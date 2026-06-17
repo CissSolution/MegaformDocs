@@ -5,8 +5,8 @@ MegaForm engine changes underneath it. Five layers enforce that.
 
 ## Layer 1 — A deliberately small surface
 
-The SDK exposes only interfaces (`IMegaFormClient`, `IFormApi`, `ISubmissionApi`, `IFileApi`),
-DTOs, and queries. It never exposes MegaForm's internal entities, repositories, EF context, or
+The SDK exposes only interfaces (`IMegaFormClient`, `IFormApi`, `ISubmissionApi`, `IFileApi`,
+`ISchemaApi`), DTOs, and queries. It never exposes MegaForm's internal entities, repositories, EF context, or
 rendering pipeline. The smaller the surface, the less there is to break.
 
 ## Layer 2 — Roslyn public-API analyzers
