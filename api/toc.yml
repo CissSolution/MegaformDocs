@@ -1,0 +1,76 @@
+### YamlMime:TableOfContent
+items:
+- uid: MegaForm.Sdk
+  name: MegaForm.Sdk
+  type: Namespace
+  items:
+  - uid: MegaForm.Sdk.CreateFormRequest
+    name: CreateFormRequest
+    type: Class
+  - uid: MegaForm.Sdk.FieldOptionInfo
+    name: FieldOptionInfo
+    type: Class
+  - uid: MegaForm.Sdk.FieldValidationInfo
+    name: FieldValidationInfo
+    type: Class
+  - uid: MegaForm.Sdk.FileDto
+    name: FileDto
+    type: Class
+  - uid: MegaForm.Sdk.FormDto
+    name: FormDto
+    type: Class
+  - uid: MegaForm.Sdk.FormFieldInfo
+    name: FormFieldInfo
+    type: Class
+  - uid: MegaForm.Sdk.FormQuery
+    name: FormQuery
+    type: Class
+  - uid: MegaForm.Sdk.FormSchemaInfo
+    name: FormSchemaInfo
+    type: Class
+  - uid: MegaForm.Sdk.IFileApi
+    name: IFileApi
+    type: Interface
+  - uid: MegaForm.Sdk.IFormApi
+    name: IFormApi
+    type: Interface
+  - uid: MegaForm.Sdk.IMegaFormClient
+    name: IMegaFormClient
+    type: Interface
+  - uid: MegaForm.Sdk.ISchemaApi
+    name: ISchemaApi
+    type: Interface
+  - uid: MegaForm.Sdk.ISubmissionApi
+    name: ISubmissionApi
+    type: Interface
+  - uid: MegaForm.Sdk.MegaFormClient
+    name: MegaFormClient
+    type: Class
+  - uid: MegaForm.Sdk.MegaFormFileContent
+    name: MegaFormFileContent
+    type: Class
+  - uid: MegaForm.Sdk.MegaFormScope
+    name: MegaFormScope
+    type: Class
+  - uid: MegaForm.Sdk.MegaFormSdk
+    name: MegaFormSdk
+    type: Class
+  - uid: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions
+    name: MegaFormSdkServiceCollectionExtensions
+    type: Class
+  - uid: MegaForm.Sdk.PagedResult`1
+    name: PagedResult<T>
+    type: Class
+  - uid: MegaForm.Sdk.SubmissionDto
+    name: SubmissionDto
+    type: Class
+  - uid: MegaForm.Sdk.SubmissionQuery
+    name: SubmissionQuery
+    type: Class
+  - uid: MegaForm.Sdk.SubmitResult
+    name: SubmitResult
+    type: Class
+  - uid: MegaForm.Sdk.UpdateFormRequest
+    name: UpdateFormRequest
+    type: Class
+memberLayout: SamePage

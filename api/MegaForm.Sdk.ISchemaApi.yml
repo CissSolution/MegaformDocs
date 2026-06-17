@@ -1,0 +1,170 @@
+### YamlMime:ManagedReference
+items:
+- uid: MegaForm.Sdk.ISchemaApi
+  commentId: T:MegaForm.Sdk.ISchemaApi
+  id: ISchemaApi
+  parent: MegaForm.Sdk
+  children:
+  - MegaForm.Sdk.ISchemaApi.Parse(System.String)
+  - MegaForm.Sdk.ISchemaApi.ParseForm(MegaForm.Sdk.FormDto)
+  langs:
+  - csharp
+  - vb
+  name: ISchemaApi
+  nameWithType: ISchemaApi
+  fullName: MegaForm.Sdk.ISchemaApi
+  type: Interface
+  source:
+    id: ISchemaApi
+    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 27
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Parse a form's schema JSON into typed field metadata (pure, no I/O).
+  example: []
+  syntax:
+    content: public interface ISchemaApi
+    content.vb: Public Interface ISchemaApi
+  derivedClasses:
+  - MegaForm.Sdk.MegaFormClient
+- uid: MegaForm.Sdk.ISchemaApi.Parse(System.String)
+  commentId: M:MegaForm.Sdk.ISchemaApi.Parse(System.String)
+  id: Parse(System.String)
+  parent: MegaForm.Sdk.ISchemaApi
+  langs:
+  - csharp
+  - vb
+  name: Parse(string)
+  nameWithType: ISchemaApi.Parse(string)
+  fullName: MegaForm.Sdk.ISchemaApi.Parse(string)
+  type: Method
+  source:
+    id: Parse
+    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 34
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: >-
+    Parse a form's SchemaJson into typed <xref href="MegaForm.Sdk.FormSchemaInfo" data-throw-if-not-resolved="false"></xref>. Never throws on malformed
+
+    JSON — returns an empty schema (mirrors the server's fail-soft schema resolver). Row layout is
+
+    flattened so the field list matches what the server validates.
+  example: []
+  syntax:
+    content: FormSchemaInfo Parse(string schemaJson)
+    parameters:
+    - id: schemaJson
+      type: System.String
+    return:
+      type: MegaForm.Sdk.FormSchemaInfo
+    content.vb: Function Parse(schemaJson As String) As FormSchemaInfo
+  overload: MegaForm.Sdk.ISchemaApi.Parse*
+  nameWithType.vb: ISchemaApi.Parse(String)
+  fullName.vb: MegaForm.Sdk.ISchemaApi.Parse(String)
+  name.vb: Parse(String)
+- uid: MegaForm.Sdk.ISchemaApi.ParseForm(MegaForm.Sdk.FormDto)
+  commentId: M:MegaForm.Sdk.ISchemaApi.ParseForm(MegaForm.Sdk.FormDto)
+  id: ParseForm(MegaForm.Sdk.FormDto)
+  parent: MegaForm.Sdk.ISchemaApi
+  langs:
+  - csharp
+  - vb
+  name: ParseForm(FormDto)
+  nameWithType: ISchemaApi.ParseForm(FormDto)
+  fullName: MegaForm.Sdk.ISchemaApi.ParseForm(MegaForm.Sdk.FormDto)
+  type: Method
+  source:
+    id: ParseForm
+    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 37
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: 'Convenience overload: parse <code class="paramref">form</code>.SchemaJson. Throws <xref href="System.ArgumentNullException" data-throw-if-not-resolved="false"></xref> when form is null.'
+  example: []
+  syntax:
+    content: FormSchemaInfo ParseForm(FormDto form)
+    parameters:
+    - id: form
+      type: MegaForm.Sdk.FormDto
+    return:
+      type: MegaForm.Sdk.FormSchemaInfo
+    content.vb: Function ParseForm(form As FormDto) As FormSchemaInfo
+  overload: MegaForm.Sdk.ISchemaApi.ParseForm*
+references:
+- uid: MegaForm.Sdk
+  commentId: N:MegaForm.Sdk
+  href: MegaForm.html
+  name: MegaForm.Sdk
+  nameWithType: MegaForm.Sdk
+  fullName: MegaForm.Sdk
+  spec.csharp:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+  spec.vb:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+- uid: MegaForm.Sdk.FormSchemaInfo
+  commentId: T:MegaForm.Sdk.FormSchemaInfo
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.FormSchemaInfo.html
+  name: FormSchemaInfo
+  nameWithType: FormSchemaInfo
+  fullName: MegaForm.Sdk.FormSchemaInfo
+- uid: MegaForm.Sdk.ISchemaApi.Parse*
+  commentId: Overload:MegaForm.Sdk.ISchemaApi.Parse
+  href: MegaForm.Sdk.ISchemaApi.html#MegaForm_Sdk_ISchemaApi_Parse_System_String_
+  name: Parse
+  nameWithType: ISchemaApi.Parse
+  fullName: MegaForm.Sdk.ISchemaApi.Parse
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: System.ArgumentNullException
+  commentId: T:System.ArgumentNullException
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.argumentnullexception
+  name: ArgumentNullException
+  nameWithType: ArgumentNullException
+  fullName: System.ArgumentNullException
+- uid: MegaForm.Sdk.ISchemaApi.ParseForm*
+  commentId: Overload:MegaForm.Sdk.ISchemaApi.ParseForm
+  href: MegaForm.Sdk.ISchemaApi.html#MegaForm_Sdk_ISchemaApi_ParseForm_MegaForm_Sdk_FormDto_
+  name: ParseForm
+  nameWithType: ISchemaApi.ParseForm
+  fullName: MegaForm.Sdk.ISchemaApi.ParseForm
+- uid: MegaForm.Sdk.FormDto
+  commentId: T:MegaForm.Sdk.FormDto
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.FormDto.html
+  name: FormDto
+  nameWithType: FormDto
+  fullName: MegaForm.Sdk.FormDto

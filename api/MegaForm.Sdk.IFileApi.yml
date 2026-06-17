@@ -1,0 +1,344 @@
+### YamlMime:ManagedReference
+items:
+- uid: MegaForm.Sdk.IFileApi
+  commentId: T:MegaForm.Sdk.IFileApi
+  id: IFileApi
+  parent: MegaForm.Sdk
+  children:
+  - MegaForm.Sdk.IFileApi.ListForSubmissionAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  - MegaForm.Sdk.IFileApi.OpenAsync(System.Int32,System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  langs:
+  - csharp
+  - vb
+  name: IFileApi
+  nameWithType: IFileApi
+  fullName: MegaForm.Sdk.IFileApi
+  type: Interface
+  source:
+    id: IFileApi
+    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 41
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: List and download files attached to submissions.
+  example: []
+  syntax:
+    content: public interface IFileApi
+    content.vb: Public Interface IFileApi
+  derivedClasses:
+  - MegaForm.Sdk.MegaFormClient
+- uid: MegaForm.Sdk.IFileApi.ListForSubmissionAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  commentId: M:MegaForm.Sdk.IFileApi.ListForSubmissionAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  id: ListForSubmissionAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  parent: MegaForm.Sdk.IFileApi
+  langs:
+  - csharp
+  - vb
+  name: ListForSubmissionAsync(int, MegaFormScope?, CancellationToken)
+  nameWithType: IFileApi.ListForSubmissionAsync(int, MegaFormScope?, CancellationToken)
+  fullName: MegaForm.Sdk.IFileApi.ListForSubmissionAsync(int, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  type: Method
+  source:
+    id: ListForSubmissionAsync
+    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 44
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: List the files uploaded against a submission (metadata only).
+  example: []
+  syntax:
+    content: Task<IReadOnlyList<FileDto>> ListForSubmissionAsync(int submissionId, MegaFormScope? scope = null, CancellationToken cancellationToken = default)
+    parameters:
+    - id: submissionId
+      type: System.Int32
+    - id: scope
+      type: MegaForm.Sdk.MegaFormScope
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task{System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.FileDto}}
+    content.vb: Function ListForSubmissionAsync(submissionId As Integer, scope As MegaFormScope = Nothing, cancellationToken As CancellationToken = Nothing) As Task(Of IReadOnlyList(Of FileDto))
+  overload: MegaForm.Sdk.IFileApi.ListForSubmissionAsync*
+  nameWithType.vb: IFileApi.ListForSubmissionAsync(Integer, MegaFormScope, CancellationToken)
+  fullName.vb: MegaForm.Sdk.IFileApi.ListForSubmissionAsync(Integer, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  name.vb: ListForSubmissionAsync(Integer, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.IFileApi.OpenAsync(System.Int32,System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  commentId: M:MegaForm.Sdk.IFileApi.OpenAsync(System.Int32,System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  id: OpenAsync(System.Int32,System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  parent: MegaForm.Sdk.IFileApi
+  langs:
+  - csharp
+  - vb
+  name: OpenAsync(int, int, MegaFormScope?, CancellationToken)
+  nameWithType: IFileApi.OpenAsync(int, int, MegaFormScope?, CancellationToken)
+  fullName: MegaForm.Sdk.IFileApi.OpenAsync(int, int, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  type: Method
+  source:
+    id: OpenAsync
+    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 47
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Read a file's bytes + metadata for a download response, or null if not found.
+  example: []
+  syntax:
+    content: Task<MegaFormFileContent?> OpenAsync(int submissionId, int fileId, MegaFormScope? scope = null, CancellationToken cancellationToken = default)
+    parameters:
+    - id: submissionId
+      type: System.Int32
+    - id: fileId
+      type: System.Int32
+    - id: scope
+      type: MegaForm.Sdk.MegaFormScope
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task{MegaForm.Sdk.MegaFormFileContent}
+    content.vb: Function OpenAsync(submissionId As Integer, fileId As Integer, scope As MegaFormScope = Nothing, cancellationToken As CancellationToken = Nothing) As Task(Of MegaFormFileContent)
+  overload: MegaForm.Sdk.IFileApi.OpenAsync*
+  nameWithType.vb: IFileApi.OpenAsync(Integer, Integer, MegaFormScope, CancellationToken)
+  fullName.vb: MegaForm.Sdk.IFileApi.OpenAsync(Integer, Integer, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  name.vb: OpenAsync(Integer, Integer, MegaFormScope, CancellationToken)
+references:
+- uid: MegaForm.Sdk
+  commentId: N:MegaForm.Sdk
+  href: MegaForm.html
+  name: MegaForm.Sdk
+  nameWithType: MegaForm.Sdk
+  fullName: MegaForm.Sdk
+  spec.csharp:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+  spec.vb:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+- uid: MegaForm.Sdk.IFileApi.ListForSubmissionAsync*
+  commentId: Overload:MegaForm.Sdk.IFileApi.ListForSubmissionAsync
+  href: MegaForm.Sdk.IFileApi.html#MegaForm_Sdk_IFileApi_ListForSubmissionAsync_System_Int32_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  name: ListForSubmissionAsync
+  nameWithType: IFileApi.ListForSubmissionAsync
+  fullName: MegaForm.Sdk.IFileApi.ListForSubmissionAsync
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: MegaForm.Sdk.MegaFormScope
+  commentId: T:MegaForm.Sdk.MegaFormScope
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.MegaFormScope.html
+  name: MegaFormScope
+  nameWithType: MegaFormScope
+  fullName: MegaForm.Sdk.MegaFormScope
+- uid: System.Threading.CancellationToken
+  commentId: T:System.Threading.CancellationToken
+  parent: System.Threading
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken
+  name: CancellationToken
+  nameWithType: CancellationToken
+  fullName: System.Threading.CancellationToken
+- uid: System.Threading.Tasks.Task{System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.FileDto}}
+  commentId: T:System.Threading.Tasks.Task{System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.FileDto}}
+  parent: System.Threading.Tasks
+  definition: System.Threading.Tasks.Task`1
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  name: Task<IReadOnlyList<FileDto>>
+  nameWithType: Task<IReadOnlyList<FileDto>>
+  fullName: System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.FileDto>>
+  nameWithType.vb: Task(Of IReadOnlyList(Of FileDto))
+  fullName.vb: System.Threading.Tasks.Task(Of System.Collections.Generic.IReadOnlyList(Of MegaForm.Sdk.FileDto))
+  name.vb: Task(Of IReadOnlyList(Of FileDto))
+  spec.csharp:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: <
+  - uid: System.Collections.Generic.IReadOnlyList`1
+    name: IReadOnlyList
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1
+  - name: <
+  - uid: MegaForm.Sdk.FileDto
+    name: FileDto
+    href: MegaForm.Sdk.FileDto.html
+  - name: '>'
+  - name: '>'
+  spec.vb:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Collections.Generic.IReadOnlyList`1
+    name: IReadOnlyList
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: MegaForm.Sdk.FileDto
+    name: FileDto
+    href: MegaForm.Sdk.FileDto.html
+  - name: )
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: System.Threading
+  commentId: N:System.Threading
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Threading
+  nameWithType: System.Threading
+  fullName: System.Threading
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+- uid: System.Threading.Tasks.Task`1
+  commentId: T:System.Threading.Tasks.Task`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  name: Task<TResult>
+  nameWithType: Task<TResult>
+  fullName: System.Threading.Tasks.Task<TResult>
+  nameWithType.vb: Task(Of TResult)
+  fullName.vb: System.Threading.Tasks.Task(Of TResult)
+  name.vb: Task(Of TResult)
+  spec.csharp:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: <
+  - name: TResult
+  - name: '>'
+  spec.vb:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: TResult
+  - name: )
+- uid: System.Threading.Tasks
+  commentId: N:System.Threading.Tasks
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Threading.Tasks
+  nameWithType: System.Threading.Tasks
+  fullName: System.Threading.Tasks
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+  - name: .
+  - uid: System.Threading.Tasks
+    name: Tasks
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+  - name: .
+  - uid: System.Threading.Tasks
+    name: Tasks
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks
+- uid: MegaForm.Sdk.IFileApi.OpenAsync*
+  commentId: Overload:MegaForm.Sdk.IFileApi.OpenAsync
+  href: MegaForm.Sdk.IFileApi.html#MegaForm_Sdk_IFileApi_OpenAsync_System_Int32_System_Int32_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  name: OpenAsync
+  nameWithType: IFileApi.OpenAsync
+  fullName: MegaForm.Sdk.IFileApi.OpenAsync
+- uid: System.Threading.Tasks.Task{MegaForm.Sdk.MegaFormFileContent}
+  commentId: T:System.Threading.Tasks.Task{MegaForm.Sdk.MegaFormFileContent}
+  parent: System.Threading.Tasks
+  definition: System.Threading.Tasks.Task`1
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  name: Task<MegaFormFileContent>
+  nameWithType: Task<MegaFormFileContent>
+  fullName: System.Threading.Tasks.Task<MegaForm.Sdk.MegaFormFileContent>
+  nameWithType.vb: Task(Of MegaFormFileContent)
+  fullName.vb: System.Threading.Tasks.Task(Of MegaForm.Sdk.MegaFormFileContent)
+  name.vb: Task(Of MegaFormFileContent)
+  spec.csharp:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: <
+  - uid: MegaForm.Sdk.MegaFormFileContent
+    name: MegaFormFileContent
+    href: MegaForm.Sdk.MegaFormFileContent.html
+  - name: '>'
+  spec.vb:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: MegaForm.Sdk.MegaFormFileContent
+    name: MegaFormFileContent
+    href: MegaForm.Sdk.MegaFormFileContent.html
+  - name: )

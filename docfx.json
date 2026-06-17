@@ -1,0 +1,26 @@
+{
+  "build": {
+    "content": [
+      { "files": [ "api/**.yml", "api/index.md" ] },
+      { "files": [ "articles/**.md", "articles/**/toc.yml", "toc.yml", "*.md" ] }
+    ],
+    "resource": [
+      { "files": [ "images/**" ] }
+    ],
+    "output": "_site",
+    "template": [ "default", "modern" ],
+    "globalMetadata": {
+      "_appName": "MegaForm",
+      "_appTitle": "MegaForm Documentation",
+      "_appFooter": "MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.",
+      "_enableSearch": true,
+      "_disableContribution": true,
+      "pdf": false
+    },
+    "globalMetadataFiles": [],
+    "fileMetadataFiles": [],
+    "postProcessors": [],
+    "keepFileLink": false,
+    "disableGitFeatures": false
+  }
+}
