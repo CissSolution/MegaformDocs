@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Class MegaFormClient | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Class MegaFormClient | MegaForm Documentation ">
+      
+      <meta name="description" content="Default  — a thin facade that maps SDK DTOs to/from MegaForm.Core repositories. It does NOT contain business logic; it reuses Core. Tenant/user context comes from the ambient  (when the host provides one) and can be overridden per call via .">
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="MegaForm.Sdk.MegaFormClient">
+
+
+
+  <h1 id="MegaForm_Sdk_MegaFormClient" data-uid="MegaForm.Sdk.MegaFormClient" class="text-break">
+Class MegaFormClient  
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="MegaForm.html">MegaForm</a>.<a class="xref" href="MegaForm.Sdk.html">Sdk</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>MegaForm.Sdk.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"><p>Default <a class="xref" href="MegaForm.Sdk.IMegaFormClient.html">IMegaFormClient</a> — a thin facade that maps SDK DTOs to/from
+MegaForm.Core repositories. It does NOT contain business logic; it reuses Core.
+Tenant/user context comes from the ambient <span class="xref">MegaForm.Core.Interfaces.IPlatformContext</span> (when the
+host provides one) and can be overridden per call via <a class="xref" href="MegaForm.Sdk.MegaFormScope.html">MegaFormScope</a>.</p>
+</div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public sealed class MegaFormClient : IMegaFormClient, IFormApi, ISubmissionApi, IFileApi, ISchemaApi</code></pre>
+  </div>
+
+
+
+
+  <dl class="typelist inheritance">
+    <dt>Inheritance</dt>
+    <dd>
+      <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
+      <div><span class="xref">MegaFormClient</span></div>
+    </dd>
+  </dl>
+
+  <dl class="typelist implements">
+    <dt>Implements</dt>
+    <dd>
+      <div><a class="xref" href="MegaForm.Sdk.IMegaFormClient.html">IMegaFormClient</a></div>
+      <div><a class="xref" href="MegaForm.Sdk.IFormApi.html">IFormApi</a></div>
+      <div><a class="xref" href="MegaForm.Sdk.ISubmissionApi.html">ISubmissionApi</a></div>
+      <div><a class="xref" href="MegaForm.Sdk.IFileApi.html">IFileApi</a></div>
+      <div><a class="xref" href="MegaForm.Sdk.ISchemaApi.html">ISchemaApi</a></div>
+    </dd>
+  </dl>
+
+
+  <dl class="typelist inheritedMembers">
+    <dt>Inherited Members</dt>
+    <dd>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)">object.Equals(object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)">object.Equals(object, object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.gethashcode">object.GetHashCode()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.gettype">object.GetType()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.referenceequals">object.ReferenceEquals(object, object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.tostring">object.ToString()</a>
+    </div>
+  </dd></dl>
+
+
+
+
+
+
+  <h2 class="section" id="constructors">Constructors
+</h2>
+
+
+  <a id="MegaForm_Sdk_MegaFormClient__ctor_" data-uid="MegaForm.Sdk.MegaFormClient.#ctor*"></a>
+
+  <h3 id="MegaForm_Sdk_MegaFormClient__ctor_MegaForm_Core_Interfaces_IFormRepository_MegaForm_Core_Interfaces_ISubmissionRepository_MegaForm_Core_Interfaces_IPlatformContext_MegaForm_Core_Interfaces_IFileRepository_MegaForm_Core_Interfaces_IStorageService_MegaForm_Core_Services_SubmissionProcessor_" data-uid="MegaForm.Sdk.MegaFormClient.#ctor(MegaForm.Core.Interfaces.IFormRepository,MegaForm.Core.Interfaces.ISubmissionRepository,MegaForm.Core.Interfaces.IPlatformContext,MegaForm.Core.Interfaces.IFileRepository,MegaForm.Core.Interfaces.IStorageService,MegaForm.Core.Services.SubmissionProcessor)">
+  MegaFormClient(IFormRepository, ISubmissionRepository, IPlatformContext?, IFileRepository?, IStorageService?, SubmissionProcessor?)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Create a client. <code class="paramref">platform</code>/<code class="paramref">files</code>/<code class="paramref">storage</code>
+are optional — when platform is null, every call must pass an explicit <a class="xref" href="MegaForm.Sdk.MegaFormScope.html">MegaFormScope</a>;
+file APIs need files+storage. <code class="paramref">submissionProcessor</code> is optional: when supplied
+(the host registered it in DI), <code>SubmitAsync</code> runs the FULL submission pipeline (validate +
+anti-spam + notify + workflow + index), identical to a public form submit; when null, it falls
+back to validate-then-insert.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public MegaFormClient(IFormRepository forms, ISubmissionRepository submissions, IPlatformContext? platform = null, IFileRepository? files = null, IStorageService? storage = null, SubmissionProcessor? submissionProcessor = null)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>forms</code> <span class="xref">IFormRepository</span></dt>
+    <dd></dd>
+    <dt><code>submissions</code> <span class="xref">ISubmissionRepository</span></dt>
+    <dd></dd>
+    <dt><code>platform</code> <span class="xref">IPlatformContext</span></dt>
+    <dd></dd>
+    <dt><code>files</code> <span class="xref">IFileRepository</span></dt>
+    <dd></dd>
+    <dt><code>storage</code> <span class="xref">IStorageService</span></dt>
+    <dd></dd>
+    <dt><code>submissionProcessor</code> <span class="xref">SubmissionProcessor</span></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="properties">Properties
+</h2>
+
+
+  <a id="MegaForm_Sdk_MegaFormClient_Files_" data-uid="MegaForm.Sdk.MegaFormClient.Files*"></a>
+
+  <h3 id="MegaForm_Sdk_MegaFormClient_Files" data-uid="MegaForm.Sdk.MegaFormClient.Files">
+  Files
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Uploaded-file listing + download.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IFileApi Files { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MegaForm.Sdk.IFileApi.html">IFileApi</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_MegaFormClient_Forms_" data-uid="MegaForm.Sdk.MegaFormClient.Forms*"></a>
+
+  <h3 id="MegaForm_Sdk_MegaFormClient_Forms" data-uid="MegaForm.Sdk.MegaFormClient.Forms">
+  Forms
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Form authoring + listing.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IFormApi Forms { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MegaForm.Sdk.IFormApi.html">IFormApi</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_MegaFormClient_Schema_" data-uid="MegaForm.Sdk.MegaFormClient.Schema*"></a>
+
+  <h3 id="MegaForm_Sdk_MegaFormClient_Schema" data-uid="MegaForm.Sdk.MegaFormClient.Schema">
+  Schema
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Parse a form's SchemaJson into typed, read-only field metadata.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ISchemaApi Schema { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MegaForm.Sdk.ISchemaApi.html">ISchemaApi</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_MegaFormClient_Submissions_" data-uid="MegaForm.Sdk.MegaFormClient.Submissions*"></a>
+
+  <h3 id="MegaForm_Sdk_MegaFormClient_Submissions" data-uid="MegaForm.Sdk.MegaFormClient.Submissions">
+  Submissions
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Submission querying (FindData).</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ISubmissionApi Submissions { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MegaForm.Sdk.ISubmissionApi.html">ISubmissionApi</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <h2 class="section" id="methods">Methods
+</h2>
+
+
+  <a id="MegaForm_Sdk_MegaFormClient_CreateFormAsync_" data-uid="MegaForm.Sdk.MegaFormClient.CreateFormAsync*"></a>
+
+  <h3 id="MegaForm_Sdk_MegaFormClient_CreateFormAsync_MegaForm_Sdk_CreateFormRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_" data-uid="MegaForm.Sdk.MegaFormClient.CreateFormAsync(MegaForm.Sdk.CreateFormRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)">
+  CreateFormAsync(CreateFormRequest, MegaFormScope?, CancellationToken)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Create a new form. Returns the created form (with its new id).</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task&lt;FormDto&gt; CreateFormAsync(CreateFormRequest request, MegaFormScope? scope = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>request</code> <a class="xref" href="MegaForm.Sdk.CreateFormRequest.html">CreateFormRequest</a></dt>
+    <dd></dd>
+    <dt><code>scope</code> <a class="xref" href="MegaForm.Sdk.MegaFormScope.html">MegaFormScope</a></dt>
+    <dd></dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="MegaForm.Sdk.FormDto.html">FormDto</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_MegaFormClient_DeleteAsync_" data-uid="MegaForm.Sdk.MegaFormClient.DeleteAsync*"></a>
+
+  <h3 id="MegaForm_Sdk_MegaFormClient_DeleteAsync_System_Int32_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_" data-uid="MegaForm.Sdk.MegaFormClient.DeleteAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)">
+  DeleteAsync(int, MegaFormScope?, CancellationToken)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Permanently delete a submission. No-op if the submission is not in this portal.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task DeleteAsync(int submissionId, MegaFormScope? scope = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>submissionId</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+    <dt><code>scope</code> <a class="xref" href="MegaForm.Sdk.MegaFormScope.html">MegaFormScope</a></dt>
+    <dd></dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task">Task</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_MegaFormClient_DeleteFormAsync_" data-uid="MegaForm.Sdk.MegaFormClient.DeleteFormAsync*"></a>
+
+  <h3 id="MegaForm_Sdk_MegaFormClient_DeleteFormAsync_System_Int32_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_" data-uid="MegaForm.Sdk.MegaFormClient.DeleteFormAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)">
+  DeleteFormAsync(int, MegaFormScope?, CancellationToken)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Permanently delete a form.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task DeleteFormAsync(int formId, MegaFormScope? scope = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>formId</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+    <dt><code>scope</code> <a class="xref" href="MegaForm.Sdk.MegaFormScope.html">MegaFormScope</a></dt>
+    <dd></dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task">Task</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_MegaFormClient_FindAsync_" data-uid="MegaForm.Sdk.MegaFormClient.FindAsync*"></a>
+
+  <h3 id="MegaForm_Sdk_MegaFormClient_FindAsync_MegaForm_Sdk_SubmissionQuery_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_" data-uid="MegaForm.Sdk.MegaFormClient.FindAsync(MegaForm.Sdk.SubmissionQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)">
+  FindAsync(SubmissionQuery, MegaFormScope?, CancellationToken)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Find submissions for a form with optional status filter + paging (FindData).</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task&lt;PagedResult&lt;SubmissionDto&gt;&gt; FindAsync(SubmissionQuery query, MegaFormScope? scope = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>query</code> <a class="xref" href="MegaForm.Sdk.SubmissionQuery.html">SubmissionQuery</a></dt>
+    <dd></dd>
+    <dt><code>scope</code> <a class="xref" href="MegaForm.Sdk.MegaFormScope.html">MegaFormScope</a></dt>
+    <dd></dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="MegaForm.Sdk.PagedResult-1.html">PagedResult</a>&lt;<a class="xref" href="MegaForm.Sdk.SubmissionDto.html">SubmissionDto</a>&gt;&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_MegaFormClient_GetAsync_" data-uid="MegaForm.Sdk.MegaFormClient.GetAsync*"></a>
+
+  <h3 id="MegaForm_Sdk_MegaFormClient_GetAsync_System_Int32_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_" data-uid="MegaForm.Sdk.MegaFormClient.GetAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)">
+  GetAsync(int, MegaFormScope?, CancellationToken)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Get a single submission by id, or null if not found.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task&lt;SubmissionDto?&gt; GetAsync(int submissionId, MegaFormScope? scope = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>submissionId</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+    <dt><code>scope</code> <a class="xref" href="MegaForm.Sdk.MegaFormScope.html">MegaFormScope</a></dt>
+    <dd></dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="MegaForm.Sdk.SubmissionDto.html">SubmissionDto</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_MegaFormClient_GetFormAsync_" data-uid="MegaForm.Sdk.MegaFormClient.GetFormAsync*"></a>
+
+  <h3 id="MegaForm_Sdk_MegaFormClient_GetFormAsync_System_Int32_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_" data-uid="MegaForm.Sdk.MegaFormClient.GetFormAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)">
+  GetFormAsync(int, MegaFormScope?, CancellationToken)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Get a single form by id, or null if not found / not in this portal.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task&lt;FormDto?&gt; GetFormAsync(int formId, MegaFormScope? scope = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>formId</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+    <dt><code>scope</code> <a class="xref" href="MegaForm.Sdk.MegaFormScope.html">MegaFormScope</a></dt>
+    <dd></dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="MegaForm.Sdk.FormDto.html">FormDto</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_MegaFormClient_ListForSubmissionAsync_" data-uid="MegaForm.Sdk.MegaFormClient.ListForSubmissionAsync*"></a>
+
+  <h3 id="MegaForm_Sdk_MegaFormClient_ListForSubmissionAsync_System_Int32_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_" data-uid="MegaForm.Sdk.MegaFormClient.ListForSubmissionAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)">
+  ListForSubmissionAsync(int, MegaFormScope?, CancellationToken)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>List the files uploaded against a submission (metadata only).</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task&lt;IReadOnlyList&lt;FileDto&gt;&gt; ListForSubmissionAsync(int submissionId, MegaFormScope? scope = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>submissionId</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+    <dt><code>scope</code> <a class="xref" href="MegaForm.Sdk.MegaFormScope.html">MegaFormScope</a></dt>
+    <dd></dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1">IReadOnlyList</a>&lt;<a class="xref" href="MegaForm.Sdk.FileDto.html">FileDto</a>&gt;&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_MegaFormClient_ListFormsAsync_" data-uid="MegaForm.Sdk.MegaFormClient.ListFormsAsync*"></a>
+
+  <h3 id="MegaForm_Sdk_MegaFormClient_ListFormsAsync_MegaForm_Sdk_FormQuery_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_" data-uid="MegaForm.Sdk.MegaFormClient.ListFormsAsync(MegaForm.Sdk.FormQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)">
+  ListFormsAsync(FormQuery?, MegaFormScope?, CancellationToken)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>List forms in the current portal with optional filter + paging.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task&lt;PagedResult&lt;FormDto&gt;&gt; ListFormsAsync(FormQuery? query = null, MegaFormScope? scope = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>query</code> <a class="xref" href="MegaForm.Sdk.FormQuery.html">FormQuery</a></dt>
+    <dd></dd>
+    <dt><code>scope</code> <a class="xref" href="MegaForm.Sdk.MegaFormScope.html">MegaFormScope</a></dt>
+    <dd></dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="MegaForm.Sdk.PagedResult-1.html">PagedResult</a>&lt;<a class="xref" href="MegaForm.Sdk.FormDto.html">FormDto</a>&gt;&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_MegaFormClient_OpenAsync_" data-uid="MegaForm.Sdk.MegaFormClient.OpenAsync*"></a>
+
+  <h3 id="MegaForm_Sdk_MegaFormClient_OpenAsync_System_Int32_System_Int32_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_" data-uid="MegaForm.Sdk.MegaFormClient.OpenAsync(System.Int32,System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)">
+  OpenAsync(int, int, MegaFormScope?, CancellationToken)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Read a file's bytes + metadata for a download response, or null if not found.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task&lt;MegaFormFileContent?&gt; OpenAsync(int submissionId, int fileId, MegaFormScope? scope = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>submissionId</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+    <dt><code>fileId</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+    <dt><code>scope</code> <a class="xref" href="MegaForm.Sdk.MegaFormScope.html">MegaFormScope</a></dt>
+    <dd></dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="MegaForm.Sdk.MegaFormFileContent.html">MegaFormFileContent</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_MegaFormClient_Parse_" data-uid="MegaForm.Sdk.MegaFormClient.Parse*"></a>
+
+  <h3 id="MegaForm_Sdk_MegaFormClient_Parse_System_String_" data-uid="MegaForm.Sdk.MegaFormClient.Parse(System.String)">
+  Parse(string)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Parse a form's SchemaJson into typed <a class="xref" href="MegaForm.Sdk.FormSchemaInfo.html">FormSchemaInfo</a>. Never throws on malformed
+JSON — returns an empty schema (mirrors the server's fail-soft schema resolver). Row layout is
+flattened so the field list matches what the server validates.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public FormSchemaInfo Parse(string schemaJson)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>schemaJson</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MegaForm.Sdk.FormSchemaInfo.html">FormSchemaInfo</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_MegaFormClient_ParseForm_" data-uid="MegaForm.Sdk.MegaFormClient.ParseForm*"></a>
+
+  <h3 id="MegaForm_Sdk_MegaFormClient_ParseForm_MegaForm_Sdk_FormDto_" data-uid="MegaForm.Sdk.MegaFormClient.ParseForm(MegaForm.Sdk.FormDto)">
+  ParseForm(FormDto)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Convenience overload: parse <code class="paramref">form</code>.SchemaJson. Throws <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.argumentnullexception">ArgumentNullException</a> when form is null.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public FormSchemaInfo ParseForm(FormDto form)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>form</code> <a class="xref" href="MegaForm.Sdk.FormDto.html">FormDto</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="MegaForm.Sdk.FormSchemaInfo.html">FormSchemaInfo</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_MegaFormClient_SubmitAsync_" data-uid="MegaForm.Sdk.MegaFormClient.SubmitAsync*"></a>
+
+  <h3 id="MegaForm_Sdk_MegaFormClient_SubmitAsync_System_Int32_System_Collections_Generic_Dictionary_System_String_System_Object__MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_" data-uid="MegaForm.Sdk.MegaFormClient.SubmitAsync(System.Int32,System.Collections.Generic.Dictionary{System.String,System.Object},MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)">
+  SubmitAsync(int, Dictionary&lt;string, object&gt;, MegaFormScope?, CancellationToken)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Submit form data, running the same server-side validation as a public form submit.
+When the host registered the full submission pipeline (anti-spam, notifications,
+workflow), this delegates to it; otherwise it validates and inserts the row. On a
+validation failure the result's <a class="xref" href="MegaForm.Sdk.SubmitResult.html#MegaForm_Sdk_SubmitResult_Success">Success</a> is false and no
+row is saved.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task&lt;SubmitResult&gt; SubmitAsync(int formId, Dictionary&lt;string, object&gt; data, MegaFormScope? scope = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>formId</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+    <dt><code>data</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2">Dictionary</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>&gt;</dt>
+    <dd></dd>
+    <dt><code>scope</code> <a class="xref" href="MegaForm.Sdk.MegaFormScope.html">MegaFormScope</a></dt>
+    <dd></dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="MegaForm.Sdk.SubmitResult.html">SubmitResult</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_MegaFormClient_UpdateAsync_" data-uid="MegaForm.Sdk.MegaFormClient.UpdateAsync*"></a>
+
+  <h3 id="MegaForm_Sdk_MegaFormClient_UpdateAsync_System_Int32_System_Collections_Generic_Dictionary_System_String_System_Object__MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_" data-uid="MegaForm.Sdk.MegaFormClient.UpdateAsync(System.Int32,System.Collections.Generic.Dictionary{System.String,System.Object},MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)">
+  UpdateAsync(int, Dictionary&lt;string, object&gt;, MegaFormScope?, CancellationToken)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Replace a submission's stored data (full replace, not merge). No-op if the submission is not in this portal.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task UpdateAsync(int submissionId, Dictionary&lt;string, object&gt; data, MegaFormScope? scope = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>submissionId</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+    <dt><code>data</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2">Dictionary</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>&gt;</dt>
+    <dd></dd>
+    <dt><code>scope</code> <a class="xref" href="MegaForm.Sdk.MegaFormScope.html">MegaFormScope</a></dt>
+    <dd></dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task">Task</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_MegaFormClient_UpdateFormAsync_" data-uid="MegaForm.Sdk.MegaFormClient.UpdateFormAsync*"></a>
+
+  <h3 id="MegaForm_Sdk_MegaFormClient_UpdateFormAsync_System_Int32_MegaForm_Sdk_UpdateFormRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_" data-uid="MegaForm.Sdk.MegaFormClient.UpdateFormAsync(System.Int32,MegaForm.Sdk.UpdateFormRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)">
+  UpdateFormAsync(int, UpdateFormRequest, MegaFormScope?, CancellationToken)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Apply a partial update to a form (only non-null members of <code class="paramref">request</code> change).
+Returns the updated form. Throws <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.invalidoperationexception">InvalidOperationException</a> when the form
+does not exist or belongs to another portal.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task&lt;FormDto&gt; UpdateFormAsync(int formId, UpdateFormRequest request, MegaFormScope? scope = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>formId</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+    <dt><code>request</code> <a class="xref" href="MegaForm.Sdk.UpdateFormRequest.html">UpdateFormRequest</a></dt>
+    <dd></dd>
+    <dt><code>scope</code> <a class="xref" href="MegaForm.Sdk.MegaFormScope.html">MegaFormScope</a></dt>
+    <dd></dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="MegaForm.Sdk.FormDto.html">FormDto</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

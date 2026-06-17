@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Standalone Host | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Standalone Host | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="standalone-host">Standalone Host</h1>
+
+<p>MegaForm can run as a standalone ASP.NET Core application via the
+<code>MegaForm.AspNetCore.Component</code> NuGet package. This is the same component that powers the
+<code>MegaForm.Web.Host</code> dev host and the <code>Samples/AspNetCoreHost</code> demo.</p>
+<h2 id="install">Install</h2>
+<p>Add the package to your host:</p>
+<pre><code class="lang-xml">&lt;ItemGroup&gt;
+  &lt;PackageReference Include=&quot;MegaForm.AspNetCore.Component&quot; Version=&quot;0.2.0-preview&quot; /&gt;
+&lt;/ItemGroup&gt;
+</code></pre>
+<p>If you are consuming local packages during development, add a <code>nuget.config</code>:</p>
+<pre><code class="lang-xml">&lt;configuration&gt;
+  &lt;packageSources&gt;
+    &lt;clear /&gt;
+    &lt;add key=&quot;local&quot; value=&quot;..\dist\pack&quot; /&gt;
+    &lt;add key=&quot;nuget.org&quot; value=&quot;https://api.nuget.org/v3/index.json&quot; /&gt;
+  &lt;/packageSources&gt;
+&lt;/configuration&gt;
+</code></pre>
+<h2 id="minimal-host">Minimal host</h2>
+<pre><code class="lang-csharp">using MegaForm.AspNetCore.Component;
+
+var builder = WebApplication.CreateBuilder(args);
+builder.AddMegaForm();
+
+var app = builder.Build();
+app.EnsureMegaFormDatabaseReady();
+app.UseMegaForm();
+app.Run();
+</code></pre>
+<p>This gives you:</p>
+<ul>
+<li>Admin dashboard at <code>/admin</code></li>
+<li>Setup wizard at <code>/setup</code> (first run)</li>
+<li>Public form renderer at <code>/f/{formId}</code></li>
+<li>API endpoints at <code>/api/MegaForm/*</code></li>
+<li>Static assets at <code>/megaform/*</code></li>
+</ul>
+<h2 id="with-options">With options</h2>
+<pre><code class="lang-csharp">builder.AddMegaForm(options =&gt;
+{
+    options.UseSqlServer(&quot;Server=.;Database=MegaForm;Trusted_Connection=true;&quot;);
+    options.UseMegaFormAuthentication = true;
+    options.AuthenticationSchemeName = &quot;MegaFormAuth&quot;;
+    options.LoginPath = &quot;/admin/login&quot;;
+    options.UseSwagger = builder.Environment.IsDevelopment();
+    options.JwtKey = builder.Configuration[&quot;Jwt:Key&quot;];
+});
+</code></pre>
+<blockquote>
+<p>Use <code>builder.AddMegaForm(...)</code> (not just <code>builder.Services.AddMegaForm(...)</code>). The builder
+extension also calls <code>UseStaticWebAssets()</code> so static assets are served in every environment.</p>
+</blockquote>
+<h2 id="important-options">Important options</h2>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th>Property</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Database</td>
+<td><code>DatabaseProvider</code>, <code>ConnectionString</code>, <code>ConfigureDbContext</code></td>
+<td>SQL Server</td>
+<td>Also supports SQLite, PostgreSQL, MySQL</td>
+</tr>
+<tr>
+<td>Routes</td>
+<td><code>ApiRoutePrefix</code>, <code>PopupApiRoutePrefix</code>, <code>AiApiRoutePrefix</code>, <code>AdminRoutePrefix</code>, <code>SetupRoutePrefix</code>, <code>FormRoutePrefix</code>, <code>DocumentsRoutePrefix</code></td>
+<td><code>/api/MegaForm</code>, <code>/api/MegaFormPopup</code>, <code>/api/MegaFormAi</code>, <code>/admin</code>, <code>/setup</code>, <code>/f</code>, <code>/documents</code></td>
+<td>All prefixes are configurable</td>
+</tr>
+<tr>
+<td>Auth</td>
+<td><code>UseMegaFormAuthentication</code>, <code>AuthenticationSchemeName</code>, <code>CookieName</code>, <code>LoginPath</code>, <code>LogoutPath</code>, <code>AccessDeniedPath</code>, <code>JwtKey</code></td>
+<td>true, &quot;MegaFormAuth&quot;</td>
+<td>Set <code>UseMegaFormAuthentication = false</code> if the host already has Identity</td>
+</tr>
+<tr>
+<td>Features</td>
+<td><code>UseSetupWizard</code>, <code>UseCors</code>, <code>UseSwagger</code>, <code>AutoEnsureDatabase</code></td>
+<td>true, true, false, true</td>
+<td></td>
+</tr>
+<tr>
+<td>Host</td>
+<td><code>BaseUrl</code>, <code>ContentRootPath</code>, <code>StorageRootPath</code>, <code>TemplatesPath</code></td>
+<td></td>
+<td>Used by storage and templates</td>
+</tr>
+</tbody>
+</table>
+<h2 id="multi-database">Multi-database</h2>
+<p>Change provider and connection string in <code>appsettings.json</code>:</p>
+<pre><code class="lang-json">{
+  &quot;ConnectionStrings&quot;: {
+    &quot;MegaForm&quot;: &quot;Data Source=megaform.db&quot;
+  },
+  &quot;Database&quot;: {
+    &quot;Provider&quot;: &quot;SQLite&quot;
+  }
+}
+</code></pre>
+<p>Supported providers: <code>SqlServer</code>, <code>SQLite</code>, <code>PostgreSql</code>, <code>MySql</code>.</p>
+<h2 id="embedding-a-form-in-your-own-pages">Embedding a form in your own pages</h2>
+<p>Reference the MegaForm tag helper and use the <code>&lt;megaform&gt;</code> tag:</p>
+<pre><code class="lang-razor">@addTagHelper *, MegaForm.AspNetCore.Component
+
+&lt;megaform form-id=&quot;@Model.FormId&quot; mode=&quot;embed&quot; min-height=&quot;720&quot; theme=&quot;corporate&quot;&gt;&lt;/megaform&gt;
+</code></pre>
+<p>See <code>Samples/CorporateWeb</code> for a complete landing-page + contact-form example.</p>
+<h2 id="using-the-sdk-in-a-standalone-host">Using the SDK in a standalone host</h2>
+<p>To consume <code>IMegaFormClient</code> from your own controllers or background jobs in the standalone host,
+register the SDK:</p>
+<pre><code class="lang-csharp">builder.Services.AddMegaFormSdk();
+
+var app = builder.Build();
+MegaForm.Sdk.MegaFormSdk.Initialize(app.ApplicationServices);
+</code></pre>
+<p>Then inject <code>IMegaFormClient</code> or use <code>MegaFormSdk.RunAsync(...)</code> from non-DI code.</p>
+<h2 id="build-and-run">Build and run</h2>
+<pre><code class="lang-bash">dotnet build
+dotnet run
+</code></pre>
+<p>Open the URL shown in the console. On first run you will be redirected to <code>/setup</code> to create the
+admin account.</p>
+<p>Default admin credentials in the <code>CorporateWeb</code> sample are <strong>admin / admin123</strong> because the sample
+seeds them automatically.</p>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,594 @@
+{
+  "source_base_path": "e:/DNNDEFENDER AND AI DESIGNES/AI DESIGNES/MegaFormSolution_280_Oqtane_um/Docs/docfx",
+  "xrefmap": "xrefmap.yml",
+  "files": [
+    {
+      "type": "Resource",
+      "output": {
+        "resource": {
+          "relative_path": "index.json"
+        }
+      }
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "README.md",
+      "output": {
+        ".html": {
+          "relative_path": "README.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.CreateFormRequest.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.CreateFormRequest.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.CreateFormRequest",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.CreateFormRequest.yml\" sourcestartlinenumber=\"1\">Request to create a new form.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.FieldOptionInfo.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.FieldOptionInfo.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.FieldOptionInfo",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.FieldOptionInfo.yml\" sourcestartlinenumber=\"1\">A choice option for Select/Radio/Checkbox fields.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.FieldValidationInfo.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.FieldValidationInfo.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.FieldValidationInfo",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.FieldValidationInfo.yml\" sourcestartlinenumber=\"1\">Validation rules for a field (subset relevant to consumers).</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.FileDto.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.FileDto.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.FileDto",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.FileDto.yml\" sourcestartlinenumber=\"1\">An uploaded file attached to a submission (metadata only; no storage path leaks).</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.FormDto.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.FormDto.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.FormDto",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.FormDto.yml\" sourcestartlinenumber=\"1\">A form, as exposed to SDK consumers. Decoupled from internal storage models.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.FormFieldInfo.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.FormFieldInfo.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.FormFieldInfo",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.FormFieldInfo.yml\" sourcestartlinenumber=\"1\">A single field's metadata, as exposed to SDK consumers (e.g. a custom renderer).</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.FormQuery.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.FormQuery.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.FormQuery",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.FormQuery.yml\" sourcestartlinenumber=\"1\">Filter/paging options for listing forms.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.FormSchemaInfo.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.FormSchemaInfo.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.FormSchemaInfo",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.FormSchemaInfo.yml\" sourcestartlinenumber=\"1\">A form's schema parsed into typed, read-only field metadata (decoupled from the\ninternal storage models). Returned by <code>ISchemaApi.Parse</code>. Row/column layout is\nflattened so <xref href=\"MegaForm.Sdk.FormSchemaInfo.Fields\" data-throw-if-not-resolved=\"false\"></xref> is the same ordered, input-field list the server\nvalidates against.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.IFileApi.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.IFileApi.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.IFileApi",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.IFileApi.yml\" sourcestartlinenumber=\"1\">List and download files attached to submissions.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.IFormApi.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.IFormApi.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.IFormApi",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.IFormApi.yml\" sourcestartlinenumber=\"1\">Create, read, list and delete forms.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.IMegaFormClient.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.IMegaFormClient.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.IMegaFormClient",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.IMegaFormClient.yml\" sourcestartlinenumber=\"1\">The single public entry point for using MegaForm programmatically. Resolve it from\nDI (<code>services.AddMegaFormSdk()</code>) or, in non-DI hosts (e.g. a DNN Razor host),\nvia the ambient <xref href=\"MegaForm\" data-throw-if-not-resolved=\"false\"></xref> accessor.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.ISchemaApi.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.ISchemaApi.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.ISchemaApi",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.ISchemaApi.yml\" sourcestartlinenumber=\"1\">Parse a form's schema JSON into typed field metadata (pure, no I/O).</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.ISubmissionApi.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.ISubmissionApi.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.ISubmissionApi",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.ISubmissionApi.yml\" sourcestartlinenumber=\"1\">Query, submit, update and delete submissions.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.MegaFormClient.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.MegaFormClient.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.MegaFormClient",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.MegaFormClient.yml\" sourcestartlinenumber=\"1\">Default <xref href=\"MegaForm.Sdk.IMegaFormClient\" data-throw-if-not-resolved=\"false\"></xref> — a thin facade that maps SDK DTOs to/from\nMegaForm.Core repositories. It does NOT contain business logic; it reuses Core.\nTenant/user context comes from the ambient <xref href=\"MegaForm.Core.Interfaces.IPlatformContext\" data-throw-if-not-resolved=\"false\"></xref> (when the\nhost provides one) and can be overridden per call via <xref href=\"MegaForm.Sdk.MegaFormScope\" data-throw-if-not-resolved=\"false\"></xref>.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.MegaFormFileContent.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.MegaFormFileContent.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.MegaFormFileContent",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.MegaFormFileContent.yml\" sourcestartlinenumber=\"1\">The bytes + metadata of a file, ready to stream to a download response.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.MegaFormScope.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.MegaFormScope.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.MegaFormScope",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.MegaFormScope.yml\" sourcestartlinenumber=\"1\">Explicit tenant/user context for an SDK call. Pass this when the caller runs\nOUTSIDE a MegaForm request (background job, scheduler, another module) where the\nambient <code>IPlatformContext</code> is not available or not the right tenant. When\nomitted, the ambient platform context is used.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.MegaFormSdk.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.MegaFormSdk.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.MegaFormSdk",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.MegaFormSdk.yml\" sourcestartlinenumber=\"1\">Ambient accessor for hosts that cannot use constructor injection — e.g. a DNN Razor\nhost, a DDR template, or a legacy .ascx. Call <xref href=\"MegaForm.Sdk.MegaFormSdk.Initialize(System.IServiceProvider)\" data-throw-if-not-resolved=\"false\"></xref> once at host\nstartup with the application's <xref href=\"System.IServiceProvider\" data-throw-if-not-resolved=\"false\"></xref>, then use\n<xref href=\"MegaForm.Sdk.MegaFormSdk.RunAsync%60%601(System.Func%7bMegaForm.Sdk.IMegaFormClient%2cSystem.Threading.Tasks.Task%7b%60%600%7d%7d)\" data-throw-if-not-resolved=\"false\"></xref> which opens a DI scope, resolves the client, and disposes it.</p>\n<pre><code class=\"lang-csharp\">// DNN razor host:\nvar forms = await MegaFormSdk.RunAsync(c =&gt; c.Forms.ListFormsAsync(\n    new FormQuery { Status = \"published\" },\n    new MegaFormScope { PortalId = PortalSettings.PortalId }));</code></pre>\n<p sourcefile=\"api/MegaForm.Sdk.MegaFormSdk.yml\" sourcestartlinenumber=\"11\">In DI hosts (Oqtane/Web), prefer injecting <xref href=\"MegaForm.Sdk.IMegaFormClient\" data-throw-if-not-resolved=\"false\"></xref> directly.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.yml\" sourcestartlinenumber=\"1\">DI registration for the MegaForm SDK facade.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.PagedResult-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.PagedResult-1.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.PagedResult<T>",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.PagedResult-1.yml\" sourcestartlinenumber=\"1\">A page of results plus the total count for the query.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.SubmissionDto.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.SubmissionDto.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.SubmissionDto",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.SubmissionDto.yml\" sourcestartlinenumber=\"1\">A submission, as exposed to SDK consumers.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.SubmissionQuery.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.SubmissionQuery.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.SubmissionQuery",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.SubmissionQuery.yml\" sourcestartlinenumber=\"1\">Filter/paging options for querying submissions (FindData).</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.SubmitResult.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.SubmitResult.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.SubmitResult",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.SubmitResult.yml\" sourcestartlinenumber=\"1\">Result of submitting form data through <code>ISubmissionApi.SubmitAsync</code>. Mirrors the\nserver submission pipeline's outcome. On a validation failure <xref href=\"MegaForm.Sdk.SubmitResult.Success\" data-throw-if-not-resolved=\"false\"></xref> is\nfalse and <xref href=\"MegaForm.Sdk.SubmitResult.ValidationErrors\" data-throw-if-not-resolved=\"false\"></xref> carries the per-field messages (no row is saved).</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.UpdateFormRequest.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.UpdateFormRequest.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.UpdateFormRequest",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.UpdateFormRequest.yml\" sourcestartlinenumber=\"1\">A partial update to an existing form: only the non-null members are applied, so callers\ncan change a single property (e.g. just the title) without re-sending the whole form.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk",
+      "Summary": null
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "api/index.md",
+      "output": {
+        ".html": {
+          "relative_path": "api/index.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "api/toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/toc.html"
+        },
+        ".json": {
+          "relative_path": "api/toc.json"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/ai-form-designer.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/ai-form-designer.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/api-stability.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/api-stability.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/dnn-razor-host.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/dnn-razor-host.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/file-download.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/file-download.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/form-builder.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/form-builder.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/installation.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/installation.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/oqtane-consumer.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/oqtane-consumer.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/overview.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/overview.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/quickstart.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/quickstart.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/reading-data.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/reading-data.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/sdk-reference.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/sdk-reference.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/standalone-host.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/standalone-host.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "articles/toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "articles/toc.html"
+        },
+        ".json": {
+          "relative_path": "articles/toc.json"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/workflow.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/workflow.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oqtane-builder.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/oqtane-builder.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oqtane-dashboard.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/oqtane-dashboard.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oqtane-sdk-download.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/oqtane-sdk-download.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oqtane-sdk-listview.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/oqtane-sdk-listview.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "index.md",
+      "output": {
+        ".html": {
+          "relative_path": "index.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "toc.html"
+        },
+        ".json": {
+          "relative_path": "toc.json"
+        }
+      },
+      "version": ""
+    }
+  ],
+  "groups": [
+    {
+      "xrefmap": "xrefmap.yml"
+    }
+  ]
+}

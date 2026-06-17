@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Quick Start | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Quick Start | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="quick-start">Quick Start</h1>
+
+<p>This builds the scenario shown on the home page: read a form's submissions through the SDK and
+render them as a list — in about 20 lines.</p>
+<h2 id="the-goal">The goal</h2>
+<p><img src="../images/oqtane-sdk-download.png" alt="SDK list view with a download link"></p>
+<h2 id="step-1--get-a-client--a-scope">Step 1 — get a client + a scope</h2>
+<pre><code class="lang-csharp">IMegaFormClient client = /* injected, or MegaFormSdk via RunAsync */;
+var scope = new MegaFormScope { PortalId = 1 };   // your portal/site id
+</code></pre>
+<h2 id="step-2--list-forms">Step 2 — list forms</h2>
+<pre><code class="lang-csharp">var forms = await client.Forms.ListFormsAsync(new FormQuery { PageSize = 50 }, scope);
+foreach (var f in forms.Items)
+    Console.WriteLine($&quot;#{f.FormId}  {f.Title}  ({f.SubmissionCount} submissions)&quot;);
+</code></pre>
+<h2 id="step-3--read-submissions-for-one-form">Step 3 — read submissions for one form</h2>
+<pre><code class="lang-csharp">var page = await client.Submissions.FindAsync(
+    new SubmissionQuery { FormId = 1, PageSize = 100 }, scope);
+
+Console.WriteLine($&quot;{page.TotalCount} submissions&quot;);
+foreach (var s in page.Items)
+    Console.WriteLine($&quot;#{s.SubmissionId}  {s.SubmittedOnUtc:yyyy-MM-dd}  {s.Status}&quot;);
+</code></pre>
+<h2 id="step-4--parse-the-submitted-values">Step 4 — parse the submitted values</h2>
+<p><code>SubmissionDto.DataJson</code> is a JSON object of <code>fieldKey → value</code>:</p>
+<pre><code class="lang-csharp">using System.Text.Json;
+
+using var doc = JsonDocument.Parse(s.DataJson ?? &quot;{}&quot;);
+foreach (var prop in doc.RootElement.EnumerateObject())
+    Console.WriteLine($&quot;  {prop.Name} = {prop.Value}&quot;);
+</code></pre>
+<blockquote>
+<p>On classic DNN (net472) use <code>Newtonsoft.Json.Linq.JObject.Parse(...)</code> instead of
+<code>System.Text.Json</code>.</p>
+</blockquote>
+<h2 id="step-5--list--link-uploaded-files">Step 5 — list &amp; link uploaded files</h2>
+<pre><code class="lang-csharp">var files = await client.Files.ListForSubmissionAsync(s.SubmissionId, scope);
+foreach (var file in files)
+    Console.WriteLine($&quot;  ⬇ {file.FileName} ({file.SizeBytes} bytes)&quot;);
+</code></pre>
+<p>To actually stream a file to the browser, see <a href="file-download.html">File Download</a>.</p>
+<h2 id="full-minimal-example">Full minimal example</h2>
+<pre><code class="lang-csharp">var scope = new MegaFormScope { PortalId = 1 };
+var page  = await client.Submissions.FindAsync(
+    new SubmissionQuery { FormId = 1, PageSize = 100 }, scope);
+
+var sb = new StringBuilder(&quot;&lt;table&gt;&lt;tr&gt;&lt;th&gt;#&lt;/th&gt;&lt;th&gt;Submitted&lt;/th&gt;&lt;th&gt;Files&lt;/th&gt;&lt;/tr&gt;&quot;);
+foreach (var s in page.Items)
+{
+    var files = await client.Files.ListForSubmissionAsync(s.SubmissionId, scope);
+    var links = string.Join(&quot; &quot;, files.Select(f =&gt;
+        $&quot;&lt;a href=\&quot;/download?submissionId={s.SubmissionId}&amp;fileId={f.FileId}\&quot;&gt;⬇ {f.FileName}&lt;/a&gt;&quot;));
+    sb.Append($&quot;&lt;tr&gt;&lt;td&gt;{s.SubmissionId}&lt;/td&gt;&lt;td&gt;{s.SubmittedOnUtc:yyyy-MM-dd}&lt;/td&gt;&lt;td&gt;{links}&lt;/td&gt;&lt;/tr&gt;&quot;);
+}
+sb.Append(&quot;&lt;/table&gt;&quot;);
+</code></pre>
+<p>Next: see the platform-specific consumers — <a href="oqtane-consumer.html">Oqtane</a> and
+<a href="dnn-razor-host.html">DNN Razor Host</a>.</p>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Reading Data | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Reading Data | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="reading-data">Reading Data</h1>
+
+<p>This guide covers the <code>Forms</code> and <code>Submissions</code> APIs: querying, paging, filtering, and scope.</p>
+<h2 id="scope-which-portal-which-user">Scope: which portal, which user</h2>
+<p>Every method accepts an optional <a href="../api/MegaForm.Sdk.MegaFormScope.html"><code>MegaFormScope</code></a>:</p>
+<pre><code class="lang-csharp">var scope = new MegaFormScope
+{
+    PortalId = 1,   // the site/portal to read from
+    UserId   = 0    // acting user (0 = anonymous/system)
+};
+</code></pre>
+<ul>
+<li><strong>Inside a MegaForm request</strong> you can usually omit it — the ambient platform context supplies
+the current portal.</li>
+<li><strong>Outside a request</strong> (a scheduled job, a different module, a CLI) you <strong>must</strong> pass it, or the
+call cannot know which tenant to read.</li>
+</ul>
+<h2 id="listing-forms">Listing forms</h2>
+<p><a href="../api/MegaForm.Sdk.IFormApi.html"><code>IFormApi.ListFormsAsync</code></a> returns a paged result:</p>
+<pre><code class="lang-csharp">var result = await client.Forms.ListFormsAsync(new FormQuery
+{
+    Status   = &quot;published&quot;,   // or &quot;draft&quot;; null = all
+    Search   = &quot;contact&quot;,     // optional title/description search
+    Page     = 1,
+    PageSize = 20
+}, scope);
+
+Console.WriteLine($&quot;{result.TotalCount} forms total, showing page {result.Page}&quot;);
+foreach (var form in result.Items)
+{
+    // form.FormId, form.Title, form.Status, form.SchemaJson,
+    // form.RequireAuth, form.SubmissionCount
+}
+</code></pre>
+<h3 id="get-one-form">Get one form</h3>
+<pre><code class="lang-csharp">FormDto? form = await client.Forms.GetFormAsync(formId: 1, scope);
+if (form is null) { /* not found, or not in this portal */ }
+</code></pre>
+<p><code>form.SchemaJson</code> is the field/layout definition as JSON — parse it if you need to render field
+labels or types.</p>
+<h2 id="querying-submissions-finddata">Querying submissions (FindData)</h2>
+<p><a href="../api/MegaForm.Sdk.ISubmissionApi.html"><code>ISubmissionApi.FindAsync</code></a> is the SDK's <em>FindData</em>:</p>
+<pre><code class="lang-csharp">var page = await client.Submissions.FindAsync(new SubmissionQuery
+{
+    FormId   = 1,
+    Status   = null,   // optional status filter; null = all
+    Page     = 1,
+    PageSize = 50
+}, scope);
+
+foreach (var s in page.Items)
+{
+    // s.SubmissionId, s.FormId, s.Status, s.IsSpam, s.UserId,
+    // s.SubmittedOnUtc, s.DataJson
+}
+</code></pre>
+<h3 id="reading-submitted-values">Reading submitted values</h3>
+<p><code>DataJson</code> is a JSON object keyed by form field key:</p>
+<pre><code class="lang-csharp">// .NET (net8+/Oqtane):
+using var doc = System.Text.Json.JsonDocument.Parse(s.DataJson ?? &quot;{}&quot;);
+var name = doc.RootElement.TryGetProperty(&quot;full_name&quot;, out var v) ? v.GetString() : null;
+
+// classic DNN (net472):
+var o = Newtonsoft.Json.Linq.JObject.Parse(s.DataJson ?? &quot;{}&quot;);
+var name2 = (string?)o[&quot;full_name&quot;];
+</code></pre>
+<div class="TIP">
+<h5>Tip</h5>
+<p>To build a table of columns dynamically, union the property names across the page's items —
+different submissions may carry different optional fields.</p>
+</div>
+<h3 id="get-one-submission">Get one submission</h3>
+<pre><code class="lang-csharp">SubmissionDto? sub = await client.Submissions.GetAsync(submissionId: 10, scope);
+</code></pre>
+<h2 id="paging-pattern">Paging pattern</h2>
+<pre><code class="lang-csharp">int pageNo = 1;
+while (true)
+{
+    var page = await client.Submissions.FindAsync(
+        new SubmissionQuery { FormId = 1, Page = pageNo, PageSize = 100 }, scope);
+    if (page.Items.Count == 0) break;
+    Process(page.Items);
+    if (pageNo * page.PageSize &gt;= page.TotalCount) break;
+    pageNo++;
+}
+</code></pre>
+<p>Next: <a href="file-download.html">download the files</a> attached to those submissions.</p>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

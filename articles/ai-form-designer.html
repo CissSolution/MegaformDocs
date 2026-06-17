@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>AI Form Designer | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="AI Form Designer | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="ai-form-designer">AI Form Designer</h1>
+
+<p>The <strong>AI Form Designer</strong> is a chat assistant inside the MegaForm builder. You describe the form
+you need in plain English; the AI proposes fields, SQL bindings, layouts, and business rules as a
+staged set of operations you can review before applying.</p>
+<h2 id="how-it-works">How it works</h2>
+<pre><code>User prompt
+    │
+    ▼
+AI chat panel  →  system prompt + history
+    │
+    ▼
+Provider (OpenAI / Anthropic / OpenRouter / local OpenAI-compatible)
+    │
+    ▼
+Tool dispatcher  →  list_widgets / get_widget / list_sql_tables /
+                    get_table_columns / list_knowledge / find_cascade_pattern /
+                    propose_table_schema
+    │
+    ▼
+MegaForm AI Tools API (DNN / Oqtane)
+    │
+    ▼
+AI emits structured ops  →  staging card  →  Apply / Discard
+    │
+    ▼
+Builder schema mutates
+</code></pre>
+<p>Key design decisions:</p>
+<ol>
+<li><strong>Tool-use loop</strong>, not a giant system prompt. The AI fetches widget schemas, SQL tables, and
+knowledge entries on demand so the static prompt stays small and cache-friendly.</li>
+<li><strong>Structured ops</strong>, not code. The AI emits JSON operations such as <code>add_field</code> or
+<code>replace_form_schema</code>. You review them in a staging card before applying.</li>
+<li><strong>Browser-side dispatcher</strong>. The actual DOM mutation happens locally; the AI is only the planner.</li>
+</ol>
+<h2 id="entry-points">Entry points</h2>
+<table>
+<thead>
+<tr>
+<th>Surface</th>
+<th>How to open</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Floating bubble</td>
+<td>Click the AI bubble in the builder header</td>
+</tr>
+<tr>
+<td><code>+ AI Form</code></td>
+<td>In the DB tab, pick tables and ask the AI to build a form from them</td>
+</tr>
+<tr>
+<td><code>Build fields with AI</code></td>
+<td>One-click batch from selected SQL tables</td>
+</tr>
+<tr>
+<td><code>Create DB Table</code></td>
+<td>Ask the AI to draft a <code>CREATE TABLE</code> for the current form</td>
+</tr>
+<tr>
+<td>Widget-drop watcher</td>
+<td>Empty DataRepeater / DynamicLabel / DataGrid greets contextually</td>
+</tr>
+</tbody>
+</table>
+<p>All entry points route through <code>window.MFAiChat.sendProgrammatic(text)</code> so history, error handling,
+and tool loops are consistent.</p>
+<h2 id="tools-the-ai-can-call">Tools the AI can call</h2>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th>Tools</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Knowledge</strong></td>
+<td><code>list_kinds</code>, <code>list_knowledge</code>, <code>get_knowledge</code></td>
+</tr>
+<tr>
+<td><strong>Widgets</strong></td>
+<td><code>list_widgets</code>, <code>get_widget</code></td>
+</tr>
+<tr>
+<td><strong>Forms</strong></td>
+<td><code>list_forms</code>, <code>get_form</code></td>
+</tr>
+<tr>
+<td><strong>SQL</strong></td>
+<td><code>list_sql_tables</code>, <code>get_table_columns</code></td>
+</tr>
+<tr>
+<td><strong>Designers</strong></td>
+<td><code>list_designers</code>, <code>get_designer</code></td>
+</tr>
+<tr>
+<td><strong>Patterns</strong></td>
+<td><code>find_cascade_pattern</code>, <code>propose_table_schema</code></td>
+</tr>
+</tbody>
+</table>
+<p>Tool results are capped at ~3 KB and arrays are sliced to 50 items to stay within model token
+budgets.</p>
+<h2 id="knowledge-base">Knowledge base</h2>
+<p>The AI's long-term memory is stored in <code>MF_AI_Knowledge</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Slug</code></td>
+<td>Unique identifier</td>
+</tr>
+<tr>
+<td><code>Kind</code></td>
+<td><code>widget</code>, <code>sql_sample</code>, <code>row_template</code>, <code>pager_template</code>, <code>form_pattern</code>, <code>designer</code>, <code>cascade_pattern</code>, <code>system_arch</code></td>
+</tr>
+<tr>
+<td><code>Title</code> / <code>Summary</code></td>
+<td>Shown when the AI lists knowledge</td>
+</tr>
+<tr>
+<td><code>Body</code></td>
+<td>Full markdown/JSON content, fetched only when needed</td>
+</tr>
+<tr>
+<td><code>Tags</code></td>
+<td>CSV filters</td>
+</tr>
+<tr>
+<td><code>Examples</code></td>
+<td>JSON array of example ops</td>
+</tr>
+<tr>
+<td><code>PortalId</code></td>
+<td><code>NULL</code> = global; non-null = per-portal override</td>
+</tr>
+<tr>
+<td><code>Source</code></td>
+<td><code>megaform-builtin</code> (upgradable) or <code>customer</code> (preserved)</td>
+</tr>
+</tbody>
+</table>
+<p>Built-in entries ship with MegaForm upgrades via <code>MERGE</code> statements that only touch
+<code>Source='megaform-builtin'</code>, so your custom entries are never overwritten.</p>
+<p>Manage entries from the admin dashboard: <strong>AI Knowledge Base</strong>.</p>
+<h2 id="op-vocabulary">Op vocabulary</h2>
+<p>After the tool loop, the AI emits one or more ops:</p>
+<table>
+<thead>
+<tr>
+<th>Op</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>add_field</code></td>
+<td>Add a new field</td>
+</tr>
+<tr>
+<td><code>remove_field</code></td>
+<td>Remove a field by key</td>
+</tr>
+<tr>
+<td><code>set_field_property</code></td>
+<td>Set a nested property (<code>path</code>, <code>value</code>)</td>
+</tr>
+<tr>
+<td><code>set_field_sql</code></td>
+<td>Configure SQL options for a field</td>
+</tr>
+<tr>
+<td><code>apply_dynlabel_preset</code></td>
+<td>Apply a DynamicLabel preset</td>
+</tr>
+<tr>
+<td><code>set_form_meta</code></td>
+<td>Update title, description, submit button, success message</td>
+</tr>
+<tr>
+<td><code>reorder_fields</code></td>
+<td>Reorder fields by key list</td>
+</tr>
+<tr>
+<td><code>replace_form_schema</code></td>
+<td>Bulk overwrite the whole schema</td>
+</tr>
+<tr>
+<td><code>set_field_image_unsplash</code></td>
+<td>Set an Unsplash image</td>
+</tr>
+<tr>
+<td><code>add_subform_from_table</code></td>
+<td>Add a subform from a SQL table</td>
+</tr>
+<tr>
+<td><code>add_field_from_column</code></td>
+<td>Add a field from a SQL column</td>
+</tr>
+<tr>
+<td><code>save_form</code></td>
+<td>Trigger Save</td>
+</tr>
+<tr>
+<td><code>chat_message</code></td>
+<td>Reply without changing the form</td>
+</tr>
+</tbody>
+</table>
+<p>The dispatcher normalizes legacy shapes automatically, so older prompts and model drift do not
+break the builder.</p>
+<h2 id="writing-effective-prompts">Writing effective prompts</h2>
+<p>Good prompts are specific:</p>
+<ul>
+<li><em>&quot;Create a contact form with full name, email, phone, and a dropdown for inquiry type.&quot;</em></li>
+<li><em>&quot;Build a golf score viewer: dropdown player → dropdown round → DataRepeater showing scores.&quot;</em></li>
+<li><em>&quot;Add a leave request form with start date, end date, reason textarea, and manager approval.&quot;</em></li>
+</ul>
+<p>For SQL-backed forms, mention the table names or let the AI discover them with <code>list_sql_tables</code>.</p>
+<h2 id="dev-vs-production-mode">Dev vs production mode</h2>
+<p>When a <code>dev.lock</code> file is present on the server, the AI panel shows raw provider errors and
+thinking text. In production it shows friendly messages such as <em>&quot;AI is busy right now. Please try
+again in a moment.&quot;</em></p>
+<h2 id="extending-the-ai">Extending the AI</h2>
+<p>To teach the AI about a new widget or pattern:</p>
+<ol>
+<li>Add a <code>MF_AI_Knowledge</code> row with the appropriate <code>Kind</code>.</li>
+<li>If it is a new widget, ensure the widget catalog lists the type.</li>
+<li>If it needs new data, add a method on <code>AiToolsController</code> (DNN and Oqtane) and register the tool
+in <code>tools.ts</code>.</li>
+<li>If it needs a new operation, add a handler in <code>ops.ts</code> and advertise it in <code>listOpSchemas()</code>.</li>
+</ol>
+<p>For full architecture details, see <code>Docs/AI_FORM_DESIGN_ARCHITECTURE.md</code>.</p>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

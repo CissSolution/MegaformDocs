@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Form Builder | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Form Builder | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="form-builder">Form Builder</h1>
+
+<p>The MegaForm <strong>Form Builder</strong> is a browser-based visual designer for creating and styling forms.
+It runs inside the Oqtane/DNN module or the ASP.NET Core standalone host and is reached from the
+admin dashboard by creating or editing a form.</p>
+<h2 id="two-modes">Two modes</h2>
+<p>The builder is organized around two top-level modes:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Purpose</th>
+<th>What you see</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Build</strong></td>
+<td>Structure the form: add fields, sections, validation, logic</td>
+<td>Field palette on the left, canvas in the center, field properties on the right</td>
+</tr>
+<tr>
+<td><strong>Design</strong></td>
+<td>Style the form: colors, typography, spacing, presets</td>
+<td>Theme presets on the left, live preview in the center, style controls on the right</td>
+</tr>
+</tbody>
+</table>
+<p>Switch between Build and Design from the header pill.</p>
+<h2 id="build-mode">Build mode</h2>
+<h3 id="field-palette">Field palette</h3>
+<p>The left rail groups fields into:</p>
+<ul>
+<li><strong>Basic</strong> — common inputs: Text, Number, Email, Phone, Date, Checkbox, Radio, Select, Textarea.</li>
+<li><strong>Layout</strong> — Section, Row, Column, Page Break, HTML block.</li>
+<li><strong>Widgets</strong> — advanced controls: Data Repeater, Dynamic Label, Data Grid, File Upload, Signature, Rating, Captcha.</li>
+</ul>
+<p>Drag a tile onto the canvas or click the <code>+ Add Field</code> row inside a section.</p>
+<h3 id="canvas">Canvas</h3>
+<p>The canvas shows the form as it will appear to end users:</p>
+<ul>
+<li><strong>Section cards</strong> group related fields under a heading.</li>
+<li><strong>Field cards</strong> display the label, required indicator, and the actual input.</li>
+<li>Click a field to select it and edit its properties.</li>
+</ul>
+<h3 id="field-properties-right-rail">Field properties (right rail)</h3>
+<p>When a field is selected, the right rail shows four tabs:</p>
+<table>
+<thead>
+<tr>
+<th>Tab</th>
+<th>Settings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>General</strong></td>
+<td>Label, field key, placeholder, help text, default value, required toggle</td>
+</tr>
+<tr>
+<td><strong>Validate</strong></td>
+<td>Required, min/max length, regex, custom error messages</td>
+</tr>
+<tr>
+<td><strong>Logic</strong></td>
+<td>Show/hide or enable/disable based on other field values</td>
+</tr>
+<tr>
+<td><strong>Style</strong></td>
+<td>Custom CSS class, background, color</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>The required toggle is an iOS-style pill. The field key can be auto-derived from the label
+and is used as the JSON property name in submission data.</p>
+</blockquote>
+<h3 id="form-level-settings">Form-level settings</h3>
+<p>Open the settings gear in the header to configure:</p>
+<ul>
+<li>Form title and description</li>
+<li>Submit button text and success message</li>
+<li>Whether the form requires authentication</li>
+<li>Form-level permissions (who can submit / view submissions)</li>
+<li>Multi-language translations</li>
+</ul>
+<h2 id="design-mode">Design mode</h2>
+<h3 id="presets">Presets</h3>
+<p>The left rail starts on <strong>Presets</strong>, a searchable grid of visual themes:</p>
+<ul>
+<li>Categories: All, Popular, Minimal, Nature, Warm, Dark, Elegant, Modern.</li>
+<li>Click a preset to repaint the canvas instantly.</li>
+<li>Pro-tier presets are marked with a purple <code>Pro</code> pill.</li>
+</ul>
+<h3 id="elements-and-colors">Elements and colors</h3>
+<ul>
+<li><strong>Elements</strong> tab — select a form element (form header, inputs, labels, buttons, errors) to jump the
+right rail to that element's controls.</li>
+<li><strong>Colors</strong> tab — edit the 10-step tint scale and assign colors to element groups.</li>
+</ul>
+<h3 id="style-controls-right-rail">Style controls (right rail)</h3>
+<table>
+<thead>
+<tr>
+<th>Tab</th>
+<th>What it controls</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Global</strong></td>
+<td>Heading/body font, base size, line height, letter spacing, border radius, shadows</td>
+</tr>
+<tr>
+<td><strong>Inputs</strong></td>
+<td>Height, border, focus state, padding</td>
+</tr>
+<tr>
+<td><strong>Buttons</strong></td>
+<td>Primary, secondary, ghost button styles</td>
+</tr>
+<tr>
+<td><strong>Layout</strong></td>
+<td>Form max-width, padding, spacing</td>
+</tr>
+</tbody>
+</table>
+<h3 id="state-preview">State preview</h3>
+<p>The header chips let you preview the form in different states:</p>
+<ul>
+<li><code>default</code> — normal appearance</li>
+<li><code>hover</code> — hover styles</li>
+<li><code>focus</code> — focused input styles</li>
+<li><code>disabled</code> — disabled control styles</li>
+<li><code>error</code> — invalid field styles</li>
+</ul>
+<p>Use the sun/moon toggle to preview light and dark variants.</p>
+<h2 id="saving-and-publishing">Saving and publishing</h2>
+<ul>
+<li><strong>Save</strong> persists the form schema and theme overrides without making the form public.</li>
+<li><strong>Publish</strong> marks the form as live so it can be embedded or submitted.</li>
+</ul>
+<p>You must save before publishing.</p>
+<h2 id="embedding-the-form">Embedding the form</h2>
+<p>Once published, a form can be embedded via:</p>
+<ul>
+<li>URL route <code>/f/{formId}</code> on the standalone host</li>
+<li>Oqtane/DNN module settings</li>
+<li>TagHelper on ASP.NET Core: <code>&lt;megaform form-id=&quot;123&quot; mode=&quot;embed&quot;&gt;&lt;/megaform&gt;</code></li>
+</ul>
+<p>See <a href="oqtane-consumer.html">Consumer — Oqtane</a> and <a href="standalone-host.html">Standalone Host</a> for code examples.</p>
+<h2 id="ai-assisted-design">AI-assisted design</h2>
+<p>The builder includes an <strong>AI Form Designer</strong> chat panel. Describe the form you want in plain
+English and the AI will suggest fields, SQL bindings, and layouts as a staged set of operations
+you can review before applying.</p>
+<p>See <a href="ai-form-designer.html">AI Form Designer</a> for details.</p>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

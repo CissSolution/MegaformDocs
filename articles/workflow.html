@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Workflow | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Workflow | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="workflow">Workflow</h1>
+
+<p>MegaForm <strong>Workflow</strong> turns a form submission into a business process. You design a flowchart of
+triggers, conditions, and actions; when a submission arrives or a field changes, the workflow
+engine executes the flow.</p>
+<h2 id="core-concepts">Core concepts</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Workflow</strong></td>
+<td>A named process attached to one or more forms</td>
+</tr>
+<tr>
+<td><strong>Trigger</strong></td>
+<td>The event that starts a workflow run</td>
+</tr>
+<tr>
+<td><strong>Step / Node</strong></td>
+<td>A single action or decision in the flow</td>
+</tr>
+<tr>
+<td><strong>Run</strong></td>
+<td>One execution of a workflow for a specific submission</td>
+</tr>
+<tr>
+<td><strong>Context</strong></td>
+<td>The submission's field values plus runtime variables (<code>_submissionId</code>, <code>now</code>, <code>currentUser</code>, …)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="workflow-canvas">Workflow canvas</h2>
+<p>The visual designer shows the flow from top to bottom:</p>
+<pre><code>📥 On Submit
+    │
+    ▼
+❓ Priority = critical?
+   YES │      │ NO
+      ▼        ▼
+ Assign   Round Robin
+ Senior      │
+      │       │
+      ▼       ▼
+  Notify Manager   Notify Agent
+            │
+            ▼
+    📧 Confirm to Submitter
+</code></pre>
+<ul>
+<li>Drag nodes from the toolbar.</li>
+<li>Connect nodes by drawing edges.</li>
+<li>Click a node to edit its properties in the right panel.</li>
+</ul>
+<h2 id="triggers">Triggers</h2>
+<table>
+<thead>
+<tr>
+<th>Trigger</th>
+<th>Fires when…</th>
+<th>Example config</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>on_submit</code></td>
+<td>A form is submitted</td>
+<td><code>{ &quot;formId&quot;: 5 }</code></td>
+</tr>
+<tr>
+<td><code>on_update</code></td>
+<td>A record is edited</td>
+<td><code>{ &quot;formId&quot;: 5, &quot;watchFields&quot;: [&quot;status&quot;] }</code></td>
+</tr>
+<tr>
+<td><code>on_field_change</code></td>
+<td>A specific field changes</td>
+<td><code>{ &quot;formId&quot;: 5, &quot;field&quot;: &quot;status&quot;, &quot;from&quot;: &quot;open&quot;, &quot;to&quot;: &quot;resolved&quot; }</code></td>
+</tr>
+<tr>
+<td><code>on_status_change</code></td>
+<td>The status field changes</td>
+<td><code>{ &quot;formId&quot;: 5, &quot;statusField&quot;: &quot;status&quot; }</code></td>
+</tr>
+<tr>
+<td><code>scheduled</code></td>
+<td>A cron schedule elapses</td>
+<td><code>{ &quot;cron&quot;: &quot;0 8 * * *&quot;, &quot;formId&quot;: 5 }</code></td>
+</tr>
+<tr>
+<td><code>manual</code></td>
+<td>A user clicks a button</td>
+<td><code>{ &quot;formId&quot;: 5, &quot;buttonLabel&quot;: &quot;Approve&quot; }</code></td>
+</tr>
+<tr>
+<td><code>webhook_received</code></td>
+<td>An external webhook arrives</td>
+<td><code>{ &quot;endpoint&quot;: &quot;/hook/crm-sync&quot; }</code></td>
+</tr>
+<tr>
+<td><code>on_date</code></td>
+<td>A date field is reached</td>
+<td><code>{ &quot;formId&quot;: 5, &quot;dateField&quot;: &quot;due_date&quot;, &quot;offset&quot;: &quot;-1d&quot; }</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="node-types">Node types</h2>
+<h3 id="condition">Condition</h3>
+<p>Branch the flow based on field values:</p>
+<pre><code class="lang-json">{
+  &quot;type&quot;: &quot;condition&quot;,
+  &quot;config&quot;: {
+    &quot;conditions&quot;: [
+      { &quot;field&quot;: &quot;deal_value&quot;, &quot;operator&quot;: &quot;greaterThan&quot;, &quot;value&quot;: 10000 },
+      { &quot;field&quot;: &quot;category&quot;, &quot;operator&quot;: &quot;equals&quot;, &quot;value&quot;: &quot;enterprise&quot; }
+    ],
+    &quot;logic&quot;: &quot;and&quot;
+  },
+  &quot;onTrue&quot;: &quot;step_approve&quot;,
+  &quot;onFalse&quot;: &quot;step_review&quot;
+}
+</code></pre>
+<p>Operators include: <code>equals</code>, <code>notEquals</code>, <code>contains</code>, <code>startsWith</code>, <code>endsWith</code>,
+<code>greaterThan</code>, <code>lessThan</code>, <code>greaterOrEqual</code>, <code>lessOrEqual</code>, <code>in</code>, <code>notIn</code>,
+<code>isEmpty</code>, <code>isNotEmpty</code>, <code>matchesRegex</code>.</p>
+<h3 id="update-field">Update Field</h3>
+<p>Set one or more field values:</p>
+<pre><code class="lang-json">{
+  &quot;type&quot;: &quot;update_field&quot;,
+  &quot;config&quot;: {
+    &quot;updates&quot;: [
+      { &quot;field&quot;: &quot;status&quot;, &quot;value&quot;: &quot;approved&quot; },
+      { &quot;field&quot;: &quot;approved_date&quot;, &quot;value&quot;: &quot;{{now}}&quot; },
+      { &quot;field&quot;: &quot;approved_by&quot;, &quot;value&quot;: &quot;{{currentUser}}&quot; }
+    ]
+  }
+}
+</code></pre>
+<h3 id="send-email">Send Email</h3>
+<p>Send HTML or plain-text email with token substitution:</p>
+<pre><code class="lang-json">{
+  &quot;type&quot;: &quot;send_email&quot;,
+  &quot;config&quot;: {
+    &quot;to&quot;: &quot;{{email}}&quot;,
+    &quot;cc&quot;: &quot;manager@company.com&quot;,
+    &quot;subject&quot;: &quot;Your request has been {{status}}&quot;,
+    &quot;body&quot;: &quot;Dear {{full_name}},\n\nYour request #{{_submissionId}} has been {{status}}.&quot;,
+    &quot;attachFields&quot;: [&quot;resume&quot;],
+    &quot;replyTo&quot;: &quot;support@company.com&quot;
+  }
+}
+</code></pre>
+<h3 id="approval">Approval</h3>
+<p>Create a human approval task:</p>
+<pre><code class="lang-json">{
+  &quot;type&quot;: &quot;approval&quot;,
+  &quot;config&quot;: {
+    &quot;approvers&quot;: { &quot;type&quot;: &quot;field&quot;, &quot;field&quot;: &quot;manager_email&quot; },
+    &quot;approvalField&quot;: &quot;_approval_status&quot;,
+    &quot;onApprove&quot;: &quot;step_approved&quot;,
+    &quot;onReject&quot;: &quot;step_rejected&quot;,
+    &quot;reminderAfter&quot;: &quot;24h&quot;,
+    &quot;escalateAfter&quot;: &quot;72h&quot;,
+    &quot;escalateTo&quot;: &quot;director@company.com&quot;
+  }
+}
+</code></pre>
+<p>Approvers can also be a fixed role, a list of emails, or a round-robin pool.</p>
+<h3 id="webhook">Webhook</h3>
+<p>Call an external HTTP endpoint:</p>
+<pre><code class="lang-json">{
+  &quot;type&quot;: &quot;webhook&quot;,
+  &quot;config&quot;: {
+    &quot;url&quot;: &quot;https://hooks.slack.com/services/...&quot;,
+    &quot;method&quot;: &quot;POST&quot;,
+    &quot;headers&quot;: { &quot;Content-Type&quot;: &quot;application/json&quot; },
+    &quot;body&quot;: { &quot;text&quot;: &quot;New ticket from {{full_name}}: {{title}}&quot; },
+    &quot;retryCount&quot;: 3,
+    &quot;timeout&quot;: 30
+  }
+}
+</code></pre>
+<h3 id="calculate">Calculate</h3>
+<p>Compute values from other fields:</p>
+<pre><code class="lang-json">{
+  &quot;type&quot;: &quot;calculate&quot;,
+  &quot;config&quot;: {
+    &quot;updates&quot;: [
+      { &quot;field&quot;: &quot;total&quot;, &quot;formula&quot;: &quot;{{quantity}} * {{unit_price}}&quot; },
+      { &quot;field&quot;: &quot;tax&quot;, &quot;formula&quot;: &quot;{{total}} * 0.1&quot; },
+      { &quot;field&quot;: &quot;grand_total&quot;, &quot;formula&quot;: &quot;{{total}} + {{tax}}&quot; }
+    ]
+  }
+}
+</code></pre>
+<h3 id="other-nodes">Other nodes</h3>
+<ul>
+<li><strong>Create Record</strong> — insert a record into another form.</li>
+<li><strong>Notify</strong> — send an in-app notification.</li>
+<li><strong>Wait</strong> — pause for a duration or until a date.</li>
+<li><strong>Assign</strong> — round-robin or load-balance assignment.</li>
+<li><strong>Generate PDF</strong> — create a PDF from a template.</li>
+<li><strong>Database</strong> — run a SQL statement.</li>
+<li><strong>Google Sheets</strong> — push a row to Google Sheets.</li>
+<li><strong>Add Role / Add User</strong> — identity-management actions.</li>
+</ul>
+<h2 id="common-examples">Common examples</h2>
+<h3 id="helpdesk-ticket-escalation">Helpdesk ticket escalation</h3>
+<ol>
+<li><code>on_submit</code> → auto-assign round-robin → email submitter confirmation.</li>
+<li><code>scheduled</code> every hour → find tickets open &gt; 24h → set status <code>overdue</code> → notify agent.</li>
+<li><code>scheduled</code> every 4 hours → find overdue &gt; 48h → escalate to manager.</li>
+<li><code>on_field_change</code> status → <code>resolved</code> → email submitter + wait 72h + send survey.</li>
+</ol>
+<h3 id="crm-lead-pipeline">CRM lead pipeline</h3>
+<ol>
+<li><code>on_submit</code> lead form → create CRM contact record → assign senior sales if enterprise,
+else round-robin → send welcome email.</li>
+<li><code>on_field_change</code> <code>deal_value</code> &gt; $50K → notify VP Sales.</li>
+<li><code>on_field_change</code> status → <code>won</code> → generate invoice + webhook to accounting.</li>
+</ol>
+<h3 id="hr-leave-request">HR leave request</h3>
+<ol>
+<li><code>on_submit</code> leave request → create approval task for manager.</li>
+<li>Approval approved → set status <code>approved</code> → notify employee → update leave balance.</li>
+<li>Approval rejected → set status <code>rejected</code> → notify employee with reason.</li>
+</ol>
+<h2 id="monitoring-runs">Monitoring runs</h2>
+<p>The workflow engine stores:</p>
+<ul>
+<li><code>MF_Workflows</code> — definitions</li>
+<li><code>MF_WorkflowRuns</code> — one row per run with status and error message</li>
+<li><code>MF_WorkflowStepLog</code> — one row per executed step</li>
+<li><code>MF_Approvals</code> — pending and resolved approval tasks</li>
+<li><code>MF_ScheduledTasks</code> — future tasks (wait, reminder, escalation, scheduled triggers)</li>
+</ul>
+<p>Admins can inspect runs from the dashboard to see exactly which nodes executed and where a run
+failed.</p>
+<h2 id="permissions">Permissions</h2>
+<p>Designing workflows requires the module permission <code>MEGAFORM_WORKFLOW</code> (typically Admins).
+Running workflows is automatic and subject to the form-level permissions of the triggering
+submission.</p>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
