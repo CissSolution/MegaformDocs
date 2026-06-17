@@ -87,30 +87,35 @@
         <article data-uid="">
 <h1 id="megaform-sdk-reference">MegaForm SDK Reference</h1>
 
-<p>This guide is the <strong>definitive English reference</strong> for <code>MegaForm.Sdk</code>. It covers every public
-interface, DTO, and common usage pattern. For platform-specific wiring see
-<a href="oqtane-consumer.html">Oqtane consumer</a> and <a href="dnn-razor-host.html">DNN Razor Host</a>.</p>
+<p>This guide is the <strong>definitive English reference</strong> for <code>MegaForm.Sdk</code>. It is kept in sync with the
+actual source code in <code>MegaForm.Sdk/</code> and the contract tests in <code>MegaForm.Sdk.Tests</code>. For
+platform-specific wiring see <a href="oqtane-consumer.html">Oqtane consumer</a> and
+<a href="dnn-razor-host.html">DNN Razor Host</a>.</p>
 <div class="TIP">
 <h5>Tip</h5>
-<p>The SDK is a <strong>stable contract</strong>. The types and methods below are guarded by public-API
-analyzers, contract tests, and package validation. See <a href="api-stability.html">API Stability</a>.</p>
+<p>The SDK is a <strong>stable public contract</strong>. The types and methods below are guarded by public-API
+analyzers (<code>RS0016</code>/<code>RS0017</code> as build errors), contract tests, and package validation. See
+<a href="api-stability.html">API Stability</a>.</p>
 </div>
 <h2 id="entry-points">Entry points</h2>
 <p>There are two ways to obtain a client:</p>
-<h3 id="1-dependency-injection-recommended">1. Dependency injection (recommended)</h3>
+<h3 id="1-dependency-injection-recommended-for-oqtane--aspnet-core">1. Dependency injection (recommended for Oqtane / ASP.NET Core)</h3>
 <pre><code class="lang-csharp">using MegaForm.Sdk;
 
-// Startup
+// Startup / IServerStartup
 services.AddMegaFormSdk();
 
-// Anywhere
+// Anywhere via constructor injection
 public class MyService
 {
     private readonly IMegaFormClient _mega;
     public MyService(IMegaFormClient mega) =&gt; _mega = mega;
 }
 </code></pre>
-<h3 id="2-ambient-accessor-legacy--non-di-hosts">2. Ambient accessor (legacy / non-DI hosts)</h3>
+<p><code>AddMegaFormSdk()</code> registers <code>IMegaFormClient</code> as a scoped service over whatever
+<code>IFormRepository</code>, <code>ISubmissionRepository</code>, <code>IFileRepository</code>, <code>IStorageService</code>, and
+<code>SubmissionProcessor</code> are already in the container.</p>
+<h3 id="2-ambient-accessor-dnn-razor-host-ddr-legacy-ascx">2. Ambient accessor (DNN Razor Host, DDR, legacy <code>.ascx</code>)</h3>
 <pre><code class="lang-csharp">MegaFormSdk.Initialize(serviceProvider);
 
 var forms = await MegaFormSdk.RunAsync(c =&gt;
@@ -119,7 +124,8 @@ var forms = await MegaFormSdk.RunAsync(c =&gt;
         new MegaFormScope { PortalId = portalId }));
 </code></pre>
 <p><code>RunAsync</code> opens a DI scope, resolves <code>IMegaFormClient</code>, executes your delegate, and disposes the
-scope.</p>
+scope. In DNN, <code>DnnServiceLocator</code> wires this automatically using
+<code>SingleClientServiceProvider</code>.</p>
 <h2 id="the-client-surface">The client surface</h2>
 <pre><code>IMegaFormClient
  ├─ Forms       : IFormApi        create, read, list, update, delete forms
@@ -137,8 +143,11 @@ is missing or wrong.</p>
     UserId   = 0    // acting user (0 = anonymous / system)
 };
 </code></pre>
+<p>If neither a scope nor an ambient <code>IPlatformContext</code> is available, the call throws
+<code>InvalidOperationException</code>.</p>
 <h2 id="forms-api--iformapi">Forms API — <code>IFormApi</code></h2>
-<p>Full API reference: <a href="../api/MegaForm.Sdk.IFormApi.html"><code>IFormApi</code></a></p>
+<p>Source reference: <a href="../api/MegaForm.Sdk.IFormApi.html"><code>IFormApi</code></a><br>
+Implementation: <code>MegaFormClient</code> maps directly to <code>IFormRepository</code>.</p>
 <h3 id="create-a-form">Create a form</h3>
 <pre><code class="lang-csharp">var form = await client.Forms.CreateFormAsync(new CreateFormRequest
 {
@@ -151,7 +160,14 @@ is missing or wrong.</p>
 
 // form.FormId is the newly assigned id.
 </code></pre>
-<p><code>Status</code> defaults to <code>&quot;draft&quot;</code> when omitted. <code>SchemaJson</code> defaults to an empty form when null.</p>
+<p>Behavior:</p>
+<ul>
+<li><code>Title</code> is required; passing <code>null</code> is treated as <code>string.Empty</code>.</li>
+<li><code>Status</code> defaults to <code>&quot;draft&quot;</code> when null or whitespace.</li>
+<li><code>SchemaJson</code> defaults to <code>{&quot;fields&quot;:[]}</code> when null or whitespace.</li>
+<li><code>RequireAuth</code> defaults to <code>false</code>.</li>
+<li>The created form's <code>PortalId</code> is the resolved portal id from <code>scope</code>/<code>IPlatformContext</code>.</li>
+</ul>
 <h3 id="list-forms">List forms</h3>
 <pre><code class="lang-csharp">var page = await client.Forms.ListFormsAsync(new FormQuery
 {
@@ -165,6 +181,12 @@ Console.WriteLine($&quot;Total: {page.TotalCount}, page {page.Page} of {page.Pag
 foreach (var f in page.Items)
     Console.WriteLine($&quot;#{f.FormId} {f.Title} ({f.SubmissionCount} submissions)&quot;);
 </code></pre>
+<p>Notes:</p>
+<ul>
+<li><code>TotalCount</code> currently equals the number of items returned on the page (the underlying
+<code>ListForms</code> repository call does not return a separate total).</li>
+<li>Invalid <code>Page</code> / <code>PageSize</code> are clamped to sensible defaults (<code>Page = 1</code>, <code>PageSize = 20</code>).</li>
+</ul>
 <h3 id="get-one-form">Get one form</h3>
 <pre><code class="lang-csharp">FormDto? form = await client.Forms.GetFormAsync(formId: 42, scope);
 if (form is null)
@@ -172,22 +194,30 @@ if (form is null)
     // not found, or not owned by the resolved portal
 }
 </code></pre>
+<p><code>GetFormAsync</code> returns <code>SubmissionCount</code> populated from form stats. Cross-portal forms return
+<code>null</code>.</p>
 <h3 id="update-a-form-partial">Update a form (partial)</h3>
 <p>Only non-null members of <a href="../api/MegaForm.Sdk.UpdateFormRequest.html"><code>UpdateFormRequest</code></a> are
-applied. This lets you change a single property without re-sending the entire form.</p>
+applied.</p>
 <pre><code class="lang-csharp">var updated = await client.Forms.UpdateFormAsync(42, new UpdateFormRequest
 {
     Title = &quot;Contact Us — Updated&quot;
     // Description, SchemaJson, Status, and RequireAuth remain unchanged
 }, scope);
 </code></pre>
-<p><code>RequireAuth</code> is <code>bool?</code> so <code>null</code> means &quot;no change&quot; and <code>false</code> means &quot;set to false&quot;.</p>
+<ul>
+<li><code>RequireAuth</code> is <code>bool?</code> so <code>null</code> means &quot;no change&quot; and <code>false</code> means &quot;set to false&quot;.</li>
+<li>Throws <code>InvalidOperationException</code> if the form does not exist or belongs to another portal.</li>
+<li>Throws <code>ArgumentNullException</code> if <code>request</code> is null.</li>
+</ul>
 <h3 id="delete-a-form">Delete a form</h3>
 <pre><code class="lang-csharp">await client.Forms.DeleteFormAsync(42, scope);
 </code></pre>
 <p>The delete is a no-op if the form does not exist or belongs to another portal.</p>
 <h2 id="submissions-api--isubmissionapi">Submissions API — <code>ISubmissionApi</code></h2>
-<p>Full API reference: <a href="../api/MegaForm.Sdk.ISubmissionApi.html"><code>ISubmissionApi</code></a></p>
+<p>Source reference: <a href="../api/MegaForm.Sdk.ISubmissionApi.html"><code>ISubmissionApi</code></a><br>
+Implementation: <code>MegaFormClient</code> maps to <code>ISubmissionRepository</code> and optionally
+<code>SubmissionProcessor</code>.</p>
 <h3 id="query-submissions-finddata">Query submissions (FindData)</h3>
 <pre><code class="lang-csharp">var page = await client.Submissions.FindAsync(new SubmissionQuery
 {
@@ -197,9 +227,11 @@ applied. This lets you change a single property without re-sending the entire fo
     PageSize = 50
 }, scope);
 </code></pre>
+<p><code>TotalCount</code> is the real total across all pages, returned by the repository.</p>
 <h3 id="get-one-submission">Get one submission</h3>
 <pre><code class="lang-csharp">SubmissionDto? sub = await client.Submissions.GetAsync(submissionId: 123, scope);
 </code></pre>
+<p><code>GetAsync</code> does not enforce portal ownership; it returns the submission if the id exists.</p>
 <h3 id="read-submitted-values">Read submitted values</h3>
 <p><code>SubmissionDto.DataJson</code> is a JSON object keyed by form field key.</p>
 <pre><code class="lang-csharp">// .NET 8+ / Oqtane
@@ -211,9 +243,12 @@ var o = Newtonsoft.Json.Linq.JObject.Parse(sub.DataJson ?? &quot;{}&quot;);
 var name2 = (string?)o[&quot;full_name&quot;];
 </code></pre>
 <h3 id="submit-data">Submit data</h3>
-<p><code>SubmitAsync</code> runs the same server-side validation as a public form submit. When the host has
-registered the full submission pipeline (anti-spam, notifications, workflow), the behavior is
-identical to a JavaScript form post.</p>
+<p><code>SubmitAsync</code> has two paths depending on whether the host registered <code>SubmissionProcessor</code>:</p>
+<p><strong>Full pipeline</strong> (Oqtane/DNN/Web with processor registered): runs the same server-side
+validation, anti-spam, notifications, workflow, and indexing as a public JS form submit.</p>
+<p><strong>Fallback</strong> (in-memory tests / lightweight hosts with no processor): resolves the schema and runs
+<code>FormValidationService.Validate</code>, then inserts. This skips anti-spam, notifications, workflow, and
+the Published-status gate.</p>
 <pre><code class="lang-csharp">var data = new Dictionary&lt;string, object&gt;
 {
     [&quot;full_name&quot;] = &quot;Jane Doe&quot;,
@@ -235,8 +270,45 @@ else
         Console.WriteLine($&quot;  {err.Key}: {err.Value}&quot;);
 }
 </code></pre>
-<p>On validation failure <code>Success</code> is <code>false</code>, <code>SubmissionId</code> is <code>0</code>, and
-<code>ValidationErrors</code> contains per-field messages. No row is saved.</p>
+<p><code>SubmitResult</code> fields:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Success</code></td>
+<td><code>true</code> when the submission was accepted and persisted</td>
+</tr>
+<tr>
+<td><code>SubmissionId</code></td>
+<td>New submission id (<code>0</code> on failure)</td>
+</tr>
+<tr>
+<td><code>ErrorMessage</code></td>
+<td>Human-readable failure reason</td>
+</tr>
+<tr>
+<td><code>SuccessMessage</code></td>
+<td>Configured post-submit message from the form</td>
+</tr>
+<tr>
+<td><code>RedirectUrl</code></td>
+<td>Configured post-submit redirect URL</td>
+</tr>
+<tr>
+<td><code>IsSpam</code> / <code>SpamScore</code></td>
+<td>Anti-spam outcome (full pipeline only)</td>
+</tr>
+<tr>
+<td><code>ValidationErrors</code></td>
+<td>Per-field messages on validation failure</td>
+</tr>
+</tbody>
+</table>
 <h3 id="update-a-submission">Update a submission</h3>
 <pre><code class="lang-csharp">var newData = new Dictionary&lt;string, object&gt;
 {
@@ -245,13 +317,17 @@ else
 
 await client.Submissions.UpdateAsync(123, newData, scope);
 </code></pre>
-<p>This performs a <strong>full replace</strong> of the stored <code>DataJson</code>, not a merge. It is a no-op if the
-submission does not exist or belongs to another portal.</p>
+<ul>
+<li>Performs a <strong>full replace</strong> of the stored <code>DataJson</code>, not a merge.</li>
+<li>No-op if the submission does not exist or belongs to another portal.</li>
+<li>Throws <code>ArgumentNullException</code> if <code>data</code> is null.</li>
+</ul>
 <h3 id="delete-a-submission">Delete a submission</h3>
 <pre><code class="lang-csharp">await client.Submissions.DeleteAsync(123, scope);
 </code></pre>
+<p>No-op if the submission does not exist or belongs to another portal.</p>
 <h2 id="files-api--ifileapi">Files API — <code>IFileApi</code></h2>
-<p>Full API reference: <a href="../api/MegaForm.Sdk.IFileApi.html"><code>IFileApi</code></a></p>
+<p>Source reference: <a href="../api/MegaForm.Sdk.IFileApi.html"><code>IFileApi</code></a></p>
 <h3 id="list-uploaded-files">List uploaded files</h3>
 <pre><code class="lang-csharp">IReadOnlyList&lt;FileDto&gt; files =
     await client.Files.ListForSubmissionAsync(submissionId: 123, scope);
@@ -259,7 +335,8 @@ submission does not exist or belongs to another portal.</p>
 foreach (var f in files)
     Console.WriteLine($&quot;#{f.FileId} {f.FileName} ({f.SizeBytes} bytes) [{f.ContentType}]&quot;);
 </code></pre>
-<p><a href="../api/MegaForm.Sdk.FileDto.html"><code>FileDto</code></a> is metadata only — no storage path is exposed.</p>
+<p><a href="../api/MegaForm.Sdk.FileDto.html"><code>FileDto</code></a> is metadata only — no storage path is exposed. If the
+host did not register <code>IFileRepository</code>, the method returns an empty list (never throws).</p>
 <h3 id="download-a-file">Download a file</h3>
 <pre><code class="lang-csharp">MegaFormFileContent? file = await client.Files.OpenAsync(
     submissionId: 123, fileId: 5, scope);
@@ -268,15 +345,20 @@ if (file is null) return NotFound();
 
 return File(file.Content, file.ContentType, file.FileName);
 </code></pre>
-<p><code>OpenAsync</code> returns <code>null</code> (not an exception) when the file is missing or the storage service is
-unavailable.</p>
+<p><code>OpenAsync</code> returns <code>null</code> when:</p>
+<ul>
+<li>the file is missing,</li>
+<li><code>IFileRepository</code> or <code>IStorageService</code> is not registered,</li>
+<li>the stored path is empty, or</li>
+<li>the storage service cannot open the path.</li>
+</ul>
 <div class="IMPORTANT">
 <h5>Important</h5>
 <p>The SDK does not enforce authorization. Always protect your download endpoint with the
 appropriate role or ownership check.</p>
 </div>
 <h2 id="schema-api--ischemaapi">Schema API — <code>ISchemaApi</code></h2>
-<p>Full API reference: <a href="../api/MegaForm.Sdk.ISchemaApi.html"><code>ISchemaApi</code></a></p>
+<p>Source reference: <a href="../api/MegaForm.Sdk.ISchemaApi.html"><code>ISchemaApi</code></a></p>
 <p>Parse a form's <code>SchemaJson</code> into typed, read-only field metadata. Row and composite layouts are
 flattened so the returned field list matches the list the server validates against.</p>
 <pre><code class="lang-csharp">var form = await client.Forms.GetFormAsync(42, scope);
@@ -295,8 +377,47 @@ foreach (var field in schema.Fields)
         Console.WriteLine($&quot;  Max length: {field.Validation.MaxLength}&quot;);
 }
 </code></pre>
+<p>Behavior:</p>
+<ul>
+<li><code>Parse</code> never throws on malformed JSON — returns an empty schema.</li>
+<li><code>ParseForm(form)</code> throws <code>ArgumentNullException</code> if <code>form</code> is null.</li>
+<li>Layout/display types (<code>Html</code>, <code>Section</code>, <code>Row</code>, <code>UniqueId</code>) have <code>IsInputField = false</code>.</li>
+<li>Row columns are expanded into the flat <code>Fields</code> list.</li>
+</ul>
 <p>Use this to build dynamic renderers, export columns, or validation mirrors without parsing the raw
-JSON yourself.</p>
+JSON yourself. See the DNN Razor input-form sample in <a href="dnn-razor-host.html">DNN Razor Host</a> for a
+schema-driven renderer.</p>
+<h2 id="dnn-razor-host-samples">DNN Razor Host samples</h2>
+<p>Two shipped Razor Host scripts demonstrate the SDK end-to-end without DI:</p>
+<table>
+<thead>
+<tr>
+<th>Sample</th>
+<th>File</th>
+<th>What it demonstrates</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>List view</strong></td>
+<td><code>MegaForm.DNN/RazorHostSamples/MegaFormSdkListView.cshtml</code></td>
+<td>List forms, query submissions, parse <code>DataJson</code>, list uploaded files, render download links</td>
+</tr>
+<tr>
+<td><strong>Input form</strong></td>
+<td><code>MegaForm.DNN/RazorHostSamples/MegaFormSdkInputForm.cshtml</code></td>
+<td>Use <code>Schema.ParseForm</code> to render a form, then <code>Submissions.SubmitAsync</code> to post data</td>
+</tr>
+</tbody>
+</table>
+<p>Both samples use the same helper pattern:</p>
+<pre><code class="lang-csharp">static T Run&lt;T&gt;(Func&lt;IMegaFormClient, Task&lt;T&gt;&gt; action)
+{
+    var _ = MegaForm.DNN.Services.DnnServiceLocator.Instance; // wire the SDK
+    return Task.Run(() =&gt; MegaFormSdk.RunAsync(action)).GetAwaiter().GetResult();
+}
+</code></pre>
+<p>See <a href="dnn-razor-host.html">DNN Razor Host</a> for the full setup and walkthrough.</p>
 <h2 id="paging-pattern">Paging pattern</h2>
 <p>Both <code>ListFormsAsync</code> and <code>FindAsync</code> return <a href="../api/MegaForm.Sdk.PagedResult-1.html"><code>PagedResult&lt;T&gt;</code></a>:</p>
 <table>
@@ -357,8 +478,16 @@ while (true)
 <td><code>Files.OpenAsync</code> returns <code>null</code></td>
 </tr>
 <tr>
-<td>Wrong portal</td>
-<td>Delete/update are no-ops; <code>UpdateFormAsync</code> throws <code>InvalidOperationException</code></td>
+<td>Wrong portal — delete/update form</td>
+<td>No-op</td>
+</tr>
+<tr>
+<td>Wrong portal — <code>UpdateFormAsync</code></td>
+<td>Throws <code>InvalidOperationException</code></td>
+</tr>
+<tr>
+<td>Wrong portal — update/delete submission</td>
+<td>No-op</td>
 </tr>
 <tr>
 <td>No portal context</td>
@@ -371,6 +500,10 @@ while (true)
 <tr>
 <td>Files API not wired</td>
 <td>Empty list / <code>null</code>; never throws</td>
+</tr>
+<tr>
+<td><code>UpdateFormAsync</code> null request</td>
+<td>Throws <code>ArgumentNullException</code></td>
 </tr>
 </tbody>
 </table>
@@ -412,6 +545,7 @@ public async Task Demo(IMegaFormClient client)
 <li><a href="quickstart.html">Quick Start</a> — build a list view in ~20 lines</li>
 <li><a href="reading-data.html">Reading Data</a> — forms &amp; submissions in depth</li>
 <li><a href="file-download.html">File Download</a> — stream uploaded files safely</li>
+<li><a href="dnn-razor-host.html">DNN Razor Host</a> — full Razor sample walkthrough</li>
 <li><a href="api-stability.html">API Stability</a> — how the contract stays stable</li>
 <li><a href="../api/index.html">API Reference</a> — generated reference for every public type</li>
 </ul>

@@ -98,6 +98,9 @@
 </tbody>
 </table>
 <h2 id="updating-the-documentation">Updating the documentation</h2>
+<p>The easiest way: push your Markdown edits to the <code>main</code> branch. GitHub Actions will
+automatically build the site with DocFX and update the <code>gh-pages</code> branch.</p>
+<h3 id="manual-update">Manual update</h3>
 <ol>
 <li>Edit the Markdown sources in <code>articles/</code> or the landing pages (<code>index.md</code>, <code>api/index.md</code>).</li>
 <li>To refresh the API reference from the <code>MegaForm.Sdk</code> source code, run <code>docfx metadata</code>

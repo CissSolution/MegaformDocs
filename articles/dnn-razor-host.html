@@ -90,76 +90,113 @@
 <p>DNN does not use Microsoft DI for module code, so the SDK is consumed in one of two ways:</p>
 <ol>
 <li><strong>Direct singleton</strong> — <code>DnnServiceLocator.Instance.Mega</code> (an <code>IMegaFormClient</code>). This is the
-idiomatic DNN pattern and the one the shipped demo uses.</li>
+idiomatic DNN pattern and the one the shipped demos use.</li>
 <li><strong>Ambient accessor</strong> — <code>MegaFormSdk.RunAsync(...)</code>, wired at module startup. Use this if you
 prefer the same call shape as other hosts.</li>
 </ol>
-<p>Both read MegaForm data through only <code>IMegaFormClient</code>. The shipped sample renders a list view
-with file-download links from a Razor Host <code>.cshtml</code> script.</p>
+<p>Both read MegaForm data through only <code>IMegaFormClient</code>. This page documents the two shipped Razor
+Host samples and the DNN download endpoint.</p>
+<blockquote>
+<p>The source files for the samples live in <code>MegaForm.DNN/RazorHostSamples/</code> in the main MegaForm
+solution.</p>
+</blockquote>
 <h2 id="how-the-sdk-is-wired-in-dnn">How the SDK is wired in DNN</h2>
-<p><code>DnnServiceLocator</code> constructs the client over the DNN repository adapters + a disk-backed
-storage service rooted at the same <code>~/App_Data/MegaForm/PrivateUploads</code> folder the upload
-pipeline writes to:</p>
-<pre><code class="lang-csharp">FileRepo = new DnnFileRepository();
-Storage  = new DnnDiskStorageService();
-Mega     = new MegaForm.Sdk.MegaFormClient(FormRepo, SubmissionRepo, null, FileRepo, Storage);
+<p><code>DnnServiceLocator</code> constructs the client over the DNN repository adapters and wires the ambient
+accessor so <code>MegaFormSdk.RunAsync</code> works without a real DI container:</p>
+<pre><code class="lang-csharp">// From MegaForm.DNN.Services.DnnServiceLocator
+var sdkClient = new MegaFormClient(
+    FormRepo, SubmissionRepo, null, null, null, SubmissionProcessor);
 
-// optional ambient accessor (no-DI) — guarded so it can never break the locator:
-try { MegaForm.Sdk.MegaFormSdk.Initialize(new SingleClientServiceProvider(Mega)); } catch { }
+MegaFormSdk.Initialize(new SingleClientServiceProvider(sdkClient));
 </code></pre>
 <p><code>SingleClientServiceProvider</code> is a tiny <code>IServiceProvider</code> that serves exactly one service
-(<code>IMegaFormClient</code>) plus a no-op scope factory, so <code>MegaFormSdk.RunAsync</code> works without a real
-container.</p>
-<h2 id="the-razor-host-script">The Razor Host script</h2>
-<p>Drop <code>MegaFormSdkListView.cshtml</code> (shipped under <code>MegaForm.DNN/RazorHostSamples/</code>) into the
-Razor Host scripts folder:</p>
+(<code>IMegaFormClient</code>) plus a no-op scope factory, so <code>MegaFormSdk.RunAsync</code>'s
+<code>CreateScope()</code> / <code>GetRequiredService&lt;IMegaFormClient&gt;()</code> calls work.</p>
+<h2 id="razor-host-helper-pattern">Razor Host helper pattern</h2>
+<p>Both samples use the same synchronous wrapper because Razor Host pages are synchronous while the
+SDK is async:</p>
+<pre><code class="lang-csharp">static T Run&lt;T&gt;(System.Func&lt;IMegaFormClient, System.Threading.Tasks.Task&lt;T&gt;&gt; action)
+{
+    // Touch the locator once so the ambient SDK accessor is wired.
+    var _ = MegaForm.DNN.Services.DnnServiceLocator.Instance;
+    return System.Threading.Tasks.Task.Run(() =&gt; MegaFormSdk.RunAsync(action)).GetAwaiter().GetResult();
+}
+</code></pre>
+<blockquote>
+<p>The SDK calls are CPU-only (no true awaited I/O), so blocking via <code>Task.Run</code> is safe and avoids
+ASP.NET <code>SynchronizationContext</code> deadlocks.</p>
+</blockquote>
+<h2 id="sample-1--list-view-megaformsdklistviewcshtml">Sample 1 — List view (<code>MegaFormSdkListView.cshtml</code>)</h2>
+<p>Drop <code>MegaFormSdkListView.cshtml</code> into the DNN Razor Host scripts folder:</p>
 <pre><code>&lt;site&gt;\DesktopModules\RazorModules\RazorHost\Scripts\MegaFormSdkListView.cshtml
 </code></pre>
-<p>The script (abridged) — note it uses <strong>Newtonsoft.Json</strong> because classic DNN (net472) has no
-<code>System.Text.Json</code>, and it blocks on the async SDK via <code>Task.Run(...).GetAwaiter().GetResult()</code>
-since Razor Host pages are synchronous:</p>
-<pre><code class="lang-cshtml">@using System.Linq
-@using MegaForm.Sdk
-@using Newtonsoft.Json.Linq
+<p>URL: <code>&lt;razor-host-page&gt;?formId=1</code> (omit <code>formId</code> to use the first form).</p>
+<h3 id="what-it-does">What it does</h3>
+<ol>
+<li>Lists all forms in the portal as clickable pills.</li>
+<li>Loads submissions for the selected form via <code>Submissions.FindAsync</code>.</li>
+<li>Parses each submission's <code>DataJson</code> with <code>Newtonsoft.Json.Linq.JObject</code>.</li>
+<li>Discovers columns dynamically and renders them as a table.</li>
+<li>Lists uploaded files per submission and renders download links.</li>
+</ol>
+<h3 id="key-sdk-calls">Key SDK calls</h3>
+<pre><code class="lang-csharp">var forms = Run(c =&gt; c.Forms.ListFormsAsync(new FormQuery { PageSize = 100 }, scope)).Items.ToList();
 
-@functions {
-    static T Run&lt;T&gt;(System.Func&lt;IMegaFormClient, System.Threading.Tasks.Task&lt;T&gt;&gt; action)
-    {
-        var _ = MegaForm.DNN.Services.DnnServiceLocator.Instance; // ensure wired
-        return System.Threading.Tasks.Task
-            .Run(() =&gt; MegaFormSdk.RunAsync(action)).GetAwaiter().GetResult();
-    }
+var page = Run(c =&gt; c.Submissions.FindAsync(
+    new SubmissionQuery { FormId = formId, PageSize = 100 }, scope));
+
+var files = Run(c =&gt; c.Files.ListForSubmissionAsync(s.SubmissionId, scope));
+</code></pre>
+<h3 id="rendered-output">Rendered output</h3>
+<p>A styled table with columns <code>#</code>, <code>Submitted</code>, <code>Status</code>, up to 6 dynamic data columns, and a <strong>Files</strong>
+column with <code>⬇ filename</code> links pointing at the download endpoint.</p>
+<h2 id="sample-2--input-form-megaformsdkinputformcshtml">Sample 2 — Input form (<code>MegaFormSdkInputForm.cshtml</code>)</h2>
+<p>Drop <code>MegaFormSdkInputForm.cshtml</code> into the same Razor Host scripts folder.</p>
+<p>URL: <code>&lt;razor-host-page&gt;?formId=1</code> (omit <code>formId</code> to use the first published form).</p>
+<h3 id="what-it-does-1">What it does</h3>
+<ol>
+<li>Picks the first published form (or the form specified by <code>?formId=</code>).</li>
+<li>Parses the form schema with <code>Schema.ParseForm</code> to discover input fields.</li>
+<li>Renders a schema-driven HTML form (<code>Text</code>, <code>Email</code>, <code>Select</code>, <code>Radio</code>, <code>Checkbox</code>, <code>Textarea</code>, …).</li>
+<li>On POST, collects the values into a <code>Dictionary&lt;string, object&gt;</code>.</li>
+<li>Submits through <code>Submissions.SubmitAsync</code> and shows success / validation errors.</li>
+</ol>
+<h3 id="key-sdk-calls-1">Key SDK calls</h3>
+<pre><code class="lang-csharp">var forms = Run(c =&gt; c.Forms.ListFormsAsync(
+    new FormQuery { Status = &quot;published&quot;, PageSize = 100 }, scope)).Items.ToList();
+
+var schema = Run&lt;FormSchemaInfo&gt;(c =&gt;
+    System.Threading.Tasks.Task.FromResult(c.Schema.ParseForm(currentForm)));
+
+var inputFields = schema.Fields.Where(f =&gt; f.IsInputField &amp;&amp; !f.Hidden).ToList();
+
+var result = Run(c =&gt; c.Submissions.SubmitAsync(formId, data, scope));
+</code></pre>
+<h3 id="checkbox-handling">Checkbox handling</h3>
+<p>Multiple checkboxes with the same <code>name</code> come back comma-separated. The sample normalizes them to a
+<code>List&lt;string&gt;</code>:</p>
+<pre><code class="lang-csharp">if (field.Type == &quot;Checkbox&quot;)
+{
+    data[key] = raw.Contains(&quot;,&quot;)
+        ? raw.Split(',').Select(x =&gt; x.Trim()).Where(x =&gt; !string.IsNullOrEmpty(x)).Cast&lt;object&gt;().ToList()
+        : (object)raw;
 }
-
-@{
-    var portalId = DotNetNuke.Entities.Portals.PortalSettings.Current.PortalId;
-    var scope    = new MegaFormScope { PortalId = portalId };
-
-    var forms = Run(c =&gt; c.Forms.ListFormsAsync(new FormQuery { PageSize = 100 }, scope)).Items.ToList();
-
-    int formId = 0; int.TryParse(Request.QueryString[&quot;formId&quot;], out formId);
-    if (formId &lt;= 0 &amp;&amp; forms.Count &gt; 0) formId = forms[0].FormId;
-
-    var page = Run(c =&gt; c.Submissions.FindAsync(
-        new SubmissionQuery { FormId = formId, PageSize = 100 }, scope));
+</code></pre>
+<h3 id="anti-spam-helpers">Anti-spam helpers</h3>
+<p>The sample adds the honeypot/timestamp fields that the public renderer uses:</p>
+<pre><code class="lang-csharp">data[&quot;__mf_hp&quot;] = &quot;&quot;;
+data[&quot;__mf_ts&quot;] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+</code></pre>
+<h3 id="success--error-rendering">Success / error rendering</h3>
+<p>After submit, the sample inspects <code>SubmitResult</code>:</p>
+<pre><code class="lang-csharp">if (submitResult.Success)
+{
+    // show submission id and SuccessMessage
 }
-
-&lt;table&gt;
-  @foreach (var s in page.Items)
-  {
-      var files = Run(c =&gt; c.Files.ListForSubmissionAsync(s.SubmissionId, scope));
-      &lt;tr&gt;
-        &lt;td&gt;@s.SubmissionId&lt;/td&gt;
-        &lt;td&gt;@s.SubmittedOnUtc.ToString(&quot;yyyy-MM-dd HH:mm&quot;)&lt;/td&gt;
-        &lt;td&gt;
-          @foreach (var f in files)
-          {
-            &lt;a href=&quot;/DesktopModules/MegaForm/API/SdkDemo/Download?submissionId=@s.SubmissionId&amp;fileId=@f.FileId&quot;&gt;⬇ @f.FileName&lt;/a&gt;
-          }
-        &lt;/td&gt;
-      &lt;/tr&gt;
-  }
-&lt;/table&gt;
+else
+{
+    // show ErrorMessage and iterate ValidationErrors
+}
 </code></pre>
 <h2 id="the-download-endpoint">The download endpoint</h2>
 <p>A DNN WebAPI controller streams the file through the SDK and is reached by the generic
@@ -192,8 +229,9 @@ public class SdkDemoController : DnnApiController
 <h2 id="set-up-the-page-one-time-admin">Set up the page (one-time, admin)</h2>
 <ol>
 <li>Add a <strong>Razor Host</strong> module to any page.</li>
-<li>In the module's menu choose <strong>Edit Script</strong> and select <code>MegaFormSdkListView.cshtml</code>.</li>
-<li>Browse the page with <code>?formId=1267</code> (or any form id that has submissions).</li>
+<li>In the module's menu choose <strong>Edit Script</strong> and select <code>MegaFormSdkListView.cshtml</code> or
+<code>MegaFormSdkInputForm.cshtml</code>.</li>
+<li>Browse the page with <code>?formId=1267</code> (or any form id that has submissions / is published).</li>
 </ol>
 <div class="NOTE">
 <h5>Note</h5>

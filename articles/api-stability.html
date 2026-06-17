@@ -90,8 +90,8 @@
 <p>The whole point of the SDK is to give integrators a surface that <strong>does not break</strong> while the
 MegaForm engine changes underneath it. Five layers enforce that.</p>
 <h2 id="layer-1--a-deliberately-small-surface">Layer 1 — A deliberately small surface</h2>
-<p>The SDK exposes only interfaces (<code>IMegaFormClient</code>, <code>IFormApi</code>, <code>ISubmissionApi</code>, <code>IFileApi</code>),
-DTOs, and queries. It never exposes MegaForm's internal entities, repositories, EF context, or
+<p>The SDK exposes only interfaces (<code>IMegaFormClient</code>, <code>IFormApi</code>, <code>ISubmissionApi</code>, <code>IFileApi</code>,
+<code>ISchemaApi</code>), DTOs, and queries. It never exposes MegaForm's internal entities, repositories, EF context, or
 rendering pipeline. The smaller the surface, the less there is to break.</p>
 <h2 id="layer-2--roslyn-public-api-analyzers">Layer 2 — Roslyn public-API analyzers</h2>
 <p><code>MegaForm.Sdk</code> enables <code>Microsoft.CodeAnalysis.PublicApiAnalyzers</code> with the two key rules
