@@ -18,6 +18,11 @@ The built site is published to GitHub Pages from the `gh-pages` branch:
 
 ## Updating the documentation
 
+The easiest way: push your Markdown edits to the `main` branch. GitHub Actions will
+automatically build the site with DocFX and update the `gh-pages` branch.
+
+### Manual update
+
 1. Edit the Markdown sources in `articles/` or the landing pages (`index.md`, `api/index.md`).
 2. To refresh the API reference from the `MegaForm.Sdk` source code, run `docfx metadata`
    against the main MegaForm solution and copy the generated `api/*.yml` files into this repo.
