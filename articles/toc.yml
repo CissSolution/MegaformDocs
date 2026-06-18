@@ -16,6 +16,8 @@
   href: oqtane-consumer.md
 - name: Consumer — DNN Razor Host
   href: dnn-razor-host.md
+- name: Razor Host Examples
+  href: razor-host-examples.md
 - name: Form Builder
   href: form-builder.md
 - name: Workflow

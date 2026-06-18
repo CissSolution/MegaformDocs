@@ -44,6 +44,7 @@ links.
 | [File download](articles/file-download.md) | List & stream uploaded files safely |
 | [Oqtane consumer](articles/oqtane-consumer.md) | Inject `IMegaFormClient` into a Blazor component |
 | [DNN Razor Host](articles/dnn-razor-host.md) | Use the SDK from a `.cshtml` with no DI |
+| [Razor Host Examples](articles/razor-host-examples.md) | Step-by-step DNN list view & input form samples |
 | [Form Builder](articles/form-builder.md) | Build and design forms visually |
 | [Workflow](articles/workflow.md) | Automate business processes around submissions |
 | [AI Form Designer](articles/ai-form-designer.md) | Design forms with the AI assistant |
