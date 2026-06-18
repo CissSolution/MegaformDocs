@@ -1,0 +1,62 @@
+# Build outputs
+**/bin/
+**/obj/
+**/out/
+**/dist/
+**/publish/
+
+# Node
+**/node_modules/
+**/npm-debug.log*
+**/yarn-error.log*
+
+# .NET
+*.dll
+*.pdb
+*.exe
+*.nupkg
+*.snupkg
+*.user
+*.suo
+*.cache
+*.log
+
+# IDE
+.vs/
+.vscode/
+*.csproj.user
+*.sln.docstates
+
+# DocFX build output
+Docs/docfx/_site/
+
+# Assets bundles (built from MegaForm.UI)
+Assets/js/bundles/*.js
+Assets/js/bundles/*.map
+!Assets/js/bundles/.gitkeep
+
+# Runtime / temp
+*.db-shm
+*.db-wal
+*.lock
+*.tmp
+_tmp/
+tmp/
+temp/
+
+# Playwright / QA
+.playwright-mcp/
+qa-out/
+_qa_screenshots/
+
+# Claude / backups
+.claude/
+*.bak
+_backup_*/
+_export_*/
+_audit_temp/
+
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
