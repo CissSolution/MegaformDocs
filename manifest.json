@@ -471,6 +471,16 @@
     },
     {
       "type": "Conceptual",
+      "source_relative_path": "articles/razor-host-examples.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/razor-host-examples.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
       "source_relative_path": "articles/reading-data.md",
       "output": {
         ".html": {
