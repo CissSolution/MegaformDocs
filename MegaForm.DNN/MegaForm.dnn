@@ -1,0 +1,291 @@
+<dotnetnuke type="Package" version="5.0">
+  <packages>
+    <package name="MegaForm" type="Module" version="01.06.32">
+      <friendlyName>MegaForm</friendlyName>
+      <description>Dynamic Form Builder Module for DNN - drag-and-drop builder, conditional logic, webhooks, anti-spam, email notifications, workflows, Save and Continue, Row/Column layout.</description>
+      <iconFile>~/DesktopModules/MegaForm/Images/module-icon.png</iconFile>
+      <owner>
+        <name>MegaForm</name>
+        <organization>MegaForm</organization>
+        <url>https://megaform.example.com</url>
+        <email>support@megaform.example.com</email>
+      </owner>
+      <license src="License.txt"/>
+      <releaseNotes src="ReleaseNotes.txt"/>
+      <azureCompatible>true</azureCompatible>
+      <dependencies>
+        <dependency type="CoreVersion">09.04.00</dependency>
+      </dependencies>
+      <components>
+        <component type="Module">
+          <desktopModule>
+            <moduleName>MegaForm</moduleName>
+            <foldername>MegaForm</foldername>
+            <businessControllerClass>MegaForm.DNN.Components.FeatureController, MegaForm.DNN</businessControllerClass>
+            <supportedFeatures>
+              <supportedFeature type="Portable"/>
+              <supportedFeature type="Upgradeable"/>
+            </supportedFeatures>
+            <moduleDefinitions>
+              <moduleDefinition>
+                <friendlyName>MegaForm</friendlyName>
+                <defaultCacheTime>0</defaultCacheTime>
+                <moduleControls>
+                  <moduleControl>
+                    <controlKey/>
+                    <controlSrc>DesktopModules/MegaForm/Views/FormView.ascx</controlSrc>
+                    <supportsPartialRendering>False</supportsPartialRendering>
+                    <controlTitle>MegaForm</controlTitle>
+                    <controlType>View</controlType>
+                    <helpUrl/>
+                  </moduleControl>
+                  <moduleControl>
+                    <controlKey>Edit</controlKey>
+                    <controlSrc>DesktopModules/MegaForm/Views/FormEdit.ascx</controlSrc>
+                    <supportsPartialRendering>False</supportsPartialRendering>
+                    <controlTitle>Form Builder</controlTitle>
+                    <controlType>Edit</controlType>
+                  </moduleControl>
+                  <moduleControl>
+                    <controlKey>Submissions</controlKey>
+                    <controlSrc>DesktopModules/MegaForm/Views/Submissions.ascx</controlSrc>
+                    <supportsPartialRendering>False</supportsPartialRendering>
+                    <controlTitle>View Submissions</controlTitle>
+                    <controlType>Edit</controlType>
+                  </moduleControl>
+                  <moduleControl>
+                    <controlKey>Tasks</controlKey>
+                    <controlSrc>DesktopModules/MegaForm/Views/Tasks.ascx</controlSrc>
+                    <supportsPartialRendering>False</supportsPartialRendering>
+                    <controlTitle>Workflow Inbox</controlTitle>
+                    <controlType>View</controlType>
+                  </moduleControl>
+                  <moduleControl>
+                    <controlKey>ManageModule</controlKey>
+                    <controlSrc>DesktopModules/MegaForm/Views/ManageModule.ascx</controlSrc>
+                    <supportsPartialRendering>False</supportsPartialRendering>
+                    <controlTitle>Manage module</controlTitle>
+                    <controlType>Edit</controlType>
+                  </moduleControl>
+                  <moduleControl>
+                    <controlKey>Settings</controlKey>
+                    <controlSrc>DesktopModules/MegaForm/Views/Settings.ascx</controlSrc>
+                    <supportsPartialRendering>False</supportsPartialRendering>
+                    <controlTitle>MegaForm Settings</controlTitle>
+                    <controlType>Admin</controlType>
+                  </moduleControl>
+                  <moduleControl>
+                    <controlKey>FormList</controlKey>
+                    <controlSrc>DesktopModules/MegaForm/Views/FormList.ascx</controlSrc>
+                    <supportsPartialRendering>False</supportsPartialRendering>
+                    <controlTitle>My Forms</controlTitle>
+                    <controlType>Edit</controlType>
+                  </moduleControl>
+                </moduleControls>
+              </moduleDefinition>
+            </moduleDefinitions>
+          </desktopModule>
+        </component>
+        <component type="Script">
+          <scripts>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.04.00.SqlDataProvider</name>
+              <version>01.04.00</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.05.00.SqlDataProvider</name>
+              <version>01.05.00</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.00.SqlDataProvider</name>
+              <version>01.06.00</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.01.SqlDataProvider</name>
+              <version>01.06.01</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.02.SqlDataProvider</name>
+              <version>01.06.02</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.03.SqlDataProvider</name>
+              <version>01.06.03</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.04.SqlDataProvider</name>
+              <version>01.06.04</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.05.SqlDataProvider</name>
+              <version>01.06.05</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.06.SqlDataProvider</name>
+              <version>01.06.06</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.07.SqlDataProvider</name>
+              <version>01.06.07</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.08.SqlDataProvider</name>
+              <version>01.06.08</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.09.SqlDataProvider</name>
+              <version>01.06.09</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.14.SqlDataProvider</name>
+              <version>01.06.14</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.15.SqlDataProvider</name>
+              <version>01.06.15</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.16.SqlDataProvider</name>
+              <version>01.06.16</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.17.SqlDataProvider</name>
+              <version>01.06.17</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.18.SqlDataProvider</name>
+              <version>01.06.18</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.19.SqlDataProvider</name>
+              <version>01.06.19</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.20.SqlDataProvider</name>
+              <version>01.06.20</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.21.SqlDataProvider</name>
+              <version>01.06.21</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.22.SqlDataProvider</name>
+              <version>01.06.22</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.23.SqlDataProvider</name>
+              <version>01.06.23</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.24.SqlDataProvider</name>
+              <version>01.06.24</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.25.SqlDataProvider</name>
+              <version>01.06.25</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.26.SqlDataProvider</name>
+              <version>01.06.26</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.27.SqlDataProvider</name>
+              <version>01.06.27</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.28.SqlDataProvider</name>
+              <version>01.06.28</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.29.SqlDataProvider</name>
+              <version>01.06.29</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.30.SqlDataProvider</name>
+              <version>01.06.30</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.31.SqlDataProvider</name>
+              <version>01.06.31</version>
+            </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.32.SqlDataProvider</name>
+              <version>01.06.32</version>
+            </script>
+            <script type="UnInstall">
+              <path>SqlScripts</path>
+              <name>Uninstall.SqlDataProvider</name>
+              <version>01.06.32</version>
+            </script>
+          </scripts>
+        </component>
+        <component type="Assembly">
+          <assemblies>
+            <assembly>
+              <name>MegaForm.DNN.dll</name>
+              <path>bin</path>
+            </assembly>
+            <assembly>
+              <name>MegaForm.Core.dll</name>
+              <path>bin</path>
+            </assembly>
+            <!-- [2026-06-23] MegaForm.Sdk.dll was missing from the manifest, so every
+                 DNN install/upgrade shipped without it. DnnServiceLocator..ctor() loads
+                 the SDK, so the FIRST code to touch DnnServiceLocator.Instance (FormsOverview,
+                 Reports/Backfill, scheduler tasks like BlogScheduledPublishTask) threw
+                 "Could not load file or assembly 'MegaForm.Sdk'". Bundling it here fixes
+                 the gap at the source. -->
+            <assembly>
+              <name>MegaForm.Sdk.dll</name>
+              <path>bin</path>
+            </assembly>
+          </assemblies>
+        </component>
+        <component type="ResourceFile">
+          <resourceFiles>
+            <basePath>DesktopModules/MegaForm</basePath>
+            <resourceFile>
+              <name>Resources.zip</name>
+            </resourceFile>
+          </resourceFiles>
+        </component>
+        <component type="File">
+          <files>
+            <file><name>icon.gif</name></file>
+          </files>
+        </component>
+      </components>
+    </package>
+  </packages>
+</dotnetnuke>
