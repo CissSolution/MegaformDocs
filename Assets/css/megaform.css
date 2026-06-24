@@ -558,11 +558,16 @@
    Affects forms with custom themes (Wedding/Premium/etc) — without this
    override they show a heavy white shadow card wrapping the styled inner
    card → double-card "nặng nề" border at the corners. */
-.mf-form-wrapper[class*="mf-theme-"]:not(.mf-theme-default) .mfp,
-.mf-form-wrapper[class*="mf-theme-"]:not(.mf-theme-default) > .mf-form,
-.mf-form-wrapper[class*="mf-theme-"]:not(.mf-theme-default) > .mf-form-inner,
-.mf-form-wrapper[class*="mf-theme-"]:not(.mf-theme-default) .mf-form,
-.mf-form-wrapper[class*="mf-theme-"]:not(.mf-theme-default) .mf-form-inner,
+/* [StandardCardFix v20260624-B264] Gate the mf-theme-* arm with .mf-custom-shell-mode so it strips
+   ONLY when an inner .mfp card exists (premium/custom-shell). A STANDARD form that merely picks a
+   theme preset carries mf-theme-* but NOT mf-custom-shell-mode and has NO inner .mfp — without this
+   gate its outer card was wrongly stripped → bare/borderless flat form. The data-mf-has-custom-html
+   arm below is left untouched (premium/custom-HTML forms keep their card stripped, no double-card). */
+.mf-form-wrapper[class*="mf-theme-"]:not(.mf-theme-default).mf-custom-shell-mode .mfp,
+.mf-form-wrapper[class*="mf-theme-"]:not(.mf-theme-default).mf-custom-shell-mode > .mf-form,
+.mf-form-wrapper[class*="mf-theme-"]:not(.mf-theme-default).mf-custom-shell-mode > .mf-form-inner,
+.mf-form-wrapper[class*="mf-theme-"]:not(.mf-theme-default).mf-custom-shell-mode .mf-form,
+.mf-form-wrapper[class*="mf-theme-"]:not(.mf-theme-default).mf-custom-shell-mode .mf-form-inner,
 .mf-form-wrapper[data-mf-has-custom-html] .mfp,
 .mf-form-wrapper[data-mf-has-custom-html] > .mf-form,
 .mf-form-wrapper[data-mf-has-custom-html] > .mf-form-inner,
@@ -740,7 +745,7 @@
        shadows + 28x32 padding. Now matches the lighter form-card defaults: 8px
        radius, single barely-visible shadow, hairline #f1f5f9 border, 24x28 padding. */
     border-radius: 8px;
-    border: 1px solid #f1f5f9;
+    border: 1px solid #e2e8f0;   /* [StandardCardFix B264] was #f1f5f9 (near-invisible hairline) → #e2e8f0 light-slate so the standard card edge is visible, matching the reference + the input borders (--mf-input-border) */
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     padding: 24px 28px;
     /* [FormWidthFix v20260602-B36] was hardcoded `max-width: 760px` — that ignored
