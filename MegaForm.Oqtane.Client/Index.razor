@@ -1689,7 +1689,7 @@ private string _listTemplate = string.Empty;
                 // the BPMN map silently falls back to an empty preview.
                 var form = await MegaFormService.GetFormAsync(_formId, ModuleState?.ModuleId ?? 0, GetCurrentSiteId());
                 _preloadedForm = form;
-                _isPublished = string.Equals(form?.Status, "Published", StringComparison.OrdinalIgnoreCase);
+                _isPublished = form != null; // [B267] draft/published gate REMOVED — every existing form is viewable; only the orthogonal "locked" concept gates management
                 _initialInlineCss = form?.InitialInlineCss ?? string.Empty;
                 LoadWorkflowPreview(form?.WorkflowJson);
                 // Static render has no Blazor circuit for this module, so field-level SSR is safe
@@ -1739,7 +1739,7 @@ private string _listTemplate = string.Empty;
                     }
                     catch { /* non-fatal */ }
                 }
-                if (match != null && string.Equals(match.Status, "Published", StringComparison.OrdinalIgnoreCase))
+                if (match != null) // [B267] any existing form is viewable (draft/published gate removed)
                 {
                     _isPublished = true;
                 }

@@ -1349,7 +1349,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         public IActionResult Schema(int formId)
         {
             var form = _formRepo.GetForm(formId);
-            if (form == null || !string.Equals(form.Status, "Published", StringComparison.OrdinalIgnoreCase))
+            if (form == null) // [B267] draft/published gate removed — serve schema for any existing form
                 return NotFound();
 
             var resolvedRenderModel = RenderModelResolver.Resolve(form.SchemaJson, form.SettingsJson, form.SubmitButtonText, form.SuccessMessage, form.RedirectUrl);
@@ -1478,8 +1478,8 @@ namespace MegaForm.Oqtane.Server.Controllers
                 return BadRequest(new { error = "formId and fieldKey are required" });
 
             var form = _formRepo.GetForm(formId);
-            if (form == null || !string.Equals(form.Status, "Published", StringComparison.OrdinalIgnoreCase))
-                return NotFound(new { error = "Published form not found" });
+            if (form == null) // [B267] draft/published gate removed — allow uploads for any existing form
+                return NotFound(new { error = "Form not found" });
             if (form.RequireAuth && !(User?.Identity?.IsAuthenticated ?? false))
                 return Unauthorized(new { error = "Authentication required for uploads" });
 

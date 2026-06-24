@@ -100,13 +100,9 @@ namespace MegaForm.Core.Services
                 return result;
             }
 
-            // 2. Check form status
-            if (!string.Equals(form.Status, "Published", StringComparison.OrdinalIgnoreCase))
-            {
-                result.Success = false;
-                result.ErrorMessage = _loc.L("form.not_published");
-                return result;
-            }
+            // 2. [B267] Form-status (draft/published) gate REMOVED — every form is submittable.
+            //    Access is now gated only by the orthogonal "locked" concept + per-form permissions
+            //    (RequireAuth) + expiration below.
 
             // 3. Check expiration
             if (form.ExpiresOnUtc.HasValue && form.ExpiresOnUtc.Value < DateTime.UtcNow)

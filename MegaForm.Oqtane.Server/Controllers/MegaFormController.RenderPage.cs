@@ -41,7 +41,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         public IActionResult RenderPage(int formId)
         {
             var form = _formRepo.GetForm(formId);
-            if (form == null || !string.Equals(form.Status, "Published", StringComparison.OrdinalIgnoreCase))
+            if (form == null) // [B267] draft/published gate removed — render any existing form
                 return NotFound();
 
             var resolved = RenderModelResolver.Resolve(form.SchemaJson, form.SettingsJson, form.SubmitButtonText, form.SuccessMessage, form.RedirectUrl);
