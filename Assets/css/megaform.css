@@ -590,6 +590,15 @@
     background: transparent;
 }
 
+/* [PureGridCardBorder v20260624-B265] The pure-grid premium theme paints its .mfp-card with only a
+   soft shadow (no border), so on its near-white page the card reads as borderless/flat. Add a 1px
+   edge using the theme's OWN --mfp-border token (slate fallback) so the card is clearly delineated
+   like the reference. Scoped to pure-grid ONLY — other premium themes (nature, fiesta-coral, etc.)
+   keep their own card design. The theme's customCss .mfp-card sets no border, so this simply adds one. */
+.mf-form-wrapper.mf-theme-pure-grid-premium .mfp-card {
+    border: 1px solid var(--mfp-border, #e2e8f0);
+}
+
 /* ============================================================
    HEADER
    ============================================================ */
