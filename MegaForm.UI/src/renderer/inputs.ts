@@ -562,6 +562,9 @@ export function renderInput(field: FormField, formId: number, formData: Record<s
       // Address is a multi-row grid → default to 2-axis arrow nav ('both'); single-row
       // composites (phone/name) default to horizontal ← →.
       const cOrient = (field as any).widgetProps?.orient || (cPreset === 'address' ? 'both' : 'horizontal');
+      // [B268] Sub-label position: 'bottom' (default, hint below the box) | 'top' (label above the
+      // box) | 'hidden' (placeholder only). Authorable in the Composite (Input) Designer.
+      const cLabelPos = String((field as any).widgetProps?.labelPos || 'bottom');
       // [Composite v1.2] Template-based layout: a part with `hidden` is omitted; parts
       // are grouped into `.mf-composite-row` by their `row` index (default 0 = single
       // row). The roving tabindex is keyed on the GLOBAL visible-part index (gi).
@@ -604,6 +607,10 @@ export function renderInput(field: FormField, formId: number, formData: Record<s
             // the ISO-2 code (US/GB). The part opts into iso2 via valueMode:'iso2'.
             value: pv || p.def || '',
             valueMode: (p as any).valueMode === 'iso2' ? 'iso2' : 'dial',
+            // [B268] Compact flag-only trigger for phone (dial mode) — hide the redundant "+1" chip;
+            // the dial code is still the stored value + shown in the open list. Address (iso2) keeps
+            // its country-code chip. Per-part override via p.showCode.
+            showCode: (p as any).showCode || ((p as any).valueMode === 'iso2' ? 'iso2' : 'none'),
             partKey: p.key,
             ariaLabel: al,
             tabIndex: cNav === 'roving' ? (gi === 0 ? 0 : -1) : null,
@@ -636,16 +643,18 @@ export function renderInput(field: FormField, formId: number, formData: Record<s
             : '';
           control = `<input type="${inputTypeAttr(p.type || 'text')}" class="mf-input mf-composite-part" data-mf-part="${esc(p.key)}" aria-label="${esc(al)}"${tabIdx}${reqAttr} placeholder="${esc(p.placeholder || p.label || '')}" value="${esc(pv)}"${ml}${maskAttr}${imAttr}${numAttr}${ro} style="${partStyle}">`;
         }
-        // Sub-label (Gravity-style hint under the part). A required part appends a red *.
+        // Sub-label (Gravity-style hint). Positioned per cLabelPos: 'top' (above), 'bottom' (default,
+        // below) or 'hidden'. A required part appends a red *.
         const subTxt = (p.sublabel != null && String(p.sublabel) !== '') ? String(p.sublabel) : '';
-        const subHtml = (subTxt || p.required)
-          ? `<small class="mf-composite-sub">${esc(subTxt)}${p.required ? ' <span class="mf-composite-req" aria-hidden="true">*</span>' : ''}</small>`
+        const subHtml = (cLabelPos !== 'hidden' && (subTxt || p.required))
+          ? `<small class="mf-composite-sub mf-composite-sub--${cLabelPos === 'top' ? 'top' : 'bottom'}">${esc(subTxt)}${p.required ? ' <span class="mf-composite-req" aria-hidden="true">*</span>' : ''}</small>`
           : '';
         // [v20260616] Literal separator OUTSIDE the box (e.g. DOB "DD / MMMM / YYYY").
         const sepHtml = p.sep
           ? `<span class="mf-composite-sep" aria-hidden="true" style="align-self:flex-start;display:flex;align-items:center;height:38px;padding:0 2px;color:#64748b;font-weight:700;">${esc(String(p.sep))}</span>`
           : '';
-        return `<div class="mf-composite-cell" style="${cellStyle(p)}">${control}${subHtml}</div>${sepHtml}`;
+        const cellInner = cLabelPos === 'top' ? `${subHtml}${control}` : `${control}${subHtml}`;
+        return `<div class="mf-composite-cell" style="${cellStyle(p)}">${cellInner}</div>${sepHtml}`;
       };
       let gi = 0;
       const rowOrder: number[] = [];

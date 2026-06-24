@@ -421,6 +421,7 @@ namespace MegaForm.Core.Services
 
             var nav = WidgetStringProp(field, "nav") ?? "roving";
             var orient = WidgetStringProp(field, "orient") ?? (string.Equals(preset, "address", StringComparison.OrdinalIgnoreCase) ? "both" : "horizontal");
+            var labelPos = WidgetStringProp(field, "labelPos") ?? "bottom"; // [B268] composite sub-label position (top/bottom/hidden)
             var isScalarSingle = IsScalarCompositePreset(preset) && parts.Count == 1;
 
             var rowOrder = new List<int>();
@@ -435,7 +436,7 @@ namespace MegaForm.Core.Services
                     rowMap[row] = rowParts;
                     rowOrder.Add(row);
                 }
-                rowParts.Add(RenderCompositePart(part, val, nav, visibleIndex, isScalarSingle, ro));
+                rowParts.Add(RenderCompositePart(part, val, nav, visibleIndex, isScalarSingle, ro, labelPos));
                 visibleIndex++;
             }
 
@@ -453,7 +454,7 @@ namespace MegaForm.Core.Services
                 + "</div><input type=\"hidden\" name=\"" + Esc(name) + "\" id=\"" + Esc(id) + "\" value=\"" + Esc(val) + "\">";
         }
 
-        private static string RenderCompositePart(CompositePart part, string val, string nav, int visibleIndex, bool isScalarSingle, string ro)
+        private static string RenderCompositePart(CompositePart part, string val, string nav, int visibleIndex, bool isScalarSingle, string ro, string labelPos = "bottom")
         {
             var partValue = isScalarSingle
                 ? (val ?? string.Empty)
@@ -507,33 +508,41 @@ namespace MegaForm.Core.Services
                     + ml + maskAttr + inputMode + numAttr + ro + " style=\"" + partStyle + "\">";
             }
 
+            // [B268] Sub-label position per composite labelPos: top (above box) | bottom (default) | hidden.
+            var isTop = string.Equals(labelPos, "top", StringComparison.OrdinalIgnoreCase);
+            var isHidden = string.Equals(labelPos, "hidden", StringComparison.OrdinalIgnoreCase);
             var subText = part.Sublabel ?? string.Empty;
-            var subHtml = (!string.IsNullOrEmpty(subText) || part.Required)
-                ? "<small class=\"mf-composite-sub\">" + Esc(subText) + (part.Required ? " <span class=\"mf-composite-req\" aria-hidden=\"true\">*</span>" : string.Empty) + "</small>"
+            var subHtml = (!isHidden && (!string.IsNullOrEmpty(subText) || part.Required))
+                ? "<small class=\"mf-composite-sub mf-composite-sub--" + (isTop ? "top" : "bottom") + "\">" + Esc(subText) + (part.Required ? " <span class=\"mf-composite-req\" aria-hidden=\"true\">*</span>" : string.Empty) + "</small>"
                 : string.Empty;
             var sepHtml = !string.IsNullOrEmpty(part.Sep)
                 ? "<span class=\"mf-composite-sep\" aria-hidden=\"true\" style=\"align-self:flex-start;display:flex;align-items:center;height:38px;padding:0 2px;color:#64748b;font-weight:700;\">" + Esc(part.Sep) + "</span>"
                 : string.Empty;
 
-            return "<div class=\"mf-composite-cell\" style=\"" + CompositeCellStyle(part) + "\">" + control + subHtml + "</div>" + sepHtml;
+            var cellInner = isTop ? (subHtml + control) : (control + subHtml);
+            return "<div class=\"mf-composite-cell\" style=\"" + CompositeCellStyle(part) + "\">" + cellInner + "</div>" + sepHtml;
         }
 
         private static string RenderCountryPickerControl(CompositePart part, string value, string ariaLabel, string tabIdx, string reqAttr, string ro)
         {
             var valueMode = string.Equals(part.ValueMode, "iso2", StringComparison.OrdinalIgnoreCase) ? "iso2" : "dial";
+            // [B268] Compact flag-only trigger for phone (dial) — hide the redundant "+1" chip; the
+            // dial code stays the stored value + is shown in the open list. Address (iso2) keeps its chip.
+            var showCode = valueMode == "iso2" ? "iso2" : "none";
             var selected = ResolveCountry(value, valueMode);
             var storedVal = valueMode == "iso2" ? selected.Iso2 : selected.Dial;
+            var codeText = showCode == "none" ? string.Empty : (showCode == "iso2" ? selected.Iso2 : selected.Dial);
             var allowedAttr = part.Allowed != null && part.Allowed.Count > 0
                 ? " data-mf-ccp-allowed=\"" + Esc(string.Join(",", part.Allowed.Select(s => (s ?? string.Empty).ToUpperInvariant()))) + "\""
                 : string.Empty;
             var disabled = ro.IndexOf("disabled", StringComparison.OrdinalIgnoreCase) >= 0 ? " disabled" : string.Empty;
 
-            return "<div class=\"mf-ccp\" data-mf-ccp data-value-mode=\"" + valueMode + "\" data-show-code=\"" + valueMode + "\"" + allowedAttr + ">"
+            return "<div class=\"mf-ccp\" data-mf-ccp data-value-mode=\"" + valueMode + "\" data-show-code=\"" + showCode + "\"" + allowedAttr + ">"
                 + "<button type=\"button\" class=\"mf-ccp-trigger mf-input mf-composite-part\" data-mf-part=\"" + Esc(part.Key)
                 + "\" value=\"" + Esc(storedVal) + "\" aria-haspopup=\"listbox\" aria-expanded=\"false\" aria-label=\"" + Esc(ariaLabel)
                 + "\"" + tabIdx + reqAttr + disabled + ">"
                 + "<span class=\"mf-ccp-flag\">" + FlagHtml(selected) + "</span>"
-                + "<span class=\"mf-ccp-code\">" + Esc(storedVal) + "</span>"
+                + (showCode == "none" ? string.Empty : "<span class=\"mf-ccp-code\">" + Esc(codeText) + "</span>")
                 + "<span class=\"mf-ccp-chev\" aria-hidden=\"true\"></span></button>"
                 + "<div class=\"mf-ccp-dropdown\" role=\"listbox\" aria-label=\"" + Esc(ariaLabel) + "\" hidden>"
                 + "<div class=\"mf-ccp-search-wrap\"><input type=\"text\" class=\"mf-ccp-search\" placeholder=\"Search country or dial code\" autocomplete=\"off\"></div>"

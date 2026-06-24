@@ -2707,6 +2707,12 @@
     color: #64748b;
     margin-top: 2px;
 }
+/* [B268] Composite part-label position. 'top' renders the sub-label ABOVE the box (labelPos:'top');
+   'bottom' (default) keeps the hint below (base rule above). */
+.mf-composite-sub--top { margin-top: 0; margin-bottom: 4px; font-weight: 600; color: #475569; }
+/* [B268] Flag-only country trigger (showCode:none, e.g. phone) — compact the cell so a lone flag
+   isn't stranded in a wide box (caps the inline ~116px flex-basis via max-width). */
+.mf-composite-cell:has(.mf-ccp[data-show-code="none"]) { max-width: 70px; }
 .mf-composite-req {
     color: #dc2626;
     font-weight: 700;

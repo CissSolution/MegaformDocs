@@ -222,8 +222,8 @@ export interface CountryPickerOpts {
   value?: string;
   /** what the part stores in its `value` (and combine sees). Default 'dial'. */
   valueMode?: 'dial' | 'iso2';
-  /** what the trigger chip shows. Default = valueMode. */
-  showCode?: 'dial' | 'iso2';
+  /** what the trigger chip shows. Default = valueMode. 'none' = flag-only (compact). */
+  showCode?: 'dial' | 'iso2' | 'none';
   /** data-mf-part key. Default 'country'. */
   partKey?: string;
   /** accessible name for the trigger button */
@@ -243,14 +243,14 @@ export interface CountryPickerOpts {
  *  The <button> carries data-mf-part + value so bindComposites reads it directly. */
 export function renderCountryPickerControl(opts: CountryPickerOpts): string {
   const valueMode = opts.valueMode === 'iso2' ? 'iso2' : 'dial';
-  const showCode = opts.showCode === 'iso2' ? 'iso2' : (opts.showCode === 'dial' ? 'dial' : valueMode);
+  const showCode = opts.showCode === 'none' ? 'none' : (opts.showCode === 'iso2' ? 'iso2' : (opts.showCode === 'dial' ? 'dial' : valueMode));
   const partKey = opts.partKey || 'country';
   const list = (opts.allowed && opts.allowed.length)
     ? COUNTRIES.filter((c) => opts.allowed!.indexOf(c.iso2) >= 0)
     : COUNTRIES;
   const selected = resolveCountry(opts.value, valueMode);
   const storedVal = valueMode === 'iso2' ? selected.iso2 : selected.dial;
-  const codeText = showCode === 'iso2' ? selected.iso2 : selected.dial;
+  const codeText = showCode === 'none' ? '' : (showCode === 'iso2' ? selected.iso2 : selected.dial);
   const tabAttr = (opts.tabIndex === 0 || opts.tabIndex === -1) ? ' tabindex="' + opts.tabIndex + '"' : '';
   const reqAttr = opts.required ? ' aria-required="true" data-mf-required="1"' : '';
   const dis = opts.readonly ? ' disabled' : '';
@@ -267,7 +267,7 @@ export function renderCountryPickerControl(opts: CountryPickerOpts): string {
       '<button type="button" class="mf-ccp-trigger mf-input mf-composite-part" data-mf-part="' + esc(partKey) + '" value="' + esc(storedVal) + '"' +
         ' aria-haspopup="listbox" aria-expanded="false" aria-label="' + al + '"' + tabAttr + reqAttr + dis + '>' +
         '<span class="mf-ccp-flag">' + flagHtml(selected) + '</span>' +
-        '<span class="mf-ccp-code">' + esc(codeText) + '</span>' +
+        (showCode === 'none' ? '' : '<span class="mf-ccp-code">' + esc(codeText) + '</span>') +
         '<span class="mf-ccp-chev" aria-hidden="true"></span>' +
       '</button>' +
       '<div class="mf-ccp-dropdown" role="listbox" aria-label="' + al + '" hidden>' +

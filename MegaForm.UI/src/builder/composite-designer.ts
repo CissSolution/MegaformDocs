@@ -260,6 +260,7 @@ import { COMPOSITE_PRESETS, COMPOSITE_DIAL_CODES, compositePresetKeys, composite
     if (typeof wp.preset !== 'string') wp.preset = 'name';
     if (typeof wp.nav !== 'string') wp.nav = 'roving';
     if (typeof wp.orient !== 'string') wp.orient = (wp.preset === 'address' ? 'both' : 'horizontal');
+    if (typeof wp.labelPos !== 'string') wp.labelPos = 'bottom';
 
     // Working copy — only written back to wp.parts on an actual edit (so opening +
     // closing without changes never mutates the schema).
@@ -369,6 +370,12 @@ import { COMPOSITE_PRESETS, COMPOSITE_DIAL_CODES, compositePresetKeys, composite
               '<option value="vertical"' + (wp.orient === 'vertical' ? ' selected' : '') + '>Vertical &uarr; &darr;</option>' +
               '<option value="both"' + (wp.orient === 'both' ? ' selected' : '') + '>Both (grid)</option>' +
             '</select></div>' +
+          '<div class="mf-comp-des-lb-cell"><label>Part labels</label>' +
+            '<select class="mf-comp-des-sel" data-lb="labelPos">' +
+              '<option value="bottom"' + (wp.labelPos !== 'top' && wp.labelPos !== 'hidden' ? ' selected' : '') + '>Below the box</option>' +
+              '<option value="top"' + (wp.labelPos === 'top' ? ' selected' : '') + '>Above the box</option>' +
+              '<option value="hidden"' + (wp.labelPos === 'hidden' ? ' selected' : '') + '>Hidden (placeholder only)</option>' +
+            '</select></div>' +
         '</div>';
 
       Array.prototype.forEach.call(layoutBar.querySelectorAll('[data-lb]'), function (sel: any) {
@@ -390,6 +397,8 @@ import { COMPOSITE_PRESETS, COMPOSITE_DIAL_CODES, compositePresetKeys, composite
             wp.nav = sel.value; B.state.isDirty = true; try { B.callModule('canvas', 'render'); } catch (_e) {}
           } else if (key === 'orient') {
             wp.orient = sel.value; B.state.isDirty = true; try { B.callModule('canvas', 'render'); } catch (_e) {}
+          } else if (key === 'labelPos') {
+            wp.labelPos = sel.value; B.state.isDirty = true; renderPreview(); try { B.callModule('canvas', 'render'); } catch (_e) {}
           }
         });
       });
@@ -604,7 +613,7 @@ import { COMPOSITE_PRESETS, COMPOSITE_DIAL_CODES, compositePresetKeys, composite
         var ctrl;
         var st = 'width:100%;min-width:0;';
         if (p.type === 'country') {
-          ctrl = '<button type="button" class="mf-input" style="' + st + 'text-align:left;">🇺🇸 +1</button>';
+          ctrl = '<button type="button" class="mf-input" style="' + st + 'text-align:left;">🇺🇸</button>'; // [B268] flag-only compact trigger
         } else if (p.type === 'select') {
           var opts = (Array.isArray(p.options) ? p.options : []).map(function (o: any) { var ov = o && o.value != null ? o.value : o; var ol = o && o.label != null ? o.label : ov; return '<option value="' + escA(ov) + '">' + esc(ol) + '</option>'; }).join('');
           ctrl = '<select class="mf-input" style="' + st + '">' + opts + '</select>';
@@ -613,9 +622,11 @@ import { COMPOSITE_PRESETS, COMPOSITE_DIAL_CODES, compositePresetKeys, composite
         } else {
           ctrl = '<input type="' + inputType(p.type || 'text') + '" class="mf-input" style="' + st + '" placeholder="' + escA(p.placeholder || '') + '" value="' + escA(p.def || '') + '">';
         }
-        var sub = (p.sublabel || p.required) ? '<small class="mf-composite-sub">' + esc(p.sublabel || '') + (p.required ? ' <span class="mf-composite-req">*</span>' : '') + '</small>' : '';
+        var lp = String(wp.labelPos || 'bottom');
+        var sub = (lp !== 'hidden' && (p.sublabel || p.required)) ? '<small class="mf-composite-sub mf-composite-sub--' + (lp === 'top' ? 'top' : 'bottom') + '">' + esc(p.sublabel || '') + (p.required ? ' <span class="mf-composite-req">*</span>' : '') + '</small>' : '';
         var sepHtml = p.sep ? '<span class="mf-composite-sep" aria-hidden="true" style="align-self:flex-start;display:flex;align-items:center;height:38px;padding:0 2px;color:#64748b;font-weight:700;">' + esc(String(p.sep)) + '</span>' : '';
-        return '<div class="mf-composite-cell" style="' + cellStyle(p) + '">' + ctrl + sub + '</div>' + sepHtml;
+        var inner = lp === 'top' ? (sub + ctrl) : (ctrl + sub);
+        return '<div class="mf-composite-cell" style="' + cellStyle(p) + '">' + inner + '</div>' + sepHtml;
       }
 
       var rows = order.map(function (r) { return '<div class="mf-composite-row" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;">' + groups[r].map(cell).join('') + '</div>'; }).join('');
