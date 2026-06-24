@@ -20,6 +20,7 @@
  */
 
 import { logFeedback, pickRuleId } from './feedback-log';
+import { insertIntoCardBody } from '@shared/custom-html-insert';
 
 // [v20260601-B27] Platform-aware Subform endpoint resolver.
 // DNN:    /DesktopModules/MegaForm/API/Subform/<path>
@@ -1227,7 +1228,9 @@ function opReplaceFormSchema(op: Op): OpResult {
         const key = f.key;
         return `\n<!-- [mfai auto-sync field:${key}] -->\n<div class="mf-field-group" data-key="${key}">{{field:${key}}}</div>`;
       }).join('');
-      nextSettings.customHtml = customHtmlAfterMerge + appendBlocks;
+      // [B266] Insert INSIDE the card body (before actions/submit) instead of appending at the END
+      // of customHtml, which placed the synced field outside the .mfp card.
+      nextSettings.customHtml = insertIntoCardBody(customHtmlAfterMerge, appendBlocks);
       (op as any).__autoSyncFields = missingFields.map((f: any) => f.key);
     }
   }

@@ -22,6 +22,7 @@
 
 import { t as i18nT, getLocale as i18nGetLocale } from '@i18n';
 import { ensureDbDialect } from '@shared/ddl-dialect';
+import { insertIntoCardBody } from '@shared/custom-html-insert';
 
 // [i18n 2026-06-10] The Create-with-AI modal was a mix of hardcoded Vietnamese +
 // English. T() translates the modal chrome (uses the dashboard bundle's embedded
@@ -1339,6 +1340,11 @@ async function callAI(userText: string, history: any[], attachments?: any[], sel
     normalizeCompositeFieldsDeep(obj.schema, 0);
     repairCustomHtmlPlaceholders(obj.schema);
     normalizeFormChrome(obj.schema, userText);
+    // [B266] Default AI output to a full-width pure-grid CUSTOM-SHELL (replaces the old compact-button
+    // standard layout). Deterministic + var-driven so builder theme presets recolor it; safe-fallback
+    // to the standard schema on any error; skips premium custom-shell (customHtml already set) + wizards.
+    applyDefaultPureGridShell(obj.schema);
+    repairCustomHtmlPlaceholders(obj.schema);
     // [TASK A] Deterministic SQL proof: cheap models hallucinate table names.
     // Validate every SQL binding against the REAL schema + auto-correct via
     // DryRunValidate suggestions, so SQL-bound forms don't silently break.
@@ -1804,21 +1810,76 @@ function repairCustomHtmlPlaceholders(schema: any): void {
     if (missing.length === 0) return;
     console.warn('[SPLIT-001 auto-repair] customHtml missing placeholders for fields:', missing.join(', '));
     const tokens = missing.map((k) => '{{field:' + k + '}}').join('');
-    let patched: string;
-    const submitIdx = html.lastIndexOf('{{form:submit}}');
-    if (submitIdx >= 0) {
-      // Inject just before {{form:submit}}.
-      patched = html.slice(0, submitIdx) + tokens + html.slice(submitIdx);
-    } else {
-      // Inject before the LAST </div> closing tag of the mfp wrapper.
-      const lastClose = html.lastIndexOf('</div>');
-      patched = lastClose >= 0
-        ? html.slice(0, lastClose) + tokens + html.slice(lastClose)
-        : html + tokens;
-    }
+    // [B266] Insert the missing tokens INSIDE the card (before the actions/submit/{{form:submit}}
+    // area) via the shared inserter, replacing the brittle {{form:submit}}-or-final-</div> logic
+    // that ejected fields outside the .mfp card when no {{form:submit}} token was present.
+    const patched = insertIntoCardBody(html, tokens);
     settings.customHtml = patched;
     (schema as any).__autoRepairedFields = missing;
   } catch { /* never fail the parse for a repair attempt */ }
+}
+
+// [B266] Var-driven pure-grid shell CSS. Styles ONLY the shell chrome (card / header / sections /
+// submit) via var(--mf-*) tokens and leaves the field INPUTS to megaform.css's --mf-* consumers —
+// so builder theme presets (which write --mf-*) fully recolor the form, with no hardcoded hex to
+// fight (the limitation documented in Docs/ANALYSIS_Premium_Preset_CSS_Limitation.md).
+const PURE_GRID_SHELL_CSS =
+  '.mfp.mfp-pure-grid{width:100%;max-width:100%;font-family:var(--mf-font-body,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif);color:var(--mf-text,#1a1a1a)}' +
+  '.mfp.mfp-pure-grid .mfp-container{max-width:var(--mf-form-max-width,720px);width:100%;margin:0 auto}' +
+  '.mfp.mfp-pure-grid .mfp-card{background:var(--mf-card-bg,#ffffff);border:1px solid var(--mf-input-border-color,#e2e8f0);border-radius:var(--mf-card-radius,12px);box-shadow:var(--mf-card-shadow,0 1px 3px rgba(0,0,0,.06));overflow:hidden}' +
+  '.mfp.mfp-pure-grid .mfp-card-header{padding:26px 32px 4px;text-align:center}' +
+  '.mfp.mfp-pure-grid .mfp-form-title{font-size:28px;font-weight:700;color:var(--mf-text,#1a1a1a);margin:0 0 8px}' +
+  '.mfp.mfp-pure-grid .mfp-form-desc{font-size:15px;color:var(--mf-text-muted,#6b7280);margin:0}' +
+  '.mfp.mfp-pure-grid .mfp-card-body{padding:22px 32px 28px;display:flex;flex-direction:column;gap:16px}' +
+  '.mfp.mfp-pure-grid .mfp-section{display:flex;flex-direction:column;gap:14px}' +
+  '.mfp.mfp-pure-grid .mfp-section-label{font-size:12px;font-weight:600;color:var(--mf-text-muted,#5a5a5a);text-transform:uppercase;letter-spacing:.08em;padding-bottom:8px;border-bottom:1px solid var(--mf-input-border-color,#e2e8f0);margin-bottom:2px}' +
+  '.mfp.mfp-pure-grid .mfp-actions{margin-top:6px}' +
+  '.mfp.mfp-pure-grid .mfp-submit{width:100%;padding:14px 28px;font-size:16px;font-weight:600;color:var(--mf-btn-fg,#ffffff);background:var(--mf-primary,#4a90d9);border:none;border-radius:var(--mf-input-radius,10px);cursor:pointer;margin-top:4px;transition:filter .15s}' +
+  '.mfp.mfp-pure-grid .mfp-submit:hover{filter:brightness(0.94)}' +
+  '@media(max-width:640px){.mfp.mfp-pure-grid .mfp-card-header,.mfp.mfp-pure-grid .mfp-card-body{padding-left:20px;padding-right:20px}}';
+
+// [B266] Wrap a STANDARD AI schema (no customHtml) into a full-width pure-grid CUSTOM-SHELL so the AI
+// default produces the kept "full-width custom-shell" form type instead of the compact-button
+// standard layout. Deterministic (the renderer substitutes {{field:key}} per field) + var-driven
+// (PURE_GRID_SHELL_CSS) so presets recolor it. No-op for premium custom-shell (customHtml present),
+// wizards (multiPage / pageBreak), or empty schemas. Any error → leaves the standard schema intact.
+function applyDefaultPureGridShell(schema: any): void {
+  try {
+    if (!schema || typeof schema !== 'object') return;
+    const settings = schema.settings || (schema.settings = {});
+    if (String(settings.customHtml || settings.CustomHtml || '').trim()) return; // respect premium output
+    if (settings.multiPage === true || settings.MultiPage === true) return;       // wizard ≠ custom-shell
+    const fields = Array.isArray(schema.fields) ? schema.fields : [];
+    if (!fields.length) return;
+    if (fields.some((f: any) => f && f.properties && f.properties.pageBreak === true)) return; // wizard
+
+    const esc = (s: any) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    let body = '';
+    let inSection = false;
+    fields.forEach((f: any) => {
+      if (!f || !f.key) return;
+      const type = String(f.type || '');
+      if (type === 'Section') {
+        if (inSection) body += '</div>';
+        body += '<div class="mfp-section"><div class="mfp-section-label">' + esc(f.label || '') + '</div>';
+        inSection = true;
+        return;
+      }
+      if (type === 'Hidden') return; // the renderer appends hidden inputs itself
+      body += '{{field:' + f.key + '}}'; // Row / Composite / plain — renderer expands each token
+    });
+    if (inSection) body += '</div>';
+
+    settings.customHtml =
+      '<div class="mfp mfp-pure-grid"><div class="mfp-container"><div class="mfp-card">' +
+      '<div class="mfp-card-header"><h1 class="mfp-form-title">{{form:title}}</h1><p class="mfp-form-desc">{{form:description}}</p></div>' +
+      '<div class="mfp-card-body">' + body +
+      '<div class="mfp-actions"><button type="submit" class="mfp-submit">{{form:submit}}</button></div>' +
+      '</div></div></div></div>';
+    settings.customCss = PURE_GRID_SHELL_CSS;
+    settings.theme = 'pure-grid-premium'; // gives the B265 card border + the --mf-*→--mfp-* preset bridge
+    (schema as any).__defaultedPureGrid = true;
+  } catch { /* on any error leave the schema as a standard form (safe fallback) */ }
 }
 
 // ─── Save + navigate ──────────────────────────────────────────────────────

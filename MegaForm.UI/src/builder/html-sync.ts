@@ -1,4 +1,5 @@
 import { MegaFormBuilder } from './core';
+import { insertIntoCardBody } from '@shared/custom-html-insert';
 
 (function () {
     'use strict';
@@ -198,19 +199,13 @@ import { MegaFormBuilder } from './core';
         }
     }
 
+    // [B266] Delegate to the shared, quote-agnostic, shell-agnostic inserter so an auto-injected
+    // field token lands INSIDE the card (before the actions/submit area) instead of before the
+    // document-final </div>. The old exact double-quoted anchors never matched single-quoted
+    // template markup (class='mfp-actions'), so the fallback ejected fields outside the .mfp card
+    // (e.g. form 803 "Geolocation").
     function insertBeforeActions(html: string, tag: string): string {
-        var actionsPatterns = [
-            '<div class="mfp-actions">',
-            '<div class="mfp-actions mf-custom-actions">',
-            '<button type="submit">{{form:submit}}</button>'
-        ];
-        for (var i = 0; i < actionsPatterns.length; i++) {
-            var idx = html.lastIndexOf(actionsPatterns[i]);
-            if (idx !== -1) return html.slice(0, idx) + '      <div class="mf-custom-field">' + tag + '</div>\n' + html.slice(idx);
-        }
-        var closeIdx = html.lastIndexOf('</div>');
-        if (closeIdx !== -1) return html.slice(0, closeIdx) + '      <div class="mf-custom-field">' + tag + '</div>\n' + html.slice(closeIdx);
-        return html + '\n' + tag;
+        return insertIntoCardBody(html, '      <div class="mf-custom-field">' + tag + '</div>\n');
     }
 
     function insertFieldTokenAfterKey(html: string, insertAfterKey: string, tag: string): string {
