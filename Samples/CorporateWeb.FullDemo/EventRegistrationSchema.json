@@ -1,0 +1,122 @@
+{
+  "version": "1.0",
+  "fields": [
+    {
+      "key": "section_info",
+      "type": "Section",
+      "label": "Attendee Information",
+      "htmlContent": "<h3>Attendee Information</h3>",
+      "order": 1,
+      "pageIndex": 0
+    },
+    {
+      "key": "full_name",
+      "type": "Text",
+      "label": "Full Name",
+      "placeholder": "Enter your full name",
+      "required": true,
+      "order": 2,
+      "pageIndex": 0,
+      "width": "100%",
+      "validation": {
+        "minLength": 2,
+        "maxLength": 100
+      }
+    },
+    {
+      "key": "email",
+      "type": "Email",
+      "label": "Email Address",
+      "placeholder": "you@example.com",
+      "required": true,
+      "order": 3,
+      "pageIndex": 0,
+      "width": "50%"
+    },
+    {
+      "key": "company",
+      "type": "Text",
+      "label": "Company",
+      "placeholder": "Your company",
+      "required": true,
+      "order": 4,
+      "pageIndex": 0,
+      "width": "50%"
+    },
+    {
+      "key": "job_title",
+      "type": "Text",
+      "label": "Job Title",
+      "placeholder": "e.g. Product Manager",
+      "required": true,
+      "order": 5,
+      "pageIndex": 0,
+      "width": "50%"
+    },
+    {
+      "key": "session",
+      "type": "Select",
+      "label": "Preferred Session",
+      "required": true,
+      "order": 6,
+      "pageIndex": 0,
+      "width": "50%",
+      "options": [
+        { "label": "-- Select a session --", "value": "", "disabled": true },
+        { "label": "AI & Machine Learning", "value": "ai" },
+        { "label": "Cloud Architecture", "value": "cloud" },
+        { "label": "Security Best Practices", "value": "security" },
+        { "label": "UX / Product Design", "value": "design" }
+      ]
+    },
+    {
+      "key": "dietary",
+      "type": "Select",
+      "label": "Dietary Requirements",
+      "required": false,
+      "order": 7,
+      "pageIndex": 0,
+      "options": [
+        { "label": "None", "value": "none" },
+        { "label": "Vegetarian", "value": "vegetarian" },
+        { "label": "Vegan", "value": "vegan" },
+        { "label": "Gluten-free", "value": "gluten-free" },
+        { "label": "Halal", "value": "halal" }
+      ]
+    },
+    {
+      "key": "comments",
+      "type": "Textarea",
+      "label": "Comments / Questions",
+      "placeholder": "Anything else we should know?",
+      "required": false,
+      "order": 8,
+      "pageIndex": 0,
+      "validation": {
+        "maxLength": 1000
+      }
+    },
+    {
+      "key": "terms",
+      "type": "Checkbox",
+      "label": "I agree to the event terms and conditions",
+      "required": true,
+      "order": 9,
+      "pageIndex": 0
+    }
+  ],
+  "pages": [
+    { "index": 0, "title": "Registration", "description": "Register for the event" }
+  ],
+  "settings": {
+    "multiPage": false,
+    "showProgressBar": false,
+    "showPageTitles": true,
+    "honeypotFieldName": "__mf_hp",
+    "rateLimitWindowMinutes": 5,
+    "rateLimitMaxPerWindow": 5,
+    "enableAnalytics": true,
+    "labelPosition": "top",
+    "formWidth": "700px"
+  }
+}

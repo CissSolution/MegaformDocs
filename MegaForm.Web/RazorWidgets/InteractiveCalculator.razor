@@ -1,0 +1,133 @@
+@*
+    InteractiveCalculator — formula-driven price/total calculator that reads
+    cascading form fields, computes a result, emits {displayValue, rawValue,
+    breakdown} into formData[key] so the value persists across re-renders
+    and lands in the submission JSON.
+
+    Default widgetProps:
+      {
+        "template": "InteractiveCalculator",
+        "parameters": {
+          "basePrice":   1000000,
+          "currency":    "VND",
+          "qtyField":    "item_qty",
+          "discountField": "promo_discount",
+          "taxRate":     0.10
+        },
+        "dependsOn": ["item_qty", "promo_discount"]
+      }
+*@
+@using MegaForm.Razor
+@inherits MfRazorWidgetBase
+@attribute [RazorTemplate("InteractiveCalculator", Category = "Interactive", Icon = "fa-calculator", WhenToUse = "Live quote / total / discount calculator that watches sibling fields and emits a computed value into the submission.", Description = "Live price/total calculator that watches form fields, computes result, emits value into submission.", SupportsSql = false, EmitsValue = true, ValueShape = "object", RequiresInteractive = true)]
+@using MegaForm.Core.Interfaces
+
+@code {
+    [Parameter, RazorParam(Label = "Base price", Group = "Inputs", Widget = "number", Required = true, Order = 10, Placeholder = "1000000")]
+    public decimal BasePrice      { get; set; } = 0m;
+
+    [Parameter, RazorParam(Label = "Currency", Group = "Display", Widget = "text", Order = 20, Placeholder = "VND")]
+    public string  Currency       { get; set; } = "VND";
+
+    [Parameter, RazorParam(Label = "Qty field key", Group = "Watched fields", Widget = "text", Required = true, Order = 30, Placeholder = "item_qty", Hint = "Snake_case key of the sibling form field that holds quantity.")]
+    public string  QtyField       { get; set; } = "item_qty";
+
+    [Parameter, RazorParam(Label = "Discount field key", Group = "Watched fields", Widget = "text", Order = 40, Placeholder = "promo_discount", Hint = "Sibling field key with discount % as decimal (0.10 = 10%).")]
+    public string  DiscountField  { get; set; } = "promo_discount";
+
+    [Parameter, RazorParam(Label = "Tax rate", Group = "Inputs", Widget = "number", Order = 50, Placeholder = "0.10", Hint = "Tax as a decimal (0.10 = 10%).")]
+    public decimal TaxRate        { get; set; } = 0m;
+
+    private decimal _qty;
+    private decimal _discountPct;
+    private decimal _subtotal;
+    private decimal _discountAmount;
+    private decimal _afterDiscount;
+    private decimal _taxAmount;
+    private decimal _total;
+
+    protected override async void OnParametersSet()
+    {
+        // Read cascading field values from form context
+        FormContext.TryGetField<decimal>(QtyField,      out _qty);
+        FormContext.TryGetField<decimal>(DiscountField, out _discountPct);
+
+        _subtotal       = BasePrice * _qty;
+        _discountAmount = _subtotal * _discountPct;
+        _afterDiscount  = _subtotal - _discountAmount;
+        _taxAmount      = _afterDiscount * TaxRate;
+        _total          = _afterDiscount + _taxAmount;
+
+        // Emit value back into formData[widgetKey] so submission JSON
+        // includes it and downstream rules (e.g. "when calc.rawValue >
+        // 5000000 then show vip_section") can test against it via dot-path.
+        await Emitter.EmitValueAsync(new
+        {
+            displayValue = $"{_total:N0} {Currency}",
+            rawValue     = _total,
+            currency     = Currency,
+            breakdown    = new
+            {
+                subtotal       = _subtotal,
+                discountPct    = _discountPct,
+                discountAmount = _discountAmount,
+                afterDiscount  = _afterDiscount,
+                taxRate        = TaxRate,
+                taxAmount      = _taxAmount,
+            }
+        });
+    }
+}
+
+<div class="mf-razor-calc">
+    <div class="mf-razor-calc-row">
+        <span>Subtotal (@_qty.ToString("N0") × @BasePrice.ToString("N0"))</span>
+        <span>@_subtotal.ToString("N0") @Currency</span>
+    </div>
+    @if (_discountPct > 0m)
+    {
+        <div class="mf-razor-calc-row is-discount">
+            <span>Discount (@(_discountPct.ToString("P0")))</span>
+            <span>-@_discountAmount.ToString("N0") @Currency</span>
+        </div>
+    }
+    @if (TaxRate > 0m)
+    {
+        <div class="mf-razor-calc-row">
+            <span>Tax (@TaxRate.ToString("P0"))</span>
+            <span>@_taxAmount.ToString("N0") @Currency</span>
+        </div>
+    }
+    <div class="mf-razor-calc-row mf-razor-calc-total">
+        <span><strong>Total</strong></span>
+        <span><strong>@_total.ToString("N0") @Currency</strong></span>
+    </div>
+</div>
+
+<style>
+    .mf-razor-calc {
+        background: #fafafa;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 14px 18px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+        font-size: 14px;
+    }
+    .mf-razor-calc-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        color: #475569;
+    }
+    .mf-razor-calc-row.is-discount {
+        color: #16a34a;
+    }
+    .mf-razor-calc-row.mf-razor-calc-total {
+        margin-top: 8px;
+        padding-top: 12px;
+        border-top: 1px solid #e2e8f0;
+        font-size: 16px;
+        color: #0f172a;
+    }
+</style>

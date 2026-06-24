@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>MegaForm 01.06.17 — Live demos</title>
+<link rel="stylesheet" href="/DesktopModules/MegaForm/Assets/css/megaform.css?v=20260516-04">
+<link rel="stylesheet" href="/DesktopModules/MegaForm/Assets/css/plugins/megaform-widget-pdf-form.css?v=20260516-04">
+<style>
+  *,*:before,*:after { box-sizing:border-box; }
+  body { font-family:system-ui,'Segoe UI',sans-serif; padding:24px; max-width:1180px; margin:auto; color:#0f172a; background:#f8fafc; }
+  h1 { margin:0 0 4px; font-size:22px; }
+  .lead { color:#64748b; margin:0 0 24px; font-size:13px; }
+  .demo-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+  .demo-tabs button { padding:10px 16px; border:1px solid #cbd5e1; background:#fff; cursor:pointer; border-radius:8px; font-size:13px; font-weight:600; }
+  .demo-tabs button.active { background:#1d4ed8; color:#fff; border-color:#1d4ed8; }
+  .demo-card { background:#fff; padding:24px; border-radius:14px; box-shadow:0 1px 3px rgba(15,23,42,.08); }
+  .demo-card h2 { margin:0 0 6px; font-size:18px; }
+  .demo-card .meta { font-size:12px; color:#64748b; margin-bottom:18px; }
+  .demo-card code { background:#0f172a; color:#e2e8f0; padding:2px 6px; border-radius:4px; font-size:11.5px; }
+  .quick-check { background:#ecfeff; border:1px solid #67e8f9; padding:10px 14px; border-radius:8px; font-size:12px; margin-bottom:14px; }
+  .quick-check b { color:#0e7490; }
+  #verify-output { margin-top:14px; padding:10px; background:#0f172a; color:#bef264; font-family:ui-monospace,monospace; font-size:11.5px; border-radius:6px; max-height:200px; overflow:auto; white-space:pre-wrap; }
+  .hidden { display:none !important; }
+</style>
+</head>
+<body>
+<h1>MegaForm 01.06.17 — Live demos</h1>
+<p class="lead">Site: <code>DNN10322_MegaTest</code> | DB: <code>WINDOWS-11\SQLEXPRESS / DNN10322_MegaTest</code> | host: <code>host / dnnhost</code></p>
+
+<div class="demo-tabs">
+  <button data-demo="cascade" class="active">Cascading SQL dropdown (Form 251)</button>
+  <button data-demo="insert">DB Insert + Cascading (Form 1252)</button>
+  <button data-demo="pdf">PDF Form widget (Form 1253)</button>
+</div>
+
+<section class="demo-card" data-section="cascade">
+  <h2>Form 251 — Cascading SQL dropdown</h2>
+  <p class="meta">Pick year → child dropdowns auto-refetch via <code>?__p__year=2025</code>. Inline SQL <code>:year</code> token + stored proc <code>spMegaForm_Sample_GetEventsByYear</code>.</p>
+  <div class="quick-check"><b>Quick verify:</b> Pick Year and watch the Event dropdowns repopulate. No DB row written (this form does not have Database Insert enabled).</div>
+  <div id="mount-cascade"></div>
+</section>
+
+<section class="demo-card hidden" data-section="insert">
+  <h2>Form 1252 — Cascading + Database Insert</h2>
+  <p class="meta">Same cascading Year → Event + 3 more fields. On submit, runs an INSERT into <code>dbo.MegaForm_Sample_Registrations</code> via the form's <code>settings.databaseInsert.insertSql</code> using <code>:fullName, :email, :year, :event, :ticketType</code> token mappings.</p>
+  <div class="quick-check"><b>Quick verify:</b> Submit the form, then click <em>Show last 5 rows</em> below.</div>
+  <button id="show-rows" type="button" style="padding:6px 12px;border:1px solid #1d4ed8;background:#1d4ed8;color:#fff;border-radius:6px;cursor:pointer;font-size:12px">Show last 5 rows in MegaForm_Sample_Registrations</button>
+  <pre id="verify-output" class="hidden"></pre>
+  <div id="mount-insert" style="margin-top:18px"></div>
+</section>
+
+<section class="demo-card hidden" data-section="pdf">
+  <h2>Form 1253 — PDF Form widget</h2>
+  <p class="meta">Single <code>PdfForm</code> field with an embedded 1-page A4 base64 PDF (~3.4 KB). HTML inputs overlay each box. On submit, <code>pdf-lib</code> flattens the answers onto the PDF and uploads as a file attachment.</p>
+  <div class="quick-check"><b>Quick verify:</b> The PDF should render below in seconds. Fill any box and press <em>Submit PDF</em>; the saved file lands under <code>App_Data/MegaForm/PrivateUploads/form-1253/</code>.</div>
+  <div id="mount-pdf"></div>
+</section>
+
+<script>window.__MF_PLATFORM__ = { platform: 'dnn' };</script>
+<script src="/DesktopModules/MegaForm/Assets/js/megaform-i18n.js"></script>
+<script src="/DesktopModules/MegaForm/Assets/js/megaform-widgets.js"></script>
+<script src="/DesktopModules/MegaForm/Assets/js/plugins/megaform-widget-pdf-form.js"></script>
+<script src="/DesktopModules/MegaForm/Assets/js/megaform-renderer.js"></script>
+<script>
+(function() {
+  var apiBase = '/api/MegaForm/';
+  var loaded = {};
+  function loadForm(formId, mountSel) {
+    if (loaded[formId]) return;
+    loaded[formId] = true;
+    fetch(apiBase + 'Submit/Schema?formId=' + formId, { credentials:'same-origin' })
+      .then(function(r){ return r.json(); })
+      .then(function(form){
+        try { form.schema = JSON.parse(form.schema); } catch(_e) {}
+        var R = window.MegaFormRenderer;
+        if (R && typeof R.init === 'function') {
+          R.init({ formId: form.formId, apiBaseUrl: apiBase, schema: form.schema, submitButtonText: form.submitButtonText || 'Submit', container: mountSel });
+        } else {
+          document.querySelector(mountSel).innerHTML = '<pre style="color:#b91c1c">Renderer global not found.</pre>';
+        }
+      });
+  }
+  // Tabs
+  var tabs = document.querySelectorAll('.demo-tabs button');
+  tabs.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      tabs.forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      var key = btn.getAttribute('data-demo');
+      document.querySelectorAll('section.demo-card').forEach(function(s){
+        s.classList.toggle('hidden', s.getAttribute('data-section') !== key);
+      });
+      if (key === 'cascade') loadForm(251,  '#mount-cascade');
+      if (key === 'insert')  loadForm(1252, '#mount-insert');
+      if (key === 'pdf')     loadForm(1253, '#mount-pdf');
+    });
+  });
+  // Auto-load first tab
+  loadForm(251, '#mount-cascade');
+  // Verify Insert by reading back last 5 rows
+  document.getElementById('show-rows').addEventListener('click', function() {
+    var out = document.getElementById('verify-output');
+    out.classList.remove('hidden');
+    out.textContent = 'Loading...';
+    // Reuse the SQL-options endpoint to read back via a hidden form? Easier: provide explicit message + tell user to check via SQL.
+    // Since no read endpoint ships for arbitrary SELECT, ask the user to check via SSMS, OR we can hit DataRepeater query if configured.
+    out.textContent = 'Run this in SSMS or sqlcmd to verify:\n\n  USE DNN10322_MegaTest;\n  SELECT TOP 5 RegistrationId, FullName, Email, EventYear, EventId, TicketType, RegisteredOnUtc\n  FROM dbo.MegaForm_Sample_Registrations\n  ORDER BY RegistrationId DESC;\n\n(MegaForm does not expose an open SELECT endpoint by design — the SQL options endpoint requires a saved field schema, and DataRepeater requires a widget config. The Insert path itself is verified by submission success + presence of a new row.)';
+  });
+})();
+</script>
+</body>
+</html>

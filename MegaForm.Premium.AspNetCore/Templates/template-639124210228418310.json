@@ -1,0 +1,636 @@
+{
+  "version": "1.0",
+  "slug": "template-639124210228418310",
+  "title": "Style Consultation",
+  "description": "Discover your signature style with our premium collection",
+  "category": "general",
+  "categories": [
+    "general",
+    "premium"
+  ],
+  "icon": "sparkles",
+  "fields": [
+    {
+      "key": "row_name",
+      "type": "Row",
+      "label": "Name",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "first_name",
+              "type": "Text",
+              "label": "First Name",
+              "required": true,
+              "placeholder": "James"
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "last_name",
+              "type": "Text",
+              "label": "Last Name",
+              "required": true,
+              "placeholder": "Anderson"
+            }
+          ]
+        }
+      ],
+      "Columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "first_name",
+              "type": "Text",
+              "label": "First Name",
+              "required": true,
+              "placeholder": "James"
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "last_name",
+              "type": "Text",
+              "label": "Last Name",
+              "required": true,
+              "placeholder": "Anderson"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "email",
+      "type": "Email",
+      "label": "Email Address",
+      "required": true,
+      "placeholder": "james@example.com"
+    },
+    {
+      "key": "phone",
+      "type": "Phone",
+      "label": "Phone Number",
+      "required": false,
+      "placeholder": "+1 (555) 123-4567"
+    },
+    {
+      "key": "row_location",
+      "type": "Row",
+      "label": "Location",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "city",
+              "type": "Text",
+              "label": "City",
+              "required": false,
+              "placeholder": "New York"
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "state",
+              "type": "Select",
+              "label": "State",
+              "required": false,
+              "placeholder": "Select State",
+              "options": [
+                {
+                  "value": "NY",
+                  "label": "New York"
+                },
+                {
+                  "value": "CA",
+                  "label": "California"
+                },
+                {
+                  "value": "TX",
+                  "label": "Texas"
+                },
+                {
+                  "value": "FL",
+                  "label": "Florida"
+                },
+                {
+                  "value": "IL",
+                  "label": "Illinois"
+                },
+                {
+                  "value": "other",
+                  "label": "Other"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "Columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "city",
+              "type": "Text",
+              "label": "City",
+              "required": false,
+              "placeholder": "New York"
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "state",
+              "type": "Select",
+              "label": "State",
+              "required": false,
+              "placeholder": "Select State",
+              "options": [
+                {
+                  "value": "NY",
+                  "label": "New York"
+                },
+                {
+                  "value": "CA",
+                  "label": "California"
+                },
+                {
+                  "value": "TX",
+                  "label": "Texas"
+                },
+                {
+                  "value": "FL",
+                  "label": "Florida"
+                },
+                {
+                  "value": "IL",
+                  "label": "Illinois"
+                },
+                {
+                  "value": "other",
+                  "label": "Other"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "style_preference",
+      "type": "Select",
+      "label": "Style Preference",
+      "required": false,
+      "placeholder": "Select Style",
+      "options": [
+        {
+          "value": "classic",
+          "label": "Classic & Timeless"
+        },
+        {
+          "value": "modern",
+          "label": "Modern Minimal"
+        },
+        {
+          "value": "bold",
+          "label": "Bold & Edgy"
+        },
+        {
+          "value": "elegant",
+          "label": "Elegant & Refined"
+        },
+        {
+          "value": "casual",
+          "label": "Casual Luxury"
+        }
+      ]
+    },
+    {
+      "key": "budget_range",
+      "type": "Select",
+      "label": "Budget Range",
+      "required": false,
+      "placeholder": "Select Budget",
+      "options": [
+        {
+          "value": "under_500",
+          "label": "Under $500"
+        },
+        {
+          "value": "500_1000",
+          "label": "$500 – $1,000"
+        },
+        {
+          "value": "1000_2500",
+          "label": "$1,000 – $2,500"
+        },
+        {
+          "value": "2500_5000",
+          "label": "$2,500 – $5,000"
+        },
+        {
+          "value": "5000_plus",
+          "label": "$5,000+"
+        }
+      ]
+    },
+    {
+      "key": "consultation_type",
+      "type": "Radio",
+      "label": "Consultation Type",
+      "required": true,
+      "options": [
+        {
+          "value": "in_store",
+          "label": "In-Store Experience"
+        },
+        {
+          "value": "virtual",
+          "label": "Virtual Styling Session"
+        },
+        {
+          "value": "private",
+          "label": "Private Shopping Appointment"
+        },
+        {
+          "value": "home",
+          "label": "Home Consultation"
+        }
+      ]
+    },
+    {
+      "key": "row_datetime",
+      "type": "Row",
+      "label": "DateTime",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "preferred_date",
+              "type": "Date",
+              "label": "Preferred Date",
+              "required": false
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "preferred_time",
+              "type": "Select",
+              "label": "Preferred Time",
+              "required": false,
+              "placeholder": "Select Time",
+              "options": [
+                {
+                  "value": "morning",
+                  "label": "Morning (10AM – 12PM)"
+                },
+                {
+                  "value": "afternoon",
+                  "label": "Afternoon (12PM – 4PM)"
+                },
+                {
+                  "value": "evening",
+                  "label": "Evening (4PM – 7PM)"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "Columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "preferred_date",
+              "type": "Date",
+              "label": "Preferred Date",
+              "required": false
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "preferred_time",
+              "type": "Select",
+              "label": "Preferred Time",
+              "required": false,
+              "placeholder": "Select Time",
+              "options": [
+                {
+                  "value": "morning",
+                  "label": "Morning (10AM – 12PM)"
+                },
+                {
+                  "value": "afternoon",
+                  "label": "Afternoon (12PM – 4PM)"
+                },
+                {
+                  "value": "evening",
+                  "label": "Evening (4PM – 7PM)"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "style_notes",
+      "type": "Textarea",
+      "label": "Style Notes",
+      "required": false,
+      "placeholder": "Tell us about your style goals, upcoming events, or any specific pieces you're looking for..."
+    },
+    {
+      "key": "newsletter",
+      "type": "Checkbox",
+      "label": "",
+      "required": false,
+      "options": [
+        {
+          "value": "yes",
+          "label": "Receive exclusive previews and member-only offers"
+        }
+      ]
+    }
+  ],
+  "submitButtonText": "Submit",
+  "successMessage": "",
+  "customHtml": "<div class=\"mfp aur-form\">{{script:theme_selector}}\n  <div class=\"aur-card\">\n    <div class=\"aur-accent-bar\"></div>\n\n    <header class=\"aur-header\">\n      <div class=\"aur-brand\">\n        <svg class=\"aur-logo\" viewBox=\"0 0 44 44\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n          <rect x=\"1\" y=\"1\" width=\"42\" height=\"42\" stroke=\"#0a0a0a\" stroke-width=\"1.5\"/>\n          <path d=\"M22 6L38 22L22 38L6 22Z\" stroke=\"#b8924a\" stroke-width=\"1.5\" fill=\"none\"/>\n          <rect x=\"16\" y=\"16\" width=\"12\" height=\"12\" fill=\"#0a0a0a\" transform=\"rotate(45 22 22)\"/>\n        </svg>\n        <div class=\"aur-brand-text\">\n          <div class=\"aur-brand-name\">{{content:brand_name}}</div>\n          <div class=\"aur-brand-tagline\">{{content:brand_tagline}}</div>\n        </div>\n      </div>\n      <div class=\"aur-header-divider\">\n        <span class=\"aur-divider-line\"></span>\n        <span class=\"aur-divider-diamond\"></span>\n        <span class=\"aur-divider-line\"></span>\n      </div>\n    </header>\n\n    <div class=\"aur-body\">\n      <div class=\"aur-intro\">\n        <h2 class=\"aur-title\">{{form:title}}</h2>\n        <p class=\"aur-description\">{{form:description}}</p>\n      </div>\n\n      <section class=\"aur-section\">\n        <div class=\"aur-section-label\">\n          <svg class=\"aur-section-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\">\n            <path d=\"M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\"></path>\n            <circle cx=\"12\" cy=\"7\" r=\"4\"></circle>\n          </svg>\n          <span>{{content:section_info}}</span>\n        </div>\n        <div class=\"aur-fields\">\n          {{field:row_name}}\n          {{field:email}}\n          {{field:phone}}\n          {{field:row_location}}\n        </div>\n      </section>\n\n      <section class=\"aur-section aur-collection-section\" data-mf-script-root=\"aurora_filter\">\n        <div class=\"aur-section-label\">\n          <svg class=\"aur-section-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\">\n            <path d=\"M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z\"></path>\n            <line x1=\"3\" y1=\"6\" x2=\"21\" y2=\"6\"></line>\n            <path d=\"M16 10a4 4 0 01-8 0\"></path>\n          </svg>\n          <span>{{content:section_collection}}</span>\n        </div>\n\n        <div class=\"aur-filter-bar\">\n          <button class=\"aur-filter-btn\" data-filter=\"all\">{{content:filter_all}}</button>\n          <button class=\"aur-filter-btn\" data-filter=\"women\">{{content:filter_women}}</button>\n          <button class=\"aur-filter-btn\" data-filter=\"men\">{{content:filter_men}}</button>\n          <button class=\"aur-filter-btn\" data-filter=\"accessories\">{{content:filter_accessories}}</button>\n        </div>\n\n        <div class=\"aur-products-grid\">\n          <div class=\"aur-product-card\" data-category=\"{{content:p1_cat}}\">\n            <div class=\"aur-product-badge\">{{content:p1_badge}}</div>\n            <div class=\"aur-product-image\"><img src=\"{{content:p1_image}}\" alt=\"{{content:p1_alt}}\" loading=\"lazy\"></div>\n            <div class=\"aur-product-info\">\n              <div class=\"aur-product-name\">{{content:p1_name}}</div>\n              <div class=\"aur-product-desc\">{{content:p1_desc}}</div>\n              <div class=\"aur-product-price\">{{content:p1_price}}</div>\n            </div>\n          </div>\n          <div class=\"aur-product-card\" data-category=\"{{content:p2_cat}}\">\n            <div class=\"aur-product-badge\">{{content:p2_badge}}</div>\n            <div class=\"aur-product-image\"><img src=\"{{content:p2_image}}\" alt=\"{{content:p2_alt}}\" loading=\"lazy\"></div>\n            <div class=\"aur-product-info\">\n              <div class=\"aur-product-name\">{{content:p2_name}}</div>\n              <div class=\"aur-product-desc\">{{content:p2_desc}}</div>\n              <div class=\"aur-product-price\">{{content:p2_price}}</div>\n            </div>\n          </div>\n          <div class=\"aur-product-card\" data-category=\"{{content:p3_cat}}\">\n            <div class=\"aur-product-badge\">{{content:p3_badge}}</div>\n            <div class=\"aur-product-image\"><img src=\"{{content:p3_image}}\" alt=\"{{content:p3_alt}}\" loading=\"lazy\"></div>\n            <div class=\"aur-product-info\">\n              <div class=\"aur-product-name\">{{content:p3_name}}</div>\n              <div class=\"aur-product-desc\">{{content:p3_desc}}</div>\n              <div class=\"aur-product-price\">{{content:p3_price}}</div>\n            </div>\n          </div>\n          <div class=\"aur-product-card\" data-category=\"{{content:p4_cat}}\">\n            <div class=\"aur-product-image\"><img src=\"{{content:p4_image}}\" alt=\"{{content:p4_alt}}\" loading=\"lazy\"></div>\n            <div class=\"aur-product-info\">\n              <div class=\"aur-product-name\">{{content:p4_name}}</div>\n              <div class=\"aur-product-desc\">{{content:p4_desc}}</div>\n              <div class=\"aur-product-price\">{{content:p4_price}}</div>\n            </div>\n          </div>\n          <div class=\"aur-product-card\" data-category=\"{{content:p5_cat}}\">\n            <div class=\"aur-product-badge\">{{content:p5_badge}}</div>\n            <div class=\"aur-product-image\"><img src=\"{{content:p5_image}}\" alt=\"{{content:p5_alt}}\" loading=\"lazy\"></div>\n            <div class=\"aur-product-info\">\n              <div class=\"aur-product-name\">{{content:p5_name}}</div>\n              <div class=\"aur-product-desc\">{{content:p5_desc}}</div>\n              <div class=\"aur-product-price\">{{content:p5_price}}</div>\n            </div>\n          </div>\n          <div class=\"aur-product-card\" data-category=\"{{content:p6_cat}}\">\n            <div class=\"aur-product-image\"><img src=\"{{content:p6_image}}\" alt=\"{{content:p6_alt}}\" loading=\"lazy\"></div>\n            <div class=\"aur-product-info\">\n              <div class=\"aur-product-name\">{{content:p6_name}}</div>\n              <div class=\"aur-product-desc\">{{content:p6_desc}}</div>\n              <div class=\"aur-product-price\">{{content:p6_price}}</div>\n            </div>\n          </div>\n          <div class=\"aur-product-card\" data-category=\"{{content:p7_cat}}\">\n            <div class=\"aur-product-badge\">{{content:p7_badge}}</div>\n            <div class=\"aur-product-image\"><img src=\"{{content:p7_image}}\" alt=\"{{content:p7_alt}}\" loading=\"lazy\"></div>\n            <div class=\"aur-product-info\">\n              <div class=\"aur-product-name\">{{content:p7_name}}</div>\n              <div class=\"aur-product-desc\">{{content:p7_desc}}</div>\n              <div class=\"aur-product-price\">{{content:p7_price}}</div>\n            </div>\n          </div>\n          <div class=\"aur-product-card\" data-category=\"{{content:p8_cat}}\">\n            <div class=\"aur-product-image\"><img src=\"{{content:p8_image}}\" alt=\"{{content:p8_alt}}\" loading=\"lazy\"></div>\n            <div class=\"aur-product-info\">\n              <div class=\"aur-product-name\">{{content:p8_name}}</div>\n              <div class=\"aur-product-desc\">{{content:p8_desc}}</div>\n              <div class=\"aur-product-price\">{{content:p8_price}}</div>\n            </div>\n          </div>\n        </div>\n        {{script:aurora_filter}}\n      </section>\n\n      <section class=\"aur-section\">\n        <div class=\"aur-section-label\">\n          <svg class=\"aur-section-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\">\n            <path d=\"M12 20V10M18 20V4M6 20v-4\"></path>\n          </svg>\n          <span>{{content:section_preferences}}</span>\n        </div>\n        <div class=\"aur-fields\">\n          {{field:style_preference}}\n          {{field:budget_range}}\n          {{field:consultation_type}}\n          {{field:row_datetime}}\n          {{field:style_notes}}\n        </div>\n      </section>\n\n      <div class=\"aur-newsletter\">{{field:newsletter}}</div>\n\n      <div class=\"aur-actions\">\n        <button type=\"submit\" class=\"aur-submit\">{{form:submit}}</button>\n      </div>\n\n      <p class=\"aur-footer-note\">{{content:footer_note}}</p>\n    </div>\n\n    <div class=\"aur-accent-bar\"></div>\n  </div>\n</div>",
+  "customCss": "@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap');:root{--aur-black:#0a0a0a;--aur-charcoal:#1a1a1a;--aur-dark:#2d2d2d;--aur-gray:#6b6b6b;--aur-light-gray:#b0b0b0;--aur-border:#e5dfd5;--aur-cream:#faf7f2;--aur-ivory:#f5f0e8;--aur-white:#ffffff;--aur-gold:#b8924a;--aur-gold-dk:#9a7838;--aur-shadow:0 2px 40px rgba(0,0,0,.08);--aur-radius:2px}*{box-sizing:border-box;margin:0;padding:0}.mfp.aur-form{font-family:'Inter',system-ui,sans-serif;background:var(--aur-cream);min-height:100vh;padding:32px 20px;display:flex;justify-content:center;align-items:flex-start}.aur-card{max-width:100%;width:100%;background:var(--aur-white);border:1px solid var(--aur-border);box-shadow:var(--aur-shadow)}.aur-accent-bar{height:3px;background:linear-gradient(90deg,var(--aur-black) 0%,var(--aur-gold) 50%,var(--aur-black) 100%)}.aur-header{padding:28px 36px 22px;border-bottom:1px solid var(--aur-border);text-align:center}.aur-brand{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:14px}.aur-logo{width:44px;height:44px;flex-shrink:0}.aur-brand-text{text-align:left}.aur-brand-name{font-family:'Inter',sans-serif;font-size:18px;font-weight:700;color:var(--aur-black);letter-spacing:.16em;line-height:1}.aur-brand-tagline{font-size:9px;font-weight:500;color:var(--aur-gold);letter-spacing:.16em;text-transform:uppercase;margin-top:3px}.aur-header-divider{display:flex;align-items:center;justify-content:center;gap:10px}.aur-divider-line{flex:0 0 70px;height:1px;background:var(--aur-border)}.aur-divider-diamond{width:7px;height:7px;background:var(--aur-gold);transform:rotate(45deg)}.aur-body{padding:30px 36px 36px}.aur-intro{text-align:center;margin-bottom:30px}.aur-title{font-family:'Playfair Display',Georgia,serif;font-size:28px;font-weight:400;color:var(--aur-black);margin:0 0 10px}.aur-description{font-size:13px;color:var(--aur-gray);margin:0;line-height:1.6;letter-spacing:.02em}.aur-section{margin-bottom:28px}.aur-section-label{display:flex;align-items:center;gap:10px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:var(--aur-black);margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--aur-border)}.aur-section-icon{width:16px;height:16px;color:var(--aur-gold);flex-shrink:0}.aur-fields{display:flex;flex-direction:column;gap:14px}.aur-collection-section{margin:0 -36px 28px;padding:24px 36px;background:var(--aur-ivory);border-top:1px solid var(--aur-border);border-bottom:1px solid var(--aur-border)}.aur-filter-bar{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}.aur-filter-btn{padding:7px 18px;font-family:'Inter',sans-serif;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--aur-border);background:var(--aur-white);color:var(--aur-dark);cursor:pointer;transition:all .2s;border-radius:var(--aur-radius)}.aur-filter-btn:hover{border-color:var(--aur-black);color:var(--aur-black)}.aur-filter-btn.active{background:var(--aur-black);color:var(--aur-white);border-color:var(--aur-black)}.aur-products-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.aur-product-card{background:var(--aur-white);border:1px solid var(--aur-border);position:relative;cursor:pointer;transition:box-shadow .2s,transform .2s}.aur-product-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.1);transform:translateY(-2px)}.aur-product-image{aspect-ratio:1/1;overflow:hidden;background:var(--aur-ivory)}.aur-product-image img{width:100%;height:100%;object-fit:cover;transition:transform .4s ease}.aur-product-card:hover .aur-product-image img{transform:scale(1.05)}.aur-product-badge{position:absolute;top:10px;left:10px;font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;background:var(--aur-black);color:var(--aur-white)}.aur-product-info{padding:12px 14px}.aur-product-name{font-family:'Playfair Display',serif;font-size:13px;font-weight:500;color:var(--aur-black);margin-bottom:3px}.aur-product-desc{font-size:11px;color:var(--aur-gray);margin-bottom:6px;line-height:1.4}.aur-product-price{font-size:13px;font-weight:600;color:var(--aur-gold-dk)}.aur-newsletter{margin-bottom:18px;padding:14px;background:var(--aur-ivory);border:1px solid var(--aur-border)}.aur-actions{margin-bottom:12px}.aur-submit{width:100%;padding:15px 32px;font-family:'Inter',sans-serif;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;background:var(--aur-black);color:var(--aur-white);border:none;cursor:pointer;transition:background .2s,letter-spacing .2s}.aur-submit:hover{background:var(--aur-charcoal);letter-spacing:.2em}.aur-footer-note{text-align:center;font-size:11px;color:var(--aur-gray);letter-spacing:.04em}.mfp.aur-form .mf-field-label,.mfp.aur-form .mf-label{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--aur-black);margin-bottom:7px;display:block}.mfp.aur-form .mf-input,.mfp.aur-form .mf-select,.mfp.aur-form .mf-textarea{border:1px solid var(--aur-border);border-radius:var(--aur-radius);background:var(--aur-ivory);font-family:'Inter',sans-serif;font-size:13px;color:var(--aur-dark);padding:11px 14px;width:100%;transition:border-color .2s,background .2s}.mfp.aur-form .mf-input:focus,.mfp.aur-form .mf-select:focus,.mfp.aur-form .mf-textarea:focus{outline:none;border-color:var(--aur-black);background:var(--aur-white)}.mfp.aur-form .mf-input::placeholder,.mfp.aur-form .mf-textarea::placeholder{color:var(--aur-light-gray)}.mfp.aur-form .mf-field-group{margin-bottom:0}.mfp.aur-form .mf-fields-container{gap:14px}.mfp.aur-form .mf-row{gap:14px}.mfp.aur-form .mf-option-group{display:flex;flex-direction:column;gap:8px}.mfp.aur-form .mf-option-item{display:flex;align-items:center;gap:10px}.mfp.aur-form .mf-required{color:var(--aur-gold)}.mfp.aur-form .mf-textarea{resize:vertical;min-height:100px}.aur-intro,.aur-section:not(.aur-collection-section),.aur-newsletter,.aur-actions,.aur-footer-note{max-width:720px;margin-left:auto;margin-right:auto}@media(min-width:640px){.aur-products-grid{grid-template-columns:repeat(3,1fr);gap:16px}}@media(min-width:960px){.aur-products-grid{grid-template-columns:repeat(4,1fr);gap:18px}}@media(min-width:1280px){.aur-products-grid{grid-template-columns:repeat(5,1fr)}}@media(min-width:1600px){.aur-products-grid{grid-template-columns:repeat(6,1fr);gap:20px}}@media(max-width:600px){.mfp.aur-form{padding:0}.aur-card{border-left:none;border-right:none}.aur-header{padding:20px}.aur-body{padding:20px}.aur-collection-section{margin:0 -20px 24px;padding:20px}.aur-products-grid{gap:10px}.mfp.aur-form .mf-row{grid-template-columns:1fr!important;gap:0!important}.mfp.aur-form .mf-row-column{width:100%!important;min-width:0!important}.aur-title{font-size:22px}.aur-intro{margin-bottom:22px}}@media(max-width:400px){.aur-products-grid{gap:8px}.aur-product-info{padding:10px 12px}.aur-product-name{font-size:12px}.aur-product-desc{font-size:10px}.aur-product-price{font-size:12px}.aur-header,.aur-body{padding:16px}.aur-collection-section{margin:0 -16px 20px;padding:16px}}",
+  "rules": [],
+  "workflow": null,
+  "settings": {
+    "theme": "aurora-fashion",
+    "multiPage": false,
+    "customContent": {
+      "brand_name": "AURORA",
+      "brand_tagline": "PREMIUM AMERICAN FASHION",
+      "section_info": "Your Information",
+      "section_collection": "Featured Collection",
+      "section_preferences": "Style Preferences",
+      "footer_note": "Complimentary styling for all consultations",
+      "filter_all": "All",
+      "filter_women": "Women",
+      "filter_men": "Men",
+      "filter_accessories": "Accessories",
+      "p1_badge": "New Arrival",
+      "p1_name": "Cashmere Overcoat",
+      "p1_desc": "Italian cashmere, tailored silhouette",
+      "p1_price": "$1,850",
+      "p1_alt": "Cashmere Overcoat",
+      "p1_cat": "women",
+      "p1_image": "https://images.unsplash.com/photo-1548624313-0396c75e4b1a?w=400&h=500&fit=crop",
+      "p2_badge": "Bestseller",
+      "p2_name": "Leather Tote",
+      "p2_desc": "Full-grain leather, handcrafted",
+      "p2_price": "$695",
+      "p2_alt": "Leather Tote",
+      "p2_cat": "accessories",
+      "p2_image": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=500&fit=crop",
+      "p3_badge": "Limited",
+      "p3_name": "Silk Blazer",
+      "p3_desc": "Raw silk blend, modern cut",
+      "p3_price": "$1,295",
+      "p3_alt": "Silk Blazer",
+      "p3_cat": "women",
+      "p3_image": "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400&h=500&fit=crop",
+      "p4_badge": "",
+      "p4_name": "Merino Sweater",
+      "p4_desc": "100% merino wool, relaxed fit",
+      "p4_price": "$485",
+      "p4_alt": "Merino Sweater",
+      "p4_cat": "men",
+      "p4_image": "https://images.unsplash.com/photo-1620012253295-c15cc3e65df4?w=400&h=500&fit=crop",
+      "p5_badge": "Exclusive",
+      "p5_name": "Designer Watch",
+      "p5_desc": "Swiss movement, sapphire crystal",
+      "p5_price": "$2,450",
+      "p5_alt": "Designer Watch",
+      "p5_cat": "accessories",
+      "p5_image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=500&fit=crop",
+      "p6_badge": "",
+      "p6_name": "Wool Suit",
+      "p6_desc": "Super 150s wool, bespoke tailoring",
+      "p6_price": "$2,195",
+      "p6_alt": "Wool Suit",
+      "p6_cat": "men",
+      "p6_image": "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&h=500&fit=crop",
+      "p7_badge": "New",
+      "p7_name": "Evening Gown",
+      "p7_desc": "Flowing silk, timeless elegance",
+      "p7_price": "$1,650",
+      "p7_alt": "Evening Gown",
+      "p7_cat": "women",
+      "p7_image": "https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=400&h=500&fit=crop",
+      "p8_badge": "",
+      "p8_name": "Leather Belt",
+      "p8_desc": "Premium leather, polished buckle",
+      "p8_price": "$295",
+      "p8_alt": "Leather Belt",
+      "p8_cat": "accessories",
+      "p8_image": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=500&fit=crop"
+    },
+    "customScripts": {
+      "aurora_filter": "(function(root,ctx){if(!root)return;var k='aurFilterInit';if(root.dataset[k]==='1')return;root.dataset[k]='1';var btns=root.querySelectorAll('.aur-filter-btn');var cards=root.querySelectorAll('.aur-product-card');if(!btns.length||!cards.length)return;function applyFilter(cat){btns.forEach(function(b){b.classList.toggle('active',b.dataset.filter===cat)});cards.forEach(function(c){c.style.display=(cat==='all'||c.dataset.category===cat)?'':'none'});}btns.forEach(function(btn){btn.addEventListener('click',function(){applyFilter(btn.dataset.filter);});});applyFilter('all');})(window.__mfCurrentScriptRoot,window.__mfScriptContext);",
+      "theme_selector": "(function(root,ctx){\nvar tp=(ctx&&ctx.themePreset)||null;\nvar TP={\"milano-ivory\":{\"name\":\"Milano Ivory\",\"style\":\"editorial\",\"background\":\"oklch(0.97 0.008 85)\",\"foreground\":\"oklch(0.18 0.01 85)\",\"card\":\"oklch(0.995 0.005 85)\",\"primary\":\"oklch(0.55 0.08 55)\",\"primaryForeground\":\"oklch(0.98 0 0)\",\"secondary\":\"oklch(0.92 0.02 85)\",\"muted\":\"oklch(0.95 0.01 85)\",\"mutedForeground\":\"oklch(0.45 0.02 85)\",\"accent\":\"oklch(0.65 0.10 50)\",\"border\":\"oklch(0.88 0.02 85)\"},\"parisian-noir\":{\"name\":\"Parisian Noir\",\"style\":\"editorial\",\"background\":\"oklch(0.97 0.003 0)\",\"foreground\":\"oklch(0.12 0 0)\",\"card\":\"oklch(1 0 0)\",\"primary\":\"oklch(0.18 0 0)\",\"primaryForeground\":\"oklch(0.98 0 0)\",\"secondary\":\"oklch(0.92 0 0)\",\"muted\":\"oklch(0.95 0 0)\",\"mutedForeground\":\"oklch(0.50 0 0)\",\"accent\":\"oklch(0.70 0.14 45)\",\"border\":\"oklch(0.88 0 0)\"},\"tokyo-mauve\":{\"name\":\"Tokyo Mauve\",\"style\":\"editorial\",\"background\":\"oklch(0.96 0.012 320)\",\"foreground\":\"oklch(0.22 0.03 320)\",\"card\":\"oklch(0.99 0.005 320)\",\"primary\":\"oklch(0.50 0.09 320)\",\"primaryForeground\":\"oklch(0.98 0 0)\",\"secondary\":\"oklch(0.90 0.03 320)\",\"muted\":\"oklch(0.94 0.01 320)\",\"mutedForeground\":\"oklch(0.48 0.03 320)\",\"accent\":\"oklch(0.70 0.08 350)\",\"border\":\"oklch(0.87 0.02 320)\"},\"dubai-champagne\":{\"name\":\"Dubai Champagne\",\"style\":\"editorial\",\"background\":\"oklch(0.97 0.015 85)\",\"foreground\":\"oklch(0.24 0.04 50)\",\"card\":\"oklch(0.995 0.006 85)\",\"primary\":\"oklch(0.62 0.11 75)\",\"primaryForeground\":\"oklch(0.15 0.02 50)\",\"secondary\":\"oklch(0.92 0.03 75)\",\"muted\":\"oklch(0.94 0.01 85)\",\"mutedForeground\":\"oklch(0.50 0.03 50)\",\"accent\":\"oklch(0.58 0.08 45)\",\"border\":\"oklch(0.85 0.03 85)\"},\"london-sage\":{\"name\":\"London Sage\",\"style\":\"editorial\",\"background\":\"oklch(0.97 0.006 150)\",\"foreground\":\"oklch(0.22 0.02 150)\",\"card\":\"oklch(0.99 0.003 150)\",\"primary\":\"oklch(0.45 0.08 150)\",\"primaryForeground\":\"oklch(0.98 0 0)\",\"secondary\":\"oklch(0.88 0.03 150)\",\"muted\":\"oklch(0.94 0.01 150)\",\"mutedForeground\":\"oklch(0.48 0.03 150)\",\"accent\":\"oklch(0.70 0.06 85)\",\"border\":\"oklch(0.86 0.02 150)\"},\"new-york-charcoal\":{\"name\":\"New York Charcoal\",\"style\":\"editorial\",\"background\":\"oklch(0.94 0.003 240)\",\"foreground\":\"oklch(0.15 0.01 240)\",\"card\":\"oklch(0.99 0.002 240)\",\"primary\":\"oklch(0.30 0.02 240)\",\"primaryForeground\":\"oklch(0.98 0 0)\",\"secondary\":\"oklch(0.90 0.01 240)\",\"muted\":\"oklch(0.93 0.005 240)\",\"mutedForeground\":\"oklch(0.48 0.01 240)\",\"accent\":\"oklch(0.62 0.13 25)\",\"border\":\"oklch(0.86 0.01 240)\"}};\nvar VMAP={\"--aur-bg\":\"background\",\"--aur-cream\":\"background\",\"--aur-ivory\":\"muted\",\"--aur-white\":\"card\",\"--aur-black\":\"foreground\",\"--aur-charcoal\":\"foreground\",\"--aur-dark\":\"foreground\",\"--aur-gray\":\"mutedForeground\",\"--aur-light-gray\":\"muted\",\"--aur-border\":\"border\",\"--aur-gold\":\"primary\",\"--aur-gold-dk\":\"accent\"};\nvar GROUPS=[];\nvar SCOPE=\".mfp.aur-form\";\nvar DEFAULT=\"milano-ivory\";\nvar PFX=\"aur\";\n\nvar cur=DEFAULT;var isOpen=false;var styleId=PFX+'-theme-vars';\nfunction scopeSel(){\n  var host=(root&&root.closest)?root.closest('.mf-form-wrapper,[id^=\"mf-form-wrapper-\"]'):null;\n  var id=host&&host.id?('#'+host.id+' '):(tp&&tp.formId?('#mf-form-wrapper-'+String(tp.formId)+' '):'');\n  return id?(id+SCOPE):SCOPE;\n}\nfunction applyTheme(key){\n  var t=TP[key];if(!t)return;cur=key;\n  var s=document.getElementById(styleId);\n  if(!s){s=document.createElement('style');s.id=styleId;document.head.appendChild(s);}\n  var sel=scopeSel();\n  var rules=sel+'{';\n  // Generic vars (MegaForm + shadcn compat)\n  rules+='--background:'+t.background+';';\n  rules+='--foreground:'+t.foreground+';';\n  rules+='--card:'+t.card+';';\n  rules+='--card-foreground:'+t.foreground+';';\n  rules+='--primary:'+t.primary+';';\n  rules+='--primary-foreground:'+t.primaryForeground+';';\n  rules+='--secondary:'+t.secondary+';';\n  rules+='--secondary-foreground:'+t.foreground+';';\n  rules+='--muted:'+t.muted+';';\n  rules+='--muted-foreground:'+t.mutedForeground+';';\n  rules+='--accent:'+t.accent+';';\n  rules+='--accent-foreground:'+t.foreground+';';\n  rules+='--border:'+t.border+';';\n  rules+='--input:'+t.muted+';';\n  rules+='--ring:'+t.primary+';';\n  // Template-specific vars via VMAP\n  Object.keys(VMAP).forEach(function(cssVar){\n    var field=VMAP[cssVar];\n    if(t[field]!==undefined){rules+=cssVar+':'+t[field]+';';}\n  });\n  rules+='}';\n  s.textContent=rules;\n  var ps=document.getElementById(PFX+'-ts-swatch');if(ps)ps.style.background=t.primary;\n  var pn=document.getElementById(PFX+'-ts-name');if(pn)pn.textContent=t.name;\n  document.querySelectorAll('[data-'+PFX+'-key]').forEach(function(btn){\n    var active=btn.getAttribute('data-'+PFX+'-key')===key;\n    btn.style.background=active?'color-mix(in oklab,'+t.primary+' 12%,transparent)':'';\n    var ck=btn.querySelector('.'+PFX+'-check');if(ck)ck.style.display=active?'inline':'none';\n  });\n  if(tp&&typeof tp.setActiveThemeKey==='function'){try{tp.setActiveThemeKey(key,true);}catch(e){}}\n  else{try{localStorage.setItem(PFX+'-theme',key);}catch(e){}}\n}\nfunction mkBtn(key,theme){\n  var btn=document.createElement('button');btn.type='button';\n  btn.setAttribute('data-'+PFX+'-key',key);\n  btn.style.cssText='display:flex;align-items:center;gap:12px;width:100%;padding:9px 14px;text-align:left;border:none;cursor:pointer;font-family:inherit;background:transparent;font-size:13px;transition:background .15s;';\n  var sw=document.createElement('div');sw.style.cssText='display:flex;gap:3px;flex-shrink:0;';\n  [theme.primary,theme.secondary,theme.accent].forEach(function(c){\n    var s=document.createElement('span');\n    s.style.cssText='width:12px;height:12px;border-radius:50%;border:1px solid rgba(0,0,0,.12);background:'+c+';display:inline-block;';\n    sw.appendChild(s);\n  });\n  var nm=document.createElement('span');\n  nm.style.cssText='color:#222;flex:1;font-size:13px;font-family:inherit;';\n  nm.textContent=theme.name;\n  var ck=document.createElement('svg');\n  ck.setAttribute('width','16');ck.setAttribute('height','16');\n  ck.setAttribute('viewBox','0 0 20 20');ck.setAttribute('fill','currentColor');\n  ck.setAttribute('class',PFX+'-check');\n  ck.style.cssText='margin-left:auto;color:'+theme.primary+';display:none;width:16px;height:16px;flex-shrink:0;';\n  ck.innerHTML='<path fill-rule=\"evenodd\" d=\"M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z\" clip-rule=\"evenodd\"/>';\n  btn.appendChild(sw);btn.appendChild(nm);btn.appendChild(ck);\n  btn.addEventListener('mouseenter',function(){if(btn.getAttribute('data-'+PFX+'-key')!==cur)btn.style.background='rgba(0,0,0,.04)';});\n  btn.addEventListener('mouseleave',function(){if(btn.getAttribute('data-'+PFX+'-key')!==cur)btn.style.background='';});\n  btn.addEventListener('click',function(e){e.stopPropagation();applyTheme(key);close();});\n  return btn;\n}\nfunction mkSection(title,list,last){\n  var sec=document.createElement('div');\n  sec.style.cssText='padding:10px 6px;'+(last?'':'border-bottom:1px solid rgba(0,0,0,.08);');\n  if(title){\n    var h=document.createElement('p');\n    h.style.cssText='font-size:10px;font-weight:600;color:#888;letter-spacing:.12em;text-transform:uppercase;margin:0 8px 6px;font-family:inherit;';\n    h.textContent=title;sec.appendChild(h);\n  }\n  list.forEach(function(e){sec.appendChild(mkBtn(e[0],e[1]));});\n  return sec;\n}\n// Build UI\nvar wrap=document.createElement('div');\nwrap.id=PFX+'-ts-wrap';\nwrap.style.cssText='position:fixed;top:16px;right:16px;z-index:99999;font-family:system-ui,-apple-system,sans-serif;';\nvar pill=document.createElement('button');pill.type='button';\npill.style.cssText='display:flex;align-items:center;gap:8px;padding:8px 14px;background:#fff;border:1px solid rgba(0,0,0,.14);border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.1);cursor:pointer;font-family:inherit;font-size:13px;color:#222;white-space:nowrap;';\nvar ps=document.createElement('span');ps.id=PFX+'-ts-swatch';\nps.style.cssText='width:16px;height:16px;border-radius:50%;flex-shrink:0;background:#888;display:inline-block;border:1px solid rgba(0,0,0,.1);';\nvar pn=document.createElement('span');pn.id=PFX+'-ts-name';pn.textContent='Theme';\nvar chv=document.createElement('svg');\nchv.setAttribute('width','14');chv.setAttribute('height','14');\nchv.setAttribute('viewBox','0 0 24 24');chv.setAttribute('fill','none');\nchv.setAttribute('stroke','currentColor');chv.setAttribute('stroke-width','2');\nchv.style.cssText='transition:transform .2s;color:#888;';\nchv.innerHTML='<polyline points=\"6 9 12 15 18 9\"/>';\npill.appendChild(ps);pill.appendChild(pn);pill.appendChild(chv);\nvar panel=document.createElement('div');\npanel.style.cssText='position:absolute;top:calc(100% + 8px);right:0;width:270px;background:#fff;border:1px solid rgba(0,0,0,.1);border-radius:10px;box-shadow:0 12px 36px rgba(0,0,0,.15);max-height:70vh;overflow-y:auto;display:none;';\n// Group by style or flat\nvar entries=Object.entries(TP);\nif(GROUPS&&GROUPS.length){\n  GROUPS.forEach(function(g,idx){\n    var list=entries.filter(function(e){return e[1].style===g[1];});\n    if(list.length)panel.appendChild(mkSection(g[0],list,idx===GROUPS.length-1));\n  });\n}else{\n  panel.appendChild(mkSection('',entries,true));\n}\nwrap.appendChild(pill);wrap.appendChild(panel);\nif(!tp||tp.selectorEnabled!==false){\n  document.body.appendChild(wrap);\n  function positionWrap(){\n    var nav=document.querySelector('header,.dnn-nav,nav[class*=nav]');\n    var navH=nav?nav.getBoundingClientRect().bottom:0;\n    wrap.style.top=Math.max(16,navH+8)+'px';\n  }\n  positionWrap();\n  window.addEventListener('resize',positionWrap);\n  setTimeout(positionWrap,500);\n  function open(){isOpen=true;panel.style.display='block';chv.style.transform='rotate(180deg)';}\n  function close(){isOpen=false;panel.style.display='none';chv.style.transform='';}\n  pill.addEventListener('click',function(e){e.stopPropagation();isOpen?close():open();});\n  document.addEventListener('click',function(){if(isOpen)close();});\n  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen)close();});\n}\nvar saved=(tp&&typeof tp.getActiveThemeKey==='function'?tp.getActiveThemeKey():(tp&&tp.savedThemeKey)||null);\nif(saved==null){try{saved=localStorage.getItem(PFX+'-theme');}catch(e){}}\napplyTheme(saved||((tp&&tp.defaultThemeKey)||DEFAULT));\nif(tp&&typeof tp.reportAvailable==='function'){try{tp.reportAvailable({activeThemeKey:cur,selectedThemeKey:cur,dirty:false});}catch(e){}}\n})(window.__mfCurrentScriptRoot||document,window.__mfScriptContext||{});\n"
+    },
+    "themeSelector": {
+      "enabled": true,
+      "mode": "module-controlled",
+      "scriptKey": "theme_selector",
+      "presetSet": "fashion-houses",
+      "defaultThemeKey": "milano-ivory",
+      "showUpdateThemeButton": true,
+      "presets": {
+        "milano-ivory": {
+          "name": "Milano Ivory",
+          "style": "editorial",
+          "background": "oklch(0.97 0.008 85)",
+          "foreground": "oklch(0.18 0.01 85)",
+          "card": "oklch(0.995 0.005 85)",
+          "primary": "oklch(0.55 0.08 55)",
+          "primaryForeground": "oklch(0.98 0 0)",
+          "secondary": "oklch(0.92 0.02 85)",
+          "muted": "oklch(0.95 0.01 85)",
+          "mutedForeground": "oklch(0.45 0.02 85)",
+          "accent": "oklch(0.65 0.10 50)",
+          "border": "oklch(0.88 0.02 85)"
+        },
+        "parisian-noir": {
+          "name": "Parisian Noir",
+          "style": "editorial",
+          "background": "oklch(0.97 0.003 0)",
+          "foreground": "oklch(0.12 0 0)",
+          "card": "oklch(1 0 0)",
+          "primary": "oklch(0.18 0 0)",
+          "primaryForeground": "oklch(0.98 0 0)",
+          "secondary": "oklch(0.92 0 0)",
+          "muted": "oklch(0.95 0 0)",
+          "mutedForeground": "oklch(0.50 0 0)",
+          "accent": "oklch(0.70 0.14 45)",
+          "border": "oklch(0.88 0 0)"
+        },
+        "tokyo-mauve": {
+          "name": "Tokyo Mauve",
+          "style": "editorial",
+          "background": "oklch(0.96 0.012 320)",
+          "foreground": "oklch(0.22 0.03 320)",
+          "card": "oklch(0.99 0.005 320)",
+          "primary": "oklch(0.50 0.09 320)",
+          "primaryForeground": "oklch(0.98 0 0)",
+          "secondary": "oklch(0.90 0.03 320)",
+          "muted": "oklch(0.94 0.01 320)",
+          "mutedForeground": "oklch(0.48 0.03 320)",
+          "accent": "oklch(0.70 0.08 350)",
+          "border": "oklch(0.87 0.02 320)"
+        },
+        "dubai-champagne": {
+          "name": "Dubai Champagne",
+          "style": "editorial",
+          "background": "oklch(0.97 0.015 85)",
+          "foreground": "oklch(0.24 0.04 50)",
+          "card": "oklch(0.995 0.006 85)",
+          "primary": "oklch(0.62 0.11 75)",
+          "primaryForeground": "oklch(0.15 0.02 50)",
+          "secondary": "oklch(0.92 0.03 75)",
+          "muted": "oklch(0.94 0.01 85)",
+          "mutedForeground": "oklch(0.50 0.03 50)",
+          "accent": "oklch(0.58 0.08 45)",
+          "border": "oklch(0.85 0.03 85)"
+        },
+        "london-sage": {
+          "name": "London Sage",
+          "style": "editorial",
+          "background": "oklch(0.97 0.006 150)",
+          "foreground": "oklch(0.22 0.02 150)",
+          "card": "oklch(0.99 0.003 150)",
+          "primary": "oklch(0.45 0.08 150)",
+          "primaryForeground": "oklch(0.98 0 0)",
+          "secondary": "oklch(0.88 0.03 150)",
+          "muted": "oklch(0.94 0.01 150)",
+          "mutedForeground": "oklch(0.48 0.03 150)",
+          "accent": "oklch(0.70 0.06 85)",
+          "border": "oklch(0.86 0.02 150)"
+        },
+        "new-york-charcoal": {
+          "name": "New York Charcoal",
+          "style": "editorial",
+          "background": "oklch(0.94 0.003 240)",
+          "foreground": "oklch(0.15 0.01 240)",
+          "card": "oklch(0.99 0.002 240)",
+          "primary": "oklch(0.30 0.02 240)",
+          "primaryForeground": "oklch(0.98 0 0)",
+          "secondary": "oklch(0.90 0.01 240)",
+          "muted": "oklch(0.93 0.005 240)",
+          "mutedForeground": "oklch(0.48 0.01 240)",
+          "accent": "oklch(0.62 0.13 25)",
+          "border": "oklch(0.86 0.01 240)"
+        }
+      }
+    },
+    "customHtml": "<div class=\"mfp aur-form\">{{script:theme_selector}}\n  <div class=\"aur-card\">\n    <div class=\"aur-accent-bar\"></div>\n\n    <header class=\"aur-header\">\n      <div class=\"aur-brand\">\n        <svg class=\"aur-logo\" viewBox=\"0 0 44 44\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n          <rect x=\"1\" y=\"1\" width=\"42\" height=\"42\" stroke=\"#0a0a0a\" stroke-width=\"1.5\"/>\n          <path d=\"M22 6L38 22L22 38L6 22Z\" stroke=\"#b8924a\" stroke-width=\"1.5\" fill=\"none\"/>\n          <rect x=\"16\" y=\"16\" width=\"12\" height=\"12\" fill=\"#0a0a0a\" transform=\"rotate(45 22 22)\"/>\n        </svg>\n        <div class=\"aur-brand-text\">\n          <div class=\"aur-brand-name\">{{content:brand_name}}</div>\n          <div class=\"aur-brand-tagline\">{{content:brand_tagline}}</div>\n        </div>\n      </div>\n      <div class=\"aur-header-divider\">\n        <span class=\"aur-divider-line\"></span>\n        <span class=\"aur-divider-diamond\"></span>\n        <span class=\"aur-divider-line\"></span>\n      </div>\n    </header>\n\n    <div class=\"aur-body\">\n      <div class=\"aur-intro\">\n        <h2 class=\"aur-title\">{{form:title}}</h2>\n        <p class=\"aur-description\">{{form:description}}</p>\n      </div>\n\n      <section class=\"aur-section\">\n        <div class=\"aur-section-label\">\n          <svg class=\"aur-section-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\">\n            <path d=\"M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\"></path>\n            <circle cx=\"12\" cy=\"7\" r=\"4\"></circle>\n          </svg>\n          <span>{{content:section_info}}</span>\n        </div>\n        <div class=\"aur-fields\">\n          {{field:row_name}}\n          {{field:email}}\n          {{field:phone}}\n          {{field:row_location}}\n        </div>\n      </section>\n\n      <section class=\"aur-section aur-collection-section\" data-mf-script-root=\"aurora_filter\">\n        <div class=\"aur-section-label\">\n          <svg class=\"aur-section-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\">\n            <path d=\"M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z\"></path>\n            <line x1=\"3\" y1=\"6\" x2=\"21\" y2=\"6\"></line>\n            <path d=\"M16 10a4 4 0 01-8 0\"></path>\n          </svg>\n          <span>{{content:section_collection}}</span>\n        </div>\n\n        <div class=\"aur-filter-bar\">\n          <button class=\"aur-filter-btn\" data-filter=\"all\">{{content:filter_all}}</button>\n          <button class=\"aur-filter-btn\" data-filter=\"women\">{{content:filter_women}}</button>\n          <button class=\"aur-filter-btn\" data-filter=\"men\">{{content:filter_men}}</button>\n          <button class=\"aur-filter-btn\" data-filter=\"accessories\">{{content:filter_accessories}}</button>\n        </div>\n\n        <div class=\"aur-products-grid\">\n          <div class=\"aur-product-card\" data-category=\"{{content:p1_cat}}\">\n            <div class=\"aur-product-badge\">{{content:p1_badge}}</div>\n            <div class=\"aur-product-image\"><img src=\"{{content:p1_image}}\" alt=\"{{content:p1_alt}}\" loading=\"lazy\"></div>\n            <div class=\"aur-product-info\">\n              <div class=\"aur-product-name\">{{content:p1_name}}</div>\n              <div class=\"aur-product-desc\">{{content:p1_desc}}</div>\n              <div class=\"aur-product-price\">{{content:p1_price}}</div>\n            </div>\n          </div>\n          <div class=\"aur-product-card\" data-category=\"{{content:p2_cat}}\">\n            <div class=\"aur-product-badge\">{{content:p2_badge}}</div>\n            <div class=\"aur-product-image\"><img src=\"{{content:p2_image}}\" alt=\"{{content:p2_alt}}\" loading=\"lazy\"></div>\n            <div class=\"aur-product-info\">\n              <div class=\"aur-product-name\">{{content:p2_name}}</div>\n              <div class=\"aur-product-desc\">{{content:p2_desc}}</div>\n              <div class=\"aur-product-price\">{{content:p2_price}}</div>\n            </div>\n          </div>\n          <div class=\"aur-product-card\" data-category=\"{{content:p3_cat}}\">\n            <div class=\"aur-product-badge\">{{content:p3_badge}}</div>\n            <div class=\"aur-product-image\"><img src=\"{{content:p3_image}}\" alt=\"{{content:p3_alt}}\" loading=\"lazy\"></div>\n            <div class=\"aur-product-info\">\n              <div class=\"aur-product-name\">{{content:p3_name}}</div>\n              <div class=\"aur-product-desc\">{{content:p3_desc}}</div>\n              <div class=\"aur-product-price\">{{content:p3_price}}</div>\n            </div>\n          </div>\n          <div class=\"aur-product-card\" data-category=\"{{content:p4_cat}}\">\n            <div class=\"aur-product-image\"><img src=\"{{content:p4_image}}\" alt=\"{{content:p4_alt}}\" loading=\"lazy\"></div>\n            <div class=\"aur-product-info\">\n              <div class=\"aur-product-name\">{{content:p4_name}}</div>\n              <div class=\"aur-product-desc\">{{content:p4_desc}}</div>\n              <div class=\"aur-product-price\">{{content:p4_price}}</div>\n            </div>\n          </div>\n          <div class=\"aur-product-card\" data-category=\"{{content:p5_cat}}\">\n            <div class=\"aur-product-badge\">{{content:p5_badge}}</div>\n            <div class=\"aur-product-image\"><img src=\"{{content:p5_image}}\" alt=\"{{content:p5_alt}}\" loading=\"lazy\"></div>\n            <div class=\"aur-product-info\">\n              <div class=\"aur-product-name\">{{content:p5_name}}</div>\n              <div class=\"aur-product-desc\">{{content:p5_desc}}</div>\n              <div class=\"aur-product-price\">{{content:p5_price}}</div>\n            </div>\n          </div>\n          <div class=\"aur-product-card\" data-category=\"{{content:p6_cat}}\">\n            <div class=\"aur-product-image\"><img src=\"{{content:p6_image}}\" alt=\"{{content:p6_alt}}\" loading=\"lazy\"></div>\n            <div class=\"aur-product-info\">\n              <div class=\"aur-product-name\">{{content:p6_name}}</div>\n              <div class=\"aur-product-desc\">{{content:p6_desc}}</div>\n              <div class=\"aur-product-price\">{{content:p6_price}}</div>\n            </div>\n          </div>\n          <div class=\"aur-product-card\" data-category=\"{{content:p7_cat}}\">\n            <div class=\"aur-product-badge\">{{content:p7_badge}}</div>\n            <div class=\"aur-product-image\"><img src=\"{{content:p7_image}}\" alt=\"{{content:p7_alt}}\" loading=\"lazy\"></div>\n            <div class=\"aur-product-info\">\n              <div class=\"aur-product-name\">{{content:p7_name}}</div>\n              <div class=\"aur-product-desc\">{{content:p7_desc}}</div>\n              <div class=\"aur-product-price\">{{content:p7_price}}</div>\n            </div>\n          </div>\n          <div class=\"aur-product-card\" data-category=\"{{content:p8_cat}}\">\n            <div class=\"aur-product-image\"><img src=\"{{content:p8_image}}\" alt=\"{{content:p8_alt}}\" loading=\"lazy\"></div>\n            <div class=\"aur-product-info\">\n              <div class=\"aur-product-name\">{{content:p8_name}}</div>\n              <div class=\"aur-product-desc\">{{content:p8_desc}}</div>\n              <div class=\"aur-product-price\">{{content:p8_price}}</div>\n            </div>\n          </div>\n        </div>\n        {{script:aurora_filter}}\n      </section>\n\n      <section class=\"aur-section\">\n        <div class=\"aur-section-label\">\n          <svg class=\"aur-section-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\">\n            <path d=\"M12 20V10M18 20V4M6 20v-4\"></path>\n          </svg>\n          <span>{{content:section_preferences}}</span>\n        </div>\n        <div class=\"aur-fields\">\n          {{field:style_preference}}\n          {{field:budget_range}}\n          {{field:consultation_type}}\n          {{field:row_datetime}}\n          {{field:style_notes}}\n        </div>\n      </section>\n\n      <div class=\"aur-newsletter\">{{field:newsletter}}</div>\n\n      <div class=\"aur-actions\">\n        <button type=\"submit\" class=\"aur-submit\">{{form:submit}}</button>\n      </div>\n\n      <p class=\"aur-footer-note\">{{content:footer_note}}</p>\n    </div>\n\n    <div class=\"aur-accent-bar\"></div>\n  </div>\n</div>",
+    "customCss": "@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap');:root{--aur-black:#0a0a0a;--aur-charcoal:#1a1a1a;--aur-dark:#2d2d2d;--aur-gray:#6b6b6b;--aur-light-gray:#b0b0b0;--aur-border:#e5dfd5;--aur-cream:#faf7f2;--aur-ivory:#f5f0e8;--aur-white:#ffffff;--aur-gold:#b8924a;--aur-gold-dk:#9a7838;--aur-shadow:0 2px 40px rgba(0,0,0,.08);--aur-radius:2px}*{box-sizing:border-box;margin:0;padding:0}.mfp.aur-form{font-family:'Inter',system-ui,sans-serif;background:var(--aur-cream);min-height:100vh;padding:32px 20px;display:flex;justify-content:center;align-items:flex-start}.aur-card{max-width:100%;width:100%;background:var(--aur-white);border:1px solid var(--aur-border);box-shadow:var(--aur-shadow)}.aur-accent-bar{height:3px;background:linear-gradient(90deg,var(--aur-black) 0%,var(--aur-gold) 50%,var(--aur-black) 100%)}.aur-header{padding:28px 36px 22px;border-bottom:1px solid var(--aur-border);text-align:center}.aur-brand{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:14px}.aur-logo{width:44px;height:44px;flex-shrink:0}.aur-brand-text{text-align:left}.aur-brand-name{font-family:'Inter',sans-serif;font-size:18px;font-weight:700;color:var(--aur-black);letter-spacing:.16em;line-height:1}.aur-brand-tagline{font-size:9px;font-weight:500;color:var(--aur-gold);letter-spacing:.16em;text-transform:uppercase;margin-top:3px}.aur-header-divider{display:flex;align-items:center;justify-content:center;gap:10px}.aur-divider-line{flex:0 0 70px;height:1px;background:var(--aur-border)}.aur-divider-diamond{width:7px;height:7px;background:var(--aur-gold);transform:rotate(45deg)}.aur-body{padding:30px 36px 36px}.aur-intro{text-align:center;margin-bottom:30px}.aur-title{font-family:'Playfair Display',Georgia,serif;font-size:28px;font-weight:400;color:var(--aur-black);margin:0 0 10px}.aur-description{font-size:13px;color:var(--aur-gray);margin:0;line-height:1.6;letter-spacing:.02em}.aur-section{margin-bottom:28px}.aur-section-label{display:flex;align-items:center;gap:10px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:var(--aur-black);margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--aur-border)}.aur-section-icon{width:16px;height:16px;color:var(--aur-gold);flex-shrink:0}.aur-fields{display:flex;flex-direction:column;gap:14px}.aur-collection-section{margin:0 -36px 28px;padding:24px 36px;background:var(--aur-ivory);border-top:1px solid var(--aur-border);border-bottom:1px solid var(--aur-border)}.aur-filter-bar{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}.aur-filter-btn{padding:7px 18px;font-family:'Inter',sans-serif;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--aur-border);background:var(--aur-white);color:var(--aur-dark);cursor:pointer;transition:all .2s;border-radius:var(--aur-radius)}.aur-filter-btn:hover{border-color:var(--aur-black);color:var(--aur-black)}.aur-filter-btn.active{background:var(--aur-black);color:var(--aur-white);border-color:var(--aur-black)}.aur-products-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.aur-product-card{background:var(--aur-white);border:1px solid var(--aur-border);position:relative;cursor:pointer;transition:box-shadow .2s,transform .2s}.aur-product-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.1);transform:translateY(-2px)}.aur-product-image{aspect-ratio:1/1;overflow:hidden;background:var(--aur-ivory)}.aur-product-image img{width:100%;height:100%;object-fit:cover;transition:transform .4s ease}.aur-product-card:hover .aur-product-image img{transform:scale(1.05)}.aur-product-badge{position:absolute;top:10px;left:10px;font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;background:var(--aur-black);color:var(--aur-white)}.aur-product-info{padding:12px 14px}.aur-product-name{font-family:'Playfair Display',serif;font-size:13px;font-weight:500;color:var(--aur-black);margin-bottom:3px}.aur-product-desc{font-size:11px;color:var(--aur-gray);margin-bottom:6px;line-height:1.4}.aur-product-price{font-size:13px;font-weight:600;color:var(--aur-gold-dk)}.aur-newsletter{margin-bottom:18px;padding:14px;background:var(--aur-ivory);border:1px solid var(--aur-border)}.aur-actions{margin-bottom:12px}.aur-submit{width:100%;padding:15px 32px;font-family:'Inter',sans-serif;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;background:var(--aur-black);color:var(--aur-white);border:none;cursor:pointer;transition:background .2s,letter-spacing .2s}.aur-submit:hover{background:var(--aur-charcoal);letter-spacing:.2em}.aur-footer-note{text-align:center;font-size:11px;color:var(--aur-gray);letter-spacing:.04em}.mfp.aur-form .mf-field-label,.mfp.aur-form .mf-label{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--aur-black);margin-bottom:7px;display:block}.mfp.aur-form .mf-input,.mfp.aur-form .mf-select,.mfp.aur-form .mf-textarea{border:1px solid var(--aur-border);border-radius:var(--aur-radius);background:var(--aur-ivory);font-family:'Inter',sans-serif;font-size:13px;color:var(--aur-dark);padding:11px 14px;width:100%;transition:border-color .2s,background .2s}.mfp.aur-form .mf-input:focus,.mfp.aur-form .mf-select:focus,.mfp.aur-form .mf-textarea:focus{outline:none;border-color:var(--aur-black);background:var(--aur-white)}.mfp.aur-form .mf-input::placeholder,.mfp.aur-form .mf-textarea::placeholder{color:var(--aur-light-gray)}.mfp.aur-form .mf-field-group{margin-bottom:0}.mfp.aur-form .mf-fields-container{gap:14px}.mfp.aur-form .mf-row{gap:14px}.mfp.aur-form .mf-option-group{display:flex;flex-direction:column;gap:8px}.mfp.aur-form .mf-option-item{display:flex;align-items:center;gap:10px}.mfp.aur-form .mf-required{color:var(--aur-gold)}.mfp.aur-form .mf-textarea{resize:vertical;min-height:100px}.aur-intro,.aur-section:not(.aur-collection-section),.aur-newsletter,.aur-actions,.aur-footer-note{max-width:720px;margin-left:auto;margin-right:auto}@media(min-width:640px){.aur-products-grid{grid-template-columns:repeat(3,1fr);gap:16px}}@media(min-width:960px){.aur-products-grid{grid-template-columns:repeat(4,1fr);gap:18px}}@media(min-width:1280px){.aur-products-grid{grid-template-columns:repeat(5,1fr)}}@media(min-width:1600px){.aur-products-grid{grid-template-columns:repeat(6,1fr);gap:20px}}@media(max-width:600px){.mfp.aur-form{padding:0}.aur-card{border-left:none;border-right:none}.aur-header{padding:20px}.aur-body{padding:20px}.aur-collection-section{margin:0 -20px 24px;padding:20px}.aur-products-grid{gap:10px}.mfp.aur-form .mf-row{grid-template-columns:1fr!important;gap:0!important}.mfp.aur-form .mf-row-column{width:100%!important;min-width:0!important}.aur-title{font-size:22px}.aur-intro{margin-bottom:22px}}@media(max-width:400px){.aur-products-grid{gap:8px}.aur-product-info{padding:10px 12px}.aur-product-name{font-size:12px}.aur-product-desc{font-size:10px}.aur-product-price{font-size:12px}.aur-header,.aur-body{padding:16px}.aur-collection-section{margin:0 -16px 20px;padding:16px}}",
+    "rules": [],
+    "workflowTemplate": null,
+    "CustomHtml": "<div class=\"mfp aur-form\">{{script:theme_selector}}\n  <div class=\"aur-card\">\n    <div class=\"aur-accent-bar\"></div>\n\n    <header class=\"aur-header\">\n      <div class=\"aur-brand\">\n        <svg class=\"aur-logo\" viewBox=\"0 0 44 44\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n          <rect x=\"1\" y=\"1\" width=\"42\" height=\"42\" stroke=\"#0a0a0a\" stroke-width=\"1.5\"/>\n          <path d=\"M22 6L38 22L22 38L6 22Z\" stroke=\"#b8924a\" stroke-width=\"1.5\" fill=\"none\"/>\n          <rect x=\"16\" y=\"16\" width=\"12\" height=\"12\" fill=\"#0a0a0a\" transform=\"rotate(45 22 22)\"/>\n        </svg>\n        <div class=\"aur-brand-text\">\n          <div class=\"aur-brand-name\">{{content:brand_name}}</div>\n          <div class=\"aur-brand-tagline\">{{content:brand_tagline}}</div>\n        </div>\n      </div>\n      <div class=\"aur-header-divider\">\n        <span class=\"aur-divider-line\"></span>\n        <span class=\"aur-divider-diamond\"></span>\n        <span class=\"aur-divider-line\"></span>\n      </div>\n    </header>\n\n    <div class=\"aur-body\">\n      <div class=\"aur-intro\">\n        <h2 class=\"aur-title\">{{form:title}}</h2>\n        <p class=\"aur-description\">{{form:description}}</p>\n      </div>\n\n      <section class=\"aur-section\">\n        <div class=\"aur-section-label\">\n          <svg class=\"aur-section-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\">\n            <path d=\"M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\"></path>\n            <circle cx=\"12\" cy=\"7\" r=\"4\"></circle>\n          </svg>\n          <span>{{content:section_info}}</span>\n        </div>\n        <div class=\"aur-fields\">\n          {{field:row_name}}\n          {{field:email}}\n          {{field:phone}}\n          {{field:row_location}}\n        </div>\n      </section>\n\n      <section class=\"aur-section aur-collection-section\" data-mf-script-root=\"aurora_filter\">\n        <div class=\"aur-section-label\">\n          <svg class=\"aur-section-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\">\n            <path d=\"M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z\"></path>\n            <line x1=\"3\" y1=\"6\" x2=\"21\" y2=\"6\"></line>\n            <path d=\"M16 10a4 4 0 01-8 0\"></path>\n          </svg>\n          <span>{{content:section_collection}}</span>\n        </div>\n\n        <div class=\"aur-filter-bar\">\n          <button class=\"aur-filter-btn\" data-filter=\"all\">{{content:filter_all}}</button>\n          <button class=\"aur-filter-btn\" data-filter=\"women\">{{content:filter_women}}</button>\n          <button class=\"aur-filter-btn\" data-filter=\"men\">{{content:filter_men}}</button>\n          <button class=\"aur-filter-btn\" data-filter=\"accessories\">{{content:filter_accessories}}</button>\n        </div>\n\n        <div class=\"aur-products-grid\">\n          <div class=\"aur-product-card\" data-category=\"{{content:p1_cat}}\">\n            <div class=\"aur-product-badge\">{{content:p1_badge}}</div>\n            <div class=\"aur-product-image\"><img src=\"{{content:p1_image}}\" alt=\"{{content:p1_alt}}\" loading=\"lazy\"></div>\n            <div class=\"aur-product-info\">\n              <div class=\"aur-product-name\">{{content:p1_name}}</div>\n              <div class=\"aur-product-desc\">{{content:p1_desc}}</div>\n              <div class=\"aur-product-price\">{{content:p1_price}}</div>\n            </div>\n          </div>\n          <div class=\"aur-product-card\" data-category=\"{{content:p2_cat}}\">\n            <div class=\"aur-product-badge\">{{content:p2_badge}}</div>\n            <div class=\"aur-product-image\"><img src=\"{{content:p2_image}}\" alt=\"{{content:p2_alt}}\" loading=\"lazy\"></div>\n            <div class=\"aur-product-info\">\n              <div class=\"aur-product-name\">{{content:p2_name}}</div>\n              <div class=\"aur-product-desc\">{{content:p2_desc}}</div>\n              <div class=\"aur-product-price\">{{content:p2_price}}</div>\n            </div>\n          </div>\n          <div class=\"aur-product-card\" data-category=\"{{content:p3_cat}}\">\n            <div class=\"aur-product-badge\">{{content:p3_badge}}</div>\n            <div class=\"aur-product-image\"><img src=\"{{content:p3_image}}\" alt=\"{{content:p3_alt}}\" loading=\"lazy\"></div>\n            <div class=\"aur-product-info\">\n              <div class=\"aur-product-name\">{{content:p3_name}}</div>\n              <div class=\"aur-product-desc\">{{content:p3_desc}}</div>\n              <div class=\"aur-product-price\">{{content:p3_price}}</div>\n            </div>\n          </div>\n          <div class=\"aur-product-card\" data-category=\"{{content:p4_cat}}\">\n            <div class=\"aur-product-image\"><img src=\"{{content:p4_image}}\" alt=\"{{content:p4_alt}}\" loading=\"lazy\"></div>\n            <div class=\"aur-product-info\">\n              <div class=\"aur-product-name\">{{content:p4_name}}</div>\n              <div class=\"aur-product-desc\">{{content:p4_desc}}</div>\n              <div class=\"aur-product-price\">{{content:p4_price}}</div>\n            </div>\n          </div>\n          <div class=\"aur-product-card\" data-category=\"{{content:p5_cat}}\">\n            <div class=\"aur-product-badge\">{{content:p5_badge}}</div>\n            <div class=\"aur-product-image\"><img src=\"{{content:p5_image}}\" alt=\"{{content:p5_alt}}\" loading=\"lazy\"></div>\n            <div class=\"aur-product-info\">\n              <div class=\"aur-product-name\">{{content:p5_name}}</div>\n              <div class=\"aur-product-desc\">{{content:p5_desc}}</div>\n              <div class=\"aur-product-price\">{{content:p5_price}}</div>\n            </div>\n          </div>\n          <div class=\"aur-product-card\" data-category=\"{{content:p6_cat}}\">\n            <div class=\"aur-product-image\"><img src=\"{{content:p6_image}}\" alt=\"{{content:p6_alt}}\" loading=\"lazy\"></div>\n            <div class=\"aur-product-info\">\n              <div class=\"aur-product-name\">{{content:p6_name}}</div>\n              <div class=\"aur-product-desc\">{{content:p6_desc}}</div>\n              <div class=\"aur-product-price\">{{content:p6_price}}</div>\n            </div>\n          </div>\n          <div class=\"aur-product-card\" data-category=\"{{content:p7_cat}}\">\n            <div class=\"aur-product-badge\">{{content:p7_badge}}</div>\n            <div class=\"aur-product-image\"><img src=\"{{content:p7_image}}\" alt=\"{{content:p7_alt}}\" loading=\"lazy\"></div>\n            <div class=\"aur-product-info\">\n              <div class=\"aur-product-name\">{{content:p7_name}}</div>\n              <div class=\"aur-product-desc\">{{content:p7_desc}}</div>\n              <div class=\"aur-product-price\">{{content:p7_price}}</div>\n            </div>\n          </div>\n          <div class=\"aur-product-card\" data-category=\"{{content:p8_cat}}\">\n            <div class=\"aur-product-image\"><img src=\"{{content:p8_image}}\" alt=\"{{content:p8_alt}}\" loading=\"lazy\"></div>\n            <div class=\"aur-product-info\">\n              <div class=\"aur-product-name\">{{content:p8_name}}</div>\n              <div class=\"aur-product-desc\">{{content:p8_desc}}</div>\n              <div class=\"aur-product-price\">{{content:p8_price}}</div>\n            </div>\n          </div>\n        </div>\n        {{script:aurora_filter}}\n      </section>\n\n      <section class=\"aur-section\">\n        <div class=\"aur-section-label\">\n          <svg class=\"aur-section-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\">\n            <path d=\"M12 20V10M18 20V4M6 20v-4\"></path>\n          </svg>\n          <span>{{content:section_preferences}}</span>\n        </div>\n        <div class=\"aur-fields\">\n          {{field:style_preference}}\n          {{field:budget_range}}\n          {{field:consultation_type}}\n          {{field:row_datetime}}\n          {{field:style_notes}}\n        </div>\n      </section>\n\n      <div class=\"aur-newsletter\">{{field:newsletter}}</div>\n\n      <div class=\"aur-actions\">\n        <button type=\"submit\" class=\"aur-submit\">{{form:submit}}</button>\n      </div>\n\n      <p class=\"aur-footer-note\">{{content:footer_note}}</p>\n    </div>\n\n    <div class=\"aur-accent-bar\"></div>\n  </div>\n</div>",
+    "CustomCss": "@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap');:root{--aur-black:#0a0a0a;--aur-charcoal:#1a1a1a;--aur-dark:#2d2d2d;--aur-gray:#6b6b6b;--aur-light-gray:#b0b0b0;--aur-border:#e5dfd5;--aur-cream:#faf7f2;--aur-ivory:#f5f0e8;--aur-white:#ffffff;--aur-gold:#b8924a;--aur-gold-dk:#9a7838;--aur-shadow:0 2px 40px rgba(0,0,0,.08);--aur-radius:2px}*{box-sizing:border-box;margin:0;padding:0}.mfp.aur-form{font-family:'Inter',system-ui,sans-serif;background:var(--aur-cream);min-height:100vh;padding:32px 20px;display:flex;justify-content:center;align-items:flex-start}.aur-card{max-width:100%;width:100%;background:var(--aur-white);border:1px solid var(--aur-border);box-shadow:var(--aur-shadow)}.aur-accent-bar{height:3px;background:linear-gradient(90deg,var(--aur-black) 0%,var(--aur-gold) 50%,var(--aur-black) 100%)}.aur-header{padding:28px 36px 22px;border-bottom:1px solid var(--aur-border);text-align:center}.aur-brand{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:14px}.aur-logo{width:44px;height:44px;flex-shrink:0}.aur-brand-text{text-align:left}.aur-brand-name{font-family:'Inter',sans-serif;font-size:18px;font-weight:700;color:var(--aur-black);letter-spacing:.16em;line-height:1}.aur-brand-tagline{font-size:9px;font-weight:500;color:var(--aur-gold);letter-spacing:.16em;text-transform:uppercase;margin-top:3px}.aur-header-divider{display:flex;align-items:center;justify-content:center;gap:10px}.aur-divider-line{flex:0 0 70px;height:1px;background:var(--aur-border)}.aur-divider-diamond{width:7px;height:7px;background:var(--aur-gold);transform:rotate(45deg)}.aur-body{padding:30px 36px 36px}.aur-intro{text-align:center;margin-bottom:30px}.aur-title{font-family:'Playfair Display',Georgia,serif;font-size:28px;font-weight:400;color:var(--aur-black);margin:0 0 10px}.aur-description{font-size:13px;color:var(--aur-gray);margin:0;line-height:1.6;letter-spacing:.02em}.aur-section{margin-bottom:28px}.aur-section-label{display:flex;align-items:center;gap:10px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:var(--aur-black);margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--aur-border)}.aur-section-icon{width:16px;height:16px;color:var(--aur-gold);flex-shrink:0}.aur-fields{display:flex;flex-direction:column;gap:14px}.aur-collection-section{margin:0 -36px 28px;padding:24px 36px;background:var(--aur-ivory);border-top:1px solid var(--aur-border);border-bottom:1px solid var(--aur-border)}.aur-filter-bar{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}.aur-filter-btn{padding:7px 18px;font-family:'Inter',sans-serif;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--aur-border);background:var(--aur-white);color:var(--aur-dark);cursor:pointer;transition:all .2s;border-radius:var(--aur-radius)}.aur-filter-btn:hover{border-color:var(--aur-black);color:var(--aur-black)}.aur-filter-btn.active{background:var(--aur-black);color:var(--aur-white);border-color:var(--aur-black)}.aur-products-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.aur-product-card{background:var(--aur-white);border:1px solid var(--aur-border);position:relative;cursor:pointer;transition:box-shadow .2s,transform .2s}.aur-product-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.1);transform:translateY(-2px)}.aur-product-image{aspect-ratio:1/1;overflow:hidden;background:var(--aur-ivory)}.aur-product-image img{width:100%;height:100%;object-fit:cover;transition:transform .4s ease}.aur-product-card:hover .aur-product-image img{transform:scale(1.05)}.aur-product-badge{position:absolute;top:10px;left:10px;font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;background:var(--aur-black);color:var(--aur-white)}.aur-product-info{padding:12px 14px}.aur-product-name{font-family:'Playfair Display',serif;font-size:13px;font-weight:500;color:var(--aur-black);margin-bottom:3px}.aur-product-desc{font-size:11px;color:var(--aur-gray);margin-bottom:6px;line-height:1.4}.aur-product-price{font-size:13px;font-weight:600;color:var(--aur-gold-dk)}.aur-newsletter{margin-bottom:18px;padding:14px;background:var(--aur-ivory);border:1px solid var(--aur-border)}.aur-actions{margin-bottom:12px}.aur-submit{width:100%;padding:15px 32px;font-family:'Inter',sans-serif;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;background:var(--aur-black);color:var(--aur-white);border:none;cursor:pointer;transition:background .2s,letter-spacing .2s}.aur-submit:hover{background:var(--aur-charcoal);letter-spacing:.2em}.aur-footer-note{text-align:center;font-size:11px;color:var(--aur-gray);letter-spacing:.04em}.mfp.aur-form .mf-field-label,.mfp.aur-form .mf-label{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--aur-black);margin-bottom:7px;display:block}.mfp.aur-form .mf-input,.mfp.aur-form .mf-select,.mfp.aur-form .mf-textarea{border:1px solid var(--aur-border);border-radius:var(--aur-radius);background:var(--aur-ivory);font-family:'Inter',sans-serif;font-size:13px;color:var(--aur-dark);padding:11px 14px;width:100%;transition:border-color .2s,background .2s}.mfp.aur-form .mf-input:focus,.mfp.aur-form .mf-select:focus,.mfp.aur-form .mf-textarea:focus{outline:none;border-color:var(--aur-black);background:var(--aur-white)}.mfp.aur-form .mf-input::placeholder,.mfp.aur-form .mf-textarea::placeholder{color:var(--aur-light-gray)}.mfp.aur-form .mf-field-group{margin-bottom:0}.mfp.aur-form .mf-fields-container{gap:14px}.mfp.aur-form .mf-row{gap:14px}.mfp.aur-form .mf-option-group{display:flex;flex-direction:column;gap:8px}.mfp.aur-form .mf-option-item{display:flex;align-items:center;gap:10px}.mfp.aur-form .mf-required{color:var(--aur-gold)}.mfp.aur-form .mf-textarea{resize:vertical;min-height:100px}.aur-intro,.aur-section:not(.aur-collection-section),.aur-newsletter,.aur-actions,.aur-footer-note{max-width:720px;margin-left:auto;margin-right:auto}@media(min-width:640px){.aur-products-grid{grid-template-columns:repeat(3,1fr);gap:16px}}@media(min-width:960px){.aur-products-grid{grid-template-columns:repeat(4,1fr);gap:18px}}@media(min-width:1280px){.aur-products-grid{grid-template-columns:repeat(5,1fr)}}@media(min-width:1600px){.aur-products-grid{grid-template-columns:repeat(6,1fr);gap:20px}}@media(max-width:600px){.mfp.aur-form{padding:0}.aur-card{border-left:none;border-right:none}.aur-header{padding:20px}.aur-body{padding:20px}.aur-collection-section{margin:0 -20px 24px;padding:20px}.aur-products-grid{gap:10px}.mfp.aur-form .mf-row{grid-template-columns:1fr!important;gap:0!important}.mfp.aur-form .mf-row-column{width:100%!important;min-width:0!important}.aur-title{font-size:22px}.aur-intro{margin-bottom:22px}}@media(max-width:400px){.aur-products-grid{gap:8px}.aur-product-info{padding:10px 12px}.aur-product-name{font-size:12px}.aur-product-desc{font-size:10px}.aur-product-price{font-size:12px}.aur-header,.aur-body{padding:16px}.aur-collection-section{margin:0 -16px 20px;padding:16px}}",
+    "CustomContent": {
+      "brand_name": "AURORA",
+      "brand_tagline": "PREMIUM AMERICAN FASHION",
+      "section_info": "Your Information",
+      "section_collection": "Featured Collection",
+      "section_preferences": "Style Preferences",
+      "footer_note": "Complimentary styling for all consultations",
+      "filter_all": "All",
+      "filter_women": "Women",
+      "filter_men": "Men",
+      "filter_accessories": "Accessories",
+      "p1_badge": "New Arrival",
+      "p1_name": "Cashmere Overcoat",
+      "p1_desc": "Italian cashmere, tailored silhouette",
+      "p1_price": "$1,850",
+      "p1_alt": "Cashmere Overcoat",
+      "p1_cat": "women",
+      "p1_image": "https://images.unsplash.com/photo-1548624313-0396c75e4b1a?w=400&h=500&fit=crop",
+      "p2_badge": "Bestseller",
+      "p2_name": "Leather Tote",
+      "p2_desc": "Full-grain leather, handcrafted",
+      "p2_price": "$695",
+      "p2_alt": "Leather Tote",
+      "p2_cat": "accessories",
+      "p2_image": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=500&fit=crop",
+      "p3_badge": "Limited",
+      "p3_name": "Silk Blazer",
+      "p3_desc": "Raw silk blend, modern cut",
+      "p3_price": "$1,295",
+      "p3_alt": "Silk Blazer",
+      "p3_cat": "women",
+      "p3_image": "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400&h=500&fit=crop",
+      "p4_badge": "",
+      "p4_name": "Merino Sweater",
+      "p4_desc": "100% merino wool, relaxed fit",
+      "p4_price": "$485",
+      "p4_alt": "Merino Sweater",
+      "p4_cat": "men",
+      "p4_image": "https://images.unsplash.com/photo-1620012253295-c15cc3e65df4?w=400&h=500&fit=crop",
+      "p5_badge": "Exclusive",
+      "p5_name": "Designer Watch",
+      "p5_desc": "Swiss movement, sapphire crystal",
+      "p5_price": "$2,450",
+      "p5_alt": "Designer Watch",
+      "p5_cat": "accessories",
+      "p5_image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=500&fit=crop",
+      "p6_badge": "",
+      "p6_name": "Wool Suit",
+      "p6_desc": "Super 150s wool, bespoke tailoring",
+      "p6_price": "$2,195",
+      "p6_alt": "Wool Suit",
+      "p6_cat": "men",
+      "p6_image": "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&h=500&fit=crop",
+      "p7_badge": "New",
+      "p7_name": "Evening Gown",
+      "p7_desc": "Flowing silk, timeless elegance",
+      "p7_price": "$1,650",
+      "p7_alt": "Evening Gown",
+      "p7_cat": "women",
+      "p7_image": "https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=400&h=500&fit=crop",
+      "p8_badge": "",
+      "p8_name": "Leather Belt",
+      "p8_desc": "Premium leather, polished buckle",
+      "p8_price": "$295",
+      "p8_alt": "Leather Belt",
+      "p8_cat": "accessories",
+      "p8_image": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=500&fit=crop"
+    },
+    "CustomScripts": {
+      "aurora_filter": "(function(root,ctx){if(!root)return;var k='aurFilterInit';if(root.dataset[k]==='1')return;root.dataset[k]='1';var btns=root.querySelectorAll('.aur-filter-btn');var cards=root.querySelectorAll('.aur-product-card');if(!btns.length||!cards.length)return;function applyFilter(cat){btns.forEach(function(b){b.classList.toggle('active',b.dataset.filter===cat)});cards.forEach(function(c){c.style.display=(cat==='all'||c.dataset.category===cat)?'':'none'});}btns.forEach(function(btn){btn.addEventListener('click',function(){applyFilter(btn.dataset.filter);});});applyFilter('all');})(window.__mfCurrentScriptRoot,window.__mfScriptContext);",
+      "theme_selector": "(function(root,ctx){\nvar tp=(ctx&&ctx.themePreset)||null;\nvar TP={\"milano-ivory\":{\"name\":\"Milano Ivory\",\"style\":\"editorial\",\"background\":\"oklch(0.97 0.008 85)\",\"foreground\":\"oklch(0.18 0.01 85)\",\"card\":\"oklch(0.995 0.005 85)\",\"primary\":\"oklch(0.55 0.08 55)\",\"primaryForeground\":\"oklch(0.98 0 0)\",\"secondary\":\"oklch(0.92 0.02 85)\",\"muted\":\"oklch(0.95 0.01 85)\",\"mutedForeground\":\"oklch(0.45 0.02 85)\",\"accent\":\"oklch(0.65 0.10 50)\",\"border\":\"oklch(0.88 0.02 85)\"},\"parisian-noir\":{\"name\":\"Parisian Noir\",\"style\":\"editorial\",\"background\":\"oklch(0.97 0.003 0)\",\"foreground\":\"oklch(0.12 0 0)\",\"card\":\"oklch(1 0 0)\",\"primary\":\"oklch(0.18 0 0)\",\"primaryForeground\":\"oklch(0.98 0 0)\",\"secondary\":\"oklch(0.92 0 0)\",\"muted\":\"oklch(0.95 0 0)\",\"mutedForeground\":\"oklch(0.50 0 0)\",\"accent\":\"oklch(0.70 0.14 45)\",\"border\":\"oklch(0.88 0 0)\"},\"tokyo-mauve\":{\"name\":\"Tokyo Mauve\",\"style\":\"editorial\",\"background\":\"oklch(0.96 0.012 320)\",\"foreground\":\"oklch(0.22 0.03 320)\",\"card\":\"oklch(0.99 0.005 320)\",\"primary\":\"oklch(0.50 0.09 320)\",\"primaryForeground\":\"oklch(0.98 0 0)\",\"secondary\":\"oklch(0.90 0.03 320)\",\"muted\":\"oklch(0.94 0.01 320)\",\"mutedForeground\":\"oklch(0.48 0.03 320)\",\"accent\":\"oklch(0.70 0.08 350)\",\"border\":\"oklch(0.87 0.02 320)\"},\"dubai-champagne\":{\"name\":\"Dubai Champagne\",\"style\":\"editorial\",\"background\":\"oklch(0.97 0.015 85)\",\"foreground\":\"oklch(0.24 0.04 50)\",\"card\":\"oklch(0.995 0.006 85)\",\"primary\":\"oklch(0.62 0.11 75)\",\"primaryForeground\":\"oklch(0.15 0.02 50)\",\"secondary\":\"oklch(0.92 0.03 75)\",\"muted\":\"oklch(0.94 0.01 85)\",\"mutedForeground\":\"oklch(0.50 0.03 50)\",\"accent\":\"oklch(0.58 0.08 45)\",\"border\":\"oklch(0.85 0.03 85)\"},\"london-sage\":{\"name\":\"London Sage\",\"style\":\"editorial\",\"background\":\"oklch(0.97 0.006 150)\",\"foreground\":\"oklch(0.22 0.02 150)\",\"card\":\"oklch(0.99 0.003 150)\",\"primary\":\"oklch(0.45 0.08 150)\",\"primaryForeground\":\"oklch(0.98 0 0)\",\"secondary\":\"oklch(0.88 0.03 150)\",\"muted\":\"oklch(0.94 0.01 150)\",\"mutedForeground\":\"oklch(0.48 0.03 150)\",\"accent\":\"oklch(0.70 0.06 85)\",\"border\":\"oklch(0.86 0.02 150)\"},\"new-york-charcoal\":{\"name\":\"New York Charcoal\",\"style\":\"editorial\",\"background\":\"oklch(0.94 0.003 240)\",\"foreground\":\"oklch(0.15 0.01 240)\",\"card\":\"oklch(0.99 0.002 240)\",\"primary\":\"oklch(0.30 0.02 240)\",\"primaryForeground\":\"oklch(0.98 0 0)\",\"secondary\":\"oklch(0.90 0.01 240)\",\"muted\":\"oklch(0.93 0.005 240)\",\"mutedForeground\":\"oklch(0.48 0.01 240)\",\"accent\":\"oklch(0.62 0.13 25)\",\"border\":\"oklch(0.86 0.01 240)\"}};\nvar VMAP={\"--aur-bg\":\"background\",\"--aur-cream\":\"background\",\"--aur-ivory\":\"muted\",\"--aur-white\":\"card\",\"--aur-black\":\"foreground\",\"--aur-charcoal\":\"foreground\",\"--aur-dark\":\"foreground\",\"--aur-gray\":\"mutedForeground\",\"--aur-light-gray\":\"muted\",\"--aur-border\":\"border\",\"--aur-gold\":\"primary\",\"--aur-gold-dk\":\"accent\"};\nvar GROUPS=[];\nvar SCOPE=\".mfp.aur-form\";\nvar DEFAULT=\"milano-ivory\";\nvar PFX=\"aur\";\n\nvar cur=DEFAULT;var isOpen=false;var styleId=PFX+'-theme-vars';\nfunction scopeSel(){\n  var host=(root&&root.closest)?root.closest('.mf-form-wrapper,[id^=\"mf-form-wrapper-\"]'):null;\n  var id=host&&host.id?('#'+host.id+' '):(tp&&tp.formId?('#mf-form-wrapper-'+String(tp.formId)+' '):'');\n  return id?(id+SCOPE):SCOPE;\n}\nfunction applyTheme(key){\n  var t=TP[key];if(!t)return;cur=key;\n  var s=document.getElementById(styleId);\n  if(!s){s=document.createElement('style');s.id=styleId;document.head.appendChild(s);}\n  var sel=scopeSel();\n  var rules=sel+'{';\n  // Generic vars (MegaForm + shadcn compat)\n  rules+='--background:'+t.background+';';\n  rules+='--foreground:'+t.foreground+';';\n  rules+='--card:'+t.card+';';\n  rules+='--card-foreground:'+t.foreground+';';\n  rules+='--primary:'+t.primary+';';\n  rules+='--primary-foreground:'+t.primaryForeground+';';\n  rules+='--secondary:'+t.secondary+';';\n  rules+='--secondary-foreground:'+t.foreground+';';\n  rules+='--muted:'+t.muted+';';\n  rules+='--muted-foreground:'+t.mutedForeground+';';\n  rules+='--accent:'+t.accent+';';\n  rules+='--accent-foreground:'+t.foreground+';';\n  rules+='--border:'+t.border+';';\n  rules+='--input:'+t.muted+';';\n  rules+='--ring:'+t.primary+';';\n  // Template-specific vars via VMAP\n  Object.keys(VMAP).forEach(function(cssVar){\n    var field=VMAP[cssVar];\n    if(t[field]!==undefined){rules+=cssVar+':'+t[field]+';';}\n  });\n  rules+='}';\n  s.textContent=rules;\n  var ps=document.getElementById(PFX+'-ts-swatch');if(ps)ps.style.background=t.primary;\n  var pn=document.getElementById(PFX+'-ts-name');if(pn)pn.textContent=t.name;\n  document.querySelectorAll('[data-'+PFX+'-key]').forEach(function(btn){\n    var active=btn.getAttribute('data-'+PFX+'-key')===key;\n    btn.style.background=active?'color-mix(in oklab,'+t.primary+' 12%,transparent)':'';\n    var ck=btn.querySelector('.'+PFX+'-check');if(ck)ck.style.display=active?'inline':'none';\n  });\n  if(tp&&typeof tp.setActiveThemeKey==='function'){try{tp.setActiveThemeKey(key,true);}catch(e){}}\n  else{try{localStorage.setItem(PFX+'-theme',key);}catch(e){}}\n}\nfunction mkBtn(key,theme){\n  var btn=document.createElement('button');btn.type='button';\n  btn.setAttribute('data-'+PFX+'-key',key);\n  btn.style.cssText='display:flex;align-items:center;gap:12px;width:100%;padding:9px 14px;text-align:left;border:none;cursor:pointer;font-family:inherit;background:transparent;font-size:13px;transition:background .15s;';\n  var sw=document.createElement('div');sw.style.cssText='display:flex;gap:3px;flex-shrink:0;';\n  [theme.primary,theme.secondary,theme.accent].forEach(function(c){\n    var s=document.createElement('span');\n    s.style.cssText='width:12px;height:12px;border-radius:50%;border:1px solid rgba(0,0,0,.12);background:'+c+';display:inline-block;';\n    sw.appendChild(s);\n  });\n  var nm=document.createElement('span');\n  nm.style.cssText='color:#222;flex:1;font-size:13px;font-family:inherit;';\n  nm.textContent=theme.name;\n  var ck=document.createElement('svg');\n  ck.setAttribute('width','16');ck.setAttribute('height','16');\n  ck.setAttribute('viewBox','0 0 20 20');ck.setAttribute('fill','currentColor');\n  ck.setAttribute('class',PFX+'-check');\n  ck.style.cssText='margin-left:auto;color:'+theme.primary+';display:none;width:16px;height:16px;flex-shrink:0;';\n  ck.innerHTML='<path fill-rule=\"evenodd\" d=\"M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z\" clip-rule=\"evenodd\"/>';\n  btn.appendChild(sw);btn.appendChild(nm);btn.appendChild(ck);\n  btn.addEventListener('mouseenter',function(){if(btn.getAttribute('data-'+PFX+'-key')!==cur)btn.style.background='rgba(0,0,0,.04)';});\n  btn.addEventListener('mouseleave',function(){if(btn.getAttribute('data-'+PFX+'-key')!==cur)btn.style.background='';});\n  btn.addEventListener('click',function(e){e.stopPropagation();applyTheme(key);close();});\n  return btn;\n}\nfunction mkSection(title,list,last){\n  var sec=document.createElement('div');\n  sec.style.cssText='padding:10px 6px;'+(last?'':'border-bottom:1px solid rgba(0,0,0,.08);');\n  if(title){\n    var h=document.createElement('p');\n    h.style.cssText='font-size:10px;font-weight:600;color:#888;letter-spacing:.12em;text-transform:uppercase;margin:0 8px 6px;font-family:inherit;';\n    h.textContent=title;sec.appendChild(h);\n  }\n  list.forEach(function(e){sec.appendChild(mkBtn(e[0],e[1]));});\n  return sec;\n}\n// Build UI\nvar wrap=document.createElement('div');\nwrap.id=PFX+'-ts-wrap';\nwrap.style.cssText='position:fixed;top:16px;right:16px;z-index:99999;font-family:system-ui,-apple-system,sans-serif;';\nvar pill=document.createElement('button');pill.type='button';\npill.style.cssText='display:flex;align-items:center;gap:8px;padding:8px 14px;background:#fff;border:1px solid rgba(0,0,0,.14);border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.1);cursor:pointer;font-family:inherit;font-size:13px;color:#222;white-space:nowrap;';\nvar ps=document.createElement('span');ps.id=PFX+'-ts-swatch';\nps.style.cssText='width:16px;height:16px;border-radius:50%;flex-shrink:0;background:#888;display:inline-block;border:1px solid rgba(0,0,0,.1);';\nvar pn=document.createElement('span');pn.id=PFX+'-ts-name';pn.textContent='Theme';\nvar chv=document.createElement('svg');\nchv.setAttribute('width','14');chv.setAttribute('height','14');\nchv.setAttribute('viewBox','0 0 24 24');chv.setAttribute('fill','none');\nchv.setAttribute('stroke','currentColor');chv.setAttribute('stroke-width','2');\nchv.style.cssText='transition:transform .2s;color:#888;';\nchv.innerHTML='<polyline points=\"6 9 12 15 18 9\"/>';\npill.appendChild(ps);pill.appendChild(pn);pill.appendChild(chv);\nvar panel=document.createElement('div');\npanel.style.cssText='position:absolute;top:calc(100% + 8px);right:0;width:270px;background:#fff;border:1px solid rgba(0,0,0,.1);border-radius:10px;box-shadow:0 12px 36px rgba(0,0,0,.15);max-height:70vh;overflow-y:auto;display:none;';\n// Group by style or flat\nvar entries=Object.entries(TP);\nif(GROUPS&&GROUPS.length){\n  GROUPS.forEach(function(g,idx){\n    var list=entries.filter(function(e){return e[1].style===g[1];});\n    if(list.length)panel.appendChild(mkSection(g[0],list,idx===GROUPS.length-1));\n  });\n}else{\n  panel.appendChild(mkSection('',entries,true));\n}\nwrap.appendChild(pill);wrap.appendChild(panel);\nif(!tp||tp.selectorEnabled!==false){\n  document.body.appendChild(wrap);\n  function positionWrap(){\n    var nav=document.querySelector('header,.dnn-nav,nav[class*=nav]');\n    var navH=nav?nav.getBoundingClientRect().bottom:0;\n    wrap.style.top=Math.max(16,navH+8)+'px';\n  }\n  positionWrap();\n  window.addEventListener('resize',positionWrap);\n  setTimeout(positionWrap,500);\n  function open(){isOpen=true;panel.style.display='block';chv.style.transform='rotate(180deg)';}\n  function close(){isOpen=false;panel.style.display='none';chv.style.transform='';}\n  pill.addEventListener('click',function(e){e.stopPropagation();isOpen?close():open();});\n  document.addEventListener('click',function(){if(isOpen)close();});\n  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen)close();});\n}\nvar saved=(tp&&typeof tp.getActiveThemeKey==='function'?tp.getActiveThemeKey():(tp&&tp.savedThemeKey)||null);\nif(saved==null){try{saved=localStorage.getItem(PFX+'-theme');}catch(e){}}\napplyTheme(saved||((tp&&tp.defaultThemeKey)||DEFAULT));\nif(tp&&typeof tp.reportAvailable==='function'){try{tp.reportAvailable({activeThemeKey:cur,selectedThemeKey:cur,dirty:false});}catch(e){}}\n})(window.__mfCurrentScriptRoot||document,window.__mfScriptContext||{});\n"
+    },
+    "Rules": [],
+    "WorkflowTemplate": null,
+    "submitButtonText": "Submit",
+    "successMessage": ""
+  }
+}

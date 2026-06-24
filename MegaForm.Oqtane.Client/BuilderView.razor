@@ -1,0 +1,294 @@
+@namespace MegaForm.Client
+@implements IDisposable
+@inject IMegaFormService MegaFormService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime Js
+@using System.Collections.Generic
+@using Microsoft.AspNetCore.Components.Routing
+@using MegaForm.Oqtane.Shared.Models
+
+@* ── MegaForm Builder View ────────────────────────────────────────────────
+   Inline child component rendered inside Index.razor when ?mfpanel=builder.
+   Receives primitive context via [Parameter] instead of inheriting ModuleBase.
+   Badge: OQBuilderInline v20260605-01
+   ──────────────────────────────────────────────────────────────────────── *@
+
+<div id="mf-builder-root"
+     data-assets-base="/Modules/MegaForm/"
+     data-form-id="@_formId"
+     data-is-new="@(_formId == 0 ? "true" : "false")"
+     data-initial-right-tab="@_initialRightTab"
+     data-api-base="/api/MegaForm/"
+     data-return-url="@_returnUrl"
+     data-dashboard-url="@BuildPanelUrl("dashboard")"
+     data-builder-url="@BuildPanelUrl("builder")"
+     data-submissions-url="@BuildPanelUrl("submissions")"
+     data-platform="oqtane"
+     data-fullscreen-host="@(Inline ? "false" : "true")"
+     data-module-id="@ModuleId"
+     data-portal-id="@SiteId"
+     data-site-id="@SiteId"
+     data-tab-id="@PageId"
+     data-schema-json="@(_schemaJson ?? "{}")"
+     data-form-status="@(_formStatus ?? "draft")"
+     data-oq-builder-boot-badge="@OQ_BUILDER_BOOT_BADGE">
+</div>
+<script data-mf-builder-static-boot="@OQ_BUILDER_BOOT_BADGE">
+    @((MarkupString)BuildStaticBuilderBootScript())
+</script>
+
+@code {
+    [Parameter] public int ModuleId { get; set; }
+    [Parameter] public int PageId { get; set; }
+    [Parameter] public int SiteId { get; set; }
+    [Parameter] public string AuthToken { get; set; } = string.Empty;
+    [Parameter] public bool IsAdmin { get; set; }
+    [Parameter] public int ConfiguredFormId { get; set; }
+    // [Inline 2026-06-12] When true, the loader renders the builder in the module pane
+    // (data-fullscreen-host="false") instead of hoisting + full-screen takeover.
+    [Parameter] public bool Inline { get; set; }
+
+    private string ModulePath() => "Modules/MegaForm/";
+
+    private const string OQ_BUILDER_BOOT_BADGE = "OQBuilderInline v20260605-01";
+    private const string BUILDER_PREVIEW_CSS_BADGE = "BuilderPreviewCss v20260422-01";
+
+    private int _formId;
+    private bool _done;
+    private string _schemaJson = "{}";
+    private string _formStatus = "draft";
+    private string _returnUrl = "/";
+    private string _initialRightTab = "field";
+    private string _platformBootScript = string.Empty;
+
+    private string ComputeReturnUrl()
+    {
+        try
+        {
+            var uri = NavigationManager?.Uri ?? string.Empty;
+            var noQuery = uri.Split('?')[0].Split('#')[0];
+            var baseUri = new Uri(NavigationManager?.BaseUri ?? "http://localhost/");
+            var origin = baseUri.GetLeftPart(UriPartial.Authority);
+            var path = noQuery.StartsWith(origin, StringComparison.OrdinalIgnoreCase)
+                ? noQuery.Substring(origin.Length)
+                : noQuery;
+            var idx = path.LastIndexOf("/builder", StringComparison.OrdinalIgnoreCase);
+            if (idx > 0)
+            {
+                return path.Substring(0, idx) + "/Dashboard";
+            }
+            return path;
+        }
+        catch { return "/"; }
+    }
+
+    private string BuildPanelUrl(string panel)
+    {
+        var baseUrl = NavigationManager.Uri.Split('?')[0].Split('#')[0];
+        var parts = new List<string>();
+        var editValue = GetQueryValue(NavigationManager.Uri, "edit");
+        if (!string.IsNullOrWhiteSpace(editValue))
+            parts.Add("edit=" + Uri.EscapeDataString(editValue));
+        parts.Add("mfpanel=" + Uri.EscapeDataString(panel));
+        return parts.Count == 0 ? baseUrl : baseUrl + "?" + string.Join("&", parts);
+    }
+
+    private static string GetQueryValue(string uri, string key)
+    {
+        if (string.IsNullOrWhiteSpace(uri) || string.IsNullOrWhiteSpace(key)) return string.Empty;
+        var q = uri.Contains("?") ? uri.Substring(uri.IndexOf('?') + 1) : string.Empty;
+        foreach (var part in q.Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var kv = part.Split('=', 2);
+            if (kv.Length > 0 && kv[0].Equals(key, StringComparison.OrdinalIgnoreCase))
+                return kv.Length > 1 ? Uri.UnescapeDataString(kv[1]) : string.Empty;
+        }
+        return string.Empty;
+    }
+
+    protected override bool ShouldRender() => !_done;
+
+    protected override void OnParametersSet()
+    {
+        var tokenJs  = string.IsNullOrEmpty(AuthToken)
+                       ? "null"
+                       : $"'{AuthToken.Replace("'", "\\'")}'";
+        var aiEnabled = MegaForm.Core.Services.AiAssistant.AiFeatureGate.IsEnabled() ? "true" : "false";
+
+        var scriptContent =
+            "if(window.__MF_PLATFORM__&&window.__MF_PLATFORM__.__builderBooted)return;" +
+            "window.__MF_PLATFORM__=window.__MF_PLATFORM__||{};" +
+            "window.__MF_PLATFORM__.platform='oqtane';" +
+            $"window.__MF_PLATFORM__.apiBase='/api/MegaForm/';" +
+            // [P0-1 route fix] AiTools/AiKnowledge controllers are at /api/<Controller>/
+            // on Oqtane (NOT /api/MegaForm/...); Subform is at /api/MegaFormPopup/.
+            $"window.__MF_PLATFORM__.aiApiBase='/api/';" +
+            $"window.__MF_PLATFORM__.subformApiBase='/api/MegaFormPopup/';" +
+            $"window.__MF_PLATFORM__.moduleId={ModuleId};" +
+            $"window.__MF_PLATFORM__.portalId={SiteId};" +
+            $"window.__MF_PLATFORM__.siteId={SiteId};" +
+            $"window.__MF_PLATFORM__.pageId={PageId};" +
+            $"window.__MF_PLATFORM__.authToken={tokenJs};" +
+            $"window.__MF_PLATFORM__.ai={{enabled:{aiEnabled}}};" +
+            $"window.__MF_PLATFORM__.builderBootBadge='{OQ_BUILDER_BOOT_BADGE}';" +
+            $"window.__MF_OQTANE_BUILDER_BOOT_BADGE__='{OQ_BUILDER_BOOT_BADGE}';" +
+            $"window.__MF_BUILDER_PREVIEW_CSS_BADGE__='{BUILDER_PREVIEW_CSS_BADGE}';" +
+            "window.__MF_PLATFORM__.__builderBooted=true;";
+
+        _platformBootScript = scriptContent;
+        try { _ = Js.InvokeVoidAsync("eval", scriptContent); } catch { }
+    }
+
+    protected override void OnInitialized()
+    {
+        if (!IsAdmin)
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        NavigationManager.LocationChanged += OnLocationChanged;
+        _returnUrl = ComputeReturnUrl();
+
+        var uri = NavigationManager.Uri ?? string.Empty;
+        var q = uri.Contains("?") ? uri.Substring(uri.IndexOf('?') + 1) : string.Empty;
+        var isNewMode = false;
+        foreach (var part in q.Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var kv = part.Split('=', 2);
+            var key = kv.Length > 0 ? kv[0] : string.Empty;
+            var val = kv.Length > 1 ? Uri.UnescapeDataString(kv[1]) : string.Empty;
+            if (key.Equals("tab", StringComparison.OrdinalIgnoreCase))
+            {
+                var tab = (val ?? string.Empty).Trim().ToLowerInvariant();
+                if (tab == "workflow" || tab == "flow" || tab == "bpmn" || tab == "bpmn2")
+                {
+                    _initialRightTab = "workflow";
+                }
+                else if (tab == "print")
+                {
+                    _initialRightTab = "print";
+                }
+            }
+            if (key.Equals("new", StringComparison.OrdinalIgnoreCase) &&
+                (val == "1" || val.Equals("true", StringComparison.OrdinalIgnoreCase)))
+            {
+                isNewMode = true;
+                break;
+            }
+        }
+
+        if (!isNewMode && ConfiguredFormId > 0)
+        {
+            _formId = ConfiguredFormId;
+        }
+        else if (isNewMode)
+        {
+            _formId = 0;
+        }
+
+        if (_formId == 0 && !isNewMode)
+        {
+            foreach (var part in q.Split('&', StringSplitOptions.RemoveEmptyEntries))
+            {
+                var kv = part.Split('=', 2);
+                var key = kv.Length > 0 ? kv[0] : string.Empty;
+                var val = kv.Length > 1 ? Uri.UnescapeDataString(kv[1]) : string.Empty;
+                if (key.Equals("formId", StringComparison.OrdinalIgnoreCase)
+                    && int.TryParse(val, out var uid))
+                {
+                    _formId = uid;
+                    break;
+                }
+            }
+        }
+    }
+
+    private bool _navHookDisposed;
+    private async void OnLocationChanged(object sender, LocationChangedEventArgs e)
+    {
+        try { await Js.InvokeVoidAsync("eval", CleanupCall); } catch { }
+    }
+
+    public void Dispose()
+    {
+        if (_navHookDisposed) return;
+        _navHookDisposed = true;
+        try { NavigationManager.LocationChanged -= OnLocationChanged; } catch { }
+        try { _ = Js.InvokeVoidAsync("eval", CleanupCall); } catch { }
+    }
+
+    private const string CleanupCall = @"(function(){
+        if (window.__mfBuilderCleanup) { try { window.__mfBuilderCleanup(); } catch(_e){} return; }
+        document.documentElement.classList.remove('mf-builder-open');
+        document.body.classList.remove('mf-builder-open');
+        document.body.removeAttribute('data-mf-builder-open');
+    })();";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (_formId <= 0)
+        {
+            _schemaJson = "{}";
+            _formStatus = "draft";
+            return;
+        }
+
+        try
+        {
+            var form = await MegaFormService.GetFormAsync(_formId, ModuleId, SiteId);
+            var schema = form?.ResolvedSchemaJson;
+            if (string.IsNullOrWhiteSpace(schema)) schema = form?.SchemaJson;
+            _schemaJson = string.IsNullOrWhiteSpace(schema) ? "{}" : schema;
+            _formStatus = string.IsNullOrWhiteSpace(form?.Status) ? "draft" : form.Status.ToLowerInvariant();
+        }
+        catch
+        {
+            _schemaJson = "{}";
+            _formStatus = "draft";
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        _done = true;
+
+        // [BuilderLoaderFlagCollisionFix v20260613-B160] BuilderView can be recreated by
+        // parent re-renders, so it needs ITS OWN guard so only the first instance appends
+        // the loader. CRITICAL: it must NOT reuse `__mfBuilderLoaderRan` — that flag belongs
+        // to the loader's own boot(). Previously BuilderView set `__mfBuilderLoaderRan=true`
+        // BEFORE appending the loader → the loader's boot() then saw the flag already true →
+        // "skipping duplicate boot" → the builder bundle was never loaded → BLANK builder.
+        // Use a distinct `__mfBuilderViewInjected` flag and let the loader manage its own.
+        var version = MegaForm.Oqtane.Shared.MegaFormAssetVersion.Current;
+        await Js.InvokeVoidAsync("eval", $@"
+            (function() {{
+                if (window.__mfBuilderViewInjected === true) return;
+                if (typeof window.MegaFormBuilder !== 'undefined') return;
+                var hasCss = !!document.querySelector('link[href*=""megaform-builder-shell""]');
+                if (hasCss) return;
+                window.__mfBuilderViewInjected = true;
+                var s = document.createElement('script');
+                s.src = '/{ModulePath()}js/megaform-oqtane-auth.js?v={version}';
+                document.head.appendChild(s);
+                var s2 = document.createElement('script');
+                s2.src = '/{ModulePath()}js/megaform-builder-loader.js?v={version}';
+                document.head.appendChild(s2);
+            }})();
+        ");
+    }
+
+    private string BuildStaticBuilderBootScript()
+    {
+        var version = MegaForm.Oqtane.Shared.MegaFormAssetVersion.Current;
+        return "(function(){"
+            + _platformBootScript
+            + "var root=document.getElementById('mf-builder-root');if(!root)return;"
+            + "function load(src,onload){var s=document.createElement('script');s.src=src;s.onload=onload||null;document.head.appendChild(s);}"
+            + "if(!document.querySelector('script[src*=\\\"megaform-oqtane-auth.js\\\"]'))load('/Modules/MegaForm/js/megaform-oqtane-auth.js?v=" + version + "');"
+            + "if(window.MegaFormBuilder&&typeof window.MegaFormBuilder.reInit==='function'){window.MegaFormBuilder.reInit();return;}"
+            + "load('/Modules/MegaForm/js/megaform-builder-loader.js?v=" + version + "&static=1');"
+            + "})();";
+    }
+}

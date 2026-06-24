@@ -1,0 +1,670 @@
+/*============================================================
+  MegaForm – Stored Procedures
+  ============================================================*/
+
+-- ============================================================
+-- PRE-FLIGHT: Ensure required columns exist before creating procs
+-- (handles case where 01_CreateTables ran with old schema)
+-- ============================================================
+IF EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_Forms')
+   AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_Forms') AND name = 'AppScope')
+BEGIN
+    ALTER TABLE [dbo].[MF_Forms] ADD AppScope NVARCHAR(50) NULL;
+END
+GO
+
+IF EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_SubmissionValues')
+   AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_SubmissionValues') AND name = 'ValueNumber')
+BEGIN
+    ALTER TABLE [dbo].[MF_SubmissionValues] ADD ValueNumber DECIMAL(18,6) NULL;
+    ALTER TABLE [dbo].[MF_SubmissionValues] ADD ValueDate DATETIME2 NULL;
+    ALTER TABLE [dbo].[MF_SubmissionValues] ADD ValueBit BIT NULL;
+    ALTER TABLE [dbo].[MF_SubmissionValues] ADD ValueText NVARCHAR(400) NULL;
+    ALTER TABLE [dbo].[MF_SubmissionValues] ADD FieldType NVARCHAR(50) NULL;
+END
+GO
+
+-- MF_WebhookLog: Rename old columns if they exist (Url→WebhookUrl, HttpStatus→ResponseCode, etc.)
+IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_WebhookLog') AND name = 'Url')
+   AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_WebhookLog') AND name = 'WebhookUrl')
+BEGIN
+    EXEC sp_rename 'MF_WebhookLog.Url', 'WebhookUrl', 'COLUMN';
+END
+GO
+IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_WebhookLog') AND name = 'HttpStatus')
+   AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_WebhookLog') AND name = 'ResponseCode')
+BEGIN
+    EXEC sp_rename 'MF_WebhookLog.HttpStatus', 'ResponseCode', 'COLUMN';
+END
+GO
+IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_WebhookLog') AND name = 'AttemptNumber')
+   AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_WebhookLog') AND name = 'RetryCount')
+BEGIN
+    EXEC sp_rename 'MF_WebhookLog.AttemptNumber', 'RetryCount', 'COLUMN';
+END
+GO
+IF EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_WebhookLog')
+   AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_WebhookLog') AND name = 'Success')
+BEGIN
+    ALTER TABLE [dbo].[MF_WebhookLog] ADD Success BIT NOT NULL DEFAULT 0;
+END
+GO
+
+-- MF_Files: Rename old columns if they exist
+IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_Files') AND name = 'StoragePath')
+   AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_Files') AND name = 'StoredPath')
+BEGIN
+    EXEC sp_rename 'MF_Files.StoragePath', 'StoredPath', 'COLUMN';
+END
+GO
+IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_Files') AND name = 'MimeType')
+   AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_Files') AND name = 'ContentType')
+BEGIN
+    EXEC sp_rename 'MF_Files.MimeType', 'ContentType', 'COLUMN';
+END
+GO
+IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_Files') AND name = 'FileSize')
+   AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_Files') AND name = 'FileSizeBytes')
+BEGIN
+    EXEC sp_rename 'MF_Files.FileSize', 'FileSizeBytes', 'COLUMN';
+END
+GO
+-- Drop StoredName if it exists (not used in C# model)
+IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_Files') AND name = 'StoredName')
+BEGIN
+    ALTER TABLE [dbo].[MF_Files] DROP COLUMN StoredName;
+END
+GO
+
+-- ============================================================
+-- FORMS CRUD
+-- ============================================================
+
+-- usp_MF_Form_Upsert
+IF OBJECT_ID('dbo.usp_MF_Form_Upsert','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Form_Upsert;
+GO
+CREATE PROCEDURE dbo.usp_MF_Form_Upsert
+    @FormId          INT OUTPUT,
+    @ModuleId        INT,
+    @PortalId        INT,
+    @Title           NVARCHAR(500),
+    @Description     NVARCHAR(MAX),
+    @SchemaJson      NVARCHAR(MAX),
+    @SettingsJson    NVARCHAR(MAX),
+    @ThemeJson       NVARCHAR(MAX),
+    @Status          NVARCHAR(20),
+    @SubmitButtonText NVARCHAR(200),
+    @SuccessMessage  NVARCHAR(MAX),
+    @RedirectUrl     NVARCHAR(1000),
+    @MaxSubmissions  INT,
+    @ExpiresOnUtc    DATETIME2,
+    @RequireAuth     BIT,
+    @EnableCaptcha   BIT,
+    @EnableSaveResume BIT,
+    @WebhookUrl      NVARCHAR(1000),
+    @WebhookSecret   NVARCHAR(500),
+    @WebhookHeaders  NVARCHAR(MAX),
+    @NotifyEmails    NVARCHAR(MAX),
+    @NotifyTemplate  NVARCHAR(MAX),
+    @AutoresponderEnabled BIT,
+    @AutoresponderEmailField NVARCHAR(200),
+    @AutoresponderSubject NVARCHAR(500),
+    @AutoresponderBody NVARCHAR(MAX),
+    @AppScope        NVARCHAR(50) = NULL,
+    @UserId          INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF @FormId > 0 AND EXISTS (SELECT 1 FROM dbo.MF_Forms WHERE FormId = @FormId)
+    BEGIN
+        UPDATE dbo.MF_Forms SET
+            Title = @Title, [Description] = @Description, SchemaJson = @SchemaJson,
+            SettingsJson = @SettingsJson, ThemeJson = @ThemeJson, [Status] = @Status,
+            SubmitButtonText = @SubmitButtonText, SuccessMessage = @SuccessMessage,
+            RedirectUrl = @RedirectUrl, MaxSubmissions = @MaxSubmissions,
+            ExpiresOnUtc = @ExpiresOnUtc, RequireAuth = @RequireAuth,
+            EnableCaptcha = @EnableCaptcha, EnableSaveResume = @EnableSaveResume,
+            WebhookUrl = @WebhookUrl, WebhookSecret = @WebhookSecret,
+            WebhookHeaders = @WebhookHeaders, NotifyEmails = @NotifyEmails,
+            NotifyTemplate = @NotifyTemplate,
+            AutoresponderEnabled = @AutoresponderEnabled,
+            AutoresponderEmailField = @AutoresponderEmailField,
+            AutoresponderSubject = @AutoresponderSubject,
+            AutoresponderBody = @AutoresponderBody,
+            AppScope = @AppScope,
+            UpdatedByUserId = @UserId, UpdatedOnUtc = SYSUTCDATETIME()
+        WHERE FormId = @FormId;
+    END
+    ELSE
+    BEGIN
+        INSERT INTO dbo.MF_Forms (
+            ModuleId, PortalId, Title, [Description], SchemaJson, SettingsJson, ThemeJson,
+            [Status], SubmitButtonText, SuccessMessage, RedirectUrl, MaxSubmissions,
+            ExpiresOnUtc, RequireAuth, EnableCaptcha, EnableSaveResume,
+            WebhookUrl, WebhookSecret, WebhookHeaders, NotifyEmails, NotifyTemplate,
+            AutoresponderEnabled, AutoresponderEmailField, AutoresponderSubject,
+            AutoresponderBody, AppScope, CreatedByUserId
+        ) VALUES (
+            @ModuleId, @PortalId, @Title, @Description, @SchemaJson, @SettingsJson, @ThemeJson,
+            @Status, @SubmitButtonText, @SuccessMessage, @RedirectUrl, @MaxSubmissions,
+            @ExpiresOnUtc, @RequireAuth, @EnableCaptcha, @EnableSaveResume,
+            @WebhookUrl, @WebhookSecret, @WebhookHeaders, @NotifyEmails, @NotifyTemplate,
+            @AutoresponderEnabled, @AutoresponderEmailField, @AutoresponderSubject,
+            @AutoresponderBody, @AppScope, @UserId
+        );
+        SET @FormId = SCOPE_IDENTITY();
+    END
+END
+GO
+
+-- usp_MF_Form_GetById
+IF OBJECT_ID('dbo.usp_MF_Form_GetById','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Form_GetById;
+GO
+CREATE PROCEDURE dbo.usp_MF_Form_GetById
+    @FormId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT * FROM dbo.MF_Forms WHERE FormId = @FormId;
+END
+GO
+
+-- usp_MF_Form_GetByModule
+IF OBJECT_ID('dbo.usp_MF_Form_GetByModule','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Form_GetByModule;
+GO
+CREATE PROCEDURE dbo.usp_MF_Form_GetByModule
+    @ModuleId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT * FROM dbo.MF_Forms WHERE ModuleId = @ModuleId ORDER BY CreatedOnUtc DESC;
+END
+GO
+
+-- usp_MF_Form_List
+IF OBJECT_ID('dbo.usp_MF_Form_List','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Form_List;
+GO
+CREATE PROCEDURE dbo.usp_MF_Form_List
+    @PortalId INT,
+    @Status   NVARCHAR(20) = NULL,
+    @Search   NVARCHAR(200) = NULL,
+    @PageIndex INT = 0,
+    @PageSize  INT = 20
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT f.*, 
+           (SELECT COUNT(*) FROM dbo.MF_Submissions s WHERE s.FormId = f.FormId AND s.IsSpam = 0) AS SubmissionCount
+    FROM dbo.MF_Forms f
+    WHERE f.PortalId = @PortalId
+      AND (@Status IS NULL OR f.[Status] = @Status)
+      AND (@Search IS NULL OR f.Title LIKE '%' + @Search + '%')
+    ORDER BY f.CreatedOnUtc DESC
+    OFFSET @PageIndex * @PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
+END
+GO
+
+-- usp_MF_Form_Delete
+IF OBJECT_ID('dbo.usp_MF_Form_Delete','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Form_Delete;
+GO
+CREATE PROCEDURE dbo.usp_MF_Form_Delete
+    @FormId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DELETE FROM dbo.MF_Forms WHERE FormId = @FormId;
+END
+GO
+
+-- ============================================================
+-- SUBMISSIONS CRUD
+-- ============================================================
+
+-- usp_MF_Submission_Insert
+IF OBJECT_ID('dbo.usp_MF_Submission_Insert','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Submission_Insert;
+GO
+CREATE PROCEDURE dbo.usp_MF_Submission_Insert
+    @SubmissionId INT OUTPUT,
+    @FormId       INT,
+    @DataJson     NVARCHAR(MAX),
+    @IpAddress    NVARCHAR(45),
+    @UserAgent    NVARCHAR(500),
+    @UserId       INT = NULL,
+    @IsSpam       BIT = 0,
+    @SpamScore    DECIMAL(5,2) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO dbo.MF_Submissions (FormId, DataJson, IpAddress, UserAgent, UserId, IsSpam, SpamScore)
+    VALUES (@FormId, @DataJson, @IpAddress, @UserAgent, @UserId, @IsSpam, @SpamScore);
+    SET @SubmissionId = SCOPE_IDENTITY();
+
+    -- Also insert normalised field values for search
+    INSERT INTO dbo.MF_SubmissionValues (SubmissionId, FieldKey, FieldValue)
+    SELECT @SubmissionId, [key], [value]
+    FROM OPENJSON(@DataJson);
+END
+GO
+
+-- usp_MF_Submission_GetById
+IF OBJECT_ID('dbo.usp_MF_Submission_GetById','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Submission_GetById;
+GO
+CREATE PROCEDURE dbo.usp_MF_Submission_GetById
+    @SubmissionId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT * FROM dbo.MF_Submissions WHERE SubmissionId = @SubmissionId;
+END
+GO
+
+-- usp_MF_Submission_List
+IF OBJECT_ID('dbo.usp_MF_Submission_List','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Submission_List;
+GO
+CREATE PROCEDURE dbo.usp_MF_Submission_List
+    @FormId    INT,
+    @Status    NVARCHAR(20) = NULL,
+    @Search    NVARCHAR(500) = NULL,
+    @DateFrom  DATETIME2 = NULL,
+    @DateTo    DATETIME2 = NULL,
+    @PageIndex INT = 0,
+    @PageSize  INT = 50
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT s.*
+    FROM dbo.MF_Submissions s
+    WHERE s.FormId = @FormId
+      AND (@Status IS NULL OR s.[Status] = @Status)
+      AND (@DateFrom IS NULL OR s.SubmittedOnUtc >= @DateFrom)
+      AND (@DateTo IS NULL OR s.SubmittedOnUtc <= @DateTo)
+      AND (@Search IS NULL OR EXISTS (
+            SELECT 1 FROM dbo.MF_SubmissionValues v 
+            WHERE v.SubmissionId = s.SubmissionId AND v.FieldValue LIKE '%' + @Search + '%'
+      ))
+    ORDER BY s.SubmittedOnUtc DESC
+    OFFSET @PageIndex * @PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
+
+    -- Total count for paging
+    SELECT COUNT(*) AS TotalCount
+    FROM dbo.MF_Submissions s
+    WHERE s.FormId = @FormId
+      AND (@Status IS NULL OR s.[Status] = @Status)
+      AND (@DateFrom IS NULL OR s.SubmittedOnUtc >= @DateFrom)
+      AND (@DateTo IS NULL OR s.SubmittedOnUtc <= @DateTo)
+      AND (@Search IS NULL OR EXISTS (
+            SELECT 1 FROM dbo.MF_SubmissionValues v 
+            WHERE v.SubmissionId = s.SubmissionId AND v.FieldValue LIKE '%' + @Search + '%'
+      ));
+END
+GO
+
+-- usp_MF_Submission_UpdateStatus
+IF OBJECT_ID('dbo.usp_MF_Submission_UpdateStatus','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Submission_UpdateStatus;
+GO
+CREATE PROCEDURE dbo.usp_MF_Submission_UpdateStatus
+    @SubmissionId INT,
+    @Status       NVARCHAR(20)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE dbo.MF_Submissions SET
+        [Status] = @Status,
+        ReadOnUtc = CASE WHEN @Status = 'Read' THEN SYSUTCDATETIME() ELSE ReadOnUtc END
+    WHERE SubmissionId = @SubmissionId;
+END
+GO
+
+-- usp_MF_Submission_Delete
+IF OBJECT_ID('dbo.usp_MF_Submission_Delete','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Submission_Delete;
+GO
+CREATE PROCEDURE dbo.usp_MF_Submission_Delete
+    @SubmissionId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DELETE FROM dbo.MF_Submissions WHERE SubmissionId = @SubmissionId;
+END
+GO
+
+-- ============================================================
+-- RATE LIMITING
+-- ============================================================
+
+IF OBJECT_ID('dbo.usp_MF_RateLimit_Check','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_RateLimit_Check;
+GO
+CREATE PROCEDURE dbo.usp_MF_RateLimit_Check
+    @FormId     INT,
+    @IpAddress  NVARCHAR(45),
+    @WindowMinutes INT = 5,
+    @MaxPerWindow  INT = 3,
+    @IsAllowed  BIT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @Count INT;
+    SELECT @Count = COUNT(*)
+    FROM dbo.MF_RateLimitLog
+    WHERE FormId = @FormId
+      AND IpAddress = @IpAddress
+      AND SubmittedOnUtc >= DATEADD(MINUTE, -@WindowMinutes, SYSUTCDATETIME());
+
+    IF @Count >= @MaxPerWindow
+        SET @IsAllowed = 0;
+    ELSE
+    BEGIN
+        SET @IsAllowed = 1;
+        INSERT INTO dbo.MF_RateLimitLog (FormId, IpAddress) VALUES (@FormId, @IpAddress);
+    END
+END
+GO
+
+-- Cleanup old rate limit entries
+IF OBJECT_ID('dbo.usp_MF_RateLimit_Cleanup','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_RateLimit_Cleanup;
+GO
+CREATE PROCEDURE dbo.usp_MF_RateLimit_Cleanup
+    @OlderThanMinutes INT = 60
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DELETE FROM dbo.MF_RateLimitLog 
+    WHERE SubmittedOnUtc < DATEADD(MINUTE, -@OlderThanMinutes, SYSUTCDATETIME());
+END
+GO
+
+-- ============================================================
+-- WEBHOOK LOG
+-- ============================================================
+
+IF OBJECT_ID('dbo.usp_MF_WebhookLog_Insert','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_WebhookLog_Insert;
+GO
+CREATE PROCEDURE dbo.usp_MF_WebhookLog_Insert
+    @FormId        INT,
+    @SubmissionId  INT,
+    @WebhookUrl    NVARCHAR(1000),
+    @RequestBody   NVARCHAR(MAX),
+    @ResponseCode  INT,
+    @ResponseBody  NVARCHAR(MAX),
+    @Success       BIT,
+    @RetryCount    INT = 0
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO dbo.MF_WebhookLog (FormId, SubmissionId, WebhookUrl, RequestBody, ResponseCode, ResponseBody, Success, RetryCount)
+    VALUES (@FormId, @SubmissionId, @WebhookUrl, @RequestBody, @ResponseCode, @ResponseBody, @Success, @RetryCount);
+END
+GO
+
+-- ============================================================
+-- FILES
+-- ============================================================
+
+IF OBJECT_ID('dbo.usp_MF_File_Insert','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_File_Insert;
+GO
+CREATE PROCEDURE dbo.usp_MF_File_Insert
+    @FileId        INT OUTPUT,
+    @SubmissionId  INT,
+    @FieldKey      NVARCHAR(200),
+    @OriginalName  NVARCHAR(500),
+    @StoredPath    NVARCHAR(1000),
+    @ContentType   NVARCHAR(200),
+    @FileSizeBytes BIGINT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO dbo.MF_Files (SubmissionId, FieldKey, OriginalName, StoredPath, ContentType, FileSizeBytes)
+    VALUES (@SubmissionId, @FieldKey, @OriginalName, @StoredPath, @ContentType, @FileSizeBytes);
+    SET @FileId = SCOPE_IDENTITY();
+END
+GO
+
+IF OBJECT_ID('dbo.usp_MF_File_GetBySubmission','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_File_GetBySubmission;
+GO
+CREATE PROCEDURE dbo.usp_MF_File_GetBySubmission
+    @SubmissionId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT * FROM dbo.MF_Files WHERE SubmissionId = @SubmissionId;
+END
+GO
+
+-- ============================================================
+-- SAVE & CONTINUE (DRAFTS)
+-- ============================================================
+
+IF OBJECT_ID('dbo.usp_MF_Draft_Upsert','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Draft_Upsert;
+GO
+CREATE PROCEDURE dbo.usp_MF_Draft_Upsert
+    @DraftId      INT OUTPUT,
+    @FormId       INT,
+    @ResumeToken  NVARCHAR(100),
+    @DataJson     NVARCHAR(MAX),
+    @Email        NVARCHAR(320),
+    @IpAddress    NVARCHAR(45),
+    @ExpiresOnUtc DATETIME2
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF EXISTS (SELECT 1 FROM dbo.MF_SavedDrafts WHERE ResumeToken = @ResumeToken)
+    BEGIN
+        UPDATE dbo.MF_SavedDrafts SET DataJson = @DataJson, ExpiresOnUtc = @ExpiresOnUtc
+        WHERE ResumeToken = @ResumeToken;
+        SELECT @DraftId = DraftId FROM dbo.MF_SavedDrafts WHERE ResumeToken = @ResumeToken;
+    END
+    ELSE
+    BEGIN
+        INSERT INTO dbo.MF_SavedDrafts (FormId, ResumeToken, DataJson, Email, IpAddress, ExpiresOnUtc)
+        VALUES (@FormId, @ResumeToken, @DataJson, @Email, @IpAddress, @ExpiresOnUtc);
+        SET @DraftId = SCOPE_IDENTITY();
+    END
+END
+GO
+
+IF OBJECT_ID('dbo.usp_MF_Draft_GetByToken','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Draft_GetByToken;
+GO
+CREATE PROCEDURE dbo.usp_MF_Draft_GetByToken
+    @ResumeToken NVARCHAR(100)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT * FROM dbo.MF_SavedDrafts 
+    WHERE ResumeToken = @ResumeToken AND ExpiresOnUtc > SYSUTCDATETIME();
+END
+GO
+
+IF OBJECT_ID('dbo.usp_MF_Draft_Delete','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Draft_Delete;
+GO
+CREATE PROCEDURE dbo.usp_MF_Draft_Delete
+    @ResumeToken NVARCHAR(100)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DELETE FROM dbo.MF_SavedDrafts WHERE ResumeToken = @ResumeToken;
+END
+GO
+
+-- ============================================================
+-- EXPORT / ANALYTICS
+-- ============================================================
+
+IF OBJECT_ID('dbo.usp_MF_Submission_Export','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Submission_Export;
+GO
+CREATE PROCEDURE dbo.usp_MF_Submission_Export
+    @FormId   INT,
+    @DateFrom DATETIME2 = NULL,
+    @DateTo   DATETIME2 = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT s.SubmissionId, s.DataJson, s.IpAddress, s.UserId, s.SubmittedOnUtc, s.[Status]
+    FROM dbo.MF_Submissions s
+    WHERE s.FormId = @FormId AND s.IsSpam = 0
+      AND (@DateFrom IS NULL OR s.SubmittedOnUtc >= @DateFrom)
+      AND (@DateTo IS NULL OR s.SubmittedOnUtc <= @DateTo)
+    ORDER BY s.SubmittedOnUtc DESC;
+END
+GO
+
+IF OBJECT_ID('dbo.usp_MF_Form_Stats','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Form_Stats;
+GO
+CREATE PROCEDURE dbo.usp_MF_Form_Stats
+    @FormId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT 
+        ISNULL(COUNT(*), 0) AS TotalSubmissions,
+        ISNULL(SUM(CASE WHEN IsSpam = 0 THEN 1 ELSE 0 END), 0) AS ValidSubmissions,
+        ISNULL(SUM(CASE WHEN IsSpam = 1 THEN 1 ELSE 0 END), 0) AS SpamSubmissions,
+        ISNULL(SUM(CASE WHEN [Status] = 'Read' THEN 1 ELSE 0 END), 0) AS ReadSubmissions,
+        MIN(SubmittedOnUtc) AS FirstSubmission,
+        MAX(SubmittedOnUtc) AS LastSubmission
+    FROM dbo.MF_Submissions
+    WHERE FormId = @FormId;
+END
+GO
+
+-- ============================================================
+-- UNIQUE ID COUNTERS
+-- ============================================================
+
+IF OBJECT_ID('dbo.MF_IncrementUniqueId','P') IS NOT NULL DROP PROCEDURE dbo.MF_IncrementUniqueId;
+GO
+CREATE PROCEDURE dbo.MF_IncrementUniqueId
+    @FormId     INT,
+    @FieldKey   NVARCHAR(100),
+    @StartValue BIGINT = 1
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF NOT EXISTS (SELECT 1 FROM MF_UniqueIdCounters WHERE FormId = @FormId AND FieldKey = @FieldKey)
+    BEGIN
+        INSERT INTO MF_UniqueIdCounters (FormId, FieldKey, CurrentValue)
+        VALUES (@FormId, @FieldKey, @StartValue - 1);
+    END
+    UPDATE MF_UniqueIdCounters
+    SET CurrentValue = CurrentValue + 1
+    OUTPUT inserted.CurrentValue
+    WHERE FormId = @FormId AND FieldKey = @FieldKey;
+END
+GO
+
+-- ============================================================
+-- PHASE 2: FILTERED SUBMISSIONS, WORKFLOWS
+-- ============================================================
+
+IF OBJECT_ID('dbo.MF_GetSubmissions_Filtered','P') IS NOT NULL DROP PROCEDURE dbo.MF_GetSubmissions_Filtered;
+GO
+CREATE PROCEDURE [dbo].[MF_GetSubmissions_Filtered]
+    @FormId     INT,
+    @UserId     INT,
+    @UserRoles  NVARCHAR(MAX) = NULL,
+    @Status     NVARCHAR(20)  = NULL,
+    @Search     NVARCHAR(200) = NULL,
+    @SortBy     NVARCHAR(50)  = 'SubmittedOnUtc',
+    @SortDir    NVARCHAR(4)   = 'DESC',
+    @Page       INT = 1,
+    @PageSize   INT = 20
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT s.SubmissionId, s.FormId, s.DataJson, s.[Status],
+           s.IpAddress, s.UserId, s.IsSpam, s.SpamScore,
+           s.SubmittedOnUtc, s.ReadOnUtc
+    FROM MF_Submissions s
+    WHERE s.FormId = @FormId
+      AND s.[Status] <> 'Deleted'
+      AND (@Status IS NULL OR s.[Status] = @Status)
+      AND (@Search IS NULL OR s.DataJson LIKE '%' + @Search + '%')
+    ORDER BY
+        CASE WHEN @SortBy='SubmittedOnUtc' AND @SortDir='DESC' THEN s.SubmittedOnUtc END DESC,
+        CASE WHEN @SortBy='SubmittedOnUtc' AND @SortDir='ASC'  THEN s.SubmittedOnUtc END ASC,
+        CASE WHEN @SortBy='Status'         AND @SortDir='DESC' THEN s.[Status] END DESC,
+        CASE WHEN @SortBy='Status'         AND @SortDir='ASC'  THEN s.[Status] END ASC
+    OFFSET (@Page - 1) * @PageSize ROWS
+    FETCH NEXT @PageSize ROWS ONLY;
+
+    SELECT COUNT(*) AS TotalCount
+    FROM MF_Submissions s
+    WHERE s.FormId = @FormId
+      AND s.[Status] <> 'Deleted'
+      AND (@Status IS NULL OR s.[Status] = @Status)
+      AND (@Search IS NULL OR s.DataJson LIKE '%' + @Search + '%');
+END
+GO
+
+IF OBJECT_ID('dbo.MF_GetWorkflows','P') IS NOT NULL DROP PROCEDURE dbo.MF_GetWorkflows;
+GO
+CREATE PROCEDURE [dbo].[MF_GetWorkflows]
+    @FormId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT * FROM MF_Workflows WHERE FormId = @FormId ORDER BY CreatedOnUtc;
+END
+GO
+
+IF OBJECT_ID('dbo.MF_LogWorkflowStep','P') IS NOT NULL DROP PROCEDURE dbo.MF_LogWorkflowStep;
+GO
+CREATE PROCEDURE [dbo].[MF_LogWorkflowStep]
+    @RunId BIGINT, @StepId NVARCHAR(100), @StepType NVARCHAR(50),
+    @StepName NVARCHAR(200), @Status NVARCHAR(20),
+    @InputJson NVARCHAR(MAX), @OutputJson NVARCHAR(MAX),
+    @ErrorMessage NVARCHAR(MAX), @DurationMs INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO MF_WorkflowStepLog (RunId,StepId,StepType,StepName,[Status],InputJson,OutputJson,ErrorMessage,DurationMs)
+    VALUES (@RunId,@StepId,@StepType,@StepName,@Status,@InputJson,@OutputJson,@ErrorMessage,@DurationMs);
+END
+GO
+
+-- ============================================================
+-- APP SCOPE: Get forms by scope, Get child submissions
+-- ============================================================
+
+IF OBJECT_ID('dbo.MF_GetFormsByAppScope','P') IS NOT NULL DROP PROCEDURE dbo.MF_GetFormsByAppScope;
+GO
+CREATE PROCEDURE [dbo].[MF_GetFormsByAppScope]
+    @PortalId   INT,
+    @AppScope   NVARCHAR(50)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT * FROM MF_Forms
+    WHERE PortalId = @PortalId AND AppScope = @AppScope AND [Status] = 'Published'
+    ORDER BY Title;
+END
+GO
+
+IF OBJECT_ID('dbo.MF_GetChildSubmissions','P') IS NOT NULL DROP PROCEDURE dbo.MF_GetChildSubmissions;
+GO
+CREATE PROCEDURE [dbo].[MF_GetChildSubmissions]
+    @ParentSubmissionId INT,
+    @RelationId         INT = NULL,
+    @Page               INT = 1,
+    @PageSize           INT = 50
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT s.SubmissionId, s.FormId, s.DataJson, s.[Status],
+           s.IpAddress, s.UserAgent, s.UserId, s.IsSpam, s.SpamScore,
+           s.SubmittedOnUtc, s.ReadOnUtc
+    FROM MF_SubmissionLinks sl
+    INNER JOIN MF_Submissions s ON s.SubmissionId = sl.ChildSubmissionId
+    WHERE sl.ParentSubmissionId = @ParentSubmissionId
+      AND (@RelationId IS NULL OR sl.RelationId = @RelationId)
+      AND s.[Status] <> 'Deleted'
+    ORDER BY s.SubmittedOnUtc ASC
+    OFFSET (@Page - 1) * @PageSize ROWS
+    FETCH NEXT @PageSize ROWS ONLY;
+
+    SELECT COUNT(*) AS TotalCount
+    FROM MF_SubmissionLinks sl
+    INNER JOIN MF_Submissions s ON s.SubmissionId = sl.ChildSubmissionId
+    WHERE sl.ParentSubmissionId = @ParentSubmissionId
+      AND (@RelationId IS NULL OR sl.RelationId = @RelationId)
+      AND s.[Status] <> 'Deleted';
+END
+GO

@@ -1,0 +1,544 @@
+{
+  "scouts": [
+    {
+      "name": "DynLabel",
+      "report": {
+        "filePath": "e:/DNNDEFENDER AND AI DESIGNES/AI DESIGNES/MegaFormSolution_280_Oqtane_um/MegaForm.UI/src/widgets/plugins/megaform-widget-dynamic-label.ts",
+        "mountTrigger": "Injected button \"Layout Designer\" (mfdl-layout-launcher class) on DynamicLabel field card in Builder canvas; click triggers lazyLoadAndOpen → loads megaform-layout-designer.js and calls window.MFLayoutDesigner.open()",
+        "tabs": [
+          {
+            "label": "Help & SQL Samples",
+            "purpose": "Display help text, token syntax, multi-sample presets with clickable Apply buttons that fill widget settings in one shot",
+            "controls": [
+              "Help HTML block",
+              "Collapsible sample presets (card grid, table list, compact links, portal stat, page detail, reset to static)"
+            ]
+          },
+          {
+            "label": "Data",
+            "purpose": "Configure SQL connection, query/stored-proc, cascade parameters, result mode toggle",
+            "controls": [
+              "useSql (checkbox)",
+              "resultMode (select: simple|multi)",
+              "dataSource (select: sql|storedproc)",
+              "connectionKey (text: DashboardDatabase)",
+              "databaseType (select: auto|SqlServer|Sqlite|PostgreSql|MySql)",
+              "masterQuery (textarea: SQL or sproc name)",
+              "queryDependsOn (text: CSV list of :param names)",
+              "reloadOnParamChange (checkbox)"
+            ]
+          },
+          {
+            "label": "Templates",
+            "purpose": "Edit HTML templates for simple mode, multi-row header/detail/footer, pager, empty state",
+            "controls": [
+              "html (textarea: raw HTML / static template)",
+              "sqlTemplate (textarea: simple row template override)",
+              "headerTemplate (textarea: multi-row header)",
+              "detailTemplate (textarea: multi-row detail / row template)",
+              "footerTemplate (textarea: multi-row footer)",
+              "pagerTemplate (textarea: pager UI)"
+            ]
+          },
+          {
+            "label": "Rendering",
+            "purpose": "Control HTML rendering, token substitution, paging, empty/error states",
+            "controls": [
+              "allowRawHtml (checkbox)",
+              "enableTokens (checkbox)",
+              "showPager (checkbox)",
+              "pageSize (number)",
+              "maxRows (number)",
+              "emptyHtml (textarea)",
+              "errorHtml (textarea)"
+            ]
+          },
+          {
+            "label": "Display",
+            "purpose": "CSS styling options",
+            "controls": [
+              "cssClass (text)"
+            ]
+          }
+        ],
+        "sqlConfigFlow": "1. User checks useSql checkbox\n2. Selects dataSource: sql (default) or storedproc\n3. Sets connectionKey (defaults to DashboardDatabase)\n4. Sets databaseType for query optimization (defaults to auto-detect)\n5. Pastes SQL query or stored proc name into masterQuery textarea\n6. Extracts :param keys from SQL with regex; or explicitly lists them in queryDependsOn\n7. Query runs via DataRepeater/Query API endpoint (formId + widgetKey + page + pageSize + filterJson with param values)\n8. Result mode (simple|multi) determines whether first row only or all rows are rendered\n9. For multi-row: configure headerTemplate, detailTemplate, footerTemplate, pagerTemplate, pageSize, showPager\n10. Tokens {{row:ColName}}, {{qs:ParamName}}, {{field:ControlName}}, {{meta:page}} are substituted at render time",
+        "hasLivePreview": false,
+        "hasTablePicker": false,
+        "hasAIAssistant": false,
+        "applyAction": "DynamicLabel uses no popup designer currently — properties are edited inline in the Builder Properties panel. A \"Layout Designer\" button injects a visual canvas (layout-designer.ts) for template composition but does NOT handle SQL table/query selection or live data preview. The button launche MFLayoutDesigner.open() which manages header/detail/footer/pager block composition, not the SQL Data tab configuration.",
+        "missingFromUserSpec": [
+          "Data tab (table picker + live DB row preview) — DynamicLabel properties are all flat textareas; no visual table browser exists",
+          "Live sample-row preview BEFORE Apply — SQL is configured blind; templates are guessed without seeing actual data columns until form preview",
+          "AI Assistant icon scoped to database/widget KB — no inline chat panel for SQL help or template suggestions",
+          "Apply data button that commits query to masterQuery without leaving popup — SQL config is manual paste + typing",
+          "Current Settings tab (read-only summary) — DynamicLabel has no read-only summary view of active widget props",
+          "Single unified popup mount point — DynamicLabel uses inline properties panel (no modal) + separate Layout Designer canvas (modal); two separate UI paradigms"
+        ],
+        "notesForUnification": "[\n  \"DynamicLabel renders 2 modes: simple (first row) + multi-row (all rows paginated). The unified Data tab must expose both modes and swap templates accordingly.\",\n  \"masterQuery, queryDependsOn, resultMode, dataSource, connectionKey, databaseType are the core SQL config. The unified popup should gather these into a single form with live preview.\",\n  \"Tokens {{row:ColName}}, {{qs:Param}}, {{field:ControlName}}, {{meta:page}} must be documented in the AI assistant KB so users understand what's available from their query.\",\n  \"Template textareas (header, detail, footer, pager, empty, error) are NOT part of the Data tab — they live in a separate Templates tab (keep templates separate from data config).\",\n  \"The Layout Designer (layout-designer.ts) is a VISUAL block composer for templates, not a SQL picker. It's a parallel UI for users who prefer dragging blocks over raw HTML. Don't merge it into the unified popup; leave it as-is (button launcher still works).\",\n  \"DynamicLabel currently injects a 'Layout Designer' button onto the canvas field card. The unified popup should ALSO inject a 'Data Config' button (or a tab within the Layout Designer that opens the unified Data popup). Two entry points: Layout Designer (visual templates) + Data Config (SQL + live preview).\",\n  \"reloadOnParamChange controls whether input change triggers re-query. This is a key toggle that affects UX (live cascade vs manual refresh).\",\n  \"queryDependsOn is a CSV fallback when :params aren't explicitly in SQL. The unified Data tab should auto-extract from SQL first, then offer manual override via queryDependsOn.\",\n  \"The reference designers (token-designer, slider-designer, imagechoice-designer) mount via getMountTarget() → #mf-builder-root or body. Follow the same B31 pattern for the unified popup.\",\n  \"DynamicLabel has sample presets (5 DNN Tabs examples) that are pre-canned SQL + templates. The unified popup should expose a Presets dropdown or gallery to let users skip blank-canvas paralysis.\",\n  \"cssClass is a minor property. It can live in Display tab but isn't critical for the Data tab.\",\n  \"The 'Help & SQL Samples' collapsible sections in properties.ts are user-facing docs. Move them into the unified popup's AI Assistant KB or a dedicated Help pane.\"\n]"
+      }
+    },
+    {
+      "name": "DataRepeater",
+      "report": {
+        "filePath": "e:/DNNDEFENDER AND AI DESIGNES/AI DESIGNES/MegaFormSolution_280_Oqtane_um/MegaForm.UI/src/view-designer/datarepeater/editor.ts",
+        "mountTrigger": "Builder canvas field card → MegaFormBuilder.state → \"Open Designer\" button (separate Vite bundle via build:datarepeater-designer)",
+        "tabs": [
+          {
+            "label": "Connection",
+            "purpose": "SQL/stored procedure selection and named connection key configuration",
+            "controls": [
+              "Query type (SQL/storedproc)",
+              "Connection key name",
+              "Database type auto-detect toggle"
+            ]
+          },
+          {
+            "label": "Master Query",
+            "purpose": "Main data source, pagination, auto-refresh, and dynamic param binding from query string/form fields",
+            "controls": [
+              "Master query textarea",
+              "Page size (0=all)",
+              "Max rows hard cap",
+              "Auto-refresh interval seconds",
+              "Extra SQL params from form fields (comma-sep)",
+              "Reload on param change checkbox"
+            ]
+          },
+          {
+            "label": "Filters",
+            "purpose": "Optional filter dropdowns, text search, and date range controls with optional dropdown option queries",
+            "controls": [
+              "Filter 1 label, type dropdown/text/daterange, SQL param name, options query textarea",
+              "Filter 2 with same structure"
+            ]
+          },
+          {
+            "label": "Drill-down",
+            "purpose": "Multi-level detail rows opened from clicked master values using :parentId substitution",
+            "controls": [
+              "Detail level 1 trigger column, placement after/before, query textarea",
+              "Detail level 2 with same structure",
+              "Detail level 3 with same structure"
+            ]
+          },
+          {
+            "label": "Templates",
+            "purpose": "Optional custom HTML templates with {columnName} token replacement and conditional blocks {if:col op value}",
+            "controls": [
+              "Master template textarea",
+              "Detail level 1 template textarea",
+              "Detail level 2 template textarea",
+              "Detail level 3 template textarea"
+            ]
+          },
+          {
+            "label": "Display",
+            "purpose": "Charting, grouping, exports, golf scorecard mode, and CSS wrapper class",
+            "controls": [
+              "Chart mode bar/line/pie",
+              "Group rows by column name",
+              "Chart label column (shown when chart on)",
+              "Chart value column (shown when chart on)",
+              "Empty message when query returns 0 rows",
+              "CSS wrapper class",
+              "Allow CSV export checkbox",
+              "Allow PDF/print export checkbox",
+              "Golf scorecard mode checkbox"
+            ]
+          },
+          {
+            "label": "Advanced JSON",
+            "purpose": "Raw JSON fallback for power users and support handoff; shows validation status and sync buttons",
+            "controls": [
+              "Textarea with full config JSON",
+              "Sync JSON to Tabs button",
+              "Format JSON button",
+              "JSON validation status line"
+            ]
+          }
+        ],
+        "sqlConfigFlow": "User selects dataSource (sql vs storedproc) + connectionKey + databaseType on Connection tab. masterQuery textarea accepts parameterized SQL with :param placeholders. Parameters are bound from: (a) query string (?year=2026 → :year), (b) form field values (queryDependsOn=year,eventId → :year/:eventId), (c) filter dropdown selections (Filter SQL param name field), (d) drill-down clicked values (automatic :parentId). All external params passed as __p__ prefixed URL params to the backend API endpoint /api/DataRepeater/Query.",
+        "hasLivePreview": false,
+        "hasTablePicker": false,
+        "hasAIAssistant": false,
+        "applyAction": "User clicks \"Apply\" button → onApply callback fires with stringifyDraft(draft) JSON → copies final JSON to clipboard → closes popup. The callback receives the full widgetProps JSON (flat keys like masterQuery, detail1Query, filter1Label, etc. plus arrays detailLevels[], filters[]). Callback is responsible for writing back to form schema via builder state.",
+        "missingFromUserSpec": [
+          "Data tab with table picker (browse DashboardDatabase)",
+          "Sample-row preview against live DB before Apply",
+          "AI Assistant icon with inline chat scoped to database/table/stored-proc knowledge",
+          "Current Settings tab showing read-only summary of ALL existing widget props on the field"
+        ],
+        "notesForUnification": "DataRepeater Designer is a separate Vite bundle (view-designer entry point) heavier than inline Token Designer. Key reuse patterns: (1) Uses openPopup() from shared.ts with PopupOpts.saveLabel and PopupOpts.onSave callback — the unification framework can plug in there. (2) Mounts inside #mf-builder-root via getMountTarget() fallback (shared.ts line 83-86) — copy this pattern for other designers. (3) Uses mountWidgetConfigPanel on the field key to show AI-set widgetProps in an Umbraco-style inspector panel. (4) All props are flat keys (detail1Query, filter1Type, etc.) which serialize to arrays (detailLevels[], filters[]) on Apply — the model.ts FLAT_KEYS array is the canonical list for schema mapping. (5) stringifyDraft(draft) produces the JSON that gets passed to onApply. (6) Tabs use h() DOM helper (pure JS, framework-free). CSS classes use .mf-drd- prefix and inject via injectStyles() in styles.ts. (7) Has preset loading system (STARTER_PRESETS, FEATURED_SAMPLE_OPTIONS) that could seed the unified Data tab. (8) Help button opens a second popup via openPopup(...hideSave=true) with detailed pattern docs; this is a good template for the AI assistant panel layout. Caveat: The designer currently does NOT validate SQL or connect to live DB — it's a form-building UI only. Table picker + live preview would require a new backend endpoint to list tables + execute sample queries for the current connection + database type."
+      }
+    },
+    {
+      "name": "RazorStudio",
+      "report": {
+        "filePath": "e:/DNNDEFENDER AND AI DESIGNES/AI DESIGNES/MegaFormSolution_280_Oqtane_um/MegaForm.UI/src/widgets/plugins/megaform-razor-studio.ts",
+        "mountTrigger": "Injected button on Razor field canvas card (line 678-697 in megaform-widget-razor.ts). Button invokes MFRazorStudio.open() with currentProps, fieldKey, formId, initialTemplate, onApplyProps, onPick, onSaveOverride, initialOverride callbacks.",
+        "tabs": [
+          {
+            "label": "Recipe",
+            "purpose": "Gallery-first interface: left panel shows searchable recipe tiles (name, category, icon, chips for SQL/Emits/Live). Right panel displays config form for selected recipe with grouped parameters by [param.group], SQL data source section (when supportsSql=true), and live preview block (on-demand render with Refresh button).",
+            "controls": [
+              "Recipe search input (filters by name, category, whenToUse, description)",
+              "Recipe tile gallery (left sidebar, 340px width, selectable)",
+              "Recipe icon + name + category + whenToUse text",
+              "Capability chips (SQL, Emits, Live badges)",
+              "Recipe config form (right pane): recipe header with name/description, SQL data source section (useSql checkbox, connectionKey, masterQuery textarea with :paramName hint, queryDependsOn csv input), parameter groups (grouped by p.group, each with typed controls: text, select, textarea, color, number, bool checkboxes), live preview host (iframe-free DIV with Refresh button, renders via POST /api/MegaFormPopup/RazorWidget/Render)"
+            ]
+          },
+          {
+            "label": "Live preview",
+            "purpose": "Server-side preview of every registered recipe with sample data. Embedded iframe pointing to /api/MegaFormPopup/RazorWidget/Preview endpoint.",
+            "controls": [
+              "Full-screen iframe (src=previewUrl(), width/height 100%)"
+            ]
+          },
+          {
+            "label": "Advanced",
+            "purpose": "Sub-tabs for read-only built-in template source viewer and custom .razor source editor (escape hatch with Roslyn JIT compile feedback).",
+            "controls": [
+              "Sub-tab: View built-in source (read-only) — list of all templates (left 240px), source textarea (read-only, 'DM Mono' monospace, dark background #0f172a), yellow banner warning",
+              "Sub-tab: Write custom .razor (escape hatch) — template name input, custom source textarea with skeleton, banner, Compile + apply button, result box (success/error feedback with compile errors on failure)"
+            ]
+          }
+        ],
+        "sqlConfigFlow": "SQL data source (when recipe.supportsSql=true) appears as grouped section in Recipe tab config form. User inputs: (1) useSql checkbox to enable/disable, (2) connectionKey text input (default 'DashboardDatabase'), (3) masterQuery textarea with :paramName placeholders for cascade values from sibling fields, (4) queryDependsOn csv input (sibling field keys that trigger re-fetch on change). On Refresh button click, collectFormIntoState() reads these inputs into state.workingProps, then renderLivePreview() POSTs to /api/MegaFormPopup/RazorWidget/Render with payload {templateName, parameters, widgetKey, sqlRows}. If useSql=true and formId/fieldKey present, first fetches rows via /api/MegaForm/DataRepeater/Query (converts column array to object keyed by name) and passes as sqlRows to Render.",
+        "hasLivePreview": true,
+        "hasTablePicker": false,
+        "hasAIAssistant": false,
+        "applyAction": "onApplyProps(state.workingProps) callback (line 422): fires on 'Apply to field' button click after collectFormIntoState() collects recipe name, parameters, SQL config (useSql, connectionKey, masterQuery, queryDependsOn) into state.workingProps. If only onPick is available (no onApplyProps), fires onPick(templateName) instead. Advanced tab custom .razor uses onApplyProps or onSaveOverride(src) after compile succeeds. All writes to field.widgetProps and trigger Builder state.isDirty=true, then rebuild canvas.",
+        "missingFromUserSpec": [
+          "Current Settings tab (read-only summary of all live widget props as they exist NOW on field)",
+          "Data tab with table picker (browse DashboardDatabase tables), sample-row live preview, 'Apply data view' button without leaving popup",
+          "AI Assistant icon/panel scoped to database/table/stored-proc knowledge + widget KB entries only",
+          "Single Apply commits everything (currently multiple Apply paths: onApplyProps for recipe, onSaveOverride for custom .razor)"
+        ],
+        "notesForUnification": "\"Razor Studio is recipe-first redesign (B27), not a unified popup. masterQuery and queryDependsOn are wired in the SQL data source section (lines 470-488) with user-facing labels and hints. collectFormIntoState() (lines 550-582) reads all UI inputs (useSql checkbox, connectionKey, masterQuery textarea, queryDependsOn csv) into state.workingProps. renderLivePreview() (lines 584-643) POSTs to /Render endpoint with {templateName, parameters, widgetKey, sqlRows}; if useSql=true, first fetches via DataRepeater/Query and maps columns to object. Live preview is NOT a persistent panel — it's on-demand render (Refresh button). No table picker exists; user writes raw SQL. StudioOptions API (line 195-204): open(opts), where opts.onApplyProps/onPick/onSaveOverride are the three callback shapes (one is active). Mounting fix (line 250): targets #mf-builder-root OR falls back to body (B31 workaround for Builder fullscreen takeover). CSS classes use .mfrs-* prefix (modal/header/tabs/body/footer/button patterns match token-designer). No inline chat; Advanced tab is for escape-hatch code only. Single point of Apply per tab context: Recipe tab = onApplyProps after collectFormIntoState, Advanced custom = onApplyProps or onSaveOverride after Roslyn compile. For unification: (1) fold this into 'Data' tab alongside table picker, (2) add read-only 'Settings' tab summarizing live props, (3) replace Advanced with AI chat scoped to KB, (4) converge all callbacks to single onApplyProps(newProps) shape.\""
+      }
+    },
+    {
+      "name": "SQLHelpers",
+      "report": {
+        "filePath": "e:/DNNDEFENDER AND AI DESIGNES/AI DESIGNES/MegaFormSolution_280_Oqtane_um/MegaForm.UI/src/view-designer/datarepeater/editor.ts",
+        "mountTrigger": "Function call: MFDataRepeaterDesigner.open(opts) — typically invoked from a property inspector or field context menu. Popup mounted via openPopup() helper into #mf-builder-root or document.body.",
+        "tabs": [
+          {
+            "label": "Connection",
+            "purpose": "Choose SQL or stored procedure mode, select database type (auto-detect, SQL Server, SQLite, PostgreSQL, MySQL), and pick the named connection (DashboardDatabase is the default).",
+            "controls": [
+              "Data source radio (sql/storedproc)",
+              "Database type dropdown",
+              "Connection key text input"
+            ]
+          },
+          {
+            "label": "Master Query",
+            "purpose": "Main SQL/stored procedure, paging settings, auto-refresh interval, shared form params (queryDependsOn, reloadOnParamChange), and empty-state message.",
+            "controls": [
+              "SQL textarea or stored procedure name",
+              "Page size number input",
+              "Refresh interval (ms)",
+              "Query depends on (comma-separated field keys)",
+              "Reload on param change checkbox",
+              "Empty message textarea"
+            ]
+          },
+          {
+            "label": "Filters",
+            "purpose": "Friendly cards for dropdown, text search, and date range filters — each backed by optional options SQL query and a SQL param name.",
+            "controls": [
+              "Filter type dropdown (None/Dropdown/Text/DateRange) per filter",
+              "Filter label text",
+              "Options query SQL (for dropdowns)",
+              "SQL param name text"
+            ]
+          },
+          {
+            "label": "Drill-down",
+            "purpose": "Optional nested detail levels (detail1/2/3) that open from clicked master values, each with SQL, template override, trigger column, and before/after placement.",
+            "controls": [
+              "Detail query SQL",
+              "Detail template HTML",
+              "Trigger column name",
+              "Placement radio (after/before)"
+            ]
+          },
+          {
+            "label": "Templates",
+            "purpose": "HTML overrides for master and detail surfaces when auto-table generation is not enough.",
+            "controls": [
+              "Master template textarea",
+              "Detail1/2/3 template textarea (override auto-table)"
+            ]
+          },
+          {
+            "label": "Display",
+            "purpose": "Grouping by column, chart rendering (bar/line/pie), exports (CSV/PDF), custom CSS class, and row caps.",
+            "controls": [
+              "Group by column dropdown",
+              "Chart type (None/Bar/Line/Pie)",
+              "Chart label column",
+              "Chart value column",
+              "Allow export CSV checkbox",
+              "Allow export PDF checkbox",
+              "Custom CSS class text",
+              "Max rows number"
+            ]
+          },
+          {
+            "label": "Advanced JSON",
+            "purpose": "Raw fallback for power users — import/export full widgetProps JSON, with live validation and error reporting.",
+            "controls": [
+              "JSON textarea with syntax highlighting",
+              "Validation status line",
+              "Import/Copy/Export toolbar buttons"
+            ]
+          }
+        ],
+        "sqlConfigFlow": "1. User picks data source (SQL query vs stored procedure) in the Connection tab. 2. User selects database type (auto-detect or explicit SQL Server/PostgreSQL/MySQL/SQLite). 3. User picks a named connection from host settings (DashboardDatabase is default; others are resolved via DnnConnectionRegistry). 4. In Master Query tab, user pastes SQL or stored proc name. 5. Cascade: queryDependsOn field accepts comma-separated form field keys; those are automatically forwarded as SQL params (:fieldName). Query string params (?year=2026) also auto-forward. 6. For filters: user picks filter type (dropdown/text/date), enters the SQL param name (:paramName), and (for dropdowns) provides an options query. 7. For drill-down: detail queries reference the parent's clicked value via :parentId. 8. Master and detail queries are validated via AiToolsController.DryRunValidate endpoint (checks for missing tables, suggests corrections). 9. Apply commits the final widgetProps JSON to the field schema.",
+        "hasLivePreview": false,
+        "hasTablePicker": false,
+        "hasAIAssistant": false,
+        "applyAction": "Apply button calls opts.onApply(finalJson) with the complete widgetProps JSON. The caller (form designer) commits this to field.widgetProps and marks the form dirty. Final JSON is also copied to clipboard.",
+        "missingFromUserSpec": [
+          "Table picker (browse DashboardDatabase tables inside the designer) — currently user must type table names in SQL",
+          "Sample-row live preview against the actual DB (show first 5-10 rows BEFORE Apply) — no current preview button",
+          "AI Assistant sidebar (scoped to database/table/stored-proc knowledge and widget-datarepeater KB entries) — currently absent",
+          "Current Settings tab (read-only summary of ALL existing widgetProps) — Advanced JSON tab shows raw JSON but not a friendly read-only summary",
+          "Single Apply commits everything (existing tabs all edit in-memory but Apply is at the bottom of the popup) — this already works, but no explicit 'Current Settings' tab feedback before editing"
+        ],
+        "notesForUnification": "1. **Mount pattern**: DataRepeater Designer already uses openPopup() helper (not document.body), so it is portable to other designers. Mount target should be configurable like TokenDesigner's getMountTarget() to avoid Builder fullscreen-takeover races. 2. **Tab architecture**: TAB_ORDER array + map of tab buttons/panels is reusable. The new unified popup can follow this pattern: render tabs, manage activeTab state, refresh chrome on tab change. 3. **Widget Config Panel integration**: DataRepeater already mounts mountWidgetConfigPanel() to show AI-set widgetProps (Umbraco-style inspector). The TokenDesigner, SliderDesigner, ImageChoiceDesigner do NOT use this yet — retrofitting them to show current props would unify the \"before/after\" feedback. 4. **SQL validation**: AiToolsController.DryRunValidate (POST /AiTools/DryRunValidate) parses SQL, checks tables exist, and suggests corrections. Any new SQL-backed popup should call this after user edits the SQL. 5. **Connection registry**: Both SubformController and AiToolsController use DnnConnectionRegistry to resolve named connections (DashboardDatabase, custom aliases from host settings). Reuse this in the unified popup. 6. **Endpoints already exist**: (a) /Subform/Tables — lists base tables + rowCount. (b) /Subform/Columns — fetches columns by tableName (name, dataType, nullable, maxLength, uiType). (c) /DataRepeater/Query — executes a form's saved query and returns sample rows. (d) /AiTools/SqlTables, /AiTools/SqlColumns — AI-focused variants (no schema filter). 7. **Table picker UX**: db-tables-panel.ts shows how to fetch tables, expand/collapse columns, drag columns → create fields. For the unified popup, reuse these endpoints and patterns but scope to the widget's context (show only relevant tables, highlight the configured table). 8. **Preview pattern**: DataRepeaterApiController.Query endpoint allows formId + widgetKey (form looks up the saved SQL from field.widgetProps.masterQuery). For a new DynamicLabel or Razor designer popup, the same Query endpoint + sample rows endpoint can power a live preview pane. 9. **Backdrop CSS**: Token/Slider/ImageChoice designers all use .mf-token-designer-backdrop (class name reused across siblings for consistency). New unified popup should either reuse this class or create a new .mf-unified-popup-backdrop and maintain the same styling (backdrop blur, modal shadow, ESC to close, footer action buttons). 10. **Preset/sample flow**: DataRepeater Designer has STARTER_PRESETS + FEATURED_SAMPLE_OPTIONS. When building unified popups for Razor and DynamicLabel, consider pre-loading a \"suggested SQL\" when the user picks a table (e.g., SELECT * FROM [table_name] LIMIT 10). 11. **Apply behavior**: All existing designers (Token, Slider, ImageChoice, DataRepeater) follow the pattern: edits are in-memory, Close/Done discards, Apply commits. The new unified spec should preserve this. Single Apply button at the bottom; all tabs are pre-Apply staging grounds. 12. **Knowledge scoping**: The AI Chat (MFAiChat) can be scoped via a KB filter. When opening the unified popup, pass the widget type (e.g., widget-dynamic-label, widget-razor-widget) so the chat only suggests relevant KB entries and hides unrelated templates/recipes. This is already done in db-tables-panel.ts for the \"Build with AI\" flow (sends hardened prompt + table list to the chat)."
+      }
+    },
+    {
+      "name": "AIIntegration",
+      "report": {
+        "filePath": "e:/DNNDEFENDER AND AI DESIGNES/AI DESIGNES/MegaFormSolution_280_Oqtane_um/MegaForm.UI/src/builder/token-designer.ts",
+        "mountTrigger": "Button click launches open() function. Mount point: #mf-builder-root (fallback document.body). Container: mf-token-designer-modal. Pattern via MFTokenDesigner.open() public API. In form builder context, designer buttons would call window.MFTokenDesigner.open() or similar pattern.",
+        "tabs": [
+          {
+            "label": "Text tokens",
+            "purpose": "Edit {{content:key}} text values via textarea inputs",
+            "controls": [
+              "Dynamic textarea list (one per token key found in customHtml)",
+              "Key name display + {{content:key}} tag reference",
+              "Token value preservation to schema.settings.customContent[key]",
+              "Real-time isDirty flag on input"
+            ]
+          },
+          {
+            "label": "Image tokens",
+            "purpose": "Configure image URLs for {{content:image_*}} tokens with upload/gallery picker",
+            "controls": [
+              "Live preview thumbnail",
+              "URL text input",
+              "Upload button (POST /api/Upload/Image)",
+              "Gallery picker (GET /api/Upload/List + filtered grid)",
+              "Clear button",
+              "Heuristic detection: token key matches IMAGE_HINTS (image, logo, banner, etc)"
+            ]
+          },
+          {
+            "label": "Form strings",
+            "purpose": "Edit form-level strings (title, description, submitText) that are separate from custom tokens",
+            "controls": [
+              "title input (schema.settings.title)",
+              "description textarea (schema.settings.description)",
+              "submitText input (schema.settings.submitText)",
+              "All persisted directly to schema.settings"
+            ]
+          }
+        ],
+        "sqlConfigFlow": "Not applicable to token designer. The token designer is NOT data-aware — it edits static customHtml content tokens, not SQL queries. SQL configuration would be on a separate Data/Query tab if this were a data-binding designer (like DataRepeater designer does).",
+        "hasLivePreview": false,
+        "hasTablePicker": false,
+        "hasAIAssistant": false,
+        "applyAction": "All changes auto-save into B.state.schema.settings (customContent, customHtml text, settings.title/description/submitText). Custom 'mf:tokens-changed' event dispatched on close to notify inline editor. No explicit Apply button needed — isDirty flag set on every input, B.markDirty() called if available.",
+        "missingFromUserSpec": [
+          "AI Assistant icon / inline chat panel (user spec requires this for new unified popup designers)",
+          "Data/SQL tab with table picker and live DB row preview (user spec item #2)",
+          "Current Settings tab as read-only summary (user spec item #1)",
+          "Sample-row preview against live DB (token designer has no DB interaction)",
+          "Single Apply button that commits everything atomically (token designer auto-saves during edit)"
+        ],
+        "notesForUnification": "[\n  \"Mount target pattern is SOLID: getMountTarget() falls back body → #mf-builder-root. Use same for new unified designers. Set data-mf-overlay='1' attribute to survive Builder fullscreen takeover (B31 fix).\",\n  \"CSS classes follow mf-token-designer-* namespace. New unified designer can reuse: mf-*-backdrop (modal wrapper), mf-*-shell (dialog container), mf-*-head (title bar), mf-*-tabs (tab buttons), mf-*-pane (tab content), mf-*-foot (action bar). Template: see token-designer lines 150-188.\",\n  \"Tab switching: Array.prototype.forEach on .mf-*-tab buttons, toggle active class, show/hide .mf-*-pane divs by data-pane attribute. Reusable pattern for multi-tab designers.\",\n  \"File upload / gallery picker: Token designer has proven patterns (lines 321-353). New Data tab can call uploadImage() + fetchGallery() from MFTokenDesigner public API, or implement own.\",\n  \"Real-time state updates: Token designer sets B.state.isDirty = true on every input change + calls B.markDirty() if available. New designer should do same to hook builder's dirty-flag tracking.\",\n  \"Dispatch custom events on state change: Token designer emits 'mf:tokens-changed' on close (line 218). New designer could emit 'mf:unified-designer-applied' for other builder components to respond.\",\n  \"CRITICAL for AI chat integration: The current AIForm Assistant mounts via mountChatUi() which auto-detects builder surface via #mf-builder-root + isBuilderSurface() check. To embed smaller scoped AI inside the new unified popup, you need a SCOPED mounting function that takes widgetType/slug parameter and passes it to list_knowledge(kind='...', search='...') to filter KB. See AiToolsController.cs line 275 — the endpoint already supports kind + search filters. Skeleton: (1) Pass opts.widgetSlug='widget-razor' to new popup mount. (2) In the popup's AI tab, call dispatchToolCall({name:'list_knowledge', args:{kind:'widget', search:'razor'}}) to get only this widget's KB. (3) Bonus: also filter by kind='sql_sample' + search in title. (4) The system prompt in chat.ts (line 124) references listOpSchemas() — you'd want to pass a scoped prompt segment that hides recipes/templates not relevant to this widget.\",\n  \"For KB filtering inside popup: The AiToolsController.Knowledge endpoint accepts ?kind=&search= params. Example: GET /AiTools/Knowledge?kind=widget&search=razor returns only widget KB entries matching 'razor'. The chat tool list_knowledge already supports these params (tools.ts line 38-40). To scope AI: (a) Enhance list_knowledge tool schema to accept optional widgetType param; (b) pass it through to the endpoint as &kind=widget&search=<widgetType>; (c) the server-side filter (AiKnowledgeRepository.List) already does the work. OR simpler: just have the client-side chat layer pre-filter results after fetching — less code touch.\",\n  \"Popup mounting pattern from DataRepeater designer: openPopup() wrapper (shared/index.ts) handles modal, backdrop, Apply button, Cancel button. Don't duplicate — reuse if possible. Check src/view-designer/shared for reusable utilities.\",\n  \"For new unified spec: (1) Settings tab = read-only summary, call inspect_form_customizations() to show current widgetProps as a <pre> or structured list. (2) Data tab = DataRepeater designer's 'Connection' + 'Master Query' tabs, refactored. (3) AI Assistant tab = mounted via mountChatUi({containerId: unique-id-in-popup, surface: 'designer', context: {widgetType, slug}}) — requires chat.ts enhancement to pass context through. (4) Single Apply button saves all three tabs' state via one set_field_property op on the builder state.\"\n]"
+      }
+    }
+  ],
+  "spec": {
+    "rationale": "The three target designers (DynamicLabel inline-props + Layout button, DataRepeater Vite editor, Razor Studio recipe gallery) already converge on the same five concerns — current state, SQL connection, live preview, templates/recipes, and apply-back-to-schema — but each one solved a different subset. Token Designer already proved the modal shell pattern (data-mf-overlay='1', #mf-builder-root mount, .mf-*-backdrop/shell/head/tabs/pane/foot CSS, B31 fix) and is the only one that survives the Builder fullscreen takeover; DataRepeater proved the openPopup() shared helper + onApply(JSON) commit contract; Razor Studio proved on-demand server-side preview against /RazorWidget/Render. Wrapping all three in one shell that mounts the existing per-widget body as the middle tabs (so Razor Studio's recipe gallery, DataRepeater's 7 tabs, and DynamicLabel's templates stay intact) lets us add the three NEW capabilities the user asked for — Current Settings summary, a Data tab with table picker + live preview, and a scoped AI panel — without rewriting any shipping widget designer. All four shipped endpoints (/Subform/Tables, /Subform/Columns, /DataRepeater/Query, /AiTools/Knowledge, /AiTools/DryRunValidate) already cover the Data + AI tab needs, so no new server code is required for v1.",
+    "sharedShellCode": "Add MegaForm.UI/src/view-designer/shared/unified-shell.ts exporting `openUnifiedDesigner(opts: UnifiedDesignerOpts): UnifiedDesignerHandle`. Opts shape: { fieldKey, fieldType: 'dynamic-label'|'datarepeater'|'razor', currentProps, formId, widgetSlug, tabs: Array<{ id, label, mount(host: HTMLElement, ctx): TabApi }>, onApply(mergedProps), onClose? }. The shell owns: (1) backdrop + dialog DOM (clones Token Designer's .mf-token-designer-backdrop/-shell/-head/-tabs/-pane/-foot class structure, renamed to .mf-unified-designer-*, with data-mf-overlay='1'); (2) getMountTarget() that prefers #mf-builder-root over body (B31); (3) tab strip with built-in 'Current Settings' (always first, read-only) and 'Data' (always second) + AI Assistant icon button in the header; (4) per-tab dirty tracking and a single bottom 'Apply' button that merges each tab's getDraft() into one object and fires onApply once; (5) ESC + backdrop click confirm-if-dirty. TabApi = { getDraft(): Partial<WidgetProps>, setProps(p): void, isDirty(): boolean }. Existing Razor Studio + DataRepeater editor + DynamicLabel properties panel are re-exported as tab adapters (factory functions that return TabApi), so the shipping code stays the source of truth and the shell is a thin wrapper.",
+    "tabSpec": [
+      {
+        "name": "Current Settings",
+        "purpose": "Read-only at-a-glance summary of the widget props that are LIVE on this field right now, grouped by section (Data binding, Templates/Recipe, Display) with a 'Copy JSON' affordance — not a re-render of the Inspector panel and NOT editable.",
+        "controls": [
+          "Grouped definition-list rendering currentProps (label / value pairs)",
+          "SQL summary line: connectionKey · dataSource · resultMode · queryDependsOn",
+          "First 240 chars of masterQuery in a <pre> with 'Show full SQL' expander",
+          "Recipe/template name chip (Razor: recipe slug; DataRepeater: detail-level count; DynamicLabel: simple|multi)",
+          "'Copy JSON' button (clipboard write of full widgetProps)",
+          "'Reset field to defaults' link (confirm dialog, fires onApply({}))"
+        ],
+        "isOptional": false,
+        "reusableFromExisting": "New thin renderer in unified-shell.ts; reads from widget-config-panel.ts (MegaForm.UI/src/view-designer/widget-config-panel.ts) prop-formatting helpers for label resolution; no Inspector code is duplicated — it imports formatPropValue() from there."
+      },
+      {
+        "name": "Data",
+        "purpose": "Pick a table from DashboardDatabase, preview live rows, and either generate a SELECT or paste/edit one — then click 'Apply data view' to write masterQuery + connectionKey + queryDependsOn back into the draft without leaving the popup.",
+        "controls": [
+          "Connection key dropdown (default DashboardDatabase, populated from host settings)",
+          "Database-type select (auto|SqlServer|Sqlite|PostgreSql|MySql)",
+          "Left rail: searchable table list (autocomplete + virtualised list) fed by /Subform/Tables",
+          "Expand-table reveals columns (name · type · nullable) from /Subform/Columns",
+          "Center: 'Generated SQL' textarea seeded with SELECT TOP 50 [cols] FROM [table]; user-editable",
+          "queryDependsOn input (CSV of sibling field keys, auto-suggested from :params in SQL)",
+          "Right: sample-row preview grid (first 25 rows) refreshed via /DataRepeater/Query (dry-run, formId+widgetKey)",
+          "'Validate SQL' button → /AiTools/DryRunValidate (shows missing-table hints)",
+          "'Apply data view' button → writes masterQuery/connectionKey/databaseType/queryDependsOn into the shell draft (does NOT close the popup; switches focus to Templates/Recipe tab of the host widget)"
+        ],
+        "isOptional": false,
+        "reusableFromExisting": "Reuses MegaForm.UI/src/builder/db-tables-panel.ts table-list + column-expand rendering (extract into shared/table-picker.ts). Sample preview reuses the /api/MegaForm/DataRepeater/Query endpoint that DataRepeater + Razor Studio already call. Validation reuses /AiTools/DryRunValidate (same endpoint DataRepeater's Apply path already uses)."
+      },
+      {
+        "name": "Widget body (host)",
+        "purpose": "The widget-specific configuration UI is mounted here unchanged. For Razor: the recipe gallery + parameter form + live preview iframe (existing megaform-razor-studio.ts open() body, minus its own modal chrome). For DataRepeater: the Connection/Master Query/Filters/Drill-down/Templates/Display/Advanced JSON sub-tabs from editor.ts (minus its own openPopup chrome). For DynamicLabel: the existing Data/Templates/Rendering/Display sections from properties.ts, lifted into the popup body.",
+        "controls": [
+          "Whatever the host widget's existing designer already renders — untouched",
+          "Sub-tabs allowed (Razor: Recipe/Live preview/Advanced; DataRepeater: 7 tabs; DynamicLabel: 4 sections)"
+        ],
+        "isOptional": false,
+        "reusableFromExisting": "Razor: MegaForm.UI/src/widgets/plugins/megaform-razor-studio.ts — refactor open() to export mountInto(host, ctx) that returns TabApi. DataRepeater: MegaForm.UI/src/view-designer/datarepeater/editor.ts — same refactor, expose stringifyDraft() as getDraft(). DynamicLabel: MegaForm.UI/src/widgets/plugins/megaform-widget-dynamic-label.ts properties block lifted into a new mountInto() exported from the same file."
+      },
+      {
+        "name": "AI Assistant (icon, not a tab)",
+        "purpose": "Slide-in right-hand panel (45% width, overlays Widget body tab). Scoped chat that ONLY surfaces (a) database/table/SP knowledge and (b) widget-specific KB entries. Not the full chat — no template gallery, no form-level recipes.",
+        "controls": [
+          "Header icon (sparkles) toggles the panel",
+          "Scoped KB picker pre-populated with kind=widget&search=<widgetSlug> + kind=sql_sample + db tables list",
+          "Message input + send",
+          "Each assistant message has 'Apply to current field' button → routes through the unified shell's draft (one set_field_property style merge), not the global builder"
+        ],
+        "isOptional": false,
+        "reusableFromExisting": "Mounts a SCOPED chat via mountChatUi({ containerId, surface:'designer', context:{ widgetSlug, fieldKey, formId } }) from MegaForm.UI/src/ai-form-assistant/chat.ts — requires chat.ts to accept context and pre-filter list_knowledge calls (already supports kind+search in AiToolsController.Knowledge). No new chat code; just a context-aware wrapper."
+      }
+    ],
+    "dataTabContract": {
+      "endpoints": [
+        "GET /api/MegaForm/Subform/Tables?connectionKey=DashboardDatabase  -> { tables:[{name,rowCount}] }  (already shipped, used by db-tables-panel)",
+        "GET /api/MegaForm/Subform/Columns?tableName=Foo&connectionKey=...  -> { table, columns:[{name,dataType,nullable,maxLength,uiType}] }  (already shipped)",
+        "POST /api/MegaForm/DataRepeater/Query  body { formId, widgetKey, page:1, pageSize:25, filterJson, sqlOverride? }  -> { rows, columns, total }  (already shipped — sqlOverride may need a small additive flag if the controller does not accept ad-hoc SQL; verify before adding)",
+        "POST /api/MegaForm/AiTools/DryRunValidate  body { sql, connectionKey }  -> { ok, missingTables[], suggestions[] }  (already shipped)",
+        "GET /api/MegaForm/AiTools/Knowledge?kind=widget&search=<widgetSlug>  -> KB entries (already shipped, used by AI tab)"
+      ],
+      "tablePickerUx": "Left rail (240px) inside the Data tab. Search box at the top (filters tables by substring). Tables render as collapsible rows showing name + rowCount badge. Click a table -> selects it (highlight) AND fetches /Subform/Columns. Columns render inline beneath the table row as chips (name · type). Selecting a table seeds the center 'Generated SQL' textarea with SELECT TOP 50 [col1],[col2],... FROM [tableName]. Clicking a column chip inserts that column at the cursor in the SQL textarea (or toggles inclusion in the generated SELECT). When the field already has a masterQuery, the rail auto-scrolls to and highlights the table parsed from the FROM clause.",
+      "samplePreviewUx": "Right pane (flex-grow). 'Run preview' button above a 25-row grid. Pressing the button fires POST /DataRepeater/Query with the current SQL textarea content as sqlOverride (or via a temp widgetKey if the endpoint cannot accept ad-hoc SQL — see open question). Columns auto-render from the response. Errors render as a red banner with the SQL parse position highlighted if /DryRunValidate gave coords. The grid is read-only, paginated client-side, max 25 rows hard cap to stay snappy. A 'Show columns' chevron toggles a sticky column-types row above the grid (useful for picking tokens). NO live re-fetch on keystroke — preview is explicit only.",
+      "applyButtonEffect": "Bottom of Data tab has 'Apply data view' (secondary, blue). On click: (1) merges { connectionKey, databaseType, dataSource:'sql', masterQuery:<textarea>, queryDependsOn:<auto-extracted ∪ user-CSV>, useSql:true } into the unified shell's pending draft (NOT into field.widgetProps yet); (2) flashes a toast 'Data view staged — click Apply at the bottom to commit'; (3) auto-switches the active tab to the host Widget body tab so the user can adjust templates against the new query; (4) DOES NOT close the popup, DOES NOT call onApply. The single bottom 'Apply' button of the shell is what actually commits everything to field.widgetProps in one onApply(mergedDraft) call (preserving the DataRepeater contract)."
+    },
+    "aiAssistantContract": {
+      "embedShape": "Header icon button (sparkles) in the unified shell's title bar. Click toggles an inline right-side slide-in panel that overlays the active tab body (panel width 45% of dialog, dialog itself grows to 92vw when AI is open). NOT a floating button, NOT a separate modal — it lives inside the same dialog so context (current draft, field key, widget slug) is shared. Close button on the panel collapses it back. Panel is scoped chat only — no template/recipe gallery, no form-level ops palette.",
+      "scopeFilter": "When the panel mounts, it calls list_knowledge() with TWO concurrent queries and unions the results: (a) kind='widget' search=<widgetSlug>  (e.g. widget-razor-widget, widget-dynamic-label, widget-datarepeater) and (b) kind='sql_sample'. It also injects the current DashboardDatabase table list (from /Subform/Tables, fetched once and cached on the shell) into the system prompt as 'Available tables: ...'. All OTHER kinds (form-recipe, starter-app, page-template, business-app) are HIDDEN — the tool's allowedKinds whitelist is enforced client-side in chat.ts's dispatchToolCall wrapper. The chat input placeholder reads 'Ask about this widget's SQL, columns, or KB entries'.",
+      "systemPromptAddendum": "You are scoped to ONE widget on ONE field. Widget type: <widgetSlug>. Field key: <fieldKey>. Form id: <formId>. Current draft (read-only snapshot, may be stale): <pretty-printed draft>. Available DashboardDatabase tables: <comma-list of table names>. You may ONLY call list_knowledge (filtered to kind=widget|sql_sample), list_sql_tables, list_sql_columns, and propose_widget_props. You MAY NOT call add_field, set_field_property on other fields, create_form, install_starter_app, or any form-level/page-level op. When the user accepts a suggestion, return a propose_widget_props payload that the popup will merge into the draft via the 'Apply to current field' button — never write to the schema directly."
+    },
+    "openQuestions": [
+      "Does POST /api/MegaForm/DataRepeater/Query currently accept an ad-hoc sqlOverride parameter for preview, or does it always look up field.widgetProps.masterQuery by widgetKey? If the latter, we need a small additive endpoint (e.g. POST /AiTools/PreviewSql { sql, connectionKey, page, pageSize }) — confirm whether to add it now or stage a temporary widgetProps blob through an existing path.",
+      "DynamicLabel today has TWO Builder entry points: inline Properties panel + 'Layout Designer' button. Should the unified popup replace the inline Properties panel entirely (button-only access) or live alongside it as a third 'Open Designer' button — and what happens to the Layout Designer (visual block composer) button (keep as separate launcher, fold into the unified shell as a 4th tab, or deprecate)?",
+      "Razor Studio's 'Live preview' tab currently iframes /api/MegaFormPopup/RazorWidget/Preview for sample-data rendering. Inside the unified shell, should the AI Assistant 'Apply to current field' action re-run that preview automatically, or wait for the user to switch back to the host tab and click Refresh manually?",
+      "For the 'Current Settings' tab — should the 'Reset field to defaults' link be present from v1 (destructive, undo-able only via Cmd-Z on the schema) or deferred? It is not in the spec verbatim but is the natural counterpart of a read-only summary."
+    ]
+  },
+  "plan": {
+    "sharedShellModule": {
+      "newFilePath": "e:/DNNDEFENDER AND AI DESIGNES/AI DESIGNES/MegaFormSolution_280_Oqtane_um/MegaForm.UI/src/view-designer/shared/unified-shell.ts",
+      "publicApi": "export type UnifiedFieldType = 'dynamic-label' | 'datarepeater' | 'razor';\n\nexport interface UnifiedDesignerCtx {\n  fieldKey: string;\n  formId: number | string;\n  widgetSlug: 'widget-dynamic-label' | 'widget-datarepeater' | 'widget-razor-widget';\n  fieldType: UnifiedFieldType;\n  initialProps: Record<string, any>;\n  /** Mutable working copy the shell merges per-tab drafts into. */\n  draft: Record<string, any>;\n  /** Cached lookups shared across tabs (table list, KB hits). */\n  cache: { tables?: Array<{name:string;rowCount:number}>; columnsByTable?: Record<string, any[]>; };\n  /** Switch focus to another tab (used by Data tab after \"Apply data view\"). */\n  focusTab(tabId: string): void;\n  /** Stage a partial merge from any tab without committing to the field. */\n  stageDraft(patch: Record<string, any>, opts?: { toast?: string }): void;\n  /** Toggle the right-side AI panel programmatically. */\n  toggleAi(open?: boolean): void;\n}\n\nexport interface UnifiedTabApi {\n  /** Called by the shell when Apply is clicked. Return the partial widgetProps this tab owns. */\n  getDraft(): Record<string, any>;\n  /** Shell pushes the merged draft back when other tabs stage changes (e.g. Data tab seeds masterQuery). */\n  setProps(p: Record<string, any>): void;\n  /** Whether this tab has unsaved edits since last setProps()/mount. */\n  isDirty(): boolean;\n  /** Optional teardown hook (close iframes, abort fetches). */\n  destroy?(): void;\n}\n\nexport interface UnifiedTabSpec {\n  id: string;\n  label: string;\n  /** Optional icon char/SVG; rendered in tab strip. */\n  icon?: string;\n  /** Built-in tabs ('current-settings', 'data') ship with the shell; host body tabs are added by widget. */\n  mount(host: HTMLElement, ctx: UnifiedDesignerCtx): UnifiedTabApi;\n}\n\nexport interface UnifiedDesignerOpts {\n  fieldKey: string;\n  fieldType: UnifiedFieldType;\n  widgetSlug: UnifiedDesignerCtx['widgetSlug'];\n  formId: number | string;\n  currentProps: Record<string, any>;\n  /** Extra tabs supplied by the widget (host body). Built-in Current Settings + Data are auto-prepended. */\n  tabs: UnifiedTabSpec[];\n  /** Default tab id to focus on open (defaults to first host tab, NOT current-settings). */\n  defaultTabId?: string;\n  /** Fired once when shell's bottom Apply button is clicked, with the merged draft. */\n  onApply(mergedProps: Record<string, any>): void | Promise<void>;\n  /** Fired after Apply success or Cancel-confirmed. */\n  onClose?(): void;\n}\n\nexport interface UnifiedDesignerHandle {\n  close(force?: boolean): void;\n  setActiveTab(id: string): void;\n  getDraft(): Record<string, any>;\n  /** For widgets that want to push fresh widgetProps mid-flight (e.g. AI Apply). */\n  applyExternalDraft(patch: Record<string, any>): void;\n}\n\nexport function openUnifiedDesigner(opts: UnifiedDesignerOpts): UnifiedDesignerHandle;\n\n/** Built-in tab factories the widget can opt into. */\nexport function buildCurrentSettingsTab(): UnifiedTabSpec;\nexport function buildDataTab(): UnifiedTabSpec;",
+      "cssDeps": "Reuse Token Designer chrome with a renamed namespace. Add a new <style> injected once on first open(), namespace prefix `.mf-unified-designer-` (clone from `.mf-token-designer-*` in MegaForm.UI/src/builder/token-designer.ts). Specifically clone these classes verbatim and rename: -backdrop (full-viewport blur), -shell (92vw max-w 1480px dialog with grow-to-92vw when AI panel open), -head (title row + AI sparkles icon button + close X), -tabs (horizontal scroll strip), -pane (active tab body, flex column, padding 16px), -foot (sticky bottom action bar with single primary Apply + secondary Cancel). Set `data-mf-overlay=\"1\"` on the shell to survive Builder fullscreen takeover (B31 fix). New classes added in this module: `.mf-unified-designer-ai-pane` (right slide-in 45% width with translateX animation), `.mf-unified-designer-toast` (transient stage-confirm toast top-right), `.mf-unified-designer-tablist` (Data tab left rail 240px), `.mf-unified-designer-preview-grid` (Data tab sample-row table). Reuse `.mf-drd-*` from datarepeater/styles.ts for the host body tabs inside DataRepeater adapter (no class collisions because host body mounts INTO a `.mf-unified-designer-pane` scope). For the table picker reuse `.mf-db-tables-*` from builder/db-tables-panel.ts by lifting the renderer into `shared/table-picker.ts`. AI pane reuses the existing `.mf-ai-chat-*` classes from ai-form-assistant/chat.ts unchanged.",
+      "estimatedLOC": 720
+    },
+    "perWidget": [
+      {
+        "widget": "DynamicLabel",
+        "existingFile": "e:/DNNDEFENDER AND AI DESIGNES/AI DESIGNES/MegaFormSolution_280_Oqtane_um/MegaForm.UI/src/widgets/plugins/megaform-widget-dynamic-label.ts",
+        "migrationStrategy": "Add a new 'Open Designer' button on the canvas card next to the existing 'Layout Designer' launcher (DO NOT replace the inline Properties panel — DynamicLabel users rely on it for quick edits). Wrap the existing Properties tabs (Data / Templates / Rendering / Display) by exporting `mountInto(host, ctx): UnifiedTabApi` from a new helper `properties-mountable.ts` (extracted from the current renderProperties() call site in megaform-widget-dynamic-label.ts ~lines 150-420). The unified shell tab spec becomes: [Current Settings, Data, Templates, Rendering, Display]. The 'Help & SQL Samples' collapsible (currently a properties pane section) becomes seed cards inside the new Data tab's preset gallery instead of a separate sub-tab. Layout Designer (MFLayoutDesigner.open()) stays as its own button — visual block composer is orthogonal.",
+        "keepExisting": true,
+        "dataTabSql": "Writes back to masterQuery + connectionKey + databaseType + dataSource + useSql + queryDependsOn. resultMode (simple|multi) stays in the host Templates/Rendering tab — Data tab only stages the query. After 'Apply data view', shell.focusTab('templates') so the user can adjust simple vs multi against fresh column headers.",
+        "aiAssistantFilter": "list_knowledge({kind:'widget', search:'widget-dynamic-label'}) UNION list_knowledge({kind:'sql_sample', search:'dynamic-label'}). System prompt addendum injects: available DashboardDatabase tables, the 4 token grammars ({{row:Col}}, {{qs:Param}}, {{field:Key}}, {{meta:page}}), and the simple-vs-multi result-mode rule. Hide kinds: form-recipe, starter-app, page-template, business-app.",
+        "estimatedHours": 6,
+        "risks": [
+          "Two entry points (inline Properties panel + new Open Designer button + existing Layout Designer button) — risk of user confusion. Mitigate by labelling: Properties panel = 'Quick edit', new button = 'Open Designer (live preview + AI)', Layout Designer = 'Visual blocks'.",
+          "renderProperties() in megaform-widget-dynamic-label.ts currently writes directly to schema.settings on every input — refactoring to a draft-staging pattern for the unified shell requires intercepting the existing input listeners. Risk: dual-write desync if user has Properties panel open at the same time as the unified popup. Mitigate by closing the inline panel when the unified shell opens (dispatch a 'mf:dynlabel-designer-opening' event).",
+          "5 sample presets (DNN Tabs paginated cards / table / compact links / portal stat / page detail) currently live in renderHelpAndSamples() and write directly to schema. Need to migrate them into the unified shell's Data tab preset gallery so they stage into the draft instead. Risk: regression on the 'Apply preset' UX users already rely on.",
+          "The cache-bust stamp (FormView.ascx.cs:378) must bump in lockstep with the new shell bundle — if DNN tenants miss the bump they get the old properties.ts without the launcher button."
+        ]
+      },
+      {
+        "widget": "DataRepeater",
+        "existingFile": "e:/DNNDEFENDER AND AI DESIGNES/AI DESIGNES/MegaFormSolution_280_Oqtane_um/MegaForm.UI/src/view-designer/datarepeater/editor.ts",
+        "migrationStrategy": "Wrap inside unified shell. The existing MFDataRepeaterDesigner.open() is the biggest investment of the three (7 tabs, ~2500 LOC, separate Vite bundle build:datarepeater-designer). Refactor open() to ALSO export `mountInto(host, ctx): UnifiedTabApi` that renders the 7 tabs as inner sub-tabs within ONE host body tab labelled 'Editor'. Keep openPopup() path alive for backward compatibility (any external callers still get the standalone modal during the transition). The unified shell tab spec becomes: [Current Settings, Data, Editor (host body with 7 sub-tabs), Advanced JSON (lifted out of sub-tab into top-level for power users)]. stringifyDraft(draft) becomes getDraft() in the TabApi. Single bottom Apply on the unified shell replaces the per-popup Apply, but the host body's inner 'Sync JSON to Tabs' button stays.",
+        "keepExisting": true,
+        "dataTabSql": "Writes back to masterQuery + connectionKey + databaseType + dataSource + queryDependsOn + reloadOnParamChange + useSql (added for parity with DynamicLabel/Razor). Filter SQL (filter1OptionsQuery, filter2OptionsQuery) and detail queries (detail1Query/2/3) stay in the host Editor tab — Data tab is master-query-only. Page size + max rows are owned by the host Editor's Master Query sub-tab, NOT the Data tab.",
+        "aiAssistantFilter": "list_knowledge({kind:'widget', search:'widget-datarepeater'}) UNION list_knowledge({kind:'sql_sample'}) UNION list_knowledge({kind:'sql_sample', search:'drill'}). System prompt addendum injects: available tables, the queryDependsOn cascade rules, drill-down :parentId convention, filter dropdown options-query pattern. Tools whitelisted: list_knowledge, list_sql_tables, list_sql_columns, propose_widget_props. Hide form-level ops (add_field/create_form/etc).",
+        "estimatedHours": 10,
+        "risks": [
+          "editor.ts is the largest of the three (separate Vite bundle). Refactoring open() into a mountable TabApi without breaking the standalone bundle requires keeping two export shapes alive simultaneously. Risk: bundle size grows ~15% if the shell is dual-imported.",
+          "FLAT_KEYS in model.ts is the canonical schema-flat list. Unified shell merges Data tab draft + host body draft — if the two tabs disagree on a key (e.g. user edits masterQuery in BOTH Data tab and Editor's Master Query sub-tab), last-write-wins via Object.assign. Need a precedence rule: Data tab is the authoritative source for connection keys, host body wins for everything else. Document the rule and add a dirty-conflict warning toast.",
+          "The 'Advanced JSON' tab currently round-trips through stringifyDraft/syncJsonToTabs. When lifted to a top-level shell tab, it must observe the merged draft (Current Settings + Data + Editor) — not just the host body's slice. Requires shell to expose draft snapshot to the JSON tab on every keystroke.",
+          "DataRepeater Designer launches as a SEPARATE entry point bundle today. The unified shell lives in the builder bundle. To embed the editor as a tab we either (a) bundle both into the builder (size hit) or (b) load the datarepeater editor lazily via dynamic import when the host body tab is first focused. Recommend (b)."
+        ]
+      },
+      {
+        "widget": "Razor",
+        "existingFile": "e:/DNNDEFENDER AND AI DESIGNES/AI DESIGNES/MegaFormSolution_280_Oqtane_um/MegaForm.UI/src/widgets/plugins/megaform-razor-studio.ts",
+        "migrationStrategy": "Wrap inside unified shell. Refactor MFRazorStudio.open() to export `mountInto(host, ctx): UnifiedTabApi` that renders the existing Recipe gallery + parameter form + Live preview iframe + Advanced (built-in source viewer / custom .razor escape hatch) as inner sub-tabs of the host body. The unified shell tab spec becomes: [Current Settings, Data, Recipe (host body), Advanced (host body)]. Move the SQL data source section (useSql, connectionKey, masterQuery, queryDependsOn currently inside the Recipe tab config form ~lines 470-488) OUT of the Recipe sub-tab and INTO the new Data tab — Recipe sub-tab keeps only the parameter form + live preview. collectFormIntoState() splits into two: collectRecipeIntoState() (params only) and collectDataIntoState() (SQL only, owned by Data tab). All Apply callbacks (onApplyProps, onPick, onSaveOverride) converge to the shell's single onApply(mergedProps). For custom .razor (Advanced), onSaveOverride becomes a special key `__razorOverride` in the merged draft that the shell separates before calling the original onApplyProps + onSaveOverride.",
+        "keepExisting": true,
+        "dataTabSql": "Writes back to masterQuery + connectionKey + databaseType + useSql + queryDependsOn. Recipe name + parameters stay in the host Recipe sub-tab. After 'Apply data view', shell.focusTab('recipe') and (per open-question #3) auto-trigger renderLivePreview() so the recipe re-renders against the new SQL rows without the user needing to click Refresh.",
+        "aiAssistantFilter": "list_knowledge({kind:'widget', search:'widget-razor-widget'}) UNION list_knowledge({kind:'sql_sample'}). System prompt addendum: available tables, list of registered recipes with their supportsSql flags and [RazorParam] metadata, the {{row}}/{{field}}/{{qs}} token rules. propose_widget_props can target either recipe.name + parameters OR sqlRows config; the AI must declare which slice it is editing.",
+        "estimatedHours": 7,
+        "risks": [
+          "Razor Studio has THREE Apply callback shapes (onApplyProps, onPick, onSaveOverride). Converging them to a single shell.onApply requires the shell to inspect the merged draft for `__razorOverride` and route to the right caller path. Risk: a Razor field whose host wired only onPick (not onApplyProps) will silently drop SQL config from the Data tab. Mitigate by detecting missing callbacks at open() time and warning.",
+          "Live preview is on-demand (Refresh button) and currently re-fetches /DataRepeater/Query then POSTs to /RazorWidget/Render. After 'Apply data view' the Data tab stages new masterQuery into the draft — the Recipe sub-tab's preview iframe must re-render against the STAGED draft (not field.widgetProps which is still old). Risk: preview shows stale data unless the Recipe adapter listens to shell.setProps().",
+          "Advanced sub-tab's custom .razor escape hatch invokes Roslyn JIT compile on the server. If the unified Apply is clicked while a compile is in flight, the shell must await the compile result before committing. Risk: race condition writing widgetProps with a partially-compiled override.",
+          "Recipe tile gallery is 340px wide. When AI pane opens (45% of dialog), the gallery may be squeezed below readable width. Need a media-query / JS resize observer to collapse gallery to icon-only when dialog < 1100px effective width."
+        ]
+      }
+    ],
+    "shipOrder": [
+      "1. Razor (7h) — smallest scope of the three host bodies, ALREADY has live preview wired (validates the shell's preview-refresh contract end-to-end), and Razor Studio's CSS namespace (.mfrs-*) is already isolated from the rest of the builder so the shell wrap is low-risk. Razor also exercises the SQL data tab + Apply flow without the complications of a separate Vite bundle. Use Razor as the reference adapter the other two copy from.",
+      "2. DynamicLabel (6h) — fewest LOC to lift (renderProperties() ~270 lines), no live preview to integrate, but two entry-point UX risk needs careful labelling. Shipping second lets us validate the 'host body tab without preview' adapter shape that DataRepeater will also need for some of its sub-tabs (Display, Advanced JSON). Also exercises the preset-gallery seeding path inside the new Data tab that DataRepeater will reuse for STARTER_PRESETS.",
+      "3. DataRepeater (10h) — biggest LOC + separate Vite bundle + 7 inner sub-tabs + drill-down/filter complexity. Ship last so the shell's TabApi contract is already validated by two simpler widgets. Use lazy dynamic import to keep the builder bundle size unchanged. The Editor sub-tabs surface unchanged inside the host body tab so existing user muscle memory is preserved — only the surrounding chrome (Current Settings + Data + AI) is new."
+    ],
+    "cacheStampBumps": [
+      "After shared shell + Razor adapter ships (Step 1): bump FormView.ascx.cs:378 from `?v=20260602-B37` to `?v=20260602-B38` AND bump MegaForm.Oqtane.Server equivalent (verify in MegaForm.Oqtane.Server/wwwroot/Modules/MegaForm/ — DNN and Oqtane stamps move in lockstep per the established pattern). Mark in MEMORY.md: project_megaform_unified_designer_shell.md.",
+      "After DynamicLabel adapter ships (Step 2): bump to `?v=20260602-B39`. Also bump dashboard.js stamp (uses `V` variable, auto-tracks). Verify DesktopModules/MegaForm/Assets/js/megaform-builder.js mtime updated so DNN browser-cache invalidates the new properties.ts wrapper.",
+      "After DataRepeater adapter ships (Step 3): bump to `?v=20260602-B40`. CRITICAL: also rebuild and republish the SEPARATE view-designer Vite bundle (npm run build:datarepeater-designer) because editor.ts is the entry point — without rebuilding it, the standalone modal users will fall back to the old shape. Verify both bundles ship: bundles/megaform-builder.js + bundles/megaform-view-designer.js.",
+      "After v1 hardening pass (post-ship, +1 follow-up week): bump to `?v=20260609-B41` if any Data tab preview endpoint changes (e.g. if open-question #1 lands a new POST /AiTools/PreviewSql endpoint, that requires a server DLL rebuild + AssemblyVersion bump too, not just a cache stamp). Confirm with current handoff log before shipping."
+    ]
+  },
+  "risks": {
+    "risks": [
+      "DataRepeater is a SEPARATE Vite bundle (build:datarepeater-designer) while the unified shell lives in the builder bundle — embedding editor.ts as a mountable tab forces either (a) bundling both into builder (size hit ~15%) or (b) lazy dynamic import that may break the standalone openPopup() entry users hit from other launchers; if both shapes are maintained, FLAT_KEYS in model.ts becomes the single point of failure when the two diverge.",
+      "DynamicLabel has THREE potential entry points after this ships (inline Properties panel quick-edit + new Open Designer button + existing Layout Designer button); renderProperties() currently writes directly to schema.settings on every input, so dual-write desync is inevitable if the inline panel stays open while the unified shell is editing the same field — and the planned 'mf:dynlabel-designer-opening' event closing the inline panel is a behavioral change users may not expect.",
+      "Razor Studio has THREE distinct Apply callback shapes (onApplyProps for recipe props, onPick for template-name-only callers, onSaveOverride for compiled custom .razor); the shell's single onApply(mergedProps) must inspect for `__razorOverride` and route to the right callback — callers that wired only onPick (legacy hosts) will silently DROP the new Data-tab SQL config without any user-visible error.",
+      "POST /DataRepeater/Query currently looks up field.widgetProps.masterQuery by widgetKey (per scout) — the spec's sqlOverride parameter likely does NOT exist; the entire Data tab live-preview UX depends on either adding a new POST /AiTools/PreviewSql endpoint (server DLL rebuild + AssemblyVersion bump, not just cache stamp) or staging a temp widgetProps blob through Save first, which violates the 'preview before commit' contract.",
+      "Cache-stamp drift between DNN (FormView.ascx.cs:378) and Oqtane (MegaForm.Oqtane.Server/wwwroot/Modules/MegaForm/) bundles is a recurring bug in this codebase per memory; shipping the shell + 3 adapters across 3 ship-order bumps (B38/B39/B40) and a separate datarepeater-designer bundle means 4+ stamp surfaces must move in lockstep — any tenant that misses one bump gets a broken half-shell (e.g., new launcher button but old properties.ts wrapper, or shell tab strip without the host body mount)."
+    ],
+    "userQuestions": [
+      "Open-question #1 is a hard blocker: does POST /api/MegaForm/DataRepeater/Query accept an ad-hoc sqlOverride parameter today, or must we ship a new POST /AiTools/PreviewSql endpoint (server rebuild + AssemblyVersion bump) before the Data tab can preview? Please confirm so we know whether Razor (Step 1) can ship in 7h or needs +server-side work first.",
+      "DynamicLabel entry-point UX: should the unified popup REPLACE the inline Properties panel entirely (cleaner, but breaks muscle memory for quick-edit users), live ALONGSIDE it as a third button labelled 'Open Designer' (plan's current choice, but 3 entry points risks confusion), or REPLACE only the Layout Designer button (fold visual block composer into the shell as a 4th tab)?",
+      "Razor Studio 'Apply to current field' AI action: after staging new masterQuery from Data tab, should the Recipe sub-tab's live preview iframe auto-re-render against the staged draft (smoother but more server load + race conditions during Roslyn compile), or wait for the user to click Refresh manually (current behavior, but feels stale)?",
+      "Should 'Reset field to defaults' ship on Current Settings tab in v1 (destructive, only undoable via Ctrl-Z on the schema — risky for users mid-edit) or defer to a v1.1 hardening pass once we see how often users actually need it? Spec listed it as natural counterpart but not verbatim required.",
+      "DataRepeater conflict resolution: when user edits masterQuery in BOTH the Data tab AND the host Editor's Master Query sub-tab in the same session, which wins on Apply? Plan suggests 'Data tab authoritative for connection keys, host body wins for everything else' but masterQuery is in BOTH scopes — please confirm precedence rule or whether we should disable the host's Master Query field when Data tab is dirty."
+    ],
+    "blockers": [
+      "POST /api/MegaForm/DataRepeater/Query sqlOverride support is unverified (scout explicitly flagged it). If the endpoint only looks up masterQuery via field.widgetProps[widgetKey], the Data tab's live sample preview CANNOT work as specified — a new POST /AiTools/PreviewSql { sql, connectionKey, page, pageSize } endpoint must ship first (server DLL rebuild + AssemblyVersion bump + cache stamp), which moves Razor (Step 1) ship time from 7h to ~10h and changes the cache-stamp plan in cacheStampBumps[3].",
+      "DataRepeater editor.ts is in a SEPARATE Vite bundle entry (build:datarepeater-designer) per scout — the plan acknowledges this but does not commit to (a) bundle-into-builder vs (b) lazy dynamic import; without a decision before coding starts, Step 3 will stall because the shell's tabs[].mount() contract must know whether the editor module is statically imported or returned via Promise<TabApi>. This is a build-system decision, not a runtime one — it must be made BEFORE the shared shell API is finalized.",
+      "DynamicLabel's renderProperties() writes directly to schema.settings on every keystroke (no draft layer). Refactoring to a mountInto() that returns getDraft() requires inverting the current write path — this is not just a wrapper, it is a behavioral rewrite of ~270 lines. The 'mountable Properties panel' deliverable in perWidget[0] needs an explicit ack that the inline panel will be refactored OR the unified shell will NOT actually call setProps()/getDraft() on it (just iframe-style display) before Step 2 starts."
+    ],
+    "recommendedShipOrder": [
+      "1. Razor (7h, possibly 10h if PreviewSql endpoint blocker lands) — Smallest adapter scope, already has live preview wired so it validates the shell's preview-refresh contract end-to-end, CSS namespace (.mfrs-*) is isolated from builder so wrap is low-risk, and exercises Data tab + Apply flow without separate-bundle complications. Best reference adapter for the other two to copy.",
+      "2. DynamicLabel (6h + behavioral-rewrite risk) — Fewest LOC to lift but requires inverting renderProperties() to a draft-staging pattern (resolve blocker #3 first). Validates the 'host body tab without preview' adapter shape that DataRepeater will reuse for its Display/Advanced sub-tabs, and exercises the preset-gallery seeding path inside the new Data tab that DataRepeater's STARTER_PRESETS will plug into next.",
+      "3. DataRepeater (10h + bundling decision) — Largest LOC + separate Vite bundle + 7 inner sub-tabs + drill-down/filter complexity. Ship last so the shell's TabApi contract is already battle-tested by two simpler widgets. Lazy dynamic import recommended to keep builder bundle size unchanged, but final answer depends on blocker #2 resolution before this step starts."
+    ]
+  }
+}

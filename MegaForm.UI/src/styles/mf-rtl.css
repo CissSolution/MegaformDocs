@@ -1,0 +1,50 @@
+/* ============================================================
+   MegaForm — shared RTL overrides
+   Loaded for ALL locales but every rule is gated by [dir=rtl], so LTR is
+   untouched. `setDir()` (src/i18n/index.ts) puts dir="rtl" on the MegaForm
+   roots/form-wrappers for RTL locales (ar/he/fa/ur), so these descendant
+   selectors only bite then. Each surface stream may ADD its own
+   `[dir=rtl] .their-class{…}` in its own CSS; cross-cutting structural flips
+   live HERE.
+   ============================================================ */
+
+[dir="rtl"] { direction: rtl; }
+/* text inputs/areas inside an RTL surface read RTL but keep numbers/code LTR */
+[dir="rtl"] input[type="text"],
+[dir="rtl"] input[type="search"],
+[dir="rtl"] textarea { text-align: start; }
+
+/* ── Submissions toolbar: the filter group + count are pushed with margin-left:auto ── */
+[dir="rtl"] .mf-subs-filters { margin-left: 0; margin-right: auto; }
+[dir="rtl"] .mf-subs-cols-count { margin-left: 0; margin-right: auto; }
+[dir="rtl"] .mf-subs-daterange-ic { left: auto; right: .625rem; }
+[dir="rtl"] .mf-subs-daterange-sel { padding: 0 2rem 0 1.75rem; background-position: left .55rem center; }
+[dir="rtl"] .mf-th-remove { right: auto; left: .4rem; }
+[dir="rtl"] .mf-th-resize { right: auto; left: 0; }
+[dir="rtl"] .mf-subs-t th, [dir="rtl"] .mf-subs-t td { text-align: right; }
+
+/* ── My Inbox: KPI/actions alignment + the right-side drawer must slide from the left ── */
+[dir="rtl"] .mf-mi-cols-count,
+[dir="rtl"] .mf-mi-kpi-body { text-align: right; }
+[dir="rtl"] .mf-mi-actions { text-align: left; }
+[dir="rtl"] .mf-mi-act-wrap { justify-content: flex-start; }
+[dir="rtl"] .mf-mi-table th, [dir="rtl"] .mf-mi-table td { text-align: right; }
+[dir="rtl"] .mf-mi-sheet-backdrop { justify-content: flex-start; }
+[dir="rtl"] .mf-mi-sheet { transform: translateX(-100%); box-shadow: 12px 0 40px rgba(15,23,42,.18); }
+[dir="rtl"] .mf-mi-sheet.is-shown { transform: translateX(0); }
+[dir="rtl"] .mf-mi-sheet.is-leaving { transform: translateX(-100%); }
+[dir="rtl"] .mf-mi-tl-item:before { left: auto; right: .42rem; }
+[dir="rtl"] .mf-mi-tl-item { flex-direction: row-reverse; }
+[dir="rtl"] .mf-mi-cols-count { margin-left: 0; margin-right: auto; }
+
+/* ── Workflow inbox drawer (same right-slide pattern) ── */
+[dir="rtl"] .mf-sheet-panel,
+[dir="rtl"] .mf-subdetail-sheet { transform: translateX(-100%); }
+
+/* ── Generic: flip margin-inline auto pushes used as "spacer to the right" ── */
+[dir="rtl"] .mf-spacer-right { margin-left: 0 !important; margin-right: auto !important; }
+
+/* NOTE for Stream B (builder) — add to builder CSS, not here:
+   [dir=rtl] panel collapse trigger right:-16px → left:-16px;
+   [dir=rtl] tooltips left:50% translateX(-50%) stay centered (ok) but
+   data-tip-pos left/right swap; right-rail resize handle flips side. */

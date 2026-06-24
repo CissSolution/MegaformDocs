@@ -1,0 +1,1225 @@
+-- MegaForm 01.06.28 — AI Knowledge: Templates + Rules + Feedback loop (2026-05-29)
+--
+-- Additive migration on top of 01.06.27 (MF_AI_Knowledge + History). Adds
+-- 3 sibling tables to let the AI Form Assistant reach a tighter contract:
+--
+--   MF_AI_KB_Templates  — Many concrete templates (preset shapes / saved
+--                         ops) per Knowledge entry. Pulls preset JSON out
+--                         of the Examples column into a queryable form so
+--                         each widget can carry an unbounded set of saved
+--                         patterns (card-grid, table-list, cascade-2level
+--                         ...) without bloating Body.
+--
+--   MF_AI_KB_Rules      — Hard-rejection rules indexed by RuleId (e.g.
+--                         'DL-001'). chat.ts + ops.ts reference rules by
+--                         RuleId instead of hand-coding the strings. When
+--                         dispatcher rejects an op, it cites the RuleId
+--                         and the AI can fetch the canonical FixHint.
+--
+--   MF_AI_KB_Feedback   — Every dispatcher rejection (or AI-self-reported
+--                         failure) is logged here with the attempted op
+--                         JSON + rejection message + the fix that worked.
+--                         Admin reviews + promotes good rows into the
+--                         Templates table → AI learns from the live loop.
+--
+-- All tables additive. No schema change on existing MF_AI_Knowledge or
+-- MF_AI_Knowledge_History. Customer-edited rows survive every upgrade.
+
+-- ════════════════════════════════════════════════════════════════════════
+--  MF_AI_KB_Templates
+-- ════════════════════════════════════════════════════════════════════════
+IF OBJECT_ID('{databaseOwner}{objectQualifier}MF_AI_KB_Templates', 'U') IS NULL
+BEGIN
+    CREATE TABLE {databaseOwner}{objectQualifier}MF_AI_KB_Templates (
+        Id              INT IDENTITY(1,1) PRIMARY KEY,
+        KnowledgeId     INT NOT NULL,
+        TemplateKey     NVARCHAR(80) NOT NULL,        -- 'card-grid','table-list','cascade-2level'
+        Kind            NVARCHAR(40) NOT NULL,        -- 'preset' | 'pattern' | 'success' | 'failure'
+        Title           NVARCHAR(200) NOT NULL,
+        Summary         NVARCHAR(500) NULL,
+        Body            NVARCHAR(MAX) NOT NULL,       -- JSON: ops[], widgetProps, or full pattern
+        Tags            NVARCHAR(500) NULL,
+        Score           INT NOT NULL CONSTRAINT DF_MF_AI_KBTpl_Score DEFAULT 0,
+        SortOrder       INT NOT NULL CONSTRAINT DF_MF_AI_KBTpl_Sort DEFAULT 100,
+        PortalId        INT NULL,                     -- NULL = global
+        Source          NVARCHAR(40) NOT NULL CONSTRAINT DF_MF_AI_KBTpl_Source DEFAULT 'customer',
+        Version         INT NOT NULL CONSTRAINT DF_MF_AI_KBTpl_Version DEFAULT 1,
+        CreatedByUserId INT NULL,
+        CreatedOnDate   DATETIME2 NOT NULL CONSTRAINT DF_MF_AI_KBTpl_CreatedOn DEFAULT SYSUTCDATETIME(),
+        UpdatedByUserId INT NULL,
+        UpdatedOnDate   DATETIME2 NULL,
+        CONSTRAINT FK_MF_AI_KBTpl_Knowledge FOREIGN KEY (KnowledgeId)
+            REFERENCES {databaseOwner}{objectQualifier}MF_AI_Knowledge(Id) ON DELETE CASCADE,
+        CONSTRAINT UQ_MF_AI_KBTpl_Key UNIQUE (KnowledgeId, TemplateKey, PortalId)
+    );
+    CREATE INDEX IX_MF_AI_KBTpl_Knowledge ON {databaseOwner}{objectQualifier}MF_AI_KB_Templates (KnowledgeId);
+    CREATE INDEX IX_MF_AI_KBTpl_Kind      ON {databaseOwner}{objectQualifier}MF_AI_KB_Templates (Kind);
+    CREATE INDEX IX_MF_AI_KBTpl_Source    ON {databaseOwner}{objectQualifier}MF_AI_KB_Templates (Source);
+END;
+GO
+
+-- ════════════════════════════════════════════════════════════════════════
+--  MF_AI_KB_Rules
+-- ════════════════════════════════════════════════════════════════════════
+IF OBJECT_ID('{databaseOwner}{objectQualifier}MF_AI_KB_Rules', 'U') IS NULL
+BEGIN
+    CREATE TABLE {databaseOwner}{objectQualifier}MF_AI_KB_Rules (
+        RuleId            NVARCHAR(40) NOT NULL PRIMARY KEY,   -- 'DL-001','DG-002','SEL-003'
+        KnowledgeId       INT NULL,                            -- back-ref to widget entry
+        WidgetType        NVARCHAR(60) NULL,                   -- 'DynamicLabel','DataGrid'
+        Title             NVARCHAR(200) NOT NULL,
+        Severity          NVARCHAR(20) NOT NULL,               -- 'hard_reject'|'warning'|'normalize'
+        Condition         NVARCHAR(MAX) NOT NULL,              -- human-readable trigger
+        RegexPattern      NVARCHAR(500) NULL,                  -- optional pattern dispatcher uses
+        RejectionMessage  NVARCHAR(MAX) NOT NULL,              -- emitted by dispatcher
+        FixHint           NVARCHAR(MAX) NOT NULL,              -- actionable guidance for AI
+        Source            NVARCHAR(40) NOT NULL CONSTRAINT DF_MF_AI_KBRule_Source DEFAULT 'megaform-builtin',
+        Version           INT NOT NULL CONSTRAINT DF_MF_AI_KBRule_Version DEFAULT 1,
+        Enabled           BIT NOT NULL CONSTRAINT DF_MF_AI_KBRule_Enabled DEFAULT 1,
+        PortalId          INT NULL,
+        CreatedByUserId   INT NULL,
+        CreatedOnDate     DATETIME2 NOT NULL CONSTRAINT DF_MF_AI_KBRule_CreatedOn DEFAULT SYSUTCDATETIME(),
+        UpdatedByUserId   INT NULL,
+        UpdatedOnDate     DATETIME2 NULL,
+        CONSTRAINT FK_MF_AI_KBRule_Knowledge FOREIGN KEY (KnowledgeId)
+            REFERENCES {databaseOwner}{objectQualifier}MF_AI_Knowledge(Id) ON DELETE SET NULL
+    );
+    CREATE INDEX IX_MF_AI_KBRule_Widget    ON {databaseOwner}{objectQualifier}MF_AI_KB_Rules (WidgetType);
+    CREATE INDEX IX_MF_AI_KBRule_Knowledge ON {databaseOwner}{objectQualifier}MF_AI_KB_Rules (KnowledgeId);
+END;
+GO
+
+-- ════════════════════════════════════════════════════════════════════════
+--  MF_AI_KB_Feedback — every dispatcher rejection + every "AI fixed itself"
+-- ════════════════════════════════════════════════════════════════════════
+IF OBJECT_ID('{databaseOwner}{objectQualifier}MF_AI_KB_Feedback', 'U') IS NULL
+BEGIN
+    CREATE TABLE {databaseOwner}{objectQualifier}MF_AI_KB_Feedback (
+        Id                 BIGINT IDENTITY(1,1) PRIMARY KEY,
+        SessionId          NVARCHAR(80) NULL,
+        RuleId             NVARCHAR(40) NULL,
+        KnowledgeId        INT NULL,
+        WidgetType         NVARCHAR(60) NULL,
+        Op                 NVARCHAR(40) NULL,                 -- 'add_field','set_field_property'
+        AttemptedJson      NVARCHAR(MAX) NOT NULL,
+        RejectionMessage   NVARCHAR(MAX) NULL,
+        FixedJson          NVARCHAR(MAX) NULL,
+        Outcome            NVARCHAR(20) NOT NULL,             -- 'rejected'|'fixed'|'abandoned'|'reported'
+        Promoted           BIT NOT NULL CONSTRAINT DF_MF_AI_KBFb_Promoted DEFAULT 0,
+        PromotedTemplateId INT NULL,
+        PortalId           INT NULL,
+        FormId             INT NULL,
+        UserId             INT NULL,
+        CreatedOnDate      DATETIME2 NOT NULL CONSTRAINT DF_MF_AI_KBFb_CreatedOn DEFAULT SYSUTCDATETIME(),
+        ReviewedByUserId   INT NULL,
+        ReviewedOnDate     DATETIME2 NULL,
+        ReviewNotes        NVARCHAR(1000) NULL,
+        CONSTRAINT FK_MF_AI_KBFb_Knowledge FOREIGN KEY (KnowledgeId)
+            REFERENCES {databaseOwner}{objectQualifier}MF_AI_Knowledge(Id) ON DELETE SET NULL,
+        CONSTRAINT FK_MF_AI_KBFb_Template FOREIGN KEY (PromotedTemplateId)
+            REFERENCES {databaseOwner}{objectQualifier}MF_AI_KB_Templates(Id)
+    );
+    CREATE INDEX IX_MF_AI_KBFb_Widget_Promoted ON {databaseOwner}{objectQualifier}MF_AI_KB_Feedback (WidgetType, Promoted, CreatedOnDate);
+    CREATE INDEX IX_MF_AI_KBFb_Outcome          ON {databaseOwner}{objectQualifier}MF_AI_KB_Feedback (Outcome, CreatedOnDate);
+    CREATE INDEX IX_MF_AI_KBFb_Rule             ON {databaseOwner}{objectQualifier}MF_AI_KB_Feedback (RuleId, CreatedOnDate);
+END;
+GO
+-- AUTO-GENERATED by gen-ai-kb-seed.cjs — DO NOT EDIT BY HAND.
+-- Seeds the strict-schema bodies for MF_AI_Knowledge widget entries,
+-- plus MF_AI_KB_Templates concrete presets and MF_AI_KB_Rules rule
+-- definitions. Override Source='megaform-builtin' only — customer
+-- rows are left alone.
+--
+-- Generated 2026-05-29T15:08:06.440Z
+
+-- ─── widget-dynamiclabel ───────────────────────────────────────────────────────
+MERGE {databaseOwner}{objectQualifier}MF_AI_Knowledge AS t
+USING (SELECT N'widget-dynamiclabel' AS Slug, CAST(NULL AS INT) AS PortalId) AS s
+  ON (t.Slug = s.Slug AND t.PortalId IS NULL)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  Kind = N'widget',
+  Title = N'DynamicLabel — Read-only HTML/SQL display widget',
+  Summary = N'Default display widget. Renders static HTML, single-record token output, or SQL rows through wrapper+row templates. Never participates in submission.',
+  Body = N'{"widgetType":"DynamicLabel","purpose":"Read-only HTML rendered against SQL rows OR submission/field tokens. Display only — never input.","when_to_use":{"yes":["display SQL rows as cards / list / table / blog / stat / detail","render a single record selected via cascade","format submission fields into a styled layout","static HTML block with merge tokens"],"no":["user needs to PICK a value → use Select instead","user needs to ENTER many rows → use DataGrid (input mode)","needs paging/filter/drill-down → use DataRepeater","value must be posted with the form → use Hidden / Text"]},"modes":{"static_or_simple":{"trigger":"no masterQuery OR (masterQuery + resultMode=''simple'')","required":["widgetProps.htmlContent (real content, not placeholder)"],"valid_tokens":["{{field:KEY}}","{{submission:KEY}}","{{qs:NAME}}","{{row:Col}} (simple+SQL only)"]},"sql_multi":{"trigger":"masterQuery set AND resultMode=''multi''","required":["useSql:true","dataSource:''sql''","resultMode:''multi''","connectionKey","masterQuery","wrapperTemplate (MUST contain {{rows}})","rowTemplate"],"optional":["queryDependsOn","emptyHtml","pageSize","pagerTemplate"],"valid_tokens":["{{row:Col}}","{{row:Col|format=raw}}","{{row:Col|number|date|link:detail}}","{{meta:viewName|portalId|page|pageCount|totalRows|rowsOnPage}}","{{qs:NAME}}","{{#index}}","{{#num}}","{{if:Col op value}}…{{/if}}"]}},"cascade_contract":{"binding":":paramName in SQL binds to form field whose key=paramName. Widget sends __p__paramName=value.","trigger_events":["change","input (debounced 350ms)"],"valid_parent_types":["Select","Text","Number","Date","Radio","Checkbox","Hidden"],"invalid_parent_types":["DataRepeater","DataGrid","GridRepeater","DynamicLabel","Html"]},"hard_rules":["DL-001","DL-002","DL-003","DL-004","DL-005"],"anti_patterns":[{"bad":"widgetProps:{htmlContent:\"<p>Hello World</p>\"}","why":"placeholder — DL-001 reject","good":"htmlContent with real tokens or masterQuery"},{"bad":"wrapperTemplate:\"<div>{{row:Title}}</div>\"","why":"wrapper expects {{rows}}, not {{row:X}}","good":"<div class=''grid''>{{rows}}</div> + rowTemplate"},{"bad":"<img src=''{{row:Url}}''>","why":"URL token without |format=raw is wrapped by rich-display HTML and breaks","good":"<img src=''{{row:Url|format=raw}}''>"},{"bad":"queryDependsOn:[''scorecards_grid'']","why":"DL-002 reject — DataGrid is display-only, cannot cascade","good":"queryDependsOn:[''player_id''] where player_id is Select"}],"version_history":[{"v":3,"date":"2026-05-29","changes":"Strict schema (purpose, when_to_use, modes split, hard_rules cross-ref, anti_patterns)"}]}',
+  Tags = N'dynamiclabel,display,sql,html,tokens,cards,table',
+  Examples = N'[{"name":"card-grid","preview":"<article><h3>{{row:Title}}</h3><p>{{row:Body}}</p></article>"}]',
+  Version = t.Version + 1,
+  UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (Slug, Kind, Title, Summary, Body, Tags, Examples, PortalId, Source, Version, CreatedOnDate)
+  VALUES (N'widget-dynamiclabel', N'widget', N'DynamicLabel — Read-only HTML/SQL display widget', N'Default display widget. Renders static HTML, single-record token output, or SQL rows through wrapper+row templates. Never participates in submission.', N'{"widgetType":"DynamicLabel","purpose":"Read-only HTML rendered against SQL rows OR submission/field tokens. Display only — never input.","when_to_use":{"yes":["display SQL rows as cards / list / table / blog / stat / detail","render a single record selected via cascade","format submission fields into a styled layout","static HTML block with merge tokens"],"no":["user needs to PICK a value → use Select instead","user needs to ENTER many rows → use DataGrid (input mode)","needs paging/filter/drill-down → use DataRepeater","value must be posted with the form → use Hidden / Text"]},"modes":{"static_or_simple":{"trigger":"no masterQuery OR (masterQuery + resultMode=''simple'')","required":["widgetProps.htmlContent (real content, not placeholder)"],"valid_tokens":["{{field:KEY}}","{{submission:KEY}}","{{qs:NAME}}","{{row:Col}} (simple+SQL only)"]},"sql_multi":{"trigger":"masterQuery set AND resultMode=''multi''","required":["useSql:true","dataSource:''sql''","resultMode:''multi''","connectionKey","masterQuery","wrapperTemplate (MUST contain {{rows}})","rowTemplate"],"optional":["queryDependsOn","emptyHtml","pageSize","pagerTemplate"],"valid_tokens":["{{row:Col}}","{{row:Col|format=raw}}","{{row:Col|number|date|link:detail}}","{{meta:viewName|portalId|page|pageCount|totalRows|rowsOnPage}}","{{qs:NAME}}","{{#index}}","{{#num}}","{{if:Col op value}}…{{/if}}"]}},"cascade_contract":{"binding":":paramName in SQL binds to form field whose key=paramName. Widget sends __p__paramName=value.","trigger_events":["change","input (debounced 350ms)"],"valid_parent_types":["Select","Text","Number","Date","Radio","Checkbox","Hidden"],"invalid_parent_types":["DataRepeater","DataGrid","GridRepeater","DynamicLabel","Html"]},"hard_rules":["DL-001","DL-002","DL-003","DL-004","DL-005"],"anti_patterns":[{"bad":"widgetProps:{htmlContent:\"<p>Hello World</p>\"}","why":"placeholder — DL-001 reject","good":"htmlContent with real tokens or masterQuery"},{"bad":"wrapperTemplate:\"<div>{{row:Title}}</div>\"","why":"wrapper expects {{rows}}, not {{row:X}}","good":"<div class=''grid''>{{rows}}</div> + rowTemplate"},{"bad":"<img src=''{{row:Url}}''>","why":"URL token without |format=raw is wrapped by rich-display HTML and breaks","good":"<img src=''{{row:Url|format=raw}}''>"},{"bad":"queryDependsOn:[''scorecards_grid'']","why":"DL-002 reject — DataGrid is display-only, cannot cascade","good":"queryDependsOn:[''player_id''] where player_id is Select"}],"version_history":[{"v":3,"date":"2026-05-29","changes":"Strict schema (purpose, when_to_use, modes split, hard_rules cross-ref, anti_patterns)"}]}', N'dynamiclabel,display,sql,html,tokens,cards,table', N'[{"name":"card-grid","preview":"<article><h3>{{row:Title}}</h3><p>{{row:Body}}</p></article>"}]', NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+GO
+
+-- ─── widget-datarepeater ───────────────────────────────────────────────────────
+MERGE {databaseOwner}{objectQualifier}MF_AI_Knowledge AS t
+USING (SELECT N'widget-datarepeater' AS Slug, CAST(NULL AS INT) AS PortalId) AS s
+  ON (t.Slug = s.Slug AND t.PortalId IS NULL)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  Kind = N'widget',
+  Title = N'DataRepeater — SQL-driven data table with drill-down, filters, charts',
+  Summary = N'Display-only tabular widget. Master SQL + up to 3 drill-down levels + filters + pagination + CSV/PDF export. Never participates in submission.',
+  Body = N'{"widgetType":"DataRepeater","purpose":"SQL-driven table with XSL-style token templates. Use when rows need paging, filters, drill-down, or chart rendering.","when_to_use":{"yes":["tabular display with paging or filters","master-detail drill-down (up to 3 levels)","chart visualisation (bar/line/pie)","export rows to CSV/PDF"],"no":["no paging/drill-down → DynamicLabel is lighter","user needs to PICK → Select cascade","user enters rows → DataGrid input mode"]},"modes":{"flat_table":{"trigger":"groupByCol empty AND chartType empty","required":["connectionKey","masterQuery"]},"grouped_accordion":{"trigger":"groupByCol set","required":["connectionKey","masterQuery","groupByCol"]},"drill_down":{"trigger":"detail{N}TriggerCol + detail{N}Query set (N=1..3)","required":["detail{N}Query must contain :parentId"]},"chart":{"trigger":"chartType in {bar,line,pie}","required":["chartLabelCol","chartValueCol"]}},"cascade_contract":{"binding":":paramName binds to field __p__paramName. Filters live under filterJson, NOT queryDependsOn.","valid_parent_types":["Select","Text","Number","Date","Radio","Checkbox","Hidden"],"invalid_parent_types":["DataRepeater (cannot self-cascade)"]},"hard_rules":["DR-001","DR-002","DR-003","DR-004"],"anti_patterns":[{"bad":"{type:\"DataRepeater\"} with no widgetProps.masterQuery","why":"DR-001 reject — bare emit shows forever-loading spinner","good":"always include masterQuery"},{"bad":"detail1TriggerCol:\"Round\" with detail1Query:\"SELECT ...\" (no :parentId)","why":"DR-004 reject — drill query needs :parentId binding","good":"detail1Query must reference :parentId"}],"version_history":[{"v":3,"date":"2026-05-29","changes":"Strict schema"}]}',
+  Tags = N'datarepeater,display,sql,table,drill,filters,paging,chart',
+  Examples = NULL,
+  Version = t.Version + 1,
+  UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (Slug, Kind, Title, Summary, Body, Tags, Examples, PortalId, Source, Version, CreatedOnDate)
+  VALUES (N'widget-datarepeater', N'widget', N'DataRepeater — SQL-driven data table with drill-down, filters, charts', N'Display-only tabular widget. Master SQL + up to 3 drill-down levels + filters + pagination + CSV/PDF export. Never participates in submission.', N'{"widgetType":"DataRepeater","purpose":"SQL-driven table with XSL-style token templates. Use when rows need paging, filters, drill-down, or chart rendering.","when_to_use":{"yes":["tabular display with paging or filters","master-detail drill-down (up to 3 levels)","chart visualisation (bar/line/pie)","export rows to CSV/PDF"],"no":["no paging/drill-down → DynamicLabel is lighter","user needs to PICK → Select cascade","user enters rows → DataGrid input mode"]},"modes":{"flat_table":{"trigger":"groupByCol empty AND chartType empty","required":["connectionKey","masterQuery"]},"grouped_accordion":{"trigger":"groupByCol set","required":["connectionKey","masterQuery","groupByCol"]},"drill_down":{"trigger":"detail{N}TriggerCol + detail{N}Query set (N=1..3)","required":["detail{N}Query must contain :parentId"]},"chart":{"trigger":"chartType in {bar,line,pie}","required":["chartLabelCol","chartValueCol"]}},"cascade_contract":{"binding":":paramName binds to field __p__paramName. Filters live under filterJson, NOT queryDependsOn.","valid_parent_types":["Select","Text","Number","Date","Radio","Checkbox","Hidden"],"invalid_parent_types":["DataRepeater (cannot self-cascade)"]},"hard_rules":["DR-001","DR-002","DR-003","DR-004"],"anti_patterns":[{"bad":"{type:\"DataRepeater\"} with no widgetProps.masterQuery","why":"DR-001 reject — bare emit shows forever-loading spinner","good":"always include masterQuery"},{"bad":"detail1TriggerCol:\"Round\" with detail1Query:\"SELECT ...\" (no :parentId)","why":"DR-004 reject — drill query needs :parentId binding","good":"detail1Query must reference :parentId"}],"version_history":[{"v":3,"date":"2026-05-29","changes":"Strict schema"}]}', N'datarepeater,display,sql,table,drill,filters,paging,chart', NULL, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+GO
+
+-- ─── widget-datagrid ───────────────────────────────────────────────────────
+MERGE {databaseOwner}{objectQualifier}MF_AI_Knowledge AS t
+USING (SELECT N'widget-datagrid' AS Slug, CAST(NULL AS INT) AS PortalId) AS s
+  ON (t.Slug = s.Slug AND t.PortalId IS NULL)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  Kind = N'widget',
+  Title = N'DataGrid — Two-mode editable grid (line-items entry OR SQL display)',
+  Summary = N'Has TWO modes. Default: inline line-items entry (invoice-style). With useSql:true: read-only tabular display fed by masterQuery. Never both.',
+  Body = N'{"widgetType":"DataGrid","purpose":"Inline-editable grid for line-items entry OR read-only SQL tabular display. Choose mode by widgetProps.useSql.","when_to_use":{"yes":["line-items entry (invoice / order lines / time sheets)","tabular SQL display when DynamicLabel is too lightweight"],"no":["SQL display with <4 columns → prefer DynamicLabel","user needs to PICK → Select cascade"]},"modes":{"edit_in_form_storage":{"trigger":"useSql=false (default)","required":["columns:[{key,label,type,required?,decimals?,computeFormula?}]"],"optional":["minRows","maxRows","editMode","totalField","totalFormula","tableName (Phase 2 master-detail)"]},"sql_display_readonly":{"trigger":"useSql=true (delegates to MFDataGridSql)","required":["masterQuery","connectionKey"],"optional":["queryDependsOn","pageSize","columns (auto-derive when empty)","emptyMessage"]}},"hard_rules":["DG-001","DG-002","DG-003","DG-004"],"anti_patterns":[{"bad":"{type:\"DataGrid\"} with no widgetProps","why":"DG-001 reject — would render invoice template ITEM/QTY/PRICE/TOTAL","good":"set useSql+masterQuery (display) OR custom columns (input)"},{"bad":"useSql:true with no masterQuery","why":"DG-002 reject","good":"masterQuery is required in SQL mode"},{"bad":"Sum(qty * price)","why":"DG-005 — Sum needs quoted expression","good":"Sum(\"qty * price\")"}],"version_history":[{"v":3,"date":"2026-05-29","changes":"Strict schema + SQL mode shipped v20260530-11"}]}',
+  Tags = N'datagrid,input,sql,subform,master-detail,line-items',
+  Examples = NULL,
+  Version = t.Version + 1,
+  UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (Slug, Kind, Title, Summary, Body, Tags, Examples, PortalId, Source, Version, CreatedOnDate)
+  VALUES (N'widget-datagrid', N'widget', N'DataGrid — Two-mode editable grid (line-items entry OR SQL display)', N'Has TWO modes. Default: inline line-items entry (invoice-style). With useSql:true: read-only tabular display fed by masterQuery. Never both.', N'{"widgetType":"DataGrid","purpose":"Inline-editable grid for line-items entry OR read-only SQL tabular display. Choose mode by widgetProps.useSql.","when_to_use":{"yes":["line-items entry (invoice / order lines / time sheets)","tabular SQL display when DynamicLabel is too lightweight"],"no":["SQL display with <4 columns → prefer DynamicLabel","user needs to PICK → Select cascade"]},"modes":{"edit_in_form_storage":{"trigger":"useSql=false (default)","required":["columns:[{key,label,type,required?,decimals?,computeFormula?}]"],"optional":["minRows","maxRows","editMode","totalField","totalFormula","tableName (Phase 2 master-detail)"]},"sql_display_readonly":{"trigger":"useSql=true (delegates to MFDataGridSql)","required":["masterQuery","connectionKey"],"optional":["queryDependsOn","pageSize","columns (auto-derive when empty)","emptyMessage"]}},"hard_rules":["DG-001","DG-002","DG-003","DG-004"],"anti_patterns":[{"bad":"{type:\"DataGrid\"} with no widgetProps","why":"DG-001 reject — would render invoice template ITEM/QTY/PRICE/TOTAL","good":"set useSql+masterQuery (display) OR custom columns (input)"},{"bad":"useSql:true with no masterQuery","why":"DG-002 reject","good":"masterQuery is required in SQL mode"},{"bad":"Sum(qty * price)","why":"DG-005 — Sum needs quoted expression","good":"Sum(\"qty * price\")"}],"version_history":[{"v":3,"date":"2026-05-29","changes":"Strict schema + SQL mode shipped v20260530-11"}]}', N'datagrid,input,sql,subform,master-detail,line-items', NULL, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+GO
+
+-- ─── widget-gridrepeater ───────────────────────────────────────────────────────
+MERGE {databaseOwner}{objectQualifier}MF_AI_Knowledge AS t
+USING (SELECT N'widget-gridrepeater' AS Slug, CAST(NULL AS INT) AS PortalId) AS s
+  ON (t.Slug = s.Slug AND t.PortalId IS NULL)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  Kind = N'widget',
+  Title = N'GridRepeater — SQL/manual repeating row collector',
+  Summary = N'Repeating row widget that stores per-form submission rows. Can pre-fill from SQL or manual entry. Behaves like a Subform with a different chrome.',
+  Body = N'{"widgetType":"GridRepeater","purpose":"Repeating row collector with SQL prefill + manual entry modes.","when_to_use":{"yes":["repeating rows that get submitted (line items, time entries)","SQL-prefilled rows users edit then resubmit"],"no":["display only → DataRepeater","simple line-items → DataGrid (lighter)"]},"modes":{"manual":{"trigger":"mode=''manual'' (default)","required":["columns"]},"sql_prefill":{"trigger":"mode=''sql''","required":["masterQuery","connectionKey","columns alias-map"]}},"hard_rules":["GR-001","GR-002"],"version_history":[{"v":2,"date":"2026-05-29","changes":"Strict schema"}]}',
+  Tags = N'gridrepeater,repeater,rows,sql,manual',
+  Examples = NULL,
+  Version = t.Version + 1,
+  UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (Slug, Kind, Title, Summary, Body, Tags, Examples, PortalId, Source, Version, CreatedOnDate)
+  VALUES (N'widget-gridrepeater', N'widget', N'GridRepeater — SQL/manual repeating row collector', N'Repeating row widget that stores per-form submission rows. Can pre-fill from SQL or manual entry. Behaves like a Subform with a different chrome.', N'{"widgetType":"GridRepeater","purpose":"Repeating row collector with SQL prefill + manual entry modes.","when_to_use":{"yes":["repeating rows that get submitted (line items, time entries)","SQL-prefilled rows users edit then resubmit"],"no":["display only → DataRepeater","simple line-items → DataGrid (lighter)"]},"modes":{"manual":{"trigger":"mode=''manual'' (default)","required":["columns"]},"sql_prefill":{"trigger":"mode=''sql''","required":["masterQuery","connectionKey","columns alias-map"]}},"hard_rules":["GR-001","GR-002"],"version_history":[{"v":2,"date":"2026-05-29","changes":"Strict schema"}]}', N'gridrepeater,repeater,rows,sql,manual', NULL, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+GO
+
+-- ─── widget-select ───────────────────────────────────────────────────────
+MERGE {databaseOwner}{objectQualifier}MF_AI_Knowledge AS t
+USING (SELECT N'widget-select' AS Slug, CAST(NULL AS INT) AS PortalId) AS s
+  ON (t.Slug = s.Slug AND t.PortalId IS NULL)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  Kind = N'widget',
+  Title = N'Select — Dropdown with static or SQL-driven options',
+  Summary = N'Single-value selector. Options come from static list OR SQL via properties.optionsSql (NOT widgetProps).',
+  Body = N'{"widgetType":"Select","purpose":"Single-value picker. Drives cascade chains.","when_to_use":{"yes":["user must PICK one value from a known set","parent in a cascade chain (Select → child Select → child display)"],"no":["multi-value → use Checkbox or Multiselect","free text → use Text"]},"modes":{"static":{"trigger":"options:[{value,label},...]","required":["options"]},"sql":{"trigger":"properties.optionsSql set","required":["properties.{optionsSource:''sql'', optionsConnectionKey, optionsSql}","SQL must SELECT … AS value, … AS label"]}},"hard_rules":["SEL-001","SEL-002","SEL-003"],"anti_patterns":[{"bad":"widgetProps.dataSource.optionsSql","why":"SEL-002 — runtime reads field.properties.* NOT widgetProps","good":"put optionsSql under field.properties"},{"bad":"SELECT Id, Name FROM …","why":"columns must be aliased to value+label","good":"SELECT Id AS value, Name AS label FROM …"}],"version_history":[{"v":3,"date":"2026-05-29","changes":"Strict schema; cascade chain rules cross-reffed"}]}',
+  Tags = N'select,dropdown,sql,options,cascade',
+  Examples = NULL,
+  Version = t.Version + 1,
+  UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (Slug, Kind, Title, Summary, Body, Tags, Examples, PortalId, Source, Version, CreatedOnDate)
+  VALUES (N'widget-select', N'widget', N'Select — Dropdown with static or SQL-driven options', N'Single-value selector. Options come from static list OR SQL via properties.optionsSql (NOT widgetProps).', N'{"widgetType":"Select","purpose":"Single-value picker. Drives cascade chains.","when_to_use":{"yes":["user must PICK one value from a known set","parent in a cascade chain (Select → child Select → child display)"],"no":["multi-value → use Checkbox or Multiselect","free text → use Text"]},"modes":{"static":{"trigger":"options:[{value,label},...]","required":["options"]},"sql":{"trigger":"properties.optionsSql set","required":["properties.{optionsSource:''sql'', optionsConnectionKey, optionsSql}","SQL must SELECT … AS value, … AS label"]}},"hard_rules":["SEL-001","SEL-002","SEL-003"],"anti_patterns":[{"bad":"widgetProps.dataSource.optionsSql","why":"SEL-002 — runtime reads field.properties.* NOT widgetProps","good":"put optionsSql under field.properties"},{"bad":"SELECT Id, Name FROM …","why":"columns must be aliased to value+label","good":"SELECT Id AS value, Name AS label FROM …"}],"version_history":[{"v":3,"date":"2026-05-29","changes":"Strict schema; cascade chain rules cross-reffed"}]}', N'select,dropdown,sql,options,cascade', NULL, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+GO
+
+-- ─── widget-contentslider ───────────────────────────────────────────────────────
+MERGE {databaseOwner}{objectQualifier}MF_AI_Knowledge AS t
+USING (SELECT N'widget-contentslider' AS Slug, CAST(NULL AS INT) AS PortalId) AS s
+  ON (t.Slug = s.Slug AND t.PortalId IS NULL)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  Kind = N'widget',
+  Title = N'ContentSlider — Static image/content carousel',
+  Summary = N'Display-only carousel. Static items[] (image + title + description + badge + meta). Auto-loops. No SQL, no submission.',
+  Body = N'{"widgetType":"ContentSlider","purpose":"Static carousel of cards. Pure visual — never carries data.","hard_rules":["CS-001","CS-002","CS-005"],"when_to_use":{"yes":["homepage feature carousel","inline product showcase"],"no":["SQL-driven rows → DynamicLabel card-grid","editable rows → DataGrid"]},"version_history":[{"v":2,"date":"2026-05-29"}]}',
+  Tags = N'slider,carousel,display,static',
+  Examples = NULL,
+  Version = t.Version + 1,
+  UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (Slug, Kind, Title, Summary, Body, Tags, Examples, PortalId, Source, Version, CreatedOnDate)
+  VALUES (N'widget-contentslider', N'widget', N'ContentSlider — Static image/content carousel', N'Display-only carousel. Static items[] (image + title + description + badge + meta). Auto-loops. No SQL, no submission.', N'{"widgetType":"ContentSlider","purpose":"Static carousel of cards. Pure visual — never carries data.","hard_rules":["CS-001","CS-002","CS-005"],"when_to_use":{"yes":["homepage feature carousel","inline product showcase"],"no":["SQL-driven rows → DynamicLabel card-grid","editable rows → DataGrid"]},"version_history":[{"v":2,"date":"2026-05-29"}]}', N'slider,carousel,display,static', NULL, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+GO
+
+-- ─── widget-phonepro ───────────────────────────────────────────────────────
+MERGE {databaseOwner}{objectQualifier}MF_AI_Knowledge AS t
+USING (SELECT N'widget-phonepro' AS Slug, CAST(NULL AS INT) AS PortalId) AS s
+  ON (t.Slug = s.Slug AND t.PortalId IS NULL)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  Kind = N'widget',
+  Title = N'PhoneNumberPro — International phone input',
+  Summary = N'Phone input with country flag, dial-code selector, E.164 validation, per-country format. Stores either JSON or raw E.164 string.',
+  Body = N'{"widgetType":"PhoneNumberPro","purpose":"International phone-number input.","modes":{"international":{"trigger":"mode=''international'' (default)","required":[],"optional":["defaultCountry","preferredCountries","separateDialCode","saveFormat (json|e164)"]},"national":{"trigger":"mode=''national''","required":["defaultCountry"],"optional":["nationalPattern","minDigits","maxDigits"]}},"hard_rules":["PHONE-001","PHONE-002","PHONE-004"],"version_history":[{"v":2,"date":"2026-05-29"}]}',
+  Tags = N'phone,intl,input,e164',
+  Examples = NULL,
+  Version = t.Version + 1,
+  UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (Slug, Kind, Title, Summary, Body, Tags, Examples, PortalId, Source, Version, CreatedOnDate)
+  VALUES (N'widget-phonepro', N'widget', N'PhoneNumberPro — International phone input', N'Phone input with country flag, dial-code selector, E.164 validation, per-country format. Stores either JSON or raw E.164 string.', N'{"widgetType":"PhoneNumberPro","purpose":"International phone-number input.","modes":{"international":{"trigger":"mode=''international'' (default)","required":[],"optional":["defaultCountry","preferredCountries","separateDialCode","saveFormat (json|e164)"]},"national":{"trigger":"mode=''national''","required":["defaultCountry"],"optional":["nationalPattern","minDigits","maxDigits"]}},"hard_rules":["PHONE-001","PHONE-002","PHONE-004"],"version_history":[{"v":2,"date":"2026-05-29"}]}', N'phone,intl,input,e164', NULL, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+GO
+
+-- ─── widget-payment ───────────────────────────────────────────────────────
+MERGE {databaseOwner}{objectQualifier}MF_AI_Knowledge AS t
+USING (SELECT N'widget-payment' AS Slug, CAST(NULL AS INT) AS PortalId) AS s
+  ON (t.Slug = s.Slug AND t.PortalId IS NULL)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  Kind = N'widget',
+  Title = N'Payment — Unified Stripe + PayPal checkout',
+  Summary = N'Provider tabs (both/stripe/paypal). Amount sources: fixed / form field / listenTotals event. requiredPaid blocks submission until paid.',
+  Body = N'{"widgetType":"Payment","purpose":"Switchable Stripe+PayPal checkout with three amount sources.","modes":{"provider_both":{"required":["stripePublishableKey","stripeCreateIntentUrl","paypalClientId","paypalCreateOrderUrl","paypalCaptureOrderUrl"]},"amount_fixed":{"trigger":"amountMode=''fixed''","required":["amount > 0"]},"amount_field":{"trigger":"amountMode=''field''","required":["amountFieldKey"]},"amount_listeners":{"trigger":"amountMode=''listenTotals''","required":["listenEventName"]}},"hard_rules":["PAY-001","PAY-002","PAY-005"],"anti_patterns":[{"bad":"amountMode:''field'' + amountFieldKey:''''","why":"PAY-006 reject","good":"pick a non-Payment source field"}],"version_history":[{"v":2,"date":"2026-05-29"}]}',
+  Tags = N'payment,stripe,paypal,checkout',
+  Examples = NULL,
+  Version = t.Version + 1,
+  UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (Slug, Kind, Title, Summary, Body, Tags, Examples, PortalId, Source, Version, CreatedOnDate)
+  VALUES (N'widget-payment', N'widget', N'Payment — Unified Stripe + PayPal checkout', N'Provider tabs (both/stripe/paypal). Amount sources: fixed / form field / listenTotals event. requiredPaid blocks submission until paid.', N'{"widgetType":"Payment","purpose":"Switchable Stripe+PayPal checkout with three amount sources.","modes":{"provider_both":{"required":["stripePublishableKey","stripeCreateIntentUrl","paypalClientId","paypalCreateOrderUrl","paypalCaptureOrderUrl"]},"amount_fixed":{"trigger":"amountMode=''fixed''","required":["amount > 0"]},"amount_field":{"trigger":"amountMode=''field''","required":["amountFieldKey"]},"amount_listeners":{"trigger":"amountMode=''listenTotals''","required":["listenEventName"]}},"hard_rules":["PAY-001","PAY-002","PAY-005"],"anti_patterns":[{"bad":"amountMode:''field'' + amountFieldKey:''''","why":"PAY-006 reject","good":"pick a non-Payment source field"}],"version_history":[{"v":2,"date":"2026-05-29"}]}', N'payment,stripe,paypal,checkout', NULL, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+GO
+
+-- ─── widget-qrcode ───────────────────────────────────────────────────────
+MERGE {databaseOwner}{objectQualifier}MF_AI_Knowledge AS t
+USING (SELECT N'widget-qrcode' AS Slug, CAST(NULL AS INT) AS PortalId) AS s
+  ON (t.Slug = s.Slug AND t.PortalId IS NULL)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  Kind = N'widget',
+  Title = N'QRCode — Corner-pinned form URL QR',
+  Summary = N'Display-only corner QR encoding the form URL (?formid=N). Hover/click reveals scan popup + copy-link.',
+  Body = N'{"widgetType":"QRCode","purpose":"Mobile hand-off QR pinned to the form wrapper.","hard_rules":["QR-001","QR-002"],"version_history":[{"v":2,"date":"2026-05-29"}]}',
+  Tags = N'qr,qrcode,display',
+  Examples = NULL,
+  Version = t.Version + 1,
+  UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (Slug, Kind, Title, Summary, Body, Tags, Examples, PortalId, Source, Version, CreatedOnDate)
+  VALUES (N'widget-qrcode', N'widget', N'QRCode — Corner-pinned form URL QR', N'Display-only corner QR encoding the form URL (?formid=N). Hover/click reveals scan popup + copy-link.', N'{"widgetType":"QRCode","purpose":"Mobile hand-off QR pinned to the form wrapper.","hard_rules":["QR-001","QR-002"],"version_history":[{"v":2,"date":"2026-05-29"}]}', N'qr,qrcode,display', NULL, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+GO
+
+-- ─── widget-signature ───────────────────────────────────────────────────────
+MERGE {databaseOwner}{objectQualifier}MF_AI_Knowledge AS t
+USING (SELECT N'widget-signature' AS Slug, CAST(NULL AS INT) AS PortalId) AS s
+  ON (t.Slug = s.Slug AND t.PortalId IS NULL)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  Kind = N'widget',
+  Title = N'Signature — Draw or typed e-signature',
+  Summary = N'Canvas signature with optional typed (cursive font) tab. Stores result as data:image/png;base64 in hidden input.',
+  Body = N'{"widgetType":"Signature","purpose":"Stores e-signature as PNG data URL.","modes":{"draw":{"trigger":"default canvas tab"},"type":{"trigger":"typedMode!==false and user picks Type tab"}},"hard_rules":["SIG-001","SIG-003"],"version_history":[{"v":2,"date":"2026-05-29"}]}',
+  Tags = N'signature,canvas,esign',
+  Examples = NULL,
+  Version = t.Version + 1,
+  UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (Slug, Kind, Title, Summary, Body, Tags, Examples, PortalId, Source, Version, CreatedOnDate)
+  VALUES (N'widget-signature', N'widget', N'Signature — Draw or typed e-signature', N'Canvas signature with optional typed (cursive font) tab. Stores result as data:image/png;base64 in hidden input.', N'{"widgetType":"Signature","purpose":"Stores e-signature as PNG data URL.","modes":{"draw":{"trigger":"default canvas tab"},"type":{"trigger":"typedMode!==false and user picks Type tab"}},"hard_rules":["SIG-001","SIG-003"],"version_history":[{"v":2,"date":"2026-05-29"}]}', N'signature,canvas,esign', NULL, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+GO
+
+-- ─── widget-subform ───────────────────────────────────────────────────────
+MERGE {databaseOwner}{objectQualifier}MF_AI_Knowledge AS t
+USING (SELECT N'widget-subform' AS Slug, CAST(NULL AS INT) AS PortalId) AS s
+  ON (t.Slug = s.Slug AND t.PortalId IS NULL)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  Kind = N'widget',
+  Title = N'Subform — Repeating row collector (list/card/accordion)',
+  Summary = N'Repeating row collector with three view modes (list/card/accordion). Stores rows[] as JSON. Phase 2: link to another MegaForm.',
+  Body = N'{"widgetType":"Subform","purpose":"Repeating row data entry. Pick a view mode by columns count + use case.","modes":{"list":{"trigger":"viewMode=''list'' (default)","required":["columns"]},"card":{"trigger":"viewMode=''card''","required":["columns"]},"accordion":{"trigger":"viewMode=''accordion''","required":["columns"]}},"hard_rules":["SUB-001","SUB-004"],"version_history":[{"v":2,"date":"2026-05-29"}]}',
+  Tags = N'subform,repeater,rows',
+  Examples = NULL,
+  Version = t.Version + 1,
+  UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (Slug, Kind, Title, Summary, Body, Tags, Examples, PortalId, Source, Version, CreatedOnDate)
+  VALUES (N'widget-subform', N'widget', N'Subform — Repeating row collector (list/card/accordion)', N'Repeating row collector with three view modes (list/card/accordion). Stores rows[] as JSON. Phase 2: link to another MegaForm.', N'{"widgetType":"Subform","purpose":"Repeating row data entry. Pick a view mode by columns count + use case.","modes":{"list":{"trigger":"viewMode=''list'' (default)","required":["columns"]},"card":{"trigger":"viewMode=''card''","required":["columns"]},"accordion":{"trigger":"viewMode=''accordion''","required":["columns"]}},"hard_rules":["SUB-001","SUB-004"],"version_history":[{"v":2,"date":"2026-05-29"}]}', N'subform,repeater,rows', NULL, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+GO
+
+-- ─── widget-pdfform ───────────────────────────────────────────────────────
+MERGE {databaseOwner}{objectQualifier}MF_AI_Knowledge AS t
+USING (SELECT N'widget-pdfform' AS Slug, CAST(NULL AS INT) AS PortalId) AS s
+  ON (t.Slug = s.Slug AND t.PortalId IS NULL)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  Kind = N'widget',
+  Title = N'PdfForm — PDF overlay form filler',
+  Summary = N'Admin uploads a PDF in designer + places typed/checkbox/signature/image fields. End-users fill them; submission stores values+signatures+images as JSON.',
+  Body = N'{"widgetType":"PdfForm","purpose":"PDF overlay form filler.","modes":{"fill":{"trigger":"mode=''fill'' (default)","required":["pdfUrl OR pdfBase64","fields"]},"preview":{"trigger":"mode=''preview''","required":["pdfUrl OR pdfBase64"]}},"hard_rules":["PDF-001","PDF-002"],"version_history":[{"v":2,"date":"2026-05-29"}]}',
+  Tags = N'pdf,form,overlay,signature',
+  Examples = NULL,
+  Version = t.Version + 1,
+  UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (Slug, Kind, Title, Summary, Body, Tags, Examples, PortalId, Source, Version, CreatedOnDate)
+  VALUES (N'widget-pdfform', N'widget', N'PdfForm — PDF overlay form filler', N'Admin uploads a PDF in designer + places typed/checkbox/signature/image fields. End-users fill them; submission stores values+signatures+images as JSON.', N'{"widgetType":"PdfForm","purpose":"PDF overlay form filler.","modes":{"fill":{"trigger":"mode=''fill'' (default)","required":["pdfUrl OR pdfBase64","fields"]},"preview":{"trigger":"mode=''preview''","required":["pdfUrl OR pdfBase64"]}},"hard_rules":["PDF-001","PDF-002"],"version_history":[{"v":2,"date":"2026-05-29"}]}', N'pdf,form,overlay,signature', NULL, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+GO
+
+-- ─── widget-golfscorecard ───────────────────────────────────────────────────────
+MERGE {databaseOwner}{objectQualifier}MF_AI_Knowledge AS t
+USING (SELECT N'widget-golfscorecard' AS Slug, CAST(NULL AS INT) AS PortalId) AS s
+  ON (t.Slug = s.Slug AND t.PortalId IS NULL)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  Kind = N'widget',
+  Title = N'GolfScorecard — Golf data display widget',
+  Summary = N'Display-only golf widget with 4 display modes (scorecard / foursome / leaderboard / custom). Reads from sproc/SQL or sibling DataRepeater.',
+  Body = N'{"widgetType":"GolfScorecard","purpose":"Golf data display (scorecard / foursome / leaderboard).","modes":{"scorecard":{"trigger":"displayMode=''scorecard'' (default)"},"foursome":{"trigger":"displayMode=''foursome''"},"leaderboard":{"trigger":"displayMode=''leaderboard''"},"custom":{"trigger":"displayMode=''custom'' + template/cardTemplate"}},"hard_rules":["GOLF-001","GOLF-002","GOLF-003"],"version_history":[{"v":2,"date":"2026-05-29"}]}',
+  Tags = N'golf,scorecard,leaderboard,display',
+  Examples = NULL,
+  Version = t.Version + 1,
+  UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (Slug, Kind, Title, Summary, Body, Tags, Examples, PortalId, Source, Version, CreatedOnDate)
+  VALUES (N'widget-golfscorecard', N'widget', N'GolfScorecard — Golf data display widget', N'Display-only golf widget with 4 display modes (scorecard / foursome / leaderboard / custom). Reads from sproc/SQL or sibling DataRepeater.', N'{"widgetType":"GolfScorecard","purpose":"Golf data display (scorecard / foursome / leaderboard).","modes":{"scorecard":{"trigger":"displayMode=''scorecard'' (default)"},"foursome":{"trigger":"displayMode=''foursome''"},"leaderboard":{"trigger":"displayMode=''leaderboard''"},"custom":{"trigger":"displayMode=''custom'' + template/cardTemplate"}},"hard_rules":["GOLF-001","GOLF-002","GOLF-003"],"version_history":[{"v":2,"date":"2026-05-29"}]}', N'golf,scorecard,leaderboard,display', NULL, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+GO
+
+-- ════════════ TEMPLATES ════════════
+DECLARE @kid INT = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-dynamiclabel' AND PortalId IS NULL);
+IF @kid IS NOT NULL
+BEGIN
+  MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Templates AS t
+  USING (SELECT @kid AS KnowledgeId, N'card-grid' AS TemplateKey, CAST(NULL AS INT) AS PortalId) AS s
+    ON (t.KnowledgeId = s.KnowledgeId AND t.TemplateKey = s.TemplateKey AND t.PortalId IS NULL)
+  WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+    Kind = N'preset', Title = N'Card grid', Summary = N'3-column responsive cards from SQL rows.',
+    Body = N'{"resultMode":"multi","wrapperTemplate":"<div class=''mf-grid'' style=''display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px''>{{rows}}</div>","rowTemplate":"<article class=''mf-card''><img src=''{{row:CoverUrl|format=raw}}'' style=''width:100%;height:140px;object-fit:cover''/><h3>{{row:Title}}</h3><p>{{row:Summary}}</p></article>"}', Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+  WHEN NOT MATCHED THEN INSERT
+    (KnowledgeId, TemplateKey, Kind, Title, Summary, Body, Tags, Score, SortOrder, PortalId, Source, Version, CreatedOnDate)
+    VALUES (@kid, N'card-grid', N'preset', N'Card grid', N'3-column responsive cards from SQL rows.', N'{"resultMode":"multi","wrapperTemplate":"<div class=''mf-grid'' style=''display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px''>{{rows}}</div>","rowTemplate":"<article class=''mf-card''><img src=''{{row:CoverUrl|format=raw}}'' style=''width:100%;height:140px;object-fit:cover''/><h3>{{row:Title}}</h3><p>{{row:Summary}}</p></article>"}', NULL, 0, 100, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+END;
+GO
+
+DECLARE @kid INT = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-dynamiclabel' AND PortalId IS NULL);
+IF @kid IS NOT NULL
+BEGIN
+  MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Templates AS t
+  USING (SELECT @kid AS KnowledgeId, N'table-list' AS TemplateKey, CAST(NULL AS INT) AS PortalId) AS s
+    ON (t.KnowledgeId = s.KnowledgeId AND t.TemplateKey = s.TemplateKey AND t.PortalId IS NULL)
+  WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+    Kind = N'preset', Title = N'Table list', Summary = N'Tabular list view from SQL rows.',
+    Body = N'{"resultMode":"multi","wrapperTemplate":"<table class=''mf-tab''><thead><tr><th>Title</th><th>Date</th></tr></thead><tbody>{{rows}}</tbody></table>","rowTemplate":"<tr><td>{{row:Title}}</td><td>{{row:Date|date}}</td></tr>"}', Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+  WHEN NOT MATCHED THEN INSERT
+    (KnowledgeId, TemplateKey, Kind, Title, Summary, Body, Tags, Score, SortOrder, PortalId, Source, Version, CreatedOnDate)
+    VALUES (@kid, N'table-list', N'preset', N'Table list', N'Tabular list view from SQL rows.', N'{"resultMode":"multi","wrapperTemplate":"<table class=''mf-tab''><thead><tr><th>Title</th><th>Date</th></tr></thead><tbody>{{rows}}</tbody></table>","rowTemplate":"<tr><td>{{row:Title}}</td><td>{{row:Date|date}}</td></tr>"}', NULL, 0, 100, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+END;
+GO
+
+DECLARE @kid INT = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-dynamiclabel' AND PortalId IS NULL);
+IF @kid IS NOT NULL
+BEGIN
+  MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Templates AS t
+  USING (SELECT @kid AS KnowledgeId, N'stat' AS TemplateKey, CAST(NULL AS INT) AS PortalId) AS s
+    ON (t.KnowledgeId = s.KnowledgeId AND t.TemplateKey = s.TemplateKey AND t.PortalId IS NULL)
+  WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+    Kind = N'preset', Title = N'Stat box', Summary = N'Single KPI / number.',
+    Body = N'{"resultMode":"simple","htmlContent":"<div class=''mf-stat''><span class=''lbl''>{{field:Label|format=raw}}</span><strong>{{field:Value}}</strong></div>"}', Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+  WHEN NOT MATCHED THEN INSERT
+    (KnowledgeId, TemplateKey, Kind, Title, Summary, Body, Tags, Score, SortOrder, PortalId, Source, Version, CreatedOnDate)
+    VALUES (@kid, N'stat', N'preset', N'Stat box', N'Single KPI / number.', N'{"resultMode":"simple","htmlContent":"<div class=''mf-stat''><span class=''lbl''>{{field:Label|format=raw}}</span><strong>{{field:Value}}</strong></div>"}', NULL, 0, 100, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+END;
+GO
+
+DECLARE @kid INT = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-dynamiclabel' AND PortalId IS NULL);
+IF @kid IS NOT NULL
+BEGIN
+  MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Templates AS t
+  USING (SELECT @kid AS KnowledgeId, N'detail' AS TemplateKey, CAST(NULL AS INT) AS PortalId) AS s
+    ON (t.KnowledgeId = s.KnowledgeId AND t.TemplateKey = s.TemplateKey AND t.PortalId IS NULL)
+  WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+    Kind = N'preset', Title = N'Detail view', Summary = N'Definition list for one record.',
+    Body = N'{"resultMode":"simple","htmlContent":"<dl class=''mf-detail''><dt>Name</dt><dd>{{field:Name}}</dd><dt>Email</dt><dd>{{field:Email}}</dd></dl>"}', Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+  WHEN NOT MATCHED THEN INSERT
+    (KnowledgeId, TemplateKey, Kind, Title, Summary, Body, Tags, Score, SortOrder, PortalId, Source, Version, CreatedOnDate)
+    VALUES (@kid, N'detail', N'preset', N'Detail view', N'Definition list for one record.', N'{"resultMode":"simple","htmlContent":"<dl class=''mf-detail''><dt>Name</dt><dd>{{field:Name}}</dd><dt>Email</dt><dd>{{field:Email}}</dd></dl>"}', NULL, 0, 100, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+END;
+GO
+
+DECLARE @kid INT = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-dynamiclabel' AND PortalId IS NULL);
+IF @kid IS NOT NULL
+BEGIN
+  MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Templates AS t
+  USING (SELECT @kid AS KnowledgeId, N'blog' AS TemplateKey, CAST(NULL AS INT) AS PortalId) AS s
+    ON (t.KnowledgeId = s.KnowledgeId AND t.TemplateKey = s.TemplateKey AND t.PortalId IS NULL)
+  WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+    Kind = N'preset', Title = N'Blog list', Summary = N'Blog timeline with cover + summary.',
+    Body = N'{"resultMode":"multi","wrapperTemplate":"<div class=''mf-blog''>{{rows}}</div>","rowTemplate":"<article class=''mf-blog-row''><img src=''{{row:CoverUrl|format=raw}}''/><time>{{row:Date|date}}</time><h3><a href=''?slug={{row:Slug|format=raw}}''>{{row:Title}}</a></h3><p>{{row:Summary}}</p></article>"}', Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+  WHEN NOT MATCHED THEN INSERT
+    (KnowledgeId, TemplateKey, Kind, Title, Summary, Body, Tags, Score, SortOrder, PortalId, Source, Version, CreatedOnDate)
+    VALUES (@kid, N'blog', N'preset', N'Blog list', N'Blog timeline with cover + summary.', N'{"resultMode":"multi","wrapperTemplate":"<div class=''mf-blog''>{{rows}}</div>","rowTemplate":"<article class=''mf-blog-row''><img src=''{{row:CoverUrl|format=raw}}''/><time>{{row:Date|date}}</time><h3><a href=''?slug={{row:Slug|format=raw}}''>{{row:Title}}</a></h3><p>{{row:Summary}}</p></article>"}', NULL, 0, 100, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+END;
+GO
+
+DECLARE @kid INT = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-datagrid' AND PortalId IS NULL);
+IF @kid IS NOT NULL
+BEGIN
+  MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Templates AS t
+  USING (SELECT @kid AS KnowledgeId, N'sql-cascade-readonly' AS TemplateKey, CAST(NULL AS INT) AS PortalId) AS s
+    ON (t.KnowledgeId = s.KnowledgeId AND t.TemplateKey = s.TemplateKey AND t.PortalId IS NULL)
+  WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+    Kind = N'preset', Title = N'SQL display by parent', Summary = N'Read-only tabular view cascading on a parent field.',
+    Body = N'{"useSql":true,"dataSource":"sql","connectionKey":"DashboardDatabase","masterQuery":"SELECT * FROM TableName WHERE ParentId = :parent_key","queryDependsOn":"parent_key","pageSize":100}', Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+  WHEN NOT MATCHED THEN INSERT
+    (KnowledgeId, TemplateKey, Kind, Title, Summary, Body, Tags, Score, SortOrder, PortalId, Source, Version, CreatedOnDate)
+    VALUES (@kid, N'sql-cascade-readonly', N'preset', N'SQL display by parent', N'Read-only tabular view cascading on a parent field.', N'{"useSql":true,"dataSource":"sql","connectionKey":"DashboardDatabase","masterQuery":"SELECT * FROM TableName WHERE ParentId = :parent_key","queryDependsOn":"parent_key","pageSize":100}', NULL, 0, 100, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+END;
+GO
+
+DECLARE @kid INT = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-datagrid' AND PortalId IS NULL);
+IF @kid IS NOT NULL
+BEGIN
+  MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Templates AS t
+  USING (SELECT @kid AS KnowledgeId, N'invoice-lines' AS TemplateKey, CAST(NULL AS INT) AS PortalId) AS s
+    ON (t.KnowledgeId = s.KnowledgeId AND t.TemplateKey = s.TemplateKey AND t.PortalId IS NULL)
+  WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+    Kind = N'preset', Title = N'Invoice line items', Summary = N'Item/Qty/Price/Total entry grid (input mode).',
+    Body = N'{"columns":[{"key":"item","label":"Item","type":"text","width":"2fr","required":true},{"key":"qty","label":"Qty","type":"number","width":"100px","required":true,"decimals":0},{"key":"price","label":"Price","type":"currency","width":"120px","required":true,"decimals":2},{"key":"total","label":"Total","type":"computed","width":"120px","computeFormula":"qty * price","decimals":2}],"totalField":"invoice_total","totalFormula":"Sum(\"qty * price\")"}', Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+  WHEN NOT MATCHED THEN INSERT
+    (KnowledgeId, TemplateKey, Kind, Title, Summary, Body, Tags, Score, SortOrder, PortalId, Source, Version, CreatedOnDate)
+    VALUES (@kid, N'invoice-lines', N'preset', N'Invoice line items', N'Item/Qty/Price/Total entry grid (input mode).', N'{"columns":[{"key":"item","label":"Item","type":"text","width":"2fr","required":true},{"key":"qty","label":"Qty","type":"number","width":"100px","required":true,"decimals":0},{"key":"price","label":"Price","type":"currency","width":"120px","required":true,"decimals":2},{"key":"total","label":"Total","type":"computed","width":"120px","computeFormula":"qty * price","decimals":2}],"totalField":"invoice_total","totalFormula":"Sum(\"qty * price\")"}', NULL, 0, 100, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+END;
+GO
+
+DECLARE @kid INT = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-datarepeater' AND PortalId IS NULL);
+IF @kid IS NOT NULL
+BEGIN
+  MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Templates AS t
+  USING (SELECT @kid AS KnowledgeId, N'flat-table-cascade' AS TemplateKey, CAST(NULL AS INT) AS PortalId) AS s
+    ON (t.KnowledgeId = s.KnowledgeId AND t.TemplateKey = s.TemplateKey AND t.PortalId IS NULL)
+  WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+    Kind = N'preset', Title = N'Flat table cascading on parent', Summary = N'Master query filtered by parent field.',
+    Body = N'{"connectionKey":"DashboardDatabase","masterQuery":"SELECT * FROM T WHERE FK = :parent_key","queryDependsOn":"parent_key","pageSize":50}', Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+  WHEN NOT MATCHED THEN INSERT
+    (KnowledgeId, TemplateKey, Kind, Title, Summary, Body, Tags, Score, SortOrder, PortalId, Source, Version, CreatedOnDate)
+    VALUES (@kid, N'flat-table-cascade', N'preset', N'Flat table cascading on parent', N'Master query filtered by parent field.', N'{"connectionKey":"DashboardDatabase","masterQuery":"SELECT * FROM T WHERE FK = :parent_key","queryDependsOn":"parent_key","pageSize":50}', NULL, 0, 100, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+END;
+GO
+
+DECLARE @kid INT = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-datarepeater' AND PortalId IS NULL);
+IF @kid IS NOT NULL
+BEGIN
+  MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Templates AS t
+  USING (SELECT @kid AS KnowledgeId, N'drill-down-2level' AS TemplateKey, CAST(NULL AS INT) AS PortalId) AS s
+    ON (t.KnowledgeId = s.KnowledgeId AND t.TemplateKey = s.TemplateKey AND t.PortalId IS NULL)
+  WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+    Kind = N'preset', Title = N'Drill-down (2 levels)', Summary = N'Click a row → opens detail SQL pinned to :parentId.',
+    Body = N'{"masterQuery":"SELECT Id, Name FROM Parents","detail1TriggerCol":"Id","detail1Query":"SELECT * FROM Children WHERE ParentId = :parentId"}', Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+  WHEN NOT MATCHED THEN INSERT
+    (KnowledgeId, TemplateKey, Kind, Title, Summary, Body, Tags, Score, SortOrder, PortalId, Source, Version, CreatedOnDate)
+    VALUES (@kid, N'drill-down-2level', N'preset', N'Drill-down (2 levels)', N'Click a row → opens detail SQL pinned to :parentId.', N'{"masterQuery":"SELECT Id, Name FROM Parents","detail1TriggerCol":"Id","detail1Query":"SELECT * FROM Children WHERE ParentId = :parentId"}', NULL, 0, 100, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+END;
+GO
+
+DECLARE @kid INT = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-datarepeater' AND PortalId IS NULL);
+IF @kid IS NOT NULL
+BEGIN
+  MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Templates AS t
+  USING (SELECT @kid AS KnowledgeId, N'chart-bar' AS TemplateKey, CAST(NULL AS INT) AS PortalId) AS s
+    ON (t.KnowledgeId = s.KnowledgeId AND t.TemplateKey = s.TemplateKey AND t.PortalId IS NULL)
+  WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+    Kind = N'preset', Title = N'Bar chart', Summary = N'Render rows as a bar chart.',
+    Body = N'{"chartType":"bar","chartLabelCol":"Category","chartValueCol":"Total","masterQuery":"SELECT Category, SUM(Amount) AS Total FROM T GROUP BY Category"}', Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+  WHEN NOT MATCHED THEN INSERT
+    (KnowledgeId, TemplateKey, Kind, Title, Summary, Body, Tags, Score, SortOrder, PortalId, Source, Version, CreatedOnDate)
+    VALUES (@kid, N'chart-bar', N'preset', N'Bar chart', N'Render rows as a bar chart.', N'{"chartType":"bar","chartLabelCol":"Category","chartValueCol":"Total","masterQuery":"SELECT Category, SUM(Amount) AS Total FROM T GROUP BY Category"}', NULL, 0, 100, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+END;
+GO
+
+DECLARE @kid INT = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-select' AND PortalId IS NULL);
+IF @kid IS NOT NULL
+BEGIN
+  MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Templates AS t
+  USING (SELECT @kid AS KnowledgeId, N'sql-options' AS TemplateKey, CAST(NULL AS INT) AS PortalId) AS s
+    ON (t.KnowledgeId = s.KnowledgeId AND t.TemplateKey = s.TemplateKey AND t.PortalId IS NULL)
+  WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+    Kind = N'preset', Title = N'SQL options', Summary = N'Dropdown sourced from SQL with value+label aliasing.',
+    Body = N'{"field.properties":{"optionsSource":"sql","optionsConnectionKey":"DashboardDatabase","optionsSql":"SELECT Id AS value, Name AS label FROM Items ORDER BY Name"}}', Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+  WHEN NOT MATCHED THEN INSERT
+    (KnowledgeId, TemplateKey, Kind, Title, Summary, Body, Tags, Score, SortOrder, PortalId, Source, Version, CreatedOnDate)
+    VALUES (@kid, N'sql-options', N'preset', N'SQL options', N'Dropdown sourced from SQL with value+label aliasing.', N'{"field.properties":{"optionsSource":"sql","optionsConnectionKey":"DashboardDatabase","optionsSql":"SELECT Id AS value, Name AS label FROM Items ORDER BY Name"}}', NULL, 0, 100, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+END;
+GO
+
+DECLARE @kid INT = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-select' AND PortalId IS NULL);
+IF @kid IS NOT NULL
+BEGIN
+  MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Templates AS t
+  USING (SELECT @kid AS KnowledgeId, N'sql-cascade-2lvl' AS TemplateKey, CAST(NULL AS INT) AS PortalId) AS s
+    ON (t.KnowledgeId = s.KnowledgeId AND t.TemplateKey = s.TemplateKey AND t.PortalId IS NULL)
+  WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+    Kind = N'pattern', Title = N'Cascade Select → Select', Summary = N'Parent select feeds child select via optionsDependsOn.',
+    Body = N'{"parent":{"type":"Select","key":"category_id","properties":{"optionsSource":"sql","optionsSql":"SELECT CategoryId AS value, Name AS label FROM Categories"}},"child":{"type":"Select","key":"product_id","properties":{"optionsSource":"sql","optionsSql":"SELECT ProductId AS value, Name AS label FROM Products WHERE CategoryId = :category_id","optionsDependsOn":["category_id"]}}}', Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+  WHEN NOT MATCHED THEN INSERT
+    (KnowledgeId, TemplateKey, Kind, Title, Summary, Body, Tags, Score, SortOrder, PortalId, Source, Version, CreatedOnDate)
+    VALUES (@kid, N'sql-cascade-2lvl', N'pattern', N'Cascade Select → Select', N'Parent select feeds child select via optionsDependsOn.', N'{"parent":{"type":"Select","key":"category_id","properties":{"optionsSource":"sql","optionsSql":"SELECT CategoryId AS value, Name AS label FROM Categories"}},"child":{"type":"Select","key":"product_id","properties":{"optionsSource":"sql","optionsSql":"SELECT ProductId AS value, Name AS label FROM Products WHERE CategoryId = :category_id","optionsDependsOn":["category_id"]}}}', NULL, 0, 100, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+END;
+GO
+
+DECLARE @kid INT = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-contentslider' AND PortalId IS NULL);
+IF @kid IS NOT NULL
+BEGIN
+  MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Templates AS t
+  USING (SELECT @kid AS KnowledgeId, N'feature-3' AS TemplateKey, CAST(NULL AS INT) AS PortalId) AS s
+    ON (t.KnowledgeId = s.KnowledgeId AND t.TemplateKey = s.TemplateKey AND t.PortalId IS NULL)
+  WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+    Kind = N'preset', Title = N'3 feature cards', Summary = N'Three static feature cards with image+title+description+badge.',
+    Body = N'{"items":[{"imageUrl":"https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800","title":"Feature one","description":"Headline copy.","badge":"New","meta":"Learn more"},{"imageUrl":"https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800","title":"Feature two","description":"Headline copy.","badge":"Hot","meta":"Learn more"},{"imageUrl":"https://images.unsplash.com/photo-1531497865144-0464ef8fb9a9?w=800","title":"Feature three","description":"Headline copy.","badge":"","meta":"Learn more"}],"interval":4500,"autoplay":true}', Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+  WHEN NOT MATCHED THEN INSERT
+    (KnowledgeId, TemplateKey, Kind, Title, Summary, Body, Tags, Score, SortOrder, PortalId, Source, Version, CreatedOnDate)
+    VALUES (@kid, N'feature-3', N'preset', N'3 feature cards', N'Three static feature cards with image+title+description+badge.', N'{"items":[{"imageUrl":"https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800","title":"Feature one","description":"Headline copy.","badge":"New","meta":"Learn more"},{"imageUrl":"https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800","title":"Feature two","description":"Headline copy.","badge":"Hot","meta":"Learn more"},{"imageUrl":"https://images.unsplash.com/photo-1531497865144-0464ef8fb9a9?w=800","title":"Feature three","description":"Headline copy.","badge":"","meta":"Learn more"}],"interval":4500,"autoplay":true}', NULL, 0, 100, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+END;
+GO
+
+DECLARE @kid INT = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-phonepro' AND PortalId IS NULL);
+IF @kid IS NOT NULL
+BEGIN
+  MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Templates AS t
+  USING (SELECT @kid AS KnowledgeId, N'vn-international' AS TemplateKey, CAST(NULL AS INT) AS PortalId) AS s
+    ON (t.KnowledgeId = s.KnowledgeId AND t.TemplateKey = s.TemplateKey AND t.PortalId IS NULL)
+  WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+    Kind = N'preset', Title = N'VN-first international', Summary = N'VN default, VN/US/GB preferred, JSON storage.',
+    Body = N'{"mode":"international","defaultCountry":"VN","preferredCountries":["VN","US","GB"],"saveFormat":"json"}', Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+  WHEN NOT MATCHED THEN INSERT
+    (KnowledgeId, TemplateKey, Kind, Title, Summary, Body, Tags, Score, SortOrder, PortalId, Source, Version, CreatedOnDate)
+    VALUES (@kid, N'vn-international', N'preset', N'VN-first international', N'VN default, VN/US/GB preferred, JSON storage.', N'{"mode":"international","defaultCountry":"VN","preferredCountries":["VN","US","GB"],"saveFormat":"json"}', NULL, 0, 100, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+END;
+GO
+
+DECLARE @kid INT = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-payment' AND PortalId IS NULL);
+IF @kid IS NOT NULL
+BEGIN
+  MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Templates AS t
+  USING (SELECT @kid AS KnowledgeId, N'stripe-fixed-usd' AS TemplateKey, CAST(NULL AS INT) AS PortalId) AS s
+    ON (t.KnowledgeId = s.KnowledgeId AND t.TemplateKey = s.TemplateKey AND t.PortalId IS NULL)
+  WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+    Kind = N'preset', Title = N'Stripe fixed USD', Summary = N'Stripe only, fixed amount, USD.',
+    Body = N'{"provider":"stripe","amountMode":"fixed","amount":99,"currency":"USD","requiredPaid":true}', Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+  WHEN NOT MATCHED THEN INSERT
+    (KnowledgeId, TemplateKey, Kind, Title, Summary, Body, Tags, Score, SortOrder, PortalId, Source, Version, CreatedOnDate)
+    VALUES (@kid, N'stripe-fixed-usd', N'preset', N'Stripe fixed USD', N'Stripe only, fixed amount, USD.', N'{"provider":"stripe","amountMode":"fixed","amount":99,"currency":"USD","requiredPaid":true}', NULL, 0, 100, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+END;
+GO
+
+DECLARE @kid INT = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-golfscorecard' AND PortalId IS NULL);
+IF @kid IS NOT NULL
+BEGIN
+  MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Templates AS t
+  USING (SELECT @kid AS KnowledgeId, N'foursome-stableford' AS TemplateKey, CAST(NULL AS INT) AS PortalId) AS s
+    ON (t.KnowledgeId = s.KnowledgeId AND t.TemplateKey = s.TemplateKey AND t.PortalId IS NULL)
+  WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+    Kind = N'preset', Title = N'Foursome (Stableford)', Summary = N'Live foursome leaderboard with Stableford points.',
+    Body = N'{"displayMode":"foursome","configJson":{"dataSource":{"type":"sproc","name":"usp_ScoringDetailLive","params":{"IsSunday":0}},"options":{"pointsCol":"Points","pointsLabel":"Pts"}}}', Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+  WHEN NOT MATCHED THEN INSERT
+    (KnowledgeId, TemplateKey, Kind, Title, Summary, Body, Tags, Score, SortOrder, PortalId, Source, Version, CreatedOnDate)
+    VALUES (@kid, N'foursome-stableford', N'preset', N'Foursome (Stableford)', N'Live foursome leaderboard with Stableford points.', N'{"displayMode":"foursome","configJson":{"dataSource":{"type":"sproc","name":"usp_ScoringDetailLive","params":{"IsSunday":0}},"options":{"pointsCol":"Points","pointsLabel":"Pts"}}}', NULL, 0, 100, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+END;
+GO
+
+DECLARE @kid INT = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-golfscorecard' AND PortalId IS NULL);
+IF @kid IS NOT NULL
+BEGIN
+  MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Templates AS t
+  USING (SELECT @kid AS KnowledgeId, N'leaderboard-net' AS TemplateKey, CAST(NULL AS INT) AS PortalId) AS s
+    ON (t.KnowledgeId = s.KnowledgeId AND t.TemplateKey = s.TemplateKey AND t.PortalId IS NULL)
+  WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+    Kind = N'preset', Title = N'Net leaderboard', Summary = N'Net-score leaderboard with custom row template.',
+    Body = N'{"displayMode":"leaderboard","configJson":{"dataSource":{"type":"sproc","name":"usp_uv_ScoringDetailLiveList"},"options":{"coursePar":72}}}', Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+  WHEN NOT MATCHED THEN INSERT
+    (KnowledgeId, TemplateKey, Kind, Title, Summary, Body, Tags, Score, SortOrder, PortalId, Source, Version, CreatedOnDate)
+    VALUES (@kid, N'leaderboard-net', N'preset', N'Net leaderboard', N'Net-score leaderboard with custom row template.', N'{"displayMode":"leaderboard","configJson":{"dataSource":{"type":"sproc","name":"usp_uv_ScoringDetailLiveList"},"options":{"coursePar":72}}}', NULL, 0, 100, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+END;
+GO
+
+-- ════════════ RULES ════════════
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'DL-001' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-dynamiclabel' AND PortalId IS NULL),
+  WidgetType = N'DynamicLabel', Title = N'No placeholder htmlContent without SQL', Severity = N'hard_reject',
+  Condition = N'masterQuery empty AND htmlContent matches placeholder regex', RegexPattern = N'^(<p>)?\s*(hello\s+world|dynamic\s+label|placeholder|sample\s+text|\.\.\.+)?\s*(</p>)?$',
+  RejectionMessage = N'no SQL (widgetProps.masterQuery) AND no real htmlContent — would render placeholder text.', FixHint = N'Either: (1) wire SQL → widgetProps.{useSql:true, dataSource:"sql", resultMode:"multi", connectionKey:"DashboardDatabase", masterQuery, wrapperTemplate, rowTemplate}; or (2) supply htmlContent with real {{field:KEY}}/{{submission:KEY}} tokens; or (3) SQL simple → masterQuery + resultMode:"simple" + htmlContent with {{row:Col}}.',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'DL-001', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-dynamiclabel' AND PortalId IS NULL),
+          N'DynamicLabel', N'No placeholder htmlContent without SQL', N'hard_reject', N'masterQuery empty AND htmlContent matches placeholder regex', N'^(<p>)?\s*(hello\s+world|dynamic\s+label|placeholder|sample\s+text|\.\.\.+)?\s*(</p>)?$',
+          N'no SQL (widgetProps.masterQuery) AND no real htmlContent — would render placeholder text.', N'Either: (1) wire SQL → widgetProps.{useSql:true, dataSource:"sql", resultMode:"multi", connectionKey:"DashboardDatabase", masterQuery, wrapperTemplate, rowTemplate}; or (2) supply htmlContent with real {{field:KEY}}/{{submission:KEY}} tokens; or (3) SQL simple → masterQuery + resultMode:"simple" + htmlContent with {{row:Col}}.', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'DL-002' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-dynamiclabel' AND PortalId IS NULL),
+  WidgetType = N'DynamicLabel', Title = N'Cascade parent must exist and not be display-only', Severity = N'hard_reject',
+  Condition = N'queryDependsOn references missing key OR a display-only widget', RegexPattern = NULL,
+  RejectionMessage = N'queryDependsOn parent does not exist or is a display-only widget.', FixHint = N'Add a Select/Text/Number/Date/Radio/Checkbox/Hidden field for the parent FIRST. DataRepeater, DataGrid, GridRepeater, DynamicLabel, Html are display-only and cannot be cascade parents.',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'DL-002', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-dynamiclabel' AND PortalId IS NULL),
+          N'DynamicLabel', N'Cascade parent must exist and not be display-only', N'hard_reject', N'queryDependsOn references missing key OR a display-only widget', NULL,
+          N'queryDependsOn parent does not exist or is a display-only widget.', N'Add a Select/Text/Number/Date/Radio/Checkbox/Hidden field for the parent FIRST. DataRepeater, DataGrid, GridRepeater, DynamicLabel, Html are display-only and cannot be cascade parents.', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'DL-003' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-dynamiclabel' AND PortalId IS NULL),
+  WidgetType = N'DynamicLabel', Title = N'wrapperTemplate in multi mode must contain {{rows}}', Severity = N'normalize',
+  Condition = N'resultMode=multi AND wrapperTemplate does not contain {{rows}}', RegexPattern = NULL,
+  RejectionMessage = N'wrapperTemplate is missing the {{rows}} injection point.', FixHint = N'Inject {{rows}} where row blocks should repeat. Example: <div class="grid">{{rows}}</div>',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'DL-003', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-dynamiclabel' AND PortalId IS NULL),
+          N'DynamicLabel', N'wrapperTemplate in multi mode must contain {{rows}}', N'normalize', N'resultMode=multi AND wrapperTemplate does not contain {{rows}}', NULL,
+          N'wrapperTemplate is missing the {{rows}} injection point.', N'Inject {{rows}} where row blocks should repeat. Example: <div class="grid">{{rows}}</div>', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'DL-004' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-dynamiclabel' AND PortalId IS NULL),
+  WidgetType = N'DynamicLabel', Title = N'useSql + resultMode required in SQL mode', Severity = N'normalize',
+  Condition = N'masterQuery set BUT (useSql=false OR resultMode missing)', RegexPattern = NULL,
+  RejectionMessage = N'SQL mode requires useSql:true and resultMode:simple|multi.', FixHint = N'The ops.normalizeDynamicLabelProps normaliser fills these when masterQuery is present, but emit them explicitly for clarity.',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'DL-004', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-dynamiclabel' AND PortalId IS NULL),
+          N'DynamicLabel', N'useSql + resultMode required in SQL mode', N'normalize', N'masterQuery set BUT (useSql=false OR resultMode missing)', NULL,
+          N'SQL mode requires useSql:true and resultMode:simple|multi.', N'The ops.normalizeDynamicLabelProps normaliser fills these when masterQuery is present, but emit them explicitly for clarity.', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'DL-005' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-dynamiclabel' AND PortalId IS NULL),
+  WidgetType = N'DynamicLabel', Title = N'|format=raw on URL attributes', Severity = N'normalize',
+  Condition = N'row template uses {{row:X}} inside src= href= background-image without |format=raw', RegexPattern = NULL,
+  RejectionMessage = N'URL tokens emit a rich-display wrapper that breaks parsing.', FixHint = N'Always: <img src="{{row:Url|format=raw}}">',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'DL-005', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-dynamiclabel' AND PortalId IS NULL),
+          N'DynamicLabel', N'|format=raw on URL attributes', N'normalize', N'row template uses {{row:X}} inside src= href= background-image without |format=raw', NULL,
+          N'URL tokens emit a rich-display wrapper that breaks parsing.', N'Always: <img src="{{row:Url|format=raw}}">', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'DG-001' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-datagrid' AND PortalId IS NULL),
+  WidgetType = N'DataGrid', Title = N'Reject bare DataGrid', Severity = N'hard_reject',
+  Condition = N'no masterQuery AND no custom columns', RegexPattern = NULL,
+  RejectionMessage = N'no widgetProps.masterQuery AND no widgetProps.columns — would render the default invoice template ITEM/QTY/PRICE/TOTAL.', FixHint = N'Pick ONE: (1) DISPLAY mode → widgetProps.{useSql:true, dataSource:"sql", connectionKey:"DashboardDatabase", masterQuery, queryDependsOn:"parent_key"}; or (2) INPUT mode → widgetProps.columns=[{key,label,type,required?,decimals?,computeFormula?}…].',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'DG-001', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-datagrid' AND PortalId IS NULL),
+          N'DataGrid', N'Reject bare DataGrid', N'hard_reject', N'no masterQuery AND no custom columns', NULL,
+          N'no widgetProps.masterQuery AND no widgetProps.columns — would render the default invoice template ITEM/QTY/PRICE/TOTAL.', N'Pick ONE: (1) DISPLAY mode → widgetProps.{useSql:true, dataSource:"sql", connectionKey:"DashboardDatabase", masterQuery, queryDependsOn:"parent_key"}; or (2) INPUT mode → widgetProps.columns=[{key,label,type,required?,decimals?,computeFormula?}…].', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'DG-002' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-datagrid' AND PortalId IS NULL),
+  WidgetType = N'DataGrid', Title = N'SQL mode requires masterQuery', Severity = N'hard_reject',
+  Condition = N'useSql=true AND masterQuery empty', RegexPattern = NULL,
+  RejectionMessage = N'SQL display mode requires widgetProps.masterQuery.', FixHint = N'Set masterQuery. Auto-derived columns means you can omit columns and the widget will read from the SQL result.',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'DG-002', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-datagrid' AND PortalId IS NULL),
+          N'DataGrid', N'SQL mode requires masterQuery', N'hard_reject', N'useSql=true AND masterQuery empty', NULL,
+          N'SQL display mode requires widgetProps.masterQuery.', N'Set masterQuery. Auto-derived columns means you can omit columns and the widget will read from the SQL result.', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'DG-003' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-datagrid' AND PortalId IS NULL),
+  WidgetType = N'DataGrid', Title = N'totalField must point to an existing field', Severity = N'warning',
+  Condition = N'totalField set but field key not present in form', RegexPattern = NULL,
+  RejectionMessage = N'totalField references a field key that does not exist.', FixHint = N'Either remove totalField or add a Number/Hidden field with that key first.',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'DG-003', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-datagrid' AND PortalId IS NULL),
+          N'DataGrid', N'totalField must point to an existing field', N'warning', N'totalField set but field key not present in form', NULL,
+          N'totalField references a field key that does not exist.', N'Either remove totalField or add a Number/Hidden field with that key first.', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'DG-004' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-datagrid' AND PortalId IS NULL),
+  WidgetType = N'DataGrid', Title = N'computeFormula references undeclared column', Severity = N'warning',
+  Condition = N'computeFormula identifier not in columns[]', RegexPattern = NULL,
+  RejectionMessage = N'Undeclared identifier in computeFormula silently resolves to 0.', FixHint = N'Use only declared column keys.',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'DG-004', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-datagrid' AND PortalId IS NULL),
+          N'DataGrid', N'computeFormula references undeclared column', N'warning', N'computeFormula identifier not in columns[]', NULL,
+          N'Undeclared identifier in computeFormula silently resolves to 0.', N'Use only declared column keys.', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'DG-005' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-datagrid' AND PortalId IS NULL),
+  WidgetType = N'DataGrid', Title = N'Sum/Avg/Min/Max require quoted expression', Severity = N'normalize',
+  Condition = N'Sum/Avg/Min/Max called with bare identifier', RegexPattern = NULL,
+  RejectionMessage = N'Aggregate function needs a quoted-string argument to iterate rows.', FixHint = N'Wrap inner expression in quotes: Sum("qty * price"), Avg("score")',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'DG-005', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-datagrid' AND PortalId IS NULL),
+          N'DataGrid', N'Sum/Avg/Min/Max require quoted expression', N'normalize', N'Sum/Avg/Min/Max called with bare identifier', NULL,
+          N'Aggregate function needs a quoted-string argument to iterate rows.', N'Wrap inner expression in quotes: Sum("qty * price"), Avg("score")', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'DR-001' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-datarepeater' AND PortalId IS NULL),
+  WidgetType = N'DataRepeater', Title = N'masterQuery required', Severity = N'hard_reject',
+  Condition = N'masterQuery empty', RegexPattern = NULL,
+  RejectionMessage = N'DataRepeater requires widgetProps.masterQuery — otherwise the widget renders a forever-loading spinner.', FixHint = N'Set masterQuery. If you only need to display fields against a parent, prefer DynamicLabel.',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'DR-001', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-datarepeater' AND PortalId IS NULL),
+          N'DataRepeater', N'masterQuery required', N'hard_reject', N'masterQuery empty', NULL,
+          N'DataRepeater requires widgetProps.masterQuery — otherwise the widget renders a forever-loading spinner.', N'Set masterQuery. If you only need to display fields against a parent, prefer DynamicLabel.', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'DR-002' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-datarepeater' AND PortalId IS NULL),
+  WidgetType = N'DataRepeater', Title = N'Chart mode needs label+value columns', Severity = N'hard_reject',
+  Condition = N'chartType in {bar,line,pie} AND (chartLabelCol empty OR chartValueCol empty)', RegexPattern = NULL,
+  RejectionMessage = N'chartType is set but chartLabelCol or chartValueCol is missing.', FixHint = N'Provide both chartLabelCol and chartValueCol, or clear chartType.',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'DR-002', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-datarepeater' AND PortalId IS NULL),
+          N'DataRepeater', N'Chart mode needs label+value columns', N'hard_reject', N'chartType in {bar,line,pie} AND (chartLabelCol empty OR chartValueCol empty)', NULL,
+          N'chartType is set but chartLabelCol or chartValueCol is missing.', N'Provide both chartLabelCol and chartValueCol, or clear chartType.', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'DR-003' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-datarepeater' AND PortalId IS NULL),
+  WidgetType = N'DataRepeater', Title = N'Drill query needs :parentId', Severity = N'hard_reject',
+  Condition = N'detail{N}Query without :parentId binding', RegexPattern = NULL,
+  RejectionMessage = N'Drill-down query does not contain :parentId.', FixHint = N'The trigger column value is bound to :parentId. Example: SELECT * FROM Detail WHERE ParentId = :parentId',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'DR-003', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-datarepeater' AND PortalId IS NULL),
+          N'DataRepeater', N'Drill query needs :parentId', N'hard_reject', N'detail{N}Query without :parentId binding', NULL,
+          N'Drill-down query does not contain :parentId.', N'The trigger column value is bound to :parentId. Example: SELECT * FROM Detail WHERE ParentId = :parentId', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'DR-004' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-datarepeater' AND PortalId IS NULL),
+  WidgetType = N'DataRepeater', Title = N'detail{N}TriggerCol set without detail{N}Query', Severity = N'warning',
+  Condition = N'detail{N}TriggerCol non-empty BUT detail{N}Query empty', RegexPattern = NULL,
+  RejectionMessage = N'Drill-down trigger has no query to fire.', FixHint = N'Either remove the trigger column or add the query with :parentId binding.',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'DR-004', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-datarepeater' AND PortalId IS NULL),
+          N'DataRepeater', N'detail{N}TriggerCol set without detail{N}Query', N'warning', N'detail{N}TriggerCol non-empty BUT detail{N}Query empty', NULL,
+          N'Drill-down trigger has no query to fire.', N'Either remove the trigger column or add the query with :parentId binding.', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'SEL-001' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-select' AND PortalId IS NULL),
+  WidgetType = N'Select', Title = N'Options source required', Severity = N'hard_reject',
+  Condition = N'options[] empty AND field.properties.optionsSql empty', RegexPattern = NULL,
+  RejectionMessage = N'Select must have either static options:[{value,label},…] or properties.optionsSql.', FixHint = N'For SQL options use field.properties (NOT widgetProps): {optionsSource:"sql", optionsConnectionKey:"DashboardDatabase", optionsSql:"SELECT Id AS value, Name AS label FROM …"}.',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'SEL-001', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-select' AND PortalId IS NULL),
+          N'Select', N'Options source required', N'hard_reject', N'options[] empty AND field.properties.optionsSql empty', NULL,
+          N'Select must have either static options:[{value,label},…] or properties.optionsSql.', N'For SQL options use field.properties (NOT widgetProps): {optionsSource:"sql", optionsConnectionKey:"DashboardDatabase", optionsSql:"SELECT Id AS value, Name AS label FROM …"}.', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'SEL-002' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-select' AND PortalId IS NULL),
+  WidgetType = N'Select', Title = N'optionsSql lives under field.properties', Severity = N'normalize',
+  Condition = N'optionsSql emitted under widgetProps.* OR widgetProps.dataSource.*', RegexPattern = NULL,
+  RejectionMessage = N'Runtime FieldOptionsService reads field.properties.optionsSql — widgetProps shape is IGNORED.', FixHint = N'Move optionsSql + optionsConnectionKey + optionsDependsOn under field.properties.*. The ops.normalizeOptionFields normaliser hoists for you, but emit canonical shape directly.',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'SEL-002', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-select' AND PortalId IS NULL),
+          N'Select', N'optionsSql lives under field.properties', N'normalize', N'optionsSql emitted under widgetProps.* OR widgetProps.dataSource.*', NULL,
+          N'Runtime FieldOptionsService reads field.properties.optionsSql — widgetProps shape is IGNORED.', N'Move optionsSql + optionsConnectionKey + optionsDependsOn under field.properties.*. The ops.normalizeOptionFields normaliser hoists for you, but emit canonical shape directly.', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'SEL-003' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-select' AND PortalId IS NULL),
+  WidgetType = N'Select', Title = N'SQL must alias value+label', Severity = N'warning',
+  Condition = N'optionsSql does not contain " AS value" or " AS label"', RegexPattern = NULL,
+  RejectionMessage = N'optionsSql columns must be aliased as value + label.', FixHint = N'SELECT PlayerId AS value, PlayerName AS label FROM GG_Players',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'SEL-003', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-select' AND PortalId IS NULL),
+          N'Select', N'SQL must alias value+label', N'warning', N'optionsSql does not contain " AS value" or " AS label"', NULL,
+          N'optionsSql columns must be aliased as value + label.', N'SELECT PlayerId AS value, PlayerName AS label FROM GG_Players', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'GR-001' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-gridrepeater' AND PortalId IS NULL),
+  WidgetType = N'GridRepeater', Title = N'masterQuery or columns required', Severity = N'hard_reject',
+  Condition = N'mode=sql AND masterQuery empty', RegexPattern = NULL,
+  RejectionMessage = N'SQL prefill mode needs widgetProps.masterQuery.', FixHint = N'Set masterQuery and define columns alias-map.',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'GR-001', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-gridrepeater' AND PortalId IS NULL),
+          N'GridRepeater', N'masterQuery or columns required', N'hard_reject', N'mode=sql AND masterQuery empty', NULL,
+          N'SQL prefill mode needs widgetProps.masterQuery.', N'Set masterQuery and define columns alias-map.', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'GR-002' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-gridrepeater' AND PortalId IS NULL),
+  WidgetType = N'GridRepeater', Title = N'Manual mode needs columns', Severity = N'hard_reject',
+  Condition = N'mode=manual AND columns empty', RegexPattern = NULL,
+  RejectionMessage = N'Manual mode requires columns[].', FixHint = N'Define columns:[{key,label,type,required?},…].',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'GR-002', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-gridrepeater' AND PortalId IS NULL),
+          N'GridRepeater', N'Manual mode needs columns', N'hard_reject', N'mode=manual AND columns empty', NULL,
+          N'Manual mode requires columns[].', N'Define columns:[{key,label,type,required?},…].', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'CS-001' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-contentslider' AND PortalId IS NULL),
+  WidgetType = N'ContentSlider', Title = N'items[] empty', Severity = N'warning',
+  Condition = N'items array missing or empty', RegexPattern = NULL,
+  RejectionMessage = N'No items supplied — default Apple-product items will render.', FixHint = N'Provide items:[{imageUrl,title,description,badge?,meta?},…].',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'CS-001', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-contentslider' AND PortalId IS NULL),
+          N'ContentSlider', N'items[] empty', N'warning', N'items array missing or empty', NULL,
+          N'No items supplied — default Apple-product items will render.', N'Provide items:[{imageUrl,title,description,badge?,meta?},…].', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'CS-002' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-contentslider' AND PortalId IS NULL),
+  WidgetType = N'ContentSlider', Title = N'Empty item filtered', Severity = N'normalize',
+  Condition = N'item has no imageUrl AND no title/description/meta/badge', RegexPattern = NULL,
+  RejectionMessage = N'Fully empty item silently dropped.', FixHint = N'Each item needs at least one visible field.',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'CS-002', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-contentslider' AND PortalId IS NULL),
+          N'ContentSlider', N'Empty item filtered', N'normalize', N'item has no imageUrl AND no title/description/meta/badge', NULL,
+          N'Fully empty item silently dropped.', N'Each item needs at least one visible field.', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'CS-005' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-contentslider' AND PortalId IS NULL),
+  WidgetType = N'ContentSlider', Title = N'imageFit cover|contain', Severity = N'warning',
+  Condition = N'imageFit not in {cover,contain}', RegexPattern = NULL,
+  RejectionMessage = N'imageFit auto-normalised to "cover".', FixHint = N'Use "cover" or "contain".',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'CS-005', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-contentslider' AND PortalId IS NULL),
+          N'ContentSlider', N'imageFit cover|contain', N'warning', N'imageFit not in {cover,contain}', NULL,
+          N'imageFit auto-normalised to "cover".', N'Use "cover" or "contain".', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'PHONE-001' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-phonepro' AND PortalId IS NULL),
+  WidgetType = N'PhoneNumberPro', Title = N'Mode must be international|national', Severity = N'normalize',
+  Condition = N'mode not in {international,national}', RegexPattern = NULL,
+  RejectionMessage = N'Mode auto-defaults to "international".', FixHint = N'Use one of the two known modes.',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'PHONE-001', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-phonepro' AND PortalId IS NULL),
+          N'PhoneNumberPro', N'Mode must be international|national', N'normalize', N'mode not in {international,national}', NULL,
+          N'Mode auto-defaults to "international".', N'Use one of the two known modes.', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'PHONE-002' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-phonepro' AND PortalId IS NULL),
+  WidgetType = N'PhoneNumberPro', Title = N'defaultCountry must be valid ISO2', Severity = N'warning',
+  Condition = N'defaultCountry not in countries table', RegexPattern = NULL,
+  RejectionMessage = N'defaultCountry coerced to "VN".', FixHint = N'Use ISO2 codes (e.g. VN, US, GB).',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'PHONE-002', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-phonepro' AND PortalId IS NULL),
+          N'PhoneNumberPro', N'defaultCountry must be valid ISO2', N'warning', N'defaultCountry not in countries table', NULL,
+          N'defaultCountry coerced to "VN".', N'Use ISO2 codes (e.g. VN, US, GB).', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'PHONE-004' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-phonepro' AND PortalId IS NULL),
+  WidgetType = N'PhoneNumberPro', Title = N'saveFormat must be json|e164', Severity = N'normalize',
+  Condition = N'saveFormat not in {json,e164}', RegexPattern = NULL,
+  RejectionMessage = N'saveFormat coerced to "json".', FixHint = N'Pick "json" (structured) or "e164" (plain string).',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'PHONE-004', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-phonepro' AND PortalId IS NULL),
+          N'PhoneNumberPro', N'saveFormat must be json|e164', N'normalize', N'saveFormat not in {json,e164}', NULL,
+          N'saveFormat coerced to "json".', N'Pick "json" (structured) or "e164" (plain string).', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'PAY-001' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-payment' AND PortalId IS NULL),
+  WidgetType = N'Payment', Title = N'Stripe needs publishable key', Severity = N'hard_reject',
+  Condition = N'provider includes stripe AND stripePublishableKey empty', RegexPattern = NULL,
+  RejectionMessage = N'Cannot initialise Stripe element.', FixHint = N'Provide stripePublishableKey or restrict provider to "paypal".',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'PAY-001', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-payment' AND PortalId IS NULL),
+          N'Payment', N'Stripe needs publishable key', N'hard_reject', N'provider includes stripe AND stripePublishableKey empty', NULL,
+          N'Cannot initialise Stripe element.', N'Provide stripePublishableKey or restrict provider to "paypal".', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'PAY-002' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-payment' AND PortalId IS NULL),
+  WidgetType = N'Payment', Title = N'Stripe needs create-intent endpoint', Severity = N'hard_reject',
+  Condition = N'provider includes stripe AND stripeCreateIntentUrl empty', RegexPattern = NULL,
+  RejectionMessage = N'No URL to call for PaymentIntent.', FixHint = N'Provide stripeCreateIntentUrl (default /api/megaform/payments/stripe/create-intent).',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'PAY-002', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-payment' AND PortalId IS NULL),
+          N'Payment', N'Stripe needs create-intent endpoint', N'hard_reject', N'provider includes stripe AND stripeCreateIntentUrl empty', NULL,
+          N'No URL to call for PaymentIntent.', N'Provide stripeCreateIntentUrl (default /api/megaform/payments/stripe/create-intent).', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'PAY-005' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-payment' AND PortalId IS NULL),
+  WidgetType = N'Payment', Title = N'amountMode=fixed needs positive amount', Severity = N'hard_reject',
+  Condition = N'amountMode=fixed AND amount<=0', RegexPattern = NULL,
+  RejectionMessage = N'Positive amount required for fixed-mode payment.', FixHint = N'Provide amount>0 or switch to amountMode=field/listenTotals.',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'PAY-005', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-payment' AND PortalId IS NULL),
+          N'Payment', N'amountMode=fixed needs positive amount', N'hard_reject', N'amountMode=fixed AND amount<=0', NULL,
+          N'Positive amount required for fixed-mode payment.', N'Provide amount>0 or switch to amountMode=field/listenTotals.', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'PAY-006' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-payment' AND PortalId IS NULL),
+  WidgetType = N'Payment', Title = N'amountMode=field needs field key', Severity = N'warning',
+  Condition = N'amountMode=field AND amountFieldKey empty', RegexPattern = NULL,
+  RejectionMessage = N'No source field for amount.', FixHint = N'Pick a non-Payment numeric field for amountFieldKey.',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'PAY-006', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-payment' AND PortalId IS NULL),
+          N'Payment', N'amountMode=field needs field key', N'warning', N'amountMode=field AND amountFieldKey empty', NULL,
+          N'No source field for amount.', N'Pick a non-Payment numeric field for amountFieldKey.', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'QR-001' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-qrcode' AND PortalId IS NULL),
+  WidgetType = N'QRCode', Title = N'Cannot be value-carrying input', Severity = N'hard_reject',
+  Condition = N'AI tries to bind QRCode to a form value', RegexPattern = NULL,
+  RejectionMessage = N'QRCode is display-only — never participates in submission.', FixHint = N'Use Text/Hidden for value-carrying input.',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'QR-001', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-qrcode' AND PortalId IS NULL),
+          N'QRCode', N'Cannot be value-carrying input', N'hard_reject', N'AI tries to bind QRCode to a form value', NULL,
+          N'QRCode is display-only — never participates in submission.', N'Use Text/Hidden for value-carrying input.', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'QR-002' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-qrcode' AND PortalId IS NULL),
+  WidgetType = N'QRCode', Title = N'errorLevel L|M|Q|H', Severity = N'normalize',
+  Condition = N'errorLevel not in {L,M,Q,H}', RegexPattern = NULL,
+  RejectionMessage = N'errorLevel coerced to "M".', FixHint = N'Use one of the four standard QR error correction levels.',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'QR-002', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-qrcode' AND PortalId IS NULL),
+          N'QRCode', N'errorLevel L|M|Q|H', N'normalize', N'errorLevel not in {L,M,Q,H}', NULL,
+          N'errorLevel coerced to "M".', N'Use one of the four standard QR error correction levels.', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'SIG-001' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-signature' AND PortalId IS NULL),
+  WidgetType = N'Signature', Title = N'Value must be PNG data URL', Severity = N'hard_reject',
+  Condition = N'attempt to set value to plain text', RegexPattern = NULL,
+  RejectionMessage = N'Signature value must be data:image/png;base64,…', FixHint = N'Use the Type tab to convert text → PNG, then store the data URL.',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'SIG-001', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-signature' AND PortalId IS NULL),
+          N'Signature', N'Value must be PNG data URL', N'hard_reject', N'attempt to set value to plain text', NULL,
+          N'Signature value must be data:image/png;base64,…', N'Use the Type tab to convert text → PNG, then store the data URL.', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'SIG-003' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-signature' AND PortalId IS NULL),
+  WidgetType = N'Signature', Title = N'Required signature missing', Severity = N'normalize',
+  Condition = N'required AND hidden.value empty', RegexPattern = NULL,
+  RejectionMessage = N'Signature required.', FixHint = N'validate() already surfaces this — no AI action needed.',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'SIG-003', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-signature' AND PortalId IS NULL),
+          N'Signature', N'Required signature missing', N'normalize', N'required AND hidden.value empty', NULL,
+          N'Signature required.', N'validate() already surfaces this — no AI action needed.', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'SUB-001' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-subform' AND PortalId IS NULL),
+  WidgetType = N'Subform', Title = N'columns required', Severity = N'normalize',
+  Condition = N'columns empty or non-array', RegexPattern = NULL,
+  RejectionMessage = N'Falls back to default columns.', FixHint = N'Provide columns:[{key,label,type,required?,width?},…].',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'SUB-001', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-subform' AND PortalId IS NULL),
+          N'Subform', N'columns required', N'normalize', N'columns empty or non-array', NULL,
+          N'Falls back to default columns.', N'Provide columns:[{key,label,type,required?,width?},…].', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'SUB-004' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-subform' AND PortalId IS NULL),
+  WidgetType = N'Subform', Title = N'maxRows must be >= minRows', Severity = N'hard_reject',
+  Condition = N'maxRows < minRows when both > 0', RegexPattern = NULL,
+  RejectionMessage = N'Add button would be permanently disabled.', FixHint = N'Ensure minRows ≤ maxRows.',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'SUB-004', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-subform' AND PortalId IS NULL),
+          N'Subform', N'maxRows must be >= minRows', N'hard_reject', N'maxRows < minRows when both > 0', NULL,
+          N'Add button would be permanently disabled.', N'Ensure minRows ≤ maxRows.', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'PDF-001' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-pdfform' AND PortalId IS NULL),
+  WidgetType = N'PdfForm', Title = N'Both pdfUrl and pdfBase64 empty', Severity = N'warning',
+  Condition = N'no PDF source', RegexPattern = NULL,
+  RejectionMessage = N'Widget renders emptyMessage.', FixHint = N'Upload a PDF via designer or supply pdfUrl.',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'PDF-001', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-pdfform' AND PortalId IS NULL),
+          N'PdfForm', N'Both pdfUrl and pdfBase64 empty', N'warning', N'no PDF source', NULL,
+          N'Widget renders emptyMessage.', N'Upload a PDF via designer or supply pdfUrl.', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'PDF-002' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-pdfform' AND PortalId IS NULL),
+  WidgetType = N'PdfForm', Title = N'fields[] entry needs id + kind', Severity = N'hard_reject',
+  Condition = N'field entry missing id or kind', RegexPattern = NULL,
+  RejectionMessage = N'Runtime keys values by field.id — missing id loses input.', FixHint = N'Each field must have id (unique) and kind (signature|image|checkbox|text|number|date).',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'PDF-002', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-pdfform' AND PortalId IS NULL),
+          N'PdfForm', N'fields[] entry needs id + kind', N'hard_reject', N'field entry missing id or kind', NULL,
+          N'Runtime keys values by field.id — missing id loses input.', N'Each field must have id (unique) and kind (signature|image|checkbox|text|number|date).', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'GOLF-001' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-golfscorecard' AND PortalId IS NULL),
+  WidgetType = N'GolfScorecard', Title = N'Custom mode needs template', Severity = N'warning',
+  Condition = N'displayMode=custom AND no configJson.template/cardTemplate', RegexPattern = NULL,
+  RejectionMessage = N'Falls back to default scorecard.', FixHint = N'Provide configJson.template OR legacy cardTemplate.',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'GOLF-001', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-golfscorecard' AND PortalId IS NULL),
+          N'GolfScorecard', N'Custom mode needs template', N'warning', N'displayMode=custom AND no configJson.template/cardTemplate', NULL,
+          N'Falls back to default scorecard.', N'Provide configJson.template OR legacy cardTemplate.', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'GOLF-002' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-golfscorecard' AND PortalId IS NULL),
+  WidgetType = N'GolfScorecard', Title = N'dataSource.type sproc|sql', Severity = N'hard_reject',
+  Condition = N'configJson.dataSource.type not in {sproc,sql}', RegexPattern = NULL,
+  RejectionMessage = N'Service only knows these two source types.', FixHint = N'Use {type:"sproc",name:"…",params:{…}} or {type:"sql",query:"…"}.',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'GOLF-002', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-golfscorecard' AND PortalId IS NULL),
+          N'GolfScorecard', N'dataSource.type sproc|sql', N'hard_reject', N'configJson.dataSource.type not in {sproc,sql}', NULL,
+          N'Service only knows these two source types.', N'Use {type:"sproc",name:"…",params:{…}} or {type:"sql",query:"…"}.', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+
+MERGE {databaseOwner}{objectQualifier}MF_AI_KB_Rules AS t
+USING (SELECT N'GOLF-003' AS RuleId) AS s ON (t.RuleId = s.RuleId)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  KnowledgeId = (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-golfscorecard' AND PortalId IS NULL),
+  WidgetType = N'GolfScorecard', Title = N'Cannot be value-carrying input', Severity = N'hard_reject',
+  Condition = N'AI binds GolfScorecard to a form value', RegexPattern = NULL,
+  RejectionMessage = N'Display-only widget.', FixHint = N'Use a different widget for input.',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (RuleId, KnowledgeId, WidgetType, Title, Severity, Condition, RegexPattern, RejectionMessage, FixHint, Source, Version, Enabled, CreatedOnDate)
+  VALUES (N'GOLF-003', (SELECT TOP 1 Id FROM {databaseOwner}{objectQualifier}MF_AI_Knowledge WHERE Slug = N'widget-golfscorecard' AND PortalId IS NULL),
+          N'GolfScorecard', N'Cannot be value-carrying input', N'hard_reject', N'AI binds GolfScorecard to a form value', NULL,
+          N'Display-only widget.', N'Use a different widget for input.', N'megaform-builtin', 1, 1, SYSUTCDATETIME());
+GO
+

@@ -1,0 +1,50 @@
+@model IEnumerable<MegaForm.Sdk.FormDto>
+@{
+    ViewData["Title"] = "Forms";
+}
+
+<h1>Forms</h1>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-auto">
+        <input type="text" name="search" value="@ViewBag.Search" class="form-control" placeholder="Search forms..." />
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Search</button>
+    </div>
+    <div class="col-auto ms-auto">
+        <a class="btn btn-success" asp-action="Create">Create Form</a>
+    </div>
+</form>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Submissions</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var form in Model)
+        {
+            <tr>
+                <td>@form.FormId</td>
+                <td>@form.Title</td>
+                <td><span class="badge bg-secondary">@form.Status</span></td>
+                <td>@form.SubmissionCount</td>
+                <td>
+                    <a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@form.FormId">Details</a>
+                    <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@form.FormId">Edit</a>
+                    <a class="btn btn-sm btn-outline-success" asp-controller="Render" asp-action="Form" asp-route-id="@form.FormId">Open</a>
+                    <form method="post" asp-action="Delete" asp-route-id="@form.FormId" class="d-inline" onsubmit="return confirm('Delete this form?');">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

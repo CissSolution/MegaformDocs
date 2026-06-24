@@ -1,0 +1,1 @@
+Theme Designer TS fix: live CSS edits from inspector no longer call full preview rebuild on every change. Save/Update still syncs merged CSS back into core state after save. Build from TS using your normal BuildTS/build.cmd/pack.cmd pipeline.

@@ -1,0 +1,174 @@
+{
+  "version": "1.0",
+  "slug": "membership-payment",
+  "title": "Membership Payment Form",
+  "description": "Choose your membership level and complete payment securely.",
+  "category": "payment",
+  "icon": "sparkles",
+  "submitButtonText": "Continue to Payment",
+  "successMessage": "Your membership payment request has been received.",
+  "settings": {
+    "theme": "pure-grid-premium",
+    "multiPage": false,
+    "customContent": {
+      "section_one": "Member Information",
+      "section_two": "Plan Selection",
+      "footer_note": "We typically respond within one business day.",
+      "section_three": "Payment"
+    }
+  },
+  "fields": [
+    {
+      "key": "row_name",
+      "type": "Row",
+      "label": "Name Row",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "first_name",
+              "type": "Text",
+              "label": "First Name",
+              "required": true,
+              "placeholder": " "
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "last_name",
+              "type": "Text",
+              "label": "Last Name",
+              "required": true,
+              "placeholder": " "
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "row_contact",
+      "type": "Row",
+      "label": "Contact Row",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "email",
+              "type": "Email",
+              "label": "Email Address",
+              "required": true,
+              "placeholder": " "
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "phone",
+              "type": "Phone",
+              "label": "Phone Number",
+              "placeholder": " "
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "row_membership_level",
+      "type": "Row",
+      "label": "Membership Level Row",
+      "columns": [
+        {
+          "span": 12,
+          "fields": [
+            {
+              "key": "membership_level",
+              "type": "Select",
+              "label": "Membership Level",
+              "required": true,
+              "options": [
+                {
+                  "label": "Basic",
+                  "value": "basic"
+                },
+                {
+                  "label": "Professional",
+                  "value": "pro"
+                },
+                {
+                  "label": "Enterprise",
+                  "value": "enterprise"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "row_billing_cycle",
+      "type": "Row",
+      "label": "Billing Cycle Row",
+      "columns": [
+        {
+          "span": 12,
+          "fields": [
+            {
+              "key": "billing_cycle",
+              "type": "Select",
+              "label": "Billing Cycle",
+              "required": true,
+              "options": [
+                {
+                  "label": "Monthly",
+                  "value": "monthly"
+                },
+                {
+                  "label": "Annual",
+                  "value": "annual"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "row_payment",
+      "type": "Row",
+      "label": "Payment Row",
+      "columns": [
+        {
+          "span": 12,
+          "fields": [
+            {
+              "key": "payment",
+              "type": "Payment",
+              "label": "Payment",
+              "required": true,
+              "widgetProps": {
+                "provider": "both",
+                "requiredPaid": true,
+                "currency": "USD",
+                "title": "Complete payment",
+                "description": "Pay securely to finish your submission.",
+                "amountLabel": "Amount due",
+                "payLabel": "Pay now"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "customHtml": "<div class='mfp mfp-pure-grid'><div class='mfp-container'><div class='mfp-card'><div class='mfp-card-header'><h1 class='mfp-form-title'>{{form:title}}</h1><p class='mfp-form-desc'>{{form:description}}</p></div><div class='mfp-card-body'><div class='mfp-section'><div class='mfp-section-label'>{{content:section_one}}</div>{{field:row_name}}{{field:row_contact}}</div><div class='mfp-section'><div class='mfp-section-label'>{{content:section_two}}</div>{{field:row_membership_level}}{{field:row_billing_cycle}}</div><div class='mfp-section'><div class='mfp-section-label'>{{content:section_three}}</div>{{field:row_payment}}</div><div class='mfp-actions'><button type='submit' class='mfp-submit'>{{form:submit}}</button></div></div><div class='mfp-card-footer'><p>{{content:footer_note}}</p></div></div></div></div>",
+  "customCss": "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');:root{--fl-primary:#003087;--fl-dark:#002060;--fl-light:#0055b3;--fl-bg:#f5f6f8;--fl-card:#ffffff;--fl-text:#1a1a1a;--fl-muted:#6b7280;--fl-border:#e4e4e4;--fl-border-focus:var(--fl-primary);--fl-section:#003087;--fl-radius:4px;--fl-radius-lg:8px;--fl-shadow:0 4px 24px rgba(0,0,0,0.08);--fl-font:'Inter',system-ui,sans-serif;}.mfp.mfp-pure-grid{font-family:var(--fl-font);color:var(--fl-text);background:var(--fl-bg);min-height:100vh;line-height:1.6;display:flex;align-items:flex-start;justify-content:center;padding:32px 16px 48px;}.mfp-container{max-width:680px;width:100%;margin:0 auto}.mfp-card{background:var(--fl-card);border-radius:var(--fl-radius-lg);box-shadow:var(--fl-shadow);overflow:hidden;border:1px solid rgba(0,0,0,0.06);}.mfp-card-header{padding:28px 36px 24px;text-align:center;border-bottom:1px solid var(--fl-border)}.mfp-form-title{font-size:24px;font-weight:700;color:var(--fl-text);margin:0 0 6px}.mfp-form-desc{font-size:14px;color:var(--fl-muted);margin:0}.mfp-card-body{padding:28px 36px 32px}.mfp-card-footer{padding:14px 36px;background:#f8f9fb;border-top:1px solid var(--fl-border);text-align:center}.mfp-card-footer p{margin:0;font-size:12px;color:var(--fl-muted)}.mfp-section{margin-bottom:24px}.mfp-section--compact{margin-bottom:16px}.mfp-section-label{font-size:11px;font-weight:700;color:var(--fl-section);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;padding-bottom:8px;border-bottom:1.5px solid var(--fl-primary);}.mfp-pure-grid .mf-row{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}.mfp-pure-grid .mf-col-6{grid-column:span 6}.mfp-pure-grid .mf-col-12{grid-column:span 12}.mfp.mfp-pure-grid .mf-field-group{position:relative!important;margin-bottom:12px;}.mfp.mfp-pure-grid .mf-row .mf-field-group{margin-bottom:0}.mfp.mfp-pure-grid .mf-field-label{position:absolute!important;left:14px;top:50%;transform:translateY(-50%);font-size:14px;font-weight:400;color:var(--fl-muted);pointer-events:none;transition:top .12s ease,font-size .12s ease,color .12s ease,transform .12s ease,font-weight .12s ease;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:88%;z-index:1;}.mfp.mfp-pure-grid .mf-input{width:100%;height:56px;padding:22px 14px 6px!important;font-size:15px;font-family:var(--fl-font);color:var(--fl-text);background:var(--fl-card);border:1px solid var(--fl-border)!important;border-radius:var(--fl-radius)!important;outline:none;box-sizing:border-box;transition:border-color .15s,box-shadow .15s;}.mfp.mfp-pure-grid .mf-input:focus{border-color:var(--fl-border-focus)!important;box-shadow:0 0 0 3px rgba(0,0,0,0.06)!important;}.mfp.mfp-pure-grid .mf-input::placeholder{color:transparent}.mfp.mfp-pure-grid .mf-select{width:100%;height:56px;padding:22px 40px 6px 14px!important;font-size:15px;font-family:var(--fl-font);color:var(--fl-text);background:var(--fl-card);border:1px solid var(--fl-border)!important;border-radius:var(--fl-radius)!important;appearance:none;cursor:pointer;outline:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E\");background-position:right 14px center;background-repeat:no-repeat;background-size:18px;transition:border-color .15s,box-shadow .15s;}.mfp.mfp-pure-grid .mf-select:focus{border-color:var(--fl-border-focus)!important;box-shadow:0 0 0 3px rgba(0,0,0,0.06)!important;}.mfp.mfp-pure-grid .mf-textarea{width:100%;padding:28px 14px 10px!important;font-size:15px;font-family:var(--fl-font);color:var(--fl-text);background:var(--fl-card);border:1px solid var(--fl-border)!important;border-radius:var(--fl-radius)!important;outline:none;resize:vertical;min-height:100px;transition:border-color .15s,box-shadow .15s;}.mfp.mfp-pure-grid .mf-textarea:focus{border-color:var(--fl-border-focus)!important;box-shadow:0 0 0 3px rgba(0,0,0,0.06)!important;}.mfp.mfp-pure-grid .mf-field-group:has(.mf-input:focus) .mf-field-label,.mfp.mfp-pure-grid .mf-field-group:has(.mf-input:not(:placeholder-shown)) .mf-field-label,.mfp.mfp-pure-grid .mf-field-group:has(.mf-select) .mf-field-label,.mfp.mfp-pure-grid .mf-field-group:has(.mf-textarea:focus) .mf-field-label,.mfp.mfp-pure-grid .mf-field-group:has(.mf-textarea:not(:placeholder-shown)) .mf-field-label{top:8px!important;transform:none!important;font-size:11px!important;font-weight:600!important;color:var(--fl-primary)!important;}.mfp.mfp-pure-grid .mf-field-group:has(.mf-textarea) .mf-field-label{top:16px;transform:none;}.mfp.mfp-pure-grid .mf-option-group{display:flex;flex-direction:column;gap:8px}.mfp.mfp-pure-grid .mf-option-item{display:flex!important;align-items:flex-start;gap:10px;padding:12px 14px;background:#f8f9fb;border:1px solid var(--fl-border);border-radius:var(--fl-radius);cursor:pointer;transition:border-color .15s;}.mfp.mfp-pure-grid .mf-option-item:hover{border-color:var(--fl-light)}.mfp.mfp-pure-grid .mf-option-control{display:none!important}.mfp.mfp-pure-grid .mf-option-item::before{content:'';width:16px;height:16px;min-width:16px;border:2px solid #d1d5db;border-radius:3px;margin-top:1px;transition:all .15s;flex-shrink:0;}.mfp.mfp-pure-grid .mf-option-item:has(.mf-option-control:checked){border-color:var(--fl-primary);background:rgba(0,0,0,.02);}.mfp.mfp-pure-grid .mf-option-item:has(.mf-option-control:checked)::before{background:var(--fl-primary);border-color:var(--fl-primary);background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:center;}.mfp.mfp-pure-grid .mf-option-ui{flex:1}.mfp.mfp-pure-grid .mf-option-label{font-size:13px;color:var(--fl-text);line-height:1.4}.mfp.mfp-pure-grid .mf-field-group:has(.mf-option-group) .mf-field-label{display:none}.mfp.mfp-pure-grid .mf-required{color:#dc2626}.mfp-actions{margin-top:8px}.mfp-submit{width:100%;padding:15px 32px;font-size:15px;font-weight:600;font-family:var(--fl-font);color:#fff;background:#003087;border:none;border-radius:var(--fl-radius);cursor:pointer;transition:all .2s;letter-spacing:.02em;}.mfp-submit:hover{background:#002060;transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.2)}@media(max-width:600px){.mfp.mfp-pure-grid{padding:0}.mfp-card{border-radius:0;border:none}.mfp-card-header,.mfp-card-body{padding:20px}.mfp-card-footer{padding:12px 20px}.mfp-pure-grid .mf-col-6,.mfp-pure-grid .mf-col-12{grid-column:span 12}}",
+  "rules": [],
+  "workflow": null
+}

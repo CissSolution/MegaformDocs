@@ -1,0 +1,50 @@
+@using MegaForm.Umbraco.Services
+@model MegaForm.Umbraco.ViewModels.MegaFormViewModel
+@inject IUmbracoModuleConfigService ModuleConfigService
+
+@{
+    var moduleConfig = ModuleConfigService.GetConfig(Model.ContentId);
+    var effectiveFormId = Model.FormId > 0 ? Model.FormId : (moduleConfig?.FormId ?? 0);
+    var hasExplicitView = !string.IsNullOrWhiteSpace(Model.ViewType);
+    var effectiveViewType = hasExplicitView ? Model.ViewType : (moduleConfig?.ViewType ?? "submit");
+    var hasExplicitConfig = !string.IsNullOrWhiteSpace(Model.ConfigJson) && Model.ConfigJson != "{}";
+    var effectiveConfigJson = hasExplicitConfig ? Model.ConfigJson : (moduleConfig?.ViewConfigJson ?? "{}");
+}
+
+@* 
+    MegaForm for Umbraco — Form View
+    This is a thin wrapper. All UI is rendered by MegaForm.UI TypeScript bundles.
+
+    Recommended usage in Umbraco template:
+    @await Html.MegaFormAsync(Model.Id)
+
+    Or use the partial directly:
+    @await Html.PartialAsync("~/Views/Partials/MegaForm/MegaFormCurrentPage.cshtml")
+*@
+
+<div id="mf-root-@Model.ContentId" 
+     class="megaform-root"
+     data-platform="umbraco" 
+     data-instance-id="@Model.ContentId"
+     data-form-id="@effectiveFormId"
+     data-api-base="/umbraco/api/megaform/"
+     data-is-admin="@Model.IsAdmin.ToString().ToLower()"
+     data-view-type="@effectiveViewType"
+     data-config='@effectiveConfigJson'>
+</div>
+
+<link rel="stylesheet" href="/App_Plugins/MegaForm/css/megaform.css" />
+<script src="/App_Plugins/MegaForm/js/bundles/megaform-config.js"></script>
+@if (effectiveViewType == "submit" || string.IsNullOrEmpty(effectiveViewType))
+{
+    <script src="/App_Plugins/MegaForm/js/megaform-renderer.js"></script>
+    <script src="/App_Plugins/MegaForm/js/megaform-widgets.js"></script>
+}
+else
+{
+    <script src="/App_Plugins/MegaForm/js/bundles/megaform-views.js"></script>
+}
+
+<script>
+    MegaForm.init(document.getElementById('mf-root-@Model.ContentId'));
+</script>

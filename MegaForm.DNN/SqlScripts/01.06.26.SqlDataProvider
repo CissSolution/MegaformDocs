@@ -1,0 +1,38 @@
+-- MegaForm 01.06.26 — Layout Designer (DataRepeater + DynamicLabel) (2026-05-28)
+--
+-- New: MF_DesignerBlocks table holds per-portal HTML snippets the admin
+-- saved from the Layout Designer canvas. The designer ships with a built-in
+-- block tray (header / row / pager / empty + variants) and admins can
+-- compose + save their own blocks ("Lưu thành block dùng lại"). Saved
+-- blocks appear under the "Đã lưu" group in the tray.
+--
+-- Backed by DesignerController.cs:
+--   GET  /Designer/Blocks?portalId=N
+--   POST /Designer/SaveBlock     { key, name, category, zone, html, help }
+--   POST /Designer/DeleteBlock?id=N
+--
+-- (Key, PortalId) is unique — re-saving the same key updates the row
+-- (MERGE).
+
+IF OBJECT_ID('{databaseOwner}{objectQualifier}MF_DesignerBlocks', 'U') IS NULL
+BEGIN
+    CREATE TABLE {databaseOwner}{objectQualifier}MF_DesignerBlocks (
+        Id                    INT IDENTITY(1,1) PRIMARY KEY,
+        PortalId              INT NOT NULL,
+        [Key]                 NVARCHAR(120) NOT NULL,
+        Name                  NVARCHAR(160) NULL,
+        Category              NVARCHAR(40)  NULL,
+        Zone                  NVARCHAR(20)  NULL,
+        HtmlSnippet           NVARCHAR(MAX) NOT NULL,
+        Help                  NVARCHAR(400) NULL,
+        CreatedByUserId       INT NULL,
+        CreatedOnDate         DATETIME2 NOT NULL CONSTRAINT DF_MF_DesignerBlocks_CreatedOn DEFAULT SYSUTCDATETIME(),
+        LastModifiedByUserId  INT NULL,
+        LastModifiedOnDate    DATETIME2 NULL,
+        CONSTRAINT UQ_MF_DesignerBlocks_Portal_Key UNIQUE (PortalId, [Key])
+    );
+    CREATE INDEX IX_MF_DesignerBlocks_Portal_Category
+        ON {databaseOwner}{objectQualifier}MF_DesignerBlocks (PortalId, Category);
+END;
+
+PRINT 'MegaForm 01.06.26 - Layout Designer custom-block table applied.';

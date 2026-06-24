@@ -1,0 +1,143 @@
+@*
+    ──────────────────────────────────────────────────────────────────────────
+    MegaForm SDK — DNN Razor Host list-view demo
+    ──────────────────────────────────────────────────────────────────────────
+    Drop this file into a DNN "Razor Host" module's Scripts folder
+    (~/DesktopModules/RazorModules/RazorHost/Scripts/) and select it, OR paste it
+    into any Razor-capable module. It reads MegaForm data through ONLY the public
+    MegaForm.Sdk facade (IMegaFormClient) — no MegaForm internals — and renders a
+    list view with per-submission file-download links.
+
+    Prereqs (already shipped with MegaForm for DNN):
+      • bin\MegaForm.Sdk.dll, bin\MegaForm.Core.dll, bin\MegaForm.DNN.dll
+      • The SDK download endpoint: /DesktopModules/MegaForm/API/SdkDemo/Download
+
+    URL:  <razor-host-page>?formId=1   (omit formId to use the first form)
+    ──────────────────────────────────────────────────────────────────────────
+*@
+@using System.Linq
+@using System.Collections.Generic
+@using MegaForm.Sdk
+@using Newtonsoft.Json.Linq
+
+@functions {
+    // Razor Host pages are synchronous; the SDK is async. The MegaForm SDK calls are
+    // CPU-only (no awaited I/O), so blocking via Task.Run avoids any SyncContext deadlock.
+    static T Run<T>(System.Func<IMegaFormClient, System.Threading.Tasks.Task<T>> action)
+    {
+        // Ensure the ambient accessor is wired (DnnServiceLocator wires it on first use).
+        var _ = MegaForm.DNN.Services.DnnServiceLocator.Instance;
+        return System.Threading.Tasks.Task.Run(() => MegaFormSdk.RunAsync(action)).GetAwaiter().GetResult();
+    }
+
+    static Dictionary<string, string> ParseData(string json)
+    {
+        var d = new Dictionary<string, string>();
+        if (string.IsNullOrWhiteSpace(json)) return d;
+        try
+        {
+            var o = JObject.Parse(json);
+            foreach (var p in o.Properties())
+            {
+                var v = p.Value == null ? "" : p.Value.ToString();
+                if (v != null && v.Length > 40) v = v.Substring(0, 40) + "…";
+                d[p.Name] = v;
+            }
+        }
+        catch { }
+        return d;
+    }
+}
+
+@{
+    var portalId = DotNetNuke.Entities.Portals.PortalSettings.Current != null
+        ? DotNetNuke.Entities.Portals.PortalSettings.Current.PortalId : 0;
+    var scope = new MegaFormScope { PortalId = portalId };
+
+    var forms = Run(c => c.Forms.ListFormsAsync(new FormQuery { PageSize = 100 }, scope)).Items.ToList();
+
+    int formId = 0;
+    int.TryParse(Request.QueryString["formId"], out formId);
+    if (formId <= 0 && forms.Count > 0) formId = forms[0].FormId;
+    var currentForm = forms.FirstOrDefault(f => f.FormId == formId);
+
+    var page = formId > 0
+        ? Run(c => c.Submissions.FindAsync(new SubmissionQuery { FormId = formId, PageSize = 100 }, scope))
+        : new PagedResult<SubmissionDto> { Items = new List<SubmissionDto>(), TotalCount = 0 };
+
+    var columns = new List<string>();
+    var rows = new List<KeyValuePair<SubmissionDto, Dictionary<string, string>>>();
+    var files = new Dictionary<int, IReadOnlyList<FileDto>>();
+    foreach (var s in page.Items)
+    {
+        var vals = ParseData(s.DataJson);
+        foreach (var k in vals.Keys) if (!columns.Contains(k)) columns.Add(k);
+        rows.Add(new KeyValuePair<SubmissionDto, Dictionary<string, string>>(s, vals));
+        files[s.SubmissionId] = Run(c => c.Files.ListForSubmissionAsync(s.SubmissionId, scope));
+    }
+    columns = columns.Take(6).ToList();
+}
+
+<div style="font-family:'Segoe UI',system-ui,sans-serif;color:#0f172a;padding:18px 22px;">
+    <h2 style="margin:0 0 4px;font-size:20px;font-weight:800;">🧩 MegaForm SDK — DNN List View Demo</h2>
+    <p style="margin:0 0 14px;color:#475569;font-size:13px;">
+        Read through <code>IMegaFormClient</code> only (the public SDK). Portal #@portalId.
+    </p>
+
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+        @foreach (var f in forms)
+        {
+            var active = f.FormId == formId;
+            <a href="?formId=@f.FormId" style="text-decoration:none;padding:6px 11px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid @(active ? "#0f172a" : "#cbd5e1");background:@(active ? "#0f172a" : "#fff");color:@(active ? "#fff" : "#334155");">@(string.IsNullOrEmpty(f.Title) ? ("Form " + f.FormId) : f.Title) #@f.FormId</a>
+        }
+    </div>
+
+    <div style="margin-bottom:8px;font-size:13px;color:#475569;">
+        <strong>@page.TotalCount</strong> submission(s) in <strong>@(currentForm != null && !string.IsNullOrEmpty(currentForm.Title) ? currentForm.Title : ("Form " + formId))</strong>
+    </div>
+
+    <div style="overflow-x:auto;border:1px solid #e2e8f0;border-radius:12px;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead>
+                <tr style="background:#f8fafc;text-align:left;">
+                    <th style="padding:10px 12px;border-bottom:1px solid #e2e8f0;">#</th>
+                    <th style="padding:10px 12px;border-bottom:1px solid #e2e8f0;">Submitted</th>
+                    <th style="padding:10px 12px;border-bottom:1px solid #e2e8f0;">Status</th>
+                    @foreach (var col in columns)
+                    {
+                        <th style="padding:10px 12px;border-bottom:1px solid #e2e8f0;white-space:nowrap;">@col</th>
+                    }
+                    <th style="padding:10px 12px;border-bottom:1px solid #e2e8f0;">Files</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in rows)
+                {
+                    var s = row.Key;
+                    <tr style="border-bottom:1px solid #f1f5f9;">
+                        <td style="padding:9px 12px;color:#64748b;">@s.SubmissionId</td>
+                        <td style="padding:9px 12px;white-space:nowrap;">@s.SubmittedOnUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td style="padding:9px 12px;">@(string.IsNullOrEmpty(s.Status) ? "new" : s.Status)</td>
+                        @foreach (var col in columns)
+                        {
+                            <td style="padding:9px 12px;">@(row.Value.ContainsKey(col) ? row.Value[col] : "")</td>
+                        }
+                        <td style="padding:9px 12px;">
+                            @if (!files.ContainsKey(s.SubmissionId) || files[s.SubmissionId].Count == 0)
+                            {
+                                <span style="color:#94a3b8;">—</span>
+                            }
+                            else
+                            {
+                                foreach (var file in files[s.SubmissionId])
+                                {
+                                    <a href="/DesktopModules/MegaForm/API/SdkDemo/Download?submissionId=@s.SubmissionId&fileId=@file.FileId" style="display:inline-block;margin-right:8px;color:#2563eb;text-decoration:underline;">⬇ @file.FileName</a>
+                                }
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,663 @@
+{
+  "version": "1.0",
+  "slug": "french-product-consultation-2026",
+  "title": "Product Consultation",
+  "description": "Schedule a personalized consultation with our product specialists",
+  "category": "general",
+  "categories": [
+    "general",
+    "premium"
+  ],
+  "icon": "sparkles",
+  "fields": [
+    {
+      "key": "row_name",
+      "type": "Row",
+      "label": "Name",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "first_name",
+              "type": "Text",
+              "label": "First Name",
+              "required": true,
+              "placeholder": "Jean"
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "last_name",
+              "type": "Text",
+              "label": "Last Name",
+              "required": true,
+              "placeholder": "Dupont"
+            }
+          ]
+        }
+      ],
+      "Columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "first_name",
+              "type": "Text",
+              "label": "First Name",
+              "required": true,
+              "placeholder": "Jean"
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "last_name",
+              "type": "Text",
+              "label": "Last Name",
+              "required": true,
+              "placeholder": "Dupont"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "row_contact",
+      "type": "Row",
+      "label": "Contact",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "email",
+              "type": "Email",
+              "label": "Email Address",
+              "required": true,
+              "placeholder": "jean@example.com"
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "phone",
+              "type": "Phone",
+              "label": "Phone Number",
+              "required": true,
+              "placeholder": "+33 1 23 45 67 89"
+            }
+          ]
+        }
+      ],
+      "Columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "email",
+              "type": "Email",
+              "label": "Email Address",
+              "required": true,
+              "placeholder": "jean@example.com"
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "phone",
+              "type": "Phone",
+              "label": "Phone Number",
+              "required": true,
+              "placeholder": "+33 1 23 45 67 89"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "row_location",
+      "type": "Row",
+      "label": "Location",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "city",
+              "type": "Text",
+              "label": "City",
+              "placeholder": "Paris"
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "country",
+              "type": "Select",
+              "label": "Country",
+              "options": [
+                {
+                  "label": "France",
+                  "value": "france"
+                },
+                {
+                  "label": "Belgium",
+                  "value": "belgium"
+                },
+                {
+                  "label": "Switzerland",
+                  "value": "switzerland"
+                },
+                {
+                  "label": "Luxembourg",
+                  "value": "luxembourg"
+                },
+                {
+                  "label": "Other",
+                  "value": "other"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "Columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "city",
+              "type": "Text",
+              "label": "City",
+              "placeholder": "Paris"
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "country",
+              "type": "Select",
+              "label": "Country",
+              "options": [
+                {
+                  "label": "France",
+                  "value": "france"
+                },
+                {
+                  "label": "Belgium",
+                  "value": "belgium"
+                },
+                {
+                  "label": "Switzerland",
+                  "value": "switzerland"
+                },
+                {
+                  "label": "Luxembourg",
+                  "value": "luxembourg"
+                },
+                {
+                  "label": "Other",
+                  "value": "other"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "product_slider",
+      "type": "Html",
+      "htmlContent": ""
+    },
+    {
+      "key": "interested_products",
+      "type": "Checkbox",
+      "label": "Products of Interest",
+      "required": true,
+      "options": [
+        {
+          "label": "Signature Parfum",
+          "value": "parfum"
+        },
+        {
+          "label": "Skincare Collection",
+          "value": "skincare"
+        },
+        {
+          "label": "Luxury Accessories",
+          "value": "accessories"
+        },
+        {
+          "label": "Home Fragrance",
+          "value": "home"
+        },
+        {
+          "label": "Gift Sets",
+          "value": "gifts"
+        }
+      ]
+    },
+    {
+      "key": "row_budget_timeline",
+      "type": "Row",
+      "label": "Budget & Timeline",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "budget_range",
+              "type": "Select",
+              "label": "Budget Range",
+              "required": true,
+              "options": [
+                {
+                  "label": "Under €200",
+                  "value": "under_200"
+                },
+                {
+                  "label": "€200 - €500",
+                  "value": "200_500"
+                },
+                {
+                  "label": "€500 - €1,000",
+                  "value": "500_1000"
+                },
+                {
+                  "label": "€1,000 - €2,500",
+                  "value": "1000_2500"
+                },
+                {
+                  "label": "€2,500+",
+                  "value": "2500_plus"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "purchase_timeline",
+              "type": "Select",
+              "label": "Purchase Timeline",
+              "options": [
+                {
+                  "label": "Within 1 week",
+                  "value": "1_week"
+                },
+                {
+                  "label": "Within 1 month",
+                  "value": "1_month"
+                },
+                {
+                  "label": "Within 3 months",
+                  "value": "3_months"
+                },
+                {
+                  "label": "Just exploring",
+                  "value": "exploring"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "Columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "budget_range",
+              "type": "Select",
+              "label": "Budget Range",
+              "required": true,
+              "options": [
+                {
+                  "label": "Under €200",
+                  "value": "under_200"
+                },
+                {
+                  "label": "€200 - €500",
+                  "value": "200_500"
+                },
+                {
+                  "label": "€500 - €1,000",
+                  "value": "500_1000"
+                },
+                {
+                  "label": "€1,000 - €2,500",
+                  "value": "1000_2500"
+                },
+                {
+                  "label": "€2,500+",
+                  "value": "2500_plus"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "purchase_timeline",
+              "type": "Select",
+              "label": "Purchase Timeline",
+              "options": [
+                {
+                  "label": "Within 1 week",
+                  "value": "1_week"
+                },
+                {
+                  "label": "Within 1 month",
+                  "value": "1_month"
+                },
+                {
+                  "label": "Within 3 months",
+                  "value": "3_months"
+                },
+                {
+                  "label": "Just exploring",
+                  "value": "exploring"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "consultation_type",
+      "type": "Radio",
+      "label": "Preferred Consultation Method",
+      "required": true,
+      "options": [
+        {
+          "label": "Video Call",
+          "value": "video"
+        },
+        {
+          "label": "Phone Call",
+          "value": "phone"
+        },
+        {
+          "label": "In-Store Visit",
+          "value": "in_store"
+        },
+        {
+          "label": "Email Correspondence",
+          "value": "email"
+        }
+      ]
+    },
+    {
+      "key": "row_datetime",
+      "type": "Row",
+      "label": "Schedule",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "preferred_date",
+              "type": "Date",
+              "label": "Preferred Date"
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "preferred_time",
+              "type": "Select",
+              "label": "Preferred Time",
+              "options": [
+                {
+                  "label": "Morning (9AM - 12PM)",
+                  "value": "morning"
+                },
+                {
+                  "label": "Afternoon (12PM - 5PM)",
+                  "value": "afternoon"
+                },
+                {
+                  "label": "Evening (5PM - 8PM)",
+                  "value": "evening"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "Columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "preferred_date",
+              "type": "Date",
+              "label": "Preferred Date"
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "preferred_time",
+              "type": "Select",
+              "label": "Preferred Time",
+              "options": [
+                {
+                  "label": "Morning (9AM - 12PM)",
+                  "value": "morning"
+                },
+                {
+                  "label": "Afternoon (12PM - 5PM)",
+                  "value": "afternoon"
+                },
+                {
+                  "label": "Evening (5PM - 8PM)",
+                  "value": "evening"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "special_requests",
+      "type": "Textarea",
+      "label": "Special Requests or Questions",
+      "placeholder": "Tell us about your preferences, any specific products you're interested in, or questions you may have...",
+      "properties": {
+        "rows": 4
+      }
+    },
+    {
+      "key": "newsletter_subscribe",
+      "type": "Checkbox",
+      "label": "Stay Connected",
+      "options": [
+        {
+          "label": "Subscribe to exclusive offers and new arrivals",
+          "value": "subscribe"
+        }
+      ]
+    }
+  ],
+  "submitButtonText": "Request Consultation",
+  "successMessage": "Merci! Your consultation request has been received. Our specialist will contact you within 24 hours.",
+  "customHtml": "<div class=\"mfp fr-consult\">{{script:theme_selector}}\n  <div class=\"fr-ambient\">\n    <span class=\"fr-fleur f1\"></span>\n    <span class=\"fr-fleur f2\"></span>\n    <span class=\"fr-fleur f3\"></span>\n    <span class=\"fr-fleur f4\"></span>\n  </div>\n  <div class=\"fr-card\">\n    <div class=\"fr-accent-line\"></div>\n    <header class=\"fr-header\">\n      <div class=\"fr-brand\">\n        <div class=\"fr-monogram\"><span>{{content:monogram_left}}</span><span class=\"fr-monogram-dot\"></span><span>{{content:monogram_right}}</span></div>\n        <div class=\"fr-brand-text\">\n          <h1 class=\"fr-brand-name\">{{content:brand_name}}</h1>\n          <p class=\"fr-brand-tagline\">{{content:brand_tagline}}</p>\n        </div>\n      </div>\n      <div class=\"fr-header-decor\">\n        <svg viewBox=\"0 0 120 24\" fill=\"none\">\n          <path d=\"M0 12h45M75 12h45\" stroke=\"currentColor\" stroke-width=\"1\"></path>\n          <circle cx=\"60\" cy=\"12\" r=\"4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\"></circle>\n          <path d=\"M52 12l4-4m0 8l-4-4m16 0l-4 4m0-8l4 4\" stroke=\"currentColor\" stroke-width=\"1\"></path>\n        </svg>\n      </div>\n    </header>\n    <div class=\"fr-body\">\n      <div class=\"fr-intro\">\n        <h2 class=\"fr-title\">{{form:title}}</h2>\n        <p class=\"fr-description\">{{form:description}}</p>\n      </div>\n\n      <section class=\"fr-section\">\n        <div class=\"fr-section-label\">\n          <span class=\"fr-section-icon\">\n            <svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\">\n              <path d=\"M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\"></path>\n              <circle cx=\"12\" cy=\"7\" r=\"4\"></circle>\n            </svg>\n          </span>\n          <span>{{content:section_personal}}</span>\n        </div>\n        <div class=\"fr-fields\">{{field:row_name}}{{field:row_contact}}{{field:row_location}}</div>\n      </section>\n\n      <section class=\"fr-section fr-section-products\" data-mf-script-root=\"french_product_slider\">\n        <div class=\"fr-section-label\">\n          <span class=\"fr-section-icon\">\n            <svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\">\n              <path d=\"M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z\"></path>\n              <line x1=\"7\" y1=\"7\" x2=\"7.01\" y2=\"7\"></line>\n            </svg>\n          </span>\n          <span>{{content:section_products}}</span>\n        </div>\n\n        <div class=\"fr-slider-container\">\n          <button type=\"button\" class=\"fr-slider-btn fr-slider-prev\" aria-label=\"{{content:slider_prev_aria}}\">\n            <svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\">\n              <path d=\"M15 18l-6-6 6-6\"></path>\n            </svg>\n          </button>\n\n          <div class=\"fr-slider-viewport\">\n            <div class=\"fr-slider-track\">\n              <div class=\"fr-slide\">\n                <div class=\"fr-product-card\">\n                  <div class=\"fr-product-badge\">{{content:product_1_badge}}</div>\n                  <div class=\"fr-product-image\">\n                    <img src=\"{{content:product_1_image}}\" alt=\"{{content:product_1_alt}}\">\n                  </div>\n                  <div class=\"fr-product-info\">\n                    <h4>{{content:product_1_name}}</h4>\n                    <p class=\"fr-product-desc\">{{content:product_1_desc}}</p>\n                    <span class=\"fr-product-price\">{{content:product_1_price}}</span>\n                  </div>\n                </div>\n              </div>\n\n              <div class=\"fr-slide\">\n                <div class=\"fr-product-card\">\n                  <div class=\"fr-product-badge fr-badge-new\">{{content:product_2_badge}}</div>\n                  <div class=\"fr-product-image\">\n                    <img src=\"{{content:product_2_image}}\" alt=\"{{content:product_2_alt}}\">\n                  </div>\n                  <div class=\"fr-product-info\">\n                    <h4>{{content:product_2_name}}</h4>\n                    <p class=\"fr-product-desc\">{{content:product_2_desc}}</p>\n                    <span class=\"fr-product-price\">{{content:product_2_price}}</span>\n                  </div>\n                </div>\n              </div>\n\n              <div class=\"fr-slide\">\n                <div class=\"fr-product-card\">\n                  <div class=\"fr-product-image\">\n                    <img src=\"{{content:product_3_image}}\" alt=\"{{content:product_3_alt}}\">\n                  </div>\n                  <div class=\"fr-product-info\">\n                    <h4>{{content:product_3_name}}</h4>\n                    <p class=\"fr-product-desc\">{{content:product_3_desc}}</p>\n                    <span class=\"fr-product-price\">{{content:product_3_price}}</span>\n                  </div>\n                </div>\n              </div>\n\n              <div class=\"fr-slide\">\n                <div class=\"fr-product-card\">\n                  <div class=\"fr-product-badge\">{{content:product_4_badge}}</div>\n                  <div class=\"fr-product-image\">\n                    <img src=\"{{content:product_4_image}}\" alt=\"{{content:product_4_alt}}\">\n                  </div>\n                  <div class=\"fr-product-info\">\n                    <h4>{{content:product_4_name}}</h4>\n                    <p class=\"fr-product-desc\">{{content:product_4_desc}}</p>\n                    <span class=\"fr-product-price\">{{content:product_4_price}}</span>\n                  </div>\n                </div>\n              </div>\n\n              <div class=\"fr-slide\">\n                <div class=\"fr-product-card\">\n                  <div class=\"fr-product-badge fr-badge-new\">{{content:product_5_badge}}</div>\n                  <div class=\"fr-product-image\">\n                    <img src=\"{{content:product_5_image}}\" alt=\"{{content:product_5_alt}}\">\n                  </div>\n                  <div class=\"fr-product-info\">\n                    <h4>{{content:product_5_name}}</h4>\n                    <p class=\"fr-product-desc\">{{content:product_5_desc}}</p>\n                    <span class=\"fr-product-price\">{{content:product_5_price}}</span>\n                  </div>\n                </div>\n              </div>\n            </div>\n          </div>\n\n          <button type=\"button\" class=\"fr-slider-btn fr-slider-next\" aria-label=\"{{content:slider_next_aria}}\">\n            <svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\">\n              <path d=\"M9 18l6-6-6-6\"></path>\n            </svg>\n          </button>\n        </div>\n\n        <div class=\"fr-slider-dots\"></div>\n        {{script:french_product_slider}}\n        <div class=\"fr-product-select\">{{field:interested_products}}</div>\n      </section>\n\n      <section class=\"fr-section\">\n        <div class=\"fr-section-label\">\n          <span class=\"fr-section-icon\">\n            <svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\">\n              <path d=\"M12 20V10M18 20V4M6 20v-4\"></path>\n            </svg>\n          </span>\n          <span>{{content:section_preferences}}</span>\n        </div>\n        <div class=\"fr-fields\">{{field:row_budget_timeline}}{{field:consultation_type}}{{field:row_datetime}}{{field:special_requests}}</div>\n      </section>\n\n      <div class=\"fr-newsletter\">{{field:newsletter_subscribe}}</div>\n\n      <div class=\"fr-actions\">\n        <button type=\"submit\" class=\"fr-submit\">\n          <span>{{form:submit}}</span>\n          <svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\">\n            <path d=\"M5 12h14M12 5l7 7-7 7\"></path>\n          </svg>\n        </button>\n      </div>\n\n      <p class=\"fr-footer-note\">{{content:footer_note}}</p>\n    </div>\n    <div class=\"fr-accent-line fr-accent-bottom\"></div>\n  </div>\n</div>",
+  "customCss": "@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Montserrat:wght@300;400;500;600;700&display=swap');:root{--fr-cream:#faf8f5;--fr-ivory:#f5f2ed;--fr-champagne:#e8e2d9;--fr-gold:#b8956e;--fr-gold-dk:#9a7856;--fr-gold-light:#d4b896;--fr-burgundy:#722f37;--fr-burgundy-light:#8a4049;--fr-charcoal:#2c2c2c;--fr-text:#3d3d3d;--fr-muted:#6b6b6b;--fr-white:#ffffff;--fr-border:#d4cfc6;--fr-input-bg:#fdfcfa;--fr-shadow:0 20px 60px rgba(0,0,0,.08);--fr-radius:6px}*{box-sizing:border-box;margin:0;padding:0}.mfp.fr-consult{font-family:'Montserrat',system-ui,sans-serif;background:linear-gradient(145deg,var(--fr-cream) 0%,var(--fr-ivory) 50%,var(--fr-cream) 100%);min-height:100vh;padding:40px 20px;display:flex;justify-content:center;align-items:flex-start;position:relative;overflow:hidden}.fr-ambient{position:absolute;inset:0;pointer-events:none;overflow:hidden}.fr-fleur{position:absolute;width:200px;height:200px;background:radial-gradient(ellipse at center,var(--fr-champagne) 0%,transparent 70%);opacity:.4;border-radius:50%}.fr-fleur.f1{top:-50px;left:-50px;width:300px;height:300px}.fr-fleur.f2{top:20%;right:-80px;width:250px;height:250px}.fr-fleur.f3{bottom:10%;left:-60px}.fr-fleur.f4{bottom:-50px;right:10%;width:280px;height:280px}.fr-card{position:relative;max-width:100%;width:100%;background:var(--fr-white);border:1px solid var(--fr-border);border-radius:var(--fr-radius);box-shadow:var(--fr-shadow);overflow:hidden;z-index:1}.fr-accent-line{height:4px;background:linear-gradient(90deg,var(--fr-champagne) 0%,var(--fr-gold) 30%,var(--fr-gold-dk) 50%,var(--fr-gold) 70%,var(--fr-champagne) 100%)}.fr-accent-bottom{margin-top:0}.fr-header{padding:28px 32px 20px;border-bottom:1px solid var(--fr-border);background:linear-gradient(180deg,var(--fr-ivory) 0%,var(--fr-white) 100%)}.fr-brand{display:flex;align-items:center;gap:14px;margin-bottom:16px}.fr-monogram{display:flex;align-items:center;gap:4px;font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;font-weight:600;font-style:italic;color:var(--fr-gold-dk);letter-spacing:2px}.fr-monogram-dot{width:5px;height:5px;background:var(--fr-gold);border-radius:50%}.fr-brand-text{display:flex;flex-direction:column;gap:2px}.fr-brand-name{font-family:'Cormorant Garamond',Georgia,serif;font-size:20px;font-weight:600;color:var(--fr-charcoal);letter-spacing:.5px;margin:0}.fr-brand-tagline{font-size:10px;color:var(--fr-muted);letter-spacing:.1em;text-transform:uppercase;margin:0}.fr-header-decor{display:flex;justify-content:center}.fr-header-decor svg{width:100px;height:20px;color:var(--fr-gold)}.fr-body{padding:28px 32px 32px}.fr-intro{text-align:center;margin-bottom:28px}.fr-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:26px;font-weight:600;color:var(--fr-charcoal);margin:0 0 8px}.fr-description{font-size:14px;color:var(--fr-muted);margin:0;line-height:1.6}.fr-section{margin-bottom:28px}.fr-section-label{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--fr-gold-dk);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--fr-champagne)}.fr-section-icon{width:18px;height:18px;flex-shrink:0}.fr-section-icon svg{width:100%;height:100%}.fr-fields{display:flex;flex-direction:column;gap:16px}.fr-section-products{background:linear-gradient(180deg,var(--fr-ivory) 0%,transparent 100%);margin:0 -32px 28px;padding:24px 32px;border-top:1px solid var(--fr-champagne);border-bottom:1px solid var(--fr-champagne)}.fr-slider-container{display:flex;align-items:center;gap:12px;margin-bottom:16px}.fr-slider-viewport{flex:1;overflow:hidden;border-radius:var(--fr-radius)}.fr-slider-track{display:flex;gap:16px;transition:transform .4s ease;padding:8px 0}.fr-slide{flex:0 0 calc(33.333% - 11px);min-width:0}.fr-product-card{background:var(--fr-white);border:1px solid var(--fr-border);border-radius:var(--fr-radius);overflow:hidden;position:relative;transition:transform .2s,box-shadow .2s}.fr-product-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,.1)}.fr-product-badge{position:absolute;top:10px;left:10px;background:var(--fr-gold);color:var(--fr-white);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:4px 10px;border-radius:20px;z-index:2}.fr-badge-new{background:var(--fr-burgundy)}.fr-product-image{aspect-ratio:1;overflow:hidden;background:var(--fr-ivory)}.fr-product-image img{width:100%;height:100%;object-fit:cover;transition:transform .3s}.fr-product-card:hover .fr-product-image img{transform:scale(1.05)}.fr-product-info{padding:14px}.fr-product-info h4{font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;font-weight:600;color:var(--fr-charcoal);margin:0 0 4px}.fr-product-desc{font-size:11px;color:var(--fr-muted);margin:0 0 8px;line-height:1.4}.fr-product-price{font-size:14px;font-weight:600;color:var(--fr-gold-dk)}.fr-slider-btn{width:36px;height:36px;border:1px solid var(--fr-border);border-radius:50%;background:var(--fr-white);color:var(--fr-gold-dk);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}.fr-slider-btn:hover{background:var(--fr-gold);color:var(--fr-white);border-color:var(--fr-gold)}.fr-slider-btn svg{width:18px;height:18px}.fr-slider-dots{display:flex;justify-content:center;gap:8px;margin-bottom:20px}.fr-dot{width:8px;height:8px;border:1px solid var(--fr-gold);border-radius:50%;background:transparent;cursor:pointer;padding:0;transition:all .2s}.fr-dot.active,.fr-dot:hover{background:var(--fr-gold)}.fr-product-select{margin-top:8px}.fr-newsletter{margin-bottom:20px;padding:16px;background:var(--fr-ivory);border-radius:var(--fr-radius);border:1px solid var(--fr-champagne)}.fr-actions{margin-bottom:16px}.fr-submit{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg,var(--fr-gold) 0%,var(--fr-gold-dk) 100%);color:var(--fr-white);border:none;border-radius:var(--fr-radius);padding:16px 32px;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(184,149,110,.3)}.fr-submit:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(184,149,110,.4)}.fr-submit svg{width:18px;height:18px}.fr-footer-note{text-align:center;font-size:11px;color:var(--fr-muted);margin:0}@media(max-width:680px){.fr-slide{flex:0 0 calc(50% - 8px)}.fr-section-products{margin:0 -20px 24px;padding:20px}}@media(max-width:540px){.mfp.fr-consult{padding:20px 12px}.fr-header{padding:20px}.fr-body{padding:20px}.fr-slide{flex:0 0 100%}.fr-slider-btn{width:32px;height:32px}.fr-slider-btn svg{width:16px;height:16px}.fr-title{font-size:22px}.fr-section-products{margin:0 -20px 20px;padding:16px 20px}.fr-product-info{padding:12px}.fr-product-info h4{font-size:14px}.fr-submit{padding:14px 24px;font-size:13px}}.mfp.fr-consult .fr-header{text-align:center}\n.mfp.fr-consult .fr-brand{justify-content:center;margin-bottom:12px}\n.mfp.fr-consult .fr-brand-text{gap:0;text-align:left}\n.mfp.fr-consult .fr-brand-name{line-height:1.1}\n.mfp.fr-consult .fr-brand-tagline{line-height:1.15}\n.mfp.fr-consult .fr-header-decor{margin-top:4px}\n.mfp.fr-consult .fr-intro{margin-bottom:22px}\n.mfp.fr-consult .fr-title{line-height:1.12;margin-bottom:6px}\n.mfp.fr-consult .fr-description{line-height:1.45}\n.mfp.fr-consult .fr-fields{gap:12px}\n.mfp.fr-consult .fr-section{margin-bottom:22px}\n.mfp.fr-consult .fr-section-label{margin-bottom:12px;padding-bottom:8px}\n.mfp.fr-consult .mf-field,.mfp.fr-consult .mf-row{margin-bottom:12px}\n.mfp.fr-consult .mf-field:last-child,.mfp.fr-consult .mf-row:last-child{margin-bottom:0}\n.mfp.fr-consult .mf-label{margin-bottom:6px;line-height:1.2}\n.mfp.fr-consult .mf-radio-group,.mfp.fr-consult .mf-checkbox-group{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}\n.mfp.fr-consult .mf-radio-option,.mfp.fr-consult .mf-checkbox-option{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;margin:0;padding:0;border:none;background:transparent;line-height:1.2}\n.mfp.fr-consult .mf-radio-option input,.mfp.fr-consult .mf-checkbox-option input{margin:0;flex:0 0 auto}\n.mfp.fr-consult .mf-radio-option label,.mfp.fr-consult .mf-checkbox-option label{display:inline;line-height:1.2}\n.mfp.fr-consult .mf-radio-option:hover,.mfp.fr-consult .mf-checkbox-option:hover{background:transparent;transform:none;box-shadow:none}\n@media(max-width:540px){\n  .mfp.fr-consult .fr-brand{flex-direction:column;gap:8px}\n  .mfp.fr-consult .fr-brand-text{text-align:center}\n  .mfp.fr-consult .mf-radio-group,.mfp.fr-consult .mf-checkbox-group{gap:8px 12px}\n}\n.mfp.fr-consult .mf-fields-container{gap:10px}\n.mfp.fr-consult .mf-field-group{margin-bottom:0}\n.mfp.fr-consult .mf-option-group{display:grid!important;grid-template-columns:repeat(2,1fr)!important;gap:6px 20px!important;align-items:start!important}\n.mfp.fr-consult .mf-option-item{display:flex!important;align-items:center!important;gap:8px!important;margin:0!important;padding:0!important}\n@media(max-width:480px){.mfp.fr-consult .mf-option-group{grid-template-columns:1fr!important}}.fr-section:not(.fr-section-products){max-width:760px;margin-left:auto;margin-right:auto}.fr-consult .mf-option-item{position:relative;padding-left:34px!important}.fr-consult .mf-option-item::before{content:'';position:absolute;left:10px;top:50%;transform:translateY(-50%);width:18px;height:18px;border:2px solid var(--fr-gold,#b8956e);border-radius:3px;background:#fff;transition:all .2s;flex-shrink:0;box-sizing:border-box}.fr-consult .mf-option-control{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}.fr-consult .mf-option-item:has(.mf-option-control:checked)::before{border-color:var(--fr-gold,#b8956e);background:var(--fr-gold,#b8956e);background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:center}.fr-consult .mf-option-item:has(input[type=\"radio\"])::before{border-radius:50%}.fr-consult .mf-option-item:has(input[type=\"radio\"]:checked)::before{background:var(--fr-gold,#b8956e);background-image:none;box-shadow:inset 0 0 0 4px #fff}.fr-consult .mf-option-item:hover::before{border-color:var(--fr-gold-dk,#9a7856)}",
+  "rules": [],
+  "workflow": null,
+  "settings": {
+    "theme": "french-elegant",
+    "multiPage": false,
+    "customContent": {
+      "brand_name": "Maison Élégance",
+      "brand_tagline": "Curated Excellence Since 1892",
+      "section_personal": "Your Information",
+      "section_products": "Our Collection",
+      "section_preferences": "Consultation Preferences",
+      "footer_note": "Your privacy is our priority",
+      "slider_prev_aria": "Previous",
+      "slider_next_aria": "Next",
+      "product_1_badge": "Bestseller",
+      "product_1_name": "Signature Parfum",
+      "product_1_desc": "Notes of bergamot, jasmine & sandalwood",
+      "product_1_price": "€285",
+      "product_1_alt": "Signature Parfum",
+      "product_2_badge": "New",
+      "product_2_name": "Skincare Collection",
+      "product_2_desc": "Complete luxury skincare ritual",
+      "product_2_price": "€420",
+      "product_2_alt": "Skincare Collection",
+      "product_3_name": "Luxury Accessories",
+      "product_3_desc": "Handcrafted leather & silk pieces",
+      "product_3_price": "€650",
+      "product_3_alt": "Luxury Accessories",
+      "product_4_badge": "Limited",
+      "product_4_name": "Home Fragrance",
+      "product_4_desc": "Artisan candles & diffusers",
+      "product_4_price": "€180",
+      "product_4_alt": "Home Fragrance",
+      "product_5_badge": "Exclusive",
+      "product_5_name": "Gift Sets",
+      "product_5_desc": "Curated luxury gift experiences",
+      "product_5_price": "€350",
+      "product_5_alt": "Gift Sets",
+      "product_1_image": "https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&h=400&fit=crop",
+      "product_2_image": "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop",
+      "product_3_image": "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&h=400&fit=crop",
+      "product_4_image": "https://images.unsplash.com/photo-1602928321679-560bb453f190?w=400&h=400&fit=crop",
+      "product_5_image": "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&h=400&fit=crop",
+      "monogram_left": "M",
+      "monogram_right": "E"
+    },
+    "customScripts": {
+      "french_product_slider": "(function(root, ctx){\n  if (!root) return;\n\n  var initKey = 'mfFrenchProductSliderInit';\n  if (root.dataset && root.dataset[initKey] === '1') return;\n  if (root.dataset) root.dataset[initKey] = '1';\n\n  var track = root.querySelector('.fr-slider-track');\n  var slides = Array.prototype.slice.call(root.querySelectorAll('.fr-slide'));\n  var prevBtn = root.querySelector('.fr-slider-prev');\n  var nextBtn = root.querySelector('.fr-slider-next');\n  var dotsWrap = root.querySelector('.fr-slider-dots');\n\n  if (!track || !slides.length) return;\n\n  var index = 0;\n  var perView = 1;\n  var maxIndex = 0;\n  var timer = null;\n  var touchStartX = null;\n  var cleanupFns = [];\n\n  function addCleanup(fn){\n    cleanupFns.push(fn);\n  }\n\n  function getPerView(){\n    var rect = root && root.getBoundingClientRect ? root.getBoundingClientRect() : null;\n    var width = rect && rect.width ? rect.width : (window.innerWidth || 1200);\n    if (width <= 540) return 1;\n    if (width <= 780) return 2;\n    if (width <= 1100) return 3;\n    if (width <= 1500) return 4;\n    return 5;\n  }\n\n  function getGap(){\n    var styles = window.getComputedStyle(track);\n    var gap = parseFloat(styles.gap || styles.columnGap || '0');\n    return isNaN(gap) ? 0 : gap;\n  }\n\n  function getStepWidth(){\n    if (!slides.length) return 0;\n    var rect = slides[0].getBoundingClientRect();\n    return rect.width + getGap();\n  }\n\n  function clamp(value){\n    if (value < 0) return 0;\n    if (value > maxIndex) return maxIndex;\n    return value;\n  }\n\n  function updateButtons(){\n    if (prevBtn) prevBtn.disabled = index <= 0;\n    if (nextBtn) nextBtn.disabled = index >= maxIndex;\n  }\n\n  function updateDots(){\n    if (!dotsWrap) return;\n    var dots = dotsWrap.querySelectorAll('.fr-dot');\n    for (var i = 0; i < dots.length; i++) {\n      dots[i].classList.toggle('active', i === index);\n      dots[i].setAttribute('aria-current', i === index ? 'true' : 'false');\n    }\n  }\n\n  function render(){\n    var step = getStepWidth();\n    track.style.transform = 'translateX(-' + (index * step) + 'px)';\n    updateButtons();\n    updateDots();\n  }\n\n  function goTo(nextIndex){\n    index = clamp(nextIndex);\n    render();\n  }\n\n  function buildDots(){\n    if (!dotsWrap) return;\n    dotsWrap.innerHTML = '';\n    for (var i = 0; i <= maxIndex; i++) {\n      (function(dotIndex){\n        var btn = document.createElement('button');\n        btn.type = 'button';\n        btn.className = 'fr-dot' + (dotIndex === index ? ' active' : '');\n        btn.setAttribute('data-index', String(dotIndex));\n        btn.setAttribute('aria-label', 'Go to slide ' + (dotIndex + 1));\n        btn.addEventListener('click', function(){ goTo(dotIndex); });\n        dotsWrap.appendChild(btn);\n      })(i);\n    }\n  }\n\n  function recalc(rebuildDots){\n    perView = getPerView();\n    maxIndex = Math.max(0, slides.length - perView);\n    index = clamp(index);\n    if (rebuildDots) buildDots();\n    render();\n  }\n\n  function stopAutoplay(){\n    if (timer) {\n      window.clearInterval(timer);\n      timer = null;\n    }\n  }\n\n  function startAutoplay(){\n    stopAutoplay();\n    if (maxIndex <= 0) return;\n    timer = window.setInterval(function(){\n      goTo(index >= maxIndex ? 0 : index + 1);\n    }, 5000);\n  }\n\n  if (prevBtn) {\n    prevBtn.addEventListener('click', function(){ goTo(index - 1); });\n  }\n\n  if (nextBtn) {\n    nextBtn.addEventListener('click', function(){ goTo(index + 1); });\n  }\n\n  track.addEventListener('touchstart', function(e){\n    if (!e.touches || !e.touches.length) return;\n    touchStartX = e.touches[0].clientX;\n  }, { passive: true });\n\n  track.addEventListener('touchend', function(e){\n    if (touchStartX == null || !e.changedTouches || !e.changedTouches.length) return;\n    var delta = e.changedTouches[0].clientX - touchStartX;\n    if (Math.abs(delta) > 40) {\n      goTo(delta > 0 ? index - 1 : index + 1);\n    }\n    touchStartX = null;\n  }, { passive: true });\n\n  var pauseTarget = root.querySelector('.fr-slider-container') || root;\n  if (pauseTarget) {\n    var onEnter = function(){ stopAutoplay(); };\n    var onLeave = function(){ startAutoplay(); };\n    pauseTarget.addEventListener('mouseenter', onEnter);\n    pauseTarget.addEventListener('mouseleave', onLeave);\n    addCleanup(function(){\n      pauseTarget.removeEventListener('mouseenter', onEnter);\n      pauseTarget.removeEventListener('mouseleave', onLeave);\n    });\n  }\n\n  var onResize = function(){ recalc(true); };\n  window.addEventListener('resize', onResize);\n  addCleanup(function(){ window.removeEventListener('resize', onResize); });\n\n  addCleanup(function(){ stopAutoplay(); });\n  addCleanup(function(){\n    if (root.dataset) delete root.dataset[initKey];\n  });\n\n  if (ctx && typeof ctx.registerCleanup === 'function') {\n    ctx.registerCleanup(cleanupFns);\n  }\n\n  recalc(true);\n  startAutoplay();\n})(window.__mfCurrentScriptRoot, window.__mfScriptContext);",
+      "theme_selector": "(function(root,ctx){\nvar tp=(ctx&&ctx.themePreset)||null;\nvar TP={\"parfum-nude\":{\"name\":\"Parfum Nude\",\"style\":\"maison\",\"background\":\"oklch(0.97 0.012 60)\",\"foreground\":\"oklch(0.26 0.04 50)\",\"card\":\"oklch(0.995 0.006 60)\",\"primary\":\"oklch(0.60 0.11 65)\",\"primaryForeground\":\"oklch(0.15 0.02 50)\",\"secondary\":\"oklch(0.92 0.03 60)\",\"muted\":\"oklch(0.94 0.012 60)\",\"mutedForeground\":\"oklch(0.48 0.03 50)\",\"accent\":\"oklch(0.45 0.13 20)\",\"border\":\"oklch(0.86 0.02 60)\"},\"cognac-amber\":{\"name\":\"Cognac Amber\",\"style\":\"maison\",\"background\":\"oklch(0.96 0.015 50)\",\"foreground\":\"oklch(0.25 0.05 45)\",\"card\":\"oklch(0.99 0.007 50)\",\"primary\":\"oklch(0.50 0.15 40)\",\"primaryForeground\":\"oklch(0.98 0 0)\",\"secondary\":\"oklch(0.90 0.04 50)\",\"muted\":\"oklch(0.93 0.015 50)\",\"mutedForeground\":\"oklch(0.50 0.04 45)\",\"accent\":\"oklch(0.65 0.11 70)\",\"border\":\"oklch(0.85 0.03 50)\"},\"velvet-bordeaux\":{\"name\":\"Velvet Bordeaux\",\"style\":\"maison\",\"background\":\"oklch(0.96 0.012 15)\",\"foreground\":\"oklch(0.26 0.06 15)\",\"card\":\"oklch(0.99 0.005 15)\",\"primary\":\"oklch(0.40 0.15 15)\",\"primaryForeground\":\"oklch(0.98 0 0)\",\"secondary\":\"oklch(0.90 0.03 15)\",\"muted\":\"oklch(0.93 0.01 15)\",\"mutedForeground\":\"oklch(0.50 0.03 15)\",\"accent\":\"oklch(0.68 0.12 55)\",\"border\":\"oklch(0.85 0.03 15)\"},\"marble-cream\":{\"name\":\"Marble Cream\",\"style\":\"maison\",\"background\":\"oklch(0.97 0.006 80)\",\"foreground\":\"oklch(0.22 0.02 80)\",\"card\":\"oklch(0.995 0.003 80)\",\"primary\":\"oklch(0.38 0.03 80)\",\"primaryForeground\":\"oklch(0.98 0 0)\",\"secondary\":\"oklch(0.90 0.02 80)\",\"muted\":\"oklch(0.94 0.008 80)\",\"mutedForeground\":\"oklch(0.50 0.02 80)\",\"accent\":\"oklch(0.60 0.11 50)\",\"border\":\"oklch(0.87 0.015 80)\"},\"jade-whisper\":{\"name\":\"Jade Whisper\",\"style\":\"maison\",\"background\":\"oklch(0.97 0.006 160)\",\"foreground\":\"oklch(0.24 0.03 160)\",\"card\":\"oklch(0.995 0.003 160)\",\"primary\":\"oklch(0.45 0.10 160)\",\"primaryForeground\":\"oklch(0.98 0 0)\",\"secondary\":\"oklch(0.90 0.03 160)\",\"muted\":\"oklch(0.94 0.01 160)\",\"mutedForeground\":\"oklch(0.50 0.03 160)\",\"accent\":\"oklch(0.65 0.10 55)\",\"border\":\"oklch(0.87 0.02 160)\"},\"noir-luxe\":{\"name\":\"Noir Luxe\",\"style\":\"maison\",\"background\":\"oklch(0.15 0.01 0)\",\"foreground\":\"oklch(0.96 0.003 0)\",\"card\":\"oklch(0.20 0.01 0)\",\"primary\":\"oklch(0.70 0.13 80)\",\"primaryForeground\":\"oklch(0.15 0.02 0)\",\"secondary\":\"oklch(0.28 0.02 0)\",\"muted\":\"oklch(0.25 0.01 0)\",\"mutedForeground\":\"oklch(0.70 0.01 0)\",\"accent\":\"oklch(0.75 0.10 55)\",\"border\":\"oklch(0.32 0.01 0)\"}};\nvar VMAP={\"--fr-cream\":\"background\",\"--fr-ivory\":\"muted\",\"--fr-white\":\"card\",\"--fr-border\":\"border\",\"--fr-champagne\":\"secondary\",\"--fr-gold\":\"primary\",\"--fr-gold-dk\":\"accent\",\"--fr-burgundy\":\"primary\",\"--fr-charcoal\":\"foreground\",\"--fr-text\":\"foreground\",\"--fr-muted\":\"mutedForeground\"};\nvar GROUPS=[];\nvar SCOPE=\".mfp.fr-consult\";\nvar DEFAULT=\"parfum-nude\";\nvar PFX=\"fp\";\n\nvar cur=DEFAULT;var isOpen=false;var styleId=PFX+'-theme-vars';\nfunction scopeSel(){\n  var host=(root&&root.closest)?root.closest('.mf-form-wrapper,[id^=\"mf-form-wrapper-\"]'):null;\n  var id=host&&host.id?('#'+host.id+' '):(tp&&tp.formId?('#mf-form-wrapper-'+String(tp.formId)+' '):'');\n  return id?(id+SCOPE):SCOPE;\n}\nfunction applyTheme(key){\n  var t=TP[key];if(!t)return;cur=key;\n  var s=document.getElementById(styleId);\n  if(!s){s=document.createElement('style');s.id=styleId;document.head.appendChild(s);}\n  var sel=scopeSel();\n  var rules=sel+'{';\n  // Generic vars (MegaForm + shadcn compat)\n  rules+='--background:'+t.background+';';\n  rules+='--foreground:'+t.foreground+';';\n  rules+='--card:'+t.card+';';\n  rules+='--card-foreground:'+t.foreground+';';\n  rules+='--primary:'+t.primary+';';\n  rules+='--primary-foreground:'+t.primaryForeground+';';\n  rules+='--secondary:'+t.secondary+';';\n  rules+='--secondary-foreground:'+t.foreground+';';\n  rules+='--muted:'+t.muted+';';\n  rules+='--muted-foreground:'+t.mutedForeground+';';\n  rules+='--accent:'+t.accent+';';\n  rules+='--accent-foreground:'+t.foreground+';';\n  rules+='--border:'+t.border+';';\n  rules+='--input:'+t.muted+';';\n  rules+='--ring:'+t.primary+';';\n  // Template-specific vars via VMAP\n  Object.keys(VMAP).forEach(function(cssVar){\n    var field=VMAP[cssVar];\n    if(t[field]!==undefined){rules+=cssVar+':'+t[field]+';';}\n  });\n  rules+='}';\n  s.textContent=rules;\n  var ps=document.getElementById(PFX+'-ts-swatch');if(ps)ps.style.background=t.primary;\n  var pn=document.getElementById(PFX+'-ts-name');if(pn)pn.textContent=t.name;\n  document.querySelectorAll('[data-'+PFX+'-key]').forEach(function(btn){\n    var active=btn.getAttribute('data-'+PFX+'-key')===key;\n    btn.style.background=active?'color-mix(in oklab,'+t.primary+' 12%,transparent)':'';\n    var ck=btn.querySelector('.'+PFX+'-check');if(ck)ck.style.display=active?'inline':'none';\n  });\n  if(tp&&typeof tp.setActiveThemeKey==='function'){try{tp.setActiveThemeKey(key,true);}catch(e){}}\n  else{try{localStorage.setItem(PFX+'-theme',key);}catch(e){}}\n}\nfunction mkBtn(key,theme){\n  var btn=document.createElement('button');btn.type='button';\n  btn.setAttribute('data-'+PFX+'-key',key);\n  btn.style.cssText='display:flex;align-items:center;gap:12px;width:100%;padding:9px 14px;text-align:left;border:none;cursor:pointer;font-family:inherit;background:transparent;font-size:13px;transition:background .15s;';\n  var sw=document.createElement('div');sw.style.cssText='display:flex;gap:3px;flex-shrink:0;';\n  [theme.primary,theme.secondary,theme.accent].forEach(function(c){\n    var s=document.createElement('span');\n    s.style.cssText='width:12px;height:12px;border-radius:50%;border:1px solid rgba(0,0,0,.12);background:'+c+';display:inline-block;';\n    sw.appendChild(s);\n  });\n  var nm=document.createElement('span');\n  nm.style.cssText='color:#222;flex:1;font-size:13px;font-family:inherit;';\n  nm.textContent=theme.name;\n  var ck=document.createElement('svg');\n  ck.setAttribute('width','16');ck.setAttribute('height','16');\n  ck.setAttribute('viewBox','0 0 20 20');ck.setAttribute('fill','currentColor');\n  ck.setAttribute('class',PFX+'-check');\n  ck.style.cssText='margin-left:auto;color:'+theme.primary+';display:none;width:16px;height:16px;flex-shrink:0;';\n  ck.innerHTML='<path fill-rule=\"evenodd\" d=\"M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z\" clip-rule=\"evenodd\"/>';\n  btn.appendChild(sw);btn.appendChild(nm);btn.appendChild(ck);\n  btn.addEventListener('mouseenter',function(){if(btn.getAttribute('data-'+PFX+'-key')!==cur)btn.style.background='rgba(0,0,0,.04)';});\n  btn.addEventListener('mouseleave',function(){if(btn.getAttribute('data-'+PFX+'-key')!==cur)btn.style.background='';});\n  btn.addEventListener('click',function(e){e.stopPropagation();applyTheme(key);close();});\n  return btn;\n}\nfunction mkSection(title,list,last){\n  var sec=document.createElement('div');\n  sec.style.cssText='padding:10px 6px;'+(last?'':'border-bottom:1px solid rgba(0,0,0,.08);');\n  if(title){\n    var h=document.createElement('p');\n    h.style.cssText='font-size:10px;font-weight:600;color:#888;letter-spacing:.12em;text-transform:uppercase;margin:0 8px 6px;font-family:inherit;';\n    h.textContent=title;sec.appendChild(h);\n  }\n  list.forEach(function(e){sec.appendChild(mkBtn(e[0],e[1]));});\n  return sec;\n}\n// Build UI\nvar wrap=document.createElement('div');\nwrap.id=PFX+'-ts-wrap';\nwrap.style.cssText='position:fixed;top:16px;right:16px;z-index:99999;font-family:system-ui,-apple-system,sans-serif;';\nvar pill=document.createElement('button');pill.type='button';\npill.style.cssText='display:flex;align-items:center;gap:8px;padding:8px 14px;background:#fff;border:1px solid rgba(0,0,0,.14);border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.1);cursor:pointer;font-family:inherit;font-size:13px;color:#222;white-space:nowrap;';\nvar ps=document.createElement('span');ps.id=PFX+'-ts-swatch';\nps.style.cssText='width:16px;height:16px;border-radius:50%;flex-shrink:0;background:#888;display:inline-block;border:1px solid rgba(0,0,0,.1);';\nvar pn=document.createElement('span');pn.id=PFX+'-ts-name';pn.textContent='Theme';\nvar chv=document.createElement('svg');\nchv.setAttribute('width','14');chv.setAttribute('height','14');\nchv.setAttribute('viewBox','0 0 24 24');chv.setAttribute('fill','none');\nchv.setAttribute('stroke','currentColor');chv.setAttribute('stroke-width','2');\nchv.style.cssText='transition:transform .2s;color:#888;';\nchv.innerHTML='<polyline points=\"6 9 12 15 18 9\"/>';\npill.appendChild(ps);pill.appendChild(pn);pill.appendChild(chv);\nvar panel=document.createElement('div');\npanel.style.cssText='position:absolute;top:calc(100% + 8px);right:0;width:270px;background:#fff;border:1px solid rgba(0,0,0,.1);border-radius:10px;box-shadow:0 12px 36px rgba(0,0,0,.15);max-height:70vh;overflow-y:auto;display:none;';\n// Group by style or flat\nvar entries=Object.entries(TP);\nif(GROUPS&&GROUPS.length){\n  GROUPS.forEach(function(g,idx){\n    var list=entries.filter(function(e){return e[1].style===g[1];});\n    if(list.length)panel.appendChild(mkSection(g[0],list,idx===GROUPS.length-1));\n  });\n}else{\n  panel.appendChild(mkSection('',entries,true));\n}\nwrap.appendChild(pill);wrap.appendChild(panel);\nif(!tp||tp.selectorEnabled!==false){\n  document.body.appendChild(wrap);\n  function positionWrap(){\n    var nav=document.querySelector('header,.dnn-nav,nav[class*=nav]');\n    var navH=nav?nav.getBoundingClientRect().bottom:0;\n    wrap.style.top=Math.max(16,navH+8)+'px';\n  }\n  positionWrap();\n  window.addEventListener('resize',positionWrap);\n  setTimeout(positionWrap,500);\n  function open(){isOpen=true;panel.style.display='block';chv.style.transform='rotate(180deg)';}\n  function close(){isOpen=false;panel.style.display='none';chv.style.transform='';}\n  pill.addEventListener('click',function(e){e.stopPropagation();isOpen?close():open();});\n  document.addEventListener('click',function(){if(isOpen)close();});\n  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen)close();});\n}\nvar saved=(tp&&typeof tp.getActiveThemeKey==='function'?tp.getActiveThemeKey():(tp&&tp.savedThemeKey)||null);\nif(saved==null){try{saved=localStorage.getItem(PFX+'-theme');}catch(e){}}\napplyTheme(saved||((tp&&tp.defaultThemeKey)||DEFAULT));\nif(tp&&typeof tp.reportAvailable==='function'){try{tp.reportAvailable({activeThemeKey:cur,selectedThemeKey:cur,dirty:false});}catch(e){}}\n})(window.__mfCurrentScriptRoot||document,window.__mfScriptContext||{});\n"
+    },
+    "themeSelector": {
+      "enabled": true,
+      "mode": "module-controlled",
+      "scriptKey": "theme_selector",
+      "presetSet": "maison-palette",
+      "defaultThemeKey": "parfum-nude",
+      "showUpdateThemeButton": true,
+      "presets": {
+        "parfum-nude": {
+          "name": "Parfum Nude",
+          "style": "maison",
+          "background": "oklch(0.97 0.012 60)",
+          "foreground": "oklch(0.26 0.04 50)",
+          "card": "oklch(0.995 0.006 60)",
+          "primary": "oklch(0.60 0.11 65)",
+          "primaryForeground": "oklch(0.15 0.02 50)",
+          "secondary": "oklch(0.92 0.03 60)",
+          "muted": "oklch(0.94 0.012 60)",
+          "mutedForeground": "oklch(0.48 0.03 50)",
+          "accent": "oklch(0.45 0.13 20)",
+          "border": "oklch(0.86 0.02 60)"
+        },
+        "cognac-amber": {
+          "name": "Cognac Amber",
+          "style": "maison",
+          "background": "oklch(0.96 0.015 50)",
+          "foreground": "oklch(0.25 0.05 45)",
+          "card": "oklch(0.99 0.007 50)",
+          "primary": "oklch(0.50 0.15 40)",
+          "primaryForeground": "oklch(0.98 0 0)",
+          "secondary": "oklch(0.90 0.04 50)",
+          "muted": "oklch(0.93 0.015 50)",
+          "mutedForeground": "oklch(0.50 0.04 45)",
+          "accent": "oklch(0.65 0.11 70)",
+          "border": "oklch(0.85 0.03 50)"
+        },
+        "velvet-bordeaux": {
+          "name": "Velvet Bordeaux",
+          "style": "maison",
+          "background": "oklch(0.96 0.012 15)",
+          "foreground": "oklch(0.26 0.06 15)",
+          "card": "oklch(0.99 0.005 15)",
+          "primary": "oklch(0.40 0.15 15)",
+          "primaryForeground": "oklch(0.98 0 0)",
+          "secondary": "oklch(0.90 0.03 15)",
+          "muted": "oklch(0.93 0.01 15)",
+          "mutedForeground": "oklch(0.50 0.03 15)",
+          "accent": "oklch(0.68 0.12 55)",
+          "border": "oklch(0.85 0.03 15)"
+        },
+        "marble-cream": {
+          "name": "Marble Cream",
+          "style": "maison",
+          "background": "oklch(0.97 0.006 80)",
+          "foreground": "oklch(0.22 0.02 80)",
+          "card": "oklch(0.995 0.003 80)",
+          "primary": "oklch(0.38 0.03 80)",
+          "primaryForeground": "oklch(0.98 0 0)",
+          "secondary": "oklch(0.90 0.02 80)",
+          "muted": "oklch(0.94 0.008 80)",
+          "mutedForeground": "oklch(0.50 0.02 80)",
+          "accent": "oklch(0.60 0.11 50)",
+          "border": "oklch(0.87 0.015 80)"
+        },
+        "jade-whisper": {
+          "name": "Jade Whisper",
+          "style": "maison",
+          "background": "oklch(0.97 0.006 160)",
+          "foreground": "oklch(0.24 0.03 160)",
+          "card": "oklch(0.995 0.003 160)",
+          "primary": "oklch(0.45 0.10 160)",
+          "primaryForeground": "oklch(0.98 0 0)",
+          "secondary": "oklch(0.90 0.03 160)",
+          "muted": "oklch(0.94 0.01 160)",
+          "mutedForeground": "oklch(0.50 0.03 160)",
+          "accent": "oklch(0.65 0.10 55)",
+          "border": "oklch(0.87 0.02 160)"
+        },
+        "noir-luxe": {
+          "name": "Noir Luxe",
+          "style": "maison",
+          "background": "oklch(0.15 0.01 0)",
+          "foreground": "oklch(0.96 0.003 0)",
+          "card": "oklch(0.20 0.01 0)",
+          "primary": "oklch(0.70 0.13 80)",
+          "primaryForeground": "oklch(0.15 0.02 0)",
+          "secondary": "oklch(0.28 0.02 0)",
+          "muted": "oklch(0.25 0.01 0)",
+          "mutedForeground": "oklch(0.70 0.01 0)",
+          "accent": "oklch(0.75 0.10 55)",
+          "border": "oklch(0.32 0.01 0)"
+        }
+      }
+    },
+    "submitButtonText": "Request Consultation",
+    "successMessage": "Merci! Your consultation request has been received. Our specialist will contact you within 24 hours.",
+    "customHtml": "<div class=\"mfp fr-consult\">{{script:theme_selector}}\n  <div class=\"fr-ambient\">\n    <span class=\"fr-fleur f1\"></span>\n    <span class=\"fr-fleur f2\"></span>\n    <span class=\"fr-fleur f3\"></span>\n    <span class=\"fr-fleur f4\"></span>\n  </div>\n  <div class=\"fr-card\">\n    <div class=\"fr-accent-line\"></div>\n    <header class=\"fr-header\">\n      <div class=\"fr-brand\">\n        <div class=\"fr-monogram\"><span>{{content:monogram_left}}</span><span class=\"fr-monogram-dot\"></span><span>{{content:monogram_right}}</span></div>\n        <div class=\"fr-brand-text\">\n          <h1 class=\"fr-brand-name\">{{content:brand_name}}</h1>\n          <p class=\"fr-brand-tagline\">{{content:brand_tagline}}</p>\n        </div>\n      </div>\n      <div class=\"fr-header-decor\">\n        <svg viewBox=\"0 0 120 24\" fill=\"none\">\n          <path d=\"M0 12h45M75 12h45\" stroke=\"currentColor\" stroke-width=\"1\"></path>\n          <circle cx=\"60\" cy=\"12\" r=\"4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1\"></circle>\n          <path d=\"M52 12l4-4m0 8l-4-4m16 0l-4 4m0-8l4 4\" stroke=\"currentColor\" stroke-width=\"1\"></path>\n        </svg>\n      </div>\n    </header>\n    <div class=\"fr-body\">\n      <div class=\"fr-intro\">\n        <h2 class=\"fr-title\">{{form:title}}</h2>\n        <p class=\"fr-description\">{{form:description}}</p>\n      </div>\n\n      <section class=\"fr-section\">\n        <div class=\"fr-section-label\">\n          <span class=\"fr-section-icon\">\n            <svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\">\n              <path d=\"M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\"></path>\n              <circle cx=\"12\" cy=\"7\" r=\"4\"></circle>\n            </svg>\n          </span>\n          <span>{{content:section_personal}}</span>\n        </div>\n        <div class=\"fr-fields\">{{field:row_name}}{{field:row_contact}}{{field:row_location}}</div>\n      </section>\n\n      <section class=\"fr-section fr-section-products\" data-mf-script-root=\"french_product_slider\">\n        <div class=\"fr-section-label\">\n          <span class=\"fr-section-icon\">\n            <svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\">\n              <path d=\"M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z\"></path>\n              <line x1=\"7\" y1=\"7\" x2=\"7.01\" y2=\"7\"></line>\n            </svg>\n          </span>\n          <span>{{content:section_products}}</span>\n        </div>\n\n        <div class=\"fr-slider-container\">\n          <button type=\"button\" class=\"fr-slider-btn fr-slider-prev\" aria-label=\"{{content:slider_prev_aria}}\">\n            <svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\">\n              <path d=\"M15 18l-6-6 6-6\"></path>\n            </svg>\n          </button>\n\n          <div class=\"fr-slider-viewport\">\n            <div class=\"fr-slider-track\">\n              <div class=\"fr-slide\">\n                <div class=\"fr-product-card\">\n                  <div class=\"fr-product-badge\">{{content:product_1_badge}}</div>\n                  <div class=\"fr-product-image\">\n                    <img src=\"{{content:product_1_image}}\" alt=\"{{content:product_1_alt}}\">\n                  </div>\n                  <div class=\"fr-product-info\">\n                    <h4>{{content:product_1_name}}</h4>\n                    <p class=\"fr-product-desc\">{{content:product_1_desc}}</p>\n                    <span class=\"fr-product-price\">{{content:product_1_price}}</span>\n                  </div>\n                </div>\n              </div>\n\n              <div class=\"fr-slide\">\n                <div class=\"fr-product-card\">\n                  <div class=\"fr-product-badge fr-badge-new\">{{content:product_2_badge}}</div>\n                  <div class=\"fr-product-image\">\n                    <img src=\"{{content:product_2_image}}\" alt=\"{{content:product_2_alt}}\">\n                  </div>\n                  <div class=\"fr-product-info\">\n                    <h4>{{content:product_2_name}}</h4>\n                    <p class=\"fr-product-desc\">{{content:product_2_desc}}</p>\n                    <span class=\"fr-product-price\">{{content:product_2_price}}</span>\n                  </div>\n                </div>\n              </div>\n\n              <div class=\"fr-slide\">\n                <div class=\"fr-product-card\">\n                  <div class=\"fr-product-image\">\n                    <img src=\"{{content:product_3_image}}\" alt=\"{{content:product_3_alt}}\">\n                  </div>\n                  <div class=\"fr-product-info\">\n                    <h4>{{content:product_3_name}}</h4>\n                    <p class=\"fr-product-desc\">{{content:product_3_desc}}</p>\n                    <span class=\"fr-product-price\">{{content:product_3_price}}</span>\n                  </div>\n                </div>\n              </div>\n\n              <div class=\"fr-slide\">\n                <div class=\"fr-product-card\">\n                  <div class=\"fr-product-badge\">{{content:product_4_badge}}</div>\n                  <div class=\"fr-product-image\">\n                    <img src=\"{{content:product_4_image}}\" alt=\"{{content:product_4_alt}}\">\n                  </div>\n                  <div class=\"fr-product-info\">\n                    <h4>{{content:product_4_name}}</h4>\n                    <p class=\"fr-product-desc\">{{content:product_4_desc}}</p>\n                    <span class=\"fr-product-price\">{{content:product_4_price}}</span>\n                  </div>\n                </div>\n              </div>\n\n              <div class=\"fr-slide\">\n                <div class=\"fr-product-card\">\n                  <div class=\"fr-product-badge fr-badge-new\">{{content:product_5_badge}}</div>\n                  <div class=\"fr-product-image\">\n                    <img src=\"{{content:product_5_image}}\" alt=\"{{content:product_5_alt}}\">\n                  </div>\n                  <div class=\"fr-product-info\">\n                    <h4>{{content:product_5_name}}</h4>\n                    <p class=\"fr-product-desc\">{{content:product_5_desc}}</p>\n                    <span class=\"fr-product-price\">{{content:product_5_price}}</span>\n                  </div>\n                </div>\n              </div>\n            </div>\n          </div>\n\n          <button type=\"button\" class=\"fr-slider-btn fr-slider-next\" aria-label=\"{{content:slider_next_aria}}\">\n            <svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\">\n              <path d=\"M9 18l6-6-6-6\"></path>\n            </svg>\n          </button>\n        </div>\n\n        <div class=\"fr-slider-dots\"></div>\n        {{script:french_product_slider}}\n        <div class=\"fr-product-select\">{{field:interested_products}}</div>\n      </section>\n\n      <section class=\"fr-section\">\n        <div class=\"fr-section-label\">\n          <span class=\"fr-section-icon\">\n            <svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\">\n              <path d=\"M12 20V10M18 20V4M6 20v-4\"></path>\n            </svg>\n          </span>\n          <span>{{content:section_preferences}}</span>\n        </div>\n        <div class=\"fr-fields\">{{field:row_budget_timeline}}{{field:consultation_type}}{{field:row_datetime}}{{field:special_requests}}</div>\n      </section>\n\n      <div class=\"fr-newsletter\">{{field:newsletter_subscribe}}</div>\n\n      <div class=\"fr-actions\">\n        <button type=\"submit\" class=\"fr-submit\">\n          <span>{{form:submit}}</span>\n          <svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\">\n            <path d=\"M5 12h14M12 5l7 7-7 7\"></path>\n          </svg>\n        </button>\n      </div>\n\n      <p class=\"fr-footer-note\">{{content:footer_note}}</p>\n    </div>\n    <div class=\"fr-accent-line fr-accent-bottom\"></div>\n  </div>\n</div>",
+    "customCss": "@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Montserrat:wght@300;400;500;600;700&display=swap');:root{--fr-cream:#faf8f5;--fr-ivory:#f5f2ed;--fr-champagne:#e8e2d9;--fr-gold:#b8956e;--fr-gold-dk:#9a7856;--fr-gold-light:#d4b896;--fr-burgundy:#722f37;--fr-burgundy-light:#8a4049;--fr-charcoal:#2c2c2c;--fr-text:#3d3d3d;--fr-muted:#6b6b6b;--fr-white:#ffffff;--fr-border:#d4cfc6;--fr-input-bg:#fdfcfa;--fr-shadow:0 20px 60px rgba(0,0,0,.08);--fr-radius:6px}*{box-sizing:border-box;margin:0;padding:0}.mfp.fr-consult{font-family:'Montserrat',system-ui,sans-serif;background:linear-gradient(145deg,var(--fr-cream) 0%,var(--fr-ivory) 50%,var(--fr-cream) 100%);min-height:100vh;padding:40px 20px;display:flex;justify-content:center;align-items:flex-start;position:relative;overflow:hidden}.fr-ambient{position:absolute;inset:0;pointer-events:none;overflow:hidden}.fr-fleur{position:absolute;width:200px;height:200px;background:radial-gradient(ellipse at center,var(--fr-champagne) 0%,transparent 70%);opacity:.4;border-radius:50%}.fr-fleur.f1{top:-50px;left:-50px;width:300px;height:300px}.fr-fleur.f2{top:20%;right:-80px;width:250px;height:250px}.fr-fleur.f3{bottom:10%;left:-60px}.fr-fleur.f4{bottom:-50px;right:10%;width:280px;height:280px}.fr-card{position:relative;max-width:100%;width:100%;background:var(--fr-white);border:1px solid var(--fr-border);border-radius:var(--fr-radius);box-shadow:var(--fr-shadow);overflow:hidden;z-index:1}.fr-accent-line{height:4px;background:linear-gradient(90deg,var(--fr-champagne) 0%,var(--fr-gold) 30%,var(--fr-gold-dk) 50%,var(--fr-gold) 70%,var(--fr-champagne) 100%)}.fr-accent-bottom{margin-top:0}.fr-header{padding:28px 32px 20px;border-bottom:1px solid var(--fr-border);background:linear-gradient(180deg,var(--fr-ivory) 0%,var(--fr-white) 100%)}.fr-brand{display:flex;align-items:center;gap:14px;margin-bottom:16px}.fr-monogram{display:flex;align-items:center;gap:4px;font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;font-weight:600;font-style:italic;color:var(--fr-gold-dk);letter-spacing:2px}.fr-monogram-dot{width:5px;height:5px;background:var(--fr-gold);border-radius:50%}.fr-brand-text{display:flex;flex-direction:column;gap:2px}.fr-brand-name{font-family:'Cormorant Garamond',Georgia,serif;font-size:20px;font-weight:600;color:var(--fr-charcoal);letter-spacing:.5px;margin:0}.fr-brand-tagline{font-size:10px;color:var(--fr-muted);letter-spacing:.1em;text-transform:uppercase;margin:0}.fr-header-decor{display:flex;justify-content:center}.fr-header-decor svg{width:100px;height:20px;color:var(--fr-gold)}.fr-body{padding:28px 32px 32px}.fr-intro{text-align:center;margin-bottom:28px}.fr-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:26px;font-weight:600;color:var(--fr-charcoal);margin:0 0 8px}.fr-description{font-size:14px;color:var(--fr-muted);margin:0;line-height:1.6}.fr-section{margin-bottom:28px}.fr-section-label{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--fr-gold-dk);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--fr-champagne)}.fr-section-icon{width:18px;height:18px;flex-shrink:0}.fr-section-icon svg{width:100%;height:100%}.fr-fields{display:flex;flex-direction:column;gap:16px}.fr-section-products{background:linear-gradient(180deg,var(--fr-ivory) 0%,transparent 100%);margin:0 -32px 28px;padding:24px 32px;border-top:1px solid var(--fr-champagne);border-bottom:1px solid var(--fr-champagne)}.fr-slider-container{display:flex;align-items:center;gap:12px;margin-bottom:16px}.fr-slider-viewport{flex:1;overflow:hidden;border-radius:var(--fr-radius)}.fr-slider-track{display:flex;gap:16px;transition:transform .4s ease;padding:8px 0}.fr-slide{flex:0 0 calc(33.333% - 11px);min-width:0}.fr-product-card{background:var(--fr-white);border:1px solid var(--fr-border);border-radius:var(--fr-radius);overflow:hidden;position:relative;transition:transform .2s,box-shadow .2s}.fr-product-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,.1)}.fr-product-badge{position:absolute;top:10px;left:10px;background:var(--fr-gold);color:var(--fr-white);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:4px 10px;border-radius:20px;z-index:2}.fr-badge-new{background:var(--fr-burgundy)}.fr-product-image{aspect-ratio:1;overflow:hidden;background:var(--fr-ivory)}.fr-product-image img{width:100%;height:100%;object-fit:cover;transition:transform .3s}.fr-product-card:hover .fr-product-image img{transform:scale(1.05)}.fr-product-info{padding:14px}.fr-product-info h4{font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;font-weight:600;color:var(--fr-charcoal);margin:0 0 4px}.fr-product-desc{font-size:11px;color:var(--fr-muted);margin:0 0 8px;line-height:1.4}.fr-product-price{font-size:14px;font-weight:600;color:var(--fr-gold-dk)}.fr-slider-btn{width:36px;height:36px;border:1px solid var(--fr-border);border-radius:50%;background:var(--fr-white);color:var(--fr-gold-dk);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}.fr-slider-btn:hover{background:var(--fr-gold);color:var(--fr-white);border-color:var(--fr-gold)}.fr-slider-btn svg{width:18px;height:18px}.fr-slider-dots{display:flex;justify-content:center;gap:8px;margin-bottom:20px}.fr-dot{width:8px;height:8px;border:1px solid var(--fr-gold);border-radius:50%;background:transparent;cursor:pointer;padding:0;transition:all .2s}.fr-dot.active,.fr-dot:hover{background:var(--fr-gold)}.fr-product-select{margin-top:8px}.fr-newsletter{margin-bottom:20px;padding:16px;background:var(--fr-ivory);border-radius:var(--fr-radius);border:1px solid var(--fr-champagne)}.fr-actions{margin-bottom:16px}.fr-submit{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg,var(--fr-gold) 0%,var(--fr-gold-dk) 100%);color:var(--fr-white);border:none;border-radius:var(--fr-radius);padding:16px 32px;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(184,149,110,.3)}.fr-submit:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(184,149,110,.4)}.fr-submit svg{width:18px;height:18px}.fr-footer-note{text-align:center;font-size:11px;color:var(--fr-muted);margin:0}@media(max-width:680px){.fr-slide{flex:0 0 calc(50% - 8px)}.fr-section-products{margin:0 -20px 24px;padding:20px}}@media(max-width:540px){.mfp.fr-consult{padding:20px 12px}.fr-header{padding:20px}.fr-body{padding:20px}.fr-slide{flex:0 0 100%}.fr-slider-btn{width:32px;height:32px}.fr-slider-btn svg{width:16px;height:16px}.fr-title{font-size:22px}.fr-section-products{margin:0 -20px 20px;padding:16px 20px}.fr-product-info{padding:12px}.fr-product-info h4{font-size:14px}.fr-submit{padding:14px 24px;font-size:13px}}.mfp.fr-consult .fr-header{text-align:center}\n.mfp.fr-consult .fr-brand{justify-content:center;margin-bottom:12px}\n.mfp.fr-consult .fr-brand-text{gap:0;text-align:left}\n.mfp.fr-consult .fr-brand-name{line-height:1.1}\n.mfp.fr-consult .fr-brand-tagline{line-height:1.15}\n.mfp.fr-consult .fr-header-decor{margin-top:4px}\n.mfp.fr-consult .fr-intro{margin-bottom:22px}\n.mfp.fr-consult .fr-title{line-height:1.12;margin-bottom:6px}\n.mfp.fr-consult .fr-description{line-height:1.45}\n.mfp.fr-consult .fr-fields{gap:12px}\n.mfp.fr-consult .fr-section{margin-bottom:22px}\n.mfp.fr-consult .fr-section-label{margin-bottom:12px;padding-bottom:8px}\n.mfp.fr-consult .mf-field,.mfp.fr-consult .mf-row{margin-bottom:12px}\n.mfp.fr-consult .mf-field:last-child,.mfp.fr-consult .mf-row:last-child{margin-bottom:0}\n.mfp.fr-consult .mf-label{margin-bottom:6px;line-height:1.2}\n.mfp.fr-consult .mf-radio-group,.mfp.fr-consult .mf-checkbox-group{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}\n.mfp.fr-consult .mf-radio-option,.mfp.fr-consult .mf-checkbox-option{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;margin:0;padding:0;border:none;background:transparent;line-height:1.2}\n.mfp.fr-consult .mf-radio-option input,.mfp.fr-consult .mf-checkbox-option input{margin:0;flex:0 0 auto}\n.mfp.fr-consult .mf-radio-option label,.mfp.fr-consult .mf-checkbox-option label{display:inline;line-height:1.2}\n.mfp.fr-consult .mf-radio-option:hover,.mfp.fr-consult .mf-checkbox-option:hover{background:transparent;transform:none;box-shadow:none}\n@media(max-width:540px){\n  .mfp.fr-consult .fr-brand{flex-direction:column;gap:8px}\n  .mfp.fr-consult .fr-brand-text{text-align:center}\n  .mfp.fr-consult .mf-radio-group,.mfp.fr-consult .mf-checkbox-group{gap:8px 12px}\n}\n.mfp.fr-consult .mf-fields-container{gap:10px}\n.mfp.fr-consult .mf-field-group{margin-bottom:0}\n.mfp.fr-consult .mf-option-group{display:grid!important;grid-template-columns:repeat(2,1fr)!important;gap:6px 20px!important;align-items:start!important}\n.mfp.fr-consult .mf-option-item{display:flex!important;align-items:center!important;gap:8px!important;margin:0!important;padding:0!important}\n@media(max-width:480px){.mfp.fr-consult .mf-option-group{grid-template-columns:1fr!important}}.fr-section:not(.fr-section-products){max-width:760px;margin-left:auto;margin-right:auto}.fr-consult .mf-option-item{position:relative;padding-left:34px!important}.fr-consult .mf-option-item::before{content:'';position:absolute;left:10px;top:50%;transform:translateY(-50%);width:18px;height:18px;border:2px solid var(--fr-gold,#b8956e);border-radius:3px;background:#fff;transition:all .2s;flex-shrink:0;box-sizing:border-box}.fr-consult .mf-option-control{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}.fr-consult .mf-option-item:has(.mf-option-control:checked)::before{border-color:var(--fr-gold,#b8956e);background:var(--fr-gold,#b8956e);background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:center}.fr-consult .mf-option-item:has(input[type=\"radio\"])::before{border-radius:50%}.fr-consult .mf-option-item:has(input[type=\"radio\"]:checked)::before{background:var(--fr-gold,#b8956e);background-image:none;box-shadow:inset 0 0 0 4px #fff}.fr-consult .mf-option-item:hover::before{border-color:var(--fr-gold-dk,#9a7856)}",
+    "rules": [],
+    "workflowTemplate": null
+  }
+}

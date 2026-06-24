@@ -1,0 +1,66 @@
+<div class="cel-rsvp-min" data-mf-script-root="theme_selector">
+
+  <div class="crm-bg-image"></div>
+  <div class="crm-bg-overlay"></div>
+
+  <div class="crm-content">
+    <div class="crm-container">
+
+      <div class="crm-card">
+
+        <header class="crm-header">
+          <div class="crm-header-inner">
+            <div class="crm-logo">
+              <span class="crm-logo-letter">{{content:brand_letter}}</span>
+            </div>
+            <div class="crm-brand">
+              <h1 class="crm-title">{{content:brand_title}}</h1>
+              <p class="crm-subtitle">{{content:brand_subtitle}}</p>
+            </div>
+          </div>
+        </header>
+
+        <section class="crm-section">
+          <h2 class="crm-section-label">{{content:section_01_label}}</h2>
+          <div class="crm-fields">
+            <div class="crm-row">{{field:full_name}}</div>
+            <div class="crm-grid-2">
+              <div class="crm-row">{{field:email}}</div>
+              <div class="crm-row">{{field:phone}}</div>
+            </div>
+            <div class="crm-row">{{field:guest_count}}</div>
+          </div>
+        </section>
+
+        <section class="crm-section">
+          <h2 class="crm-section-label">{{content:section_02_label}}</h2>
+          <div class="crm-fields">
+            <div class="crm-row">{{field:attendance}}</div>
+            <div class="crm-row">{{field:meal_preference}}</div>
+            <div class="crm-row">{{field:dietary_notes}}</div>
+          </div>
+        </section>
+
+        <section class="crm-section">
+          <h2 class="crm-section-label">{{content:section_03_label}}</h2>
+          <div class="crm-fields">
+            <div class="crm-row">{{field:song_request}}</div>
+            <div class="crm-row">{{field:message}}</div>
+          </div>
+        </section>
+
+        <div class="crm-submit-wrap">
+          <button type="submit" class="crm-btn-submit">{{content:submit_btn_text}}</button>
+        </div>
+
+      </div>
+
+      <footer class="crm-footer">
+        <p>{{content:footer_message}}</p>
+      </footer>
+
+    </div>
+  </div>
+
+  {{script:theme_selector}}
+</div>

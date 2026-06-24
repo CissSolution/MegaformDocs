@@ -1,0 +1,19 @@
+@namespace MegaForm.Client
+@inherits ModuleBase
+@inject NavigationManager NavigationManager
+
+@* Redirect shell for Languages panel.
+   Languages renders inline inside Index.razor via ?mfpanel=languages.
+   [NoPopupAdmin v20260610-01] forceLoad so Oqtane modal breaks out to full page.
+   Badge: OQLanguagesRedirect v20260610-01
+*@
+@code {
+    protected override void OnInitialized()
+    {
+        var uri = NavigationManager.Uri;
+        var baseUrl = uri.Split('?')[0].Split('#')[0];
+        baseUrl = System.Text.RegularExpressions.Regex.Replace(
+            baseUrl, @"/Languages$", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        NavigationManager.NavigateTo(baseUrl + "?mfpanel=languages", forceLoad: true);
+    }
+}

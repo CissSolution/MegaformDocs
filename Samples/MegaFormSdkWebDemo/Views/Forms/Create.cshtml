@@ -1,0 +1,37 @@
+@model MegaForm.Sdk.CreateFormRequest
+@{
+    ViewData["Title"] = "Create Form";
+}
+
+<h1>Create Form</h1>
+
+<form method="post" asp-action="Create">
+    @Html.AntiForgeryToken()
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label"></label>
+        <input asp-for="Title" class="form-control" required />
+    </div>
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label"></label>
+        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Status" class="form-label"></label>
+        <select asp-for="Status" class="form-select">
+            <option value="draft">Draft</option>
+            <option value="published">Published</option>
+            <option value="archived">Archived</option>
+        </select>
+    </div>
+    <div class="mb-3">
+        <label asp-for="SchemaJson" class="form-label">Schema JSON</label>
+        <textarea asp-for="SchemaJson" class="form-control" rows="10"></textarea>
+        <div class="form-text">Leave empty to create a blank form and edit later.</div>
+    </div>
+    <div class="mb-3 form-check">
+        <input asp-for="RequireAuth" class="form-check-input" />
+        <label asp-for="RequireAuth" class="form-check-label">Require Authentication</label>
+    </div>
+    <button type="submit" class="btn btn-primary">Create</button>
+    <a class="btn btn-outline-secondary" asp-action="Index">Cancel</a>
+</form>

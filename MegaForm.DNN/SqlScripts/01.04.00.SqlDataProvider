@@ -1,0 +1,595 @@
+/*============================================================
+  MegaForm for DNN – Complete Database Schema
+  Version: 1.0.0
+  
+  All tables in creation order (respects FK dependencies).
+  Safe to re-run (idempotent — all wrapped in IF NOT EXISTS).
+============================================================*/
+
+-- ============================================================
+-- MIGRATIONS: Add new columns to existing tables
+-- (runs BEFORE CREATE TABLE blocks so both fresh + upgrade work)
+-- ============================================================
+
+-- MF_Forms: Add AppScope (v1.0 → v1.1)
+IF EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_Forms')
+   AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_Forms') AND name = 'AppScope')
+BEGIN
+    ALTER TABLE [dbo].[MF_Forms] ADD AppScope NVARCHAR(50) NULL;
+END
+GO
+
+-- MF_SubmissionValues: Add typed columns (v1.0 → v1.1)
+IF EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_SubmissionValues')
+   AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_SubmissionValues') AND name = 'ValueNumber')
+BEGIN
+    ALTER TABLE [dbo].[MF_SubmissionValues] ADD ValueNumber DECIMAL(18,6) NULL;
+    ALTER TABLE [dbo].[MF_SubmissionValues] ADD ValueDate DATETIME2 NULL;
+    ALTER TABLE [dbo].[MF_SubmissionValues] ADD ValueBit BIT NULL;
+    ALTER TABLE [dbo].[MF_SubmissionValues] ADD ValueText NVARCHAR(400) NULL;
+    ALTER TABLE [dbo].[MF_SubmissionValues] ADD FieldType NVARCHAR(50) NULL;
+END
+GO
+
+-- MF_WebhookLog: Rename old columns → match C# model
+IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_WebhookLog') AND name = 'Url')
+   AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_WebhookLog') AND name = 'WebhookUrl')
+    EXEC sp_rename 'MF_WebhookLog.Url', 'WebhookUrl', 'COLUMN';
+GO
+IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_WebhookLog') AND name = 'HttpStatus')
+   AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_WebhookLog') AND name = 'ResponseCode')
+    EXEC sp_rename 'MF_WebhookLog.HttpStatus', 'ResponseCode', 'COLUMN';
+GO
+IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_WebhookLog') AND name = 'AttemptNumber')
+   AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_WebhookLog') AND name = 'RetryCount')
+    EXEC sp_rename 'MF_WebhookLog.AttemptNumber', 'RetryCount', 'COLUMN';
+GO
+IF EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_WebhookLog')
+   AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_WebhookLog') AND name = 'Success')
+    ALTER TABLE [dbo].[MF_WebhookLog] ADD Success BIT NOT NULL DEFAULT 0;
+GO
+
+-- MF_Files: Rename old columns → match C# model
+IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_Files') AND name = 'StoragePath')
+   AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_Files') AND name = 'StoredPath')
+    EXEC sp_rename 'MF_Files.StoragePath', 'StoredPath', 'COLUMN';
+GO
+IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_Files') AND name = 'MimeType')
+   AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_Files') AND name = 'ContentType')
+    EXEC sp_rename 'MF_Files.MimeType', 'ContentType', 'COLUMN';
+GO
+IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_Files') AND name = 'FileSize')
+   AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_Files') AND name = 'FileSizeBytes')
+    EXEC sp_rename 'MF_Files.FileSize', 'FileSizeBytes', 'COLUMN';
+GO
+IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_Files') AND name = 'StoredName')
+    ALTER TABLE [dbo].[MF_Files] DROP COLUMN StoredName;
+GO
+
+-- ============================================================
+-- 1. MF_Forms — Master form definition
+-- ============================================================
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_Forms')
+BEGIN
+    CREATE TABLE [dbo].[MF_Forms] (
+        FormId          INT IDENTITY(1,1)  NOT NULL,
+        ModuleId        INT                NOT NULL,
+        PortalId        INT                NOT NULL,
+        Title           NVARCHAR(500)      NOT NULL,
+        [Description]   NVARCHAR(MAX)      NULL,
+        SchemaJson      NVARCHAR(MAX)      NOT NULL,
+        SettingsJson    NVARCHAR(MAX)      NULL,
+        ThemeJson       NVARCHAR(MAX)      NULL,
+        [Status]        NVARCHAR(20)       NOT NULL DEFAULT 'Draft',
+        SubmitButtonText NVARCHAR(200)     NULL DEFAULT N'Submit',
+        SuccessMessage  NVARCHAR(MAX)      NULL,
+        RedirectUrl     NVARCHAR(1000)     NULL,
+        MaxSubmissions  INT                NULL,
+        ExpiresOnUtc    DATETIME2          NULL,
+        RequireAuth     BIT                NOT NULL DEFAULT 0,
+        EnableCaptcha   BIT                NOT NULL DEFAULT 0,
+        EnableSaveResume BIT               NOT NULL DEFAULT 0,
+        WebhookUrl      NVARCHAR(1000)     NULL,
+        WebhookSecret   NVARCHAR(500)      NULL,
+        WebhookHeaders  NVARCHAR(MAX)      NULL,
+        NotifyEmails    NVARCHAR(MAX)      NULL,
+        NotifyTemplate  NVARCHAR(MAX)      NULL,
+        AutoresponderEnabled BIT           NOT NULL DEFAULT 0,
+        AutoresponderEmailField NVARCHAR(200) NULL,
+        AutoresponderSubject NVARCHAR(500) NULL,
+        AutoresponderBody   NVARCHAR(MAX)  NULL,
+        AppScope        NVARCHAR(50)       NULL,
+        CreatedByUserId INT                NOT NULL,
+        CreatedOnUtc    DATETIME2          NOT NULL DEFAULT SYSUTCDATETIME(),
+        UpdatedByUserId INT                NULL,
+        UpdatedOnUtc    DATETIME2          NULL,
+        CONSTRAINT PK_MF_Forms PRIMARY KEY CLUSTERED (FormId)
+    );
+    CREATE NONCLUSTERED INDEX IX_MF_Forms_Module ON [dbo].[MF_Forms](ModuleId);
+    CREATE NONCLUSTERED INDEX IX_MF_Forms_Portal ON [dbo].[MF_Forms](PortalId, [Status]);
+    CREATE NONCLUSTERED INDEX IX_MF_Forms_AppScope ON [dbo].[MF_Forms](PortalId, AppScope)
+        INCLUDE (FormId, Title, [Status]) WHERE AppScope IS NOT NULL;
+END
+GO
+
+-- Ensure AppScope index exists (for upgrade path when table already existed)
+IF EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_Forms')
+   AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_MF_Forms_AppScope')
+BEGIN
+    CREATE NONCLUSTERED INDEX IX_MF_Forms_AppScope ON [dbo].[MF_Forms](PortalId, AppScope)
+        INCLUDE (FormId, Title, [Status]) WHERE AppScope IS NOT NULL;
+END
+GO
+
+-- ============================================================
+-- 2. MF_Submissions — Each form submission
+-- ============================================================
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_Submissions')
+BEGIN
+    CREATE TABLE [dbo].[MF_Submissions] (
+        SubmissionId    INT IDENTITY(1,1)  NOT NULL,
+        FormId          INT                NOT NULL,
+        DataJson        NVARCHAR(MAX)      NOT NULL,
+        IpAddress       NVARCHAR(45)       NULL,
+        UserAgent       NVARCHAR(500)      NULL,
+        UserId          INT                NULL,
+        [Status]        NVARCHAR(20)       NOT NULL DEFAULT 'Submitted',
+        IsSpam          BIT                NOT NULL DEFAULT 0,
+        SpamScore       DECIMAL(5,2)       NULL,
+        SubmittedOnUtc  DATETIME2          NOT NULL DEFAULT SYSUTCDATETIME(),
+        ReadOnUtc       DATETIME2          NULL,
+        CONSTRAINT PK_MF_Submissions PRIMARY KEY CLUSTERED (SubmissionId),
+        CONSTRAINT FK_MF_Submissions_Forms FOREIGN KEY (FormId)
+            REFERENCES [dbo].[MF_Forms](FormId) ON DELETE CASCADE
+    );
+    CREATE NONCLUSTERED INDEX IX_MF_Submissions_FormId ON [dbo].[MF_Submissions](FormId, SubmittedOnUtc DESC);
+    CREATE NONCLUSTERED INDEX IX_MF_Submissions_Status ON [dbo].[MF_Submissions](FormId, [Status]);
+END
+GO
+
+-- ============================================================
+-- 3. MF_SubmissionValues — Typed per-field values for search/analytics
+-- ============================================================
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_SubmissionValues')
+BEGIN
+    CREATE TABLE [dbo].[MF_SubmissionValues] (
+        ValueId         BIGINT IDENTITY(1,1) NOT NULL,
+        SubmissionId    INT                NOT NULL,
+        FieldKey        NVARCHAR(100)      NOT NULL,
+        FieldValue      NVARCHAR(MAX)      NULL,
+        ValueNumber     DECIMAL(18,6)      NULL,
+        ValueDate       DATETIME2          NULL,
+        ValueBit        BIT                NULL,
+        ValueText       NVARCHAR(400)      NULL,
+        FieldType       NVARCHAR(50)       NULL,
+        CONSTRAINT PK_MF_SubmissionValues PRIMARY KEY CLUSTERED (ValueId),
+        CONSTRAINT FK_MF_SubValues_Sub FOREIGN KEY (SubmissionId)
+            REFERENCES [dbo].[MF_Submissions](SubmissionId) ON DELETE CASCADE
+    );
+    CREATE NONCLUSTERED INDEX IX_MF_SubValues_SubId ON [dbo].[MF_SubmissionValues](SubmissionId);
+    CREATE NONCLUSTERED INDEX IX_MF_SubValues_FieldKey ON [dbo].[MF_SubmissionValues](FieldKey) INCLUDE (FieldValue);
+    CREATE NONCLUSTERED INDEX IX_MF_SubValues_Number ON [dbo].[MF_SubmissionValues](FieldKey, ValueNumber)
+        WHERE ValueNumber IS NOT NULL;
+    CREATE NONCLUSTERED INDEX IX_MF_SubValues_Date ON [dbo].[MF_SubmissionValues](FieldKey, ValueDate)
+        WHERE ValueDate IS NOT NULL;
+    CREATE NONCLUSTERED INDEX IX_MF_SubValues_Text ON [dbo].[MF_SubmissionValues](FieldKey, ValueText)
+        WHERE ValueText IS NOT NULL;
+END
+GO
+
+-- ============================================================
+-- 4. MF_Files — File attachments
+-- ============================================================
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_Files')
+BEGIN
+    CREATE TABLE [dbo].[MF_Files] (
+        FileId          INT IDENTITY(1,1)  NOT NULL,
+        SubmissionId    INT                NOT NULL,
+        FieldKey        NVARCHAR(100)      NOT NULL,
+        OriginalName    NVARCHAR(500)      NOT NULL,
+        StoredPath      NVARCHAR(1000)     NOT NULL,
+        ContentType     NVARCHAR(200)      NULL,
+        FileSizeBytes   BIGINT             NOT NULL,
+        UploadedOnUtc   DATETIME2          NOT NULL DEFAULT SYSUTCDATETIME(),
+        CONSTRAINT PK_MF_Files PRIMARY KEY (FileId),
+        CONSTRAINT FK_MF_Files_Sub FOREIGN KEY (SubmissionId)
+            REFERENCES [dbo].[MF_Submissions](SubmissionId) ON DELETE CASCADE
+    );
+END
+GO
+
+-- ============================================================
+-- 5. MF_WebhookLog — Webhook delivery log
+-- ============================================================
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_WebhookLog')
+BEGIN
+    CREATE TABLE [dbo].[MF_WebhookLog] (
+        LogId           INT IDENTITY(1,1)  NOT NULL,
+        FormId          INT                NOT NULL,
+        SubmissionId    INT                NULL,
+        WebhookUrl      NVARCHAR(1000)     NOT NULL,
+        ResponseCode    INT                NULL,
+        RequestBody     NVARCHAR(MAX)      NULL,
+        ResponseBody    NVARCHAR(MAX)      NULL,
+        Success         BIT                NOT NULL DEFAULT 0,
+        RetryCount      INT                NOT NULL DEFAULT 0,
+        SentOnUtc       DATETIME2          NOT NULL DEFAULT SYSUTCDATETIME(),
+        CONSTRAINT PK_MF_WebhookLog PRIMARY KEY (LogId)
+    );
+END
+GO
+
+-- ============================================================
+-- 6. MF_RateLimitLog — Anti-spam rate limiting
+-- ============================================================
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_RateLimitLog')
+BEGIN
+    CREATE TABLE [dbo].[MF_RateLimitLog] (
+        RateId          INT IDENTITY(1,1)  NOT NULL,
+        FormId          INT                NOT NULL,
+        IpAddress       NVARCHAR(45)       NOT NULL,
+        SubmittedOnUtc  DATETIME2          NOT NULL DEFAULT SYSUTCDATETIME(),
+        CONSTRAINT PK_MF_RateLimitLog PRIMARY KEY (RateId)
+    );
+    CREATE NONCLUSTERED INDEX IX_MF_RateLimit_Lookup
+        ON [dbo].[MF_RateLimitLog](FormId, IpAddress, SubmittedOnUtc);
+END
+GO
+
+-- ============================================================
+-- 7. MF_SavedDrafts — Save & Resume
+-- ============================================================
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_SavedDrafts')
+BEGIN
+    CREATE TABLE [dbo].[MF_SavedDrafts] (
+        DraftId         INT IDENTITY(1,1)  NOT NULL,
+        FormId          INT                NOT NULL,
+        ResumeToken     NVARCHAR(100)      NOT NULL,
+        DataJson        NVARCHAR(MAX)      NOT NULL,
+        Email           NVARCHAR(200)      NULL,
+        IpAddress       NVARCHAR(45)       NULL,
+        CreatedOnUtc    DATETIME2          NOT NULL DEFAULT SYSUTCDATETIME(),
+        ExpiresOnUtc    DATETIME2          NOT NULL,
+        CONSTRAINT PK_MF_SavedDrafts PRIMARY KEY (DraftId),
+        CONSTRAINT FK_MF_Drafts_Form FOREIGN KEY (FormId)
+            REFERENCES [dbo].[MF_Forms](FormId) ON DELETE CASCADE
+    );
+    CREATE UNIQUE NONCLUSTERED INDEX IX_MF_SavedDrafts_Token
+        ON [dbo].[MF_SavedDrafts](ResumeToken);
+END
+GO
+
+-- ============================================================
+-- 8. MF_WidgetData — Complex widget data (repeaters, payments)
+-- ============================================================
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_WidgetData')
+BEGIN
+    CREATE TABLE [dbo].[MF_WidgetData] (
+        DataId          BIGINT IDENTITY(1,1) NOT NULL,
+        SubmissionId    INT                NOT NULL,
+        WidgetType      NVARCHAR(50)       NOT NULL,
+        FieldKey        NVARCHAR(100)      NOT NULL,
+        RowIndex        INT                NOT NULL DEFAULT 0,
+        DataJson        NVARCHAR(MAX)      NOT NULL,
+        NumericValue    DECIMAL(18,6)      NULL,
+        DateValue       DATETIME2          NULL,
+        Status          NVARCHAR(20)       NULL,
+        CreatedOnUtc    DATETIME2          NOT NULL DEFAULT SYSUTCDATETIME(),
+        CONSTRAINT PK_MF_WidgetData PRIMARY KEY CLUSTERED (DataId),
+        CONSTRAINT FK_MF_WidgetData_Sub FOREIGN KEY (SubmissionId)
+            REFERENCES [dbo].[MF_Submissions](SubmissionId) ON DELETE CASCADE
+    );
+    CREATE NONCLUSTERED INDEX IX_MF_WidgetData_SubId ON [dbo].[MF_WidgetData](SubmissionId, FieldKey);
+    CREATE NONCLUSTERED INDEX IX_MF_WidgetData_Type ON [dbo].[MF_WidgetData](WidgetType, FieldKey);
+END
+GO
+
+-- ============================================================
+-- 9. MF_SearchIndex — Full-text search
+-- ============================================================
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_SearchIndex')
+BEGIN
+    CREATE TABLE [dbo].[MF_SearchIndex] (
+        IndexId         INT IDENTITY(1,1)  NOT NULL,
+        SubmissionId    INT                NOT NULL,
+        FormId          INT                NOT NULL,
+        PortalId        INT                NOT NULL,
+        Title           NVARCHAR(500)      NULL,
+        Summary         NVARCHAR(1000)     NULL,
+        SearchText      NVARCHAR(MAX)      NOT NULL,
+        Tags            NVARCHAR(500)      NULL,
+        CreatedOnUtc    DATETIME2          NOT NULL DEFAULT SYSUTCDATETIME(),
+        CONSTRAINT PK_MF_SearchIndex PRIMARY KEY CLUSTERED (IndexId)
+    );
+    CREATE UNIQUE NONCLUSTERED INDEX IX_MF_SearchIndex_SubId ON [dbo].[MF_SearchIndex](SubmissionId);
+    CREATE NONCLUSTERED INDEX IX_MF_SearchIndex_Form ON [dbo].[MF_SearchIndex](FormId);
+    CREATE NONCLUSTERED INDEX IX_MF_SearchIndex_Portal ON [dbo].[MF_SearchIndex](PortalId);
+END
+GO
+
+-- ============================================================
+-- 10. MF_FormAnalytics — Pre-aggregated stats
+-- ============================================================
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_FormAnalytics')
+BEGIN
+    CREATE TABLE [dbo].[MF_FormAnalytics] (
+        AnalyticsId     INT IDENTITY(1,1)  NOT NULL,
+        FormId          INT                NOT NULL,
+        DateKey         DATE               NOT NULL,
+        SubmissionCount INT                NOT NULL DEFAULT 0,
+        SpamCount       INT                NOT NULL DEFAULT 0,
+        UniqueVisitors  INT                NOT NULL DEFAULT 0,
+        AggregatesJson  NVARCHAR(MAX)      NULL,
+        CONSTRAINT PK_MF_FormAnalytics PRIMARY KEY (AnalyticsId)
+    );
+    CREATE UNIQUE NONCLUSTERED INDEX IX_MF_Analytics_Lookup ON [dbo].[MF_FormAnalytics](FormId, DateKey);
+END
+GO
+
+-- ============================================================
+-- 11. MF_Templates — ZIP-based template gallery
+-- ============================================================
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_Templates')
+BEGIN
+    CREATE TABLE [dbo].[MF_Templates] (
+        TemplateId      INT IDENTITY(1,1) NOT NULL,
+        PortalId        INT NOT NULL,
+        Slug            NVARCHAR(100) NOT NULL,
+        Name            NVARCHAR(200) NOT NULL,
+        Description     NVARCHAR(500) NULL,
+        Category        NVARCHAR(50) NOT NULL DEFAULT 'general',
+        Icon            NVARCHAR(10) NULL,
+        Version         NVARCHAR(20) NOT NULL DEFAULT '1.0',
+        Author          NVARCHAR(100) NULL,
+        FieldCount      INT NOT NULL DEFAULT 0,
+        HasCustomHtml   BIT NOT NULL DEFAULT 0,
+        HasCustomJs     BIT NOT NULL DEFAULT 0,
+        ThumbnailPath   NVARCHAR(500) NULL,
+        FolderPath      NVARCHAR(500) NOT NULL,
+        MetadataJson    NVARCHAR(MAX) NULL,
+        JsScanResult    NVARCHAR(MAX) NULL,
+        IsEnabled       BIT NOT NULL DEFAULT 1,
+        InstallDate     DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        InstalledBy     INT NOT NULL,
+        CONSTRAINT PK_MF_Templates PRIMARY KEY (TemplateId)
+    );
+    CREATE UNIQUE INDEX IX_MF_Templates_Slug ON MF_Templates(PortalId, Slug);
+END
+GO
+
+-- ============================================================
+-- 12. MF_FormViews — Multi-view per form
+-- ============================================================
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_FormViews')
+BEGIN
+    CREATE TABLE [dbo].[MF_FormViews] (
+        ViewId          INT IDENTITY(1,1) NOT NULL,
+        FormId          INT NOT NULL,
+        ViewKey         NVARCHAR(100) NOT NULL,
+        ViewType        NVARCHAR(30) NOT NULL,
+        ViewName        NVARCHAR(200) NOT NULL,
+        IsDefault       BIT NOT NULL DEFAULT 0,
+        SortOrder       INT NOT NULL DEFAULT 0,
+        ConfigJson      NVARCHAR(MAX) NULL,
+        CustomHtml      NVARCHAR(MAX) NULL,
+        CustomCss       NVARCHAR(MAX) NULL,
+        PermissionsJson NVARCHAR(MAX) NULL,
+        CreatedOnUtc    DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        CONSTRAINT PK_MF_FormViews PRIMARY KEY (ViewId),
+        CONSTRAINT FK_MF_FormViews_Form FOREIGN KEY (FormId)
+            REFERENCES MF_Forms(FormId) ON DELETE CASCADE
+    );
+    CREATE UNIQUE INDEX IX_MF_FormViews_Key ON MF_FormViews(FormId, ViewKey);
+END
+GO
+
+-- ============================================================
+-- 13. MF_FormPermissions — Form-level access control
+-- ============================================================
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_FormPermissions')
+BEGIN
+    CREATE TABLE [dbo].[MF_FormPermissions] (
+        PermissionId    INT IDENTITY(1,1) NOT NULL,
+        FormId          INT NOT NULL,
+        PermissionType  NVARCHAR(50) NOT NULL,
+        PrincipalType   NVARCHAR(20) NOT NULL,
+        PrincipalId     NVARCHAR(200) NOT NULL,
+        IsGranted       BIT NOT NULL DEFAULT 1,
+        CONSTRAINT PK_MF_FormPermissions PRIMARY KEY (PermissionId),
+        CONSTRAINT FK_MF_FormPerms_Form FOREIGN KEY (FormId)
+            REFERENCES MF_Forms(FormId) ON DELETE CASCADE
+    );
+    CREATE INDEX IX_MF_FormPerms_Form ON MF_FormPermissions(FormId, PermissionType);
+END
+GO
+
+-- ============================================================
+-- 14. MF_AuditLog
+-- ============================================================
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_AuditLog')
+BEGIN
+    CREATE TABLE [dbo].[MF_AuditLog] (
+        LogId           BIGINT IDENTITY(1,1) NOT NULL,
+        [Timestamp]     DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        UserId          INT NOT NULL,
+        UserName        NVARCHAR(100) NOT NULL,
+        IpAddress       NVARCHAR(45) NULL,
+        [Action]        NVARCHAR(50) NOT NULL,
+        EntityType      NVARCHAR(50) NOT NULL,
+        EntityId        INT NULL,
+        FormId          INT NULL,
+        Details         NVARCHAR(MAX) NULL,
+        Result          NVARCHAR(20) NOT NULL DEFAULT 'success',
+        CONSTRAINT PK_MF_AuditLog PRIMARY KEY CLUSTERED (LogId)
+    );
+    CREATE INDEX IX_MF_AuditLog_User ON MF_AuditLog(UserId, [Timestamp] DESC);
+    CREATE INDEX IX_MF_AuditLog_Form ON MF_AuditLog(FormId, [Timestamp] DESC);
+END
+GO
+
+-- ============================================================
+-- 15. MF_Workflows
+-- ============================================================
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_Workflows')
+BEGIN
+    CREATE TABLE [dbo].[MF_Workflows] (
+        WorkflowId      INT IDENTITY(1,1) NOT NULL,
+        FormId          INT NOT NULL,
+        WorkflowName    NVARCHAR(200) NOT NULL,
+        Description     NVARCHAR(500) NULL,
+        TriggerType     NVARCHAR(50) NOT NULL,
+        TriggerConfig   NVARCHAR(MAX) NULL,
+        StepsJson       NVARCHAR(MAX) NOT NULL,
+        IsEnabled       BIT NOT NULL DEFAULT 1,
+        Version         INT NOT NULL DEFAULT 1,
+        CreatedByUserId INT NOT NULL,
+        CreatedOnUtc    DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        ModifiedOnUtc   DATETIME2 NULL,
+        CONSTRAINT PK_MF_Workflows PRIMARY KEY (WorkflowId),
+        CONSTRAINT FK_MF_Workflows_Form FOREIGN KEY (FormId)
+            REFERENCES MF_Forms(FormId) ON DELETE CASCADE
+    );
+END
+GO
+
+-- ============================================================
+-- 16. MF_WorkflowRuns
+-- ============================================================
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_WorkflowRuns')
+BEGIN
+    CREATE TABLE [dbo].[MF_WorkflowRuns] (
+        RunId           BIGINT IDENTITY(1,1) NOT NULL,
+        WorkflowId      INT NOT NULL,
+        SubmissionId    INT NULL,
+        [Status]        NVARCHAR(20) NOT NULL DEFAULT 'running',
+        CurrentStepId   NVARCHAR(100) NULL,
+        StartedOnUtc    DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        CompletedOnUtc  DATETIME2 NULL,
+        ContextJson     NVARCHAR(MAX) NULL,
+        ErrorMessage    NVARCHAR(MAX) NULL,
+        CONSTRAINT PK_MF_WorkflowRuns PRIMARY KEY (RunId),
+        CONSTRAINT FK_MF_WFRuns_WF FOREIGN KEY (WorkflowId)
+            REFERENCES MF_Workflows(WorkflowId)
+    );
+    CREATE INDEX IX_MF_WFRuns_Status ON MF_WorkflowRuns([Status], WorkflowId);
+END
+GO
+
+-- ============================================================
+-- 17. MF_WorkflowStepLog
+-- ============================================================
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_WorkflowStepLog')
+BEGIN
+    CREATE TABLE [dbo].[MF_WorkflowStepLog] (
+        StepLogId       BIGINT IDENTITY(1,1) NOT NULL,
+        RunId           BIGINT NOT NULL,
+        StepId          NVARCHAR(100) NOT NULL,
+        StepType        NVARCHAR(50) NOT NULL,
+        StepName        NVARCHAR(200) NULL,
+        [Status]        NVARCHAR(20) NOT NULL,
+        InputJson       NVARCHAR(MAX) NULL,
+        OutputJson      NVARCHAR(MAX) NULL,
+        ErrorMessage    NVARCHAR(MAX) NULL,
+        ExecutedOnUtc   DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        DurationMs      INT NULL,
+        CONSTRAINT PK_MF_WFStepLog PRIMARY KEY (StepLogId),
+        CONSTRAINT FK_MF_WFStepLog_Run FOREIGN KEY (RunId)
+            REFERENCES MF_WorkflowRuns(RunId)
+    );
+END
+GO
+
+-- ============================================================
+-- 18. MF_UniqueIdCounters — Atomic sequential ID generator
+-- ============================================================
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_UniqueIdCounters')
+BEGIN
+    CREATE TABLE [dbo].[MF_UniqueIdCounters] (
+        CounterId       INT IDENTITY(1,1) PRIMARY KEY,
+        FormId          INT NOT NULL,
+        FieldKey        NVARCHAR(100) NOT NULL,
+        CurrentValue    BIGINT NOT NULL DEFAULT 0,
+        CONSTRAINT UQ_MF_UniqueIdCounters UNIQUE (FormId, FieldKey)
+    );
+END
+GO
+
+-- ============================================================
+-- 19. MF_FormRelations — Cross-form linking (Forum→Replies, CRM→Deals)
+-- ============================================================
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_FormRelations')
+BEGIN
+    CREATE TABLE [dbo].[MF_FormRelations] (
+        RelationId      INT IDENTITY(1,1) NOT NULL,
+        ParentFormId    INT NOT NULL,
+        ChildFormId     INT NOT NULL,
+        RelationType    NVARCHAR(50) NOT NULL,
+        ForeignKey      NVARCHAR(100) NOT NULL,
+        ParentKey       NVARCHAR(100) NOT NULL DEFAULT 'SubmissionId',
+        Label           NVARCHAR(200) NULL,
+        CascadeDelete   BIT NOT NULL DEFAULT 0,
+        CONSTRAINT PK_MF_FormRelations PRIMARY KEY (RelationId),
+        CONSTRAINT FK_MF_FormRel_Parent FOREIGN KEY (ParentFormId) REFERENCES MF_Forms(FormId),
+        CONSTRAINT FK_MF_FormRel_Child FOREIGN KEY (ChildFormId) REFERENCES MF_Forms(FormId)
+    );
+    CREATE INDEX IX_MF_FormRel_Parent ON MF_FormRelations(ParentFormId);
+    CREATE INDEX IX_MF_FormRel_Child ON MF_FormRelations(ChildFormId);
+END
+GO
+
+-- ============================================================
+-- 20. MF_SubmissionLinks — Actual parent→child record links
+-- ============================================================
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_SubmissionLinks')
+BEGIN
+    CREATE TABLE [dbo].[MF_SubmissionLinks] (
+        LinkId              INT IDENTITY(1,1) NOT NULL,
+        RelationId          INT NOT NULL,
+        ParentSubmissionId  INT NOT NULL,
+        ChildSubmissionId   INT NOT NULL,
+        CreatedOnUtc        DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+        CONSTRAINT PK_MF_SubmissionLinks PRIMARY KEY (LinkId),
+        CONSTRAINT FK_MF_SubLink_Rel FOREIGN KEY (RelationId) REFERENCES MF_FormRelations(RelationId),
+        CONSTRAINT FK_MF_SubLink_Parent FOREIGN KEY (ParentSubmissionId) REFERENCES MF_Submissions(SubmissionId),
+        CONSTRAINT FK_MF_SubLink_Child FOREIGN KEY (ChildSubmissionId) REFERENCES MF_Submissions(SubmissionId)
+    );
+    CREATE INDEX IX_MF_SubLink_Parent ON MF_SubmissionLinks(ParentSubmissionId, RelationId);
+    CREATE INDEX IX_MF_SubLink_Child ON MF_SubmissionLinks(ChildSubmissionId);
+END
+GO
+
+-- ============================================================
+-- MIGRATION: Add system fields to MF_Submissions (v1.1 → v1.2)
+-- ============================================================
+IF EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_Submissions')
+   AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_Submissions') AND name = 'ModifiedOnUtc')
+BEGIN
+    ALTER TABLE [dbo].[MF_Submissions] ADD ModifiedOnUtc DATETIME2 NULL;
+    ALTER TABLE [dbo].[MF_Submissions] ADD ModifiedByUserId INT NULL;
+END
+GO
+
+-- ============================================================
+-- MF_ModuleViewConfig — Per-module view configuration
+-- Stores which view type + form each module instance uses
+-- ============================================================
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_ModuleViewConfig')
+BEGIN
+    CREATE TABLE [dbo].[MF_ModuleViewConfig] (
+        ConfigId        INT IDENTITY(1,1)  NOT NULL,
+        ModuleId        INT                NOT NULL,
+        FormId          INT                NOT NULL,
+        ViewType        NVARCHAR(30)       NOT NULL DEFAULT 'submit',
+        ViewConfigJson  NVARCHAR(MAX)      NULL,
+        CssClass        NVARCHAR(200)      NULL,
+        CacheMinutes    INT                NOT NULL DEFAULT 0,
+        PermissionsJson NVARCHAR(MAX)      NULL,
+        CreatedOnUtc    DATETIME2          NOT NULL DEFAULT SYSUTCDATETIME(),
+        ModifiedOnUtc   DATETIME2          NULL,
+        CONSTRAINT PK_MF_ModuleViewConfig PRIMARY KEY (ConfigId),
+        CONSTRAINT FK_MF_ModuleViewConfig_Form FOREIGN KEY (FormId)
+            REFERENCES [dbo].[MF_Forms](FormId) ON DELETE CASCADE
+    );
+    CREATE UNIQUE INDEX IX_MF_ModuleViewConfig_Module ON MF_ModuleViewConfig(ModuleId);
+END
+GO

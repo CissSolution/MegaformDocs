@@ -1,0 +1,210 @@
+{
+  "version": "1.0",
+  "fields": [
+    {
+      "key": "section_personal",
+      "type": "Section",
+      "label": "Personal Information",
+      "htmlContent": "<h3>Personal Information</h3><p>Please fill in your details below.</p>",
+      "order": 1,
+      "pageIndex": 0
+    },
+    {
+      "key": "full_name",
+      "type": "Text",
+      "label": "Full Name",
+      "placeholder": "Enter your full name",
+      "required": true,
+      "order": 2,
+      "pageIndex": 0,
+      "width": "100%",
+      "validation": {
+        "minLength": 2,
+        "maxLength": 100
+      },
+      "prefillParam": "name"
+    },
+    {
+      "key": "email",
+      "type": "Email",
+      "label": "Email Address",
+      "placeholder": "you@example.com",
+      "required": true,
+      "order": 3,
+      "pageIndex": 0,
+      "width": "50%",
+      "prefillParam": "email"
+    },
+    {
+      "key": "phone",
+      "type": "Phone",
+      "label": "Phone Number",
+      "placeholder": "+1 (555) 000-0000",
+      "required": false,
+      "order": 4,
+      "pageIndex": 0,
+      "width": "50%"
+    },
+    {
+      "key": "section_request",
+      "type": "Section",
+      "label": "Your Request",
+      "htmlContent": "<h3>Your Request</h3>",
+      "order": 10,
+      "pageIndex": 1
+    },
+    {
+      "key": "category",
+      "type": "Select",
+      "label": "Category",
+      "required": true,
+      "order": 11,
+      "pageIndex": 1,
+      "options": [
+        { "label": "-- Please select --", "value": "", "disabled": true },
+        { "label": "General Inquiry", "value": "general" },
+        { "label": "Technical Support", "value": "support" },
+        { "label": "Sales", "value": "sales" },
+        { "label": "Feedback", "value": "feedback" },
+        { "label": "Other", "value": "other" }
+      ]
+    },
+    {
+      "key": "priority",
+      "type": "Radio",
+      "label": "Priority Level",
+      "required": true,
+      "order": 12,
+      "pageIndex": 1,
+      "showIf": {
+        "operator": "And",
+        "rules": [
+          { "field": "category", "condition": "Equals", "value": "support" }
+        ]
+      },
+      "options": [
+        { "label": "Low", "value": "low" },
+        { "label": "Medium", "value": "medium" },
+        { "label": "High", "value": "high" },
+        { "label": "Critical", "value": "critical" }
+      ]
+    },
+    {
+      "key": "budget_range",
+      "type": "Select",
+      "label": "Budget Range",
+      "order": 13,
+      "pageIndex": 1,
+      "showIf": {
+        "operator": "And",
+        "rules": [
+          { "field": "category", "condition": "Equals", "value": "sales" }
+        ]
+      },
+      "options": [
+        { "label": "Under $1,000", "value": "under_1k" },
+        { "label": "$1,000 - $5,000", "value": "1k_5k" },
+        { "label": "$5,000 - $20,000", "value": "5k_20k" },
+        { "label": "Over $20,000", "value": "over_20k" }
+      ]
+    },
+    {
+      "key": "other_category_text",
+      "type": "Text",
+      "label": "Please specify",
+      "required": true,
+      "order": 14,
+      "pageIndex": 1,
+      "showIf": {
+        "operator": "And",
+        "rules": [
+          { "field": "category", "condition": "Equals", "value": "other" }
+        ]
+      }
+    },
+    {
+      "key": "message",
+      "type": "Textarea",
+      "label": "Message",
+      "placeholder": "Describe your request in detail...",
+      "required": true,
+      "order": 20,
+      "pageIndex": 1,
+      "validation": {
+        "minLength": 10,
+        "maxLength": 5000
+      }
+    },
+    {
+      "key": "attachment",
+      "type": "File",
+      "label": "Attachment (optional)",
+      "order": 21,
+      "pageIndex": 1,
+      "fileSettings": {
+        "maxSizeMB": 10,
+        "allowedExtensions": [".pdf", ".jpg", ".jpeg", ".png", ".gif", ".doc", ".docx", ".xlsx"],
+        "maxFiles": 3
+      }
+    },
+    {
+      "key": "preferred_contact",
+      "type": "Checkbox",
+      "label": "Preferred Contact Method",
+      "order": 22,
+      "pageIndex": 1,
+      "options": [
+        { "label": "Email", "value": "email", "selected": true },
+        { "label": "Phone", "value": "phone" },
+        { "label": "Video Call", "value": "video" }
+      ]
+    },
+    {
+      "key": "newsletter",
+      "type": "Checkbox",
+      "label": "Subscribe to our newsletter",
+      "order": 30,
+      "pageIndex": 1
+    },
+    {
+      "key": "terms",
+      "type": "Checkbox",
+      "label": "I agree to the <a href='/terms' target='_blank'>Terms and Conditions</a>",
+      "required": true,
+      "order": 31,
+      "pageIndex": 1
+    },
+    {
+      "key": "referral_source",
+      "type": "Hidden",
+      "label": "Referral Source",
+      "order": 99,
+      "pageIndex": 1,
+      "prefillParam": "ref"
+    },
+    {
+      "key": "utm_campaign",
+      "type": "Hidden",
+      "label": "UTM Campaign",
+      "order": 100,
+      "pageIndex": 1,
+      "prefillParam": "utm_campaign"
+    }
+  ],
+  "pages": [
+    { "index": 0, "title": "About You", "description": "Tell us who you are" },
+    { "index": 1, "title": "Your Request", "description": "What can we help with?" }
+  ],
+  "settings": {
+    "multiPage": true,
+    "showProgressBar": true,
+    "showPageTitles": true,
+    "honeypotFieldName": "__mf_hp",
+    "rateLimitWindowMinutes": 5,
+    "rateLimitMaxPerWindow": 3,
+    "enableAnalytics": true,
+    "labelPosition": "top",
+    "formWidth": "700px",
+    "saveAndContinueDays": 30
+  }
+}

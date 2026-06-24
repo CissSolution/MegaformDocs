@@ -1,0 +1,490 @@
+/* ============================================================
+   MegaForm Built-in Widgets CSS v1.0
+   Covers: Signature, AdvancedFile, Repeater, Rating, ImageChoice, RichText, Payment, Geolocation, Appointment
+   ============================================================ */
+
+/* ============================================================
+   1. E-SIGNATURE
+   ============================================================ */
+.mfw-sig-wrap { border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; background: #fff; }
+.mfw-sig-tabs { display: flex; border-bottom: 1px solid #e5e7eb; }
+.mfw-sig-tab { flex: 1; padding: 10px; text-align: center; border: none; background: #f9fafb; cursor: pointer; font-size: 13px; font-weight: 600; color: #6b7280; transition: all .2s; }
+.mfw-sig-tab.active { background: #fff; color: #4f46e5; border-bottom: 2px solid #4f46e5; }
+.mfw-sig-tab:hover:not(.active) { background: #f3f4f6; }
+.mfw-sig-canvas { width: 100%; display: block; cursor: crosshair; touch-action: none; border-bottom: 1px dashed #d1d5db; }
+.mfw-sig-actions { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; }
+.mfw-sig-clear { border: 1px solid #d1d5db; background: #fff; color: #6b7280; padding: 4px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; transition: all .15s; }
+.mfw-sig-clear:hover { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
+.mfw-sig-ts { font-size: 11px; color: #10b981; font-style: italic; }
+.mfw-sig-type-area { padding: 16px; }
+.mfw-sig-typed-input { width: 100%; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
+.mfw-sig-typed-preview { min-height: 60px; display: flex; align-items: center; justify-content: center; margin-top: 12px; font-family: 'Dancing Script', 'Brush Script MT', cursive; font-size: 36px; font-style: italic; color: #1a1a2e; padding: 12px; border: 1px dashed #d1d5db; border-radius: 8px; }
+
+/* ============================================================
+   2. ADVANCED FILE UPLOAD
+   ============================================================ */
+.mfw-upload-zone { border: 2px dashed #d1d5db; border-radius: 12px; padding: 28px; text-align: center; cursor: pointer; transition: all .2s; background: #fafafa; position: relative; }
+.mfw-upload-zone:hover, .mfw-upload-zone.mfw-dragover { border-color: #6366f1; background: #f5f3ff; }
+.mfw-upload-icon { font-size: 36px; margin-bottom: 8px; }
+.mfw-upload-text { font-size: 14px; color: #374151; }
+.mfw-upload-text strong { color: #4f46e5; }
+.mfw-upload-hint { font-size: 12px; color: #9ca3af; margin-top: 4px; }
+.mfw-upload-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.mfw-upload-extras { display: flex; gap: 8px; margin-top: 8px; }
+.mfw-upload-camera-btn { border: 1px solid #d1d5db; background: #fff; padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; transition: all .15s; }
+.mfw-upload-camera-btn:hover { background: #f9fafb; border-color: #6366f1; }
+.mfw-upload-list { margin-top: 10px; }
+.mfw-upload-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 8px; margin-top: 6px; background: #fff; }
+.mfw-upload-item.error { border-color: #fca5a5; background: #fef2f2; }
+.mfw-upload-thumb { width: 40px; height: 40px; border-radius: 6px; overflow: hidden; flex-shrink: 0; background: #f3f4f6; display: flex; align-items: center; justify-content: center; }
+.mfw-upload-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.mfw-upload-thumb-icon { font-size: 20px; }
+.mfw-upload-meta { flex: 1; min-width: 0; }
+.mfw-upload-name { font-size: 13px; font-weight: 500; color: #374151; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mfw-upload-size { font-size: 11px; color: #9ca3af; }
+.mfw-upload-error { font-size: 11px; color: #dc2626; }
+.mfw-upload-progress { height: 4px; background: #e5e7eb; border-radius: 2px; margin-top: 4px; overflow: hidden; }
+.mfw-upload-progress-fill { height: 100%; background: #4f46e5; border-radius: 2px; transition: width .3s; }
+.mfw-upload-remove { border: none; background: none; color: #9ca3af; cursor: pointer; font-size: 16px; padding: 4px; line-height: 1; }
+.mfw-upload-remove:hover { color: #dc2626; }
+.mfw-upload-max { text-align: center; padding: 8px; font-size: 12px; color: #f59e0b; }
+
+/* ============================================================
+   3. REPEATER / CONFIGURABLE LIST
+   ============================================================ */
+.mfw-repeater { border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; background: #fff; }
+.mfw-repeater-table-scroll { overflow-x: auto; }
+.mfw-repeater-table { width: 100%; border-collapse: collapse; }
+.mfw-repeater-table th { padding: 8px 10px; font-size: 12px; font-weight: 600; color: #6b7280; text-align: left; background: #f9fafb; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
+.mfw-repeater-table td { padding: 6px 8px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+.mfw-repeater-action-col { width: 36px; text-align: center; }
+.mfw-rep-input { width: 100%; padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background: #fff; }
+.mfw-rep-input:focus { border-color: #6366f1; outline: none; box-shadow: 0 0 0 2px rgba(99,102,241,.1); }
+.mfw-rep-textarea { min-height: 50px; resize: vertical; }
+.mfw-rep-check { width: 16px; height: 16px; accent-color: #4f46e5; }
+.mfw-repeater-remove { border: none; background: none; color: #d1d5db; cursor: pointer; font-size: 14px; padding: 4px; border-radius: 4px; }
+.mfw-repeater-remove:hover { color: #dc2626; background: #fef2f2; }
+.mfw-repeater-footer { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-top: 1px solid #e5e7eb; background: #f9fafb; }
+.mfw-repeater-add { border: 1px dashed #6366f1; background: #f5f3ff; color: #4f46e5; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all .15s; }
+.mfw-repeater-add:hover { background: #4f46e5; color: #fff; }
+.mfw-repeater-count { font-size: 11px; color: #9ca3af; }
+/* Card layout */
+.mfw-repeater-cards { padding: 10px; }
+.mfw-repeater-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-bottom: 8px; background: #fff; }
+.mfw-repeater-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 12px; font-weight: 600; color: #6b7280; }
+.mfw-repeater-card-field { margin-bottom: 8px; }
+.mfw-repeater-card-field label { display: block; font-size: 11px; font-weight: 600; color: #6b7280; margin-bottom: 2px; }
+
+/* ============================================================
+   4. STAR RATING
+   ============================================================ */
+.mfw-rating-wrap { padding: 4px 0; }
+.mfw-rating-labels { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 11px; color: #9ca3af; }
+.mfw-rating-items { display: flex; gap: 4px; align-items: center; }
+.mfw-rating-item { transition: all .15s; user-select: none; }
+.mfw-rating-item:hover { transform: scale(1.2); }
+.mfw-rating-item.active { color: #fbbf24 !important; }
+.mfw-rating-value { font-size: 12px; color: #6b7280; margin-top: 4px; }
+
+/* ============================================================
+   5. IMAGE CHOICE
+   ============================================================ */
+.mfw-imgchoice-grid { display: grid; grid-template-columns: repeat(var(--mfw-ic-cols, 3), 1fr); gap: 12px; }
+@media (max-width: 600px) { .mfw-imgchoice-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 400px) { .mfw-imgchoice-grid { grid-template-columns: 1fr; } }
+.mfw-imgchoice-card { border: 2px solid #e5e7eb; border-radius: 12px; overflow: hidden; cursor: pointer; transition: all .2s; background: #fff; position: relative; }
+.mfw-imgchoice-card:hover { border-color: #a5b4fc; box-shadow: 0 4px 12px rgba(99,102,241,.1); transform: translateY(-2px); }
+.mfw-imgchoice-card.selected { border-color: var(--mfw-ic-accent, #4f46e5); box-shadow: 0 0 0 3px rgba(79,70,229,.15); }
+.mfw-imgchoice-bordered .mfw-imgchoice-card { border-width: 2px; }
+.mfw-imgchoice-shadow .mfw-imgchoice-card { border: none; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+.mfw-imgchoice-shadow .mfw-imgchoice-card.selected { box-shadow: 0 0 0 3px var(--mfw-ic-accent, #4f46e5); }
+.mfw-imgchoice-img { height: 120px; overflow: hidden; background: #f3f4f6; }
+.mfw-imgchoice-img img { width: 100%; height: 100%; object-fit: cover; }
+.mfw-imgchoice-placeholder { display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 700; color: #d1d5db; }
+.mfw-imgchoice-info { padding: 10px 12px; }
+.mfw-imgchoice-label { font-size: 13px; font-weight: 600; color: #374151; }
+.mfw-imgchoice-desc { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+.mfw-imgchoice-price { font-size: 14px; font-weight: 700; color: #4f46e5; margin-top: 4px; }
+.mfw-imgchoice-check { position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; border-radius: 50%; background: var(--mfw-ic-accent, #4f46e5); color: #fff; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .2s; }
+.mfw-imgchoice-card.selected .mfw-imgchoice-check { opacity: 1; }
+
+/* ============================================================
+   8. RICH TEXT EDITOR
+   ============================================================ */
+.mfw-rte-wrap { border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; }
+.mfw-rte-editor { background: #fff; }
+.mfw-rte-loading { padding: 20px; text-align: center; color: #9ca3af; font-size: 13px; }
+.mfw-rte-wrap .ql-toolbar { border: none !important; border-bottom: 1px solid #e5e7eb !important; background: #f9fafb; }
+.mfw-rte-wrap .ql-container { border: none !important; font-size: 14px; }
+
+/* ============================================================
+   9. PAYMENT
+   ============================================================ */
+.mfw-payment { border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; background: #fff; }
+.mfw-payment-breakdown { padding: 16px; background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
+.mfw-payment-line { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; color: #6b7280; }
+.mfw-payment-total { font-size: 16px; font-weight: 700; color: #111827; border-top: 1px solid #e5e7eb; margin-top: 8px; padding-top: 8px; }
+.mfw-payment-buttons { padding: 16px; display: flex; gap: 10px; flex-wrap: wrap; }
+.mfw-pay-btn { flex: 1; padding: 12px; border-radius: 8px; border: 2px solid #e5e7eb; background: #fff; cursor: pointer; font-size: 14px; font-weight: 600; text-align: center; transition: all .2s; min-width: 140px; }
+.mfw-pay-btn:hover { border-color: #6366f1; background: #f5f3ff; }
+.mfw-pay-stripe { color: #635bff; }
+.mfw-pay-paypal-btn { color: #003087; }
+.mfw-pay-icon { margin-right: 6px; }
+.mfw-payment-status { padding: 0 16px; }
+.mfw-payment-success { padding: 12px 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; color: #065f46; font-size: 13px; font-weight: 500; margin: 8px 0; }
+.mfw-stripe-form { padding: 16px; border-top: 1px solid #e5e7eb; }
+.mfw-stripe-element { border: 1px solid #d1d5db; border-radius: 8px; padding: 12px; margin-bottom: 10px; background: #fff; }
+.mfw-stripe-error { color: #dc2626; font-size: 12px; margin-bottom: 8px; }
+.mfw-pay-submit { background: #4f46e5; color: #fff; border: none; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; }
+.mfw-pay-submit:hover { background: #4338ca; }
+.mfw-pay-submit:disabled { opacity: .5; cursor: wait; }
+.mfw-pay-cancel { background: none; border: 1px solid #d1d5db; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; margin-left: 8px; }
+
+/* ============================================================
+   10. GEOLOCATION
+   ============================================================ */
+.mfw-geo { border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; background: #fff; }
+.mfw-geo-consent { padding: 24px; text-align: center; background: #f9fafb; }
+.mfw-geo-consent-icon { font-size: 32px; margin-bottom: 8px; }
+.mfw-geo-consent-text { font-size: 13px; color: #6b7280; max-width: 400px; margin: 0 auto 12px; }
+.mfw-geo-consent-btn { background: #4f46e5; color: #fff; border: none; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; }
+.mfw-geo-consent-btn:hover { background: #4338ca; }
+.mfw-geo-content { padding: 16px; }
+.mfw-geo-actions { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.mfw-geo-detect { border: 1px solid #d1d5db; background: #fff; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; }
+.mfw-geo-detect:hover { background: #f9fafb; border-color: #4f46e5; }
+.mfw-geo-status { font-size: 12px; }
+.mfw-geo-status.success { color: #10b981; }
+.mfw-geo-status.error { color: #dc2626; }
+.mfw-geo-status.loading { color: #f59e0b; }
+.mfw-geo-coords { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.mfw-geo-coord-row label { display: block; font-size: 11px; font-weight: 600; color: #6b7280; margin-bottom: 2px; }
+.mfw-geo-coord-row input { width: 100%; padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 12px; background: #f9fafb; color: #6b7280; }
+.mfw-geo-address { margin-bottom: 10px; }
+.mfw-geo-address label { display: block; font-size: 11px; font-weight: 600; color: #6b7280; margin-bottom: 2px; }
+.mfw-geo-address input { width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+
+/* ============================================================
+   11. APPOINTMENT SCHEDULER
+   ============================================================ */
+.mfw-appt { position: relative; border: 1px solid #e5e7eb; border-radius: 24px; background: #fff; box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08); overflow: hidden; }
+.mfw-appt-shell { padding: 18px; }
+.mfw-appt-main { display: grid; grid-template-columns: minmax(280px, 1.08fr) minmax(220px, 0.92fr); gap: 18px; align-items: start; }
+.mfw-appt-panel { border: 1px solid #e8edf7; border-radius: 20px; background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%); }
+.mfw-appt-panel-left { padding: 16px; }
+.mfw-appt-panel-right { padding: 16px; }
+.mfw-appt-datebar { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 54px; padding: 0 16px; border: 1px solid #dbe5ff; border-radius: 16px; background: #fff; box-shadow: inset 0 1px 0 rgba(255,255,255,0.6); }
+.mfw-appt-datevalue { font-size: 15px; font-weight: 600; color: #1f2a44; letter-spacing: 0.01em; }
+.mfw-appt-dateicon { width: 38px; height: 38px; border-radius: 12px; border: 1px solid #dbe5ff; background: linear-gradient(180deg, #ffffff 0%, #f2f6ff 100%); color: #5b74f2; cursor: pointer; }
+.mfw-appt-dateicon:hover { background: #eef4ff; }
+.mfw-appt-dateicon-glyph { font-size: 18px; line-height: 1; }
+.mfw-appt-picker-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+/* [ApptSelectFix v20260502-11] Native <select> styling was getting clobbered by
+   host themes (Oqtane/DNN apply line-height:1 + custom borders → text appears
+   cut off at the top of the box, dropdown arrow missing). Force-reset native
+   appearance, set explicit line-height matching the container, add a custom
+   SVG chevron via background-image, and bump specificity with attribute
+   selector so host CSS can't undo us. */
+.mfw-appt-picker-row select.mfw-appt-select,
+select.mfw-appt-select {
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  width: 100% !important;
+  height: 44px !important;
+  padding: 0 36px 0 14px !important;
+  border: 1px solid #dbe5ff !important;
+  border-radius: 12px !important;
+  background-color: #fff !important;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none' stroke='%23475569' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M1 1l5 5 5-5'/></svg>") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+  background-size: 12px 8px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  font-family: inherit !important;
+  line-height: 42px !important;  /* matches height minus 2px border so glyph centers vertically */
+  color: #1f2a44 !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+  text-align: left !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  cursor: pointer !important;
+}
+select.mfw-appt-select:focus { border-color: #8ea7ff !important; box-shadow: 0 0 0 3px rgba(92, 118, 255, 0.12) !important; }
+select.mfw-appt-select::-ms-expand { display: none !important; }
+.mfw-appt-calendar { margin-top: 14px; }
+.mfw-cal-title { margin-bottom: 10px; font-size: 13px; font-weight: 700; color: #7a88a6; letter-spacing: 0.08em; text-transform: uppercase; }
+.mfw-cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+.mfw-cal-header { text-align: center; font-size: 12px; font-weight: 700; color: #8a98b6; padding: 6px 0 8px; }
+.mfw-cal-empty { min-height: 42px; }
+.mfw-cal-day { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid transparent; border-radius: 14px; background: #f7f9fe; color: #25314f; font-size: 14px; font-weight: 600; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease, background .15s ease, color .15s ease, border-color .15s ease; }
+.mfw-cal-day:hover:not(.disabled) { transform: translateY(-1px); border-color: #d7e3ff; background: #eef4ff; color: #4763f6; box-shadow: 0 8px 18px rgba(71, 99, 246, 0.12); }
+.mfw-cal-day.disabled { background: #fafbfe; color: #c4ccdd; cursor: not-allowed; box-shadow: none; }
+.mfw-cal-day.today { border-color: #b9c8ff; color: #4763f6; }
+.mfw-cal-day.selected { border-color: #4f73ff; background: linear-gradient(180deg, #5d80ff 0%, #4a6ff7 100%); color: #fff; box-shadow: 0 14px 26px rgba(79, 115, 255, 0.24); }
+.mfw-appt-right-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 18px; }
+.mfw-appt-selected-date { min-height: 34px; font-size: 15px; font-weight: 700; color: #25314f; display: flex; align-items: center; }
+.mfw-appt-inline-nav { display: flex; gap: 10px; }
+.mfw-cal-prev, .mfw-cal-next { width: 38px; height: 38px; border-radius: 999px; border: 1px solid #e3e9f7; background: linear-gradient(180deg, #ffffff 0%, #f4f7fe 100%); color: #64748b; cursor: pointer; font-size: 22px; line-height: 1; }
+.mfw-cal-prev:hover, .mfw-cal-next:hover { background: #eef4ff; color: #4763f6; }
+.mfw-appt-slots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.mfw-appt-slot { min-height: 56px; padding: 0 16px; border: 1px solid #98adff; border-radius: 16px; background: #fff; color: #4f73ff; font-size: 15px; font-weight: 700; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease, background .15s ease, color .15s ease, border-color .15s ease; }
+.mfw-appt-slot:hover { transform: translateY(-1px); border-color: #4f73ff; background: #eef4ff; box-shadow: 0 12px 24px rgba(79, 115, 255, 0.14); }
+.mfw-appt-slot.selected { color: #fff; border-color: #4f73ff; background: linear-gradient(180deg, #5d80ff 0%, #4a6ff7 100%); box-shadow: 0 14px 28px rgba(79, 115, 255, 0.24); }
+.mfw-appt-slot.booked { border-color: #e5e7eb; background: #f8fafc; color: #a1a7b4; cursor: not-allowed; text-decoration: line-through; box-shadow: none; }
+.mfw-appt-no-slots { padding: 18px 0 4px; font-size: 14px; color: #8a98b6; }
+.mfw-appt-timezone { display: inline-flex; align-items: center; gap: 8px; margin-top: 20px; color: #55627d; font-size: 14px; font-weight: 600; }
+.mfw-appt-timezone-icon { font-size: 17px; line-height: 1; color: #6f7ea3; }
+.mfw-appt-confirm { display: none; margin-top: 18px; padding: 18px; border: 1px solid #d8e4ff; border-radius: 18px; background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%); }
+.mfw-appt-confirm-title { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 800; color: #22304f; }
+.mfw-appt-confirm-icon { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: linear-gradient(180deg, #5d80ff 0%, #4a6ff7 100%); color: #fff; }
+.mfw-appt-summary { margin-top: 14px; display: grid; gap: 12px; }
+.mfw-appt-summary-row { display: grid; grid-template-columns: 84px 1fr; gap: 14px; align-items: start; }
+.mfw-appt-summary-label { font-size: 13px; font-weight: 700; color: #7a88a6; text-transform: uppercase; letter-spacing: 0.06em; }
+.mfw-appt-summary-value { font-size: 15px; font-weight: 700; color: #22304f; }
+.mfw-appt-change { margin-top: 16px; min-height: 42px; padding: 0 16px; border: 1px solid #d9e3ff; border-radius: 14px; background: #fff; color: #394867; font-size: 14px; font-weight: 700; cursor: pointer; }
+.mfw-appt-change:hover { background: #f8fbff; border-color: #bfd0ff; }
+.mfw-appt-badge { position: absolute; right: 18px; bottom: 18px; display: inline-flex; align-items: center; min-height: 32px; padding: 0 14px; border: 1px solid #d7deef; border-radius: 999px; background: rgba(244, 247, 254, 0.95); color: #6f7c97; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 600px) {
+    .mfw-nps-btn { width: 34px; height: 34px; font-size: 12px; }
+    .mfw-geo-coords { grid-template-columns: 1fr; }
+    .mfw-payment-buttons { flex-direction: column; }
+    .mfw-pay-btn { min-width: 100%; }
+    .mfw-repeater-table { font-size: 12px; }
+    .mfw-appt-shell { padding: 14px; }
+    .mfw-appt-main { grid-template-columns: 1fr; }
+    .mfw-appt-panel-left, .mfw-appt-panel-right { padding: 14px; }
+    .mfw-appt-right-head { flex-direction: column; align-items: flex-start; }
+    .mfw-appt-inline-nav { align-self: flex-end; }
+    .mfw-appt-slots { grid-template-columns: 1fr; }
+    .mfw-appt-slot { min-height: 50px; font-size: 14px; }
+    .mfw-appt-summary-row { grid-template-columns: 1fr; gap: 4px; }
+    .mfw-appt-badge { position: static; margin-top: 14px; }
+}
+
+
+/* Appointment compact refresh v20260403-02 */
+.mfw-appt { border-radius: 0; box-shadow: none; overflow: visible; }
+.mfw-appt-shell { padding: 0; }
+.mfw-appt-trigger { display: flex; width: 100%; }
+.mfw-appt-datebar { width: 100%; min-height: var(--mf-input-unified-height, 40px); height: var(--mf-input-unified-height, 40px); padding: 0 10px 0 12px; border-radius: var(--mf-input-radius, 6px); box-shadow: none; align-items: center; }
+.mfw-appt-datevalue { display: flex; align-items: center; flex: 1 1 auto; min-width: 0; min-height: 100%; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mfw-appt-datevalue.is-filled { color: #1f2a44; font-weight: 700; }
+/* [ApptSelectFix v20260502-11] Removed .mfw-appt-select from this border-radius:0
+   reset — the rounded 12px from the canonical select rule must win. The other
+   elements still get the flat compact look. */
+.mfw-appt-dateicon, .mfw-cal-day, .mfw-cal-prev, .mfw-cal-next, .mfw-appt-slot, .mfw-appt-change, .mfw-appt-confirm, .mfw-appt-confirm-icon, .mfw-appt-panel { border-radius: 0 !important; }
+.mfw-appt-dateicon { width: 32px; height: 32px; min-width: 32px; display: inline-flex; align-items: center; justify-content: center; padding: 0 !important; background: #f8fafc; border-color: #d8dee8 !important; border-radius: 6px !important; flex: 0 0 32px; line-height: 1; }
+.mfw-appt-dateicon:hover { background: #eef2f7; border-color: #2563eb !important; }
+.mfw-appt-dateicon-glyph { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; font-size: 0 !important; line-height: 1 !important; color: transparent; }
+.mfw-appt-dateicon-glyph::before { content: ""; width: 18px; height: 18px; display: block; background: center / 18px 18px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23475669' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 2v4'/%3E%3Cpath d='M16 2v4'/%3E%3Cpath d='M3 10h18'/%3E%3Cpath d='M5 4h14a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z'/%3E%3C/svg%3E"); }
+.mfw-appt-popover { display: none; position: absolute; top: calc(100% + 6px); left: 0; z-index: 20; width: min(560px, calc(100vw - 32px)); padding: 10px; border: 1px solid #dbe5ff; background: #fff; box-shadow: 0 12px 28px rgba(15,23,42,.12); }
+.mfw-appt.is-open .mfw-appt-popover { display: block; }
+.mfw-appt-popover[hidden] { display: none !important; }
+/* [B46 ApptEmptyLineFix v20260602] Collapse the empty horizontal strip that
+   used to appear below the appointment input when the calendar was closed.
+   Three sources contributed: (1) a redundant empty .mf-field-error block
+   inside .mfw-appt with margin-top:4px + line-height, (2) the shell padding
+   stacking under the trigger when the popover was [hidden], (3) the popover
+   block sometimes painting a 0-height row before display:none kicked in.
+   We now hard-collapse every child below the .mfw-appt-trigger when closed
+   and ensure the trigger sits as a single row aligned with sibling inputs. */
+.mfw-appt > .mf-field-error:empty { display: none !important; }
+.mfw-appt:not(.is-open) .mfw-appt-popover[hidden] { display: none !important; height: 0 !important; padding: 0 !important; border: 0 !important; margin: 0 !important; }
+.mfw-appt:not(.is-open) .mfw-appt-shell { padding: 0 !important; }
+.mfw-appt .mfw-appt-trigger,
+.mfw-appt .mfw-appt-datebar { display: flex; align-items: center; }
+.mfw-appt .mfw-appt-trigger { width: 100%; }
+.mfw-appt .mfw-appt-datebar { justify-content: space-between; box-sizing: border-box; }
+.mfw-appt-main { gap: 10px; grid-template-columns: minmax(240px, 1fr) minmax(180px, .95fr); }
+.mfw-appt-panel { background: #fff; }
+.mfw-appt-panel-left, .mfw-appt-panel-right { padding: 10px; }
+/* [ApptSelectFix v20260502-11] Compact override — keep all the canonical
+   select-fix overrides (appearance:none, line-height, arrow) but shrink. */
+.mfw-appt-panel-left select.mfw-appt-select,
+.mfw-appt-panel-right select.mfw-appt-select { height: 38px !important; padding: 0 32px 0 10px !important; line-height: 36px !important; }
+.mfw-cal-grid { gap: 6px; }
+.mfw-cal-day { min-height: 34px; background: #fff; }
+.mfw-cal-day.selected { background: #4a6ff7; box-shadow: none; }
+.mfw-cal-prev, .mfw-cal-next { width: 30px; height: 30px; font-size: 18px; }
+.mfw-appt-slot { min-height: 38px; padding: 0 10px; box-shadow: none; }
+.mfw-appt-slot:hover, .mfw-appt-slot.selected { box-shadow: none; transform: none; }
+.mfw-appt-confirm { margin-top: 12px; padding: 12px; }
+.mfw-appt-badge { display: none !important; }
+@media (max-width: 600px) {
+  .mfw-appt-popover { width: min(420px, calc(100vw - 24px)); }
+}
+
+/* Appointment trigger anti-duplicate-border v20260501-02
+   The form theme's pure-grid input style applies a bottom border to .mf-field
+   wrapping the appointment widget, producing a second underline below the
+   widget's own .mfw-appt-datebar border. Suppress those theme borders when
+   the field contains an appointment widget. */
+.mf-field:has(> .mfw-appt),
+.mf-field:has(.mfw-appt-trigger) {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+.mf-field:has(> .mfw-appt) > input,
+.mf-field:has(.mfw-appt-trigger) > input { display: none !important; }
+/* Keep the normal field label visible so Appointment aligns vertically with
+   sibling controls in the same row. The hidden-label reset made the trigger
+   jump upward next to labeled controls such as MultiSelect. */
+
+/* HideHeader v20260501-02 — form-level setting collapses the header block.
+   Targets all conventional header containers used by built-in custom HTML
+   templates so no blank gap is left behind. */
+.mf-form-wrapper.mf-hide-header .mfp-card-header,
+.mf-form-wrapper.mf-hide-header .mf-form-header,
+.mf-form-wrapper.mf-hide-header .mfp-form-title,
+.mf-form-wrapper.mf-hide-header .mfp-form-desc,
+.mf-form-wrapper.mf-hide-header .mfp-header,
+.mf-form-wrapper.mf-hide-header .mf-form-title,
+.mf-form-wrapper.mf-hide-header .mf-form-description,
+.mf-form-wrapper.mf-hide-header [data-mf-header] {
+  display: none !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+/* PaymentPro runtime v20260404-03 */
+.mfw-payment-wrap { --mfw-accent:#4f46e5; }
+.mfw-payment-card { border:1px solid #e6eaf2; border-radius:18px; background:linear-gradient(180deg,#ffffff 0%,#fbfcff 100%); padding:16px; box-shadow:0 16px 34px rgba(15,23,42,.05); }
+.mfw-payment-top { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:14px; align-items:end; }
+.mfw-payment-header { display:grid; gap:4px; }
+.mfw-payment-title { font-size:20px; font-weight:800; color:#0f172a; line-height:1.18; }
+.mfw-payment-description { font-size:13px; color:#64748b; line-height:1.5; }
+.mfw-payment-summary { display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+.mfw-payment-amount-box { min-width:190px; padding:12px 14px; border:1px solid #dbe3f0; border-radius:14px; background:#f8fafc; }
+.mfw-payment-amount-label { display:block; font-size:11px; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:.08em; }
+.mfw-payment-amount { display:block; margin-top:4px; font-size:22px; font-weight:900; color:#0f172a; letter-spacing:-.02em; }
+.mfw-payment-status { display:inline-flex; align-items:center; justify-content:center; min-height:36px; padding:0 14px; border-radius:999px; font-size:12px; font-weight:800; border:1px solid #dbe3f0; background:#f8fafc; color:#475569; }
+.mfw-payment-status[data-status="paid"] { border-color:#bbf7d0; background:#ecfdf5; color:#166534; }
+.mfw-payment-status[data-status="pending"] { border-color:#fde68a; background:#fff7ed; color:#c2410c; }
+.mfw-payment-status[data-status="failed"] { border-color:#fecaca; background:#fef2f2; color:#b91c1c; }
+.mfw-payment-provider-switch { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:14px; }
+.mfw-payment-provider-btn { display:grid; gap:3px; text-align:left; padding:12px 14px; border:1px solid #dbe3f0; border-radius:14px; background:#fff; cursor:pointer; transition:all .18s ease; }
+.mfw-payment-provider-btn:hover { border-color:var(--mfw-accent); box-shadow:0 10px 20px rgba(79,70,229,.07); }
+.mfw-payment-provider-btn.is-active { border-color:var(--mfw-accent); background:linear-gradient(180deg,#ffffff 0%,#f6f7ff 100%); box-shadow:0 10px 20px rgba(79,70,229,.10); }
+.mfw-payment-provider-brand { display:flex; align-items:center; gap:8px; font-size:14px; font-weight:800; color:#0f172a; }
+.mfw-payment-provider-mark,
+.mfw-payment-method-mark { display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:999px; font-size:11px; font-weight:900; line-height:1; }
+.mfw-payment-provider-mark.is-stripe,
+.mfw-payment-method-mark.is-stripe { background:#eef2ff; color:#4338ca; }
+.mfw-payment-provider-mark.is-paypal,
+.mfw-payment-method-mark.is-paypal { background:#eff6ff; color:#1d4ed8; }
+.mfw-payment-provider-meta { font-size:12px; color:#64748b; }
+.mfw-payment-stage { margin-top:14px; padding:14px; border:1px solid #e5eaf3; border-radius:16px; background:#fff; }
+.mfw-payment-method { display:none; }
+.mfw-payment-method.is-active { display:block; }
+.mfw-payment-method-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
+.mfw-payment-method-name { display:flex; align-items:center; gap:8px; font-size:15px; font-weight:800; color:#0f172a; }
+.mfw-payment-method-note { font-size:12px; color:#64748b; }
+.mfw-payment-stripe-element { min-height:52px; border:1px solid #dbe3f0; border-radius:12px; padding:11px 13px; background:#fff; }
+.mfw-payment-btn { margin-top:12px; width:100%; min-height:46px; padding:0 18px; border:none; border-radius:12px; background:linear-gradient(135deg,var(--mfw-accent) 0%,#4338ca 100%); color:#fff; font-size:15px; font-weight:800; cursor:pointer; box-shadow:0 12px 24px rgba(79,70,229,.18); transition:transform .18s ease, box-shadow .18s ease, opacity .18s ease; }
+.mfw-payment-btn:hover { transform:translateY(-1px); box-shadow:0 16px 28px rgba(79,70,229,.24); }
+.mfw-payment-btn:disabled { opacity:.55; cursor:wait; transform:none; box-shadow:none; }
+.mfw-payment-paypal-buttons { min-height:42px; }
+.mfw-payment-inline-msg { min-height:18px; margin-top:12px; font-size:12px; font-weight:700; color:#64748b; }
+.mfw-payment-inline-msg.is-success { color:#166534; }
+.mfw-payment-inline-msg.is-error { color:#b91c1c; }
+.mfw-payment-inline-msg.is-warn { color:#c2410c; }
+.mfw-payment-inline-msg.is-info { color:#475569; }
+.mfw-payment-mini-error { padding:11px 13px; border:1px solid #fecaca; border-radius:12px; background:#fef2f2; color:#b91c1c; font-size:12px; font-weight:700; }
+.mfw-payment-mini-hint { display:flex; align-items:center; min-height:52px; padding:11px 13px; border:1px dashed #dbe3f0; border-radius:12px; background:#f8fafc; color:#475569; font-size:12px; font-weight:700; line-height:1.4; }
+.mfw-payment-mini-hint.is-info { border-color:#bfdbfe; background:#eff6ff; color:#1d4ed8; }
+.mfw-payment-mini-hint.is-warn { border-color:#fde68a; background:#fffbeb; color:#b45309; }
+.mfw-payment-mini-hint.is-error { border-color:#fecaca; background:#fef2f2; color:#b91c1c; }
+@media (max-width: 760px) {
+  .mfw-payment-top { grid-template-columns:1fr; }
+  .mfw-payment-summary { justify-content:flex-start; }
+  .mfw-payment-amount-box { min-width:0; width:100%; }
+  .mfw-payment-provider-switch { grid-template-columns:1fr; }
+  .mfw-payment-method-head { flex-direction:column; align-items:flex-start; }
+}
+  .mfw-payment-summary { justify-content:flex-start; }
+  .mfw-payment-amount-box { min-width:0; width:100%; }
+  .mfw-payment-provider-switch { grid-template-columns:1fr; }
+  .mfw-payment-method-head { flex-direction:column; align-items:flex-start; }
+  .mfw-payment-amount { font-size:28px; }
+}
+
+/* Content Slider Widget — MfpContentSlider v20260414-03 */
+.mf-field-group[data-type="ContentSlider"] { width:100%; }
+.mfw-content-slider { width:100%; position:relative; }
+.mfp-slider-widget { --mfp-slider-height:240px; --mfp-slider-fit:cover; width:100%; }
+.mfp-slider-shell { position:relative; width:100%; }
+.mfp-slider-viewport { overflow:hidden; border-radius:18px; width:100%; }
+.mfp-slider-track { display:flex; gap:16px; transition:transform .38s cubic-bezier(.25,.46,.45,.94); will-change:transform; }
+.mfp-slider-card { flex:0 0 calc(33.333% - 11px); min-width:200px; border-radius:18px; overflow:hidden; border:1px solid #e5e7eb; background:#fff; box-shadow:0 12px 28px rgba(15,23,42,.08); }
+.mfp-slider-media { position:relative; height:var(--mfp-slider-height); background:#f8fafc; overflow:hidden; }
+.mfp-slider-image { width:100%; height:100%; display:block; object-fit:var(--mfp-slider-fit,cover); }
+.mfp-slider-image-placeholder { background:linear-gradient(135deg,#e2e8f0 0%,#f8fafc 100%); }
+.mfp-slider-badge { position:absolute; top:12px; left:12px; display:inline-flex; align-items:center; min-height:28px; padding:0 12px; border-radius:999px; background:#111827; color:#fff; font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; }
+.mfp-slider-info { display:grid; gap:8px; padding:16px; }
+.mfp-slider-title { margin:0; font-size:16px; font-weight:800; line-height:1.28; color:#0f172a; }
+.mfp-slider-description { margin:0; font-size:13px; line-height:1.6; color:#64748b; }
+.mfp-slider-meta { font-size:14px; font-weight:800; color:#0ea5e9; }
+.mfp-slider-nav { position:absolute; top:calc(var(--mfp-slider-height)/2); transform:translateY(-50%); width:38px; height:38px; border-radius:999px; border:1px solid #dbe3f0; background:#fff; color:#0f172a; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 8px 18px rgba(15,23,42,.12); z-index:2; transition:all .18s ease; }
+.mfp-slider-nav:hover { border-color:#0ea5e9; color:#0ea5e9; }
+.mfp-slider-prev { left:-12px; }
+.mfp-slider-next { right:-12px; }
+.mfp-slider-nav svg { width:18px; height:18px; }
+.mfp-slider-dots { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:14px; }
+.mfp-slider-dot { width:8px; height:8px; border:none; border-radius:999px; background:#cbd5e1; padding:0; cursor:pointer; transition:all .18s ease; appearance:none; -webkit-appearance:none; }
+.mfp-slider-dot.is-active { width:24px; border-radius:999px; background:#0ea5e9; }
+.mfp-slider-dot:focus { outline:none; box-shadow:0 0 0 3px rgba(14,165,233,.16); }
+.mfw-slider-builder { display:grid; gap:12px; }
+.mfw-slider-inline { display:grid; grid-template-columns:minmax(0,1fr) 90px auto; gap:8px; align-items:center; }
+.mfw-slider-unit { font-size:12px; color:#64748b; font-weight:700; }
+.mfw-slider-items-head { display:flex; align-items:center; justify-content:space-between; gap:10px; padding-top:6px; border-top:1px solid #e5e7eb; font-size:12px; font-weight:800; color:#334155; text-transform:uppercase; letter-spacing:.05em; }
+.mfw-slider-add,
+.mfw-slider-remove { border:1px solid #dbe3f0; background:#fff; border-radius:10px; min-height:30px; padding:0 12px; font-size:12px; font-weight:700; cursor:pointer; color:#0f172a; }
+.mfw-slider-remove { color:#b91c1c; border-color:#fecaca; }
+.mfw-slider-item { display:grid; gap:10px; padding:12px; border:1px solid #e5e7eb; border-radius:14px; background:#fff; }
+.mfw-slider-item-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+@media (max-width: 920px) {
+  .mfp-slider-card { flex:0 0 calc(50% - 8px); min-width:180px; }
+  .mfp-slider-prev { left:-6px; }
+  .mfp-slider-next { right:-6px; }
+}
+@media (max-width: 560px) {
+  .mfp-slider-card { flex:0 0 100%; min-width:0; }
+  .mfp-slider-nav { width:34px; height:34px; }
+  .mfw-slider-inline { grid-template-columns:minmax(0,1fr); }
+}
+
+
+.mfw-appt-compact { padding: 6px; }
+.mfw-appt-compact-head { display: grid; grid-template-columns: 36px 1fr 36px; gap: 10px; align-items: center; }
+.mfw-appt-compact-days { display: grid; grid-template-columns: repeat(auto-fit, minmax(66px, 1fr)); gap: 10px; }
+.mfw-appt-compact-day { min-height: 72px; padding: 8px 6px; border: 1px solid #e2d5c8; border-radius: 18px; background: #f8f4ef; color: #5e4a38; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer; }
+.mfw-appt-compact-day:hover { background: #f4ede5; border-color: #d2b89f; }
+.mfw-appt-compact-day.selected { background: #fff; border-color: #d9c2aa; box-shadow: 0 6px 18px rgba(80, 50, 20, 0.08); }
+.mfw-appt-compact-dow { font-size: 12px; font-weight: 600; letter-spacing: .06em; color: #9b8a78; }
+.mfw-appt-compact-dom { font-size: 32px; line-height: 1; font-weight: 700; color: #2e2620; }
+.mfw-appt-slots-compact { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+.mfw-appt-slots-compact .mfw-appt-slot { min-width: 84px; min-height: 42px; padding: 0 18px; border-radius: 999px !important; border-color: #dccfbe; color: #6f5b49; background: #fffdfa; box-shadow: none; }
+.mfw-appt-slots-compact .mfw-appt-slot:hover { border-color: #d4734d; background: #fff7f2; color: #a45434; }
+.mfw-appt-slots-compact .mfw-appt-slot.selected { background: #d16b45; border-color: #d16b45; color: #fff; }
+.mfw-appt-slots-compact .mfw-appt-slot.booked { background: #f4efe9; color: #b8ab9d; border-color: #eadfce; }
+.mfw-appt-selected-date-hidden, .mfw-appt-timezone-hidden { display: none !important; }
+.mfw-appt-compact-nav { width: 36px; height: 36px; border-radius: 999px !important; }
+@media (max-width: 640px) {
+  .mfw-appt-compact-head { grid-template-columns: 32px 1fr 32px; }
+  .mfw-appt-compact-days { gap: 8px; }
+  .mfw-appt-compact-day { min-height: 64px; border-radius: 16px; }
+  .mfw-appt-compact-dom { font-size: 28px; }
+  .mfw-appt-slots-compact .mfw-appt-slot { min-width: 78px; padding: 0 14px; }
+}

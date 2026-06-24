@@ -1,0 +1,80 @@
+@model IEnumerable<MegaForm.Sdk.FormDto>
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<h1>Dashboard</h1>
+<p class="lead">Overview of forms and recent submissions powered by <code>IMegaFormClient</code>.</p>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h4 class="card-title">@ViewBag.FormCount</h4>
+                <p class="card-text">Total Forms</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h4 class="card-title">@ViewBag.SubmissionCount</h4>
+                <p class="card-text">Total Submissions</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h3>Forms</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Submissions</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var form in Model)
+        {
+            <tr>
+                <td>@form.FormId</td>
+                <td>@form.Title</td>
+                <td><span class="badge bg-secondary">@form.Status</span></td>
+                <td>@form.SubmissionCount</td>
+                <td>
+                    <a class="btn btn-sm btn-outline-primary" asp-controller="Forms" asp-action="Details" asp-route-id="@form.FormId">Details</a>
+                    <a class="btn btn-sm btn-outline-success" asp-controller="Render" asp-action="Form" asp-route-id="@form.FormId">Open</a>
+                    <a class="btn btn-sm btn-outline-info" asp-controller="Submissions" asp-action="Index" asp-route-formId="@form.FormId">Submissions</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h3>Recent Submissions</h3>
+<table class="table table-sm table-hover">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Form ID</th>
+            <th>Submitted</th>
+            <th>Status</th>
+            <th>Data</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var sub in ViewBag.RecentSubmissions)
+        {
+            <tr>
+                <td>@sub.SubmissionId</td>
+                <td>@sub.FormId</td>
+                <td>@sub.SubmittedOnUtc</td>
+                <td>@sub.Status</td>
+                <td><a asp-controller="Submissions" asp-action="Details" asp-route-id="@sub.SubmissionId">View</a></td>
+            </tr>
+        }
+    </tbody>
+</table>

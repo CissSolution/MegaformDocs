@@ -1,0 +1,2937 @@
+/* ============================================================
+   MegaForm — Base Stylesheet
+   CSS Variables-based theming system (inspired by JotForm Designer)
+   ============================================================ */
+
+/* ============================================================
+   CSS CUSTOM PROPERTIES (Theme Variables)
+   Override these per-theme via .mf-theme-{name} class
+   ============================================================ */
+:root,
+/* [HostTokenIsolation v20260619] The host CMS skin (Oqtane AcmeSkin / CISS.SideMenu)
+   defines shadcn-style design tokens on :root (--card:#fff, --card-foreground, ...). Those
+   LIGHT tokens INHERIT into the MegaForm form wrapper and hijack dark premium forms that
+   reference them with their own dark fallbacks — e.g. halloween's
+   `--mf-choice-card: var(--card, var(--hw-card,#2d2d44))` resolved to the host's #fff, so
+   chips rendered white with light text = invisible. Reset --card/--card-foreground to the
+   guaranteed-invalid value INSIDE the wrapper so the form's OWN fallback (or a server theme
+   preset on #mf-form-wrapper-{id}, or the form's .mfp{} block) wins. `:where()` keeps
+   specificity 0 so ANY of those override this trivially. Only the bg/fg card tokens are
+   reset (NOT --primary/--border) to avoid touching button/accent colours. */
+:where(.mf-form-wrapper) {
+    --card: initial;
+    --card-foreground: initial;
+}
+.mf-form-wrapper {
+    /* --- Page / Background --- */
+    --mf-page-bg:               #f5f5f5;
+    --mf-page-bg-image:         none;
+
+    /* --- Form Container ---
+       [LighterChrome v20260602-B46] Softer defaults — was 0 1px 6px rgba(0,0,0,0.1)
+       shadow + 32x40 padding + no border. Now flatter: hairline neutral border +
+       barely-there shadow + tighter 24px padding + 8px radius. Users wanting the
+       previous "card" look can opt in via data-mf-chrome="card" on the wrapper
+       (or set --mf-form-shadow / --mf-form-padding via themeCssOverrides). */
+    --mf-form-bg:               #ffffff;
+    --mf-form-shadow:           0 1px 3px rgba(0,0,0,0.05);
+    --mf-form-radius:           8px;
+    --mf-form-padding:          24px 28px;
+    --mf-form-max-width:        960px;
+    --mf-form-border:           1px solid #f1f5f9;
+
+    /* --- Typography --- */
+    --mf-font-family:           'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --mf-font-size-base:        15px;
+    --mf-line-height:           1.5;
+    --mf-color-text:            #333333;
+    --mf-color-text-light:      #666666;
+    --mf-color-text-muted:      #999999;
+
+    /* --- Title & Description --- */
+    --mf-title-font-size:       24px;
+    --mf-title-font-weight:     700;
+    --mf-title-color:           #1a1a2e;
+    --mf-title-align:           left;
+    --mf-desc-font-size:        14px;
+    --mf-desc-color:            #666666;
+
+    /* --- Labels --- */
+    --mf-label-font-size:       14px;
+    --mf-label-font-weight:     600;
+    --mf-label-color:           #333333;
+    --mf-label-margin-bottom:   6px;
+    --mf-sublabel-font-size:    12px;
+    --mf-sublabel-color:        #888888;
+
+    /* --- Inputs --- */
+    --mf-input-bg:              #ffffff;
+    --mf-input-border:          1px solid #e2e8f0;
+    --mf-input-radius:          8px;
+    /* [InputHeightMockMatch 2026-06-23] 10px 14px / 15px produced ~45px inputs vs the
+       form-builder-controls mock + admin-shell baseline of 36px (h-9, 14px font). Lowered
+       vertical padding 10→6 and font 15→14 so rendered forms match the design system.
+       See Docs/AUDIT_20260623_CARD_THUA_AND_INPUT_HEIGHT.md. */
+    --mf-input-padding:         5px 12px;
+    --mf-input-font-size:       14px;
+    --mf-input-color:           #333333;
+    --mf-input-placeholder:     #aaaaaa;
+    --mf-input-focus-border:    #4a90d9;
+    --mf-input-focus-shadow:    0 0 0 3px rgba(74, 144, 217, 0.15);
+    --mf-input-error-border:    #e74c3c;
+    --mf-input-disabled-bg:     #f5f5f5;
+
+    /* --- Primary Color (buttons, accents) --- */
+    --mf-primary:               #4a90d9;
+    --mf-primary-hover:         #3a7bc8;
+    --mf-primary-text:          #ffffff;
+
+    /* --- Submit Button --- */
+    --mf-btn-bg:                var(--mf-primary);
+    --mf-btn-bg-hover:          var(--mf-primary-hover);
+    --mf-btn-color:             var(--mf-primary-text);
+    --mf-btn-radius:            6px;
+    --mf-btn-padding:           12px 32px;
+    --mf-btn-font-size:         16px;
+    --mf-btn-font-weight:       600;
+    --mf-btn-shadow:            0 2px 4px rgba(0,0,0,0.1);
+    --mf-btn-width:             auto;
+
+    /* --- Section / Headings --- */
+    --mf-section-border-color:  #e0e0e0;
+    --mf-section-title-size:    18px;
+    --mf-section-title-color:   #1a1a2e;
+    --mf-section-bg:            transparent;
+    --mf-section-padding:       16px 0;
+
+    /* --- Progress Bar --- */
+    --mf-progress-bg:           #e9ecef;
+    --mf-progress-fill:         var(--mf-primary);
+    --mf-progress-height:       6px;
+    --mf-progress-radius:       3px;
+
+    /* --- Required Star --- */
+    --mf-required-color:        #e74c3c;
+
+    /* --- Help Text --- */
+    --mf-help-color:            #888888;
+    --mf-help-font-size:        12px;
+
+    /* --- Checkbox / Radio --- */
+    --mf-check-size:            20px;
+    --mf-check-color:           var(--mf-primary);
+    --mf-check-radius:          4px;
+    --mf-radio-radius:          50%;
+
+    /* --- File Upload --- */
+    --mf-file-border:           2px dashed #d0d5dd;
+    --mf-file-bg:               #fafafa;
+    --mf-file-hover-bg:         #f0f4ff;
+
+    /* --- Field Spacing --- */
+    --mf-field-gap:             20px;
+}
+
+/* ============================================================
+   BASE LAYOUT
+   ============================================================ */
+.mf-form-wrapper {
+    font-family: var(--mf-font-family);
+    font-size: var(--mf-font-size-base);
+    line-height: var(--mf-line-height);
+    color: var(--mf-color-text);
+    background: var(--mf-page-bg);
+    background-image: var(--mf-page-bg-image);
+    background-size: cover;
+    background-position: center;
+    padding: 24px 16px;
+    display: flex;
+    justify-content: center;
+}
+
+.mf-form-wrapper * { box-sizing: border-box; }
+
+/* [B65z-2] QR Code widget always renders pinned to the form's top-right
+   corner — the form-inner (carries max-width) is the positioning context so
+   the QR overlay sits inside the visible card, not on the page bg. */
+.mf-form-inner,
+.mf-form { position: relative; }
+.mf-form-inner .mf-field-group[data-type="QRCode"],
+.mf-form .mf-field-group[data-type="QRCode"] {
+  position: absolute !important;
+  top: 12px !important;
+  right: 12px !important;
+  width: auto !important;
+  max-width: 140px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  z-index: 5;
+}
+.mf-form-inner .mf-field-group[data-type="QRCode"] > label,
+.mf-form-inner .mf-field-group[data-type="QRCode"] > .mf-label,
+.mf-form-inner .mf-field-group[data-type="QRCode"] > .mf-field-error,
+.mf-form-inner .mf-field-group[data-type="QRCode"] > input,
+.mf-form-inner .mf-field-group[data-type="QRCode"] > .mf-input,
+.mf-form .mf-field-group[data-type="QRCode"] > label,
+.mf-form .mf-field-group[data-type="QRCode"] > .mf-label,
+.mf-form .mf-field-group[data-type="QRCode"] > .mf-field-error,
+.mf-form .mf-field-group[data-type="QRCode"] > input,
+.mf-form .mf-field-group[data-type="QRCode"] > .mf-input { display: none !important; }
+.mf-field-group[data-type="QRCode"] canvas,
+.mf-field-group[data-type="QRCode"] img.mf-qr-img { max-width: 120px; max-height: 120px; display: block; }
+
+/* Inner container — constrains header + progress + form to same width */
+.mf-form-inner {
+    width: 100%;
+    max-width: var(--mf-form-max-width);
+}
+
+.mf-form {
+    background: var(--mf-form-bg);
+    box-shadow: var(--mf-form-shadow);
+    border-radius: var(--mf-form-radius);
+    border: var(--mf-form-border);
+    padding: var(--mf-form-padding);
+    width: 100%;
+}
+
+/* ============================================================
+   [FlexGrid P1 v20260601-B16] Umbraco Block Grid-style 12-col CSS Grid
+   - Items use CSS vars (--lg-x, --lg-w, --lg-h, etc) set by the renderer
+   - Three breakpoints: lg (default, ≥1024px) / md (768-1023) / sm (<768)
+   - sm DEFAULTS to full-width stack — admins can override per item
+   ============================================================ */
+.mf-flexgrid {
+    display: grid;
+    grid-template-columns: repeat(var(--mf-grid-cols, 12), minmax(0, 1fr));
+    grid-auto-rows: var(--mf-grid-rh, 64px);
+    gap: var(--mf-grid-gap, 12px);
+    margin-bottom: var(--mf-field-gap, 20px);
+    align-items: start;
+}
+.mf-flexgrid-item {
+    /* Desktop (lg) by default. Media queries below switch to md/sm. */
+    grid-column: var(--lg-x, 1) / span var(--lg-w, 12);
+    grid-row:    var(--lg-y, auto) / span var(--lg-h, 1);
+    min-width: 0;   /* prevent grid blowout when inner content is wide */
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+    .mf-flexgrid-item {
+        grid-column: var(--md-x, 1) / span var(--md-w, 12);
+        grid-row:    var(--md-y, auto) / span var(--md-h, 1);
+    }
+}
+@media (max-width: 767px) {
+    .mf-flexgrid-item {
+        grid-column: var(--sm-x, 1) / span var(--sm-w, 12);
+        grid-row:    var(--sm-y, auto) / span var(--sm-h, 1);
+    }
+}
+/* In Builder canvas we hint the grid lines so admins see the columns. */
+.mf-canvas-flexgrid .mf-flexgrid,
+.mf-builder .mf-flexgrid {
+    background-image: linear-gradient(to right, rgba(99,102,241,.06) 1px, transparent 1px);
+    background-size: calc(100% / var(--mf-grid-cols, 12)) 100%;
+    border: 1px dashed rgba(99,102,241,.25);
+    border-radius: 6px;
+    padding: 6px;
+    min-height: 80px;
+    transition: border-color .15s, background-color .15s;
+}
+/* [FlexGrid P5 v20260601-B20] Visual feedback during palette-item drag-over */
+.mf-flexgrid.mf-fg-dropzone-hover {
+    border: 2px solid #7c3aed;
+    border-style: solid;
+    background-color: rgba(124,58,237,.04);
+}
+/* [FlexGrid P3 v20260601-B18] Position-relative + min-height MUST apply
+   in any context where Builder canvas renders (no .mf-builder ancestor
+   guarantee on the shell). Without these, the absolute-positioned resize
+   handles anchor to the body — completely outside the cell — and the
+   simulated drag misses every event. */
+.mf-canvas-flexgrid .mf-flexgrid-item {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 8px 12px;
+    transition: border-color .15s, box-shadow .15s;
+    position: relative;
+    cursor: pointer;
+    align-self: stretch;
+    /* [B24] Allow content to grow so field preview is visible. min-height
+       still gives a baseline so empty cells don't collapse to zero. */
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-height: 72px;
+}
+.mf-flexgrid-item-topbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+}
+.mf-flexgrid-item-topbar .mf-flexgrid-item-type {
+    margin-left: auto;
+}
+.mf-flexgrid-item-preview {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+}
+.mf-flexgrid-item-preview .mf-field-preview-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0 0 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    line-height: 1.3;
+}
+.mf-flexgrid-item-preview .mf-field-preview-label .mf-inline-label-text {
+    color: #0f172a;
+}
+.mf-flexgrid-item-preview .mf-field-preview-label .mf-inline-label-edit {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 10px;
+    padding: 2px 4px;
+}
+.mf-flexgrid-item-preview .mf-field-preview-input,
+.mf-flexgrid-item-preview .mf-preview-textarea,
+.mf-flexgrid-item-preview .mf-preview-select {
+    font-size: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 6px 9px;
+    color: #94a3b8;
+    min-height: 22px;
+}
+.mf-flexgrid-item-preview .mf-widget-builder-preview {
+    pointer-events: none;
+    opacity: .9;
+}
+.mf-flexgrid-item-preview .mf-req { color: #dc2626; margin-left: 2px; }
+.mf-canvas-flexgrid .mf-flexgrid-item:hover {
+    border-color: #c7d2fe;
+    box-shadow: 0 2px 6px rgba(99,102,241,.12);
+}
+/* Canvas FlexGrid wrapper card (header + grid) */
+.mf-canvas-flexgrid {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 14px;
+    overflow: hidden;
+}
+.mf-canvas-flexgrid.mf-selected {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 2px rgba(124,58,237,.16);
+}
+.mf-flexgrid-canvas-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-bottom: 1px solid #e5e7eb;
+    background: linear-gradient(180deg, #faf5ff, #f5f3ff);
+    font-size: 13px;
+    color: #4338ca;
+}
+.mf-flexgrid-canvas-head .mf-drag-handle {
+    color: #9ca3af;
+    cursor: grab;
+}
+.mf-flexgrid-canvas-head strong { font-size: 13px; color: #4c1d95; }
+.mf-flexgrid-meta {
+    color: #6b7280;
+    font-size: 11px;
+    background: #f3f4f6;
+    padding: 2px 8px;
+    border-radius: 999px;
+}
+/* [FlexGrid P4 v20260601-B19] Breakpoint tabs in canvas header */
+.mf-fg-bp-tabs {
+    margin-left: auto;
+    display: inline-flex;
+    gap: 2px;
+    background: #f3e8ff;
+    border-radius: 6px;
+    padding: 2px;
+}
+.mf-fg-bp-btn {
+    background: transparent;
+    color: #6b21a8;
+    border: none;
+    padding: 4px 9px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    transition: background .15s, color .15s;
+}
+.mf-fg-bp-btn:hover { background: rgba(124,58,237,.15); }
+.mf-fg-bp-btn.is-active {
+    background: #fff;
+    color: #4c1d95;
+    box-shadow: 0 1px 3px rgba(76,29,149,.18);
+    font-weight: 700;
+}
+.mf-flexgrid-add-btn {
+    background: #7c3aed;
+    color: #fff;
+    border: none;
+    padding: 5px 11px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.mf-flexgrid-add-btn:hover { background: #6d28d9; }
+.mf-flexgrid-canvas-head .mf-duplicate-field,
+.mf-flexgrid-canvas-head .mf-delete-field {
+    background: transparent;
+    border: 1px solid #e5e7eb;
+    color: #64748b;
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+}
+.mf-flexgrid-canvas-head .mf-delete-field:hover {
+    color: #dc2626;
+    border-color: #fca5a5;
+}
+.mf-flexgrid-canvas {
+    padding: 8px;
+    min-height: 80px;
+}
+.mf-flexgrid-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 13px;
+    padding: 28px;
+    border: 2px dashed #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+.mf-flexgrid-empty i {
+    margin-right: 6px;
+    color: #7c3aed;
+}
+/* [FlexGrid P5-redux v20260601-B23] Visible drag grip + cursor states.
+   The grip is also the Sortable `handle`. Cursor:grab on grip and the
+   whole cell so admins immediately know they can drag. */
+.mf-flexgrid-item-grip {
+    flex: 0 0 auto;
+    color: #c4b5fd;
+    cursor: grab;
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: color .15s, background .15s;
+    user-select: none;
+}
+.mf-flexgrid-item-grip:hover { color: #7c3aed; background: rgba(124,58,237,.08); }
+.mf-flexgrid-item-grip:active { cursor: grabbing; }
+.mf-flexgrid-item-grip i { font-size: 12px; }
+.mf-canvas-flexgrid .mf-flexgrid-item { cursor: default; }   /* default; grip handles drag */
+.mf-canvas-flexgrid .mf-flexgrid-item:hover .mf-flexgrid-item-grip { color: #6d28d9; }
+/* While Sortable is dragging, dim other items so the drop target is obvious */
+.mf-flexgrid.sortable-active .mf-flexgrid-item { opacity: .65; transition: opacity .15s; }
+.mf-flexgrid.sortable-active .mf-flexgrid-item.sortable-ghost { opacity: 1; }
+
+.mf-flexgrid-item-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #0f172a;
+    font-weight: 500;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.mf-flexgrid-item-label i {
+    color: #7c3aed;
+    font-size: 11px;
+}
+.mf-flexgrid-item-type {
+    margin-left: auto;
+    font-size: 10px;
+    color: #6b7280;
+    background: #f3f4f6;
+    padding: 1px 7px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    font-weight: 600;
+}
+.mf-flexgrid-item-remove {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: transparent;
+    color: #94a3b8;
+    border: none;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity .15s, background .15s, color .15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+}
+.mf-canvas-flexgrid .mf-flexgrid-item:hover .mf-flexgrid-item-remove { opacity: 1; }
+.mf-builder .mf-flexgrid-item:hover .mf-flexgrid-item-remove { opacity: 1; }
+.mf-flexgrid-item-remove:hover { background: #fee2e2; color: #dc2626; }
+
+/* [FlexGrid P3 v20260601-B18] Resize handles. Hidden by default, visible
+   on hover. East = right edge (drag horizontally). South = bottom edge.
+   SE = corner (both axes). Snap math happens in JS — these are just
+   visual targets. */
+.mf-fg-handle {
+    position: absolute;
+    background: transparent;
+    z-index: 5;
+    opacity: 0;
+    transition: opacity .15s, background .15s;
+}
+.mf-canvas-flexgrid .mf-flexgrid-item:hover .mf-fg-handle { opacity: 1; }
+.mf-builder .mf-flexgrid-item:hover .mf-fg-handle { opacity: 1; }
+.mf-fg-handle:hover { background: rgba(124,58,237,.18); }
+.mf-fg-handle-e {
+    right: -3px;
+    top: 6px;
+    bottom: 6px;
+    width: 6px;
+    cursor: ew-resize;
+    border-radius: 3px;
+}
+.mf-fg-handle-s {
+    left: 6px;
+    right: 6px;
+    bottom: -3px;
+    height: 6px;
+    cursor: ns-resize;
+    border-radius: 3px;
+}
+.mf-fg-handle-se {
+    right: -3px;
+    bottom: -3px;
+    width: 12px;
+    height: 12px;
+    cursor: nwse-resize;
+    border-radius: 50% 0 4px 0;
+    background: #7c3aed;
+    opacity: 0;
+}
+.mf-canvas-flexgrid .mf-flexgrid-item:hover .mf-fg-handle-se { opacity: 1; }
+.mf-builder .mf-flexgrid-item:hover .mf-fg-handle-se { opacity: 1; }
+.mf-fg-handle-se:hover { background: #6d28d9; }
+/* While resizing, prevent text selection on the whole canvas */
+.mf-builder.mf-resizing,
+.mf-builder.mf-resizing * {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+}
+
+/* [DoubleCardFix v20260601-B14] When a form has a CUSTOM theme applied
+   (.mf-theme-* class on wrapper) OR a custom-HTML shell (data-mf-has-custom-html
+   marker set by the renderer), strip the outer wrapper's card chrome so the
+   inner theme card stands alone. The original .mf-form_OR_.mf-form-inner_OR_.mfp
+   rule below (line ~316) puts white bg + box-shadow + 10px radius + 28px
+   padding on ALL THREE — so we must override all three here.
+
+   Affects forms with custom themes (Wedding/Premium/etc) — without this
+   override they show a heavy white shadow card wrapping the styled inner
+   card → double-card "nặng nề" border at the corners. */
+.mf-form-wrapper[class*="mf-theme-"]:not(.mf-theme-default) .mfp,
+.mf-form-wrapper[class*="mf-theme-"]:not(.mf-theme-default) > .mf-form,
+.mf-form-wrapper[class*="mf-theme-"]:not(.mf-theme-default) > .mf-form-inner,
+.mf-form-wrapper[class*="mf-theme-"]:not(.mf-theme-default) .mf-form,
+.mf-form-wrapper[class*="mf-theme-"]:not(.mf-theme-default) .mf-form-inner,
+.mf-form-wrapper[data-mf-has-custom-html] .mfp,
+.mf-form-wrapper[data-mf-has-custom-html] > .mf-form,
+.mf-form-wrapper[data-mf-has-custom-html] > .mf-form-inner,
+.mf-form-wrapper[data-mf-has-custom-html] .mf-form,
+.mf-form-wrapper[data-mf-has-custom-html] .mf-form-inner {
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    border: none !important;
+    padding: 0 !important;
+    /* keep the natural max-width so the inner card centers correctly */
+    margin: 0 auto !important;
+}
+
+/* Also lighten the page wrapper's own padding when a custom design takes
+   over the visual frame — the inner shell already breathes. */
+.mf-form-wrapper[class*="mf-theme-"]:not(.mf-theme-default),
+.mf-form-wrapper[data-mf-has-custom-html] {
+    padding: 0;
+    background: transparent;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.mf-progress-bar {
+    margin: 0 28px;
+    width: calc(100% - 56px);
+}
+.mf-standard-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 24px 28px 28px;
+    min-width: 0;
+}
+.mf-standard-body > .mf-fields-container {
+    min-width: 0;
+}
+.mf-standard-actions {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(148, 163, 184, 0.18);
+}
+.mf-standard-actions > .mf-form-actions {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
+
+.mf-form-header {
+    margin-bottom: 24px;
+}
+.mf-form-title {
+    font-size: var(--mf-title-font-size);
+    font-weight: var(--mf-title-font-weight);
+    color: var(--mf-title-color);
+    text-align: var(--mf-title-align);
+    margin: 0 0 8px 0;
+}
+.mf-form-description {
+    font-size: var(--mf-desc-font-size);
+    color: var(--mf-desc-color);
+    text-align: var(--mf-title-align);
+    margin: 0;
+}
+
+/* ============================================================
+   PROGRESS BAR
+   ============================================================ */
+.mf-progress-bar { margin-bottom: 24px; }
+
+/* Step Indicator — Circles with labels */
+.mf-steps {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0;
+    padding: 0 16px;
+}
+.mf-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 70px;
+    flex-shrink: 0;
+}
+.mf-step-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid #d1d5db;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: #9ca3af;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
+}
+.mf-step-label {
+    font-size: 11px;
+    color: #9ca3af;
+    text-align: center;
+    max-width: 100px;
+    line-height: 1.3;
+    transition: color 0.3s ease;
+}
+.mf-step-line {
+    flex: 1;
+    height: 2px;
+    background: #e5e7eb;
+    margin-top: 18px;
+    min-width: 24px;
+    transition: background 0.3s ease;
+}
+
+/* Active step */
+.mf-step.active .mf-step-circle {
+    border-color: var(--mf-primary, #4f46e5);
+    background: var(--mf-primary, #4f46e5);
+    color: #fff;
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15);
+}
+.mf-step.active .mf-step-label {
+    color: var(--mf-primary, #4f46e5);
+    font-weight: 600;
+}
+
+/* Done step */
+.mf-step.done .mf-step-circle {
+    border-color: #10b981;
+    background: #10b981;
+    color: #fff;
+}
+.mf-step.done .mf-step-circle::after {
+    content: '✓';
+    font-size: 16px;
+}
+.mf-step.done .mf-step-circle { font-size: 0; } /* hide number, show checkmark */
+.mf-step.done .mf-step-label {
+    color: #10b981;
+}
+.mf-step-line.done {
+    background: #10b981;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .mf-step-label { display: none; }
+    .mf-step { min-width: 40px; }
+    .mf-step-circle { width: 30px; height: 30px; font-size: 12px; }
+    .mf-step-line { margin-top: 15px; }
+}
+
+/* Legacy fallback (hidden, replaced by .mf-steps) */
+.mf-progress-track, .mf-progress-fill, .mf-progress-text { display: none; }
+
+/* ============================================================
+   BARE FORM CARD WRAPPER — [v20260530-27]
+   When AI generates a customHtml without its own card styling
+   OR when the form has no theme + no customCss, give it a
+   minimum-respectable look: white card, padding, soft shadow,
+   centered max-width. Overridable by any theme or customCss.
+   ============================================================ */
+.mfp,
+.mf-form-wrapper > .mf-form,
+.mf-form-wrapper > .mf-form-inner {
+    background: var(--mf-card-bg, #ffffff);
+    /* [LighterChrome v20260602-B46] was 10px radius + 0 1px 3px/0 1px 2px stacked
+       shadows + 28x32 padding. Now matches the lighter form-card defaults: 8px
+       radius, single barely-visible shadow, hairline #f1f5f9 border, 24x28 padding. */
+    border-radius: 8px;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    padding: 24px 28px;
+    /* [FormWidthFix v20260602-B36] was hardcoded `max-width: 760px` — that ignored
+       any --mf-form-max-width var set via themeCssOverrides (set_form_meta op),
+       so AI prompt "resize form to 100%" had no visual effect. Now reads the var
+       with 760px fallback so themeCssOverrides[--mf-form-max-width: 100%] wins. */
+    max-width: var(--mf-form-max-width, 760px);
+    margin: 24px auto;
+    box-sizing: border-box;
+}
+@media (max-width: 600px) {
+    .mfp,
+    .mf-form-wrapper > .mf-form,
+    .mf-form-wrapper > .mf-form-inner {
+        padding: 18px 16px;
+        margin: 12px auto;
+    }
+}
+
+/* [LighterChrome v20260602-B46] data-mf-chrome opt-in toggle on .mf-form-wrapper.
+   Lets users override the lighter default per-form via Builder Form Settings:
+     - "card"  → restore the previous heavier card chrome (10px radius, deeper shadow, 28x32 padding)
+     - "flat"  → keep the new lighter look (same as default — explicit)
+     - "none"  → strip all chrome (no border / shadow / padding / radius)
+   Pairs with Builder Form Settings "useCard" prop (writes data-mf-chrome). */
+.mf-form-wrapper[data-mf-chrome="card"] > .mf-form,
+.mf-form-wrapper[data-mf-chrome="card"] > .mf-form-inner {
+    border: 0 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+    padding: 32px 40px !important;
+}
+.mf-form-wrapper[data-mf-chrome="flat"] > .mf-form,
+.mf-form-wrapper[data-mf-chrome="flat"] > .mf-form-inner {
+    border: 1px solid #f1f5f9 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    padding: 24px 28px !important;
+}
+.mf-form-wrapper[data-mf-chrome="none"] > .mf-form,
+.mf-form-wrapper[data-mf-chrome="none"] > .mf-form-inner {
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+/* [DoubleCardFix v20260602-B34 / v20260603-B65 extended for .mfp]
+   When BOTH .mf-form-inner and an inner .mf-form render (the default
+   renderer shape), the outer .mf-form-inner already provides the card
+   chrome. The inner .mf-form must NOT also paint its own card or we
+   get the heavy "vien nang ne" double-bordered look the user reported
+   on form 335. Strip everything visual from the inner .mf-form when
+   it sits inside an .mf-form-inner wrapper.
+
+   [B65 EXTENSION] generateDefaultCustomHtml() emits `<div class="mfp
+   mfp-default">` which the base `.mfp` rule (line ~688) paints as a
+   full card. When that .mfp shell lives inside .mf-form-inner (the
+   normal renderer path for forms that have customHtml — incl. all
+   forms after auto-conversion), the user sees THREE cards stacked:
+   .mf-form-inner card  +  .mf-form card (already stripped here)  +
+   .mfp.mfp-default card. The .mfp inner-card is the regression noted
+   on form 342. Strip its chrome too so the .mf-form-inner stays the
+   single visible card. */
+.mf-form-wrapper > .mf-form-inner > .mf-form,
+.mf-form-wrapper > .mf-form-inner .mf-form,
+.mf-form-wrapper > .mf-form-inner .mfp {
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    border: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+    margin: 0 !important;
+}
+
+/* ============================================================
+   FIELDS — Shared
+   ============================================================ */
+.mf-field-group {
+    margin-bottom: var(--mf-field-gap);
+    position: relative;
+}
+.mf-field-group.mf-hidden { display: none; }
+
+.mf-field-label {
+    display: block;
+    font-size: var(--mf-label-font-size);
+    font-weight: var(--mf-label-font-weight);
+    color: var(--mf-label-color);
+    margin-bottom: var(--mf-label-margin-bottom);
+}
+.mf-field-label .mf-required {
+    color: var(--mf-required-color);
+    margin-left: 2px;
+}
+.mf-field-sublabel {
+    display: block;
+    font-size: var(--mf-sublabel-font-size);
+    color: var(--mf-sublabel-color);
+    margin-top: 4px;
+}
+.mf-field-help {
+    font-size: var(--mf-help-font-size);
+    color: var(--mf-help-color);
+    margin-top: 4px;
+}
+.mf-field-error {
+    color: var(--mf-input-error-border);
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+/* ============================================================
+   INPUTS
+   [v20260530-27] Higher specificity + !important on the critical
+   border/padding/background so DNN / Oqtane / Umbraco host
+   themes that ship a global `input { padding:0 14px }` reset can
+   NOT collapse our fields to zero-height. This made AI-generated
+   forms look unstyled even though .mf-input class was on the input.
+   ============================================================ */
+.mf-input,
+.mf-select,
+.mf-textarea,
+.mfp .mf-input,
+.mfp .mf-select,
+.mfp .mf-textarea,
+.mf-form .mf-input,
+.mf-form .mf-select,
+.mf-form .mf-textarea {
+    width: 100%;
+    background: var(--mf-input-bg) !important;
+    border: var(--mf-input-border) !important;
+    border-radius: var(--mf-input-radius) !important;
+    padding: var(--mf-input-padding) !important;
+    font-family: var(--mf-font-family);
+    font-size: var(--mf-input-font-size);
+    color: var(--mf-input-color);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+    min-height: 42px;
+    box-sizing: border-box;
+}
+.mf-input::placeholder,
+.mf-textarea::placeholder {
+    color: var(--mf-input-placeholder);
+}
+.mf-input:focus,
+.mf-select:focus,
+.mf-textarea:focus {
+    border-color: var(--mf-input-focus-border);
+    box-shadow: var(--mf-input-focus-shadow);
+}
+.mf-input.mf-error,
+.mf-select.mf-error,
+.mf-textarea.mf-error {
+    border-color: var(--mf-input-error-border);
+}
+.mf-input:disabled, .mf-textarea:disabled {
+    background: var(--mf-input-disabled-bg);
+    cursor: not-allowed;
+}
+.mf-textarea { min-height: 100px; resize: vertical; }
+.mf-select { appearance: none; cursor: pointer; }
+
+/* ============================================================
+   [B46] UNIFIED INPUT HEIGHTS
+   Root cause: Phone-Pro shell hardcoded 56px min-height + 16px
+   radius + 18px font-size (megaform-widget-phone-pro.css) and the
+   Multi-Select / Appointment trigger built their own heights, so a
+   row mixing Email + Phone + Multi-Select had a visible 14-18px
+   misalignment. This block forces the SAME computed height across
+   every input-flavoured widget so row alignment is automatic.
+
+   Token: `--mf-input-unified-height` (default 42px to match the
+   existing `.mf-input` min-height baseline). Customers can override
+   per form via theme CSS or the Form Settings style panel.
+   The .mf-textarea opt-out is intentional — multi-line fields keep
+   their min-height:100px floor unless field.height is supplied. */
+:root {
+    /* [B47-Canonical 20260602-B47] Lowered from 42px → 40px (2.5rem) to
+       match the canonical form-builder-controls reference design system.
+       40px keeps inputs flush with multi-select / phone / appointment
+       triggers (which already use 2.5rem in their scoped vars).
+       [InputHeightMockMatch 2026-06-23] The actual mock control height is 36px
+       (h-9), not 40px — the earlier "canonical" target was mis-measured. Lowered
+       40→36 so rendered inputs match the mock; the shared var keeps multi-select /
+       phone / appointment triggers flush at the same height. */
+    --mf-input-unified-height: 36px;
+}
+.mf-input,
+.mf-select,
+.mf-form .mf-input,
+.mf-form .mf-select,
+.mfp .mf-input,
+.mfp .mf-select,
+.mf-ms,
+.mf-ms-trigger,
+.mfp-phone-shell,
+.mfp-phone-input,
+.mfw-appt-datebar,
+.mfw-appt-trigger {
+    min-height: var(--mf-input-unified-height) !important;
+}
+
+/* Phone-Pro shell — strip the oversized 56px / 16px radius / 18px
+   font-size that broke row alignment. Match the standard input. */
+.mfp-phone-shell {
+    height: var(--mf-input-unified-height);
+    border-radius: var(--mf-input-radius, 6px) !important;
+    box-shadow: none !important;
+    align-items: center;
+}
+.mfp-phone-input {
+    height: calc(var(--mf-input-unified-height) - 2px) !important;
+    font-size: var(--mf-input-font-size, 15px) !important;
+    padding: 0 12px !important;
+}
+.mfp-phone-country-trigger {
+    border-radius: var(--mf-input-radius, 6px) 0 0 var(--mf-input-radius, 6px) !important;
+}
+
+/* Multi-Select chip container — the visible wrap should NOT be taller
+   than a regular input when empty. Chip rows can still grow vertically
+   when many tags are added (chips set their own line-height). */
+.mf-ms,
+.mf-ms-trigger {
+    min-height: var(--mf-input-unified-height);
+}
+
+/* Appointment widget — the .mfw-appt card chrome (border / shadow /
+   24px radius / 18px padding) made the visible row ~36px taller than
+   neighbours. Strip the heavy chrome on the trigger row; the popover
+   below still keeps its own card style when opened. Plus suppress the
+   empty `.mf-field-error` strip noted in the B46 scout report. */
+.mfw-appt .mfw-appt-shell {
+    padding: 0 !important;
+}
+.mfw-appt {
+    border: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+}
+.mfw-appt-datebar {
+    border: var(--mf-input-border, 1px solid #d0d5dd) !important;
+    border-radius: var(--mf-input-radius, 6px) !important;
+    padding: 0 12px !important;
+    background: var(--mf-input-bg, #fff) !important;
+}
+.mfw-appt > .mf-field-error:empty,
+.mf-field-error:empty {
+    display: none;
+}
+
+/* Control refresh aligned with the form-builder-controls mock. */
+.mf-date-input-wrap,
+.mf-select-wrap {
+    position: relative;
+    width: 100%;
+}
+/* Date picker popovers must escape premium cards/form bodies instead of
+   flipping upward or getting clipped at the form border. The renderer adds
+   these classes only for ancestors of date controls. */
+.mf-form-wrapper.mf-has-date-popover,
+.mf-form-wrapper.mf-has-date-popover .mf-form-inner,
+.mf-form-wrapper.mf-has-date-popover .mf-form,
+.mf-form-wrapper.mf-has-date-popover .mf-fields-container,
+.mf-form-wrapper.mf-has-date-popover .mf-date-popover-host {
+    overflow: visible !important;
+}
+.mf-form-wrapper.mf-has-date-popover .mf-dtp .mf-dtp-panel {
+    top: calc(100% + 8px) !important;
+    bottom: auto !important;
+    z-index: 10000;
+}
+.mf-form-wrapper.mf-has-date-popover .mf-cal .mf-cal-panel {
+    top: calc(100% + .5rem) !important;
+    bottom: auto !important;
+    z-index: 10000;
+}
+.mf-date-input-wrap .mf-date-input {
+    padding-left: 42px !important;
+    padding-right: 16px !important;
+}
+/* [DatePickerFix v20260601-B15] Cover the entire row so clicking anywhere
+   inside (icon or empty space) opens the picker. Icon stays visible. */
+.mf-date-input-wrap.mf-date-input-clickable { cursor: pointer; }
+.mf-date-input-wrap.mf-date-input-clickable .mf-date-icon { pointer-events: none; }
+.mf-date-input-wrap.mf-date-input-clickable .mf-date-input { cursor: pointer; }
+.mf-date-input-wrap .mf-date-input::-webkit-calendar-picker-indicator {
+    opacity: 0 !important;
+    /* Don't display:none — Chrome won't open via showPicker() when the
+       indicator is fully removed. Keep it 0-opacity + zero-width instead. */
+    width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+.mf-date-icon {
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    display: inline-flex;
+    width: 18px;
+    height: 18px;
+    color: #5f6b7a;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+.mf-date-icon-left { left: 13px; }
+.mf-date-icon svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.mf-dtp {
+    --mf-dtp-bg: var(--mf-input-bg, #fff);
+    --mf-dtp-fg: var(--mf-input-color, #0f172a);
+    --mf-dtp-border: #d8dee8;
+    --mf-dtp-muted: #f6f8fb;
+    --mf-dtp-muted-fg: #64748b;
+    --mf-dtp-primary: #2563eb;
+    --mf-dtp-ring: rgba(37, 99, 235, 0.14);
+    --mf-dtp-radius: 8px;
+}
+.mf-dtp .mf-dtp-trigger {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 42px;
+    padding-left: 42px !important;
+    padding-right: 40px !important;
+    text-align: left;
+    cursor: pointer;
+}
+.mf-dtp .mf-dtp-trigger:hover:not(:disabled) {
+    border-color: var(--mf-dtp-primary) !important;
+    background: var(--mf-dtp-muted) !important;
+}
+.mf-dtp .mf-dtp-trigger:focus-visible {
+    border-color: var(--mf-dtp-primary) !important;
+    box-shadow: 0 0 0 3px var(--mf-dtp-ring) !important;
+}
+.mf-dtp .mf-date-icon {
+    left: 13px;
+}
+.mf-dtp-value {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--mf-dtp-fg);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.mf-dtp.is-empty .mf-dtp-value {
+    color: var(--mf-input-placeholder, #94a3b8);
+}
+.mf-dtp-chevron {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border-right: 1.8px solid #7a8594;
+    border-bottom: 1.8px solid #7a8594;
+    transform: translateY(-65%) rotate(45deg);
+    transition: transform 0.2s ease;
+    pointer-events: none;
+}
+.mf-dtp.is-open .mf-dtp-chevron {
+    transform: translateY(-35%) rotate(225deg);
+}
+.mf-dtp-panel {
+    position: absolute;
+    left: 0;
+    top: calc(100% + 8px);
+    z-index: 99999;
+    width: max-content;
+    min-width: 100%;
+    max-width: min(92vw, 720px);
+    overflow: hidden;
+    background: var(--mf-dtp-bg);
+    border: 1px solid var(--mf-dtp-border);
+    border-radius: var(--mf-dtp-radius);
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.15);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px);
+    transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
+    pointer-events: none;
+}
+.mf-dtp.is-open .mf-dtp-panel {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+.mf-dtp-columns {
+    display: flex;
+    gap: 8px;
+    min-height: 192px;
+    max-width: 100%;
+    padding: 14px;
+    overflow-x: auto;
+    border-bottom: 1px solid #e5eaf2;
+}
+.mf-dtp-column {
+    display: flex;
+    flex: 1 0 74px;
+    min-width: 72px;
+    flex-direction: column;
+    gap: 8px;
+}
+.mf-dtp-column-label {
+    color: var(--mf-dtp-muted-fg);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0;
+    line-height: 1.2;
+    text-align: center;
+    text-transform: uppercase;
+}
+.mf-dtp-scroll {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 168px;
+    padding: 32px 0;
+    overflow-y: auto;
+    background: var(--mf-dtp-muted);
+    border-radius: 6px;
+    scrollbar-color: #cbd5e1 transparent;
+    scrollbar-width: thin;
+}
+.mf-dtp-scroll::-webkit-scrollbar {
+    width: 4px;
+}
+.mf-dtp-scroll::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 999px;
+}
+.mf-dtp-option {
+    width: 100%;
+    min-height: 34px;
+    padding: 7px 10px;
+    color: var(--mf-dtp-muted-fg);
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+    font: inherit;
+    font-size: 14px;
+    line-height: 1.2;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+.mf-dtp-option:hover {
+    color: var(--mf-dtp-fg);
+    background: rgba(37, 99, 235, 0.08);
+}
+.mf-dtp-option:focus-visible {
+    outline: 2px solid var(--mf-dtp-primary);
+    outline-offset: -2px;
+}
+.mf-dtp-option.is-selected {
+    color: var(--mf-dtp-primary);
+    background: rgba(37, 99, 235, 0.12);
+    box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.18);
+    font-weight: 700;
+}
+.mf-dtp-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 14px;
+    background: #fff;
+}
+.mf-dtp-action {
+    min-height: 34px;
+    padding: 0 14px;
+    background: #fff;
+    border: 1px solid #d8dee8;
+    border-radius: 6px;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.mf-dtp-action:hover {
+    background: #f8fafc;
+    border-color: #c7d2e2;
+}
+.mf-dtp-apply {
+    color: #fff;
+    background: var(--mf-dtp-primary);
+    border-color: var(--mf-dtp-primary);
+}
+.mf-dtp-apply:hover {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+}
+@media (max-width: 640px) {
+    .mf-dtp-panel {
+        width: 100%;
+        min-width: 100%;
+        max-width: 100%;
+    }
+    .mf-dtp-columns {
+        gap: 5px;
+        min-height: 172px;
+        padding: 10px;
+    }
+    .mf-dtp-column {
+        flex-basis: 64px;
+        min-width: 62px;
+    }
+    .mf-dtp-option {
+        min-height: 32px;
+        padding-inline: 6px;
+        font-size: 13px;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .mf-dtp-panel,
+    .mf-dtp-chevron,
+    .mf-dtp-option {
+        transition: none;
+    }
+}
+.mf-select-wrap .mf-select {
+    padding-right: 42px !important;
+}
+.mf-select-wrap .mf-select option:checked {
+    font-weight: 700;
+    background: #eaf2ff;
+    color: #0f172a;
+}
+.mf-select-chevron {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border-right: 1.8px solid #7a8594;
+    border-bottom: 1.8px solid #7a8594;
+    transform: translateY(-65%) rotate(45deg);
+    pointer-events: none;
+}
+
+/* ============================================================
+   CHECKBOX & RADIO
+   ============================================================ */
+.mf-option-group { display: flex; flex-direction: column; gap: 8px; }
+.mf-option-group.mf-inline { flex-direction: row; flex-wrap: wrap; gap: 16px; }
+.mf-option-group.mf-option-group--cols {
+    display: grid;
+    align-items: start;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 14px;
+    row-gap: 10px;
+}
+.mf-option-group.mf-cols-1 { grid-template-columns: 1fr; }
+.mf-option-group.mf-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.mf-option-group.mf-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.mf-option-group.mf-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+.mf-option-item {
+    display: grid;
+    grid-template-columns: var(--mf-check-size) minmax(0, 1fr);
+    align-items: start;
+    column-gap: 10px;
+    cursor: pointer;
+    font-size: var(--mf-font-size-base);
+    color: var(--mf-color-text);
+    line-height: 1.4;
+} 
+@media (max-width: 980px) {
+    .mf-option-group.mf-cols-4,
+    .mf-option-group.mf-cols-3 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+@media (max-width: 640px) {
+    .mf-option-group.mf-option-group--cols {
+        grid-template-columns: 1fr;
+    }
+}
+.mf-option-item input[type="checkbox"],
+.mf-option-item input[type="radio"] {
+    width: var(--mf-check-size);
+    height: var(--mf-check-size);
+    accent-color: var(--mf-check-color);
+    cursor: pointer;
+    margin: 0;
+    align-self: start;
+    transform: translateY(2px);
+}
+.mf-option-ui {
+    min-width: 0;
+    display: block;
+}
+.mf-option-label {
+    display: block;
+    min-width: 0;
+    line-height: 1.4;
+    white-space: normal;
+}
+.mf-option-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.mf-option-meta,
+.mf-option-desc {
+    display: block;
+    color: var(--mf-color-text-light, #666);
+    font-size: calc(var(--mf-font-size-base) * .9);
+    line-height: 1.35;
+}
+.mf-option-badge {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    border: 1px solid rgba(15,23,42,.14);
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: calc(var(--mf-font-size-base) * .78);
+    font-weight: 700;
+    color: var(--mf-color-text);
+    background: rgba(255,255,255,.72);
+}
+.mf-option-group--chips {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.mf-option-group--chips .mf-option-item {
+    position: relative;
+    display: inline-flex;
+    grid-template-columns: none;
+    margin: 0;
+    font-size: var(--mf-font-size-base);
+}
+.mf-option-group--chips .mf-option-control {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+.mf-option-group--chips .mf-option-ui {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 34px;
+    border: 1px solid var(--mf-input-border-color, #e2e8f0);
+    border-radius: 999px;
+    padding: 6px 14px;
+    background: var(--mf-input-bg, #fff);
+    /* [ChipReadability v20260619] Pair the chip text with the SAME variable family as
+       its background (--mf-input-bg/--mf-input-color), not the theme-wide --mf-color-text.
+       On dark premium themes --mf-color-text is light while the chip bg falls back to white
+       (theme didn't set --mf-input-bg) → invisible white-on-white text. --mf-input-color has
+       a global #333 default so the chip stays readable on every theme. */
+    color: var(--mf-input-color, #333333);
+    box-shadow: 0 1px 2px rgba(15,23,42,.04);
+    transition: background .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease;
+}
+.mf-option-group--chips .mf-option-label,
+.mf-option-group--chips .mf-option-copy {
+    display: inline;
+}
+.mf-option-group--chips .mf-option-desc,
+.mf-option-group--chips .mf-option-meta,
+.mf-option-group--chips .mf-option-badge {
+    display: none;
+}
+.mf-option-group--chips .mf-option-item:hover .mf-option-ui,
+.mf-option-group--chips .mf-option-control:focus-visible + .mf-option-ui {
+    border-color: var(--mf-primary, #4a90d9);
+    box-shadow: 0 0 0 3px rgba(79,70,229,.12);
+}
+.mf-option-group--chips .mf-option-item.is-checked .mf-option-ui,
+.mf-option-group--chips .mf-option-item:has(.mf-option-control:checked) .mf-option-ui {
+    border-color: var(--mf-primary, #4a90d9);
+    background: var(--mf-primary, #4a90d9);
+    color: #fff;
+}
+.mf-option-group--cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+.mf-option-group--cards.mf-option-group--cols {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.mf-option-group--cards .mf-option-item {
+    position: relative;
+    display: block;
+    min-width: 0;
+    margin: 0;
+    color: var(--mf-color-text);
+}
+.mf-option-group--cards .mf-option-control {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+.mf-option-group--cards .mf-option-ui {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    min-width: 0;
+    width: 100%;
+    border: 1px solid var(--mf-input-border-color, #e2e8f0);
+    border-radius: 14px;
+    padding: 14px 16px;
+    background: var(--mf-input-bg, #fff);
+    box-shadow: 0 1px 2px rgba(15,23,42,.05);
+    transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+.mf-option-group--cards .mf-option-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: rgba(15,23,42,.06);
+    /* [ChipReadability v20260619] icon box bg is a fixed light grey → keep dark text */
+    color: var(--mf-input-color, #333333);
+    font-weight: 700;
+}
+.mf-option-group--cards .mf-option-label {
+    font-weight: 700;
+    /* [ChipReadability v20260619] pair with the card's --mf-input-bg surface (see chips note) */
+    color: var(--mf-input-color, #333333);
+}
+.mf-option-group--cards .mf-option-check {
+    margin-left: auto;
+    color: var(--mf-primary, #4a90d9);
+    font-weight: 800;
+    opacity: 0;
+}
+.mf-option-group--cards .mf-option-item:hover .mf-option-ui,
+.mf-option-group--cards .mf-option-control:focus-visible + .mf-option-ui {
+    border-color: var(--mf-primary, #4a90d9);
+    box-shadow: 0 0 0 3px rgba(79,70,229,.12), 0 8px 24px rgba(15,23,42,.08);
+}
+.mf-option-group--cards .mf-option-item.is-checked .mf-option-ui,
+.mf-option-group--cards .mf-option-item:has(.mf-option-control:checked) .mf-option-ui {
+    border-color: var(--mf-primary, #4a90d9);
+    box-shadow: 0 0 0 2px rgba(79,70,229,.18), 0 8px 24px rgba(15,23,42,.08);
+}
+.mf-option-group--cards .mf-option-item.is-checked .mf-option-icon,
+.mf-option-group--cards .mf-option-item:has(.mf-option-control:checked) .mf-option-icon {
+    background: var(--mf-primary, #4a90d9);
+    color: #fff;
+}
+.mf-option-group--cards .mf-option-item.is-checked .mf-option-check,
+.mf-option-group--cards .mf-option-item:has(.mf-option-control:checked) .mf-option-check {
+    opacity: 1;
+}
+@media (max-width: 640px) {
+    .mf-option-group--cards.mf-option-group--cols { grid-template-columns: 1fr; }
+    .mf-option-group--cards .mf-option-ui { padding: 12px 14px; }
+    .mf-option-group--cards .mf-option-icon { flex-basis: 36px; width: 36px; height: 36px; }
+}
+
+/* ============================================================
+   FILE UPLOAD
+   ============================================================ */
+.mf-file-dropzone {
+    border: 2px dashed #cfd7e3;
+    border-radius: 8px;
+    background: #fff;
+    padding: 0;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    overflow: hidden;
+}
+.mf-file-dropzone:hover { background: #f8fafc; border-color: var(--mf-primary); }
+.mf-file-dropzone.mf-file-dragover { background: #f4f7ff; border-color: var(--mf-primary); box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
+.mf-file-dropzone-inner { padding: 34px 20px 32px; }
+.mf-file-dropzone .mf-file-icon {
+    display: inline-flex;
+    width: 40px;
+    height: 40px;
+    color: #5f6b7a;
+    margin-bottom: 10px;
+}
+.mf-file-dropzone .mf-file-icon svg {
+    width: 40px;
+    height: 40px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.mf-file-dropzone .mf-file-text { color: #111827; font-size: 14px; font-weight: 600; }
+.mf-file-dropzone .mf-file-hint { margin-top: 4px; color: #64748b; font-size: 12px; }
+.mf-file-list { padding: 0 14px 14px; display: grid; gap: 10px; }
+.mf-file-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background: #f8fafc;
+    border: 1px solid #d8e0ea;
+    border-radius: 7px;
+    margin-top: 0;
+    font-size: 13px;
+    text-align: left;
+}
+.mf-file-item-success {
+    background: #effdf4;
+    border-color: #b8f0cd;
+}
+.mf-file-type-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 2px solid #0bb35b;
+    color: #07964c;
+    font-size: 10px;
+    font-weight: 800;
+    flex: 0 0 auto;
+}
+.mf-file-meta {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+.mf-file-name { color: #111827; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mf-file-size { color: #506070; font-size: 12px; }
+.mf-file-status { color: #0bb35b; font-weight: 800; }
+.mf-file-item .mf-file-remove {
+    color: #111827;
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-size: 22px;
+    line-height: 1;
+    padding: 4px;
+}
+
+/* Rating controls */
+.mf-rating { display: grid; gap: 6px; }
+.mf-rating-items { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
+.mf-rating-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #cbd2dc;
+    cursor: pointer;
+    font-size: 26px !important;
+    line-height: 1;
+    transition: background .16s ease, color .16s ease, transform .16s ease, border-color .16s ease;
+}
+.mf-form-wrapper .mf-rating .mf-rating-item,
+.mf-form-wrapper .mf-rating .mf-star {
+    font-size: 26px !important;
+}
+.mf-form-wrapper .mf-rating--emoji .mf-rating-item {
+    font-size: 28px !important;
+}
+.mf-form-wrapper .mf-rating--thumbs .mf-rating-item {
+    font-size: 24px !important;
+}
+.mf-rating-item:hover { transform: scale(1.08); background: #eef4ff; }
+.mf-rating-item:focus-visible { outline: 2px solid var(--mf-input-focus-border); outline-offset: 2px; }
+.mf-rating .mf-rating-on { display: none; }
+.mf-rating .mf-rating-off { display: inline; }
+.mf-rating-item.is-active .mf-rating-on { display: inline; }
+.mf-rating-item.is-active .mf-rating-off { display: none; }
+.mf-rating--star .mf-rating-item.is-active { color: #ffb703; }
+.mf-rating--star .mf-rating-item { color: #cfd6df; }
+.mf-rating--heart .mf-rating-item.is-active { color: #ef3340; }
+.mf-rating--emoji .mf-rating-item { border-radius: 9px; font-size: 28px; color: #65717f; }
+.mf-rating--emoji .mf-rating-item.is-active { background: #e8f1ff; color: #7bd900; }
+.mf-rating--thumbs .mf-rating-item {
+    width: 48px;
+    height: 48px;
+    border: 1px solid #cfd7e3;
+    font-size: 24px;
+}
+.mf-rating--thumbs .mf-rating-item.is-active {
+    background: #dcfce7;
+    border-color: #22c55e;
+    color: #00a650;
+}
+.mf-rating-value { min-height: 16px; color: #475569; font-size: 12px; }
+
+/* Signature */
+.mf-signature-field {
+    position: relative;
+    width: 100%;
+}
+.mf-signature-canvas-wrap {
+    position: relative;
+    overflow: hidden;
+    background: #fff;
+    border: 2px solid #d3dbe6;
+    border-radius: 8px;
+}
+.mf-signature-canvas {
+    width: 100%;
+    height: 104px;
+    display: block;
+    cursor: crosshair;
+    touch-action: none;
+    background: #fff;
+}
+.mf-signature-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: #536273;
+    font-size: 14px;
+    pointer-events: none;
+    user-select: none;
+    transition: opacity .2s ease, visibility .2s ease;
+}
+.mf-signature-placeholder svg {
+    width: 22px;
+    height: 22px;
+    opacity: .65;
+}
+.mf-signature-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 8px;
+}
+.mf-sig-clear,
+.mf-sig-undo {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    padding: 6px 12px;
+    border: 1px solid #d8e0ea;
+    border-radius: 6px;
+    background: #fff;
+    color: #4b5563;
+    font-size: 13px;
+    cursor: pointer;
+}
+.mf-sig-clear:hover { background: #f8fafc; color: #111827; }
+.mf-sig-undo:disabled { opacity: .55; cursor: not-allowed; }
+
+/* ============================================================
+   SECTION / HTML
+   ============================================================ */
+.mf-section-break {
+    border-top: 1px solid var(--mf-section-border-color);
+    background: var(--mf-section-bg);
+    padding: var(--mf-section-padding);
+    margin: 8px 0;
+}
+.mf-section-title {
+    font-size: var(--mf-section-title-size);
+    font-weight: 600;
+    color: var(--mf-section-title-color);
+    margin: 0 0 4px 0;
+}
+.mf-html-block { padding: 8px 0; color: var(--mf-color-text); }
+
+/* ============================================================
+   ROW / COLUMNS — Grid Layout (form view)
+   ============================================================ */
+.mf-row {
+    display: grid;
+    gap: var(--mf-field-gap, 20px);
+    margin-bottom: var(--mf-field-gap, 20px);
+}
+.mf-row-column { display: flex; flex-direction: column; gap: var(--mf-field-gap, 16px); }
+.mf-row-column .mf-field-group { margin-bottom: 0; }
+/* Ensure fields inside row columns expand to fill width */
+.mf-row-column .mf-field-group input,
+.mf-row-column .mf-field-group select,
+.mf-row-column .mf-field-group textarea {
+    width: 100%;
+    box-sizing: border-box;
+}
+/* [B65b] Was 600px — lowered to 480px so the builder THEME-mode iframe
+   (~500-700px wide due to left rail + right pane) no longer collapses
+   2-col rows into 1-col. Real mobile devices (≤480px) still stack. */
+@media (max-width: 480px) {
+    .mf-row { grid-template-columns: 1fr !important; }
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.mf-form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+    flex-wrap: wrap;
+}
+.mf-btn-submit {
+    background: var(--mf-btn-bg);
+    color: var(--mf-btn-color);
+    border: none;
+    border-radius: var(--mf-btn-radius);
+    padding: var(--mf-btn-padding);
+    font-family: var(--mf-font-family);
+    font-size: var(--mf-btn-font-size);
+    font-weight: var(--mf-btn-font-weight);
+    box-shadow: var(--mf-btn-shadow);
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    width: var(--mf-btn-width);
+}
+.mf-btn-submit:hover { background: var(--mf-btn-bg-hover); }
+.mf-btn-submit:active { transform: translateY(1px); }
+.mf-btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.mf-btn-prev {
+    background: transparent;
+    border: 1px solid #d1d5db;
+    color: #6b7280;
+    border-radius: var(--mf-btn-radius);
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.mf-btn-prev:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+    color: #374151;
+}
+.mf-btn-next {
+    background: var(--mf-primary, #4f46e5);
+    border: none;
+    color: #fff;
+    border-radius: var(--mf-btn-radius);
+    padding: 10px 28px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-left: auto;
+}
+.mf-btn-next:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+
+.mf-btn-save {
+    background: transparent;
+    border: 1px solid #aaa;
+    color: #666;
+    border-radius: var(--mf-btn-radius);
+    padding: 10px 20px;
+    font-size: 14px;
+    cursor: pointer;
+}
+.mf-btn-save:hover { border-color: #666; color: #333; }
+
+/* ============================================================
+   SUCCESS / ERROR / LOADING
+   ============================================================ */
+.mf-success-message { text-align: center; padding: 40px 20px; }
+.mf-success-message .fa-check-circle { color: #27ae60; }
+.mf-error-message { margin-top: 16px; }
+.mf-loading { text-align: center; padding: 20px; color: var(--mf-primary); }
+
+/* ============================================================
+   INLINE MULTI-COLUMN SUPPORT
+   ============================================================ */
+.mf-fields-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--mf-field-gap);
+}
+/* BUG FIX: mf-page is a direct flex child of mf-fields-container.
+   Without explicit width/flex, it shrinks to content width instead of
+   filling the container — causing all field groups inside to be ~2/3 wide.  */
+.mf-fields-container > .mf-page {
+    width: 100%;
+    flex: 0 0 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+.mf-field-group { flex: 0 0 100%; }
+/* Standard renderer pages stack direct child field groups vertically.
+   Keep auto height there so blank/standard templates do not create giant gaps. */
+.mf-fields-container > .mf-page > .mf-field-group:not([data-width]) {
+    flex: 0 0 auto;
+    width: 100%;
+}
+.mf-field-group[data-width="50%"] { flex: 0 0 calc(50% - var(--mf-field-gap) / 2); }
+.mf-field-group[data-width="33%"] { flex: 0 0 calc(33.33% - var(--mf-field-gap) * 2 / 3); }
+.mf-field-group[data-width="66%"] { flex: 0 0 calc(66.66% - var(--mf-field-gap) / 3); }
+.mf-field-group[data-width="25%"] { flex: 0 0 calc(25% - var(--mf-field-gap) * 3 / 4); }
+
+@media (max-width: 600px) {
+    .mf-field-group[data-width] { flex: 0 0 100% !important; }
+    .mf-form { padding: 20px 16px; }
+    .mf-form-actions { flex-direction: column; }
+    .mf-btn-submit { width: 100%; }
+    .mf-standard-body { padding: 20px 20px 24px; }
+}
+
+/* ============================================================
+   LABEL POSITION VARIANTS
+   ============================================================ */
+.mf-labels-left .mf-field-group {
+    display: flex; align-items: flex-start; gap: 12px;
+}
+.mf-labels-left .mf-field-label {
+    flex: 0 0 140px; text-align: right; padding-top: 10px;
+}
+.mf-labels-left .mf-field-body { flex: 1; }
+
+.mf-labels-floating .mf-field-group { position: relative; }
+.mf-labels-floating .mf-field-label {
+    position: absolute; top: 12px; left: 14px;
+    font-size: 15px; font-weight: 400; color: var(--mf-input-placeholder);
+    transition: all 0.2s; pointer-events: none; z-index: 1;
+}
+.mf-labels-floating .mf-input:focus ~ .mf-field-label,
+.mf-labels-floating .mf-input:not(:placeholder-shown) ~ .mf-field-label,
+.mf-labels-floating .mf-field-group.mf-has-value .mf-field-label {
+    top: -8px; left: 10px; font-size: 11px;
+    background: var(--mf-form-bg); padding: 0 4px;
+    color: var(--mf-primary); font-weight: 600;
+}
+
+/* ============================================================
+   HONEYPOT — Never visible
+   ============================================================ */
+.mf-hp-field {
+    position: absolute !important;
+    left: -9999px !important; top: -9999px !important;
+    width: 0 !important; height: 0 !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+}
+
+/* ============================================================
+   Field Validation Error Styles
+   ============================================================ */
+.mf-field-group.mf-field-error input,
+.mf-field-group.mf-field-error textarea,
+.mf-field-group.mf-field-error select {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+.mf-field-group.mf-field-error label {
+    color: #dc2626;
+}
+.mf-field-error-msg {
+    color: #dc2626;
+    font-size: 12px;
+    margin-top: 4px;
+    padding: 4px 8px;
+    background: #fef2f2;
+    border-radius: 4px;
+    border-left: 3px solid #ef4444;
+}
+
+/* Better error banner */
+.mf-error-message .alert-danger {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-left: 4px solid #ef4444;
+    color: #991b1b;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+.mf-error-message .alert-danger i {
+    color: #ef4444;
+    margin-right: 8px;
+}
+
+/* Better success banner */
+.mf-success-message .alert-success {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-left: 4px solid #22c55e;
+    color: #166534;
+    padding: 24px;
+    border-radius: 8px;
+    text-align: center;
+}
+.mf-success-message .alert-success i {
+    color: #22c55e;
+    display: block;
+    margin-bottom: 12px;
+}
+.mf-success-message .alert-success h3 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+}
+
+/* Multi-page — see step indicator styles above */
+
+/* ============================================================
+   CONFIGURATION PANEL
+   ============================================================ */
+.mf-config-panel { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; width: 100%; margin: 0; background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.1), 0 4px 20px rgba(0,0,0,.06); overflow: hidden; box-sizing: border-box; }
+.mf-config-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; background: linear-gradient(135deg, #4f46e5, #6366f1); color: #fff; flex-wrap: wrap; gap: 12px; }
+.mf-config-title { font-size: 18px; font-weight: 700; }
+.mf-config-title i { margin-right: 8px; opacity: .85; }
+.mf-config-actions { display: flex; gap: 8px; }
+.mf-cfg-btn { padding: 8px 18px; border: 1px solid rgba(255,255,255,.3); border-radius: 8px; background: rgba(255,255,255,.15); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; }
+.mf-cfg-btn:hover { background: rgba(255,255,255,.25); }
+.mf-cfg-btn-primary { background: #fff !important; color: #4f46e5 !important; border-color: #fff !important; }
+.mf-cfg-btn-primary:hover { background: #f0f0ff !important; }
+.mf-cfg-btn-danger { background: transparent !important; color: #dc2626 !important; border-color: rgba(220,38,38,.3) !important; font-size: 12px !important; }
+.mf-cfg-btn-danger:hover { background: rgba(220,38,38,.1) !important; border-color: #dc2626 !important; }
+
+.mf-config-body { padding: 0; }
+.mf-config-tabs { display: flex; border-bottom: 2px solid #e2e8f0; background: #f8fafc; }
+.mf-cfg-tab { flex: 1; padding: 12px 16px; border: none; background: none; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; transition: all .15s; text-align: center; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+.mf-cfg-tab:hover { color: #334155; background: #f1f5f9; }
+.mf-cfg-tab.active { color: #4f46e5; border-bottom-color: #4f46e5; background: #fff; }
+.mf-cfg-tab i { margin-right: 6px; }
+
+.mf-cfg-content { display: none; padding: 24px; }
+.mf-cfg-content.active { display: block; }
+
+.mf-cfg-notice { padding: 12px 16px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; color: #1e40af; font-size: 13px; margin-bottom: 20px; }
+.mf-cfg-notice i { margin-right: 6px; }
+
+.mf-cfg-form-select { max-width: 400px; }
+.mf-cfg-form-select label { display: block; font-weight: 600; color: #334155; margin-bottom: 6px; font-size: 13px; }
+.mf-cfg-input { width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 13px; background: #fff; transition: border-color .15s; box-sizing: border-box; }
+.mf-cfg-input:focus { border-color: #6366f1; outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,.15); }
+
+.mf-cfg-section { margin-bottom: 20px; }
+.mf-cfg-section > label { display: block; font-weight: 600; color: #334155; margin-bottom: 12px; font-size: 14px; }
+
+.mf-cfg-view-types { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.mf-cfg-vt-card { padding: 14px 12px; border: 2px solid #e2e8f0; border-radius: 10px; text-align: center; cursor: pointer; transition: all .15s; background: #fff; }
+.mf-cfg-vt-card:hover { border-color: #a5b4fc; background: #f5f3ff; }
+.mf-cfg-vt-card.active { border-color: #6366f1; background: #eef2ff; box-shadow: 0 0 0 3px rgba(99,102,241,.15); }
+.mf-cfg-vt-card i { display: block; font-size: 24px; color: #6366f1; margin-bottom: 8px; }
+.mf-cfg-vt-card strong { display: block; font-size: 13px; color: #1e293b; margin-bottom: 2px; }
+.mf-cfg-vt-card span { font-size: 11px; color: #94a3b8; }
+
+.mf-cfg-view-opts { margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; }
+.mf-cfg-view-opts h4 { font-size: 14px; color: #334155; margin: 0 0 16px; }
+.mf-cfg-view-opts h4 i { margin-right: 6px; color: #6366f1; }
+
+.mf-cfg-row { margin-bottom: 14px; }
+.mf-cfg-row > label { display: block; font-weight: 500; color: #475569; margin-bottom: 6px; font-size: 13px; }
+.mf-cfg-row-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; margin-bottom: 14px; }
+.mf-cfg-row-grid label { display: block; font-weight: 500; color: #475569; margin-bottom: 6px; font-size: 13px; }
+
+.mf-cfg-checklist { max-height: 200px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px; }
+.mf-cfg-check-item { display: block; padding: 4px 8px; font-size: 13px; cursor: pointer; border-radius: 4px; }
+.mf-cfg-check-item:hover { background: #f1f5f9; }
+.mf-cfg-check-item input { margin-right: 6px; }
+.mf-cfg-check-item small { color: #94a3b8; }
+
+.mf-cfg-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+
+/* Admin Edit View button */
+.mf-cfg-edit-btn { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; font-size: 12px; color: #6366f1; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 6px; text-decoration: none; transition: all .15s; }
+.mf-cfg-edit-btn:hover { background: #e0e7ff; color: #4f46e5; text-decoration: none; }
+
+/* ── Template Gallery ── */
+.mf-tpl-categories { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0; }
+.mf-tpl-cat-btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px; font-size: 13px; border: 1px solid #e2e8f0; border-radius: 20px; background: #fff; color: #64748b; cursor: pointer; transition: all .15s; }
+.mf-tpl-cat-btn:hover { border-color: #a5b4fc; color: #4f46e5; background: #eef2ff; }
+.mf-tpl-cat-btn.active { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+.mf-tpl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.mf-tpl-card { position: relative; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; background: #fff; transition: all .2s; cursor: default; display: flex; flex-direction: column; }
+.mf-tpl-card:hover { border-color: #a5b4fc; box-shadow: 0 4px 16px rgba(79,70,229,.1); transform: translateY(-2px); }
+.mf-tpl-card-icon { font-size: 32px; margin-bottom: 10px; }
+.mf-tpl-card-body h4 { margin: 0 0 6px; font-size: 16px; font-weight: 600; color: #1e293b; }
+.mf-tpl-card-body p { margin: 0 0 8px; font-size: 13px; color: #64748b; line-height: 1.4; }
+.mf-tpl-card-meta { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: .5px; }
+.mf-tpl-use-btn { display: inline-flex; align-items: center; gap: 5px; margin-top: 12px; padding: 8px 16px; font-size: 13px; font-weight: 500; color: #4f46e5; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 8px; cursor: pointer; transition: all .15s; align-self: flex-start; }
+.mf-tpl-use-btn:hover { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+.mf-tpl-use-btn:disabled { opacity: .6; cursor: not-allowed; }
+.mf-tpl-use-btn.applied { background: #dcfce7; color: #16a34a; border-color: #86efac; cursor: default; }
+.mf-tpl-use-btn.applied:hover { background: #dcfce7; color: #16a34a; border-color: #86efac; }
+.mf-tpl-card.applied { border-color: #86efac; background: #f0fdf4; }
+.mf-tpl-pagination { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 12px 0; }
+.mf-tpl-page-btn { padding: 6px 14px; font-size: 13px; border: 1px solid #e2e8f0; border-radius: 6px; background: #fff; cursor: pointer; color: #475569; transition: all .15s; }
+.mf-tpl-page-btn:hover:not(:disabled) { border-color: #4f46e5; color: #4f46e5; }
+.mf-tpl-page-btn:disabled { opacity: .4; cursor: not-allowed; }
+.mf-tpl-page-info { font-size: 13px; color: #94a3b8; }
+
+/* ── Config Panel TS overrides ── */
+.mf-cfg-section { margin-bottom: 20px; }
+.mf-cfg-section > label { display: block; font-weight: 600; font-size: 14px; color: #1e293b; margin-bottom: 10px; }
+.mf-cfg-form-select { max-width: 400px; }
+.mf-cfg-form-select label { display: block; font-weight: 500; color: #475569; margin-bottom: 6px; font-size: 13px; }
+.mf-cfg-notice { padding: 12px 16px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; color: #0369a1; font-size: 13px; line-height: 1.5; }
+.mf-cfg-notice i { margin-right: 4px; }
+.mf-cfg-view-opts h4 { font-size: 14px; color: #334155; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9; }
+.mf-cfg-view-opts h4 i { color: #6366f1; margin-right: 6px; }
+.mf-cfg-row { margin-bottom: 14px; }
+.mf-cfg-row > label { display: block; font-weight: 500; color: #475569; margin-bottom: 6px; font-size: 13px; }
+.mf-cfg-preview-frame { border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+.mf-cfg-preview-header { padding: 8px 16px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: .5px; }
+.mf-cfg-preview-header i { color: #6366f1; margin-right: 4px; }
+
+/* Toast notifications */
+.mf-toast { position: fixed; top: 20px; right: 20px; z-index: 100000; padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; color: #fff; animation: mf-toast-in .3s ease; box-shadow: 0 4px 12px rgba(0,0,0,.15); }
+.mf-toast-success { background: #059669; }
+.mf-toast-error { background: #dc2626; }
+.mf-toast-info { background: #4f46e5; }
+@keyframes mf-toast-in { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+
+/* ── Custom Template (mfp-) width fix ─────────────────────────────────
+   Template HTML inject CSS riêng (mfp-event v.v.) với max-width cứng.
+   Dùng --mf-form-max-width và buộc width:100% để Live Editor win.
+   -------------------------------------------------------------------- */
+.mf-fields-container { align-items: stretch; }
+
+/* mfp-* width override removed — all forms use customHtml which manages its own layout */
+
+/* ── Hosted page context (mfp-card wraps the form)
+   When renderer is inside a platform card/wrapper,
+   strip double background, shadow, radius, padding from .mf-form
+   so the platform card provides the visual chrome.
+   ---------------------------------------------------------------- */
+.mfp-body .mf-form-wrapper,
+.mf-form-host .mf-form-wrapper {
+  margin: 0;
+}
+.mfp-body .mf-form-inner,
+.mf-form-host .mf-form-inner {
+  max-width: none;
+  margin: 0;
+}
+.mfp-body .mf-form,
+.mf-form-host .mf-form {
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  border: none;
+  padding: 0;
+}
+/* Alert styles (success/error) — used by renderer */
+.alert { padding: 16px 20px; border-radius: 8px; font-size: 14px; line-height: 1.6; }
+.alert-success { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
+.alert-success .fa-check-circle { color: #16a34a; font-size: 28px; display: block; margin-bottom: 10px; }
+.alert-success h3 { margin: 0 0 6px; font-size: 18px; color: #15803d; }
+.alert-success p { margin: 4px 0 0; }
+.alert-success .mf-ref-number { margin-top: 8px; color: #4ade80; font-size: 12px; }
+.alert-danger { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
+.alert-danger .fa-exclamation-triangle { color: #ef4444; margin-right: 6px; }
+
+/* ── Default generated layout (mfp-default) ────────────────────── */
+/* Used when schema has no customHtml — generateDefaultCustomHtml() creates this. */
+.mfp.mfp-default,
+.mfp.mfp-default *, .mfp.mfp-default *::before, .mfp.mfp-default *::after { box-sizing: border-box; }
+.mfp.mfp-default { max-width: 680px; margin: 0 auto; padding: 20px; font-family: var(--mf-font-family, 'Inter', system-ui, sans-serif); }
+.mfp-default .mfp-default-header { padding: 28px 32px 20px; border-bottom: 1px solid var(--mf-section-border-color, #f1f5f9); margin-bottom: 8px; }
+.mfp-default .mfp-default-header h1 { margin: 0 0 6px; font-size: 22px; font-weight: 700; color: var(--mf-title-color, #0f172a); }
+.mfp-default .mfp-default-header p { margin: 0; font-size: 14px; color: var(--mf-color-text-muted, #64748b); line-height: 1.6; }
+.mfp-default .mfp-default-body { padding: 20px 32px 32px; background: var(--mf-form-bg, #fff); }
+.mfp-default .mfp-actions { padding-top: 12px; }
+.mfp-default .mfp-actions button[type=submit] { width: 100%; background: var(--mf-primary, #6366f1); color: var(--mf-primary-text, #fff); border: none; border-radius: var(--mf-btn-radius, 8px); padding: var(--mf-btn-padding, 14px 32px); font-size: var(--mf-btn-font-size, 15px); font-weight: var(--mf-btn-font-weight, 600); cursor: pointer; transition: opacity .15s; }
+.mfp-default .mfp-actions button[type=submit]:hover { opacity: .88; }
+
+
+/* ============================================================
+   MULTI-STEP + CUSTOM HTML SHELL
+   Keeps stepper, body, and actions inside one renderer shell.
+   ============================================================ */
+.mf-form-wrapper.mf-has-multistep-shell .mf-form {
+    display: block;
+    width: 100%;
+}
+.mf-form-wrapper.mf-has-multistep-shell .mf-fields-container {
+    display: block;
+    width: 100%;
+    min-width: 0;
+}
+.mf-multistep-shell {
+    width: 100%;
+    min-width: 0;
+}
+.mf-multistep-frame {
+    --mf-multistep-effective-max-width: var(--mf-multistep-max-width, var(--mf-form-max-width, 1100px));
+    width: min(100%, var(--mf-multistep-effective-max-width));
+    min-width: 0;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.mf-multistep-header,
+.mf-multistep-body,
+.mf-multistep-footer {
+    width: 100%;
+    min-width: 0;
+}
+.mf-multistep-header .mf-progress-bar {
+    margin-bottom: 0;
+}
+.mf-multistep-body > .mfp,
+.mf-multistep-body > .mf-page,
+.mf-multistep-body .mf-page {
+    width: 100%;
+    min-width: 0;
+}
+.mf-multistep-footer .mf-form-actions {
+    margin-top: 0;
+}
+
+
+/* ============================================================
+   [DnnSkinDefense v20260421-01] SKIN BLEED DEFENSE
+
+   When MegaForm renders as a module inside DNN, Oqtane, or any
+   CMS that loads Bootstrap / skin CSS globally, those rules bleed
+   into the form — headings get Arial/bold, buttons grow Bootstrap
+   borders, lists gain disc-margins, etc.
+
+   This block defends core form typography, controls, and layout
+   primitives with !important. Customization via theme CSS vars
+   and Theme Designer customCss still works — var() fallbacks
+   preserve user-chosen values, so theme wins over defense.
+
+   Scope: .mf-form-wrapper + .mfp (custom HTML containers)
+   ============================================================ */
+
+/* ── Headings inside form: skin often sets Arial + 2rem + bold */
+.mf-form-wrapper h1,
+.mf-form-wrapper h2,
+.mf-form-wrapper h3,
+.mf-form-wrapper h4,
+.mf-form-wrapper h5,
+.mf-form-wrapper h6,
+.mfp h1, .mfp h2, .mfp h3, .mfp h4, .mfp h5, .mfp h6 {
+    font-family:  var(--mf-title-font-family, var(--mf-font-family, inherit)) !important;
+    font-weight:  var(--mf-title-font-weight, 700) !important;
+    line-height:  var(--mf-title-line-height, 1.3) !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+    margin: 0 0 12px !important;
+    padding: 0 !important;
+}
+
+/* ── Paragraphs inside form: skin adds line-height, margin, color */
+.mf-form-wrapper p,
+.mfp p {
+    font-family: var(--mf-font-family, inherit) !important;
+    font-size:   var(--mf-font-size-base, 15px) !important;
+    line-height: var(--mf-line-height, 1.5) !important;
+    margin: 0 0 10px !important;
+    padding: 0 !important;
+    color: inherit;
+}
+
+/* ── Form controls: Bootstrap .form-control / DNN skin buttons bleed */
+.mf-form-wrapper button,
+.mf-form-wrapper input,
+.mf-form-wrapper select,
+.mf-form-wrapper textarea,
+.mfp button, .mfp input, .mfp select, .mfp textarea {
+    font-family: var(--mf-font-family, inherit) !important;
+    font-size:   var(--mf-font-size-base, 15px) !important;
+    line-height: var(--mf-line-height, 1.5) !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+    box-sizing: border-box !important;
+}
+
+/* ── Text inputs: skin paints background/border on .form-control */
+.mf-form-wrapper .mf-input,
+.mf-form-wrapper .mf-textarea,
+.mf-form-wrapper .mf-select {
+    background: var(--mf-input-bg, #fff) !important;
+    color:      var(--mf-input-color, var(--mf-color-text, #333)) !important;
+    border:     var(--mf-input-border, 1px solid #d0d7de) !important;
+    border-radius: var(--mf-input-radius, 6px) !important;
+    box-shadow: none !important;
+}
+
+/* ── Links inside form: skin recolors <a> aggressively */
+.mf-form-wrapper a,
+.mf-form-wrapper a:link,
+.mf-form-wrapper a:visited,
+.mfp a, .mfp a:link, .mfp a:visited {
+    color: var(--mf-link-color, var(--mf-primary, #6366f1)) !important;
+    font-family: inherit !important;
+    text-transform: none !important;
+}
+
+/* ── Lists: skin adds disc-inside, weird margins */
+.mf-form-wrapper ul, .mf-form-wrapper ol,
+.mfp ul, .mfp ol {
+    margin: 0 0 10px !important;
+    padding: 0 0 0 24px !important;
+    list-style-position: outside;
+}
+.mf-form-wrapper li, .mfp li {
+    margin: 0 0 4px !important;
+    padding: 0 !important;
+    line-height: var(--mf-line-height, 1.5) !important;
+}
+
+/* ── Bootstrap layout helpers (DNN skins wrap panes in .container/.row) */
+.mf-form-wrapper .container,
+.mf-form-wrapper .container-fluid {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+}
+.mf-form-wrapper .row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+.mf-form-wrapper [class*="col-"] {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+/* ── Bootstrap form primitives: if skin adds .form-control/.form-group */
+.mf-form-wrapper .form-control,
+.mf-form-wrapper .form-group {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* ── Table bleed: DNN skins occasionally wrap module output in tables */
+.mf-form-wrapper table,
+.mf-form-wrapper tbody,
+.mf-form-wrapper thead,
+.mf-form-wrapper tr,
+.mf-form-wrapper td,
+.mf-form-wrapper th {
+    border: none;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+}
+
+/* ── JS-readable defense badge (introspection via getComputedStyle) */
+.mf-form-wrapper {
+    --mf-skin-defense-badge: 'DnnSkinDefense v20260421-01';
+}
+/* MegaForm control variants v20260602-B42: Calendar picker, tag multiselect, multi-column combo */
+.mf-cal,.mf-ms,.mf-mccb{position:relative;width:100%;--mfv-bg:var(--mf-input-bg,#fff);--mfv-fg:var(--mf-text,#0f172a);--mfv-border:var(--mf-border,#cbd5e1);--mfv-muted:#f1f5f9;--mfv-muted-fg:#64748b;--mfv-primary:var(--mf-primary,#2563eb);--mfv-danger:#ef4444;--mfv-radius:8px}
+.mf-cal-trigger,.mf-ms-trigger,.mf-mccb-trigger{position:relative;display:flex;align-items:center;gap:.5rem;width:100%;min-height:2.5rem;border:1px solid var(--mfv-border);border-radius:var(--mfv-radius);background:var(--mfv-bg);color:var(--mfv-fg);font:inherit;font-size:.875rem;cursor:pointer;transition:border-color .18s ease,box-shadow .18s ease,background-color .18s ease}
+.mf-cal-trigger{justify-content:space-between;padding:0 .75rem}
+.mf-ms-trigger{padding:.375rem .75rem;align-content:flex-start}
+.mf-mccb-trigger{padding:0 .75rem}
+.mf-cal-trigger:hover:not(:disabled),.mf-ms-trigger:hover:not(:disabled),.mf-mccb-trigger:hover:not(:disabled){border-color:var(--mfv-primary);background:#f8fafc}
+.mf-cal.is-open .mf-cal-trigger,.mf-ms.is-open .mf-ms-trigger,.mf-mccb.is-open .mf-mccb-trigger{border-color:var(--mfv-primary);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.mf-cal-trigger:disabled,.mf-ms-trigger:disabled,.mf-mccb-trigger:disabled{background:#eef2f7;color:#94a3b8;cursor:not-allowed}
+.mf-cal-value,.mf-mccb-value{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mf-cal.is-empty .mf-cal-value,.mf-mccb-placeholder,.mf-ms-placeholder{color:var(--mfv-muted-fg)}
+.mf-cal .mf-date-icon{position:static;top:auto;right:auto;left:auto;z-index:auto;display:inline-flex;align-items:center;justify-content:center;flex:0 0 20px;width:20px;height:20px;transform:none;pointer-events:none;color:var(--mfv-muted-fg)}
+.mf-cal .mf-date-icon svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;color:currentColor}
+.mf-cal-panel,.mf-ms-panel,.mf-mccb-panel{display:none;position:absolute;top:calc(100% + .5rem);left:0;right:0;z-index:1000;background:var(--mfv-bg);border:1px solid var(--mfv-border);border-radius:var(--mfv-radius);box-shadow:0 14px 30px rgba(15,23,42,.16);overflow:hidden}
+.mf-cal.is-open .mf-cal-panel,.mf-ms.is-open .mf-ms-panel,.mf-mccb.is-open .mf-mccb-panel{display:block}
+/* [B172] Calendar popup is a fixed-width popover, NOT full field-width. The shared
+   .mf-cal-panel/.mf-ms-panel/.mf-mccb-panel rule sets left:0;right:0 which stretches
+   the panel to the whole field (regression: date picker spanned ~700px). Multiselect
+   /multi-column SHOULD track the trigger width, so scope the cap to the calendar only. */
+.mf-cal-panel{right:auto;width:320px;min-width:320px}
+.mf-cal-header{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:1rem;border-bottom:1px solid #e2e8f0}
+.mf-cal-title{font-weight:700;text-align:center;flex:1;color:#0f172a}
+.mf-cal-nav{width:2rem;height:2rem;display:inline-flex;align-items:center;justify-content:center;border:1px solid #e2e8f0;border-radius:6px;background:#fff;color:#0f172a;font-size:22px;line-height:1;cursor:pointer}
+.mf-cal-nav:hover{background:#f1f5f9}
+.mf-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.5rem}
+.mf-cal-weekdays{padding:1rem 1rem 0;color:#64748b;font-size:.75rem;font-weight:700;text-align:center}
+.mf-cal-days{padding: .5rem 1rem 1rem}
+.mf-cal-day{aspect-ratio:1;border:1px solid transparent;border-radius:6px;background:transparent;color:#0f172a;font:inherit;font-size:.875rem;font-weight:600;cursor:pointer}
+.mf-cal-day:not(.is-empty):hover{background:#f1f5f9;border-color:#dbe3ee}
+.mf-cal-day.is-empty{pointer-events:none}
+.mf-cal-day.is-today{border-color:var(--mfv-primary);color:var(--mfv-primary)}
+.mf-cal-day.is-selected{background:var(--mfv-primary);border-color:var(--mfv-primary);color:#fff}
+.mf-cal-month-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;padding:1rem}
+.mf-cal-month{min-height:2.5rem;border:1px solid transparent;border-radius:6px;background:transparent;color:#0f172a;font:inherit;font-size:.875rem;font-weight:700;cursor:pointer}
+.mf-cal-month:hover{background:#f1f5f9;border-color:#dbe3ee}
+.mf-cal-month.is-today{border-color:var(--mfv-primary);color:var(--mfv-primary)}
+.mf-cal-month.is-selected{background:var(--mfv-primary);border-color:var(--mfv-primary);color:#fff}
+.mf-cal-time{display:flex;align-items:center;gap:.5rem;padding:.75rem 1rem;border-top:1px solid #e2e8f0;background:#f8fafc}
+.mf-cal-time label{font-weight:700;margin:0}
+.mf-cal-time input{width:3.5rem;padding:.375rem .5rem;border:1px solid #cbd5e1;border-radius:6px;text-align:center}
+.mf-cal-actions{display:flex;justify-content:flex-end;gap:.5rem;padding:1rem;border-top:1px solid #e2e8f0}
+.mf-cal-action{border:1px solid #cbd5e1;border-radius:7px;background:#fff;padding:.5rem 1rem;font-weight:700;cursor:pointer}
+.mf-cal-action:hover{background:#f1f5f9}
+.mf-cal-apply{background:var(--mfv-primary);border-color:var(--mfv-primary);color:#fff}
+.mf-ms-tags{display:flex;align-items:center;gap:.375rem;flex:1;flex-wrap:wrap;min-height:1.75rem;min-width:0}
+.mf-ms-tag{display:inline-flex;align-items:center;gap:.375rem;padding:.25rem .5rem;border-radius:5px;background:#0a5dbb;color:#fff;font-size:.8125rem;font-weight:700;white-space:nowrap}
+.mf-ms-remove{border:0;background:transparent;color:inherit;cursor:pointer;width:1rem;height:1rem;line-height:1;padding:0}
+.mf-ms-actions,.mf-mccb-actions{display:inline-flex;align-items:center;justify-content:center;gap:.375rem;margin-left:auto;color:#64748b;flex:0 0 auto}
+.mf-ms-clear,.mf-mccb-clear{display:inline-flex;align-items:center;justify-content:center;width:1.5rem;height:1.5rem;border-radius:4px;font-size:20px;line-height:1;color:#64748b}
+.mf-ms-clear:hover,.mf-mccb-clear:hover{background:#eef2f7;color:#0f172a}
+.mf-ms-chevron,.mf-mccb-chevron{display:inline-block;width:.55rem;height:.55rem;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg);transition:transform .18s ease}
+.mf-ms.is-open .mf-ms-chevron,.mf-mccb.is-open .mf-mccb-chevron{transform:rotate(-135deg)}
+.mf-ms-search-wrap,.mf-mccb-search-wrap{padding:.5rem;border-bottom:1px solid #e2e8f0;background:#fff}
+.mf-ms-search,.mf-mccb-search{width:100%;border:1px solid #cbd5e1;border-radius:6px;padding:.5rem .625rem;font:inherit}
+.mf-ms-options,.mf-mccb-options{list-style:none;margin:0;padding:.25rem 0;max-height:280px;overflow:auto}
+.mf-ms-option{display:block;width:100%;border:0;background:transparent;text-align:left;padding:.625rem .75rem;color:#0f172a;font:inherit;cursor:pointer}
+.mf-ms-option:hover:not(:disabled){background:#f1f5f9}
+.mf-ms-option:disabled{color:#94a3b8;cursor:not-allowed}
+.mf-ms-empty,.mf-mccb-empty{padding:1rem;color:#64748b;text-align:center;font-size:.875rem}
+.mf-mccb-table-head{display:flex;gap:0;padding:.75rem;background:#eaf1f6;border-bottom:1px solid #cbd5e1;color:#64748b;font-size:.75rem;font-weight:800;text-transform:uppercase}
+.mf-mccb-option{display:flex;width:100%;gap:0;border:0;background:#fff;text-align:left;padding:.75rem;color:#0f172a;font:inherit;cursor:pointer}
+.mf-mccb-option:hover{background:#f8fafc}
+.mf-mccb-option.is-selected{background:#dbe7fb;color:#0057b8;font-weight:800}
+.mf-mccb-option span,.mf-mccb-table-head div{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:1rem}
+@media (max-width:640px){.mf-cal-panel,.mf-ms-panel,.mf-mccb-panel{position:relative;top:auto;margin-top:.5rem;min-width:0;width:100%}.mf-form-wrapper.mf-has-date-popover .mf-cal .mf-cal-panel{top:auto!important;bottom:auto!important}.mf-cal-grid{gap:.3rem}.mf-cal-day{font-size:.8125rem}.mf-cal-month-grid{grid-template-columns:repeat(2,1fr);gap:.375rem;padding:.75rem}.mf-cal-month{font-size:.8125rem;min-height:2.25rem;padding:0 .25rem}.mf-mccb-table-head,.mf-mccb-option{min-width:420px}.mf-mccb-panel{overflow-x:auto}}
+
+/* [B47-Canonical] Textarea resize — canonical min-h-100 + resize-y so the corner
+   handle behaves like the React reference (min-h-[100px] resize-y). field.height
+   inline style is honored but vertical resize remains enabled. Hover/focus borders
+   reuse the same tokens as .mf-input so all text controls match. */
+.mf-textarea {
+  min-height: 100px !important;
+  resize: vertical !important;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--mf-input-border-color);
+  border-radius: var(--mf-input-radius);
+  background-color: var(--mf-input-bg);
+  font-size: var(--mf-input-font-size);
+  color: var(--mf-input-fg);
+  transition: var(--mf-input-transition);
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.mf-textarea:hover {
+  border-color: var(--mf-input-focus-color);
+}
+
+.mf-textarea:focus {
+  outline: none;
+  border-color: var(--mf-input-focus-color);
+  box-shadow: var(--mf-input-focus-ring);
+}
+
+/* Honor field.height override but still allow user resize */
+.mf-textarea[style*="height"] {
+  resize: vertical !important;
+}
+
+/* [B47-Canonical] Chip enter animation — MultiSelect production widget.
+   Production class names verified against MegaForm.UI/src/renderer/interactive.ts:478-479:
+     chip       → .mf-ms-tag
+     remove btn → .mf-ms-remove   (NOT .mf-ms-tag-remove)
+   The aliases .mfw-ms-tag / .mfw-multi-select-tag / .mfw-multi-select-chip
+   and .mfw-ms-tag-remove / .mf-ms-tag-remove are included for forward-compat
+   with any future renderer rename. @keyframes mf-chip-enter is defined by the
+   canonical tokens task — do NOT redefine here. */
+.mfw-ms-tag,
+.mf-ms-tag,
+.mfw-multi-select-tag,
+.mfw-multi-select-chip {
+  animation: mf-chip-enter 0.15s ease-in-out;
+}
+
+.mf-ms-remove,
+.mfw-ms-tag-remove,
+.mf-ms-tag-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 2px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.mf-ms-remove:hover,
+.mfw-ms-tag-remove:hover,
+.mf-ms-tag-remove:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* [B47-Canonical] Dropdown panel open/close animation — Select / MultiSelect /
+   Calendar / Multi-Column-Checkbox / Phone country / Appointment popover.
+
+   Production state mechanism verified against the renderer + plugin sources:
+     - .mf-ms     → wrapper toggles .is-open, child .mf-ms-panel was display:none/block
+                    (megaform.css:2088-2089, interactive.ts:458)
+     - .mf-cal    → wrapper toggles .is-open, child .mf-cal-panel was display:none/block
+     - .mf-mccb   → wrapper toggles .is-open, child .mf-mccb-panel was display:none/block
+     - .mfp-phone-pro → wrapper toggles .is-open, child .mfp-phone-dropdown carries the
+                       [hidden] attribute (phone-pro.js:631/645/845)
+     - .mfw-appt  → wrapper toggles .is-open, child .mfw-appt-popover carries the
+                       [hidden] attribute (appointment.js:561-574)
+
+   We override the legacy display:none/[hidden] gate with a visibility + opacity +
+   translateY transition. visibility:hidden keeps the element out of the a11y tree
+   and untabbable when closed; pointer-events:none guards stray clicks during the
+   fade. The .mf-select-chevron / .mfp-phone-chevron / .mfw-cal-prev family rotate
+   180° when the wrapper is open so the caret tracks the panel state.
+
+   Forward-compat selectors .mf-select-dropdown / .mfw-ms-panel / .mfw-ms-options
+   / .mfp-phone-country-list are included for future renderer renames — they are
+   no-ops today but cost nothing. */
+.mf-ms-panel,
+.mf-cal-panel,
+.mf-mccb-panel,
+.mfp-phone-dropdown,
+.mfw-appt-popover,
+.mf-select-dropdown,
+.mfw-ms-panel,
+.mfw-ms-options {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-0.5rem);
+  transition: opacity 0.2s ease-in-out,
+              transform 0.2s ease-in-out,
+              visibility 0s linear 0.2s;
+  pointer-events: none;
+}
+
+/* Override the legacy display:none gate — keep panel in flow so it can fade. */
+.mf-ms.is-open .mf-ms-panel,
+.mf-cal.is-open .mf-cal-panel,
+.mf-mccb.is-open .mf-mccb-panel {
+  display: block !important;
+}
+
+/* Open state — applied via .is-open on the wrapper or removal of [hidden]. */
+.mf-ms.is-open .mf-ms-panel,
+.mf-cal.is-open .mf-cal-panel,
+.mf-mccb.is-open .mf-mccb-panel,
+.mfp-phone-pro.is-open .mfp-phone-dropdown,
+.mfw-appt.is-open .mfw-appt-popover,
+.mf-select-dropdown.is-open,
+.mfw-ms-panel.is-open,
+.mfw-ms-options.is-open,
+[data-state="open"].mf-select-dropdown,
+[data-state="open"].mf-ms-panel {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+  transition: opacity 0.2s ease-in-out,
+              transform 0.2s ease-in-out,
+              visibility 0s linear 0s;
+}
+
+/* The phone + appointment plugins also flip the [hidden] HTML attribute. When
+   the wrapper is .is-open we explicitly unhide so the transition can run. */
+.mfp-phone-pro.is-open .mfp-phone-dropdown[hidden],
+.mfw-appt.is-open .mfw-appt-popover[hidden] {
+  display: block;
+}
+
+/* Chevron rotation tracks the wrapper open state. */
+.mf-select-chevron,
+.mf-ms-chevron,
+.mf-cal-chevron,
+.mfp-phone-chevron,
+.mfw-appt-chevron,
+.mfw-ms-chevron {
+  transition: transform 0.2s ease-in-out;
+}
+
+.mf-ms.is-open .mf-ms-chevron,
+.mf-cal.is-open .mf-cal-chevron,
+.mfp-phone-pro.is-open .mfp-phone-chevron,
+.mfw-appt.is-open .mfw-appt-chevron,
+.mf-select-dropdown.is-open ~ .mf-select-chevron,
+.mfw-ms-panel.is-open ~ .mfw-ms-chevron {
+  transform: rotate(180deg);
+}
+
+/* =====================================================================
+   [B47-Canonical v20260602-B47] Design tokens + animations
+   ---------------------------------------------------------------------
+   Source: E:/MENU SPECS/form-builder-controls/components/megaform/*
+   Goal:   Bring MegaForm fields, multi-select, phone-pro shell, and
+           appointment popovers in line with the canonical reference
+           design system (slate-200 borders, blue-600 focus, soft
+           panel pop-in animation, chip enter animation).
+
+   Backward compat:
+   - The existing --mf-input-radius (6px) and --mf-form-radius (8px)
+     tokens in the top :root block are preserved; this block adds NEW
+     canonical aliases so existing field code keeps working.
+   - The B46 unified-height token --mf-input-unified-height has been
+     lowered from 42px → 40px above (see comment near line 865).
+   - Some canonical tokens (--mf-input-border-color, --mf-input-fg,
+     --mf-input-bg, --mf-input-font-size, --mf-input-focus-color,
+     --mf-input-focus-ring, --mf-input-transition) were already
+     referenced by the textarea + chip + panel blocks earlier in this
+     file. They are declared here as a single canonical source-of-truth
+     so missing-token fallbacks always resolve.
+   - The @keyframes mf-chip-enter / mf-panel-open are declared here even
+     though the chip + panel selector blocks live above; CSS keyframe
+     name resolution is order-independent so both forms work.
+   ===================================================================== */
+:root,
+.mf-form-wrapper {
+    /* --- Canonical input tokens (B47) --- */
+    --mf-input-height:           40px;           /* 2.5rem, replaces B46 42px */
+    --mf-input-border-color:     #e2e8f0;        /* slate-200 */
+    --mf-input-border:           1px solid #e2e8f0;
+    --mf-input-radius-panel:     8px;            /* 0.5rem for dropdown panels */
+    --mf-input-radius-field:     6px;            /* alias of existing --mf-input-radius */
+    --mf-input-padding-x:        12px;           /* 0.75rem */
+    --mf-input-padding-y:        8px;            /* base input */
+    --mf-input-padding-y-ms:     6px;            /* multi-select container */
+    --mf-input-bg:               #fafafa;
+    --mf-input-fg:               #0f172a;        /* slate-900 */
+    --mf-input-font-size:        14px;           /* 0.875rem */
+    --mf-input-focus-color:      #2563eb;        /* blue-600 */
+    --mf-input-focus-ring:       0 0 0 3px rgba(37, 99, 235, 0.1);
+    --mf-input-error-color:      #ef4444;        /* red-500 */
+    --mf-input-error-ring:       0 0 0 3px rgba(239, 68, 68, 0.1);
+    --mf-input-muted-bg:         #f1f5f9;        /* slate-100 */
+    --mf-input-muted-fg:         #64748b;        /* slate-500 */
+    --mf-input-transition:       all 0.15s ease-in-out;
+    --mf-panel-transition:       all 0.2s ease-in-out;
+
+    /* --- Chip tokens (B47) --- */
+    --mf-chip-radius:            4px;
+    --mf-chip-padding:           0.25rem 0.5rem;
+}
+
+/* --- Animations ---
+   Used by the chip selectors near line 2173 (.mf-ms-tag etc.) and the
+   dropdown panel selectors near line 2223 (.mf-ms-panel etc.). Defined
+   here even though the consumers live above — CSS keyframe lookup is
+   document-wide and order-independent. */
+@keyframes mf-chip-enter {
+    from { opacity: 0; transform: scale(0.95); }
+    to   { opacity: 1; transform: scale(1); }
+}
+@keyframes mf-panel-open {
+    from { opacity: 0; transform: translateY(-0.5rem); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Field hover / focus polish ---
+   IMPORTANT: keep !important on border-color / box-shadow because the
+   base .mf-input rule (line ~817) marks border + background as
+   !important to defeat host DNN/Oqtane theme overrides. Without
+   !important here the canonical focus ring would be visually swallowed
+   on portals with aggressive global form CSS. */
+.mf-input,
+.mf-select,
+.mf-textarea,
+.mf-ms,
+.mf-ms-trigger,
+.mfp-phone-shell {
+    transition: var(--mf-input-transition) !important;
+}
+.mf-input:hover,
+.mf-select:hover,
+.mf-textarea:hover,
+.mf-ms-trigger:hover,
+.mfp-phone-shell:hover {
+    border-color: var(--mf-input-focus-color) !important;
+    background-color: var(--mf-input-muted-bg) !important;
+}
+.mf-input:focus,
+.mf-select:focus,
+.mf-textarea:focus,
+.mf-ms.is-open .mf-ms-trigger,
+.mf-ms-trigger:focus,
+.mfp-phone-shell:focus-within {
+    outline: none !important;
+    border-color: var(--mf-input-focus-color) !important;
+    box-shadow: var(--mf-input-focus-ring) !important;
+}
+
+/* --- Error state --- */
+.mf-input.is-error,
+.mf-select.is-error,
+.mf-textarea.is-error,
+.mf-input[aria-invalid="true"],
+.mf-select[aria-invalid="true"],
+.mf-textarea[aria-invalid="true"] {
+    border-color: var(--mf-input-error-color) !important;
+    box-shadow: var(--mf-input-error-ring) !important;
+}
+
+/* --- Reduced motion --- */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+/* === end [B47-Canonical v20260602-B47] === */
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Composite Controls runtime styling  [restored 20260615 — lost in April revert]
+   Renderer emits: .mf-composite (col flex) > .mf-composite-row (row flex) >
+   .mf-composite-cell (per-part) > control + <small.mf-composite-sub><span.mf-composite-req>*
+   ─────────────────────────────────────────────────────────────────────────── */
+.mf-composite-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+.mf-composite-sub {
+    display: block;
+    font-size: 11px;
+    line-height: 1.3;
+    color: #64748b;
+    margin-top: 2px;
+}
+.mf-composite-req {
+    color: #dc2626;
+    font-weight: 700;
+}
+.mf-composite-part.mf-error,
+.mf-composite-cell .mf-input.mf-error,
+.mf-composite-cell select.mf-error {
+    border-color: #dc2626 !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12) !important;
+}
+@container (max-width: 480px) {
+    .mf-composite-row { flex-wrap: wrap; }
+    .mf-composite-cell { flex: 1 1 100% !important; }
+}
+@supports not (container-type: inline-size) {
+    @media (max-width: 540px) {
+        .mf-composite-row { flex-wrap: wrap; }
+        .mf-composite-cell { flex: 1 1 100% !important; }
+    }
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Country picker (composite `country` part)  [QA-fix 20260617 — the renderer
+   (country-picker.ts) emits .mf-ccp-* markup but ZERO matching CSS shipped, so
+   the flag SVG rendered at its natural ~86px, the trigger stacked US/flag/+1
+   vertically, and opening the list expanded <body> to ~18000px. This adds the
+   missing rules: one-line trigger, fixed flag, absolute popover dropdown.]
+   Markup: .mf-ccp > button.mf-ccp-trigger(.mf-input.mf-composite-part)
+             > .mf-ccp-flag>.mf-ccp-flag-frame>(.mf-ccp-flag-fallback + img.mf-ccp-flag-img)
+             > .mf-ccp-code > .mf-ccp-chev
+           .mf-ccp-dropdown[hidden] > .mf-ccp-search-wrap>.mf-ccp-search
+             + .mf-ccp-list > button.mf-ccp-item
+                 > (.mf-ccp-item-left>.mf-ccp-item-flag+.mf-ccp-item-name) + .mf-ccp-item-dial
+   ─────────────────────────────────────────────────────────────────────────── */
+.mf-ccp { position: relative; display: block; width: 100%; }
+
+/* Trigger: ONE horizontal line — [flag] code chevron — never a vertical stack. */
+.mf-ccp-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    cursor: pointer;
+    text-align: left;
+}
+.mf-ccp-trigger:disabled { cursor: default; opacity: .6; }
+.mf-ccp-flag { display: inline-flex; flex: 0 0 auto; }
+
+/* Fixed flag frame so the SVG (natural 200x150) can never blow up the input row. */
+.mf-ccp-flag-frame {
+    position: relative;
+    display: inline-block;
+    width: 22px;
+    height: 16px;
+    flex: 0 0 auto;
+    border-radius: 2px;
+    overflow: hidden;
+    background: #e2e8f0;
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, .08);
+}
+.mf-ccp-flag-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* The ISO fallback chip shows ONLY when the <img> errors (onerror adds .is-missing). */
+.mf-ccp-flag-fallback {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    font-weight: 700;
+    line-height: 1;
+    color: #475569;
+}
+.mf-ccp-flag-frame.is-missing .mf-ccp-flag-img { display: none; }
+.mf-ccp-flag-frame.is-missing .mf-ccp-flag-fallback { display: flex; }
+
+.mf-ccp-code { flex: 0 0 auto; font-size: 13px; line-height: 1; color: inherit; }
+.mf-ccp-chev {
+    flex: 0 0 auto;
+    margin-left: auto;
+    width: 0; height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid currentColor;
+    opacity: .45;
+}
+
+/* Dropdown: an absolute popover anchored to the trigger — NOT in document flow,
+   so opening it cannot push fields below it or explode <body> scroll height. */
+.mf-ccp-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    z-index: 1200;
+    width: max-content;
+    min-width: 280px;
+    max-width: min(360px, calc(100vw - 24px));
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    box-shadow: 0 14px 32px rgba(15, 23, 42, .18);
+    padding: 8px;
+}
+/* The renderer toggles the `hidden` attribute; keep it hidden when closed even
+   though we give the open state an explicit positioned display. */
+.mf-ccp-dropdown[hidden] { display: none; }
+.mf-ccp-search-wrap { margin-bottom: 6px; }
+.mf-ccp-search {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 7px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 13px;
+    outline: none;
+}
+.mf-ccp-search:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, .15); }
+
+/* The list scrolls INSIDE itself (max-height) so the page body never grows. */
+.mf-ccp-list { max-height: 260px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.mf-ccp-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    min-height: 38px;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #0f172a;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+}
+.mf-ccp-item:hover,
+.mf-ccp-item.is-kb { background: #f1f5f9; }
+.mf-ccp-item.is-active { background: #eff6ff; font-weight: 600; }
+.mf-ccp-item-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.mf-ccp-item-flag { flex: 0 0 auto; display: inline-flex; }
+.mf-ccp-item-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mf-ccp-item-dial { flex: 0 0 auto; color: #64748b; font-variant-numeric: tabular-nums; }
+.mf-ccp-empty { padding: 14px; text-align: center; color: #94a3b8; font-size: 13px; }
+
+/* Real-mobile (narrow VIEWPORT) wrap for ALL composite rows — phone, date, address.
+   Complements the @container rule above (which wraps a narrow form COLUMN on a wide
+   viewport); a viewport media at <=480 only fires on actual phones, so it does NOT
+   reintroduce the B147 "narrow-column-on-wide-viewport" squeeze. Fixes the reported
+   390px horizontal overflow + 30px phone-number collapse + Year-select overflow. */
+@media (max-width: 480px) {
+    .mf-composite-row { flex-wrap: wrap; }
+    .mf-composite-cell { flex: 1 1 100% !important; min-width: 0; }
+    .mf-ccp-dropdown { min-width: 0; width: 100%; max-width: 100%; }
+}
+
+/* ============================================================
+   FastPaint skeleton (v20260619)
+   Server-prerendered loading placeholder for the form area. Lives in the
+   module's initial HTML (inside the #mf-form-{module}-{form} mount) so the
+   form is visibly "loading" the instant the page arrives, instead of a blank
+   gap while the Blazor circuit negotiates + the JS renderer boots. The JS
+   renderer's buildSkeleton() replaces the whole mount on init, so this is
+   removed automatically — no JS teardown needed. Self-contained neutral
+   colours (it sits OUTSIDE .mf-form-wrapper, so theme --mf-* vars don't reach
+   it) — it only needs to read as "a form is loading here".
+   ============================================================ */
+.mf-skeleton { display: block; width: 100%; padding: 4px 0 8px; }
+.mf-skeleton-card {
+    max-width: 720px;
+    margin: 0 auto;
+    background: #ffffff;
+    border: 1px solid #e8ecf1;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+    padding: 26px 28px;
+}
+.mf-skel-bar {
+    display: block;
+    height: 14px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #eef1f5 25%, #e3e8ef 37%, #eef1f5 63%);
+    background-size: 400% 100%;
+    animation: mf-skel-shimmer 1.4s ease-in-out infinite;
+}
+.mf-skel-title    { height: 26px; width: 54%; margin-bottom: 12px; border-radius: 7px; }
+.mf-skel-subtitle { height: 13px; width: 76%; margin-bottom: 26px; opacity: 0.75; }
+.mf-skel-field    { margin-bottom: 20px; }
+.mf-skel-label    { height: 12px; width: 32%; margin-bottom: 9px; opacity: 0.85; }
+.mf-skel-input    { height: 42px; width: 100%; border-radius: 8px; }
+.mf-skel-actions  { margin-top: 26px; display: flex; justify-content: flex-end; }
+.mf-skel-btn {
+    display: block;
+    height: 44px;
+    width: 148px;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #dbe4f0 25%, #cfdaea 37%, #dbe4f0 63%);
+    background-size: 400% 100%;
+    animation: mf-skel-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes mf-skel-shimmer {
+    0%   { background-position: 100% 0; }
+    100% { background-position: 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .mf-skel-bar, .mf-skel-btn { animation: none; }
+}
+@media (max-width: 560px) {
+    .mf-skeleton-card { padding: 20px 18px; border-radius: 8px; }
+}
+
+/* === MF-DISPLAY-STYLE-RULES first-paint mirror of index.ts:installDisplayStyleSheet (gen-display-style-css.cjs — KEEP IN SYNC) BEGIN === */
+.mf-form-wrapper[class*="mf-form-wrapper"]:not([data-mf-has-custom-html]).mf-style-radius-square,.mf-form-wrapper[class*="mf-form-wrapper"]:not([data-mf-has-custom-html]).mf-style-radius-square > .mf-form,.mf-form-wrapper[class*="mf-form-wrapper"]:not([data-mf-has-custom-html]).mf-style-radius-square > .mf-form-inner > .mf-form,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-radius-square .mfp,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-radius-square .mfp-card,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-radius-square .fr-card{border-radius:0 !important}
+.mf-form-wrapper[class*="mf-form-wrapper"]:not([data-mf-has-custom-html]).mf-style-radius-rounded,.mf-form-wrapper[class*="mf-form-wrapper"]:not([data-mf-has-custom-html]).mf-style-radius-rounded > .mf-form,.mf-form-wrapper[class*="mf-form-wrapper"]:not([data-mf-has-custom-html]).mf-style-radius-rounded > .mf-form-inner > .mf-form,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-radius-rounded .mfp,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-radius-rounded .mfp-card,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-radius-rounded .fr-card{border-radius:8px !important}
+.mf-form-wrapper[class*="mf-form-wrapper"]:not([data-mf-has-custom-html]).mf-style-radius-pill,.mf-form-wrapper[class*="mf-form-wrapper"]:not([data-mf-has-custom-html]).mf-style-radius-pill > .mf-form,.mf-form-wrapper[class*="mf-form-wrapper"]:not([data-mf-has-custom-html]).mf-style-radius-pill > .mf-form-inner > .mf-form,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-radius-pill .mfp,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-radius-pill .mfp-card,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-radius-pill .fr-card{border-radius:16px !important}
+.mf-form-wrapper[class*="mf-form-wrapper"].mf-style-input-square input,.mf-form-wrapper[class*="mf-form-wrapper"].mf-style-input-square textarea,.mf-form-wrapper[class*="mf-form-wrapper"].mf-style-input-square select{border-radius:0 !important}
+.mf-form-wrapper[class*="mf-form-wrapper"].mf-style-input-rounded input,.mf-form-wrapper[class*="mf-form-wrapper"].mf-style-input-rounded textarea,.mf-form-wrapper[class*="mf-form-wrapper"].mf-style-input-rounded select{border-radius:6px !important}
+.mf-form-wrapper[class*="mf-form-wrapper"].mf-style-input-pill input:not([type=checkbox]):not([type=radio]),.mf-form-wrapper[class*="mf-form-wrapper"].mf-style-input-pill textarea,.mf-form-wrapper[class*="mf-form-wrapper"].mf-style-input-pill select{border-radius:999px !important}
+.mf-form-wrapper[class*="mf-form-wrapper"]:not([data-mf-has-custom-html]).mf-style-shadow-none > .mf-form,.mf-form-wrapper[class*="mf-form-wrapper"]:not([data-mf-has-custom-html]).mf-style-shadow-none > .mf-form-inner > .mf-form,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-shadow-none .mfp,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-shadow-none .mfp-card,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-shadow-none .fr-card{box-shadow:none !important}
+.mf-form-wrapper[class*="mf-form-wrapper"]:not([data-mf-has-custom-html]).mf-style-shadow-soft > .mf-form,.mf-form-wrapper[class*="mf-form-wrapper"]:not([data-mf-has-custom-html]).mf-style-shadow-soft > .mf-form-inner > .mf-form,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-shadow-soft .mfp,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-shadow-soft .mfp-card,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-shadow-soft .fr-card{box-shadow:0 1px 3px rgba(15,23,42,.08) !important}
+.mf-form-wrapper[class*="mf-form-wrapper"]:not([data-mf-has-custom-html]).mf-style-shadow-medium > .mf-form,.mf-form-wrapper[class*="mf-form-wrapper"]:not([data-mf-has-custom-html]).mf-style-shadow-medium > .mf-form-inner > .mf-form,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-shadow-medium .mfp,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-shadow-medium .mfp-card,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-shadow-medium .fr-card{box-shadow:0 6px 18px rgba(15,23,42,.10) !important}
+.mf-form-wrapper[class*="mf-form-wrapper"]:not([data-mf-has-custom-html]).mf-style-shadow-large > .mf-form,.mf-form-wrapper[class*="mf-form-wrapper"]:not([data-mf-has-custom-html]).mf-style-shadow-large > .mf-form-inner > .mf-form,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-shadow-large .mfp,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-shadow-large .mfp-card,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-shadow-large .fr-card{box-shadow:0 18px 48px rgba(15,23,42,.16) !important}
+.mf-form-wrapper[class*="mf-form-wrapper"]:not([data-mf-has-custom-html]).mf-style-border-none > .mf-form,.mf-form-wrapper[class*="mf-form-wrapper"]:not([data-mf-has-custom-html]).mf-style-border-none > .mf-form-inner > .mf-form,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-border-none .mfp,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-border-none .mfp-card,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-border-none .fr-card{border:0 !important}
+.mf-form-wrapper[class*="mf-form-wrapper"]:not([data-mf-has-custom-html]).mf-style-border-hairline > .mf-form,.mf-form-wrapper[class*="mf-form-wrapper"]:not([data-mf-has-custom-html]).mf-style-border-hairline > .mf-form-inner > .mf-form,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-border-hairline .mfp,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-border-hairline .mfp-card,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-border-hairline .fr-card{border:1px solid #e4e4e7 !important}
+.mf-form-wrapper[class*="mf-form-wrapper"]:not([data-mf-has-custom-html]).mf-style-border-prominent > .mf-form,.mf-form-wrapper[class*="mf-form-wrapper"]:not([data-mf-has-custom-html]).mf-style-border-prominent > .mf-form-inner > .mf-form,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-border-prominent .mfp,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-border-prominent .mfp-card,.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-border-prominent .fr-card{border:2px solid #cbd5e1 !important}
+.mf-form-wrapper[class*="mf-form-wrapper"] button[type="submit"],.mf-form-wrapper[class*="mf-form-wrapper"] .mf-submit,.mf-form-wrapper[class*="mf-form-wrapper"] .mfp-submit,.mf-form-wrapper[class*="mf-form-wrapper"] .mf-btn-primary,.mf-form-wrapper[class*="mf-form-wrapper"] .mf-form-actions button{border-radius:var(--mf-btn-radius,6px) !important}
+.mf-form-wrapper[class*="mf-form-wrapper"].mf-style-radius-square button[type="submit"],.mf-form-wrapper[class*="mf-form-wrapper"].mf-style-radius-square .mf-submit,.mf-form-wrapper[class*="mf-form-wrapper"].mf-style-radius-square .mfp-submit,.mf-form-wrapper[class*="mf-form-wrapper"].mf-style-radius-square .mf-form-actions button{border-radius:0 !important}
+.mf-form-wrapper[class*="mf-form-wrapper"].mf-style-radius-pill button[type="submit"],.mf-form-wrapper[class*="mf-form-wrapper"].mf-style-radius-pill .mf-submit,.mf-form-wrapper[class*="mf-form-wrapper"].mf-style-radius-pill .mfp-submit,.mf-form-wrapper[class*="mf-form-wrapper"].mf-style-radius-pill .mf-form-actions button{border-radius:999px !important}
+.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-radius-square .mfp-card,.mf-form-wrapper[class*="mf-form-wrapper"].mf-custom-html-mode.mf-style-radius-square .mfp-card{border-radius:0 !important}
+.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-radius-rounded .mfp-card,.mf-form-wrapper[class*="mf-form-wrapper"].mf-custom-html-mode.mf-style-radius-rounded .mfp-card{border-radius:8px !important}
+.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-radius-pill .mfp-card,.mf-form-wrapper[class*="mf-form-wrapper"].mf-custom-html-mode.mf-style-radius-pill .mfp-card{border-radius:16px !important}
+.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-shadow-none .mfp-card,.mf-form-wrapper[class*="mf-form-wrapper"].mf-custom-html-mode.mf-style-shadow-none .mfp-card{box-shadow:none !important}
+.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-shadow-soft .mfp-card,.mf-form-wrapper[class*="mf-form-wrapper"].mf-custom-html-mode.mf-style-shadow-soft .mfp-card{box-shadow:0 1px 3px rgba(15,23,42,.08) !important}
+.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-shadow-medium .mfp-card,.mf-form-wrapper[class*="mf-form-wrapper"].mf-custom-html-mode.mf-style-shadow-medium .mfp-card{box-shadow:0 6px 18px rgba(15,23,42,.10) !important}
+.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-shadow-large .mfp-card,.mf-form-wrapper[class*="mf-form-wrapper"].mf-custom-html-mode.mf-style-shadow-large .mfp-card{box-shadow:0 18px 48px rgba(15,23,42,.16) !important}
+.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-border-none .mfp-card,.mf-form-wrapper[class*="mf-form-wrapper"].mf-custom-html-mode.mf-style-border-none .mfp-card{border:0 !important}
+.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-border-hairline .mfp-card,.mf-form-wrapper[class*="mf-form-wrapper"].mf-custom-html-mode.mf-style-border-hairline .mfp-card{border:1px solid #e4e4e7 !important}
+.mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-border-prominent .mfp-card,.mf-form-wrapper[class*="mf-form-wrapper"].mf-custom-html-mode.mf-style-border-prominent .mfp-card{border:2px solid #cbd5e1 !important}
+.mf-form-wrapper[class*="mf-form-wrapper"] button[type="submit"],.mf-form-wrapper[class*="mf-form-wrapper"] .mf-submit,.mf-form-wrapper[class*="mf-form-wrapper"] .mfp-submit,.mf-form-wrapper[class*="mf-form-wrapper"] .mf-btn-primary,.mf-form-wrapper[class*="mf-form-wrapper"] .mf-form-actions button,.mf-form-wrapper[class*="mf-form-wrapper"] .fr-btn-submit,.mf-form-wrapper[class*="mf-form-wrapper"] .mfp button.fr-btn-submit,.mf-form-wrapper[class*="mf-form-wrapper"] .mfp-card button[type="submit"]{background:var(--mf-btn-bg,var(--mf-primary,inherit));color:var(--mf-btn-color,var(--mf-btn-text,var(--mf-color-text-inverse,#ffffff)))}
+/* === MF-DISPLAY-STYLE-RULES END === */

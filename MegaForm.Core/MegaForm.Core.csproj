@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!--
+      Multi-target: net472 cho DNN, net9.0 cho Web/Oqtane.
+      net8.0 giữ lại để tương thích nếu host chạy .NET 8.
+      LangVersion KHÔNG set ở đây — set per-framework bên dưới.
+    -->
+    <TargetFrameworks>net472;net8.0;net9.0;net10.0</TargetFrameworks>
+    <RootNamespace>MegaForm.Core</RootNamespace>
+    <AssemblyName>MegaForm.Core</AssemblyName>
+    <Version>1.5.0</Version>
+    <Authors>MegaForm Team</Authors>
+    <Description>MegaForm Core — Platform-agnostic form builder engine for DNN, Oqtane, and standalone .NET.</Description>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <!-- net472 = .NET Framework 4.7.2 → C# 7.3 max (Roslyn giới hạn) -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net472'">
+    <LangVersion>7.3</LangVersion>
+  </PropertyGroup>
+
+  <!-- net8.0 và net9.0 → dùng C# mới nhất tương ứng -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0'">
+    <LangVersion>12</LangVersion>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net9.0'">
+    <LangVersion>12</LangVersion>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <LangVersion>13</LangVersion>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DefineConstants>$(DefineConstants);MEGAFORM_PRODUCTION</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <EmbeddedResource Include="Templates\ThemeDesignerHost.html" />
+  </ItemGroup>
+
+  <!-- net472 lấy các assembly từ GAC -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.IO.Compression" />
+    <!-- [BYOM L1] System.Text.Json package needed for MegaFormRowXmlSerializer
+         JsonElement projection on net472. Modern TFMs have it in the BCL. -->
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+  </ItemGroup>
+</Project>

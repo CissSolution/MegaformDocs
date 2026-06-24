@@ -1,0 +1,41 @@
+name: i18n drift gate
+
+# Hard gate (G1) for translation drift. Runs tools/i18n-check.cjs (pure Node, no deps):
+#   1 key-parity   every REQUIRED locale has the full en-US keyset
+#   2 missing-ref  every t('key') referenced in src/ exists in en-US
+#   3 placeholder  {token} counts match en-US
+#   4 script-bleed no CJK/Arabic leaked into a Latin locale value
+# Any hard failure exits non-zero → the job (and PR) fails. See
+# Docs/I18N_REMEDIATION_PLAN_2026-06-19.md (P0-1).
+#
+# NOTE: this repo is not yet under git/GitHub at the time of writing — this file is
+# ready for when it is (mirrors sdk-ci.yml).
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'MegaForm.UI/public/i18n/**'
+      - 'MegaForm.UI/src/**'
+      - 'MegaForm.UI/tools/i18n-check.cjs'
+      - '.github/workflows/i18n.yml'
+  pull_request:
+    paths:
+      - 'MegaForm.UI/public/i18n/**'
+      - 'MegaForm.UI/src/**'
+      - 'MegaForm.UI/tools/i18n-check.cjs'
+
+jobs:
+  i18n-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: i18n drift check (parity · refs · placeholders · script-bleed)
+        run: node tools/i18n-check.cjs
+        working-directory: MegaForm.UI

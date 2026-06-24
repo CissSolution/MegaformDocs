@@ -1,0 +1,15 @@
+﻿{
+    "FormId":  251,
+    "ModuleId":  0,
+    "PortalId":  0,
+    "Title":  "Cascading SQL Demo - Year then Events",
+    "Description":  "Pick a year; the Events dropdown re-loads from SQL/Stored Proc filtered by year (v01.06.16 cascading).",
+    "SchemaJson":  "{\n  \"fields\": [\n    {\n      \"key\": \"name\",\n      \"type\": \"Text\",\n      \"label\": \"Your name\",\n      \"required\": true,\n      \"width\": \"Full\"\n    },\n    {\n      \"key\": \"year\",\n      \"type\": \"Select\",\n      \"label\": \"Event year\",\n      \"required\": true,\n      \"width\": \"Half\",\n      \"options\": [\n        { \"value\": \"\", \"label\": \"-- choose --\" },\n        { \"value\": \"2024\", \"label\": \"2024\" },\n        { \"value\": \"2025\", \"label\": \"2025\" },\n        { \"value\": \"2026\", \"label\": \"2026\" }\n      ]\n    },\n    {\n      \"key\": \"event\",\n      \"type\": \"Select\",\n      \"label\": \"Event (cascading SQL)\",\n      \"required\": true,\n      \"width\": \"Half\",\n      \"options\": [\n        { \"value\": \"\", \"label\": \"-- pick a year first --\" }\n      ],\n      \"properties\": {\n        \"optionsSource\": \"sql\",\n        \"optionsType\": \"sql\",\n        \"optionsConnectionKey\": \"DashboardDatabase\",\n        \"optionsDatabaseType\": \"SqlServer\",\n        \"optionsSql\": \"SELECT EventId, EventName + COALESCE(\u0027 (\u0027 + City + \u0027)\u0027, \u0027\u0027) FROM dbo.MegaForm_Sample_Events WHERE EventYear = :year ORDER BY EventDate\",\n        \"optionsDependsOn\": [\"year\"],\n        \"optionsReloadOnChange\": true\n      }\n    },\n    {\n      \"key\": \"eventSproc\",\n      \"type\": \"Select\",\n      \"label\": \"Event (cascading via stored proc)\",\n      \"required\": false,\n      \"width\": \"Full\",\n      \"options\": [\n        { \"value\": \"\", \"label\": \"-- pick a year first --\" }\n      ],\n      \"properties\": {\n        \"optionsSource\": \"sql\",\n        \"optionsType\": \"storedproc\",\n        \"optionsConnectionKey\": \"DashboardDatabase\",\n        \"optionsDatabaseType\": \"SqlServer\",\n        \"optionsSql\": \"spMegaForm_Sample_GetEventsByYear\",\n        \"optionsDependsOn\": [\"year\"],\n        \"optionsReloadOnChange\": true\n      }\n    }\n  ],\n  \"settings\": {\n    \"displayOnly\": false,\n    \"multiPage\": false\n  }\n}",
+    "SettingsJson":  null,
+    "ThemeJson":  null,
+    "Status":  "Published",
+    "SubmitButtonText":  "Submit",
+    "SuccessMessage":  "Thanks! We saved your pick.",
+    "RedirectUrl":  null,
+    "AppScope":  null
+}

@@ -1,0 +1,555 @@
+@model MegaForm.Core.Models.AdminRecordShellInfo
+@using System
+@using System.Linq
+@using MegaForm.Core.Models
+@using MegaForm.Core.Workflow
+@{
+    var detail = Model != null ? Model.Detail : null;
+    var submission = detail != null ? detail.Submission : null;
+    var form = detail != null ? detail.Form : null;
+    var projection = Model != null ? Model.Projection : new RecordProjectionInfo();
+    var metadata = Model != null && Model.DocumentMetadata != null ? Model.DocumentMetadata : new DocumentMetadataInfo();
+    var transparency = Model != null && Model.WorkflowTransparency != null ? Model.WorkflowTransparency : new WorkflowTransparencyInfo();
+    var currentUrl = Context.Request.Path + Context.Request.QueryString;
+    string message = ViewBag.Message as string ?? string.Empty;
+    string error = ViewBag.Error as string ?? string.Empty;
+
+    string Fmt(DateTime? value) => value.HasValue ? value.Value.ToString("yyyy-MM-dd HH:mm") : "-";
+    string FmtInput(DateTime? value) => value.HasValue ? value.Value.ToString("yyyy-MM-ddTHH:mm") : string.Empty;
+    string StatusBadge(string value) => string.IsNullOrWhiteSpace(value) ? "draft" : value.Trim().ToLowerInvariant();
+    string StepBadge(string value) => string.IsNullOrWhiteSpace(value) ? "completed" : value.Trim().ToLowerInvariant();
+    string StepLabel(string value)
+    {
+        switch (StepBadge(value))
+        {
+            case "active": return "Active";
+            case "returned": return "Returned";
+            case "dry_run": return "Dry Run";
+            default: return string.IsNullOrWhiteSpace(value) ? "Completed" : value;
+        }
+    }
+}
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MegaForm - Record Detail</title>
+    <style>
+        body{font-family:Segoe UI,Arial,sans-serif;background:#f5f6f8;margin:0;color:#16181d}
+        .wrap{max-width:1360px;margin:0 auto;padding:24px}
+        .top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+        .title{font-size:30px;font-weight:700}
+        .subtitle{color:#6b7280;margin-top:6px}
+        .links a{display:inline-block;margin-left:8px;padding:10px 14px;border-radius:10px;background:#fff;color:#111827;text-decoration:none;border:1px solid #d1d5db}
+        .notice{padding:12px 14px;border-radius:12px;margin-bottom:16px}
+        .notice.ok{background:#ecfdf3;border:1px solid #86efac;color:#166534}
+        .notice.err{background:#fef2f2;border:1px solid #fca5a5;color:#991b1b}
+        .hero{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
+        .hero .stat{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:16px;box-shadow:0 10px 30px rgba(15,23,42,.04)}
+        .hero .label{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;margin-bottom:8px}
+        .hero .value{font-size:18px;font-weight:700}
+        .hero .meta{margin-top:6px;color:#6b7280;font-size:12px}
+        .grid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(320px,.95fr);gap:18px}
+        .stack{display:grid;gap:18px}
+        .card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;box-shadow:0 10px 30px rgba(15,23,42,.04)}
+        .card h2{margin:0;padding:18px 20px;border-bottom:1px solid #eef2f7;font-size:18px}
+        .card .body{padding:18px 20px}
+        .badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600}
+        .badge.draft{background:#eef2ff;color:#4338ca}
+        .badge.pending_approval{background:#fff7ed;color:#9a3412}
+        .badge.approved{background:#ecfeff;color:#0f766e}
+        .badge.published{background:#ecfdf3;color:#166534}
+        .badge.rejected{background:#fef2f2;color:#991b1b}
+        .badge.documents{background:#eef2ff;color:#4338ca}
+        .badge.generic{background:#f3f4f6;color:#374151}
+        .badge.active{background:#dbeafe;color:#1d4ed8}
+        .badge.completed{background:#ecfdf3;color:#166534}
+        .badge.returned{background:#fff7ed;color:#c2410c}
+        .badge.failed{background:#fef2f2;color:#b91c1c}
+        .badge.skipped{background:#f3f4f6;color:#4b5563}
+        .badge.dry_run{background:#eef2ff;color:#5b21b6}
+        .badge.cancelled{background:#f3f4f6;color:#374151}
+        .kv{display:grid;grid-template-columns:170px 1fr;gap:8px 14px}
+        .kv .k{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#6b7280}
+        .kv .v{font-size:14px;word-break:break-word}
+        table{width:100%;border-collapse:collapse}
+        th,td{padding:12px 14px;border-bottom:1px solid #eef2f7;vertical-align:top;text-align:left;font-size:14px}
+        th{font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:#6b7280;background:#fafafa}
+        .meta{color:#6b7280;font-size:12px}
+        .field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+        .field-grid input,.field-grid select,.field-grid textarea,.inline-form input,.inline-form textarea{width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;background:#fff;box-sizing:border-box}
+        .field-grid textarea,.inline-form textarea{min-height:96px;resize:vertical}
+        .field-grid label,.inline-form label{display:grid;gap:6px;font-size:13px;color:#374151}
+        .actions{display:flex;gap:8px;flex-wrap:wrap}
+        .actions button,.actions a,.inline-form button{padding:10px 14px;border:none;border-radius:10px;background:#111827;color:#fff;cursor:pointer;text-decoration:none}
+        .actions .alt{background:#374151}
+        .actions .warn{background:#b91c1c}
+        .list{display:grid;gap:12px}
+        .item{padding:12px 14px;border:1px solid #eef2f7;border-radius:14px;background:#fafafa}
+        .item strong{display:block;margin-bottom:4px}
+        .inline-form{display:grid;gap:10px}
+        .split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+        .muted{color:#6b7280}
+        .empty{color:#6b7280}
+        code{background:#f3f4f6;padding:2px 6px;border-radius:8px}
+        .timeline{display:grid;gap:14px}
+        .round-banner{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8}
+        .timeline-step{padding:16px 18px;border:1px solid #e5e7eb;border-radius:18px;background:#fff;box-shadow:0 10px 30px rgba(15,23,42,.04)}
+        .timeline-step.current{border-color:#60a5fa;box-shadow:0 12px 34px rgba(37,99,235,.12)}
+        .timeline-step.overdue{border-color:#f59e0b;background:#fffaf0}
+        .timeline-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+        .timeline-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+        .timeline-title strong{font-size:17px}
+        .timeline-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px;margin-top:12px}
+        .timeline-meta div{font-size:13px;color:#374151}
+        .timeline-meta span{display:block;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#6b7280;margin-bottom:4px}
+        .timeline-note{margin-top:12px;padding:12px 14px;border-radius:14px;background:#f8fafc;color:#334155}
+        .timeline-events{display:grid;gap:10px;margin-top:12px}
+        .timeline-event{padding:10px 12px;border-radius:12px;background:#f8fafc;border:1px solid #e2e8f0}
+        .timeline-event .meta{margin-top:4px}
+        @@media (max-width: 1080px){
+            .hero{grid-template-columns:repeat(2,minmax(0,1fr))}
+            .grid{grid-template-columns:1fr}
+            .field-grid,.split{grid-template-columns:1fr}
+            .kv{grid-template-columns:1fr}
+            .timeline-meta{grid-template-columns:1fr}
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="top">
+            <div>
+                <div class="title">@projection.Title</div>
+                <div class="subtitle">
+                    <span class="badge @(projection.Profile.EnableDocumentRegistry ? "documents" : "generic")">@projection.Profile.DisplayName</span>
+                    <span class="meta">Submission #@(submission != null ? submission.SubmissionId : 0)</span>
+                </div>
+            </div>
+            <div class="links">
+                <a href="/admin/tasks">Workflow Inbox</a>
+                <a href="/admin/submissions">Submissions</a>
+                @if (Model != null && !string.IsNullOrWhiteSpace(Model.PublicUrl))
+                {
+                    <a href="@Model.PublicUrl" target="_blank">Public URL</a>
+                }
+                <a href="/admin">Dashboard</a>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(message))
+        {
+            <div class="notice ok">@message</div>
+        }
+        @if (!string.IsNullOrWhiteSpace(error))
+        {
+            <div class="notice err">@error</div>
+        }
+
+        <div class="hero">
+            <div class="stat">
+                <div class="label">Form</div>
+                <div class="value">@(form != null ? form.Title : "-")</div>
+                <div class="meta">AppScope: @(form != null ? form.AppScope : "-")</div>
+            </div>
+            <div class="stat">
+                <div class="label">Status</div>
+                <div class="value"><span class="badge @StatusBadge(submission != null ? submission.Status : string.Empty)">@(submission != null ? submission.Status : "-")</span></div>
+                <div class="meta">Submitted: @Fmt(submission != null ? submission.SubmittedOnUtc : (DateTime?)null)</div>
+            </div>
+            <div class="stat">
+                <div class="label">Owner / Due</div>
+                <div class="value">@(!string.IsNullOrWhiteSpace(projection.Owner) ? projection.Owner : "-")</div>
+                <div class="meta">Due: @Fmt(projection.DueOnUtc)</div>
+            </div>
+            <div class="stat">
+                <div class="label">Workflow</div>
+                <div class="value">@(!string.IsNullOrWhiteSpace(transparency.ActiveNodeLabel) ? transparency.ActiveNodeLabel : (Model != null ? Model.WorkflowTasks.Count.ToString() + " task(s)" : "0 task(s)"))</div>
+                <div class="meta">
+                    Case: @(Model != null && Model.WorkflowCase != null ? Model.WorkflowCase.CaseId : "-")
+                    | Round @transparency.CurrentRound
+                    | Return(s): @transparency.ReturnCount
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="stack">
+                <div class="card">
+                    <h2>Overview</h2>
+                    <div class="body kv">
+                        <div class="k">Record Title</div><div class="v">@projection.Title</div>
+                        <div class="k">Summary</div><div class="v">@(!string.IsNullOrWhiteSpace(projection.Summary) ? projection.Summary : "-")</div>
+                        <div class="k">Profile</div><div class="v">@projection.Profile.DisplayName / @projection.Profile.EntitySingular</div>
+                        <div class="k">Category</div><div class="v">@(!string.IsNullOrWhiteSpace(projection.Category) ? projection.Category : "-")</div>
+                        <div class="k">Department</div><div class="v">@(!string.IsNullOrWhiteSpace(projection.Department) ? projection.Department : "-")</div>
+                        <div class="k">Keywords</div><div class="v">@(!string.IsNullOrWhiteSpace(projection.Keywords) ? projection.Keywords : "-")</div>
+                        <div class="k">Registry Number</div><div class="v">@(!string.IsNullOrWhiteSpace(projection.RegistryNumber) ? projection.RegistryNumber : "-")</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Processing Timeline</h2>
+                    <div class="body">
+                        @if (transparency == null || transparency.Steps.Count == 0)
+                        {
+                            <div class="empty">No workflow history has been recorded for this submission yet.</div>
+                        }
+                        else
+                        {
+                            var roundMarker = 0;
+                            <div class="timeline">
+                                @foreach (var step in transparency.Steps)
+                                {
+                                    if (step.RoundIndex != roundMarker)
+                                    {
+                                        roundMarker = step.RoundIndex;
+                                        <div id="@step.RoundAnchorId" class="round-banner">
+                                            <div><strong>Round @step.RoundIndex</strong> @(step.RoundIndex == 1 ? "Initial processing flow" : "Returned and re-processed")</div>
+                                            @if (step.RoundIndex > 1 && !string.IsNullOrWhiteSpace(step.PreviousRoundAnchorId))
+                                            {
+                                                <a href="#@step.PreviousRoundAnchorId">Back to round @(step.RoundIndex - 1)</a>
+                                            }
+                                        </div>
+                                    }
+
+                                    var stepCss = "timeline-step" + (step.IsCurrent ? " current" : string.Empty) + (step.IsOverdue ? " overdue" : string.Empty);
+                                    <div class="@stepCss">
+                                        <div class="timeline-head">
+                                            <div class="timeline-title">
+                                                <strong>@step.NodeLabel</strong>
+                                                <span class="badge @StepBadge(step.Status)">@StepLabel(step.Status)</span>
+                                                @if (step.IsCurrent)
+                                                {
+                                                    <span class="badge active">Current Node</span>
+                                                }
+                                                @if (step.IsOverdue)
+                                                {
+                                                    <span class="badge returned">Over SLA</span>
+                                                }
+                                            </div>
+                                            <div class="meta">@step.NodeType @(!string.IsNullOrWhiteSpace(step.TaskId) ? ("| Task " + step.TaskId) : string.Empty)</div>
+                                        </div>
+
+                                        <div class="timeline-meta">
+                                            <div><span>Started</span>@Fmt(step.StartedAt)</div>
+                                            <div><span>Completed</span>@Fmt(step.CompletedAt)</div>
+                                            <div><span>Assigned</span>@(!string.IsNullOrWhiteSpace(step.AssignedTo) ? step.AssignedTo : "-")</div>
+                                            <div><span>Due / SLA</span>@Fmt(step.DueAt)@(step.MaxProcessingHours.HasValue ? (" | " + step.MaxProcessingHours.Value + "h") : string.Empty)</div>
+                                            <div><span>Round</span>@step.RoundIndex</div>
+                                            <div><span>Candidates</span>@(!string.IsNullOrWhiteSpace(step.CandidateSummary) ? step.CandidateSummary : "-")</div>
+                                        </div>
+
+                                        @if (!string.IsNullOrWhiteSpace(step.Summary) || !string.IsNullOrWhiteSpace(step.Comment))
+                                        {
+                                            <div class="timeline-note">
+                                                @if (!string.IsNullOrWhiteSpace(step.Summary))
+                                                {
+                                                    <div>@step.Summary</div>
+                                                }
+                                                @if (!string.IsNullOrWhiteSpace(step.Comment))
+                                                {
+                                                    <div class="meta" style="margin-top:6px">@step.Comment</div>
+                                                }
+                                            </div>
+                                        }
+
+                                        @if (step.Events != null && step.Events.Count > 0)
+                                        {
+                                            <div class="timeline-events">
+                                                @foreach (var evt in step.Events)
+                                                {
+                                                    <div class="timeline-event">
+                                                        <strong>@evt.DisplayLabel</strong>
+                                                        <div class="meta">@Fmt(evt.CreatedAt) by @(!string.IsNullOrWhiteSpace(evt.ActorName) ? evt.ActorName : "system")</div>
+                                                        @if (!string.IsNullOrWhiteSpace(evt.TargetUser))
+                                                        {
+                                                            <div class="meta">Target: @evt.TargetUser</div>
+                                                        }
+                                                        @if (!string.IsNullOrWhiteSpace(evt.Comment))
+                                                        {
+                                                            <div>@evt.Comment</div>
+                                                        }
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Human Tasks</h2>
+                    <div class="body">
+                        @if (Model == null || Model.WorkflowTasks.Count == 0)
+                        {
+                            <div class="empty">No human tasks have been recorded for this submission yet.</div>
+                        }
+                        else
+                        {
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Task</th>
+                                        <th>Assignment</th>
+                                        <th>Due</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                @foreach (var task in Model.WorkflowTasks)
+                                {
+                                    var taskStatus = task.Status == WorkflowTaskStatus.Completed && string.Equals(task.Outcome, "rejected", StringComparison.OrdinalIgnoreCase)
+                                        ? "returned"
+                                        : task.Status.ToString().ToLowerInvariant();
+                                    <tr>
+                                        <td>
+                                            <div><strong>@(string.IsNullOrWhiteSpace(task.NodeLabel) ? task.NodeId : task.NodeLabel)</strong></div>
+                                            <div class="meta">TaskId: @task.TaskId</div>
+                                        </td>
+                                        <td>
+                                            <div>@(!string.IsNullOrWhiteSpace(task.AssignedDisplayName) ? task.AssignedDisplayName : task.AssignedUserName)</div>
+                                            <div class="meta">Roles: @string.Join(", ", task.CandidateRoles ?? new System.Collections.Generic.List<string>())</div>
+                                        </td>
+                                        <td>
+                                            @Fmt(task.DueAt)
+                                            @if (task.DueAt.HasValue && !task.CompletedAt.HasValue && task.DueAt.Value < DateTime.UtcNow)
+                                            {
+                                                <div class="meta" style="color:#b45309">Over SLA</div>
+                                            }
+                                        </td>
+                                        <td><span class="badge @StepBadge(taskStatus)">@(taskStatus == "returned" ? "Returned" : task.Status.ToString())</span></td>
+                                        <td>
+                                            <div class="actions">
+                                                <form method="post" action="/admin/tasks/@task.TaskId/claim">
+                                                    <input type="hidden" name="returnUrl" value="@currentUrl" />
+                                                    <button type="submit" class="alt">Claim</button>
+                                                </form>
+                                                <form method="post" action="/admin/tasks/@task.TaskId/approve">
+                                                    <input type="hidden" name="returnUrl" value="@currentUrl" />
+                                                    <button type="submit">Approve</button>
+                                                </form>
+                                                <form method="post" action="/admin/tasks/@task.TaskId/reject">
+                                                    <input type="hidden" name="returnUrl" value="@currentUrl" />
+                                                    <button type="submit" class="warn">Reject</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        }
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Form Data</h2>
+                    <div class="body">
+                        @if (detail == null || detail.FieldSnapshots == null || detail.FieldSnapshots.Count == 0)
+                        {
+                            <div class="empty">No snapshot fields were captured for this submission.</div>
+                        }
+                        else
+                        {
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Field</th>
+                                        <th>Value</th>
+                                        <th>Type</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                @foreach (var field in detail.FieldSnapshots)
+                                {
+                                    <tr>
+                                        <td>@(!string.IsNullOrWhiteSpace(field.FieldLabel) ? field.FieldLabel : field.FieldKey)</td>
+                                        <td>@(!string.IsNullOrWhiteSpace(field.DisplayValue) ? field.DisplayValue : field.RawValue)</td>
+                                        <td>@field.FieldType</td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="stack">
+                @if (Model != null && Model.Document != null)
+                {
+                    <div class="card">
+                        <h2>Document Metadata</h2>
+                        <div class="body">
+                            <form method="post" action="/admin/records/@submission.SubmissionId/document-metadata" class="field-grid">
+                                <input type="hidden" name="MetadataId" value="@metadata.MetadataId" />
+                                <input type="hidden" name="DocumentId" value="@Model.Document.DocumentId" />
+                                <label>Registry Number<input type="text" name="RegistryNumber" value="@metadata.RegistryNumber" /></label>
+                                <label>Direction
+                                    <select name="Direction">
+                                        <option value="incoming" selected="@(metadata.Direction == DocumentDirections.Incoming)">incoming</option>
+                                        <option value="outgoing" selected="@(metadata.Direction == DocumentDirections.Outgoing)">outgoing</option>
+                                        <option value="internal" selected="@(metadata.Direction == DocumentDirections.Internal)">internal</option>
+                                    </select>
+                                </label>
+                                <label>Document Type<input type="text" name="DocumentType" value="@metadata.DocumentType" /></label>
+                                <label>Category<input type="text" name="Category" value="@metadata.Category" /></label>
+                                <label>Department<input type="text" name="Department" value="@metadata.Department" /></label>
+                                <label>Owner Display Name<input type="text" name="OwnerDisplayName" value="@metadata.OwnerDisplayName" /></label>
+                                <label>Sender Org<input type="text" name="SenderOrg" value="@metadata.SenderOrg" /></label>
+                                <label>Recipient Org<input type="text" name="RecipientOrg" value="@metadata.RecipientOrg" /></label>
+                                <label>Signer<input type="text" name="SignerName" value="@metadata.SignerName" /></label>
+                                <label>Security Level
+                                    <select name="SecurityLevel">
+                                        <option value="public" selected="@(metadata.SecurityLevel == DocumentSecurityLevels.Public)">public</option>
+                                        <option value="internal" selected="@(metadata.SecurityLevel == DocumentSecurityLevels.Internal)">internal</option>
+                                        <option value="confidential" selected="@(metadata.SecurityLevel == DocumentSecurityLevels.Confidential)">confidential</option>
+                                        <option value="secret" selected="@(metadata.SecurityLevel == DocumentSecurityLevels.Secret)">secret</option>
+                                    </select>
+                                </label>
+                                <label>Urgency
+                                    <select name="UrgencyLevel">
+                                        <option value="normal" selected="@(metadata.UrgencyLevel == DocumentUrgencyLevels.Normal)">normal</option>
+                                        <option value="urgent" selected="@(metadata.UrgencyLevel == DocumentUrgencyLevels.Urgent)">urgent</option>
+                                        <option value="very_urgent" selected="@(metadata.UrgencyLevel == DocumentUrgencyLevels.VeryUrgent)">very_urgent</option>
+                                    </select>
+                                </label>
+                                <label>Issued On<input type="datetime-local" name="IssuedOnUtc" value="@FmtInput(metadata.IssuedOnUtc)" /></label>
+                                <label>Received On<input type="datetime-local" name="ReceivedOnUtc" value="@FmtInput(metadata.ReceivedOnUtc)" /></label>
+                                <label>Due On<input type="datetime-local" name="DueOnUtc" value="@FmtInput(metadata.DueOnUtc)" /></label>
+                                <label>Tags<input type="text" name="Tags" value="@metadata.Tags" /></label>
+                                <label>Keywords<input type="text" name="Keywords" value="@metadata.Keywords" /></label>
+                                <label style="grid-column:1/-1">Notes<textarea name="Notes">@metadata.Notes</textarea></label>
+                                <div class="actions" style="grid-column:1/-1">
+                                    <button type="submit">Save Metadata</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2>Assignments & Revisions</h2>
+                        <div class="body">
+                            <div class="list">
+                                <div class="item">
+                                    <strong>Current Revision</strong>
+                                    <div class="meta">@(Model.CurrentRevision != null ? ("v" + Model.CurrentRevision.VersionNumber + " / " + Model.CurrentRevision.OriginalName) : "No revision")</div>
+                                </div>
+                                <div class="item">
+                                    <strong>Published Revision</strong>
+                                    <div class="meta">@(Model.PublishedRevision != null ? ("v" + Model.PublishedRevision.VersionNumber + " / " + Fmt(Model.PublishedRevision.PublishedOnUtc)) : "No published revision")</div>
+                                    @if (!string.IsNullOrWhiteSpace(Model.PublicUrl))
+                                    {
+                                        <div><a href="@Model.PublicUrl" target="_blank">@Model.PublicUrl</a></div>
+                                    }
+                                </div>
+                                @if (Model.Assignments.Count > 0)
+                                {
+                                    foreach (var assignment in Model.Assignments.OrderByDescending(x => x.AssignedOnUtc))
+                                    {
+                                        <div class="item">
+                                            <strong>@assignment.AssignmentType</strong>
+                                            <div class="meta">@assignment.Status / @assignment.AssignedToUserName @(!string.IsNullOrWhiteSpace(assignment.AssignedRole) ? ("(" + assignment.AssignedRole + ")") : "")</div>
+                                            <div class="meta">Assigned: @Fmt(assignment.AssignedOnUtc) / Due: @Fmt(assignment.DueOnUtc)</div>
+                                            @if (!string.IsNullOrWhiteSpace(assignment.Comment))
+                                            {
+                                                <div>@assignment.Comment</div>
+                                            }
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2>Comments</h2>
+                        <div class="body">
+                            <form method="post" action="/admin/records/@submission.SubmissionId/comments" class="inline-form">
+                                <input type="hidden" name="revisionId" value="@(Model.CurrentRevision != null ? Model.CurrentRevision.RevisionId.ToString() : string.Empty)" />
+                                <label>Comment<textarea name="body" placeholder="Add an internal document note..."></textarea></label>
+                                <label><input type="checkbox" name="isInternal" value="true" checked="checked" /> Internal comment</label>
+                                <div class="actions">
+                                    <button type="submit">Add Comment</button>
+                                </div>
+                            </form>
+                            <div class="list" style="margin-top:14px">
+                                @if (Model.Comments.Count == 0)
+                                {
+                                    <div class="empty">No document comments yet.</div>
+                                }
+                                else
+                                {
+                                    foreach (var comment in Model.Comments.OrderByDescending(x => x.CreatedOnUtc))
+                                    {
+                                        <div class="item">
+                                            <strong>@comment.CommentType</strong>
+                                            <div class="meta">@Fmt(comment.CreatedOnUtc) by @comment.CreatedByUserName</div>
+                                            <div>@comment.Body</div>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2>Directives</h2>
+                        <div class="body">
+                            <form method="post" action="/admin/records/@submission.SubmissionId/directives" class="inline-form">
+                                <input type="hidden" name="revisionId" value="@(Model.CurrentRevision != null ? Model.CurrentRevision.RevisionId.ToString() : string.Empty)" />
+                                <label>Directive<textarea name="directiveText" placeholder="Add a processing directive..."></textarea></label>
+                                <div class="split">
+                                    <label>Target User<input type="text" name="targetUserName" placeholder="Reviewer / Ops / User" /></label>
+                                    <label>Target Role<input type="text" name="targetRole" placeholder="Role" /></label>
+                                </div>
+                                <label>Due On<input type="datetime-local" name="dueOnUtc" /></label>
+                                <div class="actions">
+                                    <button type="submit">Add Directive</button>
+                                </div>
+                            </form>
+                            <div class="list" style="margin-top:14px">
+                                @if (Model.Directives.Count == 0)
+                                {
+                                    <div class="empty">No directives yet.</div>
+                                }
+                                else
+                                {
+                                    foreach (var directive in Model.Directives.OrderByDescending(x => x.IssuedOnUtc))
+                                    {
+                                        <div class="item">
+                                            <strong>@directive.DirectiveText</strong>
+                                            <div class="meta">@directive.Status / target: @(!string.IsNullOrWhiteSpace(directive.TargetUserName) ? directive.TargetUserName : directive.TargetRole)</div>
+                                            <div class="meta">Issued: @Fmt(directive.IssuedOnUtc) / Due: @Fmt(directive.DueOnUtc)</div>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="card">
+                        <h2>App Projection</h2>
+                        <div class="body kv">
+                            <div class="k">Profile</div><div class="v">@projection.Profile.DisplayName</div>
+                            <div class="k">Entity</div><div class="v">@projection.Profile.EntitySingular / @projection.Profile.EntityPlural</div>
+                            <div class="k">Workflow Inbox</div><div class="v">@(projection.Profile.EnableWorkflowInbox ? "enabled" : "disabled")</div>
+                            <div class="k">Comments</div><div class="v">@(projection.Profile.EnableComments ? "workflow activity enabled" : "not enabled")</div>
+                            <div class="k">Document Registry</div><div class="v">@(projection.Profile.EnableDocumentRegistry ? "enabled" : "not enabled")</div>
+                            <div class="k">Next Step</div><div class="v muted">This shell is generic now. Document metadata, comments, and directives appear only when the app profile is backed by document revisions.</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</body>
+</html>

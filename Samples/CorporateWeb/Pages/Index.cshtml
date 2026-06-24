@@ -1,0 +1,43 @@
+@page
+@model MegaForm.Samples.CorporateWeb.Pages.IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<section class="hero">
+    <div class="container">
+        <h1>Build smarter forms in your ASP.NET Core apps</h1>
+        <p>
+            This demo site shows how a normal corporate website can embed a
+            MegaForm contact form using the MegaForm ASP.NET Core NuGet package.
+        </p>
+        <div class="cta-row">
+            <a class="btn btn-primary" href="/Contact">Get in touch</a>
+            <a class="btn btn-secondary" href="/Details">Learn more</a>
+        </div>
+    </div>
+</section>
+
+<section class="features">
+    <div class="container">
+        <h2 class="section-title">What this sample demonstrates</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>Real-world host</h3>
+                <p>A stand-alone ASP.NET Core 9 website with its own pages, layout, and styles.</p>
+            </div>
+            <div class="feature-card">
+                <h3>NuGet consumption</h3>
+                <p>Adds MegaForm through the <code>MegaForm.AspNetCore.Component</code> package from a local feed.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Form embedding</h3>
+                <p>The contact page renders a MegaForm using the <code>&lt;megaform&gt;</code> TagHelper.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Self-seeding demo</h3>
+                <p>A hosted service seeds a published contact form on first run so the sample works immediately.</p>
+            </div>
+        </div>
+    </div>
+</section>

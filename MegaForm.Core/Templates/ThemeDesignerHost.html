@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>MegaForm — Theme Designer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link rel="stylesheet" href="{{CSS_URL}}"/>
+</head>
+<body>
+<div class="td-root" id="td-root" data-form-id="{{FORM_ID}}" data-api-base="{{API_BASE_URL}}" data-return-url="{{RETURN_URL}}">
+
+  <!-- TOPBAR -->
+  <header class="td-topbar">
+    <div class="td-topbar-left">
+      <button class="td-back-btn" id="td-back-btn"><i class="fas fa-arrow-left"></i></button>
+      <div class="td-brand-icon"><i class="fas fa-palette"></i></div>
+      <div class="td-title-group">
+        <h1>Theme Designer</h1>
+        <p id="td-form-name">Loading...</p>
+      </div>
+      <span class="td-saved-badge" id="td-saved-badge">Saved</span>
+      <span class="td-debug-badge" id="td-debug-badge" title="Theme Designer build marker">TD build: waiting...</span>
+    </div>
+    <div class="td-topbar-center">
+      <button class="td-icon-btn" disabled><i class="fas fa-rotate-left"></i></button>
+      <button class="td-icon-btn" disabled><i class="fas fa-rotate-right"></i></button>
+      <div class="td-sep"></div>
+      <div class="td-device-group">
+        <button class="td-device-btn active" data-device="desktop"><i class="fas fa-desktop"></i></button>
+        <button class="td-device-btn" data-device="tablet"><i class="fas fa-tablet-screen-button"></i></button>
+        <button class="td-device-btn" data-device="mobile"><i class="fas fa-mobile-screen"></i></button>
+      </div>
+    </div>
+    <div class="td-topbar-right">
+      <button class="td-btn td-btn-primary" id="td-apply-btn"><i class="fas fa-check"></i> Update Theme</button>
+    </div>
+  </header>
+
+  <!-- BODY -->
+  <div class="td-body" id="td-body">
+
+    <!-- LEFT PANEL -->
+    <aside class="td-panel-left" id="td-panel-left">
+      <div class="td-left-tabs">
+        <button class="td-left-tab active" data-tab="presets">
+          <i class="fas fa-swatchbook"></i>
+          <span>Presets</span>
+        </button>
+        <button class="td-left-tab" data-tab="elements">
+          <i class="fas fa-cubes-stacked"></i>
+          <span>Elements</span>
+        </button>
+        <button class="td-left-tab" data-tab="palette">
+          <i class="fas fa-palette"></i>
+          <span>Colors</span>
+        </button>
+      </div>
+
+      <!-- ═══ PRESETS PANEL ═══ -->
+      <div id="td-left-presets" class="td-panel-inner">
+
+        <!-- Search + View Toggle -->
+        <div class="td-presets-toolbar">
+          <div class="td-search-wrap">
+            <i class="fas fa-magnifying-glass td-search-icon"></i>
+            <input id="td-preset-search" class="td-search-input" type="text" placeholder="Search themes..."/>
+          </div>
+          <div class="td-view-toggle">
+            <button class="td-view-btn active" id="td-view-grid" title="Grid view"><i class="fas fa-grid-2"></i></button>
+            <button class="td-view-btn" id="td-view-list" title="List view"><i class="fas fa-list"></i></button>
+          </div>
+        </div>
+
+        <!-- Category Filter Pills -->
+        <div class="td-filter-pills">
+          <button class="td-pill active" data-filter="all">All</button>
+          <button class="td-pill" data-filter="popular"><i class="fas fa-star"></i> Popular</button>
+          <button class="td-pill" data-filter="minimal">Minimal</button>
+          <button class="td-pill" data-filter="nature">Nature</button>
+          <button class="td-pill" data-filter="warm">Warm</button>
+          <button class="td-pill" data-filter="dark">Dark</button>
+          <button class="td-pill" data-filter="elegant">Elegant</button>
+          <button class="td-pill" data-filter="modern">Modern</button>
+        </div>
+
+        <!-- Preset Grid / List -->
+        <div class="td-presets-scroll">
+          <div class="td-presets-grid" id="td-preset-list"></div>
+
+          <!-- Count bar -->
+          <div class="td-presets-footer">
+            <span class="td-presets-count" id="td-presets-count">16 themes</span>
+            <div class="td-presets-footer-actions">
+              <button class="td-icon-btn-sm" title="Import theme"><i class="fas fa-download"></i></button>
+              <button class="td-icon-btn-sm" id="td-new-preset-btn" title="New theme"><i class="fas fa-plus"></i></button>
+            </div>
+          </div>
+
+          <hr class="td-divider-sm"/>
+
+          <!-- AI Theme Generator -->
+          <div class="td-ai-box">
+            <div class="td-ai-header">
+              <div class="td-ai-icon"><i class="fas fa-wand-magic-sparkles"></i></div>
+              <span class="td-ai-title">AI Theme Generator</span>
+              <span class="td-badge-pro">Pro</span>
+            </div>
+            <div class="td-ai-row">
+              <input class="td-ai-input" type="text" placeholder="Describe your brand..."/>
+              <button class="td-ai-btn"><i class="fas fa-bolt"></i> Go</button>
+            </div>
+          </div>
+
+          <!-- Recently Used -->
+          <div class="td-recent">
+            <div class="td-recent-header">
+              <span class="td-recent-label">Recently Used</span>
+              <button class="td-recent-clear">Clear</button>
+            </div>
+            <div class="td-recent-swatches" id="td-recent-swatches"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ ELEMENTS PANEL ═══ -->
+      <div id="td-left-elements" class="td-panel-inner" style="display:none">
+        <div class="td-elem-header">
+          <div class="td-elem-title">Form Elements</div>
+          <div class="td-elem-subtitle">Click to customize individual element styles</div>
+        </div>
+        <div class="td-elem-scroll">
+
+          <!-- Inputs group -->
+          <div class="td-elem-group">
+            <button class="td-elem-group-hd open" data-group="inputs">
+              <span>Inputs</span>
+              <i class="fas fa-chevron-up td-group-chevron"></i>
+            </button>
+            <div class="td-elem-items" id="td-group-inputs">
+              <button class="td-elem-item active" data-elem="text-input">
+                <span class="td-elem-icon"><i class="fas fa-i-cursor"></i></span>
+                <span class="td-elem-name">Text Input</span>
+                <i class="fas fa-chevron-right td-elem-arrow"></i>
+              </button>
+              <button class="td-elem-item" data-elem="textarea">
+                <span class="td-elem-icon"><i class="fas fa-align-left"></i></span>
+                <span class="td-elem-name">Text Area</span>
+              </button>
+              <button class="td-elem-item" data-elem="select">
+                <span class="td-elem-icon"><i class="fas fa-chevron-down"></i></span>
+                <span class="td-elem-name">Select/Dropdown</span>
+              </button>
+              <button class="td-elem-item" data-elem="date">
+                <span class="td-elem-icon"><i class="fas fa-calendar"></i></span>
+                <span class="td-elem-name">Date Picker</span>
+              </button>
+              <button class="td-elem-item" data-elem="file">
+                <span class="td-elem-icon"><i class="fas fa-file-arrow-up"></i></span>
+                <span class="td-elem-name">File Upload</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Choices group -->
+          <div class="td-elem-group">
+            <button class="td-elem-group-hd" data-group="choices">
+              <span>Choices</span>
+              <i class="fas fa-chevron-down td-group-chevron"></i>
+            </button>
+            <div class="td-elem-items" id="td-group-choices" style="display:none">
+              <button class="td-elem-item" data-elem="checkbox">
+                <span class="td-elem-icon"><i class="fas fa-square-check"></i></span>
+                <span class="td-elem-name">Checkbox</span>
+              </button>
+              <button class="td-elem-item" data-elem="radio">
+                <span class="td-elem-icon"><i class="fas fa-circle-dot"></i></span>
+                <span class="td-elem-name">Radio Button</span>
+              </button>
+              <button class="td-elem-item" data-elem="toggle">
+                <span class="td-elem-icon"><i class="fas fa-toggle-left"></i></span>
+                <span class="td-elem-name">Toggle Switch</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Actions group -->
+          <div class="td-elem-group">
+            <button class="td-elem-group-hd" data-group="actions">
+              <span>Actions</span>
+              <i class="fas fa-chevron-down td-group-chevron"></i>
+            </button>
+            <div class="td-elem-items" id="td-group-actions" style="display:none">
+              <button class="td-elem-item" data-elem="button-primary">
+                <span class="td-elem-icon"><i class="fas fa-computer-mouse"></i></span>
+                <span class="td-elem-name">Submit Button</span>
+              </button>
+              <button class="td-elem-item" data-elem="button-secondary">
+                <span class="td-elem-icon"><i class="fas fa-computer-mouse"></i></span>
+                <span class="td-elem-name">Secondary Button</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Layout group -->
+          <div class="td-elem-group">
+            <button class="td-elem-group-hd" data-group="layout">
+              <span>Layout</span>
+              <i class="fas fa-chevron-down td-group-chevron"></i>
+            </button>
+            <div class="td-elem-items" id="td-group-layout" style="display:none">
+              <button class="td-elem-item" data-elem="section">
+                <span class="td-elem-icon"><i class="fas fa-table-cells-large"></i></span>
+                <span class="td-elem-name">Section/Card</span>
+              </button>
+              <button class="td-elem-item" data-elem="heading">
+                <span class="td-elem-icon"><i class="fas fa-heading"></i></span>
+                <span class="td-elem-name">Heading</span>
+              </button>
+              <button class="td-elem-item" data-elem="divider">
+                <span class="td-elem-icon"><i class="fas fa-minus"></i></span>
+                <span class="td-elem-name">Divider</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- General group -->
+          <div class="td-elem-group">
+            <button class="td-elem-group-hd" data-group="general">
+              <span>General</span>
+              <i class="fas fa-chevron-down td-group-chevron"></i>
+            </button>
+            <div class="td-elem-items" id="td-group-general" style="display:none">
+              <button class="td-elem-item" data-elem="rating">
+                <span class="td-elem-icon"><i class="fas fa-star"></i></span>
+                <span class="td-elem-name">Rating</span>
+              </button>
+              <button class="td-elem-item" data-elem="signature">
+                <span class="td-elem-icon"><i class="fas fa-signature"></i></span>
+                <span class="td-elem-name">Signature</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ═══ COLORS PANEL ═══ -->
+      <div id="td-left-palette" class="td-panel-inner" style="display:none">
+        <div class="td-palette-scroll">
+
+          <!-- Quick color grid -->
+          <div class="td-palette-quick">
+            <div class="td-palette-quick-hd">
+              <span class="td-palette-label">Quick Colors</span>
+              <button class="td-palette-edit-btn">Edit</button>
+            </div>
+            <div class="td-palette-swatches" id="td-palette-grid"></div>
+          </div>
+
+          <!-- Color Categories Accordion -->
+          <div class="td-color-cats">
+
+            <div class="td-color-cat">
+              <button class="td-color-cat-hd open" data-cat="brand">
+                <div class="td-cat-icon td-cat-icon--blue"><i class="fas fa-sparkles"></i></div>
+                <div class="td-cat-info">
+                  <span class="td-cat-name">Brand Colors</span>
+                  <span class="td-cat-count">5 colors</span>
+                </div>
+                <i class="fas fa-chevron-right td-cat-chevron"></i>
+              </button>
+              <div class="td-cat-items" id="td-cat-brand">
+                <div class="td-clr-row" data-var="--mf-color-primary"><div class="td-clr-swatch" style="background:#3b82f6"></div><div class="td-clr-info"><span class="td-clr-label">Primary</span><span class="td-clr-desc">Main action color</span></div><span class="td-clr-hex">#3b82f6</span></div>
+                <div class="td-clr-row" data-var="--mf-color-primary-hover"><div class="td-clr-swatch" style="background:#2563eb"></div><div class="td-clr-info"><span class="td-clr-label">Primary Hover</span><span class="td-clr-desc">Hover state</span></div><span class="td-clr-hex">#2563eb</span></div>
+                <div class="td-clr-row" data-var="--mf-color-secondary"><div class="td-clr-swatch" style="background:#64748b"></div><div class="td-clr-info"><span class="td-clr-label">Secondary</span><span class="td-clr-desc">Secondary actions</span></div><span class="td-clr-hex">#64748b</span></div>
+                <div class="td-clr-row" data-var="--mf-color-accent"><div class="td-clr-swatch" style="background:#8b5cf6"></div><div class="td-clr-info"><span class="td-clr-label">Accent</span><span class="td-clr-desc">Highlight elements</span></div><span class="td-clr-hex">#8b5cf6</span></div>
+              </div>
+            </div>
+
+            <div class="td-color-cat">
+              <button class="td-color-cat-hd" data-cat="surface">
+                <div class="td-cat-icon td-cat-icon--slate"><i class="fas fa-layer-group"></i></div>
+                <div class="td-cat-info">
+                  <span class="td-cat-name">Surface Colors</span>
+                  <span class="td-cat-count">5 colors</span>
+                </div>
+                <i class="fas fa-chevron-right td-cat-chevron"></i>
+              </button>
+              <div class="td-cat-items" id="td-cat-surface" style="display:none">
+                <div class="td-clr-row" data-var="--mf-page-bg"><div class="td-clr-swatch" style="background:#ffffff"></div><div class="td-clr-info"><span class="td-clr-label">Background</span><span class="td-clr-desc">Page background</span></div><span class="td-clr-hex">#ffffff</span></div>
+                <div class="td-clr-row" data-var="--mf-form-bg"><div class="td-clr-swatch" style="background:#f8fafc"></div><div class="td-clr-info"><span class="td-clr-label">Surface</span><span class="td-clr-desc">Card backgrounds</span></div><span class="td-clr-hex">#f8fafc</span></div>
+                <div class="td-clr-row" data-var="--mf-form-border"><div class="td-clr-swatch" style="background:#e2e8f0"></div><div class="td-clr-info"><span class="td-clr-label">Border</span><span class="td-clr-desc">Default borders</span></div><span class="td-clr-hex">#e2e8f0</span></div>
+              </div>
+            </div>
+
+            <div class="td-color-cat">
+              <button class="td-color-cat-hd" data-cat="text">
+                <div class="td-cat-icon td-cat-icon--amber"><i class="fas fa-font"></i></div>
+                <div class="td-cat-info">
+                  <span class="td-cat-name">Text Colors</span>
+                  <span class="td-cat-count">5 colors</span>
+                </div>
+                <i class="fas fa-chevron-right td-cat-chevron"></i>
+              </button>
+              <div class="td-cat-items" id="td-cat-text" style="display:none">
+                <div class="td-clr-row" data-var="--mf-color-text"><div class="td-clr-swatch" style="background:#0f172a"></div><div class="td-clr-info"><span class="td-clr-label">Primary Text</span><span class="td-clr-desc">Main content</span></div><span class="td-clr-hex">#0f172a</span></div>
+                <div class="td-clr-row" data-var="--mf-color-text-muted"><div class="td-clr-swatch" style="background:#718096"></div><div class="td-clr-info"><span class="td-clr-label">Muted Text</span><span class="td-clr-desc">Descriptions</span></div><span class="td-clr-hex">#718096</span></div>
+                <div class="td-clr-row" data-var="--mf-label-color"><div class="td-clr-swatch" style="background:#2d3748"></div><div class="td-clr-info"><span class="td-clr-label">Labels</span><span class="td-clr-desc">Field labels</span></div><span class="td-clr-hex">#2d3748</span></div>
+              </div>
+            </div>
+
+            <div class="td-color-cat">
+              <button class="td-color-cat-hd" data-cat="semantic">
+                <div class="td-cat-icon td-cat-icon--emerald"><i class="fas fa-circle-dot"></i></div>
+                <div class="td-cat-info">
+                  <span class="td-cat-name">Semantic Colors</span>
+                  <span class="td-cat-count">8 colors</span>
+                </div>
+                <i class="fas fa-chevron-right td-cat-chevron"></i>
+              </button>
+              <div class="td-cat-items" id="td-cat-semantic" style="display:none">
+                <div class="td-clr-row" data-var="--mf-color-success"><div class="td-clr-swatch" style="background:#22c55e"></div><div class="td-clr-info"><span class="td-clr-label">Success</span><span class="td-clr-desc">Success states</span></div><span class="td-clr-hex">#22c55e</span></div>
+                <div class="td-clr-row" data-var="--mf-color-warning"><div class="td-clr-swatch" style="background:#f59e0b"></div><div class="td-clr-info"><span class="td-clr-label">Warning</span><span class="td-clr-desc">Warning states</span></div><span class="td-clr-hex">#f59e0b</span></div>
+                <div class="td-clr-row" data-var="--mf-required-color"><div class="td-clr-swatch" style="background:#ef4444"></div><div class="td-clr-info"><span class="td-clr-label">Error</span><span class="td-clr-desc">Error states</span></div><span class="td-clr-hex">#ef4444</span></div>
+              </div>
+            </div>
+
+            <div class="td-color-cat">
+              <button class="td-color-cat-hd" data-cat="form">
+                <div class="td-cat-icon td-cat-icon--violet"><i class="fas fa-i-cursor"></i></div>
+                <div class="td-cat-info">
+                  <span class="td-cat-name">Form States</span>
+                  <span class="td-cat-count">5 colors</span>
+                </div>
+                <i class="fas fa-chevron-right td-cat-chevron"></i>
+              </button>
+              <div class="td-cat-items" id="td-cat-form" style="display:none">
+                <div class="td-clr-row" data-var="--mf-input-bg"><div class="td-clr-swatch" style="background:#ffffff"></div><div class="td-clr-info"><span class="td-clr-label">Input Background</span><span class="td-clr-desc">Input fields</span></div><span class="td-clr-hex">#ffffff</span></div>
+                <div class="td-clr-row" data-var="--mf-input-border"><div class="td-clr-swatch" style="background:#e2e8f0"></div><div class="td-clr-info"><span class="td-clr-label">Input Border</span><span class="td-clr-desc">Field borders</span></div><span class="td-clr-hex">#e2e8f0</span></div>
+                <div class="td-clr-row" data-var="--mf-input-focus-border"><div class="td-clr-swatch" style="background:#3b82f6"></div><div class="td-clr-info"><span class="td-clr-label">Input Focus</span><span class="td-clr-desc">Focus ring</span></div><span class="td-clr-hex">#3b82f6</span></div>
+              </div>
+            </div>
+
+          </div><!-- /td-color-cats -->
+
+          <!-- Color Harmony -->
+          <div class="td-harmony-box">
+            <div class="td-harmony-hd">
+              <i class="fas fa-circle-half-stroke"></i>
+              <span>Color Harmony</span>
+              <span class="td-badge-pro">Pro</span>
+            </div>
+            <p class="td-harmony-desc">Auto-generate harmonious color combinations</p>
+            <div class="td-harmony-btns">
+              <button class="td-harmony-btn">Analogous</button>
+              <button class="td-harmony-btn">Triadic</button>
+              <button class="td-harmony-btn">Split</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- LEFT COLLAPSE TRIGGER — outside panel so it stays visible when collapsed -->
+    <button class="td-trigger td-trigger-left" id="td-left-trigger" title="Toggle left panel">
+      <i class="fas fa-chevron-left" id="td-left-chevron"></i>
+    </button>
+
+    <!-- CENTER -->
+    <main class="td-panel-center">
+      <div class="td-preview-topbar">
+        <div class="td-preview-topbar-left">
+          <i class="fas fa-eye" style="color:#71717a"></i>
+          <span>Live Preview</span>
+        </div>
+        <div class="td-preview-topbar-right">
+          <button class="td-preview-btn" id="td-refresh-btn"><i class="fas fa-rotate-right"></i> Refresh</button>
+          <button class="td-preview-btn" id="td-dark-btn"><i class="fas fa-moon"></i></button>
+        </div>
+      </div>
+      <div class="td-preview-viewport" id="td-preview-viewport" data-device="desktop">
+        <div class="td-preview-inner" id="td-preview-inner">
+          <div class="td-preview-loading" id="td-preview-loading">
+            <div class="td-spinner"></div><p>Loading preview...</p>
+          </div>
+          <iframe id="td-preview-frame" class="td-preview-iframe" src="about:blank" scrolling="yes" allowtransparency="true"></iframe>
+        </div>
+      </div>
+    </main>
+
+    <!-- RIGHT COLLAPSE TRIGGER -->
+    <button class="td-trigger td-trigger-right" id="td-right-trigger" title="Toggle right panel">
+      <i class="fas fa-chevron-right" id="td-right-chevron"></i>
+    </button>
+
+    <!-- RIGHT PANEL -->
+    <aside class="td-panel-right" id="td-panel-right">
+      <div class="td-right-tabs">
+        <button class="td-right-tab active" data-tab="colors"><i class="fas fa-droplet"></i><span>Colors</span></button>
+        <button class="td-right-tab" data-tab="type"><i class="fas fa-font"></i><span>Type</span></button>
+        <button class="td-right-tab" data-tab="space"><i class="fas fa-expand"></i><span>Space</span></button>
+        <button class="td-right-tab" data-tab="effects"><i class="fas fa-sparkles"></i><span>Effects</span></button>
+      </div>
+
+      <div class="td-right-scroll">
+
+        <!-- == COLORS == -->
+        <div class="td-tab-panel active" data-panel="colors">
+
+          <div class="td-section">
+            <div class="td-section-title">Primary Color</div>
+            <div class="td-color-preview-row">
+              <div class="td-color-swatch-lg" id="td-color-swatch" style="background:#3b82f6"></div>
+              <div class="td-hex-row">
+                <span class="td-hex-prefix">#</span>
+                <input class="td-hex-input" id="td-hex-input" type="text" maxlength="6" value="3B82F6"/>
+              </div>
+            </div>
+            <div class="td-rgb-row">
+              <div class="td-rgb-group"><input class="td-rgb-input" id="td-r-input" type="number" min="0" max="255" value="59"/><span class="td-rgb-label">R</span></div>
+              <div class="td-rgb-group"><input class="td-rgb-input" id="td-g-input" type="number" min="0" max="255" value="130"/><span class="td-rgb-label">G</span></div>
+              <div class="td-rgb-group"><input class="td-rgb-input" id="td-b-input" type="number" min="0" max="255" value="246"/><span class="td-rgb-label">B</span></div>
+            </div>
+            <div class="td-color-canvas-wrap" id="td-canvas-wrap">
+              <canvas class="td-color-canvas" id="td-canvas"></canvas>
+              <div class="td-canvas-cursor" id="td-canvas-cursor"></div>
+            </div>
+            <div class="td-hue-wrap" id="td-hue-wrap">
+              <div class="td-hue-thumb" id="td-hue-thumb"></div>
+            </div>
+            <div class="td-section-sub">Color Tints</div>
+            <div class="td-tints-grid" id="td-tints-grid"></div>
+          </div>
+
+          <div class="td-divider"></div>
+
+          <div class="td-section">
+            <div class="td-section-title">Backgrounds</div>
+            <div class="td-color-list" id="td-bg-colors">
+              <div class="td-clr-row" data-var="--mf-page-bg"><label>Page bg</label><div class="td-clr-right"><input type="color" value="#f5f5f5"/><span>#f5f5f5</span></div></div>
+              <div class="td-clr-row" data-var="--mf-form-bg"><label>Form card</label><div class="td-clr-right"><input type="color" value="#ffffff"/><span>#ffffff</span></div></div>
+              <div class="td-clr-row" data-var="--mf-form-bg-aside"><label>Sidebar</label><div class="td-clr-right"><input type="color" value="#1e3a5f"/><span>#1e3a5f</span></div></div>
+            </div>
+          </div>
+
+          <div class="td-divider"></div>
+
+          <div class="td-section">
+            <div class="td-section-title">Text Colors</div>
+            <div class="td-color-list">
+              <div class="td-clr-row" data-var="--mf-color-text"><label>Body text</label><div class="td-clr-right"><input type="color" value="#1a1a2e"/><span>#1a1a2e</span></div></div>
+              <div class="td-clr-row" data-var="--mf-color-text-muted"><label>Muted text</label><div class="td-clr-right"><input type="color" value="#718096"/><span>#718096</span></div></div>
+              <div class="td-clr-row" data-var="--mf-title-color"><label>Title</label><div class="td-clr-right"><input type="color" value="#1a1a2e"/><span>#1a1a2e</span></div></div>
+              <div class="td-clr-row" data-var="--mf-label-color"><label>Labels</label><div class="td-clr-right"><input type="color" value="#2d3748"/><span>#2d3748</span></div></div>
+              <div class="td-clr-row" data-var="--mf-help-color"><label>Help text</label><div class="td-clr-right"><input type="color" value="#718096"/><span>#718096</span></div></div>
+              <div class="td-clr-row" data-var="--mf-required-color"><label>Required (*)</label><div class="td-clr-right"><input type="color" value="#e53e3e"/><span>#e53e3e</span></div></div>
+            </div>
+          </div>
+
+          <div class="td-divider"></div>
+
+          <div class="td-section">
+            <div class="td-section-title">Input Colors</div>
+            <div class="td-color-list">
+              <div class="td-clr-row" data-var="--mf-input-bg"><label>Input bg</label><div class="td-clr-right"><input type="color" value="#ffffff"/><span>#ffffff</span></div></div>
+              <div class="td-clr-row" data-var="--mf-input-border"><label>Input border</label><div class="td-clr-right"><input type="color" value="#e2e8f0"/><span>#e2e8f0</span></div></div>
+              <div class="td-clr-row" data-var="--mf-input-color"><label>Input text</label><div class="td-clr-right"><input type="color" value="#1a202c"/><span>#1a202c</span></div></div>
+              <div class="td-clr-row" data-var="--mf-input-focus-border"><label>Focus border</label><div class="td-clr-right"><input type="color" value="#3b82f6"/><span>#3b82f6</span></div></div>
+              <div class="td-clr-row" data-var="--mf-input-disabled-bg"><label>Disabled bg</label><div class="td-clr-right"><input type="color" value="#f7fafc"/><span>#f7fafc</span></div></div>
+              <div class="td-clr-row" data-var="--mf-check-color"><label>Checkbox</label><div class="td-clr-right"><input type="color" value="#3b82f6"/><span>#3b82f6</span></div></div>
+            </div>
+          </div>
+
+          <div class="td-divider"></div>
+
+          <div class="td-section">
+            <div class="td-section-title">Section &amp; Progress</div>
+            <div class="td-color-list">
+              <div class="td-clr-row" data-var="--mf-section-bg"><label>Section bg</label><div class="td-clr-right"><input type="color" value="#f8fafc"/><span>#f8fafc</span></div></div>
+              <div class="td-clr-row" data-var="--mf-section-border-color"><label>Section border</label><div class="td-clr-right"><input type="color" value="#e2e8f0"/><span>#e2e8f0</span></div></div>
+              <div class="td-clr-row" data-var="--mf-section-title-color"><label>Section title</label><div class="td-clr-right"><input type="color" value="#1a1a2e"/><span>#1a1a2e</span></div></div>
+              <div class="td-clr-row" data-var="--mf-progress-fill"><label>Progress bar</label><div class="td-clr-right"><input type="color" value="#3b82f6"/><span>#3b82f6</span></div></div>
+              <div class="td-clr-row" data-var="--mf-progress-bg"><label>Progress bg</label><div class="td-clr-right"><input type="color" value="#e2e8f0"/><span>#e2e8f0</span></div></div>
+            </div>
+          </div>
+
+          <div class="td-divider"></div>
+
+          <div class="td-section">
+            <div class="td-section-title">File Upload</div>
+            <div class="td-color-list">
+              <div class="td-clr-row" data-var="--mf-file-bg"><label>Dropzone bg</label><div class="td-clr-right"><input type="color" value="#f8fafc"/><span>#f8fafc</span></div></div>
+              <div class="td-clr-row" data-var="--mf-file-border"><label>Dropzone border</label><div class="td-clr-right"><input type="color" value="#cbd5e0"/><span>#cbd5e0</span></div></div>
+              <div class="td-clr-row" data-var="--mf-file-hover-bg"><label>Hover bg</label><div class="td-clr-right"><input type="color" value="#ebf8ff"/><span>#ebf8ff</span></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- == TYPE == -->
+        <div class="td-tab-panel" data-panel="type">
+          <div class="td-section">
+            <div class="td-section-title">Font Family</div>
+            <div class="td-font-preview-box">
+              <div class="td-font-preview-title" id="td-font-preview-text">Form Title Preview</div>
+              <div class="td-font-preview-body">Labels and placeholder text use this font.</div>
+            </div>
+            <select class="td-select" id="td-font-select" style="margin-top:8px"></select>
+          </div>
+
+          <div class="td-divider"></div>
+
+          <div class="td-section">
+            <div class="td-section-title">Title</div>
+            <div class="td-sld-row"><div class="td-sld-hd"><span>Size</span><span class="td-sld-val">24px</span></div>
+              <input class="td-slider" type="range" min="14" max="56" value="24" data-var="--mf-title-font-size" data-unit="px"/></div>
+            <div class="td-sld-row"><div class="td-sld-hd"><span>Align</span></div>
+              <select class="td-select td-var-select" data-var="--mf-title-align">
+                <option value="left">Left</option><option value="center">Center</option><option value="right">Right</option>
+              </select></div>
+          </div>
+
+          <div class="td-divider"></div>
+
+          <div class="td-section">
+            <div class="td-section-title">Labels</div>
+            <div class="td-sld-row"><div class="td-sld-hd"><span>Size</span><span class="td-sld-val">14px</span></div>
+              <input class="td-slider" type="range" min="10" max="20" value="14" data-var="--mf-label-font-size" data-unit="px"/></div>
+            <div class="td-sld-row"><div class="td-sld-hd"><span>Weight</span></div>
+              <select class="td-select td-var-select" data-var="--mf-label-font-weight">
+                <option value="400">Regular</option><option value="500" selected>Medium</option><option value="600">Semibold</option><option value="700">Bold</option>
+              </select></div>
+          </div>
+
+          <div class="td-divider"></div>
+
+          <div class="td-section">
+            <div class="td-section-title">Inputs &amp; Buttons</div>
+            <div class="td-sld-row"><div class="td-sld-hd"><span>Input font size</span><span class="td-sld-val">15px</span></div>
+              <input class="td-slider" type="range" min="10" max="22" value="15" data-var="--mf-input-font-size" data-unit="px"/></div>
+            <div class="td-sld-row"><div class="td-sld-hd"><span>Button font size</span><span class="td-sld-val">16px</span></div>
+              <input class="td-slider" type="range" min="10" max="24" value="16" data-var="--mf-btn-font-size" data-unit="px"/></div>
+            <div class="td-sld-row"><div class="td-sld-hd"><span>Button weight</span></div>
+              <select class="td-select td-var-select" data-var="--mf-btn-font-weight">
+                <option value="400">Regular</option><option value="500">Medium</option><option value="600" selected>Semibold</option><option value="700">Bold</option>
+              </select></div>
+          </div>
+        </div>
+
+        <!-- == SPACE == -->
+        <div class="td-tab-panel" data-panel="space">
+          <div class="td-section">
+            <div class="td-section-title">Form Card</div>
+            <div class="td-sld-row"><div class="td-sld-hd"><span>Corner radius</span><span class="td-sld-val">12px</span></div>
+              <input class="td-slider" type="range" min="0" max="32" value="12" data-var="--mf-form-radius" data-unit="px"/></div>
+            <div class="td-sld-row"><div class="td-sld-hd"><span>Form padding Y</span><span class="td-sld-val">32px</span></div>
+              <input class="td-slider" type="range" min="0" max="72" value="32" data-var="--mf-form-padding-y" data-unit="px"/></div>
+            <div class="td-sld-row"><div class="td-sld-hd"><span>Form padding X</span><span class="td-sld-val">40px</span></div>
+              <input class="td-slider" type="range" min="0" max="96" value="40" data-var="--mf-form-padding-x" data-unit="px"/></div>
+          </div>
+
+          <div class="td-divider"></div>
+
+          <div class="td-section">
+            <div class="td-section-title">Fields</div>
+            <div class="td-sld-row"><div class="td-sld-hd"><span>Field / row gap</span><span class="td-sld-val">20px</span></div>
+              <input class="td-slider" type="range" min="4" max="48" value="20" data-var="--mf-field-gap" data-unit="px"/></div>
+          </div>
+
+          <div class="td-divider"></div>
+
+          <div class="td-section">
+            <div class="td-section-title">Inputs</div>
+            <div class="td-sld-row"><div class="td-sld-hd"><span>Input radius</span><span class="td-sld-val">8px</span></div>
+              <input class="td-slider" type="range" min="0" max="32" value="8" data-var="--mf-input-radius" data-unit="px"/></div>
+            <div class="td-sld-row"><div class="td-sld-hd"><span>Vertical padding</span><span class="td-sld-val">12px</span></div>
+              <input class="td-slider" type="range" min="4" max="28" value="12" data-var="--mf-input-padding-y" data-unit="px"/></div>
+          </div>
+
+          <div class="td-divider"></div>
+
+          <div class="td-section">
+            <div class="td-section-title">Buttons</div>
+            <div class="td-sld-row"><div class="td-sld-hd"><span>Button radius</span><span class="td-sld-val">8px</span></div>
+              <input class="td-slider" type="range" min="0" max="50" value="8" data-var="--mf-btn-radius" data-unit="px"/></div>
+            <div class="td-sld-row"><div class="td-sld-hd"><span>Vertical padding</span><span class="td-sld-val">14px</span></div>
+              <input class="td-slider" type="range" min="6" max="32" value="14" data-var="--mf-btn-padding-y" data-unit="px"/></div>
+          </div>
+        </div>
+
+        <!-- == EFFECTS == -->
+        <div class="td-tab-panel" data-panel="effects">
+          <div class="td-section">
+            <div class="td-section-title">Shadows</div>
+            <div class="td-tog-row">
+              <div><div class="td-tog-label">Form card shadow</div><div class="td-tog-desc">Drop shadow below form</div></div>
+              <label class="td-toggle"><input type="checkbox" class="td-effect-toggle" checked data-var="--mf-form-shadow" data-on="0 4px 24px rgba(0,0,0,.1)" data-off="none"/><span class="td-toggle-slider"></span></label>
+            </div>
+            <div class="td-tog-row">
+              <div><div class="td-tog-label">Input focus glow</div><div class="td-tog-desc">Ring glow on focus</div></div>
+              <label class="td-toggle"><input type="checkbox" class="td-effect-toggle" checked data-var="--mf-input-focus-shadow" data-on="0 0 0 3px rgba(59,130,246,.18)" data-off="none"/><span class="td-toggle-slider"></span></label>
+            </div>
+            <div class="td-tog-row">
+              <div><div class="td-tog-label">Button shadow</div><div class="td-tog-desc">Glow on submit button</div></div>
+              <label class="td-toggle"><input type="checkbox" class="td-effect-toggle" checked data-var="--mf-btn-shadow" data-on="0 4px 14px rgba(59,130,246,.35)" data-off="none"/><span class="td-toggle-slider"></span></label>
+            </div>
+          </div>
+
+          <div class="td-divider"></div>
+
+          <div class="td-section">
+            <div class="td-section-title">Borders</div>
+            <div class="td-tog-row">
+              <div><div class="td-tog-label">Form card border</div></div>
+              <label class="td-toggle"><input type="checkbox" class="td-effect-toggle" data-var="--mf-form-border" data-on="1px solid #e2e8f0" data-off="none"/><span class="td-toggle-slider"></span></label>
+            </div>
+            <div class="td-tog-row">
+              <div><div class="td-tog-label">Input borders</div></div>
+              <label class="td-toggle"><input type="checkbox" class="td-effect-toggle" checked data-var="--mf-input-border-toggle" data-on="1px solid #e2e8f0" data-off="1px solid transparent"/><span class="td-toggle-slider"></span></label>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /td-right-scroll -->
+    </aside>
+
+  </div><!-- /td-body -->
+</div>
+<script>
+// ── Left Panel Patch: 3-tab system (Presets / Elements / Colors) ──────────
+(function(){
+  // Patch switchLeftTab to handle "elements" 3rd tab
+  document.querySelectorAll('.td-left-tab').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var tab = btn.getAttribute('data-tab');
+      document.querySelectorAll('.td-left-tab').forEach(function(b){ b.classList.toggle('active', b===btn); });
+      document.getElementById('td-left-presets').style.display  = tab==='presets'   ? '' : 'none';
+      document.getElementById('td-left-elements').style.display = tab==='elements'  ? '' : 'none';
+      document.getElementById('td-left-palette').style.display  = tab==='palette'   ? '' : 'none';
+    });
+  });
+
+  // ── Preset search filter ─────────────────────────────────────
+  var searchEl = document.getElementById('td-preset-search');
+  if(searchEl) searchEl.addEventListener('input', filterPresets);
+
+  // ── Category filter pills ────────────────────────────────────
+  document.querySelectorAll('.td-pill').forEach(function(pill){
+    pill.addEventListener('click', function(){
+      document.querySelectorAll('.td-pill').forEach(function(p){ p.classList.remove('active'); });
+      pill.classList.add('active');
+      filterPresets();
+    });
+  });
+
+  function filterPresets(){
+    var search = (document.getElementById('td-preset-search')||{}).value||'';
+    search = search.toLowerCase();
+    var activeFilter = (document.querySelector('.td-pill.active')||{}).dataset||{};
+    var cat = activeFilter.filter || 'all';
+    var items = document.querySelectorAll('.td-preset-card, .td-preset-list-item');
+    var visible = 0;
+    items.forEach(function(el){
+      var name = (el.dataset.name||'').toLowerCase();
+      var category = el.dataset.category||'';
+      var popular = el.dataset.popular==='true';
+      var matchCat = cat==='all'||cat==='popular'?popular||(cat==='all'):category===cat;
+      if(cat==='all') matchCat=true;
+      if(cat==='popular') matchCat=popular;
+      var matchSearch = !search || name.includes(search);
+      var show = matchCat && matchSearch;
+      el.style.display = show ? '' : 'none';
+      if(show) visible++;
+    });
+    var countEl = document.getElementById('td-presets-count');
+    if(countEl) countEl.textContent = visible + ' themes';
+  }
+
+  // ── View toggle (grid / list) ────────────────────────────────
+  var gridBtn = document.getElementById('td-view-grid');
+  var listBtn = document.getElementById('td-view-list');
+  var listEl  = document.getElementById('td-preset-list');
+  if(gridBtn) gridBtn.addEventListener('click', function(){
+    gridBtn.classList.add('active'); listBtn.classList.remove('active');
+    if(listEl){ listEl.classList.remove('td-presets-listmode'); listEl.classList.add('td-presets-grid'); }
+  });
+  if(listBtn) listBtn.addEventListener('click', function(){
+    listBtn.classList.add('active'); gridBtn.classList.remove('active');
+    if(listEl){ listEl.classList.add('td-presets-listmode'); listEl.classList.remove('td-presets-grid'); }
+  });
+
+  // ── Elements accordion ────────────────────────────────────────
+  document.querySelectorAll('.td-elem-group-hd').forEach(function(hd){
+    hd.addEventListener('click', function(){
+      var group = hd.dataset.group;
+      var items = document.getElementById('td-group-'+group);
+      var isOpen = hd.classList.contains('open');
+      hd.classList.toggle('open', !isOpen);
+      var chevron = hd.querySelector('.td-group-chevron');
+      if(chevron){ chevron.className = isOpen ? 'fas fa-chevron-down td-group-chevron' : 'fas fa-chevron-up td-group-chevron'; }
+      if(items) items.style.display = isOpen ? 'none' : '';
+    });
+  });
+
+  // ── Element item selection ───────────────────────────────────
+  document.querySelectorAll('.td-elem-item').forEach(function(item){
+    item.addEventListener('click', function(){
+      document.querySelectorAll('.td-elem-item').forEach(function(i){ i.classList.remove('active'); i.querySelector('.td-elem-arrow') && (i.querySelector('.td-elem-arrow').style.display='none'); });
+      item.classList.add('active');
+      var arrow = item.querySelector('.td-elem-arrow');
+      if(arrow) arrow.style.display='';
+    });
+  });
+
+  // ── Colors accordion ─────────────────────────────────────────
+  document.querySelectorAll('.td-color-cat-hd').forEach(function(hd){
+    hd.addEventListener('click', function(){
+      var cat = hd.dataset.cat;
+      var items = document.getElementById('td-cat-'+cat);
+      var isOpen = hd.classList.contains('open');
+      hd.classList.toggle('open', !isOpen);
+      var chevron = hd.querySelector('.td-cat-chevron');
+      if(chevron){ chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)'; }
+      if(items) items.style.display = isOpen ? 'none' : '';
+    });
+    // Init open state
+    if(hd.classList.contains('open')){
+      var chevron = hd.querySelector('.td-cat-chevron');
+      if(chevron) chevron.style.transform = 'rotate(90deg)';
+    }
+  });
+
+  // ── Patch preset list rendering to use grid cards ─────────────
+  // Wait for the original JS to populate td-preset-list, then re-render
+  var observer = new MutationObserver(function(){
+    var list = document.getElementById('td-preset-list');
+    if(!list || !list.children.length) return;
+    // Check if already patched
+    if(list.querySelector('.td-preset-card')) return;
+    // Convert existing .td-preset-item rows into grid cards
+    var items = Array.from(list.querySelectorAll('.td-preset-item'));
+    if(!items.length) return;
+    list.classList.add('td-presets-grid');
+    // Build recently used (first 4)
+    var recentEl = document.getElementById('td-recent-swatches');
+    if(recentEl && items.length>=4){
+      recentEl.innerHTML = items.slice(0,4).map(function(item){
+        var swatches = Array.from(item.querySelectorAll('.td-preset-swatch, .td-preset-swatch-sm'));
+        var colors = swatches.slice(0,4).map(function(s){ return s.style.background||s.style.backgroundColor||'#ccc'; });
+        var name = (item.querySelector('.td-preset-name')||{}).textContent||'';
+        return '<button class="td-recent-item" title="'+name+'">'+colors.map(function(c){ return '<span style="background:'+c+'"></span>'; }).join('')+'</button>';
+      }).join('');
+    }
+    // Convert items to cards
+    items.forEach(function(item){
+      var swatches = Array.from(item.querySelectorAll('.td-preset-swatch,.td-preset-swatch-sm'));
+      var colors = swatches.map(function(s){ return s.style.background||s.style.backgroundColor||'#ccc'; });
+      while(colors.length<4) colors.push('#f0f0f0');
+      var name = (item.querySelector('.td-preset-name')||{}).textContent||'';
+      var isActive = item.classList.contains('active');
+      var card = document.createElement('button');
+      card.className = 'td-preset-card' + (isActive?' active':'');
+      card.dataset.name = name.toLowerCase();
+      card.dataset.category = item.dataset.category||'';
+      card.dataset.popular = item.dataset.popular||'false';
+      card.innerHTML =
+        '<div class="td-card-swatches">'+ colors.map(function(c){ return '<span style="background:'+c+'"></span>'; }).join('') +'</div>'+
+        '<div class="td-card-footer">'+
+          '<span class="td-card-name">'+name+'</span>'+
+          (item.dataset.badge ? '<span class="td-card-badge td-card-badge--'+(item.dataset.badge||'').toLowerCase()+'">'+item.dataset.badge+'</span>' : '')+
+        '</div>'+
+        (isActive ? '<div class="td-card-check"><i class="fas fa-check"></i></div>' : '');
+      // Mirror click to original item
+      card.addEventListener('click', function(){ item.click(); });
+      list.appendChild(card);
+      item.style.display='none';
+    });
+    // Update count
+    var countEl = document.getElementById('td-presets-count');
+    if(countEl) countEl.textContent = items.length + ' themes';
+    observer.disconnect();
+  });
+  var listEl2 = document.getElementById('td-preset-list');
+  if(listEl2) observer.observe(listEl2, {childList:true,subtree:true});
+})();
+</script>
+<script src="{{JS_URL}}"></script>
+<script src="{{INSPECTOR_JS_URL}}"></script>
+
+</body>
+</html>

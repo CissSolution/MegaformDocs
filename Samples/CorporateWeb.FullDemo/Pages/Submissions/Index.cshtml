@@ -1,0 +1,18 @@
+@page
+@model MegaForm.Samples.CorporateWeb.FullDemo.Pages.Submissions.IndexModel
+@{
+    ViewData["Title"] = "Submissions";
+}
+
+<h1>Submissions</h1>
+<p class="lead">Built-in MegaForm submissions view embedded below. Log in with <code>admin</code> / <code>admin123</code> if prompted, then switch forms in the dropdown.</p>
+
+<div class="ratio ratio-16x9" style="min-height: 800px;">
+    <iframe src="/admin/submissions" title="MegaForm Submissions" class="rounded border"></iframe>
+</div>
+
+<div class="mt-4">
+    <p>
+        <a class="btn btn-outline-primary" href="/admin/submissions" target="_blank">Open submissions in full screen</a>
+    </p>
+</div>

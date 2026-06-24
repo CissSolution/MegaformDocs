@@ -1,0 +1,64 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net472;net8.0;net9.0;net10.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>MegaForm.Sdk</RootNamespace>
+    <AssemblyName>MegaForm.Sdk</AssemblyName>
+
+    <!-- Public-contract package: a thin, stable facade over MegaForm.Core for
+         developers who use MegaForm programmatically (CreateForm/ListForms/FindData…). -->
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageId>MegaForm.Sdk</PackageId>
+    <Version>0.1.0-preview</Version>
+    <Description>Programmatic SDK for MegaForm: create forms, list forms, query submissions. Host-agnostic facade over MegaForm.Core.</Description>
+    <Authors>MegaForm Team</Authors>
+    <Company>MegaForm</Company>
+    <Copyright>© 2026 MegaForm. All rights reserved.</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageProjectUrl>https://megaform.github.io/MegaFormSolution</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/megaform/MegaFormSolution.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>megaform;forms;sdk;dotnet;oqtane;dnn;umbraco;workflow</PackageTags>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- [API stability §C-Layer4] Validate the package on pack: ensures every target
+         framework (net8/9/10) exposes a consistent public API. Once 0.1.0-preview is
+         published, set PackageValidationBaselineVersion to also catch binary-breaking
+         changes vs the last release. -->
+    <EnablePackageValidation>true</EnablePackageValidation>
+
+    <!-- [API stability] Roslyn analyzer fails the build if the public surface changes
+         without being recorded in PublicAPI.*.txt — see FUTURE_PLAN_MEGAFORM_SDK_AND_DOCS.md §C.
+         RS0016 = added-but-undeclared API; RS0017 = declared-but-removed API. As errors, any
+         accidental contract change breaks the build until PublicAPI.*.txt is updated on purpose. -->
+    <WarningsAsErrors>$(WarningsAsErrors);RS0016;RS0017</WarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MegaForm.Core\MegaForm.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+
+</Project>

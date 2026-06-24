@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MegaForm Embed Preview</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+        .preview-header {
+            background: #1e293b;
+            color: white;
+            padding: 24px 32px;
+        }
+        .preview-header h1 { font-size: 20px; font-weight: 600; }
+        .preview-header p { font-size: 13px; color: #94a3b8; margin-top: 4px; }
+        .preview-body {
+            max-width: 900px;
+            margin: 32px auto;
+            padding: 0 20px;
+        }
+        .code-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .code-section h3 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .code-section h3 .badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: #dbeafe;
+            color: #1d4ed8;
+            font-weight: 500;
+        }
+        .code-block {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 16px 20px;
+            border-radius: 8px;
+            font-family: 'SF Mono', Monaco, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+            position: relative;
+        }
+        .code-block .copy-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #334155;
+            color: #94a3b8;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        .code-block .copy-btn:hover { background: #475569; color: white; }
+        .tag { color: #f472b6; }
+        .attr { color: #7dd3fc; }
+        .str { color: #a5f3fc; }
+        .cmt { color: #64748b; }
+
+        .preview-form {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .preview-form h3 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .config-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .config-bar label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+        }
+        .config-bar input, .config-bar select {
+            padding: 6px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 13px;
+            width: 200px;
+        }
+        .config-bar button {
+            padding: 8px 16px;
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .config-bar button:hover { background: #4f46e5; }
+    </style>
+</head>
+<body>
+
+<div class="preview-header">
+    <h1>🔗 MegaForm Embed Code Generator</h1>
+    <p>Copy the code below to embed your form on any website</p>
+</div>
+
+<div class="preview-body">
+    <!-- Config -->
+    <div class="code-section">
+        <h3>Configuration</h3>
+        <div class="config-bar">
+            <div>
+                <label>Form ID</label><br>
+                <input type="number" id="cfg-form-id" value="4" min="1">
+            </div>
+            <div>
+                <label>Server URL</label><br>
+                <input type="text" id="cfg-server" value="" placeholder="https://your-site.com" style="width:280px;">
+            </div>
+            <div style="display:flex;align-items:flex-end;">
+                <button onclick="generateCode()">Generate Code</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Method 1: Script tag -->
+    <div class="code-section">
+        <h3>Method 1: Script Tag <span class="badge">Easiest</span></h3>
+        <p style="font-size:13px;color:#64748b;margin-bottom:12px;">Just paste this one line — the form will appear where you place the script.</p>
+        <div class="code-block" id="code-script">
+            <button class="copy-btn" onclick="copyCode('code-script')">Copy</button>
+            <span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="str">"<span id="code-src"></span>"</span> <span class="attr">data-form-id</span>=<span class="str">"<span id="code-fid">4</span>"</span> <span class="attr">data-server</span>=<span class="str">"<span id="code-srv"></span>"</span><span class="tag">&gt;&lt;/script&gt;</span>
+        </div>
+    </div>
+
+    <!-- Method 2: DIV + Script -->
+    <div class="code-section">
+        <h3>Method 2: Custom Container <span class="badge">Flexible</span></h3>
+        <p style="font-size:13px;color:#64748b;margin-bottom:12px;">Place a div anywhere, then reference it.</p>
+        <div class="code-block" id="code-div">
+            <button class="copy-btn" onclick="copyCode('code-div')">Copy</button>
+            <span class="cmt">&lt;!-- Place this where you want the form --&gt;</span><br>
+            <span class="tag">&lt;div</span> <span class="attr">id</span>=<span class="str">"my-contact-form"</span><span class="tag">&gt;&lt;/div&gt;</span><br><br>
+            <span class="cmt">&lt;!-- Place this before &lt;/body&gt; --&gt;</span><br>
+            <span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="str">"<span id="code-src2"></span>"</span><span class="tag">&gt;&lt;/script&gt;</span><br>
+            <span class="tag">&lt;script&gt;</span><br>
+            &nbsp;&nbsp;MegaFormEmbed.render({<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;formId: <span id="code-fid2">4</span>,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;server: '<span id="code-srv2"></span>',<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;container: '#my-contact-form'<br>
+            &nbsp;&nbsp;});<br>
+            <span class="tag">&lt;/script&gt;</span>
+        </div>
+    </div>
+
+    <!-- Method 3: iFrame -->
+    <div class="code-section">
+        <h3>Method 3: iFrame <span class="badge">Isolated</span></h3>
+        <p style="font-size:13px;color:#64748b;margin-bottom:12px;">For maximum isolation — form loads in its own frame.</p>
+        <div class="code-block" id="code-iframe">
+            <button class="copy-btn" onclick="copyCode('code-iframe')">Copy</button>
+            <span class="tag">&lt;iframe</span> <span class="attr">src</span>=<span class="str">"<span id="code-iframe-src"></span>"</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="attr">width</span>=<span class="str">"100%"</span> <span class="attr">height</span>=<span class="str">"600"</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="attr">frameborder</span>=<span class="str">"0"</span> <span class="attr">style</span>=<span class="str">"border:none;"</span><span class="tag">&gt;&lt;/iframe&gt;</span>
+        </div>
+    </div>
+
+    <!-- Live Preview -->
+    <div class="preview-form">
+        <h3>📋 Live Preview</h3>
+        <div id="megaform-preview"></div>
+    </div>
+</div>
+
+<script>
+    // Auto-detect server from current page
+    var currentServer = window.location.origin;
+    document.getElementById('cfg-server').value = currentServer;
+
+    function generateCode() {
+        var formId = document.getElementById('cfg-form-id').value;
+        var server = document.getElementById('cfg-server').value.replace(/\/$/, '');
+        var embedSrc = server + '/DesktopModules/MegaForm/Assets/js/megaform-embed.js';
+        var iframeSrc = server + '/DesktopModules/MegaForm/Assets/embed.html?formId=' + formId + '&server=' + encodeURIComponent(server);
+
+        document.getElementById('code-src').textContent = embedSrc;
+        document.getElementById('code-src2').textContent = embedSrc;
+        document.getElementById('code-fid').textContent = formId;
+        document.getElementById('code-fid2').textContent = formId;
+        document.getElementById('code-srv').textContent = server;
+        document.getElementById('code-srv2').textContent = server;
+        document.getElementById('code-iframe-src').textContent = iframeSrc;
+
+        // Load live preview
+        var preview = document.getElementById('megaform-preview');
+        preview.innerHTML = '';
+        var div = document.createElement('div');
+        div.id = 'megaform-' + formId;
+        preview.appendChild(div);
+
+        // Load embed script
+        var existing = document.getElementById('embed-preview-script');
+        if (existing) existing.remove();
+        var script = document.createElement('script');
+        script.id = 'embed-preview-script';
+        script.src = embedSrc;
+        script.setAttribute('data-form-id', formId);
+        script.setAttribute('data-server', server);
+        preview.appendChild(script);
+    }
+
+    function copyCode(elementId) {
+        var el = document.getElementById(elementId);
+        var text = el.textContent.replace(/Copy$/, '').trim();
+        navigator.clipboard.writeText(text).then(function() {
+            var btn = el.querySelector('.copy-btn');
+            btn.textContent = 'Copied!';
+            setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
+        });
+    }
+
+    // Auto-generate on load
+    generateCode();
+</script>
+</body>
+</html>

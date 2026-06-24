@@ -1,0 +1,87 @@
+{
+  "version": "1.0",
+  "fields": [
+    {
+      "key": "fullName",
+      "type": "Text",
+      "label": "Full name",
+      "placeholder": "e.g. Nguyen Van A",
+      "required": true,
+      "width": "Half"
+    },
+    {
+      "key": "email",
+      "type": "Email",
+      "label": "Email",
+      "placeholder": "you@example.com",
+      "required": true,
+      "width": "Half"
+    },
+    {
+      "key": "year",
+      "type": "Select",
+      "label": "Event year",
+      "required": true,
+      "width": "Half",
+      "options": [
+        { "value": "",     "label": "-- choose --" },
+        { "value": "2024", "label": "2024" },
+        { "value": "2025", "label": "2025" },
+        { "value": "2026", "label": "2026" }
+      ]
+    },
+    {
+      "key": "event",
+      "type": "Select",
+      "label": "Event",
+      "required": true,
+      "width": "Half",
+      "options": [
+        { "value": "", "label": "-- pick a year first --" }
+      ],
+      "properties": {
+        "optionsSource": "sql",
+        "optionsType": "storedproc",
+        "optionsConnectionKey": "DashboardDatabase",
+        "optionsDatabaseType": "SqlServer",
+        "optionsSql": "spMegaForm_Sample_GetEventsByYear",
+        "optionsDependsOn": ["year"],
+        "optionsReloadOnChange": true
+      }
+    },
+    {
+      "key": "ticketType",
+      "type": "Radio",
+      "label": "Ticket type",
+      "required": true,
+      "width": "Full",
+      "optionColumns": 3,
+      "options": [
+        { "value": "Standard", "label": "Standard" },
+        { "value": "VIP",      "label": "VIP" },
+        { "value": "Student",  "label": "Student" }
+      ]
+    }
+  ],
+  "settings": {
+    "displayOnly": false,
+    "multiPage": false,
+    "submitButtonText": "Register",
+    "successMessage": "Thanks! Your registration has been recorded.",
+    "databaseInsert": {
+      "enabled": true,
+      "connectionKey": "DashboardDatabase",
+      "databaseType": "SqlServer",
+      "insertSql": "INSERT INTO dbo.MegaForm_Sample_Registrations (FullName, Email, EventYear, EventId, TicketType, RegisteredOnUtc) VALUES (:fullName, :email, :year, :event, :ticketType, SYSUTCDATETIME());"
+    }
+  },
+  "_template": {
+    "name": "Event Registration (with DB Insert)",
+    "slug": "sample-event-registration-insert",
+    "description": "Demonstrates two MegaForm features together: cascading SQL dropdown (Year drives Event options via stored procedure) and Database Insert on submit (writes the row to dbo.MegaForm_Sample_Registrations). Connection alias DashboardDatabase + database type SqlServer must point at a database that has the MegaForm_Sample_Events table and spMegaForm_Sample_GetEventsByYear stored procedure (both ship with the module install).",
+    "category": "Cascading & DB Insert",
+    "icon": "fas fa-database",
+    "version": "01.06.17",
+    "author": "MegaForm built-in sample"
+  }
+}

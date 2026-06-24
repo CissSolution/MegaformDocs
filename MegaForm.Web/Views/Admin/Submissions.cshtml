@@ -1,0 +1,61 @@
+@{
+    Layout = null;
+    int formId = ViewBag.FormId ?? 0;
+    dynamic form = ViewBag.Form;
+    int totalCount = ViewBag.TotalCount ?? 0;
+    string apiBase = ViewBag.ApiBaseUrl ?? "/api/MegaForm/";
+    string schemaJson = ViewBag.SchemaJson ?? "{}";
+    string formsJson = ViewBag.FormsJson ?? "[]";
+    int formsCount = ViewBag.FormsCount ?? 0;
+    int submissionsCount = ViewBag.SubmissionsCount ?? 0;
+    bool hasDevLock = ViewBag.HasDevLock ?? false;
+    bool hasDemoLock = ViewBag.HasDemoLock ?? false;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>MegaForm — Submissions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/megaform/css/megaform-admin-shell.css?v=20260404-10" />
+<link rel="stylesheet" href="/megaform/css/megaform-submissions-ts.css?v=9030" />
+<style>html,body{height:100%;margin:0;padding:0;}#mf-submissions-root{min-height:100vh;}</style>
+</head>
+<body class="mf-body">
+<div id="mf-submissions-root"
+     data-platform="aspcore"
+     data-instance-id="0"
+     data-form-id="@formId"
+     data-form-title="@(form != null ? (form.Title ?? "") : "")"
+     data-api-base="@apiBase"
+     data-schema="@schemaJson"
+     data-forms="@formsJson"
+     data-total="@totalCount"
+     data-count-forms="@formsCount"
+     data-count-submissions="@submissionsCount"
+     data-dev-lock="@hasDevLock.ToString().ToLower()"
+     data-demo-lock="@hasDemoLock.ToString().ToLower()"
+     data-shell-mode="page">
+  <div class="mf-admin-loading">Loading submissions…</div>
+</div>
+<script src="/megaform/js/megaform-submissions.js?v=20260402-04"></script>
+<script>
+(function(){
+  var root = document.getElementById('mf-submissions-root');
+  if(!root) return;
+  function fail(msg){ root.innerHTML = '<div style="margin:2rem;padding:1rem;background:#fef2f2;border:1px solid #fecaca;border-radius:0.625rem;color:#dc2626;">'+msg+'</div>'; }
+  function boot(){
+    try {
+      if(window.MegaForm && window.MegaForm.initSubmissions){
+        window.MegaForm.initSubmissions(root);
+      } else { setTimeout(boot, 60); }
+    } catch(err){ fail('Submissions error: ' + (err && err.message ? err.message : err)); }
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+})();
+</script>
+</body>
+</html>

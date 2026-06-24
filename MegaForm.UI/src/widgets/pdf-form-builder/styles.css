@@ -1,0 +1,268 @@
+/* /src/widgets/pdf-form-builder/styles.css — v6
+ *
+ * KEY CHANGES from v5:
+ *   - Drop accuracy: snap-to-grid is now opt-in (default OFF in renderer).
+ *     Field's top-left corner = exact click point.
+ *   - Universal alignment: ALL text-bearing fields get identical
+ *     padding/font/line-height in BOTH edit (placeholder) + fill (input)
+ *     so characters appear at the EXACT same position whether you switch
+ *     modes or not. No more vertical/horizontal jitter.
+ *   - System font picker support: state.systemFont is applied via
+ *     inline style on .pfb-field and inherited by children.
+ */
+
+.pfb-root {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #333; width: 100%; max-width: 1100px; margin: 0 auto;
+  -webkit-text-size-adjust: 100%;
+}
+
+.pfb-toolbar {
+  display: flex; align-items: center; gap: 6px; padding: 8px;
+  background: #fff; border: 1px solid #ddd; border-radius: 4px;
+  margin-bottom: 8px; flex-wrap: wrap;
+}
+/* Runtime modes (fill/preview): minimal toolbar — zoom + Fit + Download only.
+   Mobile-toggle button + collapsible extras are admin-only; in fill mode the
+   toolbar fits in one line so always show. */
+.pfb-toolbar-fill .pfb-mobile-toggle,
+.pfb-toolbar-preview .pfb-mobile-toggle { display: none; }
+.pfb-toolbar-fill .pfb-toolbar-extra,
+.pfb-toolbar-preview .pfb-toolbar-extra {
+  display: flex !important; gap: 6px; align-items: center; flex-wrap: wrap;
+}
+.pfb-toolbar-fill .pfb-export-pdf,
+.pfb-toolbar-preview .pfb-export-pdf {
+  margin-left: 8px;
+}
+.pfb-btn {
+  padding: 7px 12px; min-height: 36px;
+  border: 1px solid #c4d3e0; border-radius: 3px;
+  background: #fff; cursor: pointer; font-size: 13px; color: #333;
+  touch-action: manipulation;
+}
+.pfb-btn:hover { background: #f0f4f8; }
+.pfb-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.pfb-btn-primary { background: #2980b9; color: #fff; border-color: #2980b9; }
+.pfb-btn-primary:hover { background: #216599; }
+.pfb-btn-success { background: #27ae60; color: #fff; border-color: #27ae60; }
+.pfb-btn-success:hover { background: #1e8a4a; }
+.pfb-zoom-label { min-width: 50px; text-align: center; font-size: 13px; color: #555; font-weight: 500; }
+.pfb-grid-toggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; color: #555; padding: 6px 8px; min-height: 36px;
+  border: 1px solid #c4d3e0; border-radius: 3px; background: #fff;
+  cursor: pointer; user-select: none;
+}
+.pfb-grid-size { width: 56px; padding: 6px; min-height: 36px; border: 1px solid #c4d3e0; border-radius: 3px; font-size: 12px; }
+.pfb-font-select { padding: 6px 8px; min-height: 36px; border: 1px solid #c4d3e0; border-radius: 3px; font-size: 12px; background: #fff; min-width: 120px; }
+
+.pfb-mobile-toggle { display: none; }
+@media (max-width: 760px) {
+  .pfb-mobile-toggle {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #fff; border: 1px solid #c4d3e0; border-radius: 3px;
+    padding: 8px 12px; font-size: 13px; cursor: pointer; min-height: 40px;
+  }
+  .pfb-toolbar-extra { display: none; width: 100%; flex-basis: 100%; padding-top: 6px; border-top: 1px solid #eee; margin-top: 4px; }
+  .pfb-toolbar-extra.open { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pfb-toolbar { gap: 4px; }
+  .pfb-btn { padding: 8px 10px; font-size: 12px; }
+}
+
+.pfb-palette { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; background: #f4f6f9; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 8px; }
+.pfb-tool { padding: 7px 10px; min-height: 36px; border: 1px solid #c4d3e0; border-radius: 3px; background: #fff; cursor: pointer; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; touch-action: manipulation; }
+.pfb-tool:hover { background: #e8f1f8; }
+.pfb-tool.active { background: #cfe6f5; border-color: #2980b9; }
+@media (max-width: 600px) {
+  .pfb-tool { padding: 8px; font-size: 11px; }
+  .pfb-tool span:last-child { display: none; }
+  .pfb-tool span:first-child { font-size: 16px; }
+}
+
+.pfb-viewport { overflow: auto; max-height: 75vh; background: #e9ecef; padding: 12px; border: 1px solid #ddd; border-radius: 4px; -webkit-overflow-scrolling: touch; }
+@media (max-width: 600px) { .pfb-viewport { padding: 6px; max-height: 70vh; } }
+.pfb-page { position: relative; margin: 0 auto 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); background: #fff; }
+.pfb-canvas { display: block; }
+
+.pfb-grid {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;
+}
+.pfb-grid.hidden { display: none; }
+.pfb-overlay { position: absolute; top: 0; left: 0; pointer-events: auto; z-index: 2; }
+
+.pfb-field {
+  position: absolute; box-sizing: border-box;
+  font-family: inherit;     /* JS sets per-field font on this element */
+  z-index: 5;
+  /* No padding here — content elements (.pfb-content, input, select, textarea)
+     provide their own padding so edit and fill modes align identically. */
+  padding: 0;
+  overflow: hidden;
+}
+.pfb-field.pfb-selected { outline: 2px solid #2980b9; outline-offset: 1px; z-index: 10; }
+
+/* === UNIVERSAL CONTENT ALIGNMENT (v6 KEY) === */
+/* Edit/preview mode shows .pfb-content (a div), fill mode shows the actual input.
+   Both use IDENTICAL padding/line-height so glyphs land at the exact same x/y. */
+.pfb-field > .pfb-content,
+.pfb-field > input[type=text],
+.pfb-field > input[type=number],
+.pfb-field > input[type=date],
+.pfb-field > textarea,
+.pfb-field > select {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 2px 4px;
+  margin: 0;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  color: #000;
+  line-height: 1.2;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.pfb-field > textarea { resize: none; }
+.pfb-field > select {
+  -webkit-appearance: menulist;
+  appearance: menulist;
+}
+.pfb-field > input[type=date] {
+  /* Date input has variable internal padding for calendar icon; explicit value
+     keeps it aligned with text inputs of same height. */
+  padding-right: 4px;
+}
+.pfb-field > .pfb-content {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.pfb-field-textarea > .pfb-content {
+  display: block;
+  white-space: pre-wrap;
+  align-items: flex-start;
+}
+
+/* === EDIT mode highlights === */
+.pfb-edit .pfb-field-text, .pfb-edit .pfb-field-number, .pfb-edit .pfb-field-date, .pfb-edit .pfb-field-textarea {
+  background: rgba(207, 230, 245, 0.55); border: 1.5px dashed #2980b9; box-shadow: inset 0 0 0 1px rgba(41,128,185,0.08);
+}
+.pfb-edit .pfb-field-checkbox, .pfb-edit .pfb-field-radio { background: rgba(255,255,255,0.95); border: 1.5px dashed #2980b9; }
+.pfb-edit .pfb-field-dropdown { background: rgba(207,245,230,0.55); border: 1.5px dashed #27ae60; }
+.pfb-edit .pfb-field-signature { background: rgba(255,200,80,0.25); border: 1.5px dashed #d4870a; }
+.pfb-edit .pfb-field-image { background: rgba(187,143,220,0.20); border: 1.5px dashed #8e44ad; }
+.pfb-edit .pfb-field-whiteout { background: #fff; border: 1.5px dashed #999; }
+.pfb-edit .pfb-field-label { background: rgba(180,180,180,0.10); border: 1.5px dashed #888; }
+
+.pfb-edit .pfb-field.is-empty::before {
+  content: attr(data-empty-label);
+  position: absolute; top: -1px; left: -1px;
+  font-size: 10px; line-height: 1; padding: 2px 5px;
+  background: #2980b9; color: #fff; border-radius: 0 0 3px 0;
+  font-weight: 500; pointer-events: none; z-index: 1;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+.pfb-edit .pfb-field-dropdown.is-empty::before { background: #27ae60; }
+.pfb-edit .pfb-field-signature.is-empty::before { background: #d4870a; }
+.pfb-edit .pfb-field-image.is-empty::before { background: #8e44ad; }
+.pfb-edit .pfb-field-checkbox.is-empty::before, .pfb-edit .pfb-field-radio.is-empty::before { display: none; }
+
+.pfb-edit .pfb-field > .pfb-content { color: #aaa; }    /* placeholder grey in edit */
+
+/* === FILL mode highlights === */
+.pfb-fill .pfb-field-text, .pfb-fill .pfb-field-number, .pfb-fill .pfb-field-date, .pfb-fill .pfb-field-textarea {
+  background: rgba(207, 230, 245, 0.25); border: 1px solid rgba(41, 128, 185, 0.35); border-radius: 2px;
+}
+.pfb-fill .pfb-field-checkbox, .pfb-fill .pfb-field-radio { background: rgba(255, 255, 255, 0.85); border: 1px solid rgba(41, 128, 185, 0.35); border-radius: 2px; }
+.pfb-fill .pfb-field-dropdown { background: rgba(207, 245, 230, 0.30); border: 1px solid rgba(39, 174, 96, 0.40); border-radius: 2px; }
+.pfb-fill .pfb-field-signature { background: rgba(255, 200, 80, 0.18); border: 1px dashed rgba(212, 135, 10, 0.55); border-radius: 2px; }
+.pfb-fill .pfb-field-image { background: rgba(187, 143, 220, 0.15); border: 1px dashed rgba(142, 68, 173, 0.55); border-radius: 2px; }
+.pfb-fill .pfb-field-whiteout { background: #fff; border: none; }
+.pfb-fill .pfb-field-label { background: transparent; border: none; }
+
+.pfb-fill .pfb-field.is-empty.pfb-field-text,
+.pfb-fill .pfb-field.is-empty.pfb-field-number,
+.pfb-fill .pfb-field.is-empty.pfb-field-date,
+.pfb-fill .pfb-field.is-empty.pfb-field-textarea {
+  background: rgba(207, 230, 245, 0.40); border-color: rgba(41, 128, 185, 0.55);
+}
+.pfb-fill .pfb-field.is-empty.pfb-field-dropdown { background: rgba(207, 245, 230, 0.45); border-color: rgba(39, 174, 96, 0.60); }
+.pfb-fill .pfb-field-signature.is-empty { background: rgba(255, 200, 80, 0.25); border: 1.5px dashed rgba(212, 135, 10, 0.75); }
+.pfb-fill .pfb-field-image.is-empty { background: rgba(187, 143, 220, 0.22); border: 1.5px dashed rgba(142, 68, 173, 0.70); }
+
+.pfb-fill .pfb-field-text:not(.is-empty),
+.pfb-fill .pfb-field-number:not(.is-empty),
+.pfb-fill .pfb-field-date:not(.is-empty),
+.pfb-fill .pfb-field-textarea:not(.is-empty) {
+  background: rgba(207, 230, 245, 0.12); border-color: rgba(41, 128, 185, 0.20);
+}
+.pfb-fill .pfb-field-dropdown:not(.is-empty) { background: rgba(207, 245, 230, 0.15); border-color: rgba(39, 174, 96, 0.25); }
+
+.pfb-fill .pfb-field-text:hover, .pfb-fill .pfb-field-number:hover, .pfb-fill .pfb-field-date:hover, .pfb-fill .pfb-field-textarea:hover {
+  background: rgba(255, 245, 150, 0.30) !important; border-color: rgba(41, 128, 185, 0.70) !important;
+}
+.pfb-fill .pfb-field-dropdown:hover { background: rgba(207, 245, 230, 0.55) !important; border-color: rgba(39, 174, 96, 0.80) !important; }
+.pfb-fill .pfb-field-signature:hover { background: rgba(255, 200, 80, 0.35) !important; border-color: rgba(212, 135, 10, 0.90) !important; }
+.pfb-fill .pfb-field-image:hover { background: rgba(187, 143, 220, 0.32) !important; border-color: rgba(142, 68, 173, 0.90) !important; }
+
+.pfb-fill .pfb-field input:focus, .pfb-fill .pfb-field textarea:focus, .pfb-fill .pfb-field select:focus {
+  outline: 2px solid rgba(41, 128, 185, 0.80); outline-offset: -1px;
+}
+
+.pfb-field-signature.is-empty, .pfb-field-image.is-empty {
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.pfb-fill .pfb-field-signature.is-empty { color: #7a5c00; }
+.pfb-fill .pfb-field-image.is-empty { color: #5d3a78; }
+
+/* === PREVIEW mode === */
+.pfb-preview .pfb-field { background: transparent !important; border: none !important; box-shadow: none !important; }
+.pfb-preview .pfb-field::before { display: none !important; }
+
+/* === Resize handles === */
+.pfb-resize { position: absolute; width: 12px; height: 12px; background: #2980b9; border: 2px solid #fff; border-radius: 50%; z-index: 11; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.pfb-resize-nw { top: -6px; left: -6px; cursor: nw-resize; }
+.pfb-resize-ne { top: -6px; right: -6px; cursor: ne-resize; }
+.pfb-resize-sw { bottom: -6px; left: -6px; cursor: sw-resize; }
+.pfb-resize-se { bottom: -6px; right: -6px; cursor: se-resize; }
+@media (max-width: 760px) {
+  .pfb-resize { width: 16px; height: 16px; }
+  .pfb-resize-nw { top: -8px; left: -8px; }
+  .pfb-resize-ne { top: -8px; right: -8px; }
+  .pfb-resize-sw { bottom: -8px; left: -8px; }
+  .pfb-resize-se { bottom: -8px; right: -8px; }
+}
+
+.pfb-empty { padding: 24px; text-align: center; color: #888; font-style: italic; }
+.pfb-error { padding: 18px; color: #a00; background: #fff3f3; border: 1px solid #fbbcbc; border-radius: 4px; }
+
+/* === Modals === */
+.sig-modal-bg, .img-modal-bg, .sig-adjust-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 12px; }
+.sig-modal, .img-modal, .sig-adjust-modal { background: #fff; border-radius: 8px; padding: 16px; width: 100%; max-width: 540px; max-height: 92vh; overflow: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+.sig-modal h3, .img-modal h3, .sig-adjust-modal h3 { margin: 0 0 6px; font-size: 16px; }
+.sig-modal canvas, .sig-adjust-modal canvas { width: 100%; max-width: 500px; border: 2px solid #c4d3e0; display: block; background: #fff; cursor: crosshair; border-radius: 4px; touch-action: none; }
+.sig-actions, .img-actions { display: flex; gap: 6px; margin-top: 12px; justify-content: flex-end; flex-wrap: wrap; }
+.sig-adjust-stage {
+  position: relative; background: #f7f9fc;
+  border: 1px solid #d6dde4; border-radius: 4px; overflow: hidden;
+  background-image:
+    linear-gradient(45deg,#eef0f3 25%,transparent 25%),
+    linear-gradient(-45deg,#eef0f3 25%,transparent 25%),
+    linear-gradient(45deg,transparent 75%,#eef0f3 75%),
+    linear-gradient(-45deg,transparent 75%,#eef0f3 75%);
+  background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  margin-top: 24px;
+}
+.sig-adjust-target { position: absolute; border: 2px dashed #d4870a; background: rgba(255,200,80,0.12); pointer-events: none; }
+.sig-adjust-target.image { border-color: #8e44ad; background: rgba(187,143,220,0.12); }
+.sig-adjust-target::before { content: 'Field area'; position: absolute; top: -18px; left: 0; font-size: 11px; color: #d4870a; font-weight: 500; }
+.sig-adjust-target.image::before { color: #8e44ad; }
+.sig-adjust-img { position: absolute; cursor: move; user-select: none; box-shadow: 0 2px 8px rgba(0,0,0,0.15); touch-action: none; }
+.sig-adjust-controls { display: flex; gap: 10px; align-items: center; margin: 10px 0; flex-wrap: wrap; font-size: 12px; }
+.sig-adjust-controls input[type=range] { flex: 1; min-width: 100px; max-width: 200px; }
+.img-modal .img-preview { max-width: 100%; max-height: 220px; display: block; margin: 8px auto; border: 1px solid #c4d3e0; border-radius: 4px; background: #fff; }

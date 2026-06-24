@@ -1,0 +1,58 @@
+@model MegaForm.Sdk.PagedResult<MegaForm.Sdk.SubmissionDto>
+@{
+    ViewData["Title"] = "Submissions";
+    var form = ViewBag.Form as MegaForm.Sdk.FormDto;
+}
+
+<h1>Submissions</h1>
+
+@if (form != null)
+{
+    <p class="lead">For form: <strong>@form.Title</strong></p>
+}
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Form ID</th>
+            <th>Submitted</th>
+            <th>Status</th>
+            <th>Spam?</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var sub in Model.Items)
+        {
+            <tr>
+                <td>@sub.SubmissionId</td>
+                <td>@sub.FormId</td>
+                <td>@sub.SubmittedOnUtc</td>
+                <td>@sub.Status</td>
+                <td>@(sub.IsSpam ? "Yes" : "No")</td>
+                <td>
+                    <a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@sub.SubmissionId">Details</a>
+                    <form method="post" asp-action="Delete" asp-route-id="@sub.SubmissionId" asp-route-formId="@ViewBag.FormId" class="d-inline" onsubmit="return confirm('Delete this submission?');">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (Model.TotalCount > Model.PageSize)
+{
+    <nav>
+        <ul class="pagination">
+            @for (var i = 0; i <= (Model.TotalCount - 1) / Model.PageSize; i++)
+            {
+                <li class="page-item @(i == Model.Page ? "active" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-formId="@ViewBag.FormId" asp-route-page="@i" asp-route-pageSize="@Model.PageSize">@(i + 1)</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}

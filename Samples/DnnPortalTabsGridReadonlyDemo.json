@@ -1,0 +1,125 @@
+{
+  "version": "1.0",
+  "fields": [
+    {
+      "key": "portalId",
+      "type": "Select",
+      "label": "Choose portal",
+      "required": false,
+      "placeholder": "Select a portal",
+      "helpText": "This SQL dropdown feeds the read-only Grid Repeater below.",
+      "defaultValue": "0",
+      "cssClass": "",
+      "width": "50%",
+      "readOnly": false,
+      "prefillParam": "portalId",
+      "validation": {},
+      "options": [
+        {
+          "label": "Loading...",
+          "value": ""
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionsSource": "sql",
+        "optionsType": "sql",
+        "optionsConnectionKey": "DashboardDatabase",
+        "optionsDatabaseType": "SqlServer",
+        "optionsSql": "SELECT\n  CAST(p.PortalID AS nvarchar(20)) AS Value,\n  CONCAT('Portal ', p.PortalID, ' / ', COALESCE(NULLIF(pa.HTTPAlias, ''), '(no primary alias)')) AS Label\nFROM dbo.Portals p\nOUTER APPLY (\n  SELECT TOP 1 HTTPAlias\n  FROM dbo.PortalAlias\n  WHERE PortalID = p.PortalID\n  ORDER BY IsPrimary DESC, PortalAliasID\n) pa\nORDER BY p.PortalID",
+        "optionsDependsOn": [],
+        "optionsReloadOnChange": false
+      },
+      "widgetProps": {}
+    },
+    {
+      "key": "tabsGrid",
+      "type": "GridRepeater",
+      "label": "Portal page readonly grid",
+      "required": false,
+      "placeholder": "",
+      "helpText": "Browse-only SQL grid. Change the portal above to reload data, but row edits are not saved.",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "widgetProps": {
+        "columns": [
+          { "key": "tabId", "label": "Tab ID", "type": "number", "width": "120px", "readOnly": true },
+          { "key": "tabName", "label": "Page", "type": "text", "width": "1.8fr", "readOnly": true },
+          { "key": "tabPath", "label": "Path", "type": "text", "width": "1.8fr", "readOnly": true },
+          { "key": "tabLevel", "label": "Level", "type": "text", "width": "120px", "readOnly": true },
+          {
+            "key": "targetTabId",
+            "label": "Target page",
+            "type": "select",
+            "width": "1.6fr",
+            "optionsSource": "sql",
+            "optionsType": "sql",
+            "optionsConnectionKey": "DashboardDatabase",
+            "optionsDatabaseType": "SqlServer",
+            "optionsSql": "SELECT\n  CAST(t.TabID AS nvarchar(20)) AS Value,\n  COALESCE(NULLIF(t.TabPath, ''), COALESCE(NULLIF(t.Title, ''), t.TabName)) AS Label\nFROM dbo.Tabs t\nWHERE t.IsDeleted = 0\n  AND t.PortalID = COALESCE(TRY_CONVERT(int, NULLIF(:portalId, '')), (SELECT MIN(PortalID) FROM dbo.Portals))\nORDER BY t.Level, t.TabOrder, t.TabID",
+            "optionsDependsOn": [ "portalId" ],
+            "optionsReloadOnChange": true,
+            "options": []
+          },
+          { "key": "include", "label": "Include", "type": "checkbox", "width": "120px", "defaultValue": false },
+          { "key": "note", "label": "Note", "type": "textarea", "width": "2fr", "placeholder": "Why include this page?" }
+        ],
+        "minRows": 0,
+        "maxRows": 200,
+        "allowReorder": true,
+        "allowDuplicateRows": false,
+        "addRowLabel": "+ Add manual row",
+        "emptyMessage": "Choose a portal to browse DNN pages in read-only mode.",
+        "layout": "grid",
+        "readOnlyMode": true,
+        "dataMode": "sql",
+        "connectionKey": "DashboardDatabase",
+        "databaseType": "SqlServer",
+        "dataSource": "sql",
+        "masterQuery": "SELECT\n  t.TabID AS tabId,\n  COALESCE(NULLIF(t.Title, ''), t.TabName) AS tabName,\n  t.TabPath AS tabPath,\n  t.Level AS tabLevel\nFROM dbo.Tabs t\nWHERE t.IsDeleted = 0\n  AND t.PortalID = COALESCE(TRY_CONVERT(int, NULLIF(:portalId, '')), (SELECT MIN(PortalID) FROM dbo.Portals))\nORDER BY t.Level, t.TabOrder, t.TabID",
+        "queryDependsOn": "portalId",
+        "reloadOnParamChange": true,
+        "pageSize": 10,
+        "displayPreset": "table",
+        "headerTemplate": "",
+        "rowTemplate": "",
+        "customCss": ".mfgr-wrap[data-preset='table'] .mfgr-header-row{background:linear-gradient(180deg,#f8fbff 0%,#eef4ff 100%)}\n.mfgr-wrap[data-preset='table'] .mfgr-th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#475569}\n.mfgr-wrap[data-preset='table'] .mfgr-row:hover .mfgr-row-inner{background:#f8fbff}\n.mfgr-wrap[data-preset='table'] .mfgr-cell{padding:10px 12px}\n.mfgr-wrap[data-preset='table'] .mfgr-pager-summary{font-weight:700;color:#334155}",
+        "pagerPrevLabel": "Prev",
+        "pagerNextLabel": "Next",
+        "pagerSummaryTemplate": "Page {page} / {pages} / {count} rows",
+        "pagerTemplate": "<div class='mfgr-pager-shell'>\n  <div class='mfgr-pager-meta'>{{summary}}</div>\n  <div class='mfgr-pager-actions'>{{prevButton}}{{nextButton}}</div>\n</div>"
+      }
+    }
+  ],
+  "settings": {
+    "theme": "default",
+    "displayOnly": false,
+    "multiPage": false,
+    "customCss": ".mf-form-root { background:#f8fafc; }\n#mf-{{formId}}-tabsGrid, .mf-field-wrap[data-key='tabsGrid'] { margin-top:8px; }\n.mfgr-readonly { padding:8px 10px; border:1px solid #dbe4f0; border-radius:8px; background:#f8fafc; color:#0f172a; min-height:38px; display:flex; align-items:center; }\n#mf-btn-submit-{{formId}} { display:none !important; }",
+    "submitButtonText": "Read-only sample",
+    "successMessage": "Readonly sample.",
+    "formWidth": "100%",
+    "hideHeader": false,
+    "showProgressBar": false
+  },
+  "_template": {
+    "name": "DNN Portal Tabs Grid Readonly Demo",
+    "slug": "dnn-portal-tabs-grid-readonly-demo",
+    "description": "SQL dropdown portal selector cascades into a browse-only Grid Repeater. Rows can page and reload, but row edits and submit are disabled.",
+    "category": "GridRepeater Samples",
+    "icon": "fas fa-table",
+    "version": "01.06.20",
+    "author": "MegaForm built-in sample"
+  }
+}

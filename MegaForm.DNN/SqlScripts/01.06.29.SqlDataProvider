@@ -1,0 +1,60 @@
+-- MegaForm 01.06.29 — CRUD lifecycle hooks (2026-05-31)
+--
+-- Sprint Option A · R2 — adds two tables used by the lifecycle runner:
+--
+--   MF_SubmissionHookErrors — every pre/post hook failure persists here
+--                              so admins can diagnose without scraping logs.
+--                              Indexed by (SubmissionId, HookSlot) for fast
+--                              "what went wrong on submission #1250?" lookups.
+--
+--   MF_FormLifecycleConfig  — denormalised cache of every form's lifecycle
+--                              config so the runner doesn't reparse the form
+--                              SchemaJson on every submit. Auto-refreshed on
+--                              FormController.Save.
+--
+-- Both tables soft-degrade — if absent, the runner just skips hook execution
+-- (so an older Oqtane.Server hitting a freshly-migrated DB doesn't crash).
+
+IF OBJECT_ID('{databaseOwner}{objectQualifier}MF_SubmissionHookErrors', 'U') IS NULL
+BEGIN
+    CREATE TABLE {databaseOwner}{objectQualifier}MF_SubmissionHookErrors (
+        Id              INT IDENTITY(1,1) PRIMARY KEY,
+        SubmissionId    INT           NOT NULL,
+        FormId          INT           NOT NULL,
+        HookSlot        NVARCHAR(40)  NOT NULL,   -- preInsert | postInsert | preUpdate | postUpdate | preDelete | postDelete
+        Scope           NVARCHAR(40)  NOT NULL,   -- form | datagrid:<fieldKey>
+        ConnectionKey   NVARCHAR(120) NULL,
+        SqlText         NVARCHAR(MAX) NULL,       -- the SQL that failed (truncated to 4000 chars by runner)
+        Parameters      NVARCHAR(MAX) NULL,       -- JSON of parameter map at execution time
+        SqlNumber       INT           NULL,       -- SqlException.Number
+        ErrorMessage    NVARCHAR(2000) NOT NULL,
+        FailedOnDate    DATETIME2     NOT NULL CONSTRAINT DF_MF_SubmissionHookErrors_FailedOn DEFAULT SYSUTCDATETIME(),
+        OnFailure       NVARCHAR(20)  NOT NULL CONSTRAINT DF_MF_SubmissionHookErrors_OnFailure DEFAULT 'continue'  -- abort | continue
+    );
+    CREATE INDEX IX_MF_SubmissionHookErrors_SubmissionId
+        ON {databaseOwner}{objectQualifier}MF_SubmissionHookErrors (SubmissionId, HookSlot);
+    CREATE INDEX IX_MF_SubmissionHookErrors_FormId_FailedOn
+        ON {databaseOwner}{objectQualifier}MF_SubmissionHookErrors (FormId, FailedOnDate DESC);
+END;
+GO
+
+IF OBJECT_ID('{databaseOwner}{objectQualifier}MF_FormLifecycleConfig', 'U') IS NULL
+BEGIN
+    CREATE TABLE {databaseOwner}{objectQualifier}MF_FormLifecycleConfig (
+        Id              INT IDENTITY(1,1) PRIMARY KEY,
+        FormId          INT          NOT NULL,
+        Scope           NVARCHAR(120) NOT NULL,  -- 'form' | 'datagrid:<fieldKey>'
+        HookSlot        NVARCHAR(40)  NOT NULL,  -- preInsert | postInsert | ...
+        Enabled         BIT           NOT NULL CONSTRAINT DF_MF_FormLifecycleConfig_Enabled DEFAULT 0,
+        ConnectionKey   NVARCHAR(120) NULL,
+        SqlText         NVARCHAR(MAX) NULL,
+        ParameterMapping NVARCHAR(MAX) NULL,     -- JSON: {":token":"field_key"}
+        OnFailure       NVARCHAR(20)  NOT NULL CONSTRAINT DF_MF_FormLifecycleConfig_OnFailure DEFAULT 'continue',
+        ExecutionOrder  INT           NOT NULL CONSTRAINT DF_MF_FormLifecycleConfig_Order DEFAULT 100,
+        UpdatedOnUtc    DATETIME2     NOT NULL CONSTRAINT DF_MF_FormLifecycleConfig_UpdatedOn DEFAULT SYSUTCDATETIME(),
+        CONSTRAINT UQ_MF_FormLifecycleConfig UNIQUE (FormId, Scope, HookSlot, ExecutionOrder)
+    );
+    CREATE INDEX IX_MF_FormLifecycleConfig_FormId_Slot
+        ON {databaseOwner}{objectQualifier}MF_FormLifecycleConfig (FormId, HookSlot);
+END;
+GO

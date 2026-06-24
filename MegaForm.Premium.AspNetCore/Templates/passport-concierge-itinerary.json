@@ -1,0 +1,211 @@
+{
+  "version": "1.0",
+  "slug": "passport-concierge-itinerary",
+  "title": "Passport Concierge Itinerary Form",
+  "description": "A travel-planning template with passport-book styling and destination vibes.",
+  "category": "events",
+  "icon": "🛂",
+  "submitButtonText": "Plan My Trip",
+  "successMessage": "Your itinerary request is on its way.",
+  "settings": {
+    "theme": "healthcare",
+    "multiPage": true
+  },
+  "fields": [
+    {
+      "key": "sec_trip",
+      "type": "Section",
+      "label": "Traveler Profile",
+      "properties": {
+        "pageBreak": false
+      }
+    },
+    {
+      "key": "row_primary",
+      "type": "Row",
+      "label": "Row Primary",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "traveler_name",
+              "type": "Text",
+              "label": "Traveler Name",
+              "required": true,
+              "placeholder": "Amelia Ross"
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "traveler_email",
+              "type": "Email",
+              "label": "Email",
+              "required": true,
+              "placeholder": "amelia@example.com"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "travel_style",
+      "type": "Select",
+      "label": "Travel Style",
+      "required": true,
+      "options": [
+        {
+          "label": "Adventure",
+          "value": "adventure"
+        },
+        {
+          "label": "Luxury",
+          "value": "luxury"
+        },
+        {
+          "label": "Family",
+          "value": "family"
+        },
+        {
+          "label": "Business",
+          "value": "business"
+        }
+      ]
+    },
+    {
+      "key": "row_trip",
+      "type": "Row",
+      "label": "Row Trip",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "departure_city",
+              "type": "Text",
+              "label": "Departure City",
+              "required": true,
+              "placeholder": "Ho Chi Minh City"
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "destination",
+              "type": "Text",
+              "label": "Destination",
+              "required": true,
+              "placeholder": "Kyoto"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "passport_help",
+      "type": "Radio",
+      "label": "Need visa / passport support?",
+      "options": [
+        {
+          "label": "Yes",
+          "value": "yes"
+        },
+        {
+          "label": "No",
+          "value": "no"
+        }
+      ]
+    },
+    {
+      "key": "passport_details",
+      "type": "Textarea",
+      "label": "Passport or visa notes",
+      "properties": {
+        "rows": 3
+      },
+      "placeholder": "Share passport country, visa concerns, or deadlines."
+    },
+    {
+      "key": "sec_plan",
+      "type": "Section",
+      "label": "Trip Details",
+      "properties": {
+        "pageBreak": true
+      }
+    },
+    {
+      "key": "must_haves",
+      "type": "Textarea",
+      "label": "Must-haves",
+      "properties": {
+        "rows": 4
+      },
+      "placeholder": "Boutique hotels, food tour, kid-friendly stops…"
+    },
+    {
+      "key": "budget_band",
+      "type": "Select",
+      "label": "Budget",
+      "options": [
+        {
+          "label": "Smart value",
+          "value": "value"
+        },
+        {
+          "label": "Comfort",
+          "value": "comfort"
+        },
+        {
+          "label": "Premium",
+          "value": "premium"
+        }
+      ]
+    },
+    {
+      "key": "notes",
+      "type": "Textarea",
+      "label": "Additional notes",
+      "properties": {
+        "rows": 4
+      }
+    }
+  ],
+  "customHtml": "<div class=\"mfp mfp-passport-concierge\"><div class=\"mfp-shell\"><div class=\"passport-cover\"><div class=\"stamp\">EXPLORE</div><h1>{{form:title}}</h1><p>{{form:description}}</p></div><div class=\"passport-pages\"><section class=\"passport-page\">{{field:row_primary}}{{field:travel_style}}{{field:row_trip}}{{field:passport_help}}{{field:passport_details}}</section><section class=\"passport-page alt\">{{field:must_haves}}{{field:budget_band}}{{field:notes}}</section><div class=\"mfp-actions\"><button type=\"submit\">{{form:submit}}</button></div></div></div></div>",
+  "customCss": ".mfp.mfp-passport-concierge{background:linear-gradient(135deg,#0f172a,#1d4ed8 55%,#38bdf8);padding:28px}.mfp-passport-concierge .mfp-shell{max-width:1080px;margin:0 auto;display:grid;grid-template-columns:340px 1fr;gap:22px}.mfp-passport-concierge .passport-cover{background:rgba(15,23,42,.82);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:30px;padding:30px;box-shadow:0 20px 55px rgba(2,6,23,.3)}.mfp-passport-concierge .stamp{display:inline-flex;padding:6px 12px;border:1px dashed rgba(255,255,255,.45);border-radius:999px;font-size:11px;letter-spacing:.14em;margin-bottom:18px}.mfp-passport-concierge h1{margin:0 0 14px;font-size:38px;line-height:1.02}.mfp-passport-concierge p{margin:0;color:#cbd5e1;line-height:1.7}.mfp-passport-concierge .passport-pages{display:grid;gap:18px}.mfp-passport-concierge .passport-page{background:#fff;border-radius:26px;padding:24px;border:1px solid rgba(255,255,255,.7);position:relative}.mfp-passport-concierge .passport-page:before{content:'';position:absolute;inset:14px;border:1px dashed #bfdbfe;border-radius:18px;pointer-events:none}.mfp-passport-concierge .passport-page.alt{background:#eff6ff}.mfp-passport-concierge .mfp-actions button[type=submit]{width:100%;border:none;border-radius:16px;padding:15px 28px;background:#0f172a;color:#fff;font-weight:800}.mfp-passport-concierge .mf-field,.mfp-passport-concierge .mf-row{margin-bottom:14px}@media(max-width:860px){.mfp.mfp-passport-concierge{padding:16px}.mfp-passport-concierge .mfp-shell{grid-template-columns:1fr}}",
+  "rules": [
+    {
+      "id": "passport_details_toggle",
+      "name": "Toggle passport_details",
+      "enabled": true,
+      "priority": 1,
+      "when": {
+        "type": "rule",
+        "field": "passport_help",
+        "operator": "eq",
+        "value": "yes"
+      },
+      "then": [
+        {
+          "id": "passport_details_show",
+          "action": "show",
+          "targetType": "field",
+          "target": "passport_details"
+        }
+      ],
+      "else": [
+        {
+          "id": "passport_details_hide",
+          "action": "hide",
+          "targetType": "field",
+          "target": "passport_details"
+        }
+      ]
+    }
+  ],
+  "workflow": null
+}

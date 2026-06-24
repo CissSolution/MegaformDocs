@@ -1,0 +1,300 @@
+<!--
+  ╔════════════════════════════════════════════════════════════════════════╗
+  ║  Document Exchange — Gmail-style inbox                                  ║
+  ║  Apply to view: document-routing-board (listview wrapper)               ║
+  ║  Badge: DocumentGmailInbox v20260517-01                                 ║
+  ╚════════════════════════════════════════════════════════════════════════╝
+-->
+<style>
+  .mf-gm-d { font-family: 'Google Sans', Roboto, Arial, sans-serif; color: #202124;
+             background: #f6f8fc; height: 760px; max-width: 1320px; margin: 16px auto;
+             border: 1px solid #e1e3e7; border-radius: 8px; overflow: hidden;
+             display: grid; grid-template-rows: 64px 1fr; box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+
+  .mf-gm-d-top { display: flex; align-items: center; height: 64px; padding: 0 16px;
+                 background: #f6f8fc; gap: 12px; border-bottom: 1px solid #ecedef; }
+  .mf-gm-d-top .menu { width: 40px; height: 40px; border-radius: 50%; display: inline-flex;
+                       align-items: center; justify-content: center; color: #5f6368;
+                       font-size: 20px; cursor: pointer; }
+  .mf-gm-d-top .menu:hover { background: #e8eaed; }
+  .mf-gm-d-top .brand { display: flex; align-items: center; gap: 8px; width: 220px;
+                        font-size: 20px; color: #5f6368; font-weight: 400; }
+  .mf-gm-d-top .brand-logo { width: 28px; height: 28px; border-radius: 6px;
+                              background: linear-gradient(135deg,#ea4335,#fbbc04);
+                              display: inline-flex; align-items: center; justify-content: center;
+                              color: #fff; font-weight: 700; font-size: 14px; }
+  .mf-gm-d-top .search { flex: 1; max-width: 720px; height: 44px; background: #eaf1fb;
+                         border-radius: 8px; display: flex; align-items: center;
+                         padding: 0 16px; gap: 12px; color: #5f6368; font-size: 14px; }
+  .mf-gm-d-top .search:focus-within { background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.18); }
+  .mf-gm-d-top .search input { flex: 1; border: 0; outline: 0; background: transparent;
+                                font-size: 16px; color: #202124; }
+  .mf-gm-d-top .gear { width: 40px; height: 40px; border-radius: 50%; display: inline-flex;
+                       align-items: center; justify-content: center; color: #5f6368;
+                       font-size: 18px; cursor: pointer; }
+  .mf-gm-d-top .gear:hover { background: #e8eaed; }
+  .mf-gm-d-top .avatar { width: 32px; height: 32px; border-radius: 50%;
+                         background: linear-gradient(135deg,#ea4335,#fbbc04);
+                         color: #fff; font-weight: 700; display: inline-flex;
+                         align-items: center; justify-content: center; font-size: 14px; }
+
+  .mf-gm-d-body { display: grid; grid-template-columns: 256px 1fr 56px; min-height: 0; }
+
+  .mf-gm-d-side { padding: 8px; overflow-y: auto; border-right: 1px solid #ecedef;
+                  background: #f6f8fc; }
+  .mf-gm-d-side .compose { display: flex; align-items: center; gap: 12px;
+                            padding: 0 24px 0 16px; height: 56px;
+                            background: #fde7e7; border: 0; border-radius: 16px;
+                            font-size: 14px; font-weight: 500; color: #5d1717;
+                            cursor: pointer; margin-bottom: 16px;
+                            box-shadow: 0 1px 2px rgba(0,0,0,.1); }
+  .mf-gm-d-side .compose .plus { font-size: 24px; font-weight: 300; }
+  .mf-gm-d-side .nav { display: flex; align-items: center; height: 32px;
+                       padding: 0 12px 0 26px; border-radius: 0 16px 16px 0;
+                       font-size: 14px; color: #202124; margin: 2px 8px 2px 0; cursor: pointer; }
+  .mf-gm-d-side .nav:hover { background: #ebebeb; }
+  .mf-gm-d-side .nav.active { background: #fadbd8; font-weight: 700; color: #5d1717; }
+  .mf-gm-d-side .nav .ico { width: 22px; margin-right: 14px; color: #5f6368; }
+  .mf-gm-d-side .nav.active .ico { color: #5d1717; }
+  .mf-gm-d-side .lbl-group { padding: 16px 22px 8px; font-size: 12px;
+                              text-transform: uppercase; color: #5f6368;
+                              letter-spacing: .04em; font-weight: 600; }
+  .mf-gm-d-side .nav .count { margin-left: auto; font-size: 11px;
+                               background: #e8eaed; color: #5f6368;
+                               padding: 1px 7px; border-radius: 10px; font-weight: 700; min-width: 18px; text-align: center; }
+  .mf-gm-d-side .nav.active .count { background: #5d1717; color: #fff; }
+  .mf-gm-d-side .nav .count:empty { display: none; }
+
+  .mf-gm-d-main { background: #fff; border-radius: 16px 0 0 0; overflow: hidden;
+                  display: flex; flex-direction: column; min-width: 0; }
+  .mf-gm-d-tools { height: 48px; display: flex; align-items: center;
+                   padding: 0 16px; gap: 4px; border-bottom: 1px solid #f1f3f4; }
+  .mf-gm-d-tools .btn { width: 36px; height: 36px; border-radius: 50%;
+                         display: inline-flex; align-items: center; justify-content: center;
+                         cursor: pointer; color: #5f6368; }
+  .mf-gm-d-tools .btn:hover { background: #f1f3f4; }
+  .mf-gm-d-tools .pager { margin-left: auto; display: inline-flex; align-items: center;
+                          gap: 4px; color: #5f6368; font-size: 12px; }
+
+  .mf-gm-d-list { flex: 1; overflow-y: auto; background: #fff; }
+
+  .mf-gm-row { display: flex; align-items: center; height: 40px; padding: 0 16px;
+                font-size: 14px; cursor: pointer; border-bottom: 1px solid #f1f3f4;
+                background: #fff; }
+  .mf-gm-row.unread { font-weight: 700; }
+  .mf-gm-row.read { background: #f6f8fc; color: #5f6368; font-weight: 400; }
+  .mf-gm-row:hover { box-shadow: inset 0 0 0 1px #dadce0, 0 1px 3px rgba(60,64,67,.18); position: relative; z-index: 2; }
+  .mf-gm-row .cb, .mf-gm-row .star, .mf-gm-row .imp { width: 28px; height: 28px;
+                  display: inline-flex; align-items: center; justify-content: center;
+                  color: #5f6368; flex-shrink: 0; }
+  .mf-gm-row .star { color: #dadce0; }
+  .mf-gm-row .sender { width: 200px; padding: 0 8px; white-space: nowrap;
+                       overflow: hidden; text-overflow: ellipsis; }
+  .mf-gm-row .content { flex: 1; display: flex; align-items: center; overflow: hidden;
+                        padding: 0 8px; gap: 8px; }
+  .mf-gm-row .subject { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mf-gm-row .snippet { color: #5f6368; font-weight: 400; white-space: nowrap;
+                        overflow: hidden; text-overflow: ellipsis; }
+  .mf-gm-row .pill { display: inline-block; padding: 1px 7px; border-radius: 4px;
+                     background: #e8eaed; color: #5f6368; font-size: 11px;
+                     font-weight: 500; margin-right: 6px; }
+  .mf-gm-row .time { width: 90px; text-align: right; font-size: 12px;
+                     color: #5f6368; flex-shrink: 0; }
+
+  .mflv-wrapper-empty { padding: 80px 24px; text-align: center; color: #5f6368;
+                         font-size: 14px; line-height: 1.6; }
+  .mflv-wrapper-empty::before { content: '📂'; display: block; font-size: 48px;
+                                margin-bottom: 12px; opacity: .55; }
+
+  .mf-gm-d-rail { padding: 8px 6px; display: flex; flex-direction: column;
+                  align-items: center; gap: 8px; background: #f6f8fc;
+                  border-left: 1px solid #ecedef; }
+  .mf-gm-d-rail .ico { width: 32px; height: 32px; border-radius: 50%;
+                       background: #fff; display: inline-flex; align-items: center;
+                       justify-content: center; cursor: pointer;
+                       box-shadow: 0 1px 2px rgba(0,0,0,.12); color: #5f6368; }
+  .mf-gm-d-rail .ico:hover { background: #f1f3f4; }
+</style>
+
+<div class="mf-gm-d" data-mf-card-badge="DocumentGmailInbox v20260517-01">
+  <header class="mf-gm-d-top">
+    <span class="menu" title="Menu">≡</span>
+    <div class="brand">
+      <span class="brand-logo">D</span>
+      <span>Document Inbox</span>
+    </div>
+    <div class="search">
+      <span>🔍</span>
+      <input type="search" placeholder="Search documents" />
+      <span>⚙</span>
+    </div>
+    <span class="gear" title="Support">?</span>
+    <span class="gear" title="Settings">⚙</span>
+    <span class="gear" title="Apps">⋮⋮</span>
+    <span class="avatar">H</span>
+  </header>
+
+  <div class="mf-gm-d-body">
+    <aside class="mf-gm-d-side">
+      <button class="compose" type="button" data-mf-act="add"><span class="plus">+</span> New document</button>
+
+      <div class="lbl-group">Calendar</div>
+      <div class="nav" data-mf-date="overdue">   <span class="ico" style="color:#c62828">⚠</span> Overdue <span class="count" data-mf-date-count="overdue"></span></div>
+      <div class="nav" data-mf-date="due-today"> <span class="ico" style="color:#ef6c00">⏰</span> Due today <span class="count" data-mf-date-count="due-today"></span></div>
+      <div class="nav" data-mf-date="due-week">  <span class="ico" style="color:#1565c0">📅</span> Due this week <span class="count" data-mf-date-count="due-week"></span></div>
+      <div class="nav" data-mf-date="recv-today"><span class="ico" style="color:#0f9d58">📥</span> Arrived today <span class="count" data-mf-date-count="recv-today"></span></div>
+
+      <div class="lbl-group">Status</div>
+      <div class="nav active" data-mf-filter="">          <span class="ico">📂</span> All documents</div>
+      <div class="nav" data-mf-filter="Incoming">          <span class="ico">📥</span> Incoming</div>
+      <div class="nav" data-mf-filter="Outgoing">          <span class="ico">📤</span> Outgoing</div>
+      <div class="nav" data-mf-filter="Internal">          <span class="ico">🗂</span> Internal</div>
+      <div class="nav" data-mf-filter="approved">          <span class="ico">✓</span> Approved</div>
+      <div class="nav" data-mf-filter="rejected">          <span class="ico">✗</span> Rejected</div>
+
+      <div class="lbl-group">By department</div>
+      <div class="nav" data-mf-filter="Finance">           <span class="ico">●</span> Finance</div>
+      <div class="nav" data-mf-filter="Human Resources">   <span class="ico">●</span> HR</div>
+      <div class="nav" data-mf-filter="Corporate Affairs"> <span class="ico">●</span> Corporate Affairs</div>
+      <div class="nav" data-mf-filter="Procurement">       <span class="ico">●</span> Procurement</div>
+
+      <div class="lbl-group">By document type</div>
+      <div class="nav" data-mf-filter="Official Letter">   <span class="ico">●</span> Official Letter</div>
+      <div class="nav" data-mf-filter="Circular">          <span class="ico">●</span> Circular</div>
+      <div class="nav" data-mf-filter="Meeting Minutes">   <span class="ico">●</span> Meeting Minutes</div>
+      <div class="nav" data-mf-filter="Decision Notice">   <span class="ico">●</span> Decision Notice</div>
+    </aside>
+
+    <main class="mf-gm-d-main">
+      <div class="mf-gm-d-tools">
+        <span class="btn" title="Select">▢</span>
+        <span class="btn" title="Refresh">⟳</span>
+        <span class="btn" title="More">⋮</span>
+        <div class="pager">
+          <span>Showing latest</span>
+          <span class="btn">‹</span>
+          <span class="btn">›</span>
+        </div>
+      </div>
+      <div class="mf-gm-d-list">
+        {{rows}}
+      </div>
+    </main>
+
+    <aside class="mf-gm-d-rail">
+      <span class="ico" title="Refresh" data-mf-act="refresh">⟳</span>
+      <span class="ico" title="Search"  data-mf-act="focus-search">🔍</span>
+    </aside>
+  </div>
+</div>
+
+<script>
+(function(){
+  // Persist date filter across listview rerenders. The search-text path uses
+  // .mflv-search-input (handled by listview runtime); the date path is purely
+  // DOM-side because the runtime has no date awareness.
+  var dateFilter = window.__mfDocDateFilter || '';
+  window.__mfDocDateFilter = dateFilter;
+
+  function bucketFor(row, today, weekEnd){
+    var due  = row.getAttribute('data-mf-due');
+    var recv = row.getAttribute('data-mf-recv');
+    var dueDate  = due  ? new Date(due  + 'T00:00:00') : null;
+    var recvDate = recv ? new Date(recv + 'T00:00:00') : null;
+    var buckets = [];
+    if (dueDate) {
+      if (dueDate < today) buckets.push('overdue');
+      else if (dueDate.getTime() === today.getTime()) buckets.push('due-today');
+      if (dueDate >= today && dueDate <= weekEnd) buckets.push('due-week');
+    }
+    if (recvDate && recvDate.getTime() === today.getTime()) buckets.push('recv-today');
+    return buckets;
+  }
+
+  function applyDateFilter(){
+    var rows = document.querySelectorAll('.mflv-shell .mf-gm-row');
+    if (!rows.length) return;
+    var today = new Date(); today.setHours(0,0,0,0);
+    var weekEnd = new Date(today.getTime() + 7*24*3600*1000);
+    var counts = { 'overdue': 0, 'due-today': 0, 'due-week': 0, 'recv-today': 0 };
+    rows.forEach(function(row){
+      var b = bucketFor(row, today, weekEnd);
+      b.forEach(function(k){ counts[k] = (counts[k]||0) + 1; });
+      if (!dateFilter) { row.style.display = ''; return; }
+      row.style.display = (b.indexOf(dateFilter) >= 0) ? '' : 'none';
+    });
+    // Update sidebar count badges
+    Object.keys(counts).forEach(function(k){
+      document.querySelectorAll('[data-mf-date-count="' + k + '"]').forEach(function(el){
+        el.textContent = counts[k] > 0 ? String(counts[k]) : '';
+      });
+    });
+  }
+
+  function wireGmail(wrapSelector){
+    var shell = document.querySelector('.mflv-shell');
+    var wrap  = document.querySelector(wrapSelector);
+    if (!shell || !wrap) return;
+    var search = shell.querySelector('.mflv-search-input');
+    var addBtn = shell.querySelector('.mflv-add-btn, [data-mflv-action="add"]');
+    var current = (search && search.value || '').trim();
+
+    // Text-based filters (sidebar nav with data-mf-filter)
+    wrap.querySelectorAll('[data-mf-filter]').forEach(function(nav){
+      nav.style.cursor = 'pointer';
+      var f = (nav.getAttribute('data-mf-filter') || '').trim();
+      if (f === current && !dateFilter) nav.classList.add('active'); else nav.classList.remove('active');
+      nav.addEventListener('click', function(){
+        dateFilter = ''; window.__mfDocDateFilter = '';
+        if (!search) return;
+        search.value = f;
+        search.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+    });
+
+    // Date filters (sidebar nav with data-mf-date)
+    wrap.querySelectorAll('[data-mf-date]').forEach(function(nav){
+      nav.style.cursor = 'pointer';
+      var d = nav.getAttribute('data-mf-date') || '';
+      if (d === dateFilter) nav.classList.add('active'); else nav.classList.remove('active');
+      nav.addEventListener('click', function(){
+        // Toggle: click active again to clear
+        dateFilter = (dateFilter === d) ? '' : d;
+        window.__mfDocDateFilter = dateFilter;
+        // Reset text search so date filter starts from full result set
+        if (search && search.value) {
+          search.value = '';
+          search.dispatchEvent(new Event('input', { bubbles: true }));
+          // listview rerender will fire applyDateFilter via the script re-run
+        } else {
+          // Update active markers + apply now
+          wrap.querySelectorAll('[data-mf-date]').forEach(function(n){
+            n.classList.toggle('active', n.getAttribute('data-mf-date') === dateFilter);
+          });
+          applyDateFilter();
+        }
+      });
+    });
+
+    wrap.querySelectorAll('[data-mf-act="add"]').forEach(function(el){
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', function(){ if (addBtn) addBtn.click(); });
+    });
+    wrap.querySelectorAll('[data-mf-act="refresh"]').forEach(function(el){
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', function(){
+        dateFilter = ''; window.__mfDocDateFilter = '';
+        if (search) search.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+    });
+    wrap.querySelectorAll('[data-mf-act="focus-search"]').forEach(function(el){
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', function(){ if (search) { search.focus(); search.select(); } });
+    });
+
+    // Apply date filter to the freshly rendered rows
+    applyDateFilter();
+  }
+  wireGmail('.mf-gm-d');
+})();
+</script>

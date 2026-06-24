@@ -1,0 +1,36 @@
+@model MegaForm.Sdk.UpdateFormRequest
+@{
+    ViewData["Title"] = "Edit Form";
+}
+
+<h1>Edit Form #@ViewBag.FormId</h1>
+
+<form method="post" asp-action="Edit" asp-route-id="@ViewBag.FormId">
+    @Html.AntiForgeryToken()
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label"></label>
+        <input asp-for="Title" class="form-control" required />
+    </div>
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label"></label>
+        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Status" class="form-label"></label>
+        <select asp-for="Status" class="form-select">
+            <option value="draft">Draft</option>
+            <option value="published">Published</option>
+            <option value="archived">Archived</option>
+        </select>
+    </div>
+    <div class="mb-3">
+        <label asp-for="SchemaJson" class="form-label">Schema JSON</label>
+        <textarea asp-for="SchemaJson" class="form-control" rows="12"></textarea>
+    </div>
+    <div class="mb-3 form-check">
+        <input asp-for="RequireAuth" class="form-check-input" />
+        <label asp-for="RequireAuth" class="form-check-label">Require Authentication</label>
+    </div>
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@ViewBag.FormId">Cancel</a>
+</form>

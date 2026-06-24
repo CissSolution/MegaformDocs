@@ -1,0 +1,338 @@
+@namespace MegaForm.Client
+@implements IDisposable
+@inject IMegaFormService MegaFormService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime Js
+@using System
+@using System.Collections.Generic
+@using System.Linq
+@using System.Text.Json
+@using MegaForm.Oqtane.Shared.Models
+
+@* ── MegaForm Dashboard View ──────────────────────────────────────────────
+   Inline child component rendered inside Index.razor when ?mfpanel=dashboard.
+   Receives primitive context via [Parameter] instead of inheriting ModuleBase.
+   [NoPopupAdmin v20260605-02] Removed fullscreen DOM takeover; now pure inline
+   (2sxc-style — no aggressive modal hiding, no body clone, no MutationObserver).
+   Badge: OQDashboardInline v20260608-B86
+   ──────────────────────────────────────────────────────────────────────── *@
+
+<div id="mf-dashboard-root"
+     data-assets-base="/Modules/MegaForm/"
+     data-api-base="/api/MegaForm/"
+     data-platform="oqtane"
+     data-mf-locale="@(System.Globalization.CultureInfo.CurrentUICulture?.Name ?? "en-US")"
+     data-module-id="@ModuleId"
+     data-portal-id="@SiteId"
+     data-site-id="@SiteId"
+     data-tab-id="@PageId"
+     data-return-url="@_returnUrl"
+     data-dashboard-url="@BuildPanelUrl("dashboard")"
+     data-builder-url="@BuildPanelUrl("builder")"
+     data-submissions-url="@BuildPanelUrl("submissions")"
+     data-myinbox-url="@BuildPanelUrl("myinbox")"
+     data-languages-url="@BuildPanelUrl("languages")"
+     data-dashboard="@_dashboardJson"
+     data-oq-dashboard-shell-badge="@OQ_DASHBOARD_SHELL_BADGE">
+</div>
+<script data-mf-dashboard-static-boot="@OQ_DASHBOARD_SHELL_BADGE">
+    @((MarkupString)BuildStaticDashboardBootScript())
+</script>
+
+@code {
+    [Parameter] public int ModuleId { get; set; }
+    [Parameter] public int PageId { get; set; }
+    [Parameter] public int SiteId { get; set; }
+    [Parameter] public string AuthToken { get; set; } = string.Empty;
+    [Parameter] public bool IsAdmin { get; set; }
+    // [Inline 2026-06-11] When the dashboard is a role-pinned inline surface (not a
+    // full-screen overlay), do NOT lock body scroll — the page must scroll so other
+    // Oqtane modules on the page stay reachable.
+    [Parameter] public bool Inline { get; set; }
+    // [CloseTrap fix 2026-06-11] When the dashboard is shown because the module is pinned to
+    // a ModuleRole (no ?mfpanel=), the current page IS the dashboard — so "Close" must escape
+    // to the Oqtane site home (/) instead of reloading this page (which would re-pin it and
+    // trap the admin). For ?mfpanel= admin nav, ComputeReturnUrl() (strip the panel) is right.
+    [Parameter] public bool RoleDriven { get; set; }
+
+    private string ModulePath() => "Modules/MegaForm/";
+
+    private const string OQ_DASHBOARD_SHELL_BADGE = "OQDashboardInline v20260608-B86";
+
+    private bool _done;
+    private string _dashboardJson = "{}";
+    private string _returnUrl = "/";
+
+    private string ComputeReturnUrl()
+    {
+        try
+        {
+            var uri = NavigationManager?.Uri ?? string.Empty;
+            var noQuery = uri.Split('?')[0].Split('#')[0];
+            var baseUri = new Uri(NavigationManager?.BaseUri ?? "http://localhost/");
+            var origin = baseUri.GetLeftPart(UriPartial.Authority);
+            var path = noQuery.StartsWith(origin, StringComparison.OrdinalIgnoreCase)
+                ? noQuery.Substring(origin.Length)
+                : noQuery;
+            var wildcardIdx = path.LastIndexOf("/*/", StringComparison.Ordinal);
+            var dashboardIdx = path.LastIndexOf("/Dashboard", StringComparison.OrdinalIgnoreCase);
+            if (wildcardIdx > 0 && dashboardIdx > wildcardIdx)
+            {
+                var pagePath = path.Substring(0, wildcardIdx);
+                return string.IsNullOrWhiteSpace(pagePath) ? "/" : pagePath + "?edit=false";
+            }
+            if (dashboardIdx > 0)
+            {
+                var pagePath = path.Substring(0, dashboardIdx);
+                return string.IsNullOrWhiteSpace(pagePath) ? "/" : pagePath + "?edit=false";
+            }
+            return string.IsNullOrWhiteSpace(path) ? "/" : path;
+        }
+        catch { return "/"; }
+    }
+
+    protected override bool ShouldRender() => !_done;
+
+    protected override void OnInitialized()
+    {
+        if (!IsAdmin)
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+        // Role-pinned page → Close escapes to the site home so the admin isn't trapped on
+        // a page that always re-renders the dashboard.
+        _returnUrl = RoleDriven ? "/" : ComputeReturnUrl();
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private bool _navHookDisposed;
+    private async void OnLocationChanged(object sender, LocationChangedEventArgs e)
+    {
+        try { await Js.InvokeVoidAsync("eval", CleanupScript); } catch { }
+    }
+
+    public void Dispose()
+    {
+        if (_navHookDisposed) return;
+        _navHookDisposed = true;
+        try { NavigationManager.LocationChanged -= OnLocationChanged; } catch { }
+        try { _ = Js.InvokeVoidAsync("eval", CleanupScript); } catch { }
+    }
+
+    private const string CleanupScript = @"(function(){
+        document.documentElement.classList.remove('mf-oq-dashboard-active');
+        document.body.classList.remove('mf-oq-dashboard-active');
+        document.body.removeAttribute('data-mf-oq-dashboard-active');
+    })();";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _dashboardJson = await BuildDashboardJsonAsync();
+    }
+
+    private async Task<string> BuildDashboardJsonAsync()
+    {
+        try
+        {
+            var forms = await MegaFormService.ListFormsAsync(0, SiteId, authModuleId: ModuleId) ?? new List<FormDto>();
+            forms = forms.OrderByDescending(f => f.UpdatedOnUtc ?? f.CreatedOnUtc).ThenByDescending(f => f.FormId).ToList();
+
+            var publishedCount = forms.Count(f => string.Equals(f.Status, "Published", StringComparison.OrdinalIgnoreCase));
+
+            var recentSubmissions = new List<object>();
+            var formSubmissions = new Dictionary<int, int>();
+            var submissionsTotal = 0;
+            foreach (var form in forms.Take(8))
+            {
+                try
+                {
+                    var page = await MegaFormService.GetSubmissionsAsync(form.FormId, 0, 6);
+                    if (page?.Items == null) continue;
+                    var count = page.TotalCount > 0 ? page.TotalCount : page.Items.Count;
+                    submissionsTotal += count;
+                    formSubmissions[form.FormId] = count;
+                    foreach (var s in page.Items)
+                    {
+                        recentSubmissions.Add(new
+                        {
+                            submissionId   = s.SubmissionId,
+                            formId         = s.FormId,
+                            formTitle      = form.Title,
+                            submittedOnUtc = s.SubmittedOnUtc.ToString("o"),
+                            status         = s.Status
+                        });
+                    }
+                }
+                catch { }
+            }
+
+            var payload = new
+            {
+                stats = new object[]
+                {
+                    new { label = "Total Forms",       value = forms.Count,          meta = $"{publishedCount} published", icon = "file" },
+                    new { label = "Submissions",       value = submissionsTotal,     meta = "Recent across this site",     icon = "inbox" },
+                    new { label = "Current Form",      value = "—",                  meta = "No form selected",            icon = "fedit" },
+                    new { label = "Platform",          value = "Oqtane",             meta = "Shared dashboard shell",      icon = "db"    }
+                },
+                recentForms = forms.Select(f => new
+                {
+                    formId      = f.FormId,
+                    title       = string.IsNullOrWhiteSpace(f.Title) ? $"Form #{f.FormId}" : f.Title,
+                    status      = string.IsNullOrWhiteSpace(f.Status) ? "Draft" : f.Status,
+                    modified    = (f.UpdatedOnUtc ?? f.CreatedOnUtc).ToString("yyyy-MM-dd HH:mm"),
+                    submissions = formSubmissions.ContainsKey(f.FormId) ? formSubmissions[f.FormId] : 0
+                }).ToArray(),
+                recentSubmissions = recentSubmissions.ToArray(),
+                quickActions = new object[]
+                {
+                    new { title = "New Form",      subtitle = "Create a fresh form",  icon = "plus",      href = BuildPanelUrl("builder") + "&new=1" },
+                    new { title = "Form Builder",  subtitle = "Open builder",         icon = "fedit",     href = BuildPanelUrl("builder") },
+                    new { title = "Submissions",   subtitle = "Review responses",     icon = "inbox",     href = BuildPanelUrl("submissions") }
+                },
+                system = new object[]
+                {
+                    new { key = "Platform",    value = "Oqtane" },
+                    new { key = "Module",      value = "MegaForm" },
+                    new { key = "Status",      value = "Online" }
+                },
+                counts = new { forms = forms.Count, submissions = submissionsTotal },
+                lockedFormIds = (await MegaFormService.GetLockedFormIdsAsync(ModuleId, SiteId)) ?? new List<int>()
+            };
+
+            return JsonSerializer.Serialize(payload);
+        }
+        catch
+        {
+            return "{\"stats\":[],\"recentForms\":[],\"recentSubmissions\":[],\"quickActions\":[],\"system\":[],\"counts\":{}}";
+        }
+    }
+
+    private string BuildPanelUrl(string panel)
+    {
+        var baseUrl = NavigationManager.Uri.Split('?')[0].Split('#')[0];
+        var parts = new List<string>();
+        var editValue = GetQueryValue(NavigationManager.Uri, "edit");
+        if (!string.IsNullOrWhiteSpace(editValue))
+            parts.Add("edit=" + Uri.EscapeDataString(editValue));
+        parts.Add("mfpanel=" + Uri.EscapeDataString(panel));
+        return parts.Count == 0 ? baseUrl : baseUrl + "?" + string.Join("&", parts);
+    }
+
+    private static string GetQueryValue(string uri, string key)
+    {
+        if (string.IsNullOrWhiteSpace(uri) || string.IsNullOrWhiteSpace(key)) return string.Empty;
+        var q = uri.Contains("?") ? uri.Substring(uri.IndexOf('?') + 1) : string.Empty;
+        foreach (var part in q.Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var kv = part.Split('=', 2);
+            if (kv.Length > 0 && kv[0].Equals(key, StringComparison.OrdinalIgnoreCase))
+                return kv.Length > 1 ? Uri.UnescapeDataString(kv[1]) : string.Empty;
+        }
+        return string.Empty;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        _done = true;
+        // Only lock body scroll for the full-screen overlay; inline keeps the page scrollable.
+        if (!Inline)
+        {
+            try { await Js.InvokeVoidAsync("eval", "document.documentElement.classList.add('mf-oq-dashboard-active');document.body.classList.add('mf-oq-dashboard-active');document.body.setAttribute('data-mf-oq-dashboard-active','1');"); } catch { }
+        }
+
+        var tokenJs = string.IsNullOrEmpty(AuthToken) ? "null" : $"'{AuthToken.Replace("'", "\\'")}'";
+        await Js.InvokeVoidAsync("eval",
+            $"window.__MF_PLATFORM__=window.__MF_PLATFORM__||{{}};" +
+            $"window.__MF_PLATFORM__.platform='oqtane';" +
+            $"window.__MF_PLATFORM__.apiBase='/api/MegaForm/';" +
+            $"window.__MF_PLATFORM__.moduleId={ModuleId};" +
+            $"window.__MF_PLATFORM__.portalId={SiteId};" +
+            $"window.__MF_PLATFORM__.siteId={SiteId};" +
+            $"window.__MF_PLATFORM__.pageId={PageId};" +
+            $"window.__MF_PLATFORM__.authToken={tokenJs};" +
+            $"window.__MF_PLATFORM__.dashboardShellBadge='{OQ_DASHBOARD_SHELL_BADGE}';" +
+            $"window.__MF_OQTANE_DASHBOARD_SHELL_BADGE__='{OQ_DASHBOARD_SHELL_BADGE}';");
+
+        var dashboardJson = await BuildDashboardJsonAsync();
+        var jsLiteral = JsonSerializer.Serialize(dashboardJson);
+        await Js.InvokeVoidAsync("eval", $"(function(json){{var o=document.getElementById('mf-dashboard-root');if(o)o.setAttribute('data-dashboard',json);}})({jsLiteral});");
+
+        await Js.InvokeVoidAsync("eval", $@"
+            (function() {{
+                var BADGE = '{OQ_DASHBOARD_SHELL_BADGE}';
+                var root = document.getElementById('mf-dashboard-root');
+                if (!root) return;
+                if (window.MegaForm && typeof window.MegaForm.initDashboard === 'function') {{
+                    try {{
+                        window.MegaForm.initDashboard(root);
+                        root.dataset.booted = '1';
+                    }} catch (e) {{ console.error('[MegaForm] initDashboard failed', e); }}
+                    return;
+                }}
+                if (document.querySelector('script[src*=""megaform-dashboard.js""]')) {{
+                    var attempt = 0;
+                    var timer = setInterval(function() {{
+                        if (window.MegaForm && typeof window.MegaForm.initDashboard === 'function') {{
+                            clearInterval(timer);
+                            try {{
+                                window.MegaForm.initDashboard(root);
+                                root.dataset.booted = '1';
+                            }} catch (e) {{ console.error('[MegaForm] initDashboard failed', e); }}
+                        }}
+                        if (++attempt > 40) clearInterval(timer);
+                    }}, 150);
+                    return;
+                }}
+                var s = document.createElement('script');
+                s.src = '/{ModulePath()}js/megaform-oqtane-auth.js';
+                document.head.appendChild(s);
+                var s2 = document.createElement('script');
+                s2.src = '/{ModulePath()}js/megaform-dashboard.js?v={MegaForm.Oqtane.Shared.MegaFormAssetVersion.Current}';
+                s2.onload = function() {{
+                    var attempt2 = 0;
+                    var timer2 = setInterval(function() {{
+                        if (window.MegaForm && typeof window.MegaForm.initDashboard === 'function') {{
+                            clearInterval(timer2);
+                            try {{
+                                window.MegaForm.initDashboard(root);
+                                root.dataset.booted = '1';
+                            }} catch (e) {{ console.error('[MegaForm] initDashboard failed', e); }}
+                        }}
+                        if (++attempt2 > 40) clearInterval(timer2);
+                    }}, 150);
+                }};
+                document.head.appendChild(s2);
+            }})();
+        ");
+    }
+
+    private string BuildStaticDashboardBootScript()
+    {
+        var version = MegaForm.Oqtane.Shared.MegaFormAssetVersion.Current;
+        return @"(function(){
+  var root = document.getElementById('mf-dashboard-root') || document.getElementById('mf-dash-root');
+  if (!root) return;
+  function mount(){
+    if (root.dataset.booted === '1') return true;
+    if (window.MegaForm && typeof window.MegaForm.initDashboard === 'function') {
+      try { window.MegaForm.initDashboard(root); root.dataset.booted = '1'; }
+      catch (e) { console.error('[MegaForm] initDashboard failed', e); }
+      return true;
+    }
+    return false;
+  }
+  function poll(){ var n=0; var t=setInterval(function(){ if (mount() || ++n>80) clearInterval(t); }, 100); }
+  if (mount()) return;
+  if (!document.querySelector('script[src*=""megaform-oqtane-auth.js""]')) {
+    var a=document.createElement('script'); a.src='/Modules/MegaForm/js/megaform-oqtane-auth.js?v=" + version + @"'; document.head.appendChild(a);
+  }
+  if (!document.querySelector('script[src*=""megaform-dashboard.js""]')) {
+    var s=document.createElement('script'); s.src='/Modules/MegaForm/js/megaform-dashboard.js?v=" + version + @"'; s.onload=poll; document.head.appendChild(s);
+  }
+  poll();
+})();";
+    }
+}

@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net9.0;net10.0</TargetFrameworks>
+    <Version>1.7.15</Version>
+    <Authors>MegaForm Team</Authors>
+    <Company>MegaForm</Company>
+    <Description>MegaForm - Dynamic Form Builder for Oqtane (Shared)</Description>
+    <Product>MegaForm</Product>
+    <AssemblyName>MegaForm.Oqtane.Shared.Oqtane</AssemblyName>
+    <RootNamespace>MegaForm.Shared</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
+  </ItemGroup>
+
+  <!-- [multi-target 20260617] Oqtane per-TFM: 10.x for net10, 6.2.1 (latest .NET 9 line) for net9 -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <PackageReference Include="Oqtane.Shared" Version="10.1.0" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
+    <PackageReference Include="Oqtane.Shared" Version="6.0.1" />
+  </ItemGroup>
+
+</Project>

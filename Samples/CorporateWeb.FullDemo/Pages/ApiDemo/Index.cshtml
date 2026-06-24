@@ -1,0 +1,374 @@
+@page
+@model MegaForm.Samples.CorporateWeb.FullDemo.Pages.ApiDemo.IndexModel
+@{
+    ViewData["Title"] = "API Demo";
+
+    var programCs = @"// Program.cs
+using MegaForm.AspNetCore.Component;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddRazorPages();
+
+// Registers the MegaForm host, database, authentication, APIs and static assets
+builder.AddMegaForm(options =>
+{
+    options.UseSqlite(builder.Configuration.GetConnectionString(""MegaForm""));
+    options.UseMegaFormAuthentication = true;
+    options.UseSetupWizard = false;
+});
+
+var app = builder.Build();
+app.EnsureMegaFormDatabaseReady();
+app.UseMegaForm();
+app.MapRazorPages();
+app.Run();";
+
+    var pageModelCs = @"// Pages/Contact.cshtml.cs
+using MegaForm.Sdk;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+
+namespace MyApp.Pages;
+
+public class ContactModel : PageModel
+{
+    private readonly IMegaFormClient _client;
+
+    public ContactModel(IMegaFormClient client) => _client = client;
+
+    public async Task<IActionResult> OnPostAsync()
+    {
+        var scope = new MegaFormScope { PortalId = 0, UserId = 1 };
+
+        var data = new Dictionary<string, object>
+        {
+            [""full_name""] = Request.Form[""full_name""],
+            [""email""] = Request.Form[""email""],
+            [""category""] = ""general"",
+            [""message""] = Request.Form[""message""],
+            [""terms""] = new[] { ""true"" }
+        };
+
+        // Replace 1 with the real FormId from your admin dashboard
+        var result = await _client.Submissions.SubmitAsync(1, data, scope);
+
+        return result.Success
+            ? RedirectToPage(""/Thanks"")
+            : BadRequest(result.ErrorMessage);
+    }
+}";
+
+    var controllerCs = @"// Controllers/LeadsController.cs
+using MegaForm.Sdk;
+using Microsoft.AspNetCore.Mvc;
+
+namespace MyApp.Controllers;
+
+[ApiController]
+[Route(""api/[controller]"")]
+public class LeadsController : ControllerBase
+{
+    private readonly IMegaFormClient _client;
+
+    public LeadsController(IMegaFormClient client) => _client = client;
+
+    [HttpPost]
+    public async Task<IActionResult> Post([FromBody] LeadDto dto)
+    {
+        var scope = new MegaFormScope { PortalId = 0, UserId = 1 };
+        var data = new Dictionary<string, object>
+        {
+            [""full_name""] = dto.Name,
+            [""email""] = dto.Email,
+            [""message""] = dto.Message,
+            [""terms""] = new[] { ""true"" }
+        };
+
+        var result = await _client.Submissions.SubmitAsync(1, data, scope);
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
+}
+
+public class LeadDto
+{
+    public string Name { get; set; }
+    public string Email { get; set; }
+    public string Message { get; set; }
+}";
+
+    var sdkContactSnippet = @"// Inject IMegaFormClient anywhere after calling builder.AddMegaForm(...)
+public class MyService
+{
+    private readonly IMegaFormClient _client;
+
+    public MyService(IMegaFormClient client)
+    {
+        _client = client;
+    }
+
+    public async Task SubmitContactAsync()
+    {
+        // 1. Scope = portal + user context
+        var scope = new MegaFormScope { PortalId = 0, UserId = 1 };
+
+        // 2. Find the form by title (or hard-code the FormId)
+        var forms = await _client.Forms.ListFormsAsync(
+            new FormQuery { Page = 1, PageSize = 100 }, scope);
+        var form = forms.Items.FirstOrDefault(f => f.Title == ""Contact Us"");
+        if (form == null) return;
+
+        // 3. Build submission data using the exact field names from the schema
+        var data = new Dictionary<string, object>
+        {
+            [""full_name""] = ""Jane Doe"",
+            [""email""] = ""jane@example.com"",
+            [""category""] = ""general"",
+            [""message""] = ""Hello from my project!"",
+            [""preferred_contact""] = new[] { ""email"" },
+            [""terms""] = new[] { ""true"" }
+        };
+
+        // 4. Submit
+        var result = await _client.Submissions.SubmitAsync(form.FormId, data, scope);
+        if (result.Success)
+            Console.WriteLine($""SubmissionId = {result.SubmissionId}"");
+        else
+            Console.WriteLine($""Failed: {result.ErrorMessage}"");
+    }
+}";
+
+    var curlSnippet = @"# 1. Log in to obtain the auth cookie (bash/macOS/Linux)
+curl -c cookies.txt -b cookies.txt \
+  http://localhost:5151/admin/login > login.html
+
+TOKEN=$(grep -o 'value=""[^""]*""' login.html | tail -1 | sed 's/value=""//;s/""$//')
+
+curl -c cookies.txt -b cookies.txt -X POST \
+  http://localhost:5151/admin/login \
+  -d ""usernameOrEmail=admin"" \
+  -d ""password=admin123"" \
+  -d ""__RequestVerificationToken=$TOKEN""
+
+# 2. Submit data to a form (replace 1 with your FormId)
+curl -c cookies.txt -b cookies.txt -X POST \
+  http://localhost:5151/api/MegaForm/Submissions/Submit \
+  -H ""Content-Type: application/json"" \
+  -d '{
+    ""formId"": 1,
+    ""values"": {
+      ""full_name"": ""Jane Doe"",
+      ""email"": ""jane@example.com"",
+      ""category"": ""general"",
+      ""message"": ""Hello from curl!"",
+      ""preferred_contact"": [""email""],
+      ""terms"": [""true""]
+    }
+  }'";
+
+    var jsSnippet = @"// Public form submission from any browser page (no auth required)
+const response = await fetch('/api/MegaForm/Submissions/Submit', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    formId: 1,   // replace with your FormId
+    values: {
+      full_name: 'Jane Doe',
+      email: 'jane@example.com',
+      category: 'general',
+      message: 'Hello from the browser!',
+      preferred_contact: ['email'],
+      terms: ['true']
+    }
+  })
+});
+
+const result = await response.json();
+if (result.success) {
+  console.log('SubmissionId:', result.submissionId);
+} else {
+  console.error('Failed:', result.errorMessage);
+}";
+}
+
+<h1>API Demo</h1>
+<p class="lead">
+    Insert and query MegaForm data from your own code using the SDK or the REST API.
+</p>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-info">@Model.Message</div>
+}
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">
+                Insert Contact Submission
+            </div>
+            <div class="card-body">
+                <p>Create a new "Contact Us" submission from code.</p>
+                <form method="post" asp-page-handler="Contact">
+                    <button type="submit" class="btn btn-primary">Insert Contact</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">
+                Insert Event Registration
+            </div>
+            <div class="card-body">
+                <p>Create a new "Event Registration" submission from code.</p>
+                <form method="post" asp-page-handler="Event">
+                    <button type="submit" class="btn btn-success">Insert Registration</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Copy-paste code samples</h5>
+    </div>
+    <div class="card-body">
+        <p>
+            Each tab below is a complete, runnable snippet. Click <strong>Copy</strong> and paste it
+            directly into your project. The SDK handles routing, validation and serialization for you.
+        </p>
+
+        <ul class="nav nav-tabs" id="apiDemoTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="program-tab" data-bs-toggle="tab" data-bs-target="#program-pane" type="button" role="tab">Program.cs</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="page-tab" data-bs-toggle="tab" data-bs-target="#page-pane" type="button" role="tab">Razor Page</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="controller-tab" data-bs-toggle="tab" data-bs-target="#controller-pane" type="button" role="tab">Controller</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="sdk-tab" data-bs-toggle="tab" data-bs-target="#sdk-pane" type="button" role="tab">C# SDK</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="rest-tab" data-bs-toggle="tab" data-bs-target="#rest-pane" type="button" role="tab">REST (curl)</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="js-tab" data-bs-toggle="tab" data-bs-target="#js-pane" type="button" role="tab">JavaScript</button>
+            </li>
+        </ul>
+
+        <div class="tab-content p-3 border border-top-0 rounded-bottom" id="apiDemoTabContent">
+            <div class="tab-pane fade show active" id="program-pane" role="tabpanel">
+                <p class="text-muted small">
+                    Add this to <code>Program.cs</code>. The package is
+                    <code>MegaForm.AspNetCore.Component</code>; it already references the SDK internally.
+                </p>
+                <div class="position-relative">
+                    <button class="btn btn-sm btn-outline-secondary position-absolute top-0 end-0 m-2" onclick="copyCode('program-code')">Copy</button>
+                    <pre class="bg-light p-3 rounded"><code id="program-code">@programCs</code></pre>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="page-pane" role="tabpanel">
+                <p class="text-muted small">
+                    A complete Razor Page handler. Replace field names and the FormId with values from your own form.
+                </p>
+                <div class="position-relative">
+                    <button class="btn btn-sm btn-outline-secondary position-absolute top-0 end-0 m-2" onclick="copyCode('page-code')">Copy</button>
+                    <pre class="bg-light p-3 rounded"><code id="page-code">@pageModelCs</code></pre>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="controller-pane" role="tabpanel">
+                <p class="text-muted small">
+                    Use this in an ASP.NET Core Web API project to receive data from a SPA or mobile app.
+                </p>
+                <div class="position-relative">
+                    <button class="btn btn-sm btn-outline-secondary position-absolute top-0 end-0 m-2" onclick="copyCode('controller-code')">Copy</button>
+                    <pre class="bg-light p-3 rounded"><code id="controller-code">@controllerCs</code></pre>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="sdk-pane" role="tabpanel">
+                <p class="text-muted small">
+                    Inject <code>IMegaFormClient</code> into any service and submit data with strongly-typed helpers.
+                </p>
+                <div class="position-relative">
+                    <button class="btn btn-sm btn-outline-secondary position-absolute top-0 end-0 m-2" onclick="copyCode('sdk-code')">Copy</button>
+                    <pre class="bg-light p-3 rounded"><code id="sdk-code">@sdkContactSnippet</code></pre>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="rest-pane" role="tabpanel">
+                <p class="text-muted small">
+                    Call MegaForm from a script or another backend. Admin endpoints require the cookie from
+                    <code>/admin/login</code>. On Windows use PowerShell or WSL for the grep/sed helpers.
+                </p>
+                <div class="position-relative">
+                    <button class="btn btn-sm btn-outline-secondary position-absolute top-0 end-0 m-2" onclick="copyCode('rest-code')">Copy</button>
+                    <pre class="bg-light p-3 rounded"><code id="rest-code">@curlSnippet</code></pre>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="js-pane" role="tabpanel">
+                <p class="text-muted small">
+                    Submit from a browser. Public form endpoints do not require authentication.
+                </p>
+                <div class="position-relative">
+                    <button class="btn btn-sm btn-outline-secondary position-absolute top-0 end-0 m-2" onclick="copyCode('js-code')">Copy</button>
+                    <pre class="bg-light p-3 rounded"><code id="js-code">@jsSnippet</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">How to use these samples in your own project</h5>
+    </div>
+    <div class="card-body">
+        <ol class="mb-0">
+            <li>
+                Install the NuGet package:
+                <code>dotnet add package MegaForm.AspNetCore.Component</code>
+            </li>
+            <li>
+                Copy the <strong>Program.cs</strong> snippet to wire up MegaForm.
+            </li>
+            <li>
+                Copy the <strong>Razor Page</strong>, <strong>Controller</strong>, <strong>SDK</strong>,
+                <strong>REST</strong> or <strong>JavaScript</strong> snippet depending on where you want to call MegaForm.
+            </li>
+            <li>
+                Replace the sample <code>FormId</code> and field names with the real values from your form
+                (open <code>/admin</code> to see them).
+            </li>
+            <li>
+                Match field names exactly: dictionary keys must equal the <code>name</code> attributes in your
+                form schema (for example <code>full_name</code>, <code>email</code>, <code>category</code>).
+            </li>
+        </ol>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        async function copyCode(elementId) {
+            const code = document.getElementById(elementId).innerText;
+            try {
+                await navigator.clipboard.writeText(code);
+                const btn = event.target;
+                const original = btn.innerText;
+                btn.innerText = 'Copied!';
+                setTimeout(() => btn.innerText = original, 1500);
+            } catch (err) {
+                alert('Could not copy code: ' + err);
+            }
+        }
+    </script>
+}

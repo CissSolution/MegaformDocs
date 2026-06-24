@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MegaForm</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 16px; }
+    </style>
+</head>
+<body>
+    <div id="megaform-container"></div>
+    <script>
+        // Parse query params
+        var params = new URLSearchParams(window.location.search);
+        var formId = params.get('formId') || params.get('formid') || '1';
+        var server = params.get('server') || window.location.origin;
+        var theme = params.get('theme') || '';
+
+        // Create target div
+        var div = document.createElement('div');
+        div.id = 'megaform-' + formId;
+        document.getElementById('megaform-container').appendChild(div);
+
+        // Load embed script
+        var script = document.createElement('script');
+        script.src = (server.replace(/\/$/, '')) + '/DesktopModules/MegaForm/Assets/js/megaform-embed.js';
+        script.setAttribute('data-form-id', formId);
+        script.setAttribute('data-server', server);
+        if (theme) script.setAttribute('data-theme', theme);
+        document.body.appendChild(script);
+
+        // Auto-resize iframe parent
+        var lastHeight = 0;
+        setInterval(function() {
+            var h = document.body.scrollHeight;
+            if (h !== lastHeight) {
+                lastHeight = h;
+                try { window.parent.postMessage({ type: 'megaform-resize', height: h, formId: formId }, '*'); }
+                catch(e) {}
+            }
+        }, 200);
+    </script>
+</body>
+</html>

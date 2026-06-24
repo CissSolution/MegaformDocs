@@ -60,3 +60,67 @@ _audit_temp/
 Thumbs.db
 .DS_Store
 desktop.ini
+
+# ── [B263 2026-06-24] Track SOURCE only; ignore artifacts/duplicates/QA junk ──
+
+# QA / scratch / screenshots
+tmp-qa/
+qa/
+qa_screenshots/
+_qa_screenshots/
+mock/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+
+# Built JS bundles (output of MegaForm.UI build → Assets/js). Source is MegaForm.UI/src + Assets/ts.
+Assets/js/
+
+# Large self-hosted font binaries (deployment assets, re-mirrored from Google Fonts)
+Assets/fonts/
+
+# Deployed / synced asset copies (BuildTS syncs Assets/ → these; pure duplicates of source)
+MegaForm.Oqtane.Server/wwwroot/Modules/MegaForm/
+MegaForm.Web/wwwroot/megaform/
+MegaForm.Web.Host/wwwroot/megaform/
+DesktopModules/
+
+# Backups, delivery bundles, packaging output
+_mfbackup*/
+_megaform_backup*/
+_mf_*backup*/
+fix21_src/
+CustomerDelivery/
+*.zip
+*.7z
+
+# DB seeds / dumps
+*.sql
+
+# Claude workflow scratch
+.claude-workflows/
+
+# Local DB copies / dumps
+*.db
+*.db-copy
+
+# Root-level scratch: temp files, one-off automation, QA snapshots
+/_tmp_*
+/tmp-*
+/temp_*
+/*.yml
+
+# MegaForm.UI/tools = accumulated one-off i18n/key-extraction dumps (scratch, not build source).
+# The real build scripts live in MegaForm.UI/scripts (build-entry.cjs / build-renderer.cjs).
+MegaForm.UI/tools/
+
+# Source maps (build artifacts)
+*.map
+
+# Synced/built asset copies in other host projects (built from Assets/ by BuildTS — duplicates)
+MegaForm.Umbraco/wwwroot/js/
+MegaForm.Umbraco/wwwroot/css/
+MegaForm.Umbraco/wwwroot/lib/
+MegaForm.Premium.AspNetCore/wwwroot/megaform/

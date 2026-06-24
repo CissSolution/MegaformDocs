@@ -1,0 +1,231 @@
+### YamlMime:ManagedReference
+items:
+- uid: MegaForm.Sdk
+  commentId: N:MegaForm.Sdk
+  id: MegaForm.Sdk
+  children:
+  - MegaForm.Sdk.CreateFormRequest
+  - MegaForm.Sdk.FieldOptionInfo
+  - MegaForm.Sdk.FieldValidationInfo
+  - MegaForm.Sdk.FileDto
+  - MegaForm.Sdk.FormDto
+  - MegaForm.Sdk.FormFieldInfo
+  - MegaForm.Sdk.FormQuery
+  - MegaForm.Sdk.FormSchemaInfo
+  - MegaForm.Sdk.IFileApi
+  - MegaForm.Sdk.IFormApi
+  - MegaForm.Sdk.IMegaFormClient
+  - MegaForm.Sdk.ISchemaApi
+  - MegaForm.Sdk.ISubmissionApi
+  - MegaForm.Sdk.MegaFormClient
+  - MegaForm.Sdk.MegaFormFileContent
+  - MegaForm.Sdk.MegaFormScope
+  - MegaForm.Sdk.MegaFormSdk
+  - MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions
+  - MegaForm.Sdk.PagedResult`1
+  - MegaForm.Sdk.SubmissionDto
+  - MegaForm.Sdk.SubmissionQuery
+  - MegaForm.Sdk.SubmitResult
+  - MegaForm.Sdk.UpdateFormRequest
+  langs:
+  - csharp
+  - vb
+  name: MegaForm.Sdk
+  nameWithType: MegaForm.Sdk
+  fullName: MegaForm.Sdk
+  type: Namespace
+  assemblies:
+  - MegaForm.Sdk
+references:
+- uid: MegaForm.Sdk.MegaFormScope
+  commentId: T:MegaForm.Sdk.MegaFormScope
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.MegaFormScope.html
+  name: MegaFormScope
+  nameWithType: MegaFormScope
+  fullName: MegaForm.Sdk.MegaFormScope
+- uid: MegaForm.Sdk.FormDto
+  commentId: T:MegaForm.Sdk.FormDto
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.FormDto.html
+  name: FormDto
+  nameWithType: FormDto
+  fullName: MegaForm.Sdk.FormDto
+- uid: MegaForm.Sdk.CreateFormRequest
+  commentId: T:MegaForm.Sdk.CreateFormRequest
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.CreateFormRequest.html
+  name: CreateFormRequest
+  nameWithType: CreateFormRequest
+  fullName: MegaForm.Sdk.CreateFormRequest
+- uid: MegaForm.Sdk.FormQuery
+  commentId: T:MegaForm.Sdk.FormQuery
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.FormQuery.html
+  name: FormQuery
+  nameWithType: FormQuery
+  fullName: MegaForm.Sdk.FormQuery
+- uid: MegaForm.Sdk.SubmissionDto
+  commentId: T:MegaForm.Sdk.SubmissionDto
+  href: MegaForm.Sdk.SubmissionDto.html
+  name: SubmissionDto
+  nameWithType: SubmissionDto
+  fullName: MegaForm.Sdk.SubmissionDto
+- uid: MegaForm.Sdk.SubmissionQuery
+  commentId: T:MegaForm.Sdk.SubmissionQuery
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.SubmissionQuery.html
+  name: SubmissionQuery
+  nameWithType: SubmissionQuery
+  fullName: MegaForm.Sdk.SubmissionQuery
+- uid: MegaForm.Sdk.FileDto
+  commentId: T:MegaForm.Sdk.FileDto
+  href: MegaForm.Sdk.FileDto.html
+  name: FileDto
+  nameWithType: FileDto
+  fullName: MegaForm.Sdk.FileDto
+- uid: MegaForm.Sdk.MegaFormFileContent
+  commentId: T:MegaForm.Sdk.MegaFormFileContent
+  href: MegaForm.Sdk.MegaFormFileContent.html
+  name: MegaFormFileContent
+  nameWithType: MegaFormFileContent
+  fullName: MegaForm.Sdk.MegaFormFileContent
+- uid: MegaForm.Sdk.SubmitResult
+  commentId: T:MegaForm.Sdk.SubmitResult
+  href: MegaForm.Sdk.SubmitResult.html
+  name: SubmitResult
+  nameWithType: SubmitResult
+  fullName: MegaForm.Sdk.SubmitResult
+- uid: MegaForm.Sdk.UpdateFormRequest
+  commentId: T:MegaForm.Sdk.UpdateFormRequest
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.UpdateFormRequest.html
+  name: UpdateFormRequest
+  nameWithType: UpdateFormRequest
+  fullName: MegaForm.Sdk.UpdateFormRequest
+- uid: MegaForm.Sdk.PagedResult`1
+  commentId: T:MegaForm.Sdk.PagedResult`1
+  href: MegaForm.Sdk.PagedResult-1.html
+  name: PagedResult<T>
+  nameWithType: PagedResult<T>
+  fullName: MegaForm.Sdk.PagedResult<T>
+  nameWithType.vb: PagedResult(Of T)
+  fullName.vb: MegaForm.Sdk.PagedResult(Of T)
+  name.vb: PagedResult(Of T)
+  spec.csharp:
+  - uid: MegaForm.Sdk.PagedResult`1
+    name: PagedResult
+    href: MegaForm.Sdk.PagedResult-1.html
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: MegaForm.Sdk.PagedResult`1
+    name: PagedResult
+    href: MegaForm.Sdk.PagedResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: MegaForm.Sdk.FormSchemaInfo
+  commentId: T:MegaForm.Sdk.FormSchemaInfo
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.FormSchemaInfo.html
+  name: FormSchemaInfo
+  nameWithType: FormSchemaInfo
+  fullName: MegaForm.Sdk.FormSchemaInfo
+- uid: MegaForm.Sdk.FormFieldInfo
+  commentId: T:MegaForm.Sdk.FormFieldInfo
+  href: MegaForm.Sdk.FormFieldInfo.html
+  name: FormFieldInfo
+  nameWithType: FormFieldInfo
+  fullName: MegaForm.Sdk.FormFieldInfo
+- uid: MegaForm.Sdk.FieldValidationInfo
+  commentId: T:MegaForm.Sdk.FieldValidationInfo
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.FieldValidationInfo.html
+  name: FieldValidationInfo
+  nameWithType: FieldValidationInfo
+  fullName: MegaForm.Sdk.FieldValidationInfo
+- uid: MegaForm.Sdk.FieldOptionInfo
+  commentId: T:MegaForm.Sdk.FieldOptionInfo
+  href: MegaForm.Sdk.FieldOptionInfo.html
+  name: FieldOptionInfo
+  nameWithType: FieldOptionInfo
+  fullName: MegaForm.Sdk.FieldOptionInfo
+- uid: MegaForm.Sdk.IMegaFormClient
+  commentId: T:MegaForm.Sdk.IMegaFormClient
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.IMegaFormClient.html
+  name: IMegaFormClient
+  nameWithType: IMegaFormClient
+  fullName: MegaForm.Sdk.IMegaFormClient
+- uid: MegaForm.Sdk.ISchemaApi
+  commentId: T:MegaForm.Sdk.ISchemaApi
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.ISchemaApi.html
+  name: ISchemaApi
+  nameWithType: ISchemaApi
+  fullName: MegaForm.Sdk.ISchemaApi
+- uid: MegaForm.Sdk.IFileApi
+  commentId: T:MegaForm.Sdk.IFileApi
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.IFileApi.html
+  name: IFileApi
+  nameWithType: IFileApi
+  fullName: MegaForm.Sdk.IFileApi
+- uid: MegaForm.Sdk.IFormApi
+  commentId: T:MegaForm.Sdk.IFormApi
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.IFormApi.html
+  name: IFormApi
+  nameWithType: IFormApi
+  fullName: MegaForm.Sdk.IFormApi
+- uid: MegaForm.Sdk.ISubmissionApi
+  commentId: T:MegaForm.Sdk.ISubmissionApi
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.ISubmissionApi.html
+  name: ISubmissionApi
+  nameWithType: ISubmissionApi
+  fullName: MegaForm.Sdk.ISubmissionApi
+- uid: MegaForm.Sdk.MegaFormClient
+  commentId: T:MegaForm.Sdk.MegaFormClient
+  href: MegaForm.Sdk.MegaFormClient.html
+  name: MegaFormClient
+  nameWithType: MegaFormClient
+  fullName: MegaForm.Sdk.MegaFormClient
+- uid: MegaForm.Sdk.MegaFormSdk
+  commentId: T:MegaForm.Sdk.MegaFormSdk
+  href: MegaForm.Sdk.MegaFormSdk.html
+  name: MegaFormSdk
+  nameWithType: MegaFormSdk
+  fullName: MegaForm.Sdk.MegaFormSdk
+- uid: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions
+  commentId: T:MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions
+  href: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.html
+  name: MegaFormSdkServiceCollectionExtensions
+  nameWithType: MegaFormSdkServiceCollectionExtensions
+  fullName: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions
+- uid: MegaForm.Sdk
+  commentId: N:MegaForm.Sdk
+  href: MegaForm.html
+  name: MegaForm.Sdk
+  nameWithType: MegaForm.Sdk
+  fullName: MegaForm.Sdk
+  spec.csharp:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+  spec.vb:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html

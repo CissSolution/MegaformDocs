@@ -1,0 +1,58 @@
+name: MegaForm SDK CI
+
+# Builds the SDK, runs the contract tests, and packs the NuGet packages on every push/PR.
+# The SDK's public API is locked by Microsoft.CodeAnalysis.PublicApiAnalyzers (RS0016/RS0017
+# treated as errors) — an accidental contract change fails the build here.
+#
+# NOTE: this repo is not yet under git/GitHub at the time of writing. This file is ready for
+# when it is. See Docs/FUTURE_PLAN_MEGAFORM_SDK_AND_DOCS.md §C.
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'MegaForm.Sdk/**'
+      - 'MegaForm.Sdk.Tests/**'
+      - 'MegaForm.Core/**'
+      - '.github/workflows/sdk-ci.yml'
+  pull_request:
+    paths:
+      - 'MegaForm.Sdk/**'
+      - 'MegaForm.Sdk.Tests/**'
+      - 'MegaForm.Core/**'
+
+jobs:
+  build-test-pack:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+
+      - name: Restore
+        run: dotnet restore MegaForm.Sdk/MegaForm.Sdk.csproj
+
+      # Build the SDK — fails on RS0016/RS0017 (undeclared/removed public API).
+      - name: Build SDK (public-API gate)
+        run: dotnet build MegaForm.Sdk/MegaForm.Sdk.csproj -c Release --no-restore
+
+      # Contract tests — behaviour lock.
+      - name: Test
+        run: dotnet test MegaForm.Sdk.Tests/MegaForm.Sdk.Tests.csproj -c Release
+
+      # Pack — fails on binary-breaking changes once a baseline version is set
+      # (EnablePackageValidation in the .csproj).
+      - name: Pack
+        run: dotnet pack MegaForm.Sdk/MegaForm.Sdk.csproj -c Release -o dist/pack
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: megaform-sdk-nupkg
+          path: dist/pack/*.nupkg

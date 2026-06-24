@@ -1,0 +1,262 @@
+/* ============================================================
+   MegaForm Widget: Rich Text Editor (WYSIWYG) v2.0
+   Styles for Quill.js wrapper, status bar, loading state,
+   responsive layout, read-only mode, error states.
+   ============================================================ */
+
+/* ── Wrapper ────────────────────────────────────────────────── */
+.mfw-rte-wrap {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.mfw-rte-wrap:focus-within {
+    border-color: #818cf8;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+.mfw-rte-readonly {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+}
+.mfw-rte-readonly:focus-within {
+    border-color: #e2e8f0;
+    box-shadow: none;
+}
+
+/* ── Label ──────────────────────────────────────────────────── */
+.mfw-rte-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    padding: 12px 14px 6px;
+    line-height: 1.4;
+}
+.mfw-rte-help {
+    font-size: 12px;
+    color: #94a3b8;
+    padding: 0 14px 8px;
+    line-height: 1.4;
+}
+
+/* ── Editor container ───────────────────────────────────────── */
+.mfw-rte-editor-wrap {
+    position: relative;
+}
+.mfw-rte-editor {
+    background: #fff;
+    font-size: 14px;
+    line-height: 1.65;
+    color: #1e293b;
+}
+
+/* ── Quill overrides (snow theme) ───────────────────────────── */
+.mfw-rte-wrap .ql-toolbar {
+    border: none !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    background: #f8fafc;
+    padding: 8px 10px !important;
+}
+.mfw-rte-wrap .ql-toolbar .ql-formats {
+    margin-right: 10px;
+}
+.mfw-rte-wrap .ql-toolbar button {
+    width: 30px;
+    height: 30px;
+    border-radius: 5px;
+    transition: background 0.15s ease;
+}
+.mfw-rte-wrap .ql-toolbar button:hover {
+    background: #e0e7ff;
+}
+.mfw-rte-wrap .ql-toolbar button.ql-active {
+    background: #c7d2fe;
+    color: #4338ca;
+}
+.mfw-rte-wrap .ql-toolbar .ql-picker-label {
+    border-radius: 5px;
+    padding: 2px 6px;
+}
+.mfw-rte-wrap .ql-toolbar .ql-picker-label:hover {
+    background: #e0e7ff;
+}
+.mfw-rte-wrap .ql-container {
+    border: none !important;
+    font-family: inherit;
+}
+.mfw-rte-wrap .ql-editor {
+    padding: 14px 16px;
+    min-height: 120px;
+}
+.mfw-rte-wrap .ql-editor.ql-blank::before {
+    color: #94a3b8;
+    font-style: normal;
+    left: 16px;
+    right: 16px;
+}
+/* Code block styling */
+.mfw-rte-wrap .ql-editor pre.ql-syntax,
+.mfw-rte-wrap .ql-editor code {
+    background: #f1f5f9;
+    border-radius: 4px;
+    font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+    font-size: 13px;
+}
+.mfw-rte-wrap .ql-editor pre.ql-syntax {
+    padding: 12px 16px;
+    margin: 10px 0;
+    border: 1px solid #e2e8f0;
+}
+/* Blockquote */
+.mfw-rte-wrap .ql-editor blockquote {
+    border-left: 3px solid #818cf8;
+    padding-left: 14px;
+    color: #475569;
+    margin: 10px 0;
+}
+/* Images inside editor */
+.mfw-rte-wrap .ql-editor img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+    margin: 8px 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+/* Links */
+.mfw-rte-wrap .ql-editor a {
+    color: #4f46e5;
+    text-decoration: underline;
+    text-decoration-color: #c7d2fe;
+    transition: text-decoration-color 0.15s;
+}
+.mfw-rte-wrap .ql-editor a:hover {
+    text-decoration-color: #4f46e5;
+}
+
+/* ── Read-only mode ─────────────────────────────────────────── */
+.mfw-rte-readonly .ql-editor {
+    background: #f8fafc;
+    cursor: default;
+}
+.mfw-rte-readonly .ql-toolbar {
+    display: none !important;
+}
+
+/* ── Loading state ──────────────────────────────────────────── */
+.mfw-rte-loading {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: rgba(248, 250, 252, 0.95);
+    z-index: 5;
+    font-size: 13px;
+    color: #94a3b8;
+}
+.mfw-rte-loading-spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid #e2e8f0;
+    border-top-color: #818cf8;
+    border-radius: 50%;
+    animation: mfw-rte-spin 0.7s linear infinite;
+}
+@keyframes mfw-rte-spin {
+    to { transform: rotate(360deg); }
+}
+.mfw-rte-error {
+    color: #dc2626;
+    font-size: 13px;
+    padding: 8px 12px;
+    background: #fef2f2;
+    border-radius: 6px;
+    border: 1px solid #fecaca;
+}
+
+/* ── Status bar (word / char count) ─────────────────────────── */
+.mfw-rte-status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 14px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    font-size: 11px;
+    color: #94a3b8;
+    user-select: none;
+}
+.mfw-rte-word-count,
+.mfw-rte-char-count {
+    transition: color 0.2s ease;
+}
+.mfw-rte-char-count.over-limit {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 600px) {
+    .mfw-rte-wrap .ql-toolbar {
+        padding: 6px 6px !important;
+    }
+    .mfw-rte-wrap .ql-toolbar .ql-formats {
+        margin-right: 4px;
+    }
+    .mfw-rte-wrap .ql-toolbar button {
+        width: 26px;
+        height: 26px;
+    }
+    .mfw-rte-wrap .ql-editor {
+        padding: 10px 12px;
+        min-height: 100px;
+        font-size: 14px;
+    }
+    .mfw-rte-label {
+        padding: 10px 12px 4px;
+    }
+    .mfw-rte-status-bar {
+        padding: 5px 10px;
+        font-size: 10px;
+    }
+}
+
+/* ── Tooltip (Quill snow theme integration) ─────────────────── */
+.mfw-rte-wrap .ql-tooltip {
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    padding: 8px 12px;
+    z-index: 100;
+}
+.mfw-rte-wrap .ql-tooltip input[type="text"] {
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 13px;
+}
+.mfw-rte-wrap .ql-tooltip a.ql-action,
+.mfw-rte-wrap .ql-tooltip a.ql-remove {
+    color: #4f46e5;
+    font-size: 12px;
+}
+
+/* ── Print styles ───────────────────────────────────────────── */
+@media print {
+    .mfw-rte-wrap {
+        border: none;
+        box-shadow: none;
+    }
+    .mfw-rte-wrap .ql-toolbar,
+    .mfw-rte-status-bar,
+    .mfw-rte-loading {
+        display: none !important;
+    }
+    .mfw-rte-wrap .ql-editor {
+        padding: 0;
+    }
+}

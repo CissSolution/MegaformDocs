@@ -1,0 +1,428 @@
+{
+  "version": "1.0",
+  "slug": "job-application-rules",
+  "title": "Job Application",
+  "description": "Apply for the role and upload your supporting information.. Demo rule included: choosing the matching option reveals the 'Sponsorship Information' section.",
+  "category": "floating-label",
+  "icon": "sparkles",
+  "submitButtonText": "Submit Application",
+  "successMessage": "Thanks for applying! Our hiring team will review your submission.",
+  "settings": {
+    "theme": "pure-grid-premium",
+    "multiPage": false,
+    "customContent": {
+      "section_one": "Applicant Information",
+      "section_two": "Role Details",
+      "footer_note": "We typically respond within one business day.",
+      "section_three": "Application Materials",
+      "section_four": "Declaration"
+    }
+  },
+  "fields": [
+    {
+      "key": "row_name",
+      "type": "Row",
+      "label": "Name Row",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "first_name",
+              "type": "Text",
+              "label": "First Name",
+              "required": true,
+              "placeholder": " "
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "last_name",
+              "type": "Text",
+              "label": "Last Name",
+              "required": true,
+              "placeholder": " "
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "row_contact",
+      "type": "Row",
+      "label": "Contact Row",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "email",
+              "type": "Email",
+              "label": "Email Address",
+              "required": true,
+              "placeholder": " "
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "phone",
+              "type": "Phone",
+              "label": "Phone Number",
+              "placeholder": " "
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "row_position",
+      "type": "Row",
+      "label": "Position Row",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "position",
+              "type": "Text",
+              "label": "Position Applying For",
+              "required": true,
+              "placeholder": " "
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "employment_type",
+              "type": "Select",
+              "label": "Employment Type",
+              "required": true,
+              "options": [
+                {
+                  "label": "Full-Time",
+                  "value": "full_time"
+                },
+                {
+                  "label": "Part-Time",
+                  "value": "part_time"
+                },
+                {
+                  "label": "Contract",
+                  "value": "contract"
+                },
+                {
+                  "label": "Internship",
+                  "value": "internship"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "row_authorization",
+      "type": "Row",
+      "label": "Authorization Row",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "work_authorization",
+              "type": "Select",
+              "label": "Work Authorization",
+              "required": true,
+              "options": [
+                {
+                  "label": "Authorized to Work",
+                  "value": "authorized"
+                },
+                {
+                  "label": "Need Sponsorship",
+                  "value": "needs_sponsorship"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "willing_relocate",
+              "type": "Select",
+              "label": "Willing to Relocate",
+              "required": true,
+              "options": [
+                {
+                  "label": "Yes",
+                  "value": "yes"
+                },
+                {
+                  "label": "No",
+                  "value": "no"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "row_sponsorship_details",
+      "type": "Row",
+      "label": "Sponsorship Details Row",
+      "columns": [
+        {
+          "span": 12,
+          "fields": [
+            {
+              "key": "sponsorship_details",
+              "type": "Textarea",
+              "label": "Sponsorship Details",
+              "placeholder": " ",
+              "properties": {
+                "rows": 3
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "row_preferred_locations",
+      "type": "Row",
+      "label": "Preferred Locations Row",
+      "columns": [
+        {
+          "span": 12,
+          "fields": [
+            {
+              "key": "preferred_locations",
+              "type": "Textarea",
+              "label": "Preferred Locations",
+              "placeholder": " ",
+              "properties": {
+                "rows": 3
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "row_resume",
+      "type": "Row",
+      "label": "Resume Row",
+      "columns": [
+        {
+          "span": 12,
+          "fields": [
+            {
+              "key": "resume",
+              "type": "File",
+              "label": "Resume",
+              "required": true,
+              "fileSettings": {
+                "maxSizeMB": 10,
+                "maxFiles": 1,
+                "allowedExtensions": [
+                  ".pdf",
+                  ".doc",
+                  ".docx"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "row_experience",
+      "type": "Row",
+      "label": "Relevant Experience Row",
+      "columns": [
+        {
+          "span": 12,
+          "fields": [
+            {
+              "key": "experience",
+              "type": "Textarea",
+              "label": "Relevant Experience",
+              "required": true,
+              "placeholder": " ",
+              "properties": {
+                "rows": 5
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "row_consent",
+      "type": "Row",
+      "label": "Application Consent Row",
+      "columns": [
+        {
+          "span": 12,
+          "fields": [
+            {
+              "key": "consent",
+              "type": "Checkbox",
+              "label": "Application Consent",
+              "required": true,
+              "options": [
+                {
+                  "label": "I confirm the information provided is accurate",
+                  "value": "agreed"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "conditional_section_heading",
+      "type": "Html",
+      "htmlContent": "<div class='mfp-section-label'>Sponsorship Information</div>"
+    },
+    {
+      "key": "conditional_reference",
+      "type": "Text",
+      "label": "Sponsorship Type",
+      "placeholder": " "
+    },
+    {
+      "key": "conditional_followup_date",
+      "type": "Date",
+      "label": "Requested Start Date"
+    },
+    {
+      "key": "conditional_notes",
+      "type": "Textarea",
+      "label": "Tell us about sponsorship requirements",
+      "placeholder": " ",
+      "properties": {
+        "rows": 3
+      }
+    }
+  ],
+  "customHtml": "<div class='mfp mfp-pure-grid'><div class='mfp-container'><div class='mfp-card'><div class='mfp-card-header'><h1 class='mfp-form-title'>{{form:title}}</h1><p class='mfp-form-desc'>{{form:description}}</p></div><div class='mfp-card-body'><div class='mfp-section'><div class='mfp-section-label'>{{content:section_one}}</div>{{field:row_name}}{{field:row_contact}}</div><div class='mfp-section'><div class='mfp-section-label'>{{content:section_two}}</div>{{field:row_position}}{{field:row_authorization}}{{field:row_sponsorship_details}}{{field:row_preferred_locations}}</div><div class='mfp-section'><div class='mfp-section-label'>{{content:section_three}}</div>{{field:row_resume}}{{field:row_experience}}</div><div class='mfp-section mfp-section--compact'><div class='mfp-section-label'>{{content:section_four}}</div>{{field:row_consent}}</div>{{field:conditional_section_heading}}{{field:conditional_reference}}{{field:conditional_followup_date}}{{field:conditional_notes}}<div class='mfp-actions'><button type='submit' class='mfp-submit'>{{form:submit}}</button></div></div><div class='mfp-card-footer'><p>{{content:footer_note}}</p></div></div></div></div>",
+  "customCss": "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');:root{--fl-primary:#003087;--fl-dark:#002060;--fl-light:#0055b3;--fl-bg:#f5f6f8;--fl-card:#ffffff;--fl-text:#1a1a1a;--fl-muted:#6b7280;--fl-border:#e4e4e4;--fl-border-focus:var(--fl-primary);--fl-section:#003087;--fl-radius:4px;--fl-radius-lg:8px;--fl-shadow:0 4px 24px rgba(0,0,0,0.08);--fl-font:'Inter',system-ui,sans-serif;}.mfp.mfp-pure-grid{font-family:var(--fl-font);color:var(--fl-text);background:var(--fl-bg);min-height:100vh;line-height:1.6;display:flex;align-items:flex-start;justify-content:center;padding:32px 16px 48px;}.mfp-container{max-width:680px;width:100%;margin:0 auto}.mfp-card{background:var(--fl-card);border-radius:var(--fl-radius-lg);box-shadow:var(--fl-shadow);overflow:hidden;border:1px solid rgba(0,0,0,0.06);}.mfp-card-header{padding:28px 36px 24px;text-align:center;border-bottom:1px solid var(--fl-border)}.mfp-form-title{font-size:24px;font-weight:700;color:var(--fl-text);margin:0 0 6px}.mfp-form-desc{font-size:14px;color:var(--fl-muted);margin:0}.mfp-card-body{padding:28px 36px 32px}.mfp-card-footer{padding:14px 36px;background:#f8f9fb;border-top:1px solid var(--fl-border);text-align:center}.mfp-card-footer p{margin:0;font-size:12px;color:var(--fl-muted)}.mfp-section{margin-bottom:24px}.mfp-section--compact{margin-bottom:16px}.mfp-section-label{font-size:11px;font-weight:700;color:var(--fl-section);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;padding-bottom:8px;border-bottom:1.5px solid var(--fl-primary);}.mfp-pure-grid .mf-row{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}.mfp-pure-grid .mf-col-6{grid-column:span 6}.mfp-pure-grid .mf-col-12{grid-column:span 12}.mfp.mfp-pure-grid .mf-field-group{position:relative!important;margin-bottom:12px;}.mfp.mfp-pure-grid .mf-row .mf-field-group{margin-bottom:0}.mfp.mfp-pure-grid .mf-field-label{position:absolute!important;left:14px;top:50%;transform:translateY(-50%);font-size:14px;font-weight:400;color:var(--fl-muted);pointer-events:none;transition:top .12s ease,font-size .12s ease,color .12s ease,transform .12s ease,font-weight .12s ease;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:88%;z-index:1;}.mfp.mfp-pure-grid .mf-input{width:100%;height:56px;padding:22px 14px 6px!important;font-size:15px;font-family:var(--fl-font);color:var(--fl-text);background:var(--fl-card);border:1px solid var(--fl-border)!important;border-radius:var(--fl-radius)!important;outline:none;box-sizing:border-box;transition:border-color .15s,box-shadow .15s;}.mfp.mfp-pure-grid .mf-input:focus{border-color:var(--fl-border-focus)!important;box-shadow:0 0 0 3px rgba(0,0,0,0.06)!important;}.mfp.mfp-pure-grid .mf-input::placeholder{color:transparent}.mfp.mfp-pure-grid .mf-select{width:100%;height:56px;padding:22px 40px 6px 14px!important;font-size:15px;font-family:var(--fl-font);color:var(--fl-text);background:var(--fl-card);border:1px solid var(--fl-border)!important;border-radius:var(--fl-radius)!important;appearance:none;cursor:pointer;outline:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E\");background-position:right 14px center;background-repeat:no-repeat;background-size:18px;transition:border-color .15s,box-shadow .15s;}.mfp.mfp-pure-grid .mf-select:focus{border-color:var(--fl-border-focus)!important;box-shadow:0 0 0 3px rgba(0,0,0,0.06)!important;}.mfp.mfp-pure-grid .mf-textarea{width:100%;padding:28px 14px 10px!important;font-size:15px;font-family:var(--fl-font);color:var(--fl-text);background:var(--fl-card);border:1px solid var(--fl-border)!important;border-radius:var(--fl-radius)!important;outline:none;resize:vertical;min-height:100px;transition:border-color .15s,box-shadow .15s;}.mfp.mfp-pure-grid .mf-textarea:focus{border-color:var(--fl-border-focus)!important;box-shadow:0 0 0 3px rgba(0,0,0,0.06)!important;}.mfp.mfp-pure-grid .mf-field-group:has(.mf-input:focus) .mf-field-label,.mfp.mfp-pure-grid .mf-field-group:has(.mf-input:not(:placeholder-shown)) .mf-field-label,.mfp.mfp-pure-grid .mf-field-group:has(.mf-select) .mf-field-label,.mfp.mfp-pure-grid .mf-field-group:has(.mf-textarea:focus) .mf-field-label,.mfp.mfp-pure-grid .mf-field-group:has(.mf-textarea:not(:placeholder-shown)) .mf-field-label{top:8px!important;transform:none!important;font-size:11px!important;font-weight:600!important;color:var(--fl-primary)!important;}.mfp.mfp-pure-grid .mf-field-group:has(.mf-textarea) .mf-field-label{top:16px;transform:none;}.mfp.mfp-pure-grid .mf-option-group{display:flex;flex-direction:column;gap:8px}.mfp.mfp-pure-grid .mf-option-item{display:flex!important;align-items:flex-start;gap:10px;padding:12px 14px;background:#f8f9fb;border:1px solid var(--fl-border);border-radius:var(--fl-radius);cursor:pointer;transition:border-color .15s;}.mfp.mfp-pure-grid .mf-option-item:hover{border-color:var(--fl-light)}.mfp.mfp-pure-grid .mf-option-control{display:none!important}.mfp.mfp-pure-grid .mf-option-item::before{content:'';width:16px;height:16px;min-width:16px;border:2px solid #d1d5db;border-radius:3px;margin-top:1px;transition:all .15s;flex-shrink:0;}.mfp.mfp-pure-grid .mf-option-item:has(.mf-option-control:checked){border-color:var(--fl-primary);background:rgba(0,0,0,.02);}.mfp.mfp-pure-grid .mf-option-item:has(.mf-option-control:checked)::before{background:var(--fl-primary);border-color:var(--fl-primary);background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:center;}.mfp.mfp-pure-grid .mf-option-ui{flex:1}.mfp.mfp-pure-grid .mf-option-label{font-size:13px;color:var(--fl-text);line-height:1.4}.mfp.mfp-pure-grid .mf-field-group:has(.mf-option-group) .mf-field-label{display:none}.mfp.mfp-pure-grid .mf-required{color:#dc2626}.mfp-actions{margin-top:8px}.mfp-submit{width:100%;padding:15px 32px;font-size:15px;font-weight:600;font-family:var(--fl-font);color:#fff;background:#003087;border:none;border-radius:var(--fl-radius);cursor:pointer;transition:all .2s;letter-spacing:.02em;}.mfp-submit:hover{background:#002060;transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.2)}@media(max-width:600px){.mfp.mfp-pure-grid{padding:0}.mfp-card{border-radius:0;border:none}.mfp-card-header,.mfp-card-body{padding:20px}.mfp-card-footer{padding:12px 20px}.mfp-pure-grid .mf-col-6,.mfp-pure-grid .mf-col-12{grid-column:span 12}}",
+  "rules": [
+    {
+      "id": "definition_conditional_section",
+      "name": "Show Sponsorship Information",
+      "enabled": true,
+      "priority": 1,
+      "when": {
+        "id": "group_conditional_section",
+        "type": "group",
+        "logic": "all",
+        "children": [
+          {
+            "id": "rule_conditional_section",
+            "type": "rule",
+            "field": "work_authorization",
+            "operator": "eq",
+            "value": "needs_sponsorship"
+          }
+        ]
+      },
+      "then": [
+        {
+          "id": "t1",
+          "action": "show",
+          "targetType": "field",
+          "target": "conditional_section_heading"
+        },
+        {
+          "id": "t2",
+          "action": "show",
+          "targetType": "field",
+          "target": "conditional_reference"
+        },
+        {
+          "id": "t3",
+          "action": "show",
+          "targetType": "field",
+          "target": "conditional_followup_date"
+        },
+        {
+          "id": "t4",
+          "action": "show",
+          "targetType": "field",
+          "target": "conditional_notes"
+        },
+        {
+          "id": "t5",
+          "action": "require",
+          "targetType": "field",
+          "target": "conditional_notes"
+        }
+      ],
+      "else": [
+        {
+          "id": "e1",
+          "action": "hide",
+          "targetType": "field",
+          "target": "conditional_section_heading"
+        },
+        {
+          "id": "e2",
+          "action": "hide",
+          "targetType": "field",
+          "target": "conditional_reference"
+        },
+        {
+          "id": "e3",
+          "action": "hide",
+          "targetType": "field",
+          "target": "conditional_followup_date"
+        },
+        {
+          "id": "e4",
+          "action": "hide",
+          "targetType": "field",
+          "target": "conditional_notes"
+        },
+        {
+          "id": "e5",
+          "action": "optional",
+          "targetType": "field",
+          "target": "conditional_notes"
+        },
+        {
+          "id": "e6",
+          "action": "clear",
+          "targetType": "field",
+          "target": "conditional_reference"
+        },
+        {
+          "id": "e7",
+          "action": "clear",
+          "targetType": "field",
+          "target": "conditional_followup_date"
+        },
+        {
+          "id": "e8",
+          "action": "clear",
+          "targetType": "field",
+          "target": "conditional_notes"
+        }
+      ]
+    }
+  ],
+  "workflow": null
+}

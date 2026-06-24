@@ -1,0 +1,75 @@
+@model MegaForm.Sdk.FormDto
+@{
+    ViewData["Title"] = Model.Title;
+    var schema = ViewBag.Schema as MegaForm.Sdk.FormSchemaInfo;
+    var result = ViewBag.SubmitResult as MegaForm.Sdk.SubmitResult;
+}
+
+<h1>@Model.Title</h1>
+<p class="text-muted">@Model.Description</p>
+
+@if (result != null)
+{
+    <div class="alert @(result.Success ? "alert-success" : "alert-danger")" role="alert">
+        @(result.Success ? result.SuccessMessage : result.ErrorMessage)
+        @if (result.ValidationErrors?.Count > 0)
+        {
+            <ul>
+                @foreach (var err in result.ValidationErrors)
+                {
+                    <li>@err.Key: @string.Join(", ", err.Value)</li>
+                }
+            </ul>
+        }
+    </div>
+}
+
+<form method="post" asp-action="Submit" asp-route-id="@Model.FormId">
+    @Html.AntiForgeryToken()
+    @if (schema?.Fields != null)
+    {
+        @foreach (var field in schema.Fields)
+        {
+            <div class="mb-3">
+                <label for="@field.Key" class="form-label">@field.Label</label>
+                @if (field.Type == "textarea")
+                {
+                    <textarea id="@field.Key" name="values[@field.Key]" class="form-control" @(field.Required ? "required" : "")></textarea>
+                }
+                else if (field.Type == "select" && field.Options != null)
+                {
+                    <select id="@field.Key" name="values[@field.Key]" class="form-select" @(field.Required ? "required" : "")>
+                        @foreach (var opt in field.Options)
+                        {
+                            <option value="@opt.Value">@opt.Label</option>
+                        }
+                    </select>
+                }
+                else if (field.Type == "checkbox")
+                {
+                    <input type="checkbox" id="@field.Key" name="values[@field.Key]" class="form-check-input" value="true" />
+                }
+                else
+                {
+                    <input type="@GetInputType(field.Type)" id="@field.Key" name="values[@field.Key]" class="form-control" @(field.Required ? "required" : "") />
+                }
+                @if (!string.IsNullOrEmpty(field.HelpText))
+                {
+                    <div class="form-text">@field.HelpText</div>
+                }
+            </div>
+        }
+    }
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+@functions {
+    string GetInputType(string type) => type?.ToLowerInvariant() switch
+    {
+        "email" => "email",
+        "number" => "number",
+        "date" => "date",
+        "password" => "password",
+        _ => "text"
+    };
+}

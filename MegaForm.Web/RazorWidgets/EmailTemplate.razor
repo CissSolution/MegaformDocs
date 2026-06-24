@@ -1,0 +1,77 @@
+@*
+    EmailTemplate — Razor-rendered HTML email body. Designed to feed the
+    MegaForm autoresponder / webhook payload, NOT to be embedded in the
+    live form view. Renders against either SqlRows or a single
+    submission row (passed through ExtraParameters["Submission"]).
+
+    Default widgetProps:
+      {
+        "template": "EmailTemplate",
+        "parameters": {
+          "subject":  "Booking confirmation",
+          "greeting": "Hi {{Name}},",
+          "body":     "Your booking on {{Date}} is confirmed.",
+          "footer":   "MegaForm Team"
+        }
+      }
+*@
+@using MegaForm.Razor
+@inherits MfRazorWidgetBase
+@attribute [RazorTemplate("EmailTemplate", Category = "Email", Icon = "fa-envelope-open-text", WhenToUse = "Compose the HTML body of an autoresponder / digest email. Tokens like {{Name}} pull from the SQL row or submission.", Description = "Razor-rendered HTML email body for the autoresponder / webhook flow.", SupportsSql = true, EmitsValue = false)]
+@using System.Linq
+@using MegaForm.Core.Interfaces
+
+@code {
+    [Parameter, RazorParam(Label = "Subject", Group = "Header", Widget = "text", Required = true, Order = 10, Placeholder = "Booking confirmation")]
+    public string Subject  { get; set; } = "";
+
+    [Parameter, RazorParam(Label = "Greeting", Group = "Body", Widget = "text", Order = 20, Placeholder = "Hi {{Name}},")]
+    public string Greeting { get; set; } = "Hi,";
+
+    [Parameter, RazorParam(Label = "Body", Group = "Body", Widget = "textarea", Required = true, Order = 30, Placeholder = "Your booking on {{Date}} is confirmed.")]
+    public string Body     { get; set; } = "";
+
+    [Parameter, RazorParam(Label = "Footer", Group = "Footer", Widget = "text", Order = 40, Placeholder = "MegaForm Team")]
+    public string Footer   { get; set; } = "";
+
+    [Parameter, RazorParam(Label = "Accent color", Group = "Style", Widget = "color", Order = 50)]
+    public string AccentColor { get; set; } = "#7c3aed";
+
+    private Dictionary<string, string> _tokens = new();
+
+    protected override void OnParametersSet()
+    {
+        // Pull tokens from the first SQL row (when used as a digest email)
+        // or from FormContext (for per-submission emails).
+        if (SqlRows != null)
+        {
+            var first = SqlRows.Cast<object>().FirstOrDefault();
+            if (first is IDictionary<string, object> d)
+            {
+                foreach (var kv in d) _tokens[kv.Key] = Convert.ToString(kv.Value) ?? "";
+            }
+        }
+    }
+
+    private string Replace(string s)
+    {
+        if (string.IsNullOrEmpty(s)) return "";
+        foreach (var kv in _tokens)
+            s = s.Replace("{{" + kv.Key + "}}", kv.Value);
+        return s;
+    }
+}
+
+<div class="mf-razor-email" style="max-width:600px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">
+    <div style="background:@AccentColor;padding:18px 22px;color:#fff">
+        <div style="font-size:18px;font-weight:700">@Subject</div>
+    </div>
+    <div style="padding:24px 22px;color:#0f172a;font-size:14px;line-height:1.55">
+        <div style="margin-bottom:10px">@Replace(Greeting)</div>
+        <div style="white-space:pre-wrap">@Replace(Body)</div>
+    </div>
+    @if (!string.IsNullOrEmpty(Footer))
+    {
+        <div style="padding:12px 22px;background:#f8fafc;color:#64748b;font-size:12px;border-top:1px solid #e2e8f0">@Replace(Footer)</div>
+    }
+</div>

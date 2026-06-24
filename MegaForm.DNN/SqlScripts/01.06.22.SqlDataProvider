@@ -1,0 +1,37 @@
+-- MegaForm 01.06.22 - Blog Publish & Analytics Scheduler Registration
+-- Registers the DNN scheduled task for blog post publishing and analytics rollup.
+
+IF NOT EXISTS (SELECT 1 FROM Schedule WHERE TypeFullName = 'MegaForm.DNN.Services.BlogScheduledPublishTask, MegaForm.DNN')
+BEGIN
+    INSERT INTO Schedule (
+        TypeFullName,
+        TimeLapse,
+        TimeLapseMeasurement,
+        RetryTimeLapse,
+        RetryTimeLapseMeasurement,
+        RetainHistoryNum,
+        AttachToEvent,
+        CatchUpEnabled,
+        Enabled,
+        ObjectDependencies,
+        Servers,
+        FriendlyName
+    )
+    VALUES (
+        'MegaForm.DNN.Services.BlogScheduledPublishTask, MegaForm.DNN',
+        5,
+        'm',
+        2,
+        'm',
+        10,
+        '',
+        0,
+        1,
+        '',
+        NULL,
+        'MegaForm Blog Publish & Analytics'
+    );
+END
+GO
+
+PRINT 'MegaForm 01.06.22 - Blog scheduler registered.';

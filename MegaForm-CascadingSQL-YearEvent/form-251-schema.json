@@ -1,0 +1,88 @@
+﻿{
+    "fields":  [
+                   {
+                       "key":  "name",
+                       "type":  "Text",
+                       "label":  "Your name",
+                       "required":  true,
+                       "width":  "Full"
+                   },
+                   {
+                       "key":  "year",
+                       "type":  "Select",
+                       "label":  "Event year",
+                       "required":  true,
+                       "width":  "Half",
+                       "options":  [
+                                       {
+                                           "value":  "",
+                                           "label":  "-- choose --"
+                                       },
+                                       {
+                                           "value":  "2024",
+                                           "label":  "2024"
+                                       },
+                                       {
+                                           "value":  "2025",
+                                           "label":  "2025"
+                                       },
+                                       {
+                                           "value":  "2026",
+                                           "label":  "2026"
+                                       }
+                                   ]
+                   },
+                   {
+                       "key":  "event",
+                       "type":  "Select",
+                       "label":  "Event (cascading SQL)",
+                       "required":  true,
+                       "width":  "Half",
+                       "options":  [
+                                       {
+                                           "value":  "",
+                                           "label":  "-- pick a year first --"
+                                       }
+                                   ],
+                       "properties":  {
+                                          "optionsSource":  "sql",
+                                          "optionsType":  "sql",
+                                          "optionsConnectionKey":  "DashboardDatabase",
+                                          "optionsDatabaseType":  "SqlServer",
+                                          "optionsSql":  "SELECT EventId, EventName + COALESCE(\u0027 (\u0027 + City + \u0027)\u0027, \u0027\u0027) FROM dbo.MegaForm_Sample_Events WHERE EventYear = :year ORDER BY EventDate",
+                                          "optionsDependsOn":  [
+                                                                   "year"
+                                                               ],
+                                          "optionsReloadOnChange":  true
+                                      }
+                   },
+                   {
+                       "key":  "eventSproc",
+                       "type":  "Select",
+                       "label":  "Event (cascading via stored proc)",
+                       "required":  false,
+                       "width":  "Full",
+                       "options":  [
+                                       {
+                                           "value":  "",
+                                           "label":  "-- pick a year first --"
+                                       }
+                                   ],
+                       "properties":  {
+                                          "optionsSource":  "sql",
+                                          "optionsType":  "storedproc",
+                                          "optionsConnectionKey":  "DashboardDatabase",
+                                          "optionsDatabaseType":  "SqlServer",
+                                          "optionsSql":  "spMegaForm_Sample_GetEventsByYear",
+                                          "optionsDependsOn":  [
+                                                                   "year"
+                                                               ],
+                                          "optionsReloadOnChange":  true
+                                      }
+                   }
+               ],
+    "settings":  {
+                     "displayOnly":  false,
+                     "multiPage":  false
+                 }
+}

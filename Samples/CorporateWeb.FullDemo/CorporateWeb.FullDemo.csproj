@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>MegaForm.Samples.CorporateWeb.FullDemo</RootNamespace>
+    <AssemblyName>MegaForm.Samples.CorporateWeb.FullDemo</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MegaForm.AspNetCore.Component" Version="0.2.1-preview" />
+    <PackageReference Include="MegaForm.Premium.AspNetCore" Version="0.2.1-preview" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="App_Data\**" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

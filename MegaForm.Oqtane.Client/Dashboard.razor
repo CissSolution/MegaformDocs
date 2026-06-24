@@ -1,0 +1,19 @@
+@namespace MegaForm.Client
+@inherits ModuleBase
+@inject NavigationManager NavigationManager
+
+@* Backward-compat redirect shell.
+   Dashboard now renders inline inside Index.razor via ?mfpanel=dashboard.
+   [NoPopupAdmin v20260605-02] forceLoad so Oqtane modal breaks out to full page.
+   Badge: OQDashboardRedirect v20260605-02
+*@
+@code {
+    protected override void OnInitialized()
+    {
+        var uri = NavigationManager.Uri;
+        var baseUrl = uri.Split('?')[0].Split('#')[0];
+        baseUrl = System.Text.RegularExpressions.Regex.Replace(
+            baseUrl, @"/Dashboard$", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        NavigationManager.NavigateTo(baseUrl + "?mfpanel=dashboard", forceLoad: true);
+    }
+}

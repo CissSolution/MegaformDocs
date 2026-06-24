@@ -1,0 +1,98 @@
+/* MegaForm DynamicLabel Widget v20260525-01 */
+.mfw-dynamic-label-wrap {
+  display: block;
+  width: 100%;
+}
+
+.mfw-dynamic-label-content {
+  min-height: 1px;
+}
+
+.mfw-dynamic-label-content.is-loading {
+  opacity: .68;
+}
+
+.mf-dynamic-label-note {
+  border: 1px solid #bae6fd;
+  background: #f0f9ff;
+  color: #0f172a;
+  border-radius: 8px;
+  padding: 12px 14px;
+  line-height: 1.55;
+}
+
+.mf-dynamic-label-error {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+  border-radius: 8px;
+  padding: 10px 12px;
+  line-height: 1.5;
+}
+
+.mf-dynamic-label-list {
+  display: grid;
+  gap: 10px;
+}
+
+.mf-dynamic-label-item {
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #0f172a;
+  border-radius: 8px;
+  padding: 12px 14px;
+  line-height: 1.5;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .06);
+}
+
+.mfw-dynamic-label-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #e2e8f0;
+  flex-wrap: wrap;
+}
+
+.mfw-dynamic-label-page-info {
+  color: #475569;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.mfw-dynamic-label-page-btn {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #0f172a;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.mfw-dynamic-label-page-btn:hover:not(:disabled) {
+  border-color: #38bdf8;
+  background: #f0f9ff;
+}
+
+.mfw-dynamic-label-page-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+@media (max-width: 520px) {
+  .mfw-dynamic-label-pager {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .mfw-dynamic-label-page-btn,
+  .mfw-dynamic-label-page-info {
+    width: 100%;
+    text-align: center;
+  }
+}

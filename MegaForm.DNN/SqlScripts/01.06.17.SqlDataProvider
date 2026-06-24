@@ -1,0 +1,34 @@
+-- ============================================================
+-- MegaForm 01.06.17 — Sample destination table for Insert-to-SQL demo
+-- ============================================================
+-- Adds a target table for the "Database Insert" form-submission demo
+-- shipped as a built-in template (Samples/SampleRegistrationInsertForm.json).
+-- The PdfForm demo (Samples/SamplePdfRegistrationForm.json) does NOT
+-- need a DB table — its submitted PDF is stored as a file attachment.
+--
+-- Object created (idempotent):
+--   dbo.MegaForm_Sample_Registrations
+--
+-- Form template's settings.databaseInsert.insertSql uses :token bindings:
+--   INSERT INTO dbo.MegaForm_Sample_Registrations
+--     (FullName, Email, EventYear, EventId, TicketType, RegisteredOnUtc)
+--   VALUES (:fullName, :email, :year, :event, :ticketType, SYSUTCDATETIME());
+-- ============================================================
+
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'MegaForm_Sample_Registrations')
+BEGIN
+    CREATE TABLE dbo.MegaForm_Sample_Registrations
+    (
+        RegistrationId   INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        FullName         NVARCHAR(200)   NOT NULL,
+        Email            NVARCHAR(320)   NOT NULL,
+        EventYear        INT             NULL,
+        EventId          INT             NULL,
+        TicketType       NVARCHAR(60)    NULL,
+        RegisteredOnUtc  DATETIME2       NOT NULL CONSTRAINT DF_MegaForm_Sample_Registrations_RegOn DEFAULT(SYSUTCDATETIME())
+    );
+
+    CREATE INDEX IX_MegaForm_Sample_Registrations_Email      ON dbo.MegaForm_Sample_Registrations(Email);
+    CREATE INDEX IX_MegaForm_Sample_Registrations_EventYear  ON dbo.MegaForm_Sample_Registrations(EventYear, EventId);
+END
+GO

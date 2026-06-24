@@ -1,0 +1,654 @@
+### YamlMime:ManagedReference
+items:
+- uid: MegaForm.Sdk.ISubmissionApi
+  commentId: T:MegaForm.Sdk.ISubmissionApi
+  id: ISubmissionApi
+  parent: MegaForm.Sdk
+  children:
+  - MegaForm.Sdk.ISubmissionApi.DeleteAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  - MegaForm.Sdk.ISubmissionApi.FindAsync(MegaForm.Sdk.SubmissionQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  - MegaForm.Sdk.ISubmissionApi.GetAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  - MegaForm.Sdk.ISubmissionApi.SubmitAsync(System.Int32,System.Collections.Generic.Dictionary{System.String,System.Object},MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  - MegaForm.Sdk.ISubmissionApi.UpdateAsync(System.Int32,System.Collections.Generic.Dictionary{System.String,System.Object},MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  langs:
+  - csharp
+  - vb
+  name: ISubmissionApi
+  nameWithType: ISubmissionApi
+  fullName: MegaForm.Sdk.ISubmissionApi
+  type: Interface
+  source:
+    id: ISubmissionApi
+    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 74
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Query, submit, update and delete submissions.
+  example: []
+  syntax:
+    content: public interface ISubmissionApi
+    content.vb: Public Interface ISubmissionApi
+  derivedClasses:
+  - MegaForm.Sdk.MegaFormClient
+- uid: MegaForm.Sdk.ISubmissionApi.FindAsync(MegaForm.Sdk.SubmissionQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  commentId: M:MegaForm.Sdk.ISubmissionApi.FindAsync(MegaForm.Sdk.SubmissionQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  id: FindAsync(MegaForm.Sdk.SubmissionQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  parent: MegaForm.Sdk.ISubmissionApi
+  langs:
+  - csharp
+  - vb
+  name: FindAsync(SubmissionQuery, MegaFormScope?, CancellationToken)
+  nameWithType: ISubmissionApi.FindAsync(SubmissionQuery, MegaFormScope?, CancellationToken)
+  fullName: MegaForm.Sdk.ISubmissionApi.FindAsync(MegaForm.Sdk.SubmissionQuery, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  type: Method
+  source:
+    id: FindAsync
+    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 77
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Find submissions for a form with optional status filter + paging (FindData).
+  example: []
+  syntax:
+    content: Task<PagedResult<SubmissionDto>> FindAsync(SubmissionQuery query, MegaFormScope? scope = null, CancellationToken cancellationToken = default)
+    parameters:
+    - id: query
+      type: MegaForm.Sdk.SubmissionQuery
+    - id: scope
+      type: MegaForm.Sdk.MegaFormScope
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task{MegaForm.Sdk.PagedResult{MegaForm.Sdk.SubmissionDto}}
+    content.vb: Function FindAsync(query As SubmissionQuery, scope As MegaFormScope = Nothing, cancellationToken As CancellationToken = Nothing) As Task(Of PagedResult(Of SubmissionDto))
+  overload: MegaForm.Sdk.ISubmissionApi.FindAsync*
+  nameWithType.vb: ISubmissionApi.FindAsync(SubmissionQuery, MegaFormScope, CancellationToken)
+  fullName.vb: MegaForm.Sdk.ISubmissionApi.FindAsync(MegaForm.Sdk.SubmissionQuery, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  name.vb: FindAsync(SubmissionQuery, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.ISubmissionApi.GetAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  commentId: M:MegaForm.Sdk.ISubmissionApi.GetAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  id: GetAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  parent: MegaForm.Sdk.ISubmissionApi
+  langs:
+  - csharp
+  - vb
+  name: GetAsync(int, MegaFormScope?, CancellationToken)
+  nameWithType: ISubmissionApi.GetAsync(int, MegaFormScope?, CancellationToken)
+  fullName: MegaForm.Sdk.ISubmissionApi.GetAsync(int, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  type: Method
+  source:
+    id: GetAsync
+    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 80
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Get a single submission by id, or null if not found.
+  example: []
+  syntax:
+    content: Task<SubmissionDto?> GetAsync(int submissionId, MegaFormScope? scope = null, CancellationToken cancellationToken = default)
+    parameters:
+    - id: submissionId
+      type: System.Int32
+    - id: scope
+      type: MegaForm.Sdk.MegaFormScope
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task{MegaForm.Sdk.SubmissionDto}
+    content.vb: Function GetAsync(submissionId As Integer, scope As MegaFormScope = Nothing, cancellationToken As CancellationToken = Nothing) As Task(Of SubmissionDto)
+  overload: MegaForm.Sdk.ISubmissionApi.GetAsync*
+  nameWithType.vb: ISubmissionApi.GetAsync(Integer, MegaFormScope, CancellationToken)
+  fullName.vb: MegaForm.Sdk.ISubmissionApi.GetAsync(Integer, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  name.vb: GetAsync(Integer, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.ISubmissionApi.SubmitAsync(System.Int32,System.Collections.Generic.Dictionary{System.String,System.Object},MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  commentId: M:MegaForm.Sdk.ISubmissionApi.SubmitAsync(System.Int32,System.Collections.Generic.Dictionary{System.String,System.Object},MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  id: SubmitAsync(System.Int32,System.Collections.Generic.Dictionary{System.String,System.Object},MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  parent: MegaForm.Sdk.ISubmissionApi
+  langs:
+  - csharp
+  - vb
+  name: SubmitAsync(int, Dictionary<string, object>, MegaFormScope?, CancellationToken)
+  nameWithType: ISubmissionApi.SubmitAsync(int, Dictionary<string, object>, MegaFormScope?, CancellationToken)
+  fullName: MegaForm.Sdk.ISubmissionApi.SubmitAsync(int, System.Collections.Generic.Dictionary<string, object>, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  type: Method
+  source:
+    id: SubmitAsync
+    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 89
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: >-
+    Submit form data, running the same server-side validation as a public form submit.
+
+    When the host registered the full submission pipeline (anti-spam, notifications,
+
+    workflow), this delegates to it; otherwise it validates and inserts the row. On a
+
+    validation failure the result's <xref href="MegaForm.Sdk.SubmitResult.Success" data-throw-if-not-resolved="false"></xref> is false and no
+
+    row is saved.
+  example: []
+  syntax:
+    content: Task<SubmitResult> SubmitAsync(int formId, Dictionary<string, object> data, MegaFormScope? scope = null, CancellationToken cancellationToken = default)
+    parameters:
+    - id: formId
+      type: System.Int32
+    - id: data
+      type: System.Collections.Generic.Dictionary{System.String,System.Object}
+    - id: scope
+      type: MegaForm.Sdk.MegaFormScope
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task{MegaForm.Sdk.SubmitResult}
+    content.vb: Function SubmitAsync(formId As Integer, data As Dictionary(Of String, Object), scope As MegaFormScope = Nothing, cancellationToken As CancellationToken = Nothing) As Task(Of SubmitResult)
+  overload: MegaForm.Sdk.ISubmissionApi.SubmitAsync*
+  nameWithType.vb: ISubmissionApi.SubmitAsync(Integer, Dictionary(Of String, Object), MegaFormScope, CancellationToken)
+  fullName.vb: MegaForm.Sdk.ISubmissionApi.SubmitAsync(Integer, System.Collections.Generic.Dictionary(Of String, Object), MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  name.vb: SubmitAsync(Integer, Dictionary(Of String, Object), MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.ISubmissionApi.UpdateAsync(System.Int32,System.Collections.Generic.Dictionary{System.String,System.Object},MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  commentId: M:MegaForm.Sdk.ISubmissionApi.UpdateAsync(System.Int32,System.Collections.Generic.Dictionary{System.String,System.Object},MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  id: UpdateAsync(System.Int32,System.Collections.Generic.Dictionary{System.String,System.Object},MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  parent: MegaForm.Sdk.ISubmissionApi
+  langs:
+  - csharp
+  - vb
+  name: UpdateAsync(int, Dictionary<string, object>, MegaFormScope?, CancellationToken)
+  nameWithType: ISubmissionApi.UpdateAsync(int, Dictionary<string, object>, MegaFormScope?, CancellationToken)
+  fullName: MegaForm.Sdk.ISubmissionApi.UpdateAsync(int, System.Collections.Generic.Dictionary<string, object>, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  type: Method
+  source:
+    id: UpdateAsync
+    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 92
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Replace a submission's stored data (full replace, not merge). No-op if the submission is not in this portal.
+  example: []
+  syntax:
+    content: Task UpdateAsync(int submissionId, Dictionary<string, object> data, MegaFormScope? scope = null, CancellationToken cancellationToken = default)
+    parameters:
+    - id: submissionId
+      type: System.Int32
+    - id: data
+      type: System.Collections.Generic.Dictionary{System.String,System.Object}
+    - id: scope
+      type: MegaForm.Sdk.MegaFormScope
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task
+    content.vb: Function UpdateAsync(submissionId As Integer, data As Dictionary(Of String, Object), scope As MegaFormScope = Nothing, cancellationToken As CancellationToken = Nothing) As Task
+  overload: MegaForm.Sdk.ISubmissionApi.UpdateAsync*
+  nameWithType.vb: ISubmissionApi.UpdateAsync(Integer, Dictionary(Of String, Object), MegaFormScope, CancellationToken)
+  fullName.vb: MegaForm.Sdk.ISubmissionApi.UpdateAsync(Integer, System.Collections.Generic.Dictionary(Of String, Object), MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  name.vb: UpdateAsync(Integer, Dictionary(Of String, Object), MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.ISubmissionApi.DeleteAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  commentId: M:MegaForm.Sdk.ISubmissionApi.DeleteAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  id: DeleteAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  parent: MegaForm.Sdk.ISubmissionApi
+  langs:
+  - csharp
+  - vb
+  name: DeleteAsync(int, MegaFormScope?, CancellationToken)
+  nameWithType: ISubmissionApi.DeleteAsync(int, MegaFormScope?, CancellationToken)
+  fullName: MegaForm.Sdk.ISubmissionApi.DeleteAsync(int, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  type: Method
+  source:
+    id: DeleteAsync
+    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 95
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Permanently delete a submission. No-op if the submission is not in this portal.
+  example: []
+  syntax:
+    content: Task DeleteAsync(int submissionId, MegaFormScope? scope = null, CancellationToken cancellationToken = default)
+    parameters:
+    - id: submissionId
+      type: System.Int32
+    - id: scope
+      type: MegaForm.Sdk.MegaFormScope
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task
+    content.vb: Function DeleteAsync(submissionId As Integer, scope As MegaFormScope = Nothing, cancellationToken As CancellationToken = Nothing) As Task
+  overload: MegaForm.Sdk.ISubmissionApi.DeleteAsync*
+  nameWithType.vb: ISubmissionApi.DeleteAsync(Integer, MegaFormScope, CancellationToken)
+  fullName.vb: MegaForm.Sdk.ISubmissionApi.DeleteAsync(Integer, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  name.vb: DeleteAsync(Integer, MegaFormScope, CancellationToken)
+references:
+- uid: MegaForm.Sdk
+  commentId: N:MegaForm.Sdk
+  href: MegaForm.html
+  name: MegaForm.Sdk
+  nameWithType: MegaForm.Sdk
+  fullName: MegaForm.Sdk
+  spec.csharp:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+  spec.vb:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+- uid: MegaForm.Sdk.ISubmissionApi.FindAsync*
+  commentId: Overload:MegaForm.Sdk.ISubmissionApi.FindAsync
+  href: MegaForm.Sdk.ISubmissionApi.html#MegaForm_Sdk_ISubmissionApi_FindAsync_MegaForm_Sdk_SubmissionQuery_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  name: FindAsync
+  nameWithType: ISubmissionApi.FindAsync
+  fullName: MegaForm.Sdk.ISubmissionApi.FindAsync
+- uid: MegaForm.Sdk.SubmissionQuery
+  commentId: T:MegaForm.Sdk.SubmissionQuery
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.SubmissionQuery.html
+  name: SubmissionQuery
+  nameWithType: SubmissionQuery
+  fullName: MegaForm.Sdk.SubmissionQuery
+- uid: MegaForm.Sdk.MegaFormScope
+  commentId: T:MegaForm.Sdk.MegaFormScope
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.MegaFormScope.html
+  name: MegaFormScope
+  nameWithType: MegaFormScope
+  fullName: MegaForm.Sdk.MegaFormScope
+- uid: System.Threading.CancellationToken
+  commentId: T:System.Threading.CancellationToken
+  parent: System.Threading
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken
+  name: CancellationToken
+  nameWithType: CancellationToken
+  fullName: System.Threading.CancellationToken
+- uid: System.Threading.Tasks.Task{MegaForm.Sdk.PagedResult{MegaForm.Sdk.SubmissionDto}}
+  commentId: T:System.Threading.Tasks.Task{MegaForm.Sdk.PagedResult{MegaForm.Sdk.SubmissionDto}}
+  parent: System.Threading.Tasks
+  definition: System.Threading.Tasks.Task`1
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  name: Task<PagedResult<SubmissionDto>>
+  nameWithType: Task<PagedResult<SubmissionDto>>
+  fullName: System.Threading.Tasks.Task<MegaForm.Sdk.PagedResult<MegaForm.Sdk.SubmissionDto>>
+  nameWithType.vb: Task(Of PagedResult(Of SubmissionDto))
+  fullName.vb: System.Threading.Tasks.Task(Of MegaForm.Sdk.PagedResult(Of MegaForm.Sdk.SubmissionDto))
+  name.vb: Task(Of PagedResult(Of SubmissionDto))
+  spec.csharp:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: <
+  - uid: MegaForm.Sdk.PagedResult`1
+    name: PagedResult
+    href: MegaForm.Sdk.PagedResult-1.html
+  - name: <
+  - uid: MegaForm.Sdk.SubmissionDto
+    name: SubmissionDto
+    href: MegaForm.Sdk.SubmissionDto.html
+  - name: '>'
+  - name: '>'
+  spec.vb:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: MegaForm.Sdk.PagedResult`1
+    name: PagedResult
+    href: MegaForm.Sdk.PagedResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: MegaForm.Sdk.SubmissionDto
+    name: SubmissionDto
+    href: MegaForm.Sdk.SubmissionDto.html
+  - name: )
+  - name: )
+- uid: System.Threading
+  commentId: N:System.Threading
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Threading
+  nameWithType: System.Threading
+  fullName: System.Threading
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+- uid: System.Threading.Tasks.Task`1
+  commentId: T:System.Threading.Tasks.Task`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  name: Task<TResult>
+  nameWithType: Task<TResult>
+  fullName: System.Threading.Tasks.Task<TResult>
+  nameWithType.vb: Task(Of TResult)
+  fullName.vb: System.Threading.Tasks.Task(Of TResult)
+  name.vb: Task(Of TResult)
+  spec.csharp:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: <
+  - name: TResult
+  - name: '>'
+  spec.vb:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: TResult
+  - name: )
+- uid: System.Threading.Tasks
+  commentId: N:System.Threading.Tasks
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Threading.Tasks
+  nameWithType: System.Threading.Tasks
+  fullName: System.Threading.Tasks
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+  - name: .
+  - uid: System.Threading.Tasks
+    name: Tasks
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+  - name: .
+  - uid: System.Threading.Tasks
+    name: Tasks
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks
+- uid: MegaForm.Sdk.ISubmissionApi.GetAsync*
+  commentId: Overload:MegaForm.Sdk.ISubmissionApi.GetAsync
+  href: MegaForm.Sdk.ISubmissionApi.html#MegaForm_Sdk_ISubmissionApi_GetAsync_System_Int32_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  name: GetAsync
+  nameWithType: ISubmissionApi.GetAsync
+  fullName: MegaForm.Sdk.ISubmissionApi.GetAsync
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: System.Threading.Tasks.Task{MegaForm.Sdk.SubmissionDto}
+  commentId: T:System.Threading.Tasks.Task{MegaForm.Sdk.SubmissionDto}
+  parent: System.Threading.Tasks
+  definition: System.Threading.Tasks.Task`1
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  name: Task<SubmissionDto>
+  nameWithType: Task<SubmissionDto>
+  fullName: System.Threading.Tasks.Task<MegaForm.Sdk.SubmissionDto>
+  nameWithType.vb: Task(Of SubmissionDto)
+  fullName.vb: System.Threading.Tasks.Task(Of MegaForm.Sdk.SubmissionDto)
+  name.vb: Task(Of SubmissionDto)
+  spec.csharp:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: <
+  - uid: MegaForm.Sdk.SubmissionDto
+    name: SubmissionDto
+    href: MegaForm.Sdk.SubmissionDto.html
+  - name: '>'
+  spec.vb:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: MegaForm.Sdk.SubmissionDto
+    name: SubmissionDto
+    href: MegaForm.Sdk.SubmissionDto.html
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: MegaForm.Sdk.SubmitResult.Success
+  commentId: P:MegaForm.Sdk.SubmitResult.Success
+  href: MegaForm.Sdk.SubmitResult.html#MegaForm_Sdk_SubmitResult_Success
+  name: Success
+  nameWithType: SubmitResult.Success
+  fullName: MegaForm.Sdk.SubmitResult.Success
+- uid: MegaForm.Sdk.ISubmissionApi.SubmitAsync*
+  commentId: Overload:MegaForm.Sdk.ISubmissionApi.SubmitAsync
+  href: MegaForm.Sdk.ISubmissionApi.html#MegaForm_Sdk_ISubmissionApi_SubmitAsync_System_Int32_System_Collections_Generic_Dictionary_System_String_System_Object__MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  name: SubmitAsync
+  nameWithType: ISubmissionApi.SubmitAsync
+  fullName: MegaForm.Sdk.ISubmissionApi.SubmitAsync
+- uid: System.Collections.Generic.Dictionary{System.String,System.Object}
+  commentId: T:System.Collections.Generic.Dictionary{System.String,System.Object}
+  parent: System.Collections.Generic
+  definition: System.Collections.Generic.Dictionary`2
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  name: Dictionary<string, object>
+  nameWithType: Dictionary<string, object>
+  fullName: System.Collections.Generic.Dictionary<string, object>
+  nameWithType.vb: Dictionary(Of String, Object)
+  fullName.vb: System.Collections.Generic.Dictionary(Of String, Object)
+  name.vb: Dictionary(Of String, Object)
+  spec.csharp:
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: <
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Threading.Tasks.Task{MegaForm.Sdk.SubmitResult}
+  commentId: T:System.Threading.Tasks.Task{MegaForm.Sdk.SubmitResult}
+  parent: System.Threading.Tasks
+  definition: System.Threading.Tasks.Task`1
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  name: Task<SubmitResult>
+  nameWithType: Task<SubmitResult>
+  fullName: System.Threading.Tasks.Task<MegaForm.Sdk.SubmitResult>
+  nameWithType.vb: Task(Of SubmitResult)
+  fullName.vb: System.Threading.Tasks.Task(Of MegaForm.Sdk.SubmitResult)
+  name.vb: Task(Of SubmitResult)
+  spec.csharp:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: <
+  - uid: MegaForm.Sdk.SubmitResult
+    name: SubmitResult
+    href: MegaForm.Sdk.SubmitResult.html
+  - name: '>'
+  spec.vb:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: MegaForm.Sdk.SubmitResult
+    name: SubmitResult
+    href: MegaForm.Sdk.SubmitResult.html
+  - name: )
+- uid: System.Collections.Generic.Dictionary`2
+  commentId: T:System.Collections.Generic.Dictionary`2
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  name: Dictionary<TKey, TValue>
+  nameWithType: Dictionary<TKey, TValue>
+  fullName: System.Collections.Generic.Dictionary<TKey, TValue>
+  nameWithType.vb: Dictionary(Of TKey, TValue)
+  fullName.vb: System.Collections.Generic.Dictionary(Of TKey, TValue)
+  name.vb: Dictionary(Of TKey, TValue)
+  spec.csharp:
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: <
+  - name: TKey
+  - name: ','
+  - name: " "
+  - name: TValue
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: (
+  - name: Of
+  - name: " "
+  - name: TKey
+  - name: ','
+  - name: " "
+  - name: TValue
+  - name: )
+- uid: System.Collections.Generic
+  commentId: N:System.Collections.Generic
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Collections.Generic
+  nameWithType: System.Collections.Generic
+  fullName: System.Collections.Generic
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+- uid: MegaForm.Sdk.ISubmissionApi.UpdateAsync*
+  commentId: Overload:MegaForm.Sdk.ISubmissionApi.UpdateAsync
+  href: MegaForm.Sdk.ISubmissionApi.html#MegaForm_Sdk_ISubmissionApi_UpdateAsync_System_Int32_System_Collections_Generic_Dictionary_System_String_System_Object__MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  name: UpdateAsync
+  nameWithType: ISubmissionApi.UpdateAsync
+  fullName: MegaForm.Sdk.ISubmissionApi.UpdateAsync
+- uid: System.Threading.Tasks.Task
+  commentId: T:System.Threading.Tasks.Task
+  parent: System.Threading.Tasks
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task
+  name: Task
+  nameWithType: Task
+  fullName: System.Threading.Tasks.Task
+- uid: MegaForm.Sdk.ISubmissionApi.DeleteAsync*
+  commentId: Overload:MegaForm.Sdk.ISubmissionApi.DeleteAsync
+  href: MegaForm.Sdk.ISubmissionApi.html#MegaForm_Sdk_ISubmissionApi_DeleteAsync_System_Int32_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  name: DeleteAsync
+  nameWithType: ISubmissionApi.DeleteAsync
+  fullName: MegaForm.Sdk.ISubmissionApi.DeleteAsync

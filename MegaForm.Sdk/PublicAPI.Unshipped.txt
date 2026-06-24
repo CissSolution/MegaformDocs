@@ -1,0 +1,243 @@
+#nullable enable
+MegaForm.Sdk.CreateFormRequest
+MegaForm.Sdk.CreateFormRequest.CreateFormRequest() -> void
+MegaForm.Sdk.CreateFormRequest.Description.get -> string?
+MegaForm.Sdk.CreateFormRequest.Description.set -> void
+MegaForm.Sdk.CreateFormRequest.RequireAuth.get -> bool
+MegaForm.Sdk.CreateFormRequest.RequireAuth.set -> void
+MegaForm.Sdk.CreateFormRequest.SchemaJson.get -> string?
+MegaForm.Sdk.CreateFormRequest.SchemaJson.set -> void
+MegaForm.Sdk.CreateFormRequest.Status.get -> string?
+MegaForm.Sdk.CreateFormRequest.Status.set -> void
+MegaForm.Sdk.CreateFormRequest.Title.get -> string!
+MegaForm.Sdk.CreateFormRequest.Title.set -> void
+MegaForm.Sdk.FormDto
+MegaForm.Sdk.FormDto.Description.get -> string?
+MegaForm.Sdk.FormDto.Description.set -> void
+MegaForm.Sdk.FormDto.FormDto() -> void
+MegaForm.Sdk.FormDto.FormId.get -> int
+MegaForm.Sdk.FormDto.FormId.set -> void
+MegaForm.Sdk.FormDto.PortalId.get -> int
+MegaForm.Sdk.FormDto.PortalId.set -> void
+MegaForm.Sdk.FormDto.RequireAuth.get -> bool
+MegaForm.Sdk.FormDto.RequireAuth.set -> void
+MegaForm.Sdk.FormDto.SchemaJson.get -> string?
+MegaForm.Sdk.FormDto.SchemaJson.set -> void
+MegaForm.Sdk.FormDto.Status.get -> string?
+MegaForm.Sdk.FormDto.Status.set -> void
+MegaForm.Sdk.FormDto.SubmissionCount.get -> int
+MegaForm.Sdk.FormDto.SubmissionCount.set -> void
+MegaForm.Sdk.FormDto.Title.get -> string?
+MegaForm.Sdk.FormDto.Title.set -> void
+MegaForm.Sdk.FormQuery
+MegaForm.Sdk.FormQuery.FormQuery() -> void
+MegaForm.Sdk.FormQuery.Page.get -> int
+MegaForm.Sdk.FormQuery.Page.set -> void
+MegaForm.Sdk.FormQuery.PageSize.get -> int
+MegaForm.Sdk.FormQuery.PageSize.set -> void
+MegaForm.Sdk.FormQuery.Search.get -> string?
+MegaForm.Sdk.FormQuery.Search.set -> void
+MegaForm.Sdk.FormQuery.Status.get -> string?
+MegaForm.Sdk.FormQuery.Status.set -> void
+MegaForm.Sdk.IFormApi
+MegaForm.Sdk.IFormApi.CreateFormAsync(MegaForm.Sdk.CreateFormRequest! request, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.FormDto!>!
+MegaForm.Sdk.IFormApi.DeleteFormAsync(int formId, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+MegaForm.Sdk.IFormApi.GetFormAsync(int formId, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.FormDto?>!
+MegaForm.Sdk.IFormApi.ListFormsAsync(MegaForm.Sdk.FormQuery? query = null, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.PagedResult<MegaForm.Sdk.FormDto!>!>!
+MegaForm.Sdk.IMegaFormClient
+MegaForm.Sdk.IMegaFormClient.Forms.get -> MegaForm.Sdk.IFormApi!
+MegaForm.Sdk.IMegaFormClient.Submissions.get -> MegaForm.Sdk.ISubmissionApi!
+MegaForm.Sdk.ISubmissionApi
+MegaForm.Sdk.ISubmissionApi.FindAsync(MegaForm.Sdk.SubmissionQuery! query, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.PagedResult<MegaForm.Sdk.SubmissionDto!>!>!
+MegaForm.Sdk.ISubmissionApi.GetAsync(int submissionId, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.SubmissionDto?>!
+MegaForm.Sdk.MegaFormClient
+MegaForm.Sdk.MegaFormClient.CreateFormAsync(MegaForm.Sdk.CreateFormRequest! request, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.FormDto!>!
+MegaForm.Sdk.MegaFormClient.DeleteFormAsync(int formId, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+MegaForm.Sdk.MegaFormClient.FindAsync(MegaForm.Sdk.SubmissionQuery! query, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.PagedResult<MegaForm.Sdk.SubmissionDto!>!>!
+MegaForm.Sdk.MegaFormClient.Forms.get -> MegaForm.Sdk.IFormApi!
+MegaForm.Sdk.MegaFormClient.GetAsync(int submissionId, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.SubmissionDto?>!
+MegaForm.Sdk.MegaFormClient.GetFormAsync(int formId, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.FormDto?>!
+MegaForm.Sdk.MegaFormClient.ListFormsAsync(MegaForm.Sdk.FormQuery? query = null, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.PagedResult<MegaForm.Sdk.FormDto!>!>!
+MegaForm.Sdk.MegaFormClient.MegaFormClient(MegaForm.Core.Interfaces.IFormRepository! forms, MegaForm.Core.Interfaces.ISubmissionRepository! submissions, MegaForm.Core.Interfaces.IPlatformContext? platform = null, MegaForm.Core.Interfaces.IFileRepository? files = null, MegaForm.Core.Interfaces.IStorageService? storage = null, MegaForm.Core.Services.SubmissionProcessor? submissionProcessor = null) -> void
+MegaForm.Sdk.MegaFormClient.Submissions.get -> MegaForm.Sdk.ISubmissionApi!
+MegaForm.Sdk.MegaFormScope
+MegaForm.Sdk.MegaFormScope.MegaFormScope() -> void
+MegaForm.Sdk.MegaFormScope.PortalId.get -> int
+MegaForm.Sdk.MegaFormScope.PortalId.set -> void
+MegaForm.Sdk.MegaFormScope.UserId.get -> int
+MegaForm.Sdk.MegaFormScope.UserId.set -> void
+MegaForm.Sdk.MegaFormSdk
+MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions
+MegaForm.Sdk.PagedResult<T>
+MegaForm.Sdk.PagedResult<T>.Items.get -> System.Collections.Generic.IReadOnlyList<T>!
+MegaForm.Sdk.PagedResult<T>.Items.set -> void
+MegaForm.Sdk.PagedResult<T>.Page.get -> int
+MegaForm.Sdk.PagedResult<T>.Page.set -> void
+MegaForm.Sdk.PagedResult<T>.PagedResult() -> void
+MegaForm.Sdk.PagedResult<T>.PageSize.get -> int
+MegaForm.Sdk.PagedResult<T>.PageSize.set -> void
+MegaForm.Sdk.PagedResult<T>.TotalCount.get -> int
+MegaForm.Sdk.PagedResult<T>.TotalCount.set -> void
+MegaForm.Sdk.SubmissionDto
+MegaForm.Sdk.SubmissionDto.DataJson.get -> string?
+MegaForm.Sdk.SubmissionDto.DataJson.set -> void
+MegaForm.Sdk.SubmissionDto.FormId.get -> int
+MegaForm.Sdk.SubmissionDto.FormId.set -> void
+MegaForm.Sdk.SubmissionDto.IsSpam.get -> bool
+MegaForm.Sdk.SubmissionDto.IsSpam.set -> void
+MegaForm.Sdk.SubmissionDto.Status.get -> string?
+MegaForm.Sdk.SubmissionDto.Status.set -> void
+MegaForm.Sdk.SubmissionDto.SubmissionDto() -> void
+MegaForm.Sdk.SubmissionDto.SubmissionId.get -> int
+MegaForm.Sdk.SubmissionDto.SubmissionId.set -> void
+MegaForm.Sdk.SubmissionDto.SubmittedOnUtc.get -> System.DateTime
+MegaForm.Sdk.SubmissionDto.SubmittedOnUtc.set -> void
+MegaForm.Sdk.SubmissionDto.UserId.get -> int?
+MegaForm.Sdk.SubmissionDto.UserId.set -> void
+MegaForm.Sdk.SubmissionQuery
+MegaForm.Sdk.SubmissionQuery.FormId.get -> int
+MegaForm.Sdk.SubmissionQuery.FormId.set -> void
+MegaForm.Sdk.SubmissionQuery.Page.get -> int
+MegaForm.Sdk.SubmissionQuery.Page.set -> void
+MegaForm.Sdk.SubmissionQuery.PageSize.get -> int
+MegaForm.Sdk.SubmissionQuery.PageSize.set -> void
+MegaForm.Sdk.SubmissionQuery.Status.get -> string?
+MegaForm.Sdk.SubmissionQuery.Status.set -> void
+MegaForm.Sdk.SubmissionQuery.SubmissionQuery() -> void
+static MegaForm.Sdk.MegaFormSdk.Initialize(System.IServiceProvider! serviceProvider) -> void
+static MegaForm.Sdk.MegaFormSdk.IsInitialized.get -> bool
+static MegaForm.Sdk.MegaFormSdk.RunAsync(System.Func<MegaForm.Sdk.IMegaFormClient!, System.Threading.Tasks.Task!>! action) -> System.Threading.Tasks.Task!
+static MegaForm.Sdk.MegaFormSdk.RunAsync<T>(System.Func<MegaForm.Sdk.IMegaFormClient!, System.Threading.Tasks.Task<T>!>! action) -> System.Threading.Tasks.Task<T>!
+static MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+MegaForm.Sdk.FileDto
+MegaForm.Sdk.FileDto.FileDto() -> void
+MegaForm.Sdk.FileDto.FileId.get -> int
+MegaForm.Sdk.FileDto.FileId.set -> void
+MegaForm.Sdk.FileDto.SubmissionId.get -> int
+MegaForm.Sdk.FileDto.SubmissionId.set -> void
+MegaForm.Sdk.FileDto.FieldKey.get -> string?
+MegaForm.Sdk.FileDto.FieldKey.set -> void
+MegaForm.Sdk.FileDto.FileName.get -> string?
+MegaForm.Sdk.FileDto.FileName.set -> void
+MegaForm.Sdk.FileDto.ContentType.get -> string?
+MegaForm.Sdk.FileDto.ContentType.set -> void
+MegaForm.Sdk.FileDto.SizeBytes.get -> long
+MegaForm.Sdk.FileDto.SizeBytes.set -> void
+MegaForm.Sdk.FileDto.UploadedOnUtc.get -> System.DateTime
+MegaForm.Sdk.FileDto.UploadedOnUtc.set -> void
+MegaForm.Sdk.MegaFormFileContent
+MegaForm.Sdk.MegaFormFileContent.MegaFormFileContent() -> void
+MegaForm.Sdk.MegaFormFileContent.FileName.get -> string!
+MegaForm.Sdk.MegaFormFileContent.FileName.set -> void
+MegaForm.Sdk.MegaFormFileContent.ContentType.get -> string!
+MegaForm.Sdk.MegaFormFileContent.ContentType.set -> void
+MegaForm.Sdk.MegaFormFileContent.Content.get -> byte[]!
+MegaForm.Sdk.MegaFormFileContent.Content.set -> void
+MegaForm.Sdk.IFileApi
+MegaForm.Sdk.IFileApi.ListForSubmissionAsync(int submissionId, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.FileDto!>!>!
+MegaForm.Sdk.IFileApi.OpenAsync(int submissionId, int fileId, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.MegaFormFileContent?>!
+MegaForm.Sdk.IMegaFormClient.Files.get -> MegaForm.Sdk.IFileApi!
+MegaForm.Sdk.MegaFormClient.Files.get -> MegaForm.Sdk.IFileApi!
+MegaForm.Sdk.MegaFormClient.ListForSubmissionAsync(int submissionId, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.FileDto!>!>!
+MegaForm.Sdk.MegaFormClient.OpenAsync(int submissionId, int fileId, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.MegaFormFileContent?>!
+MegaForm.Sdk.IFormApi.UpdateFormAsync(int formId, MegaForm.Sdk.UpdateFormRequest! request, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.FormDto!>!
+MegaForm.Sdk.ISubmissionApi.SubmitAsync(int formId, System.Collections.Generic.Dictionary<string!, object!>! data, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.SubmitResult!>!
+MegaForm.Sdk.ISubmissionApi.UpdateAsync(int submissionId, System.Collections.Generic.Dictionary<string!, object!>! data, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+MegaForm.Sdk.ISubmissionApi.DeleteAsync(int submissionId, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+MegaForm.Sdk.MegaFormClient.UpdateFormAsync(int formId, MegaForm.Sdk.UpdateFormRequest! request, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.FormDto!>!
+MegaForm.Sdk.MegaFormClient.SubmitAsync(int formId, System.Collections.Generic.Dictionary<string!, object!>! data, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.SubmitResult!>!
+MegaForm.Sdk.MegaFormClient.UpdateAsync(int submissionId, System.Collections.Generic.Dictionary<string!, object!>! data, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+MegaForm.Sdk.MegaFormClient.DeleteAsync(int submissionId, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+MegaForm.Sdk.SubmitResult
+MegaForm.Sdk.SubmitResult.SubmitResult() -> void
+MegaForm.Sdk.SubmitResult.Success.get -> bool
+MegaForm.Sdk.SubmitResult.Success.set -> void
+MegaForm.Sdk.SubmitResult.SubmissionId.get -> int
+MegaForm.Sdk.SubmitResult.SubmissionId.set -> void
+MegaForm.Sdk.SubmitResult.ErrorMessage.get -> string?
+MegaForm.Sdk.SubmitResult.ErrorMessage.set -> void
+MegaForm.Sdk.SubmitResult.SuccessMessage.get -> string?
+MegaForm.Sdk.SubmitResult.SuccessMessage.set -> void
+MegaForm.Sdk.SubmitResult.RedirectUrl.get -> string?
+MegaForm.Sdk.SubmitResult.RedirectUrl.set -> void
+MegaForm.Sdk.SubmitResult.IsSpam.get -> bool
+MegaForm.Sdk.SubmitResult.IsSpam.set -> void
+MegaForm.Sdk.SubmitResult.SpamScore.get -> double
+MegaForm.Sdk.SubmitResult.SpamScore.set -> void
+MegaForm.Sdk.SubmitResult.ValidationErrors.get -> System.Collections.Generic.Dictionary<string!, string!>?
+MegaForm.Sdk.SubmitResult.ValidationErrors.set -> void
+MegaForm.Sdk.UpdateFormRequest
+MegaForm.Sdk.UpdateFormRequest.UpdateFormRequest() -> void
+MegaForm.Sdk.UpdateFormRequest.Title.get -> string?
+MegaForm.Sdk.UpdateFormRequest.Title.set -> void
+MegaForm.Sdk.UpdateFormRequest.Description.get -> string?
+MegaForm.Sdk.UpdateFormRequest.Description.set -> void
+MegaForm.Sdk.UpdateFormRequest.SchemaJson.get -> string?
+MegaForm.Sdk.UpdateFormRequest.SchemaJson.set -> void
+MegaForm.Sdk.UpdateFormRequest.Status.get -> string?
+MegaForm.Sdk.UpdateFormRequest.Status.set -> void
+MegaForm.Sdk.UpdateFormRequest.RequireAuth.get -> bool?
+MegaForm.Sdk.UpdateFormRequest.RequireAuth.set -> void
+MegaForm.Sdk.IMegaFormClient.Schema.get -> MegaForm.Sdk.ISchemaApi!
+MegaForm.Sdk.ISchemaApi
+MegaForm.Sdk.ISchemaApi.Parse(string! schemaJson) -> MegaForm.Sdk.FormSchemaInfo!
+MegaForm.Sdk.ISchemaApi.ParseForm(MegaForm.Sdk.FormDto! form) -> MegaForm.Sdk.FormSchemaInfo!
+MegaForm.Sdk.MegaFormClient.Schema.get -> MegaForm.Sdk.ISchemaApi!
+MegaForm.Sdk.MegaFormClient.Parse(string! schemaJson) -> MegaForm.Sdk.FormSchemaInfo!
+MegaForm.Sdk.MegaFormClient.ParseForm(MegaForm.Sdk.FormDto! form) -> MegaForm.Sdk.FormSchemaInfo!
+MegaForm.Sdk.FormSchemaInfo
+MegaForm.Sdk.FormSchemaInfo.FormSchemaInfo() -> void
+MegaForm.Sdk.FormSchemaInfo.Fields.get -> System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.FormFieldInfo!>!
+MegaForm.Sdk.FormSchemaInfo.Fields.set -> void
+MegaForm.Sdk.FormFieldInfo
+MegaForm.Sdk.FormFieldInfo.FormFieldInfo() -> void
+MegaForm.Sdk.FormFieldInfo.Key.get -> string?
+MegaForm.Sdk.FormFieldInfo.Key.set -> void
+MegaForm.Sdk.FormFieldInfo.Type.get -> string?
+MegaForm.Sdk.FormFieldInfo.Type.set -> void
+MegaForm.Sdk.FormFieldInfo.Label.get -> string?
+MegaForm.Sdk.FormFieldInfo.Label.set -> void
+MegaForm.Sdk.FormFieldInfo.Placeholder.get -> string?
+MegaForm.Sdk.FormFieldInfo.Placeholder.set -> void
+MegaForm.Sdk.FormFieldInfo.HelpText.get -> string?
+MegaForm.Sdk.FormFieldInfo.HelpText.set -> void
+MegaForm.Sdk.FormFieldInfo.Required.get -> bool
+MegaForm.Sdk.FormFieldInfo.Required.set -> void
+MegaForm.Sdk.FormFieldInfo.ReadOnly.get -> bool
+MegaForm.Sdk.FormFieldInfo.ReadOnly.set -> void
+MegaForm.Sdk.FormFieldInfo.Hidden.get -> bool
+MegaForm.Sdk.FormFieldInfo.Hidden.set -> void
+MegaForm.Sdk.FormFieldInfo.Width.get -> string?
+MegaForm.Sdk.FormFieldInfo.Width.set -> void
+MegaForm.Sdk.FormFieldInfo.Order.get -> int
+MegaForm.Sdk.FormFieldInfo.Order.set -> void
+MegaForm.Sdk.FormFieldInfo.IsInputField.get -> bool
+MegaForm.Sdk.FormFieldInfo.IsInputField.set -> void
+MegaForm.Sdk.FormFieldInfo.Options.get -> System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.FieldOptionInfo!>!
+MegaForm.Sdk.FormFieldInfo.Options.set -> void
+MegaForm.Sdk.FormFieldInfo.Validation.get -> MegaForm.Sdk.FieldValidationInfo?
+MegaForm.Sdk.FormFieldInfo.Validation.set -> void
+MegaForm.Sdk.FieldValidationInfo
+MegaForm.Sdk.FieldValidationInfo.FieldValidationInfo() -> void
+MegaForm.Sdk.FieldValidationInfo.MinLength.get -> int?
+MegaForm.Sdk.FieldValidationInfo.MinLength.set -> void
+MegaForm.Sdk.FieldValidationInfo.MaxLength.get -> int?
+MegaForm.Sdk.FieldValidationInfo.MaxLength.set -> void
+MegaForm.Sdk.FieldValidationInfo.Min.get -> double?
+MegaForm.Sdk.FieldValidationInfo.Min.set -> void
+MegaForm.Sdk.FieldValidationInfo.Max.get -> double?
+MegaForm.Sdk.FieldValidationInfo.Max.set -> void
+MegaForm.Sdk.FieldValidationInfo.Pattern.get -> string?
+MegaForm.Sdk.FieldValidationInfo.Pattern.set -> void
+MegaForm.Sdk.FieldValidationInfo.PatternMessage.get -> string?
+MegaForm.Sdk.FieldValidationInfo.PatternMessage.set -> void
+MegaForm.Sdk.FieldValidationInfo.CustomMessage.get -> string?
+MegaForm.Sdk.FieldValidationInfo.CustomMessage.set -> void
+MegaForm.Sdk.FieldOptionInfo
+MegaForm.Sdk.FieldOptionInfo.FieldOptionInfo() -> void
+MegaForm.Sdk.FieldOptionInfo.Label.get -> string?
+MegaForm.Sdk.FieldOptionInfo.Label.set -> void
+MegaForm.Sdk.FieldOptionInfo.Value.get -> string?
+MegaForm.Sdk.FieldOptionInfo.Value.set -> void
+MegaForm.Sdk.FieldOptionInfo.Selected.get -> bool
+MegaForm.Sdk.FieldOptionInfo.Selected.set -> void

@@ -1,0 +1,103 @@
+/* 01.06.28o — Rules overview strengthened with dispatcher contract + canonical IDs */
+DECLARE @b NVARCHAR(MAX) = N'MegaForm has a runtime rule engine that mutates the form DOM whenever any input fires `change` or `input`.
+
+⚡ DISPATCHER CONTRACT (v20260530-28): rules are committed via the AI dispatcher in TWO ways. The `validateRuleArray` helper checks shape BEFORE write — invalid shapes get [RULES-001] reject so half-broken rules never reach the schema.
+
+(1) ADD/REPLACE rules on existing form (most common):
+```json
+{ "op":"set_form_meta", "rules":[ {RuleDefinition}, ... ] }
+```
+The dispatcher writes to ALL THREE storage slots (schema.settings.rules, schema.rules, schema.rulesJson) so every loader (rule-builder-ui, renderer, save-as-template) sees them. The Rules tab repaints automatically.
+
+(2) APPEND rules:
+```json
+{ "op":"set_form_meta", "rulesAppend":[ {RuleDefinition} ] }
+```
+
+(3) When emitting `replace_form_schema`, put rules INSIDE the schema settings (canonical) OR at top-level (auto-lifted):
+```json
+{ "op":"replace_form_schema", "preserveCustomizations":true,
+  "schema":{ "version":"1.0", "fields":[...],
+             "settings":{ "rules":[ {RuleDefinition}, ... ] } } }
+```
+
+🛑 COMMON FAILURE: emitting `{"rules":[...]}` AT THE TOP LEVEL of set_form_meta WITHOUT going through validateRuleArray fails because pre-v28 dispatcher silently dropped the key. Form 281 ("Đăng ký nội trú sinh viên") showed `rules:[]` despite the AI claiming success. Always use v28+ which writes to all 3 locations and validates shape.
+
+CANONICAL RULE DEFINITION SHAPE (paste verbatim, swap field keys + values):
+```json
+{
+  "id": "definition_show_step2",
+  "name": "Step 2 visibility — when gender=Male",
+  "enabled": true,
+  "priority": 1,
+  "when": {
+    "id":   "group_a",
+    "type": "group",
+    "logic":"all",
+    "children": [
+      {
+        "id":"rule_a", "type":"rule",
+        "field":"gender", "operator":"eq", "value":"male"
+      }
+    ]
+  },
+  "then": [
+    { "id":"ta_male_section",   "action":"show",    "targetType":"section", "target":"sec_male_only" },
+    { "id":"ta_required_male",  "action":"require", "targetType":"field",   "target":"male_specific_field" }
+  ],
+  "else": [
+    { "id":"te_male_section",   "action":"hide",     "targetType":"section", "target":"sec_male_only" },
+    { "id":"te_optional_male",  "action":"optional", "targetType":"field",   "target":"male_specific_field" }
+  ]
+}
+```
+
+ID CONVENTIONS (matching production templates in MEGAFORM TEMPLATES/DefaultTemplates - Deployed/rules-forms):
+- Rule Definition: `definition_<purpose>`
+- Group: `group_<letter>`
+- Leaf condition: `rule_<letter>`
+- THEN action: `ta_<target>`
+- ELSE action: `te_<target>`
+
+The dispatcher''s validator auto-fills missing ids/name/enabled/priority — but production templates always carry them explicitly. AI should follow the same convention.
+
+VALIDATOR ENFORCES:
+- `when.type` must be `"group"` or `"rule"`. `group` has `logic:"all"|"any"` + `children:[node...]` (non-empty). `rule` has `field, operator, value`.
+- `then`/`else` are arrays. At least ONE must be non-empty.
+- Each action needs `action`, `targetType` (`"field"|"section"|"step"`), `target` (key). `setValue` needs `value`.
+
+14 operators (case-insensitive, numeric coerce):
+`eq, neq, gt, gte, lt, lte, contains, startsWith, endsWith, in, notIn, isEmpty, isNotEmpty, isTrue, isFalse`
+
+For `in` / `notIn`: comma-separate values: `"value":"A,B,C"`.
+For `isEmpty/isNotEmpty/isTrue/isFalse`: no `value` field needed.
+
+8 actions:
+`show, hide, require, optional, enable, disable, setValue, clear`
+
+3 target types: `field, section, step`.
+
+VISUAL QA CHECKLIST after emitting rules:
+1. Open the Rules tab on the form builder. Each rule should appear in the left sidebar with ON badge + priority number.
+2. Click each rule — the right pane shows WHEN/THEN/ELSE editor populated with your conditions/actions.
+3. Open the form view (/xx?formid=N). Change the trigger field — the target should show/hide/require/etc. in real time.
+4. If nothing happens: check trigger field key matches `when.field` exactly (case-sensitive, snake_case).
+5. If the target stays visible after the condition reverses: you forgot the `else` branch with the inverse action.
+
+WHAT RULES CAN NOT DO (use workarounds):
+- Auto-CALCULATE numbers (no formula action). Use DataGrid with computeFormula (see form_pattern-formula-datagrid).
+- No "any field changes" trigger.
+- No async/server-side conditions.
+';
+
+MERGE dbo.MF_AI_Knowledge AS T
+USING (SELECT 'form_pattern-rules-overview' AS Slug) AS S ON T.Slug = S.Slug AND T.PortalId IS NULL
+WHEN MATCHED THEN UPDATE SET
+  T.Title='Rule system overview (engine, shape, dispatcher contract v28, canonical IDs, visual QA checklist)',
+  T.Summary='Top-level guide to MegaForm rules: 14 operators, 8 actions, WHEN/THEN/ELSE, priority, the rule JSON shape, dispatcher contract (writes to 3 slots), canonical ID conventions, Visual QA checklist. v28+ validates shape via validateRuleArray.',
+  T.Body=@b,
+  T.Tags='rules,overview,schema,engine,dispatcher,RULES-001,canonical,visual-qa,validator',
+  T.Kind='form_pattern',
+  T.Source='megaform-builtin',
+  T.Version=2;
+SELECT LEN(@b) AS new_body_len;

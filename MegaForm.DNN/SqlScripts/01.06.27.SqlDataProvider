@@ -1,0 +1,176 @@
+-- MegaForm 01.06.27 — AI Knowledge Base (2026-05-28)
+--
+-- Adds the AI knowledge base used by the MegaForm AI Form Assistant:
+--   MF_AI_Knowledge         — current knowledge entries
+--   MF_AI_Knowledge_History — audit log of every edit (for rollback)
+--
+-- Each entry has Kind = widget | sql_sample | row_template | pager_template
+--                       | form_pattern | designer | cascade_pattern | system_arch
+-- and a Source = 'megaform-builtin' | 'customer' | 'customer-overridden'.
+-- Future upgrades MERGE on Slug but only update Source='megaform-builtin' rows,
+-- so customer-edited entries survive MegaForm updates.
+
+IF OBJECT_ID('{databaseOwner}{objectQualifier}MF_AI_Knowledge', 'U') IS NULL
+BEGIN
+    CREATE TABLE {databaseOwner}{objectQualifier}MF_AI_Knowledge (
+        Id              INT IDENTITY(1,1) PRIMARY KEY,
+        Slug            NVARCHAR(160) NOT NULL,
+        Kind            NVARCHAR(40)  NOT NULL,
+        Title           NVARCHAR(200) NOT NULL,
+        Summary         NVARCHAR(500) NULL,
+        Body            NVARCHAR(MAX) NULL,
+        Tags            NVARCHAR(500) NULL,
+        Examples        NVARCHAR(MAX) NULL,
+        PortalId        INT NULL,                   -- NULL = global
+        Source          NVARCHAR(40)  NOT NULL CONSTRAINT DF_MF_AI_Knowledge_Source DEFAULT 'customer',
+        Version         INT NOT NULL CONSTRAINT DF_MF_AI_Knowledge_Version DEFAULT 1,
+        CreatedByUserId INT NULL,
+        CreatedOnDate   DATETIME2 NOT NULL CONSTRAINT DF_MF_AI_Knowledge_CreatedOn DEFAULT SYSUTCDATETIME(),
+        UpdatedByUserId INT NULL,
+        UpdatedOnDate   DATETIME2 NULL,
+        CONSTRAINT UQ_MF_AI_Knowledge_Slug UNIQUE (Slug, PortalId)
+    );
+    CREATE INDEX IX_MF_AI_Knowledge_Kind   ON {databaseOwner}{objectQualifier}MF_AI_Knowledge (Kind);
+    CREATE INDEX IX_MF_AI_Knowledge_Source ON {databaseOwner}{objectQualifier}MF_AI_Knowledge (Source);
+END;
+GO
+
+IF OBJECT_ID('{databaseOwner}{objectQualifier}MF_AI_Knowledge_History', 'U') IS NULL
+BEGIN
+    CREATE TABLE {databaseOwner}{objectQualifier}MF_AI_Knowledge_History (
+        HistoryId       INT IDENTITY(1,1) PRIMARY KEY,
+        KnowledgeId     INT NOT NULL,
+        Slug            NVARCHAR(160) NOT NULL,
+        Kind            NVARCHAR(40)  NOT NULL,
+        Title           NVARCHAR(200) NOT NULL,
+        Summary         NVARCHAR(500) NULL,
+        Body            NVARCHAR(MAX) NULL,
+        Tags            NVARCHAR(500) NULL,
+        Examples        NVARCHAR(MAX) NULL,
+        Source          NVARCHAR(40)  NOT NULL,
+        Version         INT NOT NULL,
+        ChangedByUserId INT NULL,
+        ChangedOnDate   DATETIME2 NOT NULL CONSTRAINT DF_MF_AI_Knowledge_Hist_When DEFAULT SYSUTCDATETIME(),
+        ChangeAction    NVARCHAR(16)  NOT NULL  -- 'create' | 'update' | 'delete'
+    );
+    CREATE INDEX IX_MF_AI_Knowledge_Hist_KnowledgeId ON {databaseOwner}{objectQualifier}MF_AI_Knowledge_History (KnowledgeId);
+END;
+GO
+
+-- ────────────────────────────────────────────────────────────────────────
+--  Seed: 50 built-in knowledge entries
+-- ────────────────────────────────────────────────────────────────────────
+-- All seed entries use Source='megaform-builtin'. On MegaForm upgrade we
+-- MERGE on Slug + PortalId IS NULL + Source='megaform-builtin' so customer
+-- overrides (Source='customer-overridden' or 'customer') are preserved.
+
+DECLARE @kb TABLE (
+  Slug NVARCHAR(160), Kind NVARCHAR(40), Title NVARCHAR(200),
+  Summary NVARCHAR(500), Body NVARCHAR(MAX), Tags NVARCHAR(500), Examples NVARCHAR(MAX)
+);
+
+-- ── Widgets (21 entries) ────────────────────────────────────────────
+INSERT INTO @kb VALUES
+  ('widget-text','widget','Text — single-line input','Plain text input, max 250 chars by default. Use for names, codes, short labels.','{"props":["placeholder","maxLength","pattern","minLength"],"defaults":{}}','text,input,basic',NULL),
+  ('widget-longtext','widget','LongText — multi-line textarea','Multi-line textarea. Use for descriptions, comments, addresses.','{"props":["placeholder","rows","maxLength"],"defaults":{"rows":4}}','text,input,basic',NULL),
+  ('widget-email','widget','Email — email address','Email input with built-in email validation.','{"props":["placeholder"],"defaults":{}}','email,input,basic',NULL),
+  ('widget-phone','widget','Phone — phone number','Simple phone input. Use widget-phonepro for international dial code.','{"props":["placeholder","format"],"defaults":{}}','phone,input,basic',NULL),
+  ('widget-phonepro','widget','PhonePro — international phone','Phone with country flag + dial-code selector + per-country format validation.','{"props":["defaultCountry","preferredCountries","format"],"defaults":{"defaultCountry":"vn"}}','phone,intl,advanced',NULL),
+  ('widget-number','widget','Number — numeric input','Number input with min/max/step.','{"props":["min","max","step","decimals"],"defaults":{}}','number,input,basic',NULL),
+  ('widget-date','widget','Date — date picker','Date picker (year/month/day).','{"props":["min","max","format"],"defaults":{"format":"yyyy-MM-dd"}}','date,input,basic',NULL),
+  ('widget-datetime','widget','DateTime — date+time picker','Combined date + time picker.','{"props":["format"],"defaults":{}}','date,time,input',NULL),
+  ('widget-time','widget','Time — time-only picker','Time picker (hour/minute).','{"props":["format","step"],"defaults":{}}','time,input,basic',NULL),
+  ('widget-select','widget','Select — single-choice dropdown','Single-choice dropdown. Options can be static array OR SQL-driven via dataSource.','{"props":["options","dataSource","placeholder","searchable","dependsOn"],"defaults":{}}','select,dropdown,sql,cascade','[{"options":[{"value":"a","label":"Alpha"},{"value":"b","label":"Beta"}]}]'),
+  ('widget-multiselect','widget','MultiSelect — multi-choice','Multi-choice dropdown with chips.','{"props":["options","dataSource","placeholder"],"defaults":{}}','select,multi,dropdown',NULL),
+  ('widget-radio','widget','Radio — radio buttons','Radio group, single choice. Use widgetProps.optionLayout="2col"/"3col" for column layout.','{"props":["options","optionLayout"],"defaults":{}}','radio,choice,basic',NULL),
+  ('widget-checkbox','widget','Checkbox — single boolean','Single checkbox / toggle.','{"props":["label","defaultChecked"],"defaults":{}}','checkbox,boolean',NULL),
+  ('widget-switch','widget','Switch — on/off toggle','Toggle switch (UI-only variant of Checkbox).','{"props":["label"],"defaults":{}}','switch,toggle,boolean',NULL),
+  ('widget-fileupload','widget','FileUpload — file attach','File upload field with multi-file + accept filter.','{"props":["accept","multiple","maxSizeMb","maxFiles"],"defaults":{"multiple":false}}','file,upload,attachment',NULL),
+  ('widget-signature','widget','Signature — touch signature','Touch / mouse signature pad. Saves SVG path.','{"props":["penColor","backgroundColor"],"defaults":{}}','signature,sign,confirm',NULL),
+  ('widget-rating','widget','Rating — star rating','1-N star rating selector.','{"props":["max","allowHalf"],"defaults":{"max":5}}','rating,score',NULL),
+  ('widget-slider','widget','Slider — range slider','Numeric range slider.','{"props":["min","max","step"],"defaults":{}}','slider,range,number',NULL),
+  ('widget-color','widget','Color — color picker','Color picker, returns hex.','{"props":[],"defaults":{}}','color,picker',NULL),
+  ('widget-richtext','widget','RichText — WYSIWYG','Rich-text editor (bold/italic/links/images).','{"props":["toolbar"],"defaults":{}}','rich,wysiwyg,html',NULL),
+  ('widget-hidden','widget','Hidden — hidden field','Hidden value (e.g. token, source URL).','{"props":["defaultValue"],"defaults":{}}','hidden,meta',NULL);
+
+-- ── Vertical / SQL widgets (8 entries) ──────────────────────────────
+INSERT INTO @kb VALUES
+  ('widget-dynamiclabel','widget','DynamicLabel — read-only HTML / SQL preview','Display-only HTML that resolves runtime tokens {{field:KEY}} / {{submission:KEY}} / {{query:PARAM}}. Can also bind SQL via connectionKey + masterQuery. For URL attributes (src, href, background-image) ALWAYS append |format=raw so the runtime emits a plain string, not rich-display HTML.','{"props":["htmlContent","connectionKey","masterQuery","wrapperTemplate","rowTemplate","emptyHtml","pagerTemplate"],"presets":["card-grid","table-list","stat","detail","blog"]}','dynamiclabel,sql,html,tokens','[{"htmlContent":"<h2>{{field:title}}</h2><p>{{submission:date}}</p>"}]'),
+  ('widget-datarepeater','widget','DataRepeater — master/detail SQL','Master/detail repeater. masterQuery returns rows, optionally detailQuery returns child rows per parent key.','{"props":["connectionKey","masterQuery","detailQuery","headerTemplate","rowTemplate","detailTemplate","footerTemplate","pagerTemplate","pageSize","queryDependsOn"]}','datarepeater,sql,master-detail',NULL),
+  ('widget-gridrepeater','widget','GridRepeater — filterable grid','SQL grid with searchable/sortable columns.','{"props":["connectionKey","query","columns","pageSize","filters"]}','gridrepeater,sql,grid,filter',NULL),
+  ('widget-datagrid','widget','DataGrid — editable Subform','Editable subform bound to a SQL table on DashboardDatabase. Inline + Modal edit modes. Supports server-side compute (totalField + totalFormula).','{"props":["tableName","parentKeyColumn","columns","editMode","totalField","totalFormula"],"defaults":{"editMode":"inline"}}','datagrid,subform,sql,editable','[{"tableName":"OrderItems","totalField":"total","totalFormula":"Sum(\"qty*price\")"}]'),
+  ('widget-contentslider','widget','ContentSlider — carousel','Image / content carousel.','{"props":["slides","autoplay","interval"],"defaults":{"autoplay":true}}','slider,carousel,image',NULL),
+  ('widget-payment','widget','Payment — Stripe/Apple/Google Pay','Unified payment widget (Stripe + Visa/MC + Apple Pay + Google Pay).','{"props":["provider","amount","currency","mode"],"defaults":{"provider":"stripe"}}','payment,stripe,checkout',NULL),
+  ('widget-pdfform','widget','PdfForm — multi-page PDF builder','Multi-page PDF form with drag-drop field placement.','{"props":["pdfUrl","fields"]}','pdf,form,multi-page',NULL),
+  ('widget-golfscorecard','widget','GolfScorecard — golf score tracker','Golf scorecard with par/handicap.','{"props":["holes","format"]}','golf,sport,score',NULL);
+
+-- ── DynamicLabel presets (5 entries) ─────────────────────────────────
+INSERT INTO @kb VALUES
+  ('preset-dynlabel-card-grid','row_template','DynamicLabel preset: Card grid','3-column responsive card grid. Each row → card with image + title + body.','{"presetLabel":"Card grid","applyOp":"apply_dynlabel_preset","wrapperTemplate":"<div class=\"mf-grid\" style=\"display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;\">{{rows}}</div>","rowTemplate":"<article class=\"mf-grid-card\"><img src=\"{{row:CoverUrl|format=raw}}\"/><h3>{{row:Title}}</h3><p>{{row:Summary}}</p></article>"}','dynamiclabel,preset,card,grid',NULL),
+  ('preset-dynlabel-table-list','row_template','DynamicLabel preset: Table list','Classic HTML table with header + tr per row.','{"presetLabel":"Table list","wrapperTemplate":"<table class=\"mf-grid-table\"><thead><tr><th>Title</th><th>Date</th></tr></thead><tbody>{{rows}}</tbody></table>","rowTemplate":"<tr><td>{{row:Title}}</td><td>{{row:PublishDate}}</td></tr>"}','dynamiclabel,preset,table',NULL),
+  ('preset-dynlabel-stat','row_template','DynamicLabel preset: Stat box','Single stat / KPI box.','{"presetLabel":"Stat","rowTemplate":"<div class=\"mf-grid-stat\"><span class=\"label\">{{row:Label}}</span><strong>{{row:Value}}</strong></div>"}','dynamiclabel,preset,stat,kpi',NULL),
+  ('preset-dynlabel-detail','row_template','DynamicLabel preset: Detail view','Single-record detail page (label/value pairs).','{"presetLabel":"Detail","rowTemplate":"<dl class=\"mf-grid-detail\"><dt>Title</dt><dd>{{row:Title}}</dd></dl>"}','dynamiclabel,preset,detail',NULL),
+  ('preset-dynlabel-blog','row_template','DynamicLabel preset: Blog post list','Timeline-style blog posts with cover image + date + summary.','{"presetLabel":"Blog","rowTemplate":"<article class=\"mf-blog-row\"><img src=\"{{row:CoverUrl|format=raw}}\"/><time>{{row:PublishDate}}</time><h3><a href=\"{{row:SlugLink|format=raw}}\">{{row:Title}}</a></h3><p>{{row:Summary}}</p></article>"}','dynamiclabel,preset,blog',NULL);
+
+-- ── Pager templates (3 entries) ──────────────────────────────────────
+INSERT INTO @kb VALUES
+  ('pager-numeric','pager_template','Pager: Numeric','Numeric page list with prev/next arrows. Listview runtime fills page numbers automatically.','{"html":"<nav class=\"mf-grid-pager\" data-mf-pager=\"numeric\"><span data-mf-pager-prev>&lsaquo; Previous</span><span data-mf-pager-pages></span><span data-mf-pager-next>Next &rsaquo;</span></nav>"}','pager,numeric,pagination',NULL),
+  ('pager-info','pager_template','Pager: X / Y info','Text-only pager: "Showing 10/256 rows · page 1/5".','{"html":"<div class=\"mf-grid-pager-info\">Showing {{meta:rowsOnPage}}/{{meta:totalRows}} rows · page {{meta:page}}/{{meta:pageCount}}</div>"}','pager,info,text',NULL),
+  ('pager-pagesize','pager_template','Pager: Page size selector','Dropdown to change ?size=. Reloads with new pageSize.','{"html":"<form method=\"get\" class=\"mf-grid-pagesize\"><label>Page size: <select name=\"size\" onchange=\"this.form.submit()\"><option>10</option><option>25</option><option>50</option><option>100</option></select></label></form>"}','pager,pagesize,size',NULL);
+
+-- ── SQL samples (5 entries) ──────────────────────────────────────────
+INSERT INTO @kb VALUES
+  ('sql-cascade-province-city','sql_sample','SQL cascade: Province → City','Parent dropdown loads provinces; child loads cities filtered by selected province via :provinceId.','{"parent":{"query":"SELECT ProvinceID AS value, ProvinceName AS label FROM Provinces ORDER BY ProvinceName"},"child":{"query":"SELECT CityID AS value, CityName AS label FROM Cities WHERE ProvinceID = :provinceId ORDER BY CityName","dependsOn":["provinceId"]}}','sql,cascade,dropdown,select','[{"fieldKey":"province","childKey":"city"}]'),
+  ('sql-lookup-by-key','sql_sample','SQL lookup: simple SELECT by key','Lookup record by primary key. Use {{query:id}} from URL or :id param.','{"query":"SELECT * FROM Customers WHERE CustomerID = :id","params":["id"]}','sql,lookup,select',NULL),
+  ('sql-master-detail','sql_sample','SQL master/detail','Master query returns top rows; detail query joins child rows per master key.','{"masterQuery":"SELECT TOP 50 OrderID, OrderDate, CustomerName FROM Orders ORDER BY OrderDate DESC","detailQuery":"SELECT ProductName, Qty, UnitPrice FROM OrderItems WHERE OrderID = :orderId","detailKey":"OrderID","detailParam":"orderId"}','sql,master-detail,join',NULL),
+  ('sql-search-paged','sql_sample','SQL search + paging','OFFSET/FETCH paging with :search filter and :page/:size params.','{"query":"SELECT * FROM Customers WHERE (Name LIKE ''%'' + :search + ''%'' OR Email LIKE ''%'' + :search + ''%'') ORDER BY Name OFFSET (:page - 1) * :size ROWS FETCH NEXT :size ROWS ONLY","params":["search","page","size"]}','sql,search,paging',NULL),
+  ('sql-sproc-with-params','sql_sample','Stored procedure with params','Calling a sproc with typed params.','{"sproc":"usp_MF_Submission_List","params":[{"name":"@formId","type":"int"},{"name":"@from","type":"datetime"}]}','sql,sproc,stored-procedure',NULL);
+
+-- ── Cascade patterns (3 entries) ─────────────────────────────────────
+INSERT INTO @kb VALUES
+  ('cascade-2level','cascade_pattern','2-level cascade dropdown','Parent → child. Child reloads when parent changes; cleared when parent clears.','{"steps":["Field 1: type=Select, dataSource.query=parent SQL","Field 2: type=Select, dataSource.query=child SQL, dependsOn=[parentKey], dataSource.queryDependsOn=[parentKey]"]}','cascade,dropdown,2-level',NULL),
+  ('cascade-3level','cascade_pattern','3-level cascade dropdown','Country → Province → City. Each level depends on the previous.','{"steps":["country: Select","province: Select dependsOn=[country]","city: Select dependsOn=[province]"]}','cascade,dropdown,3-level',NULL),
+  ('cascade-tagged-filter','cascade_pattern','Tag-filtered cascade','Multi-select tag filter that changes options of a child list.','{"steps":["tags: MultiSelect","items: GridRepeater query=SELECT * FROM Items WHERE Tag IN (:tags)"]}','cascade,tag,multiselect',NULL);
+
+-- ── Form patterns (3 entries) ────────────────────────────────────────
+INSERT INTO @kb VALUES
+  ('form-pattern-master-detail','form_pattern','Master-Detail data entry form','Top form fields capture master record; bottom DataGrid (Subform) captures children. Total bubbles up to a master field.','{"masterFields":["customerName","orderDate"],"subform":{"widget":"DataGrid","tableName":"OrderItems","columns":["productId","qty","unitPrice","total"],"totalField":"grandTotal","totalFormula":"Sum(\"qty*unitPrice\")"}}','form,master-detail,subform,datagrid',NULL),
+  ('form-pattern-multi-step','form_pattern','Multi-step wizard form','Form split into steps via Heading dividers + JavaScript step navigation.','{"steps":[{"label":"Profile","fields":["name","email"]},{"label":"Address","fields":["country","city"]},{"label":"Confirm","fields":["signature"]}]}','form,wizard,multi-step',NULL),
+  ('form-pattern-conditional-branch','form_pattern','Conditional fields via rules','Use form.settings.rules to show/hide fields based on other field values.','{"rules":[{"if":[{"key":"hasCompany","op":"=","value":true}],"then":[{"show":"companyName"},{"show":"companyTaxId"}]}]}','form,rule,conditional,branch',NULL);
+
+-- ── Designer popups (5 entries) ──────────────────────────────────────
+INSERT INTO @kb VALUES
+  ('designer-layout-v2','designer','Layout Designer v2 (DynamicLabel + DataRepeater)','Umbraco-style typed-block designer. Pick a template, drag blocks (Header / Rows / Pager / Empty), tweak typed properties. 5 quick-start templates (Magazine / Table / Card / Timeline / Blank).','{"trigger":"Click \"🧱 Layout Designer\" launcher on a DynamicLabel or DataRepeater field","outputFormat":"HTML with <!-- mf:zone --> + <!-- mf:block --> anchors + leading <!-- mf:ld-v2 {state} --> comment for round-trip"}','designer,layout,v2,dynamiclabel',NULL),
+  ('designer-gridrepeater','designer','GridRepeater Designer','Configure GridRepeater columns, sort, filter, page size.','{"trigger":"Field settings panel"}','designer,gridrepeater',NULL),
+  ('designer-datarepeater','designer','DataRepeater Designer','Configure DataRepeater master/detail SQL + 4-template editor (header/row/detail/pager).','{"trigger":"Field settings panel"}','designer,datarepeater',NULL),
+  ('designer-list-view','designer','List View Designer','Configure submission list view (visible fields + row template).','{"trigger":"Module settings → List view"}','designer,listview',NULL),
+  ('designer-card-view','designer','Card View Designer','Configure submission card view (avatar/title/meta fields + body template).','{"trigger":"Module settings → Card view"}','designer,cardview',NULL);
+
+-- ── System architecture (3 entries) ─────────────────────────────────
+INSERT INTO @kb VALUES
+  ('arch-builder','system_arch','MegaForm Builder architecture','SPA mounted on /xx?mfFormId=N#mf-builder. State at window.MegaFormBuilder.state. Fields are objects with key/type/label/widgetProps. AI ops mutate state.fields directly then trigger re-render.','{"globals":["window.MegaFormBuilder","window.MegaFormWidgets","window.__MF_PLATFORM__"],"stateShape":"{ formId, schema:{ fields:[{key,type,label,widgetProps,required,validation,options}], settings }, dirty }"}','arch,builder,spa',NULL),
+  ('arch-listview','system_arch','MegaForm Listview runtime architecture','Listview renders DynamicLabel templates against SQL rows. Resolves tokens via LookUpEngine with named sources: submission, field, submissions, form, module, user, query. For URL attributes use |format=raw.','{"tokenSources":["submission","field","submissions","form","module","user","query"],"tokenFormat":"{{source:key|format=raw}}"}','arch,listview,runtime',NULL),
+  ('arch-dashboard','system_arch','MegaForm Dashboard architecture','Cross-form admin SPA at /xx#mf-dashboard. Panels: Forms, Submissions inbox, Business Starters, AI Knowledge Base.','{"panels":["forms","submissions","starters","ai-knowledge"]}','arch,dashboard',NULL);
+
+-- ── MERGE seed entries into MF_AI_Knowledge ──────────────────────────
+MERGE {databaseOwner}{objectQualifier}MF_AI_Knowledge AS target
+USING (SELECT Slug, Kind, Title, Summary, Body, Tags, Examples FROM @kb) AS source
+   ON target.Slug = source.Slug AND target.PortalId IS NULL
+WHEN NOT MATCHED BY TARGET THEN
+  INSERT (Slug, Kind, Title, Summary, Body, Tags, Examples, PortalId, Source, Version, CreatedOnDate)
+  VALUES (source.Slug, source.Kind, source.Title, source.Summary, source.Body, source.Tags, source.Examples, NULL, 'megaform-builtin', 1, SYSUTCDATETIME())
+WHEN MATCHED AND target.Source = 'megaform-builtin' THEN
+  UPDATE SET
+    Kind        = source.Kind,
+    Title       = source.Title,
+    Summary     = source.Summary,
+    Body        = source.Body,
+    Tags        = source.Tags,
+    Examples    = source.Examples,
+    Version     = target.Version + 1,
+    UpdatedOnDate = SYSUTCDATETIME();
+-- Note: rows with Source IN ('customer','customer-overridden') are NOT updated.
+
+GO
+
+PRINT 'MegaForm 01.06.27 - AI Knowledge Base (table + 50 seed entries) applied.';

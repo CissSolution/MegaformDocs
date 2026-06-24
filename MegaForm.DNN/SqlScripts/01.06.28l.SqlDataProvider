@@ -1,0 +1,162 @@
+/*
+ * MegaForm 01.06.28l — Style Library KB seed
+ * Mined from the (now-deprecated) AI Design Assistant right-panel tab:
+ * 16 visual styles + master prompt + archetype/field-grouping heuristics.
+ * Kind='form_pattern' so the AI chat can list_knowledge(kind='form_pattern')
+ * + get_knowledge(slug=…) to copy verbatim into chat answers when the user
+ * asks for design help.
+ */
+
+-- ─── Style entries ─────────────────────────────────────────────────────────
+;WITH styles(slug, name, tip, body) AS (
+SELECT * FROM (VALUES
+('form_pattern-style-minimal',    'Style: Minimal Clean',    'Editorial',  'Ultra-minimal design. White background, generous whitespace (48-64px padding). Typography-only hierarchy using size and weight. Input fields: border-bottom only, no full borders. One accent color for required markers and focus. Submit: outlined rectangle, no gradient. Max-width 560px centered. Zero shadows, zero gradients, zero decorations.'),
+('form_pattern-style-corporate',  'Style: Corporate',        'Professional','Professional corporate form. Navy (#1e3a5f) header bar with white title. Clean white card body with subtle box-shadow. Blue (#3b82f6) accent for focus states and buttons. 2-column grid where appropriate. Modern sans-serif typography. Solid blue submit button.'),
+('form_pattern-style-soft-ui',    'Style: Soft UI',          'Calm',       'Soft UI / Neumorphism. Light gray background (#f0f0f3). Cards with soft double shadow (light + dark) creating embossed look. Inputs: inset soft shadows. Rounded corners (12-16px) everywhere. Indigo (#6366f1) accent. Submit button with raised soft shadow. Gentle, tactile feel. No hard borders.'),
+('form_pattern-style-glass',      'Style: Glass',            'Trendy',     'Glassmorphism. Gradient background (purple to blue). 2-3 large blurred circle shapes in background via ::before/::after. Form card: rgba(255,255,255,0.15), backdrop-filter:blur(20px), 1px rgba white border, border-radius:24px. Inputs: semi-transparent backgrounds. White text on dark areas. Gradient submit button.'),
+('form_pattern-style-dark',       'Style: Dark Mode',        'Modern',     'Elegant dark theme. Background #0f172a. Card surface #1e293b. Text #e2e8f0. Inputs: dark bg #0f172a, 1px #334155 border, focus glow in indigo. Indigo (#6366f1) accent. No neon effects, just refined dark palette. Submit: indigo background. Clean and readable.'),
+('form_pattern-style-gradient',   'Style: Gradient Hero',    'Bold',       'SaaS landing page style. Bold gradient hero section (purple to pink). White rounded card (border-radius:20px, subtle shadow) below hero for fields. 2-column grid for short fields. Gradient submit button matching hero. Clean modern feel.'),
+('form_pattern-style-nature',     'Style: Nature',           'Organic',    'Organic nature theme. Soft sage/cream background. Forest green (#2d6a4f) accents. Warm earth tones. Large border-radius (20px). Generous spacing. Green submit button, pill shape. Calm and inviting.'),
+('form_pattern-style-material',   'Style: Material',         'System',     'Material Design 3. Elevated card with layered shadow. Primary blue (#1976d2) header. Outlined inputs with floating-label style. 8px grid spacing. Pill-shaped submit button (border-radius:20px). Surface/on-surface color tokens.'),
+('form_pattern-style-japanese',   'Style: Zen',              'Minimal',    'Japanese Zen aesthetic. Muted earth tones: warm gray, beige, charcoal. Extreme negative space (48px+ padding). Minimal 1px borders. No decorations. Quiet refinement. Serif title, sans-serif body. Charcoal submit button, simple rectangle.'),
+('form_pattern-style-pdf-doc',    'Style: Document / PDF',   'Formal',     'Formal document/PDF style. White paper background with subtle page border. Header line and small uppercase section labels. Serif headings optional. Inputs resemble official form fields. Black/gray palette with disciplined spacing. Print-friendly aesthetic.'),
+('form_pattern-style-luxury',     'Style: Luxury',           'Premium',    'Luxury brand aesthetic. Deep charcoal/black background accents and warm gold highlight (#d4af37). Spacious layout. Thin elegant borders. Sophisticated serif heading paired with clean sans-serif body. Minimal but premium. Gold outline submit button.'),
+('form_pattern-style-playful',    'Style: Playful',          'Friendly',   'Playful modern design. Bright but curated palette using orange, yellow, and coral accents. Rounded cards (20px), soft shadow, fun icon accents, but still professional. Great for family, education, and community forms.'),
+('form_pattern-style-healthcare', 'Style: Healthcare',       'Trust',      'Healthcare intake aesthetic. Clean teal and white palette. High readability, strong labels, subtle section dividers. Soft rounded card with reassuring tone. Emphasis on clarity, accessibility, and trust.'),
+('form_pattern-style-event',      'Style: Event',            'Event',      'Modern event registration design. Dynamic accent color bars, slightly bolder typography, lively section headers, and clear CTA. White form surface over vibrant branded top area. Great hierarchy for packages/options.'),
+('form_pattern-style-mono',       'Style: Monochrome',       'Clean',      'Monochrome editorial style. Strict black/white/gray palette. Bold typography hierarchy. Strong spacing rhythm. Thin borders, no gradients. Clean and premium, similar to modern fashion/editorial websites.'),
+('form_pattern-style-coastal',    'Style: Coastal',          'Fresh',      'Airy coastal aesthetic. White/sand form card. Teal (#0077b6) accents. Relaxed generous spacing. Coral (#fb923c) subtle accent touches.')
+) AS v(slug, name, tip, body)
+)
+MERGE {databaseOwner}[{objectQualifier}MF_AI_Knowledge] AS T
+USING styles AS S
+ON T.Slug = S.slug AND T.PortalId IS NULL
+WHEN MATCHED THEN
+  UPDATE SET T.Title = S.name,
+             T.Summary = 'Premium visual style — ' + S.tip + '. Use this brief when the user asks for a ' + S.tip + '/' + REPLACE(REPLACE(S.slug, 'form_pattern-style-', ''), '-', ' ') + ' look.',
+             T.Body = S.body,
+             T.Tags = 'style,design,custom-html,custom-css,' + S.tip + ',' + REPLACE(S.slug, 'form_pattern-style-', ''),
+             T.Kind = 'form_pattern',
+             T.Source = 'megaform-builtin',
+             T.Version = 1
+WHEN NOT MATCHED THEN
+  INSERT (Slug, Kind, Title, Summary, Body, Tags, Examples, PortalId, Source, Version, CreatedOnDate)
+  VALUES (S.slug, 'form_pattern', S.name,
+          'Premium visual style — ' + S.tip + '. Use this brief when the user asks for a ' + S.tip + '/' + REPLACE(REPLACE(S.slug, 'form_pattern-style-', ''), '-', ' ') + ' look.',
+          S.body,
+          'style,design,custom-html,custom-css,' + S.tip + ',' + REPLACE(S.slug, 'form_pattern-style-', ''),
+          NULL, NULL, 'megaform-builtin', 1, SYSUTCDATETIME());
+
+-- ─── Master prompt: 15 non-negotiable rules + creative direction ───────────
+DECLARE @masterBody NVARCHAR(MAX) = N'When the user asks to "redesign", "restyle", "make this beautiful", "give this form a Glass/Dark/Luxury/etc look", or "polish the layout", FOLLOW THIS MASTER PROMPT STRUCTURE when producing a customHtml + customCss block.
+
+NON-NEGOTIABLE MEGAFORM RULES (must hold for EVERY custom-html design op):
+1. Keep EVERY {{field:key}} placeholder EXACTLY as written. Never rewrite, rename, split, omit, or alter any placeholder.
+2. Output exactly TWO blocks: customHtml (the HTML) and customCss (the CSS). Do NOT mix.
+3. Do NOT use <form> tags. The system already provides submission behavior. Use <div class="mfp"> as the root.
+4. Use {{form:title}}, {{form:description}}, and {{form:submit}} for editable form text — do NOT hardcode the current title / description / button label.
+5. CSS must be self-contained and safe inside CMS shells (DNN, Oqtane). Prefix EVERY selector with .mfp or a descendant of .mfp.
+6. Never style global tags or host containers: do NOT target html, body, :root, "*" by itself, form, .container, .row, .col, .table, .card, .btn, .rz-*, .mud-*, .oqtane-*, or any host theme selector.
+7. Include a small local reset scoped only inside .mfp (box-sizing, image max-width, button/font inheritance, heading/paragraph margin normalization).
+8. The result must render correctly when MegaForm injects real inputs into the placeholders.
+9. No JavaScript, no external libraries, no remote fonts, no dependencies, no inline SVG data URIs.
+10. Fully responsive: desktop may use 2 columns for compact fields, but under 600px everything must stack to one column with comfortable spacing.
+11. Style these selectors beautifully inside the scoped CSS: input, textarea, select, .mf-field-label, .mf-required, .mf-field-error.
+12. Preserve accessibility: high contrast, visible focus states, comfortable tap targets, clear labels, sensible spacing.
+13. The design must feel premium and deliberate — similar in quality to excellent Jotform showcase forms. Avoid generic AI-looking output.
+14. Build a visually attractive top section inside .mfp using {{form:title}} and {{form:description}}.
+15. Wide text areas, messages, notes, consent groups, and upload areas stay FULL WIDTH. Short fields (name, email, phone, date, dropdowns, number) may share rows on desktop if balanced.
+
+CREATIVE DIRECTION TEMPLATE:
+- Form archetype: <pick via archetype detection — see form_pattern-form-archetype-detection>.
+- Visual style family: <one of the 16 styles from form_pattern-style-*>.
+- Style brief: <paste the body of the chosen form_pattern-style-* KB entry verbatim>.
+- Vary layout rhythm, hero treatment, section framing, spacing, surface treatment, border language, and button presentation per style.
+
+USAGE FROM CHAT:
+1. Detect the form archetype with the regex map in form_pattern-form-archetype-detection.
+2. Pick (or ask the user to pick) one of the 16 styles by slug form_pattern-style-{id}.
+3. get_knowledge(slug="form_pattern-style-{id}") and paste its body into the design brief.
+4. Apply the 15 non-negotiable rules above to the generated HTML/CSS.
+5. Emit set_form_meta with customHtml + customCss (or customHtmlAppend/customCssAppend for additive tweaks).';
+
+MERGE {databaseOwner}[{objectQualifier}MF_AI_Knowledge] AS T
+USING (SELECT 'form_pattern-ai-design-master-prompt' AS Slug) AS S
+ON T.Slug = S.Slug AND T.PortalId IS NULL
+WHEN MATCHED THEN
+  UPDATE SET T.Title = 'AI Design Master Prompt (15 non-negotiable rules + creative direction)',
+             T.Summary = 'When generating customHtml + customCss for a form, the AI MUST satisfy these 15 rules (placeholder preservation, .mfp scoping, no <form>, no host-theme selectors, responsive, etc) and follow the creative direction template.',
+             T.Body = @masterBody,
+             T.Tags = 'design,master-prompt,rules,custom-html,custom-css,scoping,placeholders',
+             T.Kind = 'form_pattern',
+             T.Source = 'megaform-builtin',
+             T.Version = 1
+WHEN NOT MATCHED THEN
+  INSERT (Slug, Kind, Title, Summary, Body, Tags, Examples, PortalId, Source, Version, CreatedOnDate)
+  VALUES ('form_pattern-ai-design-master-prompt', 'form_pattern',
+          'AI Design Master Prompt (15 non-negotiable rules + creative direction)',
+          'When generating customHtml + customCss for a form, the AI MUST satisfy these 15 rules (placeholder preservation, .mfp scoping, no <form>, no host-theme selectors, responsive, etc) and follow the creative direction template.',
+          @masterBody,
+          'design,master-prompt,rules,custom-html,custom-css,scoping,placeholders',
+          NULL, NULL, 'megaform-builtin', 1, SYSUTCDATETIME());
+
+-- ─── Archetype + field-group heuristics ────────────────────────────────────
+DECLARE @archBody NVARCHAR(MAX) = N'FORM ARCHETYPE DETECTION (run on title + description + flattened field labels/types as a lowercased haystack):
+
+| Archetype          | Regex (matches any)                                                            |
+|--------------------|--------------------------------------------------------------------------------|
+| healthcare         | /patient|medical|health|clinic|doctor|insurance|symptom|allerg/                |
+| event              | /event|ticket|attendee|conference|seminar|workshop|rsvp/                       |
+| job application    | /job|career|resume|cv|employment|position|applicant/                           |
+| booking            | /booking|reservation|schedule|appointment|check.?in|check.?out|travel/         |
+| feedback           | /feedback|review|rating|survey|satisfaction/                                   |
+| contact            | /contact|lead|quote|enquiry|inquiry|message/                                   |
+| payment            | /payment|billing|checkout|donation|purchase|order/                             |
+| (fallback)         | professional intake                                                            |
+
+Order matters — match the FIRST hit top-to-bottom. The detected archetype goes into the master prompt as "Form archetype: <archetype>." line.
+
+FIELD-GROUP CLASSIFICATION (per field, by lowercased key + label + type):
+
+| Group     | Regex (key + label, OR type contains)                                                  | Layout treatment                              |
+|-----------|----------------------------------------------------------------------------------------|-----------------------------------------------|
+| name      | /first.?name|last.?name|full.?name|name/                                               | Row [6,6] when ≥ 2 matches                    |
+| contact   | /email|phone|mobile|contact|website|company/                                           | 2-column row when ≥ 2 matches                 |
+| dates     | /date|birth|dob|time/ OR type contains date/time                                       | Compact row alignment                         |
+| choices   | type radio|dropdown|select|checkbox                                                    | Breathing room, clear selection styling       |
+| longText  | type textarea, OR label/key contains paragraph|message|notes|comment|description       | FULL WIDTH near bottom                        |
+| uploads   | type contains upload|file|image|signature                                              | FULL WIDTH, visually distinct                 |
+| profile   | /gender|city|state|country|address|zip|postal|age|department|role/                     | Short rows for rhythm                         |
+| other     | (anything not above)                                                                   | Normal flow                                   |
+
+LAYOUT HINTS DERIVED:
+- ≥ 2 name fields → "Put name fields on the same row when space allows: …"
+- ≥ 2 contact fields → "Balanced 2-column row …"
+- ≥ 2 profile fields → "Group compact profile fields into short rows for rhythm …"
+- ≥ 1 dates field → "Date/time fields should align neatly with other compact fields …"
+- ≥ 1 choices → "Choice fields should have breathing room and clear selection styling …"
+- ≥ 1 longText → "Long text fields should span full width near the bottom …"
+- ≥ 1 uploads → "Upload/signature widgets should be full width and visually distinct …"
+- (none of the above) → "Use a clean 1-2 column responsive layout with strong spacing rhythm."
+
+Hidden + Html + Row fields are EXCLUDED from the flattened data field list (they are structural/utility). Section fields are kept (so their headings appear in the generated layout).';
+
+MERGE {databaseOwner}[{objectQualifier}MF_AI_Knowledge] AS T
+USING (SELECT 'form_pattern-form-archetype-detection' AS Slug) AS S
+ON T.Slug = S.Slug AND T.PortalId IS NULL
+WHEN MATCHED THEN
+  UPDATE SET T.Title = 'Form archetype detection + field-group layout heuristics',
+             T.Summary = '8 archetype regex patterns + 8 field-group classifications + 8 derived layout hints. Use these when the user asks for design help without a clear style name.',
+             T.Body = @archBody,
+             T.Tags = 'design,archetype,heuristics,layout,field-grouping',
+             T.Kind = 'form_pattern',
+             T.Source = 'megaform-builtin',
+             T.Version = 1
+WHEN NOT MATCHED THEN
+  INSERT (Slug, Kind, Title, Summary, Body, Tags, Examples, PortalId, Source, Version, CreatedOnDate)
+  VALUES ('form_pattern-form-archetype-detection', 'form_pattern',
+          'Form archetype detection + field-group layout heuristics',
+          '8 archetype regex patterns + 8 field-group classifications + 8 derived layout hints. Use these when the user asks for design help without a clear style name.',
+          @archBody,
+          'design,archetype,heuristics,layout,field-grouping',
+          NULL, NULL, 'megaform-builtin', 1, SYSUTCDATETIME());

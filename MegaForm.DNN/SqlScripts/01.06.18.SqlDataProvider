@@ -1,0 +1,25 @@
+/* ============================================================
+   MegaForm v01.06.18 — Schema migration
+   ----------------------------------------------------------------
+   No schema changes. v01.06.18 ships:
+     - Business Starters App Builder (Leave Request, Proposal,
+       Document Exchange, Purchase Order) ported canonical to
+       MegaForm.Core.Services.Starters so DNN runs them via
+       /API/MegaForm/Starter/{SetupName|Launch}.
+     - Submission Inbox Data View now populates inputs from the
+       parsed DataJson dictionary (server returns `data` field
+       alongside the existing `values` label/displayValue array).
+     - DNN-side fixes that did NOT need schema migration:
+       * Form/portalId=0 (host portal) accepted by starter check
+       * ListForms pageSize=0 clamped to 1000 in DnnFormRepoAdapter
+       * MF_FormPermissions.PrincipalId NOT NULL fallback to RoleName
+       * MF_FormPermissions.FieldRestrictions NOT NULL fallback to ''
+       * Starter form RateLimitMaxPerWindow raised 20→100 (in Core
+         starter schema, not stored in DNN tables).
+       * RendererHostUrl sanitizer (RederHost→RendererHost, blank
+         when hostname differs from current portal alias).
+   This file exists so DNN's install pipeline runs a clean version
+   step from 01.06.17 → 01.06.18 without errors.
+   ============================================================ */
+
+PRINT N'MegaForm v01.06.18 — no schema changes (Business Starters port + Inbox data fix).';

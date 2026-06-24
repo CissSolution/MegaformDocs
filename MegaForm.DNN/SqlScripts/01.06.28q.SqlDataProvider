@@ -1,0 +1,178 @@
+/*
+ * 01.06.28q — 3 more premium layouts: hero-top, full-page background, header-band.
+ * Companion to form_pattern-premium-split-layout (image left + form right).
+ */
+
+DECLARE @bHeroTop NVARCHAR(MAX) = N'Premium "hero banner on top" layout — full-width hero image at the top with title/description overlay, form card stacked below. Classic SaaS landing-page style. Best for marketing-driven intake forms (event signup, webinar, lead gen).
+
+🛑 MANDATORY: every field in `fields[]` MUST appear as `{{field:KEY}}` inside the form-card section. Auto-repair will inject missing ones but the AI should never rely on that.
+
+Canonical schema:
+```json
+{
+  "version":"1.0",
+  "title":"Tham gia Webinar",
+  "fields":[
+    { "key":"row_name", "type":"Row", "columns":[
+      { "span":6, "fields":[{ "key":"first_name", "type":"Text", "label":"First name", "required":true }] },
+      { "span":6, "fields":[{ "key":"last_name",  "type":"Text", "label":"Last name",  "required":true }] }
+    ]},
+    { "key":"email", "type":"Email", "label":"Email", "required":true },
+    { "key":"company", "type":"Text", "label":"Company" },
+    { "key":"role", "type":"Select", "label":"Your role", "options":[
+      {"value":"engineer","label":"Engineer"},
+      {"value":"manager","label":"Manager"},
+      {"value":"founder","label":"Founder"},
+      {"value":"other","label":"Other"}
+    ]},
+    { "key":"comments", "type":"Textarea", "label":"What do you hope to learn?" }
+  ],
+  "settings":{
+    "theme":"custom",
+    "submitButtonText":"Đăng ký ngay",
+    "customHtml":"<div class=\"mfp mfp-hero-top\"><div class=\"mfp-hero-banner\"><img src=\"https://picsum.photos/seed/webinar-hero/1600/520\" class=\"mfp-hero-img\"><div class=\"mfp-hero-overlay\"><h1 class=\"mfp-hero-title\">{{form:title}}</h1><p class=\"mfp-hero-sub\">{{form:description}}</p></div></div><div class=\"mfp-form-card\"><div class=\"mfp-form-inner\">{{field:row_name}}{{field:email}}{{field:company}}{{field:role}}{{field:comments}}<div class=\"mfp-submit-wrap\">{{form:submit}}</div></div></div></div>",
+    "customCss":".mfp.mfp-hero-top{max-width:880px;margin:24px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 24px 60px -10px rgba(15,23,42,0.16);font-family:''Inter'',sans-serif}.mfp.mfp-hero-top .mfp-hero-banner{position:relative;height:280px;overflow:hidden}.mfp.mfp-hero-top .mfp-hero-img{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(0.65)}.mfp.mfp-hero-top .mfp-hero-overlay{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:32px 36px;color:#fff;background:linear-gradient(180deg,rgba(15,23,42,0.05) 0%,rgba(15,23,42,0.55) 100%)}.mfp.mfp-hero-top .mfp-hero-title{font-size:34px;font-weight:800;margin:0 0 10px;line-height:1.15;letter-spacing:-0.01em}.mfp.mfp-hero-top .mfp-hero-sub{font-size:15px;opacity:0.92;margin:0;line-height:1.5}.mfp.mfp-hero-top .mfp-form-card{padding:36px 44px 44px;background:#fafafa}.mfp.mfp-hero-top .mfp-form-inner{display:flex;flex-direction:column;gap:18px;max-width:560px;margin:0 auto}.mfp.mfp-hero-top input,.mfp.mfp-hero-top textarea,.mfp.mfp-hero-top select{width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:11px 14px;font-size:14px;background:#fff;box-sizing:border-box}.mfp.mfp-hero-top input:focus,.mfp.mfp-hero-top textarea:focus,.mfp.mfp-hero-top select:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,0.12);outline:none}.mfp.mfp-hero-top .mf-field-label{font-size:13px;font-weight:600;color:#334155;margin-bottom:6px;display:block}.mfp.mfp-hero-top .mf-required{color:#ef4444}.mfp.mfp-hero-top .mf-btn-submit,.mfp.mfp-hero-top button[type=submit]{width:100%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:0;padding:12px 24px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer}.mfp.mfp-hero-top .mf-btn-submit:hover{transform:translateY(-1px);box-shadow:0 8px 16px -4px rgba(99,102,241,0.4)}@media (max-width:640px){.mfp.mfp-hero-top .mfp-hero-banner{height:200px}.mfp.mfp-hero-top .mfp-hero-title{font-size:24px}.mfp.mfp-hero-top .mfp-form-card{padding:24px 20px}}"
+  }
+}
+```
+
+KEYWORDS that trigger this layout: "hero ở trên", "hero banner top", "ảnh trên cùng", "image on top", "banner đầu trang", "marketing", "landing page", "webinar", "event signup", "lead gen".';
+
+
+DECLARE @bBgOverlay NVARCHAR(MAX) = N'Premium "background image full-page + form floating overlay" layout — full viewport background image (often blurred/darkened), centered semi-transparent form card with backdrop-filter blur. Glassmorphism vibe. Best for invitation forms, RSVP, luxury / lifestyle brands.
+
+Canonical schema:
+```json
+{
+  "version":"1.0",
+  "title":"You Are Invited",
+  "description":"Save the date — June 15, 2026",
+  "fields":[
+    { "key":"row_name", "type":"Row", "columns":[
+      { "span":6, "fields":[{ "key":"first_name", "type":"Text", "label":"First name", "required":true }] },
+      { "span":6, "fields":[{ "key":"last_name",  "type":"Text", "label":"Last name",  "required":true }] }
+    ]},
+    { "key":"email", "type":"Email", "label":"Email", "required":true },
+    { "key":"attending", "type":"Radio", "label":"Will you attend?", "required":true,
+      "options":[{"value":"yes","label":"Yes, I will be there"},{"value":"no","label":"Sorry, can not make it"}],
+      "properties":{"optionColumns":2} },
+    { "key":"plus_one", "type":"Checkbox", "label":"Bringing a +1" },
+    { "key":"dietary", "type":"Textarea", "label":"Dietary requirements" }
+  ],
+  "settings":{
+    "theme":"custom",
+    "submitButtonText":"Send RSVP",
+    "customHtml":"<div class=\"mfp mfp-bg-overlay\"><div class=\"mfp-bg-img\"></div><div class=\"mfp-card\"><div class=\"mfp-card-inner\"><h1 class=\"mfp-card-title\">{{form:title}}</h1><p class=\"mfp-card-sub\">{{form:description}}</p>{{field:row_name}}{{field:email}}{{field:attending}}{{field:plus_one}}{{field:dietary}}<div class=\"mfp-submit-wrap\">{{form:submit}}</div></div></div></div>",
+    "customCss":".mfp.mfp-bg-overlay{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 16px;font-family:''Inter'',sans-serif}.mfp.mfp-bg-overlay .mfp-bg-img{position:absolute;inset:0;background-image:url(''https://picsum.photos/seed/invitation/1920/1200'');background-size:cover;background-position:center;filter:brightness(0.55) blur(2px);z-index:0}.mfp.mfp-bg-overlay .mfp-card{position:relative;z-index:1;width:100%;max-width:520px;background:rgba(255,255,255,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.18);border-radius:18px;padding:40px 36px;box-shadow:0 30px 80px -20px rgba(15,23,42,0.4)}.mfp.mfp-bg-overlay .mfp-card-inner{display:flex;flex-direction:column;gap:16px}.mfp.mfp-bg-overlay .mfp-card-title{font-size:30px;font-weight:800;margin:0 0 4px;color:#0f172a;line-height:1.1;text-align:center}.mfp.mfp-bg-overlay .mfp-card-sub{font-size:14px;color:#475569;margin:0 0 16px;text-align:center}.mfp.mfp-bg-overlay input,.mfp.mfp-bg-overlay textarea,.mfp.mfp-bg-overlay select{width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:11px 14px;font-size:14px;background:#fff;box-sizing:border-box}.mfp.mfp-bg-overlay input:focus,.mfp.mfp-bg-overlay textarea:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,0.12);outline:none}.mfp.mfp-bg-overlay .mf-field-label{font-size:13px;font-weight:600;color:#334155;margin-bottom:6px;display:block}.mfp.mfp-bg-overlay .mf-required{color:#ef4444}.mfp.mfp-bg-overlay .mf-btn-submit,.mfp.mfp-bg-overlay button[type=submit]{width:100%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:0;padding:13px 24px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;margin-top:6px}"
+  }
+}
+```
+
+ANATOMY:
+- `.mfp-bg-img` is ABSOLUTE-positioned with `inset:0` so it covers the full `.mfp-bg-overlay` wrapper. The background-image goes here (not on .mfp itself) so the form card can sit on TOP with z-index:1.
+- `.mfp-card` has `backdrop-filter:blur(20px)` for the glassmorphism look on browsers that support it. The `-webkit-` prefix covers Safari.
+- `min-height:100vh` makes the form fill the viewport for that "invitation card floating over photo" vibe.
+- The background image stays SHARP at center while edges blur via `filter:blur(2px)` — feel free to remove the blur for crisp photos.
+
+KEYWORDS that trigger this layout: "background image full-page", "ảnh nền cả trang", "invitation", "rsvp", "glassmorphism", "luxury invitation", "wedding RSVP", "elegant", "transparent card", "floating overlay".';
+
+
+DECLARE @bHeaderBand NVARCHAR(MAX) = N'Premium "header color band" layout — solid or gradient colored header strip at the top with title/description, white form card BELOW that visually OVERLAPS the band edge with a negative-margin lift. Compact, corporate, professional. Best for customer surveys, support intake, B2B forms.
+
+Canonical schema:
+```json
+{
+  "version":"1.0",
+  "title":"Customer Support Request",
+  "description":"Tell us about your issue — we typically respond within 4 business hours.",
+  "fields":[
+    { "key":"row_name", "type":"Row", "columns":[
+      { "span":6, "fields":[{ "key":"first_name", "type":"Text", "label":"First name", "required":true }] },
+      { "span":6, "fields":[{ "key":"last_name",  "type":"Text", "label":"Last name",  "required":true }] }
+    ]},
+    { "key":"email", "type":"Email", "label":"Email", "required":true },
+    { "key":"category", "type":"Select", "label":"Category", "required":true, "options":[
+      {"value":"billing","label":"Billing"},{"value":"technical","label":"Technical"},{"value":"general","label":"General"}
+    ]},
+    { "key":"priority", "type":"Radio", "label":"Priority", "options":[
+      {"value":"low","label":"Low"},{"value":"medium","label":"Medium"},{"value":"high","label":"High"}
+    ], "properties":{"optionColumns":3} },
+    { "key":"description", "type":"Textarea", "label":"Describe the issue", "required":true }
+  ],
+  "settings":{
+    "theme":"custom",
+    "submitButtonText":"Submit request",
+    "customHtml":"<div class=\"mfp mfp-header-band\"><div class=\"mfp-band\"><h1 class=\"mfp-band-title\">{{form:title}}</h1><p class=\"mfp-band-sub\">{{form:description}}</p></div><div class=\"mfp-body\"><div class=\"mfp-body-inner\">{{field:row_name}}{{field:email}}{{field:category}}{{field:priority}}{{field:description}}<div class=\"mfp-submit-wrap\">{{form:submit}}</div></div></div></div>",
+    "customCss":".mfp.mfp-header-band{max-width:760px;margin:32px auto 60px;font-family:''Inter'',sans-serif}.mfp.mfp-header-band .mfp-band{background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#fff;padding:36px 36px 56px;border-radius:14px 14px 0 0;text-align:left}.mfp.mfp-header-band .mfp-band-title{font-size:26px;font-weight:800;margin:0 0 8px;line-height:1.2;letter-spacing:-0.01em}.mfp.mfp-header-band .mfp-band-sub{font-size:14px;opacity:0.9;margin:0;line-height:1.5}.mfp.mfp-header-band .mfp-body{background:#fff;border-radius:14px;box-shadow:0 24px 60px -20px rgba(15,23,42,0.25);margin-top:-32px;position:relative;padding:32px 36px 40px}.mfp.mfp-header-band .mfp-body-inner{display:flex;flex-direction:column;gap:18px}.mfp.mfp-header-band input,.mfp.mfp-header-band textarea,.mfp.mfp-header-band select{width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:11px 14px;font-size:14px;background:#fff;box-sizing:border-box}.mfp.mfp-header-band input:focus,.mfp.mfp-header-band textarea:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,0.15);outline:none}.mfp.mfp-header-band .mf-field-label{font-size:13px;font-weight:600;color:#334155;margin-bottom:6px;display:block}.mfp.mfp-header-band .mf-required{color:#ef4444}.mfp.mfp-header-band .mf-btn-submit,.mfp.mfp-header-band button[type=submit]{width:auto;background:#1e3a8a;color:#fff;border:0;padding:11px 28px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;margin-top:8px}.mfp.mfp-header-band .mf-btn-submit:hover{background:#1e40af}@media (max-width:640px){.mfp.mfp-header-band .mfp-band,.mfp.mfp-header-band .mfp-body{padding-left:20px;padding-right:20px}}"
+  }
+}
+```
+
+ANATOMY:
+- `.mfp-band` colored header — swap the gradient for any brand color. `padding-bottom:56px` is deliberately deep so the white form card overlaps it.
+- `.mfp-body` white card with `margin-top:-32px` to lift up INTO the band — creates the signature "card sitting on the color stripe" look.
+- `border-radius` arrangement: band has `14px 14px 0 0` (top corners only), body has full `14px` so they visually merge but the body stands out.
+- Submit button is solid `#1e3a8a` (matching the band) instead of gradient — more corporate.
+
+COLOR VARIANTS (swap the band gradient):
+- Healthcare: `linear-gradient(135deg,#0f766e,#14b8a6)` (teal)
+- Marketing: `linear-gradient(135deg,#ec4899,#f97316)` (pink → orange)
+- Finance: `linear-gradient(135deg,#1e293b,#475569)` (slate steel)
+- Education: `linear-gradient(135deg,#7c3aed,#a855f7)` (deep purple)
+
+KEYWORDS that trigger this layout: "header band", "header strip", "color header", "corporate header", "B2B intake", "support form", "customer service", "branded header", "thanh tiêu đề màu", "kiểu B2B".';
+
+
+-- 4-in-1 directory entry pointing users at all premium layouts
+DECLARE @bDir NVARCHAR(MAX) = N'4 production-ready premium custom-shell layouts. Pick by the user''s visual cue (image left/right, image top, full-page background, header band). Each entry has full canonical customHtml + customCss + `{{field:KEY}}` placeholders for all fields — paste verbatim, swap field keys, ship.
+
+| Slug | Look | When to use |
+|------|------|-------------|
+| `form_pattern-premium-split-layout` | Image LEFT (42%) + form RIGHT (58%) | Course signup, workshop, designer-look intake. Jotform-default. |
+| `form_pattern-premium-hero-top` | Full-width hero image TOP + form BELOW | Webinar/event signup, marketing landing, lead gen. |
+| `form_pattern-premium-bg-overlay` | Full-page background + centered glass card with fields ON TOP of the background | Invitation, RSVP, luxury / lifestyle, wedding. |
+| `form_pattern-premium-header-band` | Solid/gradient color HEADER BAND + white form card OVERLAPPING the band edge | Customer support, B2B intake, corporate survey. |
+
+All 4 layouts share the same rules:
+1. `settings.theme = "custom"` (REQUIRED).
+2. customHtml root: `<div class="mfp mfp-<layout-name>">…</div>`.
+3. 🛑 every field in `fields[]` MUST appear as `{{field:KEY}}` inside customHtml. Auto-repair in the AI Form Creator will inject missing ones, but AI should emit them correctly first try.
+4. Use `{{form:title}}`, `{{form:description}}`, `{{form:submit}}` for editable form-level text.
+5. Every CSS rule prefixed by `.mfp.mfp-<layout-name>` — never style global tags. Picsum.photos for images.
+6. `@media (max-width:640-760px)` collapse to mobile.
+
+PICKING THE LAYOUT — keyword map:
+- "split", "2-col", "image left", "image right", "designer" → split-layout
+- "hero top", "hero banner", "banner trên cùng", "landing", "webinar" → hero-top
+- "background image", "full-page bg", "ảnh nền cả trang", "glassmorphism", "invitation", "rsvp" → bg-overlay
+- "header band", "header strip", "color header", "corporate", "B2B", "thanh tiêu đề màu" → header-band
+- Generic "premium / Jotform / branded" with no specific cue → default to split-layout
+
+REUSING ACROSS FORMS:
+After AI creates one of these forms, the user can switch layouts by changing the wrapper class `.mfp-<layout-name>` AND swapping the customCss block. The customHtml structure for split vs hero-top etc differs (1 vs 2 children of root), so a clean swap requires both.';
+
+MERGE dbo.MF_AI_Knowledge AS T
+USING (SELECT 'form_pattern-premium-hero-top' AS Slug) AS S ON T.Slug = S.Slug AND T.PortalId IS NULL
+WHEN MATCHED THEN UPDATE SET T.Title='Premium hero-banner-top layout (full-width hero image on top + form card below)', T.Summary='Marketing-style hero banner at the top with title/description overlay; form card stacked below. Best for webinar/event signup + lead gen.', T.Body=@bHeroTop, T.Tags='premium,hero,banner,top,landing,webinar,event,customHtml,customCss', T.Kind='form_pattern', T.Source='megaform-builtin', T.Version=1
+WHEN NOT MATCHED THEN INSERT (Slug,Kind,Title,Summary,Body,Tags,Source,Version,CreatedOnDate)
+VALUES ('form_pattern-premium-hero-top','form_pattern','Premium hero-banner-top layout (full-width hero image on top + form card below)','Marketing-style hero banner at the top with title/description overlay; form card stacked below. Best for webinar/event signup + lead gen.',@bHeroTop,'premium,hero,banner,top,landing,webinar,event,customHtml,customCss','megaform-builtin',1,SYSUTCDATETIME());
+
+MERGE dbo.MF_AI_Knowledge AS T
+USING (SELECT 'form_pattern-premium-bg-overlay' AS Slug) AS S ON T.Slug = S.Slug AND T.PortalId IS NULL
+WHEN MATCHED THEN UPDATE SET T.Title='Premium full-page background + glassmorphism floating card overlay', T.Summary='Full-viewport background image with a centered semi-transparent backdrop-blurred form card floating on top. Best for RSVP, invitation, wedding, luxury intake.', T.Body=@bBgOverlay, T.Tags='premium,background,overlay,glassmorphism,invitation,rsvp,wedding,luxury,customHtml,customCss', T.Kind='form_pattern', T.Source='megaform-builtin', T.Version=1
+WHEN NOT MATCHED THEN INSERT (Slug,Kind,Title,Summary,Body,Tags,Source,Version,CreatedOnDate)
+VALUES ('form_pattern-premium-bg-overlay','form_pattern','Premium full-page background + glassmorphism floating card overlay','Full-viewport background image with a centered semi-transparent backdrop-blurred form card floating on top. Best for RSVP, invitation, wedding, luxury intake.',@bBgOverlay,'premium,background,overlay,glassmorphism,invitation,rsvp,wedding,luxury,customHtml,customCss','megaform-builtin',1,SYSUTCDATETIME());
+
+MERGE dbo.MF_AI_Knowledge AS T
+USING (SELECT 'form_pattern-premium-header-band' AS Slug) AS S ON T.Slug = S.Slug AND T.PortalId IS NULL
+WHEN MATCHED THEN UPDATE SET T.Title='Premium color header band + overlapping white form card (corporate / B2B)', T.Summary='Solid/gradient color header strip with title/description; white form card visually overlaps the band edge with negative margin. Corporate / B2B / support form vibe.', T.Body=@bHeaderBand, T.Tags='premium,header,band,strip,corporate,b2b,support,customHtml,customCss', T.Kind='form_pattern', T.Source='megaform-builtin', T.Version=1
+WHEN NOT MATCHED THEN INSERT (Slug,Kind,Title,Summary,Body,Tags,Source,Version,CreatedOnDate)
+VALUES ('form_pattern-premium-header-band','form_pattern','Premium color header band + overlapping white form card (corporate / B2B)','Solid/gradient color header strip with title/description; white form card visually overlaps the band edge with negative margin. Corporate / B2B / support form vibe.',@bHeaderBand,'premium,header,band,strip,corporate,b2b,support,customHtml,customCss','megaform-builtin',1,SYSUTCDATETIME());
+
+MERGE dbo.MF_AI_Knowledge AS T
+USING (SELECT 'form_pattern-premium-layouts-directory' AS Slug) AS S ON T.Slug = S.Slug AND T.PortalId IS NULL
+WHEN MATCHED THEN UPDATE SET T.Title='Premium layouts directory — pick split / hero-top / bg-overlay / header-band by keyword', T.Summary='4 production-ready premium custom-shell layouts with the keyword map AI uses to pick the right one based on the user prompt.', T.Body=@bDir, T.Tags='premium,directory,picker,keyword-map,customHtml', T.Kind='form_pattern', T.Source='megaform-builtin', T.Version=1
+WHEN NOT MATCHED THEN INSERT (Slug,Kind,Title,Summary,Body,Tags,Source,Version,CreatedOnDate)
+VALUES ('form_pattern-premium-layouts-directory','form_pattern','Premium layouts directory — pick split / hero-top / bg-overlay / header-band by keyword','4 production-ready premium custom-shell layouts with the keyword map AI uses to pick the right one based on the user prompt.',@bDir,'premium,directory,picker,keyword-map,customHtml','megaform-builtin',1,SYSUTCDATETIME());
+
+SELECT Slug, LEN(Body) AS BodyLen FROM dbo.MF_AI_Knowledge WHERE Slug LIKE 'form_pattern-premium-%' ORDER BY Slug;

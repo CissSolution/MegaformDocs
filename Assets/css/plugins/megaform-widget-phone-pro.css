@@ -1,0 +1,631 @@
+.mfp-phone-pro {
+  position: relative;
+  width: 100%;
+  font-family: Inter, Arial, sans-serif;
+}
+
+.mfp-phone-shell {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  min-height: 56px;
+  background: #fff;
+  border: 1px solid #cfd8ea;
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(28, 54, 109, 0.06);
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.mfp-phone-shell:focus-within,
+.mfp-phone-pro.is-open .mfp-phone-shell {
+  border-color: #3f7cff;
+  box-shadow: 0 10px 24px rgba(63, 124, 255, 0.14);
+}
+
+.mfp-phone-pro.is-invalid .mfp-phone-shell {
+  border-color: #d64545;
+  box-shadow: 0 10px 22px rgba(214, 69, 69, 0.12);
+}
+
+.mfp-phone-country-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 108px;
+  padding: 0 14px;
+  border: 0;
+  border-right: 1px solid #e3e9f5;
+  background: transparent;
+  color: #163b88;
+  cursor: pointer;
+  border-radius: 16px 0 0 16px;
+}
+
+.mfp-phone-country-trigger:hover { background: #f6f9ff; }
+
+.mfp-phone-flag,
+.mfp-phone-country-flag {
+  font-size: 23px;
+  line-height: 1;
+}
+
+.mfp-phone-country-code {
+  font-weight: 700;
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+.mfp-phone-chevron {
+  font-size: 16px;
+  opacity: .7;
+  margin-left: auto;
+}
+
+.mfp-phone-input-wrap {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.mfp-phone-prefix {
+  padding-left: 14px;
+  color: #49628f;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.mfp-phone-input {
+  width: 100%;
+  height: 54px;
+  border: 0;
+  background: transparent;
+  padding: 0 16px;
+  font-size: 18px;
+  color: #13305e;
+  outline: none;
+}
+
+.mfp-phone-input::placeholder { color: #8ea2c7; }
+
+.mfp-phone-helper {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #667a9b;
+}
+
+.mfp-phone-error {
+  min-height: 18px;
+  margin-top: 6px;
+  font-size: 13px;
+  color: #c53535;
+}
+
+.mfp-phone-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  z-index: 30;
+  width: min(420px, 100%);
+  background: #fff;
+  border: 1px solid #cdd7ed;
+  border-radius: 18px;
+  box-shadow: 0 18px 44px rgba(17, 43, 92, 0.16);
+  overflow: hidden;
+}
+
+.mfp-phone-dropdown-head {
+  padding: 14px 16px 8px;
+  font-weight: 800;
+  color: #173772;
+}
+
+.mfp-phone-search-wrap {
+  padding: 0 14px 12px;
+}
+
+.mfp-phone-search {
+  width: 100%;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid #d8e2f6;
+  padding: 0 14px;
+  outline: none;
+  font-size: 15px;
+}
+
+.mfp-phone-search:focus {
+  border-color: #3f7cff;
+  box-shadow: 0 0 0 4px rgba(63, 124, 255, 0.12);
+}
+
+.mfp-phone-country-list {
+  max-height: 300px;
+  overflow: auto;
+  padding: 0 8px 8px;
+}
+
+.mfp-phone-country-group-title {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 10px 8px 8px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: #7d8eaf;
+  background: linear-gradient(180deg, #ffffff 70%, rgba(255,255,255,.9));
+}
+
+.mfp-phone-country-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 12px;
+  border: 1px solid #d7e2f6;
+  border-radius: 12px;
+  background: #fff;
+  margin-bottom: 8px;
+  cursor: pointer;
+  text-align: left;
+  color: #18408d;
+}
+
+.mfp-phone-country-item:hover,
+.mfp-phone-country-item.is-active,
+.mfp-phone-country-item.is-keyboard-active {
+  background: #eef4ff;
+  border-color: #7ea7ff;
+}
+
+.mfp-phone-country-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.mfp-phone-country-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 15px;
+}
+
+.mfp-phone-country-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+
+.mfp-phone-country-dial {
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+/* [QA-20260615b] Fixed-width checkmark column so selected/unselected rows align. */
+.mfp-phone-country-check {
+  width: 18px;
+  text-align: center;
+  color: #3f7cff;
+  font-weight: 700;
+  flex: none;
+}
+.mfp-phone-country-item.is-active .mfp-phone-country-check {
+  color: #3f7cff;
+}
+
+.mfp-phone-empty {
+  padding: 20px 14px;
+  color: #6e80a3;
+  text-align: center;
+}
+
+.mfp-props-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.mfp-props-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: #21365f;
+}
+
+.mfp-props-grid input,
+.mfp-props-grid select {
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid #d6deee;
+  padding: 0 12px;
+}
+
+.mfp-prop-check {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 10px !important;
+  min-height: 38px;
+}
+
+@media (max-width: 640px) {
+  .mfp-phone-shell {
+    min-height: 52px;
+    border-radius: 14px;
+  }
+
+  .mfp-phone-country-trigger {
+    min-width: 92px;
+    padding: 0 10px;
+  }
+
+  .mfp-phone-input {
+    font-size: 17px;
+    padding: 0 12px;
+  }
+
+  .mfp-phone-dropdown {
+    width: 100%;
+  }
+
+  .mfp-props-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+.mfp-props-section {
+  border: 1px solid #e3e9f5;
+  border-radius: 12px;
+  padding: 12px;
+  background: #fff;
+}
+
+.mfp-props-section-title {
+  margin-bottom: 10px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: #6b7da4;
+}
+
+.mfp-props-section--checks {
+  grid-column: 1 / -1;
+}
+
+.mfp-props-grid .mfp-prop-check {
+  min-height: 34px;
+}
+
+/* Form controls refresh: compact mock-aligned shell. Keep the existing
+   country/search logic; this only changes presentation. */
+.mfp-phone-pro {
+  font-family: var(--mf-font-family, Inter, Arial, sans-serif);
+}
+
+.mfp-phone-shell {
+  min-height: 46px;
+  border-radius: 8px;
+  border-color: #cfd7e3;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.mfp-phone-shell:focus-within,
+.mfp-phone-pro.is-open .mfp-phone-shell {
+  border-color: var(--mf-input-focus-border, #2563eb);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+}
+
+.mfp-phone-pro.is-invalid .mfp-phone-shell {
+  border-color: #e11d48;
+  box-shadow: 0 0 0 3px rgba(225, 29, 72, .10);
+}
+
+.mfp-phone-country-trigger {
+  min-width: 100px;
+  padding: 0 12px;
+  border-right-color: #cfd7e3;
+  border-radius: 8px 0 0 8px;
+  background: #f3f6fa;
+  color: #111827;
+  gap: 7px;
+}
+
+.mfp-phone-country-trigger:hover { background: #eef2f7; }
+.mfp-phone-flag,
+.mfp-phone-country-flag { font-size: 17px; }
+.mfp-phone-country-code {
+  font-size: 14px;
+  font-weight: 600;
+}
+.mfp-phone-chevron {
+  width: 8px;
+  height: 8px;
+  margin-left: 2px;
+  border-right: 1.8px solid #6b7280;
+  border-bottom: 1.8px solid #6b7280;
+  color: transparent;
+  transform: rotate(45deg) translateY(-2px);
+}
+.mfp-phone-prefix {
+  padding-left: 12px;
+  color: #111827;
+  font-size: 14px;
+  font-weight: 600;
+}
+.mfp-phone-input {
+  height: 44px;
+  padding: 0 12px;
+  color: #111827;
+  font-size: 14px;
+}
+.mfp-phone-input::placeholder { color: #7c8794; }
+.mfp-phone-helper {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  color: #536273;
+  font-size: 12px;
+}
+.mfp-phone-error {
+  margin-top: 6px;
+  color: #e11d48;
+  font-size: 12px;
+}
+.mfp-phone-dropdown {
+  top: calc(100% + 6px);
+  border-radius: 8px;
+  border-color: #cfd7e3;
+  box-shadow: 0 14px 36px rgba(15, 23, 42, .16);
+}
+.mfp-phone-dropdown-head {
+  padding: 12px 14px 8px;
+  color: #111827;
+  font-size: 13px;
+}
+.mfp-phone-search {
+  height: 38px;
+  border-radius: 7px;
+  font-size: 13px;
+}
+.mfp-phone-country-item {
+  padding: 9px 10px;
+  border-radius: 7px;
+  border-color: #d8e0ea;
+  color: #111827;
+}
+.mfp-phone-country-item:hover,
+.mfp-phone-country-item.is-active,
+.mfp-phone-country-item.is-keyboard-active {
+  background: #eef4ff;
+  border-color: #9dbaf8;
+}
+
+@media (max-width: 640px) {
+  .mfp-phone-country-trigger {
+    min-width: 88px;
+    padding: 0 10px;
+  }
+  .mfp-phone-input {
+    font-size: 14px;
+    padding: 0 10px;
+  }
+}
+
+/* =====================================================================
+   [B47-Canonical] Phone-Pro single-wrap (2026-06-02)
+   --------------------------------------------------------------------
+   Goal: country selector + number input share ONE bordered flex
+   container (no nested borders, no height mismatch). Mirrors the
+   reference shadcn pattern: <div class="flex border overflow-hidden">
+     <button class="border-r bg-muted">flag dial chevron</button>
+     <input class="border-0 rounded-none"/>
+   </div>
+   These rules are appended LAST so they win against the earlier
+   "compact mock-aligned shell" block (lines ~289-404) without needing
+   to delete it; cascade order does the job. Uses canonical tokens
+   from megaform.css :root so themeCssOverrides + B46 unified height
+   keep working.
+   ===================================================================== */
+
+.mfp-phone-shell {
+    display: flex !important;
+    align-items: stretch !important;
+    width: 100%;
+    border: var(--mf-input-border, 1px solid #d0d5dd) !important;
+    border-radius: var(--mf-input-radius, 6px) !important;
+    overflow: hidden !important;
+    background: var(--mf-input-bg, #ffffff) !important;
+    height: var(--mf-input-unified-height, 42px) !important;
+    min-height: var(--mf-input-unified-height, 42px) !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    transition: border-color 0.2s, box-shadow 0.2s !important;
+}
+
+.mfp-phone-shell:hover {
+    border-color: var(--mf-input-focus-border, #4a90d9) !important;
+}
+
+.mfp-phone-shell:focus-within,
+.mfp-phone-pro.is-open .mfp-phone-shell {
+    border-color: var(--mf-input-focus-border, #4a90d9) !important;
+    box-shadow: var(--mf-input-focus-shadow, 0 0 0 3px rgba(74,144,217,0.15)) !important;
+}
+
+.mfp-phone-pro.is-open {
+    z-index: 1000;
+}
+
+.mfp-phone-pro.is-open .mfp-phone-shell {
+    overflow: visible !important;
+}
+
+.mfp-phone-pro.is-invalid .mfp-phone-shell {
+    border-color: var(--mf-input-error-border, #e74c3c) !important;
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.12) !important;
+}
+
+.mfp-phone-country-trigger,
+.mfp-phone-country-btn {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 0 12px !important;
+    border: 0 !important;
+    border-right: 1px solid var(--mf-input-border-color, #d0d5dd) !important;
+    background: #f3f6fa !important;
+    min-width: 100px;
+    cursor: pointer;
+    font-size: var(--mf-input-font-size, 15px) !important;
+    color: var(--mf-input-color, #333333) !important;
+    white-space: nowrap;
+    border-radius: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    box-shadow: none !important;
+}
+
+.mfp-phone-country-trigger:hover,
+.mfp-phone-country-btn:hover {
+    background: #eef2f7 !important;
+}
+
+.mfp-phone-input-wrap {
+    display: flex !important;
+    align-items: center !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+}
+
+.mfp-phone-prefix {
+    padding-left: 12px !important;
+    color: var(--mf-input-color, #333333) !important;
+    font-size: var(--mf-input-font-size, 15px) !important;
+    font-weight: 600;
+    background: transparent !important;
+    border: 0 !important;
+}
+
+.mfp-phone-input {
+    flex: 1 !important;
+    width: 100% !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    padding: 0 12px !important;
+    background: transparent !important;
+    font-size: var(--mf-input-font-size, 15px) !important;
+    color: var(--mf-input-color, #333333) !important;
+    outline: none !important;
+    box-shadow: none !important;
+    height: auto !important;
+    min-height: 0 !important;
+}
+
+.mfp-phone-input:focus,
+.mfp-phone-input:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border: 0 !important;
+}
+
+/* PhoneNumberPro flag dropdown polish */
+.mfp-phone-flag,
+.mfp-phone-country-flag {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 auto !important;
+    line-height: 1 !important;
+}
+
+.mfp-phone-flag-frame {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 24px;
+    height: 18px;
+    overflow: hidden;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    border-radius: 3px;
+    background: #f8fafc;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.mfp-phone-flag-fallback {
+    position: absolute;
+    inset: 0;
+    display: none;
+    place-items: center;
+    color: #475569;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0;
+}
+
+.mfp-phone-flag-frame.is-missing .mfp-phone-flag-fallback {
+    display: grid;
+}
+
+.mfp-phone-flag-img {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.mfp-phone-flag-globe {
+    display: inline-grid;
+    width: 24px;
+    height: 18px;
+    place-items: center;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.mfp-phone-country-left {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+}
+
+.mfp-phone-country-right {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex: 0 0 auto;
+    margin-left: 12px;
+}
+
+.mfp-phone-country-check {
+    display: inline-grid;
+    width: 18px;
+    min-width: 18px;
+    place-items: center;
+    color: transparent;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.mfp-phone-country-item.is-active .mfp-phone-country-check {
+    color: #3f7cff;
+}
+
+.mfp-phone-country-item.is-active {
+    box-shadow: inset 3px 0 0 #3f7cff;
+}

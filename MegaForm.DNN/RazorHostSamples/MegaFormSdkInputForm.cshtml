@@ -1,0 +1,215 @@
+@*
+    ──────────────────────────────────────────────────────────────────────────
+    MegaForm SDK — DNN Razor Host input-form demo
+    ──────────────────────────────────────────────────────────────────────────
+    Drop this file into a DNN "Razor Host" module's Scripts folder
+    (~/DesktopModules/RazorModules/RazorHost/Scripts/) and select it.
+
+    It renders a simple schema-driven input form using ONLY the public
+    MegaForm.Sdk facade (IMegaFormClient), then submits the collected data
+    through the same SDK. No MegaForm internals are used.
+
+    URL:  <razor-host-page>?formId=1   (omit formId to use the first published form)
+    ──────────────────────────────────────────────────────────────────────────
+*@
+@using System.Linq
+@using System.Collections.Generic
+@using MegaForm.Sdk
+
+@functions {
+    // Razor Host pages are synchronous; the SDK is async. Block via Task.Run
+    // to avoid any ASP.NET SyncContext deadlock.
+    static T Run<T>(System.Func<IMegaFormClient, System.Threading.Tasks.Task<T>> action)
+    {
+        // Touch the DNN service locator once so the ambient SDK accessor is wired.
+        var _ = MegaForm.DNN.Services.DnnServiceLocator.Instance;
+        return System.Threading.Tasks.Task.Run(() => MegaFormSdk.RunAsync(action)).GetAwaiter().GetResult();
+    }
+
+    static string RenderInputType(string fieldType)
+    {
+        switch (fieldType?.ToLowerInvariant())
+        {
+            case "email": return "email";
+            case "number": return "number";
+            case "date": return "date";
+            case "url": return "url";
+            case "phone": return "tel";
+            case "password": return "password";
+            default: return "text";
+        }
+    }
+}
+
+@{
+    var portalId = DotNetNuke.Entities.Portals.PortalSettings.Current != null
+        ? DotNetNuke.Entities.Portals.PortalSettings.Current.PortalId : 0;
+    var scope = new MegaFormScope { PortalId = portalId };
+
+    int formId = 0;
+    int.TryParse(Request.QueryString["formId"], out formId);
+
+    // Pick the first published form if no formId supplied.
+    var forms = Run(c => c.Forms.ListFormsAsync(new FormQuery { Status = "published", PageSize = 100 }, scope)).Items.ToList();
+    if (formId <= 0 && forms.Count > 0) { formId = forms[0].FormId; }
+    var currentForm = forms.FirstOrDefault(f => f.FormId == formId);
+
+    FormSchemaInfo schema = null;
+    if (currentForm != null)
+    {
+        schema = Run<FormSchemaInfo>(c => System.Threading.Tasks.Task.FromResult(c.Schema.ParseForm(currentForm)));
+    }
+
+    var inputFields = schema?.Fields.Where(f => f.IsInputField && !f.Hidden).ToList() ?? new List<FormFieldInfo>();
+
+    SubmitResult submitResult = null;
+    var submitted = Request.HttpMethod == "POST" && formId > 0;
+    if (submitted && inputFields.Count > 0)
+    {
+        var data = new Dictionary<string, object>();
+        foreach (var field in inputFields)
+        {
+            var key = field.Key;
+            if (string.IsNullOrWhiteSpace(key)) { continue; }
+
+            var raw = Request.Form[key];
+            if (field.Type == "Checkbox")
+            {
+                // Multiple checkboxes come back as comma-separated.
+                data[key] = raw.Contains(",")
+                    ? raw.Split(',').Select(x => x.Trim()).Where(x => !string.IsNullOrEmpty(x)).Cast<object>().ToList()
+                    : (object)raw;
+            }
+            else
+            {
+                data[key] = raw;
+            }
+        }
+
+        // Honeypot / anti-spam helpers expected by the public renderer.
+        data["__mf_hp"] = "";
+        data["__mf_ts"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        submitResult = Run(c => c.Submissions.SubmitAsync(formId, data, scope));
+    }
+}
+
+<div style="font-family:'Segoe UI',system-ui,sans-serif;color:#0f172a;max-width:720px;margin:0 auto;padding:18px 22px;">
+    <h2 style="margin:0 0 4px;font-size:20px;font-weight:800;">📝 MegaForm SDK — Razor Input Form Demo</h2>
+    <p style="margin:0 0 14px;color:#475569;font-size:13px;">
+        Rendered through <code>IMegaFormClient.Schema.ParseForm</code> and submitted through <code>IMegaFormClient.Submissions.SubmitAsync</code>.
+    </p>
+
+    @if (currentForm == null)
+    {
+        <div style="padding:14px 16px;background:#fee2e2;border:1px solid #fecaca;border-radius:10px;color:#991b1b;">
+            No published form found. Create and publish a MegaForm first, then pass <code>?formId=ID</code>.
+        </div>
+    }
+    else
+    {
+        <div style="margin-bottom:16px;font-size:13px;color:#475569;">
+            Form: <strong>@currentForm.Title</strong> (#@currentForm.FormId)
+        </div>
+
+        if (submitted && submitResult != null)
+        {
+            if (submitResult.Success)
+            {
+                <div style="padding:14px 16px;background:#dcfce7;border:1px solid #86efac;border-radius:10px;color:#166534;margin-bottom:16px;">
+                    ✅ Submitted successfully. Submission #@submitResult.SubmissionId.<br />
+                    @if (!string.IsNullOrWhiteSpace(submitResult.SuccessMessage))
+                    {
+                        <span>@submitResult.SuccessMessage</span>
+                    }
+                </div>
+            }
+            else
+            {
+                <div style="padding:14px 16px;background:#fee2e2;border:1px solid #fecaca;border-radius:10px;color:#991b1b;margin-bottom:16px;">
+                    ❌ Submit failed: @submitResult.ErrorMessage
+                    @if (submitResult.ValidationErrors != null && submitResult.ValidationErrors.Count > 0)
+                    {
+                        <ul style="margin:8px 0 0 18px;padding:0;">
+                            @foreach (var err in submitResult.ValidationErrors)
+                            {
+                                <li><strong>@err.Key:</strong> @err.Value</li>
+                            }
+                        </ul>
+                    }
+                </div>
+            }
+        }
+
+        <form method="post" action="?formId=@formId" style="border:1px solid #e2e8f0;border-radius:12px;padding:18px;background:#fff;">
+            @foreach (var field in inputFields)
+            {
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-weight:600;font-size:13px;margin-bottom:5px;">
+                        @field.Label @(field.Required ? "*" : "")
+                    </label>
+
+                    @if (field.Type == "Select" || field.Type == "Radio")
+                    {
+                        if (field.Type == "Select")
+                        {
+                            <select name="@field.Key" required="@field.Required"
+                                    style="width:100%;padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;">
+                                <option value="">-- select --</option>
+                                @foreach (var opt in field.Options)
+                                {
+                                    <option value="@opt.Value">@opt.Label</option>
+                                }
+                            </select>
+                        }
+                        else
+                        {
+                            <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                                @foreach (var opt in field.Options)
+                                {
+                                    <label style="font-weight:normal;font-size:13px;">
+                                        <input type="radio" name="@field.Key" value="@opt.Value" required="@field.Required" />
+                                        @opt.Label
+                                    </label>
+                                }
+                            </div>
+                        }
+                    }
+                    else if (field.Type == "Checkbox")
+                    {
+                        <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                            @foreach (var opt in field.Options)
+                            {
+                                <label style="font-weight:normal;font-size:13px;">
+                                    <input type="checkbox" name="@field.Key" value="@opt.Value" />
+                                    @opt.Label
+                                </label>
+                            }
+                        </div>
+                    }
+                    else if (field.Type == "Textarea")
+                    {
+                        <textarea name="@field.Key" required="@field.Required" rows="4"
+                                  style="width:100%;padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;"></textarea>
+                    }
+                    else
+                    {
+                        <input type="@RenderInputType(field.Type)" name="@field.Key" required="@field.Required"
+                               placeholder="@field.Placeholder"
+                               style="width:100%;padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;" />
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(field.HelpText))
+                    {
+                        <small style="display:block;margin-top:4px;color:#64748b;font-size:12px;">@field.HelpText</small>
+                    }
+                </div>
+            }
+
+            <button type="submit"
+                    style="padding:10px 18px;background:#0f172a;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;">
+                Submit
+            </button>
+        </form>
+    }
+</div>

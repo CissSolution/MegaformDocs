@@ -1,0 +1,384 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&display=swap');
+
+/* ===== Scope root: CSS variables (theme_selector overrides these) ===== */
+.cel-rsvp-min {
+  --background: oklch(0.99 0 0);
+  --foreground: oklch(0.15 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0 0);
+  --primary: oklch(0.25 0 0);
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.96 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.50 0 0);
+  --accent: oklch(0.40 0 0);
+  --border: oklch(0.92 0 0);
+  --input: oklch(0.97 0 0);
+  --ring: oklch(0.25 0 0);
+
+  display: block !important;
+  width: 100% !important;
+  position: relative;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Cormorant Garamond', Georgia, serif !important;
+  box-sizing: border-box;
+  overflow: hidden !important;
+}
+.cel-rsvp-min *,
+.cel-rsvp-min *::before,
+.cel-rsvp-min *::after {
+  box-sizing: border-box;
+}
+.cel-rsvp-min * {
+  font-family: 'Cormorant Garamond', Georgia, serif !important;
+}
+
+/* ===== Background image + overlay (fixed layers behind content) ===== */
+.cel-rsvp-min .crm-bg-image {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: url('https://images.unsplash.com/photo-1519741497674-611481863552?w=1920&q=80');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;
+  pointer-events: none;
+}
+.cel-rsvp-min .crm-bg-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: color-mix(in oklab, var(--background) 85%, transparent);
+  backdrop-filter: blur(1px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ===== Content wrapper ===== */
+.cel-rsvp-min .crm-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+.cel-rsvp-min .crm-container {
+  max-width: 672px !important;    /* 42rem = max-w-2xl */
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding: 12px 16px !important;
+  width: 100%;
+  box-sizing: border-box;
+}
+@media (min-width: 768px) {
+  .cel-rsvp-min .crm-container {
+    padding: 20px 16px !important;
+  }
+}
+
+/* ===== Card ===== */
+.cel-rsvp-min .crm-card {
+  position: relative;
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -2px rgba(0,0,0,.05) !important;
+  border-radius: 0 !important;
+}
+
+/* ===== Header ===== */
+.cel-rsvp-min .crm-header {
+  text-align: center !important;
+  padding: 20px 24px !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+.cel-rsvp-min .crm-header-inner {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  flex-wrap: wrap;
+}
+.cel-rsvp-min .crm-logo {
+  width: 32px !important;
+  height: 32px !important;
+  border: 1px solid color-mix(in oklab, var(--primary) 50%, transparent) !important;
+  background: transparent !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0;
+}
+.cel-rsvp-min .crm-logo-letter {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: var(--primary) !important;
+  line-height: 1 !important;
+}
+.cel-rsvp-min .crm-brand {
+  text-align: left !important;
+}
+.cel-rsvp-min .crm-title {
+  font-size: 18px !important;
+  line-height: 1.3 !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.025em !important;
+  color: var(--foreground) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-transform: none !important;
+  font-family: 'Cormorant Garamond', Georgia, serif !important;
+  border: none !important;
+}
+.cel-rsvp-min .crm-subtitle {
+  font-size: 10px !important;
+  line-height: 1.4 !important;
+  letter-spacing: 0.2em !important;
+  text-transform: uppercase !important;
+  color: var(--muted-foreground) !important;
+  margin: 2px 0 0 !important;
+  padding: 0 !important;
+  font-family: 'Cormorant Garamond', Georgia, serif !important;
+}
+
+/* ===== Section ===== */
+.cel-rsvp-min .crm-section {
+  padding: 24px !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+@media (min-width: 768px) {
+  .cel-rsvp-min .crm-section {
+    padding: 32px !important;
+  }
+}
+.cel-rsvp-min .crm-section-label {
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+  letter-spacing: 0.2em !important;
+  text-transform: uppercase !important;
+  color: var(--muted-foreground) !important;
+  margin: 0 0 20px !important;
+  padding: 0 !important;
+  font-weight: 400 !important;
+  font-family: 'Cormorant Garamond', Georgia, serif !important;
+  border: none !important;
+}
+
+/* ===== Field rows ===== */
+.cel-rsvp-min .crm-fields {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+}
+.cel-rsvp-min .crm-row {
+  display: block !important;
+}
+.cel-rsvp-min .crm-grid-2 {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 16px !important;
+}
+@media (min-width: 768px) {
+  .cel-rsvp-min .crm-grid-2 {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+/* ===== Form field wrappers (MegaForm default .mf-field) ===== */
+.cel-rsvp-min .mf-field {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* ===== Labels ===== */
+.cel-rsvp-min label,
+.cel-rsvp-min .mf-field label,
+.cel-rsvp-min .mf-field > label:first-child {
+  display: block !important;
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+  margin: 0 0 6px !important;
+  padding: 0 !important;
+  color: var(--foreground) !important;
+  font-weight: 400 !important;
+  font-family: 'Cormorant Garamond', Georgia, serif !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+.cel-rsvp-min .mf-required,
+.cel-rsvp-min label .required,
+.cel-rsvp-min [class*="required-marker"] {
+  color: var(--primary) !important;
+  font-weight: 400 !important;
+}
+
+/* ===== Inputs, select, textarea ===== */
+.cel-rsvp-min input[type="text"],
+.cel-rsvp-min input[type="email"],
+.cel-rsvp-min input[type="tel"],
+.cel-rsvp-min input[type="number"],
+.cel-rsvp-min input[type="url"],
+.cel-rsvp-min input[type="date"],
+.cel-rsvp-min select,
+.cel-rsvp-min textarea,
+.cel-rsvp-min .mf-field input,
+.cel-rsvp-min .mf-field select,
+.cel-rsvp-min .mf-field textarea {
+  width: 100% !important;
+  padding: 12px 16px !important;
+  background: var(--card) !important;
+  color: var(--foreground) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 0 !important;
+  font-family: 'Cormorant Garamond', Georgia, serif !important;
+  font-size: 15px !important;
+  line-height: 1.4 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  transition: border-color .15s !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+}
+.cel-rsvp-min textarea,
+.cel-rsvp-min .mf-field textarea {
+  resize: vertical !important;
+  min-height: 84px !important;
+}
+.cel-rsvp-min select,
+.cel-rsvp-min .mf-field select {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 14px center !important;
+  padding-right: 40px !important;
+  cursor: pointer !important;
+  min-height: 46px !important;
+}
+.cel-rsvp-min input::placeholder,
+.cel-rsvp-min textarea::placeholder {
+  color: var(--muted-foreground) !important;
+  opacity: 1 !important;
+}
+
+/* ===== Focus / hover borders (only color changes) ===== */
+.cel-rsvp-min input:focus,
+.cel-rsvp-min select:focus,
+.cel-rsvp-min textarea:focus,
+.cel-rsvp-min .mf-field input:focus,
+.cel-rsvp-min .mf-field select:focus,
+.cel-rsvp-min .mf-field textarea:focus,
+[class*="mf-form-wrapper"]:has(.cel-rsvp-min) input:focus,
+[class*="mf-form-wrapper"]:has(.cel-rsvp-min) select:focus,
+[class*="mf-form-wrapper"]:has(.cel-rsvp-min) textarea:focus {
+  border-color: var(--primary) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+.cel-rsvp-min input:hover:not(:focus),
+.cel-rsvp-min select:hover:not(:focus),
+.cel-rsvp-min textarea:hover:not(:focus),
+[class*="mf-form-wrapper"]:has(.cel-rsvp-min) input:hover:not(:focus),
+[class*="mf-form-wrapper"]:has(.cel-rsvp-min) select:hover:not(:focus),
+[class*="mf-form-wrapper"]:has(.cel-rsvp-min) textarea:hover:not(:focus) {
+  border-color: var(--primary) !important;
+  opacity: .92 !important;
+}
+
+/* ===== Radio group (inline horizontal) ===== */
+.cel-rsvp-min .mf-option-group,
+.cel-rsvp-min [class*="mf-option-group"] {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap;
+  gap: 24px !important;
+  margin: 4px 0 0 !important;
+  padding: 0 !important;
+}
+.cel-rsvp-min .mf-option-item {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  text-align: left !important;
+  font-size: 14px !important;
+  color: var(--foreground) !important;
+  font-family: 'Cormorant Garamond', Georgia, serif !important;
+}
+.cel-rsvp-min .mf-option-item input[type="radio"],
+.cel-rsvp-min .mf-option-item input[type="checkbox"] {
+  width: 16px !important;
+  height: 16px !important;
+  accent-color: var(--primary) !important;
+  cursor: pointer !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  flex-shrink: 0 !important;
+  border-radius: 50% !important;
+  min-height: 0 !important;
+}
+
+/* ===== Submit button ===== */
+.cel-rsvp-min .crm-submit-wrap {
+  padding: 24px !important;
+}
+@media (min-width: 768px) {
+  .cel-rsvp-min .crm-submit-wrap {
+    padding: 32px !important;
+  }
+}
+.cel-rsvp-min .crm-btn-submit,
+.cel-rsvp-min button[type="submit"] {
+  width: 100% !important;
+  padding: 14px 24px !important;
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  border: none !important;
+  border-radius: 0 !important;
+  font-family: 'Cormorant Garamond', Georgia, serif !important;
+  font-size: 14px !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  cursor: pointer !important;
+  transition: opacity .15s, background .15s !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+  box-shadow: none !important;
+}
+.cel-rsvp-min .crm-btn-submit:hover,
+.cel-rsvp-min button[type="submit"]:hover {
+  opacity: .9 !important;
+}
+
+/* ===== Footer ===== */
+.cel-rsvp-min .crm-footer {
+  text-align: center !important;
+  margin-top: 32px !important;
+  padding: 0 !important;
+}
+.cel-rsvp-min .crm-footer p {
+  font-size: 12px !important;
+  letter-spacing: 0.025em !important;
+  color: var(--muted-foreground) !important;
+  margin: 0 !important;
+  line-height: 1.5 !important;
+  font-family: 'Cormorant Garamond', Georgia, serif !important;
+}
+
+/* ===== Heading normalization (defeat DNN defaults) ===== */
+.cel-rsvp-min h1,
+.cel-rsvp-min h2,
+.cel-rsvp-min h3,
+.cel-rsvp-min h4,
+.cel-rsvp-min h5,
+.cel-rsvp-min h6 {
+  font-family: 'Cormorant Garamond', Georgia, serif !important;
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  text-shadow: none !important;
+}

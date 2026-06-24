@@ -1,0 +1,506 @@
+### YamlMime:ManagedReference
+items:
+- uid: MegaForm.Sdk.UpdateFormRequest
+  commentId: T:MegaForm.Sdk.UpdateFormRequest
+  id: UpdateFormRequest
+  parent: MegaForm.Sdk
+  children:
+  - MegaForm.Sdk.UpdateFormRequest.Description
+  - MegaForm.Sdk.UpdateFormRequest.RequireAuth
+  - MegaForm.Sdk.UpdateFormRequest.SchemaJson
+  - MegaForm.Sdk.UpdateFormRequest.Status
+  - MegaForm.Sdk.UpdateFormRequest.Title
+  langs:
+  - csharp
+  - vb
+  name: UpdateFormRequest
+  nameWithType: UpdateFormRequest
+  fullName: MegaForm.Sdk.UpdateFormRequest
+  type: Class
+  source:
+    id: UpdateFormRequest
+    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
+    startLine: 198
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: >-
+    A partial update to an existing form: only the non-null members are applied, so callers
+
+    can change a single property (e.g. just the title) without re-sending the whole form.
+  example: []
+  syntax:
+    content: public sealed class UpdateFormRequest
+    content.vb: Public NotInheritable Class UpdateFormRequest
+  inheritance:
+  - System.Object
+  inheritedMembers:
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.ToString
+- uid: MegaForm.Sdk.UpdateFormRequest.Title
+  commentId: P:MegaForm.Sdk.UpdateFormRequest.Title
+  id: Title
+  parent: MegaForm.Sdk.UpdateFormRequest
+  langs:
+  - csharp
+  - vb
+  name: Title
+  nameWithType: UpdateFormRequest.Title
+  fullName: MegaForm.Sdk.UpdateFormRequest.Title
+  type: Property
+  source:
+    id: Title
+    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
+    startLine: 201
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: New title, or null to leave unchanged.
+  example: []
+  syntax:
+    content: public string? Title { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Title As String
+  overload: MegaForm.Sdk.UpdateFormRequest.Title*
+- uid: MegaForm.Sdk.UpdateFormRequest.Description
+  commentId: P:MegaForm.Sdk.UpdateFormRequest.Description
+  id: Description
+  parent: MegaForm.Sdk.UpdateFormRequest
+  langs:
+  - csharp
+  - vb
+  name: Description
+  nameWithType: UpdateFormRequest.Description
+  fullName: MegaForm.Sdk.UpdateFormRequest.Description
+  type: Property
+  source:
+    id: Description
+    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
+    startLine: 204
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: New description, or null to leave unchanged.
+  example: []
+  syntax:
+    content: public string? Description { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Description As String
+  overload: MegaForm.Sdk.UpdateFormRequest.Description*
+- uid: MegaForm.Sdk.UpdateFormRequest.SchemaJson
+  commentId: P:MegaForm.Sdk.UpdateFormRequest.SchemaJson
+  id: SchemaJson
+  parent: MegaForm.Sdk.UpdateFormRequest
+  langs:
+  - csharp
+  - vb
+  name: SchemaJson
+  nameWithType: UpdateFormRequest.SchemaJson
+  fullName: MegaForm.Sdk.UpdateFormRequest.SchemaJson
+  type: Property
+  source:
+    id: SchemaJson
+    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
+    startLine: 207
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: New schema JSON, or null to leave unchanged.
+  example: []
+  syntax:
+    content: public string? SchemaJson { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property SchemaJson As String
+  overload: MegaForm.Sdk.UpdateFormRequest.SchemaJson*
+- uid: MegaForm.Sdk.UpdateFormRequest.Status
+  commentId: P:MegaForm.Sdk.UpdateFormRequest.Status
+  id: Status
+  parent: MegaForm.Sdk.UpdateFormRequest
+  langs:
+  - csharp
+  - vb
+  name: Status
+  nameWithType: UpdateFormRequest.Status
+  fullName: MegaForm.Sdk.UpdateFormRequest.Status
+  type: Property
+  source:
+    id: Status
+    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
+    startLine: 210
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: New status ("published"/"draft"…), or null to leave unchanged.
+  example: []
+  syntax:
+    content: public string? Status { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Status As String
+  overload: MegaForm.Sdk.UpdateFormRequest.Status*
+- uid: MegaForm.Sdk.UpdateFormRequest.RequireAuth
+  commentId: P:MegaForm.Sdk.UpdateFormRequest.RequireAuth
+  id: RequireAuth
+  parent: MegaForm.Sdk.UpdateFormRequest
+  langs:
+  - csharp
+  - vb
+  name: RequireAuth
+  nameWithType: UpdateFormRequest.RequireAuth
+  fullName: MegaForm.Sdk.UpdateFormRequest.RequireAuth
+  type: Property
+  source:
+    id: RequireAuth
+    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
+    startLine: 213
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: New require-auth flag, or null to leave unchanged (nullable distinguishes "no change" from "set false").
+  example: []
+  syntax:
+    content: public bool? RequireAuth { get; set; }
+    parameters: []
+    return:
+      type: System.Nullable{System.Boolean}
+    content.vb: Public Property RequireAuth As Boolean?
+  overload: MegaForm.Sdk.UpdateFormRequest.RequireAuth*
+references:
+- uid: MegaForm.Sdk
+  commentId: N:MegaForm.Sdk
+  href: MegaForm.html
+  name: MegaForm.Sdk
+  nameWithType: MegaForm.Sdk
+  fullName: MegaForm.Sdk
+  spec.csharp:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+  spec.vb:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: MegaForm.Sdk.UpdateFormRequest.Title*
+  commentId: Overload:MegaForm.Sdk.UpdateFormRequest.Title
+  href: MegaForm.Sdk.UpdateFormRequest.html#MegaForm_Sdk_UpdateFormRequest_Title
+  name: Title
+  nameWithType: UpdateFormRequest.Title
+  fullName: MegaForm.Sdk.UpdateFormRequest.Title
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: MegaForm.Sdk.UpdateFormRequest.Description*
+  commentId: Overload:MegaForm.Sdk.UpdateFormRequest.Description
+  href: MegaForm.Sdk.UpdateFormRequest.html#MegaForm_Sdk_UpdateFormRequest_Description
+  name: Description
+  nameWithType: UpdateFormRequest.Description
+  fullName: MegaForm.Sdk.UpdateFormRequest.Description
+- uid: MegaForm.Sdk.UpdateFormRequest.SchemaJson*
+  commentId: Overload:MegaForm.Sdk.UpdateFormRequest.SchemaJson
+  href: MegaForm.Sdk.UpdateFormRequest.html#MegaForm_Sdk_UpdateFormRequest_SchemaJson
+  name: SchemaJson
+  nameWithType: UpdateFormRequest.SchemaJson
+  fullName: MegaForm.Sdk.UpdateFormRequest.SchemaJson
+- uid: MegaForm.Sdk.UpdateFormRequest.Status*
+  commentId: Overload:MegaForm.Sdk.UpdateFormRequest.Status
+  href: MegaForm.Sdk.UpdateFormRequest.html#MegaForm_Sdk_UpdateFormRequest_Status
+  name: Status
+  nameWithType: UpdateFormRequest.Status
+  fullName: MegaForm.Sdk.UpdateFormRequest.Status
+- uid: MegaForm.Sdk.UpdateFormRequest.RequireAuth*
+  commentId: Overload:MegaForm.Sdk.UpdateFormRequest.RequireAuth
+  href: MegaForm.Sdk.UpdateFormRequest.html#MegaForm_Sdk_UpdateFormRequest_RequireAuth
+  name: RequireAuth
+  nameWithType: UpdateFormRequest.RequireAuth
+  fullName: MegaForm.Sdk.UpdateFormRequest.RequireAuth
+- uid: System.Nullable{System.Boolean}
+  commentId: T:System.Nullable{System.Boolean}
+  parent: System
+  definition: System.Nullable`1
+  href: https://learn.microsoft.com/dotnet/api/system.boolean
+  name: bool?
+  nameWithType: bool?
+  fullName: bool?
+  nameWithType.vb: Boolean?
+  fullName.vb: Boolean?
+  name.vb: Boolean?
+  spec.csharp:
+  - uid: System.Boolean
+    name: bool
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.boolean
+  - name: '?'
+  spec.vb:
+  - uid: System.Boolean
+    name: Boolean
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.boolean
+  - name: '?'
+- uid: System.Nullable`1
+  commentId: T:System.Nullable`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  name: Nullable<T>
+  nameWithType: Nullable<T>
+  fullName: System.Nullable<T>
+  nameWithType.vb: Nullable(Of T)
+  fullName.vb: System.Nullable(Of T)
+  name.vb: Nullable(Of T)
+  spec.csharp:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )

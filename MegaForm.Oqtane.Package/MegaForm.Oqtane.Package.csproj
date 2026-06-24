@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <!--
+    Microsoft.NET.Sdk.Razor: needed so dotnet build creates bin/Release/net9.0/
+    and properly compiles the Blazor assembly references.
+    nuspec picks DLLs from Client/Server/Shared/Core bin folders directly,
+    not from this project's bin — this project just needs to BUILD successfully.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>MegaForm.Oqtane.Package</AssemblyName>
+    <Version>1.7.22</Version>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <Description>MegaForm Oqtane Module Packager</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MegaForm.Oqtane.Client\MegaForm.Oqtane.Client.csproj" />
+    <ProjectReference Include="..\MegaForm.Oqtane.Server\MegaForm.Oqtane.Server.csproj" />
+    <ProjectReference Include="..\MegaForm.Oqtane.Shared\MegaForm.Oqtane.Shared.csproj" />
+  </ItemGroup>
+
+  <!-- pack.cmd calls nuget pack manually after this project builds -->
+
+</Project>

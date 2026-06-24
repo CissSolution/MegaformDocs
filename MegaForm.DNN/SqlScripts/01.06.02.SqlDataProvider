@@ -1,0 +1,8 @@
+/*============================================================
+  MegaForm – DNN workflow inbox registration hardening
+  Version: 01.06.02
+============================================================*/
+
+/* No database schema changes are required for this upgrade.
+   The Tasks control is now ensured through standard DNN APIs at runtime. */
+GO

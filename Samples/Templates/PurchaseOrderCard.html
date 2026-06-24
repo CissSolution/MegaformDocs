@@ -1,0 +1,295 @@
+<!--
+  ╔════════════════════════════════════════════════════════════════════════╗
+  ║  Purchase Order — SHAREPOINT-modern workspace page                     ║
+  ║  Apply to view: po-card (or po-detail) of Purchase Order starter       ║
+  ║  Badge: PurchaseOrderSharePoint v20260516-10                           ║
+  ╠════════════════════════════════════════════════════════════════════════╣
+  ║  Sections: hero · command bar · web parts (Properties / Status /        ║
+  ║  Approval timeline / Items / Comments / Activity feed / Related)       ║
+  ║  Tokens:                                                                ║
+  ║    {{field:requesterName}} {{field:requesterEmail}} {{field:department}}║
+  ║    {{field:vendor}} {{field:itemDescription}} {{field:amount|format=C0}}║
+  ║    {{field:deliveryDate|format=…}} {{field:justification}}              ║
+  ║    {{submission:id}} {{submission:status}} {{submission:date|format=…}} ║
+  ╚════════════════════════════════════════════════════════════════════════╝
+-->
+<style>
+  .mf-sp { font-family: 'Segoe UI', system-ui, sans-serif; color: #323130; max-width: 1280px;
+           margin: 16px auto; background: #FAF9F8; border-radius: 6px; overflow: hidden;
+           box-shadow: 0 8px 24px rgba(0,0,0,.10); border: 1px solid #EDEBE9; }
+
+  /* Site header (SharePoint chrome) */
+  .mf-sp-chrome { background: #fff; border-bottom: 1px solid #EDEBE9; padding: 12px 24px;
+                  display: flex; align-items: center; gap: 14px; }
+  .mf-sp-chrome .site-icon { width: 36px; height: 36px; background: linear-gradient(135deg, #0078D4, #5E4DCD);
+                              color: #fff; display: flex; align-items: center; justify-content: center;
+                              font-weight: 800; border-radius: 4px; }
+  .mf-sp-chrome .site-name { font-weight: 600; font-size: 15px; }
+  .mf-sp-chrome .site-sub { font-size: 11px; color: #605E5C; }
+  .mf-sp-chrome .breadcrumb { margin-left: 16px; font-size: 13px; color: #605E5C; }
+  .mf-sp-chrome .breadcrumb a { color: #0078D4; text-decoration: none; }
+  .mf-sp-chrome .breadcrumb .sep { margin: 0 6px; color: #C8C6C4; }
+  .mf-sp-chrome .actions { margin-left: auto; display: flex; gap: 6px; }
+  .mf-sp-chrome .actions .btn { padding: 6px 14px; background: #0078D4; color: #fff;
+                                 border-radius: 2px; font-size: 13px; font-weight: 600;
+                                 cursor: pointer; border: 0; }
+  .mf-sp-chrome .actions .btn.alt { background: #fff; color: #0078D4; border: 1px solid #0078D4; }
+
+  /* Command bar */
+  .mf-sp-cmd { background: #fff; padding: 6px 24px; border-bottom: 1px solid #EDEBE9;
+               display: flex; gap: 4px; }
+  .mf-sp-cmd .item { padding: 6px 12px; font-size: 13px; cursor: pointer;
+                     display: flex; align-items: center; gap: 6px; color: #323130;
+                     border-radius: 2px; }
+  .mf-sp-cmd .item:hover { background: #F3F2F1; }
+  .mf-sp-cmd .item .ico { font-size: 14px; color: #0078D4; }
+  .mf-sp-cmd .sep { width: 1px; background: #EDEBE9; margin: 4px 4px; }
+
+  /* Hero */
+  .mf-sp-hero { padding: 32px 24px 24px; background: linear-gradient(135deg, #0078D4 0%, #5E4DCD 100%);
+                color: #fff; }
+  .mf-sp-hero .meta { font-size: 11px; opacity: .85; text-transform: uppercase; letter-spacing: .08em; }
+  .mf-sp-hero h1 { margin: 6px 0 4px; font-size: 30px; font-weight: 600; letter-spacing: -.02em; }
+  .mf-sp-hero .sub { font-size: 14px; opacity: .92; margin-bottom: 14px; }
+  .mf-sp-hero .pills { display: flex; gap: 8px; flex-wrap: wrap; }
+  .mf-sp-hero .pill { padding: 4px 12px; background: rgba(255,255,255,.18);
+                      border-radius: 2px; font-size: 12px; font-weight: 600; }
+
+  /* Web parts grid */
+  .mf-sp-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;
+                padding: 16px; background: #F3F2F1; }
+  .mf-sp-grid .wp-full { grid-column: 1 / -1; }
+  .mf-sp-grid .wp-2 { grid-column: span 2; }
+  .mf-sp-wp { background: #fff; border-radius: 4px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  .mf-sp-wp h3 { margin: 0 0 12px; font-size: 14px; color: #323130;
+                 display: flex; align-items: center; gap: 8px; font-weight: 600; }
+  .mf-sp-wp h3 .ico { width: 22px; height: 22px; border-radius: 2px; background: #DEECF9;
+                      color: #0078D4; display: flex; align-items: center; justify-content: center;
+                      font-size: 12px; }
+
+  /* Properties pane */
+  .mf-sp-props .row { display: grid; grid-template-columns: 1fr 1.4fr; padding: 8px 0;
+                      border-bottom: 1px solid #F3F2F1; font-size: 13px; }
+  .mf-sp-props .row:last-child { border-bottom: 0; }
+  .mf-sp-props .k { color: #605E5C; }
+  .mf-sp-props .v { color: #201F1E; font-weight: 500; }
+
+  /* Status panel */
+  .mf-sp-status { text-align: center; padding: 18px 0; }
+  .mf-sp-status .ring { width: 92px; height: 92px; border-radius: 50%; margin: 0 auto 10px;
+                        background: conic-gradient(#0078D4 0% 60%, #EDEBE9 60% 100%);
+                        display: flex; align-items: center; justify-content: center; }
+  .mf-sp-status .ring .inner { width: 70px; height: 70px; border-radius: 50%; background: #fff;
+                                 display: flex; flex-direction: column; align-items: center;
+                                 justify-content: center; }
+  .mf-sp-status .ring .pct { font-size: 18px; font-weight: 800; color: #0078D4; }
+  .mf-sp-status .ring .lbl { font-size: 9px; color: #605E5C; text-transform: uppercase; }
+  .mf-sp-status .stage { font-weight: 600; font-size: 14px; }
+  .mf-sp-status .sub { color: #605E5C; font-size: 12px; margin-top: 4px; }
+
+  /* Approval timeline */
+  .mf-sp-flow { display: flex; gap: 0; flex-wrap: wrap; }
+  .mf-sp-flow .step { flex: 1; min-width: 130px; text-align: center; padding: 12px 8px;
+                       position: relative; }
+  .mf-sp-flow .step .circle { width: 36px; height: 36px; border-radius: 50%; margin: 0 auto 6px;
+                                background: #F3F2F1; display: flex; align-items: center;
+                                justify-content: center; font-weight: 700; color: #605E5C;
+                                font-size: 14px; border: 2px solid #EDEBE9; }
+  .mf-sp-flow .step.done .circle    { background: #50C878; color: #fff; border-color: #50C878; }
+  .mf-sp-flow .step.active .circle  { background: #FFB900; color: #fff; border-color: #FFB900;
+                                       box-shadow: 0 0 0 4px rgba(255,185,0,.18); }
+  .mf-sp-flow .step.future .circle  { background: #fff; color: #C8C6C4; }
+  .mf-sp-flow .step .label { font-size: 12px; font-weight: 600; color: #323130; }
+  .mf-sp-flow .step .role  { font-size: 11px; color: #605E5C; margin-top: 2px; }
+  .mf-sp-flow .step:not(:last-child):after { content: ''; position: absolute; top: 30px;
+                                              right: -50%; width: 100%; height: 2px; background: #EDEBE9; z-index: 0; }
+  .mf-sp-flow .step.done:not(:last-child):after { background: #50C878; }
+
+  /* Items table */
+  .mf-sp-items { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .mf-sp-items th { background: #FAF9F8; padding: 8px 12px; text-align: left;
+                     color: #605E5C; font-size: 11px; text-transform: uppercase;
+                     border-bottom: 1px solid #EDEBE9; font-weight: 600; letter-spacing: .04em; }
+  .mf-sp-items td { padding: 12px; border-bottom: 1px solid #F3F2F1; }
+  .mf-sp-items tr:hover td { background: #FAF9F8; }
+  .mf-sp-items .amt { text-align: right; font-weight: 700; color: #0078D4; }
+
+  /* Activity feed */
+  .mf-sp-act { list-style: none; padding: 0; margin: 0; }
+  .mf-sp-act li { padding: 10px 0; border-bottom: 1px solid #F3F2F1; display: flex; gap: 10px;
+                   font-size: 12px; }
+  .mf-sp-act li:last-child { border-bottom: 0; }
+  .mf-sp-act .av { width: 30px; height: 30px; border-radius: 50%; background: #DEECF9;
+                    color: #0078D4; display: flex; align-items: center; justify-content: center;
+                    font-weight: 700; font-size: 11px; flex-shrink: 0; }
+  .mf-sp-act .what { flex: 1; line-height: 1.5; }
+  .mf-sp-act .who { font-weight: 600; color: #323130; }
+  .mf-sp-act .when { color: #605E5C; font-size: 11px; }
+
+  /* Comments */
+  .mf-sp-comment { display: flex; gap: 10px; margin-bottom: 12px; }
+  .mf-sp-comment .av { width: 32px; height: 32px; border-radius: 50%;
+                        background: linear-gradient(135deg, #0078D4, #5E4DCD); color: #fff;
+                        display: flex; align-items: center; justify-content: center;
+                        font-weight: 700; font-size: 12px; flex-shrink: 0; }
+  .mf-sp-comment .body { flex: 1; background: #FAF9F8; padding: 10px 12px; border-radius: 6px;
+                          font-size: 13px; line-height: 1.55; }
+  .mf-sp-comment .body .name { font-weight: 600; font-size: 12px; color: #0078D4; }
+  .mf-sp-comment .body .time { color: #605E5C; font-size: 11px; margin-left: 6px; }
+  .mf-sp-comment-add { display: flex; gap: 8px; margin-top: 8px; }
+  .mf-sp-comment-add input { flex: 1; padding: 8px 12px; border: 1px solid #C8C6C4;
+                              border-radius: 2px; font-size: 13px; }
+  .mf-sp-comment-add button { padding: 8px 16px; background: #0078D4; color: #fff; border: 0;
+                               border-radius: 2px; font-weight: 600; font-size: 13px; cursor: pointer; }
+</style>
+
+<div class="mf-sp" data-mf-card-badge="PurchaseOrderSharePoint v20260516-10">
+  <!-- Site chrome -->
+  <header class="mf-sp-chrome">
+    <div class="site-icon">PO</div>
+    <div>
+      <div class="site-name">Purchase Orders</div>
+      <div class="site-sub">Finance · Internal site</div>
+    </div>
+    <div class="breadcrumb">
+      <a href="#">Home</a><span class="sep">›</span>
+      <a href="#">Approvals</a><span class="sep">›</span>
+      <span>PO #{{submission:id}}</span>
+    </div>
+    <div class="actions">
+      <button class="btn alt">Edit</button>
+      <button class="btn">Approve</button>
+    </div>
+  </header>
+
+  <!-- Command bar -->
+  <div class="mf-sp-cmd">
+    <div class="item"><span class="ico">↩</span>Reject</div>
+    <div class="sep"></div>
+    <div class="item"><span class="ico">📨</span>Forward</div>
+    <div class="item"><span class="ico">📌</span>Pin</div>
+    <div class="item"><span class="ico">📎</span>Attach</div>
+    <div class="sep"></div>
+    <div class="item"><span class="ico">📊</span>Export</div>
+    <div class="item"><span class="ico">⚙</span>Settings</div>
+  </div>
+
+  <!-- Hero -->
+  <div class="mf-sp-hero">
+    <div class="meta">Purchase Order · {{form:title}} · #{{submission:id}}</div>
+    <h1>{{field:vendor}}</h1>
+    <div class="sub">Requested by <strong>{{field:requesterName}}</strong> ({{field:requesterEmail}}) · {{field:department}} · Submitted {{submission:date|format=dd MMM yyyy HH:mm}}</div>
+    <div class="pills">
+      <span class="pill">{{field:amount|format=C0}}</span>
+      <span class="pill">{{field:department}}</span>
+      <span class="pill">{{submission:status|format=upper}}</span>
+      <span class="pill">Delivery: {{field:deliveryDate|format=dd MMM}}</span>
+    </div>
+  </div>
+
+  <!-- Web parts grid -->
+  <div class="mf-sp-grid">
+
+    <!-- Approval timeline (full width) -->
+    <section class="mf-sp-wp wp-full">
+      <h3><span class="ico">🔄</span>Approval flow · BPMN 2.0</h3>
+      <div class="mf-sp-flow">
+        <div class="step done">    <div class="circle">✓</div><div class="label">Submitted</div><div class="role">{{field:requesterName}}</div></div>
+        <div class="step done">    <div class="circle">✓</div><div class="label">Dept Head</div><div class="role">Department Heads</div></div>
+        <div class="step active">  <div class="circle">⏳</div><div class="label">Procurement</div><div class="role">Procurement Officers</div></div>
+        <div class="step future">  <div class="circle">?</div><div class="label">Finance / CFO</div><div class="role">amount-based branch</div></div>
+        <div class="step future">  <div class="circle">5</div><div class="label">Notify vendor</div><div class="role">SendEmail</div></div>
+        <div class="step future">  <div class="circle">6</div><div class="label">Closeout</div><div class="role">End</div></div>
+      </div>
+    </section>
+
+    <!-- Properties (left col) -->
+    <section class="mf-sp-wp mf-sp-props">
+      <h3><span class="ico">📋</span>Properties</h3>
+      <div class="row"><span class="k">PO number</span><span class="v">PO-2026-{{submission:id|format=D}}</span></div>
+      <div class="row"><span class="k">Requester</span><span class="v">{{field:requesterName}}</span></div>
+      <div class="row"><span class="k">Email</span><span class="v">{{field:requesterEmail}}</span></div>
+      <div class="row"><span class="k">Department</span><span class="v">{{field:department}}</span></div>
+      <div class="row"><span class="k">Vendor</span><span class="v">{{field:vendor}}</span></div>
+      <div class="row"><span class="k">Delivery</span><span class="v">{{field:deliveryDate|format=dd/MM/yyyy}}</span></div>
+      <div class="row"><span class="k">Submitted</span><span class="v">{{submission:date|format=dd MMM yyyy HH:mm}}</span></div>
+      <div class="row"><span class="k">Status</span><span class="v">{{submission:status}}</span></div>
+    </section>
+
+    <!-- Status ring (middle col) -->
+    <section class="mf-sp-wp">
+      <h3><span class="ico">📊</span>Progress</h3>
+      <div class="mf-sp-status">
+        <div class="ring"><div class="inner"><div class="pct">60%</div><div class="lbl">Approved</div></div></div>
+        <div class="stage">At step 3 of 6</div>
+        <div class="sub">Currently with Procurement Officers</div>
+      </div>
+    </section>
+
+    <!-- Amount summary (right col) -->
+    <section class="mf-sp-wp">
+      <h3><span class="ico">💰</span>Financial</h3>
+      <div style="font-size:30px;font-weight:800;color:#0078D4;letter-spacing:-.02em;">{{field:amount|format=C0}}</div>
+      <div style="font-size:11px;color:#605E5C;text-transform:uppercase;margin-bottom:14px;">total amount · {{field:department}} budget</div>
+      <div style="font-size:12px;color:#605E5C">
+        ⚠ Amount {{field:amount|format=C0}} exceeds $50,000 threshold — will route through CFO Sign-off branch.
+      </div>
+    </section>
+
+    <!-- Items (full width) -->
+    <section class="mf-sp-wp wp-full">
+      <h3><span class="ico">📦</span>Items requested</h3>
+      <table class="mf-sp-items">
+        <thead><tr><th>Description</th><th>Vendor</th><th>Department</th><th style="text-align:right">Amount</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>{{field:itemDescription}}</td>
+            <td>{{field:vendor}}</td>
+            <td>{{field:department}}</td>
+            <td class="amt">{{field:amount|format=C0}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Justification (2-col span) -->
+    <section class="mf-sp-wp wp-2">
+      <h3><span class="ico">💬</span>Business justification</h3>
+      <p style="margin:0;line-height:1.7;color:#323130;font-size:13px">{{field:justification}}</p>
+    </section>
+
+    <!-- Activity feed (1-col) -->
+    <section class="mf-sp-wp">
+      <h3><span class="ico">📈</span>Activity</h3>
+      <ul class="mf-sp-act">
+        <li><div class="av">RQ</div><div class="what"><span class="who">{{field:requesterName}}</span> submitted PO<div class="when">{{submission:date|format=dd MMM HH:mm}}</div></div></li>
+        <li><div class="av">DH</div><div class="what"><span class="who">Department Head</span> approved<div class="when">2 hours later</div></div></li>
+        <li><div class="av">PR</div><div class="what"><span class="who">Procurement</span> reviewing<div class="when">now</div></div></li>
+      </ul>
+    </section>
+
+    <!-- Comments (full width) -->
+    <section class="mf-sp-wp wp-full">
+      <h3><span class="ico">💭</span>Comments</h3>
+      <div class="mf-sp-comment">
+        <div class="av">DH</div>
+        <div class="body">
+          <span class="name">Department Head</span><span class="time">2 hours ago</span>
+          <div>Approved — please proceed to procurement. Confirm vendor lead time is &lt; 30 days.</div>
+        </div>
+      </div>
+      <div class="mf-sp-comment">
+        <div class="av">PR</div>
+        <div class="body">
+          <span class="name">Procurement Officer</span><span class="time">just now</span>
+          <div>Vendor quote received. Verifying terms; will move to finance shortly.</div>
+        </div>
+      </div>
+      <div class="mf-sp-comment-add">
+        <input placeholder="Add a comment (@mention to notify)...">
+        <button>Post</button>
+      </div>
+    </section>
+
+  </div>
+</div>

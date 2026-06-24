@@ -1,0 +1,311 @@
+{
+  "version": "1.0",
+  "slug": "premium-winter-games-2026",
+  "title": "Premium Form Template",
+  "description": "Complete your registration with the details below.",
+  "category": "events",
+  "icon": "⭐",
+  "submitButtonText": "Submit Registration",
+  "successMessage": "Thank you for your submission!",
+  "settings": {
+    "theme": "custom",
+    "multiPage": false,
+    "customContent": {
+      "brand_title": "Winter Games 2026",
+      "brand_subtitle": "Official Registration Portal",
+      "section_contact": "Contact Information",
+      "section_preferences": "Preferences & Details",
+      "section_documents": "Documents & Signature",
+      "footer_note": "Your information is protected under international data privacy standards."
+    }
+  },
+  "fields": [
+    {
+      "key": "row_name",
+      "type": "Row",
+      "label": "Name",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "first_name",
+              "type": "Text",
+              "label": "First Name",
+              "required": true,
+              "placeholder": " ",
+              "options": [],
+              "properties": {}
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "last_name",
+              "type": "Text",
+              "label": "Last Name",
+              "required": true,
+              "placeholder": " ",
+              "options": [],
+              "properties": {}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "row_contact",
+      "type": "Row",
+      "label": "Contact",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "email",
+              "type": "Email",
+              "label": "Email Address",
+              "required": true,
+              "placeholder": " ",
+              "options": [],
+              "properties": {}
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "phone",
+              "type": "Phone",
+              "label": "Phone Number",
+              "required": true,
+              "placeholder": " ",
+              "options": [],
+              "properties": {}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "row_web_search",
+      "type": "Row",
+      "label": "Web & Search",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "website",
+              "type": "Url",
+              "label": "Website",
+              "required": false,
+              "placeholder": " ",
+              "options": [],
+              "properties": {}
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "search",
+              "type": "Text",
+              "label": "Search Reference",
+              "required": false,
+              "placeholder": " ",
+              "options": [],
+              "properties": {}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "row_secure",
+      "type": "Row",
+      "label": "Secure Fields",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "password",
+              "type": "Password",
+              "label": "Create Password",
+              "required": true,
+              "placeholder": " ",
+              "options": [],
+              "properties": {}
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "budget",
+              "type": "Number",
+              "label": "Budget (USD)",
+              "required": false,
+              "placeholder": " ",
+              "options": [],
+              "properties": {}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "row_datetime",
+      "type": "Row",
+      "label": "Date & Time",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "preferred_date",
+              "type": "Date",
+              "label": "Preferred Date",
+              "required": false,
+              "placeholder": "",
+              "options": [],
+              "properties": {}
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "preferred_time",
+              "type": "Time",
+              "label": "Preferred Time",
+              "required": false,
+              "placeholder": "",
+              "options": [],
+              "properties": {}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "product_interest",
+      "type": "Select",
+      "label": "Area of Interest",
+      "required": true,
+      "placeholder": "",
+      "options": [
+        {
+          "label": "Alpine Skiing",
+          "value": "alpine_skiing"
+        },
+        {
+          "label": "Figure Skating",
+          "value": "figure_skating"
+        },
+        {
+          "label": "Ice Hockey",
+          "value": "ice_hockey"
+        },
+        {
+          "label": "Snowboarding",
+          "value": "snowboarding"
+        },
+        {
+          "label": "Biathlon",
+          "value": "biathlon"
+        },
+        {
+          "label": "Cross-Country",
+          "value": "cross_country"
+        }
+      ],
+      "properties": {}
+    },
+    {
+      "key": "message",
+      "type": "Textarea",
+      "label": "Additional Message",
+      "required": false,
+      "placeholder": "",
+      "options": [],
+      "properties": {
+        "rows": 4
+      }
+    },
+    {
+      "key": "attendance_mode",
+      "type": "Radio",
+      "label": "Attendance Mode",
+      "required": true,
+      "placeholder": "",
+      "options": [
+        {
+          "label": "In-Person",
+          "value": "in_person"
+        },
+        {
+          "label": "Virtual",
+          "value": "virtual"
+        },
+        {
+          "label": "Hybrid",
+          "value": "hybrid"
+        }
+      ],
+      "properties": {}
+    },
+    {
+      "key": "rating",
+      "type": "Rating",
+      "label": "Rate Your Experience",
+      "required": false,
+      "placeholder": "",
+      "options": [],
+      "properties": {}
+    },
+    {
+      "key": "file_upload",
+      "type": "File",
+      "label": "Upload Document",
+      "required": false,
+      "placeholder": "",
+      "options": [],
+      "properties": {}
+    },
+    {
+      "key": "signature",
+      "type": "Signature",
+      "label": "Signature",
+      "required": false,
+      "placeholder": "",
+      "options": [],
+      "properties": {}
+    },
+    {
+      "key": "agree_terms",
+      "type": "Checkbox",
+      "label": "I agree to the terms and conditions",
+      "required": true,
+      "placeholder": "",
+      "options": [
+        {
+          "label": "I agree to the terms and conditions",
+          "value": "agreed"
+        }
+      ],
+      "properties": {}
+    }
+  ],
+  "customHtml": "<div class=\"mfp\"><div class=\"mfp-wrapper\"><div class=\"mfp-card\"><div class=\"mfp-branding\"><div class=\"mfp-branding-logo\"><svg viewBox=\"0 0 40 40\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"20\" cy=\"20\" r=\"18\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\"/><path d=\"M20 6L22 14H30L24 19L26 27L20 22L14 27L16 19L10 14H18L20 6Z\" fill=\"currentColor\"/></svg></div><div class=\"mfp-branding-text\"><div class=\"mfp-branding-title\">{{content:brand_title}}</div><div class=\"mfp-branding-subtitle\">{{content:brand_subtitle}}</div></div></div><div class=\"mfp-form-header\"><h1 class=\"mfp-form-title\">{{form:title}}</h1><p class=\"mfp-form-desc\">{{form:description}}</p></div><div class=\"mfp-form-body\"><div class=\"mfp-section\"><div class=\"mfp-section-title\">{{content:section_contact}}</div>{{field:row_name}}{{field:row_contact}}{{field:row_web_search}}{{field:row_secure}}</div><div class=\"mfp-section\"><div class=\"mfp-section-title\">{{content:section_preferences}}</div>{{field:row_datetime}}{{field:product_interest}}{{field:message}}{{field:attendance_mode}}{{field:rating}}</div><div class=\"mfp-section\"><div class=\"mfp-section-title\">{{content:section_documents}}</div>{{field:file_upload}}{{field:signature}}</div>{{field:agree_terms}}<div class=\"mfp-pager\"></div><div class=\"mfp-submit\"><button type=\"submit\" class=\"mfp-submit-btn\">{{form:submit}}</button></div></div><div class=\"mfp-footer\"><p>{{content:footer_note}}</p></div></div></div></div>",
+  "customCss": "@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600&display=swap');:root{--mfp-bg:linear-gradient(135deg,#e8f4fc 0%,#f0f7ff 50%,#fff5f5 100%);--mfp-card-bg:#ffffff;--mfp-border:#e2e8f0;--mfp-text:#1e293b;--mfp-muted:#64748b;--mfp-accent:#0ea5e9;--mfp-accent-strong:#0284c7;--mfp-secondary:#ef4444;--mfp-radius:14px;--mfp-shadow:0 8px 32px rgba(14,165,233,0.08),0 2px 8px rgba(0,0,0,0.04);--mfp-input-bg:#f8fafc;--mfp-input-border:#e2e8f0;--mfp-input-icon:#94a3b8;--mfp-font-display:'Montserrat',system-ui,sans-serif;--mfp-font-body:'Poppins',system-ui,sans-serif}.mfp{font-family:var(--mfp-font-body);color:var(--mfp-text);line-height:1.6;max-width:800px;margin:0 auto;padding:20px 16px}.mfp-wrapper{background:var(--mfp-bg);border-radius:20px;padding:24px}.mfp-card{background:var(--mfp-card-bg);border-radius:var(--mfp-radius);box-shadow:var(--mfp-shadow);overflow:hidden;border:1px solid var(--mfp-border)}.mfp-branding{display:flex;align-items:center;gap:10px;padding:8px 20px;background:linear-gradient(135deg,#0ea5e9 0%,#0284c7 50%,#ef4444 100%);height:38px}.mfp-branding-logo{width:22px;height:22px;color:#ffffff;flex-shrink:0}.mfp-branding-logo svg{width:100%;height:100%}.mfp-branding-text{display:flex;flex-direction:column;justify-content:center}.mfp-branding-title{font-family:var(--mfp-font-display);font-size:13px;font-weight:700;color:#ffffff;letter-spacing:0.02em;line-height:1.1}.mfp-branding-subtitle{font-size:9px;font-weight:500;color:rgba(255,255,255,0.85);letter-spacing:0.04em;text-transform:uppercase;margin-top:1px}.mfp-form-header{padding:24px 28px 20px;text-align:center;border-bottom:1px solid var(--mfp-border);background:linear-gradient(180deg,#f8fafc 0%,#ffffff 100%)}.mfp-form-title{font-family:var(--mfp-font-display);font-size:22px;font-weight:700;color:var(--mfp-text);margin:0 0 6px;letter-spacing:-0.01em}.mfp-form-desc{font-size:14px;color:var(--mfp-muted);margin:0}.mfp-form-body{padding:20px}.mfp-section{margin-bottom:16px}.mfp-section:last-child{margin-bottom:0}.mfp-section-title{font-family:var(--mfp-font-display);font-size:12px;font-weight:700;color:var(--mfp-accent);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--mfp-accent);display:inline-block}.mfp-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}.mfp-col-6{grid-column:span 6}.mfp-col-12{grid-column:span 12}.mfp-field{position:relative}.mfp-field--icon{position:relative}.mfp-icon{position:absolute;left:14px;top:38px;width:18px;height:18px;color:var(--mfp-input-icon);pointer-events:none;z-index:2}.mfp-icon--textarea{top:38px}.mfp-field--icon input,.mfp-field--icon select,.mfp-field--icon textarea{padding-left:42px!important}.mfp-field label{display:block;font-size:13px;font-weight:500;color:var(--mfp-text);margin-bottom:6px}.mfp-field input,.mfp-field select,.mfp-field textarea{width:100%;padding:12px 16px;font-size:14px;font-family:var(--mfp-font-body);color:var(--mfp-text);background:var(--mfp-input-bg);border:1px solid var(--mfp-input-border);border-radius:10px;transition:all 0.2s ease;outline:none}.mfp-field input:focus,.mfp-field select:focus,.mfp-field textarea:focus{background:#ffffff;border-color:var(--mfp-accent);box-shadow:0 0 0 3px rgba(14,165,233,0.12)}.mfp-field input::placeholder,.mfp-field textarea::placeholder{color:#94a3b8}.mfp-field select{cursor:pointer;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 14px center;padding-right:44px}.mfp-field textarea{resize:vertical;min-height:100px}.mfp-field input[type=\"radio\"],.mfp-field input[type=\"checkbox\"]{width:auto;margin-right:8px}.mf-option-item{display:flex!important;flex-direction:row!important;align-items:center;gap:8px;cursor:pointer}.mf-option-item input[type=\"radio\"],.mf-option-item input[type=\"checkbox\"]{flex-shrink:0;width:16px;height:16px;margin:0}.mf-option-item span{font-size:14px;font-weight:500;color:var(--mfp-text)}.mf-option-group{display:flex;flex-direction:row;flex-wrap:wrap;gap:16px 24px;margin-top:4px}.mfp-pager{padding:0 28px;margin-bottom:20px}.mfp-submit{padding:0 28px 28px}.mfp-submit-btn{width:100%;padding:14px 28px;font-family:var(--mfp-font-display);font-size:15px;font-weight:600;color:#ffffff;background:linear-gradient(135deg,var(--mfp-accent) 0%,var(--mfp-accent-strong) 100%);border:none;border-radius:10px;cursor:pointer;transition:all 0.25s ease;text-transform:uppercase;letter-spacing:0.05em}.mfp-submit-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(14,165,233,0.3)}.mfp-footer{padding:16px 28px;background:#f8fafc;border-top:1px solid var(--mfp-border);text-align:center}.mfp-footer p{font-size:12px;color:var(--mfp-muted);margin:0}@media(max-width:768px){.mfp{padding:12px}.mfp-wrapper{padding:16px}.mfp-col-6{grid-column:span 12}.mfp-form-header{padding:20px}.mfp-form-title{font-size:20px}.mfp-form-body{padding:20px}.mfp-branding{padding:8px 16px}.mfp-branding-title{font-size:12px}.mfp-submit{padding:0 20px 20px}}.mfp .mf-row{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}.mfp .mf-col-6{grid-column:span 6}.mfp .mf-col-12{grid-column:span 12}@media(max-width:768px){.mfp .mf-col-6{grid-column:span 12}}.mfp .mf-field{position:relative;margin-bottom:16px}.mfp .mf-field label,.mfp .mf-field-label{display:block;font-size:13px;font-weight:500;color:var(--mfp-text);margin-bottom:6px}.mfp .mf-field input,.mfp .mf-field select,.mfp .mf-field textarea{width:100%;padding:12px 16px;font-size:14px;font-family:var(--mfp-font-body);color:var(--mfp-text);background:var(--mfp-input-bg);border:1px solid var(--mfp-input-border);border-radius:10px;transition:all 0.2s ease;outline:none}.mfp .mf-field input:focus,.mfp .mf-field select:focus,.mfp .mf-field textarea:focus{background:#ffffff;border-color:var(--mfp-accent);box-shadow:0 0 0 3px rgba(14,165,233,0.12)}.mfp .mf-field input::placeholder,.mfp .mf-field textarea::placeholder{color:#94a3b8}.mfp .mf-field select{cursor:pointer;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 14px center;padding-right:44px}.mfp .mf-field textarea{resize:vertical;min-height:100px}.mf-option-item{display:flex!important;flex-direction:row!important;align-items:center;gap:8px;cursor:pointer}.mf-option-item input[type='radio'],.mf-option-item input[type='checkbox']{flex-shrink:0;width:16px;height:16px;margin:0}.mf-option-item span{font-size:14px;font-weight:500;color:var(--mfp-text)}.mf-option-group{display:flex;flex-direction:row;flex-wrap:wrap;gap:16px 24px;margin-top:4px}",
+  "rules": [],
+  "workflow": null
+}

@@ -1,0 +1,289 @@
+============================================================
+MEGAFORM — TYPESCRIPT REFACTOR & MULTI-VIEW ROADMAP
+Created: 2026-02-24
+============================================================
+
+ARCHITECTURE OVERVIEW
+============================================================
+MegaForm.Core/          C# shared library (interfaces, models, services)
+MegaForm.UI/            TypeScript project (ALL UI code — portable)
+MegaForm.DNN/           DNN module (thin wrapper)
+MegaForm.Oqtane/        Oqtane module (thin wrapper)
+MegaForm.Umbraco/       Umbraco module (thin wrapper) [NEW]
+MegaForm.Web/           Standalone ASP.NET Core
+Assets/                 Shared static files (CSS, legacy JS, TS build output)
+
+Goal: Each platform view = ~10 lines HTML (mount div + load JS bundle)
+All UI logic lives in MegaForm.UI/ TypeScript project.
+
+TECHNOLOGY STACK
+============================================================
+- TypeScript 5.4+ (strict mode)
+- Vite 5 (build tool, HMR dev mode)
+- Vanilla TS (no framework — zero runtime overhead)
+- DOM helpers: custom h() function for element creation
+- Output: IIFE bundles → Assets/js/bundles/
+  - megaform-config.js  (Config Panel + Template Gallery)
+  - megaform-builder.js (Form Designer SPA)
+  - megaform-views.js   (List, Card, Detail, Continuous renderers)
+
+DEV WORKFLOW
+============================================================
+- VS Code opens MegaForm.UI/ folder
+- npm run dev → Vite watch → auto compile on save
+- Output → Assets/js/bundles/ → platform picks up immediately
+- Visual Studio opens .sln for C# — two IDEs in parallel
+- npm run build → production build with minification + sourcemaps
+
+
+============================================================
+PHASE A — TS PROJECT FOUNDATION [DONE ✅]
+============================================================
+Status: COMPLETED
+
+Deliverables:
+  ✅ MegaForm.UI/ project structure
+  ✅ package.json + tsconfig.json + vite.config.ts
+  ✅ Core types (src/core/types.ts) — mirrors C# models
+  ✅ Platform adapter interface (src/core/platform.ts)
+  ✅ DNN adapter implementation (src/adapters/dnn.ts)
+  ✅ Oqtane adapter stub (src/adapters/oqtane.ts)
+  ✅ Umbraco adapter stub (src/adapters/umbraco.ts)
+  ✅ DOM helpers (src/shared/dom.ts) — h(), render(), delegate()
+  ✅ Shared utilities (src/shared/utils.ts) — flattenFields, formatDate
+  ✅ Main entry point (src/core/index.ts) — MegaForm.init()
+  ✅ Entry stubs for config, builder, views
+
+  ✅ MegaForm.Umbraco/ C# project
+    - Composer (DI registration)
+    - API Controller (same contract as DNN/Oqtane)
+    - EF DbContext + Repositories
+    - Platform services (stubs)
+    - View (thin cshtml wrapper)
+    - Added to .sln
+
+
+============================================================
+PHASE B — CONFIG PANEL + TEMPLATE GALLERY (TS)
+============================================================
+Status: NEXT
+
+Goal: Rewrite Config Panel entirely in TypeScript.
+      Add Template Gallery as new tab.
+      Preview renders inline.
+
+Tasks:
+  [ ] Config Panel component (src/config/ConfigPanel.ts)
+      - Tab navigation (Templates | Form Designer | View Settings | Advanced)
+      - Form selector dropdown
+      - Save/Cancel/Preview buttons
+      - Reads data-* from root element for context
+
+  [ ] Template Gallery (src/config/TemplateGallery.ts)
+      - Multi-page grid of template cards
+      - Category filter tabs (General, Events, HR, Survey, Healthcare...)
+      - Preview on hover/click
+      - "Use Template" → creates form via API + applies schema
+      - Migrate template data from megaform-builder-templates.js
+
+  [ ] View Settings panel (src/config/ViewSettings.ts)
+      - View type selector (Submit, List, Card, Detail, Continuous)
+      - Per-view-type config UI
+      - Field picker for columns, sort, title, excerpt, etc.
+      - Migrate from ASCX inline JS
+
+  [ ] Inline Preview (src/config/Preview.ts)
+      - Renders form preview inside Config Panel
+      - Uses existing megaform-renderer.js (legacy, still vanilla JS)
+      - Shows in context, not blank page
+
+  [ ] Update platform views to use TS bundle:
+      - DNN FormView.ascx: replace inline config panel with <div> + bundle
+      - Oqtane FormView.razor: add <div> + bundle
+      - Umbraco MegaFormView.cshtml: already done
+
+  [ ] Integration test:
+      - Drop module → Config Panel shows
+      - Select template → form created
+      - Switch to View Settings → select List View
+      - Save → page reloads with List View
+      - Click Edit View → Config Panel returns
+
+
+============================================================
+PHASE C — BUILDER SPA MIGRATION
+============================================================
+Status: PLANNED
+
+Goal: Migrate Form Designer from ASCX (974 lines) to TypeScript.
+
+Tasks:
+  [ ] Builder shell (src/builder/BuilderShell.ts)
+      - 3-panel layout: left palette | center canvas | right properties
+      - Toolbar: save, publish, preview, undo
+
+  [ ] Field palette (src/builder/Palette.ts)
+      - Draggable field types (Basic, Advanced, Composite, Layout)
+      - Search filter
+
+  [ ] Canvas (src/builder/Canvas.ts)
+      - Migrate megaform-builder-canvas.js (696 lines)
+      - Drag-drop reorder
+      - Row/Column layout
+      - Multi-page support
+
+  [ ] Properties panel (src/builder/Properties.ts)
+      - Migrate megaform-builder-properties.js (1087 lines)
+      - Field config: label, placeholder, validation, conditions
+      - Widget config
+      - Options editor (Select, Radio, Checkbox)
+
+  [ ] Toolbar (src/builder/Toolbar.ts)
+      - Migrate megaform-builder-toolbar.js (228 lines)
+      - Save draft, publish, preview, export/import
+
+  [ ] AI Design Assistant (src/builder/AiAssistant.ts)
+      - Migrate AI tab functionality
+      - Style presets, prompt-based generation
+
+  [ ] Embed tab (src/builder/Embed.ts)
+      - Embed code generator (iframe, JS snippet)
+      - Keep existing embed.html working
+
+  [ ] Remove ASCX dependency:
+      - FormEdit.ascx → thin wrapper with <div id="mf-builder-root">
+      - All 8 builder JS files → consolidated into megaform-builder.js bundle
+
+
+============================================================
+PHASE D — VIEWS MIGRATION
+============================================================
+Status: PLANNED
+
+Goal: Migrate/enhance List, Card, Detail, Continuous views in TypeScript.
+
+Tasks:
+  [ ] List View (src/views/ListView.ts)
+      - Migrate from megaform-views.js renderListView
+      - Sortable columns, pagination, search, filters
+      - Column resize, row actions (view, edit, delete)
+      - Export button
+
+  [ ] Card View (src/views/CardView.ts)
+      - Migrate from megaform-views.js renderCardView
+      - Grid layout (2/3/4 columns)
+      - Image, title, excerpt, category badge
+      - Click → detail view
+
+  [ ] Detail View (src/views/DetailView.ts)
+      - Migrate from megaform-views.js renderDetailView
+      - Single record display
+      - Field layout, back button
+      - Edit mode toggle
+
+  [ ] Continuous View (src/views/ContinuousView.ts)
+      - NEW: Master-detail side-by-side
+      - Left: scrollable list with title/subtitle
+      - Right: detail panel
+      - Click item → loads detail
+
+  [ ] View navigation/routing
+      - URL-based: ?view=list&id=42
+      - SPA-style within module (no full page reload)
+
+  [ ] System fields in views
+      - Created date, created by, modified date, modified by
+      - Available as columns in List/Card views
+      - Auto-populated, not shown in submit form
+
+
+============================================================
+PHASE E — LEGACY CLEANUP
+============================================================
+Status: FUTURE
+
+Tasks:
+  [ ] Migrate megaform-renderer.js → TypeScript (large, ~68KB)
+  [ ] Migrate megaform-widgets.js → TypeScript
+  [ ] Migrate megaform-submissions.js → TypeScript (admin submissions page)
+  [ ] Remove all ASCX inline JavaScript
+  [ ] Remove megaform-builder-*.js legacy files
+  [ ] Single CSS build (currently separate files)
+  [ ] Update DNN manifest to reference bundles instead of individual files
+
+
+============================================================
+PLATFORM-SPECIFIC NOTES
+============================================================
+
+DNN (Current — fully functional):
+  - Auth: jQuery.ServicesFramework (TabId, ModuleId, Token)
+  - API: /API/MegaForm/Controller/Action
+  - Views: ASCX files (will become thin wrappers)
+  - DB: Raw ADO.NET (FormRepository static methods)
+
+Oqtane (Scaffolded — needs testing):
+  - Auth: Blazor auth + Bearer token
+  - API: /api/megaform/Controller/Action
+  - Views: Razor components
+  - DB: EF Core (EfRepositories.cs)
+
+Umbraco 14+ (Scaffolded — needs testing):
+  - Auth: X-UMB-XSRF-TOKEN cookie
+  - API: /umbraco/api/megaform/Controller/Action
+  - Views: cshtml partial views
+  - DB: EF Core (shared DbContext pattern)
+  - Integration: Composer for DI, PluginController for API
+  - Backoffice: Consider Lit-based property editor for Bellissima
+
+Standalone .NET (Scaffolded):
+  - Auth: ASP.NET Core Identity / cookie
+  - API: /api/megaform/Controller/Action
+  - Views: Razor Pages
+  - DB: EF Core
+
+
+============================================================
+API CONTRACT (shared across all platforms)
+============================================================
+All platforms expose identical endpoints, only prefix differs:
+
+  GET  {base}/Form/Get?formId={id}
+  GET  {base}/Form/List?moduleId={id}
+  POST {base}/Form/Save
+  POST {base}/Form/Delete?formId={id}
+  GET  {base}/Form/Stats?formId={id}
+  POST {base}/Form/Duplicate?formId={id}
+
+  GET  {base}/Submit/Schema?formId={id}           (public)
+  POST {base}/Submit/Post                          (public)
+
+  GET  {base}/Submissions/List?formId={id}&...
+  GET  {base}/Submissions/Get?submissionId={id}
+  POST {base}/Submissions/UpdateStatus?...
+  POST {base}/Submissions/Delete?submissionId={id}
+  GET  {base}/Submissions/Export?formId={id}&format=json
+
+  GET  {base}/ModuleConfig/Get?moduleId={id}
+  POST {base}/ModuleConfig/Save
+  GET  {base}/ModuleConfig/Fields?formId={id}
+
+
+============================================================
+BUILD SCRIPTS
+============================================================
+
+TS Build (MegaForm.UI/):
+  npm run dev     → watch mode, outputs to Assets/js/bundles/
+  npm run build   → production build with minification
+
+DNN Package:
+  BuildPackage-DNN.ps1 → copies Assets/ + builds DNN install zip
+
+Oqtane Package:
+  BuildPackage-Oqtane.ps1 → copies Assets/ + builds NuGet
+
+Umbraco Package:
+  BuildPackage-Umbraco.ps1 → copies Assets/ to App_Plugins/ + builds NuGet
+
+Each build script should run "npm run build" in MegaForm.UI/ first.

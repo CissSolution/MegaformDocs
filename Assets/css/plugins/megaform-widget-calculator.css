@@ -1,0 +1,54 @@
+/* MegaForm Calculator Widget — Styles */
+
+/* Container */
+.mf-wg-calc{border:1px solid rgba(0,0,0,.08);border-radius:14px;padding:16px;background:linear-gradient(135deg,#fafbff 0%,#f8f9fc 100%);box-shadow:0 1px 3px rgba(0,0,0,.04)}
+
+/* Variables Grid */
+.mf-wg-calc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:12px}
+.mf-wg-calc-item{background:#fff;border-radius:12px;padding:12px;border:1px solid #e8ecf0}
+.mf-wg-calc-item-full{grid-column:span 2}
+
+/* Labels & Inputs */
+.mf-wg-calc-label{display:block;font-size:13px;font-weight:600;color:#334155;margin-bottom:6px}
+.mf-wg-calc-input{width:100%;padding:8px 12px;border:1px solid #d0d5dd;border-radius:10px;font-size:14px;transition:border-color .2s,box-shadow .2s;box-sizing:border-box}
+.mf-wg-calc-input:focus{border-color:#818cf8;box-shadow:0 0 0 3px rgba(129,140,248,.15);outline:none}
+
+/* Range Slider */
+.mf-wg-calc-range{display:flex;align-items:center;gap:10px}
+.mf-wg-calc-range-input{flex:1;-webkit-appearance:none;height:6px;border-radius:3px;background:linear-gradient(to right,#818cf8,#c4b5fd);outline:none;border:none;padding:0}
+.mf-wg-calc-range-input::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid #818cf8;box-shadow:0 2px 4px rgba(0,0,0,.15);cursor:pointer}
+.mf-wg-calc-range-input::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid #818cf8;box-shadow:0 2px 4px rgba(0,0,0,.15);cursor:pointer}
+.mf-wg-calc-range-value{min-width:36px;text-align:center;font-size:13px;font-weight:600;color:#4f46e5;background:#eef2ff;padding:3px 8px;border-radius:20px}
+
+/* Checkbox Sum */
+.mf-wg-calc-checks{display:flex;flex-direction:column;gap:6px}
+.mf-wg-calc-check{display:flex;align-items:center;gap:8px;font-size:13px;padding:6px 8px;border-radius:8px;cursor:pointer;transition:background .15s}
+.mf-wg-calc-check:hover{background:#f0f0ff}
+.mf-wg-calc-check input[type="checkbox"]{width:16px;height:16px;accent-color:#6366f1}
+
+/* Results */
+.mf-wg-calc-results{margin-top:14px}
+.mf-wg-calc-result-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px dashed #e2e8f0}
+.mf-wg-calc-result-row:last-child{border-bottom:none}
+.mf-wg-calc-result-label{font-size:12px;text-transform:uppercase;letter-spacing:.3px;color:#64748b;font-weight:600}
+.mf-wg-calc-result-number{font-size:16px;font-weight:700;color:#1e293b}
+.mf-wg-calc-result-prefix,.mf-wg-calc-result-suffix{font-size:14px;color:#64748b;font-weight:500}
+.mf-wg-calc-result-number.is-error{color:#ef4444}
+
+/* Highlighted Total */
+.mf-wg-calc-result-highlight{background:#f0f0ff;border-radius:12px;padding:14px 16px;margin-top:8px;border:1px solid #e0e7ff !important}
+.mf-wg-calc-result-highlight .mf-wg-calc-result-label{font-size:14px;color:#4338ca}
+.mf-wg-calc-result-highlight .mf-wg-calc-result-number{font-size:24px;color:#4338ca}
+.mf-wg-calc-result-highlight .mf-wg-calc-result-prefix,.mf-wg-calc-result-highlight .mf-wg-calc-result-suffix{font-size:16px;color:#6366f1}
+
+/* Breakdown */
+.mf-wg-calc-breakdown{margin-top:12px;border:1px dashed #cbd5e1;border-radius:12px;padding:12px;background:#f8fafc}
+.mf-wg-calc-breakdown-title{font-size:11px;font-weight:700;text-transform:uppercase;color:#94a3b8;margin-bottom:6px}
+.mf-wg-calc-breakdown-pre{font-family:'Courier New',monospace;font-size:11px;color:#64748b;white-space:pre-wrap;margin:0}
+
+/* Responsive */
+@media(max-width:600px){
+    .mf-wg-calc-grid{grid-template-columns:1fr}
+    .mf-wg-calc-item-full{grid-column:span 1}
+    .mf-wg-calc-result-highlight .mf-wg-calc-result-number{font-size:20px}
+}

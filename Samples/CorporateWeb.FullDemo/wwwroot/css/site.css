@@ -1,0 +1,138 @@
+:root {
+    --mf-primary: #0d6efd;
+    --mf-dark: #1a1a2e;
+    --mf-light: #f8f9fa;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--mf-light);
+}
+
+.site-header {
+    background-color: #fff;
+    border-bottom: 1px solid #e9ecef;
+    padding: 0.75rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: var(--mf-dark);
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+.brand:hover {
+    color: var(--mf-primary);
+}
+
+.brand-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    background-color: var(--mf-primary);
+    color: #fff;
+    border-radius: 0.375rem;
+}
+
+.site-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.nav-link {
+    color: #495057;
+    text-decoration: none;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+}
+
+.nav-link:hover {
+    background-color: #e9ecef;
+    color: var(--mf-primary);
+}
+
+.nav-link-admin {
+    color: var(--mf-primary);
+}
+
+.site-main {
+    min-height: calc(100vh - 160px);
+}
+
+.site-footer {
+    background-color: #fff;
+    border-top: 1px solid #e9ecef;
+    padding: 1rem 0;
+    text-align: center;
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.hero {
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+    color: #fff;
+    padding: 3rem 0;
+    border-radius: 0.75rem;
+    text-align: center;
+}
+
+.hero h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.hero .cta-row {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.hero .btn {
+    font-weight: 600;
+}
+
+.contact-form-host {
+    background: #fff;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+    padding: 1rem;
+    min-height: 720px;
+}
+
+pre {
+    max-height: 400px;
+    overflow: auto;
+}
+
+@media (max-width: 768px) {
+    .header-inner {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .site-nav {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}

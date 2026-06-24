@@ -1,0 +1,127 @@
+{
+  "version": "1.0",
+  "fields": [
+    {
+      "key": "portalId",
+      "type": "Select",
+      "label": "Choose portal",
+      "required": false,
+      "placeholder": "Select a portal",
+      "helpText": "This SQL dropdown feeds the DataRepeater below.",
+      "defaultValue": "0",
+      "cssClass": "",
+      "width": "50%",
+      "readOnly": false,
+      "prefillParam": "portalId",
+      "validation": {},
+      "options": [
+        {
+          "label": "Loading...",
+          "value": ""
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionsSource": "sql",
+        "optionsType": "sql",
+        "optionsConnectionKey": "DashboardDatabase",
+        "optionsDatabaseType": "SqlServer",
+        "optionsSql": "SELECT\n  CAST(p.PortalID AS nvarchar(20)) AS Value,\n  CONCAT('Portal ', p.PortalID, ' / ', COALESCE(NULLIF(pa.HTTPAlias, ''), '(no primary alias)')) AS Label\nFROM dbo.Portals p\nOUTER APPLY (\n  SELECT TOP 1 HTTPAlias\n  FROM dbo.PortalAlias\n  WHERE PortalID = p.PortalID\n  ORDER BY IsPrimary DESC, PortalAliasID\n) pa\nORDER BY p.PortalID",
+        "optionsDependsOn": [],
+        "optionsReloadOnChange": false
+      },
+      "widgetProps": {}
+    },
+    {
+      "key": "tabsRepeater",
+      "type": "DataRepeater",
+      "label": "Pages in selected portal",
+      "required": false,
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "widgetProps": {
+        "dataSource": "sql",
+        "connectionKey": "DashboardDatabase",
+        "databaseType": "SqlServer",
+        "masterQuery": "SELECT\n  t.TabID,\n  COALESCE(NULLIF(t.Title, ''), t.TabName) AS PageTitle,\n  t.TabName,\n  t.TabPath,\n  t.Level,\n  CASE WHEN t.IsVisible = 1 THEN 'Visible' ELSE 'Hidden' END AS Visibility,\n  moduleStats.ModuleCount\nFROM dbo.Tabs t\nOUTER APPLY (\n  SELECT COUNT(*) AS ModuleCount\n  FROM dbo.TabModules tm\n  JOIN dbo.Modules m ON m.ModuleID = tm.ModuleID\n  WHERE tm.TabID = t.TabID\n    AND tm.IsDeleted = 0\n    AND ISNULL(m.IsDeleted, 0) = 0\n) moduleStats\nWHERE t.IsDeleted = 0\n  AND t.PortalID = COALESCE(TRY_CONVERT(int, NULLIF(:portalId, '')), (SELECT MIN(PortalID) FROM dbo.Portals))\nORDER BY t.Level, t.TabOrder, t.TabID",
+        "masterTemplate": "<article class='mfdr-row' style='display:grid;grid-template-columns:minmax(0,1.7fr) 120px 120px;gap:14px;padding:14px 16px;margin:0 0 12px;border:1px solid #dbe4f0;border-radius:14px;background:#fff;box-shadow:0 10px 24px rgba(15,23,42,.05);'>\n  <div>\n    <div style='font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#64748b;font-weight:700;'>Page #{TabID}</div>\n    <div style='margin-top:6px;font-size:18px;font-weight:700;color:#0f172a;'>{PageTitle|link:detail:TabID}</div>\n    <div style='margin-top:4px;font-size:12px;color:#475569;'>Path: {TabPath}</div>\n  </div>\n  <div style='display:flex;flex-direction:column;justify-content:center;padding:10px 12px;border-radius:12px;background:#f8fafc;'>\n    <div style='font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#64748b;font-weight:700;'>Visibility</div>\n    <div style='margin-top:6px;font-size:14px;font-weight:700;color:#4338ca;'>{Visibility}</div>\n  </div>\n  <div style='display:flex;flex-direction:column;justify-content:center;padding:10px 12px;border-radius:12px;background:#f8fafc;'>\n    <div style='font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#64748b;font-weight:700;'>Modules</div>\n    <div style='margin-top:6px;font-size:24px;font-weight:700;color:#0f766e;'>{ModuleCount}</div>\n  </div>\n</article>",
+        "pageSize": 8,
+        "refreshInterval": 0,
+        "emptyMessage": "Choose a portal to load DNN pages.",
+        "cssClass": "mfdr-dnn-tabs-cascade",
+        "maxRows": 500,
+        "allowExportCsv": true,
+        "allowExportPdf": false,
+        "chartType": "",
+        "chartLabelCol": "",
+        "chartValueCol": "",
+        "queryDependsOn": "portalId",
+        "reloadOnParamChange": true,
+        "groupByCol": "",
+        "golfMode": false,
+        "detail1Query": "SELECT\n  tm.TabModuleID,\n  tm.ModuleOrder,\n  COALESCE(NULLIF(tm.ModuleTitle, ''), dm.FriendlyName, dm.ModuleName, CONCAT('Module #', tm.ModuleID)) AS ModuleTitle,\n  tm.PaneName,\n  dm.ModuleName,\n  dm.FriendlyName,\n  tm.ModuleID\nFROM dbo.TabModules tm\nJOIN dbo.Modules m ON m.ModuleID = tm.ModuleID\nLEFT JOIN dbo.ModuleDefinitions md ON md.ModuleDefID = m.ModuleDefID\nLEFT JOIN dbo.DesktopModules dm ON dm.DesktopModuleID = md.DesktopModuleID\nWHERE tm.TabID = TRY_CONVERT(int, :parentId)\n  AND tm.IsDeleted = 0\n  AND ISNULL(m.IsDeleted, 0) = 0\nORDER BY tm.ModuleOrder, tm.TabModuleID",
+        "detail1Template": "",
+        "detail1TriggerCol": "TabID",
+        "detail1Placement": "after",
+        "detail2Query": "",
+        "detail2Template": "",
+        "detail2TriggerCol": "",
+        "detail2Placement": "",
+        "detail3Query": "",
+        "detail3Template": "",
+        "detail3TriggerCol": "",
+        "detail3Placement": "",
+        "filter1Label": "",
+        "filter1Type": "",
+        "filter1Query": "",
+        "filter1Param": "",
+        "filter2Label": "",
+        "filter2Type": "",
+        "filter2Query": "",
+        "filter2Param": "",
+        "detailLevels": [
+          {
+            "query": "SELECT\n  tm.TabModuleID,\n  tm.ModuleOrder,\n  COALESCE(NULLIF(tm.ModuleTitle, ''), dm.FriendlyName, dm.ModuleName, CONCAT('Module #', tm.ModuleID)) AS ModuleTitle,\n  tm.PaneName,\n  dm.ModuleName,\n  dm.FriendlyName,\n  tm.ModuleID\nFROM dbo.TabModules tm\nJOIN dbo.Modules m ON m.ModuleID = tm.ModuleID\nLEFT JOIN dbo.ModuleDefinitions md ON md.ModuleDefID = m.ModuleDefID\nLEFT JOIN dbo.DesktopModules dm ON dm.DesktopModuleID = md.DesktopModuleID\nWHERE tm.TabID = TRY_CONVERT(int, :parentId)\n  AND tm.IsDeleted = 0\n  AND ISNULL(m.IsDeleted, 0) = 0\nORDER BY tm.ModuleOrder, tm.TabModuleID",
+            "template": "",
+            "triggerCol": "TabID",
+            "placement": "after"
+          }
+        ],
+        "filters": []
+      }
+    }
+  ],
+  "settings": {
+    "theme": "default",
+    "displayOnly": false,
+    "multiPage": false,
+    "customCss": ".mf-form-root { background:#f8fafc; }\n.mf-form-actions { display:none !important; }\n.mfdr-dnn-tabs-cascade .mfdr-toolbar { margin-bottom: 12px; }\n.mfdr-dnn-tabs-cascade .mfdr-table { width:100%; border-collapse:collapse; background:#fff; border-radius:14px; overflow:hidden; }\n.mfdr-dnn-tabs-cascade .mfdr-table th,\n.mfdr-dnn-tabs-cascade .mfdr-table td { padding:10px 12px; border-bottom:1px solid #e5e7eb; text-align:left; font-size:13px; }\n.mfdr-dnn-tabs-cascade .mfdr-table th { background:#f8fafc; color:#475569; font-size:11px; text-transform:uppercase; letter-spacing:.06em; }\n.mfdr-dnn-tabs-cascade .mfdr-drill { color:#4338ca; font-weight:700; text-decoration:none; }\n.mfdr-dnn-tabs-cascade .mfdr-drill:hover { text-decoration:underline; }",
+    "submitButtonText": "Submit",
+    "successMessage": "Thank you.",
+    "formWidth": "100%",
+    "hideHeader": false,
+    "showProgressBar": false
+  },
+  "_template": {
+    "name": "DNN Portal Tabs Cascade Demo",
+    "slug": "dnn-portal-tabs-cascade-demo",
+    "description": "SQL dropdown portal selector cascades into a DataRepeater that lists DNN Tabs and lets you drill into page modules. Uses DashboardDatabase and showcases query-string plus form-field parameter binding into DataRepeater SQL.",
+    "category": "DataRepeater Samples",
+    "icon": "fas fa-sitemap",
+    "version": "01.06.19",
+    "author": "MegaForm built-in sample"
+  }
+}

@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFrameworks>net9.0;net10.0</TargetFrameworks>
+    <Version>1.7.15</Version>
+    <Authors>MegaForm Team</Authors>
+    <Company>MegaForm</Company>
+    <Description>MegaForm - Dynamic Form Builder for Oqtane (Client)</Description>
+    <Product>MegaForm</Product>
+    <AssemblyName>MegaForm.Oqtane.Client.Oqtane</AssemblyName>
+    <RootNamespace>MegaForm.Client</RootNamespace>
+    <BlazorWebAssemblyEnableLinking>false</BlazorWebAssemblyEnableLinking>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <!-- [multi-target 20260617] .NET 10 host (Oqtane 10.x) -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly"             Version="10.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="10.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Localization"                      Version="10.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Http"                              Version="10.0.3" />
+    <PackageReference Include="System.Net.Http.Json"                                   Version="10.0.3" />
+  </ItemGroup>
+  <!-- [multi-target 20260617] .NET 9 host (Oqtane 6.x) -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly"             Version="9.0.9" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="9.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Localization"                      Version="9.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Http"                              Version="9.0.9" />
+    <PackageReference Include="System.Net.Http.Json"                                   Version="9.0.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MegaForm.Core\MegaForm.Core.csproj" />
+    <ProjectReference Include="..\MegaForm.Oqtane.Shared\MegaForm.Oqtane.Shared.csproj" />
+    <!-- [Recovered June-15] SdkDemoView.razor (June-13) needs the SDK; the restored
+         um4_6 (June-1) .csproj predated this reference. -->
+    <ProjectReference Include="..\MegaForm.Sdk\MegaForm.Sdk.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <PackageReference Include="Oqtane.Client" Version="10.1.0" />
+    <PackageReference Include="Oqtane.Shared" Version="10.1.0" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
+    <PackageReference Include="Oqtane.Client" Version="6.0.1" />
+    <PackageReference Include="Oqtane.Shared" Version="6.0.1" />
+  </ItemGroup>
+
+</Project>

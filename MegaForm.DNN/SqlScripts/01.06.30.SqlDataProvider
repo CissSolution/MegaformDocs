@@ -1,0 +1,84 @@
+-- MegaForm 01.06.30 — B55 Reporting System (2026-06-03)
+--
+-- Ships two B55 migrations as one DNN-canonical .SqlDataProvider:
+--   1. B55 P1 — MF_SubmissionValues flat index (adds FormId column +
+--               two reporting indexes; creates the table on installs
+--               that don't have it yet).
+--   2. B55 P2 — MF_ReportDefinitions table (customer-authored report
+--               definitions; per-portal, per-AppScope, JSON body).
+--
+-- Both are idempotent (IF OBJECT_ID / IF NOT EXISTS) so re-running the
+-- module install is safe. Oqtane parity lives in
+-- MegaForm.Oqtane.Server\Migrations\01060030_AddReporting.cs.
+
+-- ===== B55 P1 ============================================================
+IF OBJECT_ID('{databaseOwner}{objectQualifier}MF_SubmissionValues', 'U') IS NULL
+BEGIN
+    CREATE TABLE {databaseOwner}{objectQualifier}MF_SubmissionValues (
+        SubmissionId    INT             NOT NULL,
+        FormId          INT             NOT NULL,
+        FieldKey        NVARCHAR(120)   NOT NULL,
+        ValueText       NVARCHAR(MAX)   NULL,
+        ValueNumber     DECIMAL(18,6)   NULL,
+        ValueDate       DATETIME2       NULL,
+        CONSTRAINT PK_MF_SubmissionValues PRIMARY KEY CLUSTERED (SubmissionId, FieldKey)
+    );
+END
+GO
+
+IF COL_LENGTH('{databaseOwner}{objectQualifier}MF_SubmissionValues', 'FormId') IS NULL
+BEGIN
+    ALTER TABLE {databaseOwner}{objectQualifier}MF_SubmissionValues
+        ADD FormId INT NOT NULL CONSTRAINT DF_MF_SubmissionValues_FormId DEFAULT 0;
+END
+GO
+
+UPDATE v
+    SET v.FormId = s.FormId
+    FROM {databaseOwner}{objectQualifier}MF_SubmissionValues v
+    INNER JOIN {databaseOwner}{objectQualifier}MF_Submissions s
+        ON s.SubmissionId = v.SubmissionId
+    WHERE v.FormId = 0;
+GO
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.indexes
+    WHERE name = 'IX_MF_SubmissionValues_FormId_FieldKey'
+      AND object_id = OBJECT_ID('{databaseOwner}{objectQualifier}MF_SubmissionValues')
+)
+BEGIN
+    CREATE INDEX IX_MF_SubmissionValues_FormId_FieldKey
+        ON {databaseOwner}{objectQualifier}MF_SubmissionValues (FormId, FieldKey);
+END
+GO
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.indexes
+    WHERE name = 'IX_MF_SubmissionValues_FormId_ValueDate'
+      AND object_id = OBJECT_ID('{databaseOwner}{objectQualifier}MF_SubmissionValues')
+)
+BEGIN
+    CREATE INDEX IX_MF_SubmissionValues_FormId_ValueDate
+        ON {databaseOwner}{objectQualifier}MF_SubmissionValues (FormId, ValueDate)
+        WHERE ValueDate IS NOT NULL;
+END
+GO
+
+-- ===== B55 P2 ============================================================
+IF OBJECT_ID('{databaseOwner}{objectQualifier}MF_ReportDefinitions', 'U') IS NULL
+BEGIN
+    CREATE TABLE {databaseOwner}{objectQualifier}MF_ReportDefinitions (
+        ReportId        INT IDENTITY(1,1) PRIMARY KEY,
+        PortalId        INT             NOT NULL,
+        Name            NVARCHAR(120)   NOT NULL,
+        AppScope        NVARCHAR(120)   NULL,
+        DefinitionJson  NVARCHAR(MAX)   NOT NULL,
+        CreatedByUserId INT             NULL,
+        CreatedOnUtc    DATETIME2       NOT NULL CONSTRAINT DF_MF_ReportDefinitions_CreatedOn DEFAULT SYSUTCDATETIME(),
+        UpdatedOnUtc    DATETIME2       NULL
+    );
+    CREATE INDEX IX_MF_ReportDefinitions_PortalId
+        ON {databaseOwner}{objectQualifier}MF_ReportDefinitions (PortalId, AppScope)
+        INCLUDE (Name);
+END
+GO

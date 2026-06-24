@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>MegaForm.Samples.SdkWebDemo</RootNamespace>
+    <AssemblyName>MegaForm.Samples.SdkWebDemo</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MegaForm.AspNetCore.Component" Version="0.2.1-preview" />
+  </ItemGroup>
+
+</Project>

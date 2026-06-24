@@ -1,0 +1,23 @@
+/* MegaForm Core CSS — imports all base styles + all plugin widget CSS */
+@import url('megaform.css');
+@import url('megaform-views.css');
+@import url('megaform-widgets.css');
+@import url('megaform-themes.css');
+
+/* ── Plugin widget CSS (mirrors Web View.cshtml) ── */
+@import url('plugins/megaform-widgets-builtin.css');
+@import url('plugins/megaform-widget-stripe.css');
+@import url('plugins/megaform-widget-paypal.css');
+@import url('plugins/megaform-widget-signature.css');
+@import url('plugins/megaform-widget-rich-text.css');
+@import url('plugins/megaform-widget-repeater.css');
+@import url('plugins/megaform-widget-advanced-file.css');
+@import url('plugins/megaform-widget-calculator.css');
+@import url('plugins/megaform-widget-rating-suite.css');
+@import url('plugins/megaform-widget-infinite-list.css');
+@import url('plugins/megaform-widget-product-line-items.css');
+@import url('plugins/megaform-widget-draw-on-image.css');
+@import url('plugins/megaform-widget-phone-pro.css');
+@import url('plugins/megaform-widget-video-embed.css');
+@import url('plugins/megaform-widget-grid-repeater.css');
+@import url('plugins/megaform-widget-payment.css');

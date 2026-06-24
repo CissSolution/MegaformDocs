@@ -1,0 +1,31 @@
+@page
+@model MegaForm.Samples.CorporateWeb.Pages.ContactModel
+@{
+    ViewData["Title"] = "Contact";
+}
+
+<section class="contact-page">
+    <div class="container">
+        <div class="contact-intro">
+            <h1>Contact us</h1>
+            <p>
+                This form is hosted and rendered by MegaForm. It was seeded
+                automatically when the sample started.
+            </p>
+        </div>
+
+        @if (Model.FormId > 0)
+        {
+            <div class="contact-form-host">
+                <megaform form-id="@Model.FormId" mode="embed" min-height="720" theme="corporate"></megaform>
+            </div>
+        }
+        else
+        {
+            <div class="no-form">
+                <p>No published MegaForm was found. Make sure the app has finished starting.</p>
+                <a class="btn btn-secondary" href="/admin" target="_blank">Open MegaForm admin</a>
+            </div>
+        }
+    </div>
+</section>

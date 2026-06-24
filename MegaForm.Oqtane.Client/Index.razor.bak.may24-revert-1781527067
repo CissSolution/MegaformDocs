@@ -1,0 +1,2626 @@
+@namespace MegaForm.Client
+@inherits ModuleBase
+@inject IMegaFormService MegaFormService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime Js
+@using System
+@using System.Collections.Generic
+@using System.Linq
+@using System.Text.Json
+@using MegaForm.Core.Models
+@using MegaForm.Core.Workflow
+@using MegaForm.Core.ViewModes
+@using MegaForm.Oqtane.Shared.Models
+
+@if (_isAdmin && !_liveRenderMode)
+{
+    <style>
+        .mf-oq-admin-dock{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin:0 0 12px;flex-wrap:wrap;font-family:'Inter',system-ui,sans-serif;}
+        .mf-oq-pill,.mf-oq-btn,.mf-oq-linkbtn{border:1px solid #dbe4f0;background:#fff;color:#0f172a;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;line-height:1;text-decoration:none;display:inline-flex;align-items:center;gap:8px;box-shadow:0 8px 20px rgba(15,23,42,.06);cursor:pointer;}
+        .mf-oq-pill{background:linear-gradient(180deg,#eff6ff 0%,#ffffff 100%);color:#2563eb;border-color:#bfdbfe;}
+        .mf-oq-btn.is-primary,.mf-oq-linkbtn.is-primary{background:#0f172a;color:#fff;border-color:#0f172a;}
+        .mf-oq-panel{margin:0 0 14px;padding:18px;border:1px solid #dbe4f0;border-radius:20px;background:#fff;box-shadow:0 14px 40px rgba(15,23,42,.05);font-family:'Inter',system-ui,sans-serif;}
+        .mf-oq-panel h3{margin:0 0 8px;font-size:16px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:10px;}
+        .mf-oq-panel .mf-oq-help{color:#475569;font-size:13px;line-height:1.6;margin:0 0 14px;}
+        .mf-oq-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;}
+        .mf-oq-card{border:1px solid #dbe4f0;border-radius:18px;background:#f8fafc;padding:16px;}
+        .mf-oq-card-title{font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:.04em;margin:0 0 6px;}
+        .mf-oq-card-value{font-size:18px;font-weight:700;color:#0f172a;margin:0 0 4px;}
+        .mf-oq-card-meta{font-size:13px;color:#475569;line-height:1.5;}
+        .mf-oq-formgrid{display:grid;grid-template-columns:220px minmax(0,1fr);gap:12px 16px;align-items:center;margin-top:12px;}
+        .mf-oq-formgrid label{font-size:13px;font-weight:600;color:#0f172a;}
+        .mf-oq-formgrid select,.mf-oq-formgrid input[type='text'],.mf-oq-formgrid input[type='number']{width:100%;border:1px solid #cbd5e1;border-radius:12px;padding:10px 12px;font-size:14px;background:#fff;}
+        .mf-oq-inline-check{display:flex;align-items:center;gap:10px;font-size:14px;color:#0f172a;}
+        .mf-oq-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;}
+        .mf-oq-note{margin-top:16px;padding:12px 14px;border-radius:14px;background:#eef6ff;color:#1d4ed8;font-size:13px;line-height:1.6;}
+        .mf-oq-list{margin:14px 0 0;padding:0;list-style:none;display:grid;gap:10px;}
+        .mf-oq-list li{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 14px;border:1px solid #e2e8f0;border-radius:14px;background:#fff;}
+        .mf-oq-list-main{min-width:0;}
+        .mf-oq-list-title{font-size:14px;font-weight:600;color:#0f172a;margin:0 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .mf-oq-list-meta{font-size:12px;color:#64748b;}
+        .mf-oq-status{display:inline-flex;align-items:center;border-radius:999px;padding:4px 10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+        .mf-oq-status.is-published{background:#dcfce7;color:#166534;}
+        .mf-oq-status.is-draft{background:#fef3c7;color:#92400e;}
+        .mf-oq-saved{margin:0 0 12px;padding:10px 12px;border-radius:12px;background:#ecfdf5;color:#166534;font-size:13px;font-weight:600;}
+        @@media (max-width: 900px){.mf-oq-grid{grid-template-columns:1fr;}.mf-oq-formgrid{grid-template-columns:1fr;}}
+    </style>
+
+    @* [ViewDesigner v20260503-02] Inline settings panel removed in favour of
+       a single cross-platform popup. The orchestrator (megaform-settings-popup.js)
+       drives view-mode + form selection, and lazy-loads the List/Card designers
+       on demand so the inline panel logic doesn't have to be duplicated here,
+       in MegaForm.Oqtane.Client/Settings.razor, in DNN, or in Web. *@
+    <div class="mf-oq-admin-dock">
+        <span class="mf-oq-pill"><i class="fas @(_isRendererHostModule ? "fa-circle-check" : "fa-eye")"></i> @(_isRendererHostModule ? "Renderer Host" : "Render Module")</span>
+        <button type="button" class="mf-oq-btn is-primary" @onclick="OpenSettingsPopupAsync"><i class="fas fa-sliders-h"></i> Settings</button>
+        <button type="button" class="mf-oq-btn" @onclick="ToggleStarterPanel"><i class="fas fa-rocket"></i> Business Starters</button>
+        <button type="button" class="mf-oq-btn" id="mf-oq-theme-preset-save" style="display:none;"><i class="fas fa-palette"></i> Update Theme</button>
+        <a href="@BuildBuilderUrl()" class="mf-oq-linkbtn"><i class="fas fa-pen-ruler"></i> Form Builder</a>
+        <a href="@BuildDashboardUrl()" class="mf-oq-linkbtn" data-mf-shared-dashboard-badge="OQDashboardLink v20260429-01"><i class="fas fa-table-columns"></i> Form Dashboard</a>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_saveMessage))
+    {
+        <div class="mf-oq-saved">@_saveMessage</div>
+    }
+
+    @if (_showStarterPanel)
+    {
+        <div class="mf-oq-panel">
+            <h3><i class="fas fa-rocket"></i> Business App Starters</h3>
+            <p class="mf-oq-help">Bootstrap a full sample app into this module with forms, named views, queries, roles, users, workflow, and sample data. The page will hard refresh after setup so the current module immediately switches to the new starter.</p>
+
+            <div class="mf-oq-grid">
+                <div class="mf-oq-card">
+                    <div class="mf-oq-card-title">Starter App</div>
+                    <div class="mf-oq-card-value">Leave Request</div>
+                    <div class="mf-oq-card-meta">Employee -> manager -> HR flow with boards, inbox, register, and printable business-ready sample data.</div>
+                    <div class="mf-oq-actions">
+                        <button type="button" class="mf-oq-btn is-primary" disabled="@_starterBusy" @onclick='() => RunStarterSetupAsync("leave")'><i class="fas fa-person-walking-luggage"></i> Launch Leave Request</button>
+                    </div>
+                </div>
+                <div class="mf-oq-card">
+                    <div class="mf-oq-card-title">Starter App</div>
+                    <div class="mf-oq-card-value">Proposal</div>
+                    <div class="mf-oq-card-meta">Requester -> manager -> finance approval path with proposal register, card view, review board, and seeded demo users.</div>
+                    <div class="mf-oq-actions">
+                        <button type="button" class="mf-oq-btn is-primary" disabled="@_starterBusy" @onclick='() => RunStarterSetupAsync("proposal")'><i class="fas fa-file-signature"></i> Launch Proposal</button>
+                    </div>
+                </div>
+                <div class="mf-oq-card">
+                    <div class="mf-oq-card-title">Starter App</div>
+                    <div class="mf-oq-card-value">Document Exchange</div>
+                    <div class="mf-oq-card-meta">Submitter -> department -> records routing with register, routing board, records board, card view, and sample registry data.</div>
+                    <div class="mf-oq-actions">
+                        <button type="button" class="mf-oq-btn is-primary" disabled="@_starterBusy" @onclick='() => RunStarterSetupAsync("documents")'><i class="fas fa-folder-tree"></i> Launch Document Exchange</button>
+                    </div>
+                </div>
+                <div class="mf-oq-card">
+                    <div class="mf-oq-card-title">Starter App</div>
+                    <div class="mf-oq-card-value">Blog Publishing</div>
+                    <div class="mf-oq-card-meta">Full content app with public views, rich posts, media, SEO/social metadata, legal review, calendar, feed, archive, and seeded lifecycle data.</div>
+                    <div class="mf-oq-actions">
+                        <button type="button" class="mf-oq-btn is-primary" disabled="@_starterBusy" @onclick='() => RunStarterSetupAsync("blog")'><i class="fas fa-newspaper"></i> Launch Blog</button>
+                    </div>
+                </div>
+            </div>
+
+            @if (_starterBusy)
+            {
+                <div class="mf-oq-note">Provisioning starter app and rebinding the current module. The page will refresh automatically when the setup finishes.</div>
+            }
+
+            <div class="mf-oq-actions">
+                <button type="button" class="mf-oq-btn" @onclick="ClosePanels"><i class="fas fa-times"></i> Close</button>
+            </div>
+        </div>
+    }
+
+    @if (_showDashboardPanel)
+    {
+        <div class="mf-oq-panel">
+            <h3><i class="fas fa-table-columns"></i> MegaForm Dashboard</h3>
+            <p class="mf-oq-help">Quick Oqtane-safe dashboard for this site. It stays inside the current Blazor page so the circuit does not break.</p>
+
+            <div class="mf-oq-grid">
+                <div class="mf-oq-card">
+                    <div class="mf-oq-card-title">Total Forms</div>
+                    <div class="mf-oq-card-value">@_dashboardFormsCount</div>
+                    <div class="mf-oq-card-meta">@_dashboardPublishedCount published</div>
+                </div>
+                <div class="mf-oq-card">
+                    <div class="mf-oq-card-title">Submissions</div>
+                    <div class="mf-oq-card-value">@_dashboardSubmissionsCount</div>
+                    <div class="mf-oq-card-meta">Recent responses across this site</div>
+                </div>
+                <div class="mf-oq-card">
+                    <div class="mf-oq-card-title">Current Form</div>
+                    <div class="mf-oq-card-value">@GetSelectedFormTitle()</div>
+                    <div class="mf-oq-card-meta">@(_formId > 0 ? GetSelectedFormStatus() : "No form bound to this module yet")</div>
+                </div>
+            </div>
+
+            <ul class="mf-oq-list">
+                @foreach (var item in _recentForms.Take(6))
+                {
+                    <li>
+                        <div class="mf-oq-list-main">
+                            <div class="mf-oq-list-title">@item.Title</div>
+                            <div class="mf-oq-list-meta">ID @item.FormId · @item.ModifiedText</div>
+                        </div>
+                        <div>
+                            <span class="mf-oq-status @(string.Equals(item.Status, "Published", StringComparison.OrdinalIgnoreCase) ? "is-published" : "is-draft")">@(string.IsNullOrWhiteSpace(item.Status) ? "Draft" : item.Status)</span>
+                        </div>
+                    </li>
+                }
+            </ul>
+
+            <div class="mf-oq-actions">
+                <button type="button" class="mf-oq-btn" @onclick="OpenSettingsPopupAsync"><i class="fas fa-sliders-h"></i> Module Settings</button>
+                <a href="@BuildBuilderUrl()" class="mf-oq-linkbtn"><i class="fas fa-pen-ruler"></i> Open Builder</a>
+                <a href="@BuildSubmissionsUrl()" class="mf-oq-linkbtn"><i class="fas fa-inbox"></i> View Submissions</a>
+                <button type="button" class="mf-oq-btn" @onclick="ClosePanels"><i class="fas fa-times"></i> Close</button>
+            </div>
+        </div>
+    }
+}
+
+@if (ShowStarterQaDock)
+{
+    var starterProfile = GetStarterQaProfile();
+    var starterRoleOptions = starterProfile?.Roles ?? new List<StarterQaRoleOption>();
+    var starterSurfaceLinks = starterProfile?.SurfaceLinks ?? new List<StarterQaSurfaceLink>();
+
+    <style>
+        .mf-qa-panel{margin:0 0 14px;padding:16px 18px;border:1px solid #dbe4f0;border-radius:18px;background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);box-shadow:0 14px 38px rgba(15,23,42,.05);font-family:'Inter',system-ui,sans-serif;}
+        .mf-qa-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px;}
+        .mf-qa-title{margin:0;font-size:16px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:10px;}
+        .mf-qa-sub{margin:6px 0 0;font-size:13px;line-height:1.6;color:#475569;max-width:840px;}
+        .mf-qa-badge{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;}
+        .mf-qa-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(260px,.8fr);gap:14px;}
+        .mf-qa-card{border:1px solid #dbe4f0;border-radius:16px;background:#fff;padding:14px 16px;}
+        .mf-qa-card h4{margin:0 0 6px;font-size:13px;font-weight:800;color:#0f172a;text-transform:uppercase;letter-spacing:.04em;}
+        .mf-qa-meta{font-size:13px;color:#475569;line-height:1.6;}
+        .mf-qa-meta strong{color:#0f172a;}
+        .mf-qa-form{display:grid;grid-template-columns:180px minmax(0,1fr);gap:10px 14px;align-items:center;margin-top:12px;}
+        .mf-qa-form label{font-size:13px;font-weight:700;color:#0f172a;}
+        .mf-qa-form select{width:100%;border:1px solid #cbd5e1;border-radius:12px;padding:10px 12px;font-size:14px;background:#fff;color:#0f172a;}
+        .mf-qa-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+        .mf-qa-btn,.mf-qa-link{border:1px solid #dbe4f0;background:#fff;color:#0f172a;border-radius:999px;padding:9px 14px;font-size:13px;font-weight:700;line-height:1;text-decoration:none;display:inline-flex;align-items:center;gap:8px;cursor:pointer;box-shadow:0 8px 20px rgba(15,23,42,.05);}
+        .mf-qa-btn.is-primary{background:#0f172a;color:#fff;border-color:#0f172a;}
+        .mf-qa-btn[disabled]{opacity:.6;cursor:not-allowed;}
+        .mf-qa-links{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;}
+        .mf-qa-link.is-recommended{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8;}
+        .mf-qa-note{margin-top:12px;padding:10px 12px;border-radius:12px;background:#f8fafc;color:#475569;font-size:12px;line-height:1.6;border:1px dashed #cbd5e1;}
+        .mf-qa-help{margin-top:12px;padding:12px 14px;border-radius:14px;background:#eef6ff;color:#1d4ed8;font-size:13px;line-height:1.6;}
+        @@media (max-width: 900px){.mf-qa-grid{grid-template-columns:1fr;}.mf-qa-form{grid-template-columns:1fr;}}
+    </style>
+
+    <div class="mf-qa-panel" data-mf-role-switch-badge="RoleSwitch v20260511-01">
+        <div class="mf-qa-head">
+            <div>
+                <h3 class="mf-qa-title"><i class="fas fa-user-gear"></i> Starter Role QA Switcher</h3>
+                <p class="mf-qa-sub">Chuyển nhanh giữa các role mẫu của starter app đang mở và nhảy thẳng vào surface phù hợp để QA quyền, dữ liệu, view, và workflow theo từng vai trò.</p>
+            </div>
+            <span class="mf-qa-badge">RoleSwitch v20260511-01</span>
+        </div>
+
+        <div class="mf-qa-grid">
+            <div class="mf-qa-card">
+                <h4>Current App</h4>
+                <div class="mf-qa-meta">
+                    <strong>@(starterProfile?.DisplayName ?? "Starter App")</strong><br />
+                    Form: @GetSelectedFormTitle()<br />
+                    Current user: @(string.IsNullOrWhiteSpace(GetCurrentUserName()) ? "Anonymous" : GetCurrentUserName())<br />
+                    Current role target: @GetCurrentStarterRoleLabel()
+                </div>
+
+                <div class="mf-qa-form">
+                    <label for="mf-qa-role-select">Switch to role</label>
+                    <select id="mf-qa-role-select" @bind="_selectedStarterRoleUserName">
+                        @foreach (var role in starterRoleOptions)
+                        {
+                            <option value="@role.UserName">@role.DisplayName - @role.Description</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mf-qa-actions">
+                    <button type="button" class="mf-qa-btn is-primary" disabled="@_starterRoleBusy" @onclick="SwitchStarterRoleAsync">
+                        <i class="fas @(_starterRoleBusy ? "fa-spinner fa-spin" : "fa-right-left")"></i>
+                        @(_starterRoleBusy ? "Switching role..." : "Switch Role")
+                    </button>
+                    <a class="mf-qa-link" href="/login?returnurl=%2Fbusiness">
+                        <i class="fas fa-arrow-right-to-bracket"></i> Login Page
+                    </a>
+                </div>
+
+                <div class="mf-qa-note">Host không nằm trong dropdown để tránh auto-login tài khoản quản trị. Khi cần quay lại host, dùng <strong>Login Page</strong>.</div>
+            </div>
+
+            <div class="mf-qa-card">
+                <h4>QA / Admin Surfaces</h4>
+                <div class="mf-qa-meta">Các link này giữ nguyên app hiện tại nhưng cho bạn nhảy nhanh qua từng surface để QA visual, dữ liệu, token, và workflow.</div>
+                <div class="mf-qa-links">
+                    @foreach (var link in starterSurfaceLinks)
+                    {
+                        <a class="mf-qa-link @(link.IsRecommended ? "is-recommended" : null)" href="@link.Url">
+                            <i class="fas @link.Icon"></i> @link.Label
+                        </a>
+                    }
+                </div>
+                <div class="mf-qa-help">Gợi ý: bắt đầu bằng role requester/employee/submitter, sau đó đổi sang manager/reviewer, cuối cùng sang finance/records hoặc HR để kiểm toàn bộ vòng đời của app.</div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (IsWorkflowMapMode && _workflowPreview != null && _workflowPreview.Nodes.Count > 0)
+{
+    <style>
+        .mf-flow-shell{display:grid;gap:18px;font-family:'Inter',system-ui,sans-serif;}
+        .mf-flow-hero{display:grid;gap:14px;padding:22px 24px;border:1px solid #bfdbfe;border-radius:24px;background:linear-gradient(135deg,#eff6ff 0%,#ffffff 55%,#f8fafc 100%);box-shadow:0 18px 42px rgba(15,23,42,.08);}
+        .mf-flow-hero-main{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;flex-wrap:wrap;}
+        .mf-flow-eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#2563eb;font-weight:800;}
+        .mf-flow-title{margin:6px 0 0;font-size:30px;line-height:1.12;color:#0f172a;}
+        .mf-flow-sub{margin:10px 0 0;font-size:14px;line-height:1.7;color:#475569;max-width:900px;}
+        .mf-flow-chips{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+        .mf-flow-chip{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;border:1px solid #dbe4f0;background:#fff;color:#0f172a;font-size:13px;font-weight:700;box-shadow:0 8px 22px rgba(15,23,42,.05);}
+        .mf-flow-actions{display:flex;gap:10px;flex-wrap:wrap;}
+        .mf-flow-link{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;text-decoration:none;font-size:13px;font-weight:700;border:1px solid #dbe4f0;background:#fff;color:#0f172a;box-shadow:0 8px 22px rgba(15,23,42,.05);}
+        .mf-flow-link.is-primary{background:#0f172a;border-color:#0f172a;color:#fff;}
+        .mf-flow-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(320px,.7fr);gap:18px;align-items:start;}
+        .mf-flow-canvas-card,.mf-flow-side-card{padding:18px;border:1px solid #dbe4f0;border-radius:22px;background:#fff;box-shadow:0 16px 36px rgba(15,23,42,.05);}
+        .mf-flow-side-card{display:grid;gap:16px;}
+        .mf-flow-canvas-wrap{position:relative;overflow:auto;max-height:72vh;border-radius:18px;border:1px solid #dbe4f0;background:linear-gradient(180deg,#f8fbff 0%,#ffffff 100%);}
+        .mf-flow-canvas{position:relative;min-width:1000px;}
+        .mf-flow-svg{position:absolute;inset:0;pointer-events:none;}
+        .mf-flow-lane{position:absolute;left:24px;right:24px;border-radius:20px;border:1px dashed rgba(148,163,184,.55);background:rgba(255,255,255,.75);box-shadow:inset 0 0 0 1px rgba(255,255,255,.3);}
+        .mf-flow-lane-label{position:absolute;left:18px;top:14px;padding:6px 10px;border-radius:999px;background:#0f172a;color:#fff;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;}
+        .mf-flow-node{position:absolute;width:220px;border-radius:22px;border:1px solid #cbd5e1;background:#fff;box-shadow:0 18px 34px rgba(15,23,42,.12);padding:16px;display:grid;gap:10px;}
+        .mf-flow-node.is-start{border-color:#86efac;background:linear-gradient(180deg,#f0fdf4 0%,#ffffff 100%);}
+        .mf-flow-node.is-approval{border-color:#93c5fd;background:linear-gradient(180deg,#eff6ff 0%,#ffffff 100%);}
+        .mf-flow-node.is-end{border-color:#fdba74;background:linear-gradient(180deg,#fff7ed 0%,#ffffff 100%);}
+        .mf-flow-node.is-action{border-color:#cbd5e1;background:linear-gradient(180deg,#f8fafc 0%,#ffffff 100%);}
+        .mf-flow-node-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;}
+        .mf-flow-node-type{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;background:#e2e8f0;color:#334155;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;}
+        .mf-flow-node-zone{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.08em;}
+        .mf-flow-node-title{margin:0;font-size:18px;line-height:1.25;color:#0f172a;font-weight:800;}
+        .mf-flow-node-id{font-size:12px;color:#64748b;line-height:1.5;}
+        .mf-flow-node-meta{display:grid;gap:8px;}
+        .mf-flow-node-label{font-size:11px;font-weight:800;color:#64748b;letter-spacing:.08em;text-transform:uppercase;}
+        .mf-flow-pillrow{display:flex;flex-wrap:wrap;gap:8px;}
+        .mf-flow-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:#f8fafc;border:1px solid #dbe4f0;color:#0f172a;font-size:12px;font-weight:700;}
+        .mf-flow-pill.is-role{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8;}
+        .mf-flow-pill.is-user{background:#f5f3ff;border-color:#ddd6fe;color:#6d28d9;}
+        .mf-flow-pill.is-status{background:#ecfeff;border-color:#bae6fd;color:#0f766e;}
+        .mf-flow-note{font-size:12px;line-height:1.6;color:#475569;border-top:1px dashed #e2e8f0;padding-top:10px;}
+        .mf-flow-head{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
+        .mf-flow-head h3{margin:0;font-size:16px;font-weight:800;color:#0f172a;}
+        .mf-flow-head p{margin:6px 0 0;font-size:13px;line-height:1.6;color:#475569;}
+        .mf-flow-side-block{display:grid;gap:10px;padding:14px;border:1px solid #e2e8f0;border-radius:18px;background:#f8fafc;}
+        .mf-flow-side-block h4{margin:0;font-size:13px;font-weight:800;color:#0f172a;text-transform:uppercase;letter-spacing:.06em;}
+        .mf-flow-list{display:grid;gap:10px;}
+        .mf-flow-list-item{padding:12px 14px;border-radius:14px;border:1px solid #dbe4f0;background:#fff;}
+        .mf-flow-list-item-title{font-size:14px;font-weight:700;color:#0f172a;margin:0 0 6px;}
+        .mf-flow-list-item-meta{font-size:12px;color:#475569;line-height:1.6;}
+        @@media (max-width: 1080px){.mf-flow-grid{grid-template-columns:1fr;}.mf-flow-canvas{min-width:960px;}}
+    </style>
+}
+
+@if (_loading)
+{
+    <div class="text-muted small p-2">Loading form…</div>
+}
+else if (_formId == 0)
+{
+    if (_isAdmin)
+    {
+        <div class="alert alert-info">
+            <strong>MegaForm:</strong> No form configured.
+            Use <button type="button" class="btn btn-link p-0 align-baseline" @onclick="OpenSettingsPopupAsync">Module Settings</button>
+            or <a href="@BuildBuilderUrl()" class="alert-link">Form Builder</a> to choose a form.
+        </div>
+    }
+}
+else if (!_isPublished)
+{
+    if (_isAdmin)
+    {
+        <div class="alert alert-warning">
+            <strong>MegaForm:</strong> This form is not published yet.
+            <a href="@BuildBuilderUrl()" class="alert-link">Open Builder ↗</a>
+        </div>
+    }
+}
+else
+{
+    @if (!string.IsNullOrWhiteSpace(_initialInlineCss))
+    {
+        <style id="mf-inline-preset-@_formId">@((MarkupString)_initialInlineCss)</style>
+    }
+@if (_isAdmin && !_liveRenderMode && !IsFormMode)
+{
+        @* [ListViewDiagnostic v20260507-28] Tiny admin-only badge so it's
+           obvious which view mode the page actually loaded — useful when the
+           page seems to "fall back" silently. Hidden in live render mode. *@
+    <div style="margin:0 0 8px;padding:6px 12px;background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;font-size:12px;color:#92400e;font-family:'Inter',system-ui,sans-serif">
+        <strong>View mode:</strong> @_viewMode
+        <span style="color:#a16207;margin-left:8px">· form #@_formId · @(IsWorkflowInboxMode ? "workflow inbox" : (IsListViewMode ? "MFListView (new)" : (IsListMode ? "data-mf-view=list (legacy)" : (IsCardMode ? "data-mf-view=card (legacy)" : "form"))))</span>
+    </div>
+}
+<div id="@FormShellId" class="megaform-module @(_cssClass)">
+        @if (IsWorkflowInboxMode)
+        {
+            <div id="mf-dnn-tasks-root"
+                 class="mf-dnn-tasks"
+                 data-module-id="@(ModuleState?.ModuleId ?? 0)"
+                 data-tab-id="@(PageState?.Page?.PageId ?? 0)"
+                 data-api-base="/api/MegaForm/Workflow"
+                 data-submissions-api-base="/api/MegaForm/"
+                 data-form-id="@_formId"
+                 data-initial-task-id="">
+                <div class="mf-dnn-task-header">
+                    <div class="mf-dnn-task-header-main">
+                        <div class="mf-dnn-task-eyebrow">MegaForm Workflow Inbox</div>
+                        <h2 class="mf-dnn-task-title">Review, approve, and trace business app requests</h2>
+                        <div class="mf-dnn-task-meta">
+                            <span class="mf-dnn-task-chip"><i class="fas fa-file-alt"></i> Form #@_formId: @GetSelectedFormTitle()</span>
+                            <span class="mf-dnn-task-chip"><i class="fas fa-layer-group"></i> View mode: @_viewMode</span>
+                            @if (!IsWorkflowInboxMode && !string.IsNullOrWhiteSpace(_activeQueryKey))
+                            {
+                                <span class="mf-dnn-task-chip"><i class="fas fa-filter"></i> Query: @_activeQueryKey</span>
+                            }
+                            @if (IsWorkflowInboxMode && !string.IsNullOrWhiteSpace(_activeViewKey))
+                            {
+                                <span class="mf-dnn-task-chip"><i class="fas fa-table-columns"></i> Starter board: @_activeViewKey</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="mf-dnn-task-actions">
+                        <button type="button" id="mf-task-refresh" class="mf-dnn-btn mf-dnn-btn-primary">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                        <a href="@BuildCurrentModuleUrl("view", "form")" class="mf-dnn-btn">
+                            <i class="fas fa-pen"></i> Submit Form
+                        </a>
+                        <a href="@BuildStarterBoardUrl()" class="mf-dnn-btn">
+                            <i class="fas fa-table-columns"></i> Starter Board
+                        </a>
+                    </div>
+                </div>
+                <div id="mf-task-feedback" class="mf-dnn-task-feedback" style="display:none;"></div>
+                <div class="mf-dnn-task-layout">
+                    <div class="mf-dnn-task-column">
+                        <section class="mf-dnn-card">
+                            <div class="mf-dnn-card-header">
+                                <h3><i class="fas fa-user-check"></i> My Tasks <span id="mf-my-task-count" class="mf-dnn-count">0</span></h3>
+                                <div class="mf-dnn-card-sub">Tasks already assigned to the signed-in user.</div>
+                            </div>
+                            <div id="mf-my-task-list" class="mf-dnn-task-list">
+                                <div class="mf-dnn-empty">Loading your task inbox...</div>
+                            </div>
+                        </section>
+                        <section class="mf-dnn-card">
+                            <div class="mf-dnn-card-header">
+                                <h3><i class="fas fa-people-arrows"></i> Role Queue <span id="mf-role-task-count" class="mf-dnn-count">0</span></h3>
+                                <div class="mf-dnn-card-sub">Tasks you can claim because one of your roles matches the workflow step.</div>
+                            </div>
+                            <div id="mf-role-task-list" class="mf-dnn-task-list">
+                                <div class="mf-dnn-empty">Loading role queue...</div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="mf-dnn-task-column mf-dnn-task-column-detail">
+                        <section class="mf-dnn-card">
+                            <div class="mf-dnn-card-header">
+                                <h3><i class="fas fa-clipboard-check"></i> Task Detail</h3>
+                                <div class="mf-dnn-card-sub">Claim, approve, reject, or forward the selected workflow step.</div>
+                            </div>
+                            <div id="mf-task-detail" class="mf-dnn-task-detail">
+                                <div class="mf-dnn-empty">Select a task from the inbox to inspect workflow history and take action.</div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        }
+        else if (IsWorkflowMapMode)
+        {
+            <div class="mf-flow-shell" data-mf-workflow-map-badge="WorkflowMap v20260512-01">
+                <section class="mf-flow-hero">
+                    <div class="mf-flow-hero-main">
+                        <div>
+                            <div class="mf-flow-eyebrow">Workflow QA / Admin</div>
+                            <h2 class="mf-flow-title">@_workflowPreview.Title</h2>
+                        <p class="mf-flow-sub">Read-only BPMN 2.0 runtime map for the active app. This is an admin QA surface only; day-to-day approve/reject/claim should happen inside submission detail on the board or in the inbox, using the same executable workflow definition.</p>
+                    </div>
+                    <div class="mf-flow-actions">
+                        <a href="@BuildCurrentModuleUrl("mfpanel", "inbox")" class="mf-flow-link"><i class="fas fa-inbox"></i> Open Workflow Inbox</a>
+                        <a href="@BuildStarterBoardUrl()" class="mf-flow-link"><i class="fas fa-table-columns"></i> Back to App Board</a>
+                        <a href="@BuildWorkflowBuilderUrl()" class="mf-flow-link is-primary"><i class="fas fa-pen-ruler"></i> Edit BPMN Workflow</a>
+                    </div>
+                </div>
+                    <div class="mf-flow-chips">
+                        <span class="mf-flow-chip"><i class="fas fa-diagram-project"></i> @(_workflowPreview.Nodes.Count) nodes</span>
+                        <span class="mf-flow-chip"><i class="fas fa-arrow-right-arrow-left"></i> @(_workflowPreview.Edges.Count) transitions</span>
+                        <span class="mf-flow-chip"><i class="fas fa-user-tag"></i> @(_workflowPreview.TotalAssignments) role/user assignments</span>
+                        @if (!string.IsNullOrWhiteSpace(_workflowPreview.VersionText))
+                        {
+                            <span class="mf-flow-chip"><i class="fas fa-code-branch"></i> @_workflowPreview.VersionText</span>
+                        }
+                    </div>
+                </section>
+
+                <div class="mf-flow-grid">
+                    <section class="mf-flow-canvas-card">
+                        <div class="mf-flow-head">
+                            <div>
+                            <h3>BPMN 2.0 Process Map</h3>
+                            <p>Diagnostic QA surface only. Use the builder to change sequence flow, swimlanes, candidate roles, candidate users, timers, gateways, and runtime statuses, then review/approve from the main app board.</p>
+                            </div>
+                            <div class="mf-flow-chip"><i class="fas fa-circle-play"></i> Start: @_workflowPreview.StartNodeLabel</div>
+                        </div>
+                        <div class="mf-flow-canvas-wrap">
+                            <div class="mf-flow-canvas" style="width:@($"{_workflowPreview.CanvasWidth}px");height:@($"{_workflowPreview.CanvasHeight}px")">
+                                @foreach (var lane in _workflowPreview.Lanes)
+                                {
+                                    <div class="mf-flow-lane" style="top:@($"{lane.Top}px");height:@($"{lane.Height}px")">
+                                        <div class="mf-flow-lane-label">@lane.Label</div>
+                                    </div>
+                                }
+                                <svg class="mf-flow-svg" width="@_workflowPreview.CanvasWidth" height="@_workflowPreview.CanvasHeight" viewBox="@($"0 0 {_workflowPreview.CanvasWidth} {_workflowPreview.CanvasHeight}")" preserveAspectRatio="none">
+                                    <defs>
+                                        <marker id="mf-flow-arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+                                            <path d="M0,0 L12,6 L0,12 z" fill="#94a3b8"></path>
+                                        </marker>
+                                    </defs>
+                                    @foreach (var edge in _workflowPreview.Edges)
+                                    {
+                                        <line x1="@edge.X1" y1="@edge.Y1" x2="@edge.X2" y2="@edge.Y2" stroke="@edge.Color" stroke-width="3" marker-end="url(#mf-flow-arrow)"></line>
+                                    }
+                                </svg>
+                                @foreach (var edge in _workflowPreview.Edges.Where(e => !string.IsNullOrWhiteSpace(e.Label)))
+                                {
+                                    <div class="mf-flow-pill" style="position:absolute;left:@($"{edge.LabelX - 36}px");top:@($"{edge.LabelY - 14}px");background:#ffffff;box-shadow:0 10px 24px rgba(15,23,42,.08)">
+                                        @edge.Label
+                                    </div>
+                                }
+                                @foreach (var node in _workflowPreview.Nodes)
+                                {
+                                    <article class="mf-flow-node @node.CssClass" style="left:@($"{node.Left}px");top:@($"{node.Top}px")">
+                                        <div class="mf-flow-node-top">
+                                            <span class="mf-flow-node-type">@node.TypeLabel</span>
+                                            <span class="mf-flow-node-zone">@node.ZoneLabel</span>
+                                        </div>
+                                        <h4 class="mf-flow-node-title">@node.Label</h4>
+                                        <div class="mf-flow-node-id">@node.MetaText</div>
+                                        @if (node.RoleAssignments.Count > 0)
+                                        {
+                                            <div class="mf-flow-node-meta">
+                                                <div class="mf-flow-node-label">Role assignments</div>
+                                                <div class="mf-flow-pillrow">
+                                                    @foreach (var role in node.RoleAssignments)
+                                                    {
+                                                        <span class="mf-flow-pill is-role"><i class="fas fa-user-tag"></i> @role</span>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                        @if (node.UserAssignments.Count > 0)
+                                        {
+                                            <div class="mf-flow-node-meta">
+                                                <div class="mf-flow-node-label">User assignments</div>
+                                                <div class="mf-flow-pillrow">
+                                                    @foreach (var user in node.UserAssignments)
+                                                    {
+                                                        <span class="mf-flow-pill is-user"><i class="fas fa-user"></i> @user</span>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                        @if (node.StatusHints.Count > 0)
+                                        {
+                                            <div class="mf-flow-node-meta">
+                                                <div class="mf-flow-node-label">Runtime statuses</div>
+                                                <div class="mf-flow-pillrow">
+                                                    @foreach (var status in node.StatusHints)
+                                                    {
+                                                        <span class="mf-flow-pill is-status"><i class="fas fa-flag"></i> @status</span>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(node.Note))
+                                        {
+                                            <div class="mf-flow-note">@node.Note</div>
+                                        }
+                                    </article>
+                                }
+                            </div>
+                        </div>
+                    </section>
+
+                    <aside class="mf-flow-side-card">
+                        <div class="mf-flow-side-block">
+                            <h4>Assignment Rules</h4>
+                            <div class="mf-flow-list">
+                                @foreach (var node in _workflowPreview.Nodes.Where(n => n.RoleAssignments.Count > 0 || n.UserAssignments.Count > 0))
+                                {
+                                    <div class="mf-flow-list-item">
+                                        <div class="mf-flow-list-item-title">@node.Label</div>
+                                        <div class="mf-flow-list-item-meta">
+                                            Roles: @(node.RoleAssignments.Count > 0 ? string.Join(", ", node.RoleAssignments) : "None")<br />
+                                            Users: @(node.UserAssignments.Count > 0 ? string.Join(", ", node.UserAssignments) : "None")
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        <div class="mf-flow-side-block">
+                            <h4>How To Change It</h4>
+                            <div class="mf-flow-list-item">
+                                <div class="mf-flow-list-item-title">Open Builder</div>
+                                <div class="mf-flow-list-item-meta">The same executable workflow definition drives this BPMN 2.0 map, the inbox, and runtime routing. Change user tasks, service tasks, sequence flow, candidate roles, candidate users, claim rules, and status mapping in Builder, then return here to QA the updated process.</div>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        }
+        else if (IsListViewMode)
+        {
+            @* [ListViewRouting v20260507-23] NEW dedicated ListView module —
+               own bundle (megaform-listview.js), own designer, own CSS.
+               Emit the mount div with data-attrs the runtime auto-binds on
+               (matches MegaForm.Core.ViewModes.ListViewSettings.BuildMountHtml
+               byte-for-byte; kept inline here so this Razor project doesn't
+               need a hard reference on MegaForm.Core). *@
+            <div data-mf-listview="1"
+                 data-mf-form-id="@_listViewFormId"
+                 data-mf-api-base="/api/MegaForm/"
+                 data-mf-module-id="@(ModuleState?.ModuleId ?? 0)"
+                 data-mf-fields-json="@_listViewFieldsJson"
+                 data-mf-row-template="@_listViewRowTemplate"
+                 data-mf-detail-template="@_listViewDetailTemplate"
+                 data-mf-wrapper-template="@_listViewWrapperTemplate"
+                 data-mf-page-size="@_listViewPageSize"
+                 data-mf-search="@(_listViewEnableSearch ? "true" : "false")"
+                 data-mf-sort="@(_listViewEnableSort ? "true" : "false")"
+                 data-mf-show-add="@(_listViewShowAddButton ? "true" : "false")"
+                 data-mf-show-actions="@(_listViewShowRowActions ? "true" : "false")"
+                 data-mf-renderer-host-url="@_rendererHostUrl"
+                 data-mf-title="@_listViewTitle"
+                 data-mf-empty-message="@_listViewEmptyMessage"
+                 data-mf-query-key="@_activeQueryKey"
+                 data-mf-context-json="@BuildTemplateContextJson()"
+                 data-mf-listview-badge="ListViewSettings v20260524-01"
+                 data-mf-debug-wraplen="@(_listViewWrapperTemplate?.Length ?? 0)"
+                 data-mf-debug-rowlen="@(_listViewRowTemplate?.Length ?? 0)"
+                 data-mf-debug-actvk="@_activeViewKey"></div>
+        }
+        else if (IsListMode)
+        {
+            @* [SubmissionViews v20260503-01] List bundle (megaform-submission-list.js)
+               auto-binds any element with data-mf-view="list" on DOMContentLoaded
+               and fetches /api/MegaForm/Submissions?formId=N. *@
+            <div id="@FormMountId"
+                 data-mf-view="list"
+                 data-mf-form-id="@_formId"
+                 data-mf-api-base="/api/MegaForm/"
+                 data-mf-fields="@_listFields"
+                 data-mf-template="@_listTemplate"
+                 data-mf-query-key="@_activeQueryKey"
+                 data-mf-context-json="@BuildTemplateContextJson()"
+                 data-form-id="@_formId"
+                 data-module-id="@(ModuleState?.ModuleId ?? 0)">
+            </div>
+        }
+        else if (IsCardMode)
+        {
+            @* [SubmissionViews v20260503-01] Card bundle (megaform-submission-card.js). *@
+            <div id="@FormMountId"
+                 data-mf-view="card"
+                 data-mf-form-id="@_formId"
+                 data-mf-api-base="/api/MegaForm/"
+                 data-mf-fields="@_cardFields"
+                 data-mf-template="@_cardTemplate"
+                 data-mf-query-key="@_activeQueryKey"
+                 data-mf-context-json="@BuildTemplateContextJson()"
+                 data-form-id="@_formId"
+                 data-module-id="@(ModuleState?.ModuleId ?? 0)">
+            </div>
+        }
+        else
+        {
+            <div id="@FormMountId"
+                 data-form-id="@_formId"
+                 data-module-id="@(ModuleState?.ModuleId ?? 0)">
+            </div>
+        }
+    </div>
+}
+
+@code {
+    protected new string ModulePath() => "Modules/MegaForm/";
+    // [SignaturePlaceholder v20260502-07] bumped to force browsers to fetch the
+    // updated megaform-renderer.js (adds .mf-signature-placeholder hint) and
+    // related canonical bundles. Bump this whenever any of the 5 Resources
+    // below changes server-side, OR a renderer fix needs to defeat browser
+    // cache on the public form view.
+    private const string OqtaneCoreAssetVersion = "20260524-01";
+    private const string WorkflowBuilderAssetVersion = "20260512-04";
+
+    public override List<Resource> Resources => new()
+    {
+        new Resource { ResourceType = ResourceType.Stylesheet, Url = "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" },
+        new Resource { ResourceType = ResourceType.Stylesheet, Url = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" },
+        new Resource { ResourceType = ResourceType.Stylesheet, Url = ModulePath() + "css/megaform.css" },
+        new Resource { ResourceType = ResourceType.Stylesheet, Url = ModulePath() + "css/megaform-widgets.css" },
+        new Resource { ResourceType = ResourceType.Stylesheet, Url = ModulePath() + "css/megaform-themes.css" },
+        new Resource { ResourceType = ResourceType.Stylesheet, Url = ModulePath() + "css/plugins/megaform-widgets-builtin.css?v=20260404-05" },
+        new Resource { ResourceType = ResourceType.Stylesheet, Url = ModulePath() + "css/megaform-admin-shell.css" },
+        // [OQ-livecore v20260420-04] Load the 5 canonical root JS files in the
+        // same dependency order the live renderer expects. Previously Oqtane only
+        // registered widgets/rule-engine/renderer here and relied on Js.InvokeVoidAsync("eval", ...)
+        // in OnAfterRenderAsync to lazy-load config+i18n+remaining files. When that
+        // eval path did not run, the page had a mount div but MegaFormRenderer stayed undefined.
+        new Resource { ResourceType = ResourceType.Script, Url = ModulePath() + $"js/megaform-config.js?v={OqtaneCoreAssetVersion}", Location = ResourceLocation.Body },
+        new Resource { ResourceType = ResourceType.Script, Url = ModulePath() + $"js/megaform-i18n.js?v={OqtaneCoreAssetVersion}", Location = ResourceLocation.Body },
+        new Resource { ResourceType = ResourceType.Script, Url = ModulePath() + $"js/megaform-widgets.js?v={OqtaneCoreAssetVersion}", Location = ResourceLocation.Body },
+        new Resource { ResourceType = ResourceType.Script, Url = ModulePath() + "js/plugins/types.js", Location = ResourceLocation.Body },
+        new Resource { ResourceType = ResourceType.Script, Url = ModulePath() + $"js/megaform-rule-engine.js?v={OqtaneCoreAssetVersion}", Location = ResourceLocation.Body },
+        new Resource { ResourceType = ResourceType.Script, Url = ModulePath() + $"js/megaform-renderer.js?v={OqtaneCoreAssetVersion}", Location = ResourceLocation.Body },
+        // [SubmissionViews v20260503-01] List/Card view bundles — separate from
+        // the form renderer. Always loaded so admins can flip View Mode without
+        // a server-side resource refresh; idle-cost ~3.5 KB each.
+        new Resource { ResourceType = ResourceType.Script, Url = ModulePath() + $"js/megaform-submission-list.js?v={OqtaneCoreAssetVersion}", Location = ResourceLocation.Body },
+        new Resource { ResourceType = ResourceType.Script, Url = ModulePath() + $"js/megaform-submission-card.js?v={OqtaneCoreAssetVersion}", Location = ResourceLocation.Body },
+        // [ListViewRouting v20260507-23] NEW dedicated ListView bundle (own
+        // designer + runtime + CSS). Always loaded so the admin's view-mode
+        // toggle works without a resource refresh; ~5 KB gz.
+        new Resource { ResourceType = ResourceType.Stylesheet, Url = ModulePath() + $"css/megaform-submissions-ts.css?v={OqtaneCoreAssetVersion}" },
+        new Resource { ResourceType = ResourceType.Stylesheet, Url = ModulePath() + $"css/megaform-listview.css?v={OqtaneCoreAssetVersion}" },
+        new Resource { ResourceType = ResourceType.Script,     Url = ModulePath() + $"js/megaform-listview.js?v={OqtaneCoreAssetVersion}",   Location = ResourceLocation.Body },
+        new Resource { ResourceType = ResourceType.Stylesheet, Url = ModulePath() + $"css/megaform-workflow-inbox-ts.css?v={OqtaneCoreAssetVersion}" },
+        new Resource { ResourceType = ResourceType.Script,     Url = ModulePath() + $"js/megaform-workflow-inbox.js?v={OqtaneCoreAssetVersion}", Location = ResourceLocation.Body },
+        // [ViewDesigner v20260503-02] Cross-platform settings popup (replaces
+        // the inline panel + Settings.razor logic). Visible to admins only via
+        // the "Settings" button — script is small (~6 KB gz) so it's cheap to
+        // ship for everyone. Designer bundles (list/card) load lazily from the
+        // popup itself, so they only download when an admin opens them.
+        new Resource { ResourceType = ResourceType.Script, Url = ModulePath() + $"js/megaform-settings-popup.js?v={OqtaneCoreAssetVersion}", Location = ResourceLocation.Body }
+    };
+
+    private int _formId;
+    private bool _loading = true;
+    private bool _isPublished;
+    private bool _isAdmin;
+    private string _initialInlineCss = string.Empty;
+    private bool _liveRenderMode;
+    private bool _embedMode;
+    private bool _moduleConfigured;
+    private string _cssClass = string.Empty;
+    private string _rendererHostUrl = string.Empty;
+    private int _rendererHostPageId;
+    private int _rendererHostModuleId;
+    private string _moduleViewConfigJson = "{}";
+    private string _selectedPresetThemeKey = string.Empty;
+    private List<FormListItem> _forms = new();
+private bool _showManagePanel;
+private bool _showDashboardPanel;
+private bool _showStarterPanel;
+private bool _starterBusy;
+    private bool _workflowEditorAutoOpenPending;
+private bool _starterRoleBusy;
+private string _saveMessage = string.Empty;
+private string _selectedStarterRoleUserName = string.Empty;
+
+    private string _displayMode = "fixed";
+    private string _triggerType = "time_delay";
+    private int _delaySeconds = 5;
+    private int _scrollPercent = 50;
+    private string _clickSelector = string.Empty;
+    private bool _showOncePerSession = true;
+    private bool _closeOnOverlay = true;
+    private string _startAt = string.Empty;
+    private string _endAt = string.Empty;
+    private bool _useThisPageAsRendererHost;
+    // [SubmissionViews v20260503-01] Module ViewMode controls which renderer
+    // mounts: "form" (default) → form renderer; "list" → submission-list bundle;
+    // "card" → submission-card bundle. Bundles are intentionally separate from
+    // the form renderer so they're easier to maintain.
+private string _viewMode = "form";
+private string _activeViewKey = string.Empty;
+private string _activeQueryKey = string.Empty;
+private string _listFields = string.Empty;
+private string _listTemplate = string.Empty;
+    private string _cardFields = string.Empty;
+    private string _cardTemplate = string.Empty;
+    // [ListViewRouting v20260507-23] When viewMode='listview' the saved JSON is
+    // a ListViewSettings blob (formId, fields, rowTemplate, pageSize, …).
+    // Persisted in ModuleConfig.ListViewSettingsJson; falls back to the legacy
+    // ViewConfig blob if not yet migrated.
+    private string _listViewSettingsJson = "{}";
+    // Parsed view of the JSON above — populated lazily so the Razor markup
+    // can bind without re-parsing on each render.
+    private int    _listViewFormId          = 0;
+    private string _listViewFieldsJson      = "[]";
+    private string _listViewRowTemplate     = string.Empty;
+    private string _listViewDetailTemplate  = string.Empty;
+    private string _listViewWrapperTemplate = string.Empty;
+    private int    _listViewPageSize        = 25;
+    private bool   _listViewEnableSearch    = true;
+    private bool   _listViewEnableSort      = true;
+    private string _listViewTitle           = string.Empty;
+    private string _listViewEmptyMessage    = "No submissions yet.";
+    private bool   _listViewShowAddButton   = true;
+    private bool   _listViewShowRowActions  = true;
+    private WorkflowPreviewModel _workflowPreview = WorkflowPreviewModel.Empty();
+    private bool IsListMode     => string.Equals(_viewMode, "list",     StringComparison.OrdinalIgnoreCase);
+    private bool IsCardMode     => string.Equals(_viewMode, "card",     StringComparison.OrdinalIgnoreCase);
+    private bool IsListViewMode => string.Equals(_viewMode, "listview", StringComparison.OrdinalIgnoreCase);
+    private bool IsWorkflowInboxMode => string.Equals(GetQueryValue(NavigationManager?.Uri ?? string.Empty, "mfpanel"), "inbox", StringComparison.OrdinalIgnoreCase);
+    private bool IsWorkflowMapMode => string.Equals(GetQueryValue(NavigationManager?.Uri ?? string.Empty, "mfpanel"), "workflowmap", StringComparison.OrdinalIgnoreCase);
+    private bool IsFormMode     => !IsWorkflowInboxMode && !IsWorkflowMapMode && !IsListMode && !IsCardMode && !IsListViewMode;
+
+    // [OQ-difix20260420-09] Bug G: UpsertModuleInlineScript called AFTER awaits
+    // misses Oqtane's resource injection pass — the renderer boot script never
+    // reaches the DOM even though _isPublished=true and the mount div renders.
+    // Workaround: stash the script here during OnParametersSetAsync and eval it
+    // from OnAfterRenderAsync via IJSRuntime, bypassing the resource pipeline.
+    private string _pendingRendererBoot = string.Empty;
+    private bool _rendererBootExecuted;
+
+    private int _dashboardFormsCount;
+    private int _dashboardPublishedCount;
+    private int _dashboardSubmissionsCount;
+    private List<DashboardFormRow> _recentForms = new();
+
+    private bool _isRendererHostModule => _rendererHostModuleId > 0 && _rendererHostModuleId == (ModuleState?.ModuleId ?? 0);
+    private bool IsPopupMode => string.Equals(_displayMode, "popup", StringComparison.OrdinalIgnoreCase);
+    private bool IsTimeDelay => string.Equals(NormalizeTriggerType(_triggerType), "time_delay", StringComparison.OrdinalIgnoreCase);
+    private bool IsScrollDepth => string.Equals(NormalizeTriggerType(_triggerType), "scroll_depth", StringComparison.OrdinalIgnoreCase);
+    private bool IsClickTrigger => string.Equals(NormalizeTriggerType(_triggerType), "click_trigger", StringComparison.OrdinalIgnoreCase);
+
+    private string FormShellId => $"megaform-container-{ModuleState?.ModuleId ?? 0}";
+    private string FormMountId => $"mf-form-{ModuleState?.ModuleId ?? 0}-{_formId}";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var apiBase = "/api/MegaForm/";
+        var token = SiteState?.AuthorizationToken ?? string.Empty;
+        var tokenJs = string.IsNullOrEmpty(token) ? "null" : $"'{token.Replace("'", "\\'")}'";
+        AddHeadContent(
+            $"<script>window.__MF_PLATFORM__=window.__MF_PLATFORM__||{{}};" +
+            $"window.__MF_PLATFORM__.platform='oqtane';" +
+            $"window.__MF_PLATFORM__.apiBase='{apiBase}';" +
+            $"window.__MF_PLATFORM__.moduleId={(ModuleState?.ModuleId ?? 0)};" +
+            $"window.__MF_PLATFORM__.portalId={(SiteState?.Alias?.SiteId ?? 0)};" +
+            $"window.__MF_PLATFORM__.siteId={(SiteState?.Alias?.SiteId ?? 0)};" +
+            $"window.__MF_PLATFORM__.pageId={(PageState?.Page?.PageId ?? 0)};" +
+            $"window.__MF_PLATFORM__.authToken={tokenJs};" +
+            $"</script>");
+
+        _loading = true;
+        _isAdmin = UserSecurity.IsAuthorized(PageState.User, PermissionNames.Edit, ModuleState.PermissionList);
+        _formId = 0;
+        _cssClass = string.Empty;
+        _isPublished = false;
+        _liveRenderMode = false;
+        _embedMode = false;
+        _moduleConfigured = false;
+        _rendererHostUrl = string.Empty;
+        _rendererHostPageId = 0;
+        _rendererHostModuleId = 0;
+        _moduleViewConfigJson = "{}";
+        _saveMessage = string.Empty;
+        _activeViewKey = string.Empty;
+        _workflowPreview = WorkflowPreviewModel.Empty();
+
+        var currentUri = NavigationManager.Uri ?? string.Empty;
+        var requested = GetQueryValue(currentUri, "formid") ?? GetQueryValue(currentUri, "FormId");
+        if (!string.IsNullOrWhiteSpace(requested))
+        {
+            var raw = requested;
+            if (!int.TryParse(raw, out _formId))
+            {
+                var digits = new string(raw.Where(char.IsDigit).ToArray());
+                int.TryParse(digits, out _formId);
+            }
+            _liveRenderMode = _formId > 0;
+        }
+
+        var embedRaw = GetQueryValue(currentUri, "embed");
+        if (!string.IsNullOrWhiteSpace(embedRaw))
+        {
+            _embedMode = embedRaw == "1" || string.Equals(embedRaw, "true", StringComparison.OrdinalIgnoreCase) || string.Equals(embedRaw, "yes", StringComparison.OrdinalIgnoreCase);
+        }
+
+        if (ModuleState?.Settings != null)
+        {
+            if (_formId <= 0)
+            {
+                var legacyFormIdValue = ReadModuleSetting("FormId");
+                var prefixedFormIdValue = ReadModuleSetting("MegaForm:FormId");
+                var rawFormId = !string.IsNullOrWhiteSpace(prefixedFormIdValue) ? prefixedFormIdValue : legacyFormIdValue;
+                if (int.TryParse(rawFormId, out var configuredId))
+                {
+                    _formId = configuredId;
+                }
+            }
+
+            _cssClass = ReadModuleSetting("MegaForm:CssClass") ?? ReadModuleSetting("CssClass") ?? string.Empty;
+            _moduleViewConfigJson = ReadModuleSetting("MegaForm:ViewConfig") ?? ReadModuleSetting("ViewConfig") ?? "{}";
+            _selectedPresetThemeKey = ReadModuleSetting("MegaForm:SelectedThemePresetKey") ?? ReadModuleSetting("SelectedThemePresetKey") ?? string.Empty;
+            _moduleConfigured = ReadModuleBool("MegaForm:ModuleConfigured") || ReadModuleBool("ModuleConfigured") || _formId > 0;
+
+            // [ViewDesigner v20260503-06] Parse viewMode + list/card config out of
+            // ModuleState.Settings so anonymous visitors AND admins both render the
+            // right mount. Previously these fields were only populated inside
+            // LoadAdminConfigAsync — meaning anonymous users always saw the form
+            // even when the module was set to List/Card view, and even admins
+            // would silently fall back to the form if the GetModuleConfigAsync
+            // call threw before reaching the viewMode block.
+            ApplyViewConfigFromJson(_moduleViewConfigJson);
+        }
+
+        var workflowEditRaw = GetQueryValue(currentUri, "wfedit");
+        _workflowEditorAutoOpenPending =
+            _isAdmin &&
+            _formId > 0 &&
+            IsWorkflowMapMode &&
+            (string.Equals(workflowEditRaw, "1", StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(workflowEditRaw, "true", StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(workflowEditRaw, "yes", StringComparison.OrdinalIgnoreCase));
+
+        AddPlatformHeadContent();
+
+        if (_isAdmin)
+        {
+            await LoadAdminConfigAsync();
+            await BuildDashboardAsync();
+            AddPlatformHeadContent();
+        }
+        else if (!_liveRenderMode)
+        {
+            // [OqtaneCanonicalModuleBinding v20260511-06] Non-admin visitors were
+            // still reading stale ModuleState.Settings, while admins refreshed the
+            // true module binding from ModuleConfig. Result: named views could point
+            // at the new form, but generic ?view=form still rendered the previous
+            // schema for regular users. Reuse the same canonical ModuleConfig read
+            // for authenticated/public visitors and quietly fall back if the host
+            // blocks the API.
+            try
+            {
+                await LoadAdminConfigAsync();
+                AddPlatformHeadContent();
+            }
+            catch
+            {
+                // Keep the stale ModuleState fallback rather than breaking render.
+            }
+        }
+
+        if (_formId > 0)
+        {
+            try
+            {
+                // Keep workflow preview reads under the same ViewModule auth context
+                // as the rest of the Oqtane module; otherwise the API may 403 and
+                // the BPMN map silently falls back to an empty preview.
+                var form = await MegaFormService.GetFormAsync(_formId, ModuleState?.ModuleId ?? 0, GetCurrentSiteId());
+                _isPublished = string.Equals(form?.Status, "Published", StringComparison.OrdinalIgnoreCase);
+                _initialInlineCss = form?.InitialInlineCss ?? string.Empty;
+                LoadWorkflowPreview(form?.WorkflowJson);
+            }
+            catch
+            {
+                _isPublished = false;
+                _initialInlineCss = string.Empty;
+                _workflowPreview = WorkflowPreviewModel.Empty();
+            }
+
+            // [OQ-difix20260418-12] Bug F: same Oqtane ServiceBase JSON quirk that
+            // emptied response.Forms (Bug D) sometimes leaves FormDto.Status as the
+            // C# default "Draft" even when the JSON payload says "status":"Published".
+            // Result: orange "This form is not published yet" warning shows for an
+            // already-published form.
+            //
+            // Defense-in-depth:
+            //   1. If _forms (loaded by reliable Form/List endpoint via v11-D
+            //      fallback) confirms the form exists and is Published → trust it.
+            //   2. Otherwise — for non-admin live render — re-query Form/List
+            //      directly here (since LoadAdminConfigAsync only ran for admins)
+            //      and read the status from there.
+            if (!_isPublished)
+            {
+                FormListItem match = null;
+                if (_forms != null && _forms.Count > 0)
+                {
+                    match = _forms.FirstOrDefault(f => f.FormId == _formId);
+                }
+                if (match == null)
+                {
+                    try
+                    {
+                        var allForms = await MegaFormService.ListFormsAsync(ModuleState.ModuleId, GetCurrentSiteId());
+                        if (allForms != null)
+                        {
+                            var hit = allForms.FirstOrDefault(f => f.FormId == _formId);
+                            if (hit != null)
+                            {
+                                match = new FormListItem { FormId = hit.FormId, Title = hit.Title, Status = hit.Status };
+                            }
+                        }
+                    }
+                    catch { /* non-fatal */ }
+                }
+                if (match != null && string.Equals(match.Status, "Published", StringComparison.OrdinalIgnoreCase))
+                {
+                    _isPublished = true;
+                }
+            }
+        }
+
+        // [OQ-difix20260420-09] Stash, don't inject. OnAfterRenderAsync will eval
+        // via IJSRuntime so the boot script is guaranteed to run even when it's
+        // built after async awaits have already ended the current resource pass.
+        // [ListViewBootSkip v20260508-04] ONLY run the form-renderer boot when
+        // the module is actually in form mode. In list/card/listview mode the
+        // page emits a different mount div (data-mf-view="list", data-mf-listview)
+        // and the form-renderer boot would wait 10s for `mf-form-{module}-{form}`
+        // — which never exists — then log "MegaForm core wait timed out".
+        if (_formId > 0 && _isPublished && !_embedMode && IsFormMode)
+        {
+            _pendingRendererBoot = BuildRendererBootScript();
+            _rendererBootExecuted = false;
+        }
+        else
+        {
+            _pendingRendererBoot = string.Empty;
+        }
+
+        EnsureStarterRoleSelection();
+        _loading = false;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Oqtane ModuleBase injects ResourceType.Script entries here on first render.
+        // If we short-circuit and skip base.OnAfterRenderAsync, the live renderer core
+        // files declared in Resources never reach the page, leaving MegaFormRenderer undefined.
+        await base.OnAfterRenderAsync(firstRender);
+
+        // [OQ-difix20260420-09] Run the stashed renderer boot once the mount div is
+        // guaranteed in the DOM. Eval gives us the same "inline <script>" semantics
+        // UpsertModuleInlineScript was supposed to produce, minus the timing hazard.
+        if (!_rendererBootExecuted && !string.IsNullOrEmpty(_pendingRendererBoot))
+        {
+            _rendererBootExecuted = true;
+            try
+            {
+                await Js.InvokeVoidAsync("eval", _pendingRendererBoot);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"MegaForm: renderer boot eval failed: {ex.Message}");
+            }
+        }
+
+        // [BrowseViewAutoMount v20260509-06] Oqtane/Blazor can render the
+        // browse-mode mount divs after the JS bundles have already passed their
+        // DOMContentLoaded auto-bind. Nudge all browse renderers after every
+        // render so list/card/listview surfaces re-mount even if the host swaps
+        // or re-creates their nodes late.
+        try
+        {
+            await Js.InvokeVoidAsync("eval", @"
+(function(){
+  try { if (window.MFListViewRebind) window.MFListViewRebind(); } catch {}
+  try { if (window.MFSubmissionListRebind) window.MFSubmissionListRebind(); } catch {}
+  try { if (window.MFSubmissionCardRebind) window.MFSubmissionCardRebind(); } catch {}
+  try {
+    var root = document.getElementById('mf-dnn-tasks-root');
+    if (root && window.MegaForm && window.MegaForm.initWorkflowInbox) {
+      window.MegaForm.initWorkflowInbox(root);
+    }
+  } catch {}
+})();
+");
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"MegaForm: browse rebind eval failed: {ex.Message}");
+        }
+
+        if (_workflowEditorAutoOpenPending)
+        {
+            _workflowEditorAutoOpenPending = false;
+            try
+            {
+                await OpenWorkflowEditorAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"MegaForm: workflow editor launch failed: {ex.Message}");
+            }
+        }
+    }
+
+    private async Task LoadAdminConfigAsync()
+    {
+        try
+        {
+            var response = await MegaFormService.GetModuleConfigAsync(ModuleState.ModuleId, GetCurrentSiteId());
+            _forms = response?.Forms ?? new List<FormListItem>();
+
+            // [OQ-difix20260418-11] Bug D fix: response.Forms occasionally arrives
+            // empty even when the API returned forms (deserialization quirk in
+            // Oqtane's ServiceBase). Fall back to ListFormsAsync — the dedicated
+            // Form/List endpoint that we know returns the full list reliably.
+            // Result: the "Module form" dropdown is always populated when the DB
+            // has forms.
+            if (_forms.Count == 0)
+            {
+                try
+                {
+                    var allForms = await MegaFormService.ListFormsAsync(ModuleState.ModuleId, GetCurrentSiteId());
+                    if (allForms != null && allForms.Count > 0)
+                    {
+                        _forms = allForms.Select(f => new FormListItem
+                        {
+                            FormId = f.FormId,
+                            Title  = string.IsNullOrWhiteSpace(f.Title) ? $"Form #{f.FormId}" : f.Title,
+                            Status = string.IsNullOrWhiteSpace(f.Status) ? "Draft" : f.Status,
+                        }).ToList();
+                    }
+                }
+                catch
+                {
+                    // Non-fatal — dropdown stays with the "-- Select a Form --" placeholder.
+                }
+            }
+
+            // [OQ-fixedrender v20260420-01] In page render mode, trust the
+            // ModuleConfig API as the canonical module binding source instead of the
+            // potentially stale ModuleState.Settings snapshot. This keeps the current
+            // page's fixed form in sync immediately after Save Module Settings.
+            if (!_liveRenderMode && response?.Config != null)
+            {
+                _formId = response.Config.FormId > 0 ? response.Config.FormId : 0;
+            }
+            else if (_formId <= 0 && response?.Config != null && response.Config.FormId > 0)
+            {
+                _formId = response.Config.FormId;
+            }
+
+            if (response?.Config != null)
+            {
+                _moduleViewConfigJson = string.IsNullOrWhiteSpace(response.Config.ViewConfig) ? _moduleViewConfigJson : response.Config.ViewConfig;
+                _cssClass = string.IsNullOrWhiteSpace(response.Config.CssClass) ? _cssClass : response.Config.CssClass;
+                _moduleConfigured = response.Config.ModuleConfigured || response.Config.FormId > 0 || _moduleConfigured;
+                _displayMode = string.Equals(response.Config.DisplayMode, "popup", StringComparison.OrdinalIgnoreCase) ? "popup" : "fixed";
+                _triggerType = NormalizeTriggerType(response.Config.TriggerType);
+                _delaySeconds = response.Config.DelaySeconds > 0 ? response.Config.DelaySeconds : 5;
+                _scrollPercent = response.Config.ScrollPercent > 0 ? response.Config.ScrollPercent : 50;
+                _clickSelector = response.Config.ClickSelector ?? string.Empty;
+                _showOncePerSession = response.Config.ShowOncePerSession;
+                _closeOnOverlay = response.Config.CloseOnOverlay;
+                _startAt = response.Config.StartAt ?? string.Empty;
+                _endAt = response.Config.EndAt ?? string.Empty;
+                // [SubmissionViews v20260503-01] + [ListViewRouting v20260507-23]
+                var vm = (response.Config.ViewMode ?? string.Empty).Trim().ToLowerInvariant();
+                _viewMode = (vm == "list" || vm == "card" || vm == "listview") ? vm : "form";
+                _listFields = response.Config.ListFields ?? string.Empty;
+                _listTemplate = response.Config.ListTemplate ?? string.Empty;
+                _cardFields = response.Config.CardFields ?? string.Empty;
+                _cardTemplate = response.Config.CardTemplate ?? string.Empty;
+                ApplyViewConfigFromJson(_moduleViewConfigJson);
+            }
+
+            _rendererHostUrl = response?.RendererHostUrl ?? string.Empty;
+            _rendererHostPageId = response?.RendererHostPageId ?? 0;
+            _rendererHostModuleId = response?.RendererHostModuleId ?? 0;
+            _useThisPageAsRendererHost = IsCurrentPageRendererHost();
+        }
+        catch
+        {
+            _forms = new List<FormListItem>();
+        }
+    }
+
+    private async Task SaveManagePanelAsync()
+    {
+        var config = new ModuleConfigDto
+        {
+            ModuleId = ModuleState.ModuleId,
+            FormId = _formId,
+            ViewType = "submit",
+            CssClass = _cssClass ?? string.Empty,
+            ModuleConfigured = true,
+            DisplayMode = IsPopupMode ? "popup" : "fixed",
+            TriggerType = NormalizeTriggerType(_triggerType),
+            DelaySeconds = Math.Clamp(_delaySeconds <= 0 ? 5 : _delaySeconds, 0, 600),
+            ScrollPercent = Math.Clamp(_scrollPercent <= 0 ? 50 : _scrollPercent, 5, 95),
+            ClickSelector = (_clickSelector ?? string.Empty).Trim(),
+            ShowOncePerSession = _showOncePerSession,
+            CloseOnOverlay = _closeOnOverlay,
+            StartAt = _startAt ?? string.Empty,
+            EndAt = _endAt ?? string.Empty,
+            UseCurrentPageAsRendererHost = _useThisPageAsRendererHost,
+            CurrentPageUrl = GetCurrentPageRendererHostUrl(),
+            CurrentPageId = PageState?.Page?.PageId ?? 0
+        };
+
+        await MegaFormService.SaveModuleConfigAsync(config, GetCurrentSiteId());
+        _moduleConfigured = true;
+        _saveMessage = "Module settings saved.";
+        NavigationManager.NavigateTo(NavigationManager.Uri, true);
+    }
+
+    private void OpenManagePanel()
+    {
+        // [ViewDesigner v20260503-02] Legacy entry — the inline panel is gone.
+        // Kept as a no-op so external callers (if any) don't break; new entry
+        // point is OpenSettingsPopupAsync (JS popup).
+        _showDashboardPanel = false;
+        _showStarterPanel = false;
+        _saveMessage = string.Empty;
+    }
+
+    // [ViewDesigner v20260503-02] Launch the unified settings popup (TS bundle
+    // megaform-settings-popup.js). The popup loads ModuleConfig over the same
+    // /api/MegaForm/ModuleConfig/{moduleId} endpoint the inline panel used to
+    // POST to, so persistence is unchanged. After Save, force a full reload so
+    // the renderer mount picks up the new ViewMode / ListFields / etc.
+    private async Task OpenSettingsPopupAsync()
+    {
+        _showDashboardPanel = false;
+        _showStarterPanel = false;
+        _saveMessage = string.Empty;
+        var moduleId = ModuleState?.ModuleId ?? 0;
+        if (moduleId <= 0) return;
+        var pageId = PageState?.Page?.PageId ?? 0;
+        var pageUrl = NavigationManager?.Uri ?? string.Empty;
+        // [ViewDesigner v20260503-04] Pass SiteState.SiteId so the popup can
+        // resolve the form list when calling /api/MegaForm/ModuleConfig over a
+        // plain (non-alias-prefixed) URL — without it, AuthEntityId returns
+        // -1 and the Forms dropdown comes back empty.
+        var siteId = SiteState?.Alias?.SiteId ?? 0;
+        try
+        {
+            await Js.InvokeVoidAsync("MFSettings.open", new
+            {
+                moduleId = moduleId,
+                siteId = siteId,
+                currentPageId = pageId,
+                currentPageUrl = pageUrl
+            });
+        }
+        catch
+        {
+            _saveMessage = "Settings popup script not loaded yet — refresh the page and try again.";
+        }
+    }
+
+    private void OpenDashboardPanel()
+    {
+        _showDashboardPanel = true;
+        _showStarterPanel = false;
+        _showManagePanel = false;
+        _saveMessage = string.Empty;
+    }
+
+    private void ToggleStarterPanel()
+    {
+        _showStarterPanel = !_showStarterPanel;
+        _showDashboardPanel = false;
+        _showManagePanel = false;
+        _saveMessage = string.Empty;
+    }
+
+    private void ClosePanels()
+    {
+        _showDashboardPanel = false;
+        _showStarterPanel = false;
+        _showManagePanel = false;
+        _saveMessage = string.Empty;
+    }
+
+    private async Task RunStarterSetupAsync(string starterKey)
+    {
+        if (_starterBusy) return;
+
+        _starterBusy = true;
+        _saveMessage = string.Empty;
+        StateHasChanged();
+
+        try
+        {
+            await Js.InvokeVoidAsync("MFStarter.launch", new
+            {
+                starterKey = starterKey ?? string.Empty,
+                moduleId = ModuleState?.ModuleId ?? 0,
+                siteId = SiteState?.Alias?.SiteId ?? 0,
+                currentUrl = NavigationManager?.Uri ?? string.Empty,
+                currentPageUrl = GetCurrentPageRendererHostUrl(),
+                currentPageId = PageState?.Page?.PageId ?? 0
+            });
+        }
+        catch (Exception ex)
+        {
+            _saveMessage = string.IsNullOrWhiteSpace(ex.Message)
+                ? "Unable to provision the starter app right now."
+                : ex.Message;
+            _starterBusy = false;
+        }
+    }
+
+    private bool ShowStarterQaDock =>
+        !_liveRenderMode &&
+        PageState?.User != null &&
+        GetStarterQaProfile() != null;
+
+    private async Task SwitchStarterRoleAsync()
+    {
+        if (_starterRoleBusy)
+        {
+            return;
+        }
+
+        var profile = GetStarterQaProfile();
+        var selectedRole = profile?.Roles?.FirstOrDefault(r =>
+            string.Equals(r.UserName, _selectedStarterRoleUserName, StringComparison.OrdinalIgnoreCase));
+
+        if (profile == null || selectedRole == null)
+        {
+            _saveMessage = "Starter role switcher is not available for this form.";
+            return;
+        }
+
+        var targetUrl = BuildStarterRoleTargetUrl(selectedRole);
+        var currentUser = GetCurrentUserName();
+        if (!string.IsNullOrWhiteSpace(currentUser) &&
+            string.Equals(currentUser, selectedRole.UserName, StringComparison.OrdinalIgnoreCase))
+        {
+            NavigationManager.NavigateTo(targetUrl, forceLoad: true);
+            return;
+        }
+
+        _starterRoleBusy = true;
+        _saveMessage = string.Empty;
+        StateHasChanged();
+
+        try
+        {
+            await Js.InvokeVoidAsync("MFStarter.switchRole", new
+            {
+                username = selectedRole.UserName,
+                password = selectedRole.Password,
+                targetUrl = targetUrl,
+                currentUrl = NavigationManager?.Uri ?? string.Empty
+            });
+        }
+        catch (Exception ex)
+        {
+            _saveMessage = string.IsNullOrWhiteSpace(ex.Message)
+                ? "Unable to switch starter roles right now."
+                : ex.Message;
+            _starterRoleBusy = false;
+        }
+    }
+
+    private void EnsureStarterRoleSelection()
+    {
+        var profile = GetStarterQaProfile();
+        if (profile == null || profile.Roles == null || profile.Roles.Count == 0)
+        {
+            _selectedStarterRoleUserName = string.Empty;
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(_selectedStarterRoleUserName) &&
+            profile.Roles.Any(r => string.Equals(r.UserName, _selectedStarterRoleUserName, StringComparison.OrdinalIgnoreCase)))
+        {
+            return;
+        }
+
+        var currentUser = GetCurrentUserName();
+        var matched = profile.Roles.FirstOrDefault(r =>
+            !string.IsNullOrWhiteSpace(currentUser) &&
+            string.Equals(r.UserName, currentUser, StringComparison.OrdinalIgnoreCase));
+
+        _selectedStarterRoleUserName = matched?.UserName ?? profile.Roles[0].UserName;
+    }
+
+    private string GetCurrentUserName()
+    {
+        var user = PageState?.User;
+        if (user == null)
+        {
+            return string.Empty;
+        }
+
+        foreach (var propertyName in new[] { "Username", "UserName", "Name", "DisplayName" })
+        {
+            var property = user.GetType().GetProperty(propertyName);
+            if (property?.GetValue(user) is string text && !string.IsNullOrWhiteSpace(text))
+            {
+                return text.Trim();
+            }
+        }
+
+        return string.Empty;
+    }
+
+    private string GetCurrentStarterRoleLabel()
+    {
+        var profile = GetStarterQaProfile();
+        if (profile == null)
+        {
+            return "No starter role mapping";
+        }
+
+        var currentUser = GetCurrentUserName();
+        var matched = profile.Roles.FirstOrDefault(r =>
+            !string.IsNullOrWhiteSpace(currentUser) &&
+            string.Equals(r.UserName, currentUser, StringComparison.OrdinalIgnoreCase));
+
+        return matched != null ? matched.DisplayName : "Custom / host session";
+    }
+
+    private string BuildStarterRoleTargetUrl(StarterQaRoleOption role)
+    {
+        if (role == null)
+        {
+            return GetCurrentPageRendererHostUrl();
+        }
+
+        if (string.Equals(role.TargetType, "vk", StringComparison.OrdinalIgnoreCase))
+        {
+            return BuildCurrentModuleUrl("vk", role.TargetValue);
+        }
+
+        if (string.Equals(role.TargetType, "mfpanel", StringComparison.OrdinalIgnoreCase))
+        {
+            return BuildCurrentModuleUrl("mfpanel", role.TargetValue);
+        }
+
+        return BuildCurrentModuleUrl("view", string.IsNullOrWhiteSpace(role.TargetValue) ? "form" : role.TargetValue);
+    }
+
+    private StarterQaProfile GetStarterQaProfile()
+    {
+        var title = GetSelectedFormTitle() ?? string.Empty;
+        var activeViewKey = (_activeViewKey ?? string.Empty).Trim().ToLowerInvariant();
+
+        if (activeViewKey.StartsWith("proposal-", StringComparison.OrdinalIgnoreCase) ||
+            title.IndexOf("Proposal Starter", StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            return new StarterQaProfile
+            {
+                AppKey = "proposal",
+                DisplayName = "Proposal Starter",
+                Roles = new List<StarterQaRoleOption>
+                {
+                    new StarterQaRoleOption { UserName = "proposal.requester", DisplayName = "Proposal requester", Password = "MegaForm!2026", Description = "Card view of my proposals", TargetType = "vk", TargetValue = "proposal-card" },
+                    new StarterQaRoleOption { UserName = "proposal.manager", DisplayName = "Proposal manager", Password = "MegaForm!2026", Description = "Manager review board", TargetType = "vk", TargetValue = "proposal-review-board" },
+                    new StarterQaRoleOption { UserName = "proposal.finance", DisplayName = "Proposal finance", Password = "MegaForm!2026", Description = "Finance review board", TargetType = "vk", TargetValue = "proposal-finance-board" }
+                },
+                SurfaceLinks = new List<StarterQaSurfaceLink>
+                {
+                    new StarterQaSurfaceLink { Label = "Submit Form", Icon = "fa-pen", Url = BuildCurrentModuleUrl("view", "form") },
+                    new StarterQaSurfaceLink { Label = "Review Board", Icon = "fa-table-columns", Url = BuildCurrentModuleUrl("vk", "proposal-review-board"), IsRecommended = true },
+                    new StarterQaSurfaceLink { Label = "Finance Board", Icon = "fa-coins", Url = BuildCurrentModuleUrl("vk", "proposal-finance-board") },
+                    new StarterQaSurfaceLink { Label = "Register", Icon = "fa-table-list", Url = BuildCurrentModuleUrl("vk", "proposal-register") },
+                    new StarterQaSurfaceLink { Label = "Card", Icon = "fa-id-card", Url = BuildCurrentModuleUrl("vk", "proposal-card") },
+                    new StarterQaSurfaceLink { Label = "Process Map (admin QA)", Icon = "fa-diagram-project", Url = BuildCurrentModuleUrl("mfpanel", "workflowmap") },
+                    new StarterQaSurfaceLink { Label = "Workflow Inbox", Icon = "fa-inbox", Url = BuildCurrentModuleUrl("mfpanel", "inbox") }
+                }
+            };
+        }
+
+        if (activeViewKey.StartsWith("leave-request-", StringComparison.OrdinalIgnoreCase) ||
+            title.IndexOf("Leave Request Starter", StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            return new StarterQaProfile
+            {
+                AppKey = "leave",
+                DisplayName = "Leave Request Starter",
+                Roles = new List<StarterQaRoleOption>
+                {
+                    new StarterQaRoleOption { UserName = "leave.employee", DisplayName = "Leave employee", Password = "MegaForm!2026", Description = "Card view of my requests", TargetType = "vk", TargetValue = "leave-request-card" },
+                    new StarterQaRoleOption { UserName = "leave.manager", DisplayName = "Leave manager", Password = "MegaForm!2026", Description = "Manager approval board", TargetType = "vk", TargetValue = "leave-request-board" },
+                    new StarterQaRoleOption { UserName = "leave.hr", DisplayName = "HR reviewer", Password = "MegaForm!2026", Description = "Workflow inbox for HR review", TargetType = "mfpanel", TargetValue = "inbox" }
+                },
+                SurfaceLinks = new List<StarterQaSurfaceLink>
+                {
+                    new StarterQaSurfaceLink { Label = "Submit Form", Icon = "fa-pen", Url = BuildCurrentModuleUrl("view", "form") },
+                    new StarterQaSurfaceLink { Label = "Manager Board", Icon = "fa-table-columns", Url = BuildCurrentModuleUrl("vk", "leave-request-board"), IsRecommended = true },
+                    new StarterQaSurfaceLink { Label = "Register", Icon = "fa-table-list", Url = BuildCurrentModuleUrl("vk", "leave-request-register") },
+                    new StarterQaSurfaceLink { Label = "Card", Icon = "fa-id-card", Url = BuildCurrentModuleUrl("vk", "leave-request-card") },
+                    new StarterQaSurfaceLink { Label = "Process Map (admin QA)", Icon = "fa-diagram-project", Url = BuildCurrentModuleUrl("mfpanel", "workflowmap") },
+                    new StarterQaSurfaceLink { Label = "Workflow Inbox", Icon = "fa-inbox", Url = BuildCurrentModuleUrl("mfpanel", "inbox") }
+                }
+            };
+        }
+
+        if (activeViewKey.StartsWith("document-", StringComparison.OrdinalIgnoreCase) ||
+            title.IndexOf("Document Exchange Starter", StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            return new StarterQaProfile
+            {
+                AppKey = "documents",
+                DisplayName = "Document Exchange Starter",
+                Roles = new List<StarterQaRoleOption>
+                {
+                    new StarterQaRoleOption { UserName = "document.submitter", DisplayName = "Document submitter", Password = "MegaForm!2026", Description = "Card view of my submitted documents", TargetType = "vk", TargetValue = "document-card" },
+                    new StarterQaRoleOption { UserName = "document.department", DisplayName = "Department reviewer", Password = "MegaForm!2026", Description = "Department routing board", TargetType = "vk", TargetValue = "document-routing-board" },
+                    new StarterQaRoleOption { UserName = "document.records", DisplayName = "Records officer", Password = "MegaForm!2026", Description = "Records review board", TargetType = "vk", TargetValue = "document-records-board" }
+                },
+                SurfaceLinks = new List<StarterQaSurfaceLink>
+                {
+                    new StarterQaSurfaceLink { Label = "Submit Form", Icon = "fa-pen", Url = BuildCurrentModuleUrl("view", "form") },
+                    new StarterQaSurfaceLink { Label = "Routing Board", Icon = "fa-table-columns", Url = BuildCurrentModuleUrl("vk", "document-routing-board"), IsRecommended = true },
+                    new StarterQaSurfaceLink { Label = "Records Board", Icon = "fa-folder-tree", Url = BuildCurrentModuleUrl("vk", "document-records-board") },
+                    new StarterQaSurfaceLink { Label = "Register", Icon = "fa-table-list", Url = BuildCurrentModuleUrl("vk", "document-register") },
+                    new StarterQaSurfaceLink { Label = "Card", Icon = "fa-id-card", Url = BuildCurrentModuleUrl("vk", "document-card") },
+                    new StarterQaSurfaceLink { Label = "Process Map (admin QA)", Icon = "fa-diagram-project", Url = BuildCurrentModuleUrl("mfpanel", "workflowmap") },
+                    new StarterQaSurfaceLink { Label = "Workflow Inbox", Icon = "fa-inbox", Url = BuildCurrentModuleUrl("mfpanel", "inbox") }
+                }
+            };
+        }
+
+        if (activeViewKey.StartsWith("blog-", StringComparison.OrdinalIgnoreCase) ||
+            title.IndexOf("Blog Publishing Starter", StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            return new StarterQaProfile
+            {
+                AppKey = "blog",
+                DisplayName = "Blog Publishing Starter",
+                Roles = new List<StarterQaRoleOption>
+                {
+                    new StarterQaRoleOption { UserName = "blog.author", DisplayName = "Blog author", Password = "MegaForm!2026", Description = "Drafts and post submission", TargetType = "view", TargetValue = "form" },
+                    new StarterQaRoleOption { UserName = "blog.editor", DisplayName = "Blog editor", Password = "MegaForm!2026", Description = "Editorial review board", TargetType = "vk", TargetValue = "blog-editorial-board" },
+                    new StarterQaRoleOption { UserName = "blog.seo", DisplayName = "SEO reviewer", Password = "MegaForm!2026", Description = "SEO review board", TargetType = "vk", TargetValue = "blog-seo-review" },
+                    new StarterQaRoleOption { UserName = "blog.legal", DisplayName = "Legal reviewer", Password = "MegaForm!2026", Description = "Content legal review board", TargetType = "vk", TargetValue = "blog-legal-review" },
+                    new StarterQaRoleOption { UserName = "blog.publisher", DisplayName = "Blog publisher", Password = "MegaForm!2026", Description = "Publishing schedule", TargetType = "vk", TargetValue = "blog-scheduled" }
+                },
+                SurfaceLinks = new List<StarterQaSurfaceLink>
+                {
+                    new StarterQaSurfaceLink { Label = "Blog Home", Icon = "fa-newspaper", Url = BuildCurrentModuleUrl("vk", "blog-home"), IsRecommended = true },
+                    new StarterQaSurfaceLink { Label = "Featured", Icon = "fa-star", Url = BuildCurrentModuleUrl("vk", "blog-featured") },
+                    new StarterQaSurfaceLink { Label = "Popular", Icon = "fa-chart-line", Url = BuildCurrentModuleUrl("vk", "blog-popular") },
+                    new StarterQaSurfaceLink { Label = "Archive", Icon = "fa-table-list", Url = BuildCurrentModuleUrl("vk", "blog-archive") },
+                    new StarterQaSurfaceLink { Label = "Feed", Icon = "fa-rss", Url = BuildCurrentModuleUrl("vk", "blog-feed") },
+                    new StarterQaSurfaceLink { Label = "Comments", Icon = "fa-comments", Url = BuildCurrentModuleUrl("vk", "blog-comments") },
+                    new StarterQaSurfaceLink { Label = "Editorial Board", Icon = "fa-table-columns", Url = BuildCurrentModuleUrl("vk", "blog-editorial-board") },
+                    new StarterQaSurfaceLink { Label = "SEO Board", Icon = "fa-magnifying-glass-chart", Url = BuildCurrentModuleUrl("vk", "blog-seo-review") },
+                    new StarterQaSurfaceLink { Label = "Legal Board", Icon = "fa-scale-balanced", Url = BuildCurrentModuleUrl("vk", "blog-legal-review") },
+                    new StarterQaSurfaceLink { Label = "Ready", Icon = "fa-circle-check", Url = BuildCurrentModuleUrl("vk", "blog-ready") },
+                    new StarterQaSurfaceLink { Label = "Schedule", Icon = "fa-calendar-days", Url = BuildCurrentModuleUrl("vk", "blog-scheduled") },
+                    new StarterQaSurfaceLink { Label = "Calendar", Icon = "fa-calendar-week", Url = BuildCurrentModuleUrl("vk", "blog-calendar") },
+                    new StarterQaSurfaceLink { Label = "SEO Gaps", Icon = "fa-list-check", Url = BuildCurrentModuleUrl("vk", "blog-seo-gaps") },
+                    new StarterQaSurfaceLink { Label = "Drafts", Icon = "fa-pen-to-square", Url = BuildCurrentModuleUrl("vk", "blog-drafts") },
+                    new StarterQaSurfaceLink { Label = "Register", Icon = "fa-table", Url = BuildCurrentModuleUrl("vk", "blog-register") },
+                    new StarterQaSurfaceLink { Label = "Card", Icon = "fa-id-card", Url = BuildCurrentModuleUrl("vk", "blog-card") },
+                    new StarterQaSurfaceLink { Label = "Process Map (admin QA)", Icon = "fa-diagram-project", Url = BuildCurrentModuleUrl("mfpanel", "workflowmap") },
+                    new StarterQaSurfaceLink { Label = "Workflow Inbox", Icon = "fa-inbox", Url = BuildCurrentModuleUrl("mfpanel", "inbox") }
+                }
+            };
+        }
+
+        return null;
+    }
+
+    private async Task BuildDashboardAsync()
+    {
+        try
+        {
+            var siteId = SiteState?.Alias?.SiteId ?? 0;
+            var forms = await MegaFormService.ListFormsAsync(0, siteId) ?? new List<FormDto>();
+            forms = forms.OrderByDescending(f => f.UpdatedOnUtc ?? f.CreatedOnUtc).ThenByDescending(f => f.FormId).ToList();
+
+            _dashboardFormsCount = forms.Count;
+            _dashboardPublishedCount = forms.Count(f => string.Equals(f.Status, "Published", StringComparison.OrdinalIgnoreCase));
+
+            var recentSubmissions = new List<SubmissionDto>();
+            var submissionsTotal = 0;
+            foreach (var form in forms.Take(8))
+            {
+                try
+                {
+                    var page = await MegaFormService.GetSubmissionsAsync(form.FormId, 0, 6);
+                    if (page?.Items != null)
+                    {
+                        recentSubmissions.AddRange(page.Items);
+                        submissionsTotal += page.TotalCount > 0 ? page.TotalCount : page.Items.Count;
+                    }
+                }
+                catch
+                {
+                }
+            }
+
+            _dashboardSubmissionsCount = submissionsTotal;
+            _recentForms = forms.Select(f => new DashboardFormRow
+            {
+                FormId = f.FormId,
+                Title = string.IsNullOrWhiteSpace(f.Title) ? $"Form #{f.FormId}" : f.Title,
+                Status = string.IsNullOrWhiteSpace(f.Status) ? "Draft" : f.Status,
+                ModifiedText = (f.UpdatedOnUtc ?? f.CreatedOnUtc).ToString("yyyy-MM-dd HH:mm")
+            }).ToList();
+        }
+        catch
+        {
+            _dashboardFormsCount = 0;
+            _dashboardPublishedCount = 0;
+            _dashboardSubmissionsCount = 0;
+            _recentForms = new List<DashboardFormRow>();
+        }
+    }
+
+private string BuildBuilderUrl()
+{
+    var url = EditUrl("Builder");
+    if (_formId > 0)
+    {
+        url += (url.Contains("?") ? "&" : "?") + "formId=" + _formId;
+    }
+    return url;
+}
+
+private string BuildWorkflowBuilderUrl()
+{
+    var url = BuildCurrentModuleUrl("mfpanel", "workflowmap");
+    url += (url.Contains("?") ? "&" : "?") + "wfedit=1";
+    return url;
+}
+
+private async Task OpenWorkflowEditorAsync()
+{
+    if (_formId <= 0)
+    {
+        return;
+    }
+
+    var returnUrl = BuildCurrentModuleUrl("mfpanel", "workflowmap");
+    await Js.InvokeVoidAsync("MFStarter.openWorkflowEditor", new
+    {
+        formId = _formId,
+        apiBase = "/api/MegaForm/",
+        assetsBase = "/Modules/MegaForm/",
+        builderUrl = returnUrl,
+        workflowScriptUrl = ModulePath() + $"js/builder/megaform-workflow-reactflow.js?v={WorkflowBuilderAssetVersion}"
+    });
+}
+
+    private int GetCurrentSiteId()
+    {
+        return SiteState?.Alias?.SiteId ?? 0;
+    }
+
+    // [OQ-newform v20260419-07] Canonical true-new route: explicit ?new=1 so the
+    // Builder can ignore ModuleState.Settings["FormId"], force formId=0 on first
+    // save, and avoid overwriting the currently bound module form.
+    private string BuildNewFormBuilderUrl()
+    {
+        var url = EditUrl("Builder");
+        return url + (url.Contains("?") ? "&" : "?") + "new=1";
+    }
+
+    private string BuildSubmissionsUrl()
+    {
+        return EditUrl("Submissions");
+    }
+
+    // Shared dashboard route (Dashboard.razor mounts canonical megaform-dashboard.js SPA)
+    private string BuildDashboardUrl()
+    {
+        return EditUrl("Dashboard");
+    }
+
+private string BuildPublicViewUrl()
+{
+    var baseUrl = !string.IsNullOrWhiteSpace(_rendererHostUrl) ? _rendererHostUrl : GetCurrentPageRendererHostUrl();
+        if (_formId <= 0)
+        {
+            return baseUrl;
+        }
+    return baseUrl + (baseUrl.Contains("?") ? "&" : "?") + "formid=" + _formId;
+}
+
+private string BuildCurrentModuleUrl(string key, string value)
+{
+    var baseUrl = GetCurrentPageRendererHostUrl();
+    var parts = new List<string>();
+    var editValue = GetQueryValue(NavigationManager?.Uri ?? string.Empty, "edit");
+    if (!string.IsNullOrWhiteSpace(editValue))
+    {
+        parts.Add("edit=" + Uri.EscapeDataString(editValue));
+    }
+    if (!string.IsNullOrWhiteSpace(key) && value != null)
+    {
+        parts.Add(key + "=" + Uri.EscapeDataString(value));
+    }
+    return parts.Count == 0 ? baseUrl : baseUrl + "?" + string.Join("&", parts);
+}
+
+private string BuildStarterBoardUrl()
+{
+    if (!string.IsNullOrWhiteSpace(_activeViewKey))
+    {
+        return BuildCurrentModuleUrl("vk", _activeViewKey);
+    }
+
+    var profile = GetStarterQaProfile();
+    var recommendedBoard = profile?.SurfaceLinks?.FirstOrDefault(link => link.IsRecommended)?.Url;
+    if (!string.IsNullOrWhiteSpace(recommendedBoard))
+    {
+        return recommendedBoard;
+    }
+
+    if (IsListViewMode)
+    {
+        return BuildCurrentModuleUrl("view", "listview");
+    }
+
+    if (IsListMode)
+    {
+        return BuildCurrentModuleUrl("view", "list");
+    }
+
+    if (IsCardMode)
+    {
+        return BuildCurrentModuleUrl("view", "card");
+    }
+
+    return BuildCurrentModuleUrl("view", "form");
+}
+
+    private void LoadWorkflowPreview(string workflowJson)
+    {
+        _workflowPreview = WorkflowPreviewModel.Empty();
+        if (string.IsNullOrWhiteSpace(workflowJson))
+        {
+            return;
+        }
+
+        try
+        {
+            var envelope = WorkflowEnvelope.ParseOrMigrate(workflowJson);
+            var definition = envelope?.AppliedWorkflow ?? envelope?.DraftWorkflow;
+            if (definition == null || definition.Nodes == null || definition.Nodes.Count == 0)
+            {
+                return;
+            }
+
+        var previewNodes = new List<WorkflowPreviewNode>();
+        var laneSequence = new List<string>();
+        var maxRight = 0d;
+        var maxBottom = 0d;
+
+        for (var i = 0; i < definition.Nodes.Count; i++)
+        {
+            var node = definition.Nodes[i];
+            var left = (node?.Position?.X ?? 0d) + 64d;
+            if (left <= 64d)
+            {
+                left = 84d + (i * 250d);
+            }
+
+            var roles = GetWorkflowConfigValues(node?.Config, "candidateRoles", "CandidateRoles");
+            var users = GetWorkflowConfigValues(node?.Config, "candidateUsers", "CandidateUsers");
+            var laneLabel = ResolveWorkflowLaneLabel(node, roles, users, definition.StartNodeId);
+            var laneIndex = laneSequence.FindIndex(l => string.Equals(l, laneLabel, StringComparison.OrdinalIgnoreCase));
+            if (laneIndex < 0)
+            {
+                laneSequence.Add(laneLabel);
+                laneIndex = laneSequence.Count - 1;
+            }
+
+            var laneTop = 40d + (laneIndex * 224d);
+            var top = laneTop + 54d;
+
+            maxRight = Math.Max(maxRight, left + 260d);
+            maxBottom = Math.Max(maxBottom, top + 200d);
+
+            var statuses = new List<string>();
+            AddWorkflowConfigStatus(statuses, node?.Config, "pendingSubmissionStatus", "PendingSubmissionStatus");
+            AddWorkflowConfigStatus(statuses, node?.Config, "approvedSubmissionStatus", "ApprovedSubmissionStatus");
+            AddWorkflowConfigStatus(statuses, node?.Config, "rejectedSubmissionStatus", "RejectedSubmissionStatus");
+
+                previewNodes.Add(new WorkflowPreviewNode
+                {
+                Id = node?.Id ?? ("node-" + i),
+                Label = string.IsNullOrWhiteSpace(node?.Label) ? ("Step " + (i + 1)) : node.Label,
+                TypeLabel = GetWorkflowNodeTypeLabel(node?.Type ?? WorkflowNodeType.FormField),
+                ZoneLabel = laneLabel,
+                CssClass = GetWorkflowNodeCssClass(node?.Type ?? WorkflowNodeType.FormField),
+                Left = left,
+                Top = top,
+                    CenterX = left + 110d,
+                    CenterY = top + 90d,
+                    MetaText = string.IsNullOrWhiteSpace(node?.Id) ? "Runtime step" : ("Node: " + node.Id),
+                    RoleAssignments = roles,
+                    UserAssignments = users,
+                    StatusHints = statuses,
+                    Note = BuildWorkflowNodeNote(node, roles, users)
+                });
+            }
+
+            var nodeLookup = previewNodes.ToDictionary(n => n.Id, n => n, StringComparer.OrdinalIgnoreCase);
+            var previewEdges = new List<WorkflowPreviewEdge>();
+            foreach (var edge in definition.Edges ?? Enumerable.Empty<WorkflowEdge>())
+            {
+                if (edge == null ||
+                    string.IsNullOrWhiteSpace(edge.SourceNodeId) ||
+                    string.IsNullOrWhiteSpace(edge.TargetNodeId) ||
+                    !nodeLookup.TryGetValue(edge.SourceNodeId, out var sourceNode) ||
+                    !nodeLookup.TryGetValue(edge.TargetNodeId, out var targetNode))
+                {
+                    continue;
+                }
+
+                var x1 = sourceNode.CenterX + 104d;
+                var y1 = sourceNode.CenterY;
+                var x2 = targetNode.CenterX - 104d;
+                var y2 = targetNode.CenterY;
+                previewEdges.Add(new WorkflowPreviewEdge
+                {
+                    SourceId = sourceNode.Id,
+                    TargetId = targetNode.Id,
+                    Label = edge.Label ?? string.Empty,
+                    X1 = x1,
+                    Y1 = y1,
+                    X2 = x2,
+                    Y2 = y2,
+                    LabelX = (x1 + x2) / 2d,
+                    LabelY = (y1 + y2) / 2d,
+                    Color = string.Equals(edge.SourceHandle, "rejected", StringComparison.OrdinalIgnoreCase) ? "#f97316" : "#94a3b8"
+                });
+            }
+
+        var lanes = new List<WorkflowPreviewLane>();
+        for (var laneIndex = 0; laneIndex < laneSequence.Count; laneIndex++)
+        {
+            var laneLabel = laneSequence[laneIndex];
+            lanes.Add(new WorkflowPreviewLane
+            {
+                Label = laneLabel,
+                Top = 40d + (laneIndex * 224d),
+                Height = 188d
+            });
+        }
+
+        if (lanes.Count == 0)
+        {
+            lanes.Add(new WorkflowPreviewLane { Label = "BPMN 2.0 Process", Top = 40d, Height = Math.Max(320d, maxBottom) });
+        }
+
+            var startNode = previewNodes.FirstOrDefault(n => string.Equals(n.Id, definition.StartNodeId, StringComparison.OrdinalIgnoreCase))
+                ?? previewNodes.FirstOrDefault();
+
+            _workflowPreview = new WorkflowPreviewModel
+            {
+                Title = string.IsNullOrWhiteSpace(definition.Name) ? (GetSelectedFormTitle() + " Workflow") : definition.Name,
+                VersionText = !string.IsNullOrWhiteSpace(envelope?.AppliedVersion) ? ("Applied " + envelope.AppliedVersion) : (!string.IsNullOrWhiteSpace(definition.Version) ? ("Version " + definition.Version) : string.Empty),
+                Nodes = previewNodes,
+                Edges = previewEdges,
+                Lanes = lanes,
+                CanvasWidth = Math.Max(1080d, maxRight + 120d),
+                CanvasHeight = Math.Max(540d, Math.Max(maxBottom + 80d, lanes.Max(l => l.Top + l.Height) + 24d)),
+                StartNodeLabel = startNode?.Label ?? "Unknown",
+                TotalAssignments = previewNodes.Sum(n => n.RoleAssignments.Count + n.UserAssignments.Count)
+            };
+        }
+        catch
+        {
+            _workflowPreview = WorkflowPreviewModel.Empty();
+        }
+    }
+
+    private static List<string> GetWorkflowConfigValues(Dictionary<string, object> config, params string[] keys)
+    {
+        var values = new List<string>();
+        if (config == null || keys == null || keys.Length == 0)
+        {
+            return values;
+        }
+
+        foreach (var key in keys)
+        {
+            var actualKey = config.Keys.FirstOrDefault(k => string.Equals(k, key, StringComparison.OrdinalIgnoreCase));
+            if (string.IsNullOrWhiteSpace(actualKey) || !config.TryGetValue(actualKey, out var raw) || raw == null)
+            {
+                continue;
+            }
+
+            if (raw is string text)
+            {
+                foreach (var item in text.Split(new[] { ',', ';', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var trimmed = item.Trim();
+                    if (!string.IsNullOrWhiteSpace(trimmed) && !values.Any(v => string.Equals(v, trimmed, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        values.Add(trimmed);
+                    }
+                }
+                continue;
+            }
+
+            if (raw is System.Collections.IEnumerable seq)
+            {
+                foreach (var item in seq)
+                {
+                    var textValue = Convert.ToString(item)?.Trim();
+                    if (!string.IsNullOrWhiteSpace(textValue) && !values.Any(v => string.Equals(v, textValue, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        values.Add(textValue);
+                    }
+                }
+            }
+        }
+
+        return values;
+    }
+
+    private static void AddWorkflowConfigStatus(List<string> target, Dictionary<string, object> config, params string[] keys)
+    {
+        if (target == null || config == null)
+        {
+            return;
+        }
+
+        foreach (var key in keys ?? Array.Empty<string>())
+        {
+            var actualKey = config.Keys.FirstOrDefault(k => string.Equals(k, key, StringComparison.OrdinalIgnoreCase));
+            if (string.IsNullOrWhiteSpace(actualKey) || !config.TryGetValue(actualKey, out var raw) || raw == null)
+            {
+                continue;
+            }
+
+            var value = Convert.ToString(raw)?.Trim();
+            if (!string.IsNullOrWhiteSpace(value) && !target.Any(v => string.Equals(v, value, StringComparison.OrdinalIgnoreCase)))
+            {
+                target.Add(value);
+            }
+        }
+    }
+
+private static string GetWorkflowNodeTypeLabel(WorkflowNodeType type)
+{
+    return type switch
+    {
+        WorkflowNodeType.FormField => "Start Event",
+        WorkflowNodeType.Approval => "User Task",
+        WorkflowNodeType.Condition => "Exclusive Gateway",
+        WorkflowNodeType.Switch => "Exclusive Gateway",
+        WorkflowNodeType.Fork => "Parallel Gateway",
+        WorkflowNodeType.Join => "Parallel Gateway",
+        WorkflowNodeType.Delay => "Intermediate Timer",
+        WorkflowNodeType.End => "End Event",
+        WorkflowNodeType.SubWorkflow => "Call Activity",
+        WorkflowNodeType.Loop => "Loop Activity",
+        WorkflowNodeType.SendEmail => "Service Task",
+        WorkflowNodeType.Webhook => "Service Task",
+        WorkflowNodeType.Database => "Service Task",
+        WorkflowNodeType.GoogleSheets => "Service Task",
+        WorkflowNodeType.Calculate => "Service Task",
+        WorkflowNodeType.SetVariable => "Service Task",
+        WorkflowNodeType.AddRole => "Service Task",
+        WorkflowNodeType.AddUser => "Service Task",
+        WorkflowNodeType.AddUserToRole => "Service Task",
+        _ => type.ToString()
+    };
+}
+
+    private static string GetWorkflowNodeCssClass(WorkflowNodeType type)
+    {
+        return type switch
+        {
+            WorkflowNodeType.Approval => "is-approval",
+            WorkflowNodeType.End => "is-end",
+            WorkflowNodeType.FormField => "is-start",
+            _ => "is-action"
+        };
+    }
+
+private static string BuildWorkflowNodeNote(WorkflowNode node, List<string> roles, List<string> users)
+{
+    if (node == null)
+    {
+        return string.Empty;
+        }
+
+    if (node.Type == WorkflowNodeType.Approval)
+    {
+        return roles.Count == 0 && users.Count == 0
+            ? "This BPMN user task has no candidate role or user yet."
+            : "This BPMN user task can be claimed by the listed roles or directly assigned users.";
+    }
+
+    return node.Type switch
+    {
+        WorkflowNodeType.End => "BPMN end event for this business process.",
+        WorkflowNodeType.Condition or WorkflowNodeType.Switch or WorkflowNodeType.Fork or WorkflowNodeType.Join => "Gateway routing is controlled by the outgoing sequence flows from this node.",
+        WorkflowNodeType.SendEmail or WorkflowNodeType.Webhook or WorkflowNodeType.Database or WorkflowNodeType.GoogleSheets or WorkflowNodeType.SetVariable or WorkflowNodeType.AddRole or WorkflowNodeType.AddUser or WorkflowNodeType.AddUserToRole or WorkflowNodeType.Calculate => "Automated service task executed by the platform runtime.",
+        WorkflowNodeType.Delay => "Timer event that pauses the process until its configured duration completes.",
+        _ => string.Empty
+    };
+}
+
+private static string ResolveWorkflowLaneLabel(WorkflowNode node, List<string> roles, List<string> users, string startNodeId)
+{
+    if (node == null)
+    {
+        return "System Automation";
+    }
+
+    if (!string.IsNullOrWhiteSpace(startNodeId) &&
+        string.Equals(node.Id, startNodeId, StringComparison.OrdinalIgnoreCase))
+    {
+        return "Submitter";
+    }
+
+    if (node.Type == WorkflowNodeType.FormField)
+    {
+        return "Submitter";
+    }
+
+    if (users != null && users.Count > 0)
+    {
+        return "User: " + users[0];
+    }
+
+    if (roles != null && roles.Count > 0)
+    {
+        return "Role: " + roles[0];
+    }
+
+    return node.Type switch
+    {
+        WorkflowNodeType.End => "End Events",
+        WorkflowNodeType.Condition or WorkflowNodeType.Switch or WorkflowNodeType.Fork or WorkflowNodeType.Join => "Decision Gateways",
+        WorkflowNodeType.Approval => "Approvals",
+        _ => "System Automation"
+    };
+}
+
+    private void AddPlatformHeadContent()
+    {
+        var token = SiteState?.AuthorizationToken ?? string.Empty;
+        var starterScript =
+            "window.MFStarter=window.MFStarter||{};" +
+            "window.MFStarter.launch=async function(opts){" +
+            "opts=opts||{};" +
+            "var key=String(opts.starterKey||'').trim().toLowerCase();" +
+            "var moduleId=Number(opts.moduleId||0);" +
+            "var siteId=Number(opts.siteId||0);" +
+            "if(moduleId<=0||siteId<=0) throw new Error('Missing module/site context for starter app launch.');" +
+            "var withAuth=function(raw){var next=new URL(raw,window.location.origin);if(moduleId>0&&!next.searchParams.has('authmoduleid')) next.searchParams.set('authmoduleid',String(moduleId));if(siteId>0&&!next.searchParams.has('authsiteid')) next.searchParams.set('authsiteid',String(siteId));return next.pathname+next.search+(next.hash||'');};" +
+            "var parseJson=async function(resp){var text=await resp.text();var json=null;try{json=JSON.parse(text);}catch{}if(!resp.ok) throw new Error((json&&json.error)||text||('HTTP '+resp.status));return json&&typeof json==='object'?(json.data||json.Data||json.result||json.Result||json):{};};" +
+            "window.__MF_STARTER_DEBUG__={step:'boot'};" +
+            "var payload={starterKey:key,moduleId:moduleId,homeUrl:String(opts.currentPageUrl||window.location.origin+window.location.pathname),currentUrl:String(opts.currentUrl||window.location.href),currentPageUrl:String(opts.currentPageUrl||window.location.origin+window.location.pathname),currentPageId:Number(opts.currentPageId||0)};" +
+            "window.__MF_STARTER_DEBUG__.step='post-launch';" +
+            "var launch=await parseJson(await fetch(withAuth('/api/MegaForm/Starter/Launch'),{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}));" +
+            "var redirectUrl=String(launch.redirectUrl||launch.RedirectUrl||'').trim();" +
+            "var defaultViewKey=String(launch.defaultViewKey||launch.DefaultViewKey||'').trim();" +
+            "if(!redirectUrl){var target=new URL(String(opts.currentPageUrl||window.location.href),window.location.origin);target.searchParams.delete('view');target.searchParams.delete('formid');target.searchParams.delete('mfpanel');target.searchParams.delete('edit');if(defaultViewKey){target.searchParams.set('vk',defaultViewKey);}else{target.searchParams.delete('vk');}redirectUrl=target.pathname+target.search+target.hash;}" +
+            "window.__MF_STARTER_DEBUG__={step:'redirect',redirectUrl:redirectUrl,defaultViewKey:defaultViewKey};" +
+            "window.location.replace(redirectUrl);" +
+            "};" +
+            "window.__MF_STARTER_ROLE_SWITCH_BADGE__='RoleSwitch v20260511-01';" +
+            "window.MFStarter.switchRole=async function(opts){" +
+            "opts=opts||{};" +
+            "var username=String(opts.username||'').trim();" +
+            "var password=String(opts.password||'').trim();" +
+            "var targetUrl=String(opts.targetUrl||opts.currentUrl||window.location.href).trim();" +
+            "var currentUrl=String(opts.currentUrl||window.location.href).trim();" +
+            "if(!username||!password) throw new Error('Missing starter role credentials.');" +
+            "var toRelative=function(raw){var next=new URL(raw,window.location.origin);return next.pathname+next.search+(next.hash||'');};" +
+            "var getLogoutUrl=function(raw){var next=new URL(raw,window.location.origin);var path=(next.pathname||'/').replace(/\\/+$/,'');return (path?path:'') + '/pages/logout/';};" +
+            "var sleep=function(ms){return new Promise(function(resolve){setTimeout(resolve,ms);});};" +
+            "var waitFor=function(test,timeoutMs,intervalMs){timeoutMs=timeoutMs||45000;intervalMs=intervalMs||250;var started=Date.now();return new Promise(function(resolve,reject){(function loop(){var passed=false;try{passed=!!test();}catch{}if(passed){resolve(true);return;}if(Date.now()-started>timeoutMs){reject(new Error('Timed out while switching starter role.'));return;}setTimeout(loop,intervalMs);})();});};" +
+            "var frame=document.getElementById('__mf_starter_role_frame__');if(frame&&frame.parentNode){frame.parentNode.removeChild(frame);}" +
+            "frame=document.createElement('iframe');frame.id='__mf_starter_role_frame__';frame.setAttribute('aria-hidden','true');frame.style.cssText='position:fixed;width:1px;height:1px;border:0;opacity:0;pointer-events:none;left:-9999px;top:-9999px;';document.body.appendChild(frame);" +
+            "await fetch(getLogoutUrl(currentUrl),{method:'POST',credentials:'same-origin'});" +
+            "await sleep(1200);" +
+            "frame.src='/login?returnurl='+encodeURIComponent(toRelative(targetUrl));" +
+            "await waitFor(function(){var doc=frame.contentDocument;return !!(doc&&doc.querySelector('#username')&&doc.querySelector('#password')&&Array.from(doc.querySelectorAll('button')).some(function(btn){return /login/i.test(btn.textContent||'');}));},60000,300);" +
+            "var doc=frame.contentDocument;" +
+            "var userInput=doc.querySelector('#username');" +
+            "var passInput=doc.querySelector('#password');" +
+            "var loginButton=Array.from(doc.querySelectorAll('button')).find(function(btn){return /login/i.test(btn.textContent||'');});" +
+            "if(!userInput||!passInput||!loginButton) throw new Error('Login form not ready for starter role switch.');" +
+            "userInput.value=username;userInput.dispatchEvent(new Event('input',{bubbles:true}));userInput.dispatchEvent(new Event('change',{bubbles:true}));" +
+            "passInput.value=password;passInput.dispatchEvent(new Event('input',{bubbles:true}));passInput.dispatchEvent(new Event('change',{bubbles:true}));" +
+            "loginButton.click();" +
+            "await waitFor(function(){try{return !!frame.contentWindow&&String(frame.contentWindow.location.pathname||'').toLowerCase()!=='/login';}catch{return false;}},60000,300);" +
+            "await sleep(1200);" +
+            "window.location.replace(targetUrl);" +
+            "};" +
+            "window.MFStarter.openWorkflowEditor=async function(opts){" +
+            "opts=opts||{};" +
+            "var formId=Number(opts.formId||0);" +
+            "var apiBase=String(opts.apiBase||'/api/MegaForm/');" +
+            "var assetsBase=String(opts.assetsBase||'/Modules/MegaForm/');" +
+            "var builderUrl=String(opts.builderUrl||window.location.href).trim();" +
+            "var workflowScriptUrl=String(opts.workflowScriptUrl||'/Modules/MegaForm/js/builder/megaform-workflow-reactflow.js').trim();" +
+            "if(formId<=0) throw new Error('Missing formId for BPMN workflow editor.');" +
+            "var ensureScript=function(src){return new Promise(function(resolve,reject){try{if(window.MFWorkflowRF&&typeof window.MFWorkflowRF.init==='function'){resolve(true);return;}var bare=String(src).split('?')[0];var existing=Array.from(document.querySelectorAll('script[src]')).find(function(s){return String(s.getAttribute('src')||'').split('?')[0]===bare;});if(existing){existing.addEventListener('load',function(){resolve(true);},{once:true});existing.addEventListener('error',function(){reject(new Error('Could not load workflow editor bundle.'));},{once:true});setTimeout(function(){if(window.MFWorkflowRF&&typeof window.MFWorkflowRF.init==='function'){resolve(true);}},300);return;}var s=document.createElement('script');s.src=src;s.onload=function(){resolve(true);};s.onerror=function(){reject(new Error('Could not load workflow editor bundle.'));};document.body.appendChild(s);}catch(err){reject(err);}});};" +
+            "await ensureScript(workflowScriptUrl);" +
+            "window.__MF_PLATFORM__=window.__MF_PLATFORM__||{};" +
+            "window.__MF_PLATFORM__.builderUrl=builderUrl;" +
+            "window.__MF_PLATFORM__.assetsBase=assetsBase;" +
+            "if(!window.MFWorkflowRF||typeof window.MFWorkflowRF.init!=='function') throw new Error('Workflow editor runtime is unavailable.');" +
+            "window.MFWorkflowRF.init(formId,apiBase);" +
+            "};";
+        var script =
+            $"window.__MF_PLATFORM__=window.__MF_PLATFORM__||{{}};" +
+            $"window.__MF_PLATFORM__.platform='oqtane';" +
+            $"window.__MF_PLATFORM__.apiBase='/api/MegaForm/';" +
+            $"window.__MF_PLATFORM__.assetsBase='/Modules/MegaForm/';" +
+            $"window.__MF_PLATFORM__.moduleId={(ModuleState?.ModuleId ?? 0)};" +
+            $"window.__MF_PLATFORM__.siteId={GetCurrentSiteId()};" +
+            $"window.__MF_PLATFORM__.pageId={(PageState?.Page?.PageId ?? 0)};" +
+            $"window.__MF_PLATFORM__.authToken={JsonSerializer.Serialize(token)};" +
+            $"window.__MF_PLATFORM__.allowThemePresetSelector={(_isAdmin && !_liveRenderMode).ToString().ToLower()};" +
+            $"window.__MF_PLATFORM__.presetThemeKey={JsonSerializer.Serialize(_selectedPresetThemeKey ?? string.Empty)};" +
+            $"window.__MF_PLATFORM__.resourceMode='inline-script-resource';" +
+            starterScript;
+        UpsertModuleInlineScript("__MF_OQTANE_PLATFORM_BOOT__", script);
+    }
+
+    private void UpsertModuleInlineScript(string marker, string script)
+    {
+        if (PageState?.Page == null || string.IsNullOrWhiteSpace(marker) || string.IsNullOrWhiteSpace(script))
+        {
+            return;
+        }
+
+        PageState.Page.Resources ??= new List<Resource>();
+        var ns = GetType().Namespace ?? string.Empty;
+        PageState.Page.Resources.RemoveAll(r =>
+            r.ResourceType == ResourceType.Script &&
+            r.Level == ResourceLevel.Module &&
+            string.Equals(r.Namespace, ns, StringComparison.Ordinal) &&
+            !string.IsNullOrEmpty(r.Content) &&
+            r.Content.Contains(marker, StringComparison.Ordinal));
+
+        PageState.Page.Resources.Add(new Resource
+        {
+            ResourceType = ResourceType.Script,
+            Location = ResourceLocation.Body,
+            Level = ResourceLevel.Module,
+            Namespace = ns,
+            Content = $"window['{marker}']=true;" + script
+        });
+    }
+
+    private string BuildRendererBootScript()
+    {
+        var payload = JsonSerializer.Serialize(new
+        {
+            formId = _formId,
+            containerId = FormMountId,
+            apiBase = "/api/MegaForm/",
+            rendererHostUrl = _rendererHostUrl,
+            moduleViewConfigJson = _moduleViewConfigJson,
+            allowThemePresetSelector = _isAdmin && !_liveRenderMode,
+            presetThemeKey = _selectedPresetThemeKey
+        });
+
+        return "(function(opts){"
+            + "var oqtaneResourceBootBadge='OqtaneResourceBoot v20260420-08';window.__MF_OQTANE_RESOURCE_BOOT_BADGE__=oqtaneResourceBootBadge;"
+            + "function addCss(href){if(!href)return;var full=(href.indexOf('http')===0?href:(location.origin+href)).split('?')[0];var links=document.querySelectorAll('link[rel=stylesheet]');for(var i=0;i<links.length;i++){if((links[i].href||'').split('?')[0]===full)return;}var el=document.createElement('link');el.rel='stylesheet';el.href=href;document.head.appendChild(el);}"
+            + "function addScript(src){return new Promise(function(resolve,reject){if(!src){resolve();return;}var full=(src.indexOf('http')===0?src:(location.origin+src)).split('?')[0];var scripts=document.querySelectorAll('script[src]');for(var i=0;i<scripts.length;i++){if((scripts[i].src||'').split('?')[0]===full){resolve();return;}}var el=document.createElement('script');el.src=src;el.onload=function(){resolve();};el.onerror=function(){reject(new Error('Failed to load '+src));};document.body.appendChild(el);});}"
+            + "function getMountEl(){return document.getElementById(opts.containerId);}"
+            + "function waitForCore(){return new Promise(function(resolve,reject){var tries=0;function check(){var mountEl=getMountEl();if(mountEl&&typeof MegaFormRenderer!=='undefined'&&MegaFormRenderer&&typeof MegaFormRenderer.init==='function'){resolve(mountEl);return;}tries++;if(tries>200){reject(new Error('MegaForm core wait timed out for '+opts.containerId));return;}setTimeout(check,50);}check();});}"
+            + "var platform=window.__MF_PLATFORM__||{};"
+            + "if(opts.rendererHostUrl){platform.rendererHostUrl=opts.rendererHostUrl;}"
+            + "platform.allowThemePresetSelector=!!opts.allowThemePresetSelector;"
+            + "platform.presetThemeKey=opts.presetThemeKey||platform.presetThemeKey||'';"
+            + "window.__MF_PLATFORM__=platform;"
+            + "addCss('/Modules/MegaForm/css/megaform-themes.css?v=' + oqtaneResourceBootBadge.split(' ').pop());"
+            + "addCss('/Modules/MegaForm/css/megaform-widgets.css?v=' + oqtaneResourceBootBadge.split(' ').pop());"
+            + "var saveBtn=document.getElementById('mf-oq-theme-preset-save');var themePresetState=null;var themePresetBusy=false;function oqHeaders(){var h={'Content-Type':'application/json'};var token=(window.__MF_PLATFORM__||{}).authToken||null;if(token)h.Authorization='Bearer ' + token;return h;}function oqModuleUrl(path){var qs=[];if(platform.moduleId)qs.push('authmoduleid='+encodeURIComponent(String(platform.moduleId||0)));if(platform.siteId)qs.push('authsiteid='+encodeURIComponent(String(platform.siteId||0)));if(!qs.length)return opts.apiBase+path;return opts.apiBase+path+(path.indexOf('?')>=0?'&':'?')+qs.join('&');}function syncThemePreset(detail){themePresetState=detail||themePresetState;if(!saveBtn)return;var canShow=!!(themePresetState&&themePresetState.hasSelector&&themePresetState.selectorEnabled&&themePresetState.showUpdateThemeButton!==false);saveBtn.style.display=canShow?'inline-flex':'none';if(!canShow)return;var dirty=!!themePresetState.dirty;saveBtn.classList.toggle('is-primary',dirty);saveBtn.disabled=themePresetBusy||!themePresetState.selectedThemeKey;saveBtn.innerHTML=\"<i class='fas fa-palette'></i> \" + (dirty?'Update Theme *':'Update Theme');}window.addEventListener('mf:theme-preset-state',function(e){syncThemePreset((e&&e.detail)||null);});if(saveBtn){saveBtn.addEventListener('click',function(){if(!themePresetState||!themePresetState.selectedThemeKey||themePresetBusy)return;themePresetBusy=true;syncThemePreset(themePresetState);saveBtn.innerHTML=\"<i class='fas fa-spinner fa-spin'></i> Saving...\";fetch(oqModuleUrl('ModuleConfig/SaveStyle'),{method:'POST',headers:oqHeaders(),credentials:'include',body:JSON.stringify({moduleId:platform.moduleId||0,formId:opts.formId,selectedPresetThemeKey:themePresetState.selectedThemeKey})}).then(function(resp){if(!resp.ok)throw new Error('SaveStyle failed: ' + resp.status);return resp.json();}).then(function(data){var nextKey=(data&&(data.selectedPresetThemeKey||data.SelectedPresetThemeKey))||themePresetState.selectedThemeKey||'';platform.presetThemeKey=nextKey;window.__MF_PLATFORM__=platform;themePresetState=Object.assign({},themePresetState||{},{savedThemeKey:nextKey,activeThemeKey:nextKey,selectedThemeKey:nextKey,dirty:false});syncThemePreset(themePresetState);}).catch(function(err){console.error('MegaForm: preset theme save failed',err);syncThemePreset(themePresetState);}).finally(function(){themePresetBusy=false;syncThemePreset(themePresetState);});});}"
+            + "waitForCore().then(function(mountEl){"
+            + "return fetch(opts.apiBase+'Schema/'+opts.formId).then(function(resp){if(!resp.ok){throw new Error('Schema fetch failed: '+resp.status);}return resp.json();}).then(function(data){"
+            + "var css=(data&&data.pluginStyles)||[];for(var i=0;i<css.length;i++){addCss('/Modules/MegaForm/css/plugins/'+css[i]+'?v=' + oqtaneResourceBootBadge.split(' ').pop());}"
+            + "var scripts=(data&&data.pluginScripts)||[];return scripts.reduce(function(p, file){return p.then(function(){return addScript('/Modules/MegaForm/js/plugins/'+file+'?v=' + oqtaneResourceBootBadge.split(' ').pop());});}, Promise.resolve()).then(function(){return data;});"
+            + "}).then(function(data){"
+            + "var schema=data&&data.schema?data.schema:data;"
+            + "if(typeof schema==='string'){try{schema=JSON.parse(schema);}catch(schemaErr){console.error('MegaForm: schema JSON parse failed',schemaErr);schema={};}}"
+            + "if(!schema||typeof schema!=='object'){schema={};}"
+            + "var hasCustomHtml=!!(schema&&schema.settings&&(schema.settings.customHtml||schema.settings.CustomHtml));"
+            + "if(hasCustomHtml&&mountEl.parentElement){mountEl.parentElement.classList.add('mf-custom-shell-mode');}"
+            + "if(data&&data.assetSelectionBadge){mountEl.setAttribute('data-mf-asset-selection-badge', data.assetSelectionBadge);}"
+            + "var effectiveSettingsJson=(data&&data.settingsJson)||null;"
+            + "try{if(opts.moduleViewConfigJson){var viewCfg=typeof opts.moduleViewConfigJson==='string'?JSON.parse(opts.moduleViewConfigJson):opts.moduleViewConfigJson||{};var settingsObj=effectiveSettingsJson?JSON.parse(effectiveSettingsJson):{};settingsObj.displayMode=String(viewCfg.displayMode||viewCfg.DisplayMode||'fixed').toLowerCase()==='popup'?'popup':'fixed';var popup=viewCfg.popup||viewCfg.Popup||{};settingsObj.popup={triggerType:popup.triggerType||popup.TriggerType||'time_delay',delaySeconds:popup.delaySeconds||popup.DelaySeconds||5,scrollPercent:popup.scrollPercent||popup.ScrollPercent||50,clickSelector:popup.clickSelector||popup.ClickSelector||'',borderMode:'transparent_popup',showOncePerSession:popup.showOncePerSession==null&&popup.ShowOncePerSession==null?true:!!(popup.showOncePerSession!=null?popup.showOncePerSession:popup.ShowOncePerSession),closeOnOverlay:popup.closeOnOverlay==null&&popup.CloseOnOverlay==null?true:!!(popup.closeOnOverlay!=null?popup.closeOnOverlay:popup.CloseOnOverlay),startAt:popup.startAt||popup.StartAt||'',endAt:popup.endAt||popup.EndAt||''};effectiveSettingsJson=JSON.stringify(settingsObj);}}catch(err){console.warn('MegaForm: module view config merge failed',err);}"
+            + "MegaFormRenderer.init({formId:opts.formId,schema:schema,settingsJson:effectiveSettingsJson,themeJson:(data&&data.themeJson)||null,title:(data&&(data.title||data.Title))||'',description:(data&&(data.description||data.Description))||'',container:'#'+opts.containerId,submitButtonText:(data&&(data.submitButtonText||data.SubmitButtonText))||'Submit',successMessage:(data&&(data.successMessage||data.SuccessMessage))||'Thank you!',apiBase:opts.apiBase,rules:(data&&(data.rules||data.Rules))||[]});"
+            + "}).catch(function(err){console.error('MegaForm: init error', err);});"
+            + "}).catch(function(err){console.error('MegaForm: core wait error', err);});"
+            + "})(" + payload + ");";
+    }
+
+    private string ReadModuleSetting(string key)
+    {
+        if (ModuleState?.Settings != null && ModuleState.Settings.TryGetValue(key, out var value))
+        {
+            return value ?? string.Empty;
+        }
+        return string.Empty;
+    }
+
+    private bool ReadModuleBool(string key)
+    {
+        var raw = ReadModuleSetting(key);
+        return bool.TryParse(raw, out var parsed) && parsed;
+    }
+
+    private string GetSelectedFormTitle()
+    {
+        if (_formId <= 0)
+        {
+            return "No form selected";
+        }
+
+        var item = _forms.FirstOrDefault(f => f.FormId == _formId);
+        if (item != null && !string.IsNullOrWhiteSpace(item.Title))
+        {
+            return item.Title;
+        }
+
+        return $"Form #{_formId}";
+    }
+
+    private string GetSelectedFormStatus()
+    {
+        var item = _forms.FirstOrDefault(f => f.FormId == _formId);
+        if (item != null && !string.IsNullOrWhiteSpace(item.Status))
+        {
+            return item.Status;
+        }
+        return _isPublished ? "Published" : "Draft / Unknown";
+    }
+
+    private string GetRendererHostStatus()
+    {
+        var isCurrentPage = IsCurrentPageRendererHost();
+
+        if (_useThisPageAsRendererHost && !isCurrentPage)
+        {
+            return "After you save these module settings, this page will become the public Renderer Host for View and embedded links.";
+        }
+
+        if (!_useThisPageAsRendererHost && isCurrentPage)
+        {
+            return "This page is currently the public Renderer Host for View and embedded links. Clear the checkbox and save to move or unset it.";
+        }
+
+        if (isCurrentPage)
+        {
+            return "This page is currently the public Renderer Host for View and embedded links.";
+        }
+        if (!string.IsNullOrWhiteSpace(_rendererHostUrl))
+        {
+            return "Renderer Host is another page: " + _rendererHostUrl;
+        }
+        return "Renderer Host is not set yet.";
+    }
+
+    private bool IsCurrentPageRendererHost()
+    {
+        var currentUrl = GetCurrentPageRendererHostUrl();
+        if (!string.IsNullOrWhiteSpace(_rendererHostUrl) && string.Equals(_rendererHostUrl, currentUrl, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+        return _rendererHostPageId > 0 && _rendererHostPageId == (PageState?.Page?.PageId ?? 0);
+    }
+
+    private string GetCurrentPageRendererHostUrl()
+    {
+        try
+        {
+            var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+            return uri.GetLeftPart(UriPartial.Path).TrimEnd('/');
+        }
+        catch
+        {
+            return NavigationManager.Uri?.TrimEnd('/') ?? string.Empty;
+        }
+    }
+
+    private string BuildTemplateContextJson()
+    {
+        var effectiveFormId = IsListViewMode && _listViewFormId > 0 ? _listViewFormId : _formId;
+        var payload = new
+        {
+            form = new
+            {
+                id = effectiveFormId,
+                title = GetSelectedFormTitle(),
+                status = _isPublished ? "Published" : "Draft"
+            },
+            module = new
+            {
+                id = ModuleState?.ModuleId ?? 0,
+                siteId = GetCurrentSiteId(),
+                pageId = PageState?.Page?.PageId ?? 0,
+                platform = "oqtane",
+                viewMode = _viewMode,
+                queryKey = _activeQueryKey ?? string.Empty,
+                rendererHostUrl = _rendererHostUrl ?? string.Empty
+            },
+            user = new
+            {
+                isAdmin = _isAdmin,
+                isAuthenticated = PageState?.User != null
+            }
+        };
+        return JsonSerializer.Serialize(payload);
+    }
+
+    private static string NormalizeTriggerType(string value)
+    {
+        var trigger = (value ?? string.Empty).Trim().ToLowerInvariant();
+        return trigger == "scroll_depth" || trigger == "click_trigger" ? trigger : "time_delay";
+    }
+
+    // [ViewDesigner v20260503-06] Pull viewMode + list/card config out of the
+    // raw MegaForm:ViewConfig JSON in ModuleState.Settings. Applies to ALL
+    // visitors (not just admins) so the page renders the right mount on the
+    // very first request, before — and independently of — LoadAdminConfigAsync.
+    private void ApplyViewConfigFromJson(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json) || json == "{}") return;
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            if (root.ValueKind != JsonValueKind.Object) return;
+
+            string ReadStr(string camel, string pascal = null)
+            {
+                if (root.TryGetProperty(camel, out var v) && v.ValueKind == JsonValueKind.String) return v.GetString();
+                if (pascal != null && root.TryGetProperty(pascal, out var v2) && v2.ValueKind == JsonValueKind.String) return v2.GetString();
+                return null;
+            }
+
+            string ReadItemStr(JsonElement source, string camel, string pascal = null)
+            {
+                if (source.TryGetProperty(camel, out var v) && v.ValueKind == JsonValueKind.String) return v.GetString();
+                if (pascal != null && source.TryGetProperty(pascal, out var v2) && v2.ValueKind == JsonValueKind.String) return v2.GetString();
+                return null;
+            }
+
+            void ApplyGenericRootConfig(string mode)
+            {
+                var normalized = string.Equals(mode, "list", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(mode, "card", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(mode, "listview", StringComparison.OrdinalIgnoreCase)
+                    ? mode.ToLowerInvariant()
+                    : "form";
+
+                _viewMode = normalized;
+                _activeViewKey = string.Empty;
+                _activeQueryKey = string.Empty;
+                _listFields = ReadStr("listFields", "ListFields") ?? _listFields ?? string.Empty;
+                _listTemplate = ReadStr("listTemplate", "ListTemplate") ?? _listTemplate ?? string.Empty;
+                _cardFields = ReadStr("cardFields", "CardFields") ?? _cardFields ?? string.Empty;
+                _cardTemplate = ReadStr("cardTemplate", "CardTemplate") ?? _cardTemplate ?? string.Empty;
+                _listViewSettingsJson = ReadStr("listViewSettingsJson", "ListViewSettingsJson") ?? _listViewSettingsJson ?? "{}";
+                if (_viewMode == "listview" && (_listViewSettingsJson == "{}" || string.IsNullOrWhiteSpace(_listViewSettingsJson)))
+                {
+                    _listViewSettingsJson = json;
+                }
+
+                ParseListViewSettings(_listViewSettingsJson);
+            }
+
+            void ApplyNamedView(FormViewInfo item)
+            {
+                var mode = FormViewSelector.MapViewTypeToViewMode(item?.ViewType);
+                if (string.IsNullOrWhiteSpace(mode))
+                {
+                    mode = "form";
+                }
+
+                _activeViewKey = item?.ViewKey ?? string.Empty;
+                _activeQueryKey = item?.QueryKey ?? string.Empty;
+
+                if (!string.IsNullOrWhiteSpace(item.ConfigJson) && item.ConfigJson != "{}")
+                {
+                    try
+                    {
+                        using var itemDoc = JsonDocument.Parse(item.ConfigJson);
+                        var itemRoot = itemDoc.RootElement;
+                        if (itemRoot.ValueKind == JsonValueKind.Object)
+                        {
+                            _listFields = ReadItemStr(itemRoot, "listFields", "ListFields") ?? _listFields ?? string.Empty;
+                            _listTemplate = ReadItemStr(itemRoot, "listTemplate", "ListTemplate") ?? _listTemplate ?? string.Empty;
+                            _cardFields = ReadItemStr(itemRoot, "cardFields", "CardFields") ?? _cardFields ?? string.Empty;
+                            _cardTemplate = ReadItemStr(itemRoot, "cardTemplate", "CardTemplate") ?? _cardTemplate ?? string.Empty;
+                            _listViewSettingsJson = ReadItemStr(itemRoot, "listViewSettingsJson", "ListViewSettingsJson") ?? item.ConfigJson;
+                        }
+                    }
+                    catch
+                    {
+                        _listViewSettingsJson = item.ConfigJson;
+                    }
+                }
+
+                _viewMode = mode;
+                if (mode == "list" && !string.IsNullOrWhiteSpace(item.CustomHtml))
+                {
+                    _listTemplate = item.CustomHtml;
+                }
+                else if (mode == "card" && !string.IsNullOrWhiteSpace(item.CustomHtml))
+                {
+                    _cardTemplate = item.CustomHtml;
+                }
+                else if (mode == "listview" && (string.IsNullOrWhiteSpace(_listViewSettingsJson) || _listViewSettingsJson == "{}"))
+                {
+                    _listViewSettingsJson = item.ConfigJson;
+                }
+
+                ParseListViewSettings(_listViewSettingsJson);
+
+                // [ViewCustomHtmlListview v20260516-11] Honor MF_Views.CustomHtml on the
+                // new ListView mode too. CustomHtml is treated as the WRAPPER template
+                // (it is expected to contain a {{rows}} placeholder where per-row HTML
+                // is injected, or it can be self-rendering chrome that shows static data).
+                // Runs AFTER ParseListViewSettings so it overrides whatever ConfigJson set.
+                if (mode == "listview" && !string.IsNullOrWhiteSpace(item.CustomHtml))
+                {
+                    _listViewWrapperTemplate = item.CustomHtml;
+                }
+            }
+
+            var currentUri = NavigationManager?.Uri ?? string.Empty;
+            var requestedView = (GetQueryValue(currentUri, "view") ?? string.Empty).Trim();
+            var requestedViewKey = (GetQueryValue(currentUri, "vk") ?? string.Empty).Trim();
+            var selectedViewKey = FormViewSelector.ReadSelectedViewKey(json);
+            var catalogItems = FormViewSelector.ReadViewCatalog(json)
+                .Select(item => new FormViewInfo
+                {
+                    ViewKey = item.ViewKey,
+                    QueryKey = item.QueryKey,
+                    ViewType = item.ViewType,
+                    ViewName = item.ViewName,
+                    IsDefault = item.IsDefault,
+                    ConfigJson = item.ConfigJson,
+                    CustomHtml = item.CustomHtml
+                })
+                .ToList();
+            var moduleViewType = ReadStr("viewMode", "ViewMode")
+                ?? ReadStr("viewType", "ViewType")
+                ?? _viewMode
+                ?? "form";
+            var selection = FormViewSelector.Resolve(
+                catalogItems,
+                requestedView,
+                requestedViewKey,
+                selectedViewKey,
+                moduleViewType);
+            if (selection.UsedNamedView && selection.MatchedView != null)
+            {
+                ApplyNamedView(selection.MatchedView);
+                return;
+            }
+
+            ApplyGenericRootConfig(FormViewSelector.MapViewTypeToViewMode(selection.ActiveViewType));
+        }
+        catch
+        {
+            // Malformed JSON — leave _viewMode at its current value ("form" by default).
+        }
+    }
+
+    // [ListViewRouting v20260507-23] Decode the saved ListView settings JSON
+    // into the typed backing fields the Razor markup binds to.
+    private void ParseListViewSettings(string json)
+    {
+        // Reset to defaults first so re-parses don't keep stale values.
+        _listViewFormId          = 0;
+        _listViewFieldsJson      = "[]";
+        _listViewRowTemplate     = string.Empty;
+        _listViewDetailTemplate  = string.Empty;
+        _listViewWrapperTemplate = string.Empty;
+        _listViewPageSize        = 25;
+        _listViewEnableSearch    = true;
+        _listViewEnableSort      = true;
+        _listViewTitle           = string.Empty;
+        _listViewEmptyMessage    = "No submissions yet.";
+        _listViewShowAddButton   = true;
+        _listViewShowRowActions  = true;
+        if (string.IsNullOrWhiteSpace(json) || json == "{}") return;
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            if (root.ValueKind != JsonValueKind.Object) return;
+
+            string ReadStr(string camel, string pascal = null)
+            {
+                if (root.TryGetProperty(camel, out var v) && v.ValueKind == JsonValueKind.String) return v.GetString();
+                if (pascal != null && root.TryGetProperty(pascal, out var v2) && v2.ValueKind == JsonValueKind.String) return v2.GetString();
+                return null;
+            }
+            int ReadInt(string camel, string pascal, int def)
+            {
+                if (root.TryGetProperty(camel, out var v) && v.ValueKind == JsonValueKind.Number && v.TryGetInt32(out var n)) return n;
+                if (root.TryGetProperty(pascal, out var v2) && v2.ValueKind == JsonValueKind.Number && v2.TryGetInt32(out var n2)) return n2;
+                return def;
+            }
+            bool ReadBool(string camel, string pascal, bool def)
+            {
+                if (root.TryGetProperty(camel, out var v) && (v.ValueKind == JsonValueKind.True || v.ValueKind == JsonValueKind.False)) return v.GetBoolean();
+                if (root.TryGetProperty(pascal, out var v2) && (v2.ValueKind == JsonValueKind.True || v2.ValueKind == JsonValueKind.False)) return v2.GetBoolean();
+                return def;
+            }
+
+            _listViewFormId          = ReadInt("formId", "FormId", _listViewFormId);
+            if (_listViewFormId <= 0)
+            {
+                _listViewFormId = _formId;
+            }
+            _listViewRowTemplate     = ReadStr("rowTemplate",     "RowTemplate")     ?? _listViewRowTemplate;
+            _listViewDetailTemplate  = ReadStr("detailTemplate",  "DetailTemplate")  ?? _listViewDetailTemplate;
+            _listViewWrapperTemplate = ReadStr("wrapperTemplate", "WrapperTemplate") ?? _listViewWrapperTemplate;
+            _listViewPageSize        = ReadInt("pageSize", "PageSize", _listViewPageSize);
+            _listViewEnableSearch    = ReadBool("enableSearch", "EnableSearch", _listViewEnableSearch);
+            _listViewEnableSort      = ReadBool("enableSort",   "EnableSort",   _listViewEnableSort);
+            _listViewShowAddButton   = ReadBool("showAddButton",  "ShowAddButton",  _listViewShowAddButton);
+            _listViewShowRowActions  = ReadBool("showRowActions", "ShowRowActions", _listViewShowRowActions);
+            _listViewTitle           = ReadStr("title",        "Title")        ?? _listViewTitle;
+            _listViewEmptyMessage    = ReadStr("emptyMessage", "EmptyMessage") ?? _listViewEmptyMessage;
+
+            if (root.TryGetProperty("fields", out var f) && f.ValueKind == JsonValueKind.Array)
+                _listViewFieldsJson = f.GetRawText();
+            else if (root.TryGetProperty("Fields", out var f2) && f2.ValueKind == JsonValueKind.Array)
+                _listViewFieldsJson = f2.GetRawText();
+        }
+        catch
+        {
+            // Bad JSON — leave defaults; runtime will show the empty-state.
+        }
+    }
+
+    private static string GetQueryValue(string uri, string key)
+    {
+        if (string.IsNullOrWhiteSpace(uri) || string.IsNullOrWhiteSpace(key))
+        {
+            return null;
+        }
+
+        var question = uri.IndexOf('?');
+        if (question < 0 || question >= uri.Length - 1)
+        {
+            return null;
+        }
+
+        var query = uri.Substring(question + 1);
+        var hash = query.IndexOf('#');
+        if (hash >= 0)
+        {
+            query = query.Substring(0, hash);
+        }
+
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return null;
+        }
+
+        foreach (var part in query.Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var kv = part.Split('=', 2, StringSplitOptions.None);
+            if (kv.Length == 0)
+            {
+                continue;
+            }
+
+            var candidateKey = Uri.UnescapeDataString((kv[0] ?? string.Empty).Replace('+', ' '));
+            if (!string.Equals(candidateKey, key, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var value = kv.Length > 1 ? kv[1] ?? string.Empty : string.Empty;
+            return Uri.UnescapeDataString(value.Replace('+', ' '));
+        }
+
+        return null;
+    }
+
+    public sealed class DashboardFormRow
+    {
+        public int FormId { get; set; }
+        public string Title { get; set; }
+        public string Status { get; set; }
+        public string ModifiedText { get; set; }
+    }
+
+    public sealed class StarterQaProfile
+    {
+        public string AppKey { get; set; }
+        public string DisplayName { get; set; }
+        public List<StarterQaRoleOption> Roles { get; set; } = new();
+        public List<StarterQaSurfaceLink> SurfaceLinks { get; set; } = new();
+    }
+
+    public sealed class StarterQaRoleOption
+    {
+        public string UserName { get; set; }
+        public string DisplayName { get; set; }
+        public string Password { get; set; }
+        public string Description { get; set; }
+        public string TargetType { get; set; }
+        public string TargetValue { get; set; }
+    }
+
+    public sealed class StarterQaSurfaceLink
+    {
+        public string Label { get; set; }
+        public string Icon { get; set; }
+        public string Url { get; set; }
+        public bool IsRecommended { get; set; }
+    }
+
+    public sealed class WorkflowPreviewModel
+    {
+        public string Title { get; set; } = "Workflow";
+        public string VersionText { get; set; } = string.Empty;
+        public List<WorkflowPreviewNode> Nodes { get; set; } = new();
+        public List<WorkflowPreviewEdge> Edges { get; set; } = new();
+        public List<WorkflowPreviewLane> Lanes { get; set; } = new();
+        public double CanvasWidth { get; set; } = 1080d;
+        public double CanvasHeight { get; set; } = 540d;
+        public string StartNodeLabel { get; set; } = string.Empty;
+        public int TotalAssignments { get; set; }
+
+        public static WorkflowPreviewModel Empty() => new WorkflowPreviewModel();
+    }
+
+    public sealed class WorkflowPreviewNode
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Label { get; set; } = string.Empty;
+        public string TypeLabel { get; set; } = string.Empty;
+        public string ZoneLabel { get; set; } = string.Empty;
+        public string CssClass { get; set; } = "is-action";
+        public double Left { get; set; }
+        public double Top { get; set; }
+        public double CenterX { get; set; }
+        public double CenterY { get; set; }
+        public string MetaText { get; set; } = string.Empty;
+        public List<string> RoleAssignments { get; set; } = new();
+        public List<string> UserAssignments { get; set; } = new();
+        public List<string> StatusHints { get; set; } = new();
+        public string Note { get; set; } = string.Empty;
+    }
+
+    public sealed class WorkflowPreviewEdge
+    {
+        public string SourceId { get; set; } = string.Empty;
+        public string TargetId { get; set; } = string.Empty;
+        public string Label { get; set; } = string.Empty;
+        public double X1 { get; set; }
+        public double Y1 { get; set; }
+        public double X2 { get; set; }
+        public double Y2 { get; set; }
+        public double LabelX { get; set; }
+        public double LabelY { get; set; }
+        public string Color { get; set; } = "#94a3b8";
+    }
+
+    public sealed class WorkflowPreviewLane
+    {
+        public string Label { get; set; } = string.Empty;
+        public double Top { get; set; }
+        public double Height { get; set; }
+    }
+}

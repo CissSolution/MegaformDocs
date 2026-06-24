@@ -1,0 +1,96 @@
+@*
+    ImageGallery — responsive card grid rendered from SQL rows that carry
+    image URLs + optional title/caption.
+
+    Default widgetProps:
+      {
+        "template": "ImageGallery",
+        "useSql": true,
+        "connectionKey": "DashboardDatabase",
+        "masterQuery": "SELECT CourseId, CourseName, ImageUrl FROM GG_Courses",
+        "parameters": {
+          "urlColumn":     "ImageUrl",
+          "titleColumn":   "CourseName",
+          "captionColumn": "",
+          "linkColumn":    "",
+          "columns":       3
+        }
+      }
+*@
+@using MegaForm.Razor
+@inherits MfRazorWidgetBase
+@attribute [RazorTemplate("ImageGallery", Category = "Display", Icon = "fa-images", WhenToUse = "Product catalogs / course thumbnails / member photos — a responsive grid of image cards driven by SQL.", Description = "Responsive image-card grid from SQL rows with URL + title columns.", SupportsSql = true, EmitsValue = false)]
+@using System.Linq
+@using MegaForm.Core.Interfaces
+
+@code {
+    [Parameter, RazorParam(Label = "Image URL column", Group = "Data mapping", Widget = "sql-column", Required = true, Order = 10, Placeholder = "ImageUrl")]
+    public string UrlColumn     { get; set; } = "Url";
+
+    [Parameter, RazorParam(Label = "Title column", Group = "Data mapping", Widget = "sql-column", Required = true, Order = 20, Placeholder = "ProductName")]
+    public string TitleColumn   { get; set; } = "Title";
+
+    [Parameter, RazorParam(Label = "Caption column", Group = "Data mapping", Widget = "sql-column", Order = 30, Placeholder = "(optional)")]
+    public string CaptionColumn { get; set; } = "";
+
+    [Parameter, RazorParam(Label = "Link URL column", Group = "Data mapping", Widget = "sql-column", Order = 40, Placeholder = "(optional)", Hint = "If set, each card becomes a link to this URL.")]
+    public string LinkColumn    { get; set; } = "";
+
+    [Parameter, RazorParam(Label = "Columns", Group = "Display", Widget = "number", Order = 50, Hint = "1–6 columns in the responsive grid.")]
+    public int    Columns       { get; set; } = 3;
+
+    private List<object> _rows = new();
+
+    protected override void OnParametersSet()
+    {
+        _rows = SqlRows?.Cast<object>().ToList() ?? new List<object>();
+    }
+
+    private static object Get(object row, string key)
+    {
+        if (string.IsNullOrEmpty(key)) return null;
+        if (row is IDictionary<string, object> d)
+            return d.TryGetValue(key, out var v) ? v : null;
+        return row?.GetType().GetProperty(key)?.GetValue(row);
+    }
+}
+
+<div class="mf-razor-gallery" style="grid-template-columns:repeat(@(Math.Max(1, Math.Min(Columns, 6))),1fr)">
+    @if (_rows.Count == 0)
+    {
+        <div class="mf-razor-gallery-empty">No images.</div>
+    }
+    else
+    {
+        foreach (var r in _rows)
+        {
+            var url     = Convert.ToString(Get(r, UrlColumn));
+            var title   = Convert.ToString(Get(r, TitleColumn));
+            var caption = Convert.ToString(Get(r, CaptionColumn));
+            var link    = Convert.ToString(Get(r, LinkColumn));
+            <div class="mf-razor-gallery-card">
+                @if (!string.IsNullOrEmpty(link))
+                {
+                    <a href="@link" target="_blank" rel="noopener">
+                        <img src="@url" alt="@title" loading="lazy" />
+                    </a>
+                }
+                else
+                {
+                    <img src="@url" alt="@title" loading="lazy" />
+                }
+                @if (!string.IsNullOrEmpty(title))   { <div class="mf-razor-gallery-title">@title</div> }
+                @if (!string.IsNullOrEmpty(caption)) { <div class="mf-razor-gallery-caption">@caption</div> }
+            </div>
+        }
+    }
+</div>
+
+<style>
+    .mf-razor-gallery { display:grid;gap:12px;margin:12px 0 }
+    .mf-razor-gallery-card { background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(15,23,42,.04) }
+    .mf-razor-gallery-card img { display:block;width:100%;height:160px;object-fit:cover }
+    .mf-razor-gallery-title { padding:8px 12px 2px;font-weight:600;color:#0f172a;font-size:13px }
+    .mf-razor-gallery-caption { padding:0 12px 10px;color:#64748b;font-size:11px }
+    .mf-razor-gallery-empty { padding:20px;color:#94a3b8;font-style:italic;background:#f8fafc;border-radius:8px;grid-column:1/-1;text-align:center }
+</style>

@@ -1,0 +1,22 @@
+-- MegaForm 01.06.25 — Phase2 + panels.ts portalId hot-fix (2026-05-27)
+--
+-- Customer 01.06.24 install crashed on Business Starter launch (Blog Publishing,
+-- and any other starter) with two parallel 400s in the browser console:
+--   GET /Phase2/AppDefinitionList                          → 400
+--   GET /Form/Get?formId=255&moduleId=0&portalId=0          → 400
+--
+-- Root cause = same pattern as the 01.06.24 Permissions fix: two code paths
+-- still sent the cross-portal-toxic TabId/ModuleId headers and/or relied on
+-- DNN-framework module resolution that fails under a child-portal subpath
+-- alias (e.g. /megaf in DNN10322_MegaF).
+--
+--   • Phase2ApiController had [DnnModuleAuthorize(Edit)] on every action.
+--     v01.06.25 swaps to class-level [DnnAuthorize(Administrators)] +
+--     ResolveTargetPortalId() (mirrors FormController & PermissionsController).
+--   • panels.ts:initFormLoader was hardcoding `&moduleId=0&portalId=0` and
+--     setting TabId/ModuleId request headers. v01.06.25 reads
+--     __MF_PLATFORM__.portalId for the query string and ships only the
+--     anti-forgery token.
+--
+-- No schema changes.
+PRINT 'MegaForm 01.06.25 - Phase2 + panels.ts portalId hot-fix applied.';

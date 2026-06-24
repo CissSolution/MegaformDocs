@@ -1,0 +1,404 @@
+{
+  "version": "1.0",
+  "slug": "template-639124136870269154",
+  "title": "Contact Us",
+  "description": "We would love to hear from you. Fill out the form below and our team will get back to you shortly.",
+  "category": "contact",
+  "categories": [
+    "contact",
+    "premium"
+  ],
+  "icon": "💌",
+  "fields": [
+    {
+      "key": "row_name",
+      "type": "Row",
+      "label": "Name",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "first_name",
+              "type": "Text",
+              "label": "First Name",
+              "required": true,
+              "placeholder": "Mario"
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "last_name",
+              "type": "Text",
+              "label": "Last Name",
+              "required": true,
+              "placeholder": "Rossi"
+            }
+          ]
+        }
+      ],
+      "Columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "first_name",
+              "type": "Text",
+              "label": "First Name",
+              "required": true,
+              "placeholder": "Mario"
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "last_name",
+              "type": "Text",
+              "label": "Last Name",
+              "required": true,
+              "placeholder": "Rossi"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "row_contact",
+      "type": "Row",
+      "label": "Contact",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "email",
+              "type": "Email",
+              "label": "Email Address",
+              "required": true,
+              "placeholder": "mario@example.com"
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "phone",
+              "type": "Phone",
+              "label": "Phone Number",
+              "required": true,
+              "placeholder": "+39 123 456 7890"
+            }
+          ]
+        }
+      ],
+      "Columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "email",
+              "type": "Email",
+              "label": "Email Address",
+              "required": true,
+              "placeholder": "mario@example.com"
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "phone",
+              "type": "Phone",
+              "label": "Phone Number",
+              "required": true,
+              "placeholder": "+39 123 456 7890"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "row_web_search",
+      "type": "Row",
+      "label": "Web & Search",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "website",
+              "type": "Url",
+              "label": "Website",
+              "placeholder": "https://yourwebsite.com"
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "search",
+              "type": "Text",
+              "label": "How Did You Find Us?",
+              "placeholder": "Search, referral, social..."
+            }
+          ]
+        }
+      ],
+      "Columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "website",
+              "type": "Url",
+              "label": "Website",
+              "placeholder": "https://yourwebsite.com"
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "search",
+              "type": "Text",
+              "label": "How Did You Find Us?",
+              "placeholder": "Search, referral, social..."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "row_password_budget",
+      "type": "Row",
+      "label": "Password & Budget",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "password",
+              "type": "Password",
+              "label": "Create Password",
+              "placeholder": "Enter secure password"
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "budget",
+              "type": "Number",
+              "label": "Budget Range (EUR)",
+              "placeholder": "5000"
+            }
+          ]
+        }
+      ],
+      "Columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "password",
+              "type": "Password",
+              "label": "Create Password",
+              "placeholder": "Enter secure password"
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "budget",
+              "type": "Number",
+              "label": "Budget Range (EUR)",
+              "placeholder": "5000"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "row_datetime",
+      "type": "Row",
+      "label": "Schedule",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "preferred_date",
+              "type": "Date",
+              "label": "Preferred Date"
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "preferred_time",
+              "type": "Time",
+              "label": "Preferred Time"
+            }
+          ]
+        }
+      ],
+      "Columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "preferred_date",
+              "type": "Date",
+              "label": "Preferred Date"
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "preferred_time",
+              "type": "Time",
+              "label": "Preferred Time"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "product_interest",
+      "type": "Select",
+      "label": "Service Interest",
+      "required": true,
+      "options": [
+        {
+          "label": "Wedding Planning",
+          "value": "wedding"
+        },
+        {
+          "label": "Event Design",
+          "value": "event"
+        },
+        {
+          "label": "Travel Experience",
+          "value": "travel"
+        },
+        {
+          "label": "Culinary Experience",
+          "value": "culinary"
+        },
+        {
+          "label": "Photography",
+          "value": "photography"
+        },
+        {
+          "label": "Other",
+          "value": "other"
+        }
+      ]
+    },
+    {
+      "key": "message",
+      "type": "Textarea",
+      "label": "Your Message",
+      "required": true,
+      "placeholder": "Tell us about your dream experience...",
+      "properties": {
+        "rows": 4
+      }
+    },
+    {
+      "key": "attendance_mode",
+      "type": "Radio",
+      "label": "Preferred Contact Method",
+      "required": true,
+      "options": [
+        {
+          "label": "Email",
+          "value": "email"
+        },
+        {
+          "label": "Phone Call",
+          "value": "phone"
+        },
+        {
+          "label": "Video Call",
+          "value": "video"
+        },
+        {
+          "label": "In Person",
+          "value": "in_person"
+        }
+      ]
+    },
+    {
+      "key": "file_upload",
+      "type": "File",
+      "label": "Upload Reference Images",
+      "placeholder": "Drag files here or click to browse"
+    },
+    {
+      "key": "signature",
+      "type": "Signature",
+      "label": "Your Signature"
+    },
+    {
+      "key": "agree_terms",
+      "type": "Checkbox",
+      "label": "I agree to the terms of service and privacy policy",
+      "required": true
+    }
+  ],
+  "submitButtonText": "Submit",
+  "successMessage": "",
+  "customHtml": "<div class=\"mfp\">\n  <div class=\"mfp-branding\">\n    <div class=\"mfp-branding-logo\">\n      <svg viewBox=\"0 0 48 48\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n        <circle cx=\"24\" cy=\"24\" r=\"22\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\"/>\n        <path d=\"M24 8C24 8 16 14 16 22C16 26 18 30 24 34C30 30 32 26 32 22C32 14 24 8 24 8Z\" fill=\"currentColor\" opacity=\"0.15\"/>\n        <path d=\"M24 12C24 12 19 16 19 22C19 25 20.5 28 24 31C27.5 28 29 25 29 22C29 16 24 12 24 12Z\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\"/>\n        <circle cx=\"24\" cy=\"21\" r=\"3\" fill=\"currentColor\"/>\n      </svg>\n    </div>\n    <div class=\"mfp-branding-text\">\n      <div class=\"mfp-branding-title\">{{content:brand_title}}</div>\n      <div class=\"mfp-branding-subtitle\">{{content:brand_subtitle}}</div>\n    </div>\n  </div>\n\n  <div class=\"mfp-card\">\n    <div class=\"mfp-header\">\n      <h1 class=\"mfp-title\">{{form:title}}</h1>\n      <p class=\"mfp-description\">{{form:description}}</p>\n    </div>\n\n    <div class=\"mfp-body\">\n      <div class=\"mfp-section\">\n        <div class=\"mfp-section-header\">\n          <span class=\"mfp-section-icon\"><svg viewBox=\"0 0 20 20\" fill=\"currentColor\"><path d=\"M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z\"/></svg></span>\n          <span class=\"mfp-section-title\">{{content:section_contact}}</span>\n        </div>\n        <div class=\"mfp-grid\">\n          <div class=\"mfp-field mfp-field--half\">{{field:first_name}}</div>\n          <div class=\"mfp-field mfp-field--half\">{{field:last_name}}</div>\n          <div class=\"mfp-field mfp-field--half\">{{field:email}}</div>\n          <div class=\"mfp-field mfp-field--half\">{{field:phone}}</div>\n          <div class=\"mfp-field mfp-field--half\">{{field:website}}</div>\n          <div class=\"mfp-field mfp-field--half\">{{field:search}}</div>\n        </div>\n      </div>\n\n      <div class=\"mfp-section\">\n        <div class=\"mfp-section-header\">\n          <span class=\"mfp-section-icon\"><svg viewBox=\"0 0 20 20\" fill=\"currentColor\"><path fill-rule=\"evenodd\" d=\"M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z\" clip-rule=\"evenodd\"/></svg></span>\n          <span class=\"mfp-section-title\">{{content:section_preferences}}</span>\n        </div>\n        <div class=\"mfp-grid\">\n          <div class=\"mfp-field mfp-field--half\">{{field:password}}</div>\n          <div class=\"mfp-field mfp-field--half\">{{field:budget}}</div>\n          <div class=\"mfp-field mfp-field--half\">{{field:preferred_date}}</div>\n          <div class=\"mfp-field mfp-field--half\">{{field:preferred_time}}</div>\n          <div class=\"mfp-field mfp-field--full\">{{field:product_interest}}</div>\n          <div class=\"mfp-field mfp-field--full\">{{field:message}}</div>\n          <div class=\"mfp-field mfp-field--full\">{{field:attendance_mode}}</div>\n          <div class=\"mfp-field mfp-field--full\"></div>\n        </div>\n      </div>\n\n      <div class=\"mfp-section\">\n        <div class=\"mfp-section-header\">\n          <span class=\"mfp-section-icon\"><svg viewBox=\"0 0 20 20\" fill=\"currentColor\"><path fill-rule=\"evenodd\" d=\"M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z\" clip-rule=\"evenodd\"/></svg></span>\n          <span class=\"mfp-section-title\">{{content:section_upload}}</span>\n        </div>\n        <div class=\"mfp-grid\">\n          <div class=\"mfp-field mfp-field--full\">{{field:file_upload}}</div>\n          <div class=\"mfp-field mfp-field--full\">{{field:signature}}</div>\n          <div class=\"mfp-field mfp-field--full\">{{field:agree_terms}}</div>\n        </div>\n      </div>\n    </div>\n\n    <div class=\"mfp-pager\">\n      <!-- Multi-page navigation hook: system will inject step indicators here -->\n    </div>\n\n    <div class=\"mfp-submit\">\n      <button type=\"submit\">{{form:submit}}</button>\n    </div>\n\n    <div class=\"mfp-footer\">\n      <p>{{content:footer_note}}</p>\n    </div>\n  </div>\n</div>",
+  "customCss": "@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Poppins:wght@300;400;500;600;700&display=swap');\n\n:root{\n  --mfp-bg:linear-gradient(145deg,#fef7f0 0%,#fff5eb 25%,#fce4d6 50%,#ffecd9 75%,#fffaf5 100%);\n  --mfp-card-bg:#ffffff;\n  --mfp-border:#f0d9c8;\n  --mfp-text:#3d2914;\n  --mfp-muted:#8b7355;\n  --mfp-accent:#d4764e;\n  --mfp-accent-light:#f5a67a;\n  --mfp-accent-strong:#c25d35;\n  --mfp-terracotta:#c9775d;\n  --mfp-olive:#7c8c5d;\n  --mfp-gold:#d4a574;\n  --mfp-cream:#fdf6ef;\n  --mfp-radius:16px;\n  --mfp-radius-sm:10px;\n  --mfp-shadow:0 8px 32px rgba(180,120,80,0.12);\n  --mfp-shadow-hover:0 12px 40px rgba(180,120,80,0.18);\n  --mfp-input-bg:#fffbf7;\n  --mfp-input-border:#e8d5c4;\n  --mfp-input-icon:#c9a88a;\n  --mfp-font-display:'Cormorant Garamond',Georgia,serif;\n  --mfp-font-body:'Poppins',system-ui,-apple-system,sans-serif\n}\n\n*{box-sizing:border-box;margin:0;padding:0}\n\n.mfp{\n  font-family:var(--mfp-font-body);\n  color:var(--mfp-text);\n  background:var(--mfp-bg);\n  min-height:100vh;\n  padding:40px 20px;\n  line-height:1.6\n}\n\n.mfp-branding{\n  display:flex;\n  align-items:center;\n  justify-content:center;\n  gap:12px;\n  padding:16px 20px 24px;\n  text-align:center\n}\n\n.mfp-branding-logo{\n  width:40px;\n  height:40px;\n  color:var(--mfp-accent);\n  flex-shrink:0\n}\n\n.mfp-branding-logo svg{\n  width:100%;\n  height:100%\n}\n\n.mfp-branding-text{\n  text-align:left\n}\n\n.mfp-branding-title{\n  font-family:var(--mfp-font-display);\n  font-size:22px;\n  font-weight:600;\n  color:var(--mfp-text);\n  letter-spacing:0.02em;\n  line-height:1.1\n}\n\n.mfp-branding-subtitle{\n  font-size:11px;\n  font-weight:400;\n  color:var(--mfp-muted);\n  letter-spacing:0.06em;\n  text-transform:uppercase;\n  margin-top:2px\n}\n\n.mfp-card{\n  max-width:800px;\n  margin:0 auto;\n  background:var(--mfp-card-bg);\n  border-radius:var(--mfp-radius);\n  box-shadow:var(--mfp-shadow);\n  overflow:hidden;\n  border:1px solid var(--mfp-border)\n}\n\n.mfp-header{\n  padding:40px 40px 32px;\n  text-align:center;\n  background:linear-gradient(180deg,#fffaf5 0%,#ffffff 100%);\n  border-bottom:1px solid var(--mfp-border)\n}\n\n.mfp-title{\n  font-family:var(--mfp-font-display);\n  font-size:36px;\n  font-weight:600;\n  color:var(--mfp-text);\n  margin-bottom:12px;\n  letter-spacing:0.01em\n}\n\n.mfp-description{\n  font-size:15px;\n  color:var(--mfp-muted);\n  max-width:480px;\n  margin:0 auto;\n  line-height:1.7\n}\n\n.mfp-body{\n  padding:32px 40px\n}\n\n.mfp-section{\n  margin-bottom:36px\n}\n\n.mfp-section:last-child{\n  margin-bottom:0\n}\n\n.mfp-section-header{\n  display:flex;\n  align-items:center;\n  gap:10px;\n  margin-bottom:20px;\n  padding-bottom:12px;\n  border-bottom:1px dashed var(--mfp-border)\n}\n\n.mfp-section-icon{\n  width:22px;\n  height:22px;\n  color:var(--mfp-accent);\n  flex-shrink:0\n}\n\n.mfp-section-icon svg{\n  width:100%;\n  height:100%\n}\n\n.mfp-section-title{\n  font-family:var(--mfp-font-display);\n  font-size:20px;\n  font-weight:600;\n  color:var(--mfp-text);\n  letter-spacing:0.02em\n}\n\n.mfp-grid{\n  display:grid;\n  grid-template-columns:repeat(2,1fr);\n  gap:20px\n}\n\n.mfp-field{\n  position:relative\n}\n\n.mfp-field--half{\n  grid-column:span 1\n}\n\n.mfp-field--full{\n  grid-column:span 2\n}\n\n.mfp label{\n  display:block;\n  font-size:13px;\n  font-weight:500;\n  color:var(--mfp-text);\n  margin-bottom:6px\n}\n\n.mfp input[type=\"text\"],\n.mfp input[type=\"email\"],\n.mfp input[type=\"tel\"],\n.mfp input[type=\"url\"],\n.mfp input[type=\"number\"],\n.mfp input[type=\"password\"],\n.mfp input[type=\"search\"],\n.mfp input[type=\"date\"],\n.mfp input[type=\"time\"],\n.mfp select,\n.mfp textarea{\n  width:100%;\n  padding:14px 16px;\n  font-size:15px;\n  font-family:var(--mfp-font-body);\n  color:var(--mfp-text);\n  background:var(--mfp-input-bg);\n  border:1px solid var(--mfp-input-border);\n  border-radius:var(--mfp-radius-sm);\n  transition:all 0.25s ease;\n  outline:none\n}\n\n.mfp input:hover,\n.mfp select:hover,\n.mfp textarea:hover{\n  border-color:var(--mfp-gold)\n}\n\n.mfp input:focus,\n.mfp select:focus,\n.mfp textarea:focus{\n  background:#ffffff;\n  border-color:var(--mfp-accent);\n  box-shadow:0 0 0 3px rgba(212,118,78,0.12)\n}\n\n.mfp input::placeholder,\n.mfp textarea::placeholder{\n  color:var(--mfp-muted);\n  opacity:0.7\n}\n\n.mfp select{\n  cursor:pointer;\n  appearance:none;\n  background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238b7355' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\");\n  background-repeat:no-repeat;\n  background-position:right 14px center;\n  padding-right:44px\n}\n\n.mfp textarea{\n  resize:vertical;\n  min-height:120px;\n  line-height:1.6\n}\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n.mfp-pager{\n  padding:0 40px;\n  min-height:0\n}\n\n.mfp-pager:empty{\n  display:none\n}\n\n.mfp-submit{\n  padding:24px 40px 32px;\n  text-align:center\n}\n\n.mfp-submit button{\n  display:inline-flex;\n  align-items:center;\n  justify-content:center;\n  gap:10px;\n  padding:16px 48px;\n  font-size:15px;\n  font-weight:600;\n  font-family:var(--mfp-font-body);\n  color:#ffffff;\n  background:linear-gradient(135deg,var(--mfp-accent) 0%,var(--mfp-accent-strong) 100%);\n  border:none;\n  border-radius:50px;\n  cursor:pointer;\n  transition:all 0.3s ease;\n  box-shadow:0 4px 16px rgba(212,118,78,0.3);\n  text-transform:uppercase;\n  letter-spacing:0.08em\n}\n\n.mfp-submit button:hover{\n  transform:translateY(-2px);\n  box-shadow:0 8px 24px rgba(212,118,78,0.4)\n}\n\n.mfp-submit button:active{\n  transform:translateY(0);\n  box-shadow:0 4px 12px rgba(212,118,78,0.3)\n}\n\n.mfp-footer{\n  padding:20px 40px;\n  text-align:center;\n  background:var(--mfp-cream);\n  border-top:1px solid var(--mfp-border)\n}\n\n.mfp-footer p{\n  font-size:12px;\n  color:var(--mfp-muted);\n  margin:0\n}\n\n@media(max-width:768px){\n  .mfp{\n    padding:24px 16px\n  }\n  .mfp-branding{\n    flex-direction:column;\n    gap:12px\n  }\n  .mfp-branding-text{\n    text-align:center\n  }\n  .mfp-branding-title{\n    font-size:28px\n  }\n  .mfp-card{\n    border-radius:var(--mfp-radius-sm)\n  }\n  .mfp-header{\n    padding:28px 24px 24px\n  }\n  .mfp-title{\n    font-size:28px\n  }\n  .mfp-body{\n    padding:24px\n  }\n  .mfp-grid{\n    grid-template-columns:1fr\n  }\n  .mfp-field--half,\n  .mfp-field--full{\n    grid-column:span 1\n  }\n  .mfp-submit{\n    padding:20px 24px 28px\n  }\n  .mfp-submit button{\n    width:100%;\n    padding:16px 32px\n  }\n  .mfp-footer{\n    padding:16px 24px\n  }\n}.mfp .mf-option-group{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}.mfp .mf-option-item{display:flex!important;align-items:center;padding:10px 14px;background:var(--mfp-input-bg);border:1px solid var(--mfp-input-border);border-radius:8px;cursor:pointer;transition:all 0.25s ease;margin-bottom:0;gap:10px}.mfp .mf-option-item::before{content:'';width:18px;height:18px;min-width:18px;border:2px solid var(--mfp-input-border);border-radius:50%;transition:all 0.25s ease;flex-shrink:0}.mfp .mf-option-ui{flex:1}.mfp .mf-option-label{font-size:14px;font-weight:400;color:var(--mfp-text)}.mfp .mf-option-control{display:none!important}.mfp .mf-option-item:has(.mf-option-control:checked){background:rgba(212,118,78,0.08);border-color:var(--mfp-accent)}.mfp .mf-option-item:has(.mf-option-control:checked) .mf-option-label{color:var(--mfp-accent-strong)}.mfp .mf-option-item:has(.mf-option-control:checked)::before{border-color:var(--mfp-accent);background:var(--mfp-accent);box-shadow:inset 0 0 0 4px #fff}.mfp .mf-field--checkbox .mf-option-item::before{border-radius:6px}.mfp .mf-field--checkbox .mf-option-item:has(.mf-option-control:checked)::before{background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:center;box-shadow:none}.mfp .mf-option-item:hover{border-color:var(--mfp-gold);background:rgba(212,165,116,0.06)}",
+  "rules": [],
+  "workflow": null,
+  "settings": {
+    "theme": "italian-romantic",
+    "multiPage": false,
+    "customContent": {
+      "brand_title": "Bella Vista",
+      "brand_subtitle": "Where Dreams Come True",
+      "section_contact": "Contact Information",
+      "section_preferences": "Preferences & Details",
+      "section_upload": "Documents & Signature",
+      "footer_note": "Your information is protected and will never be shared."
+    },
+    "customHtml": "<div class=\"mfp\">\n  <div class=\"mfp-branding\">\n    <div class=\"mfp-branding-logo\">\n      <svg viewBox=\"0 0 48 48\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n        <circle cx=\"24\" cy=\"24\" r=\"22\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\"/>\n        <path d=\"M24 8C24 8 16 14 16 22C16 26 18 30 24 34C30 30 32 26 32 22C32 14 24 8 24 8Z\" fill=\"currentColor\" opacity=\"0.15\"/>\n        <path d=\"M24 12C24 12 19 16 19 22C19 25 20.5 28 24 31C27.5 28 29 25 29 22C29 16 24 12 24 12Z\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\"/>\n        <circle cx=\"24\" cy=\"21\" r=\"3\" fill=\"currentColor\"/>\n      </svg>\n    </div>\n    <div class=\"mfp-branding-text\">\n      <div class=\"mfp-branding-title\">{{content:brand_title}}</div>\n      <div class=\"mfp-branding-subtitle\">{{content:brand_subtitle}}</div>\n    </div>\n  </div>\n\n  <div class=\"mfp-card\">\n    <div class=\"mfp-header\">\n      <h1 class=\"mfp-title\">{{form:title}}</h1>\n      <p class=\"mfp-description\">{{form:description}}</p>\n    </div>\n\n    <div class=\"mfp-body\">\n      <div class=\"mfp-section\">\n        <div class=\"mfp-section-header\">\n          <span class=\"mfp-section-icon\"><svg viewBox=\"0 0 20 20\" fill=\"currentColor\"><path d=\"M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z\"/></svg></span>\n          <span class=\"mfp-section-title\">{{content:section_contact}}</span>\n        </div>\n        <div class=\"mfp-grid\">\n          <div class=\"mfp-field mfp-field--half\">{{field:first_name}}</div>\n          <div class=\"mfp-field mfp-field--half\">{{field:last_name}}</div>\n          <div class=\"mfp-field mfp-field--half\">{{field:email}}</div>\n          <div class=\"mfp-field mfp-field--half\">{{field:phone}}</div>\n          <div class=\"mfp-field mfp-field--half\">{{field:website}}</div>\n          <div class=\"mfp-field mfp-field--half\">{{field:search}}</div>\n        </div>\n      </div>\n\n      <div class=\"mfp-section\">\n        <div class=\"mfp-section-header\">\n          <span class=\"mfp-section-icon\"><svg viewBox=\"0 0 20 20\" fill=\"currentColor\"><path fill-rule=\"evenodd\" d=\"M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z\" clip-rule=\"evenodd\"/></svg></span>\n          <span class=\"mfp-section-title\">{{content:section_preferences}}</span>\n        </div>\n        <div class=\"mfp-grid\">\n          <div class=\"mfp-field mfp-field--half\">{{field:password}}</div>\n          <div class=\"mfp-field mfp-field--half\">{{field:budget}}</div>\n          <div class=\"mfp-field mfp-field--half\">{{field:preferred_date}}</div>\n          <div class=\"mfp-field mfp-field--half\">{{field:preferred_time}}</div>\n          <div class=\"mfp-field mfp-field--full\">{{field:product_interest}}</div>\n          <div class=\"mfp-field mfp-field--full\">{{field:message}}</div>\n          <div class=\"mfp-field mfp-field--full\">{{field:attendance_mode}}</div>\n          <div class=\"mfp-field mfp-field--full\"></div>\n        </div>\n      </div>\n\n      <div class=\"mfp-section\">\n        <div class=\"mfp-section-header\">\n          <span class=\"mfp-section-icon\"><svg viewBox=\"0 0 20 20\" fill=\"currentColor\"><path fill-rule=\"evenodd\" d=\"M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z\" clip-rule=\"evenodd\"/></svg></span>\n          <span class=\"mfp-section-title\">{{content:section_upload}}</span>\n        </div>\n        <div class=\"mfp-grid\">\n          <div class=\"mfp-field mfp-field--full\">{{field:file_upload}}</div>\n          <div class=\"mfp-field mfp-field--full\">{{field:signature}}</div>\n          <div class=\"mfp-field mfp-field--full\">{{field:agree_terms}}</div>\n        </div>\n      </div>\n    </div>\n\n    <div class=\"mfp-pager\">\n      <!-- Multi-page navigation hook: system will inject step indicators here -->\n    </div>\n\n    <div class=\"mfp-submit\">\n      <button type=\"submit\">{{form:submit}}</button>\n    </div>\n\n    <div class=\"mfp-footer\">\n      <p>{{content:footer_note}}</p>\n    </div>\n  </div>\n</div>",
+    "customCss": "@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Poppins:wght@300;400;500;600;700&display=swap');\n\n:root{\n  --mfp-bg:linear-gradient(145deg,#fef7f0 0%,#fff5eb 25%,#fce4d6 50%,#ffecd9 75%,#fffaf5 100%);\n  --mfp-card-bg:#ffffff;\n  --mfp-border:#f0d9c8;\n  --mfp-text:#3d2914;\n  --mfp-muted:#8b7355;\n  --mfp-accent:#d4764e;\n  --mfp-accent-light:#f5a67a;\n  --mfp-accent-strong:#c25d35;\n  --mfp-terracotta:#c9775d;\n  --mfp-olive:#7c8c5d;\n  --mfp-gold:#d4a574;\n  --mfp-cream:#fdf6ef;\n  --mfp-radius:16px;\n  --mfp-radius-sm:10px;\n  --mfp-shadow:0 8px 32px rgba(180,120,80,0.12);\n  --mfp-shadow-hover:0 12px 40px rgba(180,120,80,0.18);\n  --mfp-input-bg:#fffbf7;\n  --mfp-input-border:#e8d5c4;\n  --mfp-input-icon:#c9a88a;\n  --mfp-font-display:'Cormorant Garamond',Georgia,serif;\n  --mfp-font-body:'Poppins',system-ui,-apple-system,sans-serif\n}\n\n*{box-sizing:border-box;margin:0;padding:0}\n\n.mfp{\n  font-family:var(--mfp-font-body);\n  color:var(--mfp-text);\n  background:var(--mfp-bg);\n  min-height:100vh;\n  padding:40px 20px;\n  line-height:1.6\n}\n\n.mfp-branding{\n  display:flex;\n  align-items:center;\n  justify-content:center;\n  gap:12px;\n  padding:16px 20px 24px;\n  text-align:center\n}\n\n.mfp-branding-logo{\n  width:40px;\n  height:40px;\n  color:var(--mfp-accent);\n  flex-shrink:0\n}\n\n.mfp-branding-logo svg{\n  width:100%;\n  height:100%\n}\n\n.mfp-branding-text{\n  text-align:left\n}\n\n.mfp-branding-title{\n  font-family:var(--mfp-font-display);\n  font-size:22px;\n  font-weight:600;\n  color:var(--mfp-text);\n  letter-spacing:0.02em;\n  line-height:1.1\n}\n\n.mfp-branding-subtitle{\n  font-size:11px;\n  font-weight:400;\n  color:var(--mfp-muted);\n  letter-spacing:0.06em;\n  text-transform:uppercase;\n  margin-top:2px\n}\n\n.mfp-card{\n  max-width:800px;\n  margin:0 auto;\n  background:var(--mfp-card-bg);\n  border-radius:var(--mfp-radius);\n  box-shadow:var(--mfp-shadow);\n  overflow:hidden;\n  border:1px solid var(--mfp-border)\n}\n\n.mfp-header{\n  padding:40px 40px 32px;\n  text-align:center;\n  background:linear-gradient(180deg,#fffaf5 0%,#ffffff 100%);\n  border-bottom:1px solid var(--mfp-border)\n}\n\n.mfp-title{\n  font-family:var(--mfp-font-display);\n  font-size:36px;\n  font-weight:600;\n  color:var(--mfp-text);\n  margin-bottom:12px;\n  letter-spacing:0.01em\n}\n\n.mfp-description{\n  font-size:15px;\n  color:var(--mfp-muted);\n  max-width:480px;\n  margin:0 auto;\n  line-height:1.7\n}\n\n.mfp-body{\n  padding:32px 40px\n}\n\n.mfp-section{\n  margin-bottom:36px\n}\n\n.mfp-section:last-child{\n  margin-bottom:0\n}\n\n.mfp-section-header{\n  display:flex;\n  align-items:center;\n  gap:10px;\n  margin-bottom:20px;\n  padding-bottom:12px;\n  border-bottom:1px dashed var(--mfp-border)\n}\n\n.mfp-section-icon{\n  width:22px;\n  height:22px;\n  color:var(--mfp-accent);\n  flex-shrink:0\n}\n\n.mfp-section-icon svg{\n  width:100%;\n  height:100%\n}\n\n.mfp-section-title{\n  font-family:var(--mfp-font-display);\n  font-size:20px;\n  font-weight:600;\n  color:var(--mfp-text);\n  letter-spacing:0.02em\n}\n\n.mfp-grid{\n  display:grid;\n  grid-template-columns:repeat(2,1fr);\n  gap:20px\n}\n\n.mfp-field{\n  position:relative\n}\n\n.mfp-field--half{\n  grid-column:span 1\n}\n\n.mfp-field--full{\n  grid-column:span 2\n}\n\n.mfp label{\n  display:block;\n  font-size:13px;\n  font-weight:500;\n  color:var(--mfp-text);\n  margin-bottom:6px\n}\n\n.mfp input[type=\"text\"],\n.mfp input[type=\"email\"],\n.mfp input[type=\"tel\"],\n.mfp input[type=\"url\"],\n.mfp input[type=\"number\"],\n.mfp input[type=\"password\"],\n.mfp input[type=\"search\"],\n.mfp input[type=\"date\"],\n.mfp input[type=\"time\"],\n.mfp select,\n.mfp textarea{\n  width:100%;\n  padding:14px 16px;\n  font-size:15px;\n  font-family:var(--mfp-font-body);\n  color:var(--mfp-text);\n  background:var(--mfp-input-bg);\n  border:1px solid var(--mfp-input-border);\n  border-radius:var(--mfp-radius-sm);\n  transition:all 0.25s ease;\n  outline:none\n}\n\n.mfp input:hover,\n.mfp select:hover,\n.mfp textarea:hover{\n  border-color:var(--mfp-gold)\n}\n\n.mfp input:focus,\n.mfp select:focus,\n.mfp textarea:focus{\n  background:#ffffff;\n  border-color:var(--mfp-accent);\n  box-shadow:0 0 0 3px rgba(212,118,78,0.12)\n}\n\n.mfp input::placeholder,\n.mfp textarea::placeholder{\n  color:var(--mfp-muted);\n  opacity:0.7\n}\n\n.mfp select{\n  cursor:pointer;\n  appearance:none;\n  background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238b7355' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\");\n  background-repeat:no-repeat;\n  background-position:right 14px center;\n  padding-right:44px\n}\n\n.mfp textarea{\n  resize:vertical;\n  min-height:120px;\n  line-height:1.6\n}\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n.mfp-pager{\n  padding:0 40px;\n  min-height:0\n}\n\n.mfp-pager:empty{\n  display:none\n}\n\n.mfp-submit{\n  padding:24px 40px 32px;\n  text-align:center\n}\n\n.mfp-submit button{\n  display:inline-flex;\n  align-items:center;\n  justify-content:center;\n  gap:10px;\n  padding:16px 48px;\n  font-size:15px;\n  font-weight:600;\n  font-family:var(--mfp-font-body);\n  color:#ffffff;\n  background:linear-gradient(135deg,var(--mfp-accent) 0%,var(--mfp-accent-strong) 100%);\n  border:none;\n  border-radius:50px;\n  cursor:pointer;\n  transition:all 0.3s ease;\n  box-shadow:0 4px 16px rgba(212,118,78,0.3);\n  text-transform:uppercase;\n  letter-spacing:0.08em\n}\n\n.mfp-submit button:hover{\n  transform:translateY(-2px);\n  box-shadow:0 8px 24px rgba(212,118,78,0.4)\n}\n\n.mfp-submit button:active{\n  transform:translateY(0);\n  box-shadow:0 4px 12px rgba(212,118,78,0.3)\n}\n\n.mfp-footer{\n  padding:20px 40px;\n  text-align:center;\n  background:var(--mfp-cream);\n  border-top:1px solid var(--mfp-border)\n}\n\n.mfp-footer p{\n  font-size:12px;\n  color:var(--mfp-muted);\n  margin:0\n}\n\n@media(max-width:768px){\n  .mfp{\n    padding:24px 16px\n  }\n  .mfp-branding{\n    flex-direction:column;\n    gap:12px\n  }\n  .mfp-branding-text{\n    text-align:center\n  }\n  .mfp-branding-title{\n    font-size:28px\n  }\n  .mfp-card{\n    border-radius:var(--mfp-radius-sm)\n  }\n  .mfp-header{\n    padding:28px 24px 24px\n  }\n  .mfp-title{\n    font-size:28px\n  }\n  .mfp-body{\n    padding:24px\n  }\n  .mfp-grid{\n    grid-template-columns:1fr\n  }\n  .mfp-field--half,\n  .mfp-field--full{\n    grid-column:span 1\n  }\n  .mfp-submit{\n    padding:20px 24px 28px\n  }\n  .mfp-submit button{\n    width:100%;\n    padding:16px 32px\n  }\n  .mfp-footer{\n    padding:16px 24px\n  }\n}.mfp .mf-option-group{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}.mfp .mf-option-item{display:flex!important;align-items:center;padding:10px 14px;background:var(--mfp-input-bg);border:1px solid var(--mfp-input-border);border-radius:8px;cursor:pointer;transition:all 0.25s ease;margin-bottom:0;gap:10px}.mfp .mf-option-item::before{content:'';width:18px;height:18px;min-width:18px;border:2px solid var(--mfp-input-border);border-radius:50%;transition:all 0.25s ease;flex-shrink:0}.mfp .mf-option-ui{flex:1}.mfp .mf-option-label{font-size:14px;font-weight:400;color:var(--mfp-text)}.mfp .mf-option-control{display:none!important}.mfp .mf-option-item:has(.mf-option-control:checked){background:rgba(212,118,78,0.08);border-color:var(--mfp-accent)}.mfp .mf-option-item:has(.mf-option-control:checked) .mf-option-label{color:var(--mfp-accent-strong)}.mfp .mf-option-item:has(.mf-option-control:checked)::before{border-color:var(--mfp-accent);background:var(--mfp-accent);box-shadow:inset 0 0 0 4px #fff}.mfp .mf-field--checkbox .mf-option-item::before{border-radius:6px}.mfp .mf-field--checkbox .mf-option-item:has(.mf-option-control:checked)::before{background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:center;box-shadow:none}.mfp .mf-option-item:hover{border-color:var(--mfp-gold);background:rgba(212,165,116,0.06)}",
+    "rules": [],
+    "workflowTemplate": null,
+    "customScripts": {},
+    "CustomHtml": "<div class=\"mfp\">\n  <div class=\"mfp-branding\">\n    <div class=\"mfp-branding-logo\">\n      <svg viewBox=\"0 0 48 48\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n        <circle cx=\"24\" cy=\"24\" r=\"22\" stroke=\"currentColor\" stroke-width=\"2\" fill=\"none\"/>\n        <path d=\"M24 8C24 8 16 14 16 22C16 26 18 30 24 34C30 30 32 26 32 22C32 14 24 8 24 8Z\" fill=\"currentColor\" opacity=\"0.15\"/>\n        <path d=\"M24 12C24 12 19 16 19 22C19 25 20.5 28 24 31C27.5 28 29 25 29 22C29 16 24 12 24 12Z\" stroke=\"currentColor\" stroke-width=\"1.5\" fill=\"none\"/>\n        <circle cx=\"24\" cy=\"21\" r=\"3\" fill=\"currentColor\"/>\n      </svg>\n    </div>\n    <div class=\"mfp-branding-text\">\n      <div class=\"mfp-branding-title\">{{content:brand_title}}</div>\n      <div class=\"mfp-branding-subtitle\">{{content:brand_subtitle}}</div>\n    </div>\n  </div>\n\n  <div class=\"mfp-card\">\n    <div class=\"mfp-header\">\n      <h1 class=\"mfp-title\">{{form:title}}</h1>\n      <p class=\"mfp-description\">{{form:description}}</p>\n    </div>\n\n    <div class=\"mfp-body\">\n      <div class=\"mfp-section\">\n        <div class=\"mfp-section-header\">\n          <span class=\"mfp-section-icon\"><svg viewBox=\"0 0 20 20\" fill=\"currentColor\"><path d=\"M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z\"/></svg></span>\n          <span class=\"mfp-section-title\">{{content:section_contact}}</span>\n        </div>\n        <div class=\"mfp-grid\">\n          <div class=\"mfp-field mfp-field--half\">{{field:first_name}}</div>\n          <div class=\"mfp-field mfp-field--half\">{{field:last_name}}</div>\n          <div class=\"mfp-field mfp-field--half\">{{field:email}}</div>\n          <div class=\"mfp-field mfp-field--half\">{{field:phone}}</div>\n          <div class=\"mfp-field mfp-field--half\">{{field:website}}</div>\n          <div class=\"mfp-field mfp-field--half\">{{field:search}}</div>\n        </div>\n      </div>\n\n      <div class=\"mfp-section\">\n        <div class=\"mfp-section-header\">\n          <span class=\"mfp-section-icon\"><svg viewBox=\"0 0 20 20\" fill=\"currentColor\"><path fill-rule=\"evenodd\" d=\"M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z\" clip-rule=\"evenodd\"/></svg></span>\n          <span class=\"mfp-section-title\">{{content:section_preferences}}</span>\n        </div>\n        <div class=\"mfp-grid\">\n          <div class=\"mfp-field mfp-field--half\">{{field:password}}</div>\n          <div class=\"mfp-field mfp-field--half\">{{field:budget}}</div>\n          <div class=\"mfp-field mfp-field--half\">{{field:preferred_date}}</div>\n          <div class=\"mfp-field mfp-field--half\">{{field:preferred_time}}</div>\n          <div class=\"mfp-field mfp-field--full\">{{field:product_interest}}</div>\n          <div class=\"mfp-field mfp-field--full\">{{field:message}}</div>\n          <div class=\"mfp-field mfp-field--full\">{{field:attendance_mode}}</div>\n          <div class=\"mfp-field mfp-field--full\"></div>\n        </div>\n      </div>\n\n      <div class=\"mfp-section\">\n        <div class=\"mfp-section-header\">\n          <span class=\"mfp-section-icon\"><svg viewBox=\"0 0 20 20\" fill=\"currentColor\"><path fill-rule=\"evenodd\" d=\"M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z\" clip-rule=\"evenodd\"/></svg></span>\n          <span class=\"mfp-section-title\">{{content:section_upload}}</span>\n        </div>\n        <div class=\"mfp-grid\">\n          <div class=\"mfp-field mfp-field--full\">{{field:file_upload}}</div>\n          <div class=\"mfp-field mfp-field--full\">{{field:signature}}</div>\n          <div class=\"mfp-field mfp-field--full\">{{field:agree_terms}}</div>\n        </div>\n      </div>\n    </div>\n\n    <div class=\"mfp-pager\">\n      <!-- Multi-page navigation hook: system will inject step indicators here -->\n    </div>\n\n    <div class=\"mfp-submit\">\n      <button type=\"submit\">{{form:submit}}</button>\n    </div>\n\n    <div class=\"mfp-footer\">\n      <p>{{content:footer_note}}</p>\n    </div>\n  </div>\n</div>",
+    "CustomCss": "@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Poppins:wght@300;400;500;600;700&display=swap');\n\n:root{\n  --mfp-bg:linear-gradient(145deg,#fef7f0 0%,#fff5eb 25%,#fce4d6 50%,#ffecd9 75%,#fffaf5 100%);\n  --mfp-card-bg:#ffffff;\n  --mfp-border:#f0d9c8;\n  --mfp-text:#3d2914;\n  --mfp-muted:#8b7355;\n  --mfp-accent:#d4764e;\n  --mfp-accent-light:#f5a67a;\n  --mfp-accent-strong:#c25d35;\n  --mfp-terracotta:#c9775d;\n  --mfp-olive:#7c8c5d;\n  --mfp-gold:#d4a574;\n  --mfp-cream:#fdf6ef;\n  --mfp-radius:16px;\n  --mfp-radius-sm:10px;\n  --mfp-shadow:0 8px 32px rgba(180,120,80,0.12);\n  --mfp-shadow-hover:0 12px 40px rgba(180,120,80,0.18);\n  --mfp-input-bg:#fffbf7;\n  --mfp-input-border:#e8d5c4;\n  --mfp-input-icon:#c9a88a;\n  --mfp-font-display:'Cormorant Garamond',Georgia,serif;\n  --mfp-font-body:'Poppins',system-ui,-apple-system,sans-serif\n}\n\n*{box-sizing:border-box;margin:0;padding:0}\n\n.mfp{\n  font-family:var(--mfp-font-body);\n  color:var(--mfp-text);\n  background:var(--mfp-bg);\n  min-height:100vh;\n  padding:40px 20px;\n  line-height:1.6\n}\n\n.mfp-branding{\n  display:flex;\n  align-items:center;\n  justify-content:center;\n  gap:12px;\n  padding:16px 20px 24px;\n  text-align:center\n}\n\n.mfp-branding-logo{\n  width:40px;\n  height:40px;\n  color:var(--mfp-accent);\n  flex-shrink:0\n}\n\n.mfp-branding-logo svg{\n  width:100%;\n  height:100%\n}\n\n.mfp-branding-text{\n  text-align:left\n}\n\n.mfp-branding-title{\n  font-family:var(--mfp-font-display);\n  font-size:22px;\n  font-weight:600;\n  color:var(--mfp-text);\n  letter-spacing:0.02em;\n  line-height:1.1\n}\n\n.mfp-branding-subtitle{\n  font-size:11px;\n  font-weight:400;\n  color:var(--mfp-muted);\n  letter-spacing:0.06em;\n  text-transform:uppercase;\n  margin-top:2px\n}\n\n.mfp-card{\n  max-width:800px;\n  margin:0 auto;\n  background:var(--mfp-card-bg);\n  border-radius:var(--mfp-radius);\n  box-shadow:var(--mfp-shadow);\n  overflow:hidden;\n  border:1px solid var(--mfp-border)\n}\n\n.mfp-header{\n  padding:40px 40px 32px;\n  text-align:center;\n  background:linear-gradient(180deg,#fffaf5 0%,#ffffff 100%);\n  border-bottom:1px solid var(--mfp-border)\n}\n\n.mfp-title{\n  font-family:var(--mfp-font-display);\n  font-size:36px;\n  font-weight:600;\n  color:var(--mfp-text);\n  margin-bottom:12px;\n  letter-spacing:0.01em\n}\n\n.mfp-description{\n  font-size:15px;\n  color:var(--mfp-muted);\n  max-width:480px;\n  margin:0 auto;\n  line-height:1.7\n}\n\n.mfp-body{\n  padding:32px 40px\n}\n\n.mfp-section{\n  margin-bottom:36px\n}\n\n.mfp-section:last-child{\n  margin-bottom:0\n}\n\n.mfp-section-header{\n  display:flex;\n  align-items:center;\n  gap:10px;\n  margin-bottom:20px;\n  padding-bottom:12px;\n  border-bottom:1px dashed var(--mfp-border)\n}\n\n.mfp-section-icon{\n  width:22px;\n  height:22px;\n  color:var(--mfp-accent);\n  flex-shrink:0\n}\n\n.mfp-section-icon svg{\n  width:100%;\n  height:100%\n}\n\n.mfp-section-title{\n  font-family:var(--mfp-font-display);\n  font-size:20px;\n  font-weight:600;\n  color:var(--mfp-text);\n  letter-spacing:0.02em\n}\n\n.mfp-grid{\n  display:grid;\n  grid-template-columns:repeat(2,1fr);\n  gap:20px\n}\n\n.mfp-field{\n  position:relative\n}\n\n.mfp-field--half{\n  grid-column:span 1\n}\n\n.mfp-field--full{\n  grid-column:span 2\n}\n\n.mfp label{\n  display:block;\n  font-size:13px;\n  font-weight:500;\n  color:var(--mfp-text);\n  margin-bottom:6px\n}\n\n.mfp input[type=\"text\"],\n.mfp input[type=\"email\"],\n.mfp input[type=\"tel\"],\n.mfp input[type=\"url\"],\n.mfp input[type=\"number\"],\n.mfp input[type=\"password\"],\n.mfp input[type=\"search\"],\n.mfp input[type=\"date\"],\n.mfp input[type=\"time\"],\n.mfp select,\n.mfp textarea{\n  width:100%;\n  padding:14px 16px;\n  font-size:15px;\n  font-family:var(--mfp-font-body);\n  color:var(--mfp-text);\n  background:var(--mfp-input-bg);\n  border:1px solid var(--mfp-input-border);\n  border-radius:var(--mfp-radius-sm);\n  transition:all 0.25s ease;\n  outline:none\n}\n\n.mfp input:hover,\n.mfp select:hover,\n.mfp textarea:hover{\n  border-color:var(--mfp-gold)\n}\n\n.mfp input:focus,\n.mfp select:focus,\n.mfp textarea:focus{\n  background:#ffffff;\n  border-color:var(--mfp-accent);\n  box-shadow:0 0 0 3px rgba(212,118,78,0.12)\n}\n\n.mfp input::placeholder,\n.mfp textarea::placeholder{\n  color:var(--mfp-muted);\n  opacity:0.7\n}\n\n.mfp select{\n  cursor:pointer;\n  appearance:none;\n  background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238b7355' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\");\n  background-repeat:no-repeat;\n  background-position:right 14px center;\n  padding-right:44px\n}\n\n.mfp textarea{\n  resize:vertical;\n  min-height:120px;\n  line-height:1.6\n}\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n.mfp-pager{\n  padding:0 40px;\n  min-height:0\n}\n\n.mfp-pager:empty{\n  display:none\n}\n\n.mfp-submit{\n  padding:24px 40px 32px;\n  text-align:center\n}\n\n.mfp-submit button{\n  display:inline-flex;\n  align-items:center;\n  justify-content:center;\n  gap:10px;\n  padding:16px 48px;\n  font-size:15px;\n  font-weight:600;\n  font-family:var(--mfp-font-body);\n  color:#ffffff;\n  background:linear-gradient(135deg,var(--mfp-accent) 0%,var(--mfp-accent-strong) 100%);\n  border:none;\n  border-radius:50px;\n  cursor:pointer;\n  transition:all 0.3s ease;\n  box-shadow:0 4px 16px rgba(212,118,78,0.3);\n  text-transform:uppercase;\n  letter-spacing:0.08em\n}\n\n.mfp-submit button:hover{\n  transform:translateY(-2px);\n  box-shadow:0 8px 24px rgba(212,118,78,0.4)\n}\n\n.mfp-submit button:active{\n  transform:translateY(0);\n  box-shadow:0 4px 12px rgba(212,118,78,0.3)\n}\n\n.mfp-footer{\n  padding:20px 40px;\n  text-align:center;\n  background:var(--mfp-cream);\n  border-top:1px solid var(--mfp-border)\n}\n\n.mfp-footer p{\n  font-size:12px;\n  color:var(--mfp-muted);\n  margin:0\n}\n\n@media(max-width:768px){\n  .mfp{\n    padding:24px 16px\n  }\n  .mfp-branding{\n    flex-direction:column;\n    gap:12px\n  }\n  .mfp-branding-text{\n    text-align:center\n  }\n  .mfp-branding-title{\n    font-size:28px\n  }\n  .mfp-card{\n    border-radius:var(--mfp-radius-sm)\n  }\n  .mfp-header{\n    padding:28px 24px 24px\n  }\n  .mfp-title{\n    font-size:28px\n  }\n  .mfp-body{\n    padding:24px\n  }\n  .mfp-grid{\n    grid-template-columns:1fr\n  }\n  .mfp-field--half,\n  .mfp-field--full{\n    grid-column:span 1\n  }\n  .mfp-submit{\n    padding:20px 24px 28px\n  }\n  .mfp-submit button{\n    width:100%;\n    padding:16px 32px\n  }\n  .mfp-footer{\n    padding:16px 24px\n  }\n}.mfp .mf-option-group{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}.mfp .mf-option-item{display:flex!important;align-items:center;padding:10px 14px;background:var(--mfp-input-bg);border:1px solid var(--mfp-input-border);border-radius:8px;cursor:pointer;transition:all 0.25s ease;margin-bottom:0;gap:10px}.mfp .mf-option-item::before{content:'';width:18px;height:18px;min-width:18px;border:2px solid var(--mfp-input-border);border-radius:50%;transition:all 0.25s ease;flex-shrink:0}.mfp .mf-option-ui{flex:1}.mfp .mf-option-label{font-size:14px;font-weight:400;color:var(--mfp-text)}.mfp .mf-option-control{display:none!important}.mfp .mf-option-item:has(.mf-option-control:checked){background:rgba(212,118,78,0.08);border-color:var(--mfp-accent)}.mfp .mf-option-item:has(.mf-option-control:checked) .mf-option-label{color:var(--mfp-accent-strong)}.mfp .mf-option-item:has(.mf-option-control:checked)::before{border-color:var(--mfp-accent);background:var(--mfp-accent);box-shadow:inset 0 0 0 4px #fff}.mfp .mf-field--checkbox .mf-option-item::before{border-radius:6px}.mfp .mf-field--checkbox .mf-option-item:has(.mf-option-control:checked)::before{background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:center;box-shadow:none}.mfp .mf-option-item:hover{border-color:var(--mfp-gold);background:rgba(212,165,116,0.06)}",
+    "CustomContent": {
+      "brand_title": "Bella Vista",
+      "brand_subtitle": "Where Dreams Come True",
+      "section_contact": "Contact Information",
+      "section_preferences": "Preferences & Details",
+      "section_upload": "Documents & Signature",
+      "footer_note": "Your information is protected and will never be shared."
+    },
+    "CustomScripts": {},
+    "Rules": [],
+    "WorkflowTemplate": null,
+    "submitButtonText": "Submit",
+    "successMessage": ""
+  }
+}

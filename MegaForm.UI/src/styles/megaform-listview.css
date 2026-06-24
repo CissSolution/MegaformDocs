@@ -1,0 +1,176 @@
+/* =============================================================
+ * MegaForm ListView — Auto-included CSS
+ * All classes prefixed `mflv-*` to prevent bleed into host site.
+ * Badge: ListViewCss v20260507-21
+ * =========================================================== */
+
+.mflv-shell { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:#0f172a; }
+.mflv-shell *, .mflv-shell *::before, .mflv-shell *::after { box-sizing: border-box; }
+
+.mflv-toolbar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:8px 0 12px; }
+.mflv-title { margin:0; font-size:18px; font-weight:600; color:#0f172a; flex:1 1 auto; }
+.mflv-search { flex:0 0 auto; }
+.mflv-search-input { padding:6px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; width:220px; outline:none; transition:border-color .12s; }
+.mflv-search-input:focus { border-color:#2563eb; }
+.mflv-meta { font-size:12px; color:#64748b; margin-left:auto; }
+
+.mflv-table { width:100%; border-collapse:separate; border-spacing:0; font-size:13px; background:#fff;
+  border:1px solid #e2e8f0; border-radius:8px; overflow:hidden; }
+.mflv-thead th { background:#f8fafc; padding:10px 12px; text-align:left; font-weight:600; font-size:12px;
+  color:#475569; border-bottom:1px solid #e2e8f0; user-select:none; }
+.mflv-thead th[data-mflv-sort]::after { content:' ⇅'; color:#cbd5e1; font-size:10px; }
+.mflv-thead th[data-mflv-sort]:hover { background:#f1f5f9; color:#0f172a; }
+.mflv-tbody td { padding:9px 12px; border-bottom:1px solid #f1f5f9; vertical-align:top; }
+.mflv-tbody tr:last-child td { border-bottom:0; }
+.mflv-tbody tr:hover { background:#f8fafc; }
+.mflv-cell-date { color:#64748b; white-space:nowrap; }
+
+.mflv-empty, .mflv-error, .mflv-loading {
+  padding:24px; text-align:center; color:#94a3b8; font-size:14px; font-style:italic;
+  background:#fff; border:1px dashed #e2e8f0; border-radius:8px;
+}
+.mflv-error { color:#dc2626; border-color:#fecaca; background:#fef2f2; font-style:normal; }
+.mflv-loading { color:#64748b; }
+
+.mflv-pagination { display:flex; align-items:center; gap:10px; justify-content:center; padding:12px 0 4px; }
+.mflv-pg-btn { background:#fff; border:1px solid #cbd5e1; border-radius:6px; padding:5px 12px; cursor:pointer;
+  font-size:12px; color:#1e293b; transition:background .12s; }
+.mflv-pg-btn:hover { background:#f1f5f9; }
+.mflv-pg-info { font-size:12px; color:#64748b; }
+
+/* =============================================================
+ * Action buttons + Add button — [ListViewActions v20260507-28]
+ * =========================================================== */
+.mflv-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:6px;
+  font-size:13px; font-weight:600; cursor:pointer; border:1px solid transparent; transition:background .12s; }
+.mflv-btn-primary { background:#2563eb; color:#fff; }
+.mflv-btn-primary:hover { background:#1d4ed8; }
+.mflv-add-btn { margin-left:auto; }
+
+.mflv-th-actions, .mflv-cell-actions { width:1%; white-space:nowrap; text-align:right; }
+.mflv-cell-actions { padding:4px 8px !important; }
+.mflv-ic-btn { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px;
+  margin-left:2px; padding:0; border:1px solid transparent; background:transparent; color:#475569;
+  border-radius:6px; cursor:pointer; font-size:14px; line-height:1; transition:background .12s, color .12s; }
+.mflv-ic-btn:hover { background:#f1f5f9; color:#0f172a; }
+.mflv-ic-btn-danger:hover { background:#fef2f2; color:#dc2626; border-color:#fecaca; }
+
+/* =============================================================
+ * Form modal (direct-mount renderer) — [CleanFormModal v20260507-29]
+ * Pinned to viewport via position:fixed; appended to <html> (not body)
+ * to escape ancestor transforms in DNN/Oqtane skins. Near-black backdrop
+ * fully hides the host page's chrome (header, footer, sidebars).
+ * =========================================================== */
+.mflv-form-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.78); z-index:2147483647;
+  display:flex; align-items:center; justify-content:center; padding:24px;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px); }
+.mflv-form-modal-overlay *, .mflv-form-modal-overlay *::before, .mflv-form-modal-overlay *::after { box-sizing:border-box; }
+
+.mflv-form-modal { background:#fff; border-radius:14px; width:min(880px, 100%); height:min(92vh, 820px);
+  display:flex; flex-direction:column; box-shadow:0 32px 90px rgba(0,0,0,.55); overflow:hidden;
+  isolation:isolate; }
+
+.mflv-form-modal-hd { display:flex; align-items:center; gap:10px; padding:12px 18px;
+  border-bottom:1px solid #e2e8f0; background:linear-gradient(180deg,#f8fafc,#f1f5f9); }
+.mflv-form-modal-title { flex:1; color:#0f172a; font-size:15px; font-weight:700; }
+.mflv-form-modal-pop { color:#2563eb; text-decoration:none; font-size:16px; padding:4px 8px;
+  border-radius:6px; line-height:1; }
+.mflv-form-modal-pop:hover { background:#eff6ff; }
+.mflv-form-modal-close { background:transparent; border:0; font-size:22px; line-height:1; cursor:pointer;
+  color:#64748b; padding:4px 12px; border-radius:6px; }
+.mflv-form-modal-close:hover { background:#f1f5f9; color:#0f172a; }
+
+.mflv-form-modal-body { flex:1; min-height:0; overflow:auto; padding:22px 26px; background:#fff; }
+.mflv-form-modal-mount { width:100%; }
+
+/* [FormFullWidth v20260508-02] Force the renderer's wrappers to fill the
+   modal body. The renderer normally caps the form at ~640px for readability
+   on full pages, but inside our 880px modal that leaves big white margins.
+   Override every common wrapper to width:100% + max-width:none. */
+.mflv-form-modal-mount .mf-form-wrapper,
+.mflv-form-modal-mount .mf-form-inner,
+.mflv-form-modal-mount .mf-form,
+.mflv-form-modal-mount .mf-form-content,
+.mflv-form-modal-mount .mf-form-fields,
+.mflv-form-modal-mount .mf-fields-container,
+.mflv-form-modal-mount form,
+.mflv-form-modal-mount .mf-form-actions { width:100% !important; max-width:none !important; margin-left:0 !important; margin-right:0 !important; padding-left:0 !important; padding-right:0 !important; }
+
+/* Don't let the renderer's own header (Oqtane-style page title) duplicate
+   the modal header, since the renderer sometimes renders its own. */
+.mflv-form-modal-mount .mf-form-header { margin-top:0; }
+
+/* [ListViewActions v20260508-02] Read-only View modal — simple field/value
+   pairs, no form rendering needed. */
+.mflv-view-card { display:flex; flex-direction:column; gap:0; background:#fff; }
+.mflv-view-row { display:grid; grid-template-columns:200px 1fr; gap:14px;
+  padding:10px 14px; border-bottom:1px solid #f1f5f9; align-items:start; }
+.mflv-view-row:last-child { border-bottom:0; }
+.mflv-view-row:nth-child(odd) { background:#f8fafc; }
+.mflv-view-label { font-size:12px; font-weight:600; color:#475569;
+  text-transform:uppercase; letter-spacing:.04em; }
+.mflv-view-value { font-size:14px; color:#0f172a; line-height:1.5; word-break:break-word; }
+.mflv-view-empty { color:#94a3b8; font-style:italic; }
+
+@media (max-width: 600px) {
+  .mflv-view-row { grid-template-columns:1fr; gap:4px; }
+}
+
+/* [AddAnother v20260508-01] Bar shown after a successful submission inside
+   the modal body, lets the admin enter another row without reopening. */
+.mflv-add-another-bar { display:flex; align-items:center; gap:10px; margin:0 0 14px;
+  padding:10px 14px; background:#ecfdf5; border:1px solid #86efac; border-radius:10px; }
+.mflv-add-another-msg { flex:1; color:#166534; font-size:13px; font-weight:600; }
+.mflv-btn-ghost { background:#fff; color:#1e293b; border:1px solid #cbd5e1; }
+.mflv-btn-ghost:hover { background:#f1f5f9; }
+
+/* =============================================================
+ * Designer popup
+ * =========================================================== */
+/* [ListViewDesignerZIndex v20260507-25] Bumped to max int so the designer
+   stacks above the settings popup overlay (which already uses 2147483647).
+   Browsers break z-index ties by DOM source order — the designer is appended
+   later than the settings popup, so equal z-index puts the designer on top. */
+.mflv-d-overlay { position:fixed; inset:0; background:rgba(15,23,42,.55); z-index:2147483647;
+  display:flex; align-items:center; justify-content:center; padding:24px; }
+.mflv-d-modal { background:#fff; border-radius:12px; width:min(820px,100%); max-height:92vh;
+  display:flex; flex-direction:column; box-shadow:0 24px 60px rgba(15,23,42,.35);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:#0f172a; }
+.mflv-d-hd { display:flex; align-items:center; padding:14px 18px; border-bottom:1px solid #e2e8f0; }
+.mflv-d-title { margin:0; font-size:16px; font-weight:600; flex:1; }
+.mflv-d-close { background:none; border:0; font-size:24px; line-height:1; cursor:pointer; color:#64748b; padding:4px 8px;
+  border-radius:6px; }
+.mflv-d-close:hover { background:#f1f5f9; color:#0f172a; }
+.mflv-d-body { padding:16px 18px; overflow-y:auto; display:flex; flex-direction:column; gap:14px; }
+.mflv-d-row { display:flex; flex-direction:column; gap:6px; }
+.mflv-d-row-2col { flex-direction:row; gap:14px; }
+.mflv-d-row-2col > div { flex:1; display:flex; flex-direction:column; gap:6px; }
+.mflv-d-row-flags { flex-direction:row; gap:18px; }
+.mflv-d-lbl { font-size:12px; font-weight:600; color:#475569; text-transform:uppercase; letter-spacing:.04em; }
+.mflv-d-form-sel, .mflv-d-title-inp, .mflv-d-page-size, .mflv-d-empty-msg {
+  padding:7px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; color:#0f172a; outline:none; }
+.mflv-d-row-tpl { padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-family:Menlo,Consolas,monospace;
+  font-size:12px; color:#0f172a; outline:none; resize:vertical; min-height:80px; }
+.mflv-d-hint { font-size:11px; color:#94a3b8; }
+
+.mflv-d-fields { display:flex; flex-wrap:wrap; gap:6px; padding:8px; background:#f8fafc; border:1px solid #e2e8f0;
+  border-radius:6px; max-height:140px; overflow-y:auto; }
+.mflv-d-fields-empty { color:#94a3b8; font-size:12px; padding:6px; }
+.mflv-d-field { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; background:#fff;
+  border:1px solid #e2e8f0; border-radius:999px; font-size:12px; cursor:pointer; }
+.mflv-d-field input { margin:0; }
+.mflv-d-field-type { color:#94a3b8; font-size:10px; text-transform:uppercase; letter-spacing:.04em; }
+.mflv-d-flag { display:inline-flex; align-items:center; gap:6px; font-size:13px; color:#1e293b; cursor:pointer; }
+
+.mflv-d-preview { background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:10px;
+  min-height:120px; max-height:260px; overflow:auto; }
+
+.mflv-d-ft { display:flex; justify-content:flex-end; gap:8px; padding:12px 18px; border-top:1px solid #e2e8f0;
+  background:#f8fafc; border-radius:0 0 12px 12px; }
+.mflv-d-btn { padding:7px 16px; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; border:1px solid transparent; }
+.mflv-d-btn-ghost { background:#fff; border-color:#cbd5e1; color:#1e293b; }
+.mflv-d-btn-ghost:hover { background:#f1f5f9; }
+.mflv-d-btn-primary { background:#2563eb; color:#fff; }
+.mflv-d-btn-primary:hover { background:#1d4ed8; }
+.mflv-d-btn[disabled] { opacity:.6; cursor:not-allowed; }

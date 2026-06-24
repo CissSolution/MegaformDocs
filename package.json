@@ -1,0 +1,13 @@
+{
+  "name": "megaformsolution_280_oqtane_um",
+  "version": "1.0.0",
+  "description": "``` MegaForm.sln ├── MegaForm.Core/           net472;net8.0 — Models, Interfaces, Services, Utilities ├── MegaForm.DNN/            .NET 4.7.2 — DNN 9.x module (ASCX, DnnApiController, ADO.NET) ├── MegaForm.Oqtane/         .NET 8 — Oqtane 5.x module (Razor, EF Core) ├── MegaForm.Web/            .NET 10 — Standalone web app (Minimal API, EF Core) ├── Assets/                  Shared JS/CSS (100% identical across all platforms) └── Docs/                    Specs and documentation ```",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}

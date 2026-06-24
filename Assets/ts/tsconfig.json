@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "module": "none",
+    "lib": ["ES5", "DOM", "ES2015.Promise"],
+    "strict": false,
+    "outDir": "../js/plugins",
+    "rootDir": ".",
+    "downlevelIteration": true,
+    "sourceMap": false,
+    "declaration": false,
+    "noEmitOnError": true
+  },
+  "include": ["megaform-widget-captcha.ts"]
+}

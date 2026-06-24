@@ -1,0 +1,3 @@
+-- MegaForm 01.06.23 - DynamicLabel customer package refresh
+-- No schema changes. This marker lets DNN record the upgrade version.
+PRINT 'MegaForm 01.06.23 - DynamicLabel package refresh applied.';

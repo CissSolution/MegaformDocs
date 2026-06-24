@@ -1,0 +1,366 @@
+/* ============================================================
+   MegaForm — Pre-Built Themes
+   12 ready-made themes (inspired by JotForm Theme Store)
+   Usage: Add class .mf-theme-{name} to .mf-form-wrapper
+   Each theme overrides CSS custom properties only.
+   ============================================================ */
+
+/* ============================================================
+   1. DEFAULT — Clean professional (already in base CSS)
+   ============================================================ */
+.mf-theme-default {
+    /* Uses base variables — no overrides needed */
+}
+
+/* ============================================================
+   2. MINIMAL — Ultra-clean, borderless inputs
+   ============================================================ */
+.mf-theme-minimal {
+    --mf-page-bg:              #ffffff;
+    --mf-form-bg:              #ffffff;
+    --mf-form-shadow:          none;
+    --mf-form-radius:          0;
+    --mf-form-border:          none;
+    --mf-form-padding:         40px 48px;
+    --mf-input-border:         none;
+    --mf-input-bg:             transparent;
+    --mf-input-radius:         0;
+    --mf-input-padding:        12px 0;
+    --mf-input-focus-shadow:   none;
+    --mf-input-focus-border:   transparent;
+    --mf-primary:              #1a1a1a;
+    --mf-primary-hover:        #333333;
+    --mf-btn-radius:           0;
+    --mf-btn-shadow:           none;
+    --mf-section-border-color: #1a1a1a;
+    --mf-title-align:          center;
+    --mf-font-family:          'Inter', -apple-system, sans-serif;
+}
+.mf-theme-minimal .mf-input,
+.mf-theme-minimal .mf-select,
+.mf-theme-minimal .mf-textarea {
+    border-bottom: 2px solid #e0e0e0;
+}
+.mf-theme-minimal .mf-input:focus,
+.mf-theme-minimal .mf-select:focus,
+.mf-theme-minimal .mf-textarea:focus {
+    border-bottom-color: #1a1a1a;
+}
+
+/* ============================================================
+   3. MODERN BLUE — Bold & corporate
+   ============================================================ */
+.mf-theme-modern-blue {
+    --mf-page-bg:              linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --mf-form-bg:              #ffffff;
+    --mf-primary-gradient:     linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --mf-form-bg-aside:        linear-gradient(160deg, #2d3a8c 0%, #667eea 100%);
+    --mf-form-shadow:          0 20px 60px rgba(0,0,0,0.15);
+    --mf-form-radius:          16px;
+    --mf-form-padding:         40px;
+    --mf-primary:              #667eea;
+    --mf-primary-hover:        #5a6fd6;
+    --mf-input-radius:         10px;
+    --mf-input-border:         1px solid #e2e8f0;
+    --mf-input-focus-border:   #667eea;
+    --mf-input-focus-shadow:   0 0 0 4px rgba(102, 126, 234, 0.15);
+    --mf-btn-radius:           10px;
+    --mf-btn-padding:          14px 40px;
+    --mf-btn-shadow:           0 4px 14px rgba(102, 126, 234, 0.4);
+    --mf-progress-fill:        linear-gradient(90deg, #667eea, #764ba2);
+    --mf-title-color:          #2d3748;
+    --mf-font-family:          'Inter', 'Segoe UI', sans-serif;
+}
+
+/* ============================================================
+   4. WARM SUNSET — Friendly orange tones
+   ============================================================ */
+.mf-theme-warm-sunset {
+    --mf-page-bg:              #fff8f0;
+    --mf-form-bg:              #ffffff;
+    --mf-primary-gradient:     linear-gradient(135deg, #ff6b35 0%, #ff9f43 100%);
+    --mf-form-bg-aside:        linear-gradient(160deg, #b34000 0%, #ff6b35 100%);
+    --mf-form-shadow:          0 4px 20px rgba(255, 107, 53, 0.08);
+    --mf-form-radius:          12px;
+    --mf-primary:              #ff6b35;
+    --mf-primary-hover:        #e85d2c;
+    --mf-input-border:         1px solid #ffd4bc;
+    --mf-input-focus-border:   #ff6b35;
+    --mf-input-focus-shadow:   0 0 0 3px rgba(255, 107, 53, 0.12);
+    --mf-input-radius:         8px;
+    --mf-btn-shadow:           0 4px 12px rgba(255, 107, 53, 0.3);
+    --mf-btn-radius:           8px;
+    --mf-title-color:          #2d1b0e;
+    --mf-label-color:          #4a3020;
+    --mf-section-border-color: #ffd4bc;
+    --mf-check-color:          #ff6b35;
+    --mf-progress-fill:        linear-gradient(90deg, #ff6b35, #ff9f43);
+    --mf-font-family:          'Nunito', 'Segoe UI', sans-serif;
+}
+
+/* ============================================================
+   5. DARK ELEGANCE — Dark mode
+   ============================================================ */
+.mf-theme-dark-elegance {
+    --mf-page-bg:              #0f0f0f;
+    --mf-form-bg:              #1a1a2e;
+    --mf-primary-gradient:     linear-gradient(135deg, #e94560 0%, #c73652 100%);
+    --mf-form-bg-aside:        linear-gradient(160deg, #0d0d1a 0%, #1a1a2e 100%);
+    --mf-form-shadow:          0 8px 32px rgba(0,0,0,0.5);
+    --mf-form-radius:          12px;
+    --mf-form-border:          1px solid #2a2a4a;
+    --mf-color-text:           #e0e0e0;
+    --mf-color-text-light:     #b0b0b0;
+    --mf-color-text-muted:     #777777;
+    --mf-title-color:          #ffffff;
+    --mf-label-color:          #d0d0d0;
+    --mf-desc-color:           #999999;
+    --mf-input-bg:             #16213e;
+    --mf-input-border:         1px solid #2a2a4a;
+    --mf-input-color:          #e0e0e0;
+    --mf-input-placeholder:    #555555;
+    --mf-input-focus-border:   #e94560;
+    --mf-input-focus-shadow:   0 0 0 3px rgba(233, 69, 96, 0.2);
+    --mf-input-disabled-bg:    #0f0f23;
+    --mf-primary:              #e94560;
+    --mf-primary-hover:        #d63851;
+    --mf-primary-text:         #ffffff;
+    --mf-btn-shadow:           0 4px 14px rgba(233, 69, 96, 0.3);
+    --mf-section-border-color: #2a2a4a;
+    --mf-section-title-color:  #ffffff;
+    --mf-help-color:           #666666;
+    --mf-required-color:       #e94560;
+    --mf-check-color:          #e94560;
+    --mf-file-bg:              #16213e;
+    --mf-file-border:          2px dashed #2a2a4a;
+    --mf-file-hover-bg:        #1a1a35;
+    --mf-progress-bg:          #2a2a4a;
+    --mf-progress-fill:        #e94560;
+    --mf-font-family:          'Inter', 'Segoe UI', sans-serif;
+}
+
+/* ============================================================
+   6. NATURE GREEN — Eco / organic
+   ============================================================ */
+.mf-theme-nature-green {
+    --mf-page-bg:              #f0f7f0;
+    --mf-form-bg:              #ffffff;
+    --mf-primary-gradient:     linear-gradient(135deg, #2d8a4e 0%, #52b77a 100%);
+    --mf-form-bg-aside:        linear-gradient(160deg, #1a5e30 0%, #2d8a4e 100%);
+    --mf-form-shadow:          0 2px 16px rgba(34, 139, 34, 0.08);
+    --mf-form-radius:          12px;
+    --mf-primary:              #2d8a4e;
+    --mf-primary-hover:        #247a42;
+    --mf-input-border:         1px solid #c8e6c9;
+    --mf-input-focus-border:   #2d8a4e;
+    --mf-input-focus-shadow:   0 0 0 3px rgba(45, 138, 78, 0.12);
+    --mf-input-radius:         8px;
+    --mf-btn-radius:           25px;
+    --mf-btn-padding:          12px 36px;
+    --mf-btn-shadow:           0 4px 12px rgba(45, 138, 78, 0.25);
+    --mf-section-border-color: #c8e6c9;
+    --mf-check-color:          #2d8a4e;
+    --mf-progress-fill:        #2d8a4e;
+    --mf-title-color:          #1b5e20;
+    --mf-font-family:          'Nunito', Georgia, serif;
+}
+
+/* ============================================================
+   7. FLAT MATERIAL — Google Material Design-inspired
+   ============================================================ */
+.mf-theme-flat-material {
+    --mf-page-bg:              #fafafa;
+    --mf-form-bg:              #ffffff;
+    --mf-form-shadow:          0 2px 4px rgba(0,0,0,0.06), 0 4px 6px rgba(0,0,0,0.04);
+    --mf-form-radius:          4px;
+    --mf-primary:              #1976d2;
+    --mf-primary-hover:        #1565c0;
+    --mf-input-border:         none;
+    --mf-input-bg:             #f5f5f5;
+    --mf-input-radius:         4px 4px 0 0;
+    --mf-input-padding:        14px 12px;
+    --mf-input-focus-border:   transparent;
+    --mf-input-focus-shadow:   none;
+    --mf-btn-radius:           4px;
+    --mf-btn-padding:          12px 24px;
+    --mf-btn-font-weight:      500;
+    --mf-btn-shadow:           0 3px 5px rgba(0,0,0,0.15);
+    --mf-label-font-size:      12px;
+    --mf-label-font-weight:    500;
+    --mf-label-color:          #616161;
+    --mf-check-color:          #1976d2;
+    --mf-font-family:          'Roboto', 'Segoe UI', sans-serif;
+}
+.mf-theme-flat-material .mf-input,
+.mf-theme-flat-material .mf-textarea,
+.mf-theme-flat-material .mf-select {
+    border-bottom: 2px solid #bdbdbd;
+}
+.mf-theme-flat-material .mf-input:focus,
+.mf-theme-flat-material .mf-textarea:focus,
+.mf-theme-flat-material .mf-select:focus {
+    border-bottom-color: #1976d2;
+}
+
+/* ============================================================
+   8. CLASSIC FORMAL — Traditional / legal / government
+   ============================================================ */
+.mf-theme-classic-formal {
+    --mf-page-bg:              #f8f4ef;
+    --mf-form-bg:              #ffffff;
+    --mf-form-shadow:          0 1px 3px rgba(0,0,0,0.08);
+    --mf-form-radius:          2px;
+    --mf-form-border:          1px solid #d5c7b5;
+    --mf-form-padding:         40px 48px;
+    --mf-primary:              #8b4513;
+    --mf-primary-hover:        #7a3c10;
+    --mf-input-border:         1px solid #c8b99a;
+    --mf-input-radius:         2px;
+    --mf-input-focus-border:   #8b4513;
+    --mf-input-focus-shadow:   0 0 0 2px rgba(139, 69, 19, 0.1);
+    --mf-btn-radius:           2px;
+    --mf-btn-shadow:           none;
+    --mf-btn-padding:          12px 40px;
+    --mf-section-border-color: #d5c7b5;
+    --mf-title-color:          #3e2723;
+    --mf-label-color:          #4e342e;
+    --mf-required-color:       #c62828;
+    --mf-check-color:          #8b4513;
+    --mf-font-family:          Georgia, 'Times New Roman', serif;
+    --mf-title-font-size:      28px;
+}
+
+/* ============================================================
+   9. PLAYFUL — Rounded, colorful, friendly
+   ============================================================ */
+.mf-theme-playful {
+    --mf-page-bg:              linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    --mf-form-bg:              #ffffff;
+    --mf-form-shadow:          0 10px 40px rgba(252, 182, 159, 0.3);
+    --mf-form-radius:          24px;
+    --mf-form-padding:         36px;
+    --mf-primary:              #ff6b6b;
+    --mf-primary-hover:        #ee5a5a;
+    --mf-input-border:         2px solid #ffd3d3;
+    --mf-input-radius:         16px;
+    --mf-input-padding:        12px 18px;
+    --mf-input-focus-border:   #ff6b6b;
+    --mf-input-focus-shadow:   0 0 0 4px rgba(255, 107, 107, 0.12);
+    --mf-btn-radius:           25px;
+    --mf-btn-padding:          14px 40px;
+    --mf-btn-shadow:           0 6px 20px rgba(255, 107, 107, 0.35);
+    --mf-btn-font-size:        17px;
+    --mf-title-align:          center;
+    --mf-title-font-size:      26px;
+    --mf-check-color:          #ff6b6b;
+    --mf-progress-fill:        linear-gradient(90deg, #ff6b6b, #feca57);
+    --mf-file-border:          2px dashed #ffd3d3;
+    --mf-font-family:          'Nunito', 'Comic Sans MS', sans-serif;
+}
+
+/* ============================================================
+   10. HEALTHCARE — Clean medical / health
+   ============================================================ */
+.mf-theme-healthcare {
+    --mf-page-bg:              #f0f8ff;
+    --mf-form-bg:              #ffffff;
+    --mf-primary-gradient:     linear-gradient(135deg, #0077b6 0%, #0096c7 100%);
+    --mf-form-bg-aside:        linear-gradient(160deg, #003d5c 0%, #0077b6 100%);
+    --mf-form-shadow:          0 2px 12px rgba(0, 100, 148, 0.06);
+    --mf-form-radius:          8px;
+    --mf-primary:              #0077b6;
+    --mf-primary-hover:        #006da6;
+    --mf-input-border:         1px solid #b5d4e8;
+    --mf-input-radius:         6px;
+    --mf-input-focus-border:   #0077b6;
+    --mf-input-focus-shadow:   0 0 0 3px rgba(0, 119, 182, 0.1);
+    --mf-btn-radius:           6px;
+    --mf-btn-shadow:           0 2px 8px rgba(0, 119, 182, 0.2);
+    --mf-section-border-color: #b5d4e8;
+    --mf-section-bg:           #f0f8ff;
+    --mf-title-color:          #003f5c;
+    --mf-check-color:          #0077b6;
+    --mf-required-color:       #d63384;
+    --mf-font-family:          'Open Sans', 'Segoe UI', sans-serif;
+}
+
+/* ============================================================
+   11. EXECUTIVE — Premium, luxury
+   ============================================================ */
+.mf-theme-executive {
+    --mf-page-bg:              #1c1c1c;
+    --mf-form-bg:              #2a2a2a;
+    --mf-primary-gradient:     linear-gradient(135deg, #c9a84c 0%, #e8c96b 100%);
+    --mf-form-bg-aside:        linear-gradient(160deg, #0d0d0d 0%, #2a2a2a 100%);
+    --mf-form-shadow:          0 12px 40px rgba(0,0,0,0.6);
+    --mf-form-radius:          4px;
+    --mf-form-border:          1px solid #c9a84c;
+    --mf-color-text:           #e8e0d0;
+    --mf-title-color:          #c9a84c;
+    --mf-label-color:          #d0c8b8;
+    --mf-desc-color:           #998f80;
+    --mf-input-bg:             #333333;
+    --mf-input-border:         1px solid #555555;
+    --mf-input-color:          #e8e0d0;
+    --mf-input-placeholder:    #777777;
+    --mf-input-focus-border:   #c9a84c;
+    --mf-input-focus-shadow:   0 0 0 2px rgba(201, 168, 76, 0.2);
+    --mf-input-radius:         4px;
+    --mf-primary:              #c9a84c;
+    --mf-primary-hover:        #b89940;
+    --mf-primary-text:         #1c1c1c;
+    --mf-btn-radius:           4px;
+    --mf-btn-shadow:           0 4px 16px rgba(201, 168, 76, 0.3);
+    --mf-section-border-color: #444444;
+    --mf-section-title-color:  #c9a84c;
+    --mf-check-color:          #c9a84c;
+    --mf-file-bg:              #333333;
+    --mf-file-border:          2px dashed #555555;
+    --mf-progress-bg:          #444444;
+    --mf-progress-fill:        #c9a84c;
+    --mf-required-color:       #e74c3c;
+    --mf-font-family:          'Playfair Display', Georgia, serif;
+    --mf-title-font-size:      28px;
+}
+
+/* ============================================================
+   12. TECH STARTUP — Modern SaaS / startup
+   ============================================================ */
+.mf-theme-tech-startup {
+    --mf-page-bg:              #0a0a23;
+    --mf-form-bg:              #141432;
+    --mf-primary-gradient:     linear-gradient(135deg, #38ef7d 0%, #11998e 100%);
+    --mf-form-bg-aside:        linear-gradient(160deg, #050515 0%, #141432 100%);
+    --mf-form-shadow:          0 0 60px rgba(56, 239, 125, 0.06);
+    --mf-form-radius:          16px;
+    --mf-form-border:          1px solid rgba(56, 239, 125, 0.15);
+    --mf-color-text:           #d0d0e0;
+    --mf-title-color:          #ffffff;
+    --mf-label-color:          #b0b0c8;
+    --mf-desc-color:           #8080a0;
+    --mf-input-bg:             #1e1e3f;
+    --mf-input-border:         1px solid #2a2a50;
+    --mf-input-color:          #e0e0f0;
+    --mf-input-placeholder:    #505070;
+    --mf-input-radius:         10px;
+    --mf-input-padding:        12px 16px;
+    --mf-input-focus-border:   #38ef7d;
+    --mf-input-focus-shadow:   0 0 0 3px rgba(56, 239, 125, 0.12);
+    --mf-primary:              #38ef7d;
+    --mf-primary-hover:        #2dd96e;
+    --mf-primary-text:         #0a0a23;
+    --mf-btn-radius:           10px;
+    --mf-btn-padding:          14px 36px;
+    --mf-btn-shadow:           0 4px 20px rgba(56, 239, 125, 0.25);
+    --mf-btn-font-weight:      700;
+    --mf-section-border-color: #2a2a50;
+    --mf-section-title-color:  #38ef7d;
+    --mf-check-color:          #38ef7d;
+    --mf-file-bg:              #1e1e3f;
+    --mf-file-border:          2px dashed #2a2a50;
+    --mf-file-hover-bg:        #252550;
+    --mf-progress-bg:          #2a2a50;
+    --mf-progress-fill:        linear-gradient(90deg, #38ef7d, #11998e);
+    --mf-required-color:       #ff6b6b;
+    --mf-font-family:          'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+}

@@ -1,0 +1,17 @@
+<div class="mf-gm-row unread"
+     data-mflv-action="view"
+     data-mflv-id="{{submission:id}}"
+     data-mf-status="{{submission:status}}"
+     data-mf-due="{{field:due_date|format=yyyy-MM-dd}}"
+     data-mf-recv="{{field:received_date|format=yyyy-MM-dd}}">
+  <span class="cb">▢</span>
+  <span class="star">★</span>
+  <span class="imp">›</span>
+  <div class="sender">{{field:owner_name}}</div>
+  <div class="content">
+    <span class="pill">{{field:document_type}}</span>
+    <span class="subject">{{field:document_title}} · {{field:registry_number}}</span>
+    <span class="snippet">— {{field:document_summary}}</span>
+  </div>
+  <div class="time">{{field:due_date|format=dd MMM}}</div>
+</div>

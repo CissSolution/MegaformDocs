@@ -1,0 +1,343 @@
+<div class="mf-product-copy">
+<p><strong>MegaForm</strong> is a modern, all-in-one form builder module for DNN (DotNetNuke), designed to make form creation fast, flexible, and accessible—even for users with no coding experience.</p>
+<p>Unlike traditional form builders that often require HTML or CSS knowledge to achieve professional results, MegaForm helps users build beautiful, production-ready forms with far less effort. Not everyone is comfortable designing layouts by hand, and that is where MegaForm stands out.</p>
+<br />
+<p>Document: <a href="https://drive.google.com/file/d/1qF8ALeJPglCvWSmqLZg7PqigOS1pL9k5/view?usp=sharing">MegaForm_EN.pdf</a></p>
+
+<div class="mf-whatsnew">
+  <p class="mf-whatsnew-title">🆕 What's new in 01.06.17</p>
+  <ul>
+    <li><strong>Cascading SQL / stored-procedure dropdowns</strong> — child fields auto-reload options when a parent field changes (e.g. <em>Year → Events of that year</em>) using <code>:fieldKey</code> token parameters bound on the server.</li>
+    <li><strong>Database INSERT on submit</strong> now reliably fires on SQL Server — token normalisation fix (<code>:name → @name</code>) closes a long-standing silent failure for Microsoft SQL Server connections.</li>
+    <li><strong>PDF Form widget</strong> ships with a professional 1-page A4 sample (base64-embedded, no external download). HTML inputs overlay each field box; <code>pdf-lib</code> flattens the answers client-side on submit and attaches the result to the submission.</li>
+    <li><strong>Two new built-in templates</strong> in the gallery: <em>Event Registration with DB Insert</em> and <em>PDF Registration Form</em> — clone and customise in seconds.</li>
+    <li>Server-side validator no longer rejects SQL-sourced dropdown values (skip strict membership when <code>optionsSource = sql</code>).</li>
+    <li>Cleaner PDF widget toolbar; build script always includes <code>icon.gif</code> at the package root.</li>
+  </ul>
+</div>
+
+<div class="container">
+<div class="icon">🔥</div>
+<p class="subtitle">Trial Version</p>
+<h2>Version 01.06.17</h2>
+<p style="margin: 20px 0 40px 0; opacity: 0.85;">Download the trial version to test every feature — no expiry, no row caps. The only difference vs production is a small "Megaform Trial Mode" footer under the submit button.</p>
+<a href="https://drive.google.com/uc?export=download&amp;id=18NyiYV_IZSclaBFxLXd1sDVwLXXQ-8ge" class="download-btn" target="_blank"> ↓ Download Trial Now </a>
+<p style="margin-top: 50px; font-size: 1rem; opacity: 0.7;">After downloading, please extract the ZIP file and follow the instructions in the documentation.</p>
+</div>
+
+<p>Inspired by powerful Form builders like Jotform and Typeform, MegaForm is a form builder with 150+ prebuilt templates ready to use, and support for external AI-assisted (no API key — your choice) form creation. MegaForm allows you to define your fields, describe your form logic, and use ChatGPT or your preferred AI tool together with MegaForm's structured prompts to generate professional form designs and layouts. This means you can create attractive, well-structured forms without needing to be an HTML expert.</p>
+
+<p>With MegaForm, you can:</p>
+<ul>
+  <li>Define the fields you want in your form</li>
+  <li>Describe conditions and how the form should behave</li>
+  <li>Use AI-generated template prompts to create polished form layouts</li>
+  <li>Start from ready-made templates and customize visually</li>
+  <li><strong>Bind dropdown options to a live SQL table or stored procedure</strong>, including cascading parent → child filtering</li>
+  <li><strong>INSERT each submission directly into your own SQL table</strong> via configurable mapping</li>
+  <li><strong>Use PDF Form widget</strong> to render a real PDF inside the page and overlay form inputs on top</li>
+  <li>Build faster without relying on manual HTML design</li>
+</ul>
+
+<p>MegaForm includes a powerful <strong>Workflow Engine</strong> that helps automate what happens after submission. You can send emails, trigger webhooks, save data to databases, and connect your forms with internal tools or third-party systems. This makes MegaForm suitable for both simple contact forms and advanced business processes.</p>
+
+<p>For integration scenarios, MegaForm supports <strong>webhooks</strong>, <strong>direct database INSERT</strong>, <strong>SQL/stored-procedure-backed dropdowns with cascading filters</strong>, and flexible workflow actions, making it easy to connect forms with CRMs, APIs, marketing tools, or custom business applications. Connection strings are resolved server-side via a single registered alias — the form schema never contains credentials.</p>
+
+<p>A major strength of MegaForm is its support for <strong>embedded forms on external websites</strong>. You can publish forms and embed them into other websites so users can fill out and submit forms <strong>without visiting your DNN website directly</strong>. This is ideal for campaign landing pages, partner websites, marketing microsites, and distributed lead collection.</p>
+
+<p>See a few forms at <a href="https://dnndefender.com/MegaForm">https://dnndefender.com/MegaForm</a> (templates are created frequently and updated for free).</p>
+
+<p>MegaForm also offers flexible display options, including:</p>
+<ul>
+  <li><strong>Fixed forms</strong> displayed directly on a page, QR Code for clean rendering on mobile (with DNN default no-skin / popup skin using a page as render host)</li>
+  <li><strong>Trigger forms</strong> opened by buttons, links, or custom HTML triggers</li>
+  <li><strong>Embedded forms</strong> for external websites (please note that embedded demo forms load slower since they are hosted on another DNN)</li>
+  <li><strong>PDF-overlay forms</strong> where the canvas is a real PDF and inputs are positioned over it</li>
+  <li><strong>Social sharing</strong> options for wider distribution</li>
+</ul>
+
+<p>To speed up deployment, MegaForm includes a growing library of <strong>ready-made templates</strong> and a <strong>quick form selection</strong> experience, allowing administrators to launch forms quickly and consistently. The built-in <strong>Theme Designer</strong> also makes it possible to adjust the visual style of forms without rebuilding templates from scratch.</p>
+
+<p>MegaForm is designed for global and multilingual usage with <strong>RTL (Right-to-Left) support</strong>, and some widgets have complicated interfaces helping ensure proper layout and usability across different languages and regions.</p>
+
+<p>Additional advanced features include:</p>
+<ul>
+  <li>AI-assisted form design with no HTML required</li>
+  <li>Smart template generation using MegaForm prompts and your preferred AI tool</li>
+  <li>Workflow automation and conditional logic</li>
+  <li>Webhook integration with external systems</li>
+  <li><strong>Cascading SQL / stored-procedure dropdowns</strong> with server-bound parameters (<code>:year, :region, …</code>)</li>
+  <li><strong>Database INSERT on submit</strong> with token parameter mapping, INSERT-only guard, and fail-soft logging</li>
+  <li><strong>PDF Form widget</strong> with coordinate-based input overlay and client-side flatten (pdf-lib)</li>
+  <li><strong>Inline BPMN review surface</strong> inside the submission detail — claim / approve / reject / forward, role-based actions, candidate-user routing</li>
+  <li>Embedded forms for third-party websites</li>
+  <li>Native QR for any form — <span style="color: #0a0a0a; font-family: 'Google Sans', Arial, sans-serif;">bridge the gap between physical flyers and digital forms.</span></li>
+  <li>Fixed form and trigger-based form display modes</li>
+  <li>Social sharing capabilities</li>
+  <li>Multi-step and structured form layouts</li>
+  <li>Role-based permissions and advanced protection</li>
+  <li>Visual customization through Theme Designer</li>
+  <li>Modern, high-performance rendering</li>
+</ul>
+
+<div class="mf-modern-tabs">
+  <input type="radio" name="mf-doc-tabs" id="mf-tab-1" checked="checked" />
+  <input type="radio" name="mf-doc-tabs" id="mf-tab-2" />
+  <input type="radio" name="mf-doc-tabs" id="mf-tab-3" />
+  <input type="radio" name="mf-doc-tabs" id="mf-tab-4" />
+  <input type="radio" name="mf-doc-tabs" id="mf-tab-5" />
+  <input type="radio" name="mf-doc-tabs" id="mf-tab-6" />
+  <input type="radio" name="mf-doc-tabs" id="mf-tab-7" />
+  <input type="radio" name="mf-doc-tabs" id="mf-tab-8" />
+  <input type="radio" name="mf-doc-tabs" id="mf-tab-9" />
+  <input type="radio" name="mf-doc-tabs" id="mf-tab-10" />
+  <input type="radio" name="mf-doc-tabs" id="mf-tab-11" />
+
+  <div class="mf-tab-header">
+    <label class="mf-tab-btn mf-tab-new" for="mf-tab-10">Cascading SQL <span class="mf-tab-badge">NEW</span></label>
+    <label class="mf-tab-btn mf-tab-new" for="mf-tab-11">PDF Form Widget <span class="mf-tab-badge">NEW</span></label>
+    <label class="mf-tab-btn" for="mf-tab-9">FormBuilder</label>
+    <label class="mf-tab-btn" for="mf-tab-1">Workflow Email</label>
+    <label class="mf-tab-btn" for="mf-tab-2">Rule Controls</label>
+    <label class="mf-tab-btn" for="mf-tab-3">Template Preview</label>
+    <label class="mf-tab-btn" for="mf-tab-4">Workflow Email 2</label>
+    <label class="mf-tab-btn" for="mf-tab-5">Builder Form Rules</label>
+    <label class="mf-tab-btn" for="mf-tab-6">Workflow Data</label>
+    <label class="mf-tab-btn" for="mf-tab-7">Workflow Hook</label>
+    <label class="mf-tab-btn" for="mf-tab-8">Auto Theme Builder</label>
+  </div>
+
+  <div class="mf-tab-body">
+    <div class="mf-tab-panel mf-panel-1">
+      <div class="mf-image-card"><img alt="Workflow Email" src="https://dnndefender.com/Portals/0/workflowEmail.png" /></div>
+    </div>
+    <div class="mf-tab-panel mf-panel-2">
+      <div class="mf-image-card"><img alt="Rule Controls" src="https://dnndefender.com/Portals/0/RuleControls.png" /></div>
+    </div>
+    <div class="mf-tab-panel mf-panel-3">
+      <div class="mf-image-card"><img alt="Template Preview" src="https://dnndefender.com/Portals/0/TemplatePreview.png" /></div>
+    </div>
+    <div class="mf-tab-panel mf-panel-4">
+      <div class="mf-image-card"><img alt="Workflow Email 2" src="https://dnndefender.com/Portals/0/workflowEmail_1.png" /></div>
+    </div>
+    <div class="mf-tab-panel mf-panel-5">
+      <div class="mf-image-card"><img alt="Builder Form Rules" src="https://dnndefender.com/Portals/0/builderFormRules.png" /></div>
+    </div>
+    <div class="mf-tab-panel mf-panel-6">
+      <div class="mf-image-card"><img alt="Workflow Data" src="https://dnndefender.com/Portals/0/workflowData.png" /></div>
+    </div>
+    <div class="mf-tab-panel mf-panel-7">
+      <div class="mf-image-card"><img alt="Workflow Hook" src="https://dnndefender.com/Portals/0/workflowHook.png" /></div>
+    </div>
+    <div class="mf-tab-panel mf-panel-8">
+      <div class="mf-image-card"><img alt="Themebuilder Auto" src="https://dnndefender.com/Portals/0/themebuilder.png" /></div>
+    </div>
+    <div class="mf-tab-panel mf-panel-9">
+      <div class="mf-image-card"><img alt="Formbuilder" src="https://dnndefender.com/Portals/0/Formbuilder.png" /></div>
+    </div>
+    <div class="mf-tab-panel mf-panel-10">
+      <div class="mf-image-card"><img alt="Cascading SQL dropdown — pick Year then Events of that year load from a stored procedure" src="https://dnndefender.com/Portals/0/cascadingSqlDropdown.png" /></div>
+      <p style="margin-top:12px;font-size:14px;color:#475569">Child dropdown re-fetches options whenever the parent changes. Supports both inline <code>SELECT</code> with <code>:fieldKey</code> tokens and stored procedures. Connection alias resolved server-side; the form schema never carries credentials. Same pipeline powers the included <em>Event Registration with DB Insert</em> built-in template.</p>
+    </div>
+    <div class="mf-tab-panel mf-panel-11">
+      <div class="mf-image-card"><img alt="PDF Form widget renders a real PDF inside the page with HTML inputs overlaying every field box" src="https://dnndefender.com/Portals/0/pdfFormWidget.png" /></div>
+      <p style="margin-top:12px;font-size:14px;color:#475569">Embed a base64 PDF (or upload a template), drop input boxes onto coordinates, and the renderer overlays HTML inputs (text / date / dropdown / textarea / checkbox / number) directly over the PDF canvas. On submit, <code>pdf-lib</code> flattens the answers client-side and attaches the resulting PDF to the submission. Ships with a professional 1-page A4 sample template.</p>
+    </div>
+  </div>
+</div>
+
+<p>Whether you are building contact forms, feedback forms, testimonials, booking requests, application forms, payment forms, or advanced workflow-driven business forms, MegaForm provides a complete, scalable, and secure solution for DNN. (We love to hear from you and always reply within 24 hours: <a href="mailto:daoA@dnndefender.com">daoA@dnndefender.com</a> or start by the Store pane.)</p>
+</div>
+
+<style><!--
+  .mf-product-copy {
+    color: #1f2937;
+    line-height: 1.7;
+    font-size: 16px;
+  }
+
+  .mf-product-copy p {
+    margin: 0 0 16px;
+  }
+
+  .mf-product-copy ul {
+    margin: 0 0 18px 20px;
+    padding: 0;
+  }
+
+  .mf-product-copy li {
+    margin: 0 0 8px;
+  }
+
+  /* === What's new highlight box (01.06.17) === */
+  .mf-product-copy .mf-whatsnew {
+    margin: 20px 0 26px;
+    padding: 18px 22px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(37, 99, 235, 0.08));
+    border: 1px solid rgba(124, 58, 237, 0.25);
+  }
+  .mf-product-copy .mf-whatsnew-title {
+    margin: 0 0 8px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #4338ca;
+    letter-spacing: 0.01em;
+  }
+  .mf-product-copy .mf-whatsnew ul {
+    margin: 0 0 0 20px;
+  }
+  .mf-product-copy .mf-whatsnew li {
+    margin-bottom: 6px;
+  }
+  .mf-product-copy code {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  .mf-product-copy .mf-whatsnew code {
+    background: rgba(15, 23, 42, 0.85);
+  }
+
+  /* === Tabs === */
+  .mf-modern-tabs {
+    position: relative;
+    max-width: 100%;
+    margin: 24px 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+  }
+
+  .mf-modern-tabs input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .mf-tab-header {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+    background: linear-gradient(180deg, #fafafa 0%, #f4f4f5 100%);
+    border-bottom: 1px solid #e5e7eb;
+    flex-wrap: wrap;
+  }
+
+  .mf-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    padding: 10px 16px;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #334155;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.2;
+    box-shadow: inset 0 0 0 1px #dbe2ea;
+    transition: all 0.2s ease;
+  }
+
+  .mf-tab-btn:hover {
+    background: #f8fafc;
+  }
+
+  .mf-tab-badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: #16a34a;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    line-height: 1.4;
+  }
+  .mf-tab-btn.mf-tab-new {
+    box-shadow: inset 0 0 0 1px #16a34a;
+  }
+
+  .mf-tab-body {
+    padding: 18px;
+    background: #ffffff;
+  }
+
+  .mf-tab-panel {
+    display: none;
+  }
+
+  .mf-image-card {
+    border-radius: 14px;
+    overflow: hidden;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+  }
+
+  .mf-image-card img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+  }
+
+  /* === Active tab highlight === */
+  #mf-tab-1:checked  ~ .mf-tab-header label[for="mf-tab-1"],
+  #mf-tab-2:checked  ~ .mf-tab-header label[for="mf-tab-2"],
+  #mf-tab-3:checked  ~ .mf-tab-header label[for="mf-tab-3"],
+  #mf-tab-4:checked  ~ .mf-tab-header label[for="mf-tab-4"],
+  #mf-tab-5:checked  ~ .mf-tab-header label[for="mf-tab-5"],
+  #mf-tab-6:checked  ~ .mf-tab-header label[for="mf-tab-6"],
+  #mf-tab-7:checked  ~ .mf-tab-header label[for="mf-tab-7"],
+  #mf-tab-8:checked  ~ .mf-tab-header label[for="mf-tab-8"],
+  #mf-tab-9:checked  ~ .mf-tab-header label[for="mf-tab-9"],
+  #mf-tab-10:checked ~ .mf-tab-header label[for="mf-tab-10"],
+  #mf-tab-11:checked ~ .mf-tab-header label[for="mf-tab-11"] {
+    background: linear-gradient(135deg, #7c3aed, #2563eb);
+    color: #ffffff;
+    box-shadow: none;
+  }
+  #mf-tab-10:checked ~ .mf-tab-header label[for="mf-tab-10"] .mf-tab-badge,
+  #mf-tab-11:checked ~ .mf-tab-header label[for="mf-tab-11"] .mf-tab-badge {
+    background: #ffffff;
+    color: #16a34a;
+  }
+
+  /* === Active tab content === */
+  #mf-tab-1:checked  ~ .mf-tab-body .mf-panel-1,
+  #mf-tab-2:checked  ~ .mf-tab-body .mf-panel-2,
+  #mf-tab-3:checked  ~ .mf-tab-body .mf-panel-3,
+  #mf-tab-4:checked  ~ .mf-tab-body .mf-panel-4,
+  #mf-tab-5:checked  ~ .mf-tab-body .mf-panel-5,
+  #mf-tab-6:checked  ~ .mf-tab-body .mf-panel-6,
+  #mf-tab-7:checked  ~ .mf-tab-body .mf-panel-7,
+  #mf-tab-8:checked  ~ .mf-tab-body .mf-panel-8,
+  #mf-tab-9:checked  ~ .mf-tab-body .mf-panel-9,
+  #mf-tab-10:checked ~ .mf-tab-body .mf-panel-10,
+  #mf-tab-11:checked ~ .mf-tab-body .mf-panel-11 {
+    display: block;
+  }
+
+  @media (max-width: 767px) {
+    .mf-tab-header {
+      padding: 10px;
+      gap: 6px;
+    }
+
+    .mf-tab-btn {
+      width: 100%;
+      text-align: center;
+      justify-content: center;
+    }
+
+    .mf-tab-body {
+      padding: 12px;
+    }
+  }
+--></style>

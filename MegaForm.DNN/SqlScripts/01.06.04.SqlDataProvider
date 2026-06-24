@@ -1,0 +1,10 @@
+/*============================================================
+  MegaForm – DNN submissions/workflow inbox packaging refresh
+  Version: 01.06.04
+============================================================*/
+
+/* No direct SQL migration is required here.
+   This package refresh ensures the DNN site receives the
+   aligned Submissions.ascx markup, workflow inbox control,
+   and updated assemblies in one upgrade step. */
+GO

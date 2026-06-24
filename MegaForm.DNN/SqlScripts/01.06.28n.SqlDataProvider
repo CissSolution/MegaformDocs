@@ -1,0 +1,164 @@
+/*
+ * 01.06.28n — KB gap fill from real Claude bridge audit (multi-step strengthen,
+ * cascade-sql consolidated, dash-slug stub deprecation pointers).
+ */
+
+-- ─── 1. Strengthen form_pattern-multi-step (was 889ch pure JSON) ──────────
+DECLARE @bMS NVARCHAR(MAX) = N'Multi-step / wizard form pattern. A long form is paginated into Next / Previous "steps" so the user fills it out in chunks. The MegaForm renderer auto-paginates whenever any `Section` field has `properties.pageBreak:true`.
+
+KEY MECHANICS (renderer/index.ts):
+- Pagination trigger: ANY Section with `properties.pageBreak:true`. No need to set `settings.multiPage:true` — the renderer detects pageBreak Sections automatically.
+- Fallback: if `settings.multiPage:true` is set but no Section has pageBreak, the renderer auto-assigns pageBreak to all Sections after the first (so legacy forms still paginate).
+- Step labels: derived from each pageBreak Section''s `label` field. First step takes the form''s leading Section (if any) or "Step 1".
+- Navigation: built-in Next + Previous buttons. Labels come from `settings.nextButtonText` (default "Next") and `settings.previousButtonText` (default "Previous"). Submit button on the LAST step uses `settings.submitButtonText`.
+- Progress bar: shown when `settings.showProgressBar:true`. Shows current step / total steps with the Section label.
+- Step-level validation: clicking Next validates ONLY the visible step''s fields. Hidden steps (via rules with action:hide on targetType:step) are skipped in the page flow — the wizard jumps to the next visible page.
+
+CANONICAL SCHEMA (3-step contact + address + confirm wizard):
+```json
+{
+  "version":"1.0",
+  "fields":[
+    { "key":"sec_profile",   "type":"Section", "label":"Your Profile",
+      "properties":{ "pageBreak":true } },
+    { "key":"row_name",      "type":"Row", "columns":[
+      { "span":6, "fields":[{ "key":"first_name", "type":"Text", "label":"First name", "required":true }] },
+      { "span":6, "fields":[{ "key":"last_name",  "type":"Text", "label":"Last name",  "required":true }] }
+    ]},
+    { "key":"email",         "type":"Email", "label":"Email", "required":true },
+
+    { "key":"sec_address",   "type":"Section", "label":"Address",
+      "properties":{ "pageBreak":true } },
+    { "key":"country",       "type":"Select", "label":"Country", "required":true, "options":[
+      {"value":"VN","label":"Vietnam"},{"value":"US","label":"United States"}
+    ]},
+    { "key":"city",          "type":"Text", "label":"City" },
+
+    { "key":"sec_confirm",   "type":"Section", "label":"Review",
+      "properties":{ "pageBreak":true } },
+    { "key":"agree",         "type":"Checkbox", "label":"I confirm the information above is correct", "required":true }
+  ],
+  "settings":{
+    "multiPage":true,
+    "showProgressBar":true,
+    "previousButtonText":"Previous",
+    "nextButtonText":"Next",
+    "submitButtonText":"Submit"
+  }
+}
+```
+
+The form above renders as 3 pages:
+1. Page 1 — heading "Your Profile" + name row + email
+2. Page 2 — heading "Address" + country + city
+3. Page 3 — heading "Review" + checkbox + Submit button
+
+NAVIGATION BEHAVIOR:
+- Next button on page N: validates the visible fields ON PAGE N. If valid, advances; if any required is empty / fails validation, scrolls to first error.
+- Previous button on page N: no validation, just rewinds to page N-1.
+- Last page: Next button is replaced with Submit (label = `settings.submitButtonText`).
+- A page can be SKIPPED with a rule: `{when: <condition>, then:[{action:"hide",targetType:"step",target:"sec_address"}]}` — Next button on page 1 jumps to page 3 (see form_pattern-rules-conditional-step).
+
+INTERACTION WITH RULES:
+- Rules fire on every input change EVEN on hidden steps — so a setValue on a step-2 field still works while user is on step 1, but the visual feedback isn''t seen until they reach step 2.
+- Step-level show/hide rules MUST be triggered by a field on an EARLIER step. Otherwise the rule fires too late and the user already saw the now-skipped page.
+
+COMMON PITFALLS:
+- Forgetting `properties:{pageBreak:true}` on the FIRST Section: page 1 then has no heading, and all fields before any pageBreak Section sit on the implicit step 1.
+- Putting all fields BEFORE the first pageBreak Section: the wizard renders only 1 page (no other step has any fields). Always insert the Section BEFORE the fields that belong to that step.
+- Confusing `Section.pageBreak` with `Section.collapsible`: collapsible is a visual UI toggle, pageBreak forces a real page split.
+- Using `replace_form_schema` to "rebuild" a wizard while the user is on page 2: rerendering loses the user''s page index and bounces them back to page 1. Prefer `add_field` / `set_field_property` for in-progress edits.
+
+WHEN TO USE A WIZARD vs SINGLE PAGE:
+- Use a wizard when: ≥10 fields total OR ≥3 logical sections OR mobile-first form OR fields require visual chunking to prevent abandonment.
+- Stay single-page when: <8 fields OR all fields conceptually one set OR the user is power-typing and wants to tab through everything.';
+
+MERGE dbo.MF_AI_Knowledge AS T
+USING (SELECT 'form_pattern-multi-step' AS Slug) AS S ON T.Slug = S.Slug AND T.PortalId IS NULL
+WHEN MATCHED THEN UPDATE SET T.Title = 'Multi-step / wizard form via Section pageBreak (canonical pattern + navigation + rules interaction)', T.Summary = 'Paginate a long form into Next/Previous steps using Section.properties.pageBreak. Includes navigation/progress/validate-before-next mechanics + rule interactions + 4 common pitfalls.', T.Body = @bMS, T.Tags = 'multi-step,wizard,multipage,pageBreak,section,navigation,progress,steps,page', T.Kind = 'form_pattern', T.Source = 'megaform-builtin', T.Version = 2
+WHEN NOT MATCHED THEN INSERT (Slug,Kind,Title,Summary,Body,Tags,Source,Version,CreatedOnDate)
+VALUES ('form_pattern-multi-step','form_pattern','Multi-step / wizard form via Section pageBreak (canonical pattern + navigation + rules interaction)','Paginate a long form into Next/Previous steps using Section.properties.pageBreak. Includes navigation/progress/validate-before-next mechanics + rule interactions + 4 common pitfalls.',@bMS,'multi-step,wizard,multipage,pageBreak,section,navigation,progress,steps,page','megaform-builtin',2,SYSUTCDATETIME());
+
+-- ─── 2. Cascade SQL dropdown consolidated entry ─────────────────────────
+DECLARE @bCascSql NVARCHAR(MAX) = N'Cascade dropdown pattern: a child Select / DataRepeater / DataGrid is filtered by the value(s) selected in one or more PARENT fields. The relationship lives in widgetProps via `optionsDependsOn` (for Select / Radio / Checkbox) or `queryDependsOn` (for DataGrid / DataRepeater / DynamicLabel).
+
+KEY MECHANICS:
+- Parent field: must have its OWN options source (static `options` array OR `properties.optionsSql`) so the dropdown actually has values to pick.
+- Child field: declares the parent key(s) it depends on.
+- SQL placeholder: parent key in camelCase prefixed with `:`. Example — parent key `country_id` → SQL placeholder `:countryId`. The renderer auto-maps snake_case → camelCase parameter binding.
+- Refresh trigger: child auto-refetches whenever ANY of its parents changes.
+- Reset on parent change: child value clears so the user can pick a fresh value from the new option set.
+
+CHILD FIELD SHAPES BY WIDGET:
+
+(a) Select / Radio / Checkbox depending on a parent:
+```json
+{
+  "key":"city",
+  "type":"Select",
+  "label":"City",
+  "properties":{
+    "optionsSource":"sql",
+    "optionsConnectionKey":"DashboardDatabase",
+    "optionsSql":"SELECT Id AS value, Name AS label FROM Cities WHERE CountryId = :countryId ORDER BY Name",
+    "optionsDependsOn":["country_id"],
+    "optionsReloadOnChange":true
+  }
+}
+```
+
+(b) DataRepeater / DataGrid / DynamicLabel filtered by parents:
+```json
+{
+  "key":"scorecard_grid",
+  "type":"DataGrid",
+  "label":"Scorecards",
+  "widgetProps":{
+    "useSql":true,
+    "dataSource":"sql",
+    "connectionKey":"DashboardDatabase",
+    "masterQuery":"SELECT * FROM Scorecards WHERE PlayerId = :playerId AND RoundId = :roundId",
+    "queryDependsOn":["player_id","round_id"],
+    "pageSize":50
+  }
+}
+```
+
+CANONICAL CHAINS:
+- 2-level: Country → City. Parent Select with optionsSql for countries; child Select with optionsDependsOn:["country_id"].
+- 3-level: Country → Province → City. Each level''s optionsDependsOn lists ALL upstream parents (not just the immediate parent) so the cascade resets cleanly: country reloads provinces, province reloads cities — and changing country auto-clears province AND city.
+- Picker → Detail: Select PARENT → Select CHILD → DataRepeater DETAIL. The user PICKS (Selects) before the DataRepeater shows. Never make a DataRepeater an intermediate picker (DataRepeater is display-only — see widget-datarepeater).
+
+DISPATCHER GUARDS (dispatcher rules in MF_AI_KB_Rules):
+- DR-001 — DataRepeater missing masterQuery is rejected (would render forever-loading spinner).
+- DL-001 — DynamicLabel missing useSql:true OR resultMode is rejected.
+- Cascade parent missing options/optionsSql is rejected (parent would never have a value to cascade).
+
+KEY VS CAMEL CASE BUG: write SQL placeholder in camelCase (`:countryId`) even though the field key is snake_case (`country_id`). The renderer normalizes. Writing `:country_id` in SQL works in some queries but fails when the connection driver strips underscores. Always camelCase.
+
+VERIFICATION BEFORE EMITTING SQL: call `get_table_columns(tableName)` on EVERY table referenced in the SQL — never assume FK columns exist by name. Tables called Players / Rounds / Scorecards usually have FK columns in the SCORECARDS table, not the lookup tables.
+
+SEE ALSO:
+- cascade-2level — 2-level country→city template
+- cascade-3level — country→province→city
+- widget-datarepeater-cascade — DataRepeater binding to master query';
+
+MERGE dbo.MF_AI_Knowledge AS T
+USING (SELECT 'form_pattern-cascade-sql' AS Slug) AS S ON T.Slug = S.Slug AND T.PortalId IS NULL
+WHEN MATCHED THEN UPDATE SET T.Title = 'Cascade SQL dropdown (parent → child filtering via optionsDependsOn / queryDependsOn)', T.Summary = 'Consolidated cascade pattern: 2-level / 3-level / picker→detail chains, optionsSql shape, dispatcher guards, snake_case → camelCase placeholder rule.', T.Body = @bCascSql, T.Tags = 'cascade,sql,depends,optionsSql,queryDependsOn,parent,child,dropdown', T.Kind = 'form_pattern', T.Source = 'megaform-builtin', T.Version = 1
+WHEN NOT MATCHED THEN INSERT (Slug,Kind,Title,Summary,Body,Tags,Source,Version,CreatedOnDate)
+VALUES ('form_pattern-cascade-sql','form_pattern','Cascade SQL dropdown (parent → child filtering via optionsDependsOn / queryDependsOn)','Consolidated cascade pattern: 2-level / 3-level / picker→detail chains, optionsSql shape, dispatcher guards, snake_case → camelCase placeholder rule.',@bCascSql,'cascade,sql,depends,optionsSql,queryDependsOn,parent,child,dropdown','megaform-builtin',1,SYSUTCDATETIME());
+
+-- ─── 3. Neutralize dash-slug stubs by overwriting body with deprecation pointers ──
+-- (cannot DELETE — production safety policy; instead UPDATE so they no longer
+-- pollute Claude''s search results with garbage content)
+DECLARE @bMSDep NVARCHAR(MAX) = N'DEPRECATED stub. The real entry uses underscore: see slug `form_pattern-multi-step` (multi-step wizard via Section pageBreak with full navigation + rules + progress + 4 pitfalls).';
+DECLARE @bCBDep NVARCHAR(MAX) = N'DEPRECATED stub. The "if/then/show" shape is NOT the real rule engine format. The real engine uses `{when, then[], else[]}` with operators (eq/neq/gt/...) and actions (show/hide/require/setValue/...). See slug `form_pattern-rules-overview` for the canonical schema + form_pattern-rules-show-hide-section for show/hide patterns.';
+
+MERGE dbo.MF_AI_Knowledge AS T
+USING (SELECT 'form-pattern-multi-step' AS Slug) AS S ON T.Slug = S.Slug AND T.PortalId IS NULL
+WHEN MATCHED THEN UPDATE SET T.Title = '[DEPRECATED — see form_pattern-multi-step]', T.Body = @bMSDep, T.Summary = 'Deprecated dash-slug stub. Use form_pattern-multi-step.', T.Tags = 'deprecated', T.Version = 2;
+
+MERGE dbo.MF_AI_Knowledge AS T
+USING (SELECT 'form-pattern-conditional-branch' AS Slug) AS S ON T.Slug = S.Slug AND T.PortalId IS NULL
+WHEN MATCHED THEN UPDATE SET T.Title = '[DEPRECATED — see form_pattern-rules-overview]', T.Body = @bCBDep, T.Summary = 'Deprecated dash-slug stub with wrong if/then format.', T.Tags = 'deprecated', T.Version = 2;

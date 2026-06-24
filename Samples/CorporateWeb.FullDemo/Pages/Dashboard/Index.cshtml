@@ -1,0 +1,18 @@
+@page
+@model MegaForm.Samples.CorporateWeb.FullDemo.Pages.Dashboard.IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<h1>Admin Dashboard</h1>
+<p class="lead">Built-in MegaForm admin dashboard embedded below. Log in with <code>admin</code> / <code>admin123</code> if prompted.</p>
+
+<div class="ratio ratio-16x9" style="min-height: 800px;">
+    <iframe src="/admin" title="MegaForm Admin Dashboard" class="rounded border"></iframe>
+</div>
+
+<div class="mt-4">
+    <p>
+        <a class="btn btn-outline-primary" href="/admin" target="_blank">Open dashboard in full screen</a>
+    </p>
+</div>

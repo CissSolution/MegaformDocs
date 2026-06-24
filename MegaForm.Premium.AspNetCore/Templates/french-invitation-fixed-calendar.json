@@ -1,0 +1,378 @@
+{
+  "version": "1.0",
+  "slug": "french-invitation-2026",
+  "title": "Vous Etes Invite",
+  "description": "We would be honored by your presence at our celebration",
+  "category": "invitation",
+  "categories": [
+    "invitation",
+    "premium"
+  ],
+  "icon": "sparkles",
+  "fields": [
+    {
+      "key": "section_page1",
+      "type": "Section",
+      "label": "Personal Information",
+      "properties": {
+        "pageBreak": false
+      }
+    },
+    {
+      "key": "row_name",
+      "type": "Row",
+      "label": "Name",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "first_name",
+              "type": "Text",
+              "label": "First Name",
+              "required": true,
+              "placeholder": " "
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "last_name",
+              "type": "Text",
+              "label": "Last Name",
+              "required": true,
+              "placeholder": " "
+            }
+          ]
+        }
+      ],
+      "Columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "first_name",
+              "type": "Text",
+              "label": "First Name",
+              "required": true,
+              "placeholder": " "
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "last_name",
+              "type": "Text",
+              "label": "Last Name",
+              "required": true,
+              "placeholder": " "
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "email",
+      "type": "Email",
+      "label": "Email Address",
+      "required": true,
+      "placeholder": " "
+    },
+    {
+      "key": "row_phone_guests",
+      "type": "Row",
+      "label": "Contact & Guests",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "phone",
+              "type": "Phone",
+              "label": "Phone Number",
+              "placeholder": " "
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "guest_count",
+              "type": "Select",
+              "label": "Number of Guests",
+              "required": true,
+              "options": [
+                {
+                  "label": "Just myself",
+                  "value": "1"
+                },
+                {
+                  "label": "2 guests",
+                  "value": "2"
+                },
+                {
+                  "label": "3 guests",
+                  "value": "3"
+                },
+                {
+                  "label": "4 guests",
+                  "value": "4"
+                },
+                {
+                  "label": "5+ guests",
+                  "value": "5_plus"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "Columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "phone",
+              "type": "Phone",
+              "label": "Phone Number",
+              "placeholder": " "
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "guest_count",
+              "type": "Select",
+              "label": "Number of Guests",
+              "required": true,
+              "options": [
+                {
+                  "label": "Just myself",
+                  "value": "1"
+                },
+                {
+                  "label": "2 guests",
+                  "value": "2"
+                },
+                {
+                  "label": "3 guests",
+                  "value": "3"
+                },
+                {
+                  "label": "4 guests",
+                  "value": "4"
+                },
+                {
+                  "label": "5+ guests",
+                  "value": "5_plus"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "attendance",
+      "type": "Select",
+      "label": "Will You Attend?",
+      "required": true,
+      "options": [
+        {
+          "label": "Joyfully Accept",
+          "value": "accept"
+        },
+        {
+          "label": "Regretfully Decline",
+          "value": "decline"
+        }
+      ]
+    },
+    {
+      "key": "meal_preference",
+      "type": "Select",
+      "label": "Meal Preference",
+      "required": true,
+      "options": [
+        {
+          "label": "Beef Bourguignon",
+          "value": "beef"
+        },
+        {
+          "label": "Coq au Vin",
+          "value": "chicken"
+        },
+        {
+          "label": "Poisson du Jour",
+          "value": "fish"
+        },
+        {
+          "label": "Vegetarian",
+          "value": "vegetarian"
+        }
+      ]
+    },
+    {
+      "key": "dietary_restrictions",
+      "type": "Checkbox",
+      "label": "Dietary Restrictions",
+      "options": [
+        {
+          "label": "Gluten-free",
+          "value": "gluten_free"
+        },
+        {
+          "label": "Dairy-free",
+          "value": "dairy_free"
+        },
+        {
+          "label": "Nut allergy",
+          "value": "nut_allergy"
+        },
+        {
+          "label": "Shellfish allergy",
+          "value": "shellfish"
+        }
+      ]
+    },
+    {
+      "key": "special_notes",
+      "type": "Textarea",
+      "label": "Message for the Hosts",
+      "properties": {
+        "rows": 3
+      },
+      "placeholder": " "
+    }
+  ],
+  "submitButtonText": "Confirm Attendance",
+  "successMessage": "Merci! Your response has been received. We look forward to celebrating with you.",
+  "customHtml": "<div class=\"mfp fr-inv\">{{script:theme_selector}}<div class=\"fr-card\"><div class=\"fr-stripe\"></div><div class=\"fr-header\"><div class=\"fr-header-top\"><div class=\"fr-logo-block\"><div class=\"fr-monogram\">AB</div><div class=\"fr-brand-text\"><span class=\"fr-brand-title\">{{form:title}}</span><span class=\"fr-brand-sub\">{{form:description}}</span></div></div><div class=\"fr-cal-block\"><div class=\"fr-cal-date\"><span class=\"fr-cal-day-name\">SAT</span><span class=\"fr-cal-day\">15</span><span class=\"fr-cal-month\">JUN 2026</span></div><div class=\"fr-cal-divider\"></div><div class=\"fr-cal-venue\"><span class=\"fr-venue-name\">Chateau de Lumiere</span><span class=\"fr-venue-city\">Paris, France</span></div></div></div></div><div class=\"fr-body\"><div class=\"fr-section\"><div class=\"fr-section-lbl\">{{content:text1}}</div>{{field:section_page1}}{{field:row_name}}{{field:email}}{{field:row_phone_guests}}</div><div class=\"fr-section\"><div class=\"fr-section-lbl\">{{content:text2}}</div>{{field:attendance}}</div><div class=\"fr-section\"><div class=\"fr-section-lbl\">{{content:text3}}</div>{{field:meal_preference}}</div><div class=\"fr-section\"><div class=\"fr-section-lbl\">{{content:text4}}</div>{{field:dietary_restrictions}}{{field:special_notes}}</div><div class=\"fr-submit-wrap\"><button type=\"submit\" class=\"fr-btn-submit\"><span>{{form:submit}}</span><span class=\"fr-btn-arrow\">→</span></button></div></div><div class=\"fr-stripe fr-stripe--bottom\"></div></div></div>",
+  "customCss": "@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Montserrat:wght@300;400;500;600&display=swap');:root{--fr-cream:#faf8f5;--fr-ivory:#f5f2ed;--fr-gold:#b8956e;--fr-gold-dk:#9a7856;--fr-burgundy:#722f37;--fr-charcoal:#2c2c2c;--fr-text:#3d3d3d;--fr-muted:#6b6b6b;--fr-white:#ffffff;--fr-border:#d4cfc6;--fr-champagne:#e8e2d9;}*{box-sizing:border-box;margin:0;padding:0}.mfp.fr-inv{font-family:'Montserrat',system-ui,sans-serif;background:linear-gradient(145deg,var(--fr-cream) 0%,var(--fr-ivory) 100%);min-height:100vh;padding:32px 16px;display:flex;justify-content:center;align-items:center;}.fr-card{position:relative;max-width:100%;width:100%;background:var(--fr-white);border:1px solid var(--fr-border);border-radius:4px;box-shadow:0 16px 48px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.03);overflow:hidden;}.fr-stripe{height:5px;background:linear-gradient(90deg,var(--fr-champagne) 0%,var(--fr-gold) 50%,var(--fr-champagne) 100%);}.fr-header{padding:18px 24px;border-bottom:1px solid var(--fr-border);}.fr-header-top{display:flex;align-items:center;justify-content:space-between;gap:16px;}.fr-logo-block{display:flex;align-items:center;gap:10px;}.fr-monogram{width:38px;height:38px;flex-shrink:0;border:1.5px solid var(--fr-gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;font-weight:600;font-style:italic;color:var(--fr-gold);letter-spacing:1px;}.fr-brand-text{display:flex;flex-direction:column;gap:2px;}.fr-brand-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;font-weight:600;font-style:italic;color:var(--fr-charcoal);display:block;}.fr-brand-sub{font-size:10px;color:var(--fr-muted);letter-spacing:.07em;text-transform:uppercase;display:block;}.fr-cal-block{display:flex;align-items:center;gap:12px;flex-shrink:0;}.fr-cal-date{display:flex;flex-direction:column;align-items:center;gap:1px;}.fr-cal-day-name{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--fr-muted);font-weight:500;}.fr-cal-day{font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-weight:600;color:var(--fr-gold);line-height:1;}.fr-cal-month{font-size:9px;font-weight:500;color:var(--fr-charcoal);letter-spacing:.06em;text-transform:uppercase;}.fr-cal-divider{width:1px;height:36px;background:var(--fr-border);}.fr-cal-venue{display:flex;flex-direction:column;gap:2px;}.fr-venue-name{font-family:'Cormorant Garamond',Georgia,serif;font-size:14px;font-weight:600;color:var(--fr-charcoal);display:block;}.fr-venue-city{font-size:10px;color:var(--fr-muted);letter-spacing:.08em;text-transform:uppercase;display:block;}.fr-body{padding:22px 24px;}.fr-section{margin-bottom:18px;}.fr-section-lbl{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--fr-gold);margin-bottom:10px;}.mfp.fr-inv .mf-section-break{display:none}.mfp.fr-inv .mf-form-actions{display:none!important}.mfp.fr-inv label,.mfp.fr-inv .mf-field-label{display:block;font-size:12px;font-weight:500;color:var(--fr-text);margin-bottom:5px;letter-spacing:.02em;}.mfp.fr-inv input[type='text'],.mfp.fr-inv input[type='email'],.mfp.fr-inv input[type='tel'],.mfp.fr-inv select,.mfp.fr-inv textarea,.mfp.fr-inv .mf-field input,.mfp.fr-inv .mf-field select,.mfp.fr-inv .mf-field textarea{width:100%;padding:11px 14px;font-family:inherit;font-size:13px;color:var(--fr-charcoal);background:var(--fr-cream);border:1px solid var(--fr-border);border-radius:4px;transition:all .2s;outline:none;}.mfp.fr-inv .mf-field input:focus,.mfp.fr-inv .mf-field select:focus,.mfp.fr-inv .mf-field textarea:focus{background:var(--fr-white);border-color:var(--fr-gold);box-shadow:0 0 0 3px rgba(184,149,110,.1);}.mfp.fr-inv input::placeholder,.mfp.fr-inv textarea::placeholder{color:var(--fr-muted)}.mfp.fr-inv select{cursor:pointer;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b6b6b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;}.mfp.fr-inv textarea{resize:vertical;min-height:70px}.mfp.fr-inv .mf-row{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;margin-bottom:12px}.mfp.fr-inv .mf-col-6{grid-column:span 6}.mfp.fr-inv .mf-col-12{grid-column:span 12}.mfp.fr-inv .mf-field{margin-bottom:12px}.mfp.fr-inv .mf-option-group{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px}.mfp.fr-inv .mf-option-item{display:flex!important;align-items:center;gap:8px;padding:8px 10px;background:var(--fr-cream);border:none;border-radius:4px;cursor:pointer;transition:background .2s;}.mfp.fr-inv .mf-option-item::before{content:'';width:15px;height:15px;min-width:15px;border:1.5px solid var(--fr-border);border-radius:3px;transition:all .2s;flex-shrink:0;}.mfp.fr-inv .mf-option-control{display:none!important}.mfp.fr-inv .mf-option-ui{flex:1}.mfp.fr-inv .mf-option-label{font-size:12px;font-weight:400;color:var(--fr-text)}.mfp.fr-inv .mf-option-item:has(.mf-option-control:checked){background:rgba(184,149,110,.08)}.mfp.fr-inv .mf-option-item:has(.mf-option-control:checked)::before{border-color:var(--fr-gold);background:var(--fr-gold);background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:center;}.mfp.fr-inv .mf-option-item:hover{background:rgba(184,149,110,.06)}.fr-submit-wrap{margin-top:20px;padding-top:18px;border-top:1px solid var(--fr-border);text-align:center}.fr-btn-submit{display:inline-flex;align-items:center;gap:10px;padding:12px 36px;font-family:inherit;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--fr-white);background:var(--fr-burgundy);border:none;border-radius:4px;cursor:pointer;transition:all .25s;}.fr-btn-submit:hover{background:#5f262d;transform:translateY(-1px);box-shadow:0 6px 20px rgba(114,47,55,.28)}.fr-btn-arrow{font-size:14px;transition:transform .2s}.fr-btn-submit:hover .fr-btn-arrow{transform:translateX(4px)}@media(max-width:480px){.mfp.fr-inv{padding:12px 8px}.fr-header{padding:14px 16px}.fr-header-top{flex-direction:column;align-items:flex-start;gap:12px}.fr-cal-block{align-self:stretch;justify-content:flex-start}.fr-body{padding:16px}.mfp.fr-inv .mf-col-6{grid-column:span 12}.mfp.fr-inv .mf-option-group{grid-template-columns:1fr}}.mfp.fr-inv .fr-body .fr-section:not(:first-of-type){border-top:1px solid var(--fr-border,#e5ded3);padding-top:22px;margin-top:22px}\n/* ========== FOCUS STATE (subtle, border-color only) ========== */\n.mfp.fr-inv input:focus,.mfp.fr-inv textarea:focus,.mfp.fr-inv select:focus,.mfp.fr-inv .mf-field input:focus,.mfp.fr-inv .mf-field textarea:focus,.mfp.fr-inv .mf-field select:focus,.mfp.fr-inv .celebration-input:focus,.mfp.fr-inv [class*=\"celebration-\"]:focus{border-color:var(--primary)!important;outline:none!important;box-shadow:none!important;}.mfp.fr-inv input:hover:not(:focus),.mfp.fr-inv textarea:hover:not(:focus),.mfp.fr-inv select:hover:not(:focus){border-color:color-mix(in oklab,var(--primary) 45%,var(--border))!important;}.mfp.fr-inv select,.mfp.fr-inv .mf-field select{min-height:46px!important;height:auto!important;}.mfp.fr-inv .fr-body .fr-section:not(:first-of-type){border-top:1px solid var(--border);padding-top:22px;margin-top:22px;}",
+  "rules": [],
+  "workflow": null,
+  "settings": {
+    "theme": "french-elegant",
+    "multiPage": false,
+    "customContent": {
+      "text1": "Your Details",
+      "text2": "Attendance",
+      "text3": "Preferences",
+      "text4": "Dietary & Notes",
+      "page1_title": "Personal Information",
+      "page2_title": "Your Response",
+      "step1": "Details",
+      "step2": "RSVP"
+    },
+    "customScripts": {
+      "theme_selector": "(function(root,ctx){\nvar tp=(ctx&&ctx.themePreset)||null;\nvar TP={\"champagne-mist\":{\"name\":\"Champagne Mist\",\"style\":\"celebration\",\"background\":\"oklch(0.97 0.012 85)\",\"foreground\":\"oklch(0.28 0.04 60)\",\"card\":\"oklch(0.995 0.006 85)\",\"primary\":\"oklch(0.45 0.08 15)\",\"primaryForeground\":\"oklch(0.98 0 0)\",\"secondary\":\"oklch(0.92 0.03 85)\",\"muted\":\"oklch(0.94 0.01 85)\",\"mutedForeground\":\"oklch(0.50 0.03 60)\",\"accent\":\"oklch(0.65 0.11 55)\",\"border\":\"oklch(0.86 0.02 85)\"},\"bordeaux-wine\":{\"name\":\"Bordeaux Wine\",\"style\":\"celebration\",\"background\":\"oklch(0.96 0.012 15)\",\"foreground\":\"oklch(0.28 0.06 15)\",\"card\":\"oklch(0.99 0.006 15)\",\"primary\":\"oklch(0.38 0.15 15)\",\"primaryForeground\":\"oklch(0.98 0 0)\",\"secondary\":\"oklch(0.90 0.03 15)\",\"muted\":\"oklch(0.93 0.01 15)\",\"mutedForeground\":\"oklch(0.50 0.03 15)\",\"accent\":\"oklch(0.70 0.10 50)\",\"border\":\"oklch(0.85 0.03 15)\"},\"provence-blush\":{\"name\":\"Provence Blush\",\"style\":\"celebration\",\"background\":\"oklch(0.97 0.01 350)\",\"foreground\":\"oklch(0.26 0.04 350)\",\"card\":\"oklch(0.995 0.005 350)\",\"primary\":\"oklch(0.55 0.11 350)\",\"primaryForeground\":\"oklch(0.98 0 0)\",\"secondary\":\"oklch(0.92 0.03 350)\",\"muted\":\"oklch(0.94 0.01 350)\",\"mutedForeground\":\"oklch(0.52 0.03 350)\",\"accent\":\"oklch(0.62 0.09 85)\",\"border\":\"oklch(0.87 0.02 350)\"},\"versailles-gold\":{\"name\":\"Versailles Gold\",\"style\":\"celebration\",\"background\":\"oklch(0.97 0.015 80)\",\"foreground\":\"oklch(0.24 0.04 60)\",\"card\":\"oklch(0.995 0.007 80)\",\"primary\":\"oklch(0.55 0.14 75)\",\"primaryForeground\":\"oklch(0.15 0.03 60)\",\"secondary\":\"oklch(0.92 0.04 80)\",\"muted\":\"oklch(0.94 0.015 80)\",\"mutedForeground\":\"oklch(0.50 0.03 60)\",\"accent\":\"oklch(0.40 0.12 15)\",\"border\":\"oklch(0.86 0.03 80)\"},\"loire-sage\":{\"name\":\"Loire Sage\",\"style\":\"celebration\",\"background\":\"oklch(0.97 0.008 150)\",\"foreground\":\"oklch(0.24 0.04 150)\",\"card\":\"oklch(0.995 0.004 150)\",\"primary\":\"oklch(0.42 0.11 150)\",\"primaryForeground\":\"oklch(0.98 0 0)\",\"secondary\":\"oklch(0.88 0.04 150)\",\"muted\":\"oklch(0.93 0.01 150)\",\"mutedForeground\":\"oklch(0.48 0.03 150)\",\"accent\":\"oklch(0.62 0.10 70)\",\"border\":\"oklch(0.85 0.02 150)\"},\"normandy-dawn\":{\"name\":\"Normandy Dawn\",\"style\":\"celebration\",\"background\":\"oklch(0.97 0.005 220)\",\"foreground\":\"oklch(0.26 0.03 220)\",\"card\":\"oklch(0.995 0.003 220)\",\"primary\":\"oklch(0.45 0.10 220)\",\"primaryForeground\":\"oklch(0.98 0 0)\",\"secondary\":\"oklch(0.91 0.03 220)\",\"muted\":\"oklch(0.94 0.01 220)\",\"mutedForeground\":\"oklch(0.50 0.03 220)\",\"accent\":\"oklch(0.65 0.11 55)\",\"border\":\"oklch(0.87 0.02 220)\"}};\nvar VMAP={\"--fr-burgundy\":\"primary\",\"--fr-gold\":\"primary\",\"--fr-gold-dk\":\"accent\",\"--fr-champagne\":\"secondary\",\"--fr-cream\":\"background\",\"--fr-ivory\":\"muted\",\"--fr-white\":\"card\",\"--fr-charcoal\":\"foreground\",\"--fr-text\":\"foreground\",\"--fr-muted\":\"mutedForeground\",\"--fr-border\":\"border\"};\nvar GROUPS=[];\nvar SCOPE=\".mfp.fr-inv\";\nvar DEFAULT=\"champagne-mist\";\nvar PFX=\"inv\";\n\nvar cur=DEFAULT;var isOpen=false;var styleId=PFX+'-theme-vars';\nfunction scopeSel(){\n  var host=(root&&root.closest)?root.closest('.mf-form-wrapper,[id^=\"mf-form-wrapper-\"]'):null;\n  var id=host&&host.id?('#'+host.id+' '):(tp&&tp.formId?('#mf-form-wrapper-'+String(tp.formId)+' '):'');\n  return id?(id+SCOPE):SCOPE;\n}\nfunction applyTheme(key){\n  var t=TP[key];if(!t)return;cur=key;\n  var s=document.getElementById(styleId);\n  if(!s){s=document.createElement('style');s.id=styleId;document.head.appendChild(s);}\n  var sel=scopeSel();\n  var rules=sel+'{';\n  rules+='--background:'+t.background+';--foreground:'+t.foreground+';';\n  rules+='--card:'+t.card+';--card-foreground:'+t.foreground+';';\n  rules+='--primary:'+t.primary+';--primary-foreground:'+t.primaryForeground+';';\n  rules+='--secondary:'+t.secondary+';--secondary-foreground:'+t.foreground+';';\n  rules+='--muted:'+t.muted+';--muted-foreground:'+t.mutedForeground+';';\n  rules+='--accent:'+t.accent+';--accent-foreground:'+t.foreground+';';\n  rules+='--border:'+t.border+';--input:'+t.muted+';--ring:'+t.primary+';';\n  Object.keys(VMAP).forEach(function(cssVar){\n    var field=VMAP[cssVar];\n    if(t[field]!==undefined){rules+=cssVar+':'+t[field]+';';}\n  });\n  rules+='}';\n  s.textContent=rules;\n  var ps=document.getElementById(PFX+'-ts-swatch');if(ps)ps.style.background=t.primary;\n  var pn=document.getElementById(PFX+'-ts-name');if(pn)pn.textContent=t.name;\n  document.querySelectorAll('[data-'+PFX+'-key]').forEach(function(btn){\n    var active=btn.getAttribute('data-'+PFX+'-key')===key;\n    btn.style.background=active?'color-mix(in oklab,'+t.primary+' 12%,transparent)':'';\n    var ck=btn.querySelector('.'+PFX+'-check');if(ck)ck.style.display=active?'inline':'none';\n  });\n  if(tp&&typeof tp.setActiveThemeKey==='function'){try{tp.setActiveThemeKey(key,true);}catch(e){}}\n  else{try{localStorage.setItem(PFX+'-theme',key);}catch(e){}}\n}\nfunction mkBtn(key,theme){\n  var btn=document.createElement('button');btn.type='button';\n  btn.setAttribute('data-'+PFX+'-key',key);\n  btn.style.cssText='display:flex;align-items:center;gap:12px;width:100%;padding:9px 14px;text-align:left;border:none;cursor:pointer;font-family:inherit;background:transparent;font-size:13px;transition:background .15s;';\n  var sw=document.createElement('div');sw.style.cssText='display:flex;gap:3px;flex-shrink:0;';\n  [theme.primary,theme.secondary,theme.accent].forEach(function(c){\n    var s=document.createElement('span');\n    s.style.cssText='width:12px;height:12px;border-radius:50%;border:1px solid rgba(0,0,0,.12);background:'+c+';display:inline-block;';\n    sw.appendChild(s);\n  });\n  var nm=document.createElement('span');\n  nm.style.cssText='color:#222;flex:1;font-size:13px;font-family:inherit;';\n  nm.textContent=theme.name;\n  var ck=document.createElement('svg');\n  ck.setAttribute('width','16');ck.setAttribute('height','16');\n  ck.setAttribute('viewBox','0 0 20 20');ck.setAttribute('fill','currentColor');\n  ck.setAttribute('class',PFX+'-check');\n  ck.style.cssText='margin-left:auto;color:'+theme.primary+';display:none;width:16px;height:16px;flex-shrink:0;';\n  ck.innerHTML='<path fill-rule=\"evenodd\" d=\"M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z\" clip-rule=\"evenodd\"/>';\n  btn.appendChild(sw);btn.appendChild(nm);btn.appendChild(ck);\n  btn.addEventListener('mouseenter',function(){if(btn.getAttribute('data-'+PFX+'-key')!==cur)btn.style.background='rgba(0,0,0,.04)';});\n  btn.addEventListener('mouseleave',function(){if(btn.getAttribute('data-'+PFX+'-key')!==cur)btn.style.background='';});\n  btn.addEventListener('click',function(e){e.stopPropagation();applyTheme(key);close();});\n  return btn;\n}\nfunction mkSection(title,list,last){\n  var sec=document.createElement('div');\n  sec.style.cssText='padding:10px 6px;'+(last?'':'border-bottom:1px solid rgba(0,0,0,.08);');\n  if(title){var h=document.createElement('p');\n    h.style.cssText='font-size:10px;font-weight:600;color:#888;letter-spacing:.12em;text-transform:uppercase;margin:0 8px 6px;font-family:inherit;';\n    h.textContent=title;sec.appendChild(h);}\n  list.forEach(function(e){sec.appendChild(mkBtn(e[0],e[1]));});\n  return sec;\n}\nvar wrap=document.createElement('div');wrap.id=PFX+'-ts-wrap';\nwrap.style.cssText='position:fixed;top:16px;right:16px;z-index:99999;font-family:system-ui,-apple-system,sans-serif;';\nvar pill=document.createElement('button');pill.type='button';\npill.style.cssText='display:flex;align-items:center;gap:8px;padding:8px 14px;background:#fff;border:1px solid rgba(0,0,0,.14);border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.1);cursor:pointer;font-family:inherit;font-size:13px;color:#222;white-space:nowrap;';\nvar ps=document.createElement('span');ps.id=PFX+'-ts-swatch';\nps.style.cssText='width:16px;height:16px;border-radius:50%;flex-shrink:0;background:#888;display:inline-block;border:1px solid rgba(0,0,0,.1);';\nvar pn=document.createElement('span');pn.id=PFX+'-ts-name';pn.textContent='Theme';\nvar chv=document.createElement('svg');chv.setAttribute('width','14');chv.setAttribute('height','14');\nchv.setAttribute('viewBox','0 0 24 24');chv.setAttribute('fill','none');\nchv.setAttribute('stroke','currentColor');chv.setAttribute('stroke-width','2');\nchv.style.cssText='transition:transform .2s;color:#888;';\nchv.innerHTML='<polyline points=\"6 9 12 15 18 9\"/>';\npill.appendChild(ps);pill.appendChild(pn);pill.appendChild(chv);\nvar panel=document.createElement('div');\npanel.style.cssText='position:absolute;top:calc(100% + 8px);right:0;width:270px;background:#fff;border:1px solid rgba(0,0,0,.1);border-radius:10px;box-shadow:0 12px 36px rgba(0,0,0,.15);max-height:70vh;overflow-y:auto;display:none;';\nvar entries=Object.entries(TP);\npanel.appendChild(mkSection('',entries,true));\nwrap.appendChild(pill);wrap.appendChild(panel);\nif(!tp||tp.selectorEnabled!==false){\n  document.body.appendChild(wrap);\n  function positionWrap(){\n    var nav=document.querySelector('header,.dnn-nav,nav[class*=nav]');\n    var navH=nav?nav.getBoundingClientRect().bottom:0;\n    wrap.style.top=Math.max(16,navH+8)+'px';\n  }\n  positionWrap();window.addEventListener('resize',positionWrap);setTimeout(positionWrap,500);\n  function open(){isOpen=true;panel.style.display='block';chv.style.transform='rotate(180deg)';}\n  function close(){isOpen=false;panel.style.display='none';chv.style.transform='';}\n  pill.addEventListener('click',function(e){e.stopPropagation();isOpen?close():open();});\n  document.addEventListener('click',function(){if(isOpen)close();});\n  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen)close();});\n}\nvar saved=(tp&&typeof tp.getActiveThemeKey==='function'?tp.getActiveThemeKey():(tp&&tp.savedThemeKey)||null);\nif(saved==null){try{saved=localStorage.getItem(PFX+'-theme');}catch(e){}}\napplyTheme(saved||((tp&&tp.defaultThemeKey)||DEFAULT));\nif(tp&&typeof tp.reportAvailable==='function'){try{tp.reportAvailable({activeThemeKey:cur,selectedThemeKey:cur,dirty:false});}catch(e){}}\n})(window.__mfCurrentScriptRoot||document,window.__mfScriptContext||{});\n"
+    },
+    "themeSelector": {
+      "enabled": true,
+      "mode": "module-controlled",
+      "scriptKey": "theme_selector",
+      "presetSet": "celebration-tones",
+      "defaultThemeKey": "champagne-mist",
+      "showUpdateThemeButton": true,
+      "presets": {
+        "champagne-mist": {
+          "name": "Champagne Mist",
+          "style": "celebration",
+          "background": "oklch(0.97 0.012 85)",
+          "foreground": "oklch(0.28 0.04 60)",
+          "card": "oklch(0.995 0.006 85)",
+          "primary": "oklch(0.45 0.08 15)",
+          "primaryForeground": "oklch(0.98 0 0)",
+          "secondary": "oklch(0.92 0.03 85)",
+          "muted": "oklch(0.94 0.01 85)",
+          "mutedForeground": "oklch(0.50 0.03 60)",
+          "accent": "oklch(0.65 0.11 55)",
+          "border": "oklch(0.86 0.02 85)"
+        },
+        "bordeaux-wine": {
+          "name": "Bordeaux Wine",
+          "style": "celebration",
+          "background": "oklch(0.96 0.012 15)",
+          "foreground": "oklch(0.28 0.06 15)",
+          "card": "oklch(0.99 0.006 15)",
+          "primary": "oklch(0.38 0.15 15)",
+          "primaryForeground": "oklch(0.98 0 0)",
+          "secondary": "oklch(0.90 0.03 15)",
+          "muted": "oklch(0.93 0.01 15)",
+          "mutedForeground": "oklch(0.50 0.03 15)",
+          "accent": "oklch(0.70 0.10 50)",
+          "border": "oklch(0.85 0.03 15)"
+        },
+        "provence-blush": {
+          "name": "Provence Blush",
+          "style": "celebration",
+          "background": "oklch(0.97 0.01 350)",
+          "foreground": "oklch(0.26 0.04 350)",
+          "card": "oklch(0.995 0.005 350)",
+          "primary": "oklch(0.55 0.11 350)",
+          "primaryForeground": "oklch(0.98 0 0)",
+          "secondary": "oklch(0.92 0.03 350)",
+          "muted": "oklch(0.94 0.01 350)",
+          "mutedForeground": "oklch(0.52 0.03 350)",
+          "accent": "oklch(0.62 0.09 85)",
+          "border": "oklch(0.87 0.02 350)"
+        },
+        "versailles-gold": {
+          "name": "Versailles Gold",
+          "style": "celebration",
+          "background": "oklch(0.97 0.015 80)",
+          "foreground": "oklch(0.24 0.04 60)",
+          "card": "oklch(0.995 0.007 80)",
+          "primary": "oklch(0.55 0.14 75)",
+          "primaryForeground": "oklch(0.15 0.03 60)",
+          "secondary": "oklch(0.92 0.04 80)",
+          "muted": "oklch(0.94 0.015 80)",
+          "mutedForeground": "oklch(0.50 0.03 60)",
+          "accent": "oklch(0.40 0.12 15)",
+          "border": "oklch(0.86 0.03 80)"
+        },
+        "loire-sage": {
+          "name": "Loire Sage",
+          "style": "celebration",
+          "background": "oklch(0.97 0.008 150)",
+          "foreground": "oklch(0.24 0.04 150)",
+          "card": "oklch(0.995 0.004 150)",
+          "primary": "oklch(0.42 0.11 150)",
+          "primaryForeground": "oklch(0.98 0 0)",
+          "secondary": "oklch(0.88 0.04 150)",
+          "muted": "oklch(0.93 0.01 150)",
+          "mutedForeground": "oklch(0.48 0.03 150)",
+          "accent": "oklch(0.62 0.10 70)",
+          "border": "oklch(0.85 0.02 150)"
+        },
+        "normandy-dawn": {
+          "name": "Normandy Dawn",
+          "style": "celebration",
+          "background": "oklch(0.97 0.005 220)",
+          "foreground": "oklch(0.26 0.03 220)",
+          "card": "oklch(0.995 0.003 220)",
+          "primary": "oklch(0.45 0.10 220)",
+          "primaryForeground": "oklch(0.98 0 0)",
+          "secondary": "oklch(0.91 0.03 220)",
+          "muted": "oklch(0.94 0.01 220)",
+          "mutedForeground": "oklch(0.50 0.03 220)",
+          "accent": "oklch(0.65 0.11 55)",
+          "border": "oklch(0.87 0.02 220)"
+        }
+      }
+    },
+    "submitButtonText": "Confirm Attendance",
+    "successMessage": "Merci! Your response has been received. We look forward to celebrating with you.",
+    "customHtml": "<div class=\"mfp fr-inv\">{{script:theme_selector}}<div class=\"fr-card\"><div class=\"fr-stripe\"></div><div class=\"fr-header\"><div class=\"fr-header-top\"><div class=\"fr-logo-block\"><div class=\"fr-monogram\">AB</div><div class=\"fr-brand-text\"><span class=\"fr-brand-title\">{{form:title}}</span><span class=\"fr-brand-sub\">{{form:description}}</span></div></div><div class=\"fr-cal-block\"><div class=\"fr-cal-date\"><span class=\"fr-cal-day-name\">SAT</span><span class=\"fr-cal-day\">15</span><span class=\"fr-cal-month\">JUN 2026</span></div><div class=\"fr-cal-divider\"></div><div class=\"fr-cal-venue\"><span class=\"fr-venue-name\">Chateau de Lumiere</span><span class=\"fr-venue-city\">Paris, France</span></div></div></div></div><div class=\"fr-body\"><div class=\"fr-section\"><div class=\"fr-section-lbl\">{{content:text1}}</div>{{field:section_page1}}{{field:row_name}}{{field:email}}{{field:row_phone_guests}}</div><div class=\"fr-section\"><div class=\"fr-section-lbl\">{{content:text2}}</div>{{field:attendance}}</div><div class=\"fr-section\"><div class=\"fr-section-lbl\">{{content:text3}}</div>{{field:meal_preference}}</div><div class=\"fr-section\"><div class=\"fr-section-lbl\">{{content:text4}}</div>{{field:dietary_restrictions}}{{field:special_notes}}</div><div class=\"fr-submit-wrap\"><button type=\"submit\" class=\"fr-btn-submit\"><span>{{form:submit}}</span><span class=\"fr-btn-arrow\">→</span></button></div></div><div class=\"fr-stripe fr-stripe--bottom\"></div></div></div>",
+    "customCss": "@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Montserrat:wght@300;400;500;600&display=swap');:root{--fr-cream:#faf8f5;--fr-ivory:#f5f2ed;--fr-gold:#b8956e;--fr-gold-dk:#9a7856;--fr-burgundy:#722f37;--fr-charcoal:#2c2c2c;--fr-text:#3d3d3d;--fr-muted:#6b6b6b;--fr-white:#ffffff;--fr-border:#d4cfc6;--fr-champagne:#e8e2d9;}*{box-sizing:border-box;margin:0;padding:0}.mfp.fr-inv{font-family:'Montserrat',system-ui,sans-serif;background:linear-gradient(145deg,var(--fr-cream) 0%,var(--fr-ivory) 100%);min-height:100vh;padding:32px 16px;display:flex;justify-content:center;align-items:center;}.fr-card{position:relative;max-width:100%;width:100%;background:var(--fr-white);border:1px solid var(--fr-border);border-radius:4px;box-shadow:0 16px 48px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.03);overflow:hidden;}.fr-stripe{height:5px;background:linear-gradient(90deg,var(--fr-champagne) 0%,var(--fr-gold) 50%,var(--fr-champagne) 100%);}.fr-header{padding:18px 24px;border-bottom:1px solid var(--fr-border);}.fr-header-top{display:flex;align-items:center;justify-content:space-between;gap:16px;}.fr-logo-block{display:flex;align-items:center;gap:10px;}.fr-monogram{width:38px;height:38px;flex-shrink:0;border:1.5px solid var(--fr-gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;font-weight:600;font-style:italic;color:var(--fr-gold);letter-spacing:1px;}.fr-brand-text{display:flex;flex-direction:column;gap:2px;}.fr-brand-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;font-weight:600;font-style:italic;color:var(--fr-charcoal);display:block;}.fr-brand-sub{font-size:10px;color:var(--fr-muted);letter-spacing:.07em;text-transform:uppercase;display:block;}.fr-cal-block{display:flex;align-items:center;gap:12px;flex-shrink:0;}.fr-cal-date{display:flex;flex-direction:column;align-items:center;gap:1px;}.fr-cal-day-name{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--fr-muted);font-weight:500;}.fr-cal-day{font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-weight:600;color:var(--fr-gold);line-height:1;}.fr-cal-month{font-size:9px;font-weight:500;color:var(--fr-charcoal);letter-spacing:.06em;text-transform:uppercase;}.fr-cal-divider{width:1px;height:36px;background:var(--fr-border);}.fr-cal-venue{display:flex;flex-direction:column;gap:2px;}.fr-venue-name{font-family:'Cormorant Garamond',Georgia,serif;font-size:14px;font-weight:600;color:var(--fr-charcoal);display:block;}.fr-venue-city{font-size:10px;color:var(--fr-muted);letter-spacing:.08em;text-transform:uppercase;display:block;}.fr-body{padding:22px 24px;}.fr-section{margin-bottom:18px;}.fr-section-lbl{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--fr-gold);margin-bottom:10px;}.mfp.fr-inv .mf-section-break{display:none}.mfp.fr-inv .mf-form-actions{display:none!important}.mfp.fr-inv label,.mfp.fr-inv .mf-field-label{display:block;font-size:12px;font-weight:500;color:var(--fr-text);margin-bottom:5px;letter-spacing:.02em;}.mfp.fr-inv input[type='text'],.mfp.fr-inv input[type='email'],.mfp.fr-inv input[type='tel'],.mfp.fr-inv select,.mfp.fr-inv textarea,.mfp.fr-inv .mf-field input,.mfp.fr-inv .mf-field select,.mfp.fr-inv .mf-field textarea{width:100%;padding:11px 14px;font-family:inherit;font-size:13px;color:var(--fr-charcoal);background:var(--fr-cream);border:1px solid var(--fr-border);border-radius:4px;transition:all .2s;outline:none;}.mfp.fr-inv .mf-field input:focus,.mfp.fr-inv .mf-field select:focus,.mfp.fr-inv .mf-field textarea:focus{background:var(--fr-white);border-color:var(--fr-gold);box-shadow:0 0 0 3px rgba(184,149,110,.1);}.mfp.fr-inv input::placeholder,.mfp.fr-inv textarea::placeholder{color:var(--fr-muted)}.mfp.fr-inv select{cursor:pointer;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b6b6b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;}.mfp.fr-inv textarea{resize:vertical;min-height:70px}.mfp.fr-inv .mf-row{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;margin-bottom:12px}.mfp.fr-inv .mf-col-6{grid-column:span 6}.mfp.fr-inv .mf-col-12{grid-column:span 12}.mfp.fr-inv .mf-field{margin-bottom:12px}.mfp.fr-inv .mf-option-group{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px}.mfp.fr-inv .mf-option-item{display:flex!important;align-items:center;gap:8px;padding:8px 10px;background:var(--fr-cream);border:none;border-radius:4px;cursor:pointer;transition:background .2s;}.mfp.fr-inv .mf-option-item::before{content:'';width:15px;height:15px;min-width:15px;border:1.5px solid var(--fr-border);border-radius:3px;transition:all .2s;flex-shrink:0;}.mfp.fr-inv .mf-option-control{display:none!important}.mfp.fr-inv .mf-option-ui{flex:1}.mfp.fr-inv .mf-option-label{font-size:12px;font-weight:400;color:var(--fr-text)}.mfp.fr-inv .mf-option-item:has(.mf-option-control:checked){background:rgba(184,149,110,.08)}.mfp.fr-inv .mf-option-item:has(.mf-option-control:checked)::before{border-color:var(--fr-gold);background:var(--fr-gold);background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:center;}.mfp.fr-inv .mf-option-item:hover{background:rgba(184,149,110,.06)}.fr-submit-wrap{margin-top:20px;padding-top:18px;border-top:1px solid var(--fr-border);text-align:center}.fr-btn-submit{display:inline-flex;align-items:center;gap:10px;padding:12px 36px;font-family:inherit;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--fr-white);background:var(--fr-burgundy);border:none;border-radius:4px;cursor:pointer;transition:all .25s;}.fr-btn-submit:hover{background:#5f262d;transform:translateY(-1px);box-shadow:0 6px 20px rgba(114,47,55,.28)}.fr-btn-arrow{font-size:14px;transition:transform .2s}.fr-btn-submit:hover .fr-btn-arrow{transform:translateX(4px)}@media(max-width:480px){.mfp.fr-inv{padding:12px 8px}.fr-header{padding:14px 16px}.fr-header-top{flex-direction:column;align-items:flex-start;gap:12px}.fr-cal-block{align-self:stretch;justify-content:flex-start}.fr-body{padding:16px}.mfp.fr-inv .mf-col-6{grid-column:span 12}.mfp.fr-inv .mf-option-group{grid-template-columns:1fr}}.mfp.fr-inv .fr-body .fr-section:not(:first-of-type){border-top:1px solid var(--fr-border,#e5ded3);padding-top:22px;margin-top:22px}\n/* ========== FOCUS STATE (subtle, border-color only) ========== */\n.mfp.fr-inv input:focus,.mfp.fr-inv textarea:focus,.mfp.fr-inv select:focus,.mfp.fr-inv .mf-field input:focus,.mfp.fr-inv .mf-field textarea:focus,.mfp.fr-inv .mf-field select:focus,.mfp.fr-inv .celebration-input:focus,.mfp.fr-inv [class*=\"celebration-\"]:focus{border-color:var(--primary)!important;outline:none!important;box-shadow:none!important;}.mfp.fr-inv input:hover:not(:focus),.mfp.fr-inv textarea:hover:not(:focus),.mfp.fr-inv select:hover:not(:focus){border-color:color-mix(in oklab,var(--primary) 45%,var(--border))!important;}.mfp.fr-inv select,.mfp.fr-inv .mf-field select{min-height:46px!important;height:auto!important;}.mfp.fr-inv .fr-body .fr-section:not(:first-of-type){border-top:1px solid var(--border);padding-top:22px;margin-top:22px;}",
+    "rules": [],
+    "workflowTemplate": null
+  }
+}

@@ -1,0 +1,225 @@
+### YamlMime:ManagedReference
+items:
+- uid: MegaForm.Sdk.IMegaFormClient
+  commentId: T:MegaForm.Sdk.IMegaFormClient
+  id: IMegaFormClient
+  parent: MegaForm.Sdk
+  children:
+  - MegaForm.Sdk.IMegaFormClient.Files
+  - MegaForm.Sdk.IMegaFormClient.Forms
+  - MegaForm.Sdk.IMegaFormClient.Schema
+  - MegaForm.Sdk.IMegaFormClient.Submissions
+  langs:
+  - csharp
+  - vb
+  name: IMegaFormClient
+  nameWithType: IMegaFormClient
+  fullName: MegaForm.Sdk.IMegaFormClient
+  type: Interface
+  source:
+    id: IMegaFormClient
+    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 11
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: >-
+    The single public entry point for using MegaForm programmatically. Resolve it from
+
+    DI (<code>services.AddMegaFormSdk()</code>) or, in non-DI hosts (e.g. a DNN Razor host),
+
+    via the ambient <xref href="MegaForm" data-throw-if-not-resolved="false"></xref> accessor.
+  example: []
+  syntax:
+    content: public interface IMegaFormClient
+    content.vb: Public Interface IMegaFormClient
+  derivedClasses:
+  - MegaForm.Sdk.MegaFormClient
+- uid: MegaForm.Sdk.IMegaFormClient.Forms
+  commentId: P:MegaForm.Sdk.IMegaFormClient.Forms
+  id: Forms
+  parent: MegaForm.Sdk.IMegaFormClient
+  langs:
+  - csharp
+  - vb
+  name: Forms
+  nameWithType: IMegaFormClient.Forms
+  fullName: MegaForm.Sdk.IMegaFormClient.Forms
+  type: Property
+  source:
+    id: Forms
+    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 14
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Form authoring + listing.
+  example: []
+  syntax:
+    content: IFormApi Forms { get; }
+    parameters: []
+    return:
+      type: MegaForm.Sdk.IFormApi
+    content.vb: ReadOnly Property Forms As IFormApi
+  overload: MegaForm.Sdk.IMegaFormClient.Forms*
+- uid: MegaForm.Sdk.IMegaFormClient.Submissions
+  commentId: P:MegaForm.Sdk.IMegaFormClient.Submissions
+  id: Submissions
+  parent: MegaForm.Sdk.IMegaFormClient
+  langs:
+  - csharp
+  - vb
+  name: Submissions
+  nameWithType: IMegaFormClient.Submissions
+  fullName: MegaForm.Sdk.IMegaFormClient.Submissions
+  type: Property
+  source:
+    id: Submissions
+    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 17
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Submission querying (FindData).
+  example: []
+  syntax:
+    content: ISubmissionApi Submissions { get; }
+    parameters: []
+    return:
+      type: MegaForm.Sdk.ISubmissionApi
+    content.vb: ReadOnly Property Submissions As ISubmissionApi
+  overload: MegaForm.Sdk.IMegaFormClient.Submissions*
+- uid: MegaForm.Sdk.IMegaFormClient.Files
+  commentId: P:MegaForm.Sdk.IMegaFormClient.Files
+  id: Files
+  parent: MegaForm.Sdk.IMegaFormClient
+  langs:
+  - csharp
+  - vb
+  name: Files
+  nameWithType: IMegaFormClient.Files
+  fullName: MegaForm.Sdk.IMegaFormClient.Files
+  type: Property
+  source:
+    id: Files
+    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 20
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Uploaded-file listing + download.
+  example: []
+  syntax:
+    content: IFileApi Files { get; }
+    parameters: []
+    return:
+      type: MegaForm.Sdk.IFileApi
+    content.vb: ReadOnly Property Files As IFileApi
+  overload: MegaForm.Sdk.IMegaFormClient.Files*
+- uid: MegaForm.Sdk.IMegaFormClient.Schema
+  commentId: P:MegaForm.Sdk.IMegaFormClient.Schema
+  id: Schema
+  parent: MegaForm.Sdk.IMegaFormClient
+  langs:
+  - csharp
+  - vb
+  name: Schema
+  nameWithType: IMegaFormClient.Schema
+  fullName: MegaForm.Sdk.IMegaFormClient.Schema
+  type: Property
+  source:
+    id: Schema
+    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 23
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Parse a form's SchemaJson into typed, read-only field metadata.
+  example: []
+  syntax:
+    content: ISchemaApi Schema { get; }
+    parameters: []
+    return:
+      type: MegaForm.Sdk.ISchemaApi
+    content.vb: ReadOnly Property Schema As ISchemaApi
+  overload: MegaForm.Sdk.IMegaFormClient.Schema*
+references:
+- uid: MegaForm
+  commentId: N:MegaForm
+  name: MegaForm
+  nameWithType: MegaForm
+  fullName: MegaForm
+- uid: MegaForm.Sdk
+  commentId: N:MegaForm.Sdk
+  href: MegaForm.html
+  name: MegaForm.Sdk
+  nameWithType: MegaForm.Sdk
+  fullName: MegaForm.Sdk
+  spec.csharp:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+  spec.vb:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+- uid: MegaForm.Sdk.IMegaFormClient.Forms*
+  commentId: Overload:MegaForm.Sdk.IMegaFormClient.Forms
+  href: MegaForm.Sdk.IMegaFormClient.html#MegaForm_Sdk_IMegaFormClient_Forms
+  name: Forms
+  nameWithType: IMegaFormClient.Forms
+  fullName: MegaForm.Sdk.IMegaFormClient.Forms
+- uid: MegaForm.Sdk.IFormApi
+  commentId: T:MegaForm.Sdk.IFormApi
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.IFormApi.html
+  name: IFormApi
+  nameWithType: IFormApi
+  fullName: MegaForm.Sdk.IFormApi
+- uid: MegaForm.Sdk.IMegaFormClient.Submissions*
+  commentId: Overload:MegaForm.Sdk.IMegaFormClient.Submissions
+  href: MegaForm.Sdk.IMegaFormClient.html#MegaForm_Sdk_IMegaFormClient_Submissions
+  name: Submissions
+  nameWithType: IMegaFormClient.Submissions
+  fullName: MegaForm.Sdk.IMegaFormClient.Submissions
+- uid: MegaForm.Sdk.ISubmissionApi
+  commentId: T:MegaForm.Sdk.ISubmissionApi
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.ISubmissionApi.html
+  name: ISubmissionApi
+  nameWithType: ISubmissionApi
+  fullName: MegaForm.Sdk.ISubmissionApi
+- uid: MegaForm.Sdk.IMegaFormClient.Files*
+  commentId: Overload:MegaForm.Sdk.IMegaFormClient.Files
+  href: MegaForm.Sdk.IMegaFormClient.html#MegaForm_Sdk_IMegaFormClient_Files
+  name: Files
+  nameWithType: IMegaFormClient.Files
+  fullName: MegaForm.Sdk.IMegaFormClient.Files
+- uid: MegaForm.Sdk.IFileApi
+  commentId: T:MegaForm.Sdk.IFileApi
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.IFileApi.html
+  name: IFileApi
+  nameWithType: IFileApi
+  fullName: MegaForm.Sdk.IFileApi
+- uid: MegaForm.Sdk.IMegaFormClient.Schema*
+  commentId: Overload:MegaForm.Sdk.IMegaFormClient.Schema
+  href: MegaForm.Sdk.IMegaFormClient.html#MegaForm_Sdk_IMegaFormClient_Schema
+  name: Schema
+  nameWithType: IMegaFormClient.Schema
+  fullName: MegaForm.Sdk.IMegaFormClient.Schema
+- uid: MegaForm.Sdk.ISchemaApi
+  commentId: T:MegaForm.Sdk.ISchemaApi
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.ISchemaApi.html
+  name: ISchemaApi
+  nameWithType: ISchemaApi
+  fullName: MegaForm.Sdk.ISchemaApi

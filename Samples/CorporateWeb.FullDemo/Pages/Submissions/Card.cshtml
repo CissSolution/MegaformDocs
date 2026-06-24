@@ -1,0 +1,51 @@
+@page
+@model MegaForm.Samples.CorporateWeb.FullDemo.Pages.Submissions.CardModel
+@{
+    ViewData["Title"] = "Card View";
+}
+
+<h1>Card View</h1>
+<p class="lead">Submissions displayed as rich cards. Data is loaded via the MegaForm SDK.</p>
+
+<form method="get" class="row g-3 mb-4">
+    <div class="col-md-4">
+        <label class="form-label">Form</label>
+        <select name="formId" class="form-select" asp-for="FormId">
+            <option value="0">All forms</option>
+            @foreach (var form in Model.Forms)
+            {
+                <option value="@form.FormId">@form.Title</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary w-100">Filter</button>
+    </div>
+</form>
+
+<div class="row g-4">
+    @foreach (var card in Model.Cards)
+    {
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>#@card.SubmissionId</span>
+                    <span class="badge bg-info">@card.FormTitle</span>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">@card.Title</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">@card.Subtitle</h6>
+                    <p class="card-text">@card.Body</p>
+                </div>
+                <div class="card-footer text-muted">
+                    @card.Footer
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (!Model.Cards.Any())
+{
+    <div class="alert alert-info">No submissions to display.</div>
+}

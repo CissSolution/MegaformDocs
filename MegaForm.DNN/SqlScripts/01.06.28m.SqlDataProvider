@@ -1,0 +1,573 @@
+/*
+ * MegaForm 01.06.28m — Rule Builder KB seed
+ * 12 entries covering: rule JSON shape, 14 operators, 8 actions, condition
+ * groups, then/else, priority, show/hide section, require-on-condition,
+ * setValue cascade, DataGrid Sum/computeFormula, money grand-total pattern,
+ * and concrete templates. Mined from MegaForm.UI/src/builder/rule-engine.ts
+ * + rule-builder-ui.ts + widgets/megaform-widget-datagrid.ts.
+ */
+
+-- ─── 1. Rule system overview ───────────────────────────────────────────────
+DECLARE @bRulesOverview NVARCHAR(MAX) = N'MegaForm has a runtime rule engine that mutates the form DOM whenever any input fires `change` or `input`. Rules live in `schema.settings.rules` as an array of Rule Definitions. Each definition has a WHEN condition tree, a THEN action list (applied when the tree evaluates true), and an ELSE action list (applied when false). Rules are sorted by `priority` ascending, then evaluated top-to-bottom.
+
+Files of record:
+- MegaForm.UI/src/builder/rule-engine.ts        — pure JS evaluator (compare, evaluateNode, collectEffects, applyEffects)
+- MegaForm.UI/src/builder/rule-builder-ui.ts    — visual rule editor (Rules tab)
+- MegaForm.UI/src/renderer/conditional.ts       — runtime binding (listens to change/input and re-runs evaluateRules)
+
+What rules CAN do (built-in):
+- Show/Hide a field, section, or step
+- Require/Optional a field, section, or step (toggles required validation)
+- Enable/Disable a field, section, or step (toggles disabled attribute)
+- SetValue (write a string into a field) / Clear (wipe a field)
+
+What rules CAN NOT do (gaps — use workarounds below):
+- Auto-CALCULATE sums (no formula action). Workarounds:
+  * Use DataGrid widget with `computeFormula` per column + `totalFormula` (see form_pattern-formula-datagrid)
+  * For non-line-item totals, populate the visible total via SetValue once a single trigger field changes — only works for static math the AI can pre-bake into the rule chain.
+  * For arbitrary calc, use DynamicLabel + SQL or a script token.
+- No "if any field in a group changes" trigger: rules listen to any input event globally.
+- No async/server-side conditions.
+
+Rule definition shape (canonical):
+```json
+{
+  "id": "definition_<random>",
+  "name": "Rule 1",
+  "enabled": true,
+  "priority": 1,
+  "when": {
+    "id": "group_<random>", "type": "group", "logic": "all",
+    "children": [
+      { "id": "rule_<r>", "type": "rule", "field": "gender", "operator": "eq", "value": "Male" }
+    ]
+  },
+  "then": [
+    { "id": "action_<r>", "action": "show",    "targetType": "field",   "target": "veteran_status" }
+  ],
+  "else": [
+    { "id": "action_<r>", "action": "hide",    "targetType": "field",   "target": "veteran_status" }
+  ]
+}
+```
+
+When the AI is asked to ADD a rule, it should:
+1. Read the current `schema.settings.rules` array (or create []).
+2. Append a new Rule Definition object using exactly the shape above. (IDs can be any unique strings; the renderer accepts arbitrary slugs.)
+3. Emit set_form_meta with `rules` as a top-level array OR replace_form_schema with settings.rules patched.
+4. Always set `enabled:true` + `priority` (default 1).';
+
+MERGE dbo.[MF_AI_Knowledge] AS T
+USING (SELECT 'form_pattern-rules-overview' AS Slug) AS S ON T.Slug = S.Slug AND T.PortalId IS NULL
+WHEN MATCHED THEN UPDATE SET T.Title='Rule system overview (engine, shape, gaps)', T.Body=@bRulesOverview, T.Summary='Top-level guide to MegaForm rules: 14 operators, 8 actions, WHEN/THEN/ELSE, priority, the rule JSON shape, and the known gap (no calculate action).', T.Tags='rules,overview,schema,engine', T.Kind='form_pattern', T.Source='megaform-builtin', T.Version=1
+WHEN NOT MATCHED THEN INSERT (Slug,Kind,Title,Summary,Body,Tags,Source,Version,CreatedOnDate)
+VALUES ('form_pattern-rules-overview','form_pattern','Rule system overview (engine, shape, gaps)','Top-level guide to MegaForm rules: 14 operators, 8 actions, WHEN/THEN/ELSE, priority, the rule JSON shape, and the known gap (no calculate action).',@bRulesOverview,'rules,overview,schema,engine','megaform-builtin',1,SYSUTCDATETIME());
+
+
+-- ─── 2. 14 operators ───────────────────────────────────────────────────────
+DECLARE @bOperators NVARCHAR(MAX) = N'14 operators are accepted by the rule engine. Each operator goes into the `operator` field of a leaf condition. Comparison is case-insensitive for strings, with numeric coercion when both sides parse as numbers.
+
+| Code        | Label              | Applies to                            | Notes |
+|-------------|--------------------|---------------------------------------|-------|
+| eq          | equals             | all                                   | Case-insensitive for strings, numeric coerce |
+| neq         | not equals         | all                                   | Inverse of eq |
+| gt          | > greater than     | number, date                          | parseFloat comparison; dates as ISO strings |
+| gte         | >= or equal        | number, date                          | |
+| lt          | < less than        | number, date                          | |
+| lte         | <= or equal        | number, date                          | |
+| contains    | contains           | text, textarea, email, url            | substring, case-insensitive |
+| startsWith  | starts with        | text, textarea                        | substring, case-insensitive |
+| endsWith    | ends with          | text, textarea                        | substring, case-insensitive |
+| in          | is in list         | select, radio, checkbox               | value matches ANY token in comma-separated `value` (e.g. "A,B,C") |
+| notIn       | is not in list     | select, radio, checkbox               | inverse of in |
+| isEmpty     | is empty           | all                                   | value is null/undefined/"" (no `value` field needed) |
+| isNotEmpty  | is not empty       | all                                   | |
+| isTrue      | is true            | checkbox                              | value truthy |
+| isFalse     | is false           | checkbox                              | value falsy |
+
+Examples:
+```json
+{ "type":"rule", "field":"age",        "operator":"gte",        "value":"18" }
+{ "type":"rule", "field":"country",    "operator":"in",         "value":"VN,TH,SG" }
+{ "type":"rule", "field":"comments",   "operator":"contains",   "value":"urgent" }
+{ "type":"rule", "field":"agree_tos",  "operator":"isTrue" }
+{ "type":"rule", "field":"deposit",    "operator":"isNotEmpty" }
+```
+
+Pitfalls:
+- For ranges (between 10 and 20), use a GROUP with logic="all" and two leaves (gte 10 + lte 20).
+- For exclusion (NOT in any), use logic="all" with neq leaves OR a single notIn.
+- isEmpty/isNotEmpty/isTrue/isFalse do NOT need a `value` key — the engine ignores it.';
+
+MERGE dbo.[MF_AI_Knowledge] AS T
+USING (SELECT 'form_pattern-rules-operators' AS Slug) AS S ON T.Slug = S.Slug AND T.PortalId IS NULL
+WHEN MATCHED THEN UPDATE SET T.Title='14 condition operators (eq, neq, gt/gte/lt/lte, contains/startsWith/endsWith, in/notIn, isEmpty/isNotEmpty, isTrue/isFalse)', T.Body=@bOperators, T.Summary='All 14 operators supported by rule-engine.ts with applies-to types + a worked example per operator.', T.Tags='rules,operators,conditions', T.Kind='form_pattern', T.Source='megaform-builtin', T.Version=1
+WHEN NOT MATCHED THEN INSERT (Slug,Kind,Title,Summary,Body,Tags,Source,Version,CreatedOnDate)
+VALUES ('form_pattern-rules-operators','form_pattern','14 condition operators (eq, neq, gt/gte/lt/lte, contains/startsWith/endsWith, in/notIn, isEmpty/isNotEmpty, isTrue/isFalse)','All 14 operators supported by rule-engine.ts with applies-to types + a worked example per operator.',@bOperators,'rules,operators,conditions','megaform-builtin',1,SYSUTCDATETIME());
+
+
+-- ─── 3. 8 actions ──────────────────────────────────────────────────────────
+DECLARE @bActions NVARCHAR(MAX) = N'8 actions are accepted by the rule engine. Each lives in `then` OR `else`. `targetType` is one of `field`, `section`, `step`. `target` is the key (snake_case) of the destination element. The renderer finds it via `data-field-key`, `data-section-key`, `data-step-key`.
+
+| Code     | Effect                                                       | Uses `value`? |
+|----------|--------------------------------------------------------------|---------------|
+| show     | Remove `display:none`                                        | no            |
+| hide     | Add `display:none`                                           | no            |
+| require  | Add `required` attr + `.mf-required` CSS class               | no            |
+| optional | Remove `required` + class                                    | no            |
+| enable   | Remove `disabled` attribute                                  | no            |
+| disable  | Add `disabled` attribute                                     | no            |
+| setValue | Write a string into `value` (and fire input event)           | YES           |
+| clear    | Set `value=""` (and fire input event)                        | no            |
+
+Examples (action objects):
+```json
+{ "action":"show",     "targetType":"section", "target":"sec_veteran_info" }
+{ "action":"hide",     "targetType":"field",   "target":"spouse_name" }
+{ "action":"require",  "targetType":"field",   "target":"insurance_number" }
+{ "action":"optional", "targetType":"field",   "target":"middle_name" }
+{ "action":"enable",   "targetType":"field",   "target":"submit_btn_extra" }
+{ "action":"disable",  "targetType":"field",   "target":"locked_field" }
+{ "action":"setValue", "targetType":"field",   "target":"tax_rate", "value":"0.08" }
+{ "action":"clear",    "targetType":"field",   "target":"discount_code" }
+```
+
+Auto-revert behavior: when WHEN evaluates true, only THEN runs (and any earlier ELSE for the same rule does NOT auto-undo). For a clean show/hide pair, put `show` in THEN and `hide` in ELSE on the SAME rule (the engine evaluates both branches per rule).
+
+Cascading: rules are sorted by `priority` ascending. If Rule A''s THEN sets field X, and Rule B reads field X in its WHEN, set Rule A`s priority lower than Rule B''s. The engine does ONE pass per evaluate, so a setValue cascade needs explicit ordering.
+
+Pitfalls:
+- Action targets MUST match field key exactly (case-sensitive). AI should grab the canvas snapshot key, NOT the label.
+- `require` on a `Section` propagates to all child fields (renderer applies recursively).
+- `setValue` on a Select must match an `options[].value`, not the label.
+- `setValue` writes a STRING. For checkbox use "true"/"false". For dates use ISO "YYYY-MM-DD".';
+
+MERGE dbo.[MF_AI_Knowledge] AS T
+USING (SELECT 'form_pattern-rules-actions' AS Slug) AS S ON T.Slug = S.Slug AND T.PortalId IS NULL
+WHEN MATCHED THEN UPDATE SET T.Title='8 rule actions (show/hide/require/optional/enable/disable/setValue/clear) — incl. cascade ordering', T.Body=@bActions, T.Summary='All 8 actions + 3 target types (field/section/step) + worked examples + the cascade/priority gotcha.', T.Tags='rules,actions,then,else,cascade', T.Kind='form_pattern', T.Source='megaform-builtin', T.Version=1
+WHEN NOT MATCHED THEN INSERT (Slug,Kind,Title,Summary,Body,Tags,Source,Version,CreatedOnDate)
+VALUES ('form_pattern-rules-actions','form_pattern','8 rule actions (show/hide/require/optional/enable/disable/setValue/clear) — incl. cascade ordering','All 8 actions + 3 target types (field/section/step) + worked examples + the cascade/priority gotcha.',@bActions,'rules,actions,then,else,cascade','megaform-builtin',1,SYSUTCDATETIME());
+
+
+-- ─── 4. Condition groups (nested + ALL/ANY) ─────────────────────────────────
+DECLARE @bGroups NVARCHAR(MAX) = N'A WHEN tree is either ONE leaf condition OR a `group` node with a `logic` of "all" (AND) or "any" (OR) and a `children` array. Children may be more leaves OR nested groups (max depth 3 in the UI but the engine is unlimited).
+
+Canonical shapes:
+
+Single leaf (the simplest possible WHEN):
+```json
+{ "type":"rule", "field":"age", "operator":"gte", "value":"18" }
+```
+
+ALL (AND) — every child must be true:
+```json
+{
+  "type":"group", "logic":"all",
+  "children": [
+    { "type":"rule", "field":"age",    "operator":"gte", "value":"18" },
+    { "type":"rule", "field":"income", "operator":"gte", "value":"50000" }
+  ]
+}
+```
+
+ANY (OR) — at least one child true:
+```json
+{
+  "type":"group", "logic":"any",
+  "children": [
+    { "type":"rule", "field":"country", "operator":"eq", "value":"US" },
+    { "type":"rule", "field":"country", "operator":"eq", "value":"CA" }
+  ]
+}
+```
+
+NESTED — (age>=18 AND income>=50000) OR is_vip=true:
+```json
+{
+  "type":"group", "logic":"any",
+  "children": [
+    {
+      "type":"group", "logic":"all",
+      "children": [
+        { "type":"rule", "field":"age",    "operator":"gte", "value":"18" },
+        { "type":"rule", "field":"income", "operator":"gte", "value":"50000" }
+      ]
+    },
+    { "type":"rule", "field":"is_vip", "operator":"isTrue" }
+  ]
+}
+```
+
+Empty group: returns FALSE (defensive default — engine line 80). Don''t emit empty groups.
+
+Negation: there is NO `not` group type. Use `neq` / `notIn` / `isEmpty` operators to negate at the leaf level. For NOT(group), invert the logic to "any/all" of negated leaves via De Morgan.';
+
+MERGE dbo.[MF_AI_Knowledge] AS T
+USING (SELECT 'form_pattern-rules-condition-groups' AS Slug) AS S ON T.Slug = S.Slug AND T.PortalId IS NULL
+WHEN MATCHED THEN UPDATE SET T.Title='Condition groups (ALL/ANY, nested, De Morgan for NOT)', T.Body=@bGroups, T.Summary='Build nested condition trees with ALL/ANY logic. Empty groups are FALSE. There is no NOT group — use neq/notIn/isEmpty or De Morgan.', T.Tags='rules,groups,nested,logic,boolean', T.Kind='form_pattern', T.Source='megaform-builtin', T.Version=1
+WHEN NOT MATCHED THEN INSERT (Slug,Kind,Title,Summary,Body,Tags,Source,Version,CreatedOnDate)
+VALUES ('form_pattern-rules-condition-groups','form_pattern','Condition groups (ALL/ANY, nested, De Morgan for NOT)','Build nested condition trees with ALL/ANY logic. Empty groups are FALSE. There is no NOT group — use neq/notIn/isEmpty or De Morgan.',@bGroups,'rules,groups,nested,logic,boolean','megaform-builtin',1,SYSUTCDATETIME());
+
+
+-- ─── 5. Show/Hide section template ─────────────────────────────────────────
+DECLARE @bShowSec NVARCHAR(MAX) = N'Use case: hide an entire SECTION until a key field has a specific value. Common patterns:
+- "Veteran info" section appears only when employmentType="veteran"
+- "Spouse details" section appears only when maritalStatus="married"
+- "Company billing" section appears only when accountType="business"
+
+Required setup:
+1. Have a Section field in the form with a stable `key` (snake_case).
+2. The trigger field (the one whose value gates the section) must exist BEFORE the section.
+
+Rule JSON (paste verbatim, swap keys):
+```json
+{
+  "id": "rule_show_spouse",
+  "name": "Show spouse details when married",
+  "enabled": true,
+  "priority": 1,
+  "when": {
+    "type": "rule", "field": "marital_status", "operator": "eq", "value": "married"
+  },
+  "then": [
+    { "action": "show", "targetType": "section", "target": "sec_spouse" }
+  ],
+  "else": [
+    { "action": "hide", "targetType": "section", "target": "sec_spouse" }
+  ]
+}
+```
+
+Tips:
+- Always put a matching `hide` in `else` — otherwise the section stays visible after the user changes the trigger away.
+- For multi-value trigger (e.g. show when in ["married","domestic_partnership"]), use `"operator":"in", "value":"married,domestic_partnership"`.
+- If you also want the section''s child fields to be REQUIRED only when visible, add a parallel rule with action=`require` for each child + ELSE optional. Or target the section with action=`require` (propagates).';
+
+MERGE dbo.[MF_AI_Knowledge] AS T
+USING (SELECT 'form_pattern-rules-show-hide-section' AS Slug) AS S ON T.Slug = S.Slug AND T.PortalId IS NULL
+WHEN MATCHED THEN UPDATE SET T.Title='Show/Hide a section based on a trigger field', T.Body=@bShowSec, T.Summary='Conditional section visibility — common for veteran info, spouse details, company billing. Includes the ELSE hide pair + in operator for multi-value triggers.', T.Tags='rules,show,hide,section,conditional,visibility', T.Kind='form_pattern', T.Source='megaform-builtin', T.Version=1
+WHEN NOT MATCHED THEN INSERT (Slug,Kind,Title,Summary,Body,Tags,Source,Version,CreatedOnDate)
+VALUES ('form_pattern-rules-show-hide-section','form_pattern','Show/Hide a section based on a trigger field','Conditional section visibility — common for veteran info, spouse details, company billing. Includes the ELSE hide pair + in operator for multi-value triggers.',@bShowSec,'rules,show,hide,section,conditional,visibility','megaform-builtin',1,SYSUTCDATETIME());
+
+
+-- ─── 6. Require on condition ───────────────────────────────────────────────
+DECLARE @bRequire NVARCHAR(MAX) = N'Use case: make a field required only when another field has a value. Examples:
+- `insurance_number` required only when has_insurance=true
+- `other_specify` required only when reason="Other"
+- `move_in_date` required only when housing_preference != "Not interested"
+
+Rule JSON:
+```json
+{
+  "id": "rule_require_other_specify",
+  "name": "Require other_specify when reason=Other",
+  "enabled": true,
+  "priority": 1,
+  "when": { "type": "rule", "field": "reason", "operator": "eq", "value": "Other" },
+  "then": [ { "action": "require",  "targetType": "field", "target": "other_specify" } ],
+  "else": [ { "action": "optional", "targetType": "field", "target": "other_specify" } ]
+}
+```
+
+Always pair `require`/`optional` so the field flips back when the condition turns false. Otherwise the field stays required forever and blocks submit.
+
+For form-level required propagation: target a Section with `require` and every child input gets required=true (renderer cascades).';
+
+MERGE dbo.[MF_AI_Knowledge] AS T
+USING (SELECT 'form_pattern-rules-require-on-condition' AS Slug) AS S ON T.Slug = S.Slug AND T.PortalId IS NULL
+WHEN MATCHED THEN UPDATE SET T.Title='Make a field required only when another field meets a condition', T.Body=@bRequire, T.Summary='Conditional require/optional — pair both actions so the field flips back when the trigger reverses, otherwise the form locks up.', T.Tags='rules,require,optional,validation,conditional', T.Kind='form_pattern', T.Source='megaform-builtin', T.Version=1
+WHEN NOT MATCHED THEN INSERT (Slug,Kind,Title,Summary,Body,Tags,Source,Version,CreatedOnDate)
+VALUES ('form_pattern-rules-require-on-condition','form_pattern','Make a field required only when another field meets a condition','Conditional require/optional — pair both actions so the field flips back when the trigger reverses, otherwise the form locks up.',@bRequire,'rules,require,optional,validation,conditional','megaform-builtin',1,SYSUTCDATETIME());
+
+
+-- ─── 7. SetValue cascade ───────────────────────────────────────────────────
+DECLARE @bSetValue NVARCHAR(MAX) = N'`setValue` writes a STATIC string into the target field. The runtime fires `input` events after the write, so subsequent rules (with HIGHER priority numbers) get a chance to react.
+
+Use cases:
+- Auto-set `tax_rate` to "0.08" when country="US", "0.20" when country="GB".
+- Auto-set `currency_code` based on country.
+- Pre-fill `delivery_method` to "express" when product_type="perishable".
+
+Single-trigger example (country=US → tax_rate=0.08):
+```json
+{
+  "id": "rule_us_tax",
+  "name": "US tax = 8%",
+  "enabled": true,
+  "priority": 1,
+  "when": { "type":"rule", "field":"country", "operator":"eq", "value":"US" },
+  "then": [ { "action":"setValue", "targetType":"field", "target":"tax_rate", "value":"0.08" } ],
+  "else": []
+}
+```
+
+Multi-branch (use multiple rules with the SAME priority OR mutually-exclusive WHEN):
+```json
+[
+  { "id":"r_us", "priority":1, "when":{"type":"rule","field":"country","operator":"eq","value":"US"}, "then":[{"action":"setValue","targetType":"field","target":"tax_rate","value":"0.08"}], "else":[] },
+  { "id":"r_gb", "priority":1, "when":{"type":"rule","field":"country","operator":"eq","value":"GB"}, "then":[{"action":"setValue","targetType":"field","target":"tax_rate","value":"0.20"}], "else":[] },
+  { "id":"r_vn", "priority":1, "when":{"type":"rule","field":"country","operator":"eq","value":"VN"}, "then":[{"action":"setValue","targetType":"field","target":"tax_rate","value":"0.10"}], "else":[] }
+]
+```
+
+Cascade (setValue triggers a downstream rule):
+- Rule A: country=US → setValue tax_rate=0.08 (priority 1)
+- Rule B: tax_rate >= 0.10 → show "high tax warning" message (priority 2)
+Order priorities so A runs first.
+
+KEY GAP: setValue can NOT compute (e.g. setValue total=subtotal+tax is impossible directly). For real math see form_pattern-formula-datagrid + form_pattern-money-calculation-pattern.';
+
+MERGE dbo.[MF_AI_Knowledge] AS T
+USING (SELECT 'form_pattern-rules-setvalue-cascade' AS Slug) AS S ON T.Slug = S.Slug AND T.PortalId IS NULL
+WHEN MATCHED THEN UPDATE SET T.Title='SetValue + cascading rules (auto-fill fields based on conditions)', T.Body=@bSetValue, T.Summary='setValue writes a static string. Cascade via priority ordering. Cannot do arithmetic — for that use DataGrid formula engine.', T.Tags='rules,setvalue,cascade,prefill,priority', T.Kind='form_pattern', T.Source='megaform-builtin', T.Version=1
+WHEN NOT MATCHED THEN INSERT (Slug,Kind,Title,Summary,Body,Tags,Source,Version,CreatedOnDate)
+VALUES ('form_pattern-rules-setvalue-cascade','form_pattern','SetValue + cascading rules (auto-fill fields based on conditions)','setValue writes a static string. Cascade via priority ordering. Cannot do arithmetic — for that use DataGrid formula engine.',@bSetValue,'rules,setvalue,cascade,prefill,priority','megaform-builtin',1,SYSUTCDATETIME());
+
+
+-- ─── 8. DataGrid formula engine (the ONLY built-in calc) ───────────────────
+DECLARE @bDataGrid NVARCHAR(MAX) = N'The DataGrid widget has a real client-side formula evaluator (megaform-widget-datagrid.ts:154 `evalLocal`). It is the ONLY built-in way to auto-calculate inside a MegaForm.
+
+Supported functions (case-sensitive, namespaced):
+- Math.Round(x, decimals), Math.Min(a,b), Math.Max(a,b), Math.Abs(x), Math.Floor(x), Math.Ceiling(x)
+- Round(x,d), Abs(x), Floor(x), Ceiling(x)
+- If(cond, a, b) — ternary
+- Sum("expr"), Avg("expr"), Min("expr"), Max("expr") — AGGREGATES across all rows. Argument must be a QUOTED string expression evaluated per-row.
+
+Per-row computed column shape:
+```json
+{ "key":"line_total", "label":"Total", "type":"computed",
+  "width":"120px", "decimals":2, "computeFormula":"qty * price" }
+```
+
+Per-grid total (writes into top-level form field):
+```json
+{
+  "type":"DataGrid",
+  "key":"line_items",
+  "label":"Line items",
+  "widgetProps":{
+    "columns":[
+      { "key":"desc",  "label":"Item",     "type":"text",     "width":"40%" },
+      { "key":"qty",   "label":"Qty",      "type":"number",   "width":"15%", "decimals":0 },
+      { "key":"price", "label":"Unit",     "type":"currency", "width":"20%", "decimals":2 },
+      { "key":"line",  "label":"Subtotal", "type":"computed", "width":"25%", "decimals":2,
+        "computeFormula":"qty * price" }
+    ],
+    "totalFormula":"Sum(\"qty * price\")",
+    "totalField":"grand_total"
+  }
+}
+```
+
+How `totalField` reaches a top-level form input:
+- After computing `totalFormula`, DataGrid sets the value of the form field whose key matches `totalField` (`grand_total` here). The field must already exist in `schema.fields` (typically as a Number or Currency input, often `readOnly:true` so users don''t override the computed total).
+
+Per-row recompute timing: every cell `input`/`change` event triggers `recomputeAll()` — all computed cells re-evaluate, then `totalFormula` recomputes, then totalField gets the new sum.
+
+Formatting:
+- `type:"currency"` adds a currency symbol per the form locale.
+- `decimals` controls displayed precision (raw value is full-precision).
+- For non-USD currency (VND, EUR), the column declares `decimals:0` for VND.
+
+GAPS:
+- No cross-DataGrid math.
+- No formula in a plain Number field (must live inside a DataGrid column).
+- For non-line-item calculation (e.g. "deposit = subtotal * 0.2" displayed as standalone field), put deposit as a DataGrid column with `computeFormula:"Sum(\"qty*price\") * 0.2"` — but that re-runs Sum per row, which is wasteful. Prefer a single read-only computed column at the bottom.';
+
+MERGE dbo.[MF_AI_Knowledge] AS T
+USING (SELECT 'form_pattern-formula-datagrid' AS Slug) AS S ON T.Slug = S.Slug AND T.PortalId IS NULL
+WHEN MATCHED THEN UPDATE SET T.Title='Auto-calculate with DataGrid (Sum/Avg/Min/Max/If + per-row computeFormula)', T.Body=@bDataGrid, T.Summary='The ONLY built-in calc engine. Per-row computeFormula + aggregate totalFormula + totalField writeback to a top-level form input. Covers invoices, orders, time sheets.', T.Tags='formula,calc,datagrid,sum,total,invoice,money,currency', T.Kind='form_pattern', T.Source='megaform-builtin', T.Version=1
+WHEN NOT MATCHED THEN INSERT (Slug,Kind,Title,Summary,Body,Tags,Source,Version,CreatedOnDate)
+VALUES ('form_pattern-formula-datagrid','form_pattern','Auto-calculate with DataGrid (Sum/Avg/Min/Max/If + per-row computeFormula)','The ONLY built-in calc engine. Per-row computeFormula + aggregate totalFormula + totalField writeback to a top-level form input. Covers invoices, orders, time sheets.',@bDataGrid,'formula,calc,datagrid,sum,total,invoice,money,currency','megaform-builtin',1,SYSUTCDATETIME());
+
+
+-- ─── 9. Money calc canonical pattern ───────────────────────────────────────
+DECLARE @bMoneyCalc NVARCHAR(MAX) = N'Canonical pattern when the user says "I want a form that auto-calculates total / tax / discount / grand total":
+
+STEP 1 — Add a `DataGrid` line-items widget with computed Subtotal column + totalFormula.
+STEP 2 — Add a `Number` field `grand_total` (readOnly:true) that the DataGrid will write into.
+STEP 3 — (Optional) For tax / discount, add Number fields `tax_rate` (default 0.08) and `discount_amount`. The DataGrid can include a `tax_line` and `discount_line` virtual column that pulls those values, but the simpler approach is to keep DataGrid pure line-items and use a final `final_total` columns OR a final read-only field with `setValue` rules.
+STEP 4 — Add Rules for prefilling tax_rate based on country (see form_pattern-rules-setvalue-cascade).
+
+Canonical schema fragment:
+```json
+{ "version":"1.0", "fields":[
+  { "key":"customer_name", "type":"Text", "label":"Customer", "required":true },
+  { "key":"country", "type":"Select", "label":"Country", "options":[
+    {"value":"US","label":"United States"},{"value":"GB","label":"United Kingdom"},{"value":"VN","label":"Vietnam"}
+  ]},
+  { "key":"tax_rate", "type":"Number", "label":"Tax rate", "readOnly":true, "defaultValue":"0.08" },
+
+  { "key":"line_items", "type":"DataGrid", "label":"Line items",
+    "widgetProps":{
+      "columns":[
+        { "key":"desc",  "label":"Item",     "type":"text",     "width":"40%" },
+        { "key":"qty",   "label":"Qty",      "type":"number",   "width":"15%", "decimals":0 },
+        { "key":"price", "label":"Unit",     "type":"currency", "width":"20%", "decimals":2 },
+        { "key":"line",  "label":"Subtotal", "type":"computed", "width":"25%", "decimals":2,
+          "computeFormula":"qty * price" }
+      ],
+      "totalFormula":"Sum(\"qty * price\")",
+      "totalField":"subtotal",
+      "minRows":1
+    }
+  },
+
+  { "key":"subtotal",   "type":"Number", "label":"Subtotal",     "readOnly":true, "defaultValue":"0" },
+  { "key":"tax_amount", "type":"Number", "label":"Tax",          "readOnly":true, "defaultValue":"0" },
+  { "key":"grand_total","type":"Number", "label":"Grand total",  "readOnly":true, "defaultValue":"0" }
+],
+"settings":{
+  "rules":[
+    { "id":"r_us", "priority":1, "enabled":true,
+      "when":{"type":"rule","field":"country","operator":"eq","value":"US"},
+      "then":[{"action":"setValue","targetType":"field","target":"tax_rate","value":"0.08"}], "else":[] },
+    { "id":"r_gb", "priority":1, "enabled":true,
+      "when":{"type":"rule","field":"country","operator":"eq","value":"GB"},
+      "then":[{"action":"setValue","targetType":"field","target":"tax_rate","value":"0.20"}], "else":[] },
+    { "id":"r_vn", "priority":1, "enabled":true,
+      "when":{"type":"rule","field":"country","operator":"eq","value":"VN"},
+      "then":[{"action":"setValue","targetType":"field","target":"tax_rate","value":"0.10"}], "else":[] }
+  ]
+}}
+```
+
+GAP: `subtotal * tax_rate = tax_amount` and `subtotal + tax_amount = grand_total` cannot be computed by rules alone. Two ways to close it:
+1. Add a hidden DataGrid row whose `computeFormula` does `Sum("qty * price") * <field:tax_rate>` — feasible but ugly.
+2. Use a single `final_total` column with `computeFormula:"qty * price * (1 + <tax_rate_field>)"`. The formula engine does NOT support reading top-level form fields (only row cells + aggregates). So this requires injecting the tax rate AS a column, not as a separate top-level field.
+
+The cleanest live MegaForm pattern today: keep the DataGrid the source-of-truth for the WHOLE total, including tax. Add a column `tax_line` whose `computeFormula` is `qty * price * 0.08` (or a column constant per row). The totalField then receives a pre-tax-included grand total. The user does not see tax separately, which is sometimes acceptable.
+
+For a TRUE separated subtotal/tax/grand_total display, ship a tiny script token in `customScripts` listening to `input` events on the DataGrid total field + tax_rate field, computing tax_amount + grand_total and writing them. See form_pattern-script-token-money-calc.';
+
+MERGE dbo.[MF_AI_Knowledge] AS T
+USING (SELECT 'form_pattern-money-calculation' AS Slug) AS S ON T.Slug = S.Slug AND T.PortalId IS NULL
+WHEN MATCHED THEN UPDATE SET T.Title='Money auto-calculation canonical pattern (invoice/order/quote)', T.Body=@bMoneyCalc, T.Summary='End-to-end form pattern with DataGrid line-items + per-country tax rule prefill + grand-total writeback. Includes the tax/grand-total gap and 3 workarounds.', T.Tags='money,calc,invoice,order,quote,tax,total,datagrid,template', T.Kind='form_pattern', T.Source='megaform-builtin', T.Version=1
+WHEN NOT MATCHED THEN INSERT (Slug,Kind,Title,Summary,Body,Tags,Source,Version,CreatedOnDate)
+VALUES ('form_pattern-money-calculation','form_pattern','Money auto-calculation canonical pattern (invoice/order/quote)','End-to-end form pattern with DataGrid line-items + per-country tax rule prefill + grand-total writeback. Includes the tax/grand-total gap and 3 workarounds.',@bMoneyCalc,'money,calc,invoice,order,quote,tax,total,datagrid,template','megaform-builtin',1,SYSUTCDATETIME());
+
+
+-- ─── 10. Script-token money calc (for true separated subtotal/tax/grand_total) ───
+DECLARE @bScriptCalc NVARCHAR(MAX) = N'When the DataGrid pattern is not enough (need separated subtotal / tax / grand_total fields with live updates), use a Custom Script Token. Script tokens live in `settings.customScripts` and are injected at runtime; they have full DOM access.
+
+Setup:
+1. Add 3 read-only Number fields: `subtotal`, `tax_amount`, `grand_total`.
+2. Add a Number field `tax_rate` (or rule-driven via setValue per country).
+3. The DataGrid keeps its `totalField:"subtotal"` so subtotal is auto-populated.
+4. Define a script token that watches subtotal + tax_rate, computes tax + total, writes back.
+
+Script token (paste verbatim into settings.customScripts.calcMoney):
+```javascript
+(function() {
+  var form = document.querySelector(''form, .mf-form, .mfp'');
+  if (!form) return;
+  var sub = form.querySelector(''[name="subtotal"]'');
+  var rate = form.querySelector(''[name="tax_rate"]'');
+  var tax = form.querySelector(''[name="tax_amount"]'');
+  var total = form.querySelector(''[name="grand_total"]'');
+  if (!sub || !rate || !tax || !total) return;
+  function recalc() {
+    var s = parseFloat(sub.value || 0) || 0;
+    var r = parseFloat(rate.value || 0) || 0;
+    var t = Math.round(s * r * 100) / 100;
+    var g = Math.round((s + t) * 100) / 100;
+    if (tax.value !== String(t))   { tax.value = t;   tax.dispatchEvent(new Event(''input'')); }
+    if (total.value !== String(g)) { total.value = g; total.dispatchEvent(new Event(''input'')); }
+  }
+  [sub, rate].forEach(function(el) {
+    el.addEventListener(''input'', recalc);
+    el.addEventListener(''change'', recalc);
+  });
+  recalc();
+})();
+```
+
+Then in customHtml: `{{script:calcMoney}}` (anywhere — the renderer injects the script tag).
+
+Pros: True 3-line breakdown. Live updates. No HiddenDataGrid hack.
+Cons: Requires customHtml + customScripts, so theme="custom". For pure-theme forms, prefer the DataGrid-only approach.';
+
+MERGE dbo.[MF_AI_Knowledge] AS T
+USING (SELECT 'form_pattern-script-token-money-calc' AS Slug) AS S ON T.Slug = S.Slug AND T.PortalId IS NULL
+WHEN MATCHED THEN UPDATE SET T.Title='Script-token money calc (separated subtotal/tax/grand_total live updates)', T.Body=@bScriptCalc, T.Summary='Workaround for the rule engine no-formula gap: a tiny customScripts JS that listens to subtotal+tax_rate and writes tax_amount+grand_total. Requires customHtml/customScripts mode.', T.Tags='money,calc,script-token,customScripts,subtotal,tax,grand-total', T.Kind='form_pattern', T.Source='megaform-builtin', T.Version=1
+WHEN NOT MATCHED THEN INSERT (Slug,Kind,Title,Summary,Body,Tags,Source,Version,CreatedOnDate)
+VALUES ('form_pattern-script-token-money-calc','form_pattern','Script-token money calc (separated subtotal/tax/grand_total live updates)','Workaround for the rule engine no-formula gap: a tiny customScripts JS that listens to subtotal+tax_rate and writes tax_amount+grand_total. Requires customHtml/customScripts mode.',@bScriptCalc,'money,calc,script-token,customScripts,subtotal,tax,grand-total','megaform-builtin',1,SYSUTCDATETIME());
+
+
+-- ─── 11. End-to-end housing form (the user''s real form) ───────────────────
+DECLARE @bHousing NVARCHAR(MAX) = N'A concrete worked example — the "Form co hearing" the user built. Fields:
+- gender (Dropdown: Male/Female)
+- housing_preference (Dropdown: Single Room / Shared / Family Apartment / Not interested)
+- move_in_date (Date)
+- special_needs (Long Text)
+
+Desired behavior:
+- Move-in date appears only when housing_preference is NOT "Not interested".
+- Special needs becomes REQUIRED when housing_preference = "Family Apartment" (because we need to know about children/elderly).
+- For gender=Female + housing_preference=Shared, auto-set special_needs placeholder to suggest mentioning women-only rooming preference.
+
+Rules JSON (paste into schema.settings.rules):
+```json
+[
+  {
+    "id":"r_move_in_visibility", "name":"Show move-in date unless not interested", "enabled":true, "priority":1,
+    "when":{ "type":"rule","field":"housing_preference","operator":"neq","value":"Not interested" },
+    "then":[ {"action":"show","targetType":"field","target":"move_in_date"} ],
+    "else":[ {"action":"hide","targetType":"field","target":"move_in_date"} ]
+  },
+  {
+    "id":"r_family_needs_required", "name":"Family apartment → special needs required", "enabled":true, "priority":2,
+    "when":{ "type":"rule","field":"housing_preference","operator":"eq","value":"Family Apartment" },
+    "then":[ {"action":"require","targetType":"field","target":"special_needs"} ],
+    "else":[ {"action":"optional","targetType":"field","target":"special_needs"} ]
+  },
+  {
+    "id":"r_female_shared_hint", "name":"Female + Shared → suggest preference", "enabled":true, "priority":3,
+    "when":{ "type":"group", "logic":"all", "children":[
+      {"type":"rule","field":"gender","operator":"eq","value":"Female"},
+      {"type":"rule","field":"housing_preference","operator":"eq","value":"Shared"}
+    ]},
+    "then":[ {"action":"setValue","targetType":"field","target":"special_needs","value":"Please mention if you prefer a women-only room."} ],
+    "else":[]
+  }
+]
+```
+
+Priority ordering: 1 (visibility) → 2 (validation toggle) → 3 (setValue hint). This ensures the field is visible & required before the hint setValue runs.';
+
+MERGE dbo.[MF_AI_Knowledge] AS T
+USING (SELECT 'form_pattern-housing-conditional-example' AS Slug) AS S ON T.Slug = S.Slug AND T.PortalId IS NULL
+WHEN MATCHED THEN UPDATE SET T.Title='End-to-end conditional housing form (show/require/setValue mixed)', T.Body=@bHousing, T.Summary='Concrete worked example: 4 fields, 3 chained rules covering show/hide + require/optional + setValue with proper priority ordering.', T.Tags='rules,example,housing,conditional,mixed,priority', T.Kind='form_pattern', T.Source='megaform-builtin', T.Version=1
+WHEN NOT MATCHED THEN INSERT (Slug,Kind,Title,Summary,Body,Tags,Source,Version,CreatedOnDate)
+VALUES ('form_pattern-housing-conditional-example','form_pattern','End-to-end conditional housing form (show/require/setValue mixed)','Concrete worked example: 4 fields, 3 chained rules covering show/hide + require/optional + setValue with proper priority ordering.',@bHousing,'rules,example,housing,conditional,mixed,priority','megaform-builtin',1,SYSUTCDATETIME());
+
+
+-- ─── 12. Multi-step wizard conditional step skip ───────────────────────────
+DECLARE @bStep NVARCHAR(MAX) = N'In multi-page forms (settings.multiPage=true), each page is a `step`. Rules can hide an entire step so the wizard skips it.
+
+Setup:
+1. settings.multiPage = true.
+2. Each page has a step key (auto-assigned `step_1`, `step_2`, etc., or explicit).
+3. The rule targets `targetType:"step"` with the step key.
+
+Use case: "Insurance details" step appears only when has_insurance=true.
+
+Rule JSON:
+```json
+{
+  "id":"r_skip_insurance_step", "name":"Skip insurance step if no insurance", "enabled":true, "priority":1,
+  "when":{ "type":"rule","field":"has_insurance","operator":"isFalse" },
+  "then":[ {"action":"hide","targetType":"step","target":"step_3_insurance"} ],
+  "else":[ {"action":"show","targetType":"step","target":"step_3_insurance"} ]
+}
+```
+
+The wizard navigation auto-respects hidden steps — Next button jumps to the next visible step.
+
+Gotcha: the trigger field must be on an EARLIER step than the one being skipped. Putting `has_insurance` on step 5 and trying to skip step 3 leaves step 3 always visible because the rule fires too late.';
+
+MERGE dbo.[MF_AI_Knowledge] AS T
+USING (SELECT 'form_pattern-rules-conditional-step' AS Slug) AS S ON T.Slug = S.Slug AND T.PortalId IS NULL
+WHEN MATCHED THEN UPDATE SET T.Title='Conditional wizard steps (skip a page based on a field)', T.Body=@bStep, T.Summary='Skip an entire wizard page using show/hide on targetType="step". Trigger field must live on an earlier step.', T.Tags='rules,step,wizard,multipage,conditional,skip', T.Kind='form_pattern', T.Source='megaform-builtin', T.Version=1
+WHEN NOT MATCHED THEN INSERT (Slug,Kind,Title,Summary,Body,Tags,Source,Version,CreatedOnDate)
+VALUES ('form_pattern-rules-conditional-step','form_pattern','Conditional wizard steps (skip a page based on a field)','Skip an entire wizard page using show/hide on targetType="step". Trigger field must live on an earlier step.',@bStep,'rules,step,wizard,multipage,conditional,skip','megaform-builtin',1,SYSUTCDATETIME());

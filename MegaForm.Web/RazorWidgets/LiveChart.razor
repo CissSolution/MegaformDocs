@@ -1,0 +1,200 @@
+@*
+    LiveChart — bar / line / pie chart rendered as inline SVG from SQL
+    rows. No client-side chart library required.
+
+    Default widgetProps:
+      {
+        "template": "LiveChart",
+        "useSql": true,
+        "connectionKey": "DashboardDatabase",
+        "masterQuery": "SELECT f.FlightName AS LabelCol, COUNT(p.PlayerId) AS ValueCol FROM GG_Players p JOIN GG_Flights f ON p.FlightId=f.FlightId GROUP BY f.FlightName",
+        "parameters": {
+          "labelColumn": "LabelCol",
+          "valueColumn": "ValueCol",
+          "chartType":   "bar"
+        }
+      }
+*@
+@using MegaForm.Razor
+@inherits MfRazorWidgetBase
+@attribute [RazorTemplate("LiveChart", Category = "Analytics", Icon = "fa-chart-column", WhenToUse = "Visualize one metric per category — bar / line / pie chart from a SQL label+value pair.", Description = "Bar / line / pie chart rendered server-side as inline SVG from a SQL label / value pair.", SupportsSql = true, EmitsValue = false)]
+@using System.Linq
+@using MegaForm.Core.Interfaces
+
+@code {
+    [Parameter, RazorParam(Label = "Label column", Group = "Data mapping", Widget = "sql-column", Required = true, Order = 10, Placeholder = "FlightName")]
+    public string LabelColumn { get; set; } = "Label";
+
+    [Parameter, RazorParam(Label = "Value column", Group = "Data mapping", Widget = "sql-column", Required = true, Order = 20, Placeholder = "PlayerCount", Hint = "Numeric column that becomes the bar height / slice size.")]
+    public string ValueColumn { get; set; } = "Value";
+
+    [Parameter, RazorParam(Label = "Chart type", Group = "Display", Widget = "select", Options = "bar,line,pie", Required = true, Order = 30)]
+    public string ChartType   { get; set; } = "bar"; // bar | line | pie
+
+    private List<(string Label, decimal Value)> _points = new();
+    private decimal _max;
+    private decimal _sum;
+    private List<RenderedBar>   _bars   = new();
+    private List<RenderedDot>   _dots   = new();
+    private List<RenderedSlice> _slices = new();
+    private List<RenderedLabel> _labels = new();
+    private string _polyline = "";
+    private const int W = 480;
+    private const int H = 200;
+    private const int PAD = 30;
+
+    private class RenderedBar   { public double X, Y, Width, Height; public string Color = ""; }
+    private class RenderedDot   { public double X, Y; }
+    private class RenderedSlice { public double X1, Y1, X2, Y2; public int Large; public string Color = ""; }
+    private class RenderedLabel { public double X, Y; public string Text = ""; }
+
+    private static readonly string[] Palette = new[] {
+        "#7c3aed", "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#84cc16"
+    };
+
+    protected override void OnParametersSet()
+    {
+        var rows = SqlRows?.Cast<object>().ToList() ?? new List<object>();
+        _points = rows.Select(r => {
+            var l = Convert.ToString(Get(r, LabelColumn)) ?? "";
+            var v = ConvertToDecimal(Get(r, ValueColumn));
+            return (l, v);
+        }).Where(p => !string.IsNullOrEmpty(p.l)).ToList();
+        _max = _points.Count > 0 ? _points.Max(p => p.Value) : 0m;
+        _sum = _points.Sum(p => p.Value);
+
+        _bars.Clear(); _dots.Clear(); _slices.Clear(); _labels.Clear();
+        if (_points.Count == 0) return;
+
+        var bw = (W - PAD * 2) / Math.Max(_points.Count, 1);
+
+        if (string.Equals(ChartType, "pie", StringComparison.OrdinalIgnoreCase))
+        {
+            decimal cumulative = 0m;
+            int colorIdx = 0;
+            foreach (var p in _points)
+            {
+                var start = cumulative / Math.Max(_sum, 1m);
+                cumulative += p.Value;
+                var end = cumulative / Math.Max(_sum, 1m);
+                var a1 = (double)start * 2 * Math.PI - Math.PI / 2;
+                var a2 = (double)end   * 2 * Math.PI - Math.PI / 2;
+                _slices.Add(new RenderedSlice {
+                    X1 = 100 * Math.Cos(a1), Y1 = 100 * Math.Sin(a1),
+                    X2 = 100 * Math.Cos(a2), Y2 = 100 * Math.Sin(a2),
+                    Large = (a2 - a1) > Math.PI ? 1 : 0,
+                    Color = Palette[colorIdx++ % Palette.Length],
+                });
+            }
+        }
+        else if (string.Equals(ChartType, "line", StringComparison.OrdinalIgnoreCase))
+        {
+            var poly = new System.Text.StringBuilder();
+            for (var i = 0; i < _points.Count; i++)
+            {
+                var x = PAD + bw * i + bw / 2.0;
+                var y = H - PAD - (double)(_points[i].Value / Math.Max(_max, 1m)) * (H - PAD * 2);
+                if (i > 0) poly.Append(' ');
+                poly.Append($"{x:F1},{y:F1}");
+                _dots.Add(new RenderedDot { X = x, Y = y });
+            }
+            _polyline = poly.ToString();
+        }
+        else
+        {
+            for (var i = 0; i < _points.Count; i++)
+            {
+                var h = (double)(_points[i].Value / Math.Max(_max, 1m)) * (H - PAD * 2);
+                _bars.Add(new RenderedBar {
+                    X = PAD + bw * i + 4,
+                    Y = H - PAD - h,
+                    Width = bw - 8,
+                    Height = h,
+                    Color = Palette[i % Palette.Length],
+                });
+            }
+        }
+
+        for (var i = 0; i < _points.Count; i++)
+        {
+            var lbl = _points[i].Label;
+            _labels.Add(new RenderedLabel {
+                X = PAD + bw * i + bw / 2.0,
+                Y = H - PAD + 14,
+                Text = lbl.Length > 8 ? lbl.Substring(0, 8) + "…" : lbl,
+            });
+        }
+    }
+
+    private static object Get(object row, string key)
+    {
+        if (row is IDictionary<string, object> d)
+            return d.TryGetValue(key, out var v) ? v : null;
+        return row?.GetType().GetProperty(key)?.GetValue(row);
+    }
+
+    private static decimal ConvertToDecimal(object v)
+    {
+        if (v == null) return 0m;
+        if (v is decimal d) return d;
+        if (decimal.TryParse(v.ToString(), out var p)) return p;
+        return 0m;
+    }
+}
+
+<div class="mf-razor-chart" data-chart-type="@ChartType">
+    @if (_points.Count == 0)
+    {
+        <div class="mf-razor-chart-empty">No data points.</div>
+    }
+    else if (string.Equals(ChartType, "pie", StringComparison.OrdinalIgnoreCase))
+    {
+        <svg viewBox="-110 -110 220 220" width="240" height="240" xmlns="http://www.w3.org/2000/svg">
+            @foreach (var s in _slices)
+            {
+                <path d="@($"M 0 0 L {s.X1:F2} {s.Y1:F2} A 100 100 0 {s.Large} 1 {s.X2:F2} {s.Y2:F2} Z")" fill="@s.Color" stroke="#fff" stroke-width="2"></path>
+            }
+        </svg>
+        <ul class="mf-razor-chart-legend">
+            @for (var i = 0; i < _points.Count; i++)
+            {
+                var color = Palette[i % Palette.Length];
+                <li><span style="background:@color"></span> @_points[i].Label <strong>@_points[i].Value.ToString("N0")</strong></li>
+            }
+        </ul>
+    }
+    else
+    {
+        <svg viewBox="0 0 480 200" width="100%" height="200" xmlns="http://www.w3.org/2000/svg">
+            <line x1="@PAD" y1="@(H - PAD)" x2="@(W - PAD)" y2="@(H - PAD)" stroke="#cbd5e1" stroke-width="1"></line>
+            <line x1="@PAD" y1="@PAD" x2="@PAD" y2="@(H - PAD)" stroke="#cbd5e1" stroke-width="1"></line>
+            @if (string.Equals(ChartType, "line", StringComparison.OrdinalIgnoreCase))
+            {
+                <polyline fill="none" stroke="#7c3aed" stroke-width="2" points="@_polyline"></polyline>
+                @foreach (var d in _dots)
+                {
+                    <circle cx="@d.X.ToString("F1")" cy="@d.Y.ToString("F1")" r="3" fill="#7c3aed"></circle>
+                }
+            }
+            else
+            {
+                @foreach (var b in _bars)
+                {
+                    <rect x="@b.X.ToString("F1")" y="@b.Y.ToString("F1")" width="@b.Width.ToString("F1")" height="@b.Height.ToString("F1")" fill="@b.Color" rx="2"></rect>
+                }
+            }
+            @foreach (var l in _labels)
+            {
+                @(new MarkupString($"<text x=\"{l.X:F1}\" y=\"{l.Y:F0}\" text-anchor=\"middle\" font-size=\"10\" fill=\"#475569\">{System.Net.WebUtility.HtmlEncode(l.Text)}</text>"))
+            }
+        </svg>
+    }
+</div>
+
+<style>
+    .mf-razor-chart { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; padding:8px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;display:flex;flex-wrap:wrap;align-items:center;gap:14px }
+    .mf-razor-chart-legend { list-style:none;padding:0;margin:0;font-size:12px;color:#334155;display:grid;gap:4px }
+    .mf-razor-chart-legend li { display:flex;align-items:center;gap:6px }
+    .mf-razor-chart-legend span { width:10px;height:10px;border-radius:2px;display:inline-block }
+    .mf-razor-chart-empty { padding:20px;color:#94a3b8;font-style:italic;text-align:center;width:100% }
+</style>

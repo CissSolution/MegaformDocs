@@ -1,0 +1,353 @@
+/* ══════════════════════════════════════════════════════════════
+   MegaForm DataRepeater Widget  v20260428-01
+   Prefix: .mfdr-
+   Used by: renderer + builder preview (single source of trust)
+   ══════════════════════════════════════════════════════════════ */
+
+.mfdr-wrap {
+  position: relative;
+  width: 100%;
+  font-family: inherit;
+  font-size: 13px;
+  color: #1e293b;
+}
+
+/* ── Toolbar: filters + export ── */
+.mfdr-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  overflow: visible;
+}
+
+.mfdr-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 320px;
+  overflow: visible;
+}
+
+.mfdr-filter-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: visible;
+}
+
+.mfdr-filter-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  white-space: nowrap;
+}
+
+.mfdr-filter-select,
+.mfdr-filter-input,
+.mfdr-filter-date {
+  padding: 6px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-size: 12px;
+  background: #fff;
+  color: #1e293b;
+  min-width: 180px;
+  max-width: 100%;
+  line-height: 1.35;
+  box-sizing: border-box;
+  pointer-events: auto;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+  opacity: 1;
+  appearance: auto;
+  -webkit-appearance: menulist;
+  -moz-appearance: menulist;
+}
+
+.mfdr-filter-btn {
+  padding: 6px 14px;
+  border: 1px solid #3b82f6;
+  border-radius: 4px;
+  background: #3b82f6;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+}
+.mfdr-filter-btn:hover { background: #2563eb; }
+
+.mfdr-export-bar {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+}
+
+.mfdr-export-btn {
+  padding: 4px 10px;
+  border: 1px solid #94a3b8;
+  border-radius: 4px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 11px;
+  cursor: pointer;
+}
+.mfdr-export-btn:hover { background: #e2e8f0; }
+
+/* ── Data table ── */
+.mfdr-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #e2e8f0;
+}
+
+.mfdr-table th {
+  background: #1e3a5f;
+  color: #fff;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  border: 1px solid #1e3a5f;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.mfdr-table th:hover { background: #2d4a6f; }
+
+.mfdr-table td {
+  padding: 6px 10px;
+  border: 1px solid #e2e8f0;
+  font-size: 13px;
+  vertical-align: top;
+}
+
+.mfdr-table tbody tr:nth-child(even) { background: #f8fafc; }
+.mfdr-table tbody tr:hover { background: #eff6ff; }
+
+/* ── Grouped accordion ── */
+.mfdr-group {
+  margin-bottom: 8px;
+  border: 1px solid #dbe4ee;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.mfdr-group-hdr {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  color: #1e293b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+
+.mfdr-group-hdr:hover { background: #f1f5f9; }
+
+.mfdr-group-arrow {
+  display: inline-block;
+  transition: transform 0.18s ease;
+}
+
+.mfdr-group-open .mfdr-group-arrow { transform: rotate(90deg); }
+
+.mfdr-group-count {
+  margin-left: auto;
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.mfdr-group-body { display: block; }
+.mfdr-group-collapsed { display: none; }
+
+/* ── Drill-down link ── */
+.mfdr-drill {
+  color: #2563eb;
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: 500;
+}
+.mfdr-drill:hover { color: #1d4ed8; }
+
+/* ── Detail row (expanded) ── */
+.mfdr-detail-row {
+  background: #f1f5f9 !important;
+}
+.mfdr-detail-row > td {
+  padding: 0 !important;
+  border: none !important;
+}
+.mfdr-detail-content {
+  padding: 10px 16px;
+  border-left: 3px solid #3b82f6;
+  margin: 4px 8px;
+}
+.mfdr-detail-level-2 .mfdr-detail-content { border-left-color: #10b981; }
+.mfdr-detail-level-3 .mfdr-detail-content { border-left-color: #f59e0b; }
+
+/* ── Detail sub-table ── */
+.mfdr-detail-content .mfdr-table {
+  font-size: 12px;
+}
+.mfdr-detail-content .mfdr-table th {
+  background: #475569;
+  padding: 5px 8px;
+  font-size: 11px;
+}
+.mfdr-detail-content .mfdr-table td {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+/* ── Conditional badge ── */
+.mfdr-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.mfdr-badge-green  { background: #dcfce7; color: #166534; }
+.mfdr-badge-red    { background: #fee2e2; color: #991b1b; }
+.mfdr-badge-blue   { background: #dbeafe; color: #1e40af; }
+.mfdr-badge-yellow { background: #fef3c7; color: #92400e; }
+.mfdr-badge-gray   { background: #f1f5f9; color: #475569; }
+
+/* ── Loading / empty / error ── */
+.mfdr-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 20px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.mfdr-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #cbd5e1;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: mfdr-spin 0.7s linear infinite;
+}
+@keyframes mfdr-spin { to { transform: rotate(360deg); } }
+
+.mfdr-empty {
+  padding: 24px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.mfdr-error {
+  padding: 12px 16px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  color: #dc2626;
+  font-size: 13px;
+}
+
+/* ── Pagination ── */
+.mfdr-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  margin-top: 4px;
+}
+
+.mfdr-page-info {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.mfdr-page-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.mfdr-page-btn {
+  padding: 4px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  background: #fff;
+  color: #334155;
+  font-size: 12px;
+  cursor: pointer;
+}
+.mfdr-page-btn:hover { background: #f1f5f9; }
+
+/* ── Status bar ── */
+.mfdr-status {
+  font-size: 11px;
+  color: #94a3b8;
+  padding: 4px 0;
+  text-align: right;
+}
+
+/* ── Chart ── */
+.mfdr-chart-wrap {
+  margin-bottom: 12px;
+}
+
+.mfdr-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.mfdr-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #475569;
+}
+
+.mfdr-legend-color {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+/* ── Sort indicators ── */
+.mfdr-sort-asc::after  { content: ' ▲'; font-size: 9px; opacity: 0.7; }
+.mfdr-sort-desc::after { content: ' ▼'; font-size: 9px; opacity: 0.7; }
+
+@media (max-width: 768px) {
+  .mfdr-toolbar {
+    align-items: stretch;
+  }
+
+  .mfdr-filter-item {
+    flex: 1 1 100%;
+  }
+
+  .mfdr-filter-select,
+  .mfdr-filter-input,
+  .mfdr-filter-date {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .mfdr-export-bar {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

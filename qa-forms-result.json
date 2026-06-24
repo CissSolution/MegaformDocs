@@ -1,0 +1,398 @@
+[
+  {
+    "url": "http://localhost:5000/test-template-page/rose_festival_row_based_ok",
+    "name": "Rose Festival 2026",
+    "overflowX": 0,
+    "overflowY": 1429,
+    "submitInfo": {
+      "text": "",
+      "inDom": true,
+      "visible": true,
+      "top": 15,
+      "bottom": 50
+    },
+    "hasThemeSelector": false
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/v0-celebration-rsvp-simple",
+    "name": "Celebration RSVP — Simple",
+    "overflowX": 0,
+    "overflowY": 768,
+    "submitInfo": {
+      "text": "",
+      "inDom": true,
+      "visible": true,
+      "top": 15,
+      "bottom": 50
+    },
+    "hasThemeSelector": true
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/v0-celebration-rsvp-stepped",
+    "name": "Celebration RSVP — Stepped",
+    "overflowX": 0,
+    "overflowY": 283,
+    "submitInfo": {
+      "text": "",
+      "inDom": true,
+      "visible": true,
+      "top": 15,
+      "bottom": 50
+    },
+    "hasThemeSelector": true
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/v0-invitation-ceremony-another-v20260419-06",
+    "name": "Celebration",
+    "overflowX": 0,
+    "overflowY": 1486,
+    "submitInfo": {
+      "text": "",
+      "inDom": true,
+      "visible": true,
+      "top": 15,
+      "bottom": 50
+    },
+    "hasThemeSelector": false
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/v0-invitation-ceremony-v6-v20260419-06",
+    "name": "Celebration",
+    "overflowX": 0,
+    "overflowY": 1471,
+    "submitInfo": {
+      "text": "",
+      "inDom": true,
+      "visible": true,
+      "top": 15,
+      "bottom": 50
+    },
+    "hasThemeSelector": false
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/v0job-application-form-v20260419-06",
+    "name": "Job Application Form",
+    "overflowX": 0,
+    "overflowY": 3194,
+    "submitInfo": {
+      "text": "",
+      "inDom": true,
+      "visible": true,
+      "top": 15,
+      "bottom": 50
+    },
+    "hasThemeSelector": false
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/american-auto-dealership-registration",
+    "name": "Schedule Your Test Drive",
+    "overflowX": 0,
+    "overflowY": 843,
+    "submitInfo": {
+      "text": "",
+      "inDom": true,
+      "visible": true,
+      "top": 15,
+      "bottom": 50
+    },
+    "hasThemeSelector": false
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/american-auto-dealership-registration1",
+    "name": "Schedule Your Test Drive",
+    "overflowX": 0,
+    "overflowY": 837,
+    "submitInfo": {
+      "text": "",
+      "inDom": true,
+      "visible": true,
+      "top": 15,
+      "bottom": 50
+    },
+    "hasThemeSelector": false
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/american-realestate-french-style",
+    "name": "Property Inquiry",
+    "overflowX": 0,
+    "overflowY": 3704,
+    "submitInfo": {
+      "text": "",
+      "inDom": true,
+      "visible": true,
+      "top": 15,
+      "bottom": 50
+    },
+    "hasThemeSelector": false
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/aurora-product-feedback",
+    "name": "Share Your Experience",
+    "overflowX": 0,
+    "overflowY": 1268,
+    "submitInfo": {
+      "text": "",
+      "inDom": true,
+      "visible": true,
+      "top": 15,
+      "bottom": 50
+    },
+    "hasThemeSelector": false
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/aurora-style-consultation",
+    "name": "Style Consultation",
+    "overflowX": 0,
+    "overflowY": 2083,
+    "submitInfo": {
+      "text": "",
+      "inDom": true,
+      "visible": true,
+      "top": 15,
+      "bottom": 50
+    },
+    "hasThemeSelector": false
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/botanical-volunteer-story",
+    "name": "Botanical Volunteer Story Form",
+    "overflowX": 0,
+    "overflowY": 432,
+    "submitInfo": {
+      "text": "",
+      "inDom": true,
+      "visible": true,
+      "top": 15,
+      "bottom": 50
+    },
+    "hasThemeSelector": false
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/cherry-blossom-festival-registration",
+    "name": "National Cherry Blossom Festival",
+    "overflowX": 0,
+    "overflowY": 2942,
+    "submitInfo": {
+      "text": "",
+      "inDom": true,
+      "visible": true,
+      "top": 15,
+      "bottom": 50
+    },
+    "hasThemeSelector": false
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/client-weekly-health-checkin",
+    "name": "Client Weekly Health Check-In",
+    "overflowX": 0,
+    "overflowY": 3774,
+    "submitInfo": {
+      "text": "",
+      "inDom": true,
+      "visible": true,
+      "top": 15,
+      "bottom": 50
+    },
+    "hasThemeSelector": false
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/coachella-festival-registration",
+    "name": "Coachella Valley Music Festival",
+    "overflowX": 0,
+    "overflowY": 3399,
+    "submitInfo": {
+      "text": "",
+      "inDom": true,
+      "visible": true,
+      "top": 15,
+      "bottom": 50
+    },
+    "hasThemeSelector": false
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/elegant-nature-job-application",
+    "name": "Elegant Nature Job Application",
+    "overflowX": 0,
+    "overflowY": 2298,
+    "submitInfo": {
+      "text": "",
+      "inDom": true,
+      "visible": true,
+      "top": 15,
+      "bottom": 50
+    },
+    "hasThemeSelector": false
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/french-invitation-fixed-calendar",
+    "name": "Vous Etes Invite",
+    "overflowX": 0,
+    "overflowY": 696,
+    "submitInfo": {
+      "text": "",
+      "inDom": true,
+      "visible": true,
+      "top": 15,
+      "bottom": 50
+    },
+    "hasThemeSelector": false
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/french-product-consultation-form-fixed-final",
+    "name": "Product Consultation",
+    "overflowX": 0,
+    "overflowY": 1854,
+    "submitInfo": {
+      "text": "",
+      "inDom": true,
+      "visible": true,
+      "top": 15,
+      "bottom": 50
+    },
+    "hasThemeSelector": false
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/halloween-party-registration",
+    "name": "Spooky Night Party",
+    "overflowX": 0,
+    "overflowY": 1758,
+    "submitInfo": {
+      "text": "",
+      "inDom": true,
+      "visible": true,
+      "top": 15,
+      "bottom": 50
+    },
+    "hasThemeSelector": false
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/invitation-ceremony-another",
+    "name": "Celebration",
+    "overflowX": 0,
+    "overflowY": 1440,
+    "submitInfo": {
+      "text": "",
+      "inDom": true,
+      "visible": true,
+      "top": 15,
+      "bottom": 50
+    },
+    "hasThemeSelector": false
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/invitation-ceremony-v6",
+    "name": "Celebration",
+    "overflowX": 0,
+    "overflowY": 1425,
+    "submitInfo": {
+      "text": "",
+      "inDom": true,
+      "visible": true,
+      "top": 15,
+      "bottom": 50
+    },
+    "hasThemeSelector": false
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/italian-law-firm-consultation",
+    "name": "Legal Consultation Request",
+    "overflowX": 0,
+    "overflowY": 2106,
+    "submitInfo": {
+      "text": "",
+      "inDom": true,
+      "visible": true,
+      "top": 15,
+      "bottom": 50
+    },
+    "hasThemeSelector": false
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/italian-romantic-experience-feedback",
+    "name": "Your Evening With Us",
+    "overflowX": 0,
+    "overflowY": 1422,
+    "submitInfo": {
+      "text": "",
+      "inDom": true,
+      "visible": true,
+      "top": 15,
+      "bottom": 50
+    },
+    "hasThemeSelector": false
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/job-application-form",
+    "name": "Job Application Form",
+    "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5000/test-template-page/job-application-form\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5000/test-template-page/job-application-form\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/megaform-italian-romantic-fixed",
+    "name": "Contact Us",
+    "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5000/test-template-page/megaform-italian-romantic-fixed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5000/test-template-page/megaform-italian-romantic-fixed\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/megaform-multipurpose-usa",
+    "name": "Get In Touch With Us",
+    "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5000/test-template-page/megaform-multipurpose-usa\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5000/test-template-page/megaform-multipurpose-usa\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/new-orleans-event-registration",
+    "name": "Mardi Gras Celebration",
+    "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5000/test-template-page/new-orleans-event-registration\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5000/test-template-page/new-orleans-event-registration\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/product-consultation-form-fixed-english-slider-fictional-cities",
+    "name": "Product Consultation",
+    "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5000/test-template-page/product-consultation-form-fixed-english-slider-fictional-cities\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5000/test-template-page/product-consultation-form-fixed-english-slider-fictional-cities\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/pt-trainer-form-template",
+    "name": "Personal Training Consultation",
+    "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5000/test-template-page/pt-trainer-form-template\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5000/test-template-page/pt-trainer-form-template\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/pt-trainer-modern-us-form",
+    "name": "Personal Training Registration",
+    "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5000/test-template-page/pt-trainer-modern-us-form\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5000/test-template-page/pt-trainer-modern-us-form\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/romantic-congratulations-event-form-fixed",
+    "name": "Celebrate With Us",
+    "error": "page.goto: Navigation to \"http://localhost:5000/test-template-page/romantic-congratulations-event-form-fixed\" is interrupted by another navigation to \"chrome-error://chromewebdata/\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5000/test-template-page/romantic-congratulations-event-form-fixed\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/sticky-spark-creative-brief",
+    "name": "Sticky Spark Creative Brief",
+    "error": "page.goto: Navigation to \"http://localhost:5000/test-template-page/sticky-spark-creative-brief\" is interrupted by another navigation to \"http://localhost:5000/test-template-page/romantic-congratulations-event-form-fixed\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5000/test-template-page/sticky-spark-creative-brief\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/sweet-holiday-rose-garden",
+    "name": "Sweet Holiday Wishes",
+    "error": "page.goto: Navigation to \"http://localhost:5000/test-template-page/sweet-holiday-rose-garden\" is interrupted by another navigation to \"http://localhost:5000/test-template-page/sticky-spark-creative-brief\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5000/test-template-page/sweet-holiday-rose-garden\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/usa-training-course-registration-form-script-token-fixed-v2",
+    "name": "Training Course Registration",
+    "error": "page.goto: Navigation to \"http://localhost:5000/test-template-page/usa-training-course-registration-form-script-token-fixed-v2\" is interrupted by another navigation to \"http://localhost:5000/test-template-page/sweet-holiday-rose-garden\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5000/test-template-page/usa-training-course-registration-form-script-token-fixed-v2\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/wedding-scrapbook-story",
+    "name": "Wedding Scrapbook Story Form",
+    "error": "page.goto: Navigation to \"http://localhost:5000/test-template-page/wedding-scrapbook-story\" is interrupted by another navigation to \"http://localhost:5000/test-template-page/usa-training-course-registration-form-script-token-fixed-v2\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5000/test-template-page/wedding-scrapbook-story\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "url": "http://localhost:5000/test-template-page/worldcup-2026-event-registration-form-fixed-centered",
+    "name": "FIFA World Cup 2026 - Event Registration",
+    "overflowX": 0,
+    "overflowY": 1713,
+    "submitInfo": {
+      "text": "",
+      "inDom": true,
+      "visible": true,
+      "top": 15,
+      "bottom": 50
+    },
+    "hasThemeSelector": false
+  }
+]

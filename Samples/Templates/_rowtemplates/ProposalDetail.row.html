@@ -1,0 +1,17 @@
+<div class="mf-gm-row unread"
+     data-mflv-action="view"
+     data-mflv-id="{{submission:id}}"
+     data-mf-status="{{submission:status}}"
+     data-mf-due="{{field:target_close_date|format=yyyy-MM-dd}}"
+     data-mf-recv="{{submission:date|format=yyyy-MM-dd}}">
+  <span class="cb">▢</span>
+  <span class="star">★</span>
+  <span class="imp">›</span>
+  <div class="sender">{{field:requester_name}}</div>
+  <div class="content">
+    <span class="pill">{{field:proposal_type}}</span>
+    <span class="subject">{{field:proposal_title}}</span>
+    <span class="snippet">— {{field:executive_summary}} · budget {{field:budget_amount|format=C0}}</span>
+  </div>
+  <div class="time">{{field:target_close_date|format=dd MMM}}</div>
+</div>

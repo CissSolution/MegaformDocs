@@ -1,0 +1,28 @@
+@page
+@model MegaForm.Samples.CorporateWeb.FullDemo.Pages.ContactModel
+@{
+    ViewData["Title"] = "Contact Us";
+}
+
+<section class="contact-page py-4">
+    <div class="container" style="max-width: 960px;">
+        @if (Model.FormId > 0)
+        {
+            <megaform form-id="@Model.FormId" mode="embed" min-height="560" theme="corporate" class="megaform-host"></megaform>
+        }
+        else
+        {
+            <div class="alert alert-warning">
+                <p>No published MegaForm was found. Make sure the app has finished starting.</p>
+                <a class="btn btn-secondary" href="/admin" target="_blank">Open MegaForm admin</a>
+            </div>
+        }
+    </div>
+</section>
+
+<style>
+    .megaform-host .mf-form-wrapper {
+        background: transparent !important;
+        padding: 0 !important;
+    }
+</style>

@@ -1,0 +1,35 @@
+@page
+@model MegaForm.Samples.CorporateWeb.Pages.DetailsModel
+@{
+    ViewData["Title"] = "Details";
+}
+
+<section class="content-page">
+    <div class="container">
+        <h1>How it works</h1>
+        <p>
+            The <strong>CorporateWeb</strong> sample is a typical ASP.NET Core
+            Razor Pages application. It references the
+            <code>MegaForm.AspNetCore.Component</code> NuGet package and calls
+            three integration points:
+        </p>
+        <ul>
+            <li><code>builder.AddMegaForm(...)</code> — registers services, auth, MVC and the database.</li>
+            <li><code>app.EnsureMegaFormDatabaseReady()</code> — creates the MegaForm schema.</li>
+            <li><code>app.UseMegaForm()</code> — enables static assets, middleware and controllers.</li>
+        </ul>
+        <p>
+            The contact page then uses the <code>&lt;megaform&gt;</code> TagHelper
+            to embed a published form that was seeded when the app first started.
+        </p>
+        <p>
+            Because MegaForm runs inside the same host, there is no external
+            server to configure. Forms, submissions and the admin console are all
+            available under the same application URL.
+        </p>
+        <div class="cta-row">
+            <a class="btn btn-primary" href="/Contact">See the contact form</a>
+            <a class="btn btn-secondary" href="/">Back to home</a>
+        </div>
+    </div>
+</section>

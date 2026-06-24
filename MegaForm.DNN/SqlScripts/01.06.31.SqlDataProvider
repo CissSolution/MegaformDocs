@@ -1,0 +1,80 @@
+-- MegaForm 01.06.31 — B53 Unified Designer AI panel scoping (2026-06-03)
+--
+-- Adds WidgetType + Surface columns to MF_AI_Knowledge so the new
+-- AiKnowledge/SearchScoped endpoint can scope KB lookups by widget +
+-- surface (e.g. widgetType='razor', surface='designer') without
+-- having to LIKE-match against the Tags CSV.
+--
+-- Both columns are NULLABLE (NULL = "applies anywhere") so existing
+-- rows continue to match every widget/surface combination until an
+-- admin curates them.
+--
+-- Idempotent (COL_LENGTH guards) — safe to re-run.
+--
+-- Oqtane parity lives in
+-- MegaForm.Oqtane.Server\Migrations\01060031_AddAiKnowledgeWidgetSurface.cs.
+
+-- ===== B53 ===============================================================
+
+-- ── 1. Add WidgetType column if missing ────────────────────────
+IF COL_LENGTH('{databaseOwner}{objectQualifier}MF_AI_Knowledge', 'WidgetType') IS NULL
+BEGIN
+    ALTER TABLE {databaseOwner}{objectQualifier}MF_AI_Knowledge
+        ADD WidgetType NVARCHAR(80) NULL;
+END
+GO
+
+-- ── 2. Add Surface column if missing ───────────────────────────
+IF COL_LENGTH('{databaseOwner}{objectQualifier}MF_AI_Knowledge', 'Surface') IS NULL
+BEGIN
+    ALTER TABLE {databaseOwner}{objectQualifier}MF_AI_Knowledge
+        ADD Surface NVARCHAR(80) NULL;
+END
+GO
+
+-- ── 3. Composite index for scoped lookups ──────────────────────
+IF NOT EXISTS (
+    SELECT 1 FROM sys.indexes
+    WHERE name = 'IX_MF_AI_Knowledge_Widget_Surface'
+      AND object_id = OBJECT_ID('{databaseOwner}{objectQualifier}MF_AI_Knowledge')
+)
+BEGIN
+    CREATE INDEX IX_MF_AI_Knowledge_Widget_Surface
+        ON {databaseOwner}{objectQualifier}MF_AI_Knowledge (WidgetType, Surface)
+        INCLUDE (Slug, Kind, Title);
+END
+GO
+
+-- ── 4. Backfill from Tags CSV for built-in rows (best-effort) ──
+-- Existing megaform-builtin rows often carry `widget:<name>` and
+-- `surface:<name>` in their Tags. Extract those into the new
+-- columns so admins don't have to retag the entire seed catalog.
+-- Customer rows are left alone.
+UPDATE {databaseOwner}{objectQualifier}MF_AI_Knowledge
+SET WidgetType =
+        CASE
+            WHEN Tags LIKE '%widget:razor%'         THEN 'razor'
+            WHEN Tags LIKE '%widget:dynlabel%'      THEN 'dynlabel'
+            WHEN Tags LIKE '%widget:dynamiclabel%'  THEN 'dynlabel'
+            WHEN Tags LIKE '%widget:datagrid%'      THEN 'datagrid'
+            WHEN Tags LIKE '%widget:datarepeater%'  THEN 'datarepeater'
+            WHEN Tags LIKE '%widget:gridrepeater%'  THEN 'gridrepeater'
+            WHEN Tags LIKE '%widget:layout%'        THEN 'layout'
+            WHEN Tags LIKE '%widget:slider%'        THEN 'slider'
+            WHEN Tags LIKE '%widget:card%'          THEN 'card'
+            WHEN Tags LIKE '%widget:list%'          THEN 'list'
+            ELSE WidgetType
+        END,
+    Surface =
+        CASE
+            WHEN Tags LIKE '%surface:designer%'  THEN 'designer'
+            WHEN Tags LIKE '%surface:runtime%'   THEN 'runtime'
+            WHEN Tags LIKE '%surface:studio%'    THEN 'studio'
+            WHEN Tags LIKE '%surface:theme%'     THEN 'theme'
+            WHEN Tags LIKE '%surface:builder%'   THEN 'designer'
+            ELSE Surface
+        END
+WHERE (WidgetType IS NULL OR Surface IS NULL)
+  AND Source = 'megaform-builtin'
+  AND Tags IS NOT NULL;
+GO

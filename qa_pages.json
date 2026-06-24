@@ -1,0 +1,254 @@
+[
+  {
+    "name": "Rose Festival 2026",
+    "path": "test-template-page/rose_festival_row_based_ok",
+    "url": "http://localhost:5000/test-template-page/rose_festival_row_based_ok",
+    "moduleId": 40,
+    "formId": 10
+  },
+  {
+    "name": "Celebration RSVP — Simple",
+    "path": "test-template-page/v0-celebration-rsvp-simple",
+    "url": "http://localhost:5000/test-template-page/v0-celebration-rsvp-simple",
+    "moduleId": 41,
+    "formId": 11
+  },
+  {
+    "name": "Celebration RSVP — Stepped",
+    "path": "test-template-page/v0-celebration-rsvp-stepped",
+    "url": "http://localhost:5000/test-template-page/v0-celebration-rsvp-stepped",
+    "moduleId": 42,
+    "formId": 12
+  },
+  {
+    "name": "Celebration",
+    "path": "test-template-page/v0-invitation-ceremony-another-v20260419-06",
+    "url": "http://localhost:5000/test-template-page/v0-invitation-ceremony-another-v20260419-06",
+    "moduleId": 43,
+    "formId": 13
+  },
+  {
+    "name": "Celebration",
+    "path": "test-template-page/v0-invitation-ceremony-v6-v20260419-06",
+    "url": "http://localhost:5000/test-template-page/v0-invitation-ceremony-v6-v20260419-06",
+    "moduleId": 44,
+    "formId": 14
+  },
+  {
+    "name": "Job Application Form",
+    "path": "test-template-page/v0job-application-form-v20260419-06",
+    "url": "http://localhost:5000/test-template-page/v0job-application-form-v20260419-06",
+    "moduleId": 45,
+    "formId": 15
+  },
+  {
+    "name": "Schedule Your Test Drive",
+    "path": "test-template-page/american-auto-dealership-registration",
+    "url": "http://localhost:5000/test-template-page/american-auto-dealership-registration",
+    "moduleId": 46,
+    "formId": 16
+  },
+  {
+    "name": "Schedule Your Test Drive",
+    "path": "test-template-page/american-auto-dealership-registration1",
+    "url": "http://localhost:5000/test-template-page/american-auto-dealership-registration1",
+    "moduleId": 47,
+    "formId": 17
+  },
+  {
+    "name": "Property Inquiry",
+    "path": "test-template-page/american-realestate-french-style",
+    "url": "http://localhost:5000/test-template-page/american-realestate-french-style",
+    "moduleId": 48,
+    "formId": 18
+  },
+  {
+    "name": "Share Your Experience",
+    "path": "test-template-page/aurora-product-feedback",
+    "url": "http://localhost:5000/test-template-page/aurora-product-feedback",
+    "moduleId": 49,
+    "formId": 19
+  },
+  {
+    "name": "Style Consultation",
+    "path": "test-template-page/aurora-style-consultation",
+    "url": "http://localhost:5000/test-template-page/aurora-style-consultation",
+    "moduleId": 50,
+    "formId": 20
+  },
+  {
+    "name": "Botanical Volunteer Story Form",
+    "path": "test-template-page/botanical-volunteer-story",
+    "url": "http://localhost:5000/test-template-page/botanical-volunteer-story",
+    "moduleId": 51,
+    "formId": 21
+  },
+  {
+    "name": "National Cherry Blossom Festival",
+    "path": "test-template-page/cherry-blossom-festival-registration",
+    "url": "http://localhost:5000/test-template-page/cherry-blossom-festival-registration",
+    "moduleId": 52,
+    "formId": 22
+  },
+  {
+    "name": "Client Weekly Health Check-In",
+    "path": "test-template-page/client-weekly-health-checkin",
+    "url": "http://localhost:5000/test-template-page/client-weekly-health-checkin",
+    "moduleId": 53,
+    "formId": 23
+  },
+  {
+    "name": "Coachella Valley Music Festival",
+    "path": "test-template-page/coachella-festival-registration",
+    "url": "http://localhost:5000/test-template-page/coachella-festival-registration",
+    "moduleId": 54,
+    "formId": 24
+  },
+  {
+    "name": "Elegant Nature Job Application",
+    "path": "test-template-page/elegant-nature-job-application",
+    "url": "http://localhost:5000/test-template-page/elegant-nature-job-application",
+    "moduleId": 55,
+    "formId": 25
+  },
+  {
+    "name": "Vous Etes Invite",
+    "path": "test-template-page/french-invitation-fixed-calendar",
+    "url": "http://localhost:5000/test-template-page/french-invitation-fixed-calendar",
+    "moduleId": 56,
+    "formId": 26
+  },
+  {
+    "name": "Product Consultation",
+    "path": "test-template-page/french-product-consultation-form-fixed-final",
+    "url": "http://localhost:5000/test-template-page/french-product-consultation-form-fixed-final",
+    "moduleId": 57,
+    "formId": 27
+  },
+  {
+    "name": "Spooky Night Party",
+    "path": "test-template-page/halloween-party-registration",
+    "url": "http://localhost:5000/test-template-page/halloween-party-registration",
+    "moduleId": 58,
+    "formId": 28
+  },
+  {
+    "name": "Celebration",
+    "path": "test-template-page/invitation-ceremony-another",
+    "url": "http://localhost:5000/test-template-page/invitation-ceremony-another",
+    "moduleId": 59,
+    "formId": 29
+  },
+  {
+    "name": "Celebration",
+    "path": "test-template-page/invitation-ceremony-v6",
+    "url": "http://localhost:5000/test-template-page/invitation-ceremony-v6",
+    "moduleId": 60,
+    "formId": 30
+  },
+  {
+    "name": "Legal Consultation Request",
+    "path": "test-template-page/italian-law-firm-consultation",
+    "url": "http://localhost:5000/test-template-page/italian-law-firm-consultation",
+    "moduleId": 61,
+    "formId": 31
+  },
+  {
+    "name": "Your Evening With Us",
+    "path": "test-template-page/italian-romantic-experience-feedback",
+    "url": "http://localhost:5000/test-template-page/italian-romantic-experience-feedback",
+    "moduleId": 62,
+    "formId": 32
+  },
+  {
+    "name": "Job Application Form",
+    "path": "test-template-page/job-application-form",
+    "url": "http://localhost:5000/test-template-page/job-application-form",
+    "moduleId": 63,
+    "formId": 33
+  },
+  {
+    "name": "Contact Us",
+    "path": "test-template-page/megaform-italian-romantic-fixed",
+    "url": "http://localhost:5000/test-template-page/megaform-italian-romantic-fixed",
+    "moduleId": 64,
+    "formId": 34
+  },
+  {
+    "name": "Get In Touch With Us",
+    "path": "test-template-page/megaform-multipurpose-usa",
+    "url": "http://localhost:5000/test-template-page/megaform-multipurpose-usa",
+    "moduleId": 65,
+    "formId": 35
+  },
+  {
+    "name": "Mardi Gras Celebration",
+    "path": "test-template-page/new-orleans-event-registration",
+    "url": "http://localhost:5000/test-template-page/new-orleans-event-registration",
+    "moduleId": 66,
+    "formId": 36
+  },
+  {
+    "name": "Product Consultation",
+    "path": "test-template-page/product-consultation-form-fixed-english-slider-fictional-cities",
+    "url": "http://localhost:5000/test-template-page/product-consultation-form-fixed-english-slider-fictional-cities",
+    "moduleId": 67,
+    "formId": 37
+  },
+  {
+    "name": "Personal Training Consultation",
+    "path": "test-template-page/pt-trainer-form-template",
+    "url": "http://localhost:5000/test-template-page/pt-trainer-form-template",
+    "moduleId": 68,
+    "formId": 38
+  },
+  {
+    "name": "Personal Training Registration",
+    "path": "test-template-page/pt-trainer-modern-us-form",
+    "url": "http://localhost:5000/test-template-page/pt-trainer-modern-us-form",
+    "moduleId": 69,
+    "formId": 39
+  },
+  {
+    "name": "Celebrate With Us",
+    "path": "test-template-page/romantic-congratulations-event-form-fixed",
+    "url": "http://localhost:5000/test-template-page/romantic-congratulations-event-form-fixed",
+    "moduleId": 70,
+    "formId": 40
+  },
+  {
+    "name": "Sticky Spark Creative Brief",
+    "path": "test-template-page/sticky-spark-creative-brief",
+    "url": "http://localhost:5000/test-template-page/sticky-spark-creative-brief",
+    "moduleId": 71,
+    "formId": 41
+  },
+  {
+    "name": "Sweet Holiday Wishes",
+    "path": "test-template-page/sweet-holiday-rose-garden",
+    "url": "http://localhost:5000/test-template-page/sweet-holiday-rose-garden",
+    "moduleId": 72,
+    "formId": 42
+  },
+  {
+    "name": "Training Course Registration",
+    "path": "test-template-page/usa-training-course-registration-form-script-token-fixed-v2",
+    "url": "http://localhost:5000/test-template-page/usa-training-course-registration-form-script-token-fixed-v2",
+    "moduleId": 73,
+    "formId": 43
+  },
+  {
+    "name": "Wedding Scrapbook Story Form",
+    "path": "test-template-page/wedding-scrapbook-story",
+    "url": "http://localhost:5000/test-template-page/wedding-scrapbook-story",
+    "moduleId": 74,
+    "formId": 44
+  },
+  {
+    "name": "FIFA World Cup 2026 - Event Registration",
+    "path": "test-template-page/worldcup-2026-event-registration-form-fixed-centered",
+    "url": "http://localhost:5000/test-template-page/worldcup-2026-event-registration-form-fixed-centered",
+    "moduleId": 75,
+    "formId": 45
+  }
+]

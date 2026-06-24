@@ -1,0 +1,29 @@
+-- MegaForm 01.06.24 — Builder + AI Form Assistant wave (2026-05-27)
+-- No schema changes. This marker lets DNN record the upgrade version.
+--
+-- Code-side highlights shipped in this package:
+--   • Multi-portal subpath alias fix — JS no longer sends TabId/ModuleId headers,
+--     server reads ?portalId=N via FormController.ResolveTargetPortalId().
+--   • PermissionsController swapped [DnnModuleAuthorize(Edit)] →
+--     [DnnAuthorize(Administrators)] so /api/Permissions/Catalog stops 400ing
+--     on child portals.
+--   • DynamicLabel widget: Help button gains an inline "Apply sample" preset
+--     picker (6 presets: card grid, table list, compact list, portal stat,
+--     page detail, static reset).
+--   • Builder Field-pane accordion now toggles when clicking anywhere on the
+--     section header (not just the chevron button).
+--   • Widget Settings pane gets canonical CSS (.mfw-auto-props /
+--     .mfw-prop-row / .mfw-prop-toggle) so every widget renders as a tidy
+--     two-column form with stacked-column textareas.
+--   • NEW sub-project: MegaForm AI Form Assistant (canonical Vite TS + C#
+--     port of the ACME Block Builder). Floating bubble on the Builder
+--     surface only, OpenAI gpt-4o by default, multi-provider abstraction
+--     (Claude/Kimi/OpenRouter/local), 9-op JSON dispatcher, widget catalog
+--     auto-extracted from src/widgets/plugins + field-plugins/_index.ts,
+--     paste/drag-drop image+text attachments, dedicated admin Settings panel.
+--   • AI feature gate: bundle ships dark — only activates when a `dev.lock`
+--     marker file is present (canonical MegaForm.Core.Services.AiAssistant
+--     .AiFeatureGate detects it in portal home, app root, App_Data, or
+--     DesktopModules/MegaForm). Controller returns 404 + JS bails when off.
+
+PRINT 'MegaForm 01.06.24 - Builder + AI Form Assistant wave applied.';

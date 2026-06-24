@@ -1,0 +1,128 @@
+/* ═══════════════════════════════════════════════════════════
+   MegaForm GolfScorecard Widget — v20260504-04
+   GolfGenius-style scorecard, foursome view + leaderboard.
+   Canonical CSS source — sync to Oqtane / Web / DNN platforms
+   alongside the matching widget JS bundle.
+   ═══════════════════════════════════════════════════════════ */
+.mfgs-wrap { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; color: #1f2a44; }
+
+/* ── Round block ── */
+.mfgs-round { margin-bottom: 8px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; }
+.mfgs-round-hdr { background: #3b5998; color: #fff; padding: 8px 12px; font-size: 14px; cursor: pointer; user-select: none; }
+.mfgs-round-hdr:hover { background: #2d4373; }
+.mfgs-arrow { display: inline-block; transition: transform 0.2s; margin-right: 4px; }
+.mfgs-open .mfgs-arrow { transform: rotate(90deg); }
+.mfgs-tee { opacity: 0.8; font-weight: normal; }
+.mfgs-slope { background: #f0f0f0; padding: 4px 12px; font-size: 11px; color: #555; border-bottom: 1px solid #ddd; }
+.mfgs-hidden { display: none; }
+.mfgs-card-body { }
+
+/* ── Scorecard table ── */
+.mfgs-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 12px; }
+.mfgs-table th, .mfgs-table td { padding: 4px 3px; border: 1px solid #d4d4d4; min-width: 26px; }
+.mfgs-table th { background: #2c3340; color: #fff; font-weight: 600; font-size: 11px; }
+.mfgs-table td:first-child, .mfgs-table th:first-child { text-align: left; min-width: 60px; font-weight: 600; font-size: 11px; }
+.mfgs-table tbody td:first-child { background: #f8f8f8; }
+
+/* Separator columns (Out, In, Total, Net) */
+.mfgs-sep { font-weight: 700 !important; background: #f0f0f0 !important; border-left: 2px solid #999 !important; }
+.mfgs-total { font-size: 13px; }
+
+/* ── Row types ── */
+.mfgs-yardage td { background: #fafafa; color: #666; font-size: 11px; }
+.mfgs-par-row td { background: #f5f5f5; font-weight: 600; }
+.mfgs-si-row td { background: #fafafa; color: #888; font-size: 10px; font-style: italic; }
+.mfgs-score-row td { font-weight: 700; font-size: 13px; vertical-align: middle; }
+.mfgs-section-label td { background: #2c3340 !important; color: #fff; text-align: center !important; font-weight: 700; font-size: 12px; padding: 6px; letter-spacing: .04em; text-transform: uppercase; }
+
+/* ── Score color marks (circles for birdie/eagle, squares for bogey/double) ──
+   Marks now wrap a <span class="mfgs-mark mfgs-XXX"> so display:inline-flex
+   actually renders (was a no-op when applied directly to <td>). ──────────── */
+.mfgs-mark {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px;
+  font-weight: 700; line-height: 1;
+}
+.mfgs-eagle    { color: #15803d; border: 2px double #15803d; border-radius: 50%; }
+.mfgs-birdie   { color: #dc2626; border: 2px solid #dc2626; border-radius: 50%; }
+.mfgs-par      { color: inherit; border: 0; }   /* no decoration */
+.mfgs-bogey    { color: #1e40af; border: 2px solid #1e40af; border-radius: 3px; }
+.mfgs-dblbogey { color: #1e40af; border: 3px double #1e40af; border-radius: 3px; }
+
+.mfgs-player-cell { text-align: left !important; min-width: 180px !important; font-size: 11px !important; font-weight: 400 !important; color: #0056b3; }
+
+/* ── States ── */
+.mfgs-loading { padding: 20px; text-align: center; color: #888; }
+.mfgs-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #ccc; border-top-color: #3b5998; border-radius: 50%; animation: mfgs-spin 0.6s linear infinite; }
+@keyframes mfgs-spin { to { transform: rotate(360deg); } }
+.mfgs-error { padding: 12px; background: #fef2f2; color: #dc2626; border-radius: 4px; }
+.mfgs-empty { padding: 20px; text-align: center; color: #888; font-style: italic; }
+
+/* ═══════════════════════════════════════════════════════════
+   Foursome view — header card + multi-player scorecard
+   Matches GolfGenius "Foursome · Stableford Points" layout.
+   ═══════════════════════════════════════════════════════════ */
+.mfgs-foursome { border: 1px solid #d4d4d4; border-radius: 8px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(15,23,42,.05); margin: 8px 0; }
+.mfgs-foursome-hdr {
+  display: flex; align-items: stretch; gap: 0;
+  background: #f8fafc; border-bottom: 1px solid #d4d4d4;
+}
+.mfgs-foursome-pos {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 12px 18px; min-width: 64px;
+  background: #fff; border-right: 1px solid #e2e8f0;
+}
+.mfgs-foursome-pos > span { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+.mfgs-foursome-pos > strong { font-size: 24px; color: #1f2a44; line-height: 1; margin-top: 4px; }
+.mfgs-foursome-meta { flex: 1; padding: 12px 16px; display: flex; flex-direction: column; justify-content: center; }
+.mfgs-foursome-title { font-weight: 600; color: #1f2a44; font-size: 14px; line-height: 1.4; }
+.mfgs-foursome-course { font-size: 12px; color: #64748b; font-style: italic; margin-top: 2px; }
+.mfgs-foursome-points {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 12px 22px; min-width: 130px;
+  background: #fff; border-left: 1px solid #e2e8f0;
+}
+.mfgs-foursome-points > span { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; text-align: center; line-height: 1.3; }
+.mfgs-foursome-points > strong { font-size: 26px; color: #b91c1c; line-height: 1; margin-top: 6px; font-variant-numeric: tabular-nums; }
+
+.mfgs-foursome-table { margin: 0; }
+.mfgs-foursome-table tbody tr.mfgs-score-row td.mfgs-player-label { color: #1d4ed8; font-weight: 600; font-size: 12px; }
+
+/* ═══════════════════════════════════════════════════════════
+   Leaderboard view — player rankings
+   Pos | Player | Total To Par | R1 | R2 | R3 | Total | (Net)
+   Color rules: red for under par, green for over par.
+   ═══════════════════════════════════════════════════════════ */
+.mfgs-leaderboard { border: 1px solid #d4d4d4; border-radius: 8px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(15,23,42,.05); margin: 8px 0; }
+.mfgs-lb-title { padding: 10px 14px; background: #eef2ff; border-bottom: 1px solid #c7d2fe; font-size: 13px; color: #1e40af; }
+.mfgs-lb-title strong { font-weight: 600; }
+.mfgs-lb-title span { display: block; font-size: 11px; color: #4338ca; margin-top: 2px; }
+.mfgs-lb-table { font-size: 13px; }
+.mfgs-lb-table th { background: #2c3340; color: #fff; padding: 8px 10px; font-size: 12px; font-weight: 600; }
+.mfgs-lb-table th small { font-weight: 400; opacity: 0.8; font-size: 10px; }
+.mfgs-lb-table td { padding: 8px 10px; vertical-align: middle; text-align: center; font-variant-numeric: tabular-nums; }
+.mfgs-lb-pos     { width: 50px; text-align: center !important; font-weight: 600; }
+.mfgs-lb-player  { text-align: left !important; min-width: 200px; color: #1d4ed8; font-weight: 500; }
+.mfgs-lb-under   { color: #dc2626 !important; font-weight: 700; }
+.mfgs-lb-over    { color: #15803d !important; font-weight: 600; }
+.mfgs-lb-total   { font-weight: 700; background: #f8fafc; }
+.mfgs-lb-row:nth-child(even) td { background: #fcfcfd; }
+.mfgs-lb-row:nth-child(even) td.mfgs-lb-total { background: #f1f5f9; }
+.mfgs-lb-row:hover td { background: #eef2ff; }
+
+/* ═══════════════════════════════════════════════════════════
+   DataRepeater Accordion Group Styles
+   ═══════════════════════════════════════════════════════════ */
+.mfdr-group { margin-bottom: 4px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; }
+.mfdr-group-hdr {
+  background: linear-gradient(135deg, #3b5998, #4a6baf);
+  color: #fff; padding: 10px 14px; cursor: pointer;
+  font-weight: 600; font-size: 14px;
+  user-select: none; transition: background 0.2s;
+}
+.mfdr-group-hdr:hover { background: linear-gradient(135deg, #2d4373, #3b5998); }
+.mfdr-group-arrow { display: inline-block; transition: transform 0.2s; margin-right: 6px; }
+.mfdr-group-open .mfdr-group-arrow { transform: rotate(90deg); }
+.mfdr-group-count { font-weight: 400; opacity: 0.7; font-size: 12px; }
+.mfdr-group-body { transition: max-height 0.3s ease; }
+.mfdr-group-collapsed { display: none; }

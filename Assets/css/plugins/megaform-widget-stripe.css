@@ -1,0 +1,121 @@
+.mfp-payment-stripe{
+  font-family:inherit;
+  color:#111827;
+}
+.mfp-payment-stripe *{box-sizing:border-box}
+.mfp-payment-stripe .mfp-pay-shell{
+  border:1px solid #dbe3ef;
+  background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);
+  border-radius:14px;
+  padding:18px;
+  box-shadow:0 8px 24px rgba(15,23,42,.06);
+}
+.mfp-payment-stripe .mfp-pay-headrow{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:12px;
+}
+.mfp-payment-stripe .mfp-pay-head{
+  font-size:18px;
+  line-height:1.25;
+  font-weight:700;
+  margin:0 0 4px;
+}
+.mfp-payment-stripe .mfp-pay-subhead{
+  font-size:13px;
+  line-height:1.5;
+  color:#5b6472;
+}
+.mfp-payment-stripe .mfp-pay-badge{
+  min-width:78px;
+  text-align:center;
+  border-radius:999px;
+  padding:7px 12px;
+  font-size:12px;
+  font-weight:700;
+  color:#4338ca;
+  background:#eef2ff;
+  border:1px solid #c7d2fe;
+}
+.mfp-payment-stripe .mfp-pay-cardrow{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+  margin-bottom:12px;
+}
+.mfp-payment-stripe .mfp-pay-cardchip{
+  min-height:42px;
+  border:1px solid #d7ddea;
+  border-radius:12px;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  font-weight:700;
+  color:#334155;
+}
+.mfp-payment-stripe .mfp-pay-status{
+  display:none;
+  margin:0 0 12px;
+  padding:10px 12px;
+  border-radius:10px;
+  font-size:13px;
+  line-height:1.4;
+}
+.mfp-payment-stripe .mfp-pay-status.is-info,
+.mfp-payment-stripe .mfp-pay-status.is-error,
+.mfp-payment-stripe .mfp-pay-status.is-success{display:block}
+.mfp-payment-stripe .mfp-pay-status.is-info{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+.mfp-payment-stripe .mfp-pay-status.is-success{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0}
+.mfp-payment-stripe .mfp-pay-status.is-error{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+.mfp-payment-stripe .mfp-stripe-panel{
+  border:1px solid #dfe6f2;
+  background:#fff;
+  border-radius:12px;
+  padding:14px;
+}
+.mfp-payment-stripe .mfp-stripe-element{
+  min-height:56px;
+}
+.mfp-payment-stripe .mfp-pay-actions{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:14px;
+  flex-wrap:wrap;
+}
+.mfp-payment-stripe .mfp-pay-safe{
+  font-size:12px;
+  color:#64748b;
+}
+.mfp-payment-stripe .mfp-pay-btn{
+  appearance:none;
+  border:0;
+  border-radius:12px;
+  background:linear-gradient(135deg,#635bff 0%,#4f46e5 100%);
+  color:#fff;
+  min-height:46px;
+  padding:0 18px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+  box-shadow:0 10px 22px rgba(79,70,229,.24);
+}
+.mfp-payment-stripe .mfp-pay-btn:hover{transform:translateY(-1px)}
+.mfp-payment-stripe .mfp-pay-btn:disabled{opacity:.65;cursor:not-allowed;transform:none}
+.mfp-payment-stripe[data-complete="1"] .mfp-pay-shell{
+  border-color:#9ae6b4;
+  box-shadow:0 10px 28px rgba(34,197,94,.12);
+}
+@media (max-width:640px){
+  .mfp-payment-stripe .mfp-pay-shell{padding:14px;border-radius:12px}
+  .mfp-payment-stripe .mfp-pay-head{font-size:16px}
+  .mfp-payment-stripe .mfp-pay-headrow{flex-direction:column;align-items:flex-start}
+  .mfp-payment-stripe .mfp-pay-cardrow{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mfp-payment-stripe .mfp-pay-actions{flex-direction:column;align-items:stretch}
+  .mfp-payment-stripe .mfp-pay-btn{width:100%}
+}

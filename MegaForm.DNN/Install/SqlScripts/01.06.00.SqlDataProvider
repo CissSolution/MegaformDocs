@@ -1,0 +1,45 @@
+/*============================================================
+  MegaForm – Permissions catalog upgrade
+  Version: 01.06.00
+============================================================*/
+
+IF EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_FormPermissions')
+BEGIN
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_FormPermissions') AND name = 'RoleName')
+        ALTER TABLE [dbo].[MF_FormPermissions] ADD RoleName NVARCHAR(200) NOT NULL CONSTRAINT DF_MF_FormPermissions_RoleName DEFAULT '';
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_FormPermissions') AND name = 'UserId')
+        ALTER TABLE [dbo].[MF_FormPermissions] ADD UserId INT NULL;
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_FormPermissions') AND name = 'Scope')
+        ALTER TABLE [dbo].[MF_FormPermissions] ADD Scope NVARCHAR(50) NOT NULL CONSTRAINT DF_MF_FormPermissions_Scope DEFAULT 'all';
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MF_FormPermissions') AND name = 'FieldRestrictions')
+        ALTER TABLE [dbo].[MF_FormPermissions] ADD FieldRestrictions NVARCHAR(MAX) NOT NULL CONSTRAINT DF_MF_FormPermissions_FieldRestrictions DEFAULT '';
+END
+GO
+
+IF EXISTS (SELECT * FROM sys.tables WHERE name = 'MF_FormPermissions')
+BEGIN
+    UPDATE [dbo].[MF_FormPermissions]
+    SET RoleName = CASE
+        WHEN PrincipalType = 'role' AND ISNULL(RoleName, '') = '' THEN ISNULL(PrincipalId, '')
+        ELSE ISNULL(RoleName, '')
+    END;
+
+    UPDATE [dbo].[MF_FormPermissions]
+    SET UserId = CASE
+        WHEN PrincipalType = 'user' AND UserId IS NULL AND ISNUMERIC(PrincipalId) = 1 THEN CONVERT(INT, PrincipalId)
+        ELSE UserId
+    END;
+
+    UPDATE [dbo].[MF_FormPermissions]
+    SET Scope = CASE
+        WHEN ISNULL(Scope, '') = '' THEN 'all'
+        ELSE Scope
+    END;
+
+    UPDATE [dbo].[MF_FormPermissions]
+    SET FieldRestrictions = ISNULL(FieldRestrictions, '');
+END
+GO

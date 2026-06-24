@@ -1,0 +1,90 @@
+-- ============================================================
+-- MegaForm 01.06.16 — Cascading SQL dropdown sample data
+-- ============================================================
+-- Adds sample tables + stored procedure to demonstrate the new
+-- cascading dropdown feature (parent field value -> child options
+-- filtered server-side via :token or stored proc parameter).
+--
+-- Objects created (safe to re-run):
+--   dbo.MegaForm_Sample_Events     — table of demo events with EventYear
+--   dbo.spMegaForm_Sample_GetEventsByYear  — stored proc returning
+--       (EventId, EventLabel) for a given @year
+--
+-- Usage in MegaForm builder (Select / Dropdown field):
+--   Source        = SQL
+--   Query type    = SQL query (SELECT)
+--   Connection    = SiteSqlServer
+--   Database type = SqlServer
+--   SQL query     = SELECT EventId, EventName + ' (' + City + ')'
+--                   FROM MegaForm_Sample_Events
+--                   WHERE EventYear = :year
+--                   ORDER BY EventDate
+--   Depends on    = year
+--
+-- OR using the stored procedure (recommended for production):
+--   Query type    = Stored procedure
+--   SQL query     = spMegaForm_Sample_GetEventsByYear
+--   Depends on    = year
+-- ============================================================
+
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'MegaForm_Sample_Events')
+BEGIN
+    CREATE TABLE dbo.MegaForm_Sample_Events
+    (
+        EventId    INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        EventYear  INT             NOT NULL,
+        EventName  NVARCHAR(200)   NOT NULL,
+        EventDate  DATE            NULL,
+        City       NVARCHAR(120)   NULL,
+        SortOrder  INT             NOT NULL CONSTRAINT DF_MegaForm_Sample_Events_SortOrder DEFAULT(0)
+    );
+
+    CREATE INDEX IX_MegaForm_Sample_Events_Year ON dbo.MegaForm_Sample_Events(EventYear);
+END
+GO
+
+-- Seed data — only insert if table is empty so re-installs don't duplicate.
+IF NOT EXISTS (SELECT 1 FROM dbo.MegaForm_Sample_Events)
+BEGIN
+    INSERT INTO dbo.MegaForm_Sample_Events (EventYear, EventName, EventDate, City, SortOrder) VALUES
+        (2024, N'Spring Customer Summit',     '2024-03-15', N'Hanoi',        10),
+        (2024, N'Mid-Year Product Launch',    '2024-06-20', N'Da Nang',      20),
+        (2024, N'Autumn Partner Conference',  '2024-09-12', N'Ho Chi Minh',  30),
+        (2024, N'Year-End Gala',              '2024-12-05', N'Hanoi',        40),
+
+        (2025, N'AI Innovation Workshop',     '2025-02-18', N'Singapore',    10),
+        (2025, N'Spring Customer Summit',     '2025-03-21', N'Hanoi',        20),
+        (2025, N'Field Operations Review',    '2025-07-09', N'Ho Chi Minh',  30),
+        (2025, N'Annual Hackathon',           '2025-10-15', N'Da Nang',      40),
+        (2025, N'Year-End Gala',              '2025-12-04', N'Hanoi',        50),
+
+        (2026, N'Strategy Kickoff',           '2026-01-22', N'Hanoi',        10),
+        (2026, N'Spring Customer Summit',     '2026-03-19', N'Singapore',    20),
+        (2026, N'MegaForm Builder Bootcamp',  '2026-05-28', N'Ho Chi Minh',  30),
+        (2026, N'Workflow Engine Summit',     '2026-08-14', N'Hanoi',        40),
+        (2026, N'Year-End Gala',              '2026-12-03', N'Da Nang',      50);
+END
+GO
+
+IF OBJECT_ID('dbo.spMegaForm_Sample_GetEventsByYear', 'P') IS NOT NULL
+    DROP PROCEDURE dbo.spMegaForm_Sample_GetEventsByYear;
+GO
+
+CREATE PROCEDURE dbo.spMegaForm_Sample_GetEventsByYear
+    @year NVARCHAR(20) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @yearInt INT = NULL;
+    IF (@year IS NOT NULL AND LEN(@year) > 0 AND ISNUMERIC(@year) = 1)
+        SET @yearInt = CONVERT(INT, @year);
+
+    SELECT
+        CAST(EventId AS NVARCHAR(20))                                          AS [Value],
+        EventName + COALESCE(' (' + City + N')', '') + COALESCE(' — ' + CONVERT(NVARCHAR(10), EventDate, 23), '') AS [Label]
+    FROM dbo.MegaForm_Sample_Events
+    WHERE (@yearInt IS NULL OR EventYear = @yearInt)
+    ORDER BY EventDate, SortOrder, EventName;
+END
+GO

@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>MegaForm.Premium.AspNetCore</PackageId>
+    <Title>MegaForm Premium for ASP.NET Core</Title>
+    <Authors>MegaForm Team</Authors>
+    <Description>Premium add-on for MegaForm ASP.NET Core. Unlocks the workflow editor/runtime and premium form templates.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageProjectUrl>https://megaform.github.io/MegaFormSolution</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/megaform/MegaFormSolution.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>megaform;forms;aspnetcore;workflow;premium;templates</PackageTags>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Version>0.2.1-preview</Version>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="..\MegaForm.AspNetCore.Component\MegaForm.AspNetCore.Component.csproj" />
+  </ItemGroup>
+
+  <!-- Workflow editor static assets and premium templates are embedded in the
+       package DLL so they work whether the consumer references the project or
+       the NuGet package. -->
+  <ItemGroup>
+    <EmbeddedResource Include="wwwroot\**\*" />
+    <EmbeddedResource Include="Templates\*.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>

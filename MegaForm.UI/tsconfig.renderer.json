@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "lib": ["ES5", "ES6", "DOM"],
+    "module": "None",
+    "strict": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "skipLibCheck": true,
+    "outDir": "../../Assets/js",
+    "rootDir": "./src/renderer",
+    "removeComments": false,
+    "declaration": false,
+    "sourceMap": false
+  },
+  "include": [
+    "src/renderer/megaform-renderer.ts"
+  ]
+}

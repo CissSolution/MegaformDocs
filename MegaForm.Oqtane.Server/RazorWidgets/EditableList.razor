@@ -1,0 +1,154 @@
+@*
+    EditableList — CRUD-enabled tabular list backed by SQL whitelist.
+
+    Renders rows from SqlRows with per-row action buttons (Edit / Delete)
+    and a top-of-list Add button. The buttons carry data-mf-razor-action
+    attributes; the TS plugin listens for clicks, opens an inline form
+    for insert/update, then POSTs to /RazorWidget/Action with the action
+    name + parameter map. The server cross-checks the action against
+    the field's widgetProps.actions whitelist and runs the parameterized
+    SQL — never the client's raw SQL.
+
+    Default widgetProps:
+      {
+        "template": "EditableList",
+        "useSql": true,
+        "connectionKey": "DashboardDatabase",
+        "masterQuery": "SELECT PlayerId, PlayerName, Handicap FROM GG_Players ORDER BY PlayerName",
+        "parameters": {
+          "idColumn": "PlayerId",
+          "columns":  "PlayerName,Handicap"
+        },
+        "actions": {
+          "insert": { "sql": "INSERT INTO GG_Players(PlayerName,Handicap,FlightId) VALUES(:PlayerName,:Handicap,1)", "fields": "PlayerName,Handicap" },
+          "update": { "sql": "UPDATE GG_Players SET PlayerName=:PlayerName, Handicap=:Handicap WHERE PlayerId=:PlayerId", "fields": "PlayerName,Handicap" },
+          "delete": { "sql": "DELETE FROM GG_Players WHERE PlayerId=:PlayerId" }
+        }
+      }
+*@
+@using MegaForm.Razor
+@inherits MfRazorWidgetBase
+@attribute [RazorTemplate("EditableList", Category = "CRUD", Icon = "fa-list-check", WhenToUse = "User needs to view + add + edit + delete rows of one SQL table inline on the form.", Description = "Editable SQL list with insert / update / delete buttons backed by a server-side action whitelist.", SupportsSql = true, EmitsValue = false)]
+@using System.Linq
+@using MegaForm.Core.Interfaces
+
+@code {
+    [Parameter, RazorParam(Label = "ID column", Group = "Data mapping", Widget = "sql-column", Required = true, Order = 10, Placeholder = "PlayerId", Hint = "Primary key column; used in WHERE clause of update/delete.")]
+    public string IdColumn { get; set; } = "Id";
+
+    [Parameter, RazorParam(Label = "Columns to display (csv)", Group = "Data mapping", Widget = "text", Required = true, Order = 20, Placeholder = "PlayerName,Handicap", Hint = "Comma-separated list of column names to render in the table.")]
+    public string Columns  { get; set; } = "";
+
+    [Parameter, RazorParam(Label = "Show Add button", Group = "Actions", Widget = "bool", Order = 30)]
+    public bool   ShowAdd  { get; set; } = true;
+
+    [Parameter, RazorParam(Label = "Show Edit button", Group = "Actions", Widget = "bool", Order = 40)]
+    public bool   ShowEdit { get; set; } = true;
+
+    [Parameter, RazorParam(Label = "Show Delete button", Group = "Actions", Widget = "bool", Order = 50)]
+    public bool   ShowDelete { get; set; } = true;
+
+    [Parameter, RazorParam(Label = "Empty-state text", Group = "Display", Widget = "text", Order = 60, Placeholder = "No rows yet.")]
+    public string EmptyText { get; set; } = "No rows yet.";
+
+    private List<string> _columnList = new();
+    private List<object> _rows = new();
+
+    protected override void OnParametersSet()
+    {
+        _columnList = (Columns ?? "")
+            .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(s => s.Trim())
+            .Where(s => s.Length > 0)
+            .ToList();
+        _rows = SqlRows?.Cast<object>().ToList() ?? new List<object>();
+
+        if (_columnList.Count == 0 && _rows.Count > 0 && _rows[0] is IDictionary<string, object> first)
+        {
+            _columnList = first.Keys.Where(k => !string.Equals(k, IdColumn, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+    }
+
+    private static object Get(object row, string key)
+    {
+        if (row is IDictionary<string, object> d)
+            return d.TryGetValue(key, out var v) ? v : null;
+        return row?.GetType().GetProperty(key)?.GetValue(row);
+    }
+}
+
+<div class="mf-razor-editable">
+    @if (ShowAdd)
+    {
+        <div class="mf-razor-editable-toolbar">
+            <button type="button" class="mf-razor-editable-add"
+                    data-mf-razor-action="insert"
+                    data-mf-widget-key="@WidgetKey">+ Add row</button>
+        </div>
+    }
+
+    @if (_rows.Count == 0)
+    {
+        <div class="mf-razor-editable-empty">@EmptyText</div>
+    }
+    else
+    {
+        <table class="mf-razor-editable-table">
+            <thead>
+                <tr>
+                    @foreach (var c in _columnList) { <th>@c</th> }
+                    @if (ShowEdit || ShowDelete) { <th class="mf-razor-editable-actions-h">Actions</th> }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in _rows)
+                {
+                    var rowId = Convert.ToString(Get(r, IdColumn));
+                    <tr data-mf-row-id="@rowId">
+                        @foreach (var c in _columnList)
+                        {
+                            <td data-mf-col="@c">@Get(r, c)</td>
+                        }
+                        @if (ShowEdit || ShowDelete)
+                        {
+                            <td class="mf-razor-editable-actions">
+                                @if (ShowEdit)
+                                {
+                                    <button type="button" class="mf-razor-editable-edit"
+                                            data-mf-razor-action="update"
+                                            data-mf-widget-key="@WidgetKey"
+                                            data-mf-row-id="@rowId">Edit</button>
+                                }
+                                @if (ShowDelete)
+                                {
+                                    <button type="button" class="mf-razor-editable-delete"
+                                            data-mf-razor-action="delete"
+                                            data-mf-widget-key="@WidgetKey"
+                                            data-mf-row-id="@rowId">Delete</button>
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+<style>
+    .mf-razor-editable { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; font-size: 13px; }
+    .mf-razor-editable-toolbar { margin-bottom: 8px; display: flex; gap: 8px; }
+    .mf-razor-editable-add { background:#10b981;color:#fff;border:0;padding:6px 12px;border-radius:6px;cursor:pointer;font-weight:600 }
+    .mf-razor-editable-add:hover { background:#059669 }
+    .mf-razor-editable-table { width:100%; border-collapse:collapse; background:#fff }
+    .mf-razor-editable-table th, .mf-razor-editable-table td { padding:8px 12px; text-align:left; border-bottom:1px solid #e2e8f0 }
+    .mf-razor-editable-table th { font-weight:600; color:#475569; background:#f8fafc }
+    .mf-razor-editable-actions { white-space:nowrap; width:1% }
+    .mf-razor-editable-actions-h { text-align:right; width:1% }
+    .mf-razor-editable-edit, .mf-razor-editable-delete { border:0;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;margin-left:4px }
+    .mf-razor-editable-edit { background:#3b82f6;color:#fff }
+    .mf-razor-editable-edit:hover { background:#2563eb }
+    .mf-razor-editable-delete { background:#ef4444;color:#fff }
+    .mf-razor-editable-delete:hover { background:#dc2626 }
+    .mf-razor-editable-empty { padding:20px;color:#94a3b8;font-style:italic;background:#f8fafc;border-radius:8px;text-align:center }
+</style>

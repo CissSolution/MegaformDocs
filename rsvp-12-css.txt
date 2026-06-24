@@ -1,0 +1,438 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+/* ===== Scope root + CSS vars (theme_selector overrides) ===== */
+.cel-rsvp-stepped {
+  --background: oklch(0.97 0.015 350);
+  --foreground: oklch(0.25 0.03 350);
+  --card: oklch(0.995 0.008 350);
+  --primary: oklch(0.55 0.14 350);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.92 0.03 350);
+  --muted: oklch(0.94 0.015 350);
+  --muted-foreground: oklch(0.50 0.03 350);
+  --accent: oklch(0.70 0.10 20);
+  --border: oklch(0.88 0.02 350);
+  --input: oklch(0.94 0.015 350);
+  --ring: oklch(0.55 0.14 350);
+
+  display: block !important;
+  width: 100% !important;
+  position: relative;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  color: var(--foreground);
+  box-sizing: border-box;
+  overflow: hidden !important;
+
+  background-image:
+    linear-gradient(135deg,
+      color-mix(in oklab, var(--primary) 90%, transparent),
+      color-mix(in oklab, var(--primary) 80%, transparent),
+      color-mix(in oklab, var(--accent) 70%, transparent)),
+    url('https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=1920&q=80') !important;
+  background-size: auto, cover !important;
+  background-position: center, center !important;
+  background-repeat: no-repeat, no-repeat !important;
+  background-attachment: scroll, scroll !important;
+  isolation: isolate !important;
+}
+.cel-rsvp-stepped *,
+.cel-rsvp-stepped *::before,
+.cel-rsvp-stepped *::after { box-sizing: border-box; }
+
+/* ===== Background layers ===== */
+/* ===== Content wrapper ===== */
+.cel-rsvp-stepped .crs-content {
+  position: relative; z-index: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+@media (min-width: 768px) {
+  .cel-rsvp-stepped .crs-content { padding: 40px 16px; }
+}
+.cel-rsvp-stepped .crs-container {
+  width: 100% !important;
+  max-width: 672px !important;
+  margin: 0 auto !important;
+  box-sizing: border-box;
+}
+
+/* ===== Hero (outside card, white text) ===== */
+.cel-rsvp-stepped .crs-hero {
+  text-align: center !important;
+  margin-bottom: 24px !important;
+  color: #fff !important;
+}
+.cel-rsvp-stepped .crs-hero-icon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 64px !important; height: 64px !important;
+  border-radius: 50% !important;
+  background: rgba(255,255,255,.1) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,.2) !important;
+  margin-bottom: 16px !important;
+  color: #fff !important;
+}
+.cel-rsvp-stepped .crs-hero-icon svg {
+  width: 32px !important; height: 32px !important;
+  display: block;
+}
+.cel-rsvp-stepped .crs-hero-title {
+  font-family: 'Cormorant Garamond', Georgia, serif !important;
+  font-size: 32px !important;
+  line-height: 1.1 !important;
+  font-weight: 700 !important;
+  color: #fff !important;
+  margin: 0 0 8px !important;
+  padding: 0 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  border: none !important;
+}
+@media (min-width: 768px) {
+  .cel-rsvp-stepped .crs-hero-title { font-size: 40px !important; }
+}
+.cel-rsvp-stepped .crs-hero-subtitle {
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 18px !important;
+  line-height: 1.4 !important;
+  color: rgba(255,255,255,.7) !important;
+  margin: 0 !important; padding: 0 !important;
+}
+
+/* ===== Card ===== */
+.cel-rsvp-stepped .crs-card {
+  background: var(--card) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,.25) !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+/* ===== Progress bar ===== */
+.cel-rsvp-stepped .crs-progress-track {
+  height: 6px !important;
+  background: var(--muted) !important;
+  overflow: hidden !important;
+}
+.cel-rsvp-stepped .crs-progress-bar {
+  height: 100% !important;
+  background: var(--primary) !important;
+  transition: width .5s cubic-bezier(.4,0,.2,1) !important;
+}
+
+/* ===== Step tabs ===== */
+.cel-rsvp-stepped .crs-step-tabs {
+  display: flex !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+.cel-rsvp-stepped .crs-step-tab {
+  flex: 1 !important;
+  padding: 20px 12px !important;
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer !important;
+  position: relative !important;
+  text-align: center !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  transition: background .2s !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+.cel-rsvp-stepped .crs-step-tab.crs-tab-upcoming { background: color-mix(in oklab, var(--muted) 30%, var(--card)) !important; }
+.cel-rsvp-stepped .crs-step-tab.crs-tab-completed { background: color-mix(in oklab, var(--muted) 50%, var(--card)) !important; }
+.cel-rsvp-stepped .crs-step-tab.crs-tab-active { background: var(--card) !important; }
+.cel-rsvp-stepped .crs-step-tab.crs-tab-active::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+  height: 2px; background: var(--primary);
+}
+.cel-rsvp-stepped .crs-tab-badge {
+  width: 32px !important; height: 32px !important;
+  border-radius: 50% !important;
+  display: flex !important; align-items: center !important; justify-content: center !important;
+  font-size: 13px !important; font-weight: 600 !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  transition: background .2s, color .2s !important;
+}
+.cel-rsvp-stepped .crs-tab-upcoming .crs-tab-badge {
+  background: var(--muted) !important;
+  color: var(--muted-foreground) !important;
+}
+.cel-rsvp-stepped .crs-tab-completed .crs-tab-badge {
+  background: color-mix(in oklab, var(--primary) 20%, transparent) !important;
+  color: var(--primary) !important;
+}
+.cel-rsvp-stepped .crs-tab-active .crs-tab-badge {
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+}
+.cel-rsvp-stepped .crs-tab-title {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: var(--muted-foreground) !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  display: none;
+}
+@media (min-width: 640px) {
+  .cel-rsvp-stepped .crs-tab-title { display: inline-block; }
+}
+.cel-rsvp-stepped .crs-tab-active .crs-tab-title { color: var(--foreground) !important; }
+
+/* ===== Step body ===== */
+.cel-rsvp-stepped .crs-step-body { padding: 24px !important; }
+@media (min-width: 768px) {
+  .cel-rsvp-stepped .crs-step-body { padding: 32px !important; }
+}
+.cel-rsvp-stepped .crs-step-header {
+  text-align: center !important;
+  margin-bottom: 32px !important;
+}
+.cel-rsvp-stepped .crs-step-number {
+  font-family: 'Cormorant Garamond', Georgia, serif !important;
+  font-size: 48px !important;
+  font-weight: 700 !important;
+  color: color-mix(in oklab, var(--primary) 20%, transparent) !important;
+  line-height: 1 !important;
+  display: block;
+}
+.cel-rsvp-stepped .crs-step-heading {
+  font-family: 'Cormorant Garamond', Georgia, serif !important;
+  font-size: 22px !important;
+  font-weight: 600 !important;
+  color: var(--foreground) !important;
+  margin: 8px 0 4px !important;
+  padding: 0 !important;
+  line-height: 1.3 !important;
+  letter-spacing: 0 !important;
+  border: none !important;
+  text-transform: none !important;
+  background: transparent !important;
+}
+.cel-rsvp-stepped .crs-step-desc {
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 14px !important;
+  color: var(--muted-foreground) !important;
+  margin: 0 !important; padding: 0 !important;
+  line-height: 1.4 !important;
+}
+
+/* ===== Field rows ===== */
+.cel-rsvp-stepped .crs-fields {
+  display: flex !important; flex-direction: column !important; gap: 16px !important;
+}
+.cel-rsvp-stepped .mf-field {
+  margin: 0 !important; padding: 0 !important;
+}
+
+/* ===== Labels ===== */
+.cel-rsvp-stepped label,
+.cel-rsvp-stepped .mf-field label,
+.cel-rsvp-stepped .mf-field > label:first-child {
+  display: block !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: var(--foreground) !important;
+  margin: 0 0 8px !important;
+  padding: 0 !important;
+  line-height: 1.4 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+.cel-rsvp-stepped .mf-required,
+.cel-rsvp-stepped label .required {
+  color: var(--primary) !important;
+  font-weight: 500 !important;
+}
+
+/* ===== Inputs / select / textarea (rounded-xl + bg-muted style) ===== */
+.cel-rsvp-stepped input[type="text"],
+.cel-rsvp-stepped input[type="email"],
+.cel-rsvp-stepped input[type="tel"],
+.cel-rsvp-stepped input[type="number"],
+.cel-rsvp-stepped input[type="url"],
+.cel-rsvp-stepped input[type="date"],
+.cel-rsvp-stepped select,
+.cel-rsvp-stepped textarea,
+.cel-rsvp-stepped .mf-field input,
+.cel-rsvp-stepped .mf-field select,
+.cel-rsvp-stepped .mf-field textarea {
+  width: 100% !important;
+  padding: 14px 16px !important;
+  background: var(--muted) !important;
+  color: var(--foreground) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 15px !important;
+  line-height: 1.4 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  transition: box-shadow .15s, background .15s !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+}
+.cel-rsvp-stepped textarea,
+.cel-rsvp-stepped .mf-field textarea {
+  resize: none !important;
+  min-height: 108px !important;
+}
+.cel-rsvp-stepped select,
+.cel-rsvp-stepped .mf-field select {
+  -webkit-appearance: none !important; appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 16px center !important;
+  padding-right: 44px !important;
+  cursor: pointer !important;
+  min-height: 50px !important;
+}
+.cel-rsvp-stepped input::placeholder,
+.cel-rsvp-stepped textarea::placeholder {
+  color: var(--muted-foreground) !important;
+  opacity: 1 !important;
+}
+
+/* ===== Focus state (ring-2 primary) ===== */
+.cel-rsvp-stepped input:focus,
+.cel-rsvp-stepped select:focus,
+.cel-rsvp-stepped textarea:focus,
+.cel-rsvp-stepped .mf-field input:focus,
+.cel-rsvp-stepped .mf-field select:focus,
+.cel-rsvp-stepped .mf-field textarea:focus,
+[class*="mf-form-wrapper"]:has(.cel-rsvp-stepped) input:focus,
+[class*="mf-form-wrapper"]:has(.cel-rsvp-stepped) select:focus,
+[class*="mf-form-wrapper"]:has(.cel-rsvp-stepped) textarea:focus {
+  box-shadow: 0 0 0 2px var(--primary) !important;
+  background: var(--card) !important;
+  outline: none !important;
+}
+
+/* ===== Button-card radios (attendance, meal_preference) ===== */
+.cel-rsvp-stepped .crs-row-attendance .mf-option-group,
+.cel-rsvp-stepped .crs-row-attendance [class*="mf-option-group"] {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 12px !important;
+  margin-top: 4px !important;
+}
+.cel-rsvp-stepped .crs-row-meal .mf-option-group,
+.cel-rsvp-stepped .crs-row-meal [class*="mf-option-group"] {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr 1fr !important;
+  gap: 12px !important;
+  margin-top: 4px !important;
+}
+.cel-rsvp-stepped .crs-row-attendance .mf-option-item,
+.cel-rsvp-stepped .crs-row-meal .mf-option-item {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 16px 12px !important;
+  background: transparent !important;
+  border: 2px solid var(--border) !important;
+  border-radius: 12px !important;
+  cursor: pointer !important;
+  transition: border-color .2s, background .2s !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: var(--foreground) !important;
+  text-align: center !important;
+  margin: 0 !important;
+  gap: 0 !important;
+}
+.cel-rsvp-stepped .crs-row-attendance .mf-option-item:hover,
+.cel-rsvp-stepped .crs-row-meal .mf-option-item:hover {
+  border-color: color-mix(in oklab, var(--primary) 50%, var(--border)) !important;
+}
+.cel-rsvp-stepped .crs-row-attendance .mf-option-item:has(input[type="radio"]:checked),
+.cel-rsvp-stepped .crs-row-meal .mf-option-item:has(input[type="radio"]:checked) {
+  border-color: var(--primary) !important;
+  background: color-mix(in oklab, var(--primary) 5%, var(--card)) !important;
+  color: var(--primary) !important;
+}
+.cel-rsvp-stepped .crs-row-attendance .mf-option-item input,
+.cel-rsvp-stepped .crs-row-meal .mf-option-item input {
+  position: absolute !important;
+  opacity: 0 !important;
+  width: 1px !important; height: 1px !important;
+  pointer-events: none !important;
+}
+
+/* ===== Nav buttons ===== */
+.cel-rsvp-stepped .crs-nav {
+  padding: 0 24px 24px !important;
+  padding-top: 8px !important;
+  display: flex !important;
+  gap: 12px !important;
+}
+@media (min-width: 768px) {
+  .cel-rsvp-stepped .crs-nav {
+    padding: 0 32px 32px !important;
+    padding-top: 8px !important;
+  }
+}
+.cel-rsvp-stepped .crs-btn {
+  flex: 1 !important;
+  padding: 14px 24px !important;
+  border-radius: 12px !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: opacity .15s, background .15s !important;
+  text-align: center !important;
+  line-height: 1.2 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: none !important;
+}
+.cel-rsvp-stepped .crs-btn-prev {
+  background: transparent !important;
+  color: var(--foreground) !important;
+  border: 2px solid var(--border) !important;
+}
+.cel-rsvp-stepped .crs-btn-prev:hover {
+  background: var(--muted) !important;
+}
+.cel-rsvp-stepped .crs-btn-next,
+.cel-rsvp-stepped .crs-btn-submit {
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  border: none !important;
+}
+.cel-rsvp-stepped .crs-btn-next:hover,
+.cel-rsvp-stepped .crs-btn-submit:hover {
+  opacity: .9 !important;
+}
+
+/* ===== Footer ===== */
+.cel-rsvp-stepped .crs-footer {
+  text-align: center !important;
+  margin: 24px 0 0 !important;
+  padding: 0 !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 13px !important;
+  color: rgba(255,255,255,.5) !important;
+  line-height: 1.5 !important;
+}
+
+/* ===== Heading reset (defeat DNN defaults) ===== */
+.cel-rsvp-stepped h1,
+.cel-rsvp-stepped h2,
+.cel-rsvp-stepped h3,
+.cel-rsvp-stepped h4 {
+  border: none !important;
+  background: transparent !important;
+  text-shadow: none !important;
+}

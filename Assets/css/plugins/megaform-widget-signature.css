@@ -1,0 +1,300 @@
+/* ============================================================
+   MegaForm Widget: E-Signature v2.0
+   ============================================================ */
+.mfw-sig-wrap {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+}
+.mfw-sig-label {
+    padding: 10px 14px 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+}
+
+/* Tabs */
+.mfw-sig-tabs {
+    display: flex;
+    border-bottom: 1px solid #e5e7eb;
+}
+.mfw-sig-tab {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    border: none;
+    background: #f9fafb;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    transition: all .2s;
+}
+.mfw-sig-tab.active {
+    background: #fff;
+    color: #4f46e5;
+    border-bottom: 2px solid #4f46e5;
+}
+.mfw-sig-tab:hover:not(.active) {
+    background: #f3f4f6;
+}
+
+/* Canvas */
+.mfw-sig-canvas {
+    width: 100%;
+    display: block;
+    cursor: crosshair;
+    touch-action: none;
+    border-bottom: 1px dashed #d1d5db;
+}
+
+/* Actions row */
+.mfw-sig-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+}
+.mfw-sig-actions-left {
+    display: flex;
+    gap: 6px;
+}
+.mfw-sig-undo,
+.mfw-sig-clear {
+    border: 1px solid #d1d5db;
+    background: #fff;
+    color: #6b7280;
+    padding: 4px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all .15s;
+}
+.mfw-sig-undo:hover {
+    background: #f5f3ff;
+    border-color: #a5b4fc;
+    color: #4f46e5;
+}
+.mfw-sig-clear:hover {
+    background: #fef2f2;
+    border-color: #fca5a5;
+    color: #dc2626;
+}
+.mfw-sig-ts {
+    font-size: 11px;
+    color: #10b981;
+    font-style: italic;
+}
+
+/* Type mode */
+.mfw-sig-type-area {
+    padding: 16px;
+}
+.mfw-sig-typed-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+.mfw-sig-typed-input:focus {
+    border-color: #6366f1;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, .1);
+}
+
+/* Font picker */
+.mfw-sig-font-picker {
+    display: flex;
+    gap: 6px;
+    margin: 10px 0;
+}
+.mfw-sig-font {
+    padding: 5px 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 20px;
+    background: #fff;
+    color: #6b7280;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all .15s;
+}
+.mfw-sig-font.active {
+    border-color: #4f46e5;
+    background: #f5f3ff;
+    color: #4f46e5;
+    font-weight: 600;
+}
+.mfw-sig-font:hover:not(.active) {
+    background: #f9fafb;
+}
+
+/* Preview */
+.mfw-sig-typed-preview {
+    min-height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 8px;
+    font-family: 'Dancing Script', 'Brush Script MT', cursive;
+    font-size: 40px;
+    font-style: italic;
+    color: #1a1a2e;
+    padding: 12px;
+    border: 1px dashed #d1d5db;
+    border-radius: 8px;
+    background: #fafafa;
+    word-break: break-all;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .mfw-sig-typed-preview { font-size: 28px; min-height: 50px; }
+    .mfw-sig-font-picker { flex-wrap: wrap; }
+    .mfw-sig-actions { flex-wrap: wrap; gap: 6px; }
+}
+
+/* ============================================================
+   SignatureWidget v20260501-02 — compact + pen-icon placeholder
+   + submission-view + print
+   ============================================================ */
+/* Compact: shrink default canvas height, refine border + corners */
+.mfw-sig-wrap {
+    border-radius: 8px;
+    border-color: #d1d5db;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+    max-width: 480px;
+}
+.mfw-sig-canvas {
+    height: 110px !important;        /* compact default — config can still override via inline */
+    border-bottom: none;
+    background-color: #fdfdfd !important;
+    background-image: linear-gradient(to bottom, transparent 0, transparent calc(100% - 1px), #e5e7eb calc(100% - 1px), #e5e7eb 100%);
+    background-repeat: no-repeat;
+    background-size: 80% 100%;
+    background-position: center bottom;
+}
+/* Pen-icon placeholder: shown when canvas is .is-empty (no strokes yet).
+   Inline SVG so no external asset is needed. Removed once user starts drawing. */
+.mfw-sig-draw-area {
+    position: relative;
+}
+.mfw-sig-draw-area .mfw-sig-canvas.is-empty + .mfw-sig-placeholder,
+.mfw-sig-draw-area .mfw-sig-placeholder {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    color: #9ca3af;
+    font-size: 11px;
+    font-style: italic;
+    transition: opacity .2s;
+    user-select: none;
+}
+.mfw-sig-placeholder svg {
+    width: 24px;
+    height: 24px;
+    opacity: .55;
+}
+.mfw-sig-canvas:not(.is-empty) ~ .mfw-sig-placeholder,
+.mfw-sig-wrap.is-signed .mfw-sig-placeholder {
+    opacity: 0;
+    visibility: hidden;
+}
+.mfw-sig-actions {
+    padding: 6px 10px;
+    background: #f9fafb;
+    border-top: 1px solid #e5e7eb;
+}
+.mfw-sig-clear {
+    padding: 3px 10px;
+    font-size: 11px;
+}
+
+/* Submission view: render the signature image inline at a sensible size */
+.mf-form-view-signature,
+img.mf-submission-signature,
+.mf-modal-signature {
+    max-width: 280px;
+    height: auto;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 4px;
+}
+
+/* Print: drop chrome, keep just the signature image, suppress action buttons */
+@media print {
+    .mfw-sig-wrap,
+    .mfw-sig-tabs,
+    .mfw-sig-actions,
+    .mfw-sig-undo,
+    .mfw-sig-clear,
+    .mfw-sig-tab,
+    .mfw-sig-placeholder { display: none !important; }
+    .mfw-sig-canvas {
+        display: block !important;
+        border: 1px solid #1f2937 !important;
+        background: #fff !important;
+        background-image: none !important;
+        max-width: 320px !important;
+    }
+    .mf-form-view-signature,
+    img.mf-submission-signature,
+    .mf-modal-signature {
+        display: block !important;
+        max-width: 320px !important;
+        border: 1px solid #1f2937 !important;
+        background: #fff !important;
+    }
+}
+
+/* Mock-aligned compact public/widget signature surface. */
+.mfw-sig-wrap {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    max-width: none;
+    background: transparent;
+}
+.mfw-sig-label,
+.mfw-sig-tabs {
+    display: none;
+}
+.mfw-sig-draw-area {
+    border: 2px solid #d3dbe6;
+    border-radius: 8px;
+    background: #fff;
+    overflow: hidden;
+}
+.mfw-sig-canvas {
+    height: 104px !important;
+    border-bottom: 0;
+    background: #fff !important;
+    background-image: none !important;
+}
+.mfw-sig-actions {
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 8px 0 0;
+    background: transparent;
+    border-top: 0;
+}
+.mfw-sig-clear,
+.mfw-sig-undo {
+    min-height: 32px;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 13px;
+    color: #4b5563;
+}
+.mfw-sig-placeholder {
+    color: #536273 !important;
+    font-size: 14px !important;
+}

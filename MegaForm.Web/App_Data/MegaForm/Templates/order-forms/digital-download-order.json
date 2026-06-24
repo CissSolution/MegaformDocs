@@ -1,0 +1,149 @@
+{
+  "version": "1.0",
+  "slug": "digital-download-order",
+  "title": "Digital Download Order",
+  "description": "Request access to a digital product or licensed download.",
+  "category": "standard-order",
+  "icon": "sparkles",
+  "submitButtonText": "Continue",
+  "successMessage": "Your download order request has been received.",
+  "settings": {
+    "theme": "pure-grid-premium",
+    "multiPage": false,
+    "customContent": {
+      "section_one": "Customer Details",
+      "section_two": "License Selection",
+      "footer_note": "We typically respond within one business day.",
+      "section_three": "Notes"
+    }
+  },
+  "fields": [
+    {
+      "key": "row_name",
+      "type": "Row",
+      "label": "Name Row",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "first_name",
+              "type": "Text",
+              "label": "First Name",
+              "required": true,
+              "placeholder": " "
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "last_name",
+              "type": "Text",
+              "label": "Last Name",
+              "required": true,
+              "placeholder": " "
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "row_contact",
+      "type": "Row",
+      "label": "Contact Row",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "email",
+              "type": "Email",
+              "label": "Email Address",
+              "required": true,
+              "placeholder": " "
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "phone",
+              "type": "Phone",
+              "label": "Phone Number",
+              "placeholder": " "
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "row_download",
+      "type": "Row",
+      "label": "Download Row",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "license_type",
+              "type": "Select",
+              "label": "License Type",
+              "required": true,
+              "options": [
+                {
+                  "label": "Single User",
+                  "value": "single"
+                },
+                {
+                  "label": "Team",
+                  "value": "team"
+                },
+                {
+                  "label": "Enterprise",
+                  "value": "enterprise"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "payment_term",
+              "type": "Select",
+              "label": "Payment Term",
+              "required": true,
+              "options": [
+                {
+                  "label": "Monthly",
+                  "value": "monthly"
+                },
+                {
+                  "label": "Annual",
+                  "value": "annual"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "implementation_notes",
+      "type": "Textarea",
+      "label": "Implementation Notes",
+      "placeholder": " ",
+      "properties": {
+        "rows": 4
+      }
+    }
+  ],
+  "customHtml": "<div class='mfp mfp-pure-grid'><div class='mfp-container'><div class='mfp-card'><div class='mfp-card-header'><h1 class='mfp-form-title'>{{form:title}}</h1><p class='mfp-form-desc'>{{form:description}}</p></div><div class='mfp-card-body'><div class='mfp-section'><div class='mfp-section-label'>{{content:section_one}}</div>{{field:row_name}}{{field:row_contact}}</div><div class='mfp-section'><div class='mfp-section-label'>{{content:section_two}}</div>{{field:row_download}}</div><div class='mfp-section'><div class='mfp-section-label'>{{content:section_three}}</div>{{field:implementation_notes}}</div><div class='mfp-actions'><button type='submit' class='mfp-submit'>{{form:submit}}</button></div></div><div class='mfp-card-footer'><p>{{content:footer_note}}</p></div></div></div></div>",
+  "customCss": "@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');:root{--mfp-primary:#009246;--mfp-primary-dark:#007a3a;--mfp-secondary:#ce2b37;--mfp-gold:#c9a227;--mfp-bg:#faf9f7;--mfp-card-bg:#ffffff;--mfp-text:#1a1a1a;--mfp-text-muted:#6b6b6b;--mfp-border:#e8e4de;--mfp-border-focus:#009246;--mfp-section:#5a5a5a;--mfp-shadow-lg:0 25px 50px -12px rgba(0,0,0,0.08);--mfp-radius:12px;--mfp-font-display:'Cormorant Garamond',Georgia,serif;--mfp-font-body:'Inter',system-ui,sans-serif}.mfp-pure-grid{font-family:var(--mfp-font-body);color:var(--mfp-text);background:var(--mfp-bg);min-height:100vh;line-height:1.6;padding-bottom:40px}.mfp-brand-bar{background:#1a1a1a;height:40px;display:flex;align-items:center;justify-content:center;position:relative;border-bottom:3px solid transparent;border-image:linear-gradient(90deg,#009246 33%,#fff 33%,#fff 66%,#ce2b37 66%) 1}.mfp-brand-center{display:flex;align-items:center;justify-content:center;gap:8px}.mfp-brand-icon{width:16px;height:16px;color:#fff}.mfp-brand-name{font-family:var(--mfp-font-display);font-size:14px;font-weight:600;color:#fff;letter-spacing:0.15em;text-transform:uppercase}.mfp-pure-grid{display:flex;align-items:center;justify-content:center;min-height:100vh}.mfp-container{max-width:720px;width:100%;margin:0 auto;padding:16px 20px}.mfp-card{background:var(--mfp-card-bg);border-radius:var(--mfp-radius);box-shadow:var(--mfp-shadow-lg)}.mfp-card-header{padding:24px 32px 0;text-align:center}.mfp-form-title{font-family:var(--mfp-font-display);font-size:32px;font-weight:600;color:var(--mfp-text);margin:0 0 8px}.mfp-form-desc{font-size:15px;color:var(--mfp-text-muted);margin:0}.mfp-card-body{padding:20px 32px 24px}.mfp-card-footer{padding:14px 32px;background:#fafafa;border-top:1px solid var(--mfp-border);text-align:center}.mfp-card-footer p{margin:0;font-size:13px;color:var(--mfp-text-muted)}.mfp-section{margin-bottom:18px}.mfp-section--compact{margin-bottom:12px}.mfp-section-label{font-size:12px;font-weight:600;color:var(--mfp-section);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--mfp-border)}.mfp-pure-grid .mf-row{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}.mfp-pure-grid .mf-col-6{grid-column:span 6}.mfp-pure-grid .mf-col-12{grid-column:span 12}@media(max-width:640px){.mfp-pure-grid .mf-col-6,.mfp-pure-grid .mf-col-12{grid-column:span 12}.mfp-card-header,.mfp-card-body{padding:28px}}.mfp-pure-grid .mf-field{position:relative;margin-bottom:14px}.mfp-pure-grid .mf-field input,.mfp-pure-grid .mf-field textarea,.mfp-pure-grid .mf-field select{width:100%;padding:20px 16px 8px;font-size:15px;font-family:inherit;color:var(--mfp-text);background:#fafafa;border:1.5px solid var(--mfp-border);border-radius:10px;transition:all .2s;outline:none}.mfp-pure-grid .mf-field textarea{min-height:120px;resize:vertical;padding-top:24px}.mfp-pure-grid .mf-field input:focus,.mfp-pure-grid .mf-field textarea:focus,.mfp-pure-grid .mf-field select:focus{background:#fff;border-color:var(--mfp-border-focus);box-shadow:0 0 0 4px rgba(0,146,70,0.08)}.mfp-pure-grid .mf-field label{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:15px;font-weight:400;color:var(--mfp-text-muted);pointer-events:none;transition:all .2s ease;padding:0 4px;margin-left:-4px;background:transparent}.mfp-pure-grid .mf-field textarea~label{top:22px;transform:none}.mfp-pure-grid .mf-field input:focus~label,.mfp-pure-grid .mf-field textarea:focus~label,.mfp-pure-grid .mf-field input:not(:placeholder-shown)~label,.mfp-pure-grid .mf-field textarea:not(:placeholder-shown)~label{top:0;transform:translateY(-50%) scale(0.8);color:var(--mfp-primary);font-weight:600;background:var(--mfp-card-bg)}.mfp-pure-grid .mf-field input::placeholder,.mfp-pure-grid .mf-field textarea::placeholder{color:transparent}.mfp-pure-grid .mf-field select{padding-top:16px;padding-bottom:16px}.mfp-pure-grid .mf-field select{appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b6b6b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E\");background-position:right 14px center;background-repeat:no-repeat;background-size:18px;padding-right:40px;cursor:pointer}.mfp-pure-grid .mf-option{display:flex;align-items:center;gap:12px;padding:14px 16px;margin-bottom:10px;background:#fafafa;border:1.5px solid var(--mfp-border);border-radius:10px;cursor:pointer;transition:all .2s}.mfp-pure-grid .mf-option:hover{border-color:var(--mfp-border-focus)}.mfp-pure-grid .mf-option input{width:18px;height:18px;margin:0;accent-color:var(--mfp-primary);cursor:pointer}.mfp-pure-grid .mf-option label{font-size:14px;color:var(--mfp-text);cursor:pointer;margin:0;font-weight:500;text-transform:none;letter-spacing:normal}.mfp-pure-grid .mf-rating{display:flex;gap:6px;padding:8px 0}.mfp-pure-grid .mf-rating-star{font-size:26px;color:#ddd;cursor:pointer;transition:color .2s}.mfp-pure-grid .mf-rating-star.active,.mfp-pure-grid .mf-rating-star:hover{color:var(--mfp-gold)}.mfp-actions{margin-top:8px}.mfp-submit{width:100%;padding:16px 28px;font-size:16px;font-weight:600;font-family:inherit;color:#fff;background:var(--mfp-primary);border:none;border-radius:10px;cursor:pointer;transition:all .2s}.mfp-submit:hover{background:var(--mfp-primary-dark);transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,146,70,0.3)}",
+  "rules": [],
+  "workflow": null
+}

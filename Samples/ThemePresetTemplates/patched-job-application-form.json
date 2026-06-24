@@ -1,0 +1,774 @@
+{
+  "version": "1.0",
+  "slug": "job-application-form",
+  "title": "Job Application Form",
+  "description": "Join our team and grow your career with us",
+  "category": "standard-application",
+  "icon": "briefcase",
+  "submitButtonText": "Submit Application",
+  "successMessage": "Thank you for applying! Our team will review your submission and be in touch shortly.",
+  "settings": {
+    "theme": "pure-grid-premium",
+    "multiPage": false,
+    "customContent": {
+      "section_one": "Personal Information",
+      "section_two": "Contact Information",
+      "section_three": "Position Details",
+      "section_four": "Education",
+      "section_five": "Work Experience",
+      "section_six": "Documents & Additional Info",
+      "footer_note": "Your information is secure and will only be used for recruitment purposes. — Equal Opportunity Employer."
+    },
+    "customScripts": {
+      "theme_selector": "(function(root,ctx){if(!root)return;var tp=(ctx&&ctx.themePreset)||null;var K='mfTSI';if(root.dataset&&root.dataset[K]==='1')return;if(root.dataset)root.dataset[K]='1';var T=[{id:'navy-coral',name:'Navy & Coral',dark:0,v:{bg:'oklch(0.97 0.01 85)',fg:'oklch(0.25 0.05 260)',card:'oklch(1 0 0)',p:'oklch(0.25 0.05 260)',s:'oklch(0.72 0.14 35)',mfg:'oklch(0.45 0.03 260)',b:'oklch(0.25 0.05 260)'}},{id:'midnight-gold',name:'Midnight Gold',dark:1,v:{bg:'oklch(0.15 0.02 260)',fg:'oklch(0.95 0.02 85)',card:'oklch(0.20 0.02 260)',p:'oklch(0.80 0.15 85)',s:'oklch(0.75 0.12 55)',mfg:'oklch(0.65 0.02 85)',b:'oklch(0.80 0.15 85)'}},{id:'ocean-breeze',name:'Ocean Breeze',dark:0,v:{bg:'oklch(0.97 0.02 200)',fg:'oklch(0.20 0.08 220)',card:'oklch(1 0 0)',p:'oklch(0.50 0.15 230)',s:'oklch(0.70 0.12 180)',mfg:'oklch(0.45 0.05 220)',b:'oklch(0.50 0.15 230)'}},{id:'forest-sage',name:'Forest Sage',dark:0,v:{bg:'oklch(0.96 0.02 140)',fg:'oklch(0.25 0.06 145)',card:'oklch(1 0 0)',p:'oklch(0.40 0.10 145)',s:'oklch(0.65 0.12 90)',mfg:'oklch(0.45 0.04 145)',b:'oklch(0.40 0.10 145)'}},{id:'rose-blush',name:'Rose Blush',dark:0,v:{bg:'oklch(0.97 0.02 350)',fg:'oklch(0.30 0.08 350)',card:'oklch(1 0 0)',p:'oklch(0.60 0.15 350)',s:'oklch(0.75 0.10 25)',mfg:'oklch(0.50 0.05 350)',b:'oklch(0.60 0.15 350)'}},{id:'sunset-amber',name:'Sunset Amber',dark:0,v:{bg:'oklch(0.96 0.03 55)',fg:'oklch(0.25 0.08 35)',card:'oklch(1 0 0)',p:'oklch(0.60 0.18 35)',s:'oklch(0.70 0.15 55)',mfg:'oklch(0.50 0.05 35)',b:'oklch(0.60 0.18 35)'}},{id:'lavender-dreams',name:'Lavender Dreams',dark:0,v:{bg:'oklch(0.97 0.02 290)',fg:'oklch(0.30 0.08 290)',card:'oklch(1 0 0)',p:'oklch(0.55 0.15 290)',s:'oklch(0.70 0.12 320)',mfg:'oklch(0.50 0.05 290)',b:'oklch(0.55 0.15 290)'}},{id:'slate-modern',name:'Slate Modern',dark:0,v:{bg:'oklch(0.96 0 0)',fg:'oklch(0.20 0 0)',card:'oklch(1 0 0)',p:'oklch(0.35 0 0)',s:'oklch(0.55 0.12 250)',mfg:'oklch(0.50 0 0)',b:'oklch(0.35 0 0)'}},{id:'emerald-night',name:'Emerald Night',dark:1,v:{bg:'oklch(0.18 0.04 160)',fg:'oklch(0.92 0.03 160)',card:'oklch(0.23 0.04 160)',p:'oklch(0.70 0.18 155)',s:'oklch(0.80 0.12 130)',mfg:'oklch(0.65 0.03 160)',b:'oklch(0.70 0.18 155)'}},{id:'cherry-blossom',name:'Cherry Blossom',dark:0,v:{bg:'oklch(0.98 0.01 350)',fg:'oklch(0.35 0.10 340)',card:'oklch(1 0 0)',p:'oklch(0.70 0.12 350)',s:'oklch(0.65 0.08 320)',mfg:'oklch(0.55 0.06 340)',b:'oklch(0.70 0.12 350)'}},{id:'arctic-blue',name:'Arctic Blue',dark:0,v:{bg:'oklch(0.97 0.01 220)',fg:'oklch(0.25 0.06 230)',card:'oklch(1 0 0)',p:'oklch(0.60 0.12 240)',s:'oklch(0.80 0.08 200)',mfg:'oklch(0.50 0.04 230)',b:'oklch(0.60 0.12 240)'}},{id:'mocha-cream',name:'Mocha Cream',dark:0,v:{bg:'oklch(0.95 0.02 70)',fg:'oklch(0.30 0.06 50)',card:'oklch(0.99 0.01 70)',p:'oklch(0.45 0.08 50)',s:'oklch(0.65 0.10 55)',mfg:'oklch(0.50 0.04 50)',b:'oklch(0.45 0.08 50)'}},{id:'electric-purple',name:'Electric Purple',dark:1,v:{bg:'oklch(0.12 0.02 280)',fg:'oklch(0.92 0.02 280)',card:'oklch(0.18 0.03 280)',p:'oklch(0.70 0.20 280)',s:'oklch(0.75 0.15 320)',mfg:'oklch(0.65 0.03 280)',b:'oklch(0.70 0.20 280)'}},{id:'tropical-teal',name:'Tropical Teal',dark:0,v:{bg:'oklch(0.97 0.02 180)',fg:'oklch(0.25 0.08 185)',card:'oklch(1 0 0)',p:'oklch(0.55 0.15 180)',s:'oklch(0.70 0.12 150)',mfg:'oklch(0.50 0.05 185)',b:'oklch(0.55 0.15 180)'}},{id:'wine-velvet',name:'Wine Velvet',dark:1,v:{bg:'oklch(0.15 0.04 10)',fg:'oklch(0.92 0.02 10)',card:'oklch(0.20 0.04 10)',p:'oklch(0.55 0.18 10)',s:'oklch(0.75 0.10 45)',mfg:'oklch(0.65 0.03 10)',b:'oklch(0.55 0.18 10)'}},{id:'mint-fresh',name:'Mint Fresh',dark:0,v:{bg:'oklch(0.97 0.02 165)',fg:'oklch(0.25 0.06 170)',card:'oklch(1 0 0)',p:'oklch(0.65 0.14 165)',s:'oklch(0.75 0.10 145)',mfg:'oklch(0.50 0.04 170)',b:'oklch(0.65 0.14 165)'}}];var LS='mfJobTheme';function scopeSel(){var host=(root&&root.closest?root.closest('.mf-form-wrapper,[id^=\"mf-form-wrapper-\"]'):null);var id=host&&host.id?('#'+host.id):(tp&&tp.formId?'#mf-form-wrapper-'+String(tp.formId):'');return id||'.mf-form-wrapper';}function ap(id){var t=null;for(var i=0;i<T.length;i++){if(T[i].id===id){t=T[i];break;}}if(!t)t=T[0];var v=t.v;var styleEl=document.getElementById('mfpts-tv');if(!styleEl){styleEl=document.createElement('style');styleEl.id='mfpts-tv';document.head.appendChild(styleEl);}var sel=scopeSel();styleEl.textContent=sel+'{--background:'+v.bg+';--foreground:'+v.fg+';--card:'+v.card+';--card-foreground:'+v.fg+';--primary:'+v.p+';--primary-foreground:'+v.fg+';--secondary:'+v.bg+';--secondary-foreground:'+v.fg+';--muted:'+v.bg+';--muted-foreground:'+v.mfg+';--accent:'+v.s+';--accent-foreground:'+v.fg+';--border:'+v.b+';--input:'+v.bg+';--ring:'+v.p+';--mfp-primary:'+v.p+';--mfp-primary-dark:'+v.p+';--mfp-accent:'+v.s+';--mfp-bg:'+v.bg+';--mfp-card-bg:'+v.card+';--mfp-text:'+v.fg+';--mfp-text-muted:'+v.mfg+';--mfp-border:'+v.b+';--mfp-border-focus:'+v.s+';--mfp-section:'+v.mfg+'}';var pg=root.querySelector('.mfp-pure-grid')||root;if(t.dark){pg.style.background=v.bg;}else{pg.style.background='';}root.querySelectorAll('.mfpts-item').forEach(function(el){el.classList.toggle('mfpts-on',el.getAttribute('data-t')===t.id);});var pill=root.querySelector('.mfpts-pill');if(pill){var lbl=pill.querySelector('.mfpts-name');if(lbl)lbl.textContent=t.name;var sws=pill.querySelectorAll('.mfpts-sw');[v.p,v.s,v.bg].forEach(function(c,i){if(sws[i])sws[i].style.background=c;});}if(tp&&typeof tp.setActiveThemeKey==='function'){try{tp.setActiveThemeKey(t.id,true);}catch(e){}}else{try{localStorage.setItem(LS,t.id);}catch(e){}}}function mkSVG(w,h,vb,attrs,children){var s=document.createElementNS('http://www.w3.org/2000/svg','svg');s.setAttribute('width',w);s.setAttribute('height',h);s.setAttribute('viewBox',vb);s.setAttribute('fill','none');s.setAttribute('stroke','currentColor');for(var k in attrs)s.setAttribute(k,attrs[k]);children.forEach(function(c){var el=document.createElementNS('http://www.w3.org/2000/svg',c.t);for(var k in c.a)el.setAttribute(k,c.a[k]);s.appendChild(el);});return s;}function bUI(){var wrap=document.createElement('div');wrap.className='mfpts-wrap';var pill=document.createElement('button');pill.type='button';pill.className='mfpts-pill';pill.setAttribute('aria-haspopup','true');pill.setAttribute('aria-expanded','false');var swRow=document.createElement('span');swRow.className='mfpts-swatches';for(var i=0;i<3;i++){var sw=document.createElement('span');sw.className='mfpts-sw';swRow.appendChild(sw);}var palSvg=mkSVG('14','14','0 0 24 24',{'stroke-width':'2'},[{t:'circle',a:{cx:'13.5',cy:'6.5',r:'1.5',fill:'currentColor'}},{t:'circle',a:{cx:'17.5',cy:'10.5',r:'1.5',fill:'currentColor'}},{t:'circle',a:{cx:'6.5',cy:'12.5',r:'1.5',fill:'currentColor'}},{t:'circle',a:{cx:'8.5',cy:'7.5',r:'1.5',fill:'currentColor'}},{t:'path',a:{d:'M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z'}}]);var nm=document.createElement('span');nm.className='mfpts-name';var chvSvg=mkSVG('11','11','0 0 24 24',{'stroke-width':'2.5'},[{t:'polyline',a:{points:'6 9 12 15 18 9'}}]);var chv=document.createElement('span');chv.className='mfpts-chv';chv.appendChild(chvSvg);pill.appendChild(palSvg);pill.appendChild(swRow);pill.appendChild(nm);pill.appendChild(chv);var panel=document.createElement('div');panel.className='mfpts-panel';panel.setAttribute('aria-hidden','true');var head=document.createElement('div');head.className='mfpts-head';head.textContent='CHOOSE THEME';panel.appendChild(head);var grid=document.createElement('div');grid.className='mfpts-grid';T.forEach(function(t){var item=document.createElement('button');item.type='button';item.className='mfpts-item';item.setAttribute('data-t',t.id);var isw=document.createElement('span');isw.className='mfpts-iswatches';[t.v.p,t.v.s,t.v.bg].forEach(function(c){var s=document.createElement('span');s.className='mfpts-isw';s.style.background=c;isw.appendChild(s);});var inm=document.createElement('span');inm.className='mfpts-iname';inm.textContent=t.name;var ckSvg=mkSVG('11','11','0 0 24 24',{'stroke-width':'3'},[{t:'polyline',a:{points:'20 6 9 17 4 12'}}]);var ck=document.createElement('span');ck.className='mfpts-ck';ck.appendChild(ckSvg);item.appendChild(isw);item.appendChild(inm);item.appendChild(ck);item.addEventListener('click',function(e){e.stopPropagation();ap(t.id);cl();});grid.appendChild(item);});panel.appendChild(grid);wrap.appendChild(pill);wrap.appendChild(panel);var isO=false;function op(){isO=true;panel.classList.add('mfpts-open');pill.setAttribute('aria-expanded','true');panel.setAttribute('aria-hidden','false');}function cl(){isO=false;panel.classList.remove('mfpts-open');pill.setAttribute('aria-expanded','false');panel.setAttribute('aria-hidden','true');}pill.addEventListener('click',function(e){e.stopPropagation();isO?cl():op();});document.addEventListener('click',function(){if(isO)cl();});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isO)cl();});return wrap;}function iCSS(){if(document.getElementById('mfpts-css'))return;var s=document.createElement('style');s.id='mfpts-css';s.textContent='.mfpts-host{display:flex;justify-content:flex-end;margin-bottom:12px;padding:0 2px}.mfpts-wrap{position:relative;display:inline-block}.mfpts-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;font-family:inherit;font-size:12px;font-weight:600;color:var(--mfp-text);background:var(--mfp-card-bg);border:1.5px solid var(--mfp-border);border-radius:999px;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.08);white-space:nowrap}.mfpts-pill:hover{box-shadow:0 4px 14px rgba(0,0,0,.14);transform:translateY(-1px)}.mfpts-swatches{display:flex;gap:2px}.mfpts-sw{width:10px;height:10px;border-radius:50%;border:1px solid rgba(0,0,0,.12)}.mfpts-chv{opacity:.55;display:flex;align-items:center;transition:transform .2s}.mfpts-pill[aria-expanded=true] .mfpts-chv{transform:rotate(180deg)}.mfpts-panel{position:absolute;right:0;top:calc(100% + 6px);min-width:232px;background:var(--mfp-card-bg);border:1.5px solid var(--mfp-border);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.15);opacity:0;pointer-events:none;transform:translateY(-4px);transition:opacity .18s,transform .18s;z-index:9999;overflow:hidden}.mfpts-open{opacity:1!important;pointer-events:auto!important;transform:none!important}.mfpts-head{padding:8px 12px 6px;font-size:10px;font-weight:700;letter-spacing:.12em;color:var(--mfp-text-muted);border-bottom:1px solid var(--mfp-border)}.mfpts-grid{padding:5px;display:grid;grid-template-columns:1fr 1fr;gap:2px;max-height:272px;overflow-y:auto}.mfpts-item{display:flex;align-items:center;gap:6px;padding:7px 8px;font-family:inherit;background:transparent;border:none;border-radius:6px;cursor:pointer;transition:background .15s;width:100%;text-align:left}.mfpts-item:hover{background:rgba(0,0,0,.05)}.mfpts-iswatches{display:flex;gap:2px;flex-shrink:0}.mfpts-isw{width:9px;height:9px;border-radius:50%;border:1px solid rgba(0,0,0,.1)}.mfpts-iname{font-size:11.5px;font-weight:500;color:var(--mfp-text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mfpts-ck{opacity:0;color:var(--mfp-accent);display:flex;align-items:center;flex-shrink:0}.mfpts-on .mfpts-ck{opacity:1}.mfpts-on{background:rgba(0,0,0,.04)}.mfpts-on .mfpts-iname{font-weight:700}';document.head.appendChild(s);}iCSS();if(!tp||tp.selectorEnabled!==false){var picker=bUI();var host=document.createElement('div');host.className='mfpts-host';host.appendChild(picker);var cb=root.querySelector('.mfp-card-body')||root.querySelector('.mfp-card')||root;if(cb)cb.insertBefore(host,cb.firstChild);}var saved=(tp&&typeof tp.getActiveThemeKey==='function'?tp.getActiveThemeKey():(tp&&tp.savedThemeKey)||null);if(saved==null){try{saved=localStorage.getItem(LS);}catch(e){}}ap(saved||((tp&&tp.defaultThemeKey)||'navy-coral'));if(tp&&typeof tp.reportAvailable==='function'){try{tp.reportAvailable({activeThemeKey:saved||((tp&&tp.defaultThemeKey)||'navy-coral'),selectedThemeKey:saved||((tp&&tp.defaultThemeKey)||'navy-coral'),dirty:false});}catch(e){}}})(window.__mfCurrentScriptRoot,window.__mfScriptContext);"
+    },
+    "themeSelector": {
+      "enabled": true,
+      "mode": "module-controlled",
+      "scriptKey": "theme_selector",
+      "presetSet": "job-application-presets",
+      "defaultThemeKey": "navy-coral",
+      "showUpdateThemeButton": true,
+      "presets": {
+        "navy-coral": {
+          "name": "Navy & Coral",
+          "background": "oklch(0.97 0.01 85)",
+          "foreground": "oklch(0.25 0.05 260)",
+          "card": "oklch(1 0 0)",
+          "primary": "oklch(0.25 0.05 260)",
+          "primaryForeground": "oklch(0.25 0.05 260)",
+          "secondary": "oklch(0.97 0.01 85)",
+          "muted": "oklch(0.97 0.01 85)",
+          "mutedForeground": "oklch(0.45 0.03 260)",
+          "accent": "oklch(0.72 0.14 35)",
+          "border": "oklch(0.25 0.05 260)",
+          "dark": false
+        },
+        "midnight-gold": {
+          "name": "Midnight Gold",
+          "background": "oklch(0.15 0.02 260)",
+          "foreground": "oklch(0.95 0.02 85)",
+          "card": "oklch(0.20 0.02 260)",
+          "primary": "oklch(0.80 0.15 85)",
+          "primaryForeground": "oklch(0.95 0.02 85)",
+          "secondary": "oklch(0.15 0.02 260)",
+          "muted": "oklch(0.15 0.02 260)",
+          "mutedForeground": "oklch(0.65 0.02 85)",
+          "accent": "oklch(0.75 0.12 55)",
+          "border": "oklch(0.80 0.15 85)",
+          "dark": true
+        },
+        "ocean-breeze": {
+          "name": "Ocean Breeze",
+          "background": "oklch(0.97 0.02 200)",
+          "foreground": "oklch(0.20 0.08 220)",
+          "card": "oklch(1 0 0)",
+          "primary": "oklch(0.50 0.15 230)",
+          "primaryForeground": "oklch(0.20 0.08 220)",
+          "secondary": "oklch(0.97 0.02 200)",
+          "muted": "oklch(0.97 0.02 200)",
+          "mutedForeground": "oklch(0.45 0.05 220)",
+          "accent": "oklch(0.70 0.12 180)",
+          "border": "oklch(0.50 0.15 230)",
+          "dark": false
+        },
+        "forest-sage": {
+          "name": "Forest Sage",
+          "background": "oklch(0.96 0.02 140)",
+          "foreground": "oklch(0.25 0.06 145)",
+          "card": "oklch(1 0 0)",
+          "primary": "oklch(0.40 0.10 145)",
+          "primaryForeground": "oklch(0.25 0.06 145)",
+          "secondary": "oklch(0.96 0.02 140)",
+          "muted": "oklch(0.96 0.02 140)",
+          "mutedForeground": "oklch(0.45 0.04 145)",
+          "accent": "oklch(0.65 0.12 90)",
+          "border": "oklch(0.40 0.10 145)",
+          "dark": false
+        },
+        "rose-blush": {
+          "name": "Rose Blush",
+          "background": "oklch(0.97 0.02 350)",
+          "foreground": "oklch(0.30 0.08 350)",
+          "card": "oklch(1 0 0)",
+          "primary": "oklch(0.60 0.15 350)",
+          "primaryForeground": "oklch(0.30 0.08 350)",
+          "secondary": "oklch(0.97 0.02 350)",
+          "muted": "oklch(0.97 0.02 350)",
+          "mutedForeground": "oklch(0.50 0.05 350)",
+          "accent": "oklch(0.75 0.10 25)",
+          "border": "oklch(0.60 0.15 350)",
+          "dark": false
+        },
+        "sunset-amber": {
+          "name": "Sunset Amber",
+          "background": "oklch(0.96 0.03 55)",
+          "foreground": "oklch(0.25 0.08 35)",
+          "card": "oklch(1 0 0)",
+          "primary": "oklch(0.60 0.18 35)",
+          "primaryForeground": "oklch(0.25 0.08 35)",
+          "secondary": "oklch(0.96 0.03 55)",
+          "muted": "oklch(0.96 0.03 55)",
+          "mutedForeground": "oklch(0.50 0.05 35)",
+          "accent": "oklch(0.70 0.15 55)",
+          "border": "oklch(0.60 0.18 35)",
+          "dark": false
+        },
+        "lavender-dreams": {
+          "name": "Lavender Dreams",
+          "background": "oklch(0.97 0.02 290)",
+          "foreground": "oklch(0.30 0.08 290)",
+          "card": "oklch(1 0 0)",
+          "primary": "oklch(0.55 0.15 290)",
+          "primaryForeground": "oklch(0.30 0.08 290)",
+          "secondary": "oklch(0.97 0.02 290)",
+          "muted": "oklch(0.97 0.02 290)",
+          "mutedForeground": "oklch(0.50 0.05 290)",
+          "accent": "oklch(0.70 0.12 320)",
+          "border": "oklch(0.55 0.15 290)",
+          "dark": false
+        },
+        "slate-modern": {
+          "name": "Slate Modern",
+          "background": "oklch(0.96 0 0)",
+          "foreground": "oklch(0.20 0 0)",
+          "card": "oklch(1 0 0)",
+          "primary": "oklch(0.35 0 0)",
+          "primaryForeground": "oklch(0.20 0 0)",
+          "secondary": "oklch(0.96 0 0)",
+          "muted": "oklch(0.96 0 0)",
+          "mutedForeground": "oklch(0.50 0 0)",
+          "accent": "oklch(0.55 0.12 250)",
+          "border": "oklch(0.35 0 0)",
+          "dark": false
+        },
+        "emerald-night": {
+          "name": "Emerald Night",
+          "background": "oklch(0.18 0.04 160)",
+          "foreground": "oklch(0.92 0.03 160)",
+          "card": "oklch(0.23 0.04 160)",
+          "primary": "oklch(0.70 0.18 155)",
+          "primaryForeground": "oklch(0.92 0.03 160)",
+          "secondary": "oklch(0.18 0.04 160)",
+          "muted": "oklch(0.18 0.04 160)",
+          "mutedForeground": "oklch(0.65 0.03 160)",
+          "accent": "oklch(0.80 0.12 130)",
+          "border": "oklch(0.70 0.18 155)",
+          "dark": true
+        },
+        "cherry-blossom": {
+          "name": "Cherry Blossom",
+          "background": "oklch(0.98 0.01 350)",
+          "foreground": "oklch(0.35 0.10 340)",
+          "card": "oklch(1 0 0)",
+          "primary": "oklch(0.70 0.12 350)",
+          "primaryForeground": "oklch(0.35 0.10 340)",
+          "secondary": "oklch(0.98 0.01 350)",
+          "muted": "oklch(0.98 0.01 350)",
+          "mutedForeground": "oklch(0.55 0.06 340)",
+          "accent": "oklch(0.65 0.08 320)",
+          "border": "oklch(0.70 0.12 350)",
+          "dark": false
+        },
+        "arctic-blue": {
+          "name": "Arctic Blue",
+          "background": "oklch(0.97 0.01 220)",
+          "foreground": "oklch(0.25 0.06 230)",
+          "card": "oklch(1 0 0)",
+          "primary": "oklch(0.60 0.12 240)",
+          "primaryForeground": "oklch(0.25 0.06 230)",
+          "secondary": "oklch(0.97 0.01 220)",
+          "muted": "oklch(0.97 0.01 220)",
+          "mutedForeground": "oklch(0.50 0.04 230)",
+          "accent": "oklch(0.80 0.08 200)",
+          "border": "oklch(0.60 0.12 240)",
+          "dark": false
+        },
+        "mocha-cream": {
+          "name": "Mocha Cream",
+          "background": "oklch(0.95 0.02 70)",
+          "foreground": "oklch(0.30 0.06 50)",
+          "card": "oklch(0.99 0.01 70)",
+          "primary": "oklch(0.45 0.08 50)",
+          "primaryForeground": "oklch(0.30 0.06 50)",
+          "secondary": "oklch(0.95 0.02 70)",
+          "muted": "oklch(0.95 0.02 70)",
+          "mutedForeground": "oklch(0.50 0.04 50)",
+          "accent": "oklch(0.65 0.10 55)",
+          "border": "oklch(0.45 0.08 50)",
+          "dark": false
+        },
+        "electric-purple": {
+          "name": "Electric Purple",
+          "background": "oklch(0.12 0.02 280)",
+          "foreground": "oklch(0.92 0.02 280)",
+          "card": "oklch(0.18 0.03 280)",
+          "primary": "oklch(0.70 0.20 280)",
+          "primaryForeground": "oklch(0.92 0.02 280)",
+          "secondary": "oklch(0.12 0.02 280)",
+          "muted": "oklch(0.12 0.02 280)",
+          "mutedForeground": "oklch(0.65 0.03 280)",
+          "accent": "oklch(0.75 0.15 320)",
+          "border": "oklch(0.70 0.20 280)",
+          "dark": true
+        },
+        "tropical-teal": {
+          "name": "Tropical Teal",
+          "background": "oklch(0.97 0.02 180)",
+          "foreground": "oklch(0.25 0.08 185)",
+          "card": "oklch(1 0 0)",
+          "primary": "oklch(0.55 0.15 180)",
+          "primaryForeground": "oklch(0.25 0.08 185)",
+          "secondary": "oklch(0.97 0.02 180)",
+          "muted": "oklch(0.97 0.02 180)",
+          "mutedForeground": "oklch(0.50 0.05 185)",
+          "accent": "oklch(0.70 0.12 150)",
+          "border": "oklch(0.55 0.15 180)",
+          "dark": false
+        },
+        "wine-velvet": {
+          "name": "Wine Velvet",
+          "background": "oklch(0.15 0.04 10)",
+          "foreground": "oklch(0.92 0.02 10)",
+          "card": "oklch(0.20 0.04 10)",
+          "primary": "oklch(0.55 0.18 10)",
+          "primaryForeground": "oklch(0.92 0.02 10)",
+          "secondary": "oklch(0.15 0.04 10)",
+          "muted": "oklch(0.15 0.04 10)",
+          "mutedForeground": "oklch(0.65 0.03 10)",
+          "accent": "oklch(0.75 0.10 45)",
+          "border": "oklch(0.55 0.18 10)",
+          "dark": true
+        },
+        "mint-fresh": {
+          "name": "Mint Fresh",
+          "background": "oklch(0.97 0.02 165)",
+          "foreground": "oklch(0.25 0.06 170)",
+          "card": "oklch(1 0 0)",
+          "primary": "oklch(0.65 0.14 165)",
+          "primaryForeground": "oklch(0.25 0.06 170)",
+          "secondary": "oklch(0.97 0.02 165)",
+          "muted": "oklch(0.97 0.02 165)",
+          "mutedForeground": "oklch(0.50 0.04 170)",
+          "accent": "oklch(0.75 0.10 145)",
+          "border": "oklch(0.65 0.14 165)",
+          "dark": false
+        }
+      }
+    }
+  },
+  "fields": [
+    {
+      "key": "row_name",
+      "type": "Row",
+      "label": "Name Row",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "first_name",
+              "type": "Text",
+              "label": "First Name",
+              "required": true,
+              "placeholder": " "
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "last_name",
+              "type": "Text",
+              "label": "Last Name",
+              "required": true,
+              "placeholder": " "
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "row_personal",
+      "type": "Row",
+      "label": "Personal Row",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "date_of_birth",
+              "type": "Date",
+              "label": "Date of Birth"
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "gender",
+              "type": "Select",
+              "label": "Gender",
+              "options": [
+                {
+                  "label": "Male",
+                  "value": "male"
+                },
+                {
+                  "label": "Female",
+                  "value": "female"
+                },
+                {
+                  "label": "Other",
+                  "value": "other"
+                },
+                {
+                  "label": "Prefer not to say",
+                  "value": "prefer_not_to_say"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "row_contact",
+      "type": "Row",
+      "label": "Contact Row",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "email",
+              "type": "Email",
+              "label": "Email Address",
+              "required": true,
+              "placeholder": " "
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "phone",
+              "type": "Phone",
+              "label": "Phone Number",
+              "required": true,
+              "placeholder": " "
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "street_address",
+      "type": "Text",
+      "label": "Street Address",
+      "placeholder": " "
+    },
+    {
+      "key": "row_city_state",
+      "type": "Row",
+      "label": "City State Row",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "city",
+              "type": "Text",
+              "label": "City",
+              "placeholder": " "
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "state",
+              "type": "Select",
+              "label": "State",
+              "options": [
+                {
+                  "label": "Alabama",
+                  "value": "AL"
+                },
+                {
+                  "label": "California",
+                  "value": "CA"
+                },
+                {
+                  "label": "Florida",
+                  "value": "FL"
+                },
+                {
+                  "label": "New York",
+                  "value": "NY"
+                },
+                {
+                  "label": "Texas",
+                  "value": "TX"
+                },
+                {
+                  "label": "Washington",
+                  "value": "WA"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "zip_code",
+      "type": "Text",
+      "label": "ZIP Code",
+      "placeholder": " "
+    },
+    {
+      "key": "position_applying",
+      "type": "Select",
+      "label": "Position Applying For",
+      "required": true,
+      "options": [
+        {
+          "label": "Software Engineer",
+          "value": "software_engineer"
+        },
+        {
+          "label": "Product Manager",
+          "value": "product_manager"
+        },
+        {
+          "label": "UX Designer",
+          "value": "ux_designer"
+        },
+        {
+          "label": "Data Analyst",
+          "value": "data_analyst"
+        },
+        {
+          "label": "Marketing Specialist",
+          "value": "marketing_specialist"
+        },
+        {
+          "label": "Sales Representative",
+          "value": "sales_representative"
+        },
+        {
+          "label": "HR Coordinator",
+          "value": "hr_coordinator"
+        },
+        {
+          "label": "Other",
+          "value": "other"
+        }
+      ]
+    },
+    {
+      "key": "row_employment",
+      "type": "Row",
+      "label": "Employment Row",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "employment_type",
+              "type": "Select",
+              "label": "Employment Type",
+              "required": true,
+              "options": [
+                {
+                  "label": "Full-Time",
+                  "value": "full_time"
+                },
+                {
+                  "label": "Part-Time",
+                  "value": "part_time"
+                },
+                {
+                  "label": "Contract",
+                  "value": "contract"
+                },
+                {
+                  "label": "Internship",
+                  "value": "internship"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "start_date",
+              "type": "Date",
+              "label": "Earliest Start Date",
+              "required": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "expected_salary",
+      "type": "Text",
+      "label": "Expected Salary (Annual)",
+      "placeholder": " "
+    },
+    {
+      "key": "education_level",
+      "type": "Select",
+      "label": "Highest Education Level",
+      "required": true,
+      "options": [
+        {
+          "label": "High School Diploma",
+          "value": "high_school"
+        },
+        {
+          "label": "Associate Degree",
+          "value": "associate"
+        },
+        {
+          "label": "Bachelor's Degree",
+          "value": "bachelors"
+        },
+        {
+          "label": "Master's Degree",
+          "value": "masters"
+        },
+        {
+          "label": "Doctorate (PhD)",
+          "value": "phd"
+        },
+        {
+          "label": "Other",
+          "value": "other"
+        }
+      ]
+    },
+    {
+      "key": "row_education",
+      "type": "Row",
+      "label": "Education Row",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "field_of_study",
+              "type": "Text",
+              "label": "Field of Study",
+              "placeholder": " "
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "university_name",
+              "type": "Text",
+              "label": "School / University Name",
+              "placeholder": " "
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "graduation_year",
+      "type": "Number",
+      "label": "Graduation Year",
+      "placeholder": " "
+    },
+    {
+      "key": "row_employer",
+      "type": "Row",
+      "label": "Employer Row",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "job_title",
+              "type": "Text",
+              "label": "Most Recent Job Title",
+              "placeholder": " "
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "company_name",
+              "type": "Text",
+              "label": "Company Name",
+              "placeholder": " "
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "row_work_dates",
+      "type": "Row",
+      "label": "Work Dates Row",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "work_start_date",
+              "type": "Date",
+              "label": "Start Date"
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "work_end_date",
+              "type": "Date",
+              "label": "End Date"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "job_responsibilities",
+      "type": "Textarea",
+      "label": "Job Responsibilities",
+      "placeholder": " ",
+      "properties": {
+        "rows": 4
+      }
+    },
+    {
+      "key": "years_experience",
+      "type": "Select",
+      "label": "Years of Experience",
+      "required": true,
+      "options": [
+        {
+          "label": "Less than 1 year",
+          "value": "less_1"
+        },
+        {
+          "label": "1-3 years",
+          "value": "1_3"
+        },
+        {
+          "label": "3-5 years",
+          "value": "3_5"
+        },
+        {
+          "label": "5-10 years",
+          "value": "5_10"
+        },
+        {
+          "label": "10+ years",
+          "value": "10_plus"
+        }
+      ]
+    },
+    {
+      "key": "resume",
+      "type": "File",
+      "label": "Upload Resume / CV",
+      "required": true,
+      "fileSettings": {
+        "maxSizeMB": 5,
+        "maxFiles": 1,
+        "allowedExtensions": [
+          ".pdf",
+          ".doc",
+          ".docx"
+        ]
+      }
+    },
+    {
+      "key": "linkedin_url",
+      "type": "Url",
+      "label": "LinkedIn Profile URL",
+      "placeholder": " "
+    },
+    {
+      "key": "cover_letter",
+      "type": "Textarea",
+      "label": "Cover Letter / Why should we hire you?",
+      "placeholder": " ",
+      "properties": {
+        "rows": 5
+      }
+    },
+    {
+      "key": "how_heard",
+      "type": "Select",
+      "label": "How did you hear about us?",
+      "options": [
+        {
+          "label": "LinkedIn",
+          "value": "linkedin"
+        },
+        {
+          "label": "Indeed",
+          "value": "indeed"
+        },
+        {
+          "label": "Glassdoor",
+          "value": "glassdoor"
+        },
+        {
+          "label": "Company Website",
+          "value": "company_website"
+        },
+        {
+          "label": "Employee Referral",
+          "value": "employee_referral"
+        },
+        {
+          "label": "Job Fair",
+          "value": "job_fair"
+        },
+        {
+          "label": "Other",
+          "value": "other"
+        }
+      ]
+    },
+    {
+      "key": "consent",
+      "type": "Checkbox",
+      "label": "Certification",
+      "required": true,
+      "options": [
+        {
+          "label": "I certify that the information provided is accurate and complete to the best of my knowledge. I understand that false statements may result in disqualification or termination of employment.",
+          "value": "agreed"
+        }
+      ]
+    }
+  ],
+  "customHtml": "<div class='mfp mfp-pure-grid mfp-careers'><div class='mfp-container'><div class='mfp-card'><div class='mfp-card-header'><div class='mfp-careers-brand'><svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16'/><rect width='20' height='14' x='2' y='6' rx='2'/></svg><span>CAREERS</span></div><h1 class='mfp-form-title'>{{form:title}}</h1><p class='mfp-form-desc'>{{form:description}}</p></div><div class='mfp-card-body'>{{script:theme_selector}}<div class='mfp-section'><div class='mfp-section-hd'><span class='mfp-num-badge'>1</span><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg><div class='mfp-section-label'>{{content:section_one}}</div></div>{{field:row_name}}{{field:row_personal}}</div><div class='mfp-section'><div class='mfp-section-hd'><span class='mfp-num-badge'>2</span><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect width='20' height='16' x='2' y='4' rx='2'/><path d='m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7'/></svg><div class='mfp-section-label'>{{content:section_two}}</div></div>{{field:row_contact}}{{field:street_address}}{{field:row_city_state}}{{field:zip_code}}</div><div class='mfp-section'><div class='mfp-section-hd'><span class='mfp-num-badge'>3</span><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16'/><rect width='20' height='14' x='2' y='6' rx='2'/></svg><div class='mfp-section-label'>{{content:section_three}}</div></div>{{field:position_applying}}{{field:row_employment}}{{field:expected_salary}}</div><div class='mfp-section'><div class='mfp-section-hd'><span class='mfp-num-badge'>4</span><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z'/><path d='M22 10v6'/><path d='M6 12.5V16a6 3 0 0 0 12 0v-3.5'/></svg><div class='mfp-section-label'>{{content:section_four}}</div></div>{{field:education_level}}{{field:row_education}}{{field:graduation_year}}</div><div class='mfp-section'><div class='mfp-section-hd'><span class='mfp-num-badge'>5</span><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'/><polyline points='12 6 12 12 16 14'/></svg><div class='mfp-section-label'>{{content:section_five}}</div></div>{{field:row_employer}}{{field:row_work_dates}}{{field:job_responsibilities}}{{field:years_experience}}</div><div class='mfp-section mfp-section--compact'><div class='mfp-section-hd'><span class='mfp-num-badge'>6</span><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48'/></svg><div class='mfp-section-label'>{{content:section_six}}</div></div>{{field:resume}}{{field:linkedin_url}}{{field:cover_letter}}{{field:how_heard}}{{field:consent}}</div><div class='mfp-actions'><button type='submit' class='mfp-submit'>{{form:submit}}</button></div></div><div class='mfp-card-footer'><p>{{content:footer_note}}</p></div></div></div></div>",
+  "customCss": "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');:root{--mfp-primary:oklch(0.25 0.05 260);--mfp-primary-dark:oklch(0.20 0.05 260);--mfp-accent:oklch(0.72 0.14 35);--mfp-bg:oklch(0.97 0.01 85);--mfp-card-bg:oklch(1 0 0);--mfp-text:oklch(0.25 0.05 260);--mfp-text-muted:oklch(0.45 0.03 260);--mfp-border:oklch(0.25 0.05 260);--mfp-border-focus:oklch(0.72 0.14 35);--mfp-section:#5a5a5a;--mfp-shadow-lg:0 25px 50px -12px rgba(0,0,0,.08);--mfp-radius:8px;--mfp-font-body:'Inter',system-ui,-apple-system,sans-serif}.mfp-pure-grid{font-family:var(--mfp-font-body);color:var(--mfp-text);background:var(--mfp-bg);min-height:100vh;line-height:1.6;padding-bottom:40px;transition:background .35s,color .35s}.mfp-pure-grid{display:flex;align-items:center;justify-content:center;min-height:100vh}.mfp-container{max-width:720px;width:100%;margin:0 auto;padding:16px 20px}.mfp-card{background:var(--mfp-card-bg);border-radius:var(--mfp-radius);box-shadow:var(--mfp-shadow-lg);transition:background .35s}.mfp-card-header{padding:24px 32px 0;text-align:center}.mfp-form-title{font-family:var(--mfp-font-body);font-size:30px;font-weight:700;color:var(--mfp-text);margin:0 0 8px;line-height:1.2}.mfp-form-desc{font-size:15px;color:var(--mfp-text-muted);margin:0}.mfp-card-body{padding:20px 32px 24px}.mfp-card-footer{padding:14px 32px;background:#fafafa;border-top:1px solid var(--mfp-border);text-align:center}.mfp-card-footer p{margin:0;font-size:13px;color:var(--mfp-text-muted)}.mfp-section{margin-bottom:18px}.mfp-section--compact{margin-bottom:12px}.mfp-section-label{font-size:12px;font-weight:600;color:var(--mfp-section);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--mfp-border)}.mfp-pure-grid .mf-row{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}.mfp-pure-grid .mf-col-6{grid-column:span 6}.mfp-pure-grid .mf-col-12{grid-column:span 12}@media(max-width:640px){.mfp-pure-grid .mf-col-6,.mfp-pure-grid .mf-col-12{grid-column:span 12}.mfp-card-header,.mfp-card-body{padding:20px}}.mfp-pure-grid .mf-field{position:relative;margin-bottom:14px}.mfp-pure-grid .mf-field input,.mfp-pure-grid .mf-field textarea,.mfp-pure-grid .mf-field select{width:100%;padding:20px 16px 8px;font-size:15px;font-family:inherit;color:var(--mfp-text);background:#fafafa;border:1.5px solid var(--mfp-border);border-radius:10px;transition:all .2s;outline:none}.mfp-pure-grid .mf-field textarea{min-height:120px;resize:vertical;padding-top:24px}.mfp-pure-grid .mf-field input:focus,.mfp-pure-grid .mf-field textarea:focus,.mfp-pure-grid .mf-field select:focus{background:#fff;border-color:var(--mfp-border-focus);box-shadow:0 0 0 4px rgba(238,130,102,0.12)}.mfp-pure-grid .mf-field label{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:15px;font-weight:400;color:var(--mfp-text-muted);pointer-events:none;transition:all .2s ease;padding:0 4px;margin-left:-4px;background:transparent}.mfp-pure-grid .mf-field textarea~label{top:22px;transform:none}.mfp-pure-grid .mf-field input:focus~label,.mfp-pure-grid .mf-field textarea:focus~label,.mfp-pure-grid .mf-field input:not(:placeholder-shown)~label,.mfp-pure-grid .mf-field textarea:not(:placeholder-shown)~label{top:0;transform:translateY(-50%) scale(0.8);color:var(--mfp-primary);font-weight:600;background:var(--mfp-card-bg)}.mfp-pure-grid .mf-field input::placeholder,.mfp-pure-grid .mf-field textarea::placeholder{color:transparent}.mfp-pure-grid .mf-field select{padding-top:16px;padding-bottom:16px}.mfp-pure-grid .mf-field select{appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b6b6b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E\");background-position:right 14px center;background-repeat:no-repeat;background-size:18px;padding-right:40px;cursor:pointer}.mfp-pure-grid .mf-option{display:flex;align-items:center;gap:12px;padding:14px 16px;margin-bottom:10px;background:#fafafa;border:1.5px solid var(--mfp-border);border-radius:10px;cursor:pointer;transition:all .2s}.mfp-pure-grid .mf-option:hover{border-color:var(--mfp-border-focus)}.mfp-pure-grid .mf-option input{width:18px;height:18px;margin:0;accent-color:var(--mfp-primary);cursor:pointer}.mfp-pure-grid .mf-option label{font-size:14px;color:var(--mfp-text);cursor:pointer;margin:0;font-weight:500;text-transform:none;letter-spacing:normal}.mfp-pure-grid .mf-option label{font-size:14px;color:var(--mfp-text);cursor:pointer;margin:0;font-weight:500;text-transform:none;letter-spacing:normal}.mfp-actions{margin-top:8px}.mfp-submit{width:100%;padding:16px 28px;font-size:16px;font-weight:600;font-family:inherit;color:#fff;background:var(--mfp-accent);border:none;border-radius:10px;cursor:pointer;transition:all .2s}.mfp-submit:hover{background:#e06d52;transform:translateY(-2px);box-shadow:0 8px 20px rgba(238,130,102,0.3)}.mfp-careers .mfp-card{border:2px solid var(--mfp-primary);border-radius:var(--mfp-radius)}.mfp-careers .mfp-card-header{background:var(--mfp-primary);color:#fff;text-align:left;padding:28px 32px 24px;border-radius:var(--mfp-radius) var(--mfp-radius) 0 0}.mfp-careers .mfp-form-title{color:#fff}.mfp-careers .mfp-form-desc{color:rgba(255,255,255,.72)}.mfp-careers-brand{display:flex;align-items:center;gap:10px;margin-bottom:12px;opacity:.8}.mfp-careers-brand span{font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase}.mfp-section-hd{display:flex;align-items:center;gap:12px;margin-bottom:8px}.mfp-num-badge{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--mfp-accent);color:#fff;font-size:13px;font-weight:700;flex-shrink:0;line-height:1}.mfp-section-hd svg{color:var(--mfp-text-muted);flex-shrink:0}.mfp-section-hd .mfp-section-label{border-bottom:none;margin-bottom:0;padding-bottom:0}",
+  "rules": [],
+  "workflow": null,
+  "categories": [
+    "standard-application",
+    "tailwindcss",
+    "premium"
+  ]
+}

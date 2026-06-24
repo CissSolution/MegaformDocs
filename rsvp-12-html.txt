@@ -1,0 +1,107 @@
+<div class="cel-rsvp-stepped" data-mf-script-root="theme_selector">
+
+  <!-- Content wrapper -->
+  <div class="crs-content">
+    <div class="crs-container">
+
+      <!-- Header (outside card, white on gradient) -->
+      <div class="crs-hero">
+        <div class="crs-hero-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 8V16C21 18.7614 18.7614 21 16 21H8C5.23858 21 3 18.7614 3 16V8C3 5.23858 5.23858 3 8 3H16C18.7614 3 21 5.23858 21 8Z"/>
+            <path d="M7 12L10 15L17 8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h1 class="crs-hero-title">{{content:hero_title}}</h1>
+        <p class="crs-hero-subtitle">{{content:hero_subtitle}}</p>
+      </div>
+
+      <!-- Form Card -->
+      <div class="crs-card">
+
+        <!-- Progress bar -->
+        <div class="crs-progress-track">
+          <div class="crs-progress-bar" style="width:33.3333%"></div>
+        </div>
+
+        <!-- Step tabs -->
+        <div class="crs-step-tabs">
+          <button type="button" class="crs-step-tab crs-tab-active" data-step-tab="1">
+            <span class="crs-tab-badge">1</span>
+            <span class="crs-tab-title">{{content:step_01_title}}</span>
+          </button>
+          <button type="button" class="crs-step-tab crs-tab-upcoming" data-step-tab="2">
+            <span class="crs-tab-badge">2</span>
+            <span class="crs-tab-title">{{content:step_02_title}}</span>
+          </button>
+          <button type="button" class="crs-step-tab crs-tab-upcoming" data-step-tab="3">
+            <span class="crs-tab-badge">3</span>
+            <span class="crs-tab-title">{{content:step_03_title}}</span>
+          </button>
+        </div>
+
+        <!-- Step content -->
+        <div class="crs-step-body">
+
+          <!-- Step 1: Personal -->
+          <div class="crs-step" data-step="1">
+            <div class="crs-step-header">
+              <span class="crs-step-number">01</span>
+              <h2 class="crs-step-heading">{{content:step_01_heading}}</h2>
+              <p class="crs-step-desc">{{content:step_01_desc}}</p>
+            </div>
+            <div class="crs-fields">
+              <div class="crs-row">{{field:full_name}}</div>
+              <div class="crs-row">{{field:email}}</div>
+              <div class="crs-row">{{field:phone}}</div>
+            </div>
+          </div>
+
+          <!-- Step 2: Event Details -->
+          <div class="crs-step" data-step="2" style="display:none">
+            <div class="crs-step-header">
+              <span class="crs-step-number">02</span>
+              <h2 class="crs-step-heading">{{content:step_02_heading}}</h2>
+              <p class="crs-step-desc">{{content:step_02_desc}}</p>
+            </div>
+            <div class="crs-fields">
+              <div class="crs-row crs-row-attendance">{{field:attendance}}</div>
+              <div class="crs-row">{{field:guest_count}}</div>
+              <div class="crs-row crs-row-meal">{{field:meal_preference}}</div>
+            </div>
+          </div>
+
+          <!-- Step 3: Additional -->
+          <div class="crs-step" data-step="3" style="display:none">
+            <div class="crs-step-header">
+              <span class="crs-step-number">03</span>
+              <h2 class="crs-step-heading">{{content:step_03_heading}}</h2>
+              <p class="crs-step-desc">{{content:step_03_desc}}</p>
+            </div>
+            <div class="crs-fields">
+              <div class="crs-row">{{field:allergies}}</div>
+              <div class="crs-row">{{field:song_request}}</div>
+              <div class="crs-row">{{field:message}}</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="crs-nav">
+          <button type="button" class="crs-btn crs-btn-prev" style="display:none">{{content:prev_btn_text}}</button>
+          <button type="button" class="crs-btn crs-btn-next">{{content:next_btn_text}}</button>
+          <button type="submit" class="crs-btn crs-btn-submit" style="display:none">{{content:submit_btn_text}}</button>
+        </div>
+
+      </div>
+
+      <!-- Footer caption -->
+      <p class="crs-footer">{{content:footer_message}}</p>
+
+    </div>
+  </div>
+
+  {{script:theme_selector}}
+  {{script:step_nav}}
+</div>

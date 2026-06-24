@@ -1,0 +1,256 @@
+/* ═══════════════════════════════════════════════════════════
+   MegaForm Subform Widget — SubformWidgetCss v20260430-12
+   List / Card / Accordion data-entry view + linked-form banner
+   ═══════════════════════════════════════════════════════════ */
+.mfsf-linked-banner {
+  margin: 0 0 8px 0;
+  padding: 8px 12px;
+  background: #eff6ff;
+  border: 1px solid #93c5fd;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #1e40af;
+}
+.mfsf-linked-banner code {
+  background: #dbeafe;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  color: #1e3a8a;
+}
+.mfsf-linked-hint {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #475569;
+  font-style: italic;
+}
+
+.mfsf-wrap {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  color: #1f2937;
+}
+
+.mfsf-actions {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.mfsf-add-btn {
+  background: #2563eb;
+  color: #fff;
+  border: 1px solid #1d4ed8;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.mfsf-add-btn:hover:not([disabled]) { background: #1d4ed8; }
+.mfsf-add-btn[disabled] { opacity: 0.5; cursor: not-allowed; background: #9ca3af; border-color: #9ca3af; }
+
+.mfsf-row-del {
+  width: 24px; height: 24px; line-height: 1;
+  background: transparent;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+.mfsf-row-del:hover { background: #fee2e2; border-color: #dc2626; }
+
+.mfsf-required { color: #dc2626; font-weight: 700; }
+.mfsf-input {
+  width: 100%;
+  padding: 5px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: inherit;
+  box-sizing: border-box;
+  background: #fff;
+}
+.mfsf-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+.mfsf-input.mfsf-error {
+  border-color: #dc2626;
+  background: #fef2f2;
+}
+.mfsf-textarea { resize: vertical; min-height: 38px; }
+.mfsf-checkbox-wrap {
+  display: inline-flex; align-items: center;
+  height: 32px;
+}
+.mfsf-checkbox {
+  width: auto !important;
+  margin: 0;
+  cursor: pointer;
+  transform: scale(1.15);
+}
+
+/* ─────────────────────────────────────────────────────────
+   MODE 1: LIST (table)
+   ───────────────────────────────────────────────────────── */
+.mfsf-mode-list {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  overflow-x: auto;
+  background: #fff;
+}
+.mfsf-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.mfsf-table th,
+.mfsf-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid #f3f4f6;
+  text-align: left;
+  vertical-align: middle;
+}
+.mfsf-table th {
+  background: #f9fafb;
+  color: #374151;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  border-bottom: 1px solid #e5e7eb;
+}
+.mfsf-table tbody tr:last-child td { border-bottom: none; }
+.mfsf-table tbody tr:hover { background: #fafbff; }
+.mfsf-num-col { width: 40px; text-align: center !important; color: #6b7280; font-weight: 600; }
+.mfsf-action-col { width: 40px; text-align: center !important; }
+
+/* ─────────────────────────────────────────────────────────
+   MODE 2: CARD (vertical)
+   ───────────────────────────────────────────────────────── */
+.mfsf-mode-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mfsf-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.mfsf-card-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  font-weight: 600;
+  font-size: 13px;
+  color: #374151;
+}
+.mfsf-card-label { flex: 1; }
+.mfsf-card-body {
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+.mfsf-card-field { display: flex; flex-direction: column; }
+.mfsf-card-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4b5563;
+  margin-bottom: 4px;
+}
+
+/* ─────────────────────────────────────────────────────────
+   MODE 3: ACCORDION (collapsible)
+   ───────────────────────────────────────────────────────── */
+.mfsf-mode-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mfsf-acc-item {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.mfsf-acc-item[open] { border-color: #93c5fd; box-shadow: 0 1px 3px rgba(37, 99, 235, 0.08); }
+.mfsf-acc-hdr {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  background: #f9fafb;
+  font-weight: 600;
+  font-size: 13px;
+  color: #374151;
+  user-select: none;
+  list-style: none;
+}
+.mfsf-acc-hdr::-webkit-details-marker { display: none; }
+.mfsf-acc-hdr::before {
+  content: '▶';
+  font-size: 10px;
+  color: #6b7280;
+  transition: transform 0.15s;
+  display: inline-block;
+}
+.mfsf-acc-item[open] .mfsf-acc-hdr::before { transform: rotate(90deg); }
+.mfsf-acc-num {
+  background: #2563eb;
+  color: #fff;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+  flex-shrink: 0;
+}
+.mfsf-acc-label { flex: 1; }
+.mfsf-acc-body {
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  border-top: 1px solid #e5e7eb;
+}
+.mfsf-acc-field { display: flex; flex-direction: column; }
+.mfsf-acc-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4b5563;
+  margin-bottom: 4px;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Mobile responsive — list mode collapses to card-ish layout
+   ───────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .mfsf-mode-list { border: none; }
+  .mfsf-table thead { display: none; }
+  .mfsf-table, .mfsf-table tbody, .mfsf-table tr, .mfsf-table td { display: block; width: 100%; }
+  .mfsf-table tr {
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    padding: 8px;
+    background: #fff;
+  }
+  .mfsf-table td { padding: 4px 0; border: none; }
+  .mfsf-num-col, .mfsf-action-col { display: inline-block; width: auto; }
+}

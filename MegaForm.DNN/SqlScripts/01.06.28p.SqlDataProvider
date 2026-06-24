@@ -1,0 +1,96 @@
+/*
+ * 01.06.28p — Jotform-style premium 2-column split layout KB entry
+ * + fix the stub form_pattern-preserve-customizations entry.
+ */
+
+DECLARE @bSplit NVARCHAR(MAX) = N'Jotform-style premium 2-column split layout: image / branded hero on the LEFT (~40-50% width with title + subtitle overlay), form fields on the RIGHT. The most-requested "premium" look users ask for in the AI Form Creator modal.
+
+🛑 MANDATORY RULE — every field in `fields[]` MUST appear as `{{field:KEY}}` somewhere in customHtml. If you list 5 fields but only place 3 placeholders, 2 fields render INVISIBLE at runtime (the previous AI Form Creator bug — form 281 showed right column blank because AI emitted customHtml without placeholders). Validator [PRESERVE-001] / [SPLIT-001] rejects this.
+
+Canonical schema (copy-paste + swap field labels/keys):
+```json
+{
+  "version":"1.0",
+  "title":"Đăng ký Workshop",
+  "fields":[
+    { "key":"row_name", "type":"Row", "columns":[
+      { "span":6, "fields":[{ "key":"first_name", "type":"Text", "label":"First name", "required":true, "placeholder":"Nguyễn" }] },
+      { "span":6, "fields":[{ "key":"last_name",  "type":"Text", "label":"Last name",  "required":true, "placeholder":"Văn A" }] }
+    ]},
+    { "key":"email",     "type":"Email",          "label":"Email",        "required":true, "placeholder":"ban@example.com" },
+    { "key":"phone",     "type":"PhoneNumberPro", "label":"Phone",        "required":true },
+    { "key":"start_date","type":"Date",           "label":"Start date",   "required":true },
+    { "key":"session",   "type":"Radio",          "label":"Session",      "required":true,
+      "options":[{"value":"morning","label":"Morning"},{"value":"evening","label":"Evening"}],
+      "properties":{"optionColumns":2} },
+    { "key":"notes",     "type":"Textarea",       "label":"Notes" }
+  ],
+  "settings":{
+    "theme":"custom",
+    "submitButtonText":"Đăng ký",
+    "customHtml":"<div class=\"mfp mfp-split\"><div class=\"mfp-hero\"><img src=\"https://picsum.photos/seed/workshop-hero/800/1100\" alt=\"\" class=\"mfp-hero-img\"><div class=\"mfp-hero-overlay\"><h1 class=\"mfp-hero-title\">{{form:title}}</h1><p class=\"mfp-hero-sub\">{{form:description}}</p></div></div><div class=\"mfp-form\"><div class=\"mfp-form-inner\">{{field:row_name}}{{field:email}}{{field:phone}}{{field:start_date}}{{field:session}}{{field:notes}}<div class=\"mfp-submit-wrap\">{{form:submit}}</div></div></div></div>",
+    "customCss":".mfp.mfp-split{display:grid;grid-template-columns:42% 58%;gap:0;min-height:560px;border-radius:16px;overflow:hidden;box-shadow:0 24px 60px -10px rgba(15,23,42,0.18);background:#fff;font-family:''Inter'',-apple-system,sans-serif;max-width:1100px;margin:24px auto}.mfp.mfp-split .mfp-hero{position:relative;overflow:hidden}.mfp.mfp-split .mfp-hero-img{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(0.7)}.mfp.mfp-split .mfp-hero-overlay{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:36px 40px;color:#fff;background:linear-gradient(135deg,rgba(15,23,42,0.55) 0%,rgba(15,23,42,0.15) 100%)}.mfp.mfp-split .mfp-hero-title{font-size:36px;font-weight:800;margin:0 0 12px;line-height:1.15;letter-spacing:-0.01em}.mfp.mfp-split .mfp-hero-sub{font-size:15px;opacity:0.92;margin:0;font-weight:400;line-height:1.5}.mfp.mfp-split .mfp-form{padding:48px 44px;display:flex;align-items:center;background:#fafafa}.mfp.mfp-split .mfp-form-inner{width:100%;max-width:440px;margin:0 auto;display:flex;flex-direction:column;gap:18px}.mfp.mfp-split .mfp-submit-wrap{margin-top:8px}.mfp.mfp-split input,.mfp.mfp-split textarea,.mfp.mfp-split select{width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:11px 14px;font-size:14px;background:#fff;transition:border-color 0.15s,box-shadow 0.15s;box-sizing:border-box}.mfp.mfp-split input:focus,.mfp.mfp-split textarea:focus,.mfp.mfp-split select:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,0.12);outline:none}.mfp.mfp-split .mf-field-label{font-size:13px;font-weight:600;color:#334155;margin-bottom:6px;display:block}.mfp.mfp-split .mf-required{color:#ef4444}.mfp.mfp-split .mf-btn-submit,.mfp.mfp-split button[type=submit]{width:100%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:0;padding:12px 24px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;transition:transform 0.12s,box-shadow 0.15s}.mfp.mfp-split .mf-btn-submit:hover{transform:translateY(-1px);box-shadow:0 8px 16px -4px rgba(99,102,241,0.4)}@media (max-width:760px){.mfp.mfp-split{grid-template-columns:1fr;max-width:600px}.mfp.mfp-split .mfp-hero{min-height:240px}.mfp.mfp-split .mfp-hero-title{font-size:24px}.mfp.mfp-split .mfp-form{padding:28px 24px}}"
+  }
+}
+```
+
+KEY ANATOMY:
+- `theme:"custom"` — required to opt into custom shell. Anything else falls back to themed CSS.
+- `customHtml` root wrapper: `<div class="mfp mfp-split">…</div>` — the `.mfp` class is required for scoping, the `.mfp-split` is the form-specific class that scoped CSS targets.
+- Two `<div>` siblings: `<div class="mfp-hero">` (left) and `<div class="mfp-form">` (right).
+- Hero overlay: `{{form:title}}` and `{{form:description}}` tokens render the form-level title and description — the user can edit them in the Builder''s Settings tab WITHOUT touching customHtml.
+- Form column: place EVERY `{{field:KEY}}` placeholder for fields in `fields[]`. If a field is missing from customHtml, that field is invisible at runtime. The order of placeholders controls the rendered order — Row fields can stay in any place; they render their internal grid intact.
+- Submit: `{{form:submit}}` renders the submit button. Wrap it in `.mfp-submit-wrap` so CSS can target the spacing.
+
+CSS SCOPING (per the master prompt):
+- Every rule starts with `.mfp.mfp-split` so it never bleeds into the host site theme or other forms.
+- Inputs / textareas / selects styled at the `.mfp.mfp-split input` level (NOT a global `input {}` rule — that would leak).
+- `@media (max-width:760px)` collapses to single column on mobile.
+- `.mf-field-label` and `.mf-required` are the labels the renderer wraps around inputs — style them within the `.mfp.mfp-split` scope.
+
+IMAGE SOURCE:
+- Use `https://picsum.photos/seed/<keyword>/<W>/<H>` — deterministic, no API key, always loads.
+- NEVER use `images.unsplash.com/photo-<hex>` (AI hallucinates 32-char IDs that 404). Validator [IMG-001] rejects.
+- For local-asset case: `/Portals/0/MyImages/hero.jpg` or `~/Modules/MegaForm/img/hero.jpg` are OK if pre-uploaded.
+
+VARIATIONS (swap-in for different vibes):
+- Image on RIGHT instead of left: change `grid-template-columns:58% 42%` and swap HTML order so `.mfp-form` comes first.
+- Pull-quote instead of image: replace `<img>` with `<blockquote class="mfp-quote">…</blockquote>` styled with serif font + large drop quote.
+- Gradient hero (no image): `<div class="mfp-hero mfp-hero-gradient">` + CSS gradient background, no `<img>` element.
+
+WHEN NOT TO USE:
+- Standard intake / contact / survey forms — use a plain Section + Row layout with `theme:"default"` instead. The Jotform-style split is OVERKILL for a 3-field contact form and clutters mobile.
+- Forms with many sections (≥3) — premium hero shells work best with 5-12 fields in ONE conceptual group.
+- Multi-page wizards (settings.multiPage:true) — the wizard navigation buttons fight the .mfp-split grid; use a wizard-themed template instead.
+
+VALIDATOR (dispatcher-side):
+- [PRESERVE-001] — every field in `fields[]` whose key is NOT referenced as `{{field:KEY}}` in customHtml triggers a reject. AI must update customHtml when adding fields or drop the field.
+- [SPLIT-001 future] — if grid-template-columns is set, both `.mfp-hero` and `.mfp-form` must be present; otherwise revert to single-column.';
+
+MERGE dbo.MF_AI_Knowledge AS T
+USING (SELECT 'form_pattern-premium-split-layout' AS Slug) AS S ON T.Slug = S.Slug AND T.PortalId IS NULL
+WHEN MATCHED THEN UPDATE SET
+  T.Title='Jotform-style premium 2-column split layout (image left + form right, full customHtml + CSS template)',
+  T.Summary='Canonical Jotform-style premium 2-column split with image hero on the left and form fields on the right. Every field MUST appear as {{field:KEY}} in customHtml. Full CSS template + responsive collapse to single column.',
+  T.Body=@bSplit,
+  T.Tags='premium,jotform,split,2-col,image-hero,branded,customHtml,customCss,placeholders',
+  T.Kind='form_pattern',
+  T.Source='megaform-builtin',
+  T.Version=1
+WHEN NOT MATCHED THEN INSERT (Slug,Kind,Title,Summary,Body,Tags,Source,Version,CreatedOnDate)
+VALUES ('form_pattern-premium-split-layout','form_pattern',
+  'Jotform-style premium 2-column split layout (image left + form right, full customHtml + CSS template)',
+  'Canonical Jotform-style premium 2-column split with image hero on the left and form fields on the right. Every field MUST appear as {{field:KEY}} in customHtml. Full CSS template + responsive collapse to single column.',
+  @bSplit,'premium,jotform,split,2-col,image-hero,branded,customHtml,customCss,placeholders','megaform-builtin',1,SYSUTCDATETIME());
+
+-- Fix the 37-char stub
+MERGE dbo.MF_AI_Knowledge AS T
+USING (SELECT 'form_pattern-preserve-customizations' AS Slug) AS S ON T.Slug = S.Slug AND T.PortalId IS NULL
+WHEN MATCHED THEN UPDATE SET
+  T.Title='[DEPRECATED — see form_pattern-premium-shell-edits + form_pattern-ai-design-master-prompt]',
+  T.Summary='Stub. Use the named entries instead.',
+  T.Body=N'DEPRECATED stub. For preserving customisations on existing premium forms, see `form_pattern-premium-shell-edits` (3 canonical recipes: change_primary_color / make_full_width / change_font) and the master prompt at `form_pattern-ai-design-master-prompt`.',
+  T.Tags='deprecated',
+  T.Version=2;
+
+SELECT Slug, LEN(Body) AS BodyLen FROM dbo.MF_AI_Knowledge WHERE Slug IN ('form_pattern-premium-split-layout','form_pattern-preserve-customizations');

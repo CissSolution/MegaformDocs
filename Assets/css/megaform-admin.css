@@ -1,0 +1,36 @@
+/* ============================================================
+   MegaForm Admin — Submissions View Stylesheet
+   ============================================================ */
+
+.mf-submissions-wrapper { font-family: 'Inter', -apple-system, sans-serif; font-size: 14px; }
+
+.mf-subs-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+.mf-subs-header h3 { margin: 0; font-size: 18px; }
+.mf-subs-header .badge { font-size: 12px; vertical-align: middle; }
+.mf-subs-header-right { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.mf-subs-filters { background: #f8fafc; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; border: 1px solid #e2e8f0; }
+
+.mf-subs-table-wrapper { overflow-x: auto; }
+.mf-subs-table { font-size: 13px; }
+.mf-subs-table thead th { background: #f1f5f9; font-weight: 600; font-size: 12px; text-transform: uppercase; color: #64748b; letter-spacing: 0.3px; }
+.mf-subs-table tbody tr { cursor: pointer; transition: background 0.1s; }
+.mf-subs-table tbody tr:hover { background: #f0f4ff; }
+.mf-subs-table tbody tr.mf-unread { font-weight: 600; }
+.mf-subs-table tbody tr.mf-spam { opacity: 0.5; background: #fff5f5; }
+.mf-subs-table .mf-status-badge { font-size: 11px; padding: 2px 8px; border-radius: 4px; }
+.mf-subs-table .mf-status-submitted { background: #dbeafe; color: #1e40af; }
+.mf-subs-table .mf-status-read { background: #d1fae5; color: #065f46; }
+.mf-subs-table .mf-status-starred { background: #fef3c7; color: #92400e; }
+
+.mf-subs-pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
+
+.mf-bulk-actions {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: #1e293b; color: #fff; padding: 10px 20px; border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2); z-index: 100; display: flex; align-items: center; gap: 12px; font-size: 13px;
+}
+
+/* Submission detail modal */
+#mf-modal-body table { font-size: 13px; }
+#mf-modal-body table th { width: 30%; background: #f8fafc; font-weight: 600; }

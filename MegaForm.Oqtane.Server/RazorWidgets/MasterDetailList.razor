@@ -1,0 +1,97 @@
+@*
+    MasterDetailList — parent rows + drill-down child rows.
+
+    Renders the parent rows from SqlRows. Each row has a "▶ Show" toggle
+    that, when clicked, requests the child rows via the standard
+    DataRepeater pipeline using the same widgetKey and a parentId
+    query-parameter. The child query lives in widgetProps.detailQuery
+    and is keyed by widgetProps.detailParentParam (default :parentId).
+
+    Default widgetProps:
+      {
+        "template": "MasterDetailList",
+        "useSql": true,
+        "connectionKey": "DashboardDatabase",
+        "masterQuery": "SELECT FlightId, FlightName FROM GG_Flights ORDER BY FlightName",
+        "detailQuery": "SELECT PlayerId, PlayerName, Handicap FROM GG_Players WHERE FlightId = :parentId ORDER BY PlayerName",
+        "parameters": {
+          "parentIdColumn":   "FlightId",
+          "parentLabelColumn":"FlightName",
+          "childColumns":     "PlayerName,Handicap"
+        }
+      }
+*@
+@using MegaForm.Razor
+@inherits MfRazorWidgetBase
+@attribute [RazorTemplate("MasterDetailList", Category = "CRUD", Icon = "fa-folder-tree", WhenToUse = "Parent → child drill-down: orders + lines, flights + players, categories + products. Click parent to expand its children.", Description = "Parent rows with drill-down child rows fetched on demand from a second SQL query.", SupportsSql = true, EmitsValue = false)]
+@using System.Linq
+@using MegaForm.Core.Interfaces
+
+@code {
+    [Parameter, RazorParam(Label = "Parent ID column", Group = "Data mapping", Widget = "sql-column", Required = true, Order = 10, Placeholder = "FlightId", Hint = "Primary key of the parent row; passed as :parentId into the child query.")]
+    public string ParentIdColumn    { get; set; } = "Id";
+
+    [Parameter, RazorParam(Label = "Parent label column", Group = "Data mapping", Widget = "sql-column", Required = true, Order = 20, Placeholder = "FlightName", Hint = "Column shown to the user for each parent row.")]
+    public string ParentLabelColumn { get; set; } = "Name";
+
+    [Parameter, RazorParam(Label = "Child columns (csv)", Group = "Data mapping", Widget = "text", Required = true, Order = 30, Placeholder = "PlayerName,Handicap", Hint = "Comma-separated list of columns shown in the expanded child table.")]
+    public string ChildColumns      { get; set; } = "";
+
+    [Parameter, RazorParam(Label = "Empty-state text", Group = "Display", Widget = "text", Order = 40)]
+    public string EmptyText         { get; set; } = "No parent rows.";
+
+    private List<object> _rows = new();
+
+    protected override void OnParametersSet()
+    {
+        _rows = SqlRows?.Cast<object>().ToList() ?? new List<object>();
+    }
+
+    private static object Get(object row, string key)
+    {
+        if (row is IDictionary<string, object> d)
+            return d.TryGetValue(key, out var v) ? v : null;
+        return row?.GetType().GetProperty(key)?.GetValue(row);
+    }
+}
+
+<div class="mf-razor-md" data-mf-md-widget="@WidgetKey" data-mf-md-childcols="@ChildColumns">
+    @if (_rows.Count == 0)
+    {
+        <div class="mf-razor-md-empty">@EmptyText</div>
+    }
+    else
+    {
+        <ul class="mf-razor-md-list">
+            @foreach (var r in _rows)
+            {
+                var pid   = Convert.ToString(Get(r, ParentIdColumn));
+                var label = Convert.ToString(Get(r, ParentLabelColumn));
+                <li class="mf-razor-md-row" data-mf-parent-id="@pid">
+                    <button type="button" class="mf-razor-md-toggle"
+                            data-mf-razor-action="loadDetail"
+                            data-mf-widget-key="@WidgetKey"
+                            data-mf-parent-id="@pid">▶</button>
+                    <span class="mf-razor-md-label">@label</span>
+                    <div class="mf-razor-md-detail" data-mf-detail-slot="@pid"></div>
+                </li>
+            }
+        </ul>
+    }
+</div>
+
+<style>
+    .mf-razor-md { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; font-size:13px; }
+    .mf-razor-md-list { list-style:none;padding:0;margin:0;background:#fff;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden }
+    .mf-razor-md-row { padding:10px 14px;border-bottom:1px solid #e2e8f0 }
+    .mf-razor-md-row:last-child { border-bottom:0 }
+    .mf-razor-md-toggle { background:transparent;border:0;cursor:pointer;color:#7c3aed;font-weight:700;margin-right:8px;transition:transform .15s }
+    .mf-razor-md-toggle.is-expanded { transform:rotate(90deg) }
+    .mf-razor-md-label { font-weight:600;color:#0f172a }
+    .mf-razor-md-detail { display:none;margin:10px 0 0 24px;padding-left:12px;border-left:2px solid #ede9fe;color:#475569 }
+    .mf-razor-md-detail.is-open { display:block }
+    .mf-razor-md-detail table { width:100%;border-collapse:collapse;font-size:12px }
+    .mf-razor-md-detail th, .mf-razor-md-detail td { padding:5px 8px;text-align:left;border-bottom:1px solid #f1f5f9 }
+    .mf-razor-md-detail th { background:#f8fafc;font-weight:600;color:#475569 }
+    .mf-razor-md-empty { padding:18px;color:#94a3b8;font-style:italic;text-align:center;background:#f8fafc;border-radius:8px }
+</style>

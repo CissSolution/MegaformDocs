@@ -1,0 +1,188 @@
+/* ============================================================
+   MegaForm Widget: Repeater (Configurable List) v2.0
+   ============================================================ */
+
+.mfw-repeater {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+}
+.mfw-repeater-header {
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* Table layout */
+.mfw-repeater-table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.mfw-repeater-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.mfw-repeater-table th {
+    padding: 8px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    text-align: left;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    white-space: nowrap;
+}
+.mfw-repeater-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: middle;
+}
+.mfw-repeater-table tbody tr:hover {
+    background: #fafafa;
+}
+.mfw-rep-num-col { width: 32px; text-align: center; }
+.mfw-rep-num {
+    font-size: 11px;
+    font-weight: 700;
+    color: #9ca3af;
+    text-align: center;
+}
+.mfw-repeater-action-col { width: 36px; text-align: center; }
+
+/* Inputs */
+.mfw-rep-input {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 13px;
+    background: #fff;
+    transition: border-color .15s, box-shadow .15s;
+    box-sizing: border-box;
+}
+.mfw-rep-input:focus {
+    border-color: #6366f1;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, .1);
+}
+.mfw-rep-select {
+    appearance: none;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%236b7280' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 24px;
+}
+.mfw-rep-textarea {
+    min-height: 50px;
+    resize: vertical;
+}
+.mfw-rep-check-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #6b7280;
+}
+.mfw-rep-check {
+    width: 16px;
+    height: 16px;
+    accent-color: #4f46e5;
+    cursor: pointer;
+}
+
+/* Remove button */
+.mfw-repeater-remove {
+    border: none;
+    background: none;
+    color: #d1d5db;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: all .15s;
+    line-height: 1;
+}
+.mfw-repeater-remove:hover {
+    color: #dc2626;
+    background: #fef2f2;
+}
+
+/* Footer */
+.mfw-repeater-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-top: 1px solid #e5e7eb;
+    background: #f9fafb;
+}
+.mfw-repeater-add {
+    border: 1px dashed #6366f1;
+    background: #f5f3ff;
+    color: #4f46e5;
+    padding: 6px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all .15s;
+}
+.mfw-repeater-add:hover {
+    background: #4f46e5;
+    color: #fff;
+    border-style: solid;
+}
+.mfw-repeater-count {
+    font-size: 11px;
+    color: #9ca3af;
+}
+
+/* Card layout */
+.mfw-repeater-cards { padding: 10px; }
+.mfw-repeater-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: #fff;
+    transition: border-color .15s;
+}
+.mfw-repeater-card:hover { border-color: #c7d2fe; }
+.mfw-repeater-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f3f4f6;
+}
+.mfw-rep-card-num {
+    font-size: 12px;
+    font-weight: 700;
+    color: #6b7280;
+}
+.mfw-repeater-card-field {
+    margin-bottom: 10px;
+}
+.mfw-repeater-card-field:last-child { margin-bottom: 0; }
+.mfw-repeater-card-field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    margin-bottom: 3px;
+}
+
+/* Responsive — switch table to card on mobile */
+@media (max-width: 600px) {
+    .mfw-repeater-table { font-size: 12px; }
+    .mfw-repeater-table th { padding: 6px; font-size: 11px; }
+    .mfw-repeater-table td { padding: 4px 6px; }
+    .mfw-rep-input { padding: 5px 6px; font-size: 12px; }
+}

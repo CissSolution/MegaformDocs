@@ -1,0 +1,63 @@
+# Overview
+
+The MegaForm SDK (`MegaForm.Sdk`) is a **thin facade** that exposes a stable, host-agnostic
+API over the MegaForm engine. Consumers depend only on a handful of interfaces and DTOs — never
+on MegaForm's internal storage models, repositories, or rendering pipeline.
+
+## The object model
+
+```
+IMegaFormClient                 ← the single entry point
+ ├─ Forms        : IFormApi        create / get / list / update / delete forms
+ ├─ Submissions  : ISubmissionApi  find (FindData) / get / submit / update / delete
+ ├─ Files        : IFileApi        list / open (download) uploaded files
+ └─ Schema       : ISchemaApi      parse form schema JSON into typed field metadata
+```
+
+Every call takes an optional [`MegaFormScope`](../api/MegaForm.Sdk.MegaFormScope.yml) that
+identifies the **portal/site** and **acting user**:
+
+```csharp
+var scope = new MegaFormScope { PortalId = 1, UserId = 0 };
+```
+
+When omitted, the SDK falls back to the host's ambient platform context (the current request's
+portal). Pass an explicit scope from background jobs, schedulers, or any code running outside a
+MegaForm request.
+
+## Data Transfer Objects
+
+The SDK never returns internal entities. It returns purpose-built DTOs:
+
+| DTO | Purpose |
+|-----|---------|
+| [`FormDto`](../api/MegaForm.Sdk.FormDto.yml) | A form: id, title, status, schema JSON, submission count |
+| [`SubmissionDto`](../api/MegaForm.Sdk.SubmissionDto.yml) | A submission: id, `DataJson`, status, submitted timestamp |
+| [`FileDto`](../api/MegaForm.Sdk.FileDto.yml) | File metadata: id, original name, content type, size (no storage path leaks) |
+| [`MegaFormFileContent`](../api/MegaForm.Sdk.MegaFormFileContent.yml) | File **bytes** + name + content type, ready to stream |
+| [`PagedResult<T>`](../api/MegaForm.Sdk.PagedResult-1.yml) | `Items` + `TotalCount` + `Page` + `PageSize` |
+
+Queries are equally small: [`FormQuery`](../api/MegaForm.Sdk.FormQuery.yml) and
+[`SubmissionQuery`](../api/MegaForm.Sdk.SubmissionQuery.yml).
+
+## Two ways to obtain the client
+
+1. **Dependency injection** (Oqtane, ASP.NET Core, any DI host):
+   register with `services.AddMegaFormSdk()` and inject `IMegaFormClient`.
+2. **Ambient accessor** (DNN Razor Host, DDR templates, legacy `.ascx` — no DI):
+   call [`MegaFormSdk.RunAsync(...)`](../api/MegaForm.Sdk.MegaFormSdk.yml).
+
+Both paths are covered in [Installation](installation.md).
+
+## Host support
+
+| Host | Status | How |
+|------|--------|-----|
+| **Oqtane** (Blazor) | ✅ Live-proven | Inject `IMegaFormClient` into a component — see [Oqtane consumer](oqtane-consumer.md) |
+| **DNN** (WebForms / Razor Host) | ✅ Live-proven | `DnnServiceLocator.Instance.Mega` or `MegaFormSdk.RunAsync` — see [DNN Razor Host](dnn-razor-host.md) |
+| **ASP.NET Core / worker** | ✅ Supported | `AddMegaFormSdk()` + register your repositories |
+
+## Target frameworks
+
+`MegaForm.Sdk` multi-targets **net472**, **net8.0**, **net9.0**, and **net10.0**, so the same
+package works on classic DNN (net472) and modern Oqtane (net10.0).

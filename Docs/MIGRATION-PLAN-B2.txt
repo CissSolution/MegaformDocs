@@ -1,0 +1,63 @@
+# MegaForm TS Migration — Builder + Submissions Plan
+# Updated: Feb 24, 2026
+
+## Current State
+- Config Panel: TS (Phase B) — working with bugs being fixed
+- Builder: ASCX + 6 legacy JS files (~3,265 lines)
+- Submissions: ASCX + 1 JS file (~673 lines)  
+- Renderer: Legacy JS (~1,407 lines) — keep for now (public-facing)
+- Views: Legacy JS (~499 lines)
+
+## Migration Order
+
+### Phase B2: Builder Shell (this session)
+Create builder entry point that loads in Config Panel's "Form Designer" tab
+or as standalone page. All UI rendered by TS, no ASCX dependency.
+
+Files to create:
+- src/builder/BuilderShell.ts — 3-panel layout (palette | canvas | properties)
+- src/builder/Toolbar.ts — save, publish, preview, undo, import/export
+- src/builder/Palette.ts — draggable field types
+- src/builder/Canvas.ts — field list, drag-drop reorder, Row/Column
+- src/builder/Properties.ts — field config panel (right side)
+- src/builder/state.ts — centralized state management
+- src/builder/fields.ts — field type definitions and defaults
+
+Migrate from:
+- megaform-builder-core.js (301 lines) → state.ts + fields.ts
+- megaform-builder-canvas.js (696 lines) → Canvas.ts
+- megaform-builder-properties.js (1087 lines) → Properties.ts
+- megaform-builder-panels.js (354 lines) → Palette.ts
+- megaform-builder-toolbar.js (228 lines) → Toolbar.ts
+- megaform-builder-presets.js (420 lines) → keep as data
+- megaform-builder-templates.js (559 lines) → already in templates.ts
+- megaform-builder-phase2.js (397 lines) → integrate into above
+
+### Phase B3: Submissions Viewer
+- src/views/SubmissionsList.ts — table with pagination, search, filters
+- src/views/SubmissionDetail.ts — single record view
+- src/views/ExportPanel.ts — CSV/Excel export
+
+Migrate from:
+- megaform-submissions.js (673 lines)
+- Submissions.ascx (679 lines)
+
+### Phase B4: Integration
+- Update Config Panel "Form Designer" tab to embed builder inline
+- Update DNN FormEdit.ascx to be thin wrapper loading TS bundle
+- Update DNN Submissions.ascx to be thin wrapper loading TS bundle
+- Remove legacy JS files from build
+
+## API Contract (all via FormController, working)
+- Form/Get?formId=X — get form + schema
+- Form/Save — save form + schema  
+- Form/ListAll — list all forms
+- Form/Stats?formId=X — submission count
+- Form/Duplicate?formId=X — clone form
+- Form/ModuleConfig?moduleId=X — get module config (was ModuleConfig/Get)
+- Form/SaveModuleConfig — save config (was ModuleConfig/Save)
+- Submit/Post — submit form data
+- Submissions/List?formId=X — list submissions
+- Submissions/Get?submissionId=X — get single submission
+- Submissions/UpdateStatus — update status
+- Submissions/Export?formId=X — export CSV

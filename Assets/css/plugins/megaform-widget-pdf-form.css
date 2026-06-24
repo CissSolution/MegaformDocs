@@ -1,0 +1,227 @@
+/* PdfFormCss v20260505-01
+   Canonical runtime styling for MegaForm PdfForm widget.
+   Keep golf / business-specific styling out of shared CSS. */
+
+.mfw-pdf-wrap {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #0f172a;
+  width: 100%;
+  max-width: 1100px;
+}
+
+.mfw-pdf-status {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border: 1px solid #dbe4f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  font-size: 12px;
+  color: #475569;
+}
+
+.mfw-pdf-status.is-idle {
+  display: none;
+}
+
+.mfw-pdf-status.is-info {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.mfw-pdf-status.is-success {
+  background: #ecfdf5;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+.mfw-pdf-status.is-error {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.mfw-pdf-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 10px;
+  padding: 8px;
+  background: #fff;
+  border: 1px solid #dbe4f0;
+  border-radius: 10px;
+}
+
+.mfw-pdf-btn {
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #0f172a;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.mfw-pdf-btn:hover {
+  background: #f8fafc;
+}
+
+.mfw-pdf-zoom-label {
+  min-width: 56px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.mfw-pdf-viewport {
+  overflow: auto;
+  max-height: 75vh;
+  padding: 12px;
+  background: #e9ecef;
+  border: 1px solid #dbe4f0;
+  border-radius: 10px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mfw-pdf-page {
+  position: relative;
+  margin: 0 auto 12px;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.12);
+  background: #fff;
+}
+
+.mfw-pdf-canvas {
+  display: block;
+}
+
+.mfw-pdf-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: auto;
+}
+
+.mfw-pdf-empty,
+.mfw-pdf-error {
+  padding: 24px;
+  text-align: center;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.mfw-pdf-empty {
+  color: #64748b;
+  background: #fff;
+}
+
+.mfw-pdf-error {
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.mfw-pdf-field {
+  position: absolute;
+  box-sizing: border-box;
+  font-family: inherit;
+  padding: 0;
+  overflow: hidden;
+}
+
+.mfw-pdf-field > .mfw-pdf-static,
+.mfw-pdf-field > input[type="text"],
+.mfw-pdf-field > input[type="number"],
+.mfw-pdf-field > input[type="date"],
+.mfw-pdf-field > textarea,
+.mfw-pdf-field > select {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 2px 4px;
+  margin: 0;
+  border: 1px solid rgba(41, 128, 185, 0.2);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.6);
+  color: #111827;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: 1.2;
+}
+
+.mfw-pdf-field > textarea {
+  resize: none;
+}
+
+.mfw-pdf-field > select {
+  appearance: menulist;
+  -webkit-appearance: menulist;
+}
+
+.mfw-pdf-static {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mfw-pdf-static.is-multiline {
+  display: block;
+  white-space: pre-wrap;
+}
+
+.mfw-pdf-field.mfw-pdf-kind-dropdown > select,
+.mfw-pdf-field.mfw-pdf-kind-dropdown > .mfw-pdf-static {
+  background: rgba(236, 253, 245, 0.7);
+  border-color: rgba(22, 163, 74, 0.35);
+}
+
+.mfw-pdf-field.mfw-pdf-kind-checkbox,
+.mfw-pdf-field.mfw-pdf-kind-radio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mfw-pdf-field.mfw-pdf-kind-checkbox > input,
+.mfw-pdf-field.mfw-pdf-kind-radio > input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.mfw-pdf-field.is-whiteout {
+  background: #fff;
+}
+
+.mfw-pdf-field.is-whiteout > .mfw-pdf-static {
+  border-color: rgba(148, 163, 184, 0.35);
+  background: #fff;
+}
+
+.mfw-pdf-field.is-unsupported > .mfw-pdf-static {
+  background: rgba(254, 249, 195, 0.85);
+  border-color: rgba(202, 138, 4, 0.4);
+  color: #854d0e;
+  justify-content: center;
+}
+
+@media (max-width: 760px) {
+  .mfw-pdf-toolbar {
+    gap: 6px;
+  }
+
+  .mfw-pdf-btn {
+    min-height: 34px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .mfw-pdf-viewport {
+    padding: 6px;
+    max-height: 70vh;
+  }
+}

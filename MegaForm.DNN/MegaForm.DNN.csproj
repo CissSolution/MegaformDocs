@@ -1,0 +1,112 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <RootNamespace>MegaForm.DNN</RootNamespace>
+    <AssemblyName>MegaForm.DNN</AssemblyName>
+    <Version>1.5.0</Version>
+    <LangVersion>7.3</LangVersion>
+
+    <!--
+      QUAN TRONG cho SDK-style net472:
+      - RestoreProjectStyle: dam bao NuGet resolve dung cho .NET Framework
+      - AutoGenerateBindingRedirects: tu dong tao binding redirects
+      - GenerateBindingRedirectsOutputType: bat buoc cho class library
+      - ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch: tat warning x86/x64
+    -->
+    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+    <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DefineConstants>$(DefineConstants);MEGAFORM_PRODUCTION</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MegaForm.Core\MegaForm.Core.csproj" />
+    <ProjectReference Include="..\MegaForm.Sdk\MegaForm.Sdk.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Dapper" Version="2.0.123" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
+  </ItemGroup>
+
+  <!--
+    DNN References — DLLs tu DNN 9.x website.
+    KHONG add qua VS GUI (se bao invalid).
+    Chay SetupReferences.bat 1 lan de copy DLLs vao References\
+    Hoac copy thu cong tu DNN\bin vao MegaForm.DNN\References\
+  -->
+  <ItemGroup>
+    <!-- DNN Core -->
+    <Reference Include="DotNetNuke">
+      <HintPath>References\DotNetNuke.dll</HintPath>
+      <Private>false</Private>
+      <SpecificVersion>false</SpecificVersion>
+    </Reference>
+    <Reference Include="DotNetNuke.Web">
+      <HintPath>References\DotNetNuke.Web.dll</HintPath>
+      <Private>false</Private>
+      <SpecificVersion>false</SpecificVersion>
+    </Reference>
+    <Reference Include="DotNetNuke.Web.Client">
+      <HintPath>References\DotNetNuke.Web.Client.dll</HintPath>
+      <Private>false</Private>
+      <SpecificVersion>false</SpecificVersion>
+    </Reference>
+    <Reference Include="DotNetNuke.Instrumentation">
+      <HintPath>References\DotNetNuke.Instrumentation.dll</HintPath>
+      <Private>false</Private>
+      <SpecificVersion>false</SpecificVersion>
+    </Reference>
+
+    <!--
+      ASP.NET WebAPI — PHAI dung DLLs tu DNN\bin, KHONG tu NuGet.
+      DNN 9.x ship WebAPI 5.2.x, NuGet co the cho version khac → runtime crash.
+    -->
+    <Reference Include="System.Web.Http">
+      <HintPath>References\System.Web.Http.dll</HintPath>
+      <Private>false</Private>
+      <SpecificVersion>false</SpecificVersion>
+    </Reference>
+    <Reference Include="System.Web.Http.WebHost">
+      <HintPath>References\System.Web.Http.WebHost.dll</HintPath>
+      <Private>false</Private>
+      <SpecificVersion>false</SpecificVersion>
+    </Reference>
+    <Reference Include="System.Net.Http.Formatting">
+      <HintPath>References\System.Net.Http.Formatting.dll</HintPath>
+      <Private>false</Private>
+      <SpecificVersion>false</SpecificVersion>
+    </Reference>
+
+    <!-- .NET Framework assemblies (tu GAC) -->
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Net.Http.WebRequest" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Compile Remove="Views\FormEditOld.ascx.cs" />
+    <Compile Remove="Views\FormViewOld.ascx.cs" />
+    <None Remove="Views\FormEditOld.ascx" />
+    <Content Remove="Views\FormEditOld.ascx" />
+    <None Remove="Views\FormViewOld.ascx" />
+    <Content Remove="Views\FormViewOld.ascx" />
+  </ItemGroup>
+
+  <!-- [DNN sync 2026-06-22] Removed a dead <EmbeddedResource> for
+       new-orleans-event-registration.json: the source file was deleted from
+       MegaForm.Web\App_Data\MegaForm\Templates (current catalog = the other 10 templates),
+       no code loads this embedded resource (DNN serves builder templates from the filesystem
+       ~/DesktopModules/MegaForm/Templates via BuilderTemplateCatalogService), so the stale
+       reference only broke the build (CS1566). -->
+
+</Project>

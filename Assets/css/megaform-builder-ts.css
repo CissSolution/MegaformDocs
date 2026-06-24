@@ -1,0 +1,4081 @@
+/* ============================================================
+   megaform-builder-ts.css — v0 Redesign OVERRIDE
+   Loads AFTER megaform-builder.css — overrides dark → light.
+   CSS ONLY — zero JS/TS changes.
+   ============================================================ */
+
+/* ── FONT ──────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900&display=swap');
+
+:root {
+  --mf-c1:      #18181b;
+  --mf-c1-lt:   #f4f4f5;
+  --mf-c1-h:    #27272a;
+  --mf-border:  #e4e4e7;
+  --mf-bg:      #f4f4f5;
+  --mf-text:    #09090b;
+  --mf-muted:   #71717a;
+  --mf-ring:    #a1a1aa;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+html, body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   LEFT PANEL — base sizing (B65d scoped fix 2026-06-03)
+   B64 globally whitened the left panel which broke the dark
+   BASIC/LAYOUT/WIDGETS palette. Now: only width/sizing here.
+   Theme-mode rail (IMAGES/FONTS/INSPECT/STRUCTURE) gets the
+   white bg via body.state-theme-mode .mf-panel-left scope.
+   ══════════════════════════════════════════════════════════ */
+.mf-panel-left {
+  border-right: 1px solid #e4e4e7 !important;
+  width: 256px !important;
+  min-width: 200px !important;
+}
+.mf-panel-left.mf-collapsed {
+  width: 0 !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  padding: 0 !important;
+  border-right-width: 0 !important;
+}
+
+/* THEME mode only — light surround matching right Theme Designer pane */
+body.state-theme-mode .mf-panel-left {
+  background: #ffffff !important;
+  box-shadow: 1px 0 4px rgba(15,23,42,.04) !important;
+  color: #0f172a !important;
+}
+body.state-theme-mode .mf-panel-header {
+  background: #ffffff !important;
+  border-bottom: 1px solid #e4e4e7 !important;
+}
+
+/* Panel header — keep generic structural rules unscoped */
+.mf-panel-header {
+  padding: 0.5rem 0.625rem 0 !important;
+}
+/* Hide title row — not in v0 design */
+.mf-panel-header-top {
+  /* height:0 + overflow:visible lets #mf-left-collapse-btn escape with absolute positioning */
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: visible !important;
+}
+/* Hide the text title — not in v0 design */
+.mf-elements-title { display: none !important; }
+
+/* ── Left collapse trigger — matches mock pixel-by-pixel ──────
+   Source: VERCEL_mega_form-admin-redesign/app/builder/page.tsx:1111-1135.
+   16×64 white card, right-rounded corners, no left border, soft shadow,
+   inline Lucide PanelLeftClose SVG. Positioned absolutely at right edge. */
+.mf-panel-left {
+  position: relative !important;
+  overflow: visible !important;
+}
+.mf-left-collapse-trigger,
+#mf-left-collapse-btn.mf-left-collapse-trigger {
+  position: absolute !important;
+  right: -16px !important;          /* Stick out 16px past the right edge */
+  top: calc(50% + 28px) !important; /* Mock offsets ~28px below center */
+  transform: translateY(-50%) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 16px !important;
+  height: 64px !important;
+  background: #ffffff !important;
+  border: 1px solid #e4e4e7 !important;
+  border-left: none !important;
+  border-radius: 0 8px 8px 0 !important;     /* rounded-r-md */
+  color: #64748b !important;        /* text-muted-foreground */
+  text-decoration: none !important;
+  z-index: 100 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;  /* shadow-sm */
+  cursor: pointer !important;
+  transition: width 0.2s ease, background 0.12s, color 0.12s !important;
+}
+.mf-left-collapse-trigger:hover {
+  width: 20px !important;           /* hover:w-5 */
+  background: rgba(241, 245, 249, 0.6) !important;   /* hover:bg-muted */
+  color: #0f172a !important;        /* hover:text-foreground */
+}
+.mf-left-collapse-trigger svg {
+  width: 14px !important;
+  height: 14px !important;
+  color: currentColor !important;
+}
+.mf-panel-left.mf-collapsed .mf-left-collapse-trigger { right: -16px !important; }
+
+/* Legacy hidden search input — keep wiring code happy */
+.mf-search-input[style*="display:none"] { display: none !important; }
+.mf-search-input:not([style*="display:none"]) {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.5rem !important;
+  color: #0f172a !important;
+  padding-left: 2rem !important;
+  height: 2rem !important;
+  font-size: 0.8125rem !important;
+  width: 100% !important;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   [B83-LeftPaletteMockParity] Palette tabs + tiles — full mock parity
+   Ports VERCEL_mega_form-admin-redesign/app/builder/page.tsx left aside
+   to production palette HTML (kept structure compatible). Replaces older
+   dark-panel palette + theme-mode override pair with a single light-pane
+   design used everywhere (Build + Design modes).
+   ════════════════════════════════════════════════════════════════ */
+
+/* Panel left chrome — light surface to host the new mock-style palette */
+.mf-panel.mf-panel-left {
+  background: #ffffff !important;
+  border-right: 1px solid #e4e4e7 !important;
+}
+/* Default-mode panel header — light surface (was inheriting dark bg from legacy palette) */
+.mf-panel.mf-panel-left .mf-panel-header {
+  background: #ffffff !important;
+  border-bottom: none !important;
+}
+
+/* ── TABS — pill container, title-case labels, white card on active.
+   [B83f-Dividers] Mock wraps the pill in a `border-b px-3 py-3` div so a
+   horizontal hairline sits below the strip separating it from the cards
+   underneath. Production has no wrapper, so we draw the divider via
+   `box-shadow: 0 1px 0 #e5e7eb` extending 12px past the pill on both sides. */
+.mf-palette-tabs {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0 !important;
+  height: 36px !important;
+  padding: 4px !important;
+  margin: 12px 12px 12px !important;
+  border-radius: 10px !important;
+  background: rgba(241, 245, 249, 0.6) !important;  /* bg-muted/50 */
+  border-bottom: none !important;
+  position: relative !important;
+}
+.mf-palette-tabs::after {
+  content: "" !important;
+  position: absolute !important;
+  left: -12px !important;
+  right: -12px !important;
+  bottom: -12px !important;
+  height: 1px !important;
+  background: #e5e7eb !important;
+  pointer-events: none !important;
+}
+/* [B87] Build palette tabs (Basic/Layout/Widgets) now match the Design-mode
+   theme tabs (Presets/Elements/Colors) 1:1 — underline style, not a pill. The
+   container also carries .mf-theme-nav-tabs so it is identical to the Design
+   container; here we just mirror the .mf-tlr-tab item style onto .mf-ptab. */
+.mf-ptab {
+  flex: 1 !important;
+  display: block !important;
+  height: auto !important;
+  padding: 0.375rem 0.25rem !important;
+  text-align: center !important;
+  font-size: 0.625rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em !important;
+  color: #64748b !important;
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 2px solid transparent !important;
+  border-radius: 0.375rem 0.375rem 0 0 !important;
+  text-transform: uppercase !important;
+  text-decoration: none !important;
+  transition: all 0.12s !important;
+  cursor: pointer !important;
+}
+.mf-ptab:hover {
+  color: #0f172a !important;
+  background: #ffffff !important;
+}
+.mf-ptab.active {
+  color: #6366f1 !important;
+  background: #ffffff !important;
+  font-weight: 700 !important;
+  border-bottom-color: #6366f1 !important;
+  box-shadow: none !important;
+}
+
+/* Panel body — light surface.
+   [B83h-MockScrollbar] Hide native Windows scrollbar to match mock's Radix
+   ScrollArea look. Wheel/touch scroll still works; scrollbar appears only on
+   hover (thin macOS-style). */
+.mf-panel-body {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 12px !important;
+  background: #ffffff !important;
+  scrollbar-width: none !important;       /* Firefox: hide */
+  scrollbar-color: transparent transparent !important;
+  -ms-overflow-style: none !important;    /* IE/old Edge */
+}
+.mf-panel-body::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+.mf-panel-body:hover {
+  scrollbar-width: thin !important;
+  scrollbar-color: #cbd5e1 transparent !important;
+}
+.mf-panel-body:hover::-webkit-scrollbar {
+  width: 6px !important;
+}
+.mf-panel-body:hover::-webkit-scrollbar-thumb {
+  background: #cbd5e1 !important;
+  border-radius: 999px !important;
+}
+.mf-panel-body:hover::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+/* ── PALETTE ITEMS — vertical card, icon-chip on top, label below ── */
+.mf-field-palette {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  padding: 0 !important;
+}
+
+.mf-palette-item {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  padding: 12px !important;
+  border-radius: 14px !important;
+  border: 1px solid #e2e8f0 !important;       /* border-border */
+  background: #ffffff !important;
+  color: #475569 !important;
+  font-size: 11px !important;
+  letter-spacing: 0 !important;
+  font-weight: 500 !important;
+  cursor: grab !important;
+  text-align: center !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease !important;
+  width: auto !important;
+  margin: 0 !important;
+  transform: none !important;
+  text-decoration: none !important;
+  box-shadow: none !important;
+  position: relative !important;
+}
+.mf-palette-item:hover {
+  border-color: rgba(59, 130, 246, 0.3) !important;   /* hover:border-primary/30 */
+  background: #ffffff !important;
+  color: #0f172a !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+}
+.mf-palette-item:active {
+  cursor: grabbing !important;
+  transform: scale(0.97) !important;
+}
+
+/* Icon chip — light tint bg + saturated icon (driven by --mf-tile-bg / --mf-tile-fg
+   inline style emitted by _registry.ts:renderPaletteItem) */
+.mf-pi-icon {
+  position: relative !important;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: var(--mf-tile-bg, #f1f5f9) !important;
+  box-shadow: none !important;
+  filter: none !important;
+  transform: none !important;
+  flex-shrink: 0 !important;
+  isolation: auto !important;
+  overflow: visible !important;
+  transition: background 0.2s ease !important;
+}
+.mf-pi-icon::before {
+  content: none !important;     /* kill the old white overlay */
+  display: none !important;
+}
+.mf-pi-icon i {
+  position: relative !important;
+  z-index: 1 !important;
+  font-size: 18px !important;   /* matches mock size-4.5 SVG */
+  filter: none !important;
+  color: var(--mf-tile-fg, #475569) !important;
+  text-shadow: none !important;
+}
+/* Mock has no scale/transform on hover — only the OUTER card lifts. Keep chip steady. */
+.mf-palette-item:hover .mf-pi-icon {
+  transform: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+.mf-palette-item:hover .mf-pi-icon::before { content: none !important; display: none !important; }
+.mf-palette-item:hover .mf-pi-icon i { color: var(--mf-tile-fg, #475569) !important; }
+
+.mf-pi-label {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  line-height: 1.25 !important;
+  color: rgba(15, 23, 42, 0.8) !important;     /* text-foreground/80 */
+  text-shadow: none !important;
+}
+.mf-palette-item:hover .mf-pi-label {
+  color: #0f172a !important;
+}
+
+/* [B83b] Pro / Advanced / Custom corner badges on widget tiles — matches mock.
+   Mock spec: -right-1.5 -top-1.5, px-1.5 py-0, 9px font, weight 600,
+   gradient bg per type, white text. */
+.mf-pi-badge {
+  position: absolute !important;
+  top: -6px !important;
+  right: -6px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 6px !important;
+  height: 14px !important;
+  font-size: 9px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  color: #ffffff !important;
+  border: 0 !important;
+  border-radius: 4px !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+  z-index: 2 !important;
+  pointer-events: none !important;
+  white-space: nowrap !important;
+}
+.mf-pi-badge-pro { background: linear-gradient(to right, #f59e0b, #f97316) !important; }
+.mf-pi-badge-advanced { background: linear-gradient(to right, #3b82f6, #06b6d4) !important; }
+.mf-pi-badge-custom { background: linear-gradient(to right, #a855f7, #ec4899) !important; }
+
+/* Cross-mode safety net: when state-theme-mode is on, the tile design above
+   stays the same (we no longer split dark vs light). Keep label dark. */
+body.state-theme-mode .mf-palette-item { background: #ffffff !important; color: #475569 !important; }
+body.state-theme-mode .mf-palette-item:hover { background: #ffffff !important; color: #0f172a !important; }
+body.state-theme-mode .mf-pi-label { color: rgba(15, 23, 42, 0.8) !important; }
+body.state-theme-mode .mf-palette-tabs { background: rgba(241, 245, 249, 0.6) !important; border-bottom: none !important; }
+body.state-theme-mode .mf-panel-body { background: #ffffff !important; }
+
+/* Hide bare <i> NOT inside mf-pi-icon */
+.mf-palette-item > i { display: none !important; }
+
+/* Field category section label */
+.mf-field-category h5,
+.mf-palette-cat-label,
+.mf-palette-cat > h5 {
+  font-size: 0.6875rem !important;
+  font-weight: 700 !important;
+  color: #64748b !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  padding: 0.625rem 0 0.375rem !important;
+  margin: 0 !important;
+  background: transparent !important;
+}
+
+/* Pro badge */
+.mf-badge-pro,
+.mf-palette-item .mf-palette-pro-badge,
+[class*="pro-badge"] {
+  position: absolute !important;
+  top: -0.375rem !important;
+  right: -0.375rem !important;
+  display: inline-flex !important;
+  padding: 0.0625rem 0.375rem !important;
+  border-radius: 9999px !important;
+  background: #18181b !important;
+  color: #fff !important;
+  font-size: 0.5625rem !important;
+  font-weight: 700 !important;
+  line-height: 1.4 !important;
+  pointer-events: none !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   CENTER CANVAS
+   ══════════════════════════════════════════════════════════ */
+.mf-panel-center {
+  background: #f4f4f5 !important;
+  padding: 1.5rem !important;
+}
+
+/* Canvas header — now lives inside .mf-form, so no outer card styling.
+   [B83f-Dividers] Mock form has `border-b 1px slate-200 p-6` on the header
+   block to separate title+description from form fields. Production .mf-canvas-header
+   gets the same hairline + 24px bottom padding for parity. */
+/* [B87] Tighter header — was 24px pad-bottom + 24px margin (~48px empty gap
+   under the description). Reduced to 10px/12px so the title/description hug
+   the first field. */
+.mf-canvas-header {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  border-radius: 0 !important;
+  padding: 0 0 10px 0 !important;
+  box-shadow: none !important;
+  margin-bottom: 12px !important;
+}
+.mf-canvas-title-input {
+  font-size: 1.125rem !important;
+  font-weight: 600 !important;
+  color: #09090b !important;
+  border: none !important;
+  border-bottom: none !important;
+  background: transparent !important;
+  padding: 2px 0 !important;
+  margin: 0 !important;
+}
+.mf-canvas-title-input:focus {
+  border-bottom: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+.mf-canvas-title-input::placeholder { color: #a1a1aa !important; font-weight: 400 !important; }
+.mf-canvas-desc-input {
+  font-size: 0.875rem !important;
+  color: #71717a !important;
+  border: none !important;
+  background: transparent !important;
+  padding: 2px 0 !important;
+  margin: 0 !important;
+  min-height: 0 !important;
+  resize: none !important;
+  line-height: 1.4 !important;
+}
+.mf-canvas-desc-input:focus { border-bottom: none !important; }
+
+/* Build chip — hide it */
+.mf-build-chip { display: none !important; }
+
+/* Canvas dropzone — neutral shell; the .mf-form-wrapper inside holds the card */
+.mf-canvas-dropzone {
+  background: transparent !important;
+  border: none !important;
+  padding: 1.5rem !important;
+  box-shadow: none !important;
+  min-height: 200px !important;
+}
+
+/* [B70] Runtime-like form card inside builder canvas */
+.mf-canvas-dropzone .mf-form-wrapper {
+  background: var(--mf-form-bg, #ffffff) !important;
+  border-radius: var(--mf-form-radius, 16px) !important;
+  box-shadow: var(--mf-form-shadow, 0 1px 3px rgba(15,23,42,.08), 0 4px 24px rgba(0,0,0,.04)) !important;
+  border: var(--mf-form-border, 1px solid #e2e8f0) !important;
+  max-width: var(--mf-form-max-width, 960px) !important;
+  width: 100% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding: var(--mf-form-padding, 32px 40px) !important;
+}
+/* [B83k] Prevent theme-level --mf-form-max-width from shrinking the builder canvas form.
+   The iframe srcdoc already does this for Design mode; this fixes the native canvas
+   (Build mode + any iframe fallback) so the form card always fills available width. */
+.mf-canvas-dropzone .mf-form-inner {
+  max-width: none !important;
+  width: 100% !important;
+}
+.mf-canvas-dropzone .mf-form {
+  background: transparent !important;
+  width: 100% !important;
+  max-width: none !important;
+}
+
+/* Empty state */
+.mf-dropzone-placeholder {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.75rem !important;
+  padding: 3rem 1.5rem !important;
+  border: 2px dashed #e4e4e7 !important;
+  border-radius: 0.5rem !important;
+  color: #a1a1aa !important;
+  text-align: center !important;
+  font-size: 0.875rem !important;
+}
+.mf-dropzone-placeholder i { opacity: 0.4 !important; }
+
+/* Canvas fields */
+.mf-canvas-field {
+  /* [P1-6] Consume theme vars (fallback = original colors) so the Build canvas
+     reflects the applied theme, matching the Design preview. Vars are injected
+     onto #mf-canvas-dropzone by buildCanvasOverridesCss(); unset = unchanged. */
+  border: 1px solid var(--mf-border, #e4e4e7) !important;
+  border-radius: 0.75rem !important;
+  background: var(--mf-form-bg, #fff) !important;
+  padding: 1rem 1.25rem !important;
+  margin-bottom: 0.75rem !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+  position: relative !important;
+}
+.mf-canvas-field:hover { border-color: #d4d4d8 !important; box-shadow: 0 1px 3px rgba(0,0,0,.04) !important; }
+.mf-canvas-field.mf-selected {
+  border-color: #4f46e5 !important;
+  box-shadow: 0 0 0 3px rgba(79,70,229,.12) !important;
+}
+
+/* Field body — flex row: icon chip + content */
+.mf-field-body {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 0.75rem !important;
+}
+.mf-field-content {
+  flex: 1 1 0% !important;
+  min-width: 0 !important;
+}
+
+/* Colored icon chip (mock parity) */
+.mf-field-icon-chip {
+  flex-shrink: 0 !important;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: var(--chip-bg, #f1f5f9) !important;
+  color: var(--chip-fg, #64748b) !important;
+  font-size: 0.875rem !important;
+  margin-top: 2px !important;
+}
+
+/* Field label */
+.mf-canvas-field .mf-field-preview-label {
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  color: var(--mf-label-color, #18181b) !important;
+  margin-bottom: 0.375rem !important;
+}
+.mf-canvas-field .mf-field-preview-label .mf-req { color: #dc2626 !important; }
+
+/* Field preview input */
+.mf-canvas-field .mf-field-preview-input {
+  /* [P1-6] Theme-aware so Build inputs match the Design preview (Sunset cream
+     bg + peach border, etc.). Fallbacks keep the default look when no theme set. */
+  border: 1px solid var(--mf-input-border-color, #e4e4e7) !important;
+  border-radius: 0.5rem !important;
+  background: var(--mf-input-bg, #fff) !important;
+  color: var(--mf-input-text, #a1a1aa) !important;
+  font-size: 0.875rem !important;
+  padding: 0.5rem 0.75rem !important;
+}
+
+/* Hide legacy type badge inside top-level field card (icon chip replaces it).
+   Row fields KEEP the badge because they don't use the icon-chip layout. */
+.mf-canvas-field:not(.mf-row-field) .mf-field-type-badge {
+  display: none !important;
+}
+
+/* Drag handle — hidden by default, shown on hover/selected */
+.mf-canvas-field .mf-drag-handle {
+  position: absolute !important;
+  left: -16px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  color: #71717a !important;
+  background: #fff !important;
+  border: 1px solid #e4e4e7 !important;
+  border-radius: 8px !important;
+  width: 30px !important;
+  height: 44px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+  cursor: grab !important;
+  opacity: 0.72 !important;
+  transition: opacity 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease !important;
+  z-index: 5 !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08) !important;
+}
+.mf-canvas-field:hover .mf-drag-handle,
+.mf-canvas-field:focus-within .mf-drag-handle,
+.mf-canvas-field.mf-selected .mf-drag-handle {
+  opacity: 1 !important;
+  border-color: #a5b4fc !important;
+  color: #4f46e5 !important;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.18) !important;
+}
+.mf-canvas-row > .mf-row-header .mf-drag-handle {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  border: 1px solid #e4e4e7 !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  color: #71717a !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: grab !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08) !important;
+}
+.mf-canvas-row:hover > .mf-row-header .mf-drag-handle,
+.mf-canvas-row.mf-selected > .mf-row-header .mf-drag-handle {
+  border-color: #a5b4fc !important;
+  color: #4f46e5 !important;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.18) !important;
+}
+/* Row field drag handle — same positioning as top-level fields.
+   The row-col container has overflow:visible so the handle sticking
+   out left:-10px renders cleanly. Must beat the build-mode opacity:0
+   rule on #mf-canvas-dropzone .mf-drag-handle. */
+body[data-mf-mode="build"] #mf-canvas-dropzone .mf-row-field .mf-drag-handle,
+body[data-mf-mode="design"] #mf-canvas-dropzone .mf-row-field .mf-drag-handle {
+  left: -10px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+body[data-mf-mode="build"] #mf-canvas-dropzone .mf-row-field:hover .mf-drag-handle,
+body[data-mf-mode="build"] #mf-canvas-dropzone .mf-row-field:focus-within .mf-drag-handle,
+body[data-mf-mode="design"] #mf-canvas-dropzone .mf-row-field:hover .mf-drag-handle,
+body[data-mf-mode="design"] #mf-canvas-dropzone .mf-row-field:focus-within .mf-drag-handle {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* Canvas action buttons — hidden by default, shown on hover/selected */
+.mf-canvas-field-actions {
+  position: absolute !important;
+  right: -10px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.25rem !important;
+  opacity: 0 !important;
+  transition: opacity 0.15s ease !important;
+  z-index: 5 !important;
+}
+.mf-canvas-field:hover .mf-canvas-field-actions,
+.mf-canvas-field.mf-selected .mf-canvas-field-actions {
+  opacity: 1 !important;
+}
+.mf-canvas-action-btn {
+  border: 1px solid #e4e4e7 !important;
+  background: #fff !important;
+  color: #a1a1aa !important;
+  border-radius: 0.375rem !important;
+  width: 28px !important;
+  height: 28px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  font-size: 0.75rem !important;
+  cursor: pointer !important;
+}
+.mf-canvas-action-btn:hover {
+  border-color: #a1a1aa !important;
+  color: #09090b !important;
+  background: #f4f4f5 !important;
+}
+.mf-canvas-action-btn.mf-delete-field:hover {
+  border-color: #fca5a5 !important;
+  color: #dc2626 !important;
+  background: #fef2f2 !important;
+}
+
+/* =========================================================
+ * [ThemeMode v20260602-B48] Canvas-as-runtime preview
+ * When body.state-theme-mode is set (right-rail THEME tab
+ * is active) the canvas hides all builder chrome — drag
+ * handles, action buttons, +Add prompts — and turns each
+ * field card into a Webflow-style "click to style" target.
+ *
+ * [ThemeMode-v2 v20260602-B49] Hide ALL builder chrome to
+ * match LIVE render at /xx?formid=N. Removed the B48 dashed
+ * hover outline + "Style this element" tooltip — user wants
+ * the RUNTIME look, not a "click to style" indicator. The
+ * Webflow click intercept in canvas.ts still fires (clicking
+ * a field jumps to its style group in the right rail) but
+ * the visual indicator is gone for a clean runtime preview.
+ * ========================================================= */
+.state-theme-mode .mf-canvas-field-handle,
+.state-theme-mode .mf-canvas-field-actions,
+.state-theme-mode .mf-add-field-prompt,
+.state-theme-mode .mf-drag-handle,
+.state-theme-mode .mf-canvas-action-btn,
+.state-theme-mode .mf-row-layout-picker,
+.state-theme-mode .mf-flexgrid-add-btn,
+.state-theme-mode .mf-fg-handle,
+.state-theme-mode .mf-flexgrid-item-remove,
+.state-theme-mode .mf-logic-badge,
+/* B49: FlexGrid header strip ("FlexGrid | 12 col · 64px row · 12px gap") */
+body.state-theme-mode .mf-fg-header,
+body.state-theme-mode .mf-fg-toolbar,
+body.state-theme-mode .mf-fg-info,
+body.state-theme-mode .mf-fg-controls,
+body.state-theme-mode .mf-fg-bp-tabs,
+body.state-theme-mode .mf-fg-bp-btn,
+body.state-theme-mode .mf-flexgrid-canvas-head,
+body.state-theme-mode .mf-flexgrid-meta,
+body.state-theme-mode .mf-flexgrid-header,
+body.state-theme-mode .mf-flexgrid-info,
+body.state-theme-mode .mf-flexgrid-toolbar,
+body.state-theme-mode .mf-flexgrid-empty,
+body.state-theme-mode .mf-flexgrid-item-topbar,
+body.state-theme-mode .mf-flexgrid-item-type,
+/* B49: Row header chrome ("Row" label + layout picker + actions) */
+body.state-theme-mode .mf-row-header,
+body.state-theme-mode .mf-row-label,
+body.state-theme-mode .mf-row-actions,
+body.state-theme-mode .mf-row-field-handle,
+body.state-theme-mode .mf-row-remove-field,
+body.state-theme-mode .mf-row-to-flexgrid,
+body.state-theme-mode .mf-row-col-empty,
+/* B49: Field-type badges + icon chip (builder chrome, not runtime) */
+body.state-theme-mode .mf-canvas-field-type,
+body.state-theme-mode .mf-field-type-badge,
+body.state-theme-mode .mf-canvas-field-type-badge,
+body.state-theme-mode .mf-type-chip,
+body.state-theme-mode .mf-field-icon-chip,
+/* B49: "Custom HTML Active — live sync on" purple banner */
+body.state-theme-mode .mf-custom-html-banner,
+body.state-theme-mode .mf-custom-html-active,
+body.state-theme-mode .mf-canvas-html-banner,
+/* B49: "Add a description (optional)" placeholder + add prompts */
+body.state-theme-mode .mf-canvas-add-desc-prompt,
+body.state-theme-mode .mf-add-desc,
+body.state-theme-mode .mf-dropzone-placeholder,
+body.state-theme-mode #mf-empty-state,
+body.state-theme-mode .mf-empty-state,
+/* B49: Settings gear icons + section heading badges + per-card duplicate/delete */
+body.state-theme-mode .mf-canvas-field-settings,
+body.state-theme-mode .mf-canvas-section-badge,
+body.state-theme-mode .mf-duplicate-field,
+body.state-theme-mode .mf-delete-field {
+  display: none !important;
+}
+.state-theme-mode .mf-canvas-field,
+.state-theme-mode .mf-canvas-row,
+.state-theme-mode .mf-canvas-flexgrid {
+  cursor: pointer !important;
+}
+/* B49: Strip ALL borders / outlines / shadows / hover effects on
+ * canvas fields so they render exactly like runtime. The click
+ * intercept in canvas.ts still fires — we just remove the visual
+ * "click to style" indicator. */
+body.state-theme-mode .mf-canvas-field,
+body.state-theme-mode .mf-canvas-row,
+body.state-theme-mode .mf-canvas-flexgrid,
+body.state-theme-mode .mf-fg-cell,
+body.state-theme-mode .mf-flexgrid-cell,
+body.state-theme-mode .mf-flexgrid-item,
+body.state-theme-mode .mf-row-col,
+body.state-theme-mode .mf-row-grid {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+/* B49: Override the earlier B48 dashed hover outline rule —
+ * user wants RUNTIME look, no "click to style" indicator. */
+body.state-theme-mode .mf-canvas-field:hover,
+body.state-theme-mode .mf-canvas-row:hover,
+body.state-theme-mode .mf-canvas-flexgrid:hover,
+body.state-theme-mode .mf-flexgrid-item:hover {
+  outline: 0 !important;
+  outline-offset: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+/* Suppress the SELECTED ring while in theme mode so accidental
+ * pre-existing selection doesn't make the runtime preview look
+ * busy. Theme mode is read-only for field properties. */
+.state-theme-mode .mf-canvas-field.mf-selected,
+.state-theme-mode .mf-canvas-row.mf-selected,
+.state-theme-mode .mf-canvas-flexgrid.mf-selected {
+  border-color: transparent !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+/* B49: Hide the canvas dropzone padding-around-fields look so the
+ * form sits flush like the runtime render. */
+body.state-theme-mode .mf-canvas-dropzone,
+body.state-theme-mode .mf-canvas-header {
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+/* B49: Suppress the B48 Webflow "Style this element" tooltip —
+ * user wants the clean runtime look. Both ::before (tooltip) and
+ * ::after (any decorative hover) are removed. */
+body.state-theme-mode .mf-canvas-field::before,
+body.state-theme-mode .mf-canvas-field::after,
+body.state-theme-mode .mf-canvas-row::before,
+body.state-theme-mode .mf-canvas-row::after,
+body.state-theme-mode .mf-canvas-flexgrid::before,
+body.state-theme-mode .mf-canvas-flexgrid::after {
+  display: none !important;
+  content: none !important;
+  opacity: 0 !important;
+}
+/* Right-rail Theme panel "click here" flash. Set by
+ * flashThemeSection() in canvas.ts for ~400ms. PRESERVED
+ * from B48 — runs AFTER the click intercept, separate from
+ * the chrome-hide system above. */
+.mf-theme-flash {
+  animation: mf-theme-flash-kf 0.4s ease-out;
+  border-radius: 6px;
+}
+@keyframes mf-theme-flash-kf {
+  0%   { background: rgba(250, 204, 21, 0.55); box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.45); }
+  60%  { background: rgba(250, 204, 21, 0.30); box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.20); }
+  100% { background: transparent;             box-shadow: none; }
+}
+
+/* =========================================================
+ * [ThemePreviewFrame v20260602-B50] Runtime preview iframe
+ * Injected inside #mf-canvas-dropzone when the THEME tab
+ * is activated. The iframe targets /xx?mfFormId=N so the
+ * canvas shows the EXACT runtime render (customHtml +
+ * customCss + theme tokens) instead of the builder's
+ * field cards. Every other direct child of the dropzone
+ * is tagged data-mf-builder-hidden="1" by canvas.ts at
+ * mount time; the rule below is the visual reinforcement
+ * to make sure stray children (e.g. Sortable.js helpers
+ * that don't survive the inline-display swap) stay out
+ * of view while the preview owns the canvas.
+ * ========================================================= */
+.mf-theme-preview-frame {
+  width: 100%;
+  /* [B50 Author C — edge case #4] long forms grow naturally; iframe
+   * has scrolling=yes plus the renderer's internal scroll. min-height
+   * keeps the placeholder/iframe visible even when the form is empty. */
+  min-height: 600px;
+  border: 0;
+  background: #ffffff;
+  display: block;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+}
+body.state-theme-mode #mf-canvas-dropzone {
+  padding: 24px !important;
+  /* [B65] Force neutral surround so dark presets (Tech Startup) don't black
+     out the canvas. Form CARD inside iframe still gets --mf-form-bg from
+     theme — mimicking how form looks published on a normal DNN page. */
+  background: #f5f7fa !important;
+  overflow-y: auto !important;
+}
+body.state-theme-mode #mf-canvas-dropzone > *:not(.mf-theme-preview-frame):not(.mf-theme-preview-placeholder) {
+  display: none !important;
+}
+
+/* [B67] When the B50 iframe is disabled (default in B67+) the user wants the
+   center FlexGrid canvas to STAY VISIBLE across mode toggles — the form in
+   the middle "khong thay doi". canvas.ts sets data-mf-theme-iframe="1" on
+   <html> only when ?themeIframe=1 mounts the iframe; in the default no-iframe
+   path we re-show the canvas children so the form keeps rendering. The B49
+   chrome dressing-down rules above (hidden handles / action bars / badges)
+   still apply, so it reads like a clean live preview. */
+html:not([data-mf-theme-iframe="1"]) body.state-theme-mode #mf-canvas-dropzone > *:not(.mf-theme-preview-frame):not(.mf-theme-preview-placeholder) {
+  display: revert !important;
+}
+
+/* =========================================================
+ * [B50 Author C] Theme-preview placeholder
+ * Shown inside #mf-canvas-dropzone instead of the iframe when:
+ *   data-mf-kind="unsaved"  → form has no saved id yet
+ *   data-mf-kind="error"    → iframe load failure / 404
+ *   data-mf-kind="info"     → generic info state
+ * Mounted by showThemePreviewPlaceholder() in canvas.ts.
+ * The previous rule's exclusion list (above) keeps it visible
+ * while every other dropzone child stays hidden.
+ * ========================================================= */
+.mf-theme-preview-placeholder {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  margin: 0 auto;
+  max-width: 560px;
+  text-align: center;
+  padding: 40px 32px;
+  background: #f8fafc;
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  color: #475569;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+.mf-theme-preview-placeholder[data-mf-kind="error"] {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #7f1d1d;
+}
+.mf-theme-preview-placeholder[data-mf-kind="unsaved"] {
+  background: #fffbeb;
+  border-color: #fcd34d;
+  color: #78350f;
+}
+.mf-theme-preview-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+.mf-theme-preview-icon i {
+  font-size: 28px;
+  color: #6366f1;
+}
+.mf-theme-preview-placeholder[data-mf-kind="error"] .mf-theme-preview-icon i {
+  color: #dc2626;
+}
+.mf-theme-preview-placeholder[data-mf-kind="unsaved"] .mf-theme-preview-icon i {
+  color: #d97706;
+}
+.mf-theme-preview-msg {
+  font-size: 14px;
+  line-height: 1.55;
+  max-width: 440px;
+  margin-bottom: 18px;
+  font-weight: 500;
+}
+/* [B50 Author C — edge case #7] Refresh-preview button overlay.
+ * Always present on the placeholder so the user can re-attempt the
+ * iframe mount without leaving the THEME tab. Calls
+ * requestThemePreviewRefresh() in canvas.ts. */
+.mf-theme-preview-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.mf-theme-preview-refresh:hover {
+  background: #eef2ff;
+  border-color: #818cf8;
+  color: #4f46e5;
+}
+.mf-theme-preview-refresh:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+.mf-theme-preview-refresh i {
+  font-size: 11px;
+}
+
+/* Submit button text */
+/* [EmptyFooterHide v20260506-07] After moving Form action texts into the
+ * HTML tab the footer is empty in default builds — collapse it so it
+ * doesn't leave a visible gap under the canvas. The :empty selector
+ * targets only TRULY empty footers (no text, no children). */
+.mf-canvas-footer:empty {
+  display: none !important;
+  padding: 0 !important;
+  border: none !important;
+  margin: 0 !important;
+  height: 0 !important;
+  min-height: 0 !important;
+}
+.mf-canvas-footer {
+  border-top: 1px solid #e4e4e7 !important;
+  padding: 1rem 1.5rem 1.5rem !important;
+  background: #fff !important;
+  border-radius: 0 0 0.75rem 0.75rem !important;
+  display: block !important;
+}
+.mf-submit-editor-label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  margin: 0 0 0.625rem !important;
+  font-size: 0.8125rem !important;
+  font-weight: 700 !important;
+  color: #18181b !important;
+}
+.mf-submit-editor-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 0.125rem 0.45rem !important;
+  border-radius: 999px !important;
+  background: #eef2ff !important;
+  border: 1px solid #c7d2fe !important;
+  color: #4338ca !important;
+  font-size: 0.6875rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.01em !important;
+}
+.mf-canvas-footer .mf-submit-btn-text {
+  display: block !important;
+  width: 100% !important;
+  max-width: 420px !important;
+  padding: 0.875rem 1rem !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 0.75rem !important;
+  background: #fff !important;
+  color: #0f172a !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  cursor: text !important;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+}
+.mf-canvas-footer .mf-submit-btn-text:focus {
+  outline: none !important;
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12) !important;
+}
+.mf-submit-editor-hint {
+  margin-top: 0.5rem !important;
+  font-size: 0.75rem !important;
+  color: #64748b !important;
+}
+
+/* Section preview — mock-style dashed card */
+.mf-canvas-field[data-type="Section"] {
+  border: 2px dashed #e4e4e7 !important;
+  background: #fafafa !important;
+  padding: 1.25rem !important;
+}
+.mf-canvas-field[data-type="Section"]:hover {
+  border-color: #d4d4d8 !important;
+  background: #f5f5f5 !important;
+}
+.mf-canvas-field[data-type="Section"].mf-selected {
+  border-color: #4f46e5 !important;
+  box-shadow: 0 0 0 3px rgba(79,70,229,.12) !important;
+  background: #f5f3ff !important;
+}
+.mf-section-preview {
+  color: #71717a !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.01em !important;
+}
+
+/* Page-break section: make the boundary visible in the builder canvas */
+body[data-mf-mode="build"] .mf-canvas-field.mf-page-break-section {
+  border: 2px dashed #4f46e5 !important;
+  background: #eef2ff !important;
+}
+body[data-mf-mode="build"] .mf-canvas-field.mf-page-break-section:hover {
+  background: #e0e7ff !important;
+  border-color: #4338ca !important;
+}
+body[data-mf-mode="build"] .mf-canvas-field.mf-page-break-section.mf-selected {
+  background: #e0e7ff !important;
+  border-color: #4f46e5 !important;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.18) !important;
+}
+.mf-section-preview.is-page-break {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  flex-wrap: wrap !important;
+}
+.mf-page-break-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.375rem !important;
+  padding: 0.25rem 0.625rem !important;
+  border-radius: 9999px !important;
+  background: #4f46e5 !important;
+  color: #fff !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+}
+
+/* Row grid */
+.mf-canvas-row {
+  border: 2px solid #e4e4e7 !important;
+  background: #fafafa !important;
+  border-radius: 0.625rem !important;
+  overflow: visible !important;
+}
+.mf-canvas-row:hover { border-color: #a1a1aa !important; }
+.mf-canvas-row.mf-selected {
+  border-color: #4f46e5 !important;
+  box-shadow: 0 0 0 3px rgba(79,70,229,.12) !important;
+}
+.mf-row-header {
+  background: #f4f4f5 !important;
+  border-bottom: 1px solid #e4e4e7 !important;
+  border-radius: 0.5rem 0.5rem 0 0 !important;
+}
+.mf-row-label { color: #71717a !important; }
+.mf-row-col {
+  border: 2px dashed #e4e4e7 !important;
+  background: #fff !important;
+  min-height: 72px !important;
+  position: relative !important;
+  overflow: visible !important;
+}
+.mf-row-col:hover { border-color: #a1a1aa !important; background: #fafafa !important; }
+.mf-row-col.mf-row-col-dragover,
+.mf-row-col.mf-row-col-droppable {
+  border-color: #6366f1 !important;
+  background: #f5f3ff !important;
+}
+.mf-row-col-empty {
+  color: #d4d4d8 !important;
+  pointer-events: none !important;
+  min-height: 56px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.mf-row-layout-btn {
+  border-color: #e4e4e7 !important;
+  background: #fff !important;
+}
+.mf-row-layout-btn:hover { border-color: #a1a1aa !important; background: #f4f4f5 !important; }
+.mf-row-layout-btn.active { border-color: #18181b !important; background: #18181b !important; }
+
+/* Custom HTML banner */
+.mf-custom-html-banner,
+[style*="background:#6366f1"],[style*="background: #6366f1"],
+[style*="background:linear-gradient(135deg,#7c3aed"],
+[style*="background: #7c3aed"] {
+  background: #7c3aed !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   RIGHT PANEL — restyle tabs to match v0
+   ══════════════════════════════════════════════════════════ */
+.mf-panel-right {
+  /* [2026-06-10] Width now driven by --mf-right-panel-width (set by the
+     #mf-right-resizer drag handler in properties.ts) so the user can drag the
+     inspector wider. Defaults to 340px when the var is unset. The old fixed
+     `width:300px !important` overrode the drag and made the pane unresizable. */
+  width: var(--mf-right-panel-width, 340px) !important;
+  background: #fff !important;
+  border-left: 1px solid #e4e4e7 !important;
+  box-shadow: none !important;
+  flex-shrink: 0 !important;
+  position: relative !important;
+  transform: none !important;
+  right: auto !important;
+  transition: opacity 0.25s ease, padding 0.25s ease, border-width 0.25s ease !important;
+  overflow: visible !important;
+}
+.mf-panel-right.mf-collapsed {
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  opacity: 0 !important;
+  border-left-width: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+  transform: none !important;
+}
+.mf-panel-right.mf-expanded {
+  width: 480px !important;
+  border-left: 1px solid #e4e4e7 !important;
+  box-shadow: -4px 0 20px rgba(0,0,0,.08) !important;
+}
+
+/* Right tabs — keep horizontal but restyle */
+.mf-right-tabs {
+  display: flex !important;
+  flex-direction: row !important;
+  width: 100% !important;
+  border-bottom: 1px solid #e4e4e7 !important;
+  overflow-x: auto !important;
+  padding: 0.4375rem 0.5rem !important;
+  gap: 2px !important;
+  background: #f0f0f0 !important;
+  position: relative !important;
+}
+.mf-right-tab {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0.4375rem 0.25rem !important;
+  font-size: 0.5625rem !important;
+  font-weight: 600 !important;
+  color: #71717a !important;
+  text-decoration: none !important;
+  border: none !important;
+  border-radius: 0.375rem !important;
+  background: transparent !important;
+  flex: 1 !important;
+  min-width: 34px !important;
+  gap: 3px !important;
+  letter-spacing: 0.04em !important;
+  cursor: pointer !important;
+  transition: all 0.12s !important;
+  margin-bottom: 0 !important;
+}
+.mf-right-tab:hover {
+  color: #52525b !important;
+  background: rgba(255,255,255,0.55) !important;
+}
+.mf-right-tab.active {
+  background: #ffffff !important;
+  color: #09090b !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,.12) !important;
+  border-bottom: none !important;
+  border-radius: 0.375rem !important;
+}
+
+/* Tab icon circle → simple icon */
+.mf-tab-icon {
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+  border-radius: 0.25rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+.mf-tab-icon i { font-size: 0.75rem !important; color: #71717a !important; }
+.mf-right-tab:hover .mf-tab-icon { background: transparent !important; transform: none !important; }
+.mf-right-tab:hover .mf-tab-icon i { color: #52525b !important; }
+.mf-right-tab.active .mf-tab-icon { background: transparent !important; box-shadow: none !important; }
+.mf-right-tab.active .mf-tab-icon i { color: #09090b !important; }
+.mf-tab-lbl {
+  font-size: 0.5625rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  color: inherit !important;
+  white-space: nowrap !important;
+  line-height: 1 !important;
+}
+
+/* Collapse / expand buttons in right tabs */
+/* ── Right collapse trigger — strip at left edge of right panel ─
+   Now a direct child of .mf-panel-right (not inside .mf-right-tabs)
+   so overflow:hidden on tabs no longer clips it. */
+.mf-panel-right {
+  overflow: visible !important;
+  position: relative !important;
+}
+/* [B83e-EdgeTriggerSvgTooltip] Right collapse trigger — matches the left one
+   pixel-by-pixel: 16×64 white card, left-rounded (mirror of left-collapse),
+   inline Lucide PanelRightClose SVG. Replaces old pill-bar `::after` chrome. */
+#mf-right-collapse-btn.mf-collapse-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: absolute !important;
+  left: -16px !important;
+  top: calc(50% + 28px) !important;
+  transform: translateY(-50%) !important;
+  width: 16px !important;
+  min-width: 16px !important;
+  max-width: 16px !important;
+  height: 64px !important;
+  background: #ffffff !important;
+  border: 1px solid #e4e4e7 !important;
+  border-right: none !important;
+  border-radius: 8px 0 0 8px !important;
+  color: #64748b !important;
+  font-size: 0 !important;
+  z-index: 200 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  cursor: pointer !important;
+  transition: width 0.2s ease, background 0.12s, color 0.12s !important;
+  text-decoration: none !important;
+  flex: 0 0 auto !important;
+  padding: 0 !important;
+}
+/* [B83e] Legacy `::after` content rules removed in the block above — the
+   .mf-edge-tooltip class now owns ::after for the dark tooltip pill. */
+#mf-right-collapse-btn.mf-collapse-btn svg {
+  width: 14px !important;
+  height: 14px !important;
+  color: currentColor !important;
+}
+#mf-right-collapse-btn.mf-collapse-btn:hover {
+  width: 20px !important;
+  background: rgba(241, 245, 249, 0.6) !important;
+  color: #0f172a !important;
+}
+
+/* [B83g] Edge trigger tooltips use the existing [data-tip] system in
+   megaform-builder-shell.css. Classes mf-edge-tooltip{-left,-right} are
+   now empty markers (no styling) — positioning is driven entirely by the
+   data-tip-pos attribute applied in dom.ts. This avoids specificity wars
+   with the shell.css [data-tip]:hover::after rule. */
+
+/* Expand button — keep at end of tabs */
+.mf-expand-btn {
+  flex: 0 0 auto !important;
+  min-width: 2rem !important;
+  max-width: 2rem !important;
+  width: 2rem !important;
+  color: #a1a1aa !important;
+  border: none !important;
+  background: transparent !important;
+  font-size: 0.875rem !important;
+}
+.mf-expand-btn:hover {
+  background: #f4f4f5 !important;
+  color: #09090b !important;
+}
+
+/* Edge mini tabs (when panel collapsed) */
+.mf-edge-mini {
+  background: #fff !important;
+  border: 1px solid #e4e4e7 !important;
+  color: #71717a !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,.08) !important;
+}
+.mf-edge-mini:hover {
+  border-color: #a1a1aa !important;
+  color: #09090b !important;
+  background: #f4f4f5 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,.1) !important;
+}
+
+/* Right panel content / scroll */
+.mf-settings-scroll,
+.mf-right-tab-content,
+.mf-prop-group {
+  background: #fff !important;
+  color: #09090b !important;
+}
+
+/* [B83h-MockScrollbar] Hide native scrollbar inside right pane scrollable
+   panels (settings + tab content). Visible thin scrollbar on hover only,
+   matching mock's Radix ScrollArea behavior. Same pattern as .mf-panel-body. */
+.mf-settings-scroll,
+.mf-right-tab-content {
+  scrollbar-width: none !important;
+  scrollbar-color: transparent transparent !important;
+  -ms-overflow-style: none !important;
+}
+.mf-settings-scroll::-webkit-scrollbar,
+.mf-right-tab-content::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+.mf-settings-scroll:hover,
+.mf-right-tab-content:hover {
+  scrollbar-width: thin !important;
+  scrollbar-color: #cbd5e1 transparent !important;
+}
+.mf-settings-scroll:hover::-webkit-scrollbar,
+.mf-right-tab-content:hover::-webkit-scrollbar { width: 6px !important; }
+.mf-settings-scroll:hover::-webkit-scrollbar-thumb,
+.mf-right-tab-content:hover::-webkit-scrollbar-thumb {
+  background: #cbd5e1 !important;
+  border-radius: 999px !important;
+}
+.mf-settings-scroll:hover::-webkit-scrollbar-track,
+.mf-right-tab-content:hover::-webkit-scrollbar-track { background: transparent !important; }
+
+/* Property group */
+.mf-prop-group {
+  border-bottom: 1px solid #e4e4e7 !important;
+  padding: 0.875rem 1rem !important;
+}
+.mf-prop-group:last-child { border-bottom: none !important; }
+
+.mf-prop-group.mf-prop-accordion {
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+.mf-prop-accordion > h6 {
+  margin: 0 !important;
+}
+
+.mf-prop-accordion-toggle {
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.75rem !important;
+  padding: 0.875rem 1rem !important;
+  border: 0 !important;
+  border-bottom: 1px solid #e4e4e7 !important;
+  background: #fff !important;
+  color: #4f46e5 !important;
+  cursor: pointer !important;
+  text-align: left !important;
+  font: inherit !important;
+}
+
+.mf-prop-accordion-toggle:hover {
+  background: #f8fafc !important;
+}
+
+.mf-prop-accordion-title {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  min-width: 0 !important;
+  font-size: 0.75rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+.mf-prop-accordion-chevron {
+  flex: 0 0 auto !important;
+  color: #71717a !important;
+  transition: transform .16s ease !important;
+}
+
+.mf-prop-accordion.mf-prop-acc-open .mf-prop-accordion-chevron {
+  transform: rotate(180deg) !important;
+}
+
+.mf-prop-accordion-body {
+  padding: 0.875rem 1rem 1rem !important;
+}
+
+.mf-prop-accordion.mf-prop-acc-collapsed .mf-prop-accordion-body {
+  display: none !important;
+}
+
+/* Property labels */
+.mf-prop-label,
+.mf-prop-group label,
+.mf-settings-scroll label {
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  color: #09090b !important;
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+ * Widget Settings — canonical layout for renderWidgetPropsEditor output
+ * (used by DynamicLabel, DataRepeater, GridRepeater, Subform, Signature,
+ *  GolfScorecard, and any future widget that ships a plugin.properties[]
+ *  array). Prior to v20260527-09 the only rules for .mfw-prop-row lived
+ *  under .mfw-paycfg (Payment widget) — every other widget rendered
+ *  unstyled with labels stranded on the left and textareas floating to
+ *  the right of an enormous gutter. These rules give them a proper
+ *  two-column layout (label-left / control-right) and a clean stacked
+ *  column variant for textareas.
+ * ────────────────────────────────────────────────────────────────────── */
+.mfw-auto-props {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  padding: 4px 0 6px !important;
+  font-size: 12px !important;
+}
+.mfw-auto-props .mfw-prop-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin: 0 !important;
+}
+.mfw-auto-props .mfw-prop-row.mfw-prop-col {
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 6px !important;
+}
+.mfw-auto-props .mfw-prop-label {
+  flex: 0 0 140px !important;
+  max-width: 140px !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  color: #475569 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  line-height: 1.35 !important;
+  padding-top: 4px !important;
+}
+.mfw-auto-props .mfw-prop-row.mfw-prop-col .mfw-prop-label {
+  flex: 0 0 auto !important;
+  max-width: none !important;
+  padding-top: 0 !important;
+}
+.mfw-auto-props .mfw-prop-row input[type="text"],
+.mfw-auto-props .mfw-prop-row input[type="number"],
+.mfw-auto-props .mfw-prop-row input[type="color"],
+.mfw-auto-props .mfw-prop-row select,
+.mfw-auto-props .mfw-prop-row textarea {
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  padding: 7px 10px !important;
+  font-size: 12px !important;
+  color: #0f172a !important;
+  background: #fff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 6px !important;
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.02) inset !important;
+  transition: border-color 0.12s, box-shadow 0.12s !important;
+}
+.mfw-auto-props .mfw-prop-row input[type="color"] {
+  flex: 0 0 56px !important;
+  width: 56px !important;
+  height: 32px !important;
+  padding: 2px 4px !important;
+}
+.mfw-auto-props .mfw-prop-row textarea {
+  min-height: 70px !important;
+  max-height: 220px !important;
+  resize: vertical !important;
+  font-family: ui-monospace, "JetBrains Mono", "Cascadia Mono", Consolas, monospace !important;
+  line-height: 1.45 !important;
+  white-space: pre !important;
+  overflow-x: auto !important;
+}
+.mfw-auto-props .mfw-prop-row input:focus,
+.mfw-auto-props .mfw-prop-row select:focus,
+.mfw-auto-props .mfw-prop-row textarea:focus {
+  outline: none !important;
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18) !important;
+}
+.mfw-auto-props .mfw-prop-toggle {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 8px 10px !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  background: #f8fafc !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #334155 !important;
+  cursor: pointer !important;
+}
+.mfw-auto-props .mfw-prop-toggle:hover {
+  background: #eef2ff !important;
+  border-color: #c7d2fe !important;
+}
+.mfw-auto-props .mfw-prop-toggle input[type="checkbox"] {
+  flex: 0 0 auto !important;
+  accent-color: #4f46e5 !important;
+  width: 14px !important;
+  height: 14px !important;
+  margin: 0 !important;
+}
+.mfw-auto-props .mfw-prop-help-launch {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  align-items: center !important;
+  margin: 0 0 4px !important;
+}
+.mfw-auto-props .mfw-prop-sample-picker {
+  flex: 1 1 220px !important;
+  display: flex !important;
+  gap: 6px !important;
+  align-items: center !important;
+}
+.mf-widget-settings-badge-wrap {
+  display: flex !important;
+  justify-content: flex-end !important;
+  margin: 0 0 4px !important;
+}
+.mf-widget-settings-badge {
+  font-size: 10px !important;
+  color: #94a3b8 !important;
+  letter-spacing: 0.04em !important;
+  background: #f1f5f9 !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 999px !important;
+  padding: 2px 8px !important;
+}
+/* Narrow inspector pane: drop label width below 120px so textareas keep
+   enough breathing room. */
+@media (max-width: 1280px) {
+  .mfw-auto-props .mfw-prop-label {
+    flex-basis: 116px !important;
+    max-width: 116px !important;
+  }
+}
+@media (max-width: 1080px) {
+  .mfw-auto-props .mfw-prop-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 4px !important;
+  }
+  .mfw-auto-props .mfw-prop-label {
+    flex-basis: auto !important;
+    max-width: none !important;
+    padding-top: 0 !important;
+  }
+}
+
+/* Property inputs */
+.mf-prop-input,
+.mf-settings-scroll input[type="text"],
+.mf-settings-scroll input[type="email"],
+.mf-settings-scroll input[type="number"],
+.mf-settings-scroll input[type="url"],
+.mf-settings-scroll select,
+.mf-settings-scroll textarea {
+  background: #fff !important;
+  border: 1px solid #e4e4e7 !important;
+  border-radius: 0.375rem !important;
+  color: #09090b !important;
+  font-size: 0.8125rem !important;
+}
+.mf-settings-scroll input:focus,
+.mf-settings-scroll select:focus,
+.mf-settings-scroll textarea:focus {
+  border-color: #a1a1aa !important;
+  box-shadow: 0 0 0 2px rgba(161,161,170,.2) !important;
+  outline: none !important;
+}
+
+/* No-selection state */
+.mf-props-empty,
+#mf-prop-placeholder {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 3rem 1.5rem !important;
+  text-align: center !important;
+  color: #a1a1aa !important;
+  font-size: 0.8125rem !important;
+}
+
+/* Right resizer */
+.mf-right-resizer::before {
+  background: #e4e4e7 !important;
+}
+.mf-right-resizer:hover::before {
+  background: #a1a1aa !important;
+}
+
+/* Flyout backdrop */
+.mf-flyout-backdrop { background: rgba(0,0,0,.3) !important; }
+
+/* ══════════════════════════════════════════════════════════
+   TOOLBAR OVERRIDES (dom.ts uses .mf-builder-toolbar — hide it,
+   the w-topbar from builder-shell.css handles the topbar)
+   ══════════════════════════════════════════════════════════ */
+.mf-builder-toolbar {
+  display: none !important;
+}
+
+/* The b-outer wrapper that handles layout */
+.b-outer {
+  padding-top: 56px !important; /* match new --topbar */
+  background: #f4f4f5 !important;
+}
+
+/* 3-pane builder app */
+.mf-builder-app {
+  display: flex !important;
+  height: 100% !important;
+  background: #f4f4f5 !important;
+  overflow: hidden !important;
+}
+.mf-builder-wrapper {
+  height: 100% !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   SCROLLBAR POLISH
+   ══════════════════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #a1a1aa; }
+
+/* ══════════════════════════════════════════════════════════
+   TOAST (builder notifications)
+   ══════════════════════════════════════════════════════════ */
+.mf-toast, [class*="mf-toast-"] {
+  border-radius: 0.5rem !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.875rem !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,.12) !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   UTILITY
+   ══════════════════════════════════════════════════════════ */
+.mf-hidden { display: none !important; }
+
+/* [B65i+B65m] Sortable states — also cover .mf-sortable-ghost (mf-prefixed)
+   and .sortable-fallback (forceFallback clone) so dark palette tile doesn't
+   leave a black bar at source position during drag. */
+.sortable-ghost,
+.mf-sortable-ghost,
+.mf-palette-item.mf-sortable-ghost,
+.mf-palette-item.sortable-ghost {
+  opacity: 0.18 !important;
+  background: #f4f4f5 !important;
+  color: #94a3b8 !important;
+  border: 1px dashed #cbd5e1 !important;
+  box-shadow: none !important;
+}
+.mf-sortable-ghost .mf-pi-icon,
+.sortable-ghost .mf-pi-icon { opacity: 0.4 !important; box-shadow: none !important; }
+.mf-sortable-ghost .mf-pi-label,
+.sortable-ghost .mf-pi-label { color: #94a3b8 !important; text-shadow: none !important; }
+
+.sortable-chosen,
+.mf-sortable-chosen { opacity: 0.9 !important; }
+
+.sortable-drag,
+.sortable-fallback,
+.mf-sortable-drag,
+.mf-sortable-fallback,
+.mf-palette-item.sortable-drag,
+.mf-palette-item.sortable-fallback,
+.mf-palette-item.mf-sortable-drag,
+.mf-palette-item.mf-sortable-fallback {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #c7d2fe !important;
+  /* [DragPerf 2026-06-18] The moving forceFallback clone repaints on EVERY pointer
+     frame. A big 40px-blur shadow forces a full-size repaint each frame → visible
+     jank. A lighter shadow + will-change:transform promotes the clone to its own GPU
+     compositor layer so SortableJS's per-frame translate() composites instead of
+     repainting. pointer-events:none stops the moving clone from hit-testing under the
+     cursor (another per-frame cost). */
+  box-shadow: 0 6px 16px rgba(15, 23, 42, .16) !important;
+  will-change: transform !important;
+  pointer-events: none !important;
+  border-radius: 0.625rem !important;
+  max-width: 160px !important;
+  padding: 0.5rem 0.5rem !important;
+  opacity: 1 !important;
+}
+.mf-palette-item.sortable-drag .mf-pi-label,
+.mf-palette-item.sortable-fallback .mf-pi-label {
+  color: #0f172a !important;
+  text-shadow: none !important;
+}
+.mf-palette-item.sortable-drag .mf-pi-icon,
+.mf-palette-item.sortable-fallback .mf-pi-icon {
+  width: 2rem !important;
+  height: 2rem !important;
+}
+
+/* Canvas drag clones must keep their real width. The generic fallback rule
+   above intentionally caps palette tiles at 160px; without this override it
+   also squeezes Row/top-level Field cards into narrow distorted columns. */
+.mf-canvas-row.sortable-drag,
+.mf-canvas-row.sortable-fallback,
+.mf-canvas-row.mf-sortable-drag,
+.mf-canvas-row.mf-sortable-fallback,
+.mf-canvas-row.mf-sortable-ghost,
+.mf-canvas-row.mf-row-drag-clone,
+.mf-canvas-item.mf-canvas-field.sortable-drag,
+.mf-canvas-item.mf-canvas-field.sortable-fallback,
+.mf-canvas-item.mf-canvas-field.mf-sortable-drag,
+.mf-canvas-item.mf-canvas-field.mf-sortable-fallback,
+.mf-canvas-item.mf-canvas-field.mf-sortable-ghost,
+.mf-canvas-item.mf-canvas-field.mf-canvas-item-drag-clone,
+.mf-row-field.sortable-drag,
+.mf-row-field.sortable-fallback,
+.mf-row-field.mf-sortable-drag,
+.mf-row-field.mf-sortable-fallback,
+.mf-row-field.mf-sortable-ghost,
+.mf-row-field.mf-row-field-drag-clone {
+  box-sizing: border-box !important;
+  display: block !important;
+  width: var(--mf-canvas-item-drag-width, auto) !important;
+  min-width: var(--mf-canvas-item-drag-width, auto) !important;
+  max-width: none !important;
+  transform-origin: top left !important;
+}
+.mf-canvas-row.sortable-drag,
+.mf-canvas-row.sortable-fallback,
+.mf-canvas-row.mf-sortable-drag,
+.mf-canvas-row.mf-sortable-fallback,
+.mf-canvas-row.mf-sortable-ghost,
+.mf-canvas-row.mf-row-drag-clone {
+  padding: 0 !important;
+}
+.mf-canvas-item.mf-canvas-field.sortable-drag,
+.mf-canvas-item.mf-canvas-field.sortable-fallback,
+.mf-canvas-item.mf-canvas-field.mf-sortable-drag,
+.mf-canvas-item.mf-canvas-field.mf-sortable-fallback,
+.mf-canvas-item.mf-canvas-field.mf-sortable-ghost,
+.mf-canvas-item.mf-canvas-field.mf-canvas-item-drag-clone,
+.mf-row-field.sortable-drag,
+.mf-row-field.sortable-fallback,
+.mf-row-field.mf-sortable-drag,
+.mf-row-field.mf-sortable-fallback,
+.mf-row-field.mf-sortable-ghost,
+.mf-row-field.mf-row-field-drag-clone {
+  padding: 1rem 1.25rem !important;
+}
+.mf-canvas-row.sortable-drag .mf-row-grid,
+.mf-canvas-row.sortable-fallback .mf-row-grid,
+.mf-canvas-row.mf-row-drag-clone .mf-row-grid {
+  display: grid !important;
+  width: 100% !important;
+}
+
+@media (max-width: 1100px) {
+  .mf-panel-right { width: var(--mf-right-panel-width, 280px) !important; }
+}
+@media (max-width: 768px) {
+  .mf-panel-left { width: 220px !important; }
+  .mf-panel-right { display: none !important; }
+  .mf-panel-center { padding: 1rem !important; }
+}
+
+/* ── Custom HTML banner (replaces inline style) ── */
+.mf-custom-html-banner {
+  background: linear-gradient(135deg, #7c3aed, #6366f1) !important;
+  color: #ffffff !important;
+  padding: 0.625rem 1rem !important;
+  border-radius: 0.625rem !important;
+  font-size: 0.8125rem !important;
+  font-weight: 600 !important;
+  margin-bottom: 0.75rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  cursor: pointer !important;
+  transition: opacity 0.12s !important;
+}
+.mf-custom-html-banner:hover { opacity: 0.96 !important; }
+.mf-custom-html-banner i { font-size: 0.75rem !important; opacity: 0.85 !important; }
+/* [2026-06-18] banner carries a label (left) + an "Edit HTML" button (right) that opens
+   the rich HTML Designer popup directly. */
+.mf-custom-html-banner { justify-content: space-between !important; }
+.mf-custom-html-banner .mf-chb-label { display: inline-flex !important; align-items: center !important; gap: 0.5rem !important; }
+.mf-custom-html-banner .mf-chb-edit {
+  display: inline-flex !important; align-items: center !important; gap: 0.375rem !important;
+  background: rgba(255, 255, 255, 0.18) !important; color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.55) !important; border-radius: 0.5rem !important;
+  padding: 0.3rem 0.7rem !important; font-size: 0.75rem !important; font-weight: 700 !important;
+  cursor: pointer !important; line-height: 1 !important; white-space: nowrap !important;
+  transition: background 0.12s, transform 0.12s !important;
+}
+.mf-custom-html-banner .mf-chb-edit:hover { background: #ffffff !important; color: #6d28d9 !important; transform: translateY(-1px) !important; }
+.mf-custom-html-banner .mf-chb-edit i { opacity: 1 !important; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   [2026-06-18 fix] HTML Token Designer modal — GLOBAL, EAGER styles.
+   The shell/inner styles used to exist ONLY scoped to #mf-composite-designer-modal
+   and injected LAZILY (when the Composite designer first opened). So opening the
+   "Custom HTML editor" / banner "Edit HTML" WITHOUT first opening the Composite
+   designer produced an UNSTYLED modal — backdrop computed to position:static +
+   transparent → the popup opened in the DOM but was INVISIBLE ("button doesn't
+   work"). These un-scoped rules ship in the eager builder stylesheet so the
+   #mf-token-designer-modal (and every sibling designer popup) is always visible.
+   !important on the critical layout props beats any builder-shell neutraliser.
+   ══════════════════════════════════════════════════════════════════════════ */
+.mf-token-designer-backdrop {
+  position: fixed !important; inset: 0 !important; z-index: 100020 !important;
+  background: rgba(15, 23, 42, .55) !important;
+  display: flex !important; align-items: center !important; justify-content: center !important;
+  padding: 24px !important;
+}
+/* Shell: NO !important so sibling designers (composite 880px, slider, …) keep their own
+   more-specific width/size overrides. For the bare #mf-token-designer-modal these globals
+   are the only matching shell rules, so it still gets a proper white centered card. */
+.mf-token-designer-shell {
+  display: flex; flex-direction: column;
+  background: #fff; border-radius: 16px;
+  box-shadow: 0 30px 80px rgba(15, 23, 42, .45);
+  max-height: min(90vh, 800px); width: min(760px, 100%);
+  overflow: hidden; font-family: Inter, system-ui, sans-serif;
+}
+.mf-token-designer-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid #e2e8f0; }
+.mf-token-designer-title { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; color: #0f172a; }
+.mf-token-designer-title i { color: #6366f1; }
+.mf-token-designer-badge { font-size: 10px; font-weight: 600; color: #6366f1; background: #eef2ff; border-radius: 6px; padding: 2px 7px; }
+.mf-token-designer-close { appearance: none; border: 0; background: transparent; font-size: 22px; line-height: 1; color: #94a3b8; cursor: pointer; width: 32px; height: 32px; border-radius: 8px; }
+.mf-token-designer-close:hover { background: #f1f5f9; color: #0f172a; }
+.mf-token-designer-tabs { display: flex; gap: 4px; padding: 0 18px; border-bottom: 1px solid #e2e8f0; background: #fff; }
+.mf-token-designer-tab { appearance: none; background: transparent; border: 0; padding: 10px 14px; font-size: 12px; font-weight: 600; color: #64748b; cursor: pointer; display: flex; align-items: center; gap: 6px; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.mf-token-designer-tab:hover { color: #0f172a; }
+.mf-token-designer-tab.active { color: #0f172a; border-bottom-color: #6366f1; }
+.mf-token-designer-count { background: #e2e8f0; color: #475569; border-radius: 999px; font-size: 10px; font-weight: 700; padding: 1px 7px; }
+.mf-token-designer-tab.active .mf-token-designer-count { background: #6366f1; color: #fff; }
+.mf-token-designer-body { padding: 16px 18px; overflow-y: auto; flex: 1; min-height: 120px; }
+.mf-token-designer-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 18px; border-top: 1px solid #e2e8f0; background: #f8fafc; }
+.mf-token-designer-foot-hint { font-size: 11px; color: #94a3b8; }
+.mf-token-designer-foot-hint kbd, .mf-token-designer-foot-hint code { background: #e2e8f0; border-radius: 4px; padding: 0 4px; font-size: 11px; }
+.mf-token-designer-empty { font-size: 12px; color: #94a3b8; padding: 16px; text-align: center; border: 1px dashed #e2e8f0; border-radius: 10px; }
+
+/* ── [2026-06-18 restore] Image-token ROW + Gallery picker overlay. These rules were lost
+   in the April-21 revert (same class of loss as the B183 token-designer modal shell) →
+   without them the image-token URL textbox rendered unstyled + squeezed and the Gallery
+   overlay was unstyled. Recovered verbatim from the pre-revert build; NON-!important so
+   sibling designers can still override. ── */
+.mf-token-image-grid { display: grid; grid-template-columns: 120px 1fr; gap: 12px; align-items: start; }
+.mf-token-image-preview { width: 120px; height: 96px; border-radius: 10px; border: 1px solid #e2e8f0; background: #f8fafc; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.mf-token-image-preview img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+.mf-token-image-empty { font-size: 10px; color: #94a3b8; text-align: center; line-height: 1.4; }
+.mf-token-image-empty i { font-size: 22px; color: #cbd5e1; display: block; margin-bottom: 4px; }
+.mf-token-image-controls { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+/* width:100% + box-sizing so the URL input fills the controls column (was squeezed). */
+.mf-token-image-url, .mf-slide-img-url { width: 100%; box-sizing: border-box; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 12px; font-family: Inter, system-ui, sans-serif; }
+.mf-token-image-url:focus, .mf-slide-img-url:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.18); }
+.mf-token-image-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+.mf-token-image-buttons .mf-builder-btn { font-size: 11px; padding: 6px 10px; }
+.mf-token-image-upload { background: #6366f1; color: #fff; border-color: #6366f1; }
+.mf-token-image-upload:hover { background: #4f46e5; border-color: #4f46e5; }
+.mf-token-image-gallery { background: #0ea5e9; color: #fff; border-color: #0ea5e9; }
+.mf-token-image-gallery:hover { background: #0284c7; border-color: #0284c7; }
+.mf-token-image-clear { background: #fff; color: #ef4444; border-color: #fecaca; }
+.mf-token-image-clear:hover { background: #fef2f2; }
+/* Gallery overlay — z-index ABOVE the token-designer modal (100020) so it stacks on top. */
+.mf-token-gallery-backdrop { position: fixed; inset: 0; z-index: 100030; background: rgba(15,23,42,.65); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 24px; }
+.mf-token-gallery-shell { width: min(900px, 100%); max-height: min(85vh, 720px); background: #fff; border-radius: 16px; box-shadow: 0 30px 80px rgba(15,23,42,.5); display: flex; flex-direction: column; overflow: hidden; }
+.mf-token-gallery-head { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; }
+.mf-token-gallery-title { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; color: #0f172a; }
+.mf-token-gallery-title i { color: #0ea5e9; }
+.mf-token-gallery-search { flex: 1; max-width: 280px; padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 12px; }
+.mf-token-gallery-search:focus { outline: none; border-color: #0ea5e9; box-shadow: 0 0 0 3px rgba(14,165,233,.18); }
+.mf-token-gallery-close { margin-left: auto; appearance: none; background: transparent; border: 0; color: #64748b; font-size: 26px; line-height: 1; cursor: pointer; padding: 0 6px; border-radius: 6px; }
+.mf-token-gallery-close:hover { background: #e2e8f0; color: #0f172a; }
+.mf-token-gallery-body { flex: 1; overflow-y: auto; padding: 16px 18px; background: #fff; }
+.mf-token-gallery-loading { padding: 48px; text-align: center; color: #94a3b8; font-size: 13px; }
+.mf-token-gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+.mf-token-gallery-card { appearance: none; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 6px; cursor: pointer; display: flex; flex-direction: column; gap: 6px; transition: all .12s; text-align: left; }
+.mf-token-gallery-card:hover { border-color: #0ea5e9; box-shadow: 0 4px 12px rgba(14,165,233,.18); transform: translateY(-1px); }
+.mf-token-gallery-thumb { aspect-ratio: 1; background: #f8fafc; border-radius: 6px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.mf-token-gallery-thumb img { max-width: 100%; max-height: 100%; object-fit: cover; }
+.mf-token-gallery-name { font-size: 10px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px 2px; }
+
+/* HTML Token Designer: slider token workbench (B240).
+   Keeps AI/premium slider images from rendering at natural size and makes each
+   slide editable as one compact element: image + related text tokens together. */
+#mf-token-designer-modal .mf-token-designer-shell {
+  width: min(980px, calc(100vw - 40px));
+  max-height: min(90vh, 820px);
+}
+#mf-token-designer-modal .mf-token-designer-body {
+  padding: 14px 16px;
+}
+#mf-token-designer-modal [data-pane="slides"] {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.mf-token-slider-group {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #ffffff;
+}
+.mf-token-slider-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+.mf-token-slider-label {
+  min-width: 0;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.mf-token-slider-label code,
+.mf-slide-card-token code {
+  background: #eef2ff;
+  color: #4338ca;
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.mf-token-slider-add {
+  flex: 0 0 auto;
+  background: #4f46e5 !important;
+  border-color: #4f46e5 !important;
+  color: #ffffff !important;
+}
+.mf-slide-workbench {
+  display: grid;
+  grid-template-columns: minmax(170px, 220px) minmax(0, 1fr);
+  min-height: 440px;
+}
+.mf-slide-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  max-height: min(58vh, 560px);
+  overflow-y: auto;
+  background: #f8fafc;
+  border-right: 1px solid #e2e8f0;
+}
+.mf-slide-nav-item {
+  appearance: none;
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  padding: 6px;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  text-align: left;
+  cursor: pointer;
+  color: #334155;
+}
+.mf-slide-nav-item:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+.mf-slide-nav-item.is-active {
+  background: #eef2ff;
+  border-color: #818cf8;
+  color: #1e1b4b;
+  box-shadow: 0 1px 0 rgba(15, 23, 42, .04);
+}
+.mf-slide-nav-thumb {
+  width: 48px;
+  height: 40px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #e2e8f0;
+  color: #94a3b8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.mf-slide-nav-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.mf-slide-nav-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mf-slide-nav-copy strong {
+  font-size: 12px;
+  line-height: 1.2;
+  color: inherit;
+}
+.mf-slide-nav-copy span {
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.25;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.mf-slide-editor {
+  border: 0;
+  border-radius: 0;
+  background: #ffffff;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: min(58vh, 560px);
+  overflow-y: auto;
+}
+.mf-slide-card-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+}
+.mf-slide-card-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 800;
+}
+.mf-slide-card-token {
+  margin-right: auto;
+}
+.mf-token-slide-remove {
+  flex: 0 0 auto;
+  color: #dc2626 !important;
+  border-color: #fecaca !important;
+  background: #fff7f7 !important;
+}
+.mf-token-slide-remove:hover {
+  background: #fef2f2 !important;
+}
+.mf-slide-card-body {
+  padding: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.mf-slide-field {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.mf-slide-field-image {
+  grid-column: 1 / -1;
+}
+.mf-slide-field-label {
+  margin: 0;
+  color: #475569;
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.mf-slide-img {
+  display: grid;
+  grid-template-columns: minmax(160px, 220px) minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+.mf-slide-img-prev {
+  width: 100%;
+  height: 150px;
+  min-height: 0;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mf-slide-img-prev img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.mf-slide-img-ctrl {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mf-slide-img-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.mf-slide-img-btns .mf-builder-btn {
+  font-size: 11px;
+  padding: 6px 10px;
+}
+.mf-slide-up {
+  background: #0ea5e9 !important;
+  border-color: #0ea5e9 !important;
+  color: #ffffff !important;
+}
+.mf-slide-gal {
+  background: #ffffff !important;
+  color: #334155 !important;
+}
+.mf-slide-clr {
+  width: 32px;
+  justify-content: center;
+  color: #dc2626 !important;
+  border-color: #fecaca !important;
+}
+.mf-slide-text {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #0f172a;
+  font: 500 12px/1.45 Inter, system-ui, sans-serif;
+  padding: 8px 10px;
+  min-height: 36px;
+}
+textarea.mf-slide-text {
+  min-height: 72px;
+  resize: vertical;
+}
+.mf-slide-text:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, .18);
+}
+
+@media (max-width: 760px) {
+  #mf-token-designer-modal .mf-token-designer-shell {
+    width: calc(100vw - 20px);
+  }
+  .mf-slide-workbench {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+  }
+  .mf-slide-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    max-height: none;
+    border-right: 0;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .mf-slide-nav-item {
+    width: 170px;
+    flex: 0 0 170px;
+  }
+  .mf-slide-editor {
+    max-height: none;
+  }
+  .mf-slide-card-body,
+  .mf-slide-img {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* When custom HTML is active, hide the dropzone placeholder */
+.mf-canvas-dropzone[style*="min-height: 0"] .mf-dropzone-placeholder,
+.mf-canvas-dropzone[style*="min-height:0"] .mf-dropzone-placeholder {
+  display: none !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   DEVICE PREVIEW — canvas width changes via data-device attr
+   ══════════════════════════════════════════════════════════ */
+/* Canvas form card wrapper responsive to device attribute */
+.mf-panel-center[data-device="tablet"] .mf-canvas-dropzone .mf-form-wrapper {
+  max-width: 540px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+.mf-panel-center[data-device="mobile"] .mf-canvas-dropzone .mf-form-wrapper {
+  max-width: 375px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   RIGHT PANEL TABS — match v0 exactly (General/Validate/Logic/Style text)
+   ══════════════════════════════════════════════════════════ */
+/* The current right tabs have icon+label, v0 has text-only horizontal tabs.
+   We keep icon+label but make them look more like v0 text tabs */
+.mf-right-tabs {
+  padding: 0 0.25rem !important;
+  gap: 2px !important;
+  overflow-x: auto !important;
+}
+.mf-right-tab {
+  padding: 0.5rem 0.375rem 0.4375rem !important;
+  min-width: 38px !important;
+  gap: 2px !important;
+}
+.mf-tab-icon {
+  width: 1.875rem !important;
+  height: 1.875rem !important;
+  border-radius: 0.5rem !important;
+}
+.mf-tab-icon i { font-size: 0.8125rem !important; }
+.mf-tab-lbl {
+  font-size: 0.5rem !important;
+  letter-spacing: 0.04em !important;
+}
+
+/* ── Per-tab active state: pill style, no colored gradients ── */
+#mf-tab-link-field.active,
+#mf-tab-link-settings.active,
+#mf-tab-link-html.active,
+#mf-tab-link-ai.active,
+#mf-tab-link-embed.active,
+#mf-tab-link-rules.active,
+#mf-tab-link-workflow.active,
+#mf-tab-link-print.active {
+  background: #ffffff !important;
+  border-bottom: none !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,.12) !important;
+}
+#mf-tab-link-field.active .mf-tab-icon,
+#mf-tab-link-settings.active .mf-tab-icon,
+#mf-tab-link-html.active .mf-tab-icon,
+#mf-tab-link-ai.active .mf-tab-icon,
+#mf-tab-link-embed.active .mf-tab-icon,
+#mf-tab-link-rules.active .mf-tab-icon,
+#mf-tab-link-workflow.active .mf-tab-icon,
+#mf-tab-link-print.active .mf-tab-icon {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+#mf-tab-link-field.active .mf-tab-icon i,
+#mf-tab-link-settings.active .mf-tab-icon i,
+#mf-tab-link-html.active .mf-tab-icon i,
+#mf-tab-link-ai.active .mf-tab-icon i,
+#mf-tab-link-embed.active .mf-tab-icon i,
+#mf-tab-link-rules.active .mf-tab-icon i,
+#mf-tab-link-workflow.active .mf-tab-icon i,
+#mf-tab-link-print.active .mf-tab-icon i {
+  color: #09090b !important;
+}
+#mf-tab-link-field.active .mf-tab-lbl,
+#mf-tab-link-settings.active .mf-tab-lbl,
+#mf-tab-link-html.active .mf-tab-lbl,
+#mf-tab-link-ai.active .mf-tab-lbl,
+#mf-tab-link-embed.active .mf-tab-lbl,
+#mf-tab-link-rules.active .mf-tab-lbl,
+#mf-tab-link-workflow.active .mf-tab-lbl,
+#mf-tab-link-print.active .mf-tab-lbl {
+  color: #09090b !important;
+  font-weight: 700 !important;
+}
+
+/* ── Right resizer — low z-index so collapse trigger shows above it ── */
+.mf-right-resizer {
+  z-index: 5 !important;  /* Must be below collapse btn (z-index: 200) */
+}
+
+/* ══════════════════════════════════════════════════════════
+   [B83c-RightPaneSlim] Override the chunky pill resizer from panels.ts
+   addStyle(), the THEME tab redundancy, and bring the right-tabs strip
+   visually closer to the mock. The resizer KEEPS drag functionality —
+   only its visual chrome is slimmed down.
+   ══════════════════════════════════════════════════════════ */
+/* Thin resizer hairline — beats the panels.ts inline addStyle() gradient bar */
+.mf-right-resizer,
+#mf-right-resizer {
+  background: transparent !important;
+  border: none !important;
+  width: 8px !important;
+  left: -4px !important;
+}
+.mf-right-resizer::before,
+#mf-right-resizer::before {
+  content: "" !important;
+  position: absolute !important;
+  left: 3px !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: 1px !important;
+  height: auto !important;
+  border-radius: 0 !important;
+  background: #e4e4e7 !important;
+  box-shadow: none !important;
+  transform: none !important;
+  transition: background 0.15s ease, width 0.15s ease, left 0.15s ease !important;
+}
+.mf-right-resizer:hover::before,
+.mf-resizing-right-panel .mf-right-resizer::before,
+#mf-right-resizer:hover::before {
+  width: 2px !important;
+  background: #6366f1 !important;
+  box-shadow: none !important;
+}
+
+/* [B83c] Hide THEME tab — Build/Design pill in topbar already covers theme mode */
+#mf-tab-link-theme {
+  display: none !important;
+}
+
+/* [B83c] Right-tabs strip — slim, mock-aligned, no heavy icon-box circles */
+.mf-right-tabs {
+  background: #ffffff !important;
+  border-bottom: 1px solid #e4e4e7 !important;
+  padding: 8px 12px !important;
+  gap: 4px !important;
+}
+.mf-right-tab {
+  flex-direction: column !important;
+  padding: 6px 4px !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  font-size: 9px !important;
+  font-weight: 500 !important;
+  color: #64748b !important;
+  letter-spacing: 0.02em !important;
+  text-transform: none !important;
+  min-width: 0 !important;
+  gap: 2px !important;
+}
+.mf-right-tab .mf-tab-icon {
+  width: 18px !important;
+  height: 18px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.mf-right-tab .mf-tab-icon i { font-size: 13px !important; color: #64748b !important; }
+.mf-right-tab .mf-tab-lbl {
+  font-size: 9.5px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: none !important;
+  color: inherit !important;
+}
+.mf-right-tab:hover {
+  background: rgba(241, 245, 249, 0.6) !important;
+  color: #0f172a !important;
+}
+.mf-right-tab:hover .mf-tab-icon i { color: #0f172a !important; }
+.mf-right-tab.active {
+  background: rgba(241, 245, 249, 0.8) !important;
+  color: #0f172a !important;
+  box-shadow: none !important;
+}
+.mf-right-tab.active .mf-tab-icon i { color: #4f46e5 !important; }
+.mf-right-tab.active .mf-tab-lbl { color: #4f46e5 !important; font-weight: 600 !important; }
+
+/* ── CRITICAL: Override overflow:hidden on layout so panel triggers are visible ── */
+.mf-builder-layout {
+  overflow: visible !important;
+}
+/* The layout still needs to contain its height properly */
+.mf-builder-layout > .mf-panel-center {
+  overflow-x: hidden !important;
+  overflow-y: auto !important; /* canvas scrolls internally */
+}
+
+/* ── Hide empty dropzone when Custom HTML Active banner is present ──────────
+   When .mf-custom-html-banner exists, the top empty zone is useless clutter.
+   We hide #mf-empty-state and shrink #mf-canvas-dropzone top padding.      */
+.mf-canvas-dropzone:has(.mf-custom-html-banner) > #mf-empty-state,
+.mf-canvas-dropzone:has(.mf-custom-html-banner) > .mf-dropzone-placeholder {
+  display: none !important;
+}
+.mf-canvas-dropzone:has(.mf-custom-html-banner) {
+  padding-top: 0 !important;
+}
+/* Blank canvas must still be a real Sortable drop target.
+   Keep the hint visible, but overlay it on top of the sortable host instead of
+   consuming layout space. That way users can drop directly into the blank form. */
+.mf-canvas-dropzone {
+  position: relative !important;
+}
+.mf-canvas-dropzone #mf-empty-state {
+  position: absolute !important;
+  inset: 1.5rem !important;
+  z-index: 1 !important;
+  pointer-events: none !important;
+}
+.mf-canvas-dropzone #mf-canvas-fields {
+  position: relative !important;
+  z-index: 2 !important;
+}
+.mf-canvas-dropzone #mf-canvas-fields.mf-canvas-fields-empty {
+  min-height: 220px !important;
+}
+
+/* ── Left panel trigger — ensure clip is not an issue ── */
+.mf-panel-left {
+  position: relative !important;
+  overflow: visible !important;
+  z-index: auto !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   [FlexGridLayoutParity v20260603-B60] Builder canvas FlexGrid
+   must render the SAME layout as the runtime form, otherwise
+   "what you see is what you publish" breaks. Root cause: the
+   runtime media queries in megaform.css at 768-1023px and
+   <768px swap from --lg-* to --md-*/--sm-*. The builder canvas
+   sits inside the center panel, typically ≤1023px wide because
+   left+right side panels eat ~512px from a 1440px screen. So
+   the media queries match and the cells fall back to 1/span 12
+   defaults → vertical stack instead of the designed 2-col row.
+
+   Fix: inside .mf-canvas-flexgrid we ALWAYS read --lg-* so
+   builder shows the ACTIVE breakpoint regardless of canvas
+   pixel width. The runtime form (rendered via the renderer
+   bundle on /xx?formid=N) is NOT affected — it has its own
+   .mf-flexgrid (no .mf-canvas-flexgrid ancestor) so the
+   viewport media queries still apply at runtime.
+
+   The TS-side fix in canvas.ts (renderFlexGridOnCanvas) also
+   mirrors --lg-* to --md-*/--sm-* on each cell for defense in
+   depth — that handles older deployed CSS without this rule.
+   ══════════════════════════════════════════════════════════ */
+.mf-canvas-flexgrid .mf-flexgrid {
+  /* Always render the 12-col grid template regardless of
+     container width. Without this, narrow canvas viewport
+     could degrade to runtime md/sm fallbacks. */
+  display: grid !important;
+  grid-template-columns: repeat(var(--mf-grid-cols, 12), minmax(0, 1fr)) !important;
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .mf-canvas-flexgrid .mf-flexgrid-item {
+    grid-column: var(--lg-x, 1) / span var(--lg-w, 12) !important;
+    grid-row:    var(--lg-y, auto) / span var(--lg-h, 1) !important;
+  }
+}
+@media (max-width: 767px) {
+  .mf-canvas-flexgrid .mf-flexgrid-item {
+    grid-column: var(--lg-x, 1) / span var(--lg-w, 12) !important;
+    grid-row:    var(--lg-y, auto) / span var(--lg-h, 1) !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   THEME SELECTOR — Settings Panel
+   ══════════════════════════════════════════════════════════ */
+.mf-theme-selector-group p {
+  font-size: 0.6875rem !important;
+  color: #71717a !important;
+  line-height: 1.5 !important;
+}
+
+/* 4-column grid of theme swatches */
+.mf-theme-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 0.5rem !important;
+}
+
+/* Individual theme card */
+.mf-theme-card {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 0.3125rem !important;
+  cursor: pointer !important;
+  padding: 0.125rem !important;
+  border-radius: 0.5rem !important;
+  border: 2px solid transparent !important;
+  transition: border-color 0.15s, transform 0.12s !important;
+}
+.mf-theme-card:hover {
+  border-color: #e4e4e7 !important;
+  transform: translateY(-1px) !important;
+}
+.mf-theme-card.active {
+  border-color: #18181b !important;
+}
+
+/* Color swatch circle */
+.mf-theme-swatch {
+  width: 100% !important;
+  aspect-ratio: 1 !important;
+  border-radius: 0.5rem !important;
+  position: relative !important;
+  border: 1px solid rgba(0,0,0,.08) !important;
+  overflow: hidden !important;
+  transition: box-shadow 0.15s !important;
+}
+.mf-theme-card:hover .mf-theme-swatch {
+  box-shadow: 0 3px 10px rgba(0,0,0,.15) !important;
+}
+.mf-theme-card.active .mf-theme-swatch {
+  box-shadow: 0 0 0 2px #18181b, 0 3px 10px rgba(0,0,0,.12) !important;
+}
+
+/* Checkmark for active state */
+.mf-theme-check {
+  position: absolute !important;
+  inset: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  opacity: 0 !important;
+  background: rgba(0,0,0,.35) !important;
+  color: #fff !important;
+  font-size: 0.875rem !important;
+  transition: opacity 0.15s !important;
+}
+.mf-theme-card.active .mf-theme-check {
+  opacity: 1 !important;
+}
+
+/* Theme name label */
+.mf-theme-name {
+  font-size: 0.5625rem !important;
+  font-weight: 500 !important;
+  color: #52525b !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  width: 100% !important;
+}
+.mf-theme-card.active .mf-theme-name {
+  color: #09090b !important;
+  font-weight: 600 !important;
+}
+
+/* Canvas theme preview indicator */
+.mf-canvas-dropzone[data-theme]::before {
+  content: 'Theme: ' attr(data-theme) !important;
+  display: block !important;
+  margin-bottom: 0.5rem !important;
+  padding: 0.25rem 0.625rem !important;
+  background: #f0fdf4 !important;
+  border: 1px solid #bbf7d0 !important;
+  border-radius: 0.375rem !important;
+  font-size: 0.6875rem !important;
+  font-weight: 600 !important;
+  color: #166534 !important;
+}
+
+
+/* ── Back button override for w-back-labeled (injected by dom.ts) ────────────
+   megaform-builder-shell.css sets .w-back { width:2rem } which clips the
+   labeled "← Dashboard" variant. Override here so it auto-sizes.           */
+.w-back.w-back-labeled {
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: 120px !important;
+  padding: 6px 12px !important;
+  border-radius: 8px !important;
+  background: #6366f1 !important;
+  color: #fff !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  transition: background 0.15s, box-shadow 0.15s !important;
+}
+.w-back.w-back-labeled:hover {
+  background: #4f46e5 !important;
+  box-shadow: 0 4px 12px rgba(99,102,241,.4) !important;
+  color: #fff !important;
+}
+.w-back.w-back-labeled i { font-size: 0.75rem !important; }
+.w-back-lbl {
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+/* Ensure w-left doesn't overflow and clip the back button */
+.w-left {
+  overflow: visible !important;
+  flex-shrink: 0 !important;
+}
+
+/* ── Payment palette item — icon-only brand badges ──────────────────────────
+   Replaces the old inline-style text badges ("S Stripe", "P PayPal") which
+   overflowed the 2-column palette card. Now shows only the brand icons,
+   sized and colored to match the dark panel.                                */
+.mf-pi-badges {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  margin-top: 2px !important;
+}
+.mf-pi-b-stripe {
+  font-size: 1rem !important;
+  color: #a3b8f0 !important;
+  background: rgba(99,102,241,.25) !important;
+  border-radius: 6px !important;
+  padding: 3px 6px !important;
+  line-height: 1 !important;
+}
+.mf-pi-b-paypal {
+  font-size: 1rem !important;
+  color: #fbbf24 !important;
+  background: rgba(251,191,36,.18) !important;
+  border-radius: 6px !important;
+  padding: 3px 6px !important;
+  line-height: 1 !important;
+}
+/* Override mf-palette-item flex layout for payment item to stack vertically */
+.mf-palette-item-payment {
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+.mf-palette-item-payment .mf-pi-label {
+  margin-bottom: 0 !important;
+}
+
+
+/* Payment widget settings refresh v20260404-03 */
+.mfw-paycfg { gap: 10px; }
+.mfw-paycfg-head { display:grid; gap:4px; padding:10px 12px; border:1px solid #e6ebf5; border-radius:12px; background:#fff; }
+.mfw-paycfg-head--simple { padding-bottom:8px; }
+.mfw-paycfg-title-row { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.mfw-paycfg-title { font-size:13px; font-weight:800; color:#0f172a; letter-spacing:.01em; }
+.mfw-paycfg-subtitle { font-size:11px; color:#64748b; line-height:1.4; }
+.mfw-paycfg-badge { display:inline-flex; align-items:center; min-height:22px; padding:0 9px; border-radius:999px; border:1px solid #c7d2fe; background:#eef2ff; color:#4f46e5; font-size:10px; font-weight:800; white-space:nowrap; }
+.mfw-paycfg-tabs { display:flex; gap:6px; flex-wrap:wrap; }
+.mfw-paycfg-tab { min-height:30px; padding:0 11px; border:1px solid #dbe4f0; border-radius:999px; background:#fff; color:#475569; font-size:12px; font-weight:700; cursor:pointer; transition:all .18s ease; }
+.mfw-paycfg-tab:hover { border-color:#a5b4fc; color:#3730a3; background:#f8faff; }
+.mfw-paycfg-tab.is-active { border-color:#6366f1; background:#4f46e5; color:#fff; box-shadow:none; }
+.mfw-paycfg-pane { display:grid; gap:10px; }
+.mfw-paycfg-card { display:grid; gap:8px; padding:12px; border:1px solid #e6ebf5; border-radius:12px; background:#fff; box-shadow:none; }
+.mfw-paycfg-card--compact { gap:6px; }
+.mfw-paycfg-help { font-size:11px; line-height:1.45; color:#64748b; margin-top:-2px; }
+.mfw-paycfg .mfw-prop-row { align-items:flex-start; gap:8px; padding:5px 0; }
+.mfw-paycfg .mfw-prop-row.mfw-prop-col { gap:6px; }
+.mfw-paycfg .mfw-prop-label { min-width:108px; padding-top:7px; color:#475569; font-weight:700; font-size:12px; }
+.mfw-paycfg .mfw-prop-row input[type=text],
+.mfw-paycfg .mfw-prop-row input[type=number],
+.mfw-paycfg .mfw-prop-row input[type=color],
+.mfw-paycfg .mfw-prop-row select,
+.mfw-paycfg .mfw-prop-row textarea { min-height:36px; border:1px solid #d7dfeb; border-radius:10px; padding:7px 10px; font-size:12px; background:#fbfdff; }
+.mfw-paycfg .mfw-prop-row textarea { min-height:82px; resize:vertical; }
+.mfw-paycfg .mfw-prop-row input[type=color] { padding:4px 6px; }
+.mfw-paycfg .mfw-prop-row input:focus,
+.mfw-paycfg .mfw-prop-row select:focus,
+.mfw-paycfg .mfw-prop-row textarea:focus { outline:none; border-color:#818cf8; box-shadow:0 0 0 3px rgba(99,102,241,.12); background:#fff; }
+.mfw-paycfg .mfw-prop-toggle { padding:6px 0; font-size:12px; font-weight:700; color:#334155; }
+.mfw-paycfg .mfw-prop-toggle input[type=checkbox] { accent-color:#4f46e5; }
+
+/* ══════════════════════════════════════════════════════════
+   [ThemeLeftRail B60 2026-06-03] Left rail — LIGHT theme
+   Matches the right Theme Designer panel: white bg, dark
+   slate text (#0f172a), light gray dividers (#e4e4e7),
+   indigo (#6366f1) for primary actions + active underline.
+   Headings 11px uppercase #64748b, hover rows #f8fafc.
+   ══════════════════════════════════════════════════════════ */
+
+/* Utility tabs (IMAGES / FONTS / INSPECT / STRUCTURE) — light pill row */
+.mf-theme-nav-tabs {
+  display: flex !important;
+  gap: 0.125rem !important;
+  padding: 0.5rem 0.625rem 0 !important;
+  background: #f8fafc !important;
+  border-bottom: 1px solid #e4e4e7 !important;
+}
+.mf-theme-nav-tabs .mf-tlr-tab {
+  flex: 1 !important;
+  padding: 0.375rem 0.25rem !important;
+  text-align: center !important;
+  font-size: 0.625rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em !important;
+  color: #64748b !important;
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 2px solid transparent !important;
+  border-radius: 0.375rem 0.375rem 0 0 !important;
+  cursor: pointer !important;
+  transition: all 0.12s !important;
+  text-transform: uppercase !important;
+}
+.mf-theme-nav-tabs .mf-tlr-tab:hover {
+  color: #0f172a !important;
+  background: #ffffff !important;
+}
+.mf-theme-nav-tabs .mf-tlr-tab.active,
+.mf-theme-nav-tabs .mf-tlr-tab[aria-selected="true"] {
+  color: #6366f1 !important;
+  background: #ffffff !important;
+  font-weight: 700 !important;
+  border-bottom-color: #6366f1 !important;
+  box-shadow: none !important;
+}
+
+/* Pane container — sits inside white .mf-panel-body */
+.mf-theme-pane {
+  padding: 0.625rem 0.5rem !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  min-height: 400px !important;
+  font-size: 0.75rem !important;
+}
+
+/* Section heading — 11px uppercase #64748b */
+.mf-tlr-section { padding: 0.25rem 0 0.5rem; }
+.mf-tlr-section-hd {
+  font-size: 0.6875rem !important;  /* 11px */
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  color: #64748b !important;
+  margin: 0 0 0.375rem !important;
+  padding: 0.5rem 0 0.375rem !important;
+  border-bottom: 1px solid #e4e4e7 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+.mf-tlr-section-sub {
+  font-size: 0.6875rem !important;
+  color: #94a3b8 !important;
+  margin-bottom: 0.5rem !important;
+  line-height: 1.4 !important;
+}
+.mf-tlr-count {
+  background: #eef2ff !important;
+  color: #4338ca !important;
+  padding: 1px 6px !important;
+  border-radius: 9999px !important;
+  font-size: 0.625rem !important;
+  font-weight: 700 !important;
+  margin-left: 6px !important;
+  border: 1px solid #c7d2fe !important;
+}
+
+/* Preset grid — 2 columns of light cards */
+.mf-tlr-preset-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.5rem !important;
+  margin-top: 0.375rem !important;
+  padding: 0 0.125rem !important;
+}
+.mf-tlr-preset {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.375rem !important;
+  align-items: stretch !important;
+  padding: 0.5rem 0.5rem 0.625rem !important;
+  border-radius: 0.625rem !important;
+  border: 1px solid #e4e4e7 !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  text-align: center !important;
+  box-shadow: 0 1px 2px rgba(15,23,42,.04) !important;
+}
+.mf-tlr-preset:hover {
+  border-color: #6366f1 !important;
+  background: #eef2ff !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(99,102,241,.18) !important;
+}
+.mf-tlr-preset.active,
+.mf-tlr-preset[aria-selected="true"] {
+  border-color: #6366f1 !important;
+  background: #eef2ff !important;
+  box-shadow: 0 2px 8px rgba(99,102,241,.25) !important;
+}
+.mf-tlr-preset-swatches {
+  display: flex !important;
+  gap: 2px !important;
+  height: 32px !important;
+  border-radius: 0.25rem !important;
+  overflow: hidden !important;
+  border: 1px solid #e4e4e7 !important;
+}
+.mf-tlr-preset-swatches > span {
+  flex: 1 !important;
+  height: 100% !important;
+  display: block !important;
+}
+.mf-tlr-preset-name {
+  font-size: 0.6875rem !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
+  text-shadow: none !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Element accordion */
+.mf-tlr-elem-group {
+  background: #ffffff !important;
+  border: 1px solid #e4e4e7 !important;
+  border-radius: 0.5rem !important;
+  margin-bottom: 0.375rem !important;
+  overflow: hidden !important;
+}
+.mf-tlr-elem-hd {
+  width: 100% !important;
+  padding: 0.5rem 0.625rem !important;
+  font-size: 0.6875rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  cursor: pointer !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  background: #f8fafc !important;
+  color: #475569 !important;
+  border: none !important;
+  transition: all 0.15s !important;
+}
+.mf-tlr-elem-hd:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+.mf-tlr-elem-hd.open,
+.mf-tlr-elem-group.expanded .mf-tlr-elem-hd { color: #0f172a !important; background: #ffffff !important; }
+.mf-tlr-elem-chevron {
+  font-size: 0.625rem !important;
+  transition: transform 0.2s ease !important;
+  opacity: 0.7 !important;
+  color: #64748b !important;
+}
+.mf-tlr-elem-group.expanded .mf-tlr-elem-chevron,
+.mf-tlr-elem-hd.open .mf-tlr-elem-chevron { transform: rotate(90deg) !important; }
+.mf-tlr-elem-items {
+  padding: 0.25rem 0 !important;
+  background: #ffffff !important;
+  display: none !important;
+}
+.mf-tlr-elem-group.expanded .mf-tlr-elem-items,
+.mf-tlr-elem-hd.open + .mf-tlr-elem-items { display: block !important; }
+.mf-tlr-elem-item {
+  width: 100% !important;
+  padding: 0.5rem 0.625rem !important;
+  font-size: 0.75rem !important;
+  color: #334155 !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 0.375rem !important;
+  transition: all 0.15s ease !important;
+  text-align: left !important;
+}
+.mf-tlr-elem-item:hover {
+  color: #0f172a !important;
+  background: #f8fafc !important;
+  border-color: #e4e4e7 !important;
+}
+.mf-tlr-elem-item.active {
+  background: #eef2ff !important;
+  border-color: #c7d2fe !important;
+  color: #4338ca !important;
+}
+.mf-tlr-elem-icon {
+  width: 1.5rem !important;
+  text-align: center !important;
+  color: #94a3b8 !important;
+  flex-shrink: 0 !important;
+}
+.mf-tlr-elem-name { flex: 1 !important; }
+.mf-tlr-elem-arrow {
+  margin-left: auto !important;
+  opacity: 0.6 !important;
+  font-size: 0.625rem !important;
+  color: #94a3b8 !important;
+}
+
+/* Swatch grid (COLORS sub-tab) */
+.mf-tlr-swatch-grid {
+  display: grid !important;
+  grid-template-columns: repeat(6, 1fr) !important;
+  gap: 0.375rem !important;
+  padding: 0.5rem 0 !important;
+}
+.mf-tlr-swatch {
+  width: 100% !important;
+  aspect-ratio: 1 !important;
+  border-radius: 0.375rem !important;
+  border: 2px solid #e4e4e7 !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  transition: all 0.15s ease-in-out !important;
+  display: block !important;
+  box-shadow: 0 1px 2px rgba(15,23,42,.06) !important;
+}
+.mf-tlr-swatch:hover {
+  transform: scale(1.1) !important;
+  border-color: #cbd5e1 !important;
+}
+.mf-tlr-swatch.active {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 2px rgba(99,102,241,.25), 0 2px 6px rgba(15,23,42,.1) !important;
+}
+
+/* Anchor button — primary indigo CTA */
+.mf-tlr-anchor { margin-top: 0.75rem; }
+.mf-tlr-anchor-btn {
+  width: 100% !important;
+  padding: 0.5rem 0.75rem !important;
+  background: #6366f1 !important;
+  color: #ffffff !important;
+  border: 1px solid #6366f1 !important;
+  border-radius: 0.375rem !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  box-shadow: 0 1px 3px rgba(99,102,241,.25) !important;
+}
+.mf-tlr-anchor-btn:hover {
+  background: #4f46e5 !important;
+  border-color: #4f46e5 !important;
+  box-shadow: 0 2px 8px rgba(99,102,241,.3) !important;
+}
+
+/* Structure tree */
+.mf-tlr-structure-tree {
+  font-size: 0.75rem !important;
+  color: #0f172a !important;
+  background: #f8fafc !important;
+  padding: 0.5rem !important;
+  border-radius: 0.5rem !important;
+  border: 1px solid #e4e4e7 !important;
+  max-height: 400px !important;
+  overflow-y: auto !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: #cbd5e1 transparent !important;
+}
+.mf-tlr-structure-css {
+  margin-top: 0.5rem !important;
+  padding: 0.5rem !important;
+  background: #f8fafc !important;
+  border: 1px solid #e4e4e7 !important;
+  border-radius: 0.375rem !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
+  font-size: 0.6875rem !important;
+  color: #475569 !important;
+  max-height: 200px !important;
+  overflow: auto !important;
+}
+
+/* Empty state */
+.mf-tlr-empty {
+  text-align: center !important;
+  padding: 1.5rem 0.625rem !important;
+  color: #94a3b8 !important;
+  font-size: 0.75rem !important;
+  font-style: italic !important;
+  background: #f8fafc !important;
+  border: 1px dashed #e4e4e7 !important;
+  border-radius: 0.5rem !important;
+}
+
+/* ───────────────────────────────────────────────────────────
+   [ThemeLeftRail B60] Extended helper classes
+   ─────────────────────────────────────────────────────────── */
+
+/* Generic button — white with light gray border (utility actions) */
+.mf-tlr-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.375rem !important;
+  padding: 0.375rem 0.625rem !important;
+  background: #ffffff !important;
+  color: #334155 !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 0.375rem !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.12s ease !important;
+  text-decoration: none !important;
+}
+.mf-tlr-btn:hover {
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+}
+.mf-tlr-btn:active { background: #f1f5f9 !important; }
+.mf-tlr-btn:disabled,
+.mf-tlr-btn[disabled] {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+}
+
+/* Primary button — indigo for the headline action in each pane */
+.mf-tlr-btn-primary {
+  background: #6366f1 !important;
+  color: #ffffff !important;
+  border-color: #6366f1 !important;
+  box-shadow: 0 1px 3px rgba(99,102,241,.25) !important;
+}
+.mf-tlr-btn-primary:hover {
+  background: #4f46e5 !important;
+  border-color: #4f46e5 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(99,102,241,.3) !important;
+}
+
+/* Font tile (FONTS sub-tab) — white card, active uses indigo */
+.mf-tlr-font-tile {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.25rem !important;
+  padding: 0.5rem 0.625rem !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.5rem !important;
+  color: #0f172a !important;
+  cursor: pointer !important;
+  text-align: left !important;
+  transition: all 0.15s ease !important;
+}
+.mf-tlr-font-tile:hover {
+  border-color: #cbd5e1 !important;
+  background: #f8fafc !important;
+}
+.mf-tlr-font-tile.active {
+  border-color: #6366f1 !important;
+  background: #eef2ff !important;
+  box-shadow: 0 0 0 2px rgba(99,102,241,.12) !important;
+}
+.mf-tlr-font-tile-name {
+  font-size: 0.6875rem !important;
+  font-weight: 700 !important;
+  color: #475569 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+}
+.mf-tlr-font-tile-preview {
+  font-size: 0.875rem !important;
+  color: #0f172a !important;
+}
+
+/* Breadcrumb chip row (INSPECT pane — DOM path trail) */
+.mf-tlr-breadcrumb {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 0.25rem !important;
+  padding: 0.375rem 0 !important;
+  margin: 0 0 0.5rem !important;
+  border-bottom: 1px solid #e4e4e7 !important;
+}
+.mf-tlr-crumb {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.25rem !important;
+  padding: 2px 8px !important;
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border: 1px solid #bfdbfe !important;
+  border-radius: 9999px !important;
+  font-size: 0.6875rem !important;
+  font-weight: 600 !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  transition: all 0.12s ease !important;
+}
+.mf-tlr-crumb:hover {
+  background: #dbeafe !important;
+  border-color: #93c5fd !important;
+  color: #1e40af !important;
+}
+.mf-tlr-crumb.active,
+.mf-tlr-crumb[aria-current="true"] {
+  background: #6366f1 !important;
+  color: #ffffff !important;
+  border-color: #6366f1 !important;
+}
+.mf-tlr-crumb-sep {
+  color: #94a3b8 !important;
+  font-size: 0.625rem !important;
+  font-weight: 700 !important;
+  padding: 0 0.125rem !important;
+}
+
+/* Inspector styles list (INSPECT pane — DOM rule rows) */
+.mf-tlr-inspect-styles {
+  margin-top: 0.5rem !important;
+  background: #ffffff !important;
+  border: 1px solid #e4e4e7 !important;
+  border-radius: 0.5rem !important;
+  overflow: hidden !important;
+}
+.mf-tlr-inspect-styles-hd {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0.375rem 0.625rem !important;
+  background: #f8fafc !important;
+  border-bottom: 1px solid #e4e4e7 !important;
+  font-size: 0.625rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  color: #64748b !important;
+}
+
+/* Style key/value rows — 11.5px monospace key + right-aligned value */
+.mf-tlr-style-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.5rem !important;
+  padding: 0.3125rem 0.625rem !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
+  font-size: 0.71875rem !important;  /* 11.5px */
+  line-height: 1.45 !important;
+  transition: background 0.1s ease !important;
+  cursor: pointer !important;
+}
+.mf-tlr-style-row:last-child { border-bottom: 0 !important; }
+.mf-tlr-style-row:hover { background: #f8fafc !important; }
+.mf-tlr-style-row.editing { background: #eef2ff !important; }
+.mf-tlr-style-key {
+  color: #475569 !important;
+  font-weight: 600 !important;
+  flex: 0 0 auto !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 55% !important;
+}
+.mf-tlr-style-val {
+  color: #0f172a !important;
+  text-align: right !important;
+  flex: 1 1 auto !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  min-width: 0 !important;
+}
+.mf-tlr-style-input {
+  width: 100% !important;
+  padding: 2px 6px !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  color: #0f172a !important;
+  background: #ffffff !important;
+  border: 1px solid #6366f1 !important;
+  border-radius: 0.25rem !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,.15) !important;
+  text-align: right !important;
+}
+
+/* Fill panel width inside #mf-palette-panel */
+#mf-palette-panel .mf-theme-nav-tabs,
+#mf-palette-panel .mf-theme-pane {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Fill panel width inside #mf-palette-panel */
+#mf-palette-panel .mf-theme-nav-tabs,
+#mf-palette-panel .mf-theme-pane {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* =========================================================
+ * [ThemeTab CustomCSS v20260602-B49] Code-editor textarea
+ * Used by the Theme tab's 5th sub-tab "Custom" for raw CSS /
+ * HTML editing (mf-theme-custom-css, mf-theme-custom-html).
+ * Dark monokai-style chrome to signal "code".
+ * ========================================================= */
+.td-textarea-code {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 12px;
+  background: #1e293b;
+  color: #e2e8f0;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  resize: vertical;
+  min-height: 200px;
+  tab-size: 2;
+  -moz-tab-size: 2;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: auto;
+}
+.td-textarea-code::placeholder {
+  color: #64748b;
+  opacity: 1;
+}
+.td-textarea-code:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   [B59-SettingsEvoq] Settings tab — GENERAL checkbox grid + Evoq sub-cards
+   ───────────────────────────────────────────────────────────── */
+
+/* 2-column grid for compact checkbox layouts (GENERAL section, Submission Details card) */
+.mf-checkbox-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 16px;
+  margin-bottom: 4px;
+}
+.mf-checkbox-grid .form-check {
+  margin-bottom: 0 !important;
+  padding: 4px 0 !important;
+  min-width: 0;
+}
+.mf-checkbox-grid .form-check-label {
+  white-space: normal !important;
+  font-size: 0.78rem !important;
+  line-height: 1.35 !important;
+  cursor: pointer;
+}
+@media (max-width: 460px) {
+  .mf-checkbox-grid { grid-template-columns: 1fr; }
+}
+
+/* Evoq-style After-Submit intro text */
+.mf-evoq-group .mf-evoq-intro {
+  font-size: 11.5px !important;
+  color: #64748b !important;
+  margin: 0 0 12px !important;
+  line-height: 1.5 !important;
+}
+
+/* Experience Mode select sits ABOVE all sub-cards as a master switch */
+.mf-evoq-mode-row {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 14px !important;
+}
+.mf-evoq-mode-row label {
+  font-weight: 600 !important;
+  color: #475569 !important;
+  margin-bottom: 4px !important;
+}
+
+/* Evoq-style sub-card (one per logical section: Confirmation / Details / Redirect) */
+.mf-evoq-card {
+  border: 1px solid #e4e4e7;
+  border-radius: 10px;
+  background: #ffffff;
+  margin-bottom: 14px;
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.mf-evoq-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+.mf-evoq-card:last-child { margin-bottom: 0; }
+
+.mf-evoq-card-head {
+  padding: 12px 14px 8px;
+  border-bottom: 1px solid #f1f5f9;
+  background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
+}
+.mf-evoq-card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+}
+.mf-evoq-card-desc {
+  font-size: 11.5px;
+  color: #64748b;
+  line-height: 1.45;
+}
+.mf-evoq-card-body {
+  padding: 12px 14px 10px;
+}
+.mf-evoq-card-body .form-group {
+  margin-bottom: 10px !important;
+}
+.mf-evoq-card-body .form-group:last-child {
+  margin-bottom: 0 !important;
+}
+.mf-evoq-card-body label {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  margin-bottom: 4px !important;
+}
+
+/* Token chip list inside Confirmation Message card */
+.mf-evoq-token-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+  padding: 8px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 6px;
+  min-height: 8px;
+}
+.mf-evoq-token-list:empty::before {
+  content: 'Tokens load here once the form has fields.';
+  font-size: 10.5px;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+/* 2-col grid for short text inputs (label fields) inside Submission Details card */
+.mf-evoq-input-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 10px;
+  margin-top: 8px;
+}
+.mf-evoq-input-grid .form-group {
+  margin-bottom: 0 !important;
+}
+@media (max-width: 460px) {
+  .mf-evoq-input-grid { grid-template-columns: 1fr; }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   [B65d Design Studio launcher + popup modal]
+   ───────────────────────────────────────────────────────────── */
+#mf-tab-link-settings,
+#mf-tab-link-html { display: none !important; }
+
+.mf-design-launcher { padding: 14px 12px 8px; }
+.mf-design-launcher-hd {
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: #475569; margin-bottom: 10px;
+}
+.mf-design-card {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 14px; margin-bottom: 10px; background: #ffffff;
+  border: 1px solid #e4e4e7; border-radius: 10px; text-align: left;
+  cursor: pointer; transition: all 0.15s ease; color: #0f172a;
+}
+.mf-design-card:hover {
+  border-color: #6366f1; background: #f5f3ff; transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(99,102,241,0.12);
+}
+.mf-design-card > i:first-child {
+  font-size: 18px; color: #6366f1; flex-shrink: 0;
+  width: 32px; height: 32px; display: flex; align-items: center;
+  justify-content: center; background: #eef2ff; border-radius: 8px;
+}
+.mf-design-card-body { flex: 1; min-width: 0; }
+.mf-design-card-title { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 3px; }
+.mf-design-card-desc { font-size: 11.5px; color: #64748b; line-height: 1.4; }
+.mf-design-card-arrow { color: #94a3b8; font-size: 11px; flex-shrink: 0; }
+.mf-design-card:hover .mf-design-card-arrow { color: #6366f1; }
+
+.mf-design-modal-backdrop {
+  position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45);
+  z-index: 9998; display: flex; align-items: center; justify-content: center;
+  padding: 32px 16px; backdrop-filter: blur(2px);
+}
+.mf-design-modal {
+  background: #ffffff; border-radius: 12px; width: 100%; max-width: 720px;
+  max-height: calc(100vh - 64px); display: flex; flex-direction: column;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25); overflow: hidden;
+}
+.mf-design-modal-head {
+  display: flex; align-items: center; gap: 10px; padding: 14px 18px;
+  border-bottom: 1px solid #e4e4e7;
+  background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
+  flex-shrink: 0;
+}
+.mf-design-modal-title { flex: 1; font-size: 15px; font-weight: 700; color: #0f172a; }
+.mf-design-modal-close {
+  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  background: transparent; border: 1px solid transparent; border-radius: 6px;
+  color: #64748b; cursor: pointer; font-size: 14px;
+}
+.mf-design-modal-close:hover { background: #f1f5f9; border-color: #e4e4e7; color: #0f172a; }
+.mf-design-modal-body { flex: 1; overflow-y: auto; padding: 16px 18px; background: #ffffff; }
+.mf-design-modal-body .mf-right-tab-content { display: block !important; padding: 0; }
+.mf-design-modal-body .mf-settings-scroll { max-height: none !important; overflow: visible !important; }
+
+/* [B65o] Design Studio accordion */
+.mf-design-accordion { padding: 12px 10px 8px; }
+.mf-design-acc-item { margin-bottom: 8px; border: 1px solid #e4e4e7; border-radius: 10px; background: #ffffff; overflow: hidden; transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+.mf-design-acc-item:hover { border-color: #c7d2fe; }
+.mf-design-acc-item.expanded { border-color: #6366f1; box-shadow: 0 6px 16px rgba(99, 102, 241, 0.10); }
+.mf-design-acc-head { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; background: transparent; border: 0; text-align: left; cursor: pointer; color: #0f172a; transition: background 0.12s ease; }
+.mf-design-acc-head:hover { background: #f5f3ff; }
+.mf-design-acc-item.expanded .mf-design-acc-head { background: linear-gradient(180deg, #f5f3ff 0%, #ffffff 100%); border-bottom: 1px solid #e0e7ff; }
+.mf-design-acc-head > i:first-child { font-size: 16px; color: #6366f1; flex-shrink: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: #eef2ff; border-radius: 8px; }
+.mf-design-acc-head .mf-design-card-arrow { transition: transform 0.2s ease; }
+.mf-design-acc-item.expanded .mf-design-acc-head .mf-design-card-arrow { transform: rotate(180deg); }
+.mf-design-acc-body { display: none; padding: 12px 14px 14px; background: #ffffff; }
+.mf-design-acc-item.expanded > .mf-design-acc-body { display: block; }
+.mf-design-acc-body .mf-right-tab-content { display: block !important; padding: 0; }
+.mf-design-acc-body .mf-settings-scroll { max-height: none !important; overflow: visible !important; }
+.mf-design-acc-body #mf-no-field-selected { padding: 12px 0; }
+
+/* [B65p+B65q] Help tip — moved LEFT of icon so it doesn't cover the input below */
+.mf-help-tip { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; margin-left: 6px; border-radius: 50%; background: #e2e8f0; color: #64748b; font-size: 9px; cursor: help; vertical-align: middle; position: relative; }
+.mf-help-tip:hover { background: #6366f1; color: #ffffff; }
+.mf-help-tip[data-tip]:hover::after { content: attr(data-tip); position: absolute; right: calc(100% + 8px); top: 50%; transform: translateY(-50%); padding: 5px 8px; background: #0f172a; color: #ffffff; font-size: 10.5px; line-height: 1.35; white-space: normal; width: 200px; max-width: 220px; border-radius: 4px; z-index: 100; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18); pointer-events: none; text-align: left; font-weight: 400; }
+.mf-help-tip[data-tip]:hover::before { content: ''; position: absolute; right: 100%; top: 50%; transform: translateY(-50%); margin-right: 3px; border: 4px solid transparent; border-left-color: #0f172a; z-index: 101; pointer-events: none; }
+
+/* [B65e Evoq toggle + HTML editor] */
+.mf-evoq-card-head-toggle { display: flex; align-items: flex-start; gap: 12px; }
+.mf-evoq-card-head-text { flex: 1; min-width: 0; }
+/* [B66] iOS-style clean toggle — no ON/OFF text label, just the pill */
+.mf-evoq-toggle { display: inline-flex; align-items: center; cursor: pointer; user-select: none; margin: 0; flex-shrink: 0; }
+.mf-evoq-toggle-input { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
+.mf-evoq-toggle-track {
+  position: relative; display: inline-block; width: 38px; height: 22px;
+  background: #cbd5e1; border-radius: 999px; transition: background 0.2s ease;
+}
+.mf-evoq-toggle-thumb {
+  position: absolute; top: 2px; left: 2px; width: 18px; height: 18px;
+  background: #ffffff; border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25); transition: left 0.2s ease;
+}
+.mf-evoq-toggle-input:checked + .mf-evoq-toggle-track { background: #6366f1; }
+.mf-evoq-toggle-input:checked + .mf-evoq-toggle-track .mf-evoq-toggle-thumb { left: 18px; }
+.mf-evoq-toggle:hover .mf-evoq-toggle-track { box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.10); }
+.mf-evoq-toggle-input:focus-visible + .mf-evoq-toggle-track { box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.30); }
+/* legacy label kept for back-compat with any older markup — hide if present */
+.mf-evoq-toggle-label { display: none !important; }
+.mf-evoq-card.is-off > .mf-evoq-card-body { display: none; }
+.mf-evoq-card.is-off > .mf-evoq-card-head { opacity: 0.62; background: #fafbfc; }
+
+.mf-html-editor { border: 1px solid #e2e8f0; border-radius: 6px; background: #ffffff; overflow: hidden; }
+.mf-html-editor:focus-within { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12); }
+.mf-html-editor-toolbar {
+  display: flex; flex-wrap: wrap; gap: 2px; padding: 4px 6px;
+  background: #f8fafc; border-bottom: 1px solid #e2e8f0;
+}
+.mf-html-editor-toolbar button {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 26px; background: transparent;
+  border: 1px solid transparent; border-radius: 4px;
+  color: #475569; cursor: pointer; font-size: 11.5px;
+}
+.mf-html-editor-toolbar button:hover { background: #ffffff; border-color: #cbd5e1; color: #0f172a; }
+.mf-html-editor-toolbar button.active { background: #eef2ff; border-color: #c7d2fe; color: #4338ca; }
+.mf-html-editor-sep { width: 1px; height: 18px; margin: 0 4px; background: #e2e8f0; align-self: center; }
+.mf-html-editor-area {
+  min-height: 100px; max-height: 260px; overflow-y: auto;
+  padding: 10px 12px; font-size: 12.5px; line-height: 1.55;
+  color: #0f172a; outline: none;
+}
+.mf-html-editor-area:empty::before { content: attr(data-placeholder); color: #94a3b8; pointer-events: none; }
+.mf-html-editor-area p { margin: 0 0 6px; }
+.mf-html-editor-area h3 { font-size: 14px; font-weight: 700; margin: 6px 0; color: #0f172a; }
+.mf-html-editor-area ul, .mf-html-editor-area ol { margin: 4px 0 6px 18px; }
+.mf-html-editor-area a { color: #4f46e5; text-decoration: underline; }
+
+/* [B65r] Terms & Privacy widget */
+.mfw-terms-privacy { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; }
+.mfw-tp-row { display: flex; align-items: flex-start; gap: 9px; cursor: pointer; margin: 0; line-height: 1.45; font-size: 13px; color: #0f172a; }
+.mfw-tp-row input[type="checkbox"] { margin: 3px 0 0; flex-shrink: 0; width: 16px; height: 16px; accent-color: var(--mf-primary, #4f46e5); }
+.mfw-tp-row-optional { color: #475569; font-size: 12.5px; }
+.mfw-tp-label { flex: 1; }
+.mfw-tp-link { color: var(--mf-primary, #4f46e5); text-decoration: underline; font-weight: 500; }
+.mfw-tp-link:hover { text-decoration: none; }
+.mfw-tp-link-disabled { color: #64748b; text-decoration: none; cursor: default; }
+.mfw-tp-sep { color: #64748b; }
+.mfw-tp-req { color: #dc2626; font-weight: 700; margin-left: 2px; }
+.mfw-tp-error { padding: 6px 10px; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 6px; color: #b91c1c; font-size: 12px; }
+
+/* [B65z-2] QR Code settings panel — tidy 2-column grid */
+.mfw-qr-settings { display: flex; flex-direction: column; gap: 6px; padding: 4px 2px 2px; }
+.mfw-qr-settings .mfw-prop-row {
+  display: grid !important;
+  grid-template-columns: 110px 1fr !important;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+  font-size: 12px;
+}
+.mfw-qr-settings .mfw-prop-label {
+  color: #475569 !important;
+  font-weight: 600 !important;
+  font-size: 10.5px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  min-width: 0 !important;
+}
+.mfw-qr-settings .mfw-prop-row input[type=text],
+.mfw-qr-settings .mfw-prop-row input[type=number],
+.mfw-qr-settings .mfw-prop-row select { width: 100% !important; height: 30px; }
+.mfw-qr-settings .mfw-prop-check {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 0; font-size: 12px; color: #334155;
+  margin: 0;
+}
+.mfw-qr-settings .mfw-qr-logo-row {
+  grid-template-columns: 1fr !important;
+  gap: 6px !important;
+  padding: 10px !important;
+  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;
+}
+.mfw-qr-settings .mfw-qr-logo-row > .mfw-prop-label { margin-bottom: 2px; }
+.mfw-qr-settings .mfw-qr-logo-actions { display: flex; gap: 6px; }
+.mfw-qr-settings .mfw-qr-logo-actions button {
+  padding: 5px 10px; font-size: 11.5px;
+  background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px;
+  color: #334155; cursor: pointer;
+}
+.mfw-qr-settings .mfw-qr-logo-actions button:hover { background: #eef2ff; border-color: #818cf8; color: #4338ca; }
+.mfw-qr-settings .mfw-qr-logo-preview {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 44px; padding: 6px;
+  background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 4px;
+}
+.mfw-qr-settings .mfw-qr-logo-preview img { max-width: 48px; max-height: 48px; }
+.mfw-qr-settings .mfw-qr-logo-preview span { color: #94a3b8; font-size: 11px; }
+
+/* [B95] Build mode left tabs and center canvas mock parity */
+body[data-mf-mode="build"] {
+  /* [2026-06-10] do NOT pin --mf-right-panel-width here — it would shadow the
+     value the resize handler sets on <html>, making the inspector unresizable. */
+  --mf-right-panel-expanded-width: 320px;
+}
+body[data-mf-mode="build"] .mf-builder-layout {
+  height: calc(100vh - var(--topbar, 56px)) !important;
+  min-height: 0 !important;
+  border: 0 !important;
+  background: #ffffff !important;
+  overflow: hidden !important;
+}
+body[data-mf-mode="build"] .mf-panel-left {
+  width: 256px !important;
+  min-width: 256px !important;
+  max-width: 256px !important;
+  height: calc(100vh - var(--topbar, 56px)) !important;
+  background: #ffffff !important;
+  border-right: 1px solid #e4e4e7 !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+/* [CanvasExpandFix] When left panel is collapsed, force zero width so center
+   canvas expands to fill the freed space. The build-mode width rule above
+   otherwise overrides .mf-collapsed because it has higher specificity. */
+body[data-mf-mode="build"] .mf-panel-left.mf-collapsed {
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  border-right-width: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+}
+body[data-mf-mode="build"] .mf-panel-left .mf-panel-header {
+  padding: 0 !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid #e4e4e7 !important;
+}
+body[data-mf-mode="build"] .mf-panel-left .mf-panel-header-top,
+body[data-mf-mode="build"] .mf-panel-left .mf-elements-title {
+  display: none !important;
+}
+body[data-mf-mode="build"] .mf-panel-left .mf-palette-tabs {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  align-items: center !important;
+  width: auto !important;
+  height: 36px !important;
+  margin: 12px !important;
+  padding: 4px !important;
+  box-sizing: border-box !important;
+  gap: 0 !important;
+  background: rgba(244, 244, 245, 0.5) !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+body[data-mf-mode="build"] .mf-panel-left .mf-palette-tabs::after {
+  display: none !important;
+}
+body[data-mf-mode="build"] .mf-panel-left .mf-ptab {
+  appearance: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 28px !important;
+  padding: 0 8px !important;
+  border: 0 !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #71717a !important;
+  font: 500 12px/16px Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  letter-spacing: 0 !important;
+  text-transform: capitalize !important;
+  text-decoration: none !important;
+}
+body[data-mf-mode="build"] .mf-panel-left .mf-ptab:hover {
+  color: #09090b !important;
+  background: transparent !important;
+  text-decoration: none !important;
+}
+body[data-mf-mode="build"] .mf-panel-left .mf-ptab.active,
+body[data-mf-mode="build"] .mf-panel-left .mf-ptab[aria-selected="true"] {
+  background: #ffffff !important;
+  color: #09090b !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+body[data-mf-mode="build"] .mf-panel-left .mf-panel-body {
+  height: calc(100% - 61px) !important;
+  padding: 8px !important;
+  background: #ffffff !important;
+  overflow-y: auto !important;
+  box-sizing: border-box !important;
+}
+body[data-mf-mode="build"] .mf-panel-center {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  width: auto !important;
+  height: calc(100vh - var(--topbar, 56px)) !important;
+  padding: 0 !important;
+  background: rgba(244, 244, 245, 0.3) !important;
+  overflow: hidden !important;
+}
+body[data-mf-mode="build"] .mf-panel-right,
+body[data-mf-mode="build"] .mf-panel-right.mf-expanded {
+  /* [2026-06-10] resizable: width follows --mf-right-panel-width (set by the
+     #mf-right-resizer drag). Was hardcoded 320px !important → unresizable. */
+  width: var(--mf-right-panel-width, 340px) !important;
+  min-width: 300px !important;
+  max-width: none !important;
+}
+/* [CanvasExpandFix] When right panel is collapsed, force zero width so center
+   canvas expands to fill the freed space. */
+body[data-mf-mode="build"] .mf-panel-right.mf-collapsed {
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  border-left-width: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  opacity: 0 !important;
+}
+body[data-mf-mode="build"] #mf-canvas-dropzone {
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  padding: 24px !important;
+  background: transparent !important;
+  border: 0 !important;
+  overflow: auto !important;
+}
+body[data-mf-mode="build"] .mf-form-wrapper {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 768px !important;
+  min-height: 0 !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  background: #ffffff !important;
+  border: 1px solid #e4e4e7 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  overflow: visible !important;
+}
+body[data-mf-mode="build"] .mf-form {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 24px !important;
+  background: #ffffff !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+body[data-mf-mode="build"] .mf-canvas-header {
+  margin: -24px -24px 24px !important;
+  padding: 24px !important;
+  border-bottom: 1px solid #e4e4e7 !important;
+  background: #ffffff !important;
+}
+body[data-mf-mode="build"] .mf-canvas-field,
+body[data-mf-mode="build"] .mf-canvas-row {
+  /* [P1-6] Build-mode card border/bg track the applied theme (this mode-scoped
+     rule out-specifies the base .mf-canvas-field, so it is what paints in Build). */
+  border-color: var(--mf-border, #e4e4e7) !important;
+  border-radius: 8px !important;
+  background: var(--mf-form-bg, #ffffff) !important;
+  box-shadow: none !important;
+}
+body[data-mf-mode="build"] .mf-canvas-field:hover,
+body[data-mf-mode="build"] .mf-canvas-row:hover {
+  border-color: #d4d4d8 !important;
+}
+body[data-mf-mode="build"] .mf-row-layout-picker,
+body[data-mf-mode="build"] .mf-row-layout-btn,
+body[data-mf-mode="build"] .mf-flexgrid-canvas-head,
+body[data-mf-mode="build"] .mf-row-header,
+body[data-mf-mode="build"] #mf-canvas-dropzone .mf-drag-handle,
+body[data-mf-mode="build"] .mf-canvas-field-actions {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.12s ease !important;
+}
+body[data-mf-mode="build"] .mf-canvas-row:hover > .mf-row-header,
+body[data-mf-mode="build"] .mf-canvas-row:hover .mf-row-layout-picker,
+body[data-mf-mode="build"] .mf-canvas-row:hover .mf-row-layout-btn,
+body[data-mf-mode="build"] #mf-canvas-dropzone .mf-canvas-field:hover > .mf-drag-handle,
+body[data-mf-mode="build"] #mf-canvas-dropzone .mf-canvas-field:hover > .mf-canvas-field-actions,
+body[data-mf-mode="build"] #mf-canvas-dropzone .mf-canvas-field.mf-selected > .mf-canvas-field-actions {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+body[data-mf-mode="build"] #mf-canvas-dropzone .mf-canvas-field > .mf-drag-handle,
+body[data-mf-mode="build"] #mf-canvas-dropzone .mf-canvas-field.mf-selected > .mf-drag-handle {
+  opacity: 0.72 !important;
+  pointer-events: auto !important;
+}
+body[data-mf-mode="build"] #mf-canvas-dropzone .mf-canvas-field:hover > .mf-drag-handle,
+body[data-mf-mode="build"] #mf-canvas-dropzone .mf-canvas-field:focus-within > .mf-drag-handle {
+  opacity: 1 !important;
+}
+body[data-mf-mode="build"] #mf-canvas-dropzone .mf-canvas-row > .mf-row-header {
+  opacity: 0.86 !important;
+  pointer-events: auto !important;
+}
+body[data-mf-mode="build"] #mf-canvas-dropzone .mf-canvas-row > .mf-row-header .mf-drag-handle {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+body[data-mf-mode="build"].mf-palette-dragging .mf-canvas-row:hover > .mf-row-header,
+body[data-mf-mode="build"].mf-palette-dragging .mf-canvas-row:hover .mf-row-layout-picker,
+body[data-mf-mode="build"].mf-palette-dragging .mf-canvas-row:hover .mf-row-layout-btn,
+body[data-mf-mode="build"].mf-palette-dragging .mf-canvas-field:hover > .mf-drag-handle,
+body[data-mf-mode="build"].mf-palette-dragging .mf-canvas-field:hover > .mf-canvas-field-actions,
+body[data-mf-mode="build"].mf-palette-dragging .mf-canvas-field.mf-selected > .mf-canvas-field-actions,
+body[data-mf-mode="build"].mf-palette-dragging #mf-canvas-dropzone .mf-row-header,
+body[data-mf-mode="build"].mf-palette-dragging #mf-canvas-dropzone .mf-flexgrid-canvas-head,
+body[data-mf-mode="build"].mf-palette-dragging #mf-canvas-dropzone .mf-row-layout-picker,
+body[data-mf-mode="build"].mf-palette-dragging #mf-canvas-dropzone .mf-row-layout-btn,
+body[data-mf-mode="build"].mf-palette-dragging #mf-canvas-dropzone .mf-canvas-field-actions,
+body[data-mf-mode="build"].mf-palette-dragging #mf-canvas-dropzone .mf-drag-handle {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+.mf-palette-drag-fallback-ghost {
+  position: fixed !important;
+  left: 0 !important;
+  top: 0 !important;
+  z-index: 2147483647 !important;
+  pointer-events: none !important;
+  opacity: 0.86 !important;
+  transform-origin: top left !important;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.18) !important;
+}
+
+/* Drag UX 2026-06-18: keep premium field cards visible while sorting. */
+
+body.mf-builder-dragging #mf-canvas-dropzone .mf-canvas-field > .mf-field-body,
+body.mf-builder-dragging #mf-canvas-dropzone .mf-canvas-row {
+  visibility: visible !important;
+}
+
+/* Keep the grip visible as the drag affordance. */
+body.mf-builder-dragging #mf-canvas-dropzone .mf-canvas-field > .mf-drag-handle {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  color: #94a3b8 !important;
+  flex: 0 0 auto !important;
+}
+/* Rows stay readable while sorting. */
+body.mf-builder-dragging #mf-canvas-dropzone .mf-row-col { min-height: 56px !important; }
+/* [RowColDrop 2026-06-19] During a drag, HIDE the "Drop field" placeholder so the empty
+   column has NO child box → SortableJS treats the column as truly empty and its
+   emptyInsertThreshold (28px) kicks in, so a palette tile can actually drop into it.
+   (pointer-events:none alone wasn't enough — the placeholder still had a bounding rect
+   that made Sortable think the column was non-empty.) Auto-reverts when the drag ends. */
+body.mf-builder-dragging #mf-canvas-dropzone .mf-row-col-empty { display: none !important; }
+body.mf-builder-dragging #mf-canvas-dropzone .mf-row-col {
+  border-color: #c7d2fe !important; background: #f8faff !important;
+}
+
+/* [RichCardPresets 2026-06-19] Sample-template picker in the Options group */
+.mf-prop-preset-row .mf-prop-preset-hint { color: #94a3b8; font-weight: 400; font-size: 11px; }
+.mf-prop-preset-controls { display: flex; gap: 6px; align-items: stretch; }
+.mf-prop-preset-controls #mf-prop-option-preset { flex: 1 1 auto; min-width: 0; }
+.mf-prop-preset-controls #mf-apply-option-preset { flex: 0 0 auto; white-space: nowrap; }
+
+/* Insertion indicator — turn SortableJS's ghost slot into a clear indigo
+   "drop here" bar instead of a faded copy of the dragged card. */
+body.mf-builder-dragging #mf-canvas-dropzone .mf-sortable-ghost,
+body.mf-builder-dragging #mf-canvas-dropzone .sortable-ghost {
+  opacity: 1 !important;
+  background: #eef2ff !important;
+  border: 2px dashed #6366f1 !important;
+  border-radius: 8px !important;
+  min-height: 38px !important;
+  box-shadow: none !important;
+}
+body.mf-builder-dragging #mf-canvas-dropzone .mf-sortable-ghost > *,
+body.mf-builder-dragging #mf-canvas-dropzone .sortable-ghost > * {
+  visibility: hidden !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   TOKEN DESIGNER — Map editor tab (v20260614)
+   ══════════════════════════════════════════════════════════ */
+.mf-token-map-editor {
+  display: grid !important;
+  grid-template-columns: minmax(280px, 360px) 1fr !important;
+  gap: 16px !important;
+  align-items: start !important;
+}
+.mf-token-map-top {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+}
+.mf-token-map-preview {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 380px !important;
+}
+.mf-token-map-frame-wrap {
+  position: relative !important;
+  flex: 1 !important;
+  min-height: 360px !important;
+  border: 1px solid #dbe4f0 !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  background: #eef2f7 !important;
+}
+.mf-token-map-frame {
+  width: 100% !important;
+  height: 100% !important;
+  border: 0 !important;
+  display: block !important;
+}
+@media (max-width: 760px) {
+  .mf-token-map-editor {
+    grid-template-columns: 1fr !important;
+  }
+  .mf-token-map-preview {
+    min-height: 280px !important;
+  }
+  .mf-token-map-frame-wrap {
+    min-height: 260px !important;
+  }
+}
+
+/* [B172] Composite control builder preview — render the REAL per-preset sub-input
+   layout on the canvas (phone country/area/number/ext, address rows, dob d/m/y …)
+   instead of a generic "Composite Widget" box. The whole preview is the
+   interaction MASK (pointer-events:none) so a click selects/drags the composite as
+   ONE unit (no focus into a sub-input); per-part editing lives in the Composite
+   Designer modal. Umbraco Block-List style. */
+.mf-canvas-field .mf-composite-preview {
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end;
+  pointer-events: none !important; /* the mask: clicks fall through to the field card */
+  margin-top: 2px;
+}
+.mf-canvas-field .mf-composite-preview * { pointer-events: none !important; }
+.mf-canvas-field .mf-composite-preview.mf-comp-orient-vertical { flex-direction: column; align-items: stretch; }
+.mf-canvas-field .mf-comp-prev-cell { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.mf-canvas-field .mf-comp-prev-sub {
+  font-size: 0.6875rem; font-weight: 600; color: #94a3b8; line-height: 1.1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.mf-canvas-field .mf-comp-prev-box {
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  min-height: 34px; padding: 0 10px;
+  border: 1px solid #e4e4e7; border-radius: 0.375rem; background: #fff;
+  color: #a1a1aa; font-size: 0.8125rem;
+}
+.mf-canvas-field .mf-comp-prev-box.is-select { background: #fafafa; }
+.mf-canvas-field .mf-comp-prev-box .fa-caret-down { color: #cbd5e1; font-size: 11px; flex: 0 0 auto; }
+.mf-canvas-field .mf-comp-prev-ph { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mf-canvas-field .mf-composite-preview-empty {
+  display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+  border: 1px dashed #c7d2fe; border-radius: 0.375rem; background: #f5f7ff;
+  color: #6366f1; font-size: 0.8125rem; pointer-events: none;
+}
+
+/* Drag/drop QA 2026-06-18: keep canvas usable on narrow builder viewports. */
+@media (max-width: 900px) {
+  body[data-mf-mode="build"] .mf-builder-layout {
+    position: relative !important;
+    display: flex !important;
+    width: 100vw !important;
+    overflow: hidden !important;
+  }
+  body[data-mf-mode="build"] .mf-panel-left {
+    position: absolute !important;
+    z-index: 80 !important;
+    left: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: min(280px, 82vw) !important;
+    min-width: 0 !important;
+    max-width: 82vw !important;
+    box-shadow: 8px 0 24px rgba(15, 23, 42, 0.12) !important;
+  }
+  body[data-mf-mode="build"] .mf-panel-left.mf-collapsed {
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    box-shadow: none !important;
+  }
+  body[data-mf-mode="build"] .mf-panel-center {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+  }
+  body[data-mf-mode="build"] .mf-panel-right,
+  body[data-mf-mode="build"] .mf-panel-right.mf-expanded {
+    display: none !important;
+  }
+  body[data-mf-mode="build"] #mf-canvas-dropzone {
+    width: 100% !important;
+    padding: 16px !important;
+  }
+  body[data-mf-mode="build"] .mf-form-wrapper {
+    max-width: min(720px, calc(100vw - 32px)) !important;
+  }
+}
+
+@media (max-width: 520px) {
+  body[data-mf-mode="build"] .mf-panel-left {
+    width: min(300px, 84vw) !important;
+    max-width: 84vw !important;
+  }
+  body[data-mf-mode="build"] #mf-canvas-dropzone {
+    padding: 12px !important;
+  }
+  body[data-mf-mode="build"] .mf-form {
+    padding: 18px !important;
+  }
+  body[data-mf-mode="build"] .mf-canvas-header {
+    margin: -18px -18px 18px !important;
+    padding: 18px !important;
+  }
+  body[data-mf-mode="build"] .mf-canvas-field .mf-drag-handle {
+    left: -10px !important;
+    width: 34px !important;
+    height: 46px !important;
+  }
+}

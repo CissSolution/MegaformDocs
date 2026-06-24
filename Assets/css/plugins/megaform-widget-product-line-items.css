@@ -1,0 +1,34 @@
+.mfw-product-line-items-wrap {
+  --mfw-accent: #4f46e5;
+  --mfw-radius: 8px;
+  --mfw-border: #e2e8f0;
+  --mfw-bg: #ffffff;
+  font-family: inherit;
+  box-sizing: border-box;
+  display: grid;
+  gap: 14px;
+}
+.mfw-product-line-items-wrap * { box-sizing: border-box; }
+.mfw-product-line-items-wrap .mfw-pli-table-wrap { overflow-x: auto; }
+.mfw-product-line-items-wrap .mfw-pli-table { width: 100%; border-collapse: collapse; min-width: 640px; background: var(--mfw-bg); }
+.mfw-product-line-items-wrap th,
+.mfw-product-line-items-wrap td { border-bottom: 1px solid var(--mfw-border); padding: 10px; text-align: left; vertical-align: middle; }
+.mfw-product-line-items-wrap th { font-size: 13px; color: #475569; }
+.mfw-product-line-items-wrap input[type="text"],
+.mfw-product-line-items-wrap input[type="number"] {
+  width: 100%; min-height: 44px; border: 1px solid var(--mfw-border); border-radius: var(--mfw-radius);
+  padding: 10px 12px; background: var(--mfw-bg);
+}
+.mfw-product-line-items-wrap .mfw-pli-actions { display: flex; justify-content: flex-start; }
+.mfw-product-line-items-wrap .mfw-pli-add,
+.mfw-product-line-items-wrap .mfw-pli-delete {
+  min-height: 44px; min-width: 44px; border-radius: var(--mfw-radius); cursor: pointer; border: 1px solid var(--mfw-accent);
+}
+.mfw-product-line-items-wrap .mfw-pli-add { background: var(--mfw-accent); color: #fff; padding: 0 14px; }
+.mfw-product-line-items-wrap .mfw-pli-add:disabled { opacity: .55; cursor: not-allowed; }
+.mfw-product-line-items-wrap .mfw-pli-delete { background: #fff; color: #dc2626; border-color: #fecaca; }
+.mfw-product-line-items-wrap .mfw-pli-summary {
+  border: 1px solid var(--mfw-border); border-radius: var(--mfw-radius); background: #f8fafc; padding: 12px; display: grid; gap: 8px;
+}
+.mfw-product-line-items-wrap .mfw-pli-summary-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.mfw-product-line-items-wrap .mfw-pli-summary-row--grand { padding-top: 8px; border-top: 1px dashed var(--mfw-border); font-size: 1.03em; }

@@ -1,0 +1,86 @@
+/* ────────────────────────────────────────────────────────────────────
+   MegaForm 01.06.32 — seed three prompt_recipe rows into MF_AI_Knowledge
+   so the chatbot can author Premium + Pure Grid form templates on demand.
+
+   The Body column holds a JSON pointer { "recipe_file": "<name>.md" } that
+   AiToolsController.ResolveKnowledgeBody() expands to the markdown file at
+   ~/DesktopModules/MegaForm/Resources/PromptRecipes/<name>.md on read.
+   Keeps each KB row slim (slug + summary + tags + pointer) while the long
+   markdown lives on disk for diff-friendly version control.
+
+   This script is idempotent — re-running it MERGEs by Slug + PortalId so
+   re-install updates the rows in place without producing duplicates.
+   ──────────────────────────────────────────────────────────────────── */
+
+SET NOCOUNT ON;
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_NULLS ON;
+
+DECLARE @recipes TABLE (
+    Slug     NVARCHAR(120) NOT NULL,
+    Kind     NVARCHAR(40)  NOT NULL,
+    Title    NVARCHAR(200) NOT NULL,
+    Summary  NVARCHAR(500) NOT NULL,
+    Body     NVARCHAR(400) NOT NULL,
+    Tags     NVARCHAR(400) NOT NULL,
+    Source   NVARCHAR(80)  NOT NULL
+);
+
+INSERT INTO @recipes (Slug, Kind, Title, Summary, Body, Tags, Source) VALUES
+('author-premium-template',
+ 'prompt_recipe',
+ 'Author a MegaForm Premium template',
+ N'Author a NEW Premium form template with a unique themed shell (mfp-<slug> class, per-template customHtml + customCss). Use for campaign / event / brand-led forms with strong visual identity. Output: single JSON with title/description/slug/icon/category, settings.customContent, 9 supported field types, customHtml with token system, customCss starting with CheckboxPad fix and scoped to .mfp.mfp-<slug>, optional rules, workflow=null.',
+ N'{"recipe_file":"author-premium-template.md"}',
+ N'premium,template,authoring,form-design,visual,campaign,mfp-slug,brand-led,custom-shell',
+ 'megaform-builtin'),
+
+('author-pure-grid-template',
+ 'prompt_recipe',
+ 'Author a MegaForm Pure Grid (Vercel-style) template',
+ N'Author a NEW Pure Grid form using the LOCKED shared design (mfp-pure-grid class, 5555-byte canonical CSS, frozen customHtml skeleton). Use for OPERATIONAL forms — contact, application, booking, registration, payment, healthcare, HR, survey, feedback. Author content+fields only; CSS byte-frozen. 18 supported field types (adds Date/Time/Number/Url/File/Html/Payment/Rating/Appointment/Calculator vs Premium 9). Floating-label requires placeholder=" " (single space) on text fields.',
+ N'{"recipe_file":"author-pure-grid-template.md"}',
+ N'pure-grid,vercel,template,authoring,form-design,operational,floating-label,locked-css,contact,application,booking,registration,payment,healthcare,hr,survey,feedback',
+ 'megaform-builtin'),
+
+('pure-grid-canonical-css',
+ 'prompt_recipe',
+ 'Pure Grid canonical customCss (paste verbatim)',
+ N'The 5555-byte byte-identical customCss shared across all 125 Pure Grid templates. Paste verbatim into customCss field. NEVER modify colors, add selectors, rename classes, or @import a different font. Italian-flag accent bar, cream bg #faf9f7, white card, Cormorant + Inter typography, green primary #009246, floating labels via non-empty placeholder, 12-col grid collapsing at <=768px. CheckboxPad fix is BAKED-IN.',
+ N'{"recipe_file":"pure-grid-canonical-css.md"}',
+ N'pure-grid,css,canonical,verbatim,locked,design-system,italian-flag,floating-label,grid,checkbox-pad',
+ 'megaform-builtin');
+
+-- ── Upsert ────────────────────────────────────────────────────────────
+-- Existing rows (same Slug + PortalId=NULL host-scope) get UPDATED.
+-- New rows get INSERTED with Version=1.
+
+DECLARE @PortalId INT = NULL;  -- host-scope so every portal sees these recipes
+
+MERGE dbo.MF_AI_Knowledge AS tgt
+USING (
+    SELECT Slug, Kind, Title, Summary, Body, Tags, Source FROM @recipes
+) AS src
+ON  tgt.Slug = src.Slug
+AND ((tgt.PortalId IS NULL AND @PortalId IS NULL) OR tgt.PortalId = @PortalId)
+WHEN MATCHED THEN UPDATE SET
+    Kind             = src.Kind,
+    Title            = src.Title,
+    Summary          = src.Summary,
+    Body             = src.Body,
+    Tags             = src.Tags,
+    Source           = src.Source,
+    Version          = tgt.Version + 1,
+    UpdatedByUserId  = -1,
+    UpdatedOnDate    = SYSUTCDATETIME()
+WHEN NOT MATCHED BY TARGET THEN INSERT
+    (Slug, Kind, Title, Summary, Body, Tags, Examples, PortalId, Source, Version,
+     CreatedByUserId, CreatedOnDate, UpdatedByUserId, UpdatedOnDate)
+VALUES
+    (src.Slug, src.Kind, src.Title, src.Summary, src.Body, src.Tags, NULL, @PortalId, src.Source, 1,
+     -1, SYSUTCDATETIME(), -1, SYSUTCDATETIME());
+
+PRINT N'MegaForm 01.06.32 — Authoring recipes seeded into MF_AI_Knowledge.';
+PRINT N'  Slugs: author-premium-template, author-pure-grid-template, pure-grid-canonical-css';
+PRINT N'  Files: ~/DesktopModules/MegaForm/Resources/PromptRecipes/*.md (3 files)';
+PRINT N'  Test:  GET /API/MegaForm/AiTools/GetPromptRecipe?slug=author-pure-grid-template';

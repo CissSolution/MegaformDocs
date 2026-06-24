@@ -1,0 +1,113 @@
+- main [ref=e287]:
+  - navigation [ref=e288]:
+    - link "Default Site" [ref=e290] [cursor=pointer]:
+      - /url: ""
+      - img "Default Site" [ref=e291]
+    - list [ref=e294]:
+      - listitem [ref=e295]:
+        - link "Home" [ref=e296] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e297]:
+            - generic [ref=e298]: 
+            - text: Home
+      - listitem [ref=e299]:
+        - link "Private" [ref=e300] [cursor=pointer]:
+          - /url: /private
+          - generic [ref=e301]:
+            - generic [ref=e302]: 
+            - text: Private
+      - listitem [ref=e303]:
+        - link "My Page" [ref=e304] [cursor=pointer]:
+          - /url: /mypage
+          - generic [ref=e305]:
+            - generic [ref=e306]: 
+            - text: My Page
+      - listitem [ref=e307]:
+        - link "Homepage 1 Test" [ref=e308] [cursor=pointer]:
+          - /url: /landinghomepage-1-test
+          - generic [ref=e309]: Homepage 1 Test
+      - listitem [ref=e310]:
+        - link "SaaS ACME" [ref=e311] [cursor=pointer]:
+          - /url: /landingsaas-acme
+          - generic [ref=e312]: SaaS ACME
+      - listitem [ref=e313]:
+        - link "SaaS Inherit" [ref=e314] [cursor=pointer]:
+          - /url: /landingsaas-inherit
+          - generic [ref=e315]: SaaS Inherit
+      - listitem [ref=e316]:
+        - link "SaaS ACME2" [ref=e317] [cursor=pointer]:
+          - /url: /landingacme2
+          - generic [ref=e318]: SaaS ACME2
+      - listitem [ref=e319]:
+        - link "Agency Creative" [ref=e320] [cursor=pointer]:
+          - /url: /agency
+          - generic [ref=e321]: Agency Creative
+    - generic [ref=e323]:
+      - generic [ref=e325]:
+        - textbox "Search" [ref=e326]
+        - button "Search Button" [ref=e327] [cursor=pointer]:
+          - generic [ref=e328]: 
+      - link "host" [ref=e329] [cursor=pointer]:
+        - /url: /profile?returnurl=%2Flogin
+      - button "Logout" [ref=e331] [cursor=pointer]
+      - button "" [ref=e333] [cursor=pointer]:
+        - generic [ref=e334]: 
+      - button "" [ref=e335] [cursor=pointer]:
+        - generic [ref=e336]: 
+      - option "Add New Module" [selected]
+      - option "Add Existing Module"
+      - option "Copy Existing Module"
+      - option "Common Modules" [selected]
+      - option "Admin Modules"
+      - option "<Select Module>" [selected]
+      - option "CISS Navigation Suite"
+      - option "Digital Agency Theme - About Us"
+      - option "Digital Agency Theme - Call To Action"
+      - option "Digital Agency Theme - Clients"
+      - option "Digital Agency Theme - Countdown"
+      - option "Digital Agency Theme - Counter"
+      - option "Digital Agency Theme - FAQs"
+      - option "Digital Agency Theme - Portfolio"
+      - option "Digital Agency Theme - Pricing"
+      - option "Digital Agency Theme - Services"
+      - option "Digital Agency Theme - Skills"
+      - option "Digital Agency Theme - Team"
+      - option "Digital Agency Theme - Testimonials"
+      - option "Digital Agency Theme - Why Us"
+      - option "DnnTheme"
+      - option "HtmlText"
+      - option "MegaForm"
+      - option "Default Pane" [selected]
+      - option "Top Full Width Pane"
+      - option "Top 100% Pane"
+      - option "Left 50% Pane"
+      - option "Right 50% Pane"
+      - option "Left 33% Pane"
+      - option "Center 33% Pane"
+      - option "Right 33% Pane"
+      - option "Left Outer 25% Pane"
+      - option "Left Inner 25% Pane"
+      - option "Right Inner 25% Pane"
+      - option "Right Outer 25% Pane"
+      - option "Left 25% Pane"
+      - option "Center 50% Pane"
+      - option "Right 25% Pane"
+      - option "Left Sidebar 66% Pane"
+      - option "Right Sidebar 33% Pane"
+      - option "Left Sidebar 33% Pane"
+      - option "Right Sidebar 66% Pane"
+      - option "Bottom 100% Pane"
+      - option "Bottom Full Width Pane"
+      - option "Footer Pane"
+      - option "Top"
+      - option "Bottom" [selected]
+      - option "Customizable Container" [selected]
+      - option "Same As Page" [selected]
+      - option "Page Editors Only"
+  - generic [ref=e341]:
+    - generic [ref=e342]:
+      - heading "User Login" [level=2] [ref=e344]
+      - separator [ref=e345]
+    - alert [ref=e348]:
+      - text: You Are Already Signed In
+      - button "close" [ref=e349] [cursor=pointer]

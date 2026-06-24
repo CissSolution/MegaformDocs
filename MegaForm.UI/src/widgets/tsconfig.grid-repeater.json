@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "lib": ["ES5", "ES6", "DOM"],
+    "module": "None",
+    "strict": false,
+    "skipLibCheck": true,
+    "noEmit": false,
+    "outDir": "../../../Assets/js/plugins"
+  },
+  "include": [
+    "megaform-widget-grid-repeater.ts"
+  ]
+}

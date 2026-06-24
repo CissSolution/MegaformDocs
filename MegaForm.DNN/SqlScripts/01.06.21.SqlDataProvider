@@ -1,0 +1,3 @@
+-- MegaForm 01.06.21 package refresh
+-- UI/assets update: DynamicLabel help modal and SQL cascade parameters.
+PRINT 'MegaForm 01.06.21 package refresh - DynamicLabel help and cascade SQL support';

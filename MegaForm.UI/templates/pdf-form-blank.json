@@ -1,0 +1,34 @@
+{
+  "version": "1.0",
+  "slug": "pdf-form-blank",
+  "title": "PDF Form — Blank (paper-style)",
+  "description": "Minimal PDF Form starter. Adds an empty PdfForm widget so you can immediately upload your own PDF and drag fields onto it. Best for paper forms (contracts, applications, intake sheets) where you want end-users to fill in inputs over an existing PDF layout.",
+  "category": "inputs",
+  "categories": ["inputs", "advanced"],
+  "icon": "📄",
+  "settings": {
+    "theme": "default",
+    "displayOnly": false,
+    "multiPage": false,
+    "submitButtonText": "Submit",
+    "successMessage": "Thank you. We have received your submission.",
+    "formWidth": "100%"
+  },
+  "fields": [
+    {
+      "key": "pdf_form",
+      "type": "PdfForm",
+      "label": "PDF Form",
+      "required": false,
+      "widgetProps": {
+        "pdfUrl": "",
+        "pdfBase64": "",
+        "fields": [],
+        "mode": "fill",
+        "defaultZoom": 1.0,
+        "showToolbar": true,
+        "emptyMessage": "Click 📄 Open PDF Form Builder on the canvas to upload your PDF and place fields."
+      }
+    }
+  ]
+}

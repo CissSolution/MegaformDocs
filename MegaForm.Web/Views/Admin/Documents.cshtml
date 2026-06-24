@@ -1,0 +1,220 @@
+@using System
+@using System.Collections.Generic
+@using System.Linq
+@{
+    IEnumerable<dynamic> rows = ViewBag.DocumentRows as IEnumerable<dynamic> ?? Array.Empty<dynamic>();
+    int totalCount = ViewBag.TotalCount ?? 0;
+    int pageIndex = ViewBag.PageIndex ?? 0;
+    int pageSize = ViewBag.PageSize ?? 20;
+    string search = ViewBag.Search as string ?? string.Empty;
+    string status = ViewBag.Status as string ?? string.Empty;
+    string appScope = ViewBag.AppScope as string ?? "documents";
+    string message = ViewBag.Message as string ?? string.Empty;
+    string error = ViewBag.Error as string ?? string.Empty;
+
+    string Fmt(DateTime? value) => value.HasValue ? value.Value.ToString("yyyy-MM-dd HH:mm") : "-";
+    string StatusBadge(string value) => string.IsNullOrWhiteSpace(value) ? "draft" : value.Trim().ToLowerInvariant();
+    var prevIndex = pageIndex > 0 ? pageIndex - 1 : 0;
+    var nextIndex = ((pageIndex + 1) * pageSize) < totalCount ? pageIndex + 1 : pageIndex;
+}
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MegaForm - Documents</title>
+    <style>
+        body{font-family:Segoe UI,Arial,sans-serif;background:#f5f6f8;margin:0;color:#16181d}
+        .wrap{max-width:1320px;margin:0 auto;padding:24px}
+        .top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+        .title{font-size:28px;font-weight:700}
+        .links a{display:inline-block;margin-left:8px;padding:10px 14px;border-radius:10px;background:#fff;color:#111827;text-decoration:none;border:1px solid #d1d5db}
+        .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+        .toolbar input,.toolbar select{padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;background:#fff;min-width:180px}
+        .toolbar button,.pager a,.actions button{padding:10px 14px;border:none;border-radius:10px;background:#111827;color:#fff;cursor:pointer;text-decoration:none}
+        .toolbar .alt,.pager .alt,.actions .alt{background:#374151}
+        .notice{padding:12px 14px;border-radius:12px;margin-bottom:16px}
+        .notice.ok{background:#ecfdf3;border:1px solid #86efac;color:#166534}
+        .notice.err{background:#fef2f2;border:1px solid #fca5a5;color:#991b1b}
+        .card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;box-shadow:0 10px 30px rgba(15,23,42,.04)}
+        .card h2{margin:0;padding:18px 20px;border-bottom:1px solid #eef2f7;font-size:18px}
+        .empty{padding:20px;color:#6b7280}
+        table{width:100%;border-collapse:collapse}
+        th,td{padding:12px 14px;border-bottom:1px solid #eef2f7;vertical-align:top;text-align:left;font-size:14px}
+        th{font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:#6b7280;background:#fafafa}
+        .meta{color:#6b7280;font-size:12px}
+        .badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600}
+        .badge.draft{background:#eef2ff;color:#4338ca}
+        .badge.pending_approval{background:#fff7ed;color:#9a3412}
+        .badge.approved{background:#ecfeff;color:#0f766e}
+        .badge.published{background:#ecfdf3;color:#166534}
+        .badge.rejected{background:#fef2f2;color:#991b1b}
+        .cell-list{display:grid;gap:6px}
+        .actions{display:flex;gap:8px;flex-wrap:wrap}
+        .actions form{margin:0}
+        .actions a{color:#1d4ed8;text-decoration:none}
+        .pager{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 20px}
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="top">
+            <div class="title">Documents</div>
+            <div class="links">
+                <a href="/admin">Dashboard</a>
+                <a href="/admin/tasks">Workflow Tasks</a>
+                <a href="/admin/submissions">Submissions</a>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(message))
+        {
+            <div class="notice ok">@message</div>
+        }
+        @if (!string.IsNullOrWhiteSpace(error))
+        {
+            <div class="notice err">@error</div>
+        }
+
+        <form method="get" action="/admin/documents" class="toolbar">
+            <input type="hidden" name="pageIndex" value="0" />
+            <input type="text" name="search" value="@search" placeholder="Search title, slug, summary" />
+            <select name="status">
+                <option value="" selected="@(string.IsNullOrWhiteSpace(status))">All statuses</option>
+                <option value="draft" selected="@(status == "draft")">Draft</option>
+                <option value="pending_approval" selected="@(status == "pending_approval")">Pending Approval</option>
+                <option value="approved" selected="@(status == "approved")">Approved</option>
+                <option value="published" selected="@(status == "published")">Published</option>
+                <option value="rejected" selected="@(status == "rejected")">Rejected</option>
+            </select>
+            <select name="appScope">
+                <option value="documents" selected="@(appScope == "documents")">documents</option>
+                <option value="document" selected="@(appScope == "document")">document</option>
+                <option value="document-management" selected="@(appScope == "document-management")">document-management</option>
+                <option value="" selected="@(string.IsNullOrWhiteSpace(appScope))">all scopes</option>
+            </select>
+            <input type="hidden" name="pageSize" value="@pageSize" />
+            <button type="submit">Filter</button>
+            <a class="alt" href="/admin/documents">Clear</a>
+        </form>
+
+        <div class="card">
+            <h2>Managed Documents (@totalCount)</h2>
+            @if (!rows.Any())
+            {
+                <div class="empty">No document revisions have been created yet. Set a form AppScope to <code>documents</code>, upload a file, and submit through the normal workflow.</div>
+            }
+            else
+            {
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Document</th>
+                            <th>Latest Revision</th>
+                            <th>Published Revision</th>
+                            <th>Aliases</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var row in rows)
+                    {
+                        var document = row.Document;
+                        var metadata = row.Metadata;
+                        var latest = row.LatestRevision;
+                        var published = row.PublishedRevision;
+                        var assignments = row.Assignments as IEnumerable<dynamic> ?? Array.Empty<dynamic>();
+                        var directives = row.Directives as IEnumerable<dynamic> ?? Array.Empty<dynamic>();
+                        var aliases = row.Aliases as IEnumerable<dynamic> ?? Array.Empty<dynamic>();
+                        string publicUrl = row.PublicUrl as string ?? string.Empty;
+                        <tr>
+                            <td>
+                                <div><strong>@document.Title</strong></div>
+                                <div class="meta">Slug: @document.Slug</div>
+                                <div class="meta">AppScope: @document.AppScope</div>
+                                @if (metadata != null)
+                                {
+                                    <div class="meta">Registry: @(metadata.RegistryNumber ?? "-")</div>
+                                    <div class="meta">Direction: @(metadata.Direction ?? "-") / Type: @(metadata.DocumentType ?? "-")</div>
+                                    <div class="meta">Category: @(metadata.Category ?? "-") / Owner: @(metadata.OwnerDisplayName ?? "-")</div>
+                                }
+                                <div class="meta">Updated: @Fmt(document.UpdatedOnUtc ?? document.CreatedOnUtc)</div>
+                                <div><span class="badge @StatusBadge(document.Status)">@document.Status</span></div>
+                            </td>
+                            <td>
+                                @if (latest == null)
+                                {
+                                    <div class="meta">No revisions</div>
+                                }
+                                else
+                                {
+                                    <div class="cell-list">
+                                        <div><strong>v@latest.VersionNumber</strong> @latest.OriginalName</div>
+                                        <div class="meta">Submission #@latest.SubmissionId</div>
+                                        <div class="meta">Stored: @latest.StoredPath</div>
+                                        <div><span class="badge @StatusBadge(latest.Status)">@latest.Status</span></div>
+                                        @if (latest.SubmissionId != null)
+                                        {
+                                            <div><a href="/admin/records/@latest.SubmissionId">Open Record Detail</a></div>
+                                        }
+                                    </div>
+                                }
+                            </td>
+                            <td>
+                                @if (published == null)
+                                {
+                                    <div class="meta">No public revision yet</div>
+                                }
+                                else
+                                {
+                                    <div class="cell-list">
+                                        <div><strong>v@published.VersionNumber</strong> @published.OriginalName</div>
+                                        <div class="meta">Published: @Fmt(published.PublishedOnUtc)</div>
+                                        <div><span class="badge @StatusBadge(published.Status)">@published.Status</span></div>
+                                        <div><a href="@publicUrl" target="_blank">@publicUrl</a></div>
+                                    </div>
+                                }
+                            </td>
+                            <td>
+                                <div class="cell-list">
+                                    @foreach (var alias in aliases)
+                                    {
+                                        <div class="meta">/@alias.Slug @(alias.IsPrimary ? "(primary)" : "")</div>
+                                    }
+                                    <div class="meta">Assignments: @assignments.Count()</div>
+                                    <div class="meta">Directives: @directives.Count()</div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="actions">
+                                    @if (latest != null && latest.SubmissionId != null)
+                                    {
+                                        <a href="/admin/records/@latest.SubmissionId">Record Detail</a>
+                                    }
+                                    <a href="/admin/tasks">Tasks</a>
+                                    @if (latest != null && (published == null || latest.RevisionId != published.RevisionId))
+                                    {
+                                        <form method="post" action="/admin/documents/revisions/@latest.RevisionId/publish">
+                                            <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                                            <button type="submit">Publish Latest</button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+
+                <div class="pager">
+                    <div class="meta">Showing @(pageIndex * pageSize + 1) - @(Math.Min((pageIndex + 1) * pageSize, totalCount)) of @totalCount</div>
+                    <div class="actions">
+                        <a class="alt" href="/admin/documents?appScope=@Uri.EscapeDataString(appScope)&status=@Uri.EscapeDataString(status)&search=@Uri.EscapeDataString(search)&pageSize=@pageSize&pageIndex=@prevIndex">Previous</a>
+                        <a class="alt" href="/admin/documents?appScope=@Uri.EscapeDataString(appScope)&status=@Uri.EscapeDataString(status)&search=@Uri.EscapeDataString(search)&pageSize=@pageSize&pageIndex=@nextIndex">Next</a>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</body>
+</html>

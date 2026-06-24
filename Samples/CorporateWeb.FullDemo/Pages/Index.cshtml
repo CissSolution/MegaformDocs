@@ -1,0 +1,76 @@
+@page
+@model MegaForm.Samples.CorporateWeb.FullDemo.Pages.IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<section class="hero mb-5">
+    <div class="container">
+        <h1>Corporate website + MegaForm components</h1>
+        <p class="lead">
+            This demo shows how a normal ASP.NET Core corporate site can embed MegaForm forms,
+            display data with list/card views, and build an admin dashboard using the MegaForm SDK.
+        </p>
+        <div class="cta-row">
+            <a class="btn btn-primary" href="/Contact">Contact form</a>
+            <a class="btn btn-success" href="/Dashboard">Dashboard</a>
+            <a class="btn btn-info" href="/Submissions/Card">Card view</a>
+        </div>
+    </div>
+</section>
+
+<section class="features">
+    <div class="container">
+        <h2 class="section-title mb-4">What this sample demonstrates</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Form embedding</h5>
+                        <p class="card-text">Embed live forms with the <code>&lt;megaform&gt;</code> Tag Helper on regular corporate pages.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">List view</h5>
+                        <p class="card-text">Query forms and submissions via <code>IMegaFormClient</code> and render them as paginated tables.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Card view</h5>
+                        <p class="card-text">Display submission data as rich cards pulled from the MegaForm API.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Admin dashboard</h5>
+                        <p class="card-text">Build a custom dashboard with form counts, submission totals and recent activity.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Programmatic insert</h5>
+                        <p class="card-text">Create submissions from code using <code>IMegaFormClient.Submissions.SubmitAsync</code>.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Auto database setup</h5>
+                        <p class="card-text">SQLite database and admin account are created automatically on first run.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

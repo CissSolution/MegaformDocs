@@ -1,0 +1,78 @@
+@namespace MegaForm.Client
+@inherits ModuleBase
+@inject IJSRuntime Js
+@implements ISettingsControl
+@using System
+@using System.Threading.Tasks
+
+@*
+    [ViewDesigner v20260503-02] Oqtane Module Settings tab — intentionally
+    reduced to a redirect.
+
+    Background: this Razor page used to duplicate every form-binding,
+    view-mode, popup-trigger, list-fields, card-template input that already
+    exists in the in-page MegaForm Settings panel (Index.razor) AND in the
+    DNN settings ascx AND in the Web admin UI. Three platforms, three
+    copies of the same logic — every tweak meant a 3-way edit and the
+    canonical store ("MegaForm:ViewConfig" module setting + Site renderer
+    host) drifted constantly.
+
+    New approach: a single TS popup (megaform-settings-popup.js) drives all
+    settings on every host (Web / DNN / Oqtane). It loads/saves through the
+    same /api/MegaForm/ModuleConfig endpoint Oqtane already uses, so no
+    server change is required.
+
+    This page exists only because Oqtane's module manager auto-registers
+    a "Module Settings" tab whenever Settings.razor is present. We keep
+    a no-op UpdateSettings() so saving the gear dialog doesn't error, and
+    surface a one-click button that opens the cross-platform popup.
+*@
+
+<div class="container py-3" style="max-width:560px">
+    <div class="alert alert-info" style="line-height:1.55">
+        <strong>MegaForm settings moved.</strong>
+        Use the in-page <span class="badge bg-primary">⚙ Settings</span> button
+        (visible to admins on the page) — it opens the new cross-platform popup with
+        drag-drop List / Card view designers.
+    </div>
+    <button type="button" class="btn btn-primary" @onclick="OpenSettingsPopupAsync">
+        Open MegaForm Settings popup
+    </button>
+    <p class="text-muted small mt-3 mb-0">
+        The legacy Module Settings tab is intentionally empty so we don't have to keep
+        Web, DNN and Oqtane settings UIs in sync. Saving here does nothing — the popup
+        persists changes through the same ModuleConfig API used everywhere else.
+    </p>
+</div>
+
+@code {
+    private async Task OpenSettingsPopupAsync()
+    {
+        var moduleId = ModuleState?.ModuleId ?? 0;
+        if (moduleId <= 0) return;
+        var pageId = PageState?.Page?.PageId ?? 0;
+        var pageUrl = string.Empty;
+        try
+        {
+            await Js.InvokeVoidAsync("MFSettings.open", new
+            {
+                moduleId = moduleId,
+                currentPageId = pageId,
+                currentPageUrl = pageUrl
+            });
+        }
+        catch
+        {
+            // Bundle hasn't loaded yet — happens when the gear dialog is opened
+            // before Index.razor has had a chance to register Resources. Caller
+            // can simply close this dialog and use the in-page button instead.
+        }
+    }
+
+    public Task UpdateSettings()
+    {
+        // No-op: the cross-platform popup writes via /api/MegaForm/ModuleConfig
+        // directly. Nothing to persist from this stub.
+        return Task.CompletedTask;
+    }
+}

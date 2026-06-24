@@ -1,0 +1,35 @@
+@page
+@model MegaForm.Samples.CorporateWeb.FullDemo.Pages.Forms.IndexModel
+@{
+    ViewData["Title"] = "Forms";
+}
+
+<h1>Forms</h1>
+<p class="lead">List view of all MegaForm forms fetched via <code>IMegaFormClient.Forms.ListFormsAsync</code>.</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Submissions</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var form in Model.Forms)
+        {
+            <tr>
+                <td>@form.FormId</td>
+                <td>@form.Title</td>
+                <td><span class="badge bg-secondary">@form.Status</span></td>
+                <td>@form.SubmissionCount</td>
+                <td>
+                    <a class="btn btn-sm btn-outline-primary" href="/f/@form.FormId" target="_blank">Open</a>
+                    <a class="btn btn-sm btn-outline-info" href="/Submissions?formId=@form.FormId">Submissions</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

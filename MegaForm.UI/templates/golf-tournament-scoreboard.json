@@ -1,0 +1,42 @@
+{
+  "version": "1.0",
+  "slug": "golf-tournament-scoreboard",
+  "title": "Golf Tournament Scoreboard",
+  "description": "Multi-round leaderboard with inline drill-down to per-round hole-by-hole scorecards. Configure to your Golf.dbo.CardResultNew table.",
+  "category": "reports",
+  "categories": [
+    "reports",
+    "premium",
+    "professional"
+  ],
+  "icon": "⛳",
+  "settings": {
+    "theme": "default",
+    "displayOnly": true,
+    "multiPage": false,
+    "customHtml": "<div style=\"background:linear-gradient(135deg,#0a5d3a 0%,#1f3a52 100%);color:#fff;padding:20px 24px;border-radius:8px;margin-bottom:20px;display:flex;align-items:center;gap:18px\"><div style=\"width:54px;height:54px;background:rgba(255,255,255,.14);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0\">⛳</div><div><h1 style=\"margin:0 0 3px;font-size:20px;font-weight:700;font-family:Georgia,serif\">Tournament Leaderboard</h1><p style=\"margin:0;opacity:.85;font-size:13px\">Click any player name to see their hole-by-hole scorecards</p></div></div>",
+    "customCss": ".mfdr-table{width:100%;border-collapse:collapse;font-size:13px;background:#fff}\n.mfdr-table thead th{background:#1f3a52;color:#fff;text-align:center;padding:9px 8px;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px;border:0}\n.mfdr-table tbody td{padding:8px;text-align:center;border-bottom:1px solid #eaeef0}\n.mfdr-table tbody tr:hover{background:#f5f9fa;cursor:pointer}\n.mfdr-table tbody td:nth-child(1){font-weight:700;color:#0a5d3a;width:50px}\n.mfdr-table tbody td:nth-child(2){text-align:left;font-weight:600;color:#0070c0;text-decoration:underline;text-decoration-color:rgba(0,112,192,.3)}\n.mfdr-table tbody tr:hover td:nth-child(2){text-decoration-color:#0070c0}\n.mfdr-group{margin-bottom:14px;border:1px solid #d6dde0;border-radius:6px;overflow:hidden}\n.mfdr-group-header{background:linear-gradient(180deg,#f7f9fa 0%,#eef2f4 100%);padding:9px 14px;font-weight:700;color:#1f3a52;font-size:14px;border-bottom:1px solid #d6dde0;cursor:pointer;user-select:none}\n.mfdr-group-header:hover{background:#eaf0f3}\n.mfdr-group-collapsed .mfdr-group-body{display:none}\n.mfdr-detail-row{background:#fafbfc}\n.mfdr-detail-content{padding:14px}\n.mfgs-round{margin-bottom:12px;border:1px solid #d6dde0;border-radius:5px;overflow:hidden}\n.mfgs-round-hdr{background:linear-gradient(180deg,#f7f9fa 0%,#eef2f4 100%);padding:8px 12px;font-size:13px;border-bottom:1px solid #d6dde0;cursor:pointer}\n.mfgs-round-hdr strong{color:#1f3a52}\n.mfgs-round-hdr em{color:#5a6a72;font-style:italic;margin-left:8px;font-weight:normal}\n.mfgs-arrow{display:inline-block;margin-right:6px;transition:transform .2s}\n.mfgs-toggle.mfgs-open .mfgs-arrow{transform:rotate(90deg)}\n.mfgs-slope{padding:5px 12px;background:#fff;font-size:11px;color:#5a6a72;border-bottom:1px solid #eaeef0}\n.mfgs-hidden{display:none}\n.mfgs-table{width:100%;border-collapse:collapse;font-size:12px}\n.mfgs-table th,.mfgs-table td{padding:5px 4px;text-align:center;border:1px solid #eaeef0}\n.mfgs-table th{background:#f0f4f6;color:#1f3a52;font-weight:600}\n.mfgs-sep{background:#f7f9fa;font-weight:600}\n.mfgs-yardage td{color:#6a7a82;font-size:10px}\n.mfgs-par-row td{background:#fafbfc;font-weight:600;color:#1f3a52}\n.mfgs-si-row td{color:#8a9aa2;font-size:10px}\n.mfgs-player-label{text-align:left !important;font-weight:600;color:#0070c0}\n.mfgs-mark{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;font-weight:700;line-height:1}\n.mfgs-eagle{background:#0a5d3a;color:#fff;border-radius:50%;box-shadow:0 0 0 2px #fff,0 0 0 3px #0a5d3a}\n.mfgs-birdie{color:#c0392b;border:1.5px solid #c0392b;border-radius:50%}\n.mfgs-par{color:#1f3a52}\n.mfgs-bogey{color:#0070c0;border:1.5px solid #0070c0}\n.mfgs-dblbogey{color:#0070c0;border:1.5px solid #0070c0;box-shadow:0 0 0 1px #fff,0 0 0 2px #0070c0}\n.mfgs-total{background:#1f3a52 !important;color:#fff !important}"
+  },
+  "fields": [
+    {
+      "key": "dr_leaderboard",
+      "type": "DataRepeater",
+      "label": "Leaderboard",
+      "widgetProps": {
+        "connectionKey": "DashboardDatabase",
+        "databaseType": "SqlServer",
+        "dataSource": "sql",
+        "masterQuery": "WITH dates AS (\n  SELECT TOP 3 EventDate, ROW_NUMBER() OVER (ORDER BY EventDate DESC) AS rn\n  FROM (SELECT DISTINCT EventDate FROM Golf.dbo.CardResultNew) d\n  ORDER BY EventDate DESC\n),\nagg AS (\n  SELECT\n    LTRIM(RTRIM(c.DisplayName)) AS PlayerName,\n    MIN(c.Flight) AS Flight,\n    SUM(CASE WHEN d.rn = 1 THEN c.Gross END) AS R1,\n    SUM(CASE WHEN d.rn = 2 THEN c.Gross END) AS R2,\n    SUM(CASE WHEN d.rn = 3 THEN c.Gross END) AS R3,\n    SUM(c.Gross) AS Gross,\n    SUM(c.Net) AS Net,\n    SUM(c.Gross) - (72 * COUNT(DISTINCT d.rn)) AS ToPar\n  FROM Golf.dbo.CardResultNew c\n  JOIN dates d ON d.EventDate = c.EventDate\n  WHERE c.EventNo = 1\n  GROUP BY LTRIM(RTRIM(c.DisplayName))\n  HAVING SUM(c.Gross) > 0\n)\nSELECT\n  ROW_NUMBER() OVER (ORDER BY ToPar ASC, Gross ASC) AS Position,\n  PlayerName,\n  CONCAT('Flight ', Flight) AS Flight,\n  CASE WHEN ToPar > 0 THEN '+' + CAST(ToPar AS varchar) ELSE CAST(ToPar AS varchar) END AS ToPar,\n  R1, R2, R3, Gross, Net\nFROM agg\nORDER BY ToPar ASC, Gross ASC",
+        "detail1TriggerCol": "PlayerName",
+        "detail1Query": "WITH dates AS (\n  SELECT TOP 3 EventDate FROM (SELECT DISTINCT EventDate FROM Golf.dbo.CardResultNew) d ORDER BY EventDate DESC\n)\nSELECT\n  CONVERT(varchar(20), c.EventDate, 107) AS roundLabel,\n  LTRIM(RTRIM(ec.GolfCourse)) AS courseName,\n  LTRIM(RTRIM(ec.Tees)) AS tee,\n  CONCAT(ec.Slope, ' / ', ec.Rating) AS slopeRating,\n  LTRIM(RTRIM(c.Hdcp)) AS handicap,\n  LTRIM(RTRIM(c.DisplayName)) AS playerName,\n  c.Score1 AS h1, c.Score2 AS h2, c.Score3 AS h3, c.Score4 AS h4, c.Score5 AS h5,\n  c.Score6 AS h6, c.Score7 AS h7, c.Score8 AS h8, c.Score9 AS h9,\n  c.Score10 AS h10, c.Score11 AS h11, c.Score12 AS h12, c.Score13 AS h13,\n  c.Score14 AS h14, c.Score15 AS h15, c.Score16 AS h16, c.Score17 AS h17, c.Score18 AS h18,\n  ec.Hole1Par AS h1P, ec.Hole2Par AS h2P, ec.Hole3Par AS h3P, ec.Hole4Par AS h4P, ec.Hole5Par AS h5P,\n  ec.Hole6Par AS h6P, ec.Hole7Par AS h7P, ec.Hole8Par AS h8P, ec.Hole9Par AS h9P,\n  ec.Hole10Par AS h10P, ec.Hole11Par AS h11P, ec.Hole12Par AS h12P, ec.Hole13Par AS h13P,\n  ec.Hole14Par AS h14P, ec.Hole15Par AS h15P, ec.Hole16Par AS h16P, ec.Hole17Par AS h17P, ec.Hole18Par AS h18P,\n  ec.Hole1Yardage AS h1Y, ec.Hole2Yardage AS h2Y, ec.Hole3Yardage AS h3Y, ec.Hole4Yardage AS h4Y, ec.Hole5Yardage AS h5Y,\n  ec.Hole6Yardage AS h6Y, ec.Hole7Yardage AS h7Y, ec.Hole8Yardage AS h8Y, ec.Hole9Yardage AS h9Y,\n  ec.Hole10Yardage AS h10Y, ec.Hole11Yardage AS h11Y, ec.Hole12Yardage AS h12Y, ec.Hole13Yardage AS h13Y,\n  ec.Hole14Yardage AS h14Y, ec.Hole15Yardage AS h15Y, ec.Hole16Yardage AS h16Y, ec.Hole17Yardage AS h17Y, ec.Hole18Yardage AS h18Y,\n  ec.Hole1Handicap AS h1SI, ec.Hole2Handicap AS h2SI, ec.Hole3Handicap AS h3SI, ec.Hole4Handicap AS h4SI, ec.Hole5Handicap AS h5SI,\n  ec.Hole6Handicap AS h6SI, ec.Hole7Handicap AS h7SI, ec.Hole8Handicap AS h8SI, ec.Hole9Handicap AS h9SI,\n  ec.Hole10Handicap AS h10SI, ec.Hole11Handicap AS h11SI, ec.Hole12Handicap AS h12SI, ec.Hole13Handicap AS h13SI,\n  ec.Hole14Handicap AS h14SI, ec.Hole15Handicap AS h15SI, ec.Hole16Handicap AS h16SI, ec.Hole17Handicap AS h17SI, ec.Hole18Handicap AS h18SI,\n  ec.OutYardage AS outYard, ec.InYardage AS inYard, ec.TotalYardage AS totalYard,\n  ec.OutPar AS outPar, ec.InPar AS inPar, ec.TotalPar AS par,\n  c.Front AS outTotal, c.Back AS inTotal, c.Gross AS total, c.Net AS net\nFROM Golf.dbo.CardResultNew c\nLEFT JOIN Golf.dbo.EventCourse ec ON ec.EventDate = c.EventDate AND ec.EventNum = c.EventNo\nINNER JOIN dates d ON d.EventDate = c.EventDate\nWHERE LTRIM(RTRIM(c.DisplayName)) = :parentId\nORDER BY c.EventDate DESC",
+        "groupByCol": "Flight",
+        "golfMode": true,
+        "pageSize": 0,
+        "allowExportCsv": true,
+        "emptyMessage": "No tournament data yet.",
+        "cssClass": "mfdr-golf-leaderboard",
+        "maxRows": 1000
+      }
+    }
+  ]
+}

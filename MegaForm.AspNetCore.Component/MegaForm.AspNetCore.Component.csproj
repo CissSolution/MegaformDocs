@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>MegaForm.AspNetCore.Component</PackageId>
+    <Title>MegaForm ASP.NET Core Component</Title>
+    <Authors>MegaForm Team</Authors>
+    <Description>ASP.NET Core integration package for MegaForm. Brings the MegaForm admin console, hosted forms, REST APIs, workflow engine, and static assets into any ASP.NET Core host.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageProjectUrl>https://megaform.github.io/MegaFormSolution</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/megaform/MegaFormSolution.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>megaform;forms;aspnetcore;mvc;razor;workflow</PackageTags>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Version>0.2.1-preview</Version>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="..\MegaForm.Core\MegaForm.Core.csproj" />
+    <ProjectReference Include="..\MegaForm.Web\MegaForm.Web.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>

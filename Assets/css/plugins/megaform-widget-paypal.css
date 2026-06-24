@@ -1,0 +1,109 @@
+.mfp-payment-paypal{
+  font-family:inherit;
+  color:#111827;
+}
+.mfp-payment-paypal *{box-sizing:border-box}
+.mfp-payment-paypal .mfp-pay-shell{
+  border:1px solid #dbe3ef;
+  background:linear-gradient(180deg,#fbfdff 0%,#f7f9fc 100%);
+  border-radius:14px;
+  padding:18px;
+  box-shadow:0 8px 22px rgba(15,23,42,.06);
+}
+.mfp-payment-paypal .mfp-pay-headrow{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:12px;
+}
+.mfp-payment-paypal .mfp-pay-head{
+  font-size:18px;
+  line-height:1.25;
+  font-weight:700;
+  margin:0 0 4px;
+}
+.mfp-payment-paypal .mfp-pay-subhead{
+  font-size:13px;
+  line-height:1.5;
+  color:#5b6472;
+}
+.mfp-payment-paypal .mfp-pay-badge{
+  min-width:70px;
+  text-align:center;
+  border-radius:999px;
+  padding:7px 12px;
+  font-size:12px;
+  font-weight:700;
+  color:#0f766e;
+  background:#ecfeff;
+  border:1px solid #b7f0ea;
+}
+.mfp-payment-paypal .mfp-pay-brandrow{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-bottom:12px;
+}
+.mfp-payment-paypal .mfp-pay-chip{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:30px;
+  padding:0 10px;
+  border-radius:999px;
+  border:1px solid #d7ddea;
+  background:#fff;
+  font-size:12px;
+  font-weight:700;
+  color:#334155;
+}
+.mfp-payment-paypal .mfp-pay-chip.is-paypal{
+  color:#003087;
+  border-color:#bfd8ff;
+  background:linear-gradient(180deg,#fff 0%,#f6faff 100%);
+}
+.mfp-payment-paypal .mfp-pay-chip.is-paypal span{color:#009cde}
+.mfp-payment-paypal .mfp-pay-status{
+  display:none;
+  margin:0 0 12px;
+  padding:10px 12px;
+  border-radius:10px;
+  font-size:13px;
+  line-height:1.4;
+}
+.mfp-payment-paypal .mfp-pay-status.is-info,
+.mfp-payment-paypal .mfp-pay-status.is-error,
+.mfp-payment-paypal .mfp-pay-status.is-success{display:block}
+.mfp-payment-paypal .mfp-pay-status.is-info{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+.mfp-payment-paypal .mfp-pay-status.is-success{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0}
+.mfp-payment-paypal .mfp-pay-status.is-error{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+.mfp-payment-paypal .mfp-paypal-panel{
+  border:1px solid #dfe6f2;
+  background:#f6f7fb;
+  border-radius:12px;
+  padding:14px;
+}
+.mfp-payment-paypal .mfp-paypal-panel-inner{
+  border-radius:10px;
+  background:#fff;
+  padding:14px;
+  box-shadow:inset 0 0 0 1px #eef2f7;
+}
+.mfp-payment-paypal .mfp-paypal-buttons{min-height:48px}
+.mfp-payment-paypal .mfp-paypal-footnote{
+  margin-top:10px;
+  color:#6b7280;
+  font-size:12px;
+  line-height:1.5;
+}
+.mfp-payment-paypal .paypal-buttons-context-iframe{z-index:1}
+.mfp-payment-paypal[data-complete="1"] .mfp-pay-shell{
+  border-color:#9ae6b4;
+  box-shadow:0 10px 28px rgba(34,197,94,.12);
+}
+@media (max-width:640px){
+  .mfp-payment-paypal .mfp-pay-shell{padding:14px;border-radius:12px}
+  .mfp-payment-paypal .mfp-pay-head{font-size:16px}
+  .mfp-payment-paypal .mfp-pay-headrow{flex-direction:column;align-items:flex-start}
+}

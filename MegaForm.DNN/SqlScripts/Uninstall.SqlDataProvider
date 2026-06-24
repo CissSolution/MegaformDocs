@@ -1,0 +1,57 @@
+/*============================================================
+  MegaForm – Uninstall Script
+  Drops all tables and stored procedures.
+  Order respects FK dependencies (children first).
+============================================================*/
+
+-- Drop stored procedures
+IF OBJECT_ID('dbo.MF_GetChildSubmissions','P') IS NOT NULL DROP PROCEDURE dbo.MF_GetChildSubmissions;
+IF OBJECT_ID('dbo.MF_GetFormsByAppScope','P') IS NOT NULL DROP PROCEDURE dbo.MF_GetFormsByAppScope;
+IF OBJECT_ID('dbo.MF_LogWorkflowStep','P') IS NOT NULL DROP PROCEDURE dbo.MF_LogWorkflowStep;
+IF OBJECT_ID('dbo.MF_GetWorkflows','P') IS NOT NULL DROP PROCEDURE dbo.MF_GetWorkflows;
+IF OBJECT_ID('dbo.MF_GetSubmissions_Filtered','P') IS NOT NULL DROP PROCEDURE dbo.MF_GetSubmissions_Filtered;
+IF OBJECT_ID('dbo.MF_IncrementUniqueId','P') IS NOT NULL DROP PROCEDURE dbo.MF_IncrementUniqueId;
+IF OBJECT_ID('dbo.usp_MF_Form_Stats','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Form_Stats;
+IF OBJECT_ID('dbo.usp_MF_Submission_Export','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Submission_Export;
+IF OBJECT_ID('dbo.usp_MF_Draft_Delete','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Draft_Delete;
+IF OBJECT_ID('dbo.usp_MF_Draft_GetByToken','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Draft_GetByToken;
+IF OBJECT_ID('dbo.usp_MF_Draft_Upsert','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Draft_Upsert;
+IF OBJECT_ID('dbo.usp_MF_File_GetBySubmission','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_File_GetBySubmission;
+IF OBJECT_ID('dbo.usp_MF_File_Insert','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_File_Insert;
+IF OBJECT_ID('dbo.usp_MF_WebhookLog_Insert','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_WebhookLog_Insert;
+IF OBJECT_ID('dbo.usp_MF_RateLimit_Cleanup','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_RateLimit_Cleanup;
+IF OBJECT_ID('dbo.usp_MF_RateLimit_Check','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_RateLimit_Check;
+IF OBJECT_ID('dbo.usp_MF_Submission_Delete','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Submission_Delete;
+IF OBJECT_ID('dbo.usp_MF_Submission_UpdateStatus','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Submission_UpdateStatus;
+IF OBJECT_ID('dbo.usp_MF_Submission_List','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Submission_List;
+IF OBJECT_ID('dbo.usp_MF_Submission_GetById','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Submission_GetById;
+IF OBJECT_ID('dbo.usp_MF_Submission_Insert','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Submission_Insert;
+IF OBJECT_ID('dbo.usp_MF_Form_Delete','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Form_Delete;
+IF OBJECT_ID('dbo.usp_MF_Form_List','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Form_List;
+IF OBJECT_ID('dbo.usp_MF_Form_GetByModule','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Form_GetByModule;
+IF OBJECT_ID('dbo.usp_MF_Form_GetById','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Form_GetById;
+IF OBJECT_ID('dbo.usp_MF_Form_Upsert','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Form_Upsert;
+GO
+
+-- Drop tables (children first to respect FK)
+IF OBJECT_ID('dbo.MF_SubmissionLinks') IS NOT NULL DROP TABLE dbo.MF_SubmissionLinks;
+IF OBJECT_ID('dbo.MF_FormRelations') IS NOT NULL DROP TABLE dbo.MF_FormRelations;
+IF OBJECT_ID('dbo.MF_WorkflowStepLog') IS NOT NULL DROP TABLE dbo.MF_WorkflowStepLog;
+IF OBJECT_ID('dbo.MF_WorkflowRuns') IS NOT NULL DROP TABLE dbo.MF_WorkflowRuns;
+IF OBJECT_ID('dbo.MF_Workflows') IS NOT NULL DROP TABLE dbo.MF_Workflows;
+IF OBJECT_ID('dbo.MF_AuditLog') IS NOT NULL DROP TABLE dbo.MF_AuditLog;
+IF OBJECT_ID('dbo.MF_FormPermissions') IS NOT NULL DROP TABLE dbo.MF_FormPermissions;
+IF OBJECT_ID('dbo.MF_FormViews') IS NOT NULL DROP TABLE dbo.MF_FormViews;
+IF OBJECT_ID('dbo.MF_Templates') IS NOT NULL DROP TABLE dbo.MF_Templates;
+IF OBJECT_ID('dbo.MF_FormAnalytics') IS NOT NULL DROP TABLE dbo.MF_FormAnalytics;
+IF OBJECT_ID('dbo.MF_SearchIndex') IS NOT NULL DROP TABLE dbo.MF_SearchIndex;
+IF OBJECT_ID('dbo.MF_WidgetData') IS NOT NULL DROP TABLE dbo.MF_WidgetData;
+IF OBJECT_ID('dbo.MF_UniqueIdCounters') IS NOT NULL DROP TABLE dbo.MF_UniqueIdCounters;
+IF OBJECT_ID('dbo.MF_SavedDrafts') IS NOT NULL DROP TABLE dbo.MF_SavedDrafts;
+IF OBJECT_ID('dbo.MF_RateLimitLog') IS NOT NULL DROP TABLE dbo.MF_RateLimitLog;
+IF OBJECT_ID('dbo.MF_WebhookLog') IS NOT NULL DROP TABLE dbo.MF_WebhookLog;
+IF OBJECT_ID('dbo.MF_Files') IS NOT NULL DROP TABLE dbo.MF_Files;
+IF OBJECT_ID('dbo.MF_SubmissionValues') IS NOT NULL DROP TABLE dbo.MF_SubmissionValues;
+IF OBJECT_ID('dbo.MF_Submissions') IS NOT NULL DROP TABLE dbo.MF_Submissions;
+IF OBJECT_ID('dbo.MF_Forms') IS NOT NULL DROP TABLE dbo.MF_Forms;
+GO

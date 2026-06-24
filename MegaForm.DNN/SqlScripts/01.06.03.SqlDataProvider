@@ -1,0 +1,9 @@
+/*============================================================
+  MegaForm – DNN workflow inbox runtime compatibility hardening
+  Version: 01.06.03
+============================================================*/
+
+/* No direct SQL migration is required here.
+   Runtime compatibility shims now ensure workflow routes, controls,
+   and missing legacy workflow columns are upgraded safely on load. */
+GO

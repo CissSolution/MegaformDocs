@@ -1,0 +1,76 @@
+name: MegaForm Docs
+
+# Build the DocFX site and deploy it to GitHub Pages whenever documentation
+# sources, the SDK surface, or the ASP.NET Core component surface change.
+#
+# To enable a custom domain, create a file named CNAME in the repo root
+# (or in Docs/docfx/) containing your domain, e.g. docs.megaform.io.
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'Docs/docfx/**'
+      - 'MegaForm.Sdk/**'
+      - 'MegaForm.AspNetCore.Component/**'
+      - 'MegaForm.Core/**'
+      - '.github/workflows/docs.yml'
+  pull_request:
+    paths:
+      - 'Docs/docfx/**'
+      - 'MegaForm.Sdk/**'
+      - 'MegaForm.AspNetCore.Component/**'
+      - 'MegaForm.Core/**'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+
+      - name: Install DocFX
+        run: dotnet tool install -g docfx
+
+      - name: Build solution (required for API metadata)
+        run: dotnet build MegaForm.sln --nologo
+
+      - name: Build docs
+        run: docfx Docs/docfx/docfx.json
+
+      - name: Upload artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: Docs/docfx/_site
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,317 @@
+@namespace MegaForm.Client
+@inherits ModuleBase
+@implements IDisposable
+@inject IMegaFormService MegaFormService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime Js
+@using Microsoft.AspNetCore.Components.Routing
+@using MegaForm.Oqtane.Shared.Models
+
+@* ── MegaForm Builder ──────────────────────────────────────────────────────
+   Platform contract: render #mf-builder-root với đúng data-* attributes.
+   megaform-builder-loader.js tự lo CSS injection + fullscreen takeover + bundle load.
+   Mọi platform (Oqtane, DNN, ASP Core) dùng chung contract này.
+   ──────────────────────────────────────────────────────────────────────── *@
+<div id="mf-builder-root"
+     data-assets-base="/Modules/MegaForm/"
+     data-form-id="@_formId"
+     data-is-new="@(_formId == 0 ? "true" : "false")"
+     data-initial-right-tab="@_initialRightTab"
+     data-api-base="/api/MegaForm/"
+     data-return-url="@_returnUrl"
+     data-platform="oqtane"
+     data-fullscreen-host="true"
+     data-module-id="@(ModuleState?.ModuleId ?? 0)"
+     data-portal-id="@(SiteState?.Alias?.SiteId ?? 0)"
+     data-site-id="@(SiteState?.Alias?.SiteId ?? 0)"
+     data-tab-id="@(PageState?.Page?.PageId ?? 0)"
+     data-schema-json="@(_schemaJson ?? "{}")"
+     data-form-status="@(_formStatus ?? "draft")"
+     data-oq-builder-boot-badge="@OQ_BUILDER_BOOT_BADGE">
+</div>
+
+@code {
+    protected new string ModulePath() => "Modules/MegaForm/";
+
+    // LOAD ORDER (critical for Oqtane Bearer auth):
+    //   1. megaform-oqtane-auth.js  ← patches window.fetch BEFORE any API call
+    //   2. megaform-builder-loader.js ← loads CSS + widget plugins + builder bundle
+    //
+    // window.__MF_PLATFORM__.authToken is injected via AddHeadContent in
+    // OnParametersSetAsync, which fires before <body> scripts render.
+    // This ensures the fetch interceptor can read the token immediately.
+    // [BuilderFOUC v20260503-08] We tried pre-loading the full builder CSS set
+    // here in v07 to fix the FOUC where the Custom HTML widget rendered huge
+    // for ~200ms. Result: the Oqtane edit-modal frame stayed empty — the
+    // loader's fullscreen takeover never completed. Suspect cause: registering
+    // builder-shell.css + builder-ts.css this early conflicts with the
+    // loader's own injection sequence (both set positioning rules on the
+    // same selectors before the takeover wraps body in .mf-dnn-builder-open).
+    //
+    // Reverted to the minimal original set. The FOUC is annoying but the
+    // builder works. Proper fix is to delete the duplicate inject from
+    // megaform-builder-loader.js OR add an inline critical-CSS <style> block
+    // here that scopes only the Custom HTML preview size. Tracked separately.
+    public override List<Resource> Resources => new()
+    {
+        new Resource
+        {
+            ResourceType = ResourceType.Stylesheet,
+            Url = ModulePath() + $"css/megaform.css?v={MegaForm.Oqtane.Shared.MegaFormAssetVersion.Current}"
+        },
+        new Resource
+        {
+            ResourceType = ResourceType.Script,
+            Url = ModulePath() + $"js/megaform-oqtane-auth.js?v={MegaForm.Oqtane.Shared.MegaFormAssetVersion.Current}",
+            Location = ResourceLocation.Body
+        },
+        new Resource
+        {
+            ResourceType = ResourceType.Script,
+            Url = ModulePath() + $"js/megaform-builder-loader.js?v={MegaForm.Oqtane.Shared.MegaFormAssetVersion.Current}",
+            Location = ResourceLocation.Body
+        }
+    };
+
+    private const string OQ_BUILDER_BOOT_BADGE = "OQBuilderBoot v20260501-12";
+    private const string BUILDER_PREVIEW_CSS_BADGE = "BuilderPreviewCss v20260422-01";
+
+    private int _formId;
+    private bool _done;
+    private string _schemaJson = "{}";
+    private string _formStatus = "draft";
+    private string _returnUrl = "/";
+    private string _initialRightTab = "field";
+
+    // [OQBuilderReturn v20260502-02] Compute the URL of the Dashboard module
+    // (not the page root, which shows Oqtane's edit-mode module-config popup
+    // and looks confusing). Derive from current URI by replacing "/builder"
+    // with "/Dashboard" — works for the standard Oqtane page layout where
+    // Dashboard and Builder modules share the same page slug "Dashboard".
+    private string ComputeReturnUrl()
+    {
+        try
+        {
+            var uri = NavigationManager?.Uri ?? string.Empty;
+            var noQuery = uri.Split('?')[0].Split('#')[0];
+            var baseUri = new Uri(NavigationManager?.BaseUri ?? "http://localhost/");
+            var origin = baseUri.GetLeftPart(UriPartial.Authority);
+            var path = noQuery.StartsWith(origin, StringComparison.OrdinalIgnoreCase)
+                ? noQuery.Substring(origin.Length)
+                : noQuery;
+            // /*/37/builder  →  /*/37/Dashboard   (case-insensitive)
+            var idx = path.LastIndexOf("/builder", StringComparison.OrdinalIgnoreCase);
+            if (idx > 0)
+            {
+                return path.Substring(0, idx) + "/Dashboard";
+            }
+            return path;
+        }
+        catch { return "/"; }
+    }
+
+    protected override bool ShouldRender() => !_done;
+
+    protected override void OnParametersSet()
+    {
+        // Inject window.__MF_PLATFORM__ into <head> BEFORE <body> scripts execute.
+        //
+        // Why AddHeadContent + OnParametersSet (not OnAfterRenderAsync):
+        //   - AddHeadContent writes a <script> tag into <head>
+        //   - Runs before the body Resources (the two scripts above) are evaluated
+        //   - OnAfterRenderAsync fires AFTER all scripts are already loaded → too late
+        //
+        // The fetch interceptor (megaform-oqtane-auth.js) reads __MF_PLATFORM__.authToken
+        // to add Authorization: Bearer to POST /api/MegaForm/* requests.
+        var token    = SiteState?.AuthorizationToken ?? string.Empty;
+        var moduleId = ModuleState?.ModuleId ?? 0;
+        var portalId = SiteState?.Alias?.SiteId ?? 0;
+        var tokenJs  = string.IsNullOrEmpty(token)
+                       ? "null"
+                       : $"'{token.Replace("'", "\\'")}'"; // escape single quotes
+        // [AiAssistantOqtaneLoad v20260601-B27] AI Form Assistant gate —
+        // mirrors DNN FormView.ascx.cs:331. The loader includes the AI
+        // bundle unconditionally; the bundle then checks this flag to
+        // decide whether to show the floating chat. Without dev.lock,
+        // the bundle silently no-ops.
+        var aiEnabled = MegaForm.Core.Services.AiAssistant.AiFeatureGate.IsEnabled() ? "true" : "false";
+
+        AddHeadContent(
+            "<style id='mf-oq-builder-prehost'>#mf-builder-root[data-platform='oqtane']{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;max-width:none!important;max-height:none!important;margin:0!important;padding:0!important;z-index:2147483000!important;background:#f8fafc!important;overflow:hidden!important;border-radius:0!important;box-shadow:none!important;}html,body{background:#f8fafc;}</style>" +
+            "<script>" +
+            "window.__MF_PLATFORM__=window.__MF_PLATFORM__||{};" +
+            "window.__MF_PLATFORM__.platform='oqtane';" +
+            $"window.__MF_PLATFORM__.apiBase='/api/MegaForm/';" +
+            $"window.__MF_PLATFORM__.moduleId={moduleId};" +
+            $"window.__MF_PLATFORM__.portalId={portalId};" +
+            $"window.__MF_PLATFORM__.siteId={portalId};" +
+            $"window.__MF_PLATFORM__.pageId={(PageState?.Page?.PageId ?? 0)};" +
+            $"window.__MF_PLATFORM__.authToken={tokenJs};" +
+            $"window.__MF_PLATFORM__.ai={{enabled:{aiEnabled}}};" +
+            $"window.__MF_PLATFORM__.builderBootBadge='{OQ_BUILDER_BOOT_BADGE}';" +
+            $"window.__MF_OQTANE_BUILDER_BOOT_BADGE__='{OQ_BUILDER_BOOT_BADGE}';" +
+            $"window.__MF_BUILDER_PREVIEW_CSS_BADGE__='{BUILDER_PREVIEW_CSS_BADGE}';" +
+            "</script>"
+        );
+    }
+
+    protected override void OnInitialized()
+    {
+        if (!UserSecurity.IsAuthorized(PageState.User, PermissionNames.Edit, ModuleState.PermissionList))
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        // [TakeoverRaceFix v20260501-12] Same pattern as Dashboard.razor /
+        // Submissions.razor: clean up the loader's fullscreen takeover on Blazor
+        // SPA-navigation away. Otherwise body keeps .mf-builder-open class +
+        // inline display:none on every sibling, hiding the next page → BLANK.
+        // Reproduced by: Dashboard → Builder → click "Dashboard" back button
+        // (href="/" → Blazor SPA-navigates, body class persists, next page blank).
+        // Cleanup logic lives in canonical loader (window.__mfBuilderCleanup) so
+        // every platform shares one source of truth.
+        NavigationManager.LocationChanged += OnLocationChanged;
+
+        // [OQBuilderReturn v20260502-02] Compute the dashboard URL once per
+        // mount so the rendered <div data-return-url="…"> carries it. Used by
+        // builder TS toolbar (getPublishReturnUrl reads data-return-url) and by
+        // the back button (a.w-back href).
+        _returnUrl = ComputeReturnUrl();
+
+        var uri = NavigationManager.Uri ?? string.Empty;
+        var q = uri.Contains("?") ? uri.Substring(uri.IndexOf('?') + 1) : string.Empty;
+        var isNewMode = false;
+        foreach (var part in q.Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var kv = part.Split('=', 2);
+            var key = kv.Length > 0 ? kv[0] : string.Empty;
+            var val = kv.Length > 1 ? Uri.UnescapeDataString(kv[1]) : string.Empty;
+            if (key.Equals("tab", StringComparison.OrdinalIgnoreCase))
+            {
+                var tab = (val ?? string.Empty).Trim().ToLowerInvariant();
+                if (tab == "workflow" || tab == "flow" || tab == "bpmn" || tab == "bpmn2")
+                {
+                    _initialRightTab = "workflow";
+                }
+                else if (tab == "print")
+                {
+                    _initialRightTab = "print";
+                }
+            }
+            if (key.Equals("new", StringComparison.OrdinalIgnoreCase) &&
+                (val == "1" || val.Equals("true", StringComparison.OrdinalIgnoreCase)))
+            {
+                isNewMode = true;
+                break;
+            }
+        }
+
+        // [OQ-newform v20260419-07] Explicit ?new=1 must bypass module-bound FormId.
+        if (!isNewMode && ModuleState?.Settings != null)
+        {
+            var rawFormId = string.Empty;
+            if (!ModuleState.Settings.TryGetValue("MegaForm:FormId", out rawFormId) || string.IsNullOrWhiteSpace(rawFormId))
+            {
+                ModuleState.Settings.TryGetValue("FormId", out rawFormId);
+            }
+            if (int.TryParse(rawFormId, out var id))
+            {
+                _formId = id;
+            }
+        }
+        else if (isNewMode)
+        {
+            _formId = 0;
+        }
+
+        if (_formId == 0 && !isNewMode)
+        {
+            foreach (var part in q.Split('&', StringSplitOptions.RemoveEmptyEntries))
+            {
+                var kv = part.Split('=', 2);
+                var key = kv.Length > 0 ? kv[0] : string.Empty;
+                var val = kv.Length > 1 ? Uri.UnescapeDataString(kv[1]) : string.Empty;
+                if (key.Equals("formId", StringComparison.OrdinalIgnoreCase)
+                    && int.TryParse(val, out var uid))
+                {
+                    _formId = uid;
+                    break;
+                }
+            }
+        }
+    }
+
+
+
+    private bool _navHookDisposed;
+    private async void OnLocationChanged(object sender, LocationChangedEventArgs e)
+    {
+        try { await Js.InvokeVoidAsync("eval", CleanupCall); } catch { }
+    }
+
+    public void Dispose()
+    {
+        if (_navHookDisposed) return;
+        _navHookDisposed = true;
+        try { NavigationManager.LocationChanged -= OnLocationChanged; } catch { }
+        try { _ = Js.InvokeVoidAsync("eval", CleanupCall); } catch { }
+    }
+
+    // Calls into canonical loader cleanup (defined once in MegaForm.UI/src/loader/index.ts).
+    // Fallback inline removes mf-builder-open in case the loader hasn't installed it yet
+    // (e.g. user navigates away before megaform-builder-loader.js finishes loading).
+    private const string CleanupCall = @"(function(){
+        if (window.__mfBuilderCleanup) { try { window.__mfBuilderCleanup(); } catch(_e){} return; }
+        document.documentElement.classList.remove('mf-builder-open');
+        document.body.classList.remove('mf-builder-open');
+        document.body.removeAttribute('data-mf-builder-open');
+    })();";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (_formId <= 0)
+        {
+            _schemaJson = "{}";
+            _formStatus = "draft";
+            return;
+        }
+
+        try
+        {
+            var form = await MegaFormService.GetFormAsync(_formId, ModuleState?.ModuleId ?? 0, SiteState?.Alias?.SiteId ?? 0);
+            var schema = form?.ResolvedSchemaJson;
+            if (string.IsNullOrWhiteSpace(schema)) schema = form?.SchemaJson;
+            _schemaJson = string.IsNullOrWhiteSpace(schema) ? "{}" : schema;
+            _formStatus = string.IsNullOrWhiteSpace(form?.Status) ? "draft" : form.Status.ToLowerInvariant();
+        }
+        catch
+        {
+            _schemaJson = "{}";
+            _formStatus = "draft";
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        _done = true;
+
+        // Oqtane Resource pipeline may set type="null" on script tags in some versions.
+        // Fallback: if loader hasn't run yet, inject manually.
+        var version = MegaForm.Oqtane.Shared.MegaFormAssetVersion.Current;
+        await Js.InvokeVoidAsync("eval", $@"
+            (function() {{
+                if (typeof window.__mfLoaderRan !== 'undefined') return;
+                var hasCss = !!document.querySelector('link[href*=""megaform-builder-shell""]');
+                if (hasCss) return;
+                var s = document.createElement('script');
+                s.src = '/{ModulePath()}js/megaform-oqtane-auth.js?v={version}';
+                document.head.appendChild(s);
+                var s2 = document.createElement('script');
+                s2.src = '/{ModulePath()}js/megaform-builder-loader.js?v={version}';
+                document.head.appendChild(s2);
+            }})();
+        ");
+    }
+}

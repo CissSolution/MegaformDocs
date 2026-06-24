@@ -1,0 +1,52 @@
+/* ============================================================
+   MegaForm Widget: Rating Suite v2.0
+   Covers: Star Rating
+   ============================================================ */
+
+/* ─── STAR RATING ─────────────────────────────────────── */
+.mfw-rating-wrap { padding: 4px 0; }
+.mfw-rating-field-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+}
+.mfw-rating-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 11px;
+    color: #9ca3af;
+}
+.mfw-rating-items {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.mfw-rating-item {
+    transition: all .15s ease;
+    user-select: none;
+    line-height: 1;
+}
+.mfw-rating-item:hover {
+    transform: scale(1.2) !important;
+}
+.mfw-rating-item:focus {
+    outline: 2px solid #6366f1;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+.mfw-rating-item.active {
+    color: #fbbf24 !important;
+}
+.mfw-rating-value {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 6px;
+    min-height: 18px;
+}
+
+@media (max-width: 480px) {
+    .mfw-rating-item { font-size: 24px !important; }
+}

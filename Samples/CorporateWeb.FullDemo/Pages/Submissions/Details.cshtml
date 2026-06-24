@@ -1,0 +1,27 @@
+@page
+@model MegaForm.Samples.CorporateWeb.FullDemo.Pages.Submissions.DetailsModel
+@{
+    ViewData["Title"] = "Submission Details";
+}
+
+<h1>Submission #@Model.Submission.SubmissionId</h1>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <strong>@Model.FormTitle</strong> — @Model.Submission.SubmittedOnUtc
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Status</dt>
+            <dd class="col-sm-9">@Model.Submission.Status</dd>
+
+            <dt class="col-sm-3">Spam</dt>
+            <dd class="col-sm-9">@(Model.Submission.IsSpam ? "Yes" : "No")</dd>
+        </dl>
+
+        <h5>Data</h5>
+        <pre class="bg-light p-3 rounded"><code>@Model.DataJson</code></pre>
+    </div>
+</div>
+
+<a class="btn btn-secondary" href="/Submissions">Back to submissions</a>

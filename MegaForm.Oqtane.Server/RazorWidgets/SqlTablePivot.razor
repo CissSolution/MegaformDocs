@@ -1,0 +1,211 @@
+@*
+    SqlTablePivot — pivot SQL rows by group, compute aggregates per group.
+    Demonstrates the LINQ + Razor pattern that proprietary tag-language
+    widgets cannot do (no @if/@foreach/GroupBy in token-only templating).
+
+    Default widgetProps:
+      {
+        "template": "SqlTablePivot",
+        "useSql": true,
+        "connectionKey": "DashboardDatabase",
+        "masterQuery": "SELECT Region, Category, SalesAmount FROM SalesFact WHERE Year = :year",
+        "queryDependsOn": ["year"],
+        "parameters": {
+          "rowGroupColumn": "Region",
+          "colGroupColumn": "Category",
+          "valueColumn":    "SalesAmount",
+          "aggregator":     "sum"
+        }
+      }
+*@
+@using MegaForm.Razor
+@inherits MfRazorWidgetBase
+@attribute [RazorTemplate("SqlTablePivot", Category = "Analytics", Icon = "fa-table-cells", WhenToUse = "Show cross-tab totals (region × category sales, month × product counts) from a flat SQL result set.", Description = "Pivot SQL rows by row/column groups with sum/avg/count/min/max aggregation. Full LINQ groupings that token-only templating cannot express.", SupportsSql = true, EmitsValue = false)]
+@using System.Linq
+@using MegaForm.Core.Interfaces
+
+@code {
+    [Parameter, RazorParam(Label = "Row group column", Group = "Data mapping", Widget = "sql-column", Required = true, Order = 10, Placeholder = "Region", Hint = "Distinct values become rows of the pivot.")]
+    public string RowGroupColumn { get; set; } = "Region";
+
+    [Parameter, RazorParam(Label = "Column group column", Group = "Data mapping", Widget = "sql-column", Required = true, Order = 20, Placeholder = "Category", Hint = "Distinct values become columns of the pivot.")]
+    public string ColGroupColumn { get; set; } = "Category";
+
+    [Parameter, RazorParam(Label = "Value column", Group = "Data mapping", Widget = "sql-column", Required = true, Order = 30, Placeholder = "SalesAmount", Hint = "Numeric column aggregated into each cell.")]
+    public string ValueColumn    { get; set; } = "Value";
+
+    [Parameter, RazorParam(Label = "Aggregator", Group = "Aggregation", Widget = "select", Options = "sum,avg,count,min,max", Required = true, Order = 40, Hint = "How to combine multiple rows that share the same row+column key.")]
+    public string Aggregator     { get; set; } = "sum"; // sum | avg | count | min | max
+
+    private List<string> _columnHeaders = new();
+    private List<PivotRow> _rows = new();
+    private decimal _grandTotal;
+
+    protected override void OnParametersSet()
+    {
+        if (SqlRows == null) return;
+        var rowsList = SqlRows.Cast<object>().ToList();
+
+        // Extract distinct column headers (e.g. each unique Category)
+        _columnHeaders = rowsList
+            .Select(r => Convert.ToString(GetPropValue(r, ColGroupColumn)))
+            .Where(s => !string.IsNullOrEmpty(s))
+            .Distinct()
+            .OrderBy(s => s)
+            .ToList();
+
+        // Group by row dimension (e.g. each unique Region)
+        var rowGroups = rowsList
+            .GroupBy(r => Convert.ToString(GetPropValue(r, RowGroupColumn)))
+            .OrderBy(g => g.Key);
+
+        _rows.Clear();
+        _grandTotal = 0m;
+
+        foreach (var rg in rowGroups)
+        {
+            var pr = new PivotRow { RowKey = rg.Key, Cells = new Dictionary<string, decimal>(), Total = 0m };
+            foreach (var colKey in _columnHeaders)
+            {
+                var cellRows = rg.Where(r => Convert.ToString(GetPropValue(r, ColGroupColumn)) == colKey);
+                List<decimal> values = cellRows.Select(r => ConvertToDecimal(GetPropValue(r, ValueColumn))).ToList();
+                decimal aggregated = Aggregator?.ToLower() switch
+                {
+                    "avg"   => values.Count > 0 ? values.Average() : 0m,
+                    "count" => values.Count,
+                    "min"   => values.Count > 0 ? values.Min() : 0m,
+                    "max"   => values.Count > 0 ? values.Max() : 0m,
+                    _       => values.Sum(),
+                };
+                pr.Cells[colKey] = aggregated;
+                pr.Total += aggregated;
+            }
+            _grandTotal += pr.Total;
+            _rows.Add(pr);
+        }
+    }
+
+    private static object GetPropValue(object obj, string name)
+    {
+        if (obj is IDictionary<string, object> dict)
+            return dict.TryGetValue(name, out var v) ? v : null;
+        return obj?.GetType().GetProperty(name)?.GetValue(obj);
+    }
+
+    private static decimal ConvertToDecimal(object v)
+    {
+        if (v == null) return 0m;
+        if (v is decimal d) return d;
+        if (decimal.TryParse(v.ToString(), out var parsed)) return parsed;
+        return 0m;
+    }
+
+    private class PivotRow
+    {
+        public string RowKey { get; set; }
+        public Dictionary<string, decimal> Cells { get; set; }
+        public decimal Total { get; set; }
+    }
+}
+
+<div class="mf-razor-pivot">
+    @if (_rows.Count == 0)
+    {
+        <div class="mf-razor-pivot-empty">No data</div>
+    }
+    else
+    {
+        <table class="mf-razor-pivot-table">
+            <thead>
+                <tr>
+                    <th class="mf-razor-pivot-row-header">@RowGroupColumn</th>
+                    @foreach (var col in _columnHeaders)
+                    {
+                        <th class="mf-razor-pivot-col-header">@col</th>
+                    }
+                    <th class="mf-razor-pivot-row-total">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in _rows)
+                {
+                    <tr>
+                        <td class="mf-razor-pivot-row-header">@r.RowKey</td>
+                        @foreach (var col in _columnHeaders)
+                        {
+                            var cell = r.Cells.TryGetValue(col, out var v) ? v : 0m;
+                            <td class="mf-razor-pivot-cell @(cell == 0m ? "is-zero" : "")">
+                                @cell.ToString("N2")
+                            </td>
+                        }
+                        <td class="mf-razor-pivot-row-total"><strong>@r.Total.ToString("N2")</strong></td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td class="mf-razor-pivot-grand-label"><strong>Grand Total</strong></td>
+                    @foreach (var col in _columnHeaders)
+                    {
+                        var colTotal = _rows.Sum(r => r.Cells.TryGetValue(col, out var v) ? v : 0m);
+                        <td class="mf-razor-pivot-col-total"><strong>@colTotal.ToString("N2")</strong></td>
+                    }
+                    <td class="mf-razor-pivot-grand-total"><strong>@_grandTotal.ToString("N2")</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    }
+</div>
+
+<style>
+    .mf-razor-pivot {
+        overflow-x: auto;
+        margin: 12px 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    }
+    .mf-razor-pivot-empty {
+        color: #94a3b8;
+        font-style: italic;
+        padding: 24px;
+        text-align: center;
+        background: #f8fafc;
+        border-radius: 8px;
+    }
+    .mf-razor-pivot-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+        font-size: 13px;
+    }
+    .mf-razor-pivot-table th,
+    .mf-razor-pivot-table td {
+        padding: 8px 12px;
+        text-align: right;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .mf-razor-pivot-row-header {
+        text-align: left !important;
+        font-weight: 600;
+        color: #0f172a;
+        background: #f8fafc;
+    }
+    .mf-razor-pivot-col-header {
+        font-weight: 600;
+        color: #475569;
+        background: #f1f5f9;
+    }
+    .mf-razor-pivot-cell.is-zero {
+        color: #cbd5e1;
+    }
+    .mf-razor-pivot-row-total,
+    .mf-razor-pivot-col-total,
+    .mf-razor-pivot-grand-total,
+    .mf-razor-pivot-grand-label {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+    .mf-razor-pivot-grand-total {
+        background: #6366f1;
+        color: #fff;
+    }
+</style>

@@ -1,0 +1,183 @@
+.mfw-payment-wrap {
+  --mfw-accent: #4f46e5;
+  --mfw-radius: 8px;
+  --mfw-border: #e2e8f0;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.mfw-payment-wrap * { box-sizing: border-box; }
+
+.mfw-payment-wrap {
+  color: #0f172a;
+}
+
+.mfw-payment-card {
+  background: var(--mfw-bg, #fff);
+  border: 1px solid var(--mfw-border);
+  border-radius: 14px;
+  padding: 16px;
+  display: grid;
+  gap: 14px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+}
+
+.mfw-payment-header {
+  display: grid;
+  gap: 6px;
+}
+
+.mfw-payment-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.mfw-payment-description {
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.mfw-payment-amount-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #dbe4f0;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(79, 70, 229, 0.06), rgba(79, 70, 229, 0.02));
+}
+
+.mfw-payment-amount-label {
+  font-size: 13px;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mfw-payment-amount {
+  font-size: 24px;
+  color: #0f172a;
+}
+
+.mfw-payment-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  width: fit-content;
+  max-width: 100%;
+  border-radius: 999px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.mfw-payment-status[data-status="idle"] {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.mfw-payment-status[data-status="pending"] {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.mfw-payment-status[data-status="paid"] {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.mfw-payment-status[data-status="failed"] {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.mfw-payment-methods {
+  display: grid;
+  gap: 14px;
+}
+
+.mfw-payment-method {
+  border: 1px solid #dbe4f0;
+  border-radius: 14px;
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.mfw-payment-method-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mfw-payment-method-name {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.mfw-payment-method-note {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.mfw-payment-stripe-box,
+.mfw-payment-paypal-box {
+  display: grid;
+  gap: 12px;
+}
+
+.mfw-payment-stripe-element {
+  min-height: 52px;
+  padding: 12px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.mfw-payment-btn {
+  min-height: 46px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--mfw-accent);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0 16px;
+}
+
+.mfw-payment-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.mfw-payment-inline-msg {
+  min-height: 20px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #475569;
+}
+
+.mfw-payment-inline-msg.is-success { color: #047857; }
+.mfw-payment-inline-msg.is-error { color: #b91c1c; }
+.mfw-payment-inline-msg.is-info { color: #1d4ed8; }
+.mfw-payment-inline-msg.is-warn { color: #b45309; }
+
+.mfw-payment-mini-error {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 13px;
+}
+
+@media (min-width: 768px) {
+  .mfw-payment-methods {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

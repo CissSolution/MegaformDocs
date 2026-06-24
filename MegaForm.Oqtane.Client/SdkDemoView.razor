@@ -1,0 +1,208 @@
+@namespace MegaForm.Client
+@inject NavigationManager NavigationManager
+@inject MegaForm.Sdk.IMegaFormClient Mega
+@using System.Text.Json
+@using System.Collections.Generic
+@using System.Linq
+@using MegaForm.Sdk
+
+@* ── SDK CONSUMER DEMO (Oqtane) ──────────────────────────────────────────────
+   Proves that ANY component/module can read MegaForm data through ONLY the public
+   MegaForm.Sdk facade (IMegaFormClient) — no MegaForm internals. Same calls a DNN
+   Razor Host (.cshtml) uses via MegaFormSdk.RunAsync. Open by URL:
+     /?mfpanel=sdkdemo            → form picker + submissions of the first form
+     /?mfpanel=sdkdemo&formId=1   → submissions of form 1 (list view + field data + files)
+   Badge: OQSdkDemo v20260613-B161
+   ──────────────────────────────────────────────────────────────────────────── *@
+
+<div class="mfsdk-demo" style="font-family:'Inter',system-ui,sans-serif;color:#0f172a;padding:18px 22px;max-width:1200px;margin:0 auto;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+        <span style="font-size:22px;">🧩</span>
+        <h1 style="margin:0;font-size:22px;font-weight:800;">MegaForm SDK — List View Demo</h1>
+    </div>
+    <p style="margin:0 0 16px;color:#475569;font-size:13px;">
+        This surface reads MegaForm data through <code>IMegaFormClient</code> (the public SDK) only —
+        the exact pattern an external Oqtane module or DNN Razor Host uses. Badge: @BADGE
+    </p>
+
+    @if (_error != null)
+    {
+        <div style="padding:12px 14px;border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;border-radius:10px;">@_error</div>
+    }
+    else if (_loading)
+    {
+        <div style="padding:24px;color:#64748b;">Loading via SDK…</div>
+    }
+    else
+    {
+        <!-- Form picker -->
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+            @foreach (var f in _forms)
+            {
+                var active = f.FormId == _formId;
+                <a href="@PanelUrl(f.FormId)"
+                   style="text-decoration:none;padding:7px 12px;border-radius:9px;font-size:13px;font-weight:600;border:1px solid @(active ? "#0f172a" : "#cbd5e1");background:@(active ? "#0f172a" : "#fff");color:@(active ? "#fff" : "#334155");">
+                    @(f.Title ?? $"Form {f.FormId}") <span style="opacity:.6;">#@f.FormId</span>
+                </a>
+            }
+        </div>
+
+        @if (_formId <= 0)
+        {
+            <div style="padding:24px;color:#64748b;">Pick a form above to list its submissions.</div>
+        }
+        else
+        {
+            <div style="margin-bottom:8px;font-size:13px;color:#475569;">
+                <strong>@_total</strong> submission(s) in <strong>@(_currentForm?.Title ?? ("Form " + _formId))</strong>
+                — read via <code>Mega.Submissions.FindAsync</code>.
+            </div>
+
+            <div style="overflow-x:auto;border:1px solid #e2e8f0;border-radius:12px;">
+                <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                    <thead>
+                        <tr style="background:#f8fafc;text-align:left;">
+                            <th style="padding:10px 12px;border-bottom:1px solid #e2e8f0;">#</th>
+                            <th style="padding:10px 12px;border-bottom:1px solid #e2e8f0;">Submitted</th>
+                            <th style="padding:10px 12px;border-bottom:1px solid #e2e8f0;">Status</th>
+                            @foreach (var col in _columns)
+                            {
+                                <th style="padding:10px 12px;border-bottom:1px solid #e2e8f0;white-space:nowrap;">@col</th>
+                            }
+                            <th style="padding:10px 12px;border-bottom:1px solid #e2e8f0;">Files</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in _rows)
+                        {
+                            <tr style="border-bottom:1px solid #f1f5f9;">
+                                <td style="padding:9px 12px;color:#64748b;">@row.Sub.SubmissionId</td>
+                                <td style="padding:9px 12px;white-space:nowrap;">@row.Sub.SubmittedOnUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td style="padding:9px 12px;"><span style="padding:2px 8px;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:12px;">@(row.Sub.Status ?? "new")</span></td>
+                                @foreach (var col in _columns)
+                                {
+                                    <td style="padding:9px 12px;">@(row.Values.TryGetValue(col, out var v) ? v : "")</td>
+                                }
+                                <td style="padding:9px 12px;">
+                                    @if (row.Files.Count == 0)
+                                    {
+                                        <span style="color:#94a3b8;">—</span>
+                                    }
+                                    else
+                                    {
+                                        @foreach (var file in row.Files)
+                                        {
+                                            <a href="@DownloadUrl(row.Sub.SubmissionId, file.FileId)" style="display:inline-block;margin-right:8px;color:#2563eb;text-decoration:underline;">⬇ @file.FileName</a>
+                                        }
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        @if (_rows.Count == 0)
+                        {
+                            <tr><td colspan="@(_columns.Count + 4)" style="padding:18px;color:#94a3b8;text-align:center;">No submissions.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public int PortalId { get; set; }
+
+    private const string BADGE = "OQSdkDemo v20260613-B161";
+    private bool _loading = true;
+    private string? _error;
+    private int _formId;
+    private int _total;
+    private List<MegaForm.Sdk.FormDto> _forms = new();
+    private MegaForm.Sdk.FormDto? _currentForm;
+    private List<string> _columns = new();
+    private List<Row> _rows = new();
+
+    private sealed class Row
+    {
+        public MegaForm.Sdk.SubmissionDto Sub { get; set; } = default!;
+        public Dictionary<string, string> Values { get; set; } = new();
+        public IReadOnlyList<FileDto> Files { get; set; } = System.Array.Empty<FileDto>();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var scope = new MegaFormScope { PortalId = PortalId };
+            var formsPage = await Mega.Forms.ListFormsAsync(new FormQuery { PageSize = 100 }, scope);
+            _forms = formsPage.Items.ToList();
+
+            _formId = ReadFormIdFromUrl();
+            if (_formId <= 0 && _forms.Count > 0) _formId = _forms[0].FormId;
+            _currentForm = _forms.FirstOrDefault(f => f.FormId == _formId);
+
+            if (_formId > 0)
+            {
+                var page = await Mega.Submissions.FindAsync(new SubmissionQuery { FormId = _formId, PageSize = 100 }, scope);
+                _total = page.TotalCount;
+                var cols = new List<string>();
+                foreach (var s in page.Items)
+                {
+                    var values = ParseData(s.DataJson);
+                    foreach (var k in values.Keys) if (!cols.Contains(k)) cols.Add(k);
+                    var files = await Mega.Files.ListForSubmissionAsync(s.SubmissionId, scope);
+                    _rows.Add(new Row { Sub = s, Values = values, Files = files });
+                }
+                _columns = cols.Take(6).ToList(); // keep the table readable
+            }
+        }
+        catch (System.Exception ex)
+        {
+            _error = "SDK call failed: " + ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static Dictionary<string, string> ParseData(string? json)
+    {
+        var d = new Dictionary<string, string>();
+        if (string.IsNullOrWhiteSpace(json)) return d;
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            if (doc.RootElement.ValueKind == JsonValueKind.Object)
+                foreach (var p in doc.RootElement.EnumerateObject())
+                {
+                    var v = p.Value.ValueKind == JsonValueKind.String ? p.Value.GetString() : p.Value.ToString();
+                    d[p.Name] = (v ?? string.Empty).Length > 40 ? v!.Substring(0, 40) + "…" : (v ?? string.Empty);
+                }
+        }
+        catch { /* leave empty on malformed json */ }
+        return d;
+    }
+
+    private int ReadFormIdFromUrl()
+    {
+        var uri = NavigationManager.Uri ?? string.Empty;
+        var q = uri.Contains("?") ? uri.Substring(uri.IndexOf('?') + 1) : string.Empty;
+        foreach (var part in q.Split('&', System.StringSplitOptions.RemoveEmptyEntries))
+        {
+            var kv = part.Split('=', 2);
+            if (kv.Length == 2 && kv[0].Equals("formId", System.StringComparison.OrdinalIgnoreCase) && int.TryParse(kv[1], out var id))
+                return id;
+        }
+        return 0;
+    }
+
+    private string PanelUrl(int formId)
+    {
+        var baseUrl = (NavigationManager.Uri ?? "/").Split('?')[0].Split('#')[0];
+        return baseUrl + "?mfpanel=sdkdemo&formId=" + formId;
+    }
+
+    private string DownloadUrl(int submissionId, int fileId)
+        => $"/api/MegaForm/SdkDemo/Download?submissionId={submissionId}&fileId={fileId}";
+}

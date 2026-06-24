@@ -1,0 +1,66 @@
+@{
+    ViewData["Title"] = "API Demo";
+}
+
+<h1>SDK API Demo</h1>
+<p class="lead">These buttons exercise the <code>IMegaFormClient</code> API surface.</p>
+
+@if (TempData["ApiDemoResult"] != null)
+{
+    <div class="alert alert-info">@TempData["ApiDemoResult"]</div>
+}
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Forms.CreateFormAsync</h5>
+                <p class="card-text">Create a sample form with a name, email, and message schema.</p>
+                <form method="post" asp-action="CreateSampleForm">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-primary">Create Sample Form</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Submissions.SubmitAsync</h5>
+                <p class="card-text">Submit sample data to a form by ID.</p>
+                <form method="post" asp-action="SubmitSample" class="d-flex gap-2">
+                    @Html.AntiForgeryToken()
+                    <input type="number" name="formId" class="form-control" placeholder="Form ID" required />
+                    <button type="submit" class="btn btn-success">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Schema.ParseForm</h5>
+                <p class="card-text">Parse a form's schema JSON into typed field metadata.</p>
+                <form method="post" asp-action="ParseSchema" class="d-flex gap-2">
+                    @Html.AntiForgeryToken()
+                    <input type="number" name="formId" class="form-control" placeholder="Form ID" required />
+                    <button type="submit" class="btn btn-info">Parse</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (ViewBag.SchemaInfo != null)
+{
+    <h3>Parsed Schema</h3>
+    <ul class="list-group">
+        @foreach (var field in ViewBag.SchemaInfo.Fields)
+        {
+            <li class="list-group-item">
+                <strong>@field.Key</strong> (@field.Type) — @field.Label
+                @(field.Required ? "[required]" : "")
+            </li>
+        }
+    </ul>
+}

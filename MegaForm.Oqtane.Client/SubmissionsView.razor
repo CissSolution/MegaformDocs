@@ -1,0 +1,130 @@
+@namespace MegaForm.Client
+@inject NavigationManager NavigationManager
+@inject IJSRuntime Js
+@using System.Collections.Generic
+
+@* ── MegaForm Submissions View ────────────────────────────────────────────
+   Inline child component rendered inside Index.razor when ?mfpanel=submissions.
+   Receives primitive context via [Parameter] instead of inheriting ModuleBase.
+   Badge: OQSubmissionsInline v20260609-B102
+   ──────────────────────────────────────────────────────────────────────── *@
+
+@* CSS + JS bundle are eager-loaded as page Resources by Index.razor (a Blazor-
+   rendered <script> tag here would not execute reliably). The poll-boot below
+   waits for MegaForm.initSubmissions, and the bundle also self-mounts this root. *@
+
+<div id="mf-submissions-root"
+     @ref="_rootRef"
+     data-shell-mode="page"
+     data-platform="oqtane"
+     data-mf-module-id="@ModuleId"
+     data-mf-site-id="@SiteId"
+     data-mf-api-base="/api/MegaForm/"
+     data-dashboard-url="@BuildPanelUrl("dashboard")"
+     data-builder-url="@BuildPanelUrl("builder")"
+     data-submissions-url="@BuildPanelUrl("submissions")"
+     data-oq-submissions-shell-badge="@OQ_SUBMISSIONS_SHELL_BADGE">
+    <div class="mf-admin-loading">Loading submissions…</div>
+</div>
+<script data-mf-submissions-static-boot="@OQ_SUBMISSIONS_SHELL_BADGE">
+    @((MarkupString)BuildStaticSubmissionsBootScript())
+</script>
+
+@code {
+    [Parameter] public int ModuleId { get; set; }
+    [Parameter] public int SiteId { get; set; }
+
+    private ElementReference _rootRef;
+    private const string OQ_SUBMISSIONS_SHELL_BADGE = "OQSubmissionsInline v20260609-B102";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // [SelfLoadBundle v20260613-B159] The submissions bundle is GATED OUT of the
+            // page Resources in some render modes (admin bundles are lazy-loaded), so a
+            // poll-only boot left the surface stuck on "Loading submissions…" forever —
+            // window.MegaForm.initSubmissions never existed because the script never loaded.
+            // Mirror DashboardView: mount if available; else if the script tag is present
+            // poll for it; else inject the bundle (+ oqtane-auth for authed API calls) then
+            // poll + mount. Guarded against double-mount via root.dataset.mfMounted.
+            var version = MegaForm.Oqtane.Shared.MegaFormAssetVersion.Current;
+            await Js.InvokeVoidAsync("eval", @"
+(function(){
+  var root = document.getElementById('mf-submissions-root');
+  if (!root) return;
+  function mount(){
+    if (root.dataset.mfMounted) return true;
+    if (window.MegaForm && typeof window.MegaForm.initSubmissions === 'function') {
+      root.dataset.mfMounted = '1';
+      try { window.MegaForm.initSubmissions(root); }
+      catch (e) { console.error('MegaForm.initSubmissions failed', e); }
+      return true;
+    }
+    return false;
+  }
+  function poll(){ var n=0; var t=setInterval(function(){ if (mount() || ++n>60) clearInterval(t); }, 120); }
+  if (mount()) return;
+  if (document.querySelector('script[src*=""megaform-submissions.js""]')) { poll(); return; }
+  if (!document.querySelector('script[src*=""megaform-oqtane-auth.js""]')) {
+    var a=document.createElement('script'); a.src='/Modules/MegaForm/js/megaform-oqtane-auth.js'; document.head.appendChild(a);
+  }
+  var s=document.createElement('script'); s.src='/Modules/MegaForm/js/megaform-submissions.js?v=" + version + @"'; s.onload=poll; document.head.appendChild(s);
+  poll();
+})();
+");
+        }
+    }
+
+    private string BuildPanelUrl(string panel)
+    {
+        var baseUrl = NavigationManager.Uri.Split('?')[0].Split('#')[0];
+        var parts = new List<string>();
+        var editValue = GetQueryValue(NavigationManager.Uri, "edit");
+        if (!string.IsNullOrWhiteSpace(editValue))
+            parts.Add("edit=" + Uri.EscapeDataString(editValue));
+        parts.Add("mfpanel=" + Uri.EscapeDataString(panel));
+        return parts.Count == 0 ? baseUrl : baseUrl + "?" + string.Join("&", parts);
+    }
+
+    private static string GetQueryValue(string uri, string key)
+    {
+        if (string.IsNullOrWhiteSpace(uri) || string.IsNullOrWhiteSpace(key)) return string.Empty;
+        var q = uri.Contains("?") ? uri.Substring(uri.IndexOf('?') + 1) : string.Empty;
+        foreach (var part in q.Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var kv = part.Split('=', 2);
+            if (kv.Length > 0 && kv[0].Equals(key, StringComparison.OrdinalIgnoreCase))
+                return kv.Length > 1 ? Uri.UnescapeDataString(kv[1]) : string.Empty;
+        }
+        return string.Empty;
+    }
+
+    private string BuildStaticSubmissionsBootScript()
+    {
+        var version = MegaForm.Oqtane.Shared.MegaFormAssetVersion.Current;
+        return @"(function(){
+  var root = document.getElementById('mf-submissions-root');
+  if (!root) return;
+  function mount(){
+    if (root.dataset.mfMounted) return true;
+    if (window.MegaForm && typeof window.MegaForm.initSubmissions === 'function') {
+      root.dataset.mfMounted = '1';
+      try { window.MegaForm.initSubmissions(root); }
+      catch (e) { console.error('MegaForm.initSubmissions failed', e); }
+      return true;
+    }
+    return false;
+  }
+  function poll(){ var n=0; var t=setInterval(function(){ if (mount() || ++n>80) clearInterval(t); }, 100); }
+  if (mount()) return;
+  if (!document.querySelector('script[src*=""megaform-oqtane-auth.js""]')) {
+    var a=document.createElement('script'); a.src='/Modules/MegaForm/js/megaform-oqtane-auth.js?v=" + version + @"'; document.head.appendChild(a);
+  }
+  if (!document.querySelector('script[src*=""megaform-submissions.js""]')) {
+    var s=document.createElement('script'); s.src='/Modules/MegaForm/js/megaform-submissions.js?v=" + version + @"'; s.onload=poll; document.head.appendChild(s);
+  }
+  poll();
+})();";
+    }
+}
