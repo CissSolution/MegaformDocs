@@ -997,6 +997,9 @@ export interface FormThemeLayoutState {
   status: number;
   theme: string;
   overrides: Record<string, string>;
+  // [B274] page-theme inheritance flags (form-level), surfaced so the Settings popup can show them.
+  inheritType?: boolean;
+  inheritColors?: boolean;
 }
 
 function sanitizeVarMap(raw: any): Record<string, string> {
@@ -1027,7 +1030,9 @@ export async function getFormThemeLayout(formId: number): Promise<FormThemeLayou
     const theme = String(settings.theme ?? settings.Theme ?? 'default').trim() || 'default';
     const overrides = sanitizeVarMap(
       settings.themeCssOverrides ?? settings.ThemeCssOverrides ?? settings.cssOverrides ?? settings.CssOverrides ?? {});
-    return { ok: true, status: r.status, theme, overrides };
+    const inheritType = (settings.inheritPageTypography ?? settings.InheritPageTypography) === true;
+    const inheritColors = (settings.inheritPageColors ?? settings.InheritPageColors) === true;
+    return { ok: true, status: r.status, theme, overrides, inheritType, inheritColors };
   } catch {
     return empty(0);
   }
@@ -1048,6 +1053,32 @@ export async function saveFormThemeLayout(
       ThemeJson: JSON.stringify({ _kind: 'MegaFormThemePatch', theme: themeId, cssOverrides: cleanOverrides }),
       CssOverrides: cleanOverrides,
     };
+    const r = await fetch(withPlatformAuth(`${getApiBase()}/Form/SaveTheme`), {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: getPlatformHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(payload),
+    });
+    let body: string | undefined;
+    try { body = await r.text(); } catch { /* swallow */ }
+    return { ok: r.ok, status: r.status, body };
+  } catch (err) {
+    return { ok: false, status: 0, body: String(err) };
+  }
+}
+
+// [B274] Persist ONLY the page-theme inheritance flags to the FORM. Form/SaveTheme is a partial
+// patch — it leaves theme/customCss/themeCssOverrides untouched when those fields are absent — so
+// sending just the flags does not disturb the module-wins CSS. Same form-level storage the builder
+// Theme Designer "Page integration" switches use (settings.inheritPageTypography / -Colors).
+export async function saveFormInheritFlags(
+  formId: number,
+  inheritType: boolean,
+  inheritColors: boolean,
+): Promise<{ ok: boolean; status: number; body?: string }> {
+  if (!formId || formId <= 0) return { ok: false, status: 0, body: 'formId required' };
+  try {
+    const payload = { FormId: formId, InheritPageTypography: !!inheritType, InheritPageColors: !!inheritColors };
     const r = await fetch(withPlatformAuth(`${getApiBase()}/Form/SaveTheme`), {
       method: 'POST',
       credentials: 'same-origin',

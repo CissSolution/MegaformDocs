@@ -29,6 +29,7 @@ import {
   fetchSchemaFields,
   getFormThemeLayout,
   saveFormThemeLayout,
+  saveFormInheritFlags,
   getModuleStyle,
   saveModuleStyle,
   type FormViewFetchResult,
@@ -258,6 +259,11 @@ export async function open(opts: SettingsOpts): Promise<void> {
   let themeState = 'default';
   let themeOverrides: Record<string, string> = {};
   let themeDirty = false;
+  // [B274] Page-theme inheritance flags (form-level). Editable here so admins don't need to open
+  // the full Theme Designer. Saved to the FORM (saveFormInheritFlags) on "Save module settings".
+  let themeInheritType = false;
+  let themeInheritColors = false;
+  let inheritDirty = false;
   let themeLayoutExpanded = true;
   let themeStatus = '';
   await loadFormTheme(current.formId);
@@ -754,6 +760,9 @@ export async function open(opts: SettingsOpts): Promise<void> {
     themeOverrides = {};
     themeDirty = false;
     themeStatus = '';
+    themeInheritType = false;
+    themeInheritColors = false;
+    inheritDirty = false;
     if (!formId || formId <= 0) return;
     // [ModuleStyle v20260624-B262] Load the MODULE's owned CSS for this form (server seeds it from
     // the form's CSS on first open / when the module was bound to a different form). The form-level
@@ -765,6 +774,12 @@ export async function open(opts: SettingsOpts): Promise<void> {
       themeOverrides = { ...res.overrides };
     } else if (res.status > 0) {
       themeStatus = `Could not load current theme (HTTP ${res.status}).`;
+    }
+    // [B274] The inherit flags are FORM-level (not in the module style) — read them from the form.
+    const formLayout = await getFormThemeLayout(formId);
+    if (formLayout.ok) {
+      themeInheritType = !!formLayout.inheritType;
+      themeInheritColors = !!formLayout.inheritColors;
     }
   }
 
@@ -861,17 +876,22 @@ export async function open(opts: SettingsOpts): Promise<void> {
     };
 
     const curMaxWidth = String(themeOverrides['--mf-form-max-width'] || '960px');
-    const maxWidthSel = h('select', { class: 'mf-vd-input', onchange: (e: Event) => { setLayoutVar('--mf-form-max-width', String((e.target as HTMLSelectElement).value)); flagDirty(); } }) as HTMLSelectElement;
-    ([['480px', 'Narrow (480)'], ['640px', 'Compact (640)'], ['768px', 'Medium (768)'], ['960px', 'Wide (960)'], ['100%', 'Full width']] as Array<[string, string]>).forEach(([v, l]) => {
-      const o = h('option', { value: v }, l);
-      if (curMaxWidth === v) o.setAttribute('selected', '');
-      maxWidthSel.appendChild(o);
-    });
-    if (!['480px', '640px', '768px', '960px', '100%'].includes(curMaxWidth)) {
-      const o = h('option', { value: curMaxWidth }, curMaxWidth + ' (custom)');
-      o.setAttribute('selected', '');
-      maxWidthSel.appendChild(o);
-    }
+
+    // [B274b] Compact inline RADIO rows (label + options on ONE line) instead of full-width
+    // dropdowns — keeps the Settings pane short. Max width + the two Page-integration source
+    // switches all use this.
+    const radioRow = (label: string, name: string, options: Array<[string, string]>, current: string, onPick: (v: string) => void): HTMLElement => {
+      const row = h('div', { style: { display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', minHeight: '24px' } },
+        h('label', { style: { fontSize: '12px', color: '#334155', minWidth: '104px' } }, label));
+      options.forEach(([val, lab], i) => {
+        const id = `mfvd-${name}-${i}`;
+        const input = h('input', { type: 'radio', name, value: val, id, style: { margin: '0' },
+          onchange: (e: Event) => { if ((e.target as HTMLInputElement).checked) onPick(val); } }) as HTMLInputElement;
+        if (val === current) input.checked = true;
+        row.appendChild(h('label', { for: id, style: { display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#334155', cursor: 'pointer' } }, input, lab));
+      });
+      return row;
+    };
 
     const content = h('div', { style: { display: 'grid', gap: '14px' } },
       h('div', { style: { display: 'grid', gap: '7px' } },
@@ -880,15 +900,16 @@ export async function open(opts: SettingsOpts): Promise<void> {
         grid,
         dirtyNote,
       ),
-      // Only the layout vars that actually take effect at render time are exposed
-      // (megaform.css var-drives form max-width + field spacing on .mf-form-inner /
-      // .mf-field-group). Card padding/border/shadow are intentionally NOT here: a
-      // non-default theme flattens the card by design, so those toggles would be
-      // "pretty but dead". Both keys below match the Theme Designer 1:1 → stay synced.
-      h('div', { style: { display: 'grid', gap: '10px', borderTop: '1px dashed #e2e8f0', paddingTop: '12px' } },
+      h('div', { style: { display: 'grid', gap: '8px', borderTop: '1px dashed #e2e8f0', paddingTop: '12px' } },
         h('div', { style: { fontSize: '12px', fontWeight: '700', color: '#0f172a' } }, 'Layout'),
-        h('div', { style: { display: 'grid', gap: '4px' } }, h('label', { style: { fontSize: '12px', color: '#334155' } }, 'Max width'), maxWidthSel),
+        radioRow('Max width', 'maxw', [['480px', '480'], ['640px', '640'], ['768px', '768'], ['960px', '960'], ['100%', 'Full']], curMaxWidth, (v) => { setLayoutVar('--mf-form-max-width', v); flagDirty(); }),
         sliderRow('Field spacing', '--mf-field-gap', 6, 40, 20),
+      ),
+      h('div', { style: { display: 'grid', gap: '8px', borderTop: '1px dashed #e2e8f0', paddingTop: '12px' } },
+        h('div', { style: { fontSize: '12px', fontWeight: '700', color: '#0f172a' } }, 'Page integration'),
+        h('div', { class: 'mf-vd-help', style: { marginTop: '-4px' } }, 'Inline embeds only — borrow the host page font / colour.'),
+        radioRow('Typography source', 'inhtype', [['theme', 'MegaForm'], ['page', 'From page']], themeInheritType ? 'page' : 'theme', (v) => { themeInheritType = (v === 'page'); inheritDirty = true; flagDirty(); }),
+        radioRow('Color source', 'inhcol', [['theme', 'MegaForm'], ['page', 'From page']], themeInheritColors ? 'page' : 'theme', (v) => { themeInheritColors = (v === 'page'); inheritDirty = true; flagDirty(); }),
       ),
     );
 
@@ -2072,6 +2093,17 @@ export async function open(opts: SettingsOpts): Promise<void> {
         return;
       }
       themeDirty = false;
+    }
+    // [B274] Persist the page-integration flags to the FORM (form-level, separate from module CSS).
+    if (inheritDirty && current.formId && current.formId > 0) {
+      status.textContent = 'Saving page integration…';
+      const inhRes = await saveFormInheritFlags(current.formId, themeInheritType, themeInheritColors);
+      if (!inhRes.ok) {
+        saveBtn.removeAttribute('disabled');
+        status.textContent = `Page-integration save failed (HTTP ${inhRes.status}): ${inhRes.body || 'unknown error'}`;
+        return;
+      }
+      inheritDirty = false;
     }
     status.textContent = 'Saving…';
     const payload = editingSavedViewId > 0

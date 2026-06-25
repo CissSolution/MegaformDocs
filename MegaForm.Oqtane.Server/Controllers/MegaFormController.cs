@@ -634,6 +634,10 @@ namespace MegaForm.Oqtane.Server.Controllers
             string schemaCustomCss = body["SchemaCustomCss"]?.ToString();
             string themeId = body["ThemeId"]?.ToString();
             var cssOverrides = body["CssOverrides"] as JObject;
+            // [B274] Optional page-theme inheritance flags (Settings popup "Page integration").
+            // Null when the caller is only patching theme/css → those forms are left untouched.
+            bool? inheritType = (body["InheritPageTypography"] is JToken it && it.Type == JTokenType.Boolean) ? it.Value<bool>() : (bool?)null;
+            bool? inheritColors = (body["InheritPageColors"] is JToken ic && ic.Type == JTokenType.Boolean) ? ic.Value<bool>() : (bool?)null;
             if (formId == 0) return BadRequest(new { error = "FormId required" });
 
             var form = _formRepo.GetForm(formId);
@@ -662,6 +666,8 @@ namespace MegaForm.Oqtane.Server.Controllers
                         schema["CustomCss"] = schemaCustomCss;
                     }
                     if (cssOverrides != null) settings["themeCssOverrides"] = cssOverrides;
+                    if (inheritType.HasValue) { settings["inheritPageTypography"] = inheritType.Value; settings["InheritPageTypography"] = inheritType.Value; }
+                    if (inheritColors.HasValue) { settings["inheritPageColors"] = inheritColors.Value; settings["InheritPageColors"] = inheritColors.Value; }
                     form.SchemaJson = schema.ToString(Newtonsoft.Json.Formatting.None);
                 }
                 catch { }
@@ -680,6 +686,8 @@ namespace MegaForm.Oqtane.Server.Controllers
                     settingsJson["CustomCss"] = schemaCustomCss;
                 }
                 if (cssOverrides != null) settingsJson["themeCssOverrides"] = cssOverrides;
+                if (inheritType.HasValue) { settingsJson["inheritPageTypography"] = inheritType.Value; settingsJson["InheritPageTypography"] = inheritType.Value; }
+                if (inheritColors.HasValue) { settingsJson["inheritPageColors"] = inheritColors.Value; settingsJson["InheritPageColors"] = inheritColors.Value; }
                 form.SettingsJson = settingsJson.ToString(Newtonsoft.Json.Formatting.None);
             }
             catch { }
