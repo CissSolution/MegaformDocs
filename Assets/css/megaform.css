@@ -2750,11 +2750,36 @@
 @container (max-width: 480px) {
     .mf-composite-row { flex-wrap: wrap; }
     .mf-composite-cell { flex: 1 1 100% !important; }
+    /* [B280] SMART composite collapse: small groups stay on ONE row instead of full-width
+       stacking (which orphaned the date "/" + time ":" separators and made the form very tall).
+       Only date/time/money/measurement/price-range — their cells are short selects/numbers, so
+       2-3 fit a row. Wide text groups (name/address/email-confirm/contact…) still stack. Verified
+       mfqa: dob row 274px→55px, cells 324(stacked)→90×3(one row). */
+    .mf-composite[data-preset="dob"] .mf-composite-row,
+    .mf-composite[data-preset="time"] .mf-composite-row,
+    .mf-composite[data-preset="money"] .mf-composite-row,
+    .mf-composite[data-preset="measurement"] .mf-composite-row,
+    .mf-composite[data-preset="price_range"] .mf-composite-row { flex-wrap: nowrap !important; }
+    .mf-composite[data-preset="dob"] .mf-composite-cell,
+    .mf-composite[data-preset="time"] .mf-composite-cell,
+    .mf-composite[data-preset="money"] .mf-composite-cell,
+    .mf-composite[data-preset="measurement"] .mf-composite-cell,
+    .mf-composite[data-preset="price_range"] .mf-composite-cell { flex: 1 1 0 !important; min-width: 0 !important; }
 }
 @supports not (container-type: inline-size) {
     @media (max-width: 540px) {
         .mf-composite-row { flex-wrap: wrap; }
         .mf-composite-cell { flex: 1 1 100% !important; }
+        .mf-composite[data-preset="dob"] .mf-composite-row,
+        .mf-composite[data-preset="time"] .mf-composite-row,
+        .mf-composite[data-preset="money"] .mf-composite-row,
+        .mf-composite[data-preset="measurement"] .mf-composite-row,
+        .mf-composite[data-preset="price_range"] .mf-composite-row { flex-wrap: nowrap !important; }
+        .mf-composite[data-preset="dob"] .mf-composite-cell,
+        .mf-composite[data-preset="time"] .mf-composite-cell,
+        .mf-composite[data-preset="money"] .mf-composite-cell,
+        .mf-composite[data-preset="measurement"] .mf-composite-cell,
+        .mf-composite[data-preset="price_range"] .mf-composite-cell { flex: 1 1 0 !important; min-width: 0 !important; }
     }
 }
 
@@ -2777,6 +2802,16 @@
    when the wrapper is >600px, so the showcase hero layout is preserved).
    ─────────────────────────────────────────────────────────────────────────── */
 .mf-form-wrapper { container-type: inline-size; container-name: mfpane; max-width: 100%; }
+/* [B281 regression-fix] EXCEPTION: turn containment OFF inside a POPUP-mode form. The popup
+   dialog is `display:inline-block` (shrink-to-fit, see PopupRuntime ~index.ts:991), and
+   inline-size containment makes the wrapper take its inline-size from the CONTAINER instead of
+   its content → circular with the shrink-to-fit dialog → the whole form collapses to a ~0-width
+   sliver (invisible; the transparent overlay then sits over the hidden country-picker so its
+   flag can't be clicked — reported on form 868). Normal sizing here is correct: a popup is
+   ~full-viewport (mobile dialog is width:100%), so it doesn't need pane container-queries.
+   Verified mfqa/_868fix.mjs: wrapper 0px→508px, flag dropdown opens (182 items). */
+.mf-popup-overlay .mf-form-wrapper,
+.mf-popup-body .mf-form-wrapper { container-type: normal !important; }
 
 /* Default grid/flex items have min-width:auto, so .ey-panel etc. can't shrink
    below their intrinsic content width and balloon past a narrow pane. Let them. */
@@ -2796,6 +2831,24 @@
     .mf-form-wrapper .mfp-euro-youth .ey-card      { padding: 20px !important; }
     .mf-form-wrapper .mfp-euro-youth .ey-step-text { display: none !important; }
     .mf-form-wrapper .mfp-euro-youth .ey-actions   { flex-wrap: wrap; gap: 8px; }
+
+    /* [B279] GENERIC narrow-pane field-layout (standard / AI forms) — collapse multi-column
+       field ROWS and option-grids to a single column when the PANE (not viewport) is narrow.
+       `.mf-row` already collapses at viewport ≤640 (megaform.css ~1797), but that NEVER fires
+       for a narrow form COLUMN on a WIDE screen — so a 2-col "First name | Last name" row stayed
+       2-col in a 33% pane (measured: 87px each — qa-issue1-test.mjs). This restores the B153
+       container-collapse that was lost with the container-type declaration. Verified: 87px→194px. */
+    .mf-form-wrapper .mf-row { grid-template-columns: 1fr !important; }
+    .mf-form-wrapper .mf-option-group.mf-cols-2,
+    .mf-form-wrapper .mf-option-group.mf-cols-3,
+    .mf-form-wrapper .mf-option-group.mf-cols-4 { grid-template-columns: 1fr !important; }
+
+    /* [B279] Trim the oversized internal card padding premium custom-shell forms carry in a
+       narrow pane (measured: wrapper 16px edge-pad + .mf-form-inner 28px = 44px each side on a
+       284px pane → the field area was barely half the pane). Full-width forms (>600px container)
+       keep the comfortable padding — this block is inert there. */
+    .mf-form-wrapper.mf-custom-shell-mode { --mf-form-edge-pad: 8px; }
+    .mf-form-wrapper .mf-form-inner { padding-left: 16px !important; padding-right: 16px !important; }
 }
 /* Fallback for browsers without container-query support: same collapse keyed to
    the VIEWPORT. Only fires on genuinely narrow screens, so it won't squeeze a
@@ -2806,6 +2859,9 @@
         .mf-form-wrapper .mfp-euro-youth .ey-hero   { display: none !important; }
         .mf-form-wrapper .mfp-euro-youth .ey-grid-2 { grid-template-columns: 1fr !important; }
         .mf-form-wrapper .mfp-euro-youth .ey-accom  { grid-template-columns: 1fr !important; }
+        .mf-form-wrapper .mf-option-group.mf-cols-2,
+        .mf-form-wrapper .mf-option-group.mf-cols-3,
+        .mf-form-wrapper .mf-option-group.mf-cols-4 { grid-template-columns: 1fr !important; }
     }
 }
 
@@ -2944,6 +3000,17 @@
     .mf-composite-row { flex-wrap: wrap; }
     .mf-composite-cell { flex: 1 1 100% !important; min-width: 0; }
     .mf-ccp-dropdown { min-width: 0; width: 100%; max-width: 100%; }
+    /* [B280] keep small inline groups on one row (see @container block above) */
+    .mf-composite[data-preset="dob"] .mf-composite-row,
+    .mf-composite[data-preset="time"] .mf-composite-row,
+    .mf-composite[data-preset="money"] .mf-composite-row,
+    .mf-composite[data-preset="measurement"] .mf-composite-row,
+    .mf-composite[data-preset="price_range"] .mf-composite-row { flex-wrap: nowrap !important; }
+    .mf-composite[data-preset="dob"] .mf-composite-cell,
+    .mf-composite[data-preset="time"] .mf-composite-cell,
+    .mf-composite[data-preset="money"] .mf-composite-cell,
+    .mf-composite[data-preset="measurement"] .mf-composite-cell,
+    .mf-composite[data-preset="price_range"] .mf-composite-cell { flex: 1 1 0 !important; min-width: 0 !important; }
 }
 
 /* ============================================================

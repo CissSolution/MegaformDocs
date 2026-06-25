@@ -283,29 +283,39 @@
            pinned-header theme that hits this, and only in edit mode (whole block is gated). */
         body:has(.fixed-top) { padding-top: 0 !important; }
 
-        /* (1) Make the native action menu visible above MegaForm content, but keep it BELOW the
-           header (z 1030) so it tucks behind the header on scroll rather than over the logo. */
-        .app-moduleactions { position: relative; z-index: 1000; display: inline-block !important;
-            visibility: visible !important; opacity: 1 !important; }
-        .app-moduleactions .dropdown-toggle { display: inline-flex !important; align-items: center;
-            justify-content: center; min-width: 30px; min-height: 30px; padding: 4px 8px;
-            border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #334155 !important;
-            box-shadow: 0 1px 2px rgba(15, 23, 42, .06); }
-        .app-moduleactions .dropdown-toggle::after { display: inline-block !important; opacity: .85; margin-left: 2px; }
+        /* [B277 LEAK-FIX → B278 all-native] These were GLOBAL `.app-moduleactions …` rules, so a
+           SINGLE MegaForm module restyled EVERY module's native ▼ action toggle on the page
+           (border + radius + shadow + 30px min-size + white menu) — the reported "khi MegaForm có
+           mặt thì nút action bị to ra và có border".
+           B278: the cosmetic toggle box is REMOVED entirely (no module — incl. MegaForm — gets a
+           border/box; every ▼ stays 100% native/uniform, the user's preference). Only the two
+           FUNCTIONAL, invisible protections are kept, and SCOPED to the MegaForm module's OWN edit
+           border so they never touch another module: (1) z-index so MegaForm content/cards can't
+           cover the menu; (3) keep the dropdown MENU readable where MegaForm/theme colour bleeds
+           in. Scope hook = `.app-pane-admin-border:has(megaform-marker)` — Oqtane renders one
+           `.app-pane-admin-border` PER MODULE in edit mode (verified per-module, never per-pane —
+           mfqa/qa-scope-verify.mjs); `:has()` is already a dep of this block (see body:has above)
+           and degrades safely (rules just don't apply) on a UA without it. */
+
+        /* (1) Keep the module's own action menu above MegaForm content, but BELOW the header
+           (z 1030) so it tucks behind the header on scroll. The ▼ TOGGLE is left fully native. */
+        .app-pane-admin-border:has(.mf-form-wrapper, .mf-oq-admin-dock, .megaform-module) .app-moduleactions {
+            position: relative; z-index: 1000; }
 
         /* (3) De-contaminate the native dropdown from MegaForm/theme bleed: clean light surface,
            readable dark text + icons, system font — matching stock Oqtane edit chrome. */
-        .app-moduleactions .dropdown-menu { z-index: 1300; background-color: #ffffff !important;
+        .app-pane-admin-border:has(.mf-form-wrapper, .mf-oq-admin-dock, .megaform-module) .app-moduleactions .dropdown-menu {
+            z-index: 1300; background-color: #ffffff !important;
             color: #212529 !important; border: 1px solid rgba(0, 0, 0, .15) !important;
             box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .175) !important;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important; }
-        .app-moduleactions .dropdown-menu .dropdown-item,
-        .app-moduleactions .dropdown-menu .dropdown-item i,
-        .app-moduleactions .dropdown-menu .dropdown-item svg,
-        .app-moduleactions .dropdown-menu a { color: #212529 !important; }
-        .app-moduleactions .dropdown-menu .dropdown-item:hover,
-        .app-moduleactions .dropdown-menu .dropdown-item:focus { background-color: #e9ecef !important; color: #1e2125 !important; }
-        .app-moduleactions .dropdown-divider { border-top-color: rgba(0, 0, 0, .15) !important; }
+        .app-pane-admin-border:has(.mf-form-wrapper, .mf-oq-admin-dock, .megaform-module) .app-moduleactions .dropdown-menu .dropdown-item,
+        .app-pane-admin-border:has(.mf-form-wrapper, .mf-oq-admin-dock, .megaform-module) .app-moduleactions .dropdown-menu .dropdown-item i,
+        .app-pane-admin-border:has(.mf-form-wrapper, .mf-oq-admin-dock, .megaform-module) .app-moduleactions .dropdown-menu .dropdown-item svg,
+        .app-pane-admin-border:has(.mf-form-wrapper, .mf-oq-admin-dock, .megaform-module) .app-moduleactions .dropdown-menu a { color: #212529 !important; }
+        .app-pane-admin-border:has(.mf-form-wrapper, .mf-oq-admin-dock, .megaform-module) .app-moduleactions .dropdown-menu .dropdown-item:hover,
+        .app-pane-admin-border:has(.mf-form-wrapper, .mf-oq-admin-dock, .megaform-module) .app-moduleactions .dropdown-menu .dropdown-item:focus { background-color: #e9ecef !important; color: #1e2125 !important; }
+        .app-pane-admin-border:has(.mf-form-wrapper, .mf-oq-admin-dock, .megaform-module) .app-moduleactions .dropdown-divider { border-top-color: rgba(0, 0, 0, .15) !important; }
     </style>
 }
 
