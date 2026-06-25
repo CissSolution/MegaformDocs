@@ -455,6 +455,24 @@ namespace MegaForm.Core.Models
         [JsonProperty("themeCssOverrides")]
         public Dictionary<string, string> ThemeCssOverrides { get; set; } = new Dictionary<string, string>();
 
+        /// <summary>
+        /// [B269] Inline-only page-theme inheritance. When true the rendered form borrows the host
+        /// skin's font (server stamps the .mf-inherit-type wrapper class → font-family:inherit).
+        /// Ignored for custom-shell / premium forms and inside iframe embeds (no parent to inherit).
+        /// Default false → existing forms render unchanged.
+        /// </summary>
+        [JsonProperty("inheritPageTypography")]
+        public bool InheritPageTypography { get; set; }
+
+        /// <summary>
+        /// [B269] Inline-only page-theme inheritance. When true the form blends into the host skin's
+        /// colours (transparent outer panel + host --bs-primary accent) via injected scoped vars;
+        /// body text stays MegaForm's for contrast. Ignored for custom-shell / premium forms and
+        /// iframe embeds. Default false → existing forms render unchanged.
+        /// </summary>
+        [JsonProperty("inheritPageColors")]
+        public bool InheritPageColors { get; set; }
+
         [JsonProperty("defaultLanguage")]
         public string DefaultLanguage { get; set; }
 

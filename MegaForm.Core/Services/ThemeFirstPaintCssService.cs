@@ -20,7 +20,7 @@ namespace MegaForm.Core.Services
     /// </summary>
     public static class ThemeFirstPaintCssService
     {
-        public const string Badge = "ThemeFirstPaintCss v20260623-B244";
+        public const string Badge = "ThemeFirstPaintCss v20260625-B269-pageinherit";
 
         // Mirror of KNOWN_PREMIUM_VAR_PREFIXES in renderer/index.ts.
         private static readonly string[] KnownPremiumVarPrefixes =
@@ -78,6 +78,14 @@ namespace MegaForm.Core.Services
             var themeId = ResolveThemeId(settings);
             if (themeId.Length > 0) classes.Add("mf-theme-" + themeId);
 
+            // Page-theme typography inheritance (inline embeds only): the form borrows the host
+            // skin's font instead of its own --mf-font-family. Robust explicit class — megaform.css
+            // .mf-inherit-type forces font-family:inherit!important (icon glyphs excluded). Applies
+            // to EVERY form type incl. .mfp premium / AI custom-HTML shells: the opt-in flag is the
+            // author's explicit choice, so there is no form on which it is hard-blocked.
+            if (ReadBool(First(settings, "inheritPageTypography", "InheritPageTypography")))
+                classes.Add("mf-inherit-type");
+
             return string.Join(" ", classes);
         }
 
@@ -86,10 +94,30 @@ namespace MegaForm.Core.Services
         /// expanded with premium aliases (mirror of buildScopedThemeVarsCss(formId,
         /// effectiveCssOverrides)). Empty when the form has no theme overrides.
         /// </summary>
+        private const string HostPrimaryVar = "var(--bs-primary, var(--primary, var(--theme-primary, #2563eb)))";
+
         public static string BuildScopedThemeVarsCss(int formId, JObject settings)
         {
             if (settings == null) return string.Empty;
             var overrides = CollectThemeCssOverrides(settings);
+
+            // Page-theme "borrow colours" (inline embeds only): the form blends into the host skin
+            // — transparent OUTER panel + the host's primary accent (Bootstrap --bs-primary on
+            // Oqtane, skin var on DNN, safe literal fallback last). Available on EVERY form type
+            // (incl. .mfp premium / AI custom-HTML shells) — opt-in, reversible, author's choice.
+            var borrowColors = ReadBool(First(settings, "inheritPageColors", "InheritPageColors"));
+            if (borrowColors)
+            {
+                // Inject the host primary into the override map BEFORE alias expansion so
+                // BuildPremiumThemeAliasVars propagates it to EVERY primary-family alias
+                // (--mfp-primary / --au-primary / --primary / --ring / button + per-template
+                // prefixes). Without this, .mfp / AI pure-grid shells that read --mfp-* would not
+                // recolour. Body text colour is left untouched (readability); the card keeps its
+                // own bg (only the outer wrapper goes transparent, applied after aliases below).
+                overrides["--mf-primary"] = HostPrimaryVar;
+                overrides["--mf-btn-bg"] = HostPrimaryVar;
+            }
+
             if (overrides.Count == 0) return string.Empty;
 
             var customCss = Str(First(settings, "customCss", "CustomCss"));
@@ -101,6 +129,10 @@ namespace MegaForm.Core.Services
             var effective = new Dictionary<string, string>(StringComparer.Ordinal);
             foreach (var kv in aliases) effective[kv.Key] = kv.Value;
             foreach (var kv in overrides) effective[kv.Key] = kv.Value;
+
+            // Outer panel only — applied AFTER aliases so it is not propagated into card-bg
+            // derivations (a .mfp card would otherwise go transparent and vanish).
+            if (borrowColors) effective["--mf-page-bg"] = "transparent";
 
             return BuildScopedCss(formId, effective);
         }

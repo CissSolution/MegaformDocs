@@ -94,6 +94,12 @@ import { MegaFormBuilder } from './core';
     var currentCustomCss = '';
     var currentCustomHtml = '';
     var currentUseCustomHtml = false;
+    // [B269] Page-theme inheritance (inline embeds only). Persisted as plain settings
+    // booleans (not CSS vars); the server turns them into the .mf-inherit-type wrapper class
+    // (typography) and injected scoped --mf-* borrow vars (colours). Effect is only visible on
+    // the published inline page (the builder preview has no real host skin to inherit from).
+    var currentInheritType = false;
+    var currentInheritColors = false;
 
     var THEME_STYLE_TAG_ID = 'mf-builder-theme-overrides';
 
@@ -390,6 +396,9 @@ import { MegaFormBuilder } from './core';
         if (typeof s.useCustomHtml === 'boolean')      currentUseCustomHtml = s.useCustomHtml;
         else if (typeof s.UseCustomHtml === 'boolean') currentUseCustomHtml = s.UseCustomHtml;
         else                                            currentUseCustomHtml = !!(currentCustomHtml && currentCustomHtml.trim());
+        // [B269] page-theme inheritance flags (default off → forms unchanged).
+        currentInheritType   = (s.inheritPageTypography === true) || (s.InheritPageTypography === true);
+        currentInheritColors = (s.inheritPageColors === true)     || (s.InheritPageColors === true);
         live = {};
 
         // Precedence: themeJson.cssOverrides → settings.cssOverrides
@@ -440,6 +449,11 @@ import { MegaFormBuilder } from './core';
         }
         s.useCustomHtml = !!currentUseCustomHtml;
         s.UseCustomHtml = !!currentUseCustomHtml;
+        // [B269] page-theme inheritance booleans (server → wrapper class + scoped borrow vars).
+        s.inheritPageTypography = !!currentInheritType;
+        s.InheritPageTypography = !!currentInheritType;
+        s.inheritPageColors = !!currentInheritColors;
+        s.InheritPageColors = !!currentInheritColors;
         var themeObj = {
             _kind: 'MegaFormThemePatch',
             theme: currentTheme,
@@ -1676,43 +1690,90 @@ import { MegaFormBuilder } from './core';
         return 'md';
     }
 
-    function panelGlobalHtml(): string {
+    // [B269/B272] "Page integration" — two source switches (Typography / Color) that let an
+    // inline-embedded form borrow the host skin's font / primary colour. Available on EVERY form
+    // type (standard, AI custom-HTML, premium .mfp) — it is an opt-in, reversible author choice, so
+    // there is no form on which it is blocked (AI forms also use customHtml, so gating on that was
+    // wrong). The selects persist plain booleans via onInputDelegated (data-mf-theme-inherit),
+    // NOT CSS vars.
+    function pageInheritSectionHtml(): string {
+        var opt = function (v: string, l: string, on: boolean): string {
+            return '<option value="' + v + '"' + (on ? ' selected' : '') + '>' + l + '</option>';
+        };
+        var row = function (kind: string, label: string, pageLabel: string, on: boolean): string {
+            return (
+                '<div class="td-sld-row" style="margin:8px 0">' +
+                  '<div style="font-size:12px;color:#334155;margin-bottom:4px">' + escAttr(label) + '</div>' +
+                  '<select class="form-control form-control-sm" data-mf-theme-inherit="' + escAttr(kind) + '">' +
+                    opt('theme', 'MegaForm theme', !on) +
+                    opt('page', pageLabel, on) +
+                  '</select>' +
+                '</div>'
+            );
+        };
         return (
             '<div class="mf-tr-section" data-mf-theme-anchor="form">' +
+              '<div class="mf-tr-section-head"><i class="fas fa-link mf-tr-section-icon" style="color:#0ea5e9"></i><span>Page integration</span></div>' +
+              '<div style="font-size:10px;color:#94a3b8;margin:-2px 0 6px;line-height:1.45">Only when the form is embedded <b>inline</b> in an Oqtane/DNN page — borrows the host skin\'s font / primary colour. No effect inside an iframe embed; visible on the published page (preview here is approximate).</div>' +
+              row('type', 'Typography source', 'Inherit from page', currentInheritType) +
+              row('colors', 'Color source', 'Borrow from page', currentInheritColors) +
+            '</div>'
+        );
+    }
+
+    // [B271] Reorg: the commonly-used groups (Page integration → Typography → Border Radius) stay
+    // up top; the decorative / rarely-touched groups (Shadows, Transitions) move DOWN into the
+    // collapsible "Advanced" block alongside Custom CSS / HTML, so the default Global view is clean.
+    // All these knobs use document-delegated handlers (data-mf-theme-*), so nesting them inside the
+    // collapsed body keeps every handler working.
+    function panelShadowsHtml(): string {
+        return (
+            '<div class="mf-tr-section" data-mf-theme-anchor="form">' +
+              '<div class="mf-tr-section-head"><i class="fas fa-layer-group mf-tr-section-icon" style="color:#d97706"></i><span>Shadows</span></div>' +
+              shadowPresetsHtml(activeShadowFromLive()) +
+              shadowQuadHtml() +
+            '</div>'
+        );
+    }
+    function panelTransitionsHtml(): string {
+        return (
+            '<div class="mf-tr-section" data-mf-theme-anchor="form">' +
+              '<div class="mf-tr-section-head"><i class="fas fa-bolt mf-tr-section-icon" style="color:#7c3aed"></i><span>Transitions</span></div>' +
+              // [B272] Enable-transitions toggle + Easing select removed — dead vars (0 consumers).
+              // Duration kept: the renderer reads --mf-transition-duration (renderer/index.ts:448).
+              sliderRow('--mf-transition-duration', 'Duration', 0, 500, 200, 'ms') +
+            '</div>'
+        );
+    }
+
+    function panelGlobalHtml(): string {
+        var divider = '<div style="margin:12px 0;border-top:1px solid #e2e8f0"></div>';
+        return (
+            pageInheritSectionHtml() +
+            '<div class="mf-tr-section" data-mf-theme-anchor="form">' +
               '<div class="mf-tr-section-head"><i class="fas fa-font mf-tr-section-icon" style="color:#2563eb"></i><span>Typography</span></div>' +
+              // [B272] Heading weight + Letter spacing removed — dead vars (0 consumers anywhere).
               fontSelectHtml('--mf-heading-font', 'Heading Font', 'Inter') +
-              selectRow('--mf-heading-weight', 'Heading weight',
-                [{ v: '400', l: 'Regular' }, { v: '500', l: 'Medium' }, { v: '600', l: 'Semibold' }, { v: '700', l: 'Bold' }], '700') +
               fontSelectHtml('--mf-font-family', 'Body Font', 'Inter') +
               sliderRow('--mf-font-size-base', 'Base size',     12,    20,    16,   'px') +
               sliderRow('--mf-line-height',    'Line height',   1,     2,     1.5,  '')   +
-              sliderRow('--mf-letter-spacing', 'Letter spacing',-0.05, 0.1,   0,    'em') +
             '</div>' +
             '<div class="mf-tr-section" data-mf-theme-anchor="form">' +
               '<div class="mf-tr-section-head"><i class="fas fa-square mf-tr-section-icon" style="color:#059669"></i><span>Border Radius</span></div>' +
               shapeCardsHtml(activeShapeFromLive()) +
               sliderRow('--mf-form-radius', 'Custom radius', 0, 24, 8, 'px') +
             '</div>' +
-            '<div class="mf-tr-section" data-mf-theme-anchor="form">' +
-              '<div class="mf-tr-section-head"><i class="fas fa-layer-group mf-tr-section-icon" style="color:#d97706"></i><span>Shadows</span></div>' +
-              shadowPresetsHtml(activeShadowFromLive()) +
-              shadowQuadHtml() +
-            '</div>' +
-            '<div class="mf-tr-section" data-mf-theme-anchor="form">' +
-              '<div class="mf-tr-section-head"><i class="fas fa-bolt mf-tr-section-icon" style="color:#7c3aed"></i><span>Transitions</span></div>' +
-              toggleRow('--mf-transitions-on', 'Enable transitions', 'on', 'off', true) +
-              sliderRow('--mf-transition-duration', 'Duration', 0, 500, 200, 'ms') +
-              selectRow('--mf-transition-easing', 'Easing',
-                [{ v: 'linear', l: 'Linear' }, { v: 'ease', l: 'Ease' }, { v: 'ease-in', l: 'Ease In' }, { v: 'ease-out', l: 'Ease Out' }, { v: 'ease-in-out', l: 'Ease In Out' }], 'ease-in-out') +
-            '</div>' +
             '<div class="mf-theme-advanced-wrap" style="margin-top:8px">' +
               '<button type="button" data-mf-theme-advanced-toggle class="mf-tr-advanced-toggle">' +
-                '<span><i class="fas fa-code" style="margin-right:6px;color:#6366f1"></i>Advanced — CSS &amp; HTML</span>' +
+                '<span><i class="fas fa-sliders-h" style="margin-right:6px;color:#6366f1"></i>Advanced — Effects, CSS &amp; HTML</span>' +
                 '<i class="fas fa-chevron-down" style="font-size:10px;color:#94a3b8"></i>' +
               '</button>' +
               '<div class="mf-theme-advanced-body" style="display:none;padding-top:10px">' +
+                panelShadowsHtml() +
+                panelTransitionsHtml() +
+                divider +
                 panelCustomHtml() +
-                '<div style="margin-top:12px;padding-top:12px;border-top:1px solid #e2e8f0"></div>' +
+                divider +
                 panelHtmlTemplate() +
               '</div>' +
             '</div>'
@@ -1828,33 +1889,39 @@ import { MegaFormBuilder } from './core';
     //   Grid Settings       (Columns + Column gap + Responsive)
     //   Header & Footer     (Show header / footer / sticky footer)
     //   Responsive Breakpoints (read-only info + Configure button)
+    // [ThemeTabTrim v20260624] Layout panel rebuilt to ONLY expose controls whose CSS
+    // variables are actually consumed by megaform.css on the rendered form (verified via
+    // the public /render path). Dead knobs were removed so every visible control has a
+    // real, immediate effect on the center canvas + the saved/published form:
+    //   • Form padding  → --mf-form-padding (composed from -y by composeCompositeVars; .mf-form{padding})
+    //   • Field gap     → --mf-field-gap (.mf-flexgrid margin-bottom + field groups)
+    //   • Max width     → --mf-form-max-width (.mf-form-inner{max-width})
+    //   • Show border   → --mf-form-border  (.mf-form{border})   [repointed from dead --mf-form-border-show]
+    //   • Show shadow   → --mf-form-shadow  (.mf-form{box-shadow})[repointed from dead --mf-form-shadow-show]
+    //   • Columns (1)   → forced single-column stack (buildIframeOverridesCss); auto/2/3 = native
+    //   • Column gap    → --mf-grid-gap     (.mf-flexgrid{gap})  [repointed from dead --mf-form-column-gap]
+    // Removed (no CSS consumer / no effect): Base unit, Section gap + link, Alignment,
+    // Responsive-columns toggle, Header/Footer/Sticky toggles, Responsive-info block.
+    // NOTE: --mf-form-border / --mf-form-shadow / --mf-form-padding target the STANDARD form
+    // card (.mf-form). On premium / custom-HTML forms that card is intentionally stripped
+    // (the .mfp shell is the visual frame) — there Max width + Field gap remain the effective
+    // layout knobs, which is the correct behaviour for those templates.
     function panelLayoutHtml(): string {
         return (
             '<div class="mf-tr-section" data-mf-theme-anchor="form">' +
               '<div class="mf-tr-section-head">' +
                 '<i class="fas fa-arrows-alt mf-tr-section-icon" style="color:#2563eb"></i>' +
                 '<span style="flex:1">Spacing</span>' +
-                '<button type="button" class="mf-tr-link-btn is-linked" id="mf-tr-spacing-link" title="Link spacing values">' +
-                  '<i class="fas fa-link"></i>' +
-                '</button>' +
               '</div>' +
-              sliderRow('--mf-spacing-base',    'Base unit',     2,  8,  4,  'px') +
               sliderRow('--mf-form-padding-y',  'Form padding',  12, 48, 24, 'px') +
               sliderRow('--mf-field-gap',      'Field gap',      8,  32, 16, 'px') +
-              sliderRow('--mf-section-gap',     'Section gap',   16, 64, 32, 'px') +
             '</div>' +
             '<div class="mf-tr-section" data-mf-theme-anchor="form">' +
               '<div class="mf-tr-section-head"><i class="fas fa-square-full mf-tr-section-icon" style="color:#059669"></i><span>Form Container</span></div>' +
               selectRow('--mf-form-max-width', 'Max width',
                 [{ v: '480px', l: '480px (Narrow)' }, { v: '640px', l: '640px (Default)' }, { v: '768px', l: '768px (Wide)' }, { v: '100%', l: 'Full width' }], '640px') +
-              '<div class="mf-tr-row-label">Alignment</div>' +
-              '<div class="mf-tr-align-row" data-mf-theme-var="--mf-form-align">' +
-                '<button type="button" class="mf-tr-align-btn is-active" data-mf-theme-align="center" title="Center"><i class="fas fa-align-center"></i></button>' +
-                '<button type="button" class="mf-tr-align-btn" data-mf-theme-align="left" title="Left"><i class="fas fa-align-left"></i></button>' +
-                '<button type="button" class="mf-tr-align-btn" data-mf-theme-align="right" title="Right"><i class="fas fa-align-right"></i></button>' +
-              '</div>' +
-              toggleRow('--mf-form-border-show', 'Show border', '1px solid #e2e8f0', 'none', true) +
-              toggleRow('--mf-form-shadow-show', 'Show shadow', '0 4px 24px rgba(0,0,0,.1)', 'none', true) +
+              toggleRow('--mf-form-border', 'Show border', '1px solid #e2e8f0', 'none', true) +
+              toggleRow('--mf-form-shadow', 'Show shadow', '0 4px 24px rgba(0,0,0,.1)', 'none', true) +
             '</div>' +
             '<div class="mf-tr-section" data-mf-theme-anchor="form">' +
               '<div class="mf-tr-section-head"><i class="fas fa-th mf-tr-section-icon" style="color:#7c3aed"></i><span>Grid Settings</span></div>' +
@@ -1864,23 +1931,7 @@ import { MegaFormBuilder } from './core';
               // buildIframeOverridesCss); 2/3 fall back to the native layout.
               selectRow('--mf-form-columns', 'Columns',
                 [{ v: 'auto', l: 'Auto (default)' }, { v: '1', l: '1 column' }, { v: '2', l: '2 columns' }, { v: '3', l: '3 columns' }], 'auto') +
-              sliderRow('--mf-form-column-gap', 'Column gap', 8, 32, 16, 'px') +
-              toggleRow('--mf-form-responsive-cols', 'Responsive columns', 'on', 'off', true) +
-            '</div>' +
-            '<div class="mf-tr-section" data-mf-theme-anchor="form">' +
-              '<div class="mf-tr-section-head"><i class="fas fa-window-maximize mf-tr-section-icon" style="color:#d97706"></i><span>Header &amp; Footer</span></div>' +
-              toggleRow('--mf-form-show-header',  'Show header',  'block', 'none', true) +
-              toggleRow('--mf-form-show-footer',  'Show footer',  'block', 'none', true) +
-              toggleRow('--mf-form-sticky-footer','Sticky footer','sticky','static',false) +
-            '</div>' +
-            '<div class="mf-tr-section mf-tr-section-info">' +
-              '<div class="mf-tr-section-head"><i class="fas fa-mobile-alt mf-tr-section-icon" style="color:#2563eb"></i><span>Responsive Settings</span></div>' +
-              '<div class="mf-tr-breakpoint-grid">' +
-                '<div class="mf-tr-breakpoint-row"><span class="mf-tr-bp-label">Mobile</span><span class="mf-tr-bp-meta">&lt; 640px</span><span class="mf-tr-bp-value">1 col</span></div>' +
-                '<div class="mf-tr-breakpoint-row"><span class="mf-tr-bp-label">Tablet</span><span class="mf-tr-bp-meta">&lt; 1024px</span><span class="mf-tr-bp-value">2 col</span></div>' +
-                '<div class="mf-tr-breakpoint-row"><span class="mf-tr-bp-label">Desktop</span><span class="mf-tr-bp-meta">1024px+</span><span class="mf-tr-bp-value">Auto</span></div>' +
-              '</div>' +
-              '<button type="button" class="mf-tr-bp-config-btn" id="mf-tr-bp-config">Configure breakpoints</button>' +
+              sliderRow('--mf-grid-gap', 'Column gap', 8, 32, 16, 'px') +
             '</div>'
         );
     }
@@ -2094,16 +2145,15 @@ import { MegaFormBuilder } from './core';
                 '</button>' +
               '</div>' +
               '<div class="mf-theme-tabs" style="display:flex;border-bottom:1px solid #e2e8f0;background:#fff">' +
+                // [ThemeTabTrim v20260624] Inputs + Buttons sub-tabs removed per spec — most of
+                // their vars are stripped on themed forms / hard-coded, so they were non-functional.
+                // Only Global + Layout (styling that actually applies) + Inspector are kept.
                 '<button type="button" class="mf-theme-subtab active" data-mf-theme-subtab="global"   style="flex:1;padding:8px;border:none;background:transparent;font-size:11px;font-weight:600;color:#0f172a;border-bottom:2px solid #6366f1;cursor:pointer"><i class="fas fa-globe"></i> Global</button>' +
-                '<button type="button" class="mf-theme-subtab" data-mf-theme-subtab="inputs"           style="flex:1;padding:8px;border:none;background:transparent;font-size:11px;font-weight:600;color:#64748b;border-bottom:2px solid transparent;cursor:pointer"><i class="fas fa-keyboard"></i> Inputs</button>' +
-                '<button type="button" class="mf-theme-subtab" data-mf-theme-subtab="buttons"          style="flex:1;padding:8px;border:none;background:transparent;font-size:11px;font-weight:600;color:#64748b;border-bottom:2px solid transparent;cursor:pointer"><i class="fas fa-stop"></i> Buttons</button>' +
                 '<button type="button" class="mf-theme-subtab" data-mf-theme-subtab="layout"           style="flex:1;padding:8px;border:none;background:transparent;font-size:11px;font-weight:600;color:#64748b;border-bottom:2px solid transparent;cursor:pointer"><i class="fas fa-table-columns"></i> Layout</button>' +
                 '<button type="button" class="mf-theme-subtab" data-mf-theme-subtab="inspector"        style="flex:1;padding:8px;border:none;background:transparent;font-size:11px;font-weight:600;color:#64748b;border-bottom:2px solid transparent;cursor:pointer"><i class="fas fa-crosshairs"></i> Inspector</button>' +
               '</div>' +
               '<div class="mf-theme-body" style="flex:1;overflow-y:auto;padding:14px 16px;background:#fff">' +
                 '<div class="mf-theme-subpanel" data-mf-theme-panel="global"    style="">'          + panelGlobalHtml()    + '</div>' +
-                '<div class="mf-theme-subpanel" data-mf-theme-panel="inputs"    style="display:none">' + panelInputsHtml()    + '</div>' +
-                '<div class="mf-theme-subpanel" data-mf-theme-panel="buttons"   style="display:none">' + panelButtonsHtml()   + '</div>' +
                 '<div class="mf-theme-subpanel" data-mf-theme-panel="layout"    style="display:none">' + panelLayoutHtml()    + '</div>' +
                 '<div class="mf-theme-subpanel" data-mf-theme-panel="inspector" style="display:none">' + panelInspectorHtml() + '</div>' +
               '</div>' +
@@ -2515,6 +2565,18 @@ import { MegaFormBuilder } from './core';
             var onVal  = t.getAttribute('data-mf-theme-on')  || '';
             var offVal = t.getAttribute('data-mf-theme-off') || 'none';
             setVar(toggleVar, (t as HTMLInputElement).checked ? onVal : offVal);
+            return;
+        }
+
+        // [B269] Page-integration source switch (Typography / Color). Persists a plain boolean,
+        // not a CSS var — the server turns it into the wrapper class / scoped borrow vars at render.
+        var inheritKind = t.getAttribute('data-mf-theme-inherit');
+        if (inheritKind) {
+            var inheritOn = ((t as HTMLSelectElement).value === 'page');
+            if (inheritKind === 'type') currentInheritType = inheritOn;
+            else if (inheritKind === 'colors') currentInheritColors = inheritOn;
+            persistToSchema();
+            flushPreview();
             return;
         }
 

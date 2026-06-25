@@ -38,7 +38,7 @@
     --mf-form-radius:           8px;
     --mf-form-padding:          24px 28px;
     --mf-form-max-width:        960px;
-    --mf-form-border:           1px solid #f1f5f9;
+    --mf-form-border:           1px solid #e2e8f0;   /* [ThemeTabLayout v20260624] #f1f5f9 → #e2e8f0 to preserve the B264 visible standard-card edge now that .mf-form-inner consumes this var (was a hardcoded 1px solid #e2e8f0). Overridden by the Theme Designer "Show border" control. */
 
     /* --- Typography --- */
     --mf-font-family:           'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -150,6 +150,21 @@
 }
 
 .mf-form-wrapper * { box-sizing: border-box; }
+
+/* ============================================================
+   PAGE-THEME INHERITANCE (inline embeds only) — B269
+   The server stamps .mf-inherit-type on the wrapper when the author picks
+   "Typography source: Inherit from page" in Theme Designer → Global. The form
+   then borrows the host skin's font instead of its own --mf-font-family.
+   Explicit !important (not the var() no-fallback trick) so it is robust against
+   megaform.css's own `font-family: var(--mf-font-family)` declarations.
+   Icon glyphs (FontAwesome <i>/.fa*, <svg>, Material) are EXCLUDED so they keep
+   their icon font. Colours are borrowed via injected scoped vars, not a class.
+   ============================================================ */
+.mf-form-wrapper.mf-inherit-type,
+.mf-form-wrapper.mf-inherit-type *:not(i):not(svg):not([class*="fa-"]):not(.fa):not(.fas):not(.far):not(.fab):not(.fal):not(.material-icons) {
+    font-family: inherit !important;
+}
 
 /* [B65z-2] QR Code widget always renders pinned to the form's top-right
    corner — the form-inner (carries max-width) is the positioning context so
@@ -749,14 +764,23 @@
 .mfp,
 .mf-form-wrapper > .mf-form,
 .mf-form-wrapper > .mf-form-inner {
-    background: var(--mf-card-bg, #ffffff);
+    background: var(--mf-card-bg, var(--mf-form-bg, #ffffff));
     /* [LighterChrome v20260602-B46] was 10px radius + 0 1px 3px/0 1px 2px stacked
        shadows + 28x32 padding. Now matches the lighter form-card defaults: 8px
        radius, single barely-visible shadow, hairline #f1f5f9 border, 24x28 padding. */
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;   /* [StandardCardFix B264] was #f1f5f9 (near-invisible hairline) → #e2e8f0 light-slate so the standard card edge is visible, matching the reference + the input borders (--mf-input-border) */
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    padding: 24px 28px;
+    /* [ThemeTabLayout v20260624] The Theme Designer Global+Layout controls write
+       --mf-form-radius / --mf-form-border / --mf-form-shadow / --mf-form-padding.
+       Those were previously hardcoded HERE (the real standard-form card is
+       .mf-form-inner, not the invisible inner .mf-form), so the Border-radius,
+       Shadows, Form-padding and Show-border/shadow controls had NO visible effect.
+       Make them var-driven with the EXACT former values as fallbacks → existing
+       forms render byte-identical, forms edited via the Theme Designer now apply.
+       Premium / custom-HTML cards are stripped by the rule above and keep their own
+       shell, and data-mf-chrome="card|flat|none" still wins (it is !important). */
+    border-radius: var(--mf-form-radius, 8px);
+    border: var(--mf-form-border, 1px solid #e2e8f0);   /* [StandardCardFix B264] visible #e2e8f0 light-slate edge */
+    box-shadow: var(--mf-form-shadow, 0 1px 3px rgba(0, 0, 0, 0.05));
+    padding: var(--mf-form-padding, 24px 28px);
     /* [FormWidthFix v20260602-B36] was hardcoded `max-width: 760px` — that ignored
        any --mf-form-max-width var set via themeCssOverrides (set_form_meta op),
        so AI prompt "resize form to 100%" had no visual effect. Now reads the var
