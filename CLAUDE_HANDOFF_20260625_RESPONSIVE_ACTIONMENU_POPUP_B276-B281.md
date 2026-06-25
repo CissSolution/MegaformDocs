@@ -91,6 +91,36 @@ non-popup probes). FIX: `.mf-popup-overlay .mf-form-wrapper,.mf-popup-body .mf-f
 
 ---
 
+## ⚠️⚠️ CLEAN-HOST INSTALL — MegaForm DB migrations BROKEN on a fresh SQL Server host (:5000)
+After the package files install OK (deps fixed), MegaForm on **:5000 (Oqtane.New10, LocalDB, net10.0)**
+is non-functional: `?mfpanel=myinbox` → **"Invalid object name 'MF_WorkflowTasks'"**, submissions/forms-overview
+JSON errors, new forms don't save. Root cause: **the MF_* tables were NEVER created — module DB migrations fail.**
+DB check: **0 MF_* tables**, ModuleDefinition `MegaForm.Oqtane.Client.Oqtane` Version=BLANK, 0 MegaForm rows
+in `__EFMigrationsHistory`. Two migration bugs (only surface on a CLEAN host — :5070's tables predate them):
+- **BUG 1 — FIXED (`64e2ae2`): duplicate migration id.** `01060034_AddSubmissionStatusIndex` AND
+  `01060034_SeedTemplateGuides` both declared `[Migration("MegaForm.01.06.00.34")]` → EF
+  `MigrationsAssembly.get_Migrations()` threw "same key already added" while BUILDING the list → NO migration
+  ran. Fix: re-numbered SeedTemplateGuides → `.35` (+ renamed file 01060035_; idempotent so safe on existing DBs).
+- **BUG 2 — OPEN (needs next-session debug): NullReferenceException in the EntityBuilder migration path.**
+  After BUG 1, EF builds the list but `Migrate()` throws (accurate pdb stack):
+  `NRE at MigrationBuilder.CreateTable[TColumns]() ← Oqtane BaseEntityBuilder.Create() (BaseEntityBuilder.cs:476)
+  ← MegaForm InitializeModule.Up() (01050100_InitializeModule.cs:line 26 = new FormViewEntityBuilder(...).Create())
+  during Migration.get_UpOperations()/GenerateUpSql`. It's during OPERATION-BUILD (not SQL exec) so it's
+  deterministic & host-independent (LocalDB vs SQLEXPRESS irrelevant; same Oqtane 10.1.0.0 on both). FormView/
+  Form EntityBuilders look structurally identical, so the null is subtle (needs a breakpoint in
+  BaseEntityBuilder.Create / inspect which column/PK/FK is null). ⭐**KEY LEAD: MegaFormManager.Install routes
+  SQLite through `db.Database.GenerateCreateScript()` (MODEL-based, WORKS) but SQL Server through EF `Migrate()`
+  (EntityBuilder-based, NRE).** So clean SQL Server installs were always broken; SQLite works. Likely fixes:
+  (a) route SQL Server through GenerateCreateScript too (like SQLite — bypasses the EntityBuilders), or
+  (b) find+fix the null in the FormView (or a later) EntityBuilder. Logs: `%TEMP%\oqt5000_out*.log` (use the
+  net10.0 .pdb for accurate frames — copy `MegaForm.Oqtane.Server.Oqtane.pdb` next to the dll).
+- **State left on :5000:** MegaForm package INSTALLED (DLLs+deps+wwwroot present, site UP at :5000) but DB not
+  initialized → module panels error. The failed install also left a `ModuleDefinition` row (blank version) +
+  re-tries the migration (non-fatal) on every boot. Next session: fix BUG 2, then the migration runs.
+- **Package IS complete** (the user's "missing KBs/SQL/DLL" was a mis-attribution — real cause = these migration
+  bugs): verified the .nupkg ships 34 TemplateGuide KB `.md`, 8 PromptRecipes, 185 js, css, fonts, flags, +
+  `lib/net9.0`+`lib/net10.0` DLLs incl all deps. "SQL scripts" = the EF migrations embedded in the Server DLL.
+
 ## ⚠️ OPEN / USER STILL VERIFYING
 **Country-picker flag on form 868 (popup) — user reported "still doesn't drop" after B281.** My browser QA
 (real Playwright mouse-click, NOT JS) on the **deployed B281** opens the dropdown (182 countries) at EVERY

@@ -28,6 +28,19 @@
     </dependencies>
   </metadata>
   <files>
+    <!-- ════════════════════════════════════════════════════════════════════════════════════════
+         COMPLETENESS (verified in v1.7.27): this package is COMPLETE for a clean Oqtane install —
+         · DLLs: all MegaForm assemblies (Client/Server/Shared/Core/Sdk) + non-host deps
+           (Newtonsoft.Json, Microsoft.AspNetCore.Razor.Language, Microsoft.CodeAnalysis[.CSharp]),
+           for BOTH net9.0 and net10.0 (entries below).
+         · KBs / SQL scripts: the wwwroot wildcard ships all KB content under
+           wwwroot\Modules\MegaForm\Resources\ (34 TemplateGuide .md + PromptRecipes) + all js/css/
+           fonts/img. The MF_* table "SQL scripts" are the EF migrations COMPILED INTO the Server DLL
+           (Migrations\*.cs + EntityBuilders) — not standalone files — so they ship inside lib\*.
+         ⭐ For a COMPLETE build, run the full `pack.cmd` (it npm-builds the 7 JS bundles + Vite-syncs
+            them into MegaForm.Oqtane.Server\wwwroot BEFORE packing). A lean re-pack only refreshes
+            what's already in that wwwroot — stale/missing bundles there → an incomplete package.
+         ════════════════════════════════════════════════════════════════════════════════════════ -->
     <!-- net9.0 builds -->
 
     <!-- Client Blazor WASM DLL — tên chứa "Oqtane" → được load bởi IsOqtaneAssembly() -->
