@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>MegaForm.Oqtane</id>
-    <version>1.5.1</version>
+    <version>1.7.27</version>
     <authors>MegaForm Team</authors>
     <owners>MegaForm</owners>
     <title>MegaForm - Dynamic Form Builder</title>
@@ -13,7 +13,7 @@
     <projectUrl>https://github.com/nicknguyen-oqtane/MegaForm</projectUrl>
     <icon>icon.png</icon>
     <tags>oqtane module form builder survey payment</tags>
-    <releaseNotes>v1.5.1 — Oqtane-standard multi-database migrations for MF_* tables (SQL Server, SQLite, MySQL, PostgreSQL)</releaseNotes>
+    <releaseNotes>v1.7.27 (20260625-B281) — responsive narrow-pane field collapse + smart composite mobile layout (date/time stay inline) + native module action menus (no CSS leak) + popup-form container-type regression fix (flag/country-picker works in popup mode).</releaseNotes>
     <summary>Dynamic form builder module for Oqtane CMS</summary>
 
     <packageTypes>
