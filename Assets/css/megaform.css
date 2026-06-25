@@ -2759,6 +2759,57 @@
 }
 
 /* ───────────────────────────────────────────────────────────────────────────
+   [B276] NARROW-PANE RESPONSIVENESS — respond to the PANE, not the viewport.
+   A form can sit in a narrow Oqtane pane (50%/33% column) on a WIDE screen.
+   Premium showcase templates (euro-youth ".ey-*", etc.) author their breakpoints
+   against the VIEWPORT (@media min-width:1024 → hero column + 2-col grids), so in
+   a ~344px pane on a 1440px desktop those desktop rules fire and the layout
+   OVERFLOWS its pane (measured: .ey-panel 497px inside a 294px wrapper → 552px
+   page scroll @390px; same panel overflows a 474px 50%-pane @1280px).
+   Fix: make every form wrapper a SIZE CONTAINER so child layouts key off the pane
+   width, and collapse the showcase multi-column shell to one column when the
+   wrapper itself is ≤600px — regardless of viewport. Scoped under .mf-form-wrapper
+   for +1 specificity so it beats the template's own `!important` @media rules
+   irrespective of source order. NOTE: declaring container-type here ALSO activates
+   the intended (previously dormant) composite `@container (max-width:480px)` rule
+   above. Verified mfqa/qa-panes-fixtest.mjs (panel fits pane @ vp390/1100/1280)
+   + qa-fullwidth-regression.mjs (ZERO change to full-width — @container is inert
+   when the wrapper is >600px, so the showcase hero layout is preserved).
+   ─────────────────────────────────────────────────────────────────────────── */
+.mf-form-wrapper { container-type: inline-size; container-name: mfpane; max-width: 100%; }
+
+/* Default grid/flex items have min-width:auto, so .ey-panel etc. can't shrink
+   below their intrinsic content width and balloon past a narrow pane. Let them. */
+.mf-form-wrapper .mfp .ey-shell,
+.mf-form-wrapper .mfp .ey-panel,
+.mf-form-wrapper .mfp .ey-card,
+.mf-form-wrapper .mfp .ey-stepper,
+.mf-form-wrapper .mfp .ey-step { min-width: 0 !important; }
+
+@container mfpane (max-width: 600px) {
+    /* euro-youth "ey" premium wizard — drop the hero column + multi-col grids */
+    .mf-form-wrapper .mfp-euro-youth .ey-shell     { grid-template-columns: 1fr !important; }
+    .mf-form-wrapper .mfp-euro-youth .ey-hero      { display: none !important; }
+    .mf-form-wrapper .mfp-euro-youth .ey-grid-2    { grid-template-columns: 1fr !important; }
+    .mf-form-wrapper .mfp-euro-youth .ey-accom     { grid-template-columns: 1fr !important; }
+    .mf-form-wrapper .mfp-euro-youth .ey-panel     { padding: 24px 16px !important; }
+    .mf-form-wrapper .mfp-euro-youth .ey-card      { padding: 20px !important; }
+    .mf-form-wrapper .mfp-euro-youth .ey-step-text { display: none !important; }
+    .mf-form-wrapper .mfp-euro-youth .ey-actions   { flex-wrap: wrap; gap: 8px; }
+}
+/* Fallback for browsers without container-query support: same collapse keyed to
+   the VIEWPORT. Only fires on genuinely narrow screens, so it won't squeeze a
+   narrow pane on a wide desktop (that case just keeps the un-collapsed layout). */
+@supports not (container-type: inline-size) {
+    @media (max-width: 600px) {
+        .mf-form-wrapper .mfp-euro-youth .ey-shell  { grid-template-columns: 1fr !important; }
+        .mf-form-wrapper .mfp-euro-youth .ey-hero   { display: none !important; }
+        .mf-form-wrapper .mfp-euro-youth .ey-grid-2 { grid-template-columns: 1fr !important; }
+        .mf-form-wrapper .mfp-euro-youth .ey-accom  { grid-template-columns: 1fr !important; }
+    }
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
    Country picker (composite `country` part)  [QA-fix 20260617 — the renderer
    (country-picker.ts) emits .mf-ccp-* markup but ZERO matching CSS shipped, so
    the flag SVG rendered at its natural ~86px, the trigger stacked US/flag/+1
