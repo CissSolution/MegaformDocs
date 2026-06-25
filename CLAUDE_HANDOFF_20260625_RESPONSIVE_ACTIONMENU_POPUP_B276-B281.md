@@ -60,8 +60,24 @@ non-popup probes). FIX: `.mf-popup-overlay .mf-form-wrapper,.mf-popup-body .mf-f
 
 ---
 
-## 📦 NUGET PACKAGE
-- **`MegaForm.Oqtane` v1.7.27** (net9.0) — `MegaForm.Oqtane.Package/MegaForm.Oqtane.1.7.27.nupkg`.
+## 📦 NUGET PACKAGE — built + INSTALLED on a clean host
+- **`MegaForm.Oqtane` v1.7.27** (multi-target **net9.0 + net10.0**) — `MegaForm.Oqtane.Package/MegaForm.Oqtane.1.7.27.nupkg`.
+  ✅ **Installed successfully on :5000 (Oqtane.New10, net10.0)** — fresh install, site boots, module+assets
+  deploy, B281 CSS present. Commits `7ee0942` (version/handoff) + `6c382d8` (dependency fix).
+- ⭐⭐**PACKAGING DEFECT FIXED (`6c382d8`) — the nuspec was net9.0-only AND omitted runtime deps**, so a
+  FRESH install on a clean Oqtane host CRASHED at boot (`ReflectionTypeLoadException` in Oqtane's assembly
+  scan): missing **MegaForm.Sdk.dll → Microsoft.AspNetCore.Razor.Language.dll → Microsoft.CodeAnalysis(.CSharp).dll**.
+  (Matches the known DNN gotcha "MegaForm.Sdk.dll MISSING from every install".) The :5070 dev site only worked
+  because it had ACCUMULATED these from prior manual deploys — packaging was never validated on a clean host.
+  Fix: added net10.0 `lib/` entries + the 4 missing deps (both TFMs) to the nuspec. Dep closure =
+  `(Core ∪ Server ∪ Sdk build output) − clean-host bin` = exactly those (HtmlAgilityPack/SixLabors on :5070
+  are stale leftovers, NOT in the current build output → not needed). ⭐**INSTALL/ROLLBACK RUNBOOK** for a
+  self-hosted Oqtane site: `Oqtane.New10` = :5000 (host/`Minh@2002`); copy `.nupkg` → `<site>\Packages\` →
+  Stop-Process Oqtane.Server (that site) → Start-Process → Oqtane auto-installs on boot (extracts `lib/{tfm}`
+  DLLs to the app ROOT + `wwwroot/Modules/MegaForm`, consumes the nupkg). Capture startup with
+  `Start-Process -RedirectStandardError` to see boot crashes. ROLLBACK = stop, delete the MegaForm*.dll +
+  deps from root + rename `wwwroot/Modules/MegaForm`, restart. ⚠️First install attempt CRASHED :5000 (missing
+  deps) — rolled back to restore, fixed deps, re-installed OK.
 - Built via lean path (this session changed only CSS + Index.razor + AssetVersion, no TS): bump
   `MegaForm.Oqtane.Package/MegaForm.Oqtane.nuspec` `<version>` → 1.7.27; `cp Assets/css/megaform.css →
   MegaForm.Oqtane.Server/wwwroot/Modules/MegaForm/css/`; `dotnet build {Shared,Core,Client,Server} -c Release -f
