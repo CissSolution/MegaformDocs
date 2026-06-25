@@ -50,6 +50,28 @@
     <!-- Third-party dependencies not provided by Oqtane host -->
     <!-- Newtonsoft.Json is used by MegaForm.Core; Oqtane 6 does NOT ship it -->
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Newtonsoft.Json.dll" target="lib\net9.0" />
+    <!-- [pkg-fix 20260625] MegaForm runtime deps the Oqtane host does NOT provide. Without these a
+         CLEAN-host install crashes at startup (ReflectionTypeLoadException during Oqtane's assembly
+         scan): MegaForm.Sdk → Microsoft.AspNetCore.Razor.Language → Roslyn (CodeAnalysis). The
+         :5070 dev site only worked because it had accumulated them from earlier manual deploys. -->
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\MegaForm.Sdk.dll" target="lib\net9.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Microsoft.AspNetCore.Razor.Language.dll" target="lib\net9.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Microsoft.CodeAnalysis.dll" target="lib\net9.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Microsoft.CodeAnalysis.CSharp.dll" target="lib\net9.0" />
+
+    <!-- net10.0 builds (Oqtane 10.x hosts, e.g. :5070 Oqtane.MSSQL3 + :5000 Oqtane.New10) -->
+    <file src="..\MegaForm.Oqtane.Client\bin\Release\net10.0\MegaForm.Oqtane.Client.Oqtane.dll" target="lib\net10.0" />
+    <file src="..\MegaForm.Oqtane.Client\bin\Release\net10.0\MegaForm.Oqtane.Client.Oqtane.pdb" target="lib\net10.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\MegaForm.Oqtane.Server.Oqtane.dll" target="lib\net10.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\MegaForm.Oqtane.Server.Oqtane.pdb" target="lib\net10.0" />
+    <file src="..\MegaForm.Oqtane.Shared\bin\Release\net10.0\MegaForm.Oqtane.Shared.Oqtane.dll" target="lib\net10.0" />
+    <file src="..\MegaForm.Oqtane.Shared\bin\Release\net10.0\MegaForm.Oqtane.Shared.Oqtane.pdb" target="lib\net10.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\MegaForm.Core.dll" target="lib\net10.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Newtonsoft.Json.dll" target="lib\net10.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\MegaForm.Sdk.dll" target="lib\net10.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Microsoft.AspNetCore.Razor.Language.dll" target="lib\net10.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Microsoft.CodeAnalysis.dll" target="lib\net10.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Microsoft.CodeAnalysis.CSharp.dll" target="lib\net10.0" />
 
     <!-- FIX 3: wwwroot — path đúng: wwwroot/Modules/MegaForm/** → deploy vào {webroot}/Modules/MegaForm/ -->
     <!-- Oqtane extract: bỏ 1 segment "wwwroot" → còn Modules/MegaForm/... → vào wwwroot/Modules/MegaForm/ -->
