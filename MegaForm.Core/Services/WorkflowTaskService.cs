@@ -143,6 +143,53 @@ namespace MegaForm.Core.Services
             return BuildResult(task);
         }
 
+        // [SendToInbox v20260625] Ad-hoc routing: send a submission to a chosen user's inbox
+        // WITHOUT a pre-configured workflow. Creates a single-step review task assigned directly
+        // to the target user (mirrors ForwardTaskAsync's assignment), so it lands in that user's
+        // My Inbox "In Progress". Additive — does not touch the existing engine-driven task path.
+        public WorkflowTaskInstance CreateAdHocReviewTask(int formId, int submissionId, string targetUser, string title, string comment, UserContext actor)
+        {
+            EnsureActor(actor);
+            if (string.IsNullOrWhiteSpace(targetUser))
+                throw new InvalidOperationException("targetUser is required.");
+
+            var nowUtc = DateTime.UtcNow;
+            var caseInst = new WorkflowCaseInstance
+            {
+                CaseId = Guid.NewGuid().ToString("N"),
+                FormId = formId,
+                SubmissionId = submissionId,
+                WorkflowId = "adhoc-inbox",
+                CurrentNodeId = "adhoc-review",
+                Status = WorkflowCaseStatus.Running,
+                StartedByUserId = actor.UserId,
+                StartedByUserName = actor.UserName ?? string.Empty,
+                CreatedAt = nowUtc,
+            };
+            var task = new WorkflowTaskInstance
+            {
+                CaseId = caseInst.CaseId,
+                FormId = formId,
+                SubmissionId = submissionId,
+                NodeId = "adhoc-review",
+                NodeLabel = string.IsNullOrWhiteSpace(title) ? "Review submission" : title.Trim(),
+                Status = WorkflowTaskStatus.Claimed,
+                AssignedUserId = TryParseUserId(targetUser),
+                AssignedUserName = (targetUser ?? string.Empty).Trim(),
+                AssignedDisplayName = (targetUser ?? string.Empty).Trim(),
+                ClaimedAt = nowUtc,
+                AllowClaim = true,
+                AllowForward = true,
+                AllowReassign = true,
+                Comment = comment ?? string.Empty,
+            };
+            caseInst.ActiveTaskId = task.TaskId;
+            _repo.SaveCase(caseInst);
+            _repo.SaveTask(task);
+            _repo.AddTaskAction(BuildAction(task, actor, WorkflowTaskActionType.Forwarded, null, comment, targetUser));
+            return task;
+        }
+
         public Task<WorkflowTaskOperationResult> ClaimTaskAsync(
             string taskId,
             UserContext actor,

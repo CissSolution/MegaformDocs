@@ -219,6 +219,32 @@ namespace MegaForm.Oqtane.Server.Controllers
             }
         }
 
+        // [SendToInbox v20260625] Route a submission to a chosen user's inbox on demand
+        // (no pre-configured workflow needed). Body: { formId, submissionId, targetUser, title?, comment? }.
+        [HttpPost("Workflow/Tasks/SendSubmission")]
+        [Authorize]
+        public IActionResult WorkflowSendSubmission([FromBody] JsonElement bodyElement)
+        {
+            var body = ParseBody(bodyElement);
+            if (body == null) return BadRequest(new { error = "Invalid JSON body" });
+            try
+            {
+                var actor = GetCurrentUserContextWithRoles();
+                int formId = body.Value<int?>("formId") ?? 0;
+                int submissionId = body.Value<int?>("submissionId") ?? 0;
+                string targetUser = (string)body["targetUser"];
+                string title = (string)body["title"];
+                string comment = (string)body["comment"];
+                if (string.IsNullOrWhiteSpace(targetUser)) return BadRequest(new { error = "targetUser is required" });
+                var task = _workflowTasks.CreateAdHocReviewTask(formId, submissionId, targetUser, title, comment, actor);
+                return JsonOk(new { ok = true, taskId = task.TaskId, assignedTo = task.AssignedUserName, formId, submissionId });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
         [HttpPost("Workflow/Tasks/Comment")]
         [Authorize]
         public IActionResult WorkflowCommentTask([FromBody] JsonElement bodyElement)

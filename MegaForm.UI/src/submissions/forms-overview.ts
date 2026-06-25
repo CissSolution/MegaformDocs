@@ -43,12 +43,24 @@ const IC: Record<string, string> = {
   arrowDown: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>`,
   chevronsUpDown: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>`,
   refresh: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>`,
+  // [StorageType v20260625] per-form destination icons
+  stoDb: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>`,
+  stoSheet: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="12" x="3" y="6" rx="2"/><path d="M3 10h18"/><path d="M8 6v12"/><path d="M16 6v12"/></svg>`,
+  stoCsv: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M8 13h2"/><path d="M8 17h2"/><path d="M14 13h2"/><path d="M14 17h2"/></svg>`,
 };
 function ic(name: string, size = 16): string {
   return `<svg width="${size}" height="${size}" class="mf-fo-ic" ${IC[name] ? IC[name].slice(4) : '></svg>'}`;
 }
 
+// [StorageType v20260625] icon + tooltip + colour per submission destination.
+const STORAGE_META: Record<string, { icon: string; title: string; color: string; bg: string }> = {
+  csv:   { icon: 'stoCsv',   title: 'Stored in MegaForm — export to CSV', color: '#475569', bg: '#f1f5f9' },
+  sheet: { icon: 'stoSheet', title: 'Connected to Google Sheet',          color: '#15803d', bg: '#dcfce7' },
+  db:    { icon: 'stoDb',    title: 'Connected to a database table',       color: '#1d4ed8', bg: '#dbeafe' },
+};
+
 // ── Types ─────────────────────────────────────────────────────
+type StorageKind = 'csv' | 'sheet' | 'db';
 interface RawForm {
   formId: number; title: string; status: string;
   createdOnUtc: string | null; allTime: number; last7: number; series: number[];
@@ -58,7 +70,7 @@ interface FormRow {
   formId: number; title: string; status: string; createdLabel: string; createdMs: number;
   allTime: number; last7: number; last30: number;
   trend: 'up' | 'down' | 'flat'; trendPct: number; completion: number | null;
-  sparkline: number[]; starred: boolean;
+  sparkline: number[]; starred: boolean; storage: StorageKind;
 }
 type SortKey = 'name' | 'createdAt' | 'allTime' | 'last7' | 'last30';
 type SortDir = 'asc' | 'desc';
@@ -86,6 +98,7 @@ let _host: HTMLElement;
 let _rows: FormRow[] = [];
 let _generatedAt = new Date();
 let _seriesByForm: Record<number, number[]> = {};
+let _storageByForm: Record<number, StorageKind> = {};
 let _search = '';
 let _statusFilter = 'all';
 let _sortKey: SortKey = 'allTime';
@@ -99,8 +112,38 @@ export function renderFormsOverview(host: HTMLElement, ctx: FormsOverviewCtx): v
   void load();
 }
 
+// [StorageType v20260625] Derive a form's submission destination from its settings/workflow.
+// db    = settings.databaseInsert.enabled (writes a row to a connected SQL table)
+// sheet = a Google Sheets node in the workflow (type 25 / "GoogleSheets")
+// csv   = default (stored in MegaForm submissions, exportable to CSV)
+function deriveStorage(settingsJson: string, workflowJson: string): StorageKind {
+  try {
+    const s = settingsJson ? JSON.parse(settingsJson) : {};
+    const di = s.databaseInsert || s.DatabaseInsert;
+    if (di && (di.enabled === true || di.Enabled === true)) return 'db';
+  } catch { /* ignore */ }
+  const wf = String(workflowJson || '');
+  if (/"type"\s*:\s*("?GoogleSheets"?|25)\b/i.test(wf) || /GoogleSheets/i.test(wf)) return 'sheet';
+  return 'csv';
+}
+
+async function loadStorageMap(): Promise<void> {
+  _storageByForm = {};
+  try {
+    const url = _ctx.apiBase.replace(/\/+$/, '/') + 'Form/List?siteId=' + (_ctx.siteId || 1);
+    const r = await fetch(url, { credentials: 'same-origin', cache: 'no-store' });
+    if (!r.ok) return;
+    const list = await r.json();
+    (list || []).forEach((f: any) => {
+      const id = f.formId ?? f.FormId ?? 0;
+      if (id > 0) _storageByForm[id] = deriveStorage(f.settingsJson ?? f.SettingsJson ?? '', f.workflowJson ?? f.WorkflowJson ?? '');
+    });
+  } catch { /* best-effort — falls back to 'csv' */ }
+}
+
 async function load(): Promise<void> {
   try {
+    await loadStorageMap();
     const url = _ctx.apiBase.replace(/\/+$/, '/') + 'Reports/FormsOverview?days=30&siteId=' + (_ctx.siteId || 1);
     const r = await fetch(url, { credentials: 'same-origin', cache: 'no-store' });
     if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -137,6 +180,7 @@ async function load(): Promise<void> {
         completion: f.completion,
         sparkline: s.slice(-14),
         starred: false,
+        storage: _storageByForm[f.formId] || 'csv',
       } as FormRow;
     });
     paint();
@@ -374,12 +418,21 @@ function buildTable(): HTMLElement {
     starBtn.addEventListener('click', (e) => { e.stopPropagation(); row.starred = !row.starred; repaintTableOnly(); });
     tdStar.appendChild(starBtn); tr.appendChild(tdStar);
 
-    // form name (clickable → drill in)
+    // form name (clickable → drill in) + storage-destination chip
     const tdName = el('td', 'mf-fo-td mf-fo-td-name');
+    const sto = STORAGE_META[row.storage];
+    const stoChip = el('span', `mf-fo-storage mf-fo-storage-${row.storage}`, ic(sto.icon, 13));
+    stoChip.title = sto.title;
+    stoChip.setAttribute('aria-label', sto.title);
+    stoChip.style.cssText = `display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;flex:0 0 auto;color:${sto.color};background:${sto.bg};margin-right:8px`;
+    const nameWrap = el('span', 'mf-fo-name-wrap');
+    nameWrap.style.cssText = 'display:inline-flex;align-items:center;gap:0';
     const link = el('a', 'mf-fo-form-link', `${row.title} ${ic('chevronRight', 14)}`) as HTMLAnchorElement;
     link.href = '#';
     link.addEventListener('click', (e) => { e.preventDefault(); _ctx.onPickForm(row.formId, row.title); });
-    tdName.appendChild(link);
+    nameWrap.appendChild(stoChip);
+    nameWrap.appendChild(link);
+    tdName.appendChild(nameWrap);
     tdName.appendChild(el('span', 'mf-fo-form-sub', `#${row.formId}`));
     tr.appendChild(tdName);
 

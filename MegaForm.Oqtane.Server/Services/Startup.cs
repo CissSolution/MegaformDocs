@@ -337,6 +337,18 @@ namespace MegaForm.Oqtane.Server.Services
             var connStr = !string.IsNullOrWhiteSpace(connectionString)
                 ? connectionString
                 : (_config?.GetConnectionString(connectionName) ?? string.Empty);
+            // [DashboardDbFallback v20260625] Stock Oqtane installs ship ONLY "DefaultConnection".
+            // MegaForm's dashboard / DB-bound-form / AI-SQL tools resolve the app DB by the
+            // conventional alias "DashboardDatabase" (DNN already alias-resolves it). When that
+            // alias is absent, fall back to Oqtane's DefaultConnection so a DB-connected form works
+            // out of the box without any appsettings edit (matches the DNN behaviour). An explicit
+            // connectionString or a real "DashboardDatabase" entry still take precedence.
+            if (string.IsNullOrWhiteSpace(connStr)
+                && (string.IsNullOrWhiteSpace(connectionName)
+                    || string.Equals(connectionName, "DashboardDatabase", StringComparison.OrdinalIgnoreCase)))
+            {
+                connStr = _config?.GetConnectionString("DefaultConnection") ?? string.Empty;
+            }
             if (string.IsNullOrWhiteSpace(connStr))
                 throw new InvalidOperationException("Connection string '" + connectionName + "' not found. Add it to appsettings.json under ConnectionStrings:" + connectionName + ".");
 

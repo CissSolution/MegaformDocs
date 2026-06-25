@@ -51,6 +51,10 @@ const I: Record<string, string> = {
   file: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>`,
   inbox: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>`,
   panel: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>`,
+  gear: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>`,
+  send: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>`,
+  userPlus: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg>`,
+  csv: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M8 13h2"/><path d="M8 17h2"/><path d="M14 13h2"/><path d="M14 17h2"/></svg>`,
   chevD: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>`,
   logout: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>`,
   refresh: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>`,
@@ -1090,11 +1094,16 @@ function buildBulkBar(count: number): HTMLElement {
   const info = span('mf-subs-bulk-info', `${count} selected`);
   const markBtn = btn('mf-btn mf-btn-outline mf-btn-sm', `${ic('check',13)} Mark Processed`, (e) => { e.preventDefault(); bulkUpdateStatus('Read'); });
   const archBtn = btn('mf-btn mf-btn-outline mf-btn-sm', `${ic('archive',13)} Archive`, (e) => { e.preventDefault(); bulkUpdateStatus('Archived'); });
+  // [SendToInbox v20260625] Route the selected submission(s) to a chosen user's My Inbox.
+  const inboxBtn = btn('mf-btn mf-btn-outline mf-btn-sm', `${ic('send',13)} <span class="mf-btn-lbl">${T('subs.send_to_inbox','Send to Inbox')}</span>`, (e) => {
+    e.preventDefault();
+    openSendToInboxModal(Array.from(getSubsState().selected));
+  });
   const delBtn = btn('mf-btn mf-btn-outline mf-btn-sm mf-btn-danger-outline', `${ic('trash',13)} Delete`, (e) => {
     e.preventDefault();
     if (confirm(`Delete ${count} submissions? This cannot be undone.`)) bulkDelete();
   });
-  mk(bar, info, markBtn, archBtn, delBtn);
+  mk(bar, info, markBtn, archBtn, inboxBtn, delBtn);
   return bar;
 }
 
@@ -1756,6 +1765,109 @@ function openGoogleSheetConnectModal(): void {
   document.body.appendChild(overlay);
   overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
   idInp.focus();
+}
+
+// [SendToInbox v20260625] Route selected submission(s) to a chosen user's My Inbox.
+// Creates an ad-hoc review task per submission (POST Workflow/Tasks/SendSubmission), assigned
+// to the picked user. User list comes from Workflow/Directory (same source as the inbox Forward
+// picker); a free-text username field is offered as a fallback for sites with no custom roles.
+function subsApiBase(): string {
+  return String((getSubsState().config.apiBase || (getApiBase() + '/'))).replace(/\/+$/, '') + '/';
+}
+async function openSendToInboxModal(submissionIds: number[]): Promise<void> {
+  if (!submissionIds || submissionIds.length === 0) { toast('Select at least one submission first.', 'info'); return; }
+  const base = subsApiBase();
+  // resolve formId per submission (per-form view → config.formId; else from the row)
+  const subFormId = (sid: number): number => {
+    const s = ((getSubsState().submissions as any[]) || []).find((x: any) => (x.submissionId ?? x.SubmissionId) === sid);
+    return (s && (s.formId ?? s.FormId)) || getSubsState().config.formId || 0;
+  };
+
+  const overlay = div('mf-sti-overlay');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.45);display:flex;align-items:center;justify-content:center;z-index:100010;padding:16px';
+  const box = div();
+  box.style.cssText = 'background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 20px 40px rgba(15,23,42,.18);width:100%;max-width:460px;padding:24px';
+  const title = document.createElement('h3');
+  title.innerHTML = `${ic('send', 16)} ${T('subs.send_to_inbox', 'Send to Inbox')}`;
+  title.style.cssText = 'margin:0 0 4px;font-size:18px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:8px';
+  const subtitle = document.createElement('p');
+  subtitle.textContent = `${submissionIds.length} submission${submissionIds.length > 1 ? 's' : ''} → a teammate's inbox`;
+  subtitle.style.cssText = 'margin:0 0 16px;font-size:13px;color:#64748b';
+
+  // user picker (directory) + free-text fallback
+  const selWrap = div(); selWrap.style.cssText = 'margin-bottom:12px';
+  const selLbl = document.createElement('label'); selLbl.textContent = T('subs.assign_to', 'Assign to user'); selLbl.style.cssText = 'display:block;font-size:13px;font-weight:600;color:#334155;margin-bottom:4px';
+  const sel = document.createElement('select'); sel.className = 'mf-input';
+  sel.style.cssText = 'width:100%;padding:8px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;background:#fff';
+  sel.innerHTML = `<option value="">${T('subs.loading_users', 'Loading users…')}</option>`;
+  mk(selWrap, selLbl, sel);
+
+  const txtWrap = div(); txtWrap.style.cssText = 'margin-bottom:12px';
+  const txtLbl = document.createElement('label'); txtLbl.textContent = T('subs.or_username', 'or type a username'); txtLbl.style.cssText = 'display:block;font-size:12px;font-weight:600;color:#64748b;margin-bottom:4px';
+  const txt = document.createElement('input') as HTMLInputElement;
+  txt.type = 'text'; txt.className = 'mf-input'; txt.placeholder = 'e.g. host';
+  txt.style.cssText = 'width:100%;padding:8px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px';
+  mk(txtWrap, txtLbl, txt);
+
+  const noteWrap = div(); noteWrap.style.cssText = 'margin-bottom:16px';
+  const noteLbl = document.createElement('label'); noteLbl.textContent = T('subs.note_optional', 'Note (optional)'); noteLbl.style.cssText = 'display:block;font-size:13px;font-weight:600;color:#334155;margin-bottom:4px';
+  const noteInp = document.createElement('textarea'); noteInp.className = 'mf-input'; noteInp.rows = 2;
+  noteInp.style.cssText = 'width:100%;padding:8px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;resize:vertical';
+  mk(noteWrap, noteLbl, noteInp);
+
+  const btns = div(); btns.style.cssText = 'display:flex;gap:8px;justify-content:flex-end';
+  const cancelBtn = btn('mf-btn mf-btn-outline mf-btn-sm', T('dash.cancel', 'Cancel'), (e) => { e.preventDefault(); overlay.remove(); });
+  const sendBtn = btn('mf-btn mf-btn-primary mf-btn-sm', `${ic('send', 13)} ${T('subs.send', 'Send')}`, async (e) => {
+    e.preventDefault();
+    const targetUser = (txt.value.trim() || sel.value || '').trim();
+    if (!targetUser) { toast(T('subs.pick_user', 'Pick a user or type a username.'), 'error'); return; }
+    sendBtn.disabled = true; sendBtn.innerHTML = T('subs.sending', 'Sending…');
+    try {
+      let ok = 0;
+      for (const sid of submissionIds) {
+        const res = await fetch(base + 'Workflow/Tasks/SendSubmission', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ formId: subFormId(sid), submissionId: sid, targetUser, title: 'Review submission', comment: noteInp.value.trim() }),
+        });
+        if (res.ok) ok++;
+      }
+      toast(T('subs.sent_to_inbox', 'Sent {n} to {u}’s inbox.', { n: String(ok), u: targetUser }), ok > 0 ? 'success' : 'error');
+      overlay.remove();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Send failed', 'error');
+      sendBtn.disabled = false; sendBtn.innerHTML = `${ic('send', 13)} ${T('subs.send', 'Send')}`;
+    }
+  });
+  mk(btns, cancelBtn, sendBtn);
+  mk(box, title, subtitle, selWrap, txtWrap, noteWrap, btns);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+
+  // populate the directory
+  try {
+    const res = await fetch(base + 'Workflow/Directory', { credentials: 'include', headers: { Accept: 'application/json' } });
+    const data = res.ok ? await res.json() : null;
+    const groups = (data && (data.groups || data.Groups)) || [];
+    if (!groups.length) {
+      sel.innerHTML = `<option value="">${T('subs.no_dir_users', '(no directory users — type a username)')}</option>`;
+    } else {
+      sel.innerHTML = `<option value="">${T('subs.choose_user', '— choose —')}</option>`;
+      groups.forEach((g: any) => {
+        const og = document.createElement('optgroup'); og.label = g.name || g.Name || 'Users';
+        ((g.users || g.Users) || []).forEach((u: any) => {
+          const o = document.createElement('option');
+          o.value = u.userName || u.UserName || '';
+          o.textContent = (u.displayName || u.DisplayName || u.userName || u.UserName || '') + (u.email || u.Email ? ` · ${u.email || u.Email}` : '');
+          og.appendChild(o);
+        });
+        if (og.children.length) sel.appendChild(og);
+      });
+    }
+  } catch {
+    sel.innerHTML = `<option value="">${T('subs.no_dir_users', '(no directory users — type a username)')}</option>`;
+  }
 }
 
 async function fetchWorkflowDef(formId: number): Promise<any> {
