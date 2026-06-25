@@ -20,11 +20,14 @@
     RenderFragment RenderAdminDock = @<text>
     <div class="mf-oq-admin-dock">
         <a class="mf-oq-btn" href="@BuildSettingsUrl()" data-mf-settings-link="1" onclick="@BuildSettingsInlineOpenScript()"><i class="fas fa-cog"></i> Settings</a>
-        <a class="mf-oq-linkbtn" href="@BuildPanelUrl("builder")"><i class="fas fa-pen-ruler"></i> Form Builder</a>
-        <a class="mf-oq-linkbtn" href="@BuildPanelUrl("dashboard")" data-mf-shared-dashboard-badge="OQDashboardLink v20260429-01"><i class="fas fa-table-columns"></i> Form Dashboard</a>
+        @* [B273 soft-nav fix] data-enhance-nav="false" forces a FULL page load so the builder/
+           dashboard inline boot <script> actually runs — Blazor enhanced-nav does NOT execute
+           DOM-swapped <script> tags, so a soft-nav lands on a BLANK panel (OQIndependentPages). *@
+        <a class="mf-oq-linkbtn" href="@BuildPanelUrl("builder")" data-enhance-nav="false"><i class="fas fa-pen-ruler"></i> Form Builder</a>
+        <a class="mf-oq-linkbtn" href="@BuildPanelUrl("dashboard")" data-enhance-nav="false" data-mf-shared-dashboard-badge="OQDashboardLink v20260429-01"><i class="fas fa-table-columns"></i> Form Dashboard</a>
         @if (!IsFormMode && _formId > 0)
         {
-            <a class="mf-oq-linkbtn" href="@BuildPanelUrl("builder")"><i class="fas fa-paintbrush"></i> Design Template</a>
+            <a class="mf-oq-linkbtn" href="@BuildPanelUrl("builder")" data-enhance-nav="false"><i class="fas fa-paintbrush"></i> Design Template</a>
         }
     </div>
     <div id="@SettingsInlineHostId" class="mf-oq-settings-inline-host" data-mf-settings-inline-host="1"></div>
@@ -757,7 +760,7 @@ else if (_formId == 0)
         <div class="alert alert-info">
             <strong>MegaForm:</strong> No form configured.
             Use the <i class="fas fa-cog"></i> <strong>Module Settings</strong> (gear icon)
-            or <a class="alert-link" href="@BuildPanelUrl("builder")">Form Builder</a> to choose a form.
+            or <a class="alert-link" href="@BuildPanelUrl("builder")" data-enhance-nav="false">Form Builder</a> to choose a form.
         </div>
     }
 }
@@ -767,7 +770,7 @@ else if (!_isPublished)
     {
         <div class="alert alert-warning">
             <strong>MegaForm:</strong> This form is not published yet.
-            <a class="alert-link" href="@BuildPanelUrl("builder")">Open Builder â†—</a>
+            <a class="alert-link" href="@BuildPanelUrl("builder")" data-enhance-nav="false">Open Builder â†—</a>
         </div>
     }
 }
@@ -2564,15 +2567,18 @@ private string BuildBuilderUrl()
 // [NoPopupAdmin v20260605-01] Workflow editor no longer opens as a JS popup.
 // Admins use the Builder with ?rightTab=workflow instead.
 
-    private void OpenBuilderPanel() => NavigationManager.NavigateTo(BuildPanelUrl("builder"));
-    private void OpenDashboardPanel() => NavigationManager.NavigateTo(BuildPanelUrl("dashboard"));
-    private void OpenSubmissionsPanel() => NavigationManager.NavigateTo(BuildPanelUrl("submissions"));
-    private void OpenLanguagesPanel() => NavigationManager.NavigateTo(BuildPanelUrl("languages"));
+    // [B273 soft-nav fix] forceLoad:true → full page load so the panel's inline boot <script>
+    // runs (Blazor enhanced-nav skips DOM-swapped scripts → blank panel). Matches the
+    // OQIndependentPages pattern (Dashboard.razor/Languages.razor already use forceLoad:true).
+    private void OpenBuilderPanel() => NavigationManager.NavigateTo(BuildPanelUrl("builder"), forceLoad: true);
+    private void OpenDashboardPanel() => NavigationManager.NavigateTo(BuildPanelUrl("dashboard"), forceLoad: true);
+    private void OpenSubmissionsPanel() => NavigationManager.NavigateTo(BuildPanelUrl("submissions"), forceLoad: true);
+    private void OpenLanguagesPanel() => NavigationManager.NavigateTo(BuildPanelUrl("languages"), forceLoad: true);
     private void OpenBuilderWorkflowPanel()
     {
         var url = BuildPanelUrl("builder");
         url += (url.Contains("?") ? "&" : "?") + "rightTab=workflow";
-        NavigationManager.NavigateTo(url);
+        NavigationManager.NavigateTo(url, forceLoad: true);
     }
 
     private string BuildPanelUrl(string panel)
