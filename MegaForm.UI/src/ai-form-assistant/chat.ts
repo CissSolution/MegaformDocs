@@ -215,8 +215,13 @@ function systemPrompt(): string {
       '- This form has a templateGuideSlug, so the guide below is authoritative.\n' +
       '- Observe immutableRules, mutableRules, contentTokenDictionary, fieldLayoutMap, theme, compositeWidgetPolicy, and conversionExamples.\n' +
       '- Do NOT rename locked keys, replace customHtml/customCss, or change settings.theme unless mutableRules explicitly allow it.\n' +
-      '- When adding fields, insert the matching {field:KEY} / {{field:KEY}} placeholder into the panel declared by fieldLayoutMap.defaultAppendPanel.\n\n' +
-      guideText.slice(0, 6000) + (guideText.length > 6000 ? '\n…(truncated)' : '') + '\n'
+      '- When adding fields, insert the matching {field:KEY} / {{field:KEY}} placeholder into the panel declared by fieldLayoutMap.defaultAppendPanel.\n' +
+      // [v20260626-PremiumDeterministic] guide.md frontmatter carries the deterministic facts
+      // map (fields/display/steps/shellTexts/hashes); the body lists per-op formulas. A hardcoded
+      // shell heading/caption is rebranded via set_html_text (text-only swap) so customCss stays
+      // byte-identical; colour goes ONLY through themeCssOverrides.
+      '- To change a hardcoded heading/caption shown in the shell, use the exact string from the guide\'s shellTexts list with set_html_text (text-only swap; keeps structure + customCss byte-identical). NEVER edit customCss for colour — use themeCssOverrides.\n\n' +
+      guideText.slice(0, 9500) + (guideText.length > 9500 ? '\n…(truncated)' : '') + '\n'
     : '';
 
   // [v20260528-14] Include a compact snapshot of the CURRENT form schema so

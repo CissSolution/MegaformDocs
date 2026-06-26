@@ -124,6 +124,31 @@ IF NOT EXIST "MegaForm.Web\wwwroot\megaform\js\megaform-theme-inspector.js" ( EC
 
 :SKIP_TS
 
+REM -- Step 1b: Sync i18n locale packs + verify package completeness ------------
+REM  ROOT CAUSE of the 2026-06-26 drift: the canonical public/i18n was NEVER synced
+REM  into the four Oqtane js/**/i18n dirs at pack time, so the wwwroot wildcard shipped
+REM  stale/partial language packs. Sync ALL dirs from canonical, then GUARD: abort the
+REM  pack if any resource directory (i18n / KB) is incomplete. The package ships whole
+REM  DIRECTORIES (wwwroot wildcard) — so completeness == this tree being complete here.
+where node >NUL 2>&1
+IF ERRORLEVEL 1 (
+    ECHO [WARN] Node khong co -- BO QUA i18n sync + completeness guard ^(rui ro ship thieu^)
+    GOTO :SKIP_I18N
+)
+ECHO.
+ECHO [1b/4] Sync i18n locale packs to ALL platform dirs...
+call node "MegaForm.UI\tools\i18n-sync-platforms.cjs"
+IF ERRORLEVEL 1 ( ECHO [LOI] i18n sync that bai! & EXIT /B 1 )
+ECHO.
+ECHO [1b2/4] Generate per-template facts.json + guide.md to ALL 3 platform dirs...
+call node "MegaForm.UI\tools\gen-template-facts.cjs"
+IF ERRORLEVEL 1 ( ECHO [LOI] gen-template-facts that bai! & EXIT /B 1 )
+ECHO.
+ECHO [1c/4] Verify package completeness ^(i18n + KB resources + premium facts/guide^)...
+call node "MegaForm.UI\tools\verify-package-complete.cjs"
+IF ERRORLEVEL 1 ( ECHO [LOI] Package KHONG day du -- huy pack. Xem log o tren. & EXIT /B 1 )
+:SKIP_I18N
+
 REM -- Step 2/4: Build C# Release (sau khi wwwroot da co bundle moi) ------------
 ECHO.
 ECHO [2/4] Build Release C#...
