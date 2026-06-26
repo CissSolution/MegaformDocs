@@ -101,22 +101,22 @@ in `__EFMigrationsHistory`. Two migration bugs (only surface on a CLEAN host —
   `01060034_SeedTemplateGuides` both declared `[Migration("MegaForm.01.06.00.34")]` → EF
   `MigrationsAssembly.get_Migrations()` threw "same key already added" while BUILDING the list → NO migration
   ran. Fix: re-numbered SeedTemplateGuides → `.35` (+ renamed file 01060035_; idempotent so safe on existing DBs).
-- **BUG 2 — OPEN (needs next-session debug): NullReferenceException in the EntityBuilder migration path.**
-  After BUG 1, EF builds the list but `Migrate()` throws (accurate pdb stack):
-  `NRE at MigrationBuilder.CreateTable[TColumns]() ← Oqtane BaseEntityBuilder.Create() (BaseEntityBuilder.cs:476)
-  ← MegaForm InitializeModule.Up() (01050100_InitializeModule.cs:line 26 = new FormViewEntityBuilder(...).Create())
-  during Migration.get_UpOperations()/GenerateUpSql`. It's during OPERATION-BUILD (not SQL exec) so it's
-  deterministic & host-independent (LocalDB vs SQLEXPRESS irrelevant; same Oqtane 10.1.0.0 on both). FormView/
-  Form EntityBuilders look structurally identical, so the null is subtle (needs a breakpoint in
-  BaseEntityBuilder.Create / inspect which column/PK/FK is null). ⭐**KEY LEAD: MegaFormManager.Install routes
-  SQLite through `db.Database.GenerateCreateScript()` (MODEL-based, WORKS) but SQL Server through EF `Migrate()`
-  (EntityBuilder-based, NRE).** So clean SQL Server installs were always broken; SQLite works. Likely fixes:
-  (a) route SQL Server through GenerateCreateScript too (like SQLite — bypasses the EntityBuilders), or
-  (b) find+fix the null in the FormView (or a later) EntityBuilder. Logs: `%TEMP%\oqt5000_out*.log` (use the
-  net10.0 .pdb for accurate frames — copy `MegaForm.Oqtane.Server.Oqtane.pdb` next to the dll).
-- **State left on :5000:** MegaForm package INSTALLED (DLLs+deps+wwwroot present, site UP at :5000) but DB not
-  initialized → module panels error. The failed install also left a `ModuleDefinition` row (blank version) +
-  re-tries the migration (non-fatal) on every boot. Next session: fix BUG 2, then the migration runs.
+- **BUG 2 — FIXED (`740476c`, pkg v1.7.28): the EntityBuilder migration path NRE'd + the schema install had a
+  GO-batch bug.** Two parts: (i) the EF `Migrate()` / EntityBuilder path threw a NullReferenceException in
+  Oqtane `BaseEntityBuilder.Create()` → `MigrationBuilder.CreateTable` (FormViewEntityBuilder, op-build phase,
+  deterministic). (ii) Fix = route **ALL** DBs through `MegaFormManager.InstallSchemaFromModel` (model-based
+  `db.Database.GenerateCreateScript()` — never calls the migration Up()/EntityBuilders → no NRE; idempotent).
+  ⭐The final blocker was **`GO` batch separators**: SQL Server's GenerateCreateScript emits `GO` (a sqlcmd-only
+  keyword `ExecuteSqlRaw` rejects with "Could not find stored procedure 'GO'"); the old split-on-`;` glued GO to
+  the next statement, failing ~37 CREATEs (incl MF_Workflows/MF_WorkflowTasks/MF_WorkflowTaskActions).
+  `SplitSqlStatements` now strips standalone `GO` lines. History seeded from `db.Database.GetMigrations()`.
+  ✅Verified on a FRESH :5000 (Oqtane.New10, LocalDB, net10.0): **0 → 24 MF_* tables** (incl the 3 workflow
+  tables), 0 schema errors, 11 history rows; **My Inbox + Submissions panels load with NO error** (b310-*.png).
+  ⭐**KNOWN LIMITATION:** GenerateCreateScript creates NEW tables but does NOT ALTER existing tables to add NEW
+  columns. So a FRESH install gets the full current schema; an EXISTING install with schema drift keeps its old
+  columns. (Seen on :5070: its old `MF_AI_Knowledge` lacks `WidgetType` → the WidgetType index logs a benign
+  `[MegaForm schema] ERR ... Column ... does not exist` on boot; non-fatal, :5070 still works.) Future: add an
+  ALTER-missing-columns pass for true upgrade support. Log marker `[MegaForm schema] ERR` flags any DDL failure.
 - **Package IS complete** (the user's "missing KBs/SQL/DLL" was a mis-attribution — real cause = these migration
   bugs): verified the .nupkg ships 34 TemplateGuide KB `.md`, 8 PromptRecipes, 185 js, css, fonts, flags, +
   `lib/net9.0`+`lib/net10.0` DLLs incl all deps. "SQL scripts" = the EF migrations embedded in the Server DLL.
