@@ -149,7 +149,7 @@
     "settings.theme",
     "field keys"
   ],
-  "customCssSha256": "15b3d2747e965b61424288cb6e1f97cda385e2857df6e092f11512fd5f575fe0",
+  "customCssSha256": "091af7542ef9c511053f5fe063da2b690fc531831d839f8060e854883e91552c",
   "shellSha256": "33a267bd52a7c721684f2bad56ab3d4fbd4d1d9101823419fd0c1e5ea6102668"
 }
 ---
@@ -224,9 +224,9 @@ Some visible text (hero heading, step labels, section/field captions) is baked i
 - **C7 Edit CARD options** (fields: purpose, region, budget): `{op:"set_field_property", key:"purpose", path:"options", value:[{"value":"v1","label":"Title","meta":"Subtitle","description":"…","icon":"★"},…], designDecision:"preserve"}`. Keep `optionDisplay:"cards"`. Card chrome (`.mf-option-group--cards`) stays.
 - **C2 Add field**: `{op:"add_field", type:"Text", key:"new_key", label:"…", step:3, designDecision:"preserve"}` — the dispatcher inserts `{{field:new_key}}` into the matching `data-step` block. Pick a snake_case key not already used.
 - **C3 Remove field**: `{op:"remove_field", key:"<key>", designDecision:"preserve"}` — removes the field and its token; leaves zero orphan placeholders.
-- **C8 Change COLOUR (only if the user explicitly asks)**: `{op:"set_form_meta", themeCssOverrides:{"--primary":"#hex","--accent":"#hex"}, designDecision:"preserve"}`. NEVER edit customCss for colour — customCss must stay byte-identical (sha256 `15b3d2747e96…`).
+- **C8 Change COLOUR (only if the user explicitly asks)**: `{op:"set_form_meta", themeCssOverrides:{"--primary":"#hex","--accent":"#hex"}, designDecision:"preserve"}`. NEVER edit customCss for colour — customCss must stay byte-identical (sha256 `091af7542ef9…`).
 - **C4/C5 Add/Remove step** (ADVANCED — customHtml-wizard): steps are `data-step` blocks in customHtml driven by `au_wizard`. Only attempt if the user explicitly asks; clone an existing `data-step` block via `customHtmlAppend` (NEVER touch customCss), renumber the stepper, and add the new fields with placeholders. If unsure, ask the user instead of guessing.
 
 ## Hard invariants (a change that breaks any of these is a FAILURE — refuse the op)
-- customCss sha256 stays `15b3d2747e965b61…` · customHtml shell sha256 stays `33a267bd52a7c721…` (unless C2/C4 legitimately add a node).
+- customCss sha256 stays `091af7542ef9c511…` · customHtml shell sha256 stays `33a267bd52a7c721…` (unless C2/C4 legitimately add a node).
 - `settings.theme` stays `down-under-reef-premium`. Every field keeps a `{{field:key}}` (own or via Row). Zero orphan/zero floating-outside-card fields.
