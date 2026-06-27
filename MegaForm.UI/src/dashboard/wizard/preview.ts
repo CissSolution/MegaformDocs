@@ -1,17 +1,26 @@
 // Live preview panel (right side). A faithful, lightweight mock of the form as configured —
 // reflects theme color, fields, and multi-step. Not the real renderer (cheap to re-render).
-import { WizardData, WizardField, fieldMeta, themeMeta, fontStack, roundnessPx } from './types';
+import { WizardData, WizardField, themeMeta, fontStack, roundnessPx } from './types';
+import { catalogLabel, catalogPreview } from './field-catalog';
 import { h, icon } from './ui';
 
 function fieldPreview(f: WizardField, radius: number): HTMLElement {
-  const m = fieldMeta(f.type);
-  const label = h('div', { style: 'font-size:12px;font-weight:600;margin-bottom:4px' }, [document.createTextNode(f.label || m.label), f.required ? h('span', { style: 'color:#ef4444' }, ' *') : null]);
+  const hint = catalogPreview(f.type);
+  // Section / heading render without a field label/control.
+  if (hint === 'section') return h('div', { style: 'display:flex;align-items:center;gap:8px;margin:14px 0 10px' }, [h('div', { style: 'flex:1;height:1px;background:#e2e8f0' }), h('span', { style: 'font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em' }, f.label || 'Section'), h('div', { style: 'flex:1;height:1px;background:#e2e8f0' })]);
+  if (hint === 'html') return h('div', { style: 'font-size:14px;font-weight:800;margin:10px 0 8px;color:#334155' }, f.label || 'Heading');
+
+  const label = h('div', { style: 'font-size:12px;font-weight:600;margin-bottom:4px' }, [document.createTextNode(f.label || catalogLabel(f.type)), f.required ? h('span', { style: 'color:#ef4444' }, ' *') : null]);
   let control: HTMLElement;
-  if (f.type === 'textarea') control = h('div', { style: 'height:54px;border:1px solid #e2e8f0;border-radius:' + radius + 'px;background:#fff' });
-  else if (f.type === 'checkbox') control = h('div', { style: 'display:flex;align-items:center;gap:7px;font-size:12px;color:#94a3b8' }, [h('span', { style: 'width:16px;height:16px;border:1px solid #cbd5e1;border-radius:4px' }), document.createTextNode(f.label || 'Yes')]);
-  else if (f.type === 'rating') control = h('div', { style: 'color:#fbbf24;font-size:16px;letter-spacing:3px' }, '★★★★★');
-  else if (f.type === 'fullname') control = h('div', { style: 'display:flex;gap:8px' }, [inputBox('First', radius), inputBox('Last', radius)]);
-  else control = inputBox(f.type === 'email' ? 'you@example.com' : 'Enter ' + (f.label || 'value').toLowerCase() + '…', radius, f.type === 'dropdown');
+  if (hint === 'textarea') control = h('div', { style: 'height:54px;border:1px solid #e2e8f0;border-radius:' + radius + 'px;background:#fff' });
+  else if (hint === 'checkbox') control = h('div', { style: 'display:flex;align-items:center;gap:7px;font-size:12px;color:#94a3b8' }, [h('span', { style: 'width:16px;height:16px;border:1px solid #cbd5e1;border-radius:4px' }), document.createTextNode(f.label || 'Yes')]);
+  else if (hint === 'rating') control = h('div', { style: 'color:#fbbf24;font-size:16px;letter-spacing:3px' }, '★★★★★');
+  else if (hint === 'name') control = h('div', { style: 'display:flex;gap:8px' }, [inputBox('First', radius), inputBox('Last', radius)]);
+  else if (hint === 'address') control = h('div', { style: 'display:flex;flex-direction:column;gap:6px' }, [inputBox('Street address', radius), h('div', { style: 'display:flex;gap:8px' }, [inputBox('City', radius), inputBox('ZIP', radius)])]);
+  else if (hint === 'file') control = h('div', { style: 'height:40px;border:1.5px dashed #cbd5e1;border-radius:' + radius + 'px;background:#fff;display:flex;align-items:center;justify-content:center;gap:7px;font-size:12px;color:#94a3b8' }, [icon('fa-paperclip'), document.createTextNode('Upload a file')]);
+  else if (hint === 'signature') control = h('div', { style: 'height:48px;border:1px solid #e2e8f0;border-radius:' + radius + 'px;background:#fafbfc;display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-size:18px;font-style:italic' }, 'Sign here');
+  else if (hint === 'date') control = inputBox('mm / dd / yyyy', radius, true);
+  else control = inputBox(f.type === 'email' ? 'you@example.com' : 'Enter ' + (f.label || 'value').toLowerCase() + '…', radius, hint === 'choice');
   return h('div', { style: 'margin-bottom:12px' }, [label, control]);
 }
 function inputBox(ph: string, radius: number, caret?: boolean): HTMLElement {

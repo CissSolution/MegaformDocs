@@ -2,7 +2,8 @@
 // builder" contract: the produced SchemaJson/SettingsJson/ThemeJson/WorkflowJson make the
 // existing builder open fully populated. Multi-step → Section pageBreak (the clean standard
 // model). No backend change — Publish flags + closeDate ride in SettingsJson.
-import { WizardData, WizardField, fieldMeta, themeMeta, fontStack, roundnessPx, FONT_STYLES } from './types';
+import { WizardData, WizardField, themeMeta, fontStack, roundnessPx, FONT_STYLES } from './types';
+import { mfField, buildFieldFromCatalog, catalogLabel } from './field-catalog';
 
 function slug(s: string, used: Set<string>): string {
   let base = String(s || 'field').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'field';
@@ -12,37 +13,15 @@ function slug(s: string, used: Set<string>): string {
   return key;
 }
 
-// Canonical MegaForm field — backfill arrays/objects so the builder never .map()s undefined.
-function mfField(type: string, key: string, label: string, required: boolean, extra?: any): any {
-  return Object.assign({
-    key, type, label, required: !!required,
-    placeholder: '', helpText: '', defaultValue: '', cssClass: '', width: '100%',
-    readOnly: false, prefillParam: '', validation: {}, options: [], showIf: null,
-    htmlContent: '', fileSettings: null, properties: {},
-  }, extra || {});
-}
-
-function optionList(label: string): any[] {
-  return ['Option 1', 'Option 2', 'Option 3'].map(o => ({ label: o, value: o.toLowerCase().replace(/\s+/g, '_') }));
-}
-
-// One WizardField → one MegaForm field (Full Name → a 2-column Row of first/last name).
+// One WizardField → one builder-safe MegaForm field, via the full field catalog
+// (Full Name → Composite preset 'name'; Short/Long Text → Composite 'text'/'textarea';
+// Dropdown → Select; File/Signature/Rating/Date/… → their real types).
 function buildField(f: WizardField, used: Set<string>): any {
-  const meta = fieldMeta(f.type);
-  const mfType = meta.mfType;
-  if (f.type === 'fullname') {
-    const rowKey = slug(f.label || 'name', used);
-    const first = mfField('Text', slug('first_name', used), 'First name', f.required, { placeholder: 'Jane' });
-    const last = mfField('Text', slug('last_name', used), 'Last name', f.required, { placeholder: 'Doe' });
-    return mfField('Row', rowKey, f.label || 'Full Name', false, {
-      columns: [{ span: 6, fields: [first] }, { span: 6, fields: [last] }],
-    });
-  }
   const key = slug(f.label || f.type, used);
-  const extra: any = {};
-  if (mfType === 'Select' || mfType === 'Radio' || mfType === 'MultiSelect') extra.options = optionList(f.label);
-  if (mfType === 'Textarea') extra.placeholder = 'Enter your answer...';
-  return mfField(mfType, key, f.label || meta.label, f.required, extra);
+  const built = buildFieldFromCatalog(f.type, key, f.label || catalogLabel(f.type), f.required);
+  if (built) return built;
+  // Unknown key fallback → a plain short-text Composite.
+  return mfField('Composite', key, f.label || 'Field', f.required, { widgetProps: { preset: 'text' } });
 }
 
 function hasEmail(fields: any[]): boolean {

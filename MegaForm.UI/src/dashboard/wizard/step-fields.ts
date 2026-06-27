@@ -1,41 +1,57 @@
 // Wizard step 2 — Fields: palette + field list + the multi-step STEPS panel.
 // formPages[] maps 1:1 to MegaForm Section pageBreak (see transform.ts).
-import { WizardData, SetFn, WizardField, FormPage, FIELD_TYPES, fieldMeta } from './types';
+import { WizardData, SetFn, WizardField, FormPage } from './types';
+import { curatedFields, fieldsInGroup, FIELD_GROUPS, catalogLabel, catalogIcon, FieldDef } from './field-catalog';
 import { h, icon, toggle } from './ui';
 
 let counter = 2000;
 const fid = () => 'wf-' + (++counter);
 let activePageId = 'page-1';
-export function resetFields(): void { activePageId = 'page-1'; }
+let paletteExpanded = false;
+export function resetFields(): void { activePageId = 'page-1'; paletteExpanded = false; }
 
-// ── Field palette (10 types) ──
-function palette(onAdd: (type: string) => void): HTMLElement {
-  return h('div', null, [
-    h('div', { class: 'mfw-flbl', style: 'margin-bottom:8px' }, 'Add field'),
-    h('div', { class: 'mfw-grid', style: 'grid-template-columns:repeat(5,1fr);margin-bottom:14px' },
-      FIELD_TYPES.map(ft => h('button', { type: 'button', class: 'mfw-pick', style: 'display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px', onclick: () => onAdd(ft.type) }, [
-        h('span', { style: 'width:30px;height:30px;border-radius:9px;background:#eef2ff;color:#6366f1;display:flex;align-items:center;justify-content:center' }, [icon(ft.icon)]),
-        h('span', { style: 'font-size:11px;font-weight:600;color:#475569' }, ft.label),
-      ]))
-    ),
+// ── Field palette: curated tiles + an expandable "more fields" registry view ──
+function paletteTile(d: FieldDef, onAdd: (type: string) => void): HTMLElement {
+  return h('button', { type: 'button', class: 'mfw-pick', title: d.label, style: 'display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px', onclick: () => onAdd(d.key) }, [
+    h('span', { style: 'width:30px;height:30px;border-radius:9px;background:#eef2ff;color:#6366f1;display:flex;align-items:center;justify-content:center' }, [icon(d.icon)]),
+    h('span', { style: 'font-size:11px;font-weight:600;color:#475569;text-align:center;line-height:1.2' }, d.label),
   ]);
+}
+function palette(onAdd: (type: string) => void, onMore: () => void): HTMLElement {
+  const grid = (defs: FieldDef[]) => h('div', { class: 'mfw-grid', style: 'grid-template-columns:repeat(5,1fr);margin-bottom:10px' }, defs.map(d => paletteTile(d, onAdd)));
+  const children: Array<Node> = [
+    h('div', { style: 'display:flex;align-items:center;justify-content:space-between;margin-bottom:8px' }, [
+      h('div', { class: 'mfw-flbl', style: 'margin:0' }, 'Add field'),
+      h('button', { type: 'button', style: 'border:0;background:none;color:#6366f1;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px', onclick: onMore }, [document.createTextNode(paletteExpanded ? 'Less' : 'More fields'), icon(paletteExpanded ? 'fa-chevron-up' : 'fa-chevron-down')]),
+    ]),
+  ];
+  if (paletteExpanded) {
+    FIELD_GROUPS.forEach(g => {
+      const defs = fieldsInGroup(g.id);
+      if (!defs.length) return;
+      children.push(h('div', { class: 'mfw-flbl', style: 'margin:6px 0 6px;font-size:11px;color:#94a3b8' }, g.label));
+      children.push(grid(defs));
+    });
+  } else {
+    children.push(grid(curatedFields()));
+  }
+  return h('div', { style: 'margin-bottom:6px' }, children);
 }
 
 // ── One field row ──
 function fieldRow(f: WizardField, onLabel: (id: string, v: string) => void, onReq: (id: string) => void, onDel: (id: string) => void): HTMLElement {
-  const m = fieldMeta(f.type);
   return h('div', { style: 'display:flex;align-items:center;gap:10px;border:1px solid #e2e8f0;border-radius:11px;background:#fff;padding:8px 10px;margin-bottom:7px' }, [
     h('span', { style: 'color:#cbd5e1;cursor:grab' }, [icon('fa-grip-vertical')]),
-    h('span', { style: 'width:28px;height:28px;border-radius:8px;background:#f1f5f9;color:#6366f1;display:flex;align-items:center;justify-content:center;flex:0 0 28px' }, [icon(m.icon)]),
+    h('span', { style: 'width:28px;height:28px;border-radius:8px;background:#f1f5f9;color:#6366f1;display:flex;align-items:center;justify-content:center;flex:0 0 28px' }, [icon(catalogIcon(f.type))]),
     h('input', { class: 'mfw-in', style: 'height:32px;border:0;font-weight:600;flex:1;padding:0', value: f.label, oninput: (e: any) => onLabel(f.id, e.target.value) }),
     h('label', { style: 'display:flex;align-items:center;gap:6px;font-size:11px;color:#94a3b8' }, [document.createTextNode('Req'), toggle(f.required, () => onReq(f.id))]),
     h('button', { type: 'button', style: 'border:0;background:none;color:#cbd5e1;cursor:pointer', title: 'Delete', onclick: () => onDel(f.id) }, [icon('fa-trash-can')]),
   ]);
 }
 
-function fieldListEl(fields: WizardField[], onAdd: (t: string) => void, onLabel: (id: string, v: string) => void, onReq: (id: string) => void, onDel: (id: string) => void, emptyLabel: string): HTMLElement {
+function fieldListEl(fields: WizardField[], onAdd: (t: string) => void, onLabel: (id: string, v: string) => void, onReq: (id: string) => void, onDel: (id: string) => void, emptyLabel: string, onMore: () => void): HTMLElement {
   return h('div', null, [
-    palette(onAdd),
+    palette(onAdd, onMore),
     h('div', { class: 'mfw-flbl', style: 'margin-bottom:8px' }, 'Fields'),
     fields.length
       ? h('div', null, fields.map(f => fieldRow(f, onLabel, onReq, onDel)))
@@ -80,9 +96,10 @@ export function renderFields(data: WizardData, set: SetFn): HTMLElement {
   if (data.templateIsPremium && data.templateRecord) return premiumFieldsNotice(data.templateRecord);
 
   const total = data.isMultiStep ? data.formPages.reduce((n, p) => n + p.fields.length, 0) : data.fields.length;
+  const onMore = () => { paletteExpanded = !paletteExpanded; set({}, { rerender: true }); };
 
   // ── single-page handlers ──
-  const sAdd = (t: string) => set({ fields: [...data.fields, { id: fid(), type: t, label: fieldMeta(t).label, required: false }] });
+  const sAdd = (t: string) => set({ fields: [...data.fields, { id: fid(), type: t, label: catalogLabel(t), required: false }] });
   const sLabel = (id: string, v: string) => { const f = data.fields.find(x => x.id === id); if (f) f.label = v; set({}, { rerender: false }); };
   const sReq = (id: string) => set({ fields: data.fields.map(f => f.id === id ? { ...f, required: !f.required } : f) });
   const sDel = (id: string) => set({ fields: data.fields.filter(f => f.id !== id) });
@@ -90,7 +107,7 @@ export function renderFields(data: WizardData, set: SetFn): HTMLElement {
   // ── multi-page helpers ──
   const active = data.formPages.find(p => p.id === activePageId) || data.formPages[0];
   const patchActive = (mut: (p: FormPage) => FormPage) => set({ formPages: data.formPages.map(p => p.id === active.id ? mut(p) : p) });
-  const pAdd = (t: string) => patchActive(p => ({ ...p, fields: [...p.fields, { id: fid(), type: t, label: fieldMeta(t).label, required: false }] }));
+  const pAdd = (t: string) => patchActive(p => ({ ...p, fields: [...p.fields, { id: fid(), type: t, label: catalogLabel(t), required: false }] }));
   const pLabel = (id: string, v: string) => { const f = active.fields.find(x => x.id === id); if (f) f.label = v; set({}, { rerender: false }); };
   const pReq = (id: string) => patchActive(p => ({ ...p, fields: p.fields.map(f => f.id === id ? { ...f, required: !f.required } : f) }));
   const pDel = (id: string) => patchActive(p => ({ ...p, fields: p.fields.filter(f => f.id !== id) }));
@@ -119,7 +136,7 @@ export function renderFields(data: WizardData, set: SetFn): HTMLElement {
   ]);
 
   if (!data.isMultiStep) {
-    return h('div', null, [header, h('div', { class: 'mfw-card', style: 'background:#fafbfc' }, [fieldListEl(data.fields, sAdd, sLabel, sReq, sDel, 'No fields yet — click a type above to add')])]);
+    return h('div', null, [header, h('div', { class: 'mfw-card', style: 'background:#fafbfc' }, [fieldListEl(data.fields, sAdd, sLabel, sReq, sDel, 'No fields yet — click a type above to add', onMore)])]);
   }
 
   // multi-step: steps sidebar + active page editor
@@ -147,7 +164,7 @@ export function renderFields(data: WizardData, set: SetFn): HTMLElement {
       h('span', { style: 'width:20px;height:20px;border-radius:50%;background:#6366f1;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center' }, String(data.formPages.findIndex(p => p.id === active.id) + 1)),
       h('input', { class: 'mfw-in', style: 'height:28px;border:0;font-weight:700;font-size:14px;padding:0;flex:1', value: active.title, oninput: (e: any) => renamePage(active.id, e.target.value) }),
     ]),
-    fieldListEl(active.fields, pAdd, pLabel, pReq, pDel, 'No fields on ' + active.title),
+    fieldListEl(active.fields, pAdd, pLabel, pReq, pDel, 'No fields on ' + active.title, onMore),
   ]);
 
   return h('div', null, [header, h('div', { style: 'display:flex;gap:12px;background:#f8fafc;border-radius:14px;padding:8px' }, [sidebar, editor])]);
