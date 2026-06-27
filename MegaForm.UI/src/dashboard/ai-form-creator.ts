@@ -21,8 +21,9 @@
  */
 
 import { t as i18nT, getLocale as i18nGetLocale } from '@i18n';
-import { ensureDbDialect } from '@shared/ddl-dialect';
-import { insertIntoCardBody } from '@shared/custom-html-insert';
+import { ensureDbDialect, getDbProviderKey } from '@shared/ddl-dialect';
+import { insertIntoCardBody, syncFieldPlaceholders } from '@shared/custom-html-insert';
+import { applyHtmlTextSwaps, collectHtmlTextNodes } from '@shared/html-text-swap';
 
 // [i18n 2026-06-10] The Create-with-AI modal was a mix of hardcoded Vietnamese +
 // English. T() translates the modal chrome (uses the dashboard bundle's embedded
@@ -159,6 +160,12 @@ const AI_SYSTEM_PROMPT = [
   'When the user mentions:',
   '  • "tax", "total", "subtotal", "invoice", "line items" → add a DataGrid with computeFormula columns',
   '  • "auto-fill X when Y", "show A when B", "ẩn hiện theo điều kiện" → add settings.rules array with { id, name, enabled:true, priority:N, when:{type:group,logic:all,children:[{type:rule,field,operator,value}]}, then:[{action,targetType,target,value?}], else:[…] }. Operators: eq,neq,gt,gte,lt,lte,contains,startsWith,endsWith,in,notIn,isEmpty,isNotEmpty,isTrue,isFalse. Actions: show,hide,require,optional,enable,disable,setValue,clear. targetType: field|section|step.',
+  '',
+  'DATABASE INSERT (single form):',
+  '  • If the user asks to "save to table / lưu vào bảng / store in database / INSERT on submit" for a SINGLE form, emit `schema.settings.databaseInsert` = { enabled:true, connectionKey:"DashboardDatabase", databaseType:"SqlServer", insertSql:"INSERT INTO ...", parameterMapping:{} }.',
+  '  • `insertSql` must use `:fieldKey` placeholders matching the field keys above.',
+  '  • Example: for fields with keys `full_name`, `email`, emit `insertSql`: "INSERT INTO [dbo].[Registrations]([FullName],[Email]) VALUES (:full_name, :email)".',
+  '  • Only emit this when the prompt explicitly requests custom-table persistence. Do NOT invent a table name if the user did not ask for one.',
   '',
   'Keep the schema TIGHT — 5 to 12 fields is the sweet spot for AI-generated forms. The user can always extend in the Builder afterwards.',
 ].join('\n');
@@ -869,7 +876,24 @@ function wireShell(overlay: HTMLElement, modal: HTMLElement, state: any, host?: 
         try {
           const B: any = (window as any).MegaFormBuilder;
           const sc = B && B.state && B.state.schema;
-          if (sc) builderForm = { title: (sc.settings && sc.settings.title) || '', description: (sc.settings && sc.settings.description) || '', fields: sc.fields || [] };
+          if (sc) {
+            const s = sc.settings || {};
+            builderForm = {
+              title: s.title || '',
+              description: s.description || '',
+              fields: sc.fields || [],
+              // [B3 2026-06-27] Carry the PREMIUM design (read-only context) so callAI
+              // can detect a premium edit, preserve the immutable shell byte-for-byte,
+              // and let the AI rebrand hardcoded shell text via htmlTextSwaps.
+              settings: {
+                customHtml: s.customHtml || s.CustomHtml || '',
+                customCss: s.customCss || s.CustomCss || '',
+                theme: s.theme || s.Theme || '',
+                themeCssOverrides: s.themeCssOverrides || s.ThemeCssOverrides || {},
+                templateGuideSlug: s.templateGuideSlug || s.TemplateGuideSlug || '',
+              },
+            };
+          }
         } catch { /* no canvas yet */ }
       }
       const result = await callAI(text, state.history, sentAttachments, state.selectedTables.slice(), builderForm);
@@ -1254,6 +1278,56 @@ function enableActions(modal: HTMLElement, on: boolean): void {
   });
 }
 
+// [B3 fix 2026-06-27] Guarantee a field shape the builder canvas can load. The AI
+// often returns lean fields (a Row WITHOUT its columns[], inputs without options[] /
+// validation / properties); the builder then does `field.columns.map` /
+// `field.options.map` on undefined and the whole form fails to load. Backfill the
+// arrays/objects the renderer + builder iterate.
+function ensureBuilderSafeField(f: any): any {
+  if (!f || typeof f !== 'object') return f;
+  if (f.type === 'Row') {
+    if (!Array.isArray(f.columns)) f.columns = [];
+    f.columns.forEach((c: any) => { if (c && Array.isArray(c.fields)) c.fields.forEach(ensureBuilderSafeField); });
+  }
+  if (!Array.isArray(f.options)) f.options = [];
+  if (f.validation == null || typeof f.validation !== 'object') f.validation = {};
+  if (f.properties == null || typeof f.properties !== 'object') f.properties = {};
+  if (f.widgetProps == null || typeof f.widgetProps !== 'object') f.widgetProps = {};
+  return f;
+}
+
+// [B3 fix 2026-06-27] Keep-style field merge. A premium edit must NOT let the AI
+// restructure the field tree (it loses Row columns + per-field shape). Start from
+// the EXISTING field for any key the AI kept (preserving type / columns / widgetProps),
+// overlay only the safe author-editable props, and normalise genuinely-new fields.
+function mergeKeepStyleFields(existing: any[], aiFields: any[]): any[] {
+  const byKey: Record<string, any> = {};
+  for (const f of existing || []) if (f && f.key) byKey[String(f.key)] = f;
+  const SAFE = ['label', 'placeholder', 'required', 'helpText', 'defaultValue', 'options'];
+  const out: any[] = [];
+  for (const af of aiFields || []) {
+    if (!af || !af.key) continue;
+    const orig = byKey[String(af.key)];
+    if (orig) {
+      const merged = JSON.parse(JSON.stringify(orig));   // preserve full shape incl Row columns
+      for (const k of SAFE) {
+        if (af[k] === undefined) continue;
+        if (k === 'options' && !Array.isArray(orig.options)) continue;   // don't graft options onto a non-option field
+        merged[k] = af[k];
+      }
+      out.push(ensureBuilderSafeField(merged));
+    } else {
+      out.push(ensureBuilderSafeField({
+        key: af.key, type: af.type || 'Text', label: af.label || af.key,
+        required: !!af.required, placeholder: af.placeholder || '', helpText: af.helpText || '',
+        options: Array.isArray(af.options) ? af.options : [], defaultValue: af.defaultValue ?? '',
+        validation: {}, properties: {}, widgetProps: {},
+      }));
+    }
+  }
+  return out;
+}
+
 // ─── AI call ──────────────────────────────────────────────────────────────
 async function callAI(userText: string, history: any[], attachments?: any[], selectedTables?: string[], builderForm?: any): Promise<{ schema?: any; explain?: string; rawText?: string }> {
   // [B88-fix] Inject the AI provider bundle on demand + apply the shared
@@ -1293,6 +1367,29 @@ async function callAI(userText: string, history: any[], attachments?: any[], sel
   if (builderForm && Array.isArray(builderForm.fields)) {
     system += '\n\nYOU ARE EDITING AN EXISTING FORM ON THE CANVAS (builder mode). The user wants an INCREMENTAL change. Return the COMPLETE updated form schema = the current fields below WITH the requested change applied (add / remove / modify). PRESERVE every existing field, its "key", order, label, options and settings UNLESS the user explicitly asks to change it. Never drop fields the user did not mention, and never restart from a blank form. If the user asks to "add" something, append it to the existing fields.\nCURRENT FORM ON THE CANVAS (JSON):\n' +
       JSON.stringify({ title: builderForm.title || '', description: builderForm.description || '', fields: builderForm.fields });
+  }
+  // [B3 2026-06-27] Premium keep-style edit — when the canvas form carries an
+  // IMMUTABLE premium shell (customHtml / non-default theme / overrides), the AI
+  // must NOT regenerate the design. It returns field/title changes plus text-only
+  // htmlTextSwaps to rebrand hardcoded shell copy; we preserve the shell byte-for-
+  // byte on apply. ONE mechanism (@shared/html-text-swap) shared with the chat
+  // assistant's set_html_text op.
+  const _exSettings: any = (builderForm && builderForm.settings) || {};
+  const _exTheme = String(_exSettings.theme || '').trim().toLowerCase();
+  const isPremiumEdit = !!(builderForm && (
+    String(_exSettings.customHtml || '').trim() ||
+    (_exTheme && _exTheme !== 'default') ||
+    (_exSettings.themeCssOverrides && Object.keys(_exSettings.themeCssOverrides).length)
+  ));
+  if (isPremiumEdit) {
+    const shellTexts = collectHtmlTextNodes(String(_exSettings.customHtml || ''));
+    system += '\n\n🔒 PREMIUM KEEP-STYLE EDIT — this form has an IMMUTABLE premium design (customHtml + customCss + theme). You MUST NOT emit customHtml or customCss, and MUST NOT change theme — they are preserved automatically. Return JSON shaped {"schema":{version,title,description,fields,settings},"htmlTextSwaps":[{"find","replace"}],"explain"}.\n'
+      + '- ALWAYS set schema.title AND schema.description to the rebranded copy (the form metadata name) so the dashboard + canvas title update too.\n'
+      + '- Apply the user request by editing fields (relabel / add / remove / reorder). Keep every other field key/order/options intact.\n'
+      + '- In schema.settings put ONLY themeCssOverrides (colour tweaks via the template CSS vars) — OMIT customHtml / customCss / theme entirely.\n'
+      + '- To rebrand HARDCODED copy baked into the shell (hero title + subtitle, EVERY stepper label, eyebrow/step numbers, section headings + captions, button text), add {"find":"<exact current text>","replace":"<new text>"} entries to htmlTextSwaps. `find` MUST be one of the SHELL TEXTS below verbatim; `replace` MUST be plain text (no < > tags). Rebrand EVERY shell text that names the OLD theme/brand or topic — do not leave any old-brand wording behind. This rebrands the look WITHOUT changing its structure.\n'
+      + '- Change colour ONLY if the user asks, and ONLY via themeCssOverrides.\n'
+      + 'SHELL TEXTS (exact current strings you may rebrand): ' + JSON.stringify(shellTexts);
   }
   if (selectedTables && selectedTables.length) {
     system += '\n\nTABLES THE USER PRE-ATTACHED FROM THE DATABASE (DashboardDatabase):\n' +
@@ -1338,17 +1435,55 @@ async function callAI(userText: string, history: any[], attachments?: any[], sel
     // CompositeAddress / … alias to {type:"Composite", widgetProps.preset} here,
     // recursively (composites can sit inside Row columns).
     normalizeCompositeFieldsDeep(obj.schema, 0);
-    repairCustomHtmlPlaceholders(obj.schema);
-    normalizeFormChrome(obj.schema, userText);
-    // [B266] Default AI output to a full-width pure-grid CUSTOM-SHELL (replaces the old compact-button
-    // standard layout). Deterministic + var-driven so builder theme presets recolor it; safe-fallback
-    // to the standard schema on any error; skips premium custom-shell (customHtml already set) + wizards.
-    applyDefaultPureGridShell(obj.schema);
-    repairCustomHtmlPlaceholders(obj.schema);
+    if (isPremiumEdit) {
+      // [B3 2026-06-27] Keep-style apply: preserve the immutable premium shell
+      // byte-for-byte and apply ONLY the AI's intent. NEVER run normalizeFormChrome
+      // / applyDefaultPureGridShell here (they would replace the premium shell with
+      // the pure-grid default). Colour goes through themeCssOverrides; brand copy
+      // baked into the shell is rebranded via text-only htmlTextSwaps.
+      // [B3 fix] Merge the AI's field intent onto the EXISTING field shapes — the AI
+      // tends to drop a Row's columns[] / a field's options[], which crashes the
+      // builder canvas (undefined .map) when the form is reloaded.
+      obj.schema.fields = mergeKeepStyleFields((builderForm && builderForm.fields) || [], obj.schema.fields);
+      const sset: any = (obj.schema.settings && typeof obj.schema.settings === 'object') ? obj.schema.settings : (obj.schema.settings = {});
+      const aiOverrides = (sset.themeCssOverrides && typeof sset.themeCssOverrides === 'object') ? sset.themeCssOverrides : {};
+      let html = String(_exSettings.customHtml || '');
+      const swaps = Array.isArray((obj as any).htmlTextSwaps) ? (obj as any).htmlTextSwaps : [];
+      if (swaps.length && html) {
+        const r = applyHtmlTextSwaps(html, swaps, collectHtmlTextNodes(html));
+        html = r.html;
+        if (r.rejected.length) console.warn('[B3 keep-style] rejected swaps:', r.rejected);
+      }
+      // Re-assert the shell from the EXISTING form (byte-identical) so the apply
+      // can never drop or mutate customCss / theme.
+      sset.customHtml = html;
+      sset.customCss = String(_exSettings.customCss || '');
+      if (_exSettings.theme) sset.theme = _exSettings.theme;
+      if (_exSettings.templateGuideSlug) sset.templateGuideSlug = _exSettings.templateGuideSlug;
+      sset.themeCssOverrides = Object.assign({}, _exSettings.themeCssOverrides || {}, aiOverrides);
+      // Make sure any NEW field has a {{field:key}} placeholder inside the shell.
+      repairCustomHtmlPlaceholders(obj.schema);
+    } else {
+      repairCustomHtmlPlaceholders(obj.schema);
+      normalizeFormChrome(obj.schema, userText);
+      // [B266] Default AI output to a full-width pure-grid CUSTOM-SHELL (replaces the old compact-button
+      // standard layout). Deterministic + var-driven so builder theme presets recolor it; safe-fallback
+      // to the standard schema on any error; skips premium custom-shell (customHtml already set) + wizards.
+      applyDefaultPureGridShell(obj.schema);
+      repairCustomHtmlPlaceholders(obj.schema);
+    }
     // [TASK A] Deterministic SQL proof: cheap models hallucinate table names.
     // Validate every SQL binding against the REAL schema + auto-correct via
     // DryRunValidate suggestions, so SQL-bound forms don't silently break.
     const proof = await proofFormSql(obj.schema);
+    // [DB-INSERT-AI 2026-06-22] Single-form AI prompts that ask to persist to a
+    // custom table must leave the studio with a populated settings.databaseInsert.
+    // If the AI already emitted one we keep it; otherwise we auto-build from the
+    // prompt + active DashboardDatabase provider.
+    try {
+      const providerKey = await getDbProviderKey();
+      await ensureSingleFormDatabaseInsert(obj.schema, userText, providerKey);
+    } catch { /* never fail schema parsing for DB insert setup */ }
     let explain = String(obj.explain || '');
     if (proof.note) explain += (explain ? '\n\n' : '') + proof.note;
     return { schema: obj.schema, explain };
@@ -1542,6 +1677,9 @@ async function runAppBatchFromDashboard(modal: HTMLElement, state: any, appBatch
   if (!preview) return;
   const tables = Array.isArray(appBatch.tables) ? appBatch.tables : [];
   const forms  = Array.isArray(appBatch.forms)  ? appBatch.forms  : [];
+  // [DB-INSERT-AI 2026-06-22] Use the active DashboardDatabase provider so INSERT SQL
+  // and databaseType match the real backend (SQLite/MySQL/Postgres/MSSQL).
+  const providerKey = await getDbProviderKey();
 
   preview.innerHTML = [
     '<div style="background:#f1f5f9;border-radius:10px;padding:14px 18px;color:#0f172a;font-family:-apple-system,sans-serif;">',
@@ -1635,7 +1773,9 @@ async function runAppBatchFromDashboard(modal: HTMLElement, state: any, appBatch
           f.properties.optionsSource = 'sql';
           f.properties.optionsType = 'sql';
           f.properties.optionsConnectionKey = 'DashboardDatabase';
-          f.properties.optionsSql = canonicalSql;
+          f.properties.optionsSql = providerKey === 'sqlite' || providerKey === 'mysql' || providerKey === 'postgres'
+            ? `SELECT ${quoteIdentifierForProvider(hit.parentPk, providerKey)} AS value, ${quoteIdentifierForProvider(hit.labelCol, providerKey)} AS label FROM ${quoteIdentifierForProvider(hit.parentTable, providerKey)} ORDER BY ${quoteIdentifierForProvider(hit.labelCol, providerKey)}`
+            : `SELECT [${hit.parentPk}] AS value, [${hit.labelCol}] AS label FROM [${hit.parentSchema}].[${hit.parentTable}] ORDER BY [${hit.labelCol}]`;
           f.options = [];
           n++;
         }
@@ -1678,6 +1818,7 @@ async function runAppBatchFromDashboard(modal: HTMLElement, state: any, appBatch
   function buildInsertSql(form: any): { insertSql: string; mapping: Record<string, string> } {
     const tableName = form.tableName;
     const schemaName = form.schemaName || 'dbo';
+    const p = providerKey || 'mssql';
     const skip = new Set(['Row', 'Section', 'Heading', 'Divider', 'HtmlBlock', 'Image', 'DynamicLabel', 'DataRepeater', 'DataGrid', 'GridRepeater', 'Razor', 'FileUpload', 'File', 'Signature']);
     const flat: { key: string }[] = [];
     function walk(arr: any[]) {
@@ -1691,7 +1832,8 @@ async function runAppBatchFromDashboard(modal: HTMLElement, state: any, appBatch
     const userMap = (form.mapping || {}) as Record<string, string>;
     const cols = flat.map(f => userMap[f.key] || resolveColName(tableName, schemaName, f.key));
     const params = flat.map(f => ':' + f.key);
-    const insertSql = `INSERT INTO [${schemaName}].[${tableName}] (${cols.map(c => '[' + c + ']').join(', ')}) VALUES (${params.join(', ')})`;
+    const insertSql = 'INSERT INTO ' + qualifiedTableForProvider(p, schemaName, tableName) +
+      ' (' + cols.map(c => quoteIdentifierForProvider(c, p)).join(', ') + ') VALUES (' + params.join(', ') + ')';
     const mapping: Record<string, string> = {};
     flat.forEach(f => { mapping[':' + f.key] = f.key; });
     return { insertSql, mapping };
@@ -1709,7 +1851,7 @@ async function runAppBatchFromDashboard(modal: HTMLElement, state: any, appBatch
       settingsObj.databaseInsert = {
         enabled: true,
         connectionKey: 'DashboardDatabase',
-        databaseType: '',
+        databaseType: providerKey === 'mssql' ? 'SqlServer' : providerKey,
         insertSql, parameterMapping: mapping,
       };
       schemaObj.settings = settingsObj;
@@ -1800,22 +1942,23 @@ function repairCustomHtmlPlaceholders(schema: any): void {
     // mfp-bg-overlay / mfp-header-band + any AI-invented variant like mfp-sidebar /
     // mfp-magazine / mfp-zpattern / mfp-cards / mfp-floating-labels, etc).
     if (!/class\s*=\s*["'][^"']*\bmfp(?:\s|["'])/.test(html)) return;
-    const fields = flattenFieldsLite(schema.fields || []);
-    const missing: string[] = [];
-    fields.forEach((f) => {
-      if (!f.key || f.type === 'Hidden' || f.type === 'Section') return;
-      const token = '{{field:' + f.key + '}}';
-      if (html.indexOf(token) < 0) missing.push(f.key);
-    });
-    if (missing.length === 0) return;
-    console.warn('[SPLIT-001 auto-repair] customHtml missing placeholders for fields:', missing.join(', '));
-    const tokens = missing.map((k) => '{{field:' + k + '}}').join('');
-    // [B266] Insert the missing tokens INSIDE the card (before the actions/submit/{{form:submit}}
-    // area) via the shared inserter, replacing the brittle {{form:submit}}-or-final-</div> logic
-    // that ejected fields outside the .mfp card when no {{form:submit}} token was present.
-    const patched = insertIntoCardBody(html, tokens);
-    settings.customHtml = patched;
-    (schema as any).__autoRepairedFields = missing;
+    // [2026-06-27] Structure-aware sync (Row-rendered sub-fields get NO own token; a
+    // new field's token lands INSIDE its data-step panel, not before the shared actions
+    // row at the very end; orphans/duplicates dropped). This replaces the old flat
+    // "append every missing token before the last actions" logic that duplicated
+    // Row sub-fields and collapsed the multi-step wizard onto one cramped page.
+    const before = html;
+    const patched = syncFieldPlaceholders(html, schema.fields || []);
+    if (patched !== before) {
+      settings.customHtml = patched;
+      const newlyAdded: string[] = [];
+      try {
+        flattenFieldsLite(schema.fields || []).forEach((f: any) => {
+          if (f && f.key && before.indexOf('{{field:' + f.key + '}}') < 0 && patched.indexOf('{{field:' + f.key + '}}') >= 0) newlyAdded.push(f.key);
+        });
+      } catch { /* ignore */ }
+      if (newlyAdded.length) (schema as any).__autoRepairedFields = newlyAdded;
+    }
   } catch { /* never fail the parse for a repair attempt */ }
 }
 
@@ -1880,6 +2023,94 @@ function applyDefaultPureGridShell(schema: any): void {
     settings.theme = 'pure-grid-premium'; // gives the B265 card border + the --mf-*→--mfp-* preset bridge
     (schema as any).__defaultedPureGrid = true;
   } catch { /* on any error leave the schema as a standard form (safe fallback) */ }
+}
+
+// ─── Database INSERT helpers for single-form AI output ────────────────────
+const DB_INSERT_KEYWORDS = /\b(save\s+to\s+(table|db|database)|store\s+in\s+(table|db|database)|lưu\s+vào\s+(bảng|csdl|cơ\s+sở\s+dữ\s+liệu)|insert\s+on\s+submit|database\s+insert|custom\s+table|bảng\s+dữ\s+liệu)\b/i;
+
+function snakeToPascal(k: string): string {
+  return String(k || '').split(/[_\s-]+/).map(w => w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : '').join('');
+}
+
+function quoteIdentifierForProvider(ident: string, provider: string): string {
+  const p = String(provider || '').toLowerCase();
+  if (p === 'sqlite' || p === 'postgres') return '"' + ident.replace(/"/g, '""') + '"';
+  if (p === 'mysql') return '`' + ident.replace(/`/g, '``') + '`';
+  return '[' + ident.replace(/\]/g, ']]') + ']';
+}
+
+function qualifiedTableForProvider(provider: string, schemaName: string, tableName: string): string {
+  const p = String(provider || '').toLowerCase();
+  const table = quoteIdentifierForProvider(tableName, provider);
+  if (p === 'sqlite' || p === 'mysql' || p === 'postgres') return table;
+  const schema = String(schemaName || 'dbo');
+  return quoteIdentifierForProvider(schema, provider) + '.' + table;
+}
+
+function flatInsertableFieldKeys(fields: any[]): string[] {
+  const skip = new Set(['Row', 'Section', 'Heading', 'Divider', 'HtmlBlock', 'Html', 'Image', 'DynamicLabel', 'DataRepeater', 'DataGrid', 'GridRepeater', 'Razor', 'FileUpload', 'File', 'Signature']);
+  const keys: string[] = [];
+  function walk(arr: any[]) {
+    if (!Array.isArray(arr)) return;
+    for (const f of arr) {
+      if (!f) continue;
+      if (f.type === 'Row' && Array.isArray(f.columns)) {
+        for (const c of f.columns) walk(c.fields || []);
+        continue;
+      }
+      if (!f.key || skip.has(String(f.type || ''))) continue;
+      keys.push(String(f.key));
+    }
+  }
+  walk(fields || []);
+  return keys;
+}
+
+function buildInsertSqlForFields(fields: any[], tableName: string, schemaName: string, provider: string): { insertSql: string; parameterMapping: Record<string, string> } {
+  const keys = flatInsertableFieldKeys(fields);
+  const cols = keys.map(k => quoteIdentifierForProvider(snakeToPascal(k), provider));
+  const params = keys.map(k => ':' + k);
+  const insertSql = 'INSERT INTO ' + qualifiedTableForProvider(provider, schemaName, tableName) +
+    ' (' + cols.join(', ') + ') VALUES (' + params.join(', ') + ')';
+  const mapping: Record<string, string> = {};
+  keys.forEach(k => { mapping[':' + k] = k; });
+  return { insertSql, parameterMapping: mapping };
+}
+
+function extractTableNameFromPrompt(prompt: string): string | null {
+  const p = String(prompt || '');
+  // "save to table Registrations" / "lưu vào bảng Registrations" / "store in table [dbo].[Registrations]"
+  const m = p.match(/(?:save\s+to|store\s+in|lưu\s+vào)\s+(?:table|bảng|csdl|cơ\s+sở\s+dữ\s+liệu)?\s*(?:\[?dbo\]?\s*\.\s*)?\[?([A-Za-z_][A-Za-z0-9_]*)\]?/i);
+  if (m) return m[1];
+  // generic "... table X" / "... bảng X"
+  const m2 = p.match(/(?:table|bảng)\s+(?:name\s*=\s*)?['"]?([A-Za-z_][A-Za-z0-9_]*)['"]?/i);
+  if (m2) return m2[1];
+  return null;
+}
+
+async function ensureSingleFormDatabaseInsert(schema: any, userText: string, providerKey: string): Promise<void> {
+  if (!schema || typeof schema !== 'object') return;
+  const settings = schema.settings || (schema.settings = {});
+  // If the AI already emitted a databaseInsert config, keep it but normalize the type.
+  const existing = settings.databaseInsert;
+  if (existing && typeof existing === 'object' && (existing.enabled || existing.insertSql)) {
+    if (!existing.connectionKey) existing.connectionKey = 'DashboardDatabase';
+    if (!existing.databaseType && providerKey) existing.databaseType = providerKey === 'mssql' ? 'SqlServer' : providerKey;
+    return;
+  }
+  // Only auto-wire when the prompt explicitly asks for DB persistence.
+  if (!DB_INSERT_KEYWORDS.test(String(userText || ''))) return;
+  const tableName = extractTableNameFromPrompt(userText) || snakeToPascal(String(schema.title || 'AIForm'));
+  const schemaName = 'dbo';
+  const p = providerKey || 'mssql';
+  const { insertSql, parameterMapping } = buildInsertSqlForFields(schema.fields, tableName, schemaName, p);
+  settings.databaseInsert = {
+    enabled: true,
+    connectionKey: 'DashboardDatabase',
+    databaseType: p === 'mssql' ? 'SqlServer' : p,
+    insertSql,
+    parameterMapping,
+  };
 }
 
 // ─── Save + navigate ──────────────────────────────────────────────────────

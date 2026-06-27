@@ -21,6 +21,12 @@
     "step_label",
     "panel_title"
   ],
+  "colorVars": {
+    "--in-primary": "#2563eb",
+    "--in-ink": "#0f172a",
+    "--in-muted": "#64748b",
+    "--in-border": "#e2e8f0"
+  },
   "lockedKeys": [
     "first_name",
     "last_name",
@@ -94,7 +100,12 @@ _(none)_
 - **C7 Edit CARD options** (fields: none): `{op:"set_field_property", key:"<cardFieldKey>", path:"options", value:[{"value":"v1","label":"Title","meta":"Subtitle","description":"…","icon":"★"},…], designDecision:"preserve"}`. Keep `optionDisplay:"cards"`. Card chrome (`.mf-option-group--cards`) stays.
 - **C2 Add field**: `{op:"add_field", type:"Text", key:"new_key", label:"…", step:2, designDecision:"preserve"}` — the dispatcher inserts `{{field:new_key}}` into the matching `in-step` block. Pick a snake_case key not already used.
 - **C3 Remove field**: `{op:"remove_field", key:"<key>", designDecision:"preserve"}` — removes the field and its token; leaves zero orphan placeholders.
-- **C8 Change COLOUR (only if the user explicitly asks)**: `{op:"set_form_meta", themeCssOverrides:{"--primary":"#hex","--accent":"#hex"}, designDecision:"preserve"}`. NEVER edit customCss for colour — customCss must stay byte-identical (sha256 `848f7a7b8b25…`).
+- **C8 Change COLOUR (only if the user explicitly asks)**: `{op:"set_form_meta", themeCssOverrides:{"<scoped-var>":"#hex",…}, designDecision:"preserve"}`. ⚠ This template scopes its palette under TEMPLATE-SPECIFIC vars — target THOSE exact names (the generic `--primary`/`--accent` are INERT here). Available colour vars (current value):
+  - `--in-primary`: #2563eb
+  - `--in-ink`: #0f172a
+  - `--in-muted`: #64748b
+  - `--in-border`: #e2e8f0
+  NEVER edit customCss for colour — customCss must stay byte-identical (sha256 `848f7a7b8b25…`).
 - **C4/C5 Add/Remove step** (ADVANCED — rail-content): steps are `in-step` blocks in customHtml driven by `the wizard script`. Only attempt if the user explicitly asks; clone an existing `in-step` block via `customHtmlAppend` (NEVER touch customCss), renumber the stepper, and add the new fields with placeholders. If unsure, ask the user instead of guessing.
 
 ## Hard invariants (a change that breaks any of these is a FAILURE — refuse the op)

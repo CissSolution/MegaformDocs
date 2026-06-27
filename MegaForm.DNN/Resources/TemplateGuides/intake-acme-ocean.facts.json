@@ -82,6 +82,12 @@
   "cardFields": [],
   "chipSelectors": [],
   "cardSelectors": [],
+  "colorVars": {
+    "--in-primary": "#2563eb",
+    "--in-ink": "#0f172a",
+    "--in-muted": "#64748b",
+    "--in-border": "#e2e8f0"
+  },
   "contentTokens": [
     "brand_name",
     "brand_sub",

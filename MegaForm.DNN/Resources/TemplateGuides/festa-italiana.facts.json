@@ -195,6 +195,19 @@
     ".mfp.mfp-festa-italiana .mf-option-group--chips .mf-option-label"
   ],
   "cardSelectors": [],
+  "colorVars": {
+    "--fi-ink": "#3a2a1a",
+    "--fi-green": "#1a7a4c",
+    "--fi-cream": "#f4f1ea",
+    "--fi-red": "#b5322e",
+    "--fi-bg": "#f6f1e7",
+    "--fi-body": "#fbf8f1",
+    "--fi-muted": "#7a6a55",
+    "--fi-soft": "#b3a387",
+    "--fi-line": "#d8cab0",
+    "--fi-card-line": "#e3d8c2",
+    "--fi-gold": "#d4af6a"
+  },
   "contentTokens": [
     "hero_image"
   ],

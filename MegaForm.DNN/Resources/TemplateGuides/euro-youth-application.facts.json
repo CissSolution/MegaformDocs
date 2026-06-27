@@ -251,6 +251,10 @@
     ".mfp-euro-youth .ey-programme-copy",
     ".mfp-euro-youth .ey-programme-copy strong"
   ],
+  "colorVars": {
+    "--mf-choice-border": "rgba(255,255,255,0.28)",
+    "--mf-choice-card": "rgba(255,255,255,0.10)"
+  },
   "contentTokens": [],
   "scriptTokens": [
     "euro_youth_wizard"

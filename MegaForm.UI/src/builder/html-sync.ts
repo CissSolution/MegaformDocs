@@ -1,5 +1,5 @@
 import { MegaFormBuilder } from './core';
-import { insertIntoCardBody } from '@shared/custom-html-insert';
+import { insertIntoCardBody, syncFieldPlaceholders } from '@shared/custom-html-insert';
 
 (function () {
     'use strict';
@@ -317,41 +317,24 @@ import { insertIntoCardBody } from '@shared/custom-html-insert';
             rulesRemoved += removeTouchedRules(options.removeKeys);
         }
 
-        var refs = flattenFieldRefs();
-        var existingKeys: Record<string, boolean> = {};
-        refs.forEach(function (ref: any) { existingKeys[ref.key] = true; });
-
-        extractFieldKeysFromHtml(html).forEach(function (key) {
-            if (!existingKeys[key]) {
-                var next = removeFieldTokensFromHtml(html, key);
-                if (next !== html) {
-                    removedTokens++;
-                    html = next;
-                }
+        // [2026-06-27] Honour an EXPLICIT manual insert position first (insert-after /
+        // insert-before a sibling), then delegate ALL remaining token bookkeeping to the
+        // shared structure-aware sync: it drops orphan + duplicate + Row-rendered-sub-field
+        // tokens and places any missing field's token INSIDE its data-step panel (not before
+        // the shared actions row at the very end, which collapsed the multi-step wizard).
+        if (options.insertKey) {
+            var insTag = '{{field:' + options.insertKey + '}}';
+            if (html.indexOf(insTag) === -1) {
+                var positioned = html;
+                if (options.insertAfterKey) positioned = insertFieldTokenAfterKey(html, options.insertAfterKey, insTag);
+                if (positioned === html && options.insertBeforeKey) positioned = insertFieldTokenBeforeKey(html, options.insertBeforeKey, insTag);
+                if (positioned !== html) { html = positioned; injected++; }
             }
-        });
-
-        var topLevelFields = (B.state.schema && Array.isArray(B.state.schema.fields)) ? B.state.schema.fields : [];
-        topLevelFields.forEach(function (field: any) {
-            if (!field || field.type === 'Section' || field.type === 'Html' || field.type === 'Hidden') return;
-            var tag = '{{field:' + field.key + '}}';
-            if (html.indexOf(tag) === -1) {
-                var nextHtml = html;
-                if (options.insertKey && options.insertAfterKey && options.insertKey === field.key) {
-                    nextHtml = insertFieldTokenAfterKey(html, options.insertAfterKey, tag);
-                }
-                if (nextHtml === html && options.insertKey && options.insertBeforeKey && options.insertKey === field.key) {
-                    nextHtml = insertFieldTokenBeforeKey(html, options.insertBeforeKey, tag);
-                }
-                if (nextHtml === html) {
-                    nextHtml = insertBeforeActions(html, tag);
-                }
-                if (nextHtml !== html) {
-                    html = nextHtml;
-                    injected++;
-                }
-            }
-        });
+        }
+        var schemaFields = (B.state.schema && Array.isArray(B.state.schema.fields)) ? B.state.schema.fields : [];
+        var beforeSync = html;
+        var afterSync = syncFieldPlaceholders(html, schemaFields);
+        if (afterSync !== beforeSync) { html = afterSync; injected++; }
 
         if (html !== originalHtml) {
             setCustomHtml(html);

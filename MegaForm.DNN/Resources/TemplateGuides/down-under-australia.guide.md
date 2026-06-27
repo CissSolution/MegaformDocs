@@ -52,6 +52,15 @@
     "budget"
   ],
   "contentTokens": [],
+  "colorVars": {
+    "--au-primary": "#0bb39b",
+    "--au-primary-d": "#079a85",
+    "--au-ink": "#06363a",
+    "--au-soft": "#e2f7f2",
+    "--au-sub": "#5b8a8c",
+    "--au-border": "#d2ece8",
+    "--au-surface": "#ffffff"
+  },
   "lockedKeys": [
     "first_name",
     "last_name",
@@ -224,7 +233,15 @@ Some visible text (hero heading, step labels, section/field captions) is baked i
 - **C7 Edit CARD options** (fields: purpose, region, budget): `{op:"set_field_property", key:"purpose", path:"options", value:[{"value":"v1","label":"Title","meta":"Subtitle","description":"…","icon":"★"},…], designDecision:"preserve"}`. Keep `optionDisplay:"cards"`. Card chrome (`.mf-option-group--cards`) stays.
 - **C2 Add field**: `{op:"add_field", type:"Text", key:"new_key", label:"…", step:3, designDecision:"preserve"}` — the dispatcher inserts `{{field:new_key}}` into the matching `data-step` block. Pick a snake_case key not already used.
 - **C3 Remove field**: `{op:"remove_field", key:"<key>", designDecision:"preserve"}` — removes the field and its token; leaves zero orphan placeholders.
-- **C8 Change COLOUR (only if the user explicitly asks)**: `{op:"set_form_meta", themeCssOverrides:{"--primary":"#hex","--accent":"#hex"}, designDecision:"preserve"}`. NEVER edit customCss for colour — customCss must stay byte-identical (sha256 `091af7542ef9…`).
+- **C8 Change COLOUR (only if the user explicitly asks)**: `{op:"set_form_meta", themeCssOverrides:{"<scoped-var>":"#hex",…}, designDecision:"preserve"}`. ⚠ This template scopes its palette under TEMPLATE-SPECIFIC vars — target THOSE exact names (the generic `--primary`/`--accent` are INERT here). Available colour vars (current value):
+  - `--au-primary`: #0bb39b
+  - `--au-primary-d`: #079a85
+  - `--au-ink`: #06363a
+  - `--au-soft`: #e2f7f2
+  - `--au-sub`: #5b8a8c
+  - `--au-border`: #d2ece8
+  - `--au-surface`: #ffffff
+  NEVER edit customCss for colour — customCss must stay byte-identical (sha256 `091af7542ef9…`).
 - **C4/C5 Add/Remove step** (ADVANCED — customHtml-wizard): steps are `data-step` blocks in customHtml driven by `au_wizard`. Only attempt if the user explicitly asks; clone an existing `data-step` block via `customHtmlAppend` (NEVER touch customCss), renumber the stepper, and add the new fields with placeholders. If unsure, ask the user instead of guessing.
 
 ## Hard invariants (a change that breaks any of these is a FAILURE — refuse the op)

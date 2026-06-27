@@ -31,31 +31,50 @@ export const DDL_DIALECTS: Record<string, string> = {
 };
 
 let __dialectCache: string | null = null;
+let __providerKeyCache: string | null = null;
+
+/** Map a raw provider string from the backend to one of our dialect keys. */
+export function mapProviderToKey(p: string): 'sqlite' | 'mysql' | 'postgres' | 'mssql' | '' {
+  const s = String(p || '').toLowerCase();
+  if (s.includes('sqlite')) return 'sqlite';
+  if (s.includes('mysql') || s.includes('maria')) return 'mysql';
+  if (s.includes('postgre') || s.includes('npgsql')) return 'postgres';
+  if (s.includes('sqlserver') || s.includes('mssql') || s === 'sql' || s.includes('sqlclient')) return 'mssql';
+  return '';
+}
+
+/** Resolve the AiTools base URL the same way the tool layer does (ops.ts getAiBaseLocal):
+ * Oqtane → `/api/` (route is /api/AiTools, NOT /api/MegaForm/AiTools), DNN → DesktopModules. */
+function aiToolsBase(): string {
+  const w = window as any;
+  const platform = w.__MF_PLATFORM__ || {};
+  if (typeof platform.aiApiBase === 'string' && platform.aiApiBase) return String(platform.aiApiBase).replace(/\/+$/, '/');
+  if (String(platform.platform || '').toLowerCase() === 'oqtane' || w.Oqtane || w.__OQTANE__ || document.querySelector('[data-mf-platform="oqtane"]')) return '/api/';
+  return '/DesktopModules/MegaForm/API/';
+}
+
+/** Detect the active DashboardDatabase provider key (cached): sqlite | mysql | postgres | mssql | ''. */
+export async function getDbProviderKey(siteId?: number): Promise<'sqlite' | 'mysql' | 'postgres' | 'mssql' | ''> {
+  if (__providerKeyCache !== null) return __providerKeyCache;
+  try {
+    const w = window as any;
+    const platform = w.__MF_PLATFORM__ || {};
+    const sid = siteId || platform.siteId || platform.SiteId || 1;
+    const r = await fetch(aiToolsBase() + 'AiTools/DbProvider?siteId=' + sid, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+    const j = await r.json();
+    __providerKeyCache = mapProviderToKey(String((j && j.provider) || ''));
+  } catch {
+    __providerKeyCache = '';
+  }
+  return __providerKeyCache;
+}
 
 /** Detect the active DashboardDatabase provider (cached) and return its DDL-dialect block.
  * Resolves the AiTools base the SAME way the tool layer does (ops.ts getAiBaseLocal):
  * Oqtane → `/api/` (route is /api/AiTools, NOT /api/MegaForm/AiTools), DNN → DesktopModules. */
 export async function ensureDbDialect(siteId?: number): Promise<string> {
   if (__dialectCache !== null) return __dialectCache;
-  try {
-    const w = window as any;
-    const platform = w.__MF_PLATFORM__ || {};
-    let base: string;
-    if (typeof platform.aiApiBase === 'string' && platform.aiApiBase) base = String(platform.aiApiBase).replace(/\/+$/, '/');
-    else if (String(platform.platform || '').toLowerCase() === 'oqtane' || w.Oqtane || w.__OQTANE__ || document.querySelector('[data-mf-platform="oqtane"]')) base = '/api/';
-    else base = '/DesktopModules/MegaForm/API/';
-    const sid = siteId || platform.siteId || platform.SiteId || 1;
-    const r = await fetch(base + 'AiTools/DbProvider?siteId=' + sid, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
-    const j = await r.json();
-    const p = String((j && j.provider) || '').toLowerCase();
-    const key = p.includes('sqlite') ? 'sqlite'
-              : (p.includes('mysql') || p.includes('maria')) ? 'mysql'
-              : (p.includes('postgre') || p.includes('npgsql')) ? 'postgres'
-              : (p.includes('sqlserver') || p.includes('mssql') || p === 'sql' || p.includes('sqlclient')) ? 'mssql'
-              : '';
-    __dialectCache = key ? DDL_DIALECTS[key] : '';
-  } catch {
-    __dialectCache = '';
-  }
+  const key = await getDbProviderKey(siteId);
+  __dialectCache = key ? DDL_DIALECTS[key] : '';
   return __dialectCache;
 }

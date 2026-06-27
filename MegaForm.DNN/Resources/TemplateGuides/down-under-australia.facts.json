@@ -246,6 +246,15 @@
     ".mfp-australia .mf-option-group--cards .mf-option-item",
     ".mfp-australia .mf-option-group--cards .mf-option-ui"
   ],
+  "colorVars": {
+    "--au-primary": "#0bb39b",
+    "--au-primary-d": "#079a85",
+    "--au-ink": "#06363a",
+    "--au-soft": "#e2f7f2",
+    "--au-sub": "#5b8a8c",
+    "--au-border": "#d2ece8",
+    "--au-surface": "#ffffff"
+  },
   "contentTokens": [],
   "scriptTokens": [
     "au_wizard"

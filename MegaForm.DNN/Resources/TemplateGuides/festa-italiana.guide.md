@@ -41,6 +41,19 @@
   "contentTokens": [
     "hero_image"
   ],
+  "colorVars": {
+    "--fi-ink": "#3a2a1a",
+    "--fi-green": "#1a7a4c",
+    "--fi-cream": "#f4f1ea",
+    "--fi-red": "#b5322e",
+    "--fi-bg": "#f6f1e7",
+    "--fi-body": "#fbf8f1",
+    "--fi-muted": "#7a6a55",
+    "--fi-soft": "#b3a387",
+    "--fi-line": "#d8cab0",
+    "--fi-card-line": "#e3d8c2",
+    "--fi-gold": "#d4af6a"
+  },
   "lockedKeys": [
     "first_name",
     "last_name",
@@ -214,7 +227,19 @@ Some visible text (hero heading, step labels, section/field captions) is baked i
 - **C7 Edit CARD options** (fields: none): `{op:"set_field_property", key:"<cardFieldKey>", path:"options", value:[{"value":"v1","label":"Title","meta":"Subtitle","description":"…","icon":"★"},…], designDecision:"preserve"}`. Keep `optionDisplay:"cards"`. Card chrome (`.mf-option-group--cards`) stays.
 - **C2 Add field**: `{op:"add_field", type:"Text", key:"new_key", label:"…", step:2, designDecision:"preserve"}` — the dispatcher inserts `{{field:new_key}}` into the matching `data-step` block. Pick a snake_case key not already used.
 - **C3 Remove field**: `{op:"remove_field", key:"<key>", designDecision:"preserve"}` — removes the field and its token; leaves zero orphan placeholders.
-- **C8 Change COLOUR (only if the user explicitly asks)**: `{op:"set_form_meta", themeCssOverrides:{"--primary":"#hex","--accent":"#hex"}, designDecision:"preserve"}`. NEVER edit customCss for colour — customCss must stay byte-identical (sha256 `f00e3a4f3c37…`).
+- **C8 Change COLOUR (only if the user explicitly asks)**: `{op:"set_form_meta", themeCssOverrides:{"<scoped-var>":"#hex",…}, designDecision:"preserve"}`. ⚠ This template scopes its palette under TEMPLATE-SPECIFIC vars — target THOSE exact names (the generic `--primary`/`--accent` are INERT here). Available colour vars (current value):
+  - `--fi-ink`: #3a2a1a
+  - `--fi-green`: #1a7a4c
+  - `--fi-cream`: #f4f1ea
+  - `--fi-red`: #b5322e
+  - `--fi-bg`: #f6f1e7
+  - `--fi-body`: #fbf8f1
+  - `--fi-muted`: #7a6a55
+  - `--fi-soft`: #b3a387
+  - `--fi-line`: #d8cab0
+  - `--fi-card-line`: #e3d8c2
+  - `--fi-gold`: #d4af6a
+  NEVER edit customCss for colour — customCss must stay byte-identical (sha256 `f00e3a4f3c37…`).
 - **C4/C5 Add/Remove step** (ADVANCED — customHtml-wizard): steps are `data-step` blocks in customHtml driven by `festa_wizard`. Only attempt if the user explicitly asks; clone an existing `data-step` block via `customHtmlAppend` (NEVER touch customCss), renumber the stepper, and add the new fields with placeholders. If unsure, ask the user instead of guessing.
 
 ## Hard invariants (a change that breaks any of these is a FAILURE — refuse the op)

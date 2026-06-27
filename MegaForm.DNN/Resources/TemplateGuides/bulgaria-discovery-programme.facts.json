@@ -335,6 +335,20 @@
     ".mfp-bulgaria .mf-option-group--cards .mf-option-copy",
     ".mfp-bulgaria .mf-option-group--cards .mf-option-label"
   ],
+  "colorVars": {
+    "--bg-parch": "#f5f0e8",
+    "--bg-surface": "#fff",
+    "--bg-dark": "#1a1410",
+    "--bg-rose": "#c94f6d",
+    "--bg-rose-soft": "#fdf0f3",
+    "--bg-green": "#2d5a3d",
+    "--bg-green-soft": "#edf6f0",
+    "--bg-gold": "#c8853a",
+    "--bg-gold-soft": "#fdf4ec",
+    "--bg-muted": "#7c6e62",
+    "--bg-border": "#e6ddd2",
+    "--bg-line": "#ded3c7"
+  },
   "contentTokens": [],
   "scriptTokens": [
     "bulgaria_wizard"

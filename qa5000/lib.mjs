@@ -38,13 +38,21 @@ export async function login(page) {
 }
 
 export async function isLoggedIn(page) {
+  // [2026-06-27] /api/User/current returns 403 even WHEN authenticated on this
+  // host, so it is an unreliable signal. The navbar's "Logout" affordance only
+  // appears for a signed-in user — use that, with an admin-endpoint fallback.
   return await page.evaluate(async () => {
     try {
-      const r = await fetch('/api/User/current', { credentials: 'same-origin', headers: { Accept: 'application/json' } });
-      if (!r.ok) return false;
-      const u = await r.json();
-      return !!(u && (u.IsAuthenticated || u.Username || u.UserId >= 0));
-    } catch { return false; }
+      const txt = document.body ? (document.body.textContent || '') : '';
+      if (/\bLogout\b/.test(txt)) return true;
+      if (document.querySelector('a[href*="logout" i], button[title*="logout" i]')) return true;
+    } catch { /* fall through */ }
+    try {
+      // Admin-only: DefaultConfig returns a non-empty apiKey only for an authed admin.
+      const r = await fetch('/api/AiAssistant/DefaultConfig?entityid=1&entityname=Site&siteId=1', { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+      if (r.ok) { const j = await r.json(); return !!(j && (j.apiKey || j.provider)); }
+    } catch { /* ignore */ }
+    return false;
   });
 }
 

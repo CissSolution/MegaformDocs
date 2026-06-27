@@ -62,6 +62,20 @@
     "region"
   ],
   "contentTokens": [],
+  "colorVars": {
+    "--bg-parch": "#f5f0e8",
+    "--bg-surface": "#fff",
+    "--bg-dark": "#1a1410",
+    "--bg-rose": "#c94f6d",
+    "--bg-rose-soft": "#fdf0f3",
+    "--bg-green": "#2d5a3d",
+    "--bg-green-soft": "#edf6f0",
+    "--bg-gold": "#c8853a",
+    "--bg-gold-soft": "#fdf4ec",
+    "--bg-muted": "#7c6e62",
+    "--bg-border": "#e6ddd2",
+    "--bg-line": "#ded3c7"
+  },
   "lockedKeys": [
     "first_name",
     "last_name",
@@ -240,7 +254,20 @@ Some visible text (hero heading, step labels, section/field captions) is baked i
 - **C7 Edit CARD options** (fields: purpose_type, region): `{op:"set_field_property", key:"purpose_type", path:"options", value:[{"value":"v1","label":"Title","meta":"Subtitle","description":"…","icon":"★"},…], designDecision:"preserve"}`. Keep `optionDisplay:"cards"`. Card chrome (`.mf-option-group--cards`) stays.
 - **C2 Add field**: `{op:"add_field", type:"Text", key:"new_key", label:"…", step:3, designDecision:"preserve"}` — the dispatcher inserts `{{field:new_key}}` into the matching `data-step` block. Pick a snake_case key not already used.
 - **C3 Remove field**: `{op:"remove_field", key:"<key>", designDecision:"preserve"}` — removes the field and its token; leaves zero orphan placeholders.
-- **C8 Change COLOUR (only if the user explicitly asks)**: `{op:"set_form_meta", themeCssOverrides:{"--primary":"#hex","--accent":"#hex"}, designDecision:"preserve"}`. NEVER edit customCss for colour — customCss must stay byte-identical (sha256 `c5429cdb917e…`).
+- **C8 Change COLOUR (only if the user explicitly asks)**: `{op:"set_form_meta", themeCssOverrides:{"<scoped-var>":"#hex",…}, designDecision:"preserve"}`. ⚠ This template scopes its palette under TEMPLATE-SPECIFIC vars — target THOSE exact names (the generic `--primary`/`--accent` are INERT here). Available colour vars (current value):
+  - `--bg-parch`: #f5f0e8
+  - `--bg-surface`: #fff
+  - `--bg-dark`: #1a1410
+  - `--bg-rose`: #c94f6d
+  - `--bg-rose-soft`: #fdf0f3
+  - `--bg-green`: #2d5a3d
+  - `--bg-green-soft`: #edf6f0
+  - `--bg-gold`: #c8853a
+  - `--bg-gold-soft`: #fdf4ec
+  - `--bg-muted`: #7c6e62
+  - `--bg-border`: #e6ddd2
+  - `--bg-line`: #ded3c7
+  NEVER edit customCss for colour — customCss must stay byte-identical (sha256 `c5429cdb917e…`).
 - **C4/C5 Add/Remove step** (ADVANCED — customHtml-wizard): steps are `data-step` blocks in customHtml driven by `bulgaria_wizard`. Only attempt if the user explicitly asks; clone an existing `data-step` block via `customHtmlAppend` (NEVER touch customCss), renumber the stepper, and add the new fields with placeholders. If unsure, ask the user instead of guessing.
 
 ## Hard invariants (a change that breaks any of these is a FAILURE — refuse the op)
