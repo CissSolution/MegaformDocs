@@ -581,9 +581,15 @@ namespace MegaForm.Oqtane.Server.Controllers
         [Authorize(Policy = "EditModule")]
         public IActionResult GetPermissionsCatalog([FromQuery] int formId)
         {
-            if (formId <= 0) return BadRequest(new { error = "formId required" });
+            // formId <= 0 → SITE-LEVEL catalog (used by the Form Creation Wizard, which
+            // has no formId yet). Principals (roles + users) come from the portal, not the
+            // form, so the catalog is fully populated; only the form-specific permission
+            // rules are skipped. ResolvePortalId(0) falls back to auth/header site.
+            if (formId < 0) formId = 0;
 
-            var permissions = PermissionCatalogService.NormalizeRules(formId, _phase2Repo.GetFormPermissions(formId));
+            var permissions = formId > 0
+                ? PermissionCatalogService.NormalizeRules(formId, _phase2Repo.GetFormPermissions(formId))
+                : new List<FormPermissionInfo>();
             var catalog = _permissionCatalog.GetCatalog(formId, ResolvePortalId(formId), GetCurrentUserContext());
             return Ok(new { permissions, catalog });
         }

@@ -1,0 +1,60 @@
+// Live preview panel (right side). A faithful, lightweight mock of the form as configured —
+// reflects theme color, fields, and multi-step. Not the real renderer (cheap to re-render).
+import { WizardData, WizardField, fieldMeta, themeMeta, fontStack, roundnessPx } from './types';
+import { h, icon } from './ui';
+
+function fieldPreview(f: WizardField, radius: number): HTMLElement {
+  const m = fieldMeta(f.type);
+  const label = h('div', { style: 'font-size:12px;font-weight:600;margin-bottom:4px' }, [document.createTextNode(f.label || m.label), f.required ? h('span', { style: 'color:#ef4444' }, ' *') : null]);
+  let control: HTMLElement;
+  if (f.type === 'textarea') control = h('div', { style: 'height:54px;border:1px solid #e2e8f0;border-radius:' + radius + 'px;background:#fff' });
+  else if (f.type === 'checkbox') control = h('div', { style: 'display:flex;align-items:center;gap:7px;font-size:12px;color:#94a3b8' }, [h('span', { style: 'width:16px;height:16px;border:1px solid #cbd5e1;border-radius:4px' }), document.createTextNode(f.label || 'Yes')]);
+  else if (f.type === 'rating') control = h('div', { style: 'color:#fbbf24;font-size:16px;letter-spacing:3px' }, '★★★★★');
+  else if (f.type === 'fullname') control = h('div', { style: 'display:flex;gap:8px' }, [inputBox('First', radius), inputBox('Last', radius)]);
+  else control = inputBox(f.type === 'email' ? 'you@example.com' : 'Enter ' + (f.label || 'value').toLowerCase() + '…', radius, f.type === 'dropdown');
+  return h('div', { style: 'margin-bottom:12px' }, [label, control]);
+}
+function inputBox(ph: string, radius: number, caret?: boolean): HTMLElement {
+  return h('div', { style: 'height:34px;border:1px solid #e2e8f0;border-radius:' + radius + 'px;background:#fff;display:flex;align-items:center;padding:0 10px;font-size:12px;color:#cbd5e1' }, [document.createTextNode(ph), caret ? h('span', { style: 'margin-left:auto' }, [icon('fa-chevron-down')]) : null]);
+}
+
+export function renderPreview(data: WizardData): HTMLElement {
+  const tm = themeMeta(data.theme);
+  const primary = data.primaryColor || tm.colors[0];
+  const radius = Math.min(roundnessPx(data.roundness), 24);
+  const pages = data.isMultiStep ? data.formPages : null;
+  const total = data.isMultiStep ? data.formPages.reduce((n, p) => n + p.fields.length, 0) : data.fields.length;
+  const shownFields = pages ? (pages[0]?.fields || []) : data.fields;
+  const slug = (data.formName || 'my-form').toLowerCase().replace(/\s+/g, '-');
+
+  const body: Array<Node> = [];
+  if (pages && pages.length > 1) {
+    body.push(h('div', { style: 'display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:700;margin-bottom:6px' }, [h('span', { style: 'color:' + primary }, 'Step 1 of ' + pages.length), h('span', { style: 'color:#94a3b8' }, Math.round(100 / pages.length) + '%')]));
+    body.push(h('div', { style: 'height:4px;border-radius:99px;background:#eef2f6;margin-bottom:10px;overflow:hidden' }, [h('i', { style: 'display:block;height:100%;width:' + (100 / pages.length) + '%;background:' + primary })]));
+    body.push(h('div', { style: 'display:flex;gap:10px;border-bottom:1px solid #f1f5f9;margin-bottom:12px;font-size:11px' }, pages.map((p, i) => h('span', { style: 'padding-bottom:6px;font-weight:600;' + (i === 0 ? 'color:' + primary + ';border-bottom:2px solid ' + primary : 'color:#cbd5e1') }, p.title))));
+  }
+  body.push(h('div', { style: 'font-size:15px;font-weight:800;font-family:' + fontStack(data.fontStyle) + ';margin-bottom:2px' }, data.formName || 'Untitled Form'));
+  if (pages) body.push(h('div', { style: 'font-size:12px;font-weight:700;color:#475569;margin:6px 0 10px' }, pages[0]?.title || ''));
+  else if (data.formDescription) body.push(h('div', { style: 'font-size:12px;color:#94a3b8;margin-bottom:12px' }, data.formDescription));
+  if (shownFields.length) shownFields.forEach(f => body.push(fieldPreview(f, radius)));
+  else body.push(h('div', { style: 'text-align:center;color:#cbd5e1;font-size:12px;padding:24px 0' }, 'No fields yet'));
+  body.push(h('button', { style: 'width:100%;height:38px;border:0;border-radius:' + radius + 'px;background:' + primary + ';color:#fff;font-weight:700;font-size:13px;margin-top:6px;cursor:default' }, pages && pages.length > 1 ? 'Next →' : 'Submit Form'));
+
+  const access = data.accessLevel === 'authenticated' ? 'Members' : data.accessLevel === 'restricted' ? 'Invite' : 'Public';
+  return h('div', null, [
+    h('div', { class: 'lbl' }, [icon('fa-eye'), document.createTextNode('Live Preview')]),
+    h('div', { class: 'mfw-phone' }, [
+      h('div', { class: 'mfw-phone-bar' }, [h('i', { style: 'background:#f87171' }), h('i', { style: 'background:#fbbf24' }), h('i', { style: 'background:#34d399' }), h('span', { class: 'mfw-phone-url' }, 'forms.example.com/' + slug)]),
+      h('div', { class: 'mfw-phone-body' }, body),
+    ]),
+    h('div', { class: 'mfw-summ' }, [
+      summ(String(total), 'Fields'),
+      summ(data.isMultiStep ? String(data.formPages.length) : (data.approvalEnabled ? String(data.approvalNodes.length) : '—'), data.isMultiStep ? 'Pages' : 'Approvals'),
+      summ(themeMeta(data.theme).label, 'Theme'),
+      summ(access, 'Access'),
+    ]),
+  ]);
+}
+function summ(value: string, label: string): HTMLElement {
+  return h('div', { class: 'c' }, [h('b', null, value), h('span', null, label)]);
+}

@@ -1529,9 +1529,14 @@ namespace MegaForm.Web.Controllers
         [Authorize]
         public IActionResult GetPermissionsCatalog(int formId)
         {
-            if (formId <= 0) return BadRequest(new { error = "formId required" });
+            // formId <= 0 → SITE-LEVEL catalog (Form Creation Wizard has no formId yet).
+            // Principals come from the portal, not the form, so the list is fully populated;
+            // only form-specific permission rules are skipped.
+            if (formId < 0) formId = 0;
 
-            var permissions = PermissionCatalogService.NormalizeRules(formId, _phase2Repo.GetFormPermissions(formId));
+            var permissions = formId > 0
+                ? PermissionCatalogService.NormalizeRules(formId, _phase2Repo.GetFormPermissions(formId))
+                : new List<FormPermissionInfo>();
             var catalog = _permissionCatalog.GetCatalog(formId, ResolvePortalId(formId), GetCurrentUserContext());
             return Ok(new { permissions, catalog });
         }

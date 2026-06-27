@@ -553,10 +553,15 @@ namespace MegaForm.WebApi
         [ActionName("Permissions/Catalog")]
         public HttpResponseMessage GetPermissionsCatalog()
         {
+            // formId == 0 → SITE-LEVEL catalog (Form Creation Wizard has no formId yet).
+            // Principals come from the portal (ResolveTargetPortalId), not the form, so the
+            // list is fully populated; only form-specific permission rules are skipped.
             int formId = int.Parse(Request.GetQueryNameValuePairs().FirstOrDefault(p => p.Key == "formId").Value ?? "0");
-            if (formId == 0) return Request.CreateResponse(HttpStatusCode.BadRequest);
+            if (formId < 0) formId = 0;
 
-            var perms = PermissionCatalogService.NormalizeRules(formId, FormRepository.GetFormPermissions(formId));
+            var perms = formId > 0
+                ? PermissionCatalogService.NormalizeRules(formId, FormRepository.GetFormPermissions(formId))
+                : new List<FormPermissionInfo>();
             var provider = new DnnPermissionPrincipalCatalogProvider(ResolveTargetPortalId());
             var service = new PermissionCatalogService(provider);
             var catalog = service.GetCatalog(formId, ResolveTargetPortalId(), CurrentUser);
