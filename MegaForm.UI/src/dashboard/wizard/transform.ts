@@ -5,6 +5,7 @@
 import { WizardData, WizardField, themeMeta, fontStack, roundnessPx, FONT_STYLES } from './types';
 import { mfField, buildFieldFromCatalog, catalogLabel } from './field-catalog';
 import { syncFieldPlaceholders } from '@shared/custom-html-insert';
+import { applyDefaultPureGridShell } from '../ai-form-creator';
 
 function slug(s: string, used: Set<string>): string {
   let base = String(s || 'field').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'field';
@@ -175,8 +176,14 @@ export function wizardToDto(data: WizardData, ctx: WizardSaveCtx): any {
   };
 
   const schema = { version: '1.0', fields, settings };
+  // ⭐ Wrap single-page forms in the SAME clean "pure-grid" card the AI creator emits, so a
+  // wizard-built STANDARD form looks premium (one flat card, no "card thừa") and is
+  // structurally identical to AI output — WITHOUT being a premium template. Internally a no-op
+  // for multi-step (multiPage)/pageBreak/custom-shell forms (they keep the standard renderer).
+  applyDefaultPureGridShell(schema);
   const requireAuth = data.accessLevel === 'authenticated' || data.accessLevel === 'restricted';
   const workflowJson = buildWorkflow(data);
+  const finalTheme = typeof settings.theme === 'string' ? settings.theme : mfTheme;
 
   return {
     FormId: 0,
@@ -187,7 +194,7 @@ export function wizardToDto(data: WizardData, ctx: WizardSaveCtx): any {
     Description: data.formDescription || '',
     SchemaJson: JSON.stringify(schema),
     SettingsJson: JSON.stringify(settings),
-    ThemeJson: JSON.stringify({ theme: mfTheme, cssOverrides }),
+    ThemeJson: JSON.stringify({ theme: finalTheme, customCss: settings.customCss || '', cssOverrides }),
     Status: 'Draft',
     SubmitButtonText: 'Submit',
     SuccessMessage: 'Thank you! Your submission has been received.',

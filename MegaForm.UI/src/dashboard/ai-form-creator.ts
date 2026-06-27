@@ -1986,7 +1986,7 @@ const PURE_GRID_SHELL_CSS =
 // standard layout. Deterministic (the renderer substitutes {{field:key}} per field) + var-driven
 // (PURE_GRID_SHELL_CSS) so presets recolor it. No-op for premium custom-shell (customHtml present),
 // wizards (multiPage / pageBreak), or empty schemas. Any error → leaves the standard schema intact.
-function applyDefaultPureGridShell(schema: any): void {
+export function applyDefaultPureGridShell(schema: any): void {
   try {
     if (!schema || typeof schema !== 'object') return;
     const settings = schema.settings || (schema.settings = {});
