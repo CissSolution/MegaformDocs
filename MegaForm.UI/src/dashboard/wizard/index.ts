@@ -13,12 +13,14 @@ import { renderPreview } from './preview';
 import { wizardToDto } from './transform';
 import { postWizardForm, builderUrlFor, wizardCtx } from './save';
 import { loadSiteCatalog, resetSiteCatalog } from './principals';
+import { resetTemplates } from './templates';
 
 export function openFormCreationWizard(): void {
   if (document.getElementById('mf-wizard-root')) return;
   injectWizardCss();
   resetFields();
   resetSiteCatalog();
+  resetTemplates();
   const state: WizardData = defaultWizardData();
   let step = 0;          // 0..4
   let busy = false;

@@ -116,7 +116,54 @@ function buildWorkflow(data: WizardData): string {
 
 export interface WizardSaveCtx { moduleId: number; siteId: number; }
 
+// PREMIUM (custom-shell) faithful emit: keep the template's customHtml/customCss/
+// customScripts/customContent/theme exactly (the wizard does NOT edit its structure — see
+// au_wizard per-index coupling). Only the name/description, Publish flags and the approval
+// Workflow are layered on; the premium look (theme/customCss) is preserved untouched.
+function premiumDto(data: WizardData, ctx: WizardSaveCtx): any {
+  const t = data.templateRecord || {};
+  const settings: any = JSON.parse(JSON.stringify(t.settings || {}));
+  const fields = Array.isArray(t.fields) ? t.fields : [];
+  // Layer Publish options (additive — no style clobber).
+  settings.accessLevel = data.accessLevel;
+  settings.allowAnonymous = !!data.allowAnonymous;
+  settings.collectEmail = !!data.collectEmail;
+  settings.limitOneResponse = !!data.limitOneResponse;
+  settings.closeDate = data.closeDate || '';
+  settings.createdViaWizard = true;
+  settings.createdFromTemplateId = t.id || '';
+
+  const schema = { version: '1.0', fields, settings };
+  const requireAuth = data.accessLevel === 'authenticated' || data.accessLevel === 'restricted';
+  const workflowJson = buildWorkflow(data);
+  const theme = typeof settings.theme === 'string' ? settings.theme : '';
+  const rules = Array.isArray(settings.rules) ? settings.rules : [];
+
+  return {
+    FormId: 0,
+    PreserveModuleBindingOnSave: true,
+    ModuleId: ctx.moduleId || 0,
+    SiteId: ctx.siteId || 0,
+    Title: data.formName || t.title || 'Untitled Form',
+    Description: data.formDescription || t.description || '',
+    SchemaJson: JSON.stringify(schema),
+    SettingsJson: JSON.stringify(settings),
+    ThemeJson: JSON.stringify({ theme, customCss: settings.customCss || '' }),
+    Status: 'Draft',
+    SubmitButtonText: t.submitButtonText || 'Submit',
+    SuccessMessage: t.successMessage || 'Thank you! Your submission has been received.',
+    RequireAuth: requireAuth,
+    EnableCaptcha: false,
+    EnableSaveResume: false,
+    RulesJson: JSON.stringify(rules),
+    WorkflowJson: workflowJson || (settings.workflowTemplate ? JSON.stringify(settings.workflowTemplate) : ''),
+    ExpiresOnUtc: data.closeDate ? new Date(data.closeDate).toISOString() : null,
+  };
+}
+
 export function wizardToDto(data: WizardData, ctx: WizardSaveCtx): any {
+  if (data.templateIsPremium && data.templateRecord) return premiumDto(data, ctx);
+
   const used = new Set<string>();
   const fields = buildFields(data, used);
   const cssOverrides = buildCssOverrides(data);

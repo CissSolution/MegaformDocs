@@ -18,7 +18,33 @@ function inputBox(ph: string, radius: number, caret?: boolean): HTMLElement {
   return h('div', { style: 'height:34px;border:1px solid #e2e8f0;border-radius:' + radius + 'px;background:#fff;display:flex;align-items:center;padding:0 10px;font-size:12px;color:#cbd5e1' }, [document.createTextNode(ph), caret ? h('span', { style: 'margin-left:auto' }, [icon('fa-chevron-down')]) : null]);
 }
 
+function premiumPreview(data: WizardData): HTMLElement {
+  const t = data.templateRecord || {};
+  const html = String((t.settings && t.settings.customHtml) || '');
+  const steps = (html.match(/data-step\s*=/g) || []).length;
+  const access = data.accessLevel === 'authenticated' ? 'Members' : data.accessLevel === 'restricted' ? 'Invite' : 'Public';
+  return h('div', null, [
+    h('div', { class: 'lbl' }, [icon('fa-eye'), document.createTextNode('Live Preview')]),
+    h('div', { class: 'mfw-phone' }, [
+      h('div', { class: 'mfw-phone-bar' }, [h('i', { style: 'background:#f87171' }), h('i', { style: 'background:#fbbf24' }), h('i', { style: 'background:#34d399' }), h('span', { class: 'mfw-phone-url' }, 'forms.example.com/' + (t.slug || 'premium'))]),
+      h('div', { class: 'mfw-phone-body', style: 'text-align:center;padding:28px 16px' }, [
+        h('div', { style: 'width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:20px' }, [icon('fa-wand-magic-sparkles')]),
+        h('div', { style: 'font-size:15px;font-weight:800;margin-bottom:4px' }, data.formName || t.title || 'Premium form'),
+        h('div', { style: 'font-size:12px;color:#94a3b8;margin-bottom:14px' }, steps > 1 ? steps + '-step premium layout' : 'Premium single-page layout'),
+        h('div', { style: 'display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:#7c3aed;background:#f3e8ff;border-radius:99px;padding:5px 12px' }, [icon('fa-lock'), document.createTextNode('Custom design preserved')]),
+      ]),
+    ]),
+    h('div', { class: 'mfw-summ' }, [
+      summ(String(t.fieldCount || 0), 'Fields'),
+      summ(steps > 1 ? String(steps) : '1', steps > 1 ? 'Steps' : 'Page'),
+      summ('Premium', 'Style'),
+      summ(access, 'Access'),
+    ]),
+  ]);
+}
+
 export function renderPreview(data: WizardData): HTMLElement {
+  if (data.templateIsPremium && data.templateRecord) return premiumPreview(data);
   const tm = themeMeta(data.theme);
   const primary = data.primaryColor || tm.colors[0];
   const radius = Math.min(roundnessPx(data.roundness), 24);

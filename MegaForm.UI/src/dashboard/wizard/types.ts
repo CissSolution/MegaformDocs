@@ -15,6 +15,9 @@ export interface ApprovalNode { id: string; role: string; name: string; type: 'a
 export interface WizardData {
   // 1 — Setup
   formName: string; formDescription: string; category: string; template: string | null;
+  // Selected REAL template (BuilderTemplates/List record, normalized) + premium flag.
+  // null for blank / built-in quick-start. Premium → faithful custom-shell emit (② / ③).
+  templateRecord: any | null; templateIsPremium: boolean;
   // 2 — Fields
   isMultiStep: boolean; fields: WizardField[]; formPages: FormPage[]; showProgressBar: boolean;
   // 3 — Workflow
@@ -29,6 +32,7 @@ export interface WizardData {
 export function defaultWizardData(): WizardData {
   return {
     formName: '', formDescription: '', category: '', template: null,
+    templateRecord: null, templateIsPremium: false,
     isMultiStep: false, fields: [], formPages: [{ id: 'page-1', title: 'Step 1', fields: [] }], showProgressBar: true,
     approvalEnabled: false, approvalNodes: [], notifySubmitter: true, deadlineDays: '3',
     theme: 'clean', primaryColor: '#3b82f6', accentColor: '#8b5cf6', fontStyle: 'inter', roundness: 'md',

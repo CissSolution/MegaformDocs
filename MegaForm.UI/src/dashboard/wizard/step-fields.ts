@@ -46,7 +46,39 @@ function fieldListEl(fields: WizardField[], onAdd: (t: string) => void, onLabel:
   ]);
 }
 
+// Premium (custom-shell) templates carry their own layout (customHtml + data-step panels +
+// *_wizard scripts). The wizard does NOT edit that structure (the scripts validate by step
+// INDEX — re-ordering/adding fields here would desync them). Show a read-only summary; the
+// form is fully editable in the builder after creation.
+function premiumFieldsNotice(t: any): HTMLElement {
+  const html = String((t.settings && t.settings.customHtml) || '');
+  const steps = (html.match(/data-step\s*=/g) || []).length;
+  const fieldCount = Array.isArray(t.fields) ? t.fields.length : 0;
+  const row = (ic: string, label: string, value: string) => h('div', { style: 'display:flex;align-items:center;gap:10px;border:1px solid #e2e8f0;border-radius:11px;background:#fff;padding:10px 12px' }, [
+    h('span', { style: 'width:30px;height:30px;border-radius:9px;background:#f3e8ff;color:#7c3aed;display:flex;align-items:center;justify-content:center;flex:0 0 30px' }, [icon(ic)]),
+    h('div', { style: 'flex:1' }, [h('div', { style: 'font-size:13px;font-weight:700' }, value), h('div', { style: 'font-size:11px;color:#94a3b8' }, label)]),
+  ]);
+  return h('div', null, [
+    h('div', { style: 'display:flex;align-items:center;gap:10px;margin-bottom:6px' }, [
+      h('h2', { style: 'margin:0' }, 'Premium template'),
+      h('span', { class: 'mfw-badge', style: 'color:#7c3aed;background:#7c3aed1a' }, 'Custom design'),
+    ]),
+    h('p', { class: 'sub' }, t.title + ' ships a hand-built layout. Its structure is kept exactly as designed — you can fine-tune fields in the builder after creating the form.'),
+    h('div', { class: 'mfw-grid', style: 'grid-template-columns:repeat(3,1fr);margin-bottom:16px' }, [
+      row('fa-layer-group', 'Fields', String(fieldCount)),
+      row('fa-shoe-prints', steps > 1 ? 'Steps' : 'Layout', steps > 1 ? String(steps) : 'Single page'),
+      row('fa-wand-magic-sparkles', 'Style', 'Premium'),
+    ]),
+    h('div', { style: 'display:flex;align-items:flex-start;gap:10px;border:1.5px dashed #ddd6fe;border-radius:12px;background:#faf5ff;padding:13px 14px' }, [
+      h('span', { style: 'color:#7c3aed;margin-top:1px' }, [icon('fa-circle-info')]),
+      h('div', { style: 'font-size:12px;color:#6b21a8;line-height:1.5' }, 'The multi-step flow, validation and review screens are wired to this template, and its premium colours are kept as designed. Workflow and Publish options on the next steps still apply.'),
+    ]),
+  ]);
+}
+
 export function renderFields(data: WizardData, set: SetFn): HTMLElement {
+  if (data.templateIsPremium && data.templateRecord) return premiumFieldsNotice(data.templateRecord);
+
   const total = data.isMultiStep ? data.formPages.reduce((n, p) => n + p.fields.length, 0) : data.fields.length;
 
   // ── single-page handlers ──
