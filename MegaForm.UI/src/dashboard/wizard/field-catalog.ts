@@ -49,6 +49,7 @@ const compositeDefs: FieldDef[] = Object.keys(COMPOSITE_PRESET_META).map((preset
 const otherDefs: FieldDef[] = [
   { key: 'select', label: 'Dropdown', icon: 'fa-caret-down', group: 'choice', curated: true, preview: 'choice', build: (k, l, r) => mfField('Select', k, l, r, { options: opts() }) },
   { key: 'multiselect', label: 'Multi-Select', icon: 'fa-list-check', group: 'choice', curated: false, preview: 'choice', build: (k, l, r) => mfField('Select', k, l, r, { options: opts(), widgetProps: { selectVariant: 'multi-select' } }) },
+  { key: 'chips', label: 'Chips / Tags', icon: 'fa-tags', group: 'choice', curated: true, preview: 'chips', build: (k, l, r) => mfField('Select', k, l, r, { options: opts(), widgetProps: { selectVariant: 'multi-select', display: 'chips' } }) },
   { key: 'multicolumn', label: 'Multi-Column Combo', icon: 'fa-table-columns', group: 'choice', curated: false, preview: 'choice', build: (k, l, r) => mfField('Select', k, l, r, { options: opts(), widgetProps: { selectVariant: 'multi-column' } }) },
   { key: 'radio', label: 'Radio Group', icon: 'fa-circle-dot', group: 'choice', curated: true, preview: 'choice', build: (k, l, r) => mfField('Radio', k, l, r, { options: opts() }) },
   { key: 'checkbox', label: 'Checkbox', icon: 'fa-square-check', group: 'choice', curated: true, preview: 'checkbox', build: (k, l, r) => mfField('Checkbox', k, l, r, { options: opts() }) },
@@ -61,9 +62,12 @@ const otherDefs: FieldDef[] = [
   { key: 'captcha', label: 'Captcha', icon: 'fa-shield-halved', group: 'advanced', curated: false, preview: 'input', build: (k, l, r) => mfField('Captcha', k, l, r) },
   { key: 'terms', label: 'Terms & Privacy', icon: 'fa-file-contract', group: 'advanced', curated: false, preview: 'checkbox', build: (k, l, r) => mfField('TermsPrivacy', k, l, r, { widgetProps: {} }) },
   // Layout
+  { key: 'row', label: 'Row / 2 Columns', icon: 'fa-table-columns', group: 'layout', curated: true, preview: 'row', build: (k, l) => mfField('Row', k, l || 'Row', false, { columns: [{ span: 6, fields: [] }, { span: 6, fields: [] }] }) },
+  { key: 'row3', label: '3 Columns', icon: 'fa-table-cells', group: 'layout', curated: false, preview: 'row3', build: (k, l) => mfField('Row', k, l || 'Columns', false, { columns: [{ span: 4, fields: [] }, { span: 4, fields: [] }, { span: 4, fields: [] }] }) },
+  { key: 'card', label: 'Card / Section', icon: 'fa-square-full', group: 'layout', curated: true, preview: 'card', build: (k, l) => mfField('Section', k, l || 'Card', false, { properties: { pageBreak: false, card: true } }) },
+  { key: 'flexgrid', label: 'Flex Grid (12-col)', icon: 'fa-table-cells-large', group: 'layout', curated: false, preview: 'row3', build: (k, l) => mfField('FlexGrid', k, l || 'Grid', false, { columns: [], properties: { cols: 12 } }) },
   { key: 'section', label: 'Section / Page Break', icon: 'fa-grip-lines', group: 'layout', curated: false, preview: 'section', build: (k, l) => mfField('Section', k, l || 'Section', false, { properties: { pageBreak: false } }) },
   { key: 'heading', label: 'Heading / HTML', icon: 'fa-heading', group: 'layout', curated: false, preview: 'html', build: (k, l) => mfField('Html', k, l || 'Heading', false, { htmlContent: '<h3>' + (l || 'Heading') + '</h3>' }) },
-  { key: 'row', label: 'Row (columns)', icon: 'fa-table-columns', group: 'layout', curated: false, preview: 'section', build: (k, l) => mfField('Row', k, l || 'Row', false, { columns: [{ span: 6, fields: [] }, { span: 6, fields: [] }] }) },
   { key: 'hidden', label: 'Hidden Field', icon: 'fa-eye-slash', group: 'layout', curated: false, preview: 'input', build: (k, l) => mfField('Hidden', k, l, false, { defaultValue: '' }) },
   // Payment
   { key: 'stripe', label: 'Stripe Payment', icon: 'fa-credit-card', group: 'payment', curated: false, preview: 'input', build: (k, l) => mfField('StripePayment', k, l || 'Payment', false, { properties: {} }) },

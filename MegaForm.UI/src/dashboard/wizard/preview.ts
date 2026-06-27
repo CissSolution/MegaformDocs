@@ -9,6 +9,21 @@ function fieldPreview(f: WizardField, radius: number): HTMLElement {
   // Section / heading render without a field label/control.
   if (hint === 'section') return h('div', { style: 'display:flex;align-items:center;gap:8px;margin:14px 0 10px' }, [h('div', { style: 'flex:1;height:1px;background:#e2e8f0' }), h('span', { style: 'font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em' }, f.label || 'Section'), h('div', { style: 'flex:1;height:1px;background:#e2e8f0' })]);
   if (hint === 'html') return h('div', { style: 'font-size:14px;font-weight:800;margin:10px 0 8px;color:#334155' }, f.label || 'Heading');
+  // Card / Section container — a bordered card with a sample field inside.
+  if (hint === 'card') return h('div', { style: 'border:1px solid #e2e8f0;border-radius:12px;padding:12px 13px;margin-bottom:12px;box-shadow:0 1px 2px rgba(15,23,42,.05)' }, [
+    h('div', { style: 'font-size:12px;font-weight:700;margin-bottom:8px' }, f.label || 'Card'),
+    inputBox('Field inside card…', radius),
+  ]);
+  // Row / columns — N side-by-side column placeholders.
+  if (hint === 'row' || hint === 'row3') {
+    const n = hint === 'row3' ? 3 : 2;
+    const cols: Array<Node> = [];
+    for (let i = 0; i < n; i++) cols.push(inputBox('Column ' + (i + 1), radius));
+    return h('div', { style: 'margin-bottom:12px' }, [
+      f.label ? h('div', { style: 'font-size:12px;font-weight:600;margin-bottom:4px' }, f.label) : null,
+      h('div', { style: 'display:flex;gap:8px' }, cols),
+    ]);
+  }
 
   const label = h('div', { style: 'font-size:12px;font-weight:600;margin-bottom:4px' }, [document.createTextNode(f.label || catalogLabel(f.type)), f.required ? h('span', { style: 'color:#ef4444' }, ' *') : null]);
   let control: HTMLElement;
@@ -20,6 +35,7 @@ function fieldPreview(f: WizardField, radius: number): HTMLElement {
   else if (hint === 'file') control = h('div', { style: 'height:40px;border:1.5px dashed #cbd5e1;border-radius:' + radius + 'px;background:#fff;display:flex;align-items:center;justify-content:center;gap:7px;font-size:12px;color:#94a3b8' }, [icon('fa-paperclip'), document.createTextNode('Upload a file')]);
   else if (hint === 'signature') control = h('div', { style: 'height:48px;border:1px solid #e2e8f0;border-radius:' + radius + 'px;background:#fafbfc;display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-size:18px;font-style:italic' }, 'Sign here');
   else if (hint === 'date') control = inputBox('mm / dd / yyyy', radius, true);
+  else if (hint === 'chips') control = h('div', { style: 'display:flex;flex-wrap:wrap;gap:6px' }, ['Option 1', 'Option 2', 'Option 3'].map(t => h('span', { style: 'font-size:11px;font-weight:600;background:#eef2ff;color:#6366f1;border-radius:999px;padding:4px 11px' }, t)));
   else control = inputBox(f.type === 'email' ? 'you@example.com' : 'Enter ' + (f.label || 'value').toLowerCase() + '…', radius, hint === 'choice');
   return h('div', { style: 'margin-bottom:12px' }, [label, control]);
 }
