@@ -4,6 +4,7 @@
 // model). No backend change — Publish flags + closeDate ride in SettingsJson.
 import { WizardData, WizardField, themeMeta, fontStack, roundnessPx, FONT_STYLES } from './types';
 import { mfField, buildFieldFromCatalog, catalogLabel } from './field-catalog';
+import { syncFieldPlaceholders } from '@shared/custom-html-insert';
 
 function slug(s: string, used: Set<string>): string {
   let base = String(s || 'field').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'field';
@@ -102,7 +103,17 @@ export interface WizardSaveCtx { moduleId: number; siteId: number; }
 function premiumDto(data: WizardData, ctx: WizardSaveCtx): any {
   const t = data.templateRecord || {};
   const settings: any = JSON.parse(JSON.stringify(t.settings || {}));
-  const fields = Array.isArray(t.fields) ? t.fields : [];
+  // Edited working copy (③ add/remove) if present, else the template's fields. Strip the
+  // UI-only __step marker before emit.
+  const srcFields = Array.isArray(data.premiumFields) ? data.premiumFields : (Array.isArray(t.fields) ? t.fields : []);
+  const fields = JSON.parse(JSON.stringify(srcFields));
+  fields.forEach((f: any) => { if (f && f.__step != null) delete f.__step; });
+  // Reconcile the custom-shell layout so add/remove reflects in the premium HTML: new fields
+  // are cloned into the right data-step panel with the template's label styling; removed
+  // fields' labels + review-summary rows are cleaned (syncFieldPlaceholders, proven on form 13).
+  if (typeof settings.customHtml === 'string' && settings.customHtml) {
+    settings.customHtml = syncFieldPlaceholders(settings.customHtml, fields);
+  }
   // Layer Publish options (additive — no style clobber).
   settings.accessLevel = data.accessLevel;
   settings.allowAnonymous = !!data.allowAnonymous;

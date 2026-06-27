@@ -31,6 +31,9 @@ function premiumPreview(data: WizardData): HTMLElement {
   const t = data.templateRecord || {};
   const html = String((t.settings && t.settings.customHtml) || '');
   const steps = (html.match(/data-step\s*=/g) || []).length;
+  const fieldCount = Array.isArray(data.premiumFields)
+    ? data.premiumFields.filter((f: any) => f && f.type !== 'Section' && f.type !== 'Hidden').length
+    : (t.fieldCount || 0);
   const access = data.accessLevel === 'authenticated' ? 'Members' : data.accessLevel === 'restricted' ? 'Invite' : 'Public';
   return h('div', null, [
     h('div', { class: 'lbl' }, [icon('fa-eye'), document.createTextNode('Live Preview')]),
@@ -44,7 +47,7 @@ function premiumPreview(data: WizardData): HTMLElement {
       ]),
     ]),
     h('div', { class: 'mfw-summ' }, [
-      summ(String(t.fieldCount || 0), 'Fields'),
+      summ(String(fieldCount), 'Fields'),
       summ(steps > 1 ? String(steps) : '1', steps > 1 ? 'Steps' : 'Page'),
       summ('Premium', 'Style'),
       summ(access, 'Access'),

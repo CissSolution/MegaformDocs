@@ -16,16 +16,16 @@ function applyTemplate(tplId: string, set: SetFn): void {
     const meta = FIELD_TYPES.find(f => f.type === ft);
     return { id: fid(), type: ft, label: meta ? meta.label : 'Field', required: ft === 'email' };
   });
-  set({ template: tplId, templateRecord: null, templateIsPremium: false, isMultiStep: false, fields, formPages: [{ id: 'page-1', title: 'Step 1', fields: [] }] });
+  set({ template: tplId, templateRecord: null, templateIsPremium: false, premiumFields: null, isMultiStep: false, fields, formPages: [{ id: 'page-1', title: 'Step 1', fields: [] }] });
 }
 
-// Apply a REAL library template. Premium (custom-shell) → faithful emit, no field hydration.
-// Standard → hydrate the editable wizard fields from the template's fields.
+// Apply a REAL library template. Premium (custom-shell) → editable working copy of its
+// fields (③ — add/remove in the wizard). Standard → hydrate the editable wizard fields.
 function applyRealTemplate(t: WizardTemplate, set: SetFn): void {
   if (t.isPremium) {
-    set({ template: t.id, templateRecord: t, templateIsPremium: true, isMultiStep: false, fields: [], formPages: [{ id: 'page-1', title: 'Step 1', fields: [] }] });
+    set({ template: t.id, templateRecord: t, templateIsPremium: true, premiumFields: JSON.parse(JSON.stringify(t.fields || [])), isMultiStep: false, fields: [], formPages: [{ id: 'page-1', title: 'Step 1', fields: [] }] });
   } else {
-    set({ template: t.id, templateRecord: t, templateIsPremium: false, isMultiStep: false, fields: hydrateStandardFields(t), formPages: [{ id: 'page-1', title: 'Step 1', fields: [] }] });
+    set({ template: t.id, templateRecord: t, templateIsPremium: false, premiumFields: null, isMultiStep: false, fields: hydrateStandardFields(t), formPages: [{ id: 'page-1', title: 'Step 1', fields: [] }] });
   }
 }
 

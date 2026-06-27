@@ -18,6 +18,9 @@ export interface WizardData {
   // Selected REAL template (BuilderTemplates/List record, normalized) + premium flag.
   // null for blank / built-in quick-start. Premium → faithful custom-shell emit (② / ③).
   templateRecord: any | null; templateIsPremium: boolean;
+  // Editable working copy of a premium template's fields (③ — add/remove in the wizard;
+  // customHtml is reconciled via syncFieldPlaceholders on Create). null when not premium.
+  premiumFields: any[] | null;
   // 2 — Fields
   isMultiStep: boolean; fields: WizardField[]; formPages: FormPage[]; showProgressBar: boolean;
   // 3 — Workflow
@@ -32,7 +35,7 @@ export interface WizardData {
 export function defaultWizardData(): WizardData {
   return {
     formName: '', formDescription: '', category: '', template: null,
-    templateRecord: null, templateIsPremium: false,
+    templateRecord: null, templateIsPremium: false, premiumFields: null,
     isMultiStep: false, fields: [], formPages: [{ id: 'page-1', title: 'Step 1', fields: [] }], showProgressBar: true,
     approvalEnabled: false, approvalNodes: [], notifySubmitter: true, deadlineDays: '3',
     theme: 'clean', primaryColor: '#3b82f6', accentColor: '#8b5cf6', fontStyle: 'inter', roundness: 'md',
