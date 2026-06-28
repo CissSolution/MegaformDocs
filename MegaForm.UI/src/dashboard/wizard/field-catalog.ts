@@ -7,6 +7,7 @@
 // A Composite field is canonically { type:'Composite', widgetProps:{ preset } } — the parts
 // (phone country/number, name first/last, address rows, dob d/m/y…) are derived at render.
 import { COMPOSITE_PRESET_META } from '../../renderer/helpers';
+import { defaultChipOptions, defaultCardOptions } from '@shared/choice-defaults';
 
 // Canonical MegaForm field — backfill arrays/objects so the builder never .map()s undefined.
 export function mfField(type: string, key: string, label: string, required: boolean, extra?: any): any {
@@ -49,8 +50,8 @@ const compositeDefs: FieldDef[] = Object.keys(COMPOSITE_PRESET_META).map((preset
 const otherDefs: FieldDef[] = [
   { key: 'select', label: 'Dropdown', icon: 'fa-caret-down', group: 'choice', curated: true, preview: 'choice', build: (k, l, r) => mfField('Select', k, l, r, { options: opts() }) },
   { key: 'multiselect', label: 'Multi-Select', icon: 'fa-list-check', group: 'choice', curated: false, preview: 'choice', build: (k, l, r) => mfField('Select', k, l, r, { options: opts(), widgetProps: { selectVariant: 'multi-select' } }) },
-  { key: 'chips', label: 'Chips', icon: 'fa-tags', group: 'choice', curated: true, preview: 'chips', build: (k, l, r) => mfField('Chips', k, l, r, { options: opts() }) },
-  { key: 'cards', label: 'Choice Cards', icon: 'fa-grip', group: 'choice', curated: true, preview: 'cards', build: (k, l, r) => mfField('Cards', k, l, r, { options: opts() }) },
+  { key: 'chips', label: 'Chips', icon: 'fa-tags', group: 'choice', curated: true, preview: 'chips', build: (k, l, r) => mfField('Chips', k, l, r, { options: defaultChipOptions() }) },
+  { key: 'cards', label: 'Choice Cards', icon: 'fa-grip', group: 'choice', curated: true, preview: 'cards', build: (k, l, r) => mfField('Cards', k, l, r, { options: defaultCardOptions(), allowOptionHtml: true }) },
   { key: 'multicolumn', label: 'Multi-Column Combo', icon: 'fa-table-columns', group: 'choice', curated: false, preview: 'choice', build: (k, l, r) => mfField('Select', k, l, r, { options: opts(), widgetProps: { selectVariant: 'multi-column' } }) },
   { key: 'radio', label: 'Radio Group', icon: 'fa-circle-dot', group: 'choice', curated: true, preview: 'choice', build: (k, l, r) => mfField('Radio', k, l, r, { options: opts() }) },
   { key: 'checkbox', label: 'Checkbox', icon: 'fa-square-check', group: 'choice', curated: true, preview: 'checkbox', build: (k, l, r) => mfField('Checkbox', k, l, r, { options: opts() }) },

@@ -1673,9 +1673,12 @@ import { ensureFieldSettingsBadge, getActiveField, hasActiveFieldSelection } fro
         if (ft.hasOptions) {
             renderOptionsEditor(field.options || []);
             var isChoiceField = field.type === 'Radio' || field.type === 'Checkbox';
+            // Chips/Cards reuse the Option Columns control (Auto/1–4) but NOT the Choice-Display
+            // picker — their chips/cards skin is fixed by the field type.
+            var isColumnField = isChoiceField || field.type === 'Chips' || field.type === 'Cards';
             var choiceProps = field.properties || {};
             B.toggle('mf-prop-option-style-wrap', isChoiceField);
-            B.toggle('mf-prop-option-columns-wrap', isChoiceField);
+            B.toggle('mf-prop-option-columns-wrap', isColumnField);
             B.setVal('mf-prop-option-display', String(field.optionDisplay || choiceProps.optionDisplay || 'default'));
             B.setChecked('mf-prop-option-richhtml', field.allowOptionHtml === true || choiceProps.allowOptionHtml === true);
             B.setVal('mf-prop-option-columns', field.optionColumns ? String(field.optionColumns) : '');
@@ -2122,7 +2125,7 @@ import { ensureFieldSettingsBadge, getActiveField, hasActiveFieldSelection } fro
             optionColsEl.addEventListener('change', function () {
                 if (!hasActiveFieldSelection(currentField)) return;
                 var f = getActiveField(currentField);
-                if (!f || (f.type !== 'Radio' && f.type !== 'Checkbox')) return;
+                if (!f || (f.type !== 'Radio' && f.type !== 'Checkbox' && f.type !== 'Chips' && f.type !== 'Cards')) return;
                 var parsed = parseInt(this.value, 10);
                 if (parsed > 0) f.optionColumns = parsed;
                 else delete f.optionColumns;

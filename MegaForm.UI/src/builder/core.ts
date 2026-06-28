@@ -1,6 +1,7 @@
 import { getPlatformRoute } from '@shared/platform-host';
 // [Composite Registry v20260616] Single source for the alias→preset map + labels.
 import { compositeAliasToPresetMap, compositePresetLabel } from '../renderer/helpers';
+import { defaultChipOptions, defaultCardOptions } from '@shared/choice-defaults';
 /* ============================================================
    MegaForm Builder — Core (State, Helpers, Public API)
    File: megaform-builder-core.js
@@ -594,7 +595,11 @@ var MegaFormBuilder = (function () {
 
         // Widget default options
         if (!f.options.length) {
-            if (type === 'Select' || type === 'Radio' || type === 'Checkbox' || type === 'MultiSelect' || type === 'Chips' || type === 'Cards') {
+            // [Chips/Cards 2026-06-28] Rich premium seeds (icon/title/meta/desc for Cards) so a
+            // freshly dropped control already shows the full layout for the author to edit.
+            if (type === 'Cards') { f.options = defaultCardOptions(); f.allowOptionHtml = true; }
+            else if (type === 'Chips') { f.options = defaultChipOptions(); }
+            else if (type === 'Select' || type === 'Radio' || type === 'Checkbox' || type === 'MultiSelect') {
                 f.options = [{ value: 'option_1', label: 'Option 1' }, { value: 'option_2', label: 'Option 2' }, { value: 'option_3', label: 'Option 3' }];
             }
             if (type === 'ImageChoice') f.options = [{value:'opt1',label:'Option 1'},{value:'opt2',label:'Option 2'},{value:'opt3',label:'Option 3'}];
