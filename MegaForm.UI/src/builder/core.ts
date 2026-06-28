@@ -594,7 +594,7 @@ var MegaFormBuilder = (function () {
 
         // Widget default options
         if (!f.options.length) {
-            if (type === 'Select' || type === 'Radio' || type === 'Checkbox' || type === 'MultiSelect') {
+            if (type === 'Select' || type === 'Radio' || type === 'Checkbox' || type === 'MultiSelect' || type === 'Chips' || type === 'Cards') {
                 f.options = [{ value: 'option_1', label: 'Option 1' }, { value: 'option_2', label: 'Option 2' }, { value: 'option_3', label: 'Option 3' }];
             }
             if (type === 'ImageChoice') f.options = [{value:'opt1',label:'Option 1'},{value:'opt2',label:'Option 2'},{value:'opt3',label:'Option 3'}];

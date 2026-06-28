@@ -36,6 +36,7 @@ function fieldPreview(f: WizardField, radius: number): HTMLElement {
   else if (hint === 'signature') control = h('div', { style: 'height:48px;border:1px solid #e2e8f0;border-radius:' + radius + 'px;background:#fafbfc;display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-size:18px;font-style:italic' }, 'Sign here');
   else if (hint === 'date') control = inputBox('mm / dd / yyyy', radius, true);
   else if (hint === 'chips') control = h('div', { style: 'display:flex;flex-wrap:wrap;gap:6px' }, ['Option 1', 'Option 2', 'Option 3'].map(t => h('span', { style: 'font-size:11px;font-weight:600;background:#eef2ff;color:#6366f1;border-radius:999px;padding:4px 11px' }, t)));
+  else if (hint === 'cards') control = h('div', { style: 'display:flex;flex-direction:column;gap:7px' }, ['Option 1', 'Option 2', 'Option 3'].map((t, i) => h('div', { style: 'display:flex;align-items:center;gap:10px;border:1px solid ' + (i === 0 ? '#6366f1' : '#e2e8f0') + ';border-radius:12px;padding:9px 12px;font-size:12px;font-weight:600;color:#334155' + (i === 0 ? ';box-shadow:0 0 0 3px rgba(99,102,241,.12)' : '') }, [h('span', { style: 'width:18px;height:18px;border-radius:50%;border:2px solid ' + (i === 0 ? '#6366f1' : '#cbd5e1') + ';flex:0 0 18px' }), document.createTextNode(t)])));
   else control = inputBox(f.type === 'email' ? 'you@example.com' : 'Enter ' + (f.label || 'value').toLowerCase() + '…', radius, hint === 'choice');
   return h('div', { style: 'margin-bottom:12px' }, [label, control]);
 }

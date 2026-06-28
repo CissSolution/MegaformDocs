@@ -81,10 +81,10 @@ function renderOptionPart(field: FormField, opt: ChoiceOption, value: unknown, h
   return htmlCapable && optionHtmlEnabled(field, opt) ? sanitizeOptionHtml(text) : esc(displayText(text));
 }
 
-function getOptionGroupClass(field: FormField): string {
+function getOptionGroupClass(field: FormField, forcedDisplay?: OptionDisplay): string {
   const count = Array.isArray(field.options) ? field.options.length : 0;
   const parsed = parseInt(String((field as any).optionColumns || ''), 10);
-  const display = getOptionDisplay(field);
+  const display = forcedDisplay || getOptionDisplay(field);
   const cols = parsed > 0 ? Math.min(Math.max(parsed, 1), 4) : (display === 'cards' ? 1 : (count >= 9 ? 3 : count >= 6 ? 2 : 1));
   const classes = ['mf-option-group'];
   if (display !== 'default') classes.push(`mf-option-group--${display}`);
@@ -121,8 +121,8 @@ function getSignatureCanvasHeight(field: FormField): number {
   return 120;
 }
 
-function renderOptionItem(inputType: 'radio' | 'checkbox', name: string, opt: ChoiceOption, checked: boolean, field: FormField): string {
-  const display = getOptionDisplay(field);
+function renderOptionItem(inputType: 'radio' | 'checkbox', name: string, opt: ChoiceOption, checked: boolean, field: FormField, forcedDisplay?: OptionDisplay): string {
+  const display = forcedDisplay || getOptionDisplay(field);
   const value = String(opt.value ?? opt.label ?? '');
   const labelSource = opt.richHtml || opt.labelHtml || opt.html || opt.label || opt.value || '';
   const labelHtml = renderOptionPart(field, opt, labelSource, true);
@@ -476,6 +476,25 @@ export function renderInput(field: FormField, formId: number, formData: Record<s
       let h = `<div class="${getOptionGroupClass(field)}">`;
       (field.options || []).forEach(opt => {
         h += renderOptionItem('checkbox', name, opt, selectedVals.includes(opt.value), field);
+      });
+      return h + '</div>';
+    }
+    // [Chips/Cards 2026-06-28] Two dedicated option controls split out from Radio/Checkbox.
+    // Chips = multi-select (checkbox inputs) forced to the chip skin; Cards = single-select
+    // (radio inputs) forced to the card skin. Reuse the exact .mf-option-group--chips/--cards
+    // markup so megaform.css + every premium template's restyle apply automatically.
+    case 'Chips': {
+      const selectedVals = Array.isArray(val) ? val : (val ? val.split(',') : []);
+      let h = `<div class="${getOptionGroupClass(field, 'chips')}">`;
+      (field.options || []).forEach(opt => {
+        h += renderOptionItem('checkbox', name, opt, selectedVals.includes(opt.value), field, 'chips');
+      });
+      return h + '</div>';
+    }
+    case 'Cards': {
+      let h = `<div class="${getOptionGroupClass(field, 'cards')}">`;
+      (field.options || []).forEach(opt => {
+        h += renderOptionItem('radio', name, opt, val === opt.value, field, 'cards');
       });
       return h + '</div>';
     }

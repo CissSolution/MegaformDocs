@@ -13,6 +13,9 @@ import SortableModule from 'sortablejs';
 // [Fidelity v20260616] Shared cell sizing so the canvas composite preview matches the runtime
 // (fraction widths 1/4·1/2·full, flex shares) — single source in renderer/helpers.
 import { compositeCellStyle } from '../renderer/helpers';
+// [2026-06-27 #2 Steps-in-builder] Surface the custom-shell wizard's step structure
+// (which lives only in customHtml, invisible to the schema-driven canvas).
+import { fieldStepMap } from '@shared/custom-html-insert';
 // MegaFormBuilder is a global defined by megaform-builder-core.js
 
 (function () {
@@ -1738,7 +1741,22 @@ import { compositeCellStyle } from '../renderer/helpers';
         if (emptyState) emptyState.style.display = 'none';
         container.classList.remove('mf-canvas-fields-empty');
 
+        // [2026-06-27 #2 Steps-in-builder] For a custom-shell WIZARD form, step membership
+        // lives only in customHtml (the data-step panels) — invisible to this schema-driven
+        // canvas. Parse it (prefix-agnostic, works for au/bg/ey/fi) and drop a "Step N · Title"
+        // divider before the first field of each step, so the builder shows the wizard's pages.
+        const wizardStepMap = hasCustomHtml ? fieldStepMap(String(s.customHtml || s.CustomHtml || '')) : {};
+        const hasWizardSteps = Object.keys(wizardStepMap).length > 0;
+        let lastStepOrdinal = -1;
+
         B.state.schema.fields.forEach((field: any, index: number) => {
+            if (hasWizardSteps) {
+                const step = wizardStepMap[String(field.key)];
+                if (step && step.ordinal !== lastStepOrdinal) {
+                    container.appendChild(makeStepDivider(step.ordinal, step.label));
+                    lastStepOrdinal = step.ordinal;
+                }
+            }
             if (field.type === 'Row') {
                 container.appendChild(renderRowOnCanvas(field, index));
             } else if (field.type === 'FlexGrid') {
@@ -1781,6 +1799,26 @@ import { compositeCellStyle } from '../renderer/helpers';
             });
         });
         return { sources, targets };
+    }
+
+    // [2026-06-27 #2] A read-only "Step N · Title" divider shown before each wizard step's
+    // fields. NOT a .mf-canvas-item, so it is ignored by SortableJS draggable selection and
+    // by the index math (syncCanvasIndexes / getCanvasInsertIndexFromDom count only
+    // .mf-canvas-item) — it can't perturb reorder. Inline-styled (no CSS-build dependency).
+    function makeStepDivider(ordinal: number, label: string): HTMLElement {
+        const d = document.createElement('div');
+        d.className = 'mf-canvas-step-divider';
+        d.setAttribute('data-step-ordinal', String(ordinal));
+        d.setAttribute('contenteditable', 'false');
+        d.style.cssText = 'display:flex;align-items:center;gap:10px;margin:18px 2px 8px;user-select:none;pointer-events:none;';
+        const safe = B.escHtml ? B.escHtml(String(label || '')) : String(label || '').replace(/[<>&]/g, '');
+        d.innerHTML =
+            '<span style="display:inline-flex;align-items:center;gap:7px;padding:4px 12px;border-radius:999px;' +
+            'background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-weight:700;font-size:11px;letter-spacing:.04em;white-space:nowrap;">' +
+            '<i class="fas fa-layer-group" style="font-size:10px;"></i> STEP ' + ordinal + '</span>' +
+            '<span style="font-weight:600;font-size:13px;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + safe + '</span>' +
+            '<span style="flex:1;height:1px;background:linear-gradient(90deg,#e2e8f0,transparent);"></span>';
+        return d;
     }
 
     function renderFieldOnCanvas(field: any, index: number): HTMLElement {
@@ -2702,6 +2740,13 @@ import { compositeCellStyle } from '../renderer/helpers';
                     if (B.state.selectedFieldIndex === oldPos) B.state.selectedFieldIndex = newPos;
                     B.state.isDirty = true;
                     syncCanvasIndexes(container);
+                    // [2026-06-28 D1] For a custom-shell form, render order = customHtml token order,
+                    // NOT schema order. A bare schema reorder therefore had NO effect on the rendered
+                    // form (the user's "drag does nothing" bug). Push the new order into customHtml by
+                    // moving each field wrapper (reorder:true), so render + theme preview follow the drag.
+                    if (B.syncSchemaToHtmlImmediate) {
+                        try { B.syncSchemaToHtmlImmediate({ reason: 'canvas-reorder', reorder: true, refreshEditors: true }); } catch (_reErr) {}
+                    }
                     // Refresh properties nếu đang có field được chọn
                     if (B.state.selectedFieldIndex >= 0) {
                         const sel = B.state.schema.fields[B.state.selectedFieldIndex];
@@ -3144,8 +3189,10 @@ import { compositeCellStyle } from '../renderer/helpers';
                 html += `<div class="mf-field-preview-input" data-inline-placeholder="1"><span class="mf-inline-placeholder-text" data-inline-text>${B.escHtml(getPlaceholderText(field, 'Select date...'))}</span><button type="button" class="mf-inline-placeholder-edit" data-inline-edit aria-label="Edit placeholder"><i class="fas fa-i-cursor"></i></button><i class="fas fa-calendar-alt"></i></div>`;
                 break;
             case 'Radio':
-            case 'Checkbox': {
-                const icon = field.type === 'Radio' ? 'fa-circle' : 'fa-square';
+            case 'Checkbox':
+            case 'Chips':
+            case 'Cards': {
+                const icon = field.type === 'Radio' ? 'fa-circle' : field.type === 'Chips' ? 'fa-tag' : 'fa-square';
                 const rawOptionCount = Array.isArray(field.options) ? field.options.length : 0;
                 const parsedCols = parseInt(field.optionColumns, 10);
                 const previewCols = parsedCols > 1 ? Math.min(Math.max(parsedCols, 1), 4) : (rawOptionCount >= 8 ? 3 : rawOptionCount >= 5 ? 2 : 1);

@@ -551,6 +551,25 @@ FieldPlugins.register({
   settingsGroups: ['general', 'options', 'condition'],
 } as FieldPlugin);
 
+// [Chips/Cards 2026-06-28] Dedicated chip + selectable-card option controls, split out from
+// Radio/Checkbox so authors get a one-click control instead of a hidden display variant.
+// Chips = multi-select pills; Cards = single-select tiles. Rendering forces the chips/cards
+// skin by type (inputs.ts + FormHtmlRenderer.cs), reusing .mf-option-group--chips/--cards so
+// they inherit the premium chip/card look from megaform.css and every premium template.
+FieldPlugins.register({
+  type: 'Chips', label: 'Chips',
+  icon: 'fa-tags', color: '#8b5cf6', category: 'basic', sortOrder: 71,
+  hasOptions: true,
+  settingsGroups: ['general', 'options', 'condition'],
+} as FieldPlugin);
+
+FieldPlugins.register({
+  type: 'Cards', label: 'Choice Cards',
+  icon: 'fa-grip', color: '#0ea5e9', category: 'basic', sortOrder: 72,
+  hasOptions: true,
+  settingsGroups: ['general', 'options', 'condition'],
+} as FieldPlugin);
+
 FieldPlugins.register({
   type: 'File', label: 'File Upload',
   icon: 'fa-paperclip', color: '#e74c3c', category: 'basic', sortOrder: 75,

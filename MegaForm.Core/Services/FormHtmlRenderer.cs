@@ -336,6 +336,23 @@ namespace MegaForm.Core.Services
                         sb.Append(OptionItem("checkbox", name, opt, tr.OptionLabel(opt), selected.Contains(opt.Value), id, field));
                     return sb.Append("</div>").ToString();
                 }
+                // [Chips/Cards 2026-06-28] SSR parity with renderer/inputs.ts: Chips = multi-select
+                // (checkbox inputs) forced to the chips skin; Cards = single-select (radio) forced cards.
+                case "Chips":
+                {
+                    var selected = (val ?? string.Empty).Split(',').Select(s => s.Trim()).ToHashSet();
+                    var sb = new StringBuilder("<div class=\"" + OptionGroupClass(field, "chips") + "\">");
+                    foreach (var opt in SafeOptions(field))
+                        sb.Append(OptionItem("checkbox", name, opt, tr.OptionLabel(opt), selected.Contains(opt.Value), id, field, "chips"));
+                    return sb.Append("</div>").ToString();
+                }
+                case "Cards":
+                {
+                    var sb = new StringBuilder("<div class=\"" + OptionGroupClass(field, "cards") + "\">");
+                    foreach (var opt in SafeOptions(field))
+                        sb.Append(OptionItem("radio", name, opt, tr.OptionLabel(opt), val == opt.Value, id, field, "cards"));
+                    return sb.Append("</div>").ToString();
+                }
                 case "File":
                 {
                     var fs = field.FileSettings ?? new FileFieldSettings();
@@ -944,11 +961,11 @@ namespace MegaForm.Core.Services
             => "<input type=\"" + inputType + "\" class=\"mf-input\" id=\"" + id + "\" name=\"" + name
                + "\" value=\"" + Esc(val) + "\" placeholder=\"" + Esc(ph) + "\"" + flags + ">";
 
-        private static string OptionItem(string inputType, string name, MfOption opt, string translatedLabel, bool selected, string baseId, FormField field)
+        private static string OptionItem(string inputType, string name, MfOption opt, string translatedLabel, bool selected, string baseId, FormField field, string forcedDisplay = null)
         {
             var value = opt?.Value ?? opt?.Label ?? string.Empty;
             var oid = baseId + "-" + Slug(value);
-            var display = OptionDisplay(field);
+            var display = forcedDisplay ?? OptionDisplay(field);
             var allowHtml = OptionHtmlEnabled(field, opt);
             var labelSource = opt?.RichHtml ?? opt?.LabelHtml ?? opt?.Html ?? translatedLabel ?? opt?.Label ?? value;
             var classes = new List<string> { "mf-option-item" };
@@ -966,9 +983,9 @@ namespace MegaForm.Core.Services
                 + OptionPart(field, opt, labelSource, true) + "</span>" + meta + desc + "</span>" + badge + check + "</span></label>";
         }
 
-        private static string OptionGroupClass(FormField field)
+        private static string OptionGroupClass(FormField field, string forcedDisplay = null)
         {
-            var display = OptionDisplay(field);
+            var display = forcedDisplay ?? OptionDisplay(field);
             var cols = field.OptionColumns;
             var classes = new List<string> { "mf-option-group" };
             if (display != "default") classes.Add("mf-option-group--" + display);
