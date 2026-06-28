@@ -798,7 +798,7 @@
        so AI prompt "resize form to 100%" had no visual effect. Now reads the var
        with 760px fallback so themeCssOverrides[--mf-form-max-width: 100%] wins. */
     max-width: var(--mf-form-max-width, 760px);
-    margin: 24px auto;
+    margin: 12px auto 24px;   /* [TopGap v20260628] trimmed the top margin (was 24px) so the card sits closer to the form/module heading; bottom spacing kept */
     box-sizing: border-box;
 }
 @media (max-width: 600px) {
@@ -806,7 +806,7 @@
     .mf-form-wrapper > .mf-form,
     .mf-form-wrapper > .mf-form-inner {
         padding: 18px 16px;
-        margin: 12px auto;
+        margin: 8px auto 12px;
     }
 }
 
@@ -1439,6 +1439,14 @@
     flex-direction: row;
     flex-wrap: wrap;
     gap: 8px;
+}
+/* [ChipNoColumns v20260628] Chips are pill tags → ALWAYS a tight flex-wrap cloud, never a
+   column grid. The generic .mf-option-group--cols grid (and the builder's Option Columns
+   control) must NOT apply to chips: a content-width pill stretched into a wide grid cell looks
+   broken on desktop and collapses one-per-row on mobile. Force flex regardless of --cols/--cols-N. */
+.mf-option-group--chips.mf-option-group--cols {
+    display: flex;
+    grid-template-columns: none;
 }
 .mf-option-group--chips .mf-option-item {
     position: relative;
