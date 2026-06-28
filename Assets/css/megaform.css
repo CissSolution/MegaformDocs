@@ -149,6 +149,18 @@
     justify-content: center;
 }
 
+/* [B286 2026-06-26] Wizard (multi-step) STANDARD forms were the only AI-generated form type
+   still showing the gray --mf-page-bg + wrapper padding as an extra "card/frame" AROUND the
+   white form card — every single-page AI form is a frameless custom-shell. Drop the page-bg
+   frame on wizard forms so the white card sits directly on the host page, visually consistent
+   with non-multi-step forms ("card thừa bên ngoài"). Scoped via :has(.mf-steps) so only wizards
+   are affected; the white .mf-form card itself is untouched. */
+.mf-form-wrapper:has(.mf-steps) {
+    background: transparent !important;
+    background-image: none !important;
+    padding: 0 !important;
+}
+
 .mf-form-wrapper * { box-sizing: border-box; }
 
 /* ============================================================
@@ -864,6 +876,11 @@
     position: relative;
 }
 .mf-field-group.mf-hidden { display: none; }
+/* [B286 2026-06-26] Custom-shell forms (.mfp — incl. the AI default pure-grid + premium shells)
+   space their fields with a flex `gap` on the field container (.mfp-card-body / .mfp-form-inner /
+   .mfp-body-inner …). The per-field margin-bottom above STACKED on top of that gap → ~36px double
+   spacing in AI-generated forms. Inside a .mfp shell let the container gap own the spacing. */
+.mfp .mf-field-group { margin-bottom: 0; }
 
 .mf-field-label {
     display: block;
@@ -1464,7 +1481,13 @@
 .mf-option-group--chips .mf-option-badge {
     display: none;
 }
-.mf-option-group--chips .mf-option-item:hover .mf-option-ui,
+/* [ChipCardBorder v20260628] Mouse hover = a single coloured border + faint tint, NO ring
+   (the old 0 0 0 3px ring stacked on the 1px border read as a doubled border). The focus ring
+   is kept ONLY for keyboard :focus-visible (a11y). */
+.mf-option-group--chips .mf-option-item:hover .mf-option-ui {
+    border-color: var(--mf-primary, #4a90d9);
+    background: color-mix(in srgb, var(--mf-primary, #4a90d9) 7%, var(--mf-input-bg, #fff));
+}
 .mf-option-group--chips .mf-option-control:focus-visible + .mf-option-ui {
     border-color: var(--mf-primary, #4a90d9);
     box-shadow: 0 0 0 3px rgba(79,70,229,.12);
@@ -1534,15 +1557,22 @@
     font-weight: 800;
     opacity: 0;
 }
-.mf-option-group--cards .mf-option-item:hover .mf-option-ui,
+/* [ChipCardBorder v20260628] Mouse hover = single coloured border + soft lift, NO ring. */
+.mf-option-group--cards .mf-option-item:hover .mf-option-ui {
+    border-color: var(--mf-primary, #4a90d9);
+    box-shadow: 0 6px 18px rgba(15,23,42,.08);
+}
 .mf-option-group--cards .mf-option-control:focus-visible + .mf-option-ui {
     border-color: var(--mf-primary, #4a90d9);
-    box-shadow: 0 0 0 3px rgba(79,70,229,.12), 0 8px 24px rgba(15,23,42,.08);
+    box-shadow: 0 0 0 3px rgba(79,70,229,.12), 0 6px 18px rgba(15,23,42,.08);
 }
+/* Selected = single coloured border + faint tint fill + soft lift (NO 2px ring → no doubled
+   border; matches the mock's clean selected card). */
 .mf-option-group--cards .mf-option-item.is-checked .mf-option-ui,
 .mf-option-group--cards .mf-option-item:has(.mf-option-control:checked) .mf-option-ui {
     border-color: var(--mf-primary, #4a90d9);
-    box-shadow: 0 0 0 2px rgba(79,70,229,.18), 0 8px 24px rgba(15,23,42,.08);
+    background: color-mix(in srgb, var(--mf-primary, #4a90d9) 6%, var(--mf-input-bg, #fff));
+    box-shadow: 0 6px 18px rgba(15,23,42,.08);
 }
 .mf-option-group--cards .mf-option-item.is-checked .mf-option-icon,
 .mf-option-group--cards .mf-option-item:has(.mf-option-control:checked) .mf-option-icon {
