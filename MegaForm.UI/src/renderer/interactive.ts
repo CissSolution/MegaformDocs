@@ -579,10 +579,13 @@ function bindCalendarDatePickers(): void {
           `<input type="number" min="0" max="59" data-time-part="minute" value="${padDatePart(state.minute)}" aria-label="Minute">` +
           `</div>`;
       }
+      // [DatePickerNoApply v20260628] Apply is only needed for date-TIME mode (confirm the time
+      // after picking a day). For date-only / month-year, clicking a day/month commits + closes
+      // immediately, so the Apply button is dropped.
       h += `<div class="mf-cal-actions">` +
         `<button type="button" class="mf-cal-action" data-action="today">${esc(labels.today)}</button>` +
         `<button type="button" class="mf-cal-action" data-action="clear">${esc(labels.clear)}</button>` +
-        `<button type="button" class="mf-cal-action mf-cal-apply" data-action="apply">${esc(labels.apply)}</button>` +
+        (mode === 'date-time' ? `<button type="button" class="mf-cal-action mf-cal-apply" data-action="apply">${esc(labels.apply)}</button>` : '') +
         `</div>`;
       panel.innerHTML = h;
     };
@@ -610,7 +613,9 @@ function bindCalendarDatePickers(): void {
         state.month = parseInt(month.dataset.month || '1', 10) || 1;
         state.day = 1;
         normalizeDay(state);
-        renderPanel();
+        // month-year picker has no day step → commit + close on the month click (no Apply).
+        if (mode === 'month-year') { commit(formatDateOutput(state, mode, '24h')); close(); }
+        else renderPanel();
         return;
       }
       const day = target.closest<HTMLButtonElement>('[data-day]');
@@ -619,7 +624,10 @@ function bindCalendarDatePickers(): void {
         state.month = viewMonth;
         state.day = parseInt(day.dataset.day || '1', 10) || 1;
         normalizeDay(state);
-        renderPanel();
+        // [DatePickerNoApply] date-only → commit + close on the day click (no Apply step). date-time
+        // keeps the panel open so the user can still set the time, then confirms with Apply.
+        if (mode === 'date-time') renderPanel();
+        else { commit(formatDateOutput(state, mode, '24h')); close(); }
         return;
       }
       const action = target.closest<HTMLButtonElement>('[data-action]');

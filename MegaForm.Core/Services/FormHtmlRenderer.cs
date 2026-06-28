@@ -307,7 +307,7 @@ namespace MegaForm.Core.Services
                         + "\" placeholder=\"" + Esc(ph) + "\"" + minA + maxA + ro + req + ">";
                 }
                 case "Date":
-                    return "<input type=\"date\" class=\"mf-input\" id=\"" + id + "\" name=\"" + name + "\" value=\"" + Esc(val) + "\"" + ro + req + ">";
+                    return CalendarDatePicker(field, id, name, val, ph, ro);
                 case "Textarea":
                     return "<textarea class=\"mf-textarea\" id=\"" + id + "\" name=\"" + name + "\" placeholder=\"" + Esc(ph) + "\"" + ro + req + ">" + Esc(val) + "</textarea>";
                 case "Select":
@@ -960,6 +960,49 @@ namespace MegaForm.Core.Services
         private static string Input(string inputType, string id, string name, string val, string ph, string flags)
             => "<input type=\"" + inputType + "\" class=\"mf-input\" id=\"" + id + "\" name=\"" + name
                + "\" value=\"" + Esc(val) + "\" placeholder=\"" + Esc(ph) + "\"" + flags + ">";
+
+        // [DatePickerSSRParity v20260628] Server-render the SAME mf-cal calendar shell the client
+        // renderer emits (renderer/inputs.ts renderCalendarDatePicker), NOT a native <input type=date>
+        // (the old picker). interactive.ts binds [data-mf-cal="1"] and renders the panel on open.
+        private static string CalendarDatePicker(FormField field, string id, string name, string val, string ph, string ro)
+        {
+            string Prop(string key, string fallback)
+            {
+                var v = FieldStringProp(field, key);
+                return string.IsNullOrEmpty(v) ? fallback : v;
+            }
+            var rawMode = (FieldStringProp(field, "datePickerMode") ?? FieldStringProp(field, "mode") ?? "date-only").ToLowerInvariant();
+            var mode = (rawMode == "date-time" || rawMode == "datetime") ? "date-time"
+                     : (rawMode == "month-year" || rawMode == "monthyear") ? "month-year"
+                     : "date-only";
+            var placeholder = !string.IsNullOrEmpty(ph) ? ph
+                : mode == "date-time" ? "Select date & time..."
+                : mode == "month-year" ? "Select month..." : "Select date...";
+            var disabled = string.IsNullOrEmpty(ro) ? "false" : "true";
+            var disAttr = string.IsNullOrEmpty(ro) ? string.Empty : " disabled";
+            var apply = Prop("applyText", Prop("applyLabel", "Apply"));
+            var clear = Prop("clearText", Prop("clearLabel", "Clear"));
+            var today = Prop("todayText", Prop("todayLabel", "Today"));
+            var prev = Prop("previousMonthText", "Previous month");
+            var next = Prop("nextMonthText", "Next month");
+            var time = Prop("timeText", "Time:");
+            var weekdays = Prop("weekdayLabels", "SU,MO,TU,WE,TH,FR,SA");
+            var months = Prop("monthLabels", "January,February,March,April,May,June,July,August,September,October,November,December");
+            var ariaLabel = string.IsNullOrEmpty(field.Label) ? "Calendar date picker" : field.Label;
+            return "<div class=\"mf-date-input-wrap mf-cal\" id=\"" + id + "-cal\""
+                + " data-mf-cal=\"1\" data-mode=\"" + Esc(mode) + "\" data-value=\"" + Esc(val) + "\" data-placeholder=\"" + Esc(placeholder) + "\""
+                + " data-disabled=\"" + disabled + "\" data-readonly=\"" + disabled + "\""
+                + " data-label-apply=\"" + Esc(apply) + "\" data-label-clear=\"" + Esc(clear) + "\" data-label-today=\"" + Esc(today) + "\""
+                + " data-label-prev=\"" + Esc(prev) + "\" data-label-next=\"" + Esc(next) + "\" data-label-time=\"" + Esc(time) + "\""
+                + " data-weekdays=\"" + Esc(weekdays) + "\" data-months=\"" + Esc(months) + "\">"
+                + "<input type=\"hidden\" class=\"mf-cal-hidden\" id=\"" + id + "\" name=\"" + Esc(name) + "\" value=\"" + Esc(val) + "\">"
+                + "<button type=\"button\" class=\"mf-cal-trigger mf-input\" aria-haspopup=\"dialog\" aria-expanded=\"false\"" + disAttr + ">"
+                + "<span class=\"mf-cal-value\">" + Esc(placeholder) + "</span>"
+                + "<span class=\"mf-date-icon\" aria-hidden=\"true\"><svg viewBox=\"0 0 24 24\"><path d=\"M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z\"/></svg></span>"
+                + "</button>"
+                + "<div class=\"mf-cal-panel\" role=\"dialog\" aria-label=\"" + Esc(ariaLabel) + "\"></div>"
+                + "</div>";
+        }
 
         private static string OptionItem(string inputType, string name, MfOption opt, string translatedLabel, bool selected, string baseId, FormField field, string forcedDisplay = null)
         {
