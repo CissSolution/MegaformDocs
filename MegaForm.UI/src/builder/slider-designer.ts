@@ -17,14 +17,44 @@
   var B: any = (window as any).MegaFormBuilder;
   if (!B) return;
 
-  // 4 visual variants. The first one (`cards`) is the existing layout —
-  // the others are CSS-only differentiations driven by data-style on root.
+  // 3 ready-made templates the author picks from — each drives `data-style`
+  // on the rendered widget (see megaform-widget-content-slider.ts). Pick once,
+  // edit the slides, done — no markup to write by hand.
   var STYLES = [
-    { id: 'cards',    label: 'Cards',     desc: 'Horizontal product cards with text below.', icon: 'fa-th' },
-    { id: 'fade',     label: 'Fade',      desc: 'Full-bleed image, fade between slides with overlay text.', icon: 'fa-image' },
-    { id: 'minimal',  label: 'Minimal',   desc: 'Edge-to-edge image, no card chrome.', icon: 'fa-square' },
-    { id: 'kenburns', label: 'Ken Burns', desc: 'Slow zoom effect on each slide.', icon: 'fa-search-plus' }
+    { id: 'overlay', label: 'Overlay', desc: 'Full-bleed photo with the title, caption and dots floating on top. Bold, editorial, swipe-first. Ken Burns zoom + autoplay.', icon: 'fa-image' },
+    { id: 'card',    label: 'Card',    desc: 'Photo on top, caption panel below with dots + a counter. Clean and easy to read.', icon: 'fa-id-card' },
+    { id: 'cards',   label: 'Cards',   desc: 'A row of product cards that scrolls 1–3 at a time. Great for catalogues and showcases.', icon: 'fa-th-large' }
   ];
+
+  // Tiny inline-styled mock of each template so the picker reads as a visual
+  // gallery (the designer ships no dedicated CSS for these tiles).
+  function stylePreviewHtml(id: string): string {
+    var ACCENT = '#0ea5e9';
+    if (id === 'card') {
+      return '<div style="display:flex;flex-direction:column;width:100%;height:100%;border-radius:8px;overflow:hidden;border:1px solid #e2e8f0;background:#fff;">' +
+        '<div style="flex:1;background:linear-gradient(135deg,#94a3b8,#cbd5e1);"></div>' +
+        '<div style="padding:6px 7px;background:#fff;">' +
+          '<div style="width:62%;height:6px;border-radius:3px;background:#334155;"></div>' +
+          '<div style="width:84%;height:4px;border-radius:3px;background:#cbd5e1;margin-top:4px;"></div>' +
+          '<div style="display:flex;gap:3px;margin-top:6px;align-items:center;"><span style="width:12px;height:4px;border-radius:3px;background:' + ACCENT + ';"></span><span style="width:4px;height:4px;border-radius:3px;background:#cbd5e1;"></span><span style="width:4px;height:4px;border-radius:3px;background:#cbd5e1;"></span></div>' +
+        '</div>' +
+      '</div>';
+    }
+    if (id === 'cards') {
+      var card = '<div style="flex:1;border-radius:6px;overflow:hidden;border:1px solid #e2e8f0;background:#fff;display:flex;flex-direction:column;">' +
+          '<div style="height:54%;background:linear-gradient(135deg,#94a3b8,#cbd5e1);"></div>' +
+          '<div style="padding:4px;"><div style="width:80%;height:4px;border-radius:2px;background:#334155;"></div><div style="width:55%;height:3px;border-radius:2px;background:#cbd5e1;margin-top:3px;"></div></div>' +
+        '</div>';
+      return '<div style="display:flex;gap:5px;width:100%;height:100%;align-items:stretch;padding:2px;">' + card + card + card + '</div>';
+    }
+    // overlay (default)
+    return '<div style="position:relative;width:100%;height:100%;border-radius:8px;overflow:hidden;border:1px solid #e2e8f0;background:linear-gradient(135deg,#64748b,#94a3b8);">' +
+      '<span style="position:absolute;left:6px;top:6px;padding:1px 6px;border-radius:999px;background:' + ACCENT + ';color:#fff;font-size:8px;font-weight:700;">Badge</span>' +
+      '<div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.85),rgba(0,0,0,0) 70%);"></div>' +
+      '<div style="position:absolute;left:7px;bottom:14px;"><div style="width:70px;height:6px;border-radius:3px;background:#fff;"></div><div style="width:96px;height:4px;border-radius:3px;background:rgba(255,255,255,.7);margin-top:4px;"></div></div>' +
+      '<div style="position:absolute;left:50%;transform:translateX(-50%);bottom:5px;display:flex;gap:3px;align-items:center;padding:3px 6px;border-radius:999px;background:rgba(0,0,0,.3);"><span style="width:12px;height:4px;border-radius:3px;background:#fff;"></span><span style="width:4px;height:4px;border-radius:3px;background:rgba(255,255,255,.6);"></span><span style="width:4px;height:4px;border-radius:3px;background:rgba(255,255,255,.6);"></span></div>' +
+    '</div>';
+  }
 
   function uploadImage(file: File): Promise<string> {
     var td: any = (window as any).MFTokenDesigner;
@@ -50,8 +80,11 @@
     }
     var wp = field.widgetProps = field.widgetProps || {};
     if (!Array.isArray(wp.items)) wp.items = [];
-    if (typeof wp.style !== 'string') wp.style = 'cards';
-    if (typeof wp.height !== 'number') wp.height = 240;
+    if (typeof wp.style !== 'string') wp.style = 'overlay';
+    // fold retired style ids (fade/minimal/kenburns) into the closest template
+    if (wp.style === 'fade' || wp.style === 'minimal' || wp.style === 'kenburns') wp.style = 'overlay';
+    if (typeof wp.radius !== 'number') wp.radius = 18;
+    if (typeof wp.height !== 'number') wp.height = (wp.style === 'card' ? 176 : (wp.style === 'cards' ? 240 : 224));
     if (typeof wp.interval !== 'number') wp.interval = 4000;
     if (typeof wp.autoplay !== 'boolean') wp.autoplay = true;
     if (wp.imageFit !== 'contain' && wp.imageFit !== 'cover') wp.imageFit = 'cover';
@@ -127,25 +160,33 @@
       paneStyle.innerHTML = '';
       var grid = document.createElement('div');
       grid.className = 'mf-slider-designer-style-grid';
+      grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;';
       STYLES.forEach(function (s) {
+        var active = wp.style === s.id;
         var card = document.createElement('button');
         card.type = 'button';
-        card.className = 'mf-slider-designer-style-card' + (wp.style === s.id ? ' is-active' : '');
+        card.className = 'mf-slider-designer-style-card' + (active ? ' is-active' : '');
+        card.setAttribute('data-style-id', s.id);
+        card.style.cssText = 'display:flex;flex-direction:column;gap:8px;text-align:left;padding:10px;border-radius:14px;cursor:pointer;background:#fff;border:1.5px solid ' + (active ? '#0ea5e9' : '#e2e8f0') + ';box-shadow:' + (active ? '0 8px 22px -12px rgba(14,165,233,.5)' : 'none') + ';transition:border-color .15s ease, box-shadow .15s ease;';
         card.innerHTML =
-          '<div class="mf-slider-designer-style-preview mf-slider-preview-' + s.id + '">' +
-            '<i class="fas ' + s.icon + '"></i>' +
+          '<div class="mf-slider-designer-style-preview" style="height:86px;border-radius:10px;overflow:hidden;background:#f1f5f9;">' + stylePreviewHtml(s.id) + '</div>' +
+          '<div class="mf-slider-designer-style-label" style="font-weight:800;font-size:13px;color:#0f172a;display:flex;align-items:center;gap:6px;">' +
+            '<i class="fas ' + s.icon + '" style="color:#0ea5e9;"></i>' + B.escHtml(s.label) +
+            (active ? '<span style="margin-left:auto;color:#0ea5e9;font-size:12px;"><i class="fas fa-check-circle"></i></span>' : '') +
           '</div>' +
-          '<div class="mf-slider-designer-style-label">' + B.escHtml(s.label) + '</div>' +
-          '<div class="mf-slider-designer-style-desc">' + B.escHtml(s.desc) + '</div>';
+          '<div class="mf-slider-designer-style-desc" style="font-size:11px;line-height:1.45;color:#64748b;">' + B.escHtml(s.desc) + '</div>';
         card.addEventListener('click', function () {
           wp.style = s.id;
           B.state.isDirty = true;
-          Array.prototype.forEach.call(grid.querySelectorAll('.mf-slider-designer-style-card'), function (c: HTMLElement) { c.classList.remove('is-active'); });
-          card.classList.add('is-active');
+          renderStylePane();
         });
         grid.appendChild(card);
       });
+      var hint = document.createElement('div');
+      hint.style.cssText = 'margin-top:12px;font-size:11px;color:#64748b;display:flex;align-items:center;gap:6px;';
+      hint.innerHTML = '<i class="fas fa-circle-info"></i> Pick a template, then add your photos in the <strong>Slides</strong> tab. The form preview updates when you press Done.';
       paneStyle.appendChild(grid);
+      paneStyle.appendChild(hint);
     }
 
     // ── Slides pane ───────────────────────────────────────────
@@ -307,6 +348,10 @@
           '<input type="number" min="120" max="640" step="20" class="mf-token-row-input mf-slider-s-height" value="' + Number(wp.height || 240) + '"/>' +
         '</div>' +
         '<div class="mf-token-row">' +
+          '<label class="mf-token-row-label">Corner radius (px)</label>' +
+          '<input type="number" min="0" max="48" step="2" class="mf-token-row-input mf-slider-s-radius" value="' + Number(wp.radius != null ? wp.radius : 18) + '"/>' +
+        '</div>' +
+        '<div class="mf-token-row">' +
           '<label class="mf-token-row-label">Image fit</label>' +
           '<select class="mf-token-row-input mf-slider-s-fit">' +
             '<option value="cover"' + (wp.imageFit === 'cover' ? ' selected' : '') + '>Cover (crop to fill)</option>' +
@@ -323,6 +368,9 @@
       paneSettings.appendChild(grid);
       (grid.querySelector('.mf-slider-s-height') as HTMLInputElement).addEventListener('input', function (e: any) {
         wp.height = Math.max(120, Math.min(640, Number(e.target.value) || 240)); B.state.isDirty = true;
+      });
+      (grid.querySelector('.mf-slider-s-radius') as HTMLInputElement).addEventListener('input', function (e: any) {
+        wp.radius = Math.max(0, Math.min(48, Number(e.target.value) || 0)); B.state.isDirty = true;
       });
       (grid.querySelector('.mf-slider-s-fit') as HTMLSelectElement).addEventListener('change', function (e: any) {
         wp.imageFit = e.target.value === 'contain' ? 'contain' : 'cover'; B.state.isDirty = true;
