@@ -200,6 +200,28 @@ namespace MegaForm.Core.Rendering
             postSubmit["redirectUrl"] = resolvedRedirectUrl ?? string.Empty;
             postSubmit["RedirectUrl"] = resolvedRedirectUrl ?? string.Empty;
 
+            // [buttons-doubling-fix 20260629] Sanitize the buttons array: drop empty buttons
+            // (no label AND no url) and hard-cap the count. Self-heals any form already bloated by
+            // the historical doubling bug (buttons grew to 2^19 empty objects). The append itself is
+            // stopped by ObjectCreationHandling.Replace on PostSubmitExperience.Buttons; this cap is
+            // the belt-and-suspenders that also cleans poisoned data on every resolve.
+            const int MaxPostSubmitButtons = 6;
+            var rawButtons = postSubmit["buttons"] as JArray ?? postSubmit["Buttons"] as JArray;
+            var cleanButtons = new JArray();
+            if (rawButtons != null)
+            {
+                foreach (var b in rawButtons)
+                {
+                    var label = (b?["label"] ?? b?["Label"])?.ToString();
+                    var url = (b?["url"] ?? b?["Url"])?.ToString();
+                    if (string.IsNullOrWhiteSpace(label) && string.IsNullOrWhiteSpace(url)) continue;
+                    cleanButtons.Add(b.DeepClone());
+                    if (cleanButtons.Count >= MaxPostSubmitButtons) break;
+                }
+            }
+            postSubmit["buttons"] = cleanButtons;
+            postSubmit.Remove("Buttons");
+
             settings["postSubmitExperience"] = postSubmit;
             settings["PostSubmitExperience"] = (JObject)postSubmit.DeepClone();
             settings["successMessage"] = message;

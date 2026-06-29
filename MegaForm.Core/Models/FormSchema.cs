@@ -609,7 +609,13 @@ namespace MegaForm.Core.Models
         [JsonProperty("reviewTitle")]
         public string ReviewTitle { get; set; } = "Review your answers";
 
-        [JsonProperty("buttons")]
+        // [buttons-doubling-fix 20260629] ObjectCreationHandling.Replace is LOAD-BEARING.
+        // RenderModelResolver emits BOTH casing keys (postSubmitExperience + PostSubmitExperience),
+        // and Newtonsoft matches both case-insensitively to this single property. With the default
+        // ObjectCreationHandling.Auto it REUSES the pre-initialized list and APPENDS each key's array
+        // → the buttons list doubled on every resolve (2 → 2^19 = 524288 over ~19 GET/save cycles,
+        // bloating the POST body to ~75 MB). Replace makes the second key OVERWRITE instead of append.
+        [JsonProperty("buttons", ObjectCreationHandling = ObjectCreationHandling.Replace)]
         public List<PostSubmitActionButton> Buttons { get; set; } = new List<PostSubmitActionButton>();
     }
 
