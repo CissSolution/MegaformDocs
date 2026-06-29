@@ -3,7 +3,7 @@
   "templateGuideSlug": "tpl-euro-youth-application",
   "slug": "euro-youth-application",
   "theme": "euro-youth-premium",
-  "rootSelector": ".mfp.mfp-euro-youth",
+  "rootSelector": ".mfp.mfp-euro-youth.mfp-native-generated",
   "tokenStyle": "double",
   "stepMechanism": "customHtml-wizard",
   "stepAnchor": "data-step",
@@ -11,33 +11,36 @@
   "stepFieldKeys": [
     {
       "step": 0,
-      "keys": []
-    },
-    {
-      "step": 1,
-      "keys": []
-    },
-    {
-      "step": 2,
-      "keys": []
-    },
-    {
-      "step": 3,
       "keys": [
         "first_name",
         "last_name",
         "email",
         "phone",
         "birth_year",
-        "country",
+        "country"
+      ]
+    },
+    {
+      "step": 1,
+      "keys": [
+        "programme",
         "duration",
         "start_month",
+        "interests"
+      ]
+    },
+    {
+      "step": 2,
+      "keys": [
+        "accommodation",
         "language_level",
         "motivation",
-        "programme",
-        "interests",
-        "accommodation",
-        "scholarship",
+        "scholarship"
+      ]
+    },
+    {
+      "step": 3,
+      "keys": [
         "newsletter",
         "terms"
       ]
@@ -58,20 +61,24 @@
     "--mf-choice-card": "rgba(255,255,255,0.10)"
   },
   "lockedKeys": [
+    "premium_step_1",
     "first_name",
     "last_name",
     "email",
     "phone",
     "birth_year",
     "country",
+    "premium_step_2",
     "programme",
     "duration",
     "start_month",
     "interests",
+    "premium_step_3",
     "accommodation",
     "language_level",
     "motivation",
     "scholarship",
+    "premium_step_4",
     "newsletter",
     "terms"
   ],
@@ -103,40 +110,34 @@
     "Country of residence *",
     "Choose your track",
     "Pick the programme that fits your goals.",
-    "Erasmus Exchange",
-    "Berlin &middot; Paris &middot; Madrid",
-    "Study a semester at a partner university across the EU.",
-    "&check;",
-    "Language Immersion",
-    "Florence &middot; Lisbon &middot; Vienna",
-    "Intensive language courses with a host family.",
-    "Solidarity Corps",
-    "Amsterdam &middot; Prague &middot; Athens",
-    "Volunteer on community and sustainability projects.",
+    "Programme *",
     "Duration (months)",
     "Preferred start *",
     "Interests",
-    "Art & Design",
-    "Technology",
-    "Sustainability",
-    "Music",
-    "Sports",
-    "Cuisine",
-    "History",
-    "Entrepreneurship",
     "Where you'll live and how we can help.",
     "Accommodation preference *",
-    "Host family",
-    "Live with locals",
-    "Student dorm",
-    "On campus",
-    "Shared flat",
-    "With peers",
     "Language level",
     "Why do you want to join? (optional)",
-    "Apply for a mobility grant",
-    "Eligible participants receive up to &euro;600/month towards living costs.",
-    "Review &amp; confirm"
+    "Mobility grant",
+    "Review &amp; confirm",
+    "Double-check your details before submitting.",
+    "Name",
+    "&mdash;",
+    "Email",
+    "Country",
+    "Duration",
+    "3 months",
+    "Start",
+    "Accommodation",
+    "No",
+    "Newsletter",
+    "Terms *",
+    "&larr; Back",
+    "&larr; Cancel",
+    "Continue &rarr;",
+    "Submit application &check;",
+    "Co-funded by the European Youth Mobility Initiative &middot; Step",
+    "of 4"
   ],
   "allowedOps": [
     "set_form_meta",
@@ -155,13 +156,13 @@
     "settings.theme",
     "field keys"
   ],
-  "customCssSha256": "028e26db0c8c76f635f94d0c260fe80ae4027f3468b5f923880b2debc48ff384",
-  "shellSha256": "a799bbb29b3ea77bc962ad8e6292acefd195b122566e8df74ec901e0b20ce5a2"
+  "customCssSha256": "a4d59e1ca4c928e3063cde0bd05d7cb1d04831e461b70936834a22d57d3f5fe8",
+  "shellSha256": "f7cc062d5a9aa27c61621a889184031a00998c1c50837b3dac3161a7f8c1eba9"
 }
 ---
 # AI Edit Guide — EuroYouth 2026 Application
 
-Theme `euro-youth-premium` · root `.mfp.mfp-euro-youth` · 16 fields · 4 steps (customHtml-wizard).
+Theme `euro-youth-premium` · root `.mfp.mfp-euro-youth.mfp-native-generated` · 20 fields · 4 steps (customHtml-wizard).
 
 ## DETERMINISTIC EDIT PROTOCOL (follow exactly — do NOT improvise structure/CSS)
 This is a PREMIUM form. Its look lives in `settings.customHtml` + `settings.customCss` + `settings.theme`, which are **IMMUTABLE**. You may ONLY emit these ops, and ONLY against keys/tokens listed in the frontmatter map:
@@ -174,20 +175,24 @@ NEVER emit `customHtml`, `customCss`, `theme`, or `replace_form_schema` for this
 ## Field map
 | key | type | display | step | options |
 |-----|------|---------|------|---------|
-| first_name | Text | input | 3 |  |
-| last_name | Text | input | 3 |  |
-| email | Email | input | 3 |  |
-| phone | Phone | input | 3 |  |
-| birth_year | Text | input | 3 |  |
-| country | Select | choice | 3 | 13 |
-| programme | Radio | cards | 3 | 3 |
-| duration | Select | choice | 3 | 4 |
-| start_month | Select | choice | 3 | 12 |
-| interests | Checkbox | chips | 3 | 8 |
-| accommodation | Radio | cards | 3 | 3 |
-| language_level | Select | choice | 3 | 6 |
-| motivation | Textarea | input | 3 |  |
-| scholarship | Checkbox | chips | 3 | 1 |
+| premium_step_1 | Section | input | - |  |
+| first_name | Text | input | 0 |  |
+| last_name | Text | input | 0 |  |
+| email | Email | input | 0 |  |
+| phone | Phone | input | 0 |  |
+| birth_year | Text | input | 0 |  |
+| country | Select | choice | 0 | 13 |
+| premium_step_2 | Section | input | - |  |
+| programme | Radio | cards | 1 | 3 |
+| duration | Select | choice | 1 | 4 |
+| start_month | Select | choice | 1 | 12 |
+| interests | Checkbox | chips | 1 | 8 |
+| premium_step_3 | Section | input | - |  |
+| accommodation | Radio | cards | 2 | 3 |
+| language_level | Select | choice | 2 | 6 |
+| motivation | Textarea | input | 2 |  |
+| scholarship | Checkbox | chips | 2 | 1 |
+| premium_step_4 | Section | input | - |  |
 | newsletter | Checkbox | chips | 3 | 1 |
 | terms | Checkbox | choice | 3 | 1 |
 
@@ -222,21 +227,21 @@ Some visible text (hero heading, step labels, section/field captions) is baked i
 - "Country of residence *"
 - "Choose your track"
 - "Pick the programme that fits your goals."
-- "Erasmus Exchange"
-- "Berlin &middot; Paris &middot; Madrid"
+- "Programme *"
+- "Duration (months)"
 
 ## Formulas (fill the slots — never change the op shape)
 - **C1 Change content/title**: form title `{op:"set_form_meta", title:"New title", designDecision:"preserve"}`; a field's editable label `{op:"set_field_property", key:"<key>", path:"label", value:"New label", designDecision:"preserve"}`; a {{content:*}} token `{op:"set_form_meta", customContent:{"<token>":"New text"}, designDecision:"preserve"}`; **a hardcoded shell heading/caption** `{op:"set_html_text", find:"<exact current text from the list above>", replace:"New text", designDecision:"preserve"}` (text-only swap; never include HTML tags in find/replace).
 - **C6 Edit CHIP options** (fields: interests, scholarship, newsletter): `{op:"set_field_property", key:"interests", path:"options", value:[{"value":"v1","label":"Label 1"},…], designDecision:"preserve"}`. Keep the field's `optionDisplay:"chips"` — set ONLY options. The chip look (`.mf-option-group--chips`) is in customCss and stays.
-- **C7 Edit CARD options** (fields: programme, accommodation): `{op:"set_field_property", key:"programme", path:"options", value:[{"value":"v1","label":"Title","meta":"Subtitle","description":"…","icon":"★"},…], designDecision:"preserve"}`. Keep `optionDisplay:"cards"`. Card chrome (`.mf-option-group--cards`) stays.
+- **C7 Edit CARD options** (fields: programme, accommodation): `{op:"set_field_property", key:"programme", path:"options", value:[{"value":"v1","label":"Title","meta":"Subtitle","description":"…","icon":"🏙️"},…], designDecision:"preserve"}`. Keep `optionDisplay:"cards"`. Card chrome (`.mf-option-group--cards`) stays. ⚠ `icon` MUST be a single EMOJI (🏙️ 🚀 ★ ✿ ⛰ 🏆) OR a FontAwesome name (`fa-city`, `fa-rocket`) — give each option a DISTINCT, meaningful glyph. NEVER use a plain descriptive word like "city"/"beach" alone (it renders as literal text). Match the template's existing icon style (most premium cards use emoji).
 - **C2 Add field**: `{op:"add_field", type:"Text", key:"new_key", label:"…", step:3, designDecision:"preserve"}` — the dispatcher inserts `{{field:new_key}}` into the matching `data-step` block. Pick a snake_case key not already used.
 - **C3 Remove field**: `{op:"remove_field", key:"<key>", designDecision:"preserve"}` — removes the field and its token; leaves zero orphan placeholders.
 - **C8 Change COLOUR (only if the user explicitly asks)**: `{op:"set_form_meta", themeCssOverrides:{"<scoped-var>":"#hex",…}, designDecision:"preserve"}`. ⚠ This template scopes its palette under TEMPLATE-SPECIFIC vars — target THOSE exact names (the generic `--primary`/`--accent` are INERT here). Available colour vars (current value):
   - `--mf-choice-border`: rgba(255,255,255,0.28)
   - `--mf-choice-card`: rgba(255,255,255,0.10)
-  NEVER edit customCss for colour — customCss must stay byte-identical (sha256 `028e26db0c8c…`).
-- **C4/C5 Add/Remove step** (ADVANCED — customHtml-wizard): steps are `data-step` blocks in customHtml driven by `euro_youth_wizard`. Only attempt if the user explicitly asks; clone an existing `data-step` block via `customHtmlAppend` (NEVER touch customCss), renumber the stepper, and add the new fields with placeholders. If unsure, ask the user instead of guessing.
+  NEVER edit customCss for colour — customCss must stay byte-identical (sha256 `a4d59e1ca4c9…`).
+- **C4/C5 Add/Remove step** (ADVANCED — customHtml-wizard): steps are `data-step` blocks in customHtml driven by `the wizard script`. Only attempt if the user explicitly asks; clone an existing `data-step` block via `customHtmlAppend` (NEVER touch customCss), renumber the stepper, and add the new fields with placeholders. If unsure, ask the user instead of guessing.
 
 ## Hard invariants (a change that breaks any of these is a FAILURE — refuse the op)
-- customCss sha256 stays `028e26db0c8c76f6…` · customHtml shell sha256 stays `a799bbb29b3ea77b…` (unless C2/C4 legitimately add a node).
+- customCss sha256 stays `a4d59e1ca4c928e3…` · customHtml shell sha256 stays `f7cc062d5a9aa27c…` (unless C2/C4 legitimately add a node).
 - `settings.theme` stays `euro-youth-premium`. Every field keeps a `{{field:key}}` (own or via Row). Zero orphan/zero floating-outside-card fields.

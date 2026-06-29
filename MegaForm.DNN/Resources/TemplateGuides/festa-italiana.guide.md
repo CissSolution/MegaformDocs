@@ -3,7 +3,7 @@
   "templateGuideSlug": "tpl-festa-italiana",
   "slug": "festa-italiana",
   "theme": "festa-italiana-premium",
-  "rootSelector": ".mfp.mfp-festa-italiana",
+  "rootSelector": ".mfp.mfp-festa-italiana.mfp-native-generated",
   "tokenStyle": "double",
   "stepMechanism": "customHtml-wizard",
   "stepAnchor": "data-step",
@@ -11,24 +11,30 @@
   "stepFieldKeys": [
     {
       "step": 0,
-      "keys": []
-    },
-    {
-      "step": 1,
-      "keys": []
-    },
-    {
-      "step": 2,
       "keys": [
         "first_name",
         "last_name",
         "email",
         "phone",
-        "city",
+        "city"
+      ]
+    },
+    {
+      "step": 1,
+      "keys": [
+        "pass",
         "guests",
         "wine_pairing",
+        "dietary"
+      ]
+    },
+    {
+      "step": 2,
+      "keys": [
         "arrival",
-        "notes"
+        "notes",
+        "terms",
+        "newsletter"
       ]
     }
   ],
@@ -55,26 +61,24 @@
     "--fi-gold": "#d4af6a"
   },
   "lockedKeys": [
+    "premium_step_1",
     "first_name",
     "last_name",
     "email",
     "phone",
     "city",
+    "premium_step_2",
     "pass",
     "guests",
     "wine_pairing",
     "dietary",
+    "premium_step_3",
     "arrival",
     "notes",
     "terms",
     "newsletter"
   ],
-  "missingFieldPlaceholders": [
-    "pass",
-    "dietary",
-    "terms",
-    "newsletter"
-  ],
+  "missingFieldPlaceholders": [],
   "shellTexts": [
     "Benvenuti alla",
     "Festa Italiana",
@@ -99,37 +103,26 @@
     "Città",
     "City",
     "Scegli la tua esperienza",
-    "Piazza",
-    "Accesso generale, degustazioni e musica dal vivo",
-    "€45",
-    "Terrazza",
-    "Posto riservato, cena a 4 portate e vini selezionati",
-    "€95",
-    "Villa",
-    "Esperienza completa, tavolo privato e chef incontro",
-    "€180",
+    "Pass",
+    "Choose your pass",
     "Numero di ospiti",
     "Number of guests",
     "Abbinamento vini",
     "Wine pairing",
     "Preferenze alimentari",
     "Dietary preferences",
-    "Vegetariano",
-    "Vegano",
-    "Senza glutine",
-    "Senza lattosio",
-    "Pescetariano",
     "Ultimi dettagli",
+    "Riepilogo",
+    "Ospite",
+    "Ospiti",
+    "Dieta",
     "Orario di arrivo",
     "Arrival time",
     "Note speciali",
     "Special notes",
-    "Riepilogo",
-    "Ospite",
-    "Pass",
-    "Ospiti",
-    "Dieta",
-    "Desidero ricevere aggiornamenti sui prossimi eventi.",
+    "Termini",
+    "Terms",
+    "Newsletter",
     "&larr; Indietro",
     "Continua &rarr;",
     "Conferma Iscrizione",
@@ -153,12 +146,12 @@
     "field keys"
   ],
   "customCssSha256": "f00e3a4f3c37aad6d2fad225c9d8e92d7454bc4439e8853854891fe1ed94ae3b",
-  "shellSha256": "a5c099c402eea69ab46e0a198212a3d7357c39f69904108c2347f467a769b40e"
+  "shellSha256": "86104a511e7d238ead9cbb246081ed57a667abbaac601a7d4c71ff88e183113c"
 }
 ---
 # AI Edit Guide — Festa Italiana
 
-Theme `festa-italiana-premium` · root `.mfp.mfp-festa-italiana` · 13 fields · 3 steps (customHtml-wizard).
+Theme `festa-italiana-premium` · root `.mfp.mfp-festa-italiana.mfp-native-generated` · 16 fields · 3 steps (customHtml-wizard).
 
 ## DETERMINISTIC EDIT PROTOCOL (follow exactly — do NOT improvise structure/CSS)
 This is a PREMIUM form. Its look lives in `settings.customHtml` + `settings.customCss` + `settings.theme`, which are **IMMUTABLE**. You may ONLY emit these ops, and ONLY against keys/tokens listed in the frontmatter map:
@@ -171,19 +164,22 @@ NEVER emit `customHtml`, `customCss`, `theme`, or `replace_form_schema` for this
 ## Field map
 | key | type | display | step | options |
 |-----|------|---------|------|---------|
-| first_name | Text | input | 2 |  |
-| last_name | Text | input | 2 |  |
-| email | Email | input | 2 |  |
-| phone | Phone | input | 2 |  |
-| city | Text | input | 2 |  |
-| pass | Radio | chips | - | 3 |
-| guests | Select | choice | 2 | 6 |
-| wine_pairing | Select | choice | 2 | 4 |
-| dietary | Checkbox | chips | - | 5 |
+| premium_step_1 | Section | input | - |  |
+| first_name | Text | input | 0 |  |
+| last_name | Text | input | 0 |  |
+| email | Email | input | 0 |  |
+| phone | Phone | input | 0 |  |
+| city | Text | input | 0 |  |
+| premium_step_2 | Section | input | - |  |
+| pass | Radio | chips | 1 | 3 |
+| guests | Select | choice | 1 | 6 |
+| wine_pairing | Select | choice | 1 | 4 |
+| dietary | Checkbox | chips | 1 | 5 |
+| premium_step_3 | Section | input | - |  |
 | arrival | Select | choice | 2 | 3 |
 | notes | Textarea | input | 2 |  |
-| terms | Checkbox | choice | - | 1 |
-| newsletter | Checkbox | chips | - | 1 |
+| terms | Checkbox | choice | 2 | 1 |
+| newsletter | Checkbox | chips | 2 | 1 |
 
 ## Content tokens ({{content:*}} — editable text shown in the shell)
 - `hero_image`: "/Modules/MegaForm/img/festa-italiana/festa-italiana-hero.png"
@@ -215,16 +211,16 @@ Some visible text (hero heading, step labels, section/field captions) is baked i
 - "Città"
 - "City"
 - "Scegli la tua esperienza"
-- "Piazza"
-- "Accesso generale, degustazioni e musica dal vivo"
-- "€45"
-- "Terrazza"
-- "Posto riservato, cena a 4 portate e vini selezionati"
+- "Pass"
+- "Choose your pass"
+- "Numero di ospiti"
+- "Number of guests"
+- "Abbinamento vini"
 
 ## Formulas (fill the slots — never change the op shape)
 - **C1 Change content/title**: form title `{op:"set_form_meta", title:"New title", designDecision:"preserve"}`; a field's editable label `{op:"set_field_property", key:"<key>", path:"label", value:"New label", designDecision:"preserve"}`; a {{content:*}} token `{op:"set_form_meta", customContent:{"<token>":"New text"}, designDecision:"preserve"}`; **a hardcoded shell heading/caption** `{op:"set_html_text", find:"<exact current text from the list above>", replace:"New text", designDecision:"preserve"}` (text-only swap; never include HTML tags in find/replace).
 - **C6 Edit CHIP options** (fields: pass, dietary, newsletter): `{op:"set_field_property", key:"pass", path:"options", value:[{"value":"v1","label":"Label 1"},…], designDecision:"preserve"}`. Keep the field's `optionDisplay:"chips"` — set ONLY options. The chip look (`.mf-option-group--chips`) is in customCss and stays.
-- **C7 Edit CARD options** (fields: none): `{op:"set_field_property", key:"<cardFieldKey>", path:"options", value:[{"value":"v1","label":"Title","meta":"Subtitle","description":"…","icon":"★"},…], designDecision:"preserve"}`. Keep `optionDisplay:"cards"`. Card chrome (`.mf-option-group--cards`) stays.
+- **C7 Edit CARD options** (fields: none): `{op:"set_field_property", key:"<cardFieldKey>", path:"options", value:[{"value":"v1","label":"Title","meta":"Subtitle","description":"…","icon":"🏙️"},…], designDecision:"preserve"}`. Keep `optionDisplay:"cards"`. Card chrome (`.mf-option-group--cards`) stays. ⚠ `icon` MUST be a single EMOJI (🏙️ 🚀 ★ ✿ ⛰ 🏆) OR a FontAwesome name (`fa-city`, `fa-rocket`) — give each option a DISTINCT, meaningful glyph. NEVER use a plain descriptive word like "city"/"beach" alone (it renders as literal text). Match the template's existing icon style (most premium cards use emoji).
 - **C2 Add field**: `{op:"add_field", type:"Text", key:"new_key", label:"…", step:2, designDecision:"preserve"}` — the dispatcher inserts `{{field:new_key}}` into the matching `data-step` block. Pick a snake_case key not already used.
 - **C3 Remove field**: `{op:"remove_field", key:"<key>", designDecision:"preserve"}` — removes the field and its token; leaves zero orphan placeholders.
 - **C8 Change COLOUR (only if the user explicitly asks)**: `{op:"set_form_meta", themeCssOverrides:{"<scoped-var>":"#hex",…}, designDecision:"preserve"}`. ⚠ This template scopes its palette under TEMPLATE-SPECIFIC vars — target THOSE exact names (the generic `--primary`/`--accent` are INERT here). Available colour vars (current value):
@@ -240,8 +236,8 @@ Some visible text (hero heading, step labels, section/field captions) is baked i
   - `--fi-card-line`: #e3d8c2
   - `--fi-gold`: #d4af6a
   NEVER edit customCss for colour — customCss must stay byte-identical (sha256 `f00e3a4f3c37…`).
-- **C4/C5 Add/Remove step** (ADVANCED — customHtml-wizard): steps are `data-step` blocks in customHtml driven by `festa_wizard`. Only attempt if the user explicitly asks; clone an existing `data-step` block via `customHtmlAppend` (NEVER touch customCss), renumber the stepper, and add the new fields with placeholders. If unsure, ask the user instead of guessing.
+- **C4/C5 Add/Remove step** (ADVANCED — customHtml-wizard): steps are `data-step` blocks in customHtml driven by `the wizard script`. Only attempt if the user explicitly asks; clone an existing `data-step` block via `customHtmlAppend` (NEVER touch customCss), renumber the stepper, and add the new fields with placeholders. If unsure, ask the user instead of guessing.
 
 ## Hard invariants (a change that breaks any of these is a FAILURE — refuse the op)
-- customCss sha256 stays `f00e3a4f3c37aad6…` · customHtml shell sha256 stays `a5c099c402eea69a…` (unless C2/C4 legitimately add a node).
+- customCss sha256 stays `f00e3a4f3c37aad6…` · customHtml shell sha256 stays `86104a511e7d238e…` (unless C2/C4 legitimately add a node).
 - `settings.theme` stays `festa-italiana-premium`. Every field keeps a `{{field:key}}` (own or via Row). Zero orphan/zero floating-outside-card fields.

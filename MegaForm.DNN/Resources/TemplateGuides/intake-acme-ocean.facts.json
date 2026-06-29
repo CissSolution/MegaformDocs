@@ -5,19 +5,51 @@
   "theme": "intake-ocean-premium",
   "title": "Acme Platform Intake",
   "tokenStyle": "double",
-  "rootSelector": ".mfp.mfp-intake",
-  "stepMechanism": "rail-content",
-  "stepAnchor": "in-step",
+  "rootSelector": ".mfp.mfp-intake.mfp-native-generated",
+  "stepMechanism": "customHtml-wizard",
+  "stepAnchor": "data-step",
   "stepCount": 3,
-  "steps": [],
+  "steps": [
+    {
+      "index": 0,
+      "fieldKeys": [
+        "first_name",
+        "last_name",
+        "work_email"
+      ]
+    },
+    {
+      "index": 1,
+      "fieldKeys": [
+        "company",
+        "role",
+        "terms"
+      ]
+    },
+    {
+      "index": 2,
+      "fieldKeys": []
+    }
+  ],
   "fields": [
+    {
+      "key": "premium_step_1",
+      "type": "Section",
+      "label": "About you",
+      "display": "input",
+      "optionCount": 0,
+      "step": null,
+      "placeholder": "{{field:premium_step_1}}",
+      "inCustomHtml": false,
+      "required": false
+    },
     {
       "key": "first_name",
       "type": "Text",
       "label": "First name",
       "display": "input",
       "optionCount": 0,
-      "step": null,
+      "step": 0,
       "placeholder": "{{field:first_name}}",
       "inCustomHtml": true,
       "required": true
@@ -28,7 +60,7 @@
       "label": "Last name",
       "display": "input",
       "optionCount": 0,
-      "step": null,
+      "step": 0,
       "placeholder": "{{field:last_name}}",
       "inCustomHtml": true,
       "required": true
@@ -39,10 +71,21 @@
       "label": "Work email",
       "display": "input",
       "optionCount": 0,
-      "step": null,
+      "step": 0,
       "placeholder": "{{field:work_email}}",
       "inCustomHtml": true,
       "required": true
+    },
+    {
+      "key": "premium_step_2",
+      "type": "Section",
+      "label": "Your needs",
+      "display": "input",
+      "optionCount": 0,
+      "step": null,
+      "placeholder": "{{field:premium_step_2}}",
+      "inCustomHtml": false,
+      "required": false
     },
     {
       "key": "company",
@@ -50,7 +93,7 @@
       "label": "Company",
       "display": "input",
       "optionCount": 0,
-      "step": null,
+      "step": 1,
       "placeholder": "{{field:company}}",
       "inCustomHtml": true,
       "required": false
@@ -61,7 +104,7 @@
       "label": "Role",
       "display": "input",
       "optionCount": 0,
-      "step": null,
+      "step": 1,
       "placeholder": "{{field:role}}",
       "inCustomHtml": true,
       "required": false
@@ -72,10 +115,21 @@
       "label": "I agree to be contacted about my request.",
       "display": "choice",
       "optionCount": 0,
-      "step": null,
+      "step": 1,
       "placeholder": "{{field:terms}}",
       "inCustomHtml": true,
       "required": true
+    },
+    {
+      "key": "premium_step_3",
+      "type": "Section",
+      "label": "Review",
+      "display": "input",
+      "optionCount": 0,
+      "step": null,
+      "placeholder": "{{field:premium_step_3}}",
+      "inCustomHtml": false,
+      "required": false
     }
   ],
   "chipFields": [],
@@ -95,15 +149,20 @@
     "step2",
     "step3",
     "theme_name",
-    "step_label",
-    "panel_title"
+    "step1_eyebrow",
+    "step2_eyebrow",
+    "step3_eyebrow",
+    "review_lede"
   ],
   "scriptTokens": [],
   "formTokens": [
     "submit"
   ],
-  "shellTexts": [],
-  "cssClassCount": 20,
+  "shellTexts": [
+    "&larr; Back",
+    "Continue &rarr;"
+  ],
+  "cssClassCount": 27,
   "cssClasses": [
     "mfp-intake",
     "in-card",
@@ -124,17 +183,24 @@
     "in-actions",
     "in-submit",
     "mf-field-group",
-    "mf-field-label"
+    "mf-field-label",
+    "in-page",
+    "in-lede",
+    "is-done",
+    "in-back",
+    "in-next",
+    "mf-premium-native-mode",
+    "mf-form-actions"
   ],
   "missingFieldPlaceholders": [],
   "orphanFieldPlaceholders": [],
   "hashes": {
-    "customCssSha256": "848f7a7b8b25f4f3278fbc8b4bf249a91deb0c42b9c725e5a89cea1a16839f12",
-    "customHtmlSha256": "1a2257fc7e912ad739f6f1a4f1783197aba28bb1e1bbd4cc6a4f6b8f688b7526",
-    "shellSha256": "9675c74d7f4f85984da4cfe27c3d3a59ecb0228362e2415980ebe6e9a3873fa7"
+    "customCssSha256": "8d7b4be69b9c3ed853aadc20761731fa720b70bf1637c3360c6482b283a931fd",
+    "customHtmlSha256": "780c2e6f7799cc9e5b3dcb4f1cd4f7140144987e67180dac3aef1cedf3986028",
+    "shellSha256": "944a5faf4bd9f90eb1694a52612cab26d71b64f3656d583a048316b9804bb883"
   },
   "counts": {
-    "fields": 6,
+    "fields": 9,
     "fieldTokens": 6,
     "steps": 3
   },
