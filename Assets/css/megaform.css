@@ -254,6 +254,32 @@
         grid-row:    var(--sm-y, auto) / span var(--sm-h, 1);
     }
 }
+/* [PDF-grid / FlexGrid layout v20260629] A flat-field flexgrid (settings.layoutMode='flexgrid')
+   is nested as a single child INSIDE the flex .mf-page (we deliberately do NOT co-class
+   .mf-page.mf-flexgrid — the .mf-fields-container > .mf-page flex rule would beat display:grid).
+   Make that nested grid fill the page width so the 12-col layout spans correctly. Flow forms are
+   untouched (no .mf-flexgrid child). */
+.mf-fields-container > .mf-page > .mf-flexgrid { flex: 1 1 100%; width: 100%; min-width: 0; }
+/* [Premium FlexGrid v20260630] A premium step panel ([data-step] inside a .mfp shell) converted to a
+   2-D grid keeps ALL chrome (hero/stepper/card) + the bespoke field labels — only the field AREA
+   becomes a grid. The active step renders as a grid (high specificity + !important beats the premium
+   `.xx-page.is-active{display:flex|block}` rule); inactive steps stay hidden (the premium-native nav
+   toggles .is-active). Rows grow to fit bespoke labels/textarea (no fixed 64px clip). */
+.mfp [data-step].mf-flexgrid[data-mf-flexgrid].is-active {
+    display: grid !important;
+    /* FORCE the 24-col template + gap with !important — a premium step panel is often ALREADY a grid
+       (its own grid-template-columns: e.g. 1fr 1fr for the 2-col look), and that per-form customCss
+       rule ties/beats the base .mf-flexgrid selector. Without this override the wrapped items collapse
+       into the premium's 2-col template and overlap. */
+    grid-template-columns: repeat(var(--mf-grid-cols, 24), minmax(0, 1fr)) !important;
+    grid-auto-rows: minmax(var(--mf-grid-rh, 64px), auto) !important;
+    grid-auto-flow: row !important;
+    gap: var(--mf-grid-gap, 12px) !important;
+    align-items: start !important;
+}
+.mfp [data-step].mf-flexgrid[data-mf-flexgrid]:not(.is-active) { display: none !important; }
+/* The wrapped field item is just a positioning cell — let the bespoke label inside flow naturally. */
+.mfp [data-step].mf-flexgrid[data-mf-flexgrid] > .mf-flexgrid-item { display: block; min-width: 0; }
 /* In Builder canvas we hint the grid lines so admins see the columns. */
 .mf-canvas-flexgrid .mf-flexgrid,
 .mf-builder .mf-flexgrid {
@@ -611,6 +637,7 @@
 
 /* Also lighten the page wrapper's own padding when a custom design takes
    over the visual frame — the inner shell already breathes. */
+.mf-form-wrapper.mf-theme-pure-grid-premium,
 .mf-form-wrapper[class*="mf-theme-"]:not(.mf-theme-default),
 .mf-form-wrapper[data-mf-has-custom-html] {
     padding: 0;
@@ -1419,7 +1446,7 @@
 .mf-option-desc {
     display: block;
     color: var(--mf-color-text-light, #666);
-    font-size: calc(var(--mf-font-size-base) * .9);
+    font-size: calc(var(--mf-font-size-base) * .86);
     line-height: 1.35;
 }
 .mf-option-badge {
@@ -1465,11 +1492,11 @@
 .mf-option-group--chips .mf-option-ui {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    min-height: 34px;
-    border: 1px solid var(--mf-input-border-color, #e2e8f0);
+    gap: 6px;
+    min-height: 36px;
+    border: 2px solid var(--mf-input-border-color, #e2e8f0);
     border-radius: 999px;
-    padding: 6px 14px;
+    padding: 6px 12px;
     background: var(--mf-input-bg, #fff);
     /* [ChipReadability v20260619] Pair the chip text with the SAME variable family as
        its background (--mf-input-bg/--mf-input-color), not the theme-wide --mf-color-text.
@@ -1477,7 +1504,9 @@
        (theme didn't set --mf-input-bg) → invisible white-on-white text. --mf-input-color has
        a global #333 default so the chip stays readable on every theme. */
     color: var(--mf-input-color, #333333);
-    box-shadow: 0 1px 2px rgba(15,23,42,.04);
+    font-size: 14px;
+    line-height: 20px;
+    box-shadow: none;
     transition: background .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease;
 }
 .mf-option-group--chips .mf-option-label,
@@ -1531,56 +1560,74 @@
 .mf-option-group--cards .mf-option-ui {
     display: flex;
     align-items: flex-start;
-    gap: 14px;
+    gap: 12px;
     min-width: 0;
     width: 100%;
-    border: 1px solid var(--mf-input-border-color, #e2e8f0);
-    border-radius: 14px;
-    padding: 14px 16px;
+    min-height: 72px;
+    border: 2px solid var(--mf-input-border-color, #e2e8f0);
+    border-radius: 8px;
+    padding: 16px;
     background: var(--mf-input-bg, #fff);
-    box-shadow: 0 1px 2px rgba(15,23,42,.05);
+    box-shadow: none;
     transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
 }
 .mf-option-group--cards .mf-option-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    flex: 0 0 42px;
-    width: 42px;
-    height: 42px;
-    border-radius: 12px;
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
     background: rgba(15,23,42,.06);
     /* [ChipReadability v20260619] icon box bg is a fixed light grey → keep dark text */
     color: var(--mf-input-color, #333333);
     font-weight: 700;
 }
 .mf-option-group--cards .mf-option-label {
-    font-weight: 700;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 600;
     /* [ChipReadability v20260619] pair with the card's --mf-input-bg surface (see chips note) */
     color: var(--mf-input-color, #333333);
 }
+.mf-option-group--cards .mf-option-meta,
+.mf-option-group--cards .mf-option-desc {
+    font-size: 12px;
+    line-height: 16px;
+}
 .mf-option-group--cards .mf-option-check {
     margin-left: auto;
-    color: var(--mf-primary, #4a90d9);
+    flex: 0 0 20px;
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    color: #fff;
+    background: var(--mf-primary, #4a90d9);
+    font-size: 12px;
+    line-height: 1;
     font-weight: 800;
     opacity: 0;
 }
 /* [ChipCardBorder v20260628] Mouse hover = single coloured border + soft lift, NO ring. */
 .mf-option-group--cards .mf-option-item:hover .mf-option-ui {
     border-color: var(--mf-primary, #4a90d9);
-    box-shadow: 0 6px 18px rgba(15,23,42,.08);
+    background: color-mix(in srgb, var(--mf-primary, #4a90d9) 4%, var(--mf-input-bg, #fff));
 }
 .mf-option-group--cards .mf-option-control:focus-visible + .mf-option-ui {
     border-color: var(--mf-primary, #4a90d9);
-    box-shadow: 0 0 0 3px rgba(79,70,229,.12), 0 6px 18px rgba(15,23,42,.08);
+    box-shadow: 0 0 0 3px rgba(79,70,229,.12);
 }
 /* Selected = single coloured border + faint tint fill + soft lift (NO 2px ring → no doubled
    border; matches the mock's clean selected card). */
 .mf-option-group--cards .mf-option-item.is-checked .mf-option-ui,
 .mf-option-group--cards .mf-option-item:has(.mf-option-control:checked) .mf-option-ui {
     border-color: var(--mf-primary, #4a90d9);
-    background: color-mix(in srgb, var(--mf-primary, #4a90d9) 6%, var(--mf-input-bg, #fff));
-    box-shadow: 0 6px 18px rgba(15,23,42,.08);
+    background: color-mix(in srgb, var(--mf-primary, #4a90d9) 5%, var(--mf-input-bg, #fff));
+    box-shadow: none;
 }
 .mf-option-group--cards .mf-option-item.is-checked .mf-option-icon,
 .mf-option-group--cards .mf-option-item:has(.mf-option-control:checked) .mf-option-icon {
@@ -1849,6 +1896,13 @@
     border-top: 1px solid #e5e7eb;
     flex-wrap: wrap;
 }
+/* [2026-07-02] Premium-native shells (euro-youth / intake / down-under / festa / bulgaria)
+   render their OWN back/next/submit buttons (.au-/.bg-/.ey-/.fi-*, [data-mf-native-*]).
+   The generic renderer also injects .mf-form-actions (Back/Next/Submit) → DUPLICATE buttons
+   (§6 "double button"). The JS hide raced/missed on some shells; the wrapper class
+   .mf-premium-native-mode is the canonical, always-set signal, so hide the generic block
+   from first paint deterministically. */
+.mf-premium-native-mode .mf-form-actions { display: none !important; }
 .mf-btn-submit {
     background: var(--mf-btn-bg);
     color: var(--mf-btn-color);
@@ -1935,7 +1989,11 @@
     flex: 0 0 100%;
     min-width: 0;
     display: flex;
-    flex-direction: column;
+    /* row-wrap so per-field data-width (resize) can flow fields side by side; full-width
+       fields (flex 0 0 100% / width:100%) still wrap to their own line and the 20px
+       field-group margin-bottom keeps the vertical stacking spacing intact. */
+    flex-flow: row wrap;
+    align-content: flex-start;
     gap: 0;
 }
 .mf-field-group { flex: 0 0 100%; }
@@ -1945,6 +2003,7 @@
     flex: 0 0 auto;
     width: 100%;
 }
+.mf-field-group[data-width="100%"] { flex: 0 0 100%; }
 .mf-field-group[data-width="50%"] { flex: 0 0 calc(50% - var(--mf-field-gap) / 2); }
 .mf-field-group[data-width="33%"] { flex: 0 0 calc(33.33% - var(--mf-field-gap) * 2 / 3); }
 .mf-field-group[data-width="66%"] { flex: 0 0 calc(66.66% - var(--mf-field-gap) / 3); }
@@ -2411,6 +2470,8 @@
 .mf-cal.is-open .mf-cal-trigger,.mf-ms.is-open .mf-ms-trigger,.mf-mccb.is-open .mf-mccb-trigger{border-color:var(--mfv-primary);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
 .mf-cal-trigger:disabled,.mf-ms-trigger:disabled,.mf-mccb-trigger:disabled{background:#eef2f7;color:#94a3b8;cursor:not-allowed}
 .mf-cal-value,.mf-mccb-value{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* [BUG1 20260701] Date picker (.mf-cal) is a native <button>; its UA-default text-align:center leaks the value/placeholder to center on shells that don't force left (e.g. pure-grid premium form 5). Force left so date values align like text inputs, matching the .mf-dtp variant. */
+.mf-cal-trigger,.mf-cal-value,.mf-cal-placeholder,.mf-mccb-trigger,.mf-mccb-value,.mf-mccb-placeholder{text-align:left}
 .mf-cal.is-empty .mf-cal-value,.mf-mccb-placeholder,.mf-ms-placeholder{color:var(--mfv-muted-fg)}
 .mf-cal .mf-date-icon{position:static;top:auto;right:auto;left:auto;z-index:auto;display:inline-flex;align-items:center;justify-content:center;flex:0 0 20px;width:20px;height:20px;transform:none;pointer-events:none;color:var(--mfv-muted-fg)}
 .mf-cal .mf-date-icon svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;color:currentColor}
@@ -3135,3 +3196,40 @@
 .mf-form-wrapper[class*="mf-form-wrapper"][data-mf-has-custom-html].mf-style-border-prominent .mfp-card,.mf-form-wrapper[class*="mf-form-wrapper"].mf-custom-html-mode.mf-style-border-prominent .mfp-card{border:2px solid #cbd5e1 !important}
 .mf-form-wrapper[class*="mf-form-wrapper"] button[type="submit"],.mf-form-wrapper[class*="mf-form-wrapper"] .mf-submit,.mf-form-wrapper[class*="mf-form-wrapper"] .mfp-submit,.mf-form-wrapper[class*="mf-form-wrapper"] .mf-btn-primary,.mf-form-wrapper[class*="mf-form-wrapper"] .mf-form-actions button,.mf-form-wrapper[class*="mf-form-wrapper"] .fr-btn-submit,.mf-form-wrapper[class*="mf-form-wrapper"] .mfp button.fr-btn-submit,.mf-form-wrapper[class*="mf-form-wrapper"] .mfp-card button[type="submit"]{background:var(--mf-btn-bg,var(--mf-primary,inherit));color:var(--mf-btn-color,var(--mf-btn-text,var(--mf-color-text-inverse,#ffffff)))}
 /* === MF-DISPLAY-STYLE-RULES END === */
+
+/* Americana templates use a centered 1000px render surface for screenshot parity on
+   /api/MegaForm/render/* only. When the same form is embedded in a full Oqtane page,
+   contain that endpoint chrome so it cannot add a huge spacer or repaint the host. */
+html body:has(.navbar):has(.mfp-americana) {
+    background: var(--bs-body-bg, inherit) !important;
+}
+
+html body:has(.navbar):has(.mfp-americana)
+    .mf-form-wrapper.mf-custom-shell-mode.mf-custom-html-mode.mf-premium-native-mode.mf-has-multistep-shell:has(.mfp-americana) {
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 0 !important;
+    background: transparent !important;
+    display: block !important;
+    align-items: initial !important;
+    justify-content: initial !important;
+}
+
+html body:has(.navbar):has(.mfp-americana)
+    .mf-form-wrapper.mf-custom-shell-mode.mf-custom-html-mode.mf-premium-native-mode.mf-has-multistep-shell:has(.mfp-americana) .mf-form,
+html body:has(.navbar):has(.mfp-americana)
+    .mf-form-wrapper.mf-custom-shell-mode.mf-custom-html-mode.mf-premium-native-mode.mf-has-multistep-shell:has(.mfp-americana) .mf-multistep-shell,
+html body:has(.navbar):has(.mfp-americana)
+    .mf-form-wrapper.mf-custom-shell-mode.mf-custom-html-mode.mf-premium-native-mode.mf-has-multistep-shell:has(.mfp-americana) .mf-multistep-frame,
+html body:has(.navbar):has(.mfp-americana)
+    .mf-form-wrapper.mf-custom-shell-mode.mf-custom-html-mode.mf-premium-native-mode.mf-has-multistep-shell:has(.mfp-americana) .mf-multistep-body,
+html body:has(.navbar):has(.mfp-americana)
+    .mf-form-wrapper.mf-custom-shell-mode.mf-custom-html-mode.mf-premium-native-mode.mf-has-multistep-shell:has(.mfp-americana) .mf-fields-container {
+    height: auto !important;
+    min-height: 0 !important;
+}
+
+html body:has(.navbar):has(.mfp-americana)
+    .mf-form-wrapper.mf-custom-shell-mode.mf-custom-html-mode.mf-premium-native-mode.mf-has-multistep-shell:has(.mfp-americana) .mf-multistep-frame {
+    gap: 0 !important;
+}

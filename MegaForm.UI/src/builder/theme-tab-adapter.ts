@@ -59,6 +59,7 @@
 
 import { MegaFormBuilder } from './core';
 import { isColorProp, colorToHex } from './inspector-color';
+import { openInspectorColorPalette } from './inspector-color-palette';
 
 (function () {
     'use strict';
@@ -2090,8 +2091,9 @@ import { isColorProp, colorToHex } from './inspector-color';
         var swatch = '';
         if (isColorProp(key, String(val || ''))) {
             var hex = colorToHex(String(val || '')) || '#000000';
-            swatch = '<input type="color" data-inspector-color="1" data-inspector-key="' + escAttr(key) + '" value="' + escAttr(hex) + '" ' +
-                'title="Pick colour" style="flex:0 0 auto;width:26px;height:26px;padding:0;border:1px solid #e2e8f0;border-radius:5px;background:#fff;cursor:pointer" />';
+            // Button opens the curated colour-palette popover (swatches + recent + native custom picker).
+            swatch = '<button type="button" data-inspector-color="1" data-inspector-key="' + escAttr(key) + '" ' +
+                'title="Pick colour" style="flex:0 0 auto;width:26px;height:26px;padding:0;border:1px solid #cbd5e1;border-radius:5px;cursor:pointer;background:' + escAttr(hex) + '"></button>';
         }
         return (
             '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;font-size:11px;border-bottom:1px solid #f1f5f9;background:#fff;transition:background .2s" class="mf-theme-inspector-row" data-inspector-key="' + escAttr(key) + '">' +
@@ -2120,15 +2122,20 @@ import { isColorProp, colorToHex } from './inspector-color';
                 if (e.key === 'Enter') { e.preventDefault(); commitInspectorEdit(input); input.blur(); }
             });
         });
-        // [2026-07-02] Colour swatches: on change, mirror the hex into the sibling text input
-        // and commit (reuses the text-input commit path for iframe + theme-var propagation).
-        var swatches = activeContainer.querySelectorAll<HTMLInputElement>('[data-inspector-color]');
-        swatches.forEach(function (sw: HTMLInputElement) {
-            sw.addEventListener('input', function () {
+        // [2026-07-02] Colour swatch buttons: open the curated palette popover; the chosen hex is
+        // mirrored into the sibling text input and committed (reuses the text-input commit path
+        // for iframe + theme-var propagation), and the swatch preview is updated.
+        var swatches = activeContainer.querySelectorAll<HTMLButtonElement>('[data-inspector-color]');
+        swatches.forEach(function (sw: HTMLButtonElement) {
+            sw.addEventListener('click', function (e) {
+                e.preventDefault();
                 var row = sw.closest<HTMLElement>('.mf-theme-inspector-row');
                 var txt = row ? row.querySelector<HTMLInputElement>('[data-inspector-input]') : null;
-                if (txt) { txt.value = sw.value; commitInspectorEdit(txt); }
-                else { commitInspectorEdit(sw); }
+                var current = colorToHex(String((txt && txt.value) || sw.style.backgroundColor || '')) || '#000000';
+                openInspectorColorPalette(sw, current, function (hex: string) {
+                    sw.style.background = hex;
+                    if (txt) { txt.value = hex; commitInspectorEdit(txt); }
+                });
             });
         });
     }

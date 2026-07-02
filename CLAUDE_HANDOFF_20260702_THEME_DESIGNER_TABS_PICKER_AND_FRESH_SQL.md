@@ -35,6 +35,13 @@ The picker was previously a Pick button in the (now-removed) left Colors tab, an
 ### Build + deploy
 `cd MegaForm.UI && node scripts/build-entry.cjs builder` (70 modules; auto-syncs 3 platform wwwroot + CSS). Deployed to `Oqtane.MegaForm.Check1743.MSSQL/wwwroot/Modules/MegaForm/js/bundles/megaform-builder.js` + `.../css/megaform-builder-shell.css` (md5 verified). ⭐ Same-URL nav in the builder triggers Blazor enhanced-nav → blank builder; recover by navigating to `?mfpanel=dashboard` first, then the builder URL (full load).
 
+## Follow-up fixes on :5090 QA (1.7.46, 2026-07-02)
+User QA'd the premium form (form 1 = euro-youth premium) on the fresh :5090 and reported: duplicate footer button, canvas "flicker", inspector needs a colour palette.
+- **Duplicate button (FIXED, QA PASS):** premium-native shells render their own `.ey-next/.ey-submit` (Continue →/Submit application ✓) AND the generic renderer injected `.mf-form-actions` (Back/Next/Submit) → 2 next + 2 submit. The JS hide (`updateNavigation` line ~2550, `#mf-form-{id} .mf-form-actions`) raced/missed. Canonical CSS fix in `Assets/css/megaform.css`: `.mf-premium-native-mode .mf-form-actions{display:none!important}` — the wrapper class is always set by the client, and the C# Core does NOT render `.mf-form-actions` (only the client does), so this hides them from first paint (kills the generic-actions flash too). QA on :5090 public form: `.mf-form-actions` computed `display:none`, only native "Continue →" visible.
+- **Colour palette (ADDED):** new `MegaForm.UI/src/builder/inspector-color-palette.ts` — inspector colour rows' swatch is now a button opening a popover (24 curated swatches + recent + native "Custom…" picker) → `theme-tab-adapter.ts` wires it (was a bare `<input type=color>`).
+- **Flicker (⚠️ NOT reproduced as a loop):** measured the Design preview iframe + public form for 3–6s idle → 0 DOM mutations / 0 iframe reloads. The visible "nháy" was most likely the generic-actions show/hide churn + the one-time custom-HTML rebuild flash; the dup-button CSS removes the actions component. If a continuous flicker persists after 1.7.46, capture a screen recording — likely the deeper SSR→client custom-HTML rebuild-not-hydrate flash (see [[B221]]/form-788 notes), a separate larger fix.
+- Package bumped to **1.7.46** (AssetVersion 20260702-B343) and re-installed on :5090 as an UPGRADE (nupkg in Packages/ + restart). AssetVersion bump is REQUIRED so browsers fetch the new builder.js/megaform.css (they cache under the old `?v=`).
+
 ## Task 4 — fresh clean SQL site + nupkg-only install (DONE — build side)
 
 ### 4a — Package 1.7.45 (DONE, verified)
