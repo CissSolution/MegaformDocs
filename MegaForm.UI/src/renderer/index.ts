@@ -10,6 +10,10 @@ import { RENDERER_SIGNATURE_SIZING_BADGE, renderInput, renderSingleFieldElement,
 import { evaluateCondition, getFieldValue, bindConditionalLogic } from './conditional';
 import { validatePage, validateForm, collectFormData, clearFieldErrors, bindFieldErrorClear } from './validation';
 import { bindInteractiveElements } from './interactive';
+import { collectUnloadedWidgetTypes, injectWidgetPlugins, isWidgetTypeRegistered } from '@shared/widget-plugin-autoload';
+import { buildSummaryHtml } from '@shared/summary-html';
+import { initInlineEdit } from '@shared/inline-edit';
+import { t } from '@i18n';
 
 let config: RendererConfig;
 // [PostSubmitSummary v20260619] Captured at submit time so the post-submit
@@ -42,6 +46,35 @@ function repairKnownBrokenCustomScriptSource(value: string): string {
     .replace(/\\+"'\\+":'''}/g, "\\\"'\\\":'&#39;'}")
     .replace(/\\+"'\\+":''}/g, "\\\"'\\\":'&#39;'}");
   return text;
+}
+
+// [2026-06-27 WizardGuard] Premium multi-step shells (au-family) gate each step with a
+// HARD-CODED `canProceed()` keyed by step index + field name, e.g.
+//   if(current===1)return checked('purpose');
+// When a field is later removed (AI/builder edit changes the form's purpose), that step
+// can NEVER be satisfied → the "Continue" button stays disabled → the form is UNSUBMITTABLE
+// (and the wizard can't be paged through in the theme designer either). This presence-guards
+// every field check so a check for a field that NO LONGER EXISTS in the DOM is treated as
+// satisfied. On a PRISTINE form every field is present → `!byName('x')` is false → the
+// original check runs verbatim → behaviour is byte-identical (verified on form 9). Applied at
+// render time (no stored-data change); scoped to au-family scripts that define byName+canProceed.
+const WIZARD_VALIDATION_GUARD_BADGE = 'WizardValidationPresenceGuard v20260627';
+function guardWizardStepValidation(code: string): string {
+  const text = String(code || '');
+  if (!/function\s+canProceed\s*\(\s*\)/.test(text) || !/function\s+byName\s*\(/.test(text)) return text;
+  if (text.indexOf('__mfGuarded') !== -1) return text;                       // idempotent
+  let changed = false;
+  const out = text.replace(/function\s+canProceed\s*\(\s*\)\s*\{([\s\S]*?)\}/, (full, body) => {
+    if (/[{}]/.test(body)) return full;                                      // only the simple one-liner shape
+    const g = String(body)
+      .replace(/\bemailOk\(\)/g, "(!byName('email')||emailOk())")
+      .replace(/\bchecked\('([^']+)'\)/g, "(!byName('$1')||checked('$1'))")
+      .replace(/\bvalue\('([^']+)'\)/g, "(!byName('$1')||value('$1'))");
+    changed = true;
+    return 'function canProceed(){/*__mfGuarded*/' + g + '}';
+  });
+  if (changed) { try { (window as any).__MF_WIZARD_VALIDATION_GUARDED__ = WIZARD_VALIDATION_GUARD_BADGE; } catch { /* */ } }
+  return out;
 }
 
 function repairRendererSchemaStrings(value: any): any {
@@ -169,9 +202,10 @@ function buildSkeleton(mountEl: HTMLElement, fid: number, submitText?: string, h
   const cfgAny = config as any;
   const schemaObj = cfgAny.schema || {};
   const schemaSettings = schemaObj.settings || {};
+  const hideHeaderFlag = schemaSettings.hideHeader === true || schemaSettings.HideHeader === true;
   const headerTitle = esc(String(cfgAny.title || schemaObj.title || schemaSettings.title || '').trim());
   const headerDesc  = esc(String(cfgAny.description || schemaObj.description || schemaSettings.description || '').trim());
-  const headerHtml = (!hasCustomHtml && (headerTitle || headerDesc))
+  const headerHtml = (!hasCustomHtml && !hideHeaderFlag && (headerTitle || headerDesc))
     ? `<div class="mf-form-header">` +
         (headerTitle ? `<h1 class="mf-form-title">${headerTitle}</h1>` : '') +
         (headerDesc  ? `<p class="mf-form-description">${headerDesc}</p>` : '') +
@@ -179,7 +213,7 @@ function buildSkeleton(mountEl: HTMLElement, fid: number, submitText?: string, h
     : '';
 
   mountEl.innerHTML =
-    `<div id="mf-form-wrapper-${fid}" class="${wrapperClass}" data-form-id="${fid}"${moduleIdAttr}>` +
+    `<div id="mf-form-wrapper-${fid}" class="${wrapperClass}${hideHeaderFlag ? ' mf-hide-header' : ''}" data-form-id="${fid}"${moduleIdAttr}>` +
       `<div class="mf-form-inner">` +
         headerHtml +
 
@@ -427,6 +461,16 @@ function detectPremiumVarPrefixes(templateText: string): string[] {
   return Object.keys(found);
 }
 
+function collectAuthoredCssVarDeclarations(templateText: string): Record<string, true> {
+  const found: Record<string, true> = {};
+  const re = /(--[a-zA-Z0-9_-]+)\s*:/g;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(String(templateText || '')))) {
+    found[match[1]] = true;
+  }
+  return found;
+}
+
 function buildPremiumThemeAliasVars(vars: Record<string, string>, templateText = ''): Record<string, string> {
   const out: Record<string, string> = {};
   const primary = pickThemeVar(vars, ['--mf-primary', '--mf-btn-bg', '--primary', '--mfp-primary']);
@@ -448,6 +492,14 @@ function buildPremiumThemeAliasVars(vars: Record<string, string>, templateText =
   const transition = pickThemeVar(vars, ['--mf-transition-duration'], '200ms');
 
   if (!primary && !formBg && !foreground && !border) return out;
+
+  const authoredVars = collectAuthoredCssVarDeclarations(templateText);
+  if (Object.keys(authoredVars).length) {
+    vars = { ...vars };
+    Object.keys(authoredVars).forEach(name => {
+      if (vars[name] == null) vars[name] = '__mf-authored-template-var__';
+    });
+  }
 
   putThemeAlias(out, vars, '--mf-primary', primary);
   putThemeAlias(out, vars, '--mf-primary-hover', primaryHover);
@@ -568,12 +620,23 @@ function buildCustomShellCompatibilityCss(formId: number, settings: any, customC
   const hasCustomShell = !!customHtml.trim() || /(?:^|[\s.{#>])mfp(?:[\s.#:{>]|-|$)/i.test(String(customCss || ''));
   if (!hasCustomShell) return '';
   const W = `#mf-form-wrapper-${formId}`;
+  const authoredVars = collectAuthoredCssVarDeclarations(`${customCss}\n${customHtml}`);
+  const themeOverrides = collectThemeCssOverrides(settings, readThemePatch(settings));
+  const enableTemplateVarBridge = Object.keys(themeOverrides).length > 0;
+  const templateVar = (name: string, value: string) =>
+    enableTemplateVarBridge || !authoredVars[name] ? `  ${name}: ${value};` : '';
+  const australiaButtonAccent = enableTemplateVarBridge
+    ? 'var(--mf-btn-bg, var(--mf-primary, var(--au-primary)))'
+    : 'var(--mf-btn-bg, var(--au-primary))';
   // [CardThuaFix 2026-06-23] Discriminator for "card-in-child" premium templates
   // (e.g. pure-grid: .mfp > .mfp-container > .mfp-card). When .mfp already contains an
   // inner card we must NOT also paint .mfp as a card, or the form shows a double card
   // ("card thừa") around the body. :has() is supported on all modern browsers the
   // renderer targets. See Docs/AUDIT_20260623_CARD_THUA_AND_INPUT_HEIGHT.md.
-  const NOINNER = ':not(:has(.mfp-card)):not(:has(.fr-card))';
+  // [StrayShellBorderFix 2026-07-01] Also skip when the shell nests .ey-card (euro-youth) —
+  // keeps the transparent outer .mfp borderless so no stray 1px edge shows above the shell.
+  // Mirrors CustomShellCompatibilityCssService.NOINNER (SSR parity).
+  const NOINNER = ':not(:has(.mfp-card)):not(:has(.fr-card)):not(:has(.ey-card))';
   return [
     `/* ${CUSTOM_SHELL_BUILDER_COMPAT_BADGE} */`,
     `${W}[data-mf-has-custom-html] .mfp,`,
@@ -584,6 +647,30 @@ function buildCustomShellCompatibilityCss(formId: number, settings: any, customC
     `  max-width: var(--mf-form-max-width, 100%) !important;`,
     `  margin-left: auto !important;`,
     `  margin-right: auto !important;`,
+    `}`,
+    `${W}[data-mf-has-custom-html] > .mf-form-inner,`,
+    `${W}.mf-custom-shell-mode > .mf-form-inner,`,
+    `${W}.mf-custom-html-mode > .mf-form-inner {`,
+    `  width: 100% !important;`,
+    `  max-width: none !important;`,
+    `  margin-left: 0 !important;`,
+    `  margin-right: 0 !important;`,
+    `  padding-left: 0 !important;`,
+    `  padding-right: 0 !important;`,
+    `}`,
+    `${W}[data-mf-has-custom-html] .mf-fields-container,`,
+    `${W}.mf-custom-shell-mode .mf-fields-container,`,
+    `${W}.mf-custom-html-mode .mf-fields-container,`,
+    `${W}[data-mf-has-custom-html] .mf-multistep-frame,`,
+    `${W}.mf-custom-shell-mode .mf-multistep-frame,`,
+    `${W}.mf-custom-html-mode .mf-multistep-frame,`,
+    `${W}[data-mf-has-custom-html] .mf-multistep-body,`,
+    `${W}.mf-custom-shell-mode .mf-multistep-body,`,
+    `${W}.mf-custom-html-mode .mf-multistep-body {`,
+    `  width: 100% !important;`,
+    `  max-width: none !important;`,
+    `  margin-left: 0 !important;`,
+    `  margin-right: 0 !important;`,
     `}`,
     `${W} .mfp[class*="mfp-"] {`,
     `  --background: var(--mf-page-bg, var(--mf-form-bg, var(--background, #ffffff)));`,
@@ -646,14 +733,14 @@ function buildCustomShellCompatibilityCss(formId: number, settings: any, customC
     `  background-clip: padding-box !important;`,
     `}`,
     `${W} .mfp.mfp-australia {`,
-    `  --au-primary: var(--mf-primary, var(--primary, #0bb39b));`,
-    `  --au-primary-d: var(--mf-primary-hover, var(--mf-btn-hover-bg, var(--mf-primary, #079a85)));`,
-    `  --au-soft: var(--mf-primary-light, var(--muted, #e2f7f2));`,
-    `  --au-ink: var(--mf-text, var(--foreground, #06363a));`,
-    `  --au-sub: var(--mf-label-color, var(--muted-foreground, #5b8a8c));`,
-    `  --au-border: var(--mf-input-border-color, var(--mf-border, var(--border, #d2ece8)));`,
-    `  --au-surface: var(--mf-form-bg, var(--card, #ffffff));`,
-    `  --au-band: linear-gradient(120deg, var(--mf-form-bg, #eafaf7), var(--mf-primary-light, #f3fbff));`,
+    templateVar('--au-primary', 'var(--mf-primary, var(--primary, #0bb39b))'),
+    templateVar('--au-primary-d', 'var(--mf-primary-hover, var(--mf-btn-hover-bg, var(--mf-primary, #079a85)))'),
+    templateVar('--au-soft', 'var(--mf-primary-light, var(--muted, #e2f7f2))'),
+    templateVar('--au-ink', 'var(--mf-text, var(--foreground, #06363a))'),
+    templateVar('--au-sub', 'var(--mf-label-color, var(--muted-foreground, #5b8a8c))'),
+    templateVar('--au-border', 'var(--mf-input-border-color, var(--mf-border, var(--border, #d2ece8)))'),
+    templateVar('--au-surface', 'var(--mf-form-bg, var(--card, #ffffff))'),
+    templateVar('--au-band', 'linear-gradient(120deg, var(--mf-form-bg, #eafaf7), var(--mf-primary-light, #f3fbff))'),
     `  background: var(--au-surface) !important;`,
     `  border-color: var(--au-border) !important;`,
     `  border-radius: var(--mf-form-radius, 39px) !important;`,
@@ -752,8 +839,8 @@ function buildCustomShellCompatibilityCss(formId: number, settings: any, customC
     `${W} .mfp.mfp-australia .mfp-submit,`,
     `${W} .mfp.mfp-australia .au-next,`,
     `${W} .mfp.mfp-australia .au-prev {`,
-    `  background: var(--mf-btn-bg, var(--mf-primary, var(--au-primary))) !important;`,
-    `  border-color: var(--mf-btn-bg, var(--mf-primary, var(--au-primary))) !important;`,
+    `  background: ${australiaButtonAccent} !important;`,
+    `  border-color: ${australiaButtonAccent} !important;`,
     `  border-radius: var(--mf-btn-radius, 14px) !important;`,
     `  color: var(--mf-btn-color, var(--mf-color-text-inverse, #ffffff)) !important;`,
     `  font-family: var(--mf-font-family, 'Outfit', system-ui, sans-serif) !important;`,
@@ -1161,6 +1248,39 @@ function maybeActivatePopupMode(wrapper: HTMLElement | null): void {
 }
 
 /** Initialize the renderer */
+// [WidgetAutoload 2026-06-28] Returns true when it injected missing widget
+// plugin <script>s and deferred the render (init will be re-invoked once they
+// register). Returns false (render proceeds now) when nothing is missing or a
+// retry has already been attempted. Capped at ~5s so a never-loading plugin
+// still falls through to the existing text-input fallback rather than hanging.
+function maybeDeferForWidgetPlugins(cfg: RendererConfig): boolean {
+  try {
+    if ((cfg as any).__mfWidgetAutoloadTried) return false;
+    const types = collectUnloadedWidgetTypes((cfg.schema && (cfg.schema as any).fields) || []);
+    if (!types.length) return false;
+    (cfg as any).__mfWidgetAutoloadTried = true;
+    injectWidgetPlugins(types);
+    let tries = 0;
+    const timer = window.setInterval(() => {
+      tries++;
+      const ready = types.every((t) => isWidgetTypeRegistered(t));
+      if (ready || tries > 40) {
+        window.clearInterval(timer);
+        try { init(cfg); } catch (e) { try { console.warn('MegaForm: widget autoload retry failed', e); } catch (_e) { /* noop */ } }
+      }
+    }, 120);
+    return true;
+  } catch (_err) {
+    return false;
+  }
+}
+
+function hasServerPagedSsr(container?: HTMLElement | null): boolean {
+  const fc = container || document.getElementById(`mf-fields-container-${config.formId}`);
+  if (!fc || fc.getAttribute('data-mf-ssr-multistep') !== '1') return false;
+  return Array.from(fc.children).some(child => child.classList && child.classList.contains('mf-page'));
+}
+
 function init(cfg: RendererConfig): void {
   config = cfg;
   try {
@@ -1179,6 +1299,25 @@ function init(cfg: RendererConfig): void {
 
   var settings = (config.schema!.settings || {}) as any;
   var hasCustom = !!(settings.customHtml && String(settings.customHtml).trim());
+  const ssrPreWrapper = document.getElementById(`mf-form-wrapper-${config.formId}`);
+  const ssrPreFc = document.getElementById(`mf-fields-container-${config.formId}`);
+  const isSsr = !hasCustom && !!(ssrPreFc && ssrPreFc.querySelector('.mf-field-group') &&
+    (ssrPreFc.getAttribute('data-mf-ssr') === '1' || ssrPreWrapper?.getAttribute('data-mf-ssr') === '1'));
+
+  // Oqtane Interactive can run this boot twice during prerender -> circuit handoff.
+  // Once the SSR DOM is hydrated, the second pass must not rebuild or double-bind it.
+  if (isSsr && ssrPreFc?.getAttribute('data-mf-hydrated') === '1') {
+    console.log('MegaForm: SSR already hydrated (skip duplicate init)', config.formId);
+    return;
+  }
+
+  // [WidgetAutoload 2026-06-28] If this form uses a widget whose plugin <script>
+  // is NOT on the page (e.g. ?formid= admin override, inline render, embeds — the
+  // server manifest was built for a DIFFERENT form), the widget would fall back to
+  // a plain text input. Inject the missing plugin(s) and DEFER the whole render
+  // until they register, then re-run init ONCE. We return BEFORE buildSkeleton /
+  // any binding here, so the retry renders + binds exactly once (no double-bind).
+  if (maybeDeferForWidgetPlugins(cfg)) return;
 
   formData = (config.prefilledData as Record<string, unknown>) || {};
   syncPlatformTrialFlags();
@@ -1233,17 +1372,19 @@ function init(cfg: RendererConfig): void {
   // [SSR hydrate v20260620-B213] Detect server-rendered field markup BEFORE buildSkeleton (which
   // moves the nodes into the rebuilt shell). When present (and not custom-HTML), HYDRATE the
   // existing DOM instead of rebuilding it from schema → single load, no image re-fetch.
-  const ssrPreWrapper = document.getElementById(`mf-form-wrapper-${config.formId}`);
-  const ssrPreFc = document.getElementById(`mf-fields-container-${config.formId}`);
-  const isSsr = !hasCustom && !!(ssrPreFc && ssrPreFc.querySelector('.mf-field-group') &&
-    (ssrPreFc.getAttribute('data-mf-ssr') === '1' || ssrPreWrapper?.getAttribute('data-mf-ssr') === '1'));
-  if (mountEl) buildSkeleton(mountEl, config.formId, config.submitButtonText, hasCustom);
+  const hasFullSsrShell = isSsr && !!document.getElementById(`mf-btn-submit-${config.formId}`);
+  if (mountEl && !hasFullSsrShell) buildSkeleton(mountEl, config.formId, config.submitButtonText, hasCustom);
   applyFormPresentationSettings(settings);
 
   if (hasCustom) {
     var wrapper = document.getElementById(`mf-form-wrapper-${config.formId}`);
     if (wrapper) {
       wrapper.classList.add('mf-custom-html-mode');
+      if ((settings as any).premiumNativePageBreak === true || (settings as any).PremiumNativePageBreak === true) {
+        wrapper.classList.add('mf-premium-native-mode');
+      } else {
+        wrapper.classList.remove('mf-premium-native-mode');
+      }
       const header = wrapper.querySelector<HTMLElement>('.mf-form-header');
       const actions = wrapper.querySelector<HTMLElement>('.mf-form-actions');
       const footer = wrapper.querySelector<HTMLElement>('.mf-embed-footer');
@@ -1267,6 +1408,7 @@ function init(cfg: RendererConfig): void {
   bindInteractiveElements(config);
   bindSaveDraft();
   bindFieldErrorClear(config.formId);
+  bindPremiumSummary();
 
   // Phase 1: hydrate SQL-sourced options (badge: FieldOptionsRenderer v20260430-01)
   void hydrateSqlOptions();
@@ -1308,6 +1450,29 @@ function init(cfg: RendererConfig): void {
     var popupWrapper = document.getElementById(`mf-form-wrapper-${config.formId}`);
     maybeActivatePopupMode(popupWrapper);
   } catch (_popupErr) { /* defensive — popup must never break the form */ }
+
+  // [InlineEdit 2026-06-29] Host + Oqtane edit-mode ONLY: make shell strings (hero/brand/
+  // step labels/headings) + field labels click-to-edit in place, with a Save pill that
+  // round-trips the full form. Strictly gated (isInlineEditContext) → no-op for public
+  // visitors, and wrapped so it can never break the render.
+  try {
+    initInlineEdit({
+      formId: config.formId,
+      apiBaseUrl: config.apiBaseUrl,
+      schema: config.schema,
+      // [InlineEdit→Builder 20260630] Activates ONLY in the builder DESIGN preview (config.isPreview);
+      // in preview, save() posts a patch to the parent builder instead of writing the DB. Public
+      // ?view=form&edit=true no longer triggers inline-edit (retired — was unstable).
+      isPreview: !!config.isPreview,
+      container: (document.getElementById(`mf-form-wrapper-${config.formId}`)
+        || document.getElementById(`mf-form-${config.formId}`)) as HTMLElement | null,
+    });
+  } catch (_ieErr) { /* defensive — inline edit must never break the form */ }
+
+  // [PreviewStepNav 2026-06-29] Builder DESIGN/preview only: make the wizard step pills clickable so
+  // the host can jump to any step (incl. the review/summary) without filling fields or pressing Next.
+  // Runs last so all step markup (standard + premium-native shell) is in the DOM. Public form: no-op.
+  try { enablePreviewStepNav(); } catch (_psnErr) { /* defensive — never break the form */ }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1361,9 +1526,19 @@ function calculatePages(): void {
 
   if (hasPageBreak) {
     fields.forEach(f => {
-      if (f.type === 'Section' && f.properties?.pageBreak) fieldPages.push([]);
+      // [EmptyFirstPageFix B285 2026-06-26] Only start a NEW page on a page-break Section when the
+      // current page ALREADY has content. A page-break on the FIRST field (very common from the AI
+      // multi-step generator, which marks every section incl. the first with pageBreak:true) used to
+      // push an empty leading page → a blank "Step 1" with no fields before the real first section.
+      // The same guard collapses any consecutive/leading page breaks instead of emitting empty pages.
+      if (f.type === 'Section' && f.properties?.pageBreak && fieldPages[fieldPages.length - 1].length > 0) {
+        fieldPages.push([]);
+      }
       fieldPages[fieldPages.length - 1].push(f);
     });
+    // Defensive: drop any page that ended up with no fields (e.g. trailing page break).
+    fieldPages = fieldPages.filter(page => page && page.length > 0);
+    if (!fieldPages.length) fieldPages = [fields.slice()];
   } else {
     fieldPages[0] = fields.slice();
   }
@@ -1427,8 +1602,46 @@ function hydrateSsrFields(): void {
     .filter(el => el.closest(`#mf-fields-container-${config.formId}`) === container);
   if (groups.length === 0) { renderFields(); return; }
 
+  if (hasServerPagedSsr(container)) {
+    Array.from(container.children).forEach((child, idx) => {
+      if (child.classList && child.classList.contains('mf-page')) {
+        (child as HTMLElement).style.display = idx === currentPage ? '' : 'none';
+      }
+    });
+    container.setAttribute('data-mf-hydrated', '1');
+    bindConditionalLogic(container);
+    console.log('MegaForm: HYDRATED SSR multi-step (bind-only)', groups.length, 'fields');
+    return;
+  }
+
   const byKey = new Map<string, HTMLElement>();
   groups.forEach(el => { const k = el.getAttribute('data-key'); if (k && !byKey.has(k)) byKey.set(k, el); });
+
+  // [PDF-grid / FlexGrid layout v20260629] Single-page flexgrid hydrate: the SSR already emitted
+  // .mf-flexgrid > .mf-flexgrid-item > .mf-field-group with the --lg/md/sm vars. PRESERVE that grid
+  // (do NOT strip the field-groups out of their items, which the flow path below would do) — just
+  // host the existing grid inside one .mf-page so the rest of the renderer's page logic is happy.
+  // Multi-page flexgrid falls through to the flow hydrate (graceful degrade) — not yet supported.
+  const fgSettings = (config.schema!.settings || {}) as any;
+  const fgMode = fgSettings.layoutMode === 'flexgrid' || fgSettings.LayoutMode === 'flexgrid';
+  if (fgMode && fieldPages.length <= 1) {
+    const ssrGrid = container.querySelector<HTMLElement>('.mf-flexgrid[data-mf-flexgrid]');
+    if (ssrGrid) {
+      const pageDiv = document.createElement('div');
+      pageDiv.className = 'mf-page';
+      pageDiv.id = `mf-page-${config.formId}-0`;
+      const rest = Array.from(container.children).filter(c => c !== ssrGrid) as HTMLElement[];
+      pageDiv.appendChild(ssrGrid);
+      rest.forEach(c => { if (!c.classList || !c.classList.contains('mf-page')) pageDiv.appendChild(c); });
+      container.textContent = '';
+      container.appendChild(pageDiv);
+      container.setAttribute('data-mf-hydrated', '1');
+      bindConditionalLogic(container);
+      console.log('MegaForm: HYDRATED flexgrid (single-page, preserved grid)');
+      return;
+    }
+  }
+
   // Strays = non-field-group direct children (e.g. bare hidden inputs from FormHtmlRenderer).
   const strays = Array.from(container.children).filter(c => !c.classList || !c.classList.contains('mf-field-group')) as HTMLElement[];
 
@@ -1590,7 +1803,7 @@ function injectManagedCustomScripts(container: HTMLElement, scripts: Record<stri
     if (!key) return;
     const code = scripts[key];
     if (typeof code !== 'string' || !String(code).trim()) return;
-    const repairedCode = repairKnownBrokenCustomScriptSource(code);
+    const repairedCode = guardWizardStepValidation(repairKnownBrokenCustomScriptSource(code));
     if (repairedCode !== code) {
       try { (window as any).__MF_RENDERER_SCRIPT_REPAIRED__ = CUSTOM_SCRIPT_SCHEMA_REPAIR_BADGE; } catch { /* */ }
     }
@@ -1648,7 +1861,10 @@ function renderCustomHtml(container: HTMLElement, settings: any): void {
   // background + shadow + padding wraps the custom-HTML inner card → user
   // sees a heavy double-card border at the corners.
   const wrapperEl = document.getElementById(`mf-form-wrapper-${config.formId}`);
-  if (wrapperEl) wrapperEl.setAttribute('data-mf-has-custom-html', '1');
+  if (wrapperEl) {
+    wrapperEl.setAttribute('data-mf-has-custom-html', '1');
+    wrapperEl.classList.toggle('mf-premium-native-mode', !!(settings?.premiumNativePageBreak === true || settings?.PremiumNativePageBreak === true));
+  }
 
   // Apply theme class to the form wrapper (not the container) so theme CSS vars work
   const themeId = settings.theme || settings.Theme || '';
@@ -1727,6 +1943,14 @@ function renderCustomHtml(container: HTMLElement, settings: any): void {
     }
   }
 
+  // [SchemaSummary 2026-06-28] {{summary}} → schema-driven review summary (a label +
+  // empty value-slot per input field; values filled live by updateLiveSummary). Replaces
+  // hard-coded per-template summary rows so it auto-reflects the current schema after edits.
+  // Parity with C# FormHtmlRenderer.BuildSummaryHtml (SSR).
+  if (html.indexOf('{{summary}}') !== -1) {
+    html = html.split('{{summary}}').join(buildSummaryHtml((config.schema && (config.schema as any).fields) || []));
+  }
+
   // Replace {{field:key}} placeholders
   html = html.replace(/\{\{field:([a-zA-Z0-9_]+)\}\}/g, (_match, key) => {
     const field = fieldMap[key];
@@ -1778,7 +2002,8 @@ function renderCustomHtml(container: HTMLElement, settings: any): void {
       && field.type !== 'Appointment';
     const showIfAttr = field.showIf ? ` data-show-if="${esc(JSON.stringify(field.showIf))}"` : '';
     const showIfStyle = field.showIf && !evaluateCondition(field.showIf as any) ? ' style="display:none"' : '';
-    let h = `<div class="mf-field-group" data-key="${field.key}" data-type="${field.type}"${showIfAttr}${showIfStyle}>`;
+    const widthAttr = (field as any).width && (field as any).width !== '100%' ? ` data-width="${esc(String((field as any).width))}"` : '';
+    let h = `<div class="mf-field-group" data-key="${field.key}" data-type="${field.type}"${widthAttr}${showIfAttr}${showIfStyle}>`;
     if (!isWidgetSelfLabeled) {
       h += `<label class="mf-field-label" for="mf-${config.formId}-${field.key}">${esc(field.label)}${field.required ? ' <span class="mf-required">*</span>' : ''}</label>`;
     }
@@ -1829,7 +2054,11 @@ function renderCustomHtml(container: HTMLElement, settings: any): void {
 
   const detectedCustomSubmit = !!container.querySelector('button[type="submit"], input[type="submit"]');
   if (isMultiStepCustomHtmlMode()) {
-    hideCustomHtmlSubmitBlocks(container);
+    if (isPremiumNativeCustomHtmlMode()) {
+      bindPremiumNativeShellControls(container);
+    } else {
+      hideCustomHtmlSubmitBlocks(container);
+    }
     customHtmlHasOwnSubmit = false;
   } else {
     customHtmlHasOwnSubmit = detectedCustomSubmit;
@@ -1862,6 +2091,14 @@ function getDirectChildUnderAncestor(ancestor: Element, node: Node): Node | null
   let current: Node | null = node;
   while (current && current.parentNode && current.parentNode !== ancestor) current = current.parentNode;
   return current && current.parentNode === ancestor ? current : null;
+}
+
+function isPersistentCustomShellChrome(node: Node): boolean {
+  if (!(node instanceof HTMLElement)) return false;
+  const cls = String(node.className || '');
+  if (/\b(?:au|bg|ey|fi)-actions\b|\bmfp-actions\b|\bmf-custom-actions\b/i.test(cls)) return true;
+  if (node.hasAttribute('data-mf-native-actions')) return true;
+  return false;
 }
 
 function wrapCustomHtmlPagesFromAnchors(fragment: DocumentFragment): number {
@@ -1904,6 +2141,10 @@ function wrapCustomHtmlPagesFromAnchors(fragment: DocumentFragment): number {
       if (newPageIndex > 0) activeWrapper.style.display = 'none';
       rebuiltChildren.push(activeWrapper);
     }
+    if (activeWrapper && isPersistentCustomShellChrome(child)) {
+      rebuiltChildren.push(child);
+      return;
+    }
     if (activeWrapper) activeWrapper.appendChild(child);
     else rebuiltChildren.push(child);
   });
@@ -1918,6 +2159,104 @@ function wrapCustomHtmlPagesFromAnchors(fragment: DocumentFragment): number {
 function isMultiStepCustomHtmlMode(): boolean {
   const settings = (config.schema!.settings || {}) as any;
   return !!(settings.customHtml && String(settings.customHtml).trim()) && totalPages > 1;
+}
+
+function isPremiumNativeCustomHtmlMode(): boolean {
+  const settings = (config.schema!.settings || {}) as any;
+  return isMultiStepCustomHtmlMode() && !!(settings.premiumNativePageBreak === true || settings.PremiumNativePageBreak === true);
+}
+
+function getPremiumNativeRoot(): HTMLElement | null {
+  const wrapper = document.getElementById(`mf-form-wrapper-${config.formId}`);
+  if (!wrapper || !wrapper.classList.contains('mf-premium-native-mode')) return null;
+  return wrapper.querySelector<HTMLElement>('.mfp-native-generated, .mfp');
+}
+
+function premiumNativeActionButtons(root: HTMLElement, kind: 'back' | 'next' | 'submit'): HTMLElement[] {
+  const selectors: Record<string, string> = {
+    back: '.au-back,.bg-back,.ey-back,.fi-back,[data-mf-native-back]',
+    next: '.au-next,.bg-next,.ey-next,.fi-next,[data-mf-native-next]',
+    submit: '.au-submit,.bg-submit,.ey-submit,.fi-submit,[data-mf-native-submit]',
+  };
+  return Array.from(root.querySelectorAll<HTMLElement>(selectors[kind]));
+}
+
+function hasPremiumNativeCustomActions(): boolean {
+  const root = getPremiumNativeRoot();
+  if (!root) return false;
+  return premiumNativeActionButtons(root, 'next').length > 0 || premiumNativeActionButtons(root, 'submit').length > 0;
+}
+
+function bindPremiumNativeShellControls(container: HTMLElement): void {
+  if (!isPremiumNativeCustomHtmlMode()) return;
+  const root = getPremiumNativeRoot() || container.querySelector<HTMLElement>('.mfp-native-generated, .mfp');
+  if (!root) return;
+  premiumNativeActionButtons(root, 'back').forEach(btn => {
+    btn.addEventListener('click', ev => {
+      ev.preventDefault();
+      goPrevPage();
+    });
+  });
+  premiumNativeActionButtons(root, 'next').forEach(btn => {
+    btn.addEventListener('click', ev => {
+      ev.preventDefault();
+      goNextPage();
+    });
+  });
+  premiumNativeActionButtons(root, 'submit').forEach(btn => {
+    btn.addEventListener('click', ev => {
+      ev.preventDefault();
+      document.getElementById(`mf-btn-submit-${config.formId}`)?.click();
+    });
+  });
+}
+
+function setButtonState(btn: HTMLElement, visible: boolean, disabled: boolean): void {
+  btn.hidden = !visible;
+  btn.style.display = visible ? '' : 'none';
+  if ('disabled' in btn) (btn as HTMLButtonElement).disabled = !!disabled;
+  btn.setAttribute('aria-hidden', visible ? 'false' : 'true');
+}
+
+function updatePremiumNativeShellState(): void {
+  const root = getPremiumNativeRoot();
+  if (!root) return;
+
+  const pageEls = Array.from(root.querySelectorAll<HTMLElement>('.au-page,.bg-page,.ey-page,.fi-page,[data-mf-native-page]'));
+  pageEls.forEach((el, idx) => {
+    const raw = Number(el.getAttribute('data-step'));
+    const pageIndex = Number.isFinite(raw) ? raw : idx;
+    el.classList.toggle('is-active', pageIndex === currentPage);
+    el.classList.toggle('is-done', pageIndex < currentPage);
+  });
+
+  const stepEls = Array.from(root.querySelectorAll<HTMLElement>('.au-step,.bg-step,.ey-step,.fi-step,[data-mf-native-step]'));
+  stepEls.forEach((el, idx) => {
+    const raw = Number(el.getAttribute('data-step'));
+    const pageIndex = Number.isFinite(raw) ? raw : idx;
+    el.classList.toggle('is-active', pageIndex === currentPage);
+    el.classList.toggle('is-done', pageIndex < currentPage);
+  });
+
+  const lineEls = Array.from(root.querySelectorAll<HTMLElement>('.au-line,.bg-line,.ey-line,.fi-step-line,[data-line]'));
+  lineEls.forEach((el, idx) => {
+    const raw = Number(el.getAttribute('data-line'));
+    const lineIndex = Number.isFinite(raw) ? raw : idx;
+    el.classList.toggle('is-active', lineIndex === currentPage);
+    el.classList.toggle('is-done', lineIndex < currentPage);
+  });
+
+  const pct = Math.max(0, Math.min(100, Math.round(((currentPage + 1) / Math.max(1, totalPages)) * 100)));
+  root.querySelectorAll<HTMLElement>('.au-progress i,[data-mf-native-progress-fill]').forEach(el => { el.style.width = pct + '%'; });
+  root.querySelectorAll<HTMLElement>('[data-bg-current],[data-ey-current],[data-mf-native-current]').forEach(el => { el.textContent = String(currentPage + 1); });
+
+  premiumNativeActionButtons(root, 'back').forEach(btn => setButtonState(btn, currentPage > 0, currentPage === 0));
+  premiumNativeActionButtons(root, 'next').forEach(btn => setButtonState(btn, currentPage < totalPages - 1, false));
+  premiumNativeActionButtons(root, 'submit').forEach(btn => setButtonState(btn, currentPage === totalPages - 1, false));
+  root.querySelectorAll<HTMLElement>('.ey-cancel,[data-mf-native-cancel]').forEach(el => {
+    el.hidden = currentPage !== 0;
+    el.style.display = currentPage === 0 ? '' : 'none';
+  });
 }
 
 function syncMultiStepShellMode(enable: boolean): void {
@@ -1986,30 +2325,82 @@ function hideCustomHtmlSubmitBlocks(container: HTMLElement): void {
   });
 }
 
+// [PDF-grid / FlexGrid layout v20260629] helpers for the flat-field flexgrid presentation layer.
+// Mirror MegaForm.Core/Services/FormHtmlRenderer.cs (RenderFlexGridFields) + inputs.ts
+// renderFlexGridElement (1-based x/y). Used by the client REBUILD path below; the SSR/HYDRATE path
+// reuses the server-emitted grid (see hydrateSsrFields flexgrid branch).
+function _fgClamp(v: any, min: number, max: number, dflt: number): number {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return dflt;
+  return Math.max(min, Math.min(max, Math.floor(n)));
+}
+function _fgSetVars(cell: HTMLElement, pl: any, bp: string, cols: number, idx: number): void {
+  const p = pl || { x: 0, y: idx, w: cols, h: 1 };
+  cell.style.setProperty(`--${bp}-x`, String(_fgClamp(p.x, 0, cols - 1, 0) + 1));
+  cell.style.setProperty(`--${bp}-y`, String(_fgClamp(p.y, 0, 999, 0) + 1));
+  cell.style.setProperty(`--${bp}-w`, String(_fgClamp(p.w, 1, cols, cols)));
+  cell.style.setProperty(`--${bp}-h`, String(_fgClamp(p.h, 1, 12, 1)));
+}
+function _fgCell(field: any, cols: number, idx: number): HTMLElement {
+  const cell = document.createElement('div');
+  cell.className = 'mf-flexgrid-item';
+  const pl = field.placement || field.Placement || {};
+  _fgSetVars(cell, pl.lg || pl.Lg, 'lg', cols, idx);
+  _fgSetVars(cell, pl.md || pl.Md || pl.lg || pl.Lg, 'md', cols, idx);
+  _fgSetVars(cell, pl.sm || pl.Sm, 'sm', cols, idx);
+  return cell;
+}
+function _fgLayoutActive(): boolean {
+  const s = (config.schema!.settings || {}) as any;
+  return s.layoutMode === 'flexgrid' || s.LayoutMode === 'flexgrid';
+}
+
 function renderStandardFields(container: HTMLElement): void {
+  const s = (config.schema!.settings || {}) as any;
+  const fgMode = _fgLayoutActive();
+  const cfg = (s.gridConfig || s.GridConfig || {}) as any;
+  // [PDF-grid finer v20260629] default 24 cols (finer snap) when unspecified.
+  const fgCols = fgMode ? (Number(cfg.cols) > 0 ? _fgClamp(cfg.cols, 1, 24, 24) : 24) : 12;
+
   fieldPages.forEach((pageFields, pageIdx) => {
     const pageDiv = document.createElement('div');
     pageDiv.className = 'mf-page';
     pageDiv.id = `mf-page-${config.formId}-${pageIdx}`;
     pageDiv.style.display = pageIdx === currentPage ? '' : 'none';
 
+    let grid: HTMLElement | null = null;
+    if (fgMode) {
+      grid = document.createElement('div');
+      grid.className = 'mf-flexgrid';
+      grid.setAttribute('data-mf-flexgrid', '1');
+      grid.style.setProperty('--mf-grid-cols', String(fgCols));
+      grid.style.setProperty('--mf-grid-rh', _fgClamp(cfg.rowHeight, 20, 400, 64) + 'px');
+      grid.style.setProperty('--mf-grid-gap', _fgClamp(cfg.gap, 0, 64, 12) + 'px');
+      pageDiv.appendChild(grid);
+    }
+
+    let gi = 0;
     pageFields.forEach(field => {
       if (field.type === 'Hidden') {
         pageDiv.innerHTML += `<input type="hidden" name="${esc(field.key)}" value="${esc(String(field.defaultValue || formData[field.key] || ''))}">`;
         return;
       }
+      let el: HTMLElement;
       if (field.type === 'Row' && field.columns) {
-        pageDiv.appendChild(renderRowElement(field, config.formId, formData));
-        return;
+        el = renderRowElement(field, config.formId, formData);
+      } else if (field.type === 'FlexGrid' && Array.isArray((field as any).items)) {
+        // [FlexGrid P1] nested FlexGrid container field — parallel codepath, unchanged.
+        el = renderFlexGridElement(field, config.formId, formData);
+      } else {
+        el = renderSingleFieldElement(field, config.formId, formData);
       }
-      // [FlexGrid P1 v20260601-B16] FlexGrid is a parallel codepath — legacy
-      // Row continues to work unchanged. items[] inside the FlexGrid are real
-      // form fields with per-breakpoint placement.
-      if (field.type === 'FlexGrid' && Array.isArray((field as any).items)) {
-        pageDiv.appendChild(renderFlexGridElement(field, config.formId, formData));
-        return;
+      if (fgMode && grid) {
+        const cell = _fgCell(field, fgCols, gi); gi++;
+        cell.appendChild(el);
+        grid.appendChild(cell);
+      } else {
+        pageDiv.appendChild(el);
       }
-      pageDiv.appendChild(renderSingleFieldElement(field, config.formId, formData));
     });
 
     container.appendChild(pageDiv);
@@ -2116,17 +2507,30 @@ function startPaymentWatcher(): void {
 function buildStepIndicator(): void {
   const bar = document.getElementById(`mf-progress-${config.formId}`);
   if (!bar || totalPages <= 1) return;
+  if (hasServerPagedSsr() && bar.querySelector('.mf-steps')) {
+    bar.style.display = '';
+    return;
+  }
 
-  const labels: string[] = ['Step 1'];
-  let idx = 1;
-  config.schema!.fields.forEach(f => {
-    if (f.type === 'Section' && f.properties?.pageBreak) { idx++; labels.push(f.label || `Step ${idx}`); }
-  });
-  while (labels.length < totalPages) labels.push(`Step ${labels.length + 1}`);
-  // First section label
-  config.schema!.fields.forEach(f => {
-    if (f.type === 'Section' && !f.properties?.pageBreak) labels[0] = f.label || labels[0];
-  });
+  // [fix 20260630] ANY multi-step customHtml shell (premium au/bg/ey/fi-stepband OR a custom wizard)
+  // renders its OWN stepper inside the customHtml — NEVER also emit the generic .mf-steps (that
+  // produced a DOUBLE stepper). Broadened from premium-native to isMultiStepCustomHtmlMode so it also
+  // covers shells not flagged premiumNativePageBreak (e.g. euro-youth). The prior hide lived in
+  // updateNavigation gated on hasPremiumNativeCustomActions(), which races/misses; suppress
+  // deterministically at build time instead.
+  if (isMultiStepCustomHtmlMode()) { bar.innerHTML = ''; bar.style.display = 'none'; return; }
+
+  // [B286 2026-06-26] Derive each step's label from the ACTUAL page structure (fieldPages) —
+  // the page's leading Section heading, else a generic "Step N". The old logic counted pageBreak
+  // sections and pushed labels AFTER page 0, which went off-by-one once calculatePages stopped
+  // emitting an empty leading page (a leading page-break Section now lives ON page 0, so its name
+  // must label step 1 instead of the generic "Step 1").
+  const labels: string[] = [];
+  for (let p = 0; p < totalPages; p++) {
+    const pageFields = fieldPages[p] || [];
+    const sec = pageFields.find(f => f.type === 'Section' && f.label);
+    labels.push(sec && sec.label ? sec.label : `Step ${p + 1}`);
+  }
 
   let html = '<div class="mf-steps">';
   for (let i = 0; i < totalPages; i++) {
@@ -2153,6 +2557,7 @@ function updateNavigation(): void {
     if (nextBtn) nextBtn.style.display = 'none';
     if (submitBtn) submitBtn.style.display = customHtmlHasOwnSubmit && !shellSubmitMode ? 'none' : '';
     if (bar) bar.style.display = 'none';
+    updatePremiumNativeShellState();
     applyPaymentSubmitMode();
     return;
   }
@@ -2165,6 +2570,19 @@ function updateNavigation(): void {
   if (prevBtn) prevBtn.style.display = currentPage > 0 ? '' : 'none';
   if (nextBtn) nextBtn.style.display = currentPage < totalPages - 1 ? '' : 'none';
   if (submitBtn) submitBtn.style.display = shellSubmitMode ? (currentPage === totalPages - 1 ? '' : 'none') : (customHtmlHasOwnSubmit ? 'none' : (currentPage === totalPages - 1 ? '' : 'none'));
+  // Any multi-step customHtml shell owns the stepper → always hide the generic .mf-steps
+  // (deterministic, not gated on action-button detection which races → no more double stepper).
+  if (isMultiStepCustomHtmlMode() && bar) bar.style.display = 'none';
+  // [fix 20260701] Hide the generic Next/Prev/Submit DETERMINISTICALLY for premium-native shells.
+  // bindPremiumNativeShellControls (init, same isPremiumNativeCustomHtmlMode gate) already bound the
+  // shell's OWN au/bg/ey/fi-next/back/submit, so the generic actions are redundant. Dropped the racy
+  // hasPremiumNativeCustomActions() gate — it fired for down-under/festa but MISSED euro-youth/intake
+  // (the §6 double-button leak: generic "Next" showing alongside the shell's "Continue").
+  if (isPremiumNativeCustomHtmlMode()) {
+    const actions = document.querySelector<HTMLElement>(`#mf-form-${config.formId} .mf-form-actions`);
+    if (actions) actions.style.display = 'none';
+  }
+  updatePremiumNativeShellState();
   applyPaymentSubmitMode();
   updateTrialSubmitNote();
 
@@ -2180,11 +2598,60 @@ function updateNavigation(): void {
 
 function bindNavigation(): void {
   document.getElementById(`mf-btn-prev-${config.formId}`)?.addEventListener('click', () => {
-    if (currentPage > 0) { currentPage--; updateNavigation(); scrollToTop(); }
+    goPrevPage();
   });
   document.getElementById(`mf-btn-next-${config.formId}`)?.addEventListener('click', () => {
-    if (!validatePage(fieldPages[currentPage] || [], config.formId)) return;
-    if (currentPage < totalPages - 1) { currentPage++; updateNavigation(); scrollToTop(); }
+    goNextPage();
+  });
+}
+
+function goPrevPage(): void {
+  if (currentPage > 0) {
+    currentPage--;
+    updateNavigation();
+    scrollToTop();
+  }
+}
+
+function goNextPage(): void {
+  // [PreviewStepNav v20260629] In the builder DESIGN/preview (config.isPreview) skip the per-step
+  // required-field gate so the host can page through the whole wizard — incl. the review/summary —
+  // without filling anything. The PUBLIC form is unchanged: validation still gates Next there.
+  if (!config.isPreview && !validatePage(fieldPages[currentPage] || [], config.formId)) return;
+  if (currentPage < totalPages - 1) {
+    currentPage++;
+    updateNavigation();
+    scrollToTop();
+  }
+}
+
+/** Jump straight to a wizard step (no validation). Used by the preview-only clickable step pills so
+ *  the host can inspect any step — including the final review/summary — in the Design Live Preview. */
+function goToStep(stepIndex: number): void {
+  if (!Number.isFinite(stepIndex) || stepIndex < 0 || stepIndex >= totalPages) return;
+  currentPage = stepIndex;
+  updateNavigation();
+  scrollToTop();
+}
+
+/** [PreviewStepNav v20260629] DESIGN/preview only: make every wizard step-indicator pill clickable
+ *  to jump straight to that step. Covers the standard `.mf-step` pills and the premium-native shell
+ *  steppers (`.au-step`/`.bg-step`/`.ey-step`/`.fi-step`/`[data-mf-native-step]`). No-op (and the
+ *  pills stay inert) on the public form, since it is gated to config.isPreview. */
+function enablePreviewStepNav(): void {
+  if (!config.isPreview || totalPages <= 1) return;
+  const root = document.getElementById(`mf-form-wrapper-${config.formId}`) || document;
+  const sel = '.mf-step[data-step],.au-step[data-step],.bg-step[data-step],.ey-step[data-step],.fi-step[data-step],[data-mf-native-step]';
+  (root as ParentNode).querySelectorAll<HTMLElement>(sel).forEach((pill, idx) => {
+    if (pill.getAttribute('data-mf-prevnav') === '1') return;
+    pill.setAttribute('data-mf-prevnav', '1');
+    pill.style.cursor = 'pointer';
+    pill.title = t('renderer.view_step_design');
+    pill.addEventListener('click', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      const raw = Number(pill.getAttribute('data-step'));
+      goToStep(Number.isFinite(raw) ? raw : idx);
+    });
   });
 }
 
@@ -2742,6 +3209,46 @@ function buildSummaryRows(data: Record<string, unknown>, rowClass: string, hideE
 
 // [ReviewStep v20260619] Pre-submit summary/review rendered INSIDE the form's own
 // .mf-form card (so it inherits the card chrome + the themed .mf-btn buttons).
+// [PremiumSummary 2026-06-28] Premium templates carry a hard-coded review-step
+// summary (nodes with data-au-summary="KEY") that USED to be filled by an injected
+// {{script:}} updateSummary(). The premium→native migration STRIPS those scripts,
+// so the summary stopped populating after an edit ("không tự động summary"). Re-
+// implement it centrally: fill every [data-au-summary] node from the LIVE form data
+// on input/change, so the premium review auto-reflects what the user entered. Only
+// activates when the form actually contains data-au-summary nodes (premium shells).
+function fmtPremiumSummaryVal(v: any): string {
+  if (v == null) return '';
+  if (Array.isArray(v)) return v.map(fmtPremiumSummaryVal).filter((x) => x !== '').join(', ');
+  if (typeof v === 'object') { try { return Object.keys(v).map((k) => fmtPremiumSummaryVal((v as any)[k])).filter((x) => x !== '').join(' '); } catch (_e) { return ''; } }
+  return String(v);
+}
+function updatePremiumSummary(): void {
+  const form = document.getElementById('mf-form-' + config.formId);
+  if (!form) return;
+  // Fill BOTH the legacy per-template rows (data-au-summary, Australia) AND the new
+  // schema-driven {{summary}} value-slots (data-mf-summary-key, any form).
+  const nodes = form.querySelectorAll('[data-au-summary],[data-mf-summary-key]');
+  if (!nodes.length) return;
+  let data: Record<string, any> = {};
+  try { data = (collectFormData(config) as Record<string, any>) || {}; } catch (_e) { data = {}; }
+  nodes.forEach((node) => {
+    const key = (node.getAttribute('data-au-summary') || node.getAttribute('data-mf-summary-key') || '').trim();
+    if (!key) return;
+    let v: any = data[key];
+    // 'name' is the au-template alias for the first_name + last_name Row.
+    if ((v == null || v === '') && key === 'name') v = [data.first_name, data.last_name].filter(Boolean).join(' ');
+    (node as HTMLElement).textContent = fmtPremiumSummaryVal(v);
+  });
+}
+function bindPremiumSummary(): void {
+  const form = document.getElementById('mf-form-' + config.formId);
+  if (!form || !form.querySelector('[data-au-summary],[data-mf-summary-key]')) return;
+  const upd = () => { try { updatePremiumSummary(); } catch (_e) { /* noop */ } };
+  form.addEventListener('input', upd);
+  form.addEventListener('change', upd);
+  upd();
+}
+
 function showReview(data: Record<string, unknown>, ps: any): void {
   const fid = config.formId;
   const form = document.getElementById('mf-form-' + fid);
@@ -3042,7 +3549,12 @@ function rebuildFieldPages(pageParts: string[]): void {
     (window as any).__MF_THEME_LIVE_PREVIEW_BOUND__ = true;
 
     var styleTag: HTMLStyleElement | null = null;
+    var expectedParentOrigin = window.location.origin;
+    try {
+      if (document.referrer) expectedParentOrigin = new URL(document.referrer).origin;
+    } catch (_originErr) { /* defensive */ }
     window.addEventListener('message', function (e: MessageEvent) {
+      if (e.source !== window.parent || e.origin !== expectedParentOrigin) return;
       var d: any = e && e.data;
       if (!d || d.type !== 'mf-theme-live-css') return;
       if (!styleTag) {
@@ -3058,7 +3570,7 @@ function rebuildFieldPages(pageParts: string[]): void {
     // immediately on first load (covers uncommitted theme edits that
     // happened before the iframe finished booting).
     var announce = function () {
-      try { window.parent.postMessage({ type: 'mf-theme-preview-ready' }, '*'); } catch (_e) { /* defensive */ }
+      try { window.parent.postMessage({ type: 'mf-theme-preview-ready' }, expectedParentOrigin); } catch (_e) { /* defensive */ }
     };
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
       announce();

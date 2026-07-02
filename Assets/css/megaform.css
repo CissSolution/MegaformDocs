@@ -7,6 +7,17 @@
    CSS CUSTOM PROPERTIES (Theme Variables)
    Override these per-theme via .mf-theme-{name} class
    ============================================================ */
+/* [Oqtane Interactive SSR keepalive 20260702] During Interactive boot, Oqtane can wrap the
+   prerendered page subtree in a direct body child with inline display:none before the circuit
+   swaps in the live tree. If that subtree contains MegaForm SSR, keep it visible so first-paint
+   form markup is not hidden as a black/blank frame while Blazor connects. */
+body > div[style*="display: none"]:has(.mf-form-wrapper),
+body > div[style*="display:none"]:has(.mf-form-wrapper),
+body > div[style*="display: none"]:has(.megaform-module),
+body > div[style*="display:none"]:has(.megaform-module) {
+    display: block !important;
+}
+
 :root,
 /* [HostTokenIsolation v20260619] The host CMS skin (Oqtane AcmeSkin / CISS.SideMenu)
    defines shadcn-style design tokens on :root (--card:#fff, --card-foreground, ...). Those
@@ -696,6 +707,21 @@
     color: var(--mf-desc-color);
     text-align: var(--mf-title-align);
     margin: 0;
+}
+.mf-form-wrapper.mf-hide-header .mf-form-header,
+.mf-form-wrapper.mf-hide-header .mfp-card-header,
+.mf-form-wrapper.mf-hide-header .mfp-default-header,
+.mf-form-wrapper.mf-hide-header .mfp-header,
+.mf-form-wrapper.mf-hide-header .mf-form-title,
+.mf-form-wrapper.mf-hide-header .mf-form-description,
+.mf-form-wrapper.mf-hide-header .mfp-form-title,
+.mf-form-wrapper.mf-hide-header .mfp-form-desc,
+.mf-form-wrapper.mf-hide-header [data-mf-header] {
+    display: none !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
 }
 
 /* ============================================================

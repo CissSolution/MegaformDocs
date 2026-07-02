@@ -4,6 +4,7 @@
 @inject NavigationManager NavigationManager
 @inject IJSRuntime Js
 @using System
+@using System.Collections.Concurrent
 @using System.Collections.Generic
 @using System.Linq
 @using System.Text.Json
@@ -30,7 +31,6 @@
             <a class="mf-oq-linkbtn" href="@BuildPanelUrl("builder")" data-enhance-nav="false"><i class="fas fa-paintbrush"></i> Design Template</a>
         }
     </div>
-    <div id="@SettingsInlineHostId" class="mf-oq-settings-inline-host" data-mf-settings-inline-host="1"></div>
     <script data-mf-settings-dock-boot="1">
         @((MarkupString)BuildSettingsDockBootScript())
     </script>
@@ -53,6 +53,66 @@
             <div class="mf-skel-field"><span class="mf-skel-bar mf-skel-label"></span><span class="mf-skel-bar mf-skel-input"></span></div>
             <div class="mf-skel-field"><span class="mf-skel-bar mf-skel-label"></span><span class="mf-skel-bar mf-skel-input"></span></div>
             <div class="mf-skel-actions"><span class="mf-skel-btn"></span></div>
+        </div>
+    </div>;
+}
+
+@{
+    RenderFragment RenderSsrFormMount = @<div id="@FormMountId"
+         data-form-id="@_formId"
+         data-module-id="@(ModuleState?.ModuleId ?? 0)">
+        <div id="mf-form-wrapper-@_formId" class="@_ssrWrapperClass" data-mf-has-custom-html="@(_ssrHasCustom ? "1" : null)" data-mf-ssr="1">
+            <div class="mf-form-inner">
+                @if (!_ssrHasCustom && !_ssrHideHeader && (!string.IsNullOrWhiteSpace(_ssrTitle) || !string.IsNullOrWhiteSpace(_ssrDescription)))
+                {
+                    <div class="mf-form-header">
+                        @if (!string.IsNullOrWhiteSpace(_ssrTitle))
+                        {
+                            <h1 class="mf-form-title">@_ssrTitle</h1>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(_ssrDescription))
+                        {
+                            <p class="mf-form-description">@_ssrDescription</p>
+                        }
+                    </div>
+                }
+                <form id="mf-form-@_formId" class="mf-form" novalidate>
+                    <div id="mf-progress-@_formId" class="mf-progress-bar" style="@(_ssrIsMultiStep ? null : "display:none;")">@((MarkupString)_ssrStepsHtml)</div>
+                    <div id="mf-fields-container-@_formId" class="mf-fields-container" data-mf-ssr="1" data-mf-ssr-multistep="@(_ssrIsMultiStep ? "1" : null)">@((MarkupString)_ssrFieldsHtml)</div>
+                    <div style="position:absolute;left:-9999px;top:-9999px;height:0;width:0;overflow:hidden;" aria-hidden="true" tabindex="-1">
+                        <input type="text" id="mf_hp_@_formId" name="@SsrHoneypotName" value="" autocomplete="off" tabindex="-1" />
+                    </div>
+                    <input type="hidden" id="mf-form-id-@_formId" value="@_formId" />
+                    <div class="mf-form-actions">
+                        <button type="button" id="mf-btn-prev-@_formId" class="mf-btn mf-btn-prev" style="display:none;">
+                            <i class="fa fa-arrow-left"></i> @SsrPreviousButtonText
+                        </button>
+                        <button type="button" id="mf-btn-next-@_formId" class="mf-btn mf-btn-next" style="@(_ssrIsMultiStep ? null : "display:none;")">
+                            @SsrNextButtonText <i class="fa fa-arrow-right"></i>
+                        </button>
+                        <button type="button" id="mf-btn-submit-@_formId" class="mf-btn mf-btn-submit" style="@(_ssrIsMultiStep ? "display:none;" : null)">
+                            <i class="fa fa-paper-plane"></i> @SsrSubmitButtonText
+                        </button>
+                    </div>
+                </form>
+                <div id="mf-success-@_formId" class="mf-success-message" style="display:none;">
+                    <div class="alert alert-success">
+                        <i class="fa fa-check-circle fa-2x"></i>
+                        <h3>Thank You!</h3>
+                        <p id="mf-success-text-@_formId"></p>
+                        <p class="mf-ref-number"><small>Reference: #<span id="mf-success-ref-@_formId"></span></small></p>
+                    </div>
+                </div>
+                <div id="mf-error-@_formId" class="mf-error-message" style="display:none;">
+                    <div class="alert alert-danger">
+                        <i class="fa fa-exclamation-triangle"></i>
+                        <span id="mf-error-text-@_formId"></span>
+                    </div>
+                </div>
+                <div id="mf-loading-@_formId" class="mf-loading" style="display:none;">
+                    <i class="fa fa-spinner fa-spin fa-2x"></i> Submitting...
+                </div>
+            </div>
         </div>
     </div>;
 }
@@ -435,8 +495,6 @@
 {
     <style>
         .mf-oq-admin-dock{position:relative;z-index:1020;display:flex;gap:8px;align-items:center;justify-content:flex-end;margin:0 0 12px;flex-wrap:wrap;font-family:'Inter',system-ui,sans-serif;}
-        .mf-oq-settings-inline-host{position:relative;z-index:1019;}
-        .mf-oq-settings-inline-host:not(:empty){margin:0 0 14px;font-family:'Inter',system-ui,sans-serif;}
         .mf-oq-pill,.mf-oq-btn,.mf-oq-linkbtn{border:1px solid #dbe4f0;background:#fff;color:#0f172a;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;line-height:1;text-decoration:none;display:inline-flex;align-items:center;gap:8px;box-shadow:0 8px 20px rgba(15,23,42,.06);cursor:pointer;}
         .mf-oq-pill{background:linear-gradient(180deg,#eff6ff 0%,#ffffff 100%);color:#2563eb;border-color:#bfdbfe;}
         .mf-oq-btn.is-primary,.mf-oq-linkbtn.is-primary{background:#0f172a;color:#fff;border-color:#0f172a;}
@@ -596,7 +654,7 @@ else
 
 }
 
-@if (IsStaticRender && _panelMode != MfPanelMode.None)
+@if (IsStaticRender && _panelMode != MfPanelMode.None && !IsHostInteractive)
 {
     <script data-mf-static-surface-boot="@_panelMode">
         @((MarkupString)BuildSurfaceBootScript())
@@ -747,8 +805,29 @@ else
     </style>
 }
 
-@if (_loading)
+@if (_panelMode != MfPanelMode.None)
 {
+    @* [PanelExclusive 2026-07-01] A ?mfpanel= admin surface (dashboard/builder/submissions/my-inbox/
+       languages/...) is active and already rendered ABOVE. Do NOT also emit the public form below it —
+       the panel and the public form must be MUTUALLY EXCLUSIVE. Previously only the loading-skeleton
+       (below) was gated on _panelMode == None; the LOADED form (the final `else`) was not, so the form
+       "bled" under the dashboard/submissions panel in inline mode. This empty leading branch suppresses
+       the entire form-render chain whenever any panel is active. *@
+}
+else if (_loading)
+{
+    if (CanRenderSsrFormShell)
+    {
+        @if (!string.IsNullOrWhiteSpace(_ssrCustomCss))
+        {
+            <style id="mf-custom-css-@_formId">@((MarkupString)_ssrCustomCss)</style>
+        }
+        <div id="@FormShellId" class="megaform-module @(_cssClass)">
+            @RenderSsrFormMount
+        </div>
+    }
+    else
+    {
     @* [FastPaint v20260620] _formId is resolved synchronously from the module settings
        BEFORE the first await, so during the post-circuit load window we already know whether
        this module renders a form. Show the form-shaped skeleton (not a bare spinner) so the
@@ -761,6 +840,7 @@ else
     else
     {
         <div class="mf-load-spinner" role="status" aria-label="Loading"></div>
+    }
     }
 }
 else if (_formId == 0)
@@ -1123,46 +1203,28 @@ else
                without waiting for the interactive Blazor circuit to trigger a second
                /api/MegaForm/Schema/{id} fetch. This removes the ~1.2s dead zone caused
                by SignalR connect + component lifecycle. *@
-            @if (_formId > 0 && _isPublished && !IsPopupMode && _preloadedForm != null)
+            @if (_formId > 0 && _isPublished && !IsPopupMode && _preloadedForm != null && !IsHostInteractive)
             {
                 <script type="application/json" id="mf-preload-schema-@FormMountId">
                     @((MarkupString)BuildPreloadSchemaJson())
                 </script>
             }
-            <div id="@FormMountId"
-                 data-form-id="@_formId"
-                 data-module-id="@(ModuleState?.ModuleId ?? 0)">@if (SsrMode && !string.IsNullOrEmpty(_ssrFieldsHtml))
-                {
-                    @* [2026-06-13 SSR] Server-rendered form body for SEO + fast first paint.
-                       Crawlers (no JS) see the real field labels/inputs/text here; the JS
-                       renderer hydrates this DOM (or rebuilds identically when hydration off). *@
-                    @* [C v20260621] data-mf-has-custom-html is the marker megaform.css uses to strip the
-                       default form padding/card so a custom-HTML shell goes full-width. The JS renderer
-                       sets it on rebuild (renderer/index.ts:1165); the prerender MUST set it too, else the
-                       SSR card renders narrower (default padding) and visibly snaps wider when JS runs. *@
-                    <div id="mf-form-wrapper-@_formId" class="@_ssrWrapperClass" data-mf-has-custom-html="@(_ssrHasCustom ? "1" : null)" data-mf-ssr="1">
-                        <form id="mf-form-@_formId" class="mf-form" novalidate>
-                            <div id="mf-fields-container-@_formId">@((MarkupString)_ssrFieldsHtml)</div>
-                        </form>
-                    </div>
-                }
-                else if (!IsPopupMode)
-                {
-                    @* [FastPaint v20260619] Prerendered skeleton FRAME. This static markup is part
-                       of the module's PRERENDERED HTML, so the form area is visibly "there" (a
-                       shimmering card) the instant the page HTML arrives — instead of a blank gap
-                       while the Blazor SignalR circuit negotiates and the JS renderer boots. The JS
-                       renderer's buildSkeleton() overwrites this mount's innerHTML on init (it only
-                       no-ops when #mf-fields-container-{id} already exists — which this skeleton
-                       deliberately does NOT create), so it is cleanly replaced by the real form with
-                       no hydration work. Kept GENERIC (no field-specific markup) so it fits standard,
-                       premium and custom-HTML forms alike. Suppressed for popup mode (the inline body
-                       would otherwise flash before being moved into the overlay). The enclosing branch
-                       already guarantees _formId>0 && _isPublished, so the renderer boot WILL run and
-                       replace this — it can never linger as a permanent shimmer for a real form. *@
+            @if (CanRenderSsrFormShell)
+            {
+                @* [SSR multi-step 2026-07-02] Render the full client-compatible shell server-side:
+                   progress host, paged field DOM, honeypot, actions and success/error/loading nodes.
+                   buildSkeleton() then no-ops instead of tearing the prerendered DOM into a skeleton. *@
+                @RenderSsrFormMount
+            }
+            else if (!IsPopupMode)
+            {
+                <div id="@FormMountId"
+                     data-form-id="@_formId"
+                     data-module-id="@(ModuleState?.ModuleId ?? 0)">
                     @RenderFormSkeleton
-                }</div>
-            @if (IsStaticRender && _formId > 0 && _isPublished && !IsPopupMode)
+                </div>
+            }
+            @if (IsStaticRender && _formId > 0 && _isPublished && !IsPopupMode && !IsHostInteractive)
             {
                 <script data-mf-static-render-boot="@FormMountId">
                     @((MarkupString)BuildRendererBootScript())
@@ -1192,6 +1254,15 @@ else
     // public override bool? Prerender => true;  // <- do NOT re-enable (terminates circuit).
     public override string RenderMode => RenderModes.Static;
     private bool IsStaticRender => string.Equals(RenderMode, RenderModes.Static, StringComparison.OrdinalIgnoreCase);
+    // [InteractiveGuard 2026-07-01] When the SITE default RenderMode is "Interactive", Oqtane IGNORES
+    // this module's declared Static preference and wraps it in an InteractiveServer + prerender boundary
+    // (Oqtane.Client ModuleInstance.razor). In that mode the module subtree is STREAMED in via Blazor
+    // insertMarkup, which throws "Unexpected end of input" when it hits our inline <script> MarkupString
+    // tags (preload schema + renderer/surface boot). Detect the interactive host so we can SUPPRESS those
+    // inline <script>s — the boot still runs via the OnAfterRenderAsync Js.InvokeVoidAsync("eval",...)
+    // path (which fires normally on the interactive circuit), so nothing is lost. IsStaticRender reads
+    // the module's own RenderMode (always Static) so it can't detect this; PageState.RenderMode can.
+    private bool IsHostInteractive => string.Equals(PageState?.RenderMode, RenderModes.Interactive, StringComparison.OrdinalIgnoreCase);
 
     private enum MfPanelMode { None, Dashboard, Builder, Submissions, Portal, MyInbox, Languages, SdkDemo }
     private MfPanelMode _panelMode;
@@ -1390,8 +1461,52 @@ else
     private string _ssrCustomCss = string.Empty;   // [C v20260621] form's authored customCss, prerendered so first paint is styled
     private string _ssrWrapperRuntimeClasses = string.Empty;   // [PresetSwapFix B244] theme/display-style classes the renderer adds at runtime, prerendered so first paint == final theme
     private string _ssrWrapperClass = "mf-form-wrapper";   // [PresetSwapFix B244] full SSR wrapper class value (base + custom-shell + runtime theme/display classes)
+    private string _ssrStepsHtml = string.Empty;
+    private bool _ssrIsMultiStep;
+    private bool _ssrHideHeader;
+    private string _ssrTitle = string.Empty;
+    private string _ssrDescription = string.Empty;
+    private string _ssrSubmitText = "Submit";
+    private string _ssrPreviousText = "Previous";
+    private string _ssrNextText = "Next";
+    private string _ssrHoneypotName = string.Empty;
     private bool SsrMode => IsStaticRender || (NavigationManager?.Uri ?? string.Empty)
         .IndexOf("mfssr=1", StringComparison.OrdinalIgnoreCase) >= 0;
+    private bool CanRenderSsrFormShell => SsrMode && _formId > 0 && IsFormMode && _panelMode == MfPanelMode.None
+        && !_embedMode && !IsPopupMode && !string.IsNullOrWhiteSpace(_ssrFieldsHtml);
+    private bool ShouldHoldSsrShellDuringInteractiveLoading => IsHostInteractive && SsrMode && _loading
+        && _formId > 0 && IsFormMode && _panelMode == MfPanelMode.None
+        && !_embedMode && !IsPopupMode && string.IsNullOrWhiteSpace(_ssrFieldsHtml);
+    private string SsrHoneypotName => string.IsNullOrWhiteSpace(_ssrHoneypotName) ? $"mf_hp_{_formId}_ssr" : _ssrHoneypotName;
+    private string SsrSubmitButtonText => string.IsNullOrWhiteSpace(_ssrSubmitText) ? "Submit" : _ssrSubmitText;
+    private string SsrPreviousButtonText => string.IsNullOrWhiteSpace(_ssrPreviousText) ? "Previous" : _ssrPreviousText;
+    private string SsrNextButtonText => string.IsNullOrWhiteSpace(_ssrNextText) ? "Next" : _ssrNextText;
+    private sealed class SsrSnapshot
+    {
+        public string FieldsHtml { get; set; } = string.Empty;
+        public string CustomCss { get; set; } = string.Empty;
+        public string WrapperRuntimeClasses { get; set; } = string.Empty;
+        public string WrapperClass { get; set; } = "mf-form-wrapper";
+        public string StepsHtml { get; set; } = string.Empty;
+        public bool HasCustom { get; set; }
+        public bool IsMultiStep { get; set; }
+        public bool HideHeader { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string SubmitText { get; set; } = "Submit";
+        public string PreviousText { get; set; } = "Previous";
+        public string NextText { get; set; } = "Next";
+        public string HoneypotName { get; set; } = string.Empty;
+        public DateTimeOffset CreatedUtc { get; set; } = DateTimeOffset.UtcNow;
+    }
+    private static readonly ConcurrentDictionary<string, SsrSnapshot> SsrSnapshots = new();
+
+    protected override bool ShouldRender()
+    {
+        // Keep Oqtane Interactive from replacing prerendered SSR form DOM with a blank loading pass.
+        return !ShouldHoldSsrShellDuringInteractiveLoading && base.ShouldRender();
+    }
+
     private bool _isPublished;
     private bool _isAdmin;
     private string _initialInlineCss = string.Empty;
@@ -1507,7 +1622,6 @@ private string _listTemplate = string.Empty;
 
     private string FormShellId => $"megaform-container-{ModuleState?.ModuleId ?? 0}";
     private string FormMountId => $"mf-form-{ModuleState?.ModuleId ?? 0}-{_formId}";
-    private string SettingsInlineHostId => $"mf-settings-inline-host-{ModuleState?.ModuleId ?? 0}";
 
     protected override async Task OnParametersSetAsync()
     {
@@ -1545,7 +1659,13 @@ private string _listTemplate = string.Empty;
         _workflowPreview = WorkflowPreviewModel.Empty();
 
         var currentUri = NavigationManager.Uri ?? string.Empty;
-        var requested = GetQueryValue(currentUri, "formid") ?? GetQueryValue(currentUri, "FormId");
+        // [FormIdGate 2026-06-26] The ?formid=xxx URL override (render an ARBITRARY form by id on this
+        // module page, instead of the module's configured form) is an ADMIN/QA feature — gate it to
+        // editors only (_isAdmin = Edit permission, set above). Public/anon visitors passing ?formid=
+        // are ignored and fall through to the module's CONFIGURED form below, so they can't browse
+        // arbitrary forms (incl. drafts) by guessing ids. Applies on BOTH the SSR and interactive
+        // passes since PageState.User is resolved server-side too.
+        var requested = _isAdmin ? (GetQueryValue(currentUri, "formid") ?? GetQueryValue(currentUri, "FormId")) : null;
         if (!string.IsNullOrWhiteSpace(requested))
         {
             var raw = requested;
@@ -1665,6 +1785,8 @@ private string _listTemplate = string.Empty;
             ApplyViewConfigFromJson(_moduleViewConfigJson);
         }
 
+        TryRestoreSsrSnapshot();
+
         AddPlatformHeadContent();
 
         if (_isAdmin)
@@ -1708,7 +1830,7 @@ private string _listTemplate = string.Empty;
                 // Static render has no Blazor circuit for this module, so field-level SSR is safe
                 // and gives public visitors real form markup in the first HTML response.
                 if (SsrMode)
-                    TryBuildSsrFormHtml(!string.IsNullOrWhiteSpace(form?.ResolvedSchemaJson) ? form.ResolvedSchemaJson : form?.SchemaJson);
+                    TryBuildSsrFormHtml(!string.IsNullOrWhiteSpace(form?.ResolvedSchemaJson) ? form.ResolvedSchemaJson : form?.SchemaJson, form);
             }
             catch
             {
@@ -2640,6 +2762,13 @@ private string BuildBuilderUrl()
             + "})();";
     }
 
+    // [SettingsPopup B280 2026-06-26] The in-page ⚙ Settings button now opens the
+    // MegaForm Settings UI as a TRUE floating popup (centered overlay + dim backdrop),
+    // not an inline pane. We simply DON'T pass inline/inlineHostId — openPopup() then
+    // renders a fixed .mf-vd-overlay instead of mounting into the page flow. The old
+    // surface-swap prep() logic is gone (it was only needed to make the inline pane
+    // fit the CMS layout). Same payload otherwise; auto-open on ?mfconfig=1 still works
+    // (BuildSettingsDockBootScript re-invokes this onclick).
     private string BuildSettingsInlineOpenScript()
     {
         var payload = JsonSerializer.Serialize(new
@@ -2647,26 +2776,13 @@ private string BuildBuilderUrl()
             moduleId = ModuleState?.ModuleId ?? 0,
             siteId = GetCurrentSiteId(),
             currentPageId = PageState?.Page?.PageId ?? 0,
-            currentPageUrl = GetCurrentPageRendererHostUrl(),
-            inline = true,
-            inlineHostId = SettingsInlineHostId
+            currentPageUrl = GetCurrentPageRendererHostUrl()
         });
         var version = (OqtaneCoreAssetVersion ?? string.Empty).Replace("'", "\\'");
         return "(function(opts){"
-            + "function prep(){var host=opts.inlineHostId?document.getElementById(opts.inlineHostId):null;if(!host)return null;"
-            + "var surface=null;try{surface=(host.parentElement&&host.parentElement.querySelector('.mf-oq-surface.is-fs'))||document.querySelector('.mf-oq-surface.is-fs');}catch(e){}"
-            + "if(surface&&!host.__mfSettingsSurfaceRestore){var state={fs:surface.classList.contains('is-fs'),inline:surface.classList.contains('is-inline'),htmlDash:document.documentElement.classList.contains('mf-oq-dashboard-active'),bodyDash:document.body.classList.contains('mf-oq-dashboard-active'),pref:null,prefOk:false};"
-            + "try{state.pref=localStorage.getItem('mf-surface-fs');state.prefOk=true;localStorage.setItem('mf-surface-fs','0');}catch(e){}"
-            + "surface.classList.remove('is-fs');surface.classList.add('is-inline');surface.setAttribute('data-mf-settings-inline-surface','1');document.documentElement.classList.remove('mf-oq-dashboard-active');document.body.classList.remove('mf-oq-dashboard-active');"
-            + "host.__mfSettingsSurfaceRestore=function(){if(surface&&surface.isConnected){surface.classList.toggle('is-fs',state.fs);surface.classList.toggle('is-inline',state.inline);surface.removeAttribute('data-mf-settings-inline-surface');}document.documentElement.classList.toggle('mf-oq-dashboard-active',state.htmlDash);document.body.classList.toggle('mf-oq-dashboard-active',state.bodyDash);try{if(state.prefOk){if(state.pref===null)localStorage.removeItem('mf-surface-fs');else localStorage.setItem('mf-surface-fs',state.pref);}}catch(e){}host.__mfSettingsSurfaceRestore=null;try{window.dispatchEvent(new Event('resize'));}catch(e){}};"
-            + "if(window.MutationObserver){var mo=new MutationObserver(function(){if(!host.children.length){try{if(host.__mfSettingsSurfaceRestore)host.__mfSettingsSurfaceRestore();}catch(e){}mo.disconnect();}});mo.observe(host,{childList:true});}"
-            + "try{window.dispatchEvent(new Event('resize'));}catch(e){}"
-            + "}return host;}"
             + "function open(){"
-            + "var host=prep();"
             + "if(window.MFSettings&&typeof window.MFSettings.open==='function'){window.MFSettings.open(opts);return;}"
-            + "if(host&&!host.children.length){host.innerHTML='<div style=\"padding:18px;border:1px solid #dbe4f0;border-radius:14px;background:#fff;color:#64748b;font:13px system-ui\">Loading MegaForm settings...</div>';}"
-            + "var s=document.createElement('script');s.src='/Modules/MegaForm/js/megaform-settings-popup.js?v=" + version + "&inlineboot='+(Date.now());s.onload=open;s.onerror=function(){alert('Failed to load MegaForm settings.');};document.body.appendChild(s);"
+            + "var s=document.createElement('script');s.src='/Modules/MegaForm/js/megaform-settings-popup.js?v=" + version + "&popupboot='+(Date.now());s.onload=open;s.onerror=function(){alert('Failed to load MegaForm settings.');};document.body.appendChild(s);"
             + "}"
             + "open();"
             + "})(" + payload + ");return false;";
@@ -2759,12 +2875,22 @@ private string BuildStarterBoardUrl()
     // [2026-06-13 SSR] Deserialize the resolved schema and render the static form body
     // server-side (FormHtmlRenderer, shared Core). Runs during Blazor prerender so the
     // markup is in the initial HTTP response = crawlable. Non-fatal on any error.
-    private void TryBuildSsrFormHtml(string schemaJson)
+    private void TryBuildSsrFormHtml(string schemaJson, FormDto form = null)
     {
         _ssrFieldsHtml = string.Empty;
+        _ssrStepsHtml = string.Empty;
         _ssrCustomCss = string.Empty;
         _ssrWrapperRuntimeClasses = string.Empty;
         _ssrWrapperClass = "mf-form-wrapper";
+        _ssrIsMultiStep = false;
+        _ssrHideHeader = false;
+        _ssrHasCustom = false;
+        _ssrTitle = form?.Title ?? string.Empty;
+        _ssrDescription = form?.Description ?? string.Empty;
+        _ssrSubmitText = form?.SubmitButtonText ?? "Submit";
+        _ssrPreviousText = "Previous";
+        _ssrNextText = "Next";
+        _ssrHoneypotName = $"mf_hp_{_formId}_{Guid.NewGuid().ToString("N").Substring(0, 5)}";
         try
         {
             if (string.IsNullOrWhiteSpace(schemaJson)) return;
@@ -2777,6 +2903,7 @@ private string BuildStarterBoardUrl()
             // — so an SSR body that the renderer would rebuild anyway is still correct. Was gated to
             // IsSsrEligible only (standard hydrate); the gate is removed now that we render in-place.
             _ssrHasCustom = !string.IsNullOrWhiteSpace(schema.Settings?.CustomHtml);
+            _ssrHideHeader = schema.Settings?.HideHeader == true;
             // [SingleSource v20260624-B260] Compose the form's FULL CSS into ONE block via the
             // shared ModuleCssComposer: [preset (_initialInlineCss), scoped theme vars, authored
             // customCss, custom-shell compat] in the SAME source order the two old blocks had
@@ -2795,6 +2922,7 @@ private string BuildStarterBoardUrl()
                 // style fields onto the form's — "module setting wins". Additive: no module style
                 // (or bound to a different form) → form settings used unchanged.
                 if (settingsObj != null) OverlayModuleStyle(settingsObj, _formId);
+                _ssrHideHeader = _ssrHideHeader || ReadJObjectBool(settingsObj, "hideHeader", "HideHeader");
                 _ssrWrapperRuntimeClasses = settingsObj != null
                     ? MegaForm.Core.Services.ThemeFirstPaintCssService.BuildWrapperRuntimeClasses(settingsObj)
                     : string.Empty;
@@ -2812,10 +2940,106 @@ private string BuildStarterBoardUrl()
             _ssrWrapperClass = string.IsNullOrEmpty(_ssrWrapperRuntimeClasses)
                 ? baseWrapperClass
                 : baseWrapperClass + " " + _ssrWrapperRuntimeClasses;
+            if (_ssrHideHeader && !_ssrWrapperClass.Split(' ', StringSplitOptions.RemoveEmptyEntries).Contains("mf-hide-header", StringComparer.Ordinal))
+            {
+                _ssrWrapperClass += " mf-hide-header";
+            }
 
-            _ssrFieldsHtml = MegaForm.Core.Services.FormHtmlRenderer.RenderFieldsBody(schema, _formId, null);
+            _ssrIsMultiStep = MegaForm.Core.Services.FormHtmlRenderer.IsStandardMultiStep(schema);
+            if (_ssrIsMultiStep) _ssrStepsHtml = MegaForm.Core.Services.FormHtmlRenderer.RenderStepIndicator(schema, null);
+            _ssrSubmitText = !string.IsNullOrWhiteSpace(form?.SubmitButtonText)
+                ? form.SubmitButtonText
+                : (schema.Settings?.SubmitButtonText ?? "Submit");
+            _ssrPreviousText = !string.IsNullOrWhiteSpace(schema.Settings?.PreviousButtonText) ? schema.Settings.PreviousButtonText : "Previous";
+            _ssrNextText = !string.IsNullOrWhiteSpace(schema.Settings?.NextButtonText) ? schema.Settings.NextButtonText : "Next";
+            _ssrFieldsHtml = MegaForm.Core.Services.FormHtmlRenderer.RenderFieldsBody(
+                schema,
+                _formId,
+                null,
+                _ssrTitle,
+                _ssrDescription,
+                _ssrSubmitText);
+            // [BloatGuard 2026-07-01] Same insertMarkup crash guard as the schema preload — a
+            // field that renders a multi-MB inline data-URI (e.g. a QRCode base64 logo) makes
+            // the SSR MarkupString abort the Blazor render. Above ~700KB, drop the SSR body and
+            // let the client renderer build it (slower first paint, but the page doesn't crash).
+            if (_ssrFieldsHtml != null && _ssrFieldsHtml.Length > 700 * 1024) _ssrFieldsHtml = string.Empty;
+            if (!string.IsNullOrWhiteSpace(_ssrFieldsHtml)) StoreSsrSnapshot();
         }
         catch { _ssrFieldsHtml = string.Empty; }
+    }
+
+    private string SsrSnapshotKey()
+        => $"{GetCurrentSiteId()}:{PageState?.Page?.PageId ?? 0}:{ModuleState?.ModuleId ?? 0}:{_formId}";
+    private string SsrSnapshotSiteFormKey()
+        => $"site-form:{GetCurrentSiteId()}:{_formId}";
+    private string SsrSnapshotFormKey()
+        => $"form:{_formId}";
+
+    private void StoreSsrSnapshot()
+    {
+        if (_formId <= 0 || string.IsNullOrWhiteSpace(_ssrFieldsHtml)) return;
+        CleanupSsrSnapshots();
+        var snapshot = new SsrSnapshot
+        {
+            FieldsHtml = _ssrFieldsHtml,
+            CustomCss = _ssrCustomCss,
+            WrapperRuntimeClasses = _ssrWrapperRuntimeClasses,
+            WrapperClass = _ssrWrapperClass,
+            StepsHtml = _ssrStepsHtml,
+            HasCustom = _ssrHasCustom,
+            IsMultiStep = _ssrIsMultiStep,
+            HideHeader = _ssrHideHeader,
+            Title = _ssrTitle,
+            Description = _ssrDescription,
+            SubmitText = _ssrSubmitText,
+            PreviousText = _ssrPreviousText,
+            NextText = _ssrNextText,
+            HoneypotName = SsrHoneypotName,
+            CreatedUtc = DateTimeOffset.UtcNow
+        };
+        SsrSnapshots[SsrSnapshotKey()] = snapshot;
+        SsrSnapshots[SsrSnapshotSiteFormKey()] = snapshot;
+        SsrSnapshots[SsrSnapshotFormKey()] = snapshot;
+    }
+
+    private void TryRestoreSsrSnapshot()
+    {
+        if (!SsrMode || _formId <= 0 || !string.IsNullOrWhiteSpace(_ssrFieldsHtml)) return;
+        if (!SsrSnapshots.TryGetValue(SsrSnapshotKey(), out var s)
+            && !SsrSnapshots.TryGetValue(SsrSnapshotSiteFormKey(), out s)
+            && !SsrSnapshots.TryGetValue(SsrSnapshotFormKey(), out s)) return;
+        if (DateTimeOffset.UtcNow - s.CreatedUtc > TimeSpan.FromMinutes(5))
+        {
+            SsrSnapshots.TryRemove(SsrSnapshotKey(), out _);
+            SsrSnapshots.TryRemove(SsrSnapshotSiteFormKey(), out _);
+            SsrSnapshots.TryRemove(SsrSnapshotFormKey(), out _);
+            return;
+        }
+        _ssrFieldsHtml = s.FieldsHtml ?? string.Empty;
+        _ssrCustomCss = s.CustomCss ?? string.Empty;
+        _ssrWrapperRuntimeClasses = s.WrapperRuntimeClasses ?? string.Empty;
+        _ssrWrapperClass = string.IsNullOrWhiteSpace(s.WrapperClass) ? "mf-form-wrapper" : s.WrapperClass;
+        _ssrStepsHtml = s.StepsHtml ?? string.Empty;
+        _ssrHasCustom = s.HasCustom;
+        _ssrIsMultiStep = s.IsMultiStep;
+        _ssrHideHeader = s.HideHeader;
+        _ssrTitle = s.Title ?? string.Empty;
+        _ssrDescription = s.Description ?? string.Empty;
+        _ssrSubmitText = s.SubmitText ?? "Submit";
+        _ssrPreviousText = s.PreviousText ?? "Previous";
+        _ssrNextText = s.NextText ?? "Next";
+        _ssrHoneypotName = s.HoneypotName ?? string.Empty;
+    }
+
+    private static void CleanupSsrSnapshots()
+    {
+        if (SsrSnapshots.Count < 128) return;
+        var cutoff = DateTimeOffset.UtcNow - TimeSpan.FromMinutes(5);
+        foreach (var kv in SsrSnapshots)
+        {
+            if (kv.Value.CreatedUtc < cutoff) SsrSnapshots.TryRemove(kv.Key, out _);
+        }
     }
 
     // [ModuleStyle v20260624-B262] Overlay the module's owned CSS for the current form onto the
@@ -2840,6 +3064,19 @@ private string BuildStarterBoardUrl()
             }
         }
         catch { /* non-fatal: fall back to the form's settings */ }
+    }
+
+    private static bool ReadJObjectBool(Newtonsoft.Json.Linq.JObject obj, params string[] keys)
+    {
+        if (obj == null || keys == null) return false;
+        foreach (var key in keys)
+        {
+            var tok = obj[key];
+            if (tok == null) continue;
+            if (tok.Type == Newtonsoft.Json.Linq.JTokenType.Boolean) return tok.ToObject<bool>();
+            if (bool.TryParse(tok.ToString(), out var parsed)) return parsed;
+        }
+        return false;
     }
 
     // [2026-06-18 SchemaPreload] Build a SchemaResponse-shaped JSON blob from the form DTO
@@ -2874,7 +3111,15 @@ private string BuildStarterBoardUrl()
                 PluginScripts = _preloadedForm.PluginScripts ?? new System.Collections.Generic.List<string>(),
                 PluginStyles = _preloadedForm.PluginStyles ?? new System.Collections.Generic.List<string>()
             };
-            return System.Text.Json.JsonSerializer.Serialize(response);
+            var json = System.Text.Json.JsonSerializer.Serialize(response);
+            // [BloatGuard 2026-07-01] A multi-MB schema (e.g. a QRCode field whose widgetProps
+            // .logoUrl is a 1.5MB base64 image) rendered inline as a MarkupString makes Blazor's
+            // insertMarkup throw "Unexpected end of input" and ABORT the whole page render — which
+            // is why the dashboard then showed 0 forms (its form-list load never ran). Skip the
+            // inline preload above ~700KB; the client fetches the schema over the API as usual
+            // (the preload is only a first-paint optimisation, never the sole data source).
+            if (json != null && json.Length > 700 * 1024) return "{}";
+            return json;
         }
         catch
         {
@@ -3330,6 +3575,7 @@ private static string ResolveWorkflowLaneLabel(WorkflowNode node, List<string> r
             + "function addCss(href){if(!href)return;var full=(href.indexOf('http')===0?href:(location.origin+href)).split('?')[0];var links=document.querySelectorAll('link[rel=stylesheet]');for(var i=0;i<links.length;i++){if((links[i].href||'').split('?')[0]===full)return;}var el=document.createElement('link');el.rel='stylesheet';el.href=href;document.head.appendChild(el);}"
             + "function addScript(src){return new Promise(function(resolve,reject){if(!src){resolve();return;}var full=(src.indexOf('http')===0?src:(location.origin+src)).split('?')[0];var scripts=document.querySelectorAll('script[src]');for(var i=0;i<scripts.length;i++){if((scripts[i].src||'').split('?')[0]===full){resolve();return;}}var el=document.createElement('script');el.src=src;el.onload=function(){resolve();};el.onerror=function(){reject(new Error('Failed to load '+src));};document.body.appendChild(el);});}"
             + "function getMountEl(){return document.getElementById(opts.containerId);}"
+            + "var bootKey=String(opts.containerId||'')+':'+String(opts.formId||'');var bootRegistry=window.__MF_OQTANE_RENDER_BOOTS__=window.__MF_OQTANE_RENDER_BOOTS__||{};if(bootRegistry[bootKey]&&bootRegistry[bootKey].state==='running'){return;}if(bootRegistry[bootKey]&&bootRegistry[bootKey].state==='done'){var doneMount=getMountEl();var doneFc=doneMount&&doneMount.querySelector('#mf-fields-container-'+opts.formId);if(doneFc&&doneFc.getAttribute('data-mf-hydrated')==='1'){return;}}bootRegistry[bootKey]={state:'running',at:Date.now()};"
             + "function waitForCore(){return new Promise(function(resolve,reject){var tries=0;function check(){var mountEl=getMountEl();if(mountEl&&typeof MegaFormRenderer!=='undefined'&&MegaFormRenderer&&typeof MegaFormRenderer.init==='function'){resolve(mountEl);return;}tries++;if(tries>200){reject(new Error('MegaForm core wait timed out for '+opts.containerId));return;}setTimeout(check,50);}check();});}"
             + "var platform=window.__MF_PLATFORM__||{};"
             + "if(opts.rendererHostUrl){platform.rendererHostUrl=opts.rendererHostUrl;}"
@@ -3356,9 +3602,9 @@ private static string ResolveWorkflowLaneLabel(WorkflowNode node, List<string> r
             + "if(data&&(data.assetSelectionBadge||data.AssetSelectionBadge)){mountEl.setAttribute('data-mf-asset-selection-badge', data.assetSelectionBadge||data.AssetSelectionBadge);}"
             + "var effectiveSettingsJson=(data&&(data.settingsJson||data.SettingsJson))||null;"
             + "try{if(opts.moduleViewConfigJson){var viewCfg=typeof opts.moduleViewConfigJson==='string'?JSON.parse(opts.moduleViewConfigJson):opts.moduleViewConfigJson||{};var settingsObj=effectiveSettingsJson?JSON.parse(effectiveSettingsJson):{};settingsObj.displayMode=String(viewCfg.displayMode||viewCfg.DisplayMode||'fixed').toLowerCase()==='popup'?'popup':'fixed';var popup=viewCfg.popup||viewCfg.Popup||{};settingsObj.popup={triggerType:popup.triggerType||popup.TriggerType||'time_delay',delaySeconds:popup.delaySeconds||popup.DelaySeconds||5,scrollPercent:popup.scrollPercent||popup.ScrollPercent||50,clickSelector:popup.clickSelector||popup.ClickSelector||'',borderMode:'transparent_popup',showOncePerSession:popup.showOncePerSession==null&&popup.ShowOncePerSession==null?true:!!(popup.showOncePerSession!=null?popup.showOncePerSession:popup.ShowOncePerSession),closeOnOverlay:popup.closeOnOverlay==null&&popup.CloseOnOverlay==null?true:!!(popup.closeOnOverlay!=null?popup.closeOnOverlay:popup.CloseOnOverlay),startAt:popup.startAt||popup.StartAt||'',endAt:popup.endAt||popup.EndAt||''};effectiveSettingsJson=JSON.stringify(settingsObj);}}catch(err){console.warn('MegaForm: module view config merge failed',err);}"
-            + "MegaFormRenderer.init({formId:opts.formId,schema:schema,settingsJson:effectiveSettingsJson,themeJson:(data&&(data.themeJson||data.ThemeJson))||null,title:(data&&(data.title||data.Title))||'',description:(data&&(data.description||data.Description))||'',container:'#'+opts.containerId,submitButtonText:(data&&(data.submitButtonText||data.SubmitButtonText))||'Submit',successMessage:(data&&(data.successMessage||data.SuccessMessage))||'Thank you!',apiBase:opts.apiBase,moduleViewConfigJson:opts.moduleViewConfigJson,rules:(data&&(data.rules||data.Rules))||[]});"
-            + "}).catch(function(err){console.error('MegaForm: init error', err);});"
-            + "}).catch(function(err){console.error('MegaForm: core wait error', err);});"
+            + "MegaFormRenderer.init({formId:opts.formId,schema:schema,settingsJson:effectiveSettingsJson,themeJson:(data&&(data.themeJson||data.ThemeJson))||null,title:(data&&(data.title||data.Title))||'',description:(data&&(data.description||data.Description))||'',container:'#'+opts.containerId,submitButtonText:(data&&(data.submitButtonText||data.SubmitButtonText))||'Submit',successMessage:(data&&(data.successMessage||data.SuccessMessage))||'Thank you!',apiBase:opts.apiBase,moduleViewConfigJson:opts.moduleViewConfigJson,rules:(data&&(data.rules||data.Rules))||[]});bootRegistry[bootKey]={state:'done',at:Date.now()};"
+            + "}).catch(function(err){bootRegistry[bootKey]={state:'error',at:Date.now(),message:String(err&&err.message||err)};console.error('MegaForm: init error', err);});"
+            + "}).catch(function(err){bootRegistry[bootKey]={state:'error',at:Date.now(),message:String(err&&err.message||err)};console.error('MegaForm: core wait error', err);});"
             + "})(" + payload + ");";
     }
 

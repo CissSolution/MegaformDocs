@@ -112,7 +112,8 @@ namespace MegaForm.Core.Services
         /// Render the inner HTML of the fields container (#mf-fields-container-{formId}) for the
         /// given schema. Returns customHtml (token-substituted) when present, else standard fields.
         /// </summary>
-        public static string RenderFieldsBody(FormSchema schema, int formId, string locale = null)
+        public static string RenderFieldsBody(FormSchema schema, int formId, string locale = null,
+            string formTitle = null, string formDescription = null, string submitButtonText = null)
         {
             if (schema == null) return string.Empty;
             var settings = schema.Settings ?? new FormSettings();
@@ -121,22 +122,92 @@ namespace MegaForm.Core.Services
                 .OrderBy(f => f.Order)
                 .ToList();
 
+            // [FOUC/SSR-dedup 2026-07-02] Defensive de-dup by field key. A corrupted/legacy schema
+            // can carry the same field twice (observed live: a form whose stored SchemaJson had EVERY
+            // field duplicated → the SSR body emitted 36 .mf-field-group for an 18-field form). The
+            // client renderer already de-dupes by data-key (hydrateSsrFields byKey keeps the first per
+            // key), so an un-deduped SSR body paints each field twice → duplicate DOM ids, a visible
+            // "double-then-collapse" flash on first paint, and ~2x payload. Match the client: keep the
+            // FIRST occurrence per non-empty key. Keyless layout fields (rare) are left untouched.
+            if (fields.Count > 1)
+            {
+                var seenKeys = new HashSet<string>(StringComparer.Ordinal);
+                fields = fields.Where(f => string.IsNullOrEmpty(f.Key) || seenKeys.Add(f.Key)).ToList();
+            }
+
             if (!string.IsNullOrWhiteSpace(settings.CustomHtml))
-                return RenderCustomHtml(schema, fields, formId, locale);
+                return RenderCustomHtml(schema, fields, formId, locale, formTitle, formDescription, submitButtonText);
+
+            // [PDF-grid / FlexGrid layout v20260629] Opt-in 2-D grid presentation for standard forms.
+            // Fields stay FLAT; each .mf-field-group is wrapped in a .mf-flexgrid-item carrying the
+            // same --lg/md/sm CSS vars the existing .mf-flexgrid CSS consumes. SSR is MANDATORY here
+            // because the public renderer HYDRATES (does not rebuild) — the client moves these nodes
+            // into a .mf-page but preserves the grid wrappers (see hydrateSsrFields flexgrid branch).
+            var pages = CalculatePages(fields, settings);
+            if (pages.Count > 1)
+                return RenderStandardPagedFields(pages, formId, locale);
+
+            if (string.Equals(settings.LayoutMode, "flexgrid", StringComparison.OrdinalIgnoreCase))
+                return RenderFlexGridFields(fields, settings, formId, locale);
 
             return RenderStandardFields(fields, formId, locale);
+        }
+
+        public static int GetPageCount(FormSchema schema)
+        {
+            if (schema == null) return 0;
+            var fields = NormalizeFields(schema);
+            return CalculatePages(fields, schema.Settings ?? new FormSettings()).Count;
+        }
+
+        public static bool IsStandardMultiStep(FormSchema schema)
+        {
+            if (schema == null) return false;
+            var settings = schema.Settings ?? new FormSettings();
+            if (!string.IsNullOrWhiteSpace(settings.CustomHtml)) return false;
+            return GetPageCount(schema) > 1;
+        }
+
+        public static string RenderStepIndicator(FormSchema schema, string locale = null)
+        {
+            if (!IsStandardMultiStep(schema)) return string.Empty;
+            var pages = CalculatePages(NormalizeFields(schema), schema.Settings ?? new FormSettings());
+            var labels = new List<string>();
+            for (var i = 0; i < pages.Count; i++)
+            {
+                var section = pages[i].FirstOrDefault(f =>
+                    string.Equals(f.Type, "Section", StringComparison.OrdinalIgnoreCase)
+                    && !string.IsNullOrWhiteSpace(ResolveFieldTranslation(f, locale).Label));
+                var raw = section != null ? ResolveFieldTranslation(section, locale).Label : "Step " + (i + 1).ToString(CultureInfo.InvariantCulture);
+                var label = Regex.Replace(raw ?? string.Empty, @"^Step\s*\d+[:\s]*", string.Empty, RegexOptions.IgnoreCase).Trim();
+                labels.Add(string.IsNullOrEmpty(label) ? "Step " + (i + 1).ToString(CultureInfo.InvariantCulture) : label);
+            }
+
+            var sb = new StringBuilder();
+            sb.Append("<div class=\"mf-steps\">");
+            for (var i = 0; i < pages.Count; i++)
+            {
+                sb.Append("<div class=\"mf-step").Append(i == 0 ? " active" : string.Empty)
+                  .Append("\" data-step=\"").Append(i.ToString(CultureInfo.InvariantCulture)).Append("\">")
+                  .Append("<div class=\"mf-step-circle\">").Append((i + 1).ToString(CultureInfo.InvariantCulture)).Append("</div>")
+                  .Append("<div class=\"mf-step-label\">").Append(Esc(labels[i])).Append("</div></div>");
+                if (i < pages.Count - 1) sb.Append("<div class=\"mf-step-line\"></div>");
+            }
+            sb.Append("</div>");
+            return sb.ToString();
         }
 
         // ────────────────────────────────────────────────────────────────
         // Custom HTML mode — substitute {{form:*}}, {{content:*}}, {{script:*}}, {{field:key}}
         // ────────────────────────────────────────────────────────────────
-        private static string RenderCustomHtml(FormSchema schema, List<FormField> fields, int formId, string locale)
+        private static string RenderCustomHtml(FormSchema schema, List<FormField> fields, int formId, string locale,
+            string formTitle, string formDescription, string submitButtonText)
         {
             var settings = schema.Settings;
             var html = settings.CustomHtml ?? string.Empty;
 
             // {{form:title|description|submit}}
-            var formTr = ResolveFormTranslation(schema, locale);
+            var formTr = ResolveFormTranslation(schema, locale, formTitle, formDescription, submitButtonText);
             html = html.Replace("{{form:title}}", Esc(formTr.Title));
             html = html.Replace("{{form:description}}", Esc(formTr.Description));
             html = html.Replace("{{form:submit}}", Esc(formTr.SubmitButtonText));
@@ -162,6 +233,12 @@ namespace MegaForm.Core.Services
                     return "<div style=\"color:#ef4444;font-size:12px;\">Field \"" + Esc(key) + "\" not found</div>";
                 return RenderFieldToken(field, formId, locale);
             });
+
+            // {{summary}} → schema-driven review summary (label + value-slot per input field;
+            // the JS fills values live). Auto-reflects the schema after edits, unlike hard-coded
+            // template summary rows. Parity with MegaForm.UI/src/shared/summary-html.ts.
+            if (html.IndexOf("{{summary}}", StringComparison.Ordinal) >= 0)
+                html = html.Replace("{{summary}}", BuildSummaryHtml(fields));
 
             // Trailing hidden fields not referenced by a token (parity with TS)
             var sb = new StringBuilder(html);
@@ -196,6 +273,83 @@ namespace MegaForm.Core.Services
             return sb.ToString();
         }
 
+        private static string RenderStandardPagedFields(List<List<FormField>> pages, int formId, string locale)
+        {
+            var sb = new StringBuilder();
+            for (var pageIdx = 0; pageIdx < pages.Count; pageIdx++)
+            {
+                sb.Append("<div class=\"mf-page\" id=\"mf-page-").Append(formId)
+                  .Append('-').Append(pageIdx.ToString(CultureInfo.InvariantCulture)).Append("\"");
+                if (pageIdx > 0) sb.Append(" style=\"display:none;\"");
+                sb.Append(">");
+                foreach (var field in pages[pageIdx])
+                {
+                    if (string.Equals(field.Type, "Hidden", StringComparison.OrdinalIgnoreCase))
+                    {
+                        sb.Append("<input type=\"hidden\" name=\"").Append(Esc(field.Key))
+                          .Append("\" value=\"").Append(Esc(field.DefaultValue ?? string.Empty)).Append("\">");
+                        continue;
+                    }
+                    sb.Append(RenderFieldGroup(field, formId, locale));
+                }
+                sb.Append("</div>");
+            }
+            return sb.ToString();
+        }
+
+        // ────────────────────────────────────────────────────────────────
+        // [PDF-grid / FlexGrid layout v20260629] Standard fields on a responsive 2-D grid.
+        // Mirrors MegaForm.UI/src/renderer/inputs.ts renderFlexGridElement (1-based x/y, lg/md/sm).
+        // ────────────────────────────────────────────────────────────────
+        private static int GridClamp(int v, int min, int max) => Math.Max(min, Math.Min(max, v));
+
+        private static string PlacementVars(string bp, FlexPlacement pl, int cols)
+        {
+            // 1-based for CSS grid-column / grid-row (parity with the TS renderer's "+ 1").
+            int x = GridClamp(pl.X, 0, cols - 1) + 1;
+            int y = GridClamp(pl.Y, 0, 999) + 1;
+            int w = GridClamp(pl.W, 1, cols);
+            int h = GridClamp(pl.H, 1, 12);
+            return "--" + bp + "-x:" + x + ";--" + bp + "-y:" + y + ";--" + bp + "-w:" + w + ";--" + bp + "-h:" + h + ";";
+        }
+
+        private static string RenderFlexGridFields(List<FormField> fields, FormSettings settings, int formId, string locale)
+        {
+            var cfg = settings.GridConfig ?? new FlexGridConfig();
+            int cols = cfg.Cols > 0 ? GridClamp(cfg.Cols, 1, 24) : 24;
+            int rh = GridClamp(cfg.RowHeight, 20, 400);
+            int gap = GridClamp(cfg.Gap, 0, 64);
+
+            var sb = new StringBuilder();
+            sb.Append("<div class=\"mf-flexgrid\" data-mf-flexgrid=\"1\" style=\"--mf-grid-cols:").Append(cols)
+              .Append(";--mf-grid-rh:").Append(rh).Append("px;--mf-grid-gap:").Append(gap).Append("px\">");
+            int idx = 0;
+            foreach (var field in fields)
+            {
+                if (string.Equals(field.Type, "Hidden", StringComparison.OrdinalIgnoreCase))
+                {
+                    // hidden inputs stay bare (no grid cell)
+                    sb.Append("<input type=\"hidden\" name=\"").Append(Esc(field.Key))
+                      .Append("\" value=\"").Append(Esc(field.DefaultValue ?? string.Empty)).Append("\">");
+                    continue;
+                }
+                var p = field.Placement;
+                var lg = p?.Lg ?? new FlexPlacement { X = 0, Y = idx, W = cols, H = 1 };
+                var md = p?.Md ?? lg;
+                var sm = p?.Sm ?? new FlexPlacement { X = 0, Y = idx, W = cols, H = 1 };
+                sb.Append("<div class=\"mf-flexgrid-item\" style=\"")
+                  .Append(PlacementVars("lg", lg, cols))
+                  .Append(PlacementVars("md", md, cols))
+                  .Append(PlacementVars("sm", sm, cols))
+                  .Append("\">")
+                  .Append(RenderFieldGroup(field, formId, locale))
+                  .Append("</div>");
+                idx++;
+            }
+            sb.Append("</div>");
+            return sb.ToString();
+        }
+
         // A {{field:key}} token can resolve to a Section/Html/Hidden/Row special-case
         private static string RenderFieldToken(FormField field, int formId, string locale)
         {
@@ -203,6 +357,49 @@ namespace MegaForm.Core.Services
             if (string.Equals(type, "Hidden", StringComparison.OrdinalIgnoreCase))
                 return "<input type=\"hidden\" name=\"" + Esc(field.Key) + "\" value=\"" + Esc(field.DefaultValue ?? string.Empty) + "\">";
             return RenderFieldGroup(field, formId, locale);
+        }
+
+        // Field types that are NOT user input → excluded from the {{summary}} block.
+        private static readonly HashSet<string> NonSummaryTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        { "Section", "Hidden", "Html", "ContentSlider", "Map", "QRCode", "QR", "RichText",
+          "DataRepeater", "Captcha", "GolfScorecard", "VideoEmbed", "DrawOnImage", "Signature" };
+
+        // [SchemaSummary 2026-06-28] Build the {{summary}} block from the schema: one row per input
+        // field (label + empty value slot the JS fills live). MUST stay byte-parity with
+        // MegaForm.UI/src/shared/summary-html.ts buildSummaryHtml(). Inline styles (mirrors the JS
+        // showReview rows) so it renders correctly without any external/cache-stamped CSS.
+        private static string BuildSummaryHtml(List<FormField> fields)
+        {
+            var sb = new StringBuilder();
+            sb.Append("<div class=\"mf-summary\" data-mf-summary=\"1\" role=\"group\" aria-label=\"Summary\">");
+            AppendSummaryRows(sb, fields);
+            sb.Append("</div>");
+            return sb.ToString();
+        }
+
+        private static void AppendSummaryRows(StringBuilder sb, List<FormField> fields)
+        {
+            if (fields == null) return;
+            foreach (var f in fields)
+            {
+                if (f == null) continue;
+                var type = f.Type ?? "Text";
+                if (string.Equals(type, "Row", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (f.Columns != null)
+                        foreach (var col in f.Columns)
+                            if (col != null) AppendSummaryRows(sb, col.Fields);
+                    continue;
+                }
+                if (NonSummaryTypes.Contains(type)) continue;
+                var key = f.Key ?? string.Empty;
+                if (string.IsNullOrEmpty(key)) continue;
+                var label = string.IsNullOrEmpty(f.Label) ? key : f.Label;
+                sb.Append("<div class=\"mf-summary-row\" style=\"display:flex;justify-content:space-between;gap:18px;padding:11px 2px;border-bottom:1px solid rgba(127,127,127,.18)\">")
+                  .Append("<span class=\"mf-summary-label\" style=\"font-weight:600;opacity:.66;flex:0 0 40%\">").Append(Esc(label)).Append("</span>")
+                  .Append("<span class=\"mf-summary-value\" data-mf-summary-key=\"").Append(Esc(key)).Append("\" style=\"flex:1;text-align:right;word-break:break-word;white-space:pre-wrap\"></span>")
+                  .Append("</div>");
+            }
         }
 
         // ────────────────────────────────────────────────────────────────
@@ -237,8 +434,13 @@ namespace MegaForm.Core.Services
             var selfLabeled = isWidget && !AlwaysLabeledWidgets.Contains(type);
 
             var sb = new StringBuilder();
+            // Per-field width (inline-edit resize) → data-width so the flow CSS sizes the field;
+            // omitted at the 100% default. SSR parity with the TS renderer so a resized width
+            // survives SSR first paint + hydrate (standard forms hydrate the SSR field DOM).
+            var widthAttr = (!string.IsNullOrEmpty(field.Width) && field.Width != "100%")
+                ? " data-width=\"" + Esc(field.Width) + "\"" : string.Empty;
             sb.Append("<div class=\"mf-field-group\" data-key=\"").Append(Esc(field.Key))
-              .Append("\" data-type=\"").Append(Esc(type)).Append("\"").Append(showIfAttr).Append(">");
+              .Append("\" data-type=\"").Append(Esc(type)).Append("\"").Append(widthAttr).Append(showIfAttr).Append(">");
             if (!selfLabeled)
             {
                 sb.Append("<label class=\"mf-field-label\" for=\"mf-").Append(formId).Append('-').Append(Esc(field.Key)).Append("\">")
@@ -528,7 +730,11 @@ namespace MegaForm.Core.Services
             // [B268] Sub-label position per composite labelPos: top (above box) | bottom (default) | hidden.
             var isTop = string.Equals(labelPos, "top", StringComparison.OrdinalIgnoreCase);
             var isHidden = string.Equals(labelPos, "hidden", StringComparison.OrdinalIgnoreCase);
-            var subText = part.Sublabel ?? string.Empty;
+            // [BUG3 fix 20260701] Fall back to the accessible label (label = CompositePartLabel:
+            // label -> sublabel -> known-key map -> placeholder -> humanized key) when the part has
+            // no explicit sublabel, so presets like 'name' (First/Last, no sublabels) still render a
+            // label above/below EVERY box under labelPos top/bottom (was: empty => no <small>).
+            var subText = !string.IsNullOrEmpty(part.Sublabel) ? part.Sublabel : (!isHidden ? label : string.Empty);
             var subHtml = (!isHidden && (!string.IsNullOrEmpty(subText) || part.Required))
                 ? "<small class=\"mf-composite-sub mf-composite-sub--" + (isTop ? "top" : "bottom") + "\">" + Esc(subText) + (part.Required ? " <span class=\"mf-composite-req\" aria-hidden=\"true\">*</span>" : string.Empty) + "</small>"
                 : string.Empty;
@@ -1004,6 +1210,97 @@ namespace MegaForm.Core.Services
                 + "</div>";
         }
 
+        // [B311] Mirror of TS resolveOptionIconHtml. An option Icon may be a GLYPH (emoji ★🚀, HTML
+        // entity &#128188;, inline <i>/<img>) OR a bare icon NAME the AI emitted ("city"/"rocket"/"fa-city").
+        // Glyphs render as-is; a bare ASCII token resolves to a FontAwesome icon so the card shows a real
+        // glyph instead of the literal word.
+        private static string ResolveOptionIcon(FormField field, MfOption opt, string raw)
+        {
+            var s = (raw ?? string.Empty).Trim();
+            if (s.Length == 0) return string.Empty;
+            var hasMarkup = s.IndexOf('<') >= 0 || s.IndexOf('&') >= 0;
+            var nonAscii = false;
+            foreach (var ch in s) { if (ch > 0x7F) { nonAscii = true; break; } }
+            if (hasMarkup || nonAscii) return OptionPart(field, opt, s, true);
+            string cls;
+            if (System.Text.RegularExpressions.Regex.IsMatch(s, @"^(fa-(solid|regular|light|thin|brands|duotone|sharp)|fas|far|fal|fat|fab|fad)\b")) cls = s;
+            else if (s.StartsWith("fa-")) cls = "fa-solid " + s;
+            else
+            {
+                var key = System.Text.RegularExpressions.Regex.Replace(s.ToLowerInvariant(), @"[^a-z0-9]+", "-").Trim('-');
+                var aliases = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["building2"] = "building",
+                    ["building-2"] = "building",
+                    ["code2"] = "code",
+                    ["ticket"] = "ticket-alt",
+                    ["megaphone"] = "bullhorn",
+                    ["zap"] = "bolt",
+                    ["sparkles"] = "wand-magic-sparkles",
+                    ["graduationcap"] = "graduation-cap",
+                    ["calendar-days"] = "calendar-alt",
+                    ["calendardays"] = "calendar-alt",
+                    ["map-pin"] = "map-marker-alt",
+                    ["mappin"] = "map-marker-alt",
+                    ["mail"] = "envelope",
+                    ["phone"] = "phone",
+                    ["user"] = "user",
+                    ["users"] = "users",
+                    ["briefcase"] = "briefcase",
+                    ["file-text"] = "file-alt",
+                    ["filetext"] = "file-alt",
+                    ["upload"] = "upload",
+                    ["wallet"] = "wallet",
+                    ["home"] = "home",
+                    ["compass"] = "compass",
+                    ["palmtree"] = "umbrella-beach",
+                    ["tree-palm"] = "tree",
+                    ["treepalm"] = "tree",
+                    ["waves"] = "water",
+                    ["mountain"] = "mountain",
+                    ["snowflake"] = "snowflake",
+                    ["heart-handshake"] = "handshake",
+                    ["hearthandshake"] = "handshake",
+                    ["heart"] = "heart",
+                    ["flower2"] = "seedling",
+                    ["flower-2"] = "seedling",
+                    ["tree-pine"] = "tree",
+                    ["treepine"] = "tree",
+                    ["party-popper"] = "gift",
+                    ["partypopper"] = "gift",
+                    ["cake"] = "birthday-cake",
+                    ["gift"] = "gift",
+                    ["utensils"] = "utensils",
+                    ["wine"] = "wine-glass-alt",
+                    ["glass-water"] = "glass-water",
+                    ["glasswater"] = "glass-water",
+                    ["drumstick"] = "drumstick-bite",
+                    ["salad"] = "leaf",
+                    ["pizza"] = "pizza-slice",
+                    ["ice-cream"] = "ice-cream",
+                    ["icecream"] = "ice-cream",
+                    ["mic2"] = "microphone",
+                    ["mic-2"] = "microphone",
+                    ["disc3"] = "compact-disc",
+                    ["disc-3"] = "compact-disc",
+                    ["tent"] = "campground",
+                    ["pen-line"] = "pen",
+                    ["penline"] = "pen",
+                    ["layout-grid"] = "th-large",
+                    ["layoutgrid"] = "th-large",
+                    ["line-chart"] = "chart-line",
+                    ["linechart"] = "chart-line",
+                    ["headphones"] = "headphones",
+                    ["send"] = "paper-plane",
+                    ["clipboard-list"] = "clipboard-list",
+                    ["clipboardlist"] = "clipboard-list",
+                };
+                if (aliases.TryGetValue(key, out var mapped)) key = mapped;
+                cls = "fa-solid fa-" + key;
+            }
+            return "<i class=\"" + Esc(cls) + "\" aria-hidden=\"true\"></i>";
+        }
+
         private static string OptionItem(string inputType, string name, MfOption opt, string translatedLabel, bool selected, string baseId, FormField field, string forcedDisplay = null)
         {
             var value = opt?.Value ?? opt?.Label ?? string.Empty;
@@ -1015,7 +1312,7 @@ namespace MegaForm.Core.Services
             if (display != "default") classes.Add("mf-option-item--" + display);
             if (selected) classes.Add("is-checked");
             if (allowHtml) classes.Add("mf-option-item--html");
-            var icon = string.IsNullOrEmpty(opt?.Icon) ? "" : "<span class=\"mf-option-icon\" aria-hidden=\"true\">" + OptionPart(field, opt, opt.Icon, true) + "</span>";
+            var icon = string.IsNullOrEmpty(opt?.Icon) ? "" : "<span class=\"mf-option-icon\" aria-hidden=\"true\">" + ResolveOptionIcon(field, opt, opt.Icon) + "</span>";
             var meta = string.IsNullOrEmpty(opt?.Meta) ? "" : "<span class=\"mf-option-meta\">" + OptionPart(field, opt, opt.Meta, true) + "</span>";
             var descText = opt?.Description ?? opt?.Desc ?? opt?.SubLabel;
             var desc = string.IsNullOrEmpty(descText) ? "" : "<span class=\"mf-option-desc\">" + OptionPart(field, opt, descText, true) + "</span>";
@@ -1131,14 +1428,17 @@ namespace MegaForm.Core.Services
             return r;
         }
 
-        private static FormTranslation ResolveFormTranslation(FormSchema schema, string locale)
+        private static FormTranslation ResolveFormTranslation(FormSchema schema, string locale,
+            string formTitle = null, string formDescription = null, string submitButtonText = null)
         {
             var s = schema.Settings ?? new FormSettings();
             var baseTr = new FormTranslation
             {
-                Title = string.Empty,
-                Description = string.Empty,
-                SubmitButtonText = s.SubmitButtonText ?? "Submit"
+                Title = formTitle ?? string.Empty,
+                Description = formDescription ?? string.Empty,
+                SubmitButtonText = !string.IsNullOrWhiteSpace(submitButtonText)
+                    ? submitButtonText
+                    : (s.SubmitButtonText ?? "Submit")
             };
             if (!string.IsNullOrEmpty(locale) && schema.Translations != null
                 && schema.Translations.TryGetValue(locale, out var t) && t != null)
@@ -1169,10 +1469,72 @@ namespace MegaForm.Core.Services
             return map;
         }
 
+        private static List<FormField> NormalizeFields(FormSchema schema)
+        {
+            var fields = (schema?.Fields ?? new List<FormField>())
+                .Where(f => f != null)
+                .OrderBy(f => f.Order)
+                .ToList();
+            if (fields.Count <= 1) return fields;
+
+            var seenKeys = new HashSet<string>(StringComparer.Ordinal);
+            return fields.Where(f => string.IsNullOrEmpty(f.Key) || seenKeys.Add(f.Key)).ToList();
+        }
+
+        private static List<List<FormField>> CalculatePages(List<FormField> fields, FormSettings settings)
+        {
+            fields = fields ?? new List<FormField>();
+            var pages = new List<List<FormField>> { new List<FormField>() };
+            var hasPageBreak = fields.Any(f => string.Equals(f.Type, "Section", StringComparison.OrdinalIgnoreCase) && IsPageBreak(f));
+            var hasPageIndex = fields.Any(f => f.PageIndex > 0);
+
+            if (!hasPageBreak && hasPageIndex)
+            {
+                var indexed = new List<List<FormField>>();
+                foreach (var f in fields)
+                {
+                    var pageIndex = Math.Max(0, f.PageIndex);
+                    while (indexed.Count <= pageIndex) indexed.Add(new List<FormField>());
+                    indexed[pageIndex].Add(f);
+                }
+                var nonEmpty = indexed.Where(p => p.Count > 0).ToList();
+                return nonEmpty.Count > 0 ? nonEmpty : new List<List<FormField>> { fields.ToList() };
+            }
+
+            var multiPage = settings?.MultiPage == true;
+            var sectionCount = 0;
+            foreach (var f in fields)
+            {
+                var startsPage = string.Equals(f.Type, "Section", StringComparison.OrdinalIgnoreCase) && IsPageBreak(f);
+                if (!hasPageBreak && multiPage && string.Equals(f.Type, "Section", StringComparison.OrdinalIgnoreCase))
+                {
+                    sectionCount++;
+                    startsPage = sectionCount > 1;
+                }
+                if (startsPage && pages[pages.Count - 1].Count > 0) pages.Add(new List<FormField>());
+                pages[pages.Count - 1].Add(f);
+            }
+
+            var result = pages.Where(p => p.Count > 0).ToList();
+            return result.Count > 0 ? result : new List<List<FormField>> { fields.ToList() };
+        }
+
         private static bool IsPageBreak(FormField field)
-            => field.Properties != null
-               && field.Properties.TryGetValue("pageBreak", out var pb)
-               && pb is bool b && b;
+        {
+            if (field?.Properties == null) return false;
+            if (!field.Properties.TryGetValue("pageBreak", out var pb)
+                && !field.Properties.TryGetValue("PageBreak", out pb))
+                return false;
+            if (pb is bool b) return b;
+            if (pb is JsonElement je)
+            {
+                if (je.ValueKind == JsonValueKind.True) return true;
+                if (je.ValueKind == JsonValueKind.False) return false;
+                if (je.ValueKind == JsonValueKind.String && bool.TryParse(je.GetString(), out var parsedJson)) return parsedJson;
+            }
+            bool.TryParse(Convert.ToString(pb, CultureInfo.InvariantCulture), out var parsed);
+            return parsed;
+        }
 
         private static string SerializeShowIf(ShowIfCondition c)
             => Newtonsoft.Json.JsonConvert.SerializeObject(c, new Newtonsoft.Json.JsonSerializerSettings

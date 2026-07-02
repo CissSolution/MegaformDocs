@@ -50,6 +50,8 @@ namespace MegaForm.Oqtane.Server.Controllers
             var schemaJson = resolved.SchemaJson ?? "{}";
 
             string fieldsBody = string.Empty;
+            string stepperHtml = string.Empty;
+            bool isStandardMultiStep = false;
             bool hasCustomHtml = false;
             string customCss = string.Empty;
             try
@@ -59,7 +61,15 @@ namespace MegaForm.Oqtane.Server.Controllers
                 {
                     hasCustomHtml = !string.IsNullOrWhiteSpace(schema.Settings?.CustomHtml);
                     customCss = schema.Settings?.CustomCss ?? string.Empty;
-                    fieldsBody = FormHtmlRenderer.RenderFieldsBody(schema, formId, null);
+                    fieldsBody = FormHtmlRenderer.RenderFieldsBody(
+                        schema,
+                        formId,
+                        null,
+                        form.Title,
+                        form.Description,
+                        resolved.SubmitButtonText);
+                    isStandardMultiStep = FormHtmlRenderer.IsStandardMultiStep(schema);
+                    if (isStandardMultiStep) stepperHtml = FormHtmlRenderer.RenderStepIndicator(schema, null);
                 }
             }
             catch { /* fall back to empty body — the JS renderer still builds it after boot */ }
@@ -70,10 +80,12 @@ namespace MegaForm.Oqtane.Server.Controllers
             // carries data-mf-ssr="1", so the public renderer does NOTHING to CSS. inlineCss is
             // folded in, so the separate mf-inline-preset block is no longer emitted below.
             string wrapperRuntimeClasses = string.Empty;
+            bool hideHeader = false;
             try
             {
                 var settingsObj = JObject.Parse(schemaJson)["settings"] as JObject
                                   ?? JObject.Parse(schemaJson)["Settings"] as JObject;
+                hideHeader = settingsObj != null && ReadBool(settingsObj, "hideHeader", "HideHeader");
                 wrapperRuntimeClasses = settingsObj != null ? ThemeFirstPaintCssService.BuildWrapperRuntimeClasses(settingsObj) : string.Empty;
                 customCss = ModuleCssComposer.Compose(formId, settingsObj, inlineCss, null);
             }
@@ -99,7 +111,10 @@ namespace MegaForm.Oqtane.Server.Controllers
                 inlineCss,
                 customCss,
                 fieldsBody,
+                stepperHtml,
+                isStandardMultiStep,
                 hasCustomHtml,
+                hideHeader,
                 wrapperRuntimeClasses,
                 manifest?.ScriptFiles ?? new List<string>(),
                 manifest?.StyleFiles ?? new List<string>());
@@ -110,7 +125,8 @@ namespace MegaForm.Oqtane.Server.Controllers
         private static string BuildRenderPageHtml(
             int formId, string schemaJson, string settingsJson, string themeJson,
             string formTitle, string formDescription, string submitButtonText, string successMessage,
-            string inlineCss, string customCss, string fieldsBody, bool hasCustomHtml,
+            string inlineCss, string customCss, string fieldsBody, string stepperHtml, bool isStandardMultiStep, bool hasCustomHtml,
+            bool hideHeader,
             string wrapperRuntimeClasses,
             List<string> pluginScripts, List<string> pluginStyles)
         {
@@ -170,7 +186,7 @@ namespace MegaForm.Oqtane.Server.Controllers
               .Append(string.IsNullOrWhiteSpace(wrapperRuntimeClasses) ? string.Empty : " " + wrapperRuntimeClasses)
               .Append("\" data-mf-ssr=\"1\">");
             sb.Append("<div class=\"mf-form-inner\">");
-            if (!hasCustomHtml && (!string.IsNullOrEmpty(title) || !string.IsNullOrEmpty(desc)))
+            if (!hasCustomHtml && !hideHeader && (!string.IsNullOrEmpty(title) || !string.IsNullOrEmpty(desc)))
             {
                 sb.Append("<div class=\"mf-form-header\">");
                 if (!string.IsNullOrEmpty(title)) sb.Append("<h1 class=\"mf-form-title\">").Append(title).Append("</h1>");
@@ -178,8 +194,12 @@ namespace MegaForm.Oqtane.Server.Controllers
                 sb.Append("</div>");
             }
             sb.Append("<div id=\"mf-form-").Append(formId).Append("\" class=\"mf-form\">");
-            sb.Append("<div id=\"mf-progress-").Append(formId).Append("\" class=\"mf-progress-bar\" style=\"display:none;\"></div>");
-            sb.Append("<div id=\"mf-fields-container-").Append(formId).Append("\" class=\"mf-fields-container\">").Append(fieldsBody ?? string.Empty).Append("</div>");
+            sb.Append("<div id=\"mf-progress-").Append(formId).Append("\" class=\"mf-progress-bar\"");
+            if (!isStandardMultiStep) sb.Append(" style=\"display:none;\"");
+            sb.Append(">").Append(stepperHtml ?? string.Empty).Append("</div>");
+            sb.Append("<div id=\"mf-fields-container-").Append(formId).Append("\" class=\"mf-fields-container\" data-mf-ssr=\"1\"");
+            if (isStandardMultiStep) sb.Append(" data-mf-ssr-multistep=\"1\"");
+            sb.Append(">").Append(fieldsBody ?? string.Empty).Append("</div>");
             sb.Append("<div style=\"position:absolute;left:-9999px;top:-9999px;height:0;width:0;overflow:hidden;\" aria-hidden=\"true\" tabindex=\"-1\">");
             sb.Append("<input type=\"text\" id=\"mf_hp_").Append(formId).Append("\" name=\"").Append(hp).Append("\" value=\"\" autocomplete=\"off\" tabindex=\"-1\"/></div>");
             sb.Append("<input type=\"hidden\" id=\"mf-form-id-").Append(formId).Append("\" value=\"").Append(formId).Append("\"/>");
@@ -236,5 +256,18 @@ namespace MegaForm.Oqtane.Server.Controllers
 
         private static string Js(string src, string v) =>
             "<script src=\"" + src + (string.IsNullOrEmpty(v) ? string.Empty : "?v=" + v) + "\"></script>";
+
+        private static bool ReadBool(JObject obj, params string[] keys)
+        {
+            if (obj == null || keys == null) return false;
+            foreach (var key in keys)
+            {
+                var tok = obj[key];
+                if (tok == null) continue;
+                if (tok.Type == JTokenType.Boolean) return tok.Value<bool>();
+                if (bool.TryParse(tok.ToString(), out var parsed)) return parsed;
+            }
+            return false;
+        }
     }
 }
