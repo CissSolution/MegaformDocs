@@ -313,6 +313,7 @@ import { fieldStepMap } from '@shared/custom-html-insert';
             '(function(){' +
                 'var __mfInspectOn=false;' +
                 'var __mfInspectHandler=null;' +
+                'var __mfParentOrigin=window.location.origin;try{if(document.referrer)__mfParentOrigin=new URL(document.referrer).origin;}catch(_eOrigin){}' +
                 'var INSPECT_KEYS=["display","position","width","height","min-width","min-height","max-width","max-height","margin","padding","border","border-radius","background","background-color","background-image","color","font-family","font-size","font-weight","line-height","letter-spacing","text-align","box-shadow","outline","opacity","overflow","flex","gap","grid-template-columns","transition","cursor","z-index"];' +
                 'function __mfInspectSelector(el){' +
                     'try{' +
@@ -381,7 +382,7 @@ import { fieldStepMap } from '@shared/custom-html-insert';
                             'var sel=__mfInspectSelector(t);' +
                             'var crumbs=__mfInspectBreadcrumb(t);' +
                             'var styles=__mfInspectStyles(t);' +
-                            'try{window.parent.postMessage({type:"mf-theme-inspect-pick",selector:sel,breadcrumb:crumbs,styles:styles},"*");}catch(_e2){}' +
+                            'try{window.parent.postMessage({type:"mf-theme-inspect-pick",selector:sel,breadcrumb:crumbs,styles:styles},__mfParentOrigin);}catch(_e2){}' +
                         '}finally{__mfInspectOff();}' +
                     '};' +
                     'try{document.addEventListener("mousedown",__mfInspectHandler,true);}catch(_e){}' +
@@ -394,6 +395,7 @@ import { fieldStepMap } from '@shared/custom-html-insert';
                 '}catch(_e){}' +
                 'try{' +
                     'window.addEventListener("message",function(e){' +
+                        'if(e.source!==window.parent||e.origin!==__mfParentOrigin)return;' +
                         'var d=e&&e.data;if(!d)return;' +
                         'if(d.type==="mf-theme-live-css"){' +
                             'var s=document.getElementById("mf-theme-live-preview");' +
@@ -431,8 +433,11 @@ import { fieldStepMap } from '@shared/custom-html-insert';
                                     'for(var ii=0;ii<nodes.length;ii++){' +
                                         'var el=nodes[ii];' +
                                         'if(!el||!el.style)continue;' +
-                                        'try{el.style[camel]=val;}catch(_eApply){' +
-                                            'try{el.style.setProperty(key,val);}catch(_eFallback){}' +
+                                        // [2026-07-02 FIX] Apply with !important priority. The inspector is an
+                                        // explicit override tool; premium template CSS often uses !important, so a
+                                        // plain inline style (no priority) was silently overridden → edits looked dead.
+                                        'try{el.style.setProperty(key,val,"important");}catch(_eApply){' +
+                                            'try{el.style[camel]=val;}catch(_eFallback){}' +
                                         '}' +
                                     '}' +
                                 '}' +
@@ -444,7 +449,7 @@ import { fieldStepMap } from '@shared/custom-html-insert';
                         '}' +
                     '},false);' +
                 '}catch(_e){}' +
-                'function announceReady(){try{window.parent.postMessage({type:"mf-theme-preview-ready"},"*");}catch(_e){}}' +
+                'function announceReady(){try{window.parent.postMessage({type:"mf-theme-preview-ready"},__mfParentOrigin);}catch(_e){}}' +
                 'function doInit(){' +
                     'try{if(window.MegaFormRenderer&&typeof window.MegaFormRenderer.init==="function"){window.MegaFormRenderer.init(window.__CFG);}}catch(e){try{console.error("[mf-theme-preview] renderer init failed",e);}catch(_){}}' +
                     'announceReady();' +
@@ -982,7 +987,7 @@ import { fieldStepMap } from '@shared/custom-html-insert';
         'megaform-widget-data-repeater.js',
         'megaform-widget-draw-on-image.js',
         'megaform-widget-geolocation.js',
-        'megaform-widget-golf-scorecard.js',
+        // [2026-07-01] megaform-widget-golf-scorecard.js removed from palette force-load — Golf Scorecard retired from the Widgets palette.
         'megaform-widget-grid-repeater.js',
         'megaform-widget-image-choice.js',
         // [2026-06-15] megaform-widget-infinite-list.js removed — InfiniteList retired.
@@ -1075,8 +1080,14 @@ import { fieldStepMap } from '@shared/custom-html-insert';
         let _paletteRetries = 0;
         let _paletteLastCount = -1;
         let _paletteStableTicks = 0;
-        const STABLE_TICKS_REQUIRED = 5;
         const MAX_TICKS = 80; // 80 × 150 ms = 12 s hard cap
+        // [PaletteDeterminism v20260701-01] Widget plugin <script>s load async & independently
+        // (separate js/plugins/*.js files force-injected by ensureAllPluginsLoaded). The old
+        // "settle after 5 stable ticks (~750ms)" exit could fire BEFORE a slow-loading plugin
+        // registered, so the palette showed a DIFFERENT SUBSET (and therefore different sorted
+        // order) on each reload. Fix: repaint on every count change AND keep polling to the hard
+        // cap so the FINAL paint always contains every registered plugin — deterministic & complete
+        // every load. Order is already stable via the localeCompare sort in populatePluginPalette().
         const _paletteTimer = setInterval(() => {
             _paletteRetries++;
             if (typeof MegaFormWidgets === 'undefined' || !MegaFormWidgets.getAllPlugins) {
@@ -1089,12 +1100,14 @@ import { fieldStepMap } from '@shared/custom-html-insert';
                 _paletteLastCount = count;
                 _paletteStableTicks = 0;
                 if (count > 0) populatePluginPalette();
-                return;
+            } else {
+                _paletteStableTicks++;
             }
-            _paletteStableTicks++;
-            if (_paletteStableTicks >= STABLE_TICKS_REQUIRED || _paletteRetries > MAX_TICKS) {
+            // Only STOP at the hard cap. By then every force-loaded plugin script has executed,
+            // so the last paint is complete. Do NOT clear early on stability (that caused the
+            // missing-widget / shifting-order flakiness).
+            if (_paletteRetries > MAX_TICKS) {
                 clearInterval(_paletteTimer);
-                // One last paint guarantees latest state is committed
                 if (count > 0) populatePluginPalette();
             }
         }, 150);
@@ -1118,7 +1131,7 @@ import { fieldStepMap } from '@shared/custom-html-insert';
     function populatePluginPalette(): void {
         if (typeof MegaFormWidgets === 'undefined' || !MegaFormWidgets.getAllPlugins) return;
         const plugins = MegaFormWidgets.getAllPlugins();
-        const hiddenLegacyTypes = new Set(['StripePayment', 'PayPalPayment', 'Likert', 'NPS']);
+        const hiddenLegacyTypes = new Set(['StripePayment', 'PayPalPayment', 'Likert', 'NPS', 'GolfScorecard']);
         const preferredOrder = ['Payment'];
         const keys = Object.keys(plugins)
             .filter(typeName => !hiddenLegacyTypes.has(typeName))

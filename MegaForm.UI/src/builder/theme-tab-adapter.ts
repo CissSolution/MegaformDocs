@@ -58,6 +58,7 @@
    ============================================================ */
 
 import { MegaFormBuilder } from './core';
+import { isColorProp, colorToHex } from './inspector-color';
 
 (function () {
     'use strict';
@@ -612,7 +613,10 @@ import { MegaFormBuilder } from './core';
         var shell = wrapper + ' .mfp[class*="mfp-"]';
         return [
             '/* PremiumShellEdgeGuard v20260623-B239 */',
-            wrapper + ':not(.mf-style-border-none):not(.mf-style-border-hairline):not(.mf-style-border-prominent) .mfp[class*="mfp-"] {\n' +
+            // [StrayShellBorderFix 2026-07-01] :not(:has(.ey-card)) mirrors the renderer/SSR
+            // NOINNER guard so the euro-youth transparent outer .mfp stays borderless in the
+            // Design live-preview too (no stray 1px edge above the nested .ey-card shell).
+            wrapper + ':not(.mf-style-border-none):not(.mf-style-border-hairline):not(.mf-style-border-prominent) .mfp[class*="mfp-"]:not(:has(.ey-card)) {\n' +
             '  --mfp-shell-border: var(--aur-border, var(--au-border, var(--fr-border, var(--bg-border, var(--it-border, var(--nola-border, var(--hw-border, var(--ey-border, var(--mf-input-border-color, var(--mf-border, var(--mfp-border, var(--border, #e2e8f0))))))))))));\n' +
             '  border: 1px solid var(--mfp-shell-border) !important;\n' +
             '}',
@@ -851,8 +855,16 @@ import { MegaFormBuilder } from './core';
                                  .replace(/#mf-canvas-dropzone\s*\{\}/g, '')
                                  .replace(/#mf-canvas-dropzone\s*,?\s*/g, '');
             }
-            frame.contentWindow.postMessage({ type: 'mf-theme-live-css', css: safeCss }, '*');
+            frame.contentWindow.postMessage({ type: 'mf-theme-live-css', css: safeCss }, getPreviewFrameTargetOrigin(frame));
         } catch (_e) { /* defensive */ }
+    }
+
+    function getPreviewFrameTargetOrigin(frame: HTMLIFrameElement): string {
+        try {
+            var src = frame.getAttribute('src') || '';
+            if (src && src.indexOf('about:') !== 0) return new URL(src, window.location.href).origin;
+        } catch (_e) { /* defensive */ }
+        return window.location.origin;
     }
 
     // [B56 FIX 3] Tell the iframe to apply / clear the preset theme class.
@@ -866,7 +878,7 @@ import { MegaFormBuilder } from './core';
             frame.contentWindow.postMessage({
                 type: 'mf-theme-live-class',
                 themeId: String(themeId || 'default')
-            }, '*');
+            }, getPreviewFrameTargetOrigin(frame));
         } catch (_e) { /* defensive */ }
     }
 
@@ -876,6 +888,8 @@ import { MegaFormBuilder } from './core';
         (window as any).__MF_THEME_PREVIEW_READY_BOUND__ = true;
         window.addEventListener('message', function (e: MessageEvent) {
             try {
+                var frame = document.querySelector('.mf-theme-preview-frame') as HTMLIFrameElement | null;
+                if (!frame || e.source !== frame.contentWindow || e.origin !== getPreviewFrameTargetOrigin(frame)) return;
                 var d: any = e && e.data;
                 if (!d || d.type !== 'mf-theme-preview-ready') return;
                 // [B56 FIX 1] Post the iframe-scoped variant — not the
@@ -1943,9 +1957,17 @@ import { MegaFormBuilder } from './core';
     function panelInspectorHtml(): string {
         return (
             '<div class="mf-theme-panel-section" style="margin-bottom:16px">' +
-              '<div id="mf-theme-inspector-empty" style="padding:24px 12px;text-align:center;color:#94a3b8;font-size:12px">' +
+              // [2026-07-02] CSS picker moved here from the left rail. Click Pick → the preview
+              // iframe enters crosshair mode → clicking any element streams its CSS into the
+              // rows below, where every value (incl. colours) is live-editable.
+              '<button type="button" data-mf-inspector-pick="1" data-pick-on="0" class="mf-insp-pick-btn" ' +
+                'style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;height:36px;margin-bottom:12px;' +
+                'border:1px solid #c7d2fe;border-radius:8px;background:#eef2ff;color:#4338ca;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s">' +
+                '<i class="fas fa-eye-dropper"></i><span class="mf-insp-pick-label">Pick element</span>' +
+              '</button>' +
+              '<div id="mf-theme-inspector-empty" style="padding:20px 12px;text-align:center;color:#94a3b8;font-size:12px">' +
                 '<i class="fas fa-crosshairs" style="font-size:24px;display:block;margin-bottom:10px;opacity:.5"></i>' +
-                'Click <b>Pick</b> in the left Colors panel, then click any element on the form preview to inspect its styles here.' +
+                'Click <b>Pick element</b> above, then click any element in the form preview to inspect &amp; edit its styles here.' +
               '</div>' +
               '<div id="mf-theme-inspector-content" style="display:none">' +
                 '<div style="font-family:Consolas,Menlo,monospace;font-size:11px;color:#0f172a;background:#f1f5f9;padding:6px 8px;border-radius:6px;margin-bottom:10px;word-break:break-all" id="mf-theme-inspector-sel"></div>' +
@@ -1970,6 +1992,22 @@ import { MegaFormBuilder } from './core';
                 p2.style.display = (p2.getAttribute('data-mf-theme-panel') === 'inspector') ? '' : 'none';
             });
         }
+    }
+
+    // [2026-07-02] Reflect inspect-mode on/off in the right-rail Pick button (label + colour).
+    // Driven by the 'mf:theme-inspect-mode' event that the left rail's setInspectMode emits, so
+    // the button also resets after a one-shot pick auto-disables inspect mode.
+    function setInspectorPickBtnState(on: boolean): void {
+        if (!activeContainer) return;
+        var btn = activeContainer.querySelector<HTMLElement>('[data-mf-inspector-pick]');
+        if (!btn) return;
+        btn.setAttribute('data-pick-on', on ? '1' : '0');
+        btn.classList.toggle('is-active', on);
+        var lbl = btn.querySelector<HTMLElement>('.mf-insp-pick-label');
+        if (lbl) lbl.textContent = on ? 'Picking… click an element' : 'Pick element';
+        btn.style.background = on ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : '#eef2ff';
+        btn.style.color = on ? '#ffffff' : '#4338ca';
+        btn.style.borderColor = on ? '#6366f1' : '#c7d2fe';
     }
 
     function populateInspectorPanel(selector: string, breadcrumb: string[], styles: Record<string, string>): void {
@@ -2047,9 +2085,18 @@ import { MegaFormBuilder } from './core';
             'border-radius':'--mf-border-radius','box-shadow':'--mf-shadow'
         }, key);
         var badge = isThemed ? '<span style="display:inline-block;background:#ede9fe;color:#6d28d9;border-radius:3px;padding:0 4px;font-size:8px;font-weight:700;text-transform:uppercase;margin-left:4px">var</span>' : '';
+        // [2026-07-02] For colour properties, prepend a native colour swatch so the user can
+        // change colours directly on the right (as requested), synced with the text input.
+        var swatch = '';
+        if (isColorProp(key, String(val || ''))) {
+            var hex = colorToHex(String(val || '')) || '#000000';
+            swatch = '<input type="color" data-inspector-color="1" data-inspector-key="' + escAttr(key) + '" value="' + escAttr(hex) + '" ' +
+                'title="Pick colour" style="flex:0 0 auto;width:26px;height:26px;padding:0;border:1px solid #e2e8f0;border-radius:5px;background:#fff;cursor:pointer" />';
+        }
         return (
             '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;font-size:11px;border-bottom:1px solid #f1f5f9;background:#fff;transition:background .2s" class="mf-theme-inspector-row" data-inspector-key="' + escAttr(key) + '">' +
-              '<div style="color:#64748b;font-family:Consolas,Menlo,monospace;flex:0 0 45%;word-break:break-all;display:flex;align-items:center">' + escHtml(key) + badge + '</div>' +
+              '<div style="color:#64748b;font-family:Consolas,Menlo,monospace;flex:0 0 40%;word-break:break-all;display:flex;align-items:center">' + escHtml(key) + badge + '</div>' +
+              swatch +
               '<input type="text" data-inspector-input="1" data-inspector-key="' + escAttr(key) + '" value="' + escAttr(String(val || '')) + '" spellcheck="false" autocomplete="off" ' +
                 'style="flex:1;min-width:0;border:1px solid #e2e8f0;border-radius:4px;padding:4px 8px;font-family:Consolas,Menlo,monospace;font-size:11px;color:#0f172a;background:#fff;text-align:right;outline:none;transition:border-color .15s,box-shadow .15s" />' +
             '</div>'
@@ -2073,6 +2120,17 @@ import { MegaFormBuilder } from './core';
                 if (e.key === 'Enter') { e.preventDefault(); commitInspectorEdit(input); input.blur(); }
             });
         });
+        // [2026-07-02] Colour swatches: on change, mirror the hex into the sibling text input
+        // and commit (reuses the text-input commit path for iframe + theme-var propagation).
+        var swatches = activeContainer.querySelectorAll<HTMLInputElement>('[data-inspector-color]');
+        swatches.forEach(function (sw: HTMLInputElement) {
+            sw.addEventListener('input', function () {
+                var row = sw.closest<HTMLElement>('.mf-theme-inspector-row');
+                var txt = row ? row.querySelector<HTMLInputElement>('[data-inspector-input]') : null;
+                if (txt) { txt.value = sw.value; commitInspectorEdit(txt); }
+                else { commitInspectorEdit(sw); }
+            });
+        });
     }
 
     function commitInspectorEdit(input: HTMLInputElement): void {
@@ -2090,7 +2148,7 @@ import { MegaFormBuilder } from './core';
                     cssKey: cssKey,
                     cssValue: cssVal,
                     themeVar: null
-                }, '*');
+                }, getPreviewFrameTargetOrigin(frame));
             }
         } catch { /* defensive */ }
         // Update theme var if mapped
@@ -2256,6 +2314,17 @@ import { MegaFormBuilder } from './core';
             try {
                 if (B.callModule) B.callModule('canvas', 'render');
             } catch (_e) { /* defensive */ }
+            return;
+        }
+
+        // [2026-07-02] Inspector "Pick" button — asks the left rail's inspect engine to enter/
+        // leave crosshair mode via a decoupled event. Results stream back into this same panel.
+        var pickBtn = t.closest('[data-mf-inspector-pick]') as HTMLElement | null;
+        if (pickBtn) {
+            e.preventDefault();
+            var turnOn = pickBtn.getAttribute('data-pick-on') !== '1';
+            try { document.dispatchEvent(new CustomEvent('mf:theme-request-inspect-mode', { detail: { on: turnOn } })); } catch (_e) { /* defensive */ }
+            setInspectorPickBtnState(turnOn);
             return;
         }
 
@@ -2841,13 +2910,20 @@ import { MegaFormBuilder } from './core';
             window.dispatchEvent(new CustomEvent('mf:theme-tab-activated'));
         } catch (_e) { /* IE11-free */ }
 
-        // [B73] Listen for CSS picker results from left-rail Colors tab
+        // [B73] Listen for CSS picker results (the inspect engine still lives in the left-rail
+        // module, but the Pick button + results now live here on the right Inspector sub-tab).
         try {
             window.addEventListener('mf:theme-inspect-element', function (ev: Event) {
                 var d = (ev as CustomEvent).detail;
                 if (d && d.selector) {
                     populateInspectorPanel(d.selector, d.breadcrumb || [], d.styles || {});
                 }
+            });
+            // [2026-07-02] Keep the right-rail Pick button label/colour in sync with inspect mode
+            // (also resets it after a one-shot pick auto-disables inspect mode). Dispatched on
+            // `document` by setInspectMode().
+            document.addEventListener('mf:theme-inspect-mode', function (ev: Event) {
+                setInspectorPickBtnState(!!((ev as CustomEvent).detail && (ev as CustomEvent).detail.on));
             });
         } catch (_e) { /* defensive */ }
     }

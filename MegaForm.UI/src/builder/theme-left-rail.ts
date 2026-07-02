@@ -231,6 +231,15 @@ function installEventBridge(): void {
       renderInspectPick(d.selector || '', d.breadcrumb || [], d.styles || {});
     }
   }, false);
+
+  // [2026-07-02] The CSS picker's Pick button now lives on the RIGHT-rail Inspector sub-tab.
+  // The inspect engine (crosshair handshake + one-shot pick) still lives here, so the right
+  // rail asks us to toggle it via this decoupled event. setInspectMode() echoes the state
+  // back on 'mf:theme-inspect-mode' so the right Pick button can sync its label.
+  document.addEventListener('mf:theme-request-inspect-mode', (e: Event) => {
+    const on = !!((e as CustomEvent).detail && (e as CustomEvent).detail.on);
+    setInspectMode(on);
+  });
 }
 
 installEventBridge();
@@ -244,7 +253,11 @@ function renderUtilityNavHtml(): string {
   // mock-aligned surfaces; legacy panes still render below for any caller
   // that needs them via state restore, but the visible strip only shows the
   // new three.
-  const visibleTabs: ThemeUtilityTab[] = ['presets', 'elements', 'colors'];
+  // [2026-07-02] Elements + Colors tabs removed (unfinished / unused). Only Presets
+  // remains on the left; the CSS picker + inspector now live on the RIGHT rail's
+  // Inspector sub-tab. The elements/colors panes stay mounted (hidden) so any legacy
+  // wireup keeps type-checking, but they are never shown.
+  const visibleTabs: ThemeUtilityTab[] = ['presets'];
   const safeActive: ThemeUtilityTab = (visibleTabs.indexOf(t) >= 0 ? t : 'presets');
   return (
     '<div class="mf-panel-header">' +
@@ -260,8 +273,6 @@ function renderUtilityNavHtml(): string {
     // localhost:3000/builder?mode=design (Presets / Elements / Colors).
     '<div class="mf-palette-tabs mf-theme-nav-tabs" role="tablist">' +
       navTab('presets',  'Presets',  safeActive === 'presets') +
-      navTab('elements', 'Elements', safeActive === 'elements') +
-      navTab('colors',   'Colors',   safeActive === 'colors') +
     '</div>' +
 
     // Body — one container per visible tab; only the active one shows.
@@ -269,8 +280,10 @@ function renderUtilityNavHtml(): string {
     // expects them (e.g. INSPECT iframe handshake) keeps working.
     '<div class="mf-panel-body">' +
       '<div class="mf-palette-cat mf-theme-pane" id="mf-tlr-pane-presets"'  + paneVis('presets',  safeActive) + '>' + renderPresetsPane()  + '</div>' +
-      '<div class="mf-palette-cat mf-theme-pane" id="mf-tlr-pane-elements"' + paneVis('elements', safeActive) + '>' + renderElementsPane() + '</div>' +
-      '<div class="mf-palette-cat mf-theme-pane" id="mf-tlr-pane-colors"'   + paneVis('colors',   safeActive) + '>' + renderColorsPane()   + '</div>' +
+      // [2026-07-02] Elements + Colors panes hidden (tabs removed). Kept mounted for
+      // backward-compat wireup only; the picker/inspector now lives on the right rail.
+      '<div class="mf-palette-cat mf-theme-pane" id="mf-tlr-pane-elements" style="display:none">' + renderElementsPane() + '</div>' +
+      '<div class="mf-palette-cat mf-theme-pane" id="mf-tlr-pane-colors"   style="display:none">' + renderColorsPane()   + '</div>' +
       // Legacy hidden panes — kept for backward compat (INSPECT iframe handshake, etc.).
       '<div class="mf-palette-cat mf-theme-pane" id="mf-tlr-pane-images"    style="display:none">' + renderImagesPane()    + '</div>' +
       '<div class="mf-palette-cat mf-theme-pane" id="mf-tlr-pane-fonts"     style="display:none">' + renderFontsPane()     + '</div>' +
@@ -1340,12 +1353,26 @@ function setInspectMode(on: boolean): void {
   try {
     const frame = document.querySelector('.mf-theme-preview-frame') as HTMLIFrameElement | null;
     if (frame && frame.contentWindow) {
-      frame.contentWindow.postMessage({ type: 'mf-theme-inspect-mode', on }, '*');
+      let targetOrigin = window.location.origin;
+      try {
+        const src = frame.getAttribute('src') || '';
+        if (src && src.indexOf('about:') !== 0) targetOrigin = new URL(src, window.location.href).origin;
+      } catch { /* defensive */ }
+      frame.contentWindow.postMessage({ type: 'mf-theme-inspect-mode', on }, targetOrigin);
     }
   } catch { /* defensive */ }
 
-  // Emit a public event so the right rail / iframe can react too.
-  document.dispatchEvent(new CustomEvent('mf:theme-inspect-mode', { detail: { on } }));
+  // Emit a public event so the right rail / iframe can react too. bubbles:true so both
+  // window- and document-registered listeners receive it (see mf:theme-inspect-element fix).
+  document.dispatchEvent(new CustomEvent('mf:theme-inspect-mode', { bubbles: true, detail: { on } }));
+}
+
+function getPreviewFrameTargetOrigin(frame: HTMLIFrameElement): string {
+  try {
+    const src = frame.getAttribute('src') || '';
+    if (src && src.indexOf('about:') !== 0) return new URL(src, window.location.href).origin;
+  } catch { /* defensive */ }
+  return window.location.origin;
 }
 
 function renderInspectPick(selector: string, breadcrumb: string[], styles: Record<string, string>): void {
@@ -1355,8 +1382,13 @@ function renderInspectPick(selector: string, breadcrumb: string[], styles: Recor
   state.lastPickedSelector = String(selector || '');
   state.lastPickedStyles   = { ...(styles || {}) };
 
-  // Dispatch event so theme-tab-adapter can open the Inspector sub-tab
+  // Dispatch event so theme-tab-adapter can open the Inspector sub-tab.
+  // [2026-07-02 FIX] bubbles:true is REQUIRED — the adapter listens on `window`, and a
+  // non-bubbling event dispatched on `document` never reaches window bubble-phase listeners.
+  // This is why the CSS picker silently "did nothing" (the pick message arrived but the
+  // right-rail Inspector never populated).
   document.dispatchEvent(new CustomEvent('mf:theme-inspect-element', {
+    bubbles: true,
     detail: { selector, breadcrumb, styles },
   }));
 
@@ -1436,7 +1468,7 @@ function postEditToIframe(selector: string, cssKey: string, cssValue: string): v
         cssKey,
         cssValue,
         themeVar: themeVar || null,
-      }, '*');
+      }, getPreviewFrameTargetOrigin(frame));
     }
   } catch { /* defensive */ }
 
