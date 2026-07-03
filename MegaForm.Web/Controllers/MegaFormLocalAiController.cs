@@ -64,7 +64,13 @@ namespace MegaForm.Web.Controllers
                 if (!string.IsNullOrWhiteSpace(kbAnswer))
                     return Content(JsonConvert.SerializeObject(BuildOpenAiResponse(kbAnswer)), "application/json");
 
-                var kimiAnswer = await TryKimiCliAsync(query);
+                // [SecFix 2026-07-03 P1-3] The kimi CLI fallback spawns a local process. Even though
+                // this endpoint now requires auth, restrict the process spawn to admins/host so a
+                // low-privilege authenticated user cannot reach the RCE surface. KB answers above
+                // stay available to any authenticated user.
+                var isPrivileged = User != null &&
+                    (User.IsInRole("Administrator") || User.IsInRole("Host") || User.IsInRole("host") || User.IsInRole("Admin"));
+                var kimiAnswer = isPrivileged ? await TryKimiCliAsync(query) : null;
                 if (!string.IsNullOrWhiteSpace(kimiAnswer))
                     return Content(JsonConvert.SerializeObject(BuildOpenAiResponse(kimiAnswer)), "application/json");
 

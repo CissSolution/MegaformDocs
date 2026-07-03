@@ -251,9 +251,10 @@ namespace MegaForm.Core.Services
                 var isStoredProc = string.Equals(optionsType, "storedproc", StringComparison.OrdinalIgnoreCase)
                                 || string.Equals(optionsType, "sproc",      StringComparison.OrdinalIgnoreCase);
 
-                // Inline SQL must be SELECT-only. Stored procs are name-only — safe by definition
-                // (no arbitrary DML body coming from the manifest).
+                // Inline SQL must be SELECT-only. Stored procs are name-only, but the name still
+                // reaches the DB — restrict it to a plain [schema.]identifier (blocks xp_/system procs).
                 if (!isStoredProc && IsDangerousQuery(sql)) return options;
+                if (isStoredProc && !IsSafeProcName(sql)) return options;
 
                 using (var conn = _registry.GetConnection(connectionKey, databaseType, null))
                 {
@@ -454,18 +455,38 @@ namespace MegaForm.Core.Services
             return null;
         }
 
-        // Same guard list as DataRepeaterService — block any DML in a "read options" path.
-        private static readonly string[] _danger = new[]
-        {
-            "INSERT ", "UPDATE ", "DELETE ", "DROP ", "ALTER ", "TRUNCATE ", "EXEC ", "EXECUTE ",
-            "CREATE ", "GRANT ", "REVOKE ", "MERGE ", "BULK ", "BACKUP ", "RESTORE "
-        };
+        // [SecFix P1-4] Word-boundary danger scan for the "read options" path. The old version
+        // matched "INSERT " with a trailing SPACE, so INSERT\tINTO / INSERT\nINTO (tab/newline
+        // obfuscation) slipped through. This is a read-only surface — legitimate config is a
+        // single SELECT — so we also reject statement-stacking and comments outright.
+        private static readonly System.Text.RegularExpressions.Regex _dangerRx =
+            new System.Text.RegularExpressions.Regex(
+                @"\b(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE|EXEC|EXECUTE|GRANT|REVOKE|DENY|MERGE|BULK|BACKUP|RESTORE|SHUTDOWN|RECONFIGURE|WAITFOR|OPENROWSET|OPENQUERY|OPENDATASOURCE)\b|\bxp_",
+                System.Text.RegularExpressions.RegexOptions.Compiled | System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
         private static bool IsDangerousQuery(string sql)
         {
             if (string.IsNullOrWhiteSpace(sql)) return true;
-            var upper = " " + sql.ToUpperInvariant() + " ";
-            return _danger.Any(d => upper.Contains(d));
+            var body = sql.Trim().TrimEnd(';');
+            if (body.IndexOf(';') >= 0) return true;                                   // no statement stacking
+            if (body.IndexOf("--", StringComparison.Ordinal) >= 0 ||
+                body.IndexOf("/*", StringComparison.Ordinal) >= 0) return true;        // no comment obfuscation
+            return _dangerRx.IsMatch(body);
+        }
+
+        // [SecFix P1-4] Stored-proc mode executes a proc NAME (no arbitrary body) but the name
+        // still reaches the DB verbatim — restrict it to a plain [schema.]identifier so it can't
+        // carry a system proc reference or injected fragment.
+        private static readonly System.Text.RegularExpressions.Regex _procNameRx =
+            new System.Text.RegularExpressions.Regex(
+                @"^\s*\[?[A-Za-z_][A-Za-z0-9_]*\]?(\s*\.\s*\[?[A-Za-z_][A-Za-z0-9_]*\]?)?\s*$",
+                System.Text.RegularExpressions.RegexOptions.Compiled);
+
+        private static bool IsSafeProcName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return false;
+            if (name.IndexOf("xp_", StringComparison.OrdinalIgnoreCase) >= 0) return false;
+            return _procNameRx.IsMatch(name);
         }
     }
 }

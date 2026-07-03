@@ -285,14 +285,25 @@ namespace MegaForm.Core.Services
             return list;
         }
 
+        // [SecFix P1-6] Lifecycle hook SQL runs on every PUBLIC form submission, so a
+        // CSRF/imported malicious hook could previously ship anything except the 4 substrings
+        // below (EXEC, DROP TABLE, DELETE, ALTER, statement-stacking all passed). Hooks are
+        // legitimately single DML statements (INSERT/UPDATE/DELETE), so we now reject
+        // statement-stacking + comments and word-boundary-block all DDL / privilege / OS-reach
+        // verbs, while still allowing plain DML.
+        private static readonly System.Text.RegularExpressions.Regex _hookDangerRx =
+            new System.Text.RegularExpressions.Regex(
+                @"\b(DROP|ALTER|CREATE|TRUNCATE|EXEC|EXECUTE|GRANT|REVOKE|DENY|SHUTDOWN|RECONFIGURE|WAITFOR|OPENROWSET|OPENQUERY|OPENDATASOURCE|BACKUP|RESTORE|MERGE|BULK)\b|\bxp_|\bsp_oacreate\b",
+                System.Text.RegularExpressions.RegexOptions.Compiled | System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
         private static bool IsDangerousVerb(string sql)
         {
             if (string.IsNullOrWhiteSpace(sql)) return true;
-            var s = sql.ToUpperInvariant();
-            return s.Contains("DROP DATABASE")
-                || s.Contains("TRUNCATE TABLE")
-                || s.Contains("XP_CMDSHELL")
-                || s.Contains("SHUTDOWN");
+            var body = sql.Trim().TrimEnd(';');
+            if (body.IndexOf(';') >= 0) return true;                                    // no statement stacking
+            if (body.IndexOf("--", StringComparison.Ordinal) >= 0 ||
+                body.IndexOf("/*", StringComparison.Ordinal) >= 0) return true;         // no comment obfuscation
+            return _hookDangerRx.IsMatch(body);
         }
 
         private static string Truncate(string s, int max)

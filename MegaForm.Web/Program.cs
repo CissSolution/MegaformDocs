@@ -155,8 +155,20 @@ builder.Services.AddControllersWithViews(o =>
 })
 .AddNewtonsoftJson(); // Dùng Newtonsoft.Json giống DNN
 
+// [SecFix 2026-07-03 P2-1] When origins are configured (MEGAFORM_CORS_ORIGINS or Cors:Origins,
+// comma/semicolon-separated) lock CORS to them and allow credentials; otherwise keep the
+// permissive dev default (AllowAnyOrigin, no credentials — the invalid Origin+credentials combo
+// is avoided). Set the env var in production to stop arbitrary origins calling with cookies.
+var corsRaw = Environment.GetEnvironmentVariable("MEGAFORM_CORS_ORIGINS") ?? cfg["Cors:Origins"] ?? "";
+var corsOrigins = corsRaw.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+for (int i = 0; i < corsOrigins.Length; i++) corsOrigins[i] = corsOrigins[i].Trim();
 builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
-    p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
+{
+    if (corsOrigins.Length > 0)
+        p.WithOrigins(corsOrigins).AllowAnyMethod().AllowAnyHeader().AllowCredentials();
+    else
+        p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+}));
 
 // ── Swagger (development) ─────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();

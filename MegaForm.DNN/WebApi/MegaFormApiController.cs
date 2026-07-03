@@ -2991,13 +2991,16 @@ VALUES
             if (string.IsNullOrWhiteSpace(path))
                 return Request.CreateResponse(HttpStatusCode.NotFound);
 
-            // Sanitize: prevent path traversal
-            var safePath = path.Replace("..", "").TrimStart('/', '\\').Replace('/', Path.DirectorySeparatorChar);
+            // [SecFix P1-8] Canonical-path containment (GetFullPath resolves any `..`); the old
+            // `path.Replace("..","")` sanitiser is bypassable.
             var appDataRoot = System.Web.Hosting.HostingEnvironment.MapPath("~/App_Data/MegaForm/PrivateUploads")
                 ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "MegaForm", "PrivateUploads");
-            var fullPath = Path.Combine(appDataRoot, safePath);
+            appDataRoot = Path.GetFullPath(appDataRoot);
+            var rel = path.TrimStart('/', '\\').Replace('/', Path.DirectorySeparatorChar);
+            var fullPath = Path.GetFullPath(Path.Combine(appDataRoot, rel));
+            var rootWithSep = appDataRoot.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
 
-            if (!fullPath.StartsWith(appDataRoot, StringComparison.OrdinalIgnoreCase) || !File.Exists(fullPath))
+            if (!fullPath.StartsWith(rootWithSep, StringComparison.OrdinalIgnoreCase) || !File.Exists(fullPath))
                 return Request.CreateResponse(HttpStatusCode.NotFound);
 
             var bytes = File.ReadAllBytes(fullPath);
@@ -3025,6 +3028,8 @@ VALUES
             response.Content.Headers.ContentDisposition =
                 new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment")
                 { FileName = Path.GetFileName(fullPath) };
+            // [SecFix P2-4] Prevent MIME-sniffing a private upload into executable content.
+            response.Headers.TryAddWithoutValidation("X-Content-Type-Options", "nosniff");
             return response;
         }
     }
@@ -3802,6 +3807,7 @@ VALUES
 
         [HttpGet]
         [ActionName("DatabaseSettings")]
+        [DnnAuthorize(StaticRoles = "Administrators")]
         public HttpResponseMessage GetDatabaseSettings()
         {
             var provider = GetPortalSetting("Database_Provider");
@@ -3816,7 +3822,7 @@ VALUES
             return Request.CreateResponse(HttpStatusCode.OK, new
             {
                 provider,
-                connectionString,
+                connectionString = MaskConnectionSecrets(connectionString),
                 dashboardConnectionName = dashboardAlias,
                 samples = new
                 {

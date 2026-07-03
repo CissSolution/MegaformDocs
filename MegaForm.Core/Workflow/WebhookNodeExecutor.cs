@@ -118,6 +118,20 @@ namespace MegaForm.Core.Services.Workflow
             CancellationToken ct)
         {
             string url    = ResolveTemplate(config.Url, ctx);
+
+            // [SecFix P0-8] SSRF guard — the URL template can resolve {{field.*}} from a PUBLIC
+            // form submission, so an attacker could point the server at cloud metadata / internal
+            // hosts. Reject non-http(s) and private/loopback/metadata targets before any send.
+            if (!MegaForm.Core.Services.SsrfGuard.IsUrlAllowed(url, out var ssrfReason))
+            {
+                return new WebhookExecutionResult
+                {
+                    IsSuccess = false,
+                    StatusCode = 0,
+                    Error = "Blocked webhook URL: " + ssrfReason,
+                };
+            }
+
             string method = config.Method.ToString();
             string body   = BuildBody(config, ctx);
 

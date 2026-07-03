@@ -200,19 +200,24 @@ namespace MegaForm.Core.Services
             return list;
         }
 
-        // Allow only INSERT. Block UPDATE/DELETE/DDL etc.
-        private static readonly string[] _bannedKeywords = new[]
-        {
-            "UPDATE ", "DELETE ", "DROP ", "ALTER ", "TRUNCATE ", "EXEC ", "EXECUTE ",
-            "CREATE ", "GRANT ", "REVOKE ", "MERGE ", "BULK ", "BACKUP ", "RESTORE "
-        };
+        // [SecFix P1-5] Allow only a single INSERT. The old check matched banned verbs with a
+        // trailing SPACE ("UPDATE ") and never rejected statement-stacking, so a public submission
+        // running form-configured InsertSql could smuggle "INSERT ...;UPDATE\nT SET..." past it.
+        // Now: reject stacking + comments, require a leading INSERT, and word-boundary-block every
+        // non-INSERT verb (so INSERT\tINTO ... SELECT still works but INSERT;DROP does not).
+        private static readonly Regex _bannedRx = new Regex(
+            @"\b(UPDATE|DELETE|DROP|ALTER|TRUNCATE|EXEC|EXECUTE|CREATE|GRANT|REVOKE|DENY|MERGE|BULK|BACKUP|RESTORE|SHUTDOWN|RECONFIGURE|WAITFOR|OPENROWSET|OPENQUERY|OPENDATASOURCE)\b|\bxp_",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private static bool IsDangerousNonInsertQuery(string sql)
         {
             if (string.IsNullOrWhiteSpace(sql)) return true;
-            var upper = " " + sql.Trim().ToUpperInvariant() + " ";
-            if (!upper.TrimStart().StartsWith("INSERT ")) return true;
-            return _bannedKeywords.Any(b => upper.Contains(b));
+            var body = sql.Trim().TrimEnd(';');
+            if (body.IndexOf(';') >= 0) return true;                                    // no statement stacking
+            if (body.IndexOf("--", StringComparison.Ordinal) >= 0 ||
+                body.IndexOf("/*", StringComparison.Ordinal) >= 0) return true;         // no comment obfuscation
+            if (!Regex.IsMatch(body, @"^\s*INSERT\b", RegexOptions.IgnoreCase)) return true;
+            return _bannedRx.IsMatch(body);
         }
     }
 }

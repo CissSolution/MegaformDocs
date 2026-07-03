@@ -761,8 +761,12 @@ namespace MegaForm.Oqtane.Server.Controllers
                 char.IsLetterOrDigit(c) || c == '-' || c == '_').ToArray());
             if (string.IsNullOrEmpty(safeId)) return BadRequest(new { error = "invalid id" });
 
-            // Try bundles/i18n first (built strings), then builder/i18n (static overrides)
-            foreach (var subPath in new[] { "js/bundles/i18n", "js/builder/i18n" })
+            // [SaveShadowFix 2026-07-01] Read builder/i18n (author OVERRIDES written by the
+            // i18n/save endpoint) BEFORE bundles/i18n (shipped defaults). Since the package
+            // now ships every locale in bundles/i18n, reading it first shadowed every saved
+            // translation → the Language Manager "Save" appeared to do nothing on reload.
+            // Overrides must win; both dirs hold the same defaults until a save happens.
+            foreach (var subPath in new[] { "js/builder/i18n", "js/bundles/i18n" })
             {
                 var path = Path.Combine(_env.WebRootPath, "Modules", "MegaForm",
                     subPath.Replace('/', Path.DirectorySeparatorChar), safeId + ".json");
@@ -781,6 +785,11 @@ namespace MegaForm.Oqtane.Server.Controllers
         [HttpPost("i18n/create")]
         [HttpPost("i18n/save")]
         [HttpPost("i18n/import")]
+        // [SecFix 2026-07-02 P0-2] Was unauthenticated (every OTHER action in this controller
+        // is [Authorize]d — these three write endpoints were missed). Anyone could POST
+        // attacker-controlled JSON that is written to a locale file and later rendered in the
+        // builder → stored XSS. Gate to EditModule like the rest of the write endpoints.
+        [Authorize(Policy = "EditModule")]
         public IActionResult UpsertI18nLocale([FromBody] JsonElement body)
         {
             // [OQI18nWrite v20260617] Implement locale WRITE on Oqtane (was a blanket 501
@@ -807,6 +816,11 @@ namespace MegaForm.Oqtane.Server.Controllers
                     return BadRequest(new { error = "invalid locale" });
                 if (string.Equals(safeLocale, "en-US", StringComparison.OrdinalIgnoreCase))
                     return BadRequest(new { error = "en-US is the built-in source locale and cannot be overwritten." });
+                // [SecFix 2026-07-02 P0-2] 'index' is the locale MANIFEST (index.json) read by
+                // ListI18nLocales — never a translatable pack. Reject it so a write can't clobber
+                // the manifest (the char allow-list already blocks path separators / traversal).
+                if (string.Equals(safeLocale, "index", StringComparison.OrdinalIgnoreCase))
+                    return BadRequest(new { error = "'index' is the locale manifest and cannot be overwritten." });
 
                 var i18nDir = Path.Combine(_env.WebRootPath, "Modules", "MegaForm", "js", "builder", "i18n");
                 Directory.CreateDirectory(i18nDir);
@@ -1763,16 +1777,22 @@ namespace MegaForm.Oqtane.Server.Controllers
         {
             if (string.IsNullOrWhiteSpace(path)) return NotFound();
 
-            var safePath = path.Replace("..", string.Empty).TrimStart('/', '\\').Replace('/', Path.DirectorySeparatorChar);
-            var appDataRoot = Path.Combine(_env.ContentRootPath ?? AppDomain.CurrentDomain.BaseDirectory, "App_Data", "MegaForm", "PrivateUploads");
-            var fullPath = Path.Combine(appDataRoot, safePath);
-            if (!fullPath.StartsWith(appDataRoot, StringComparison.OrdinalIgnoreCase) || !System.IO.File.Exists(fullPath))
+            // [SecFix P1-8] Canonical-path containment. The old `path.Replace("..","")` is an
+            // anti-pattern (bypassable via `..././`, encoded, etc.). GetFullPath resolves any `..`
+            // so an escaping path fails the root-prefix check.
+            var appDataRoot = Path.GetFullPath(Path.Combine(_env.ContentRootPath ?? AppDomain.CurrentDomain.BaseDirectory, "App_Data", "MegaForm", "PrivateUploads"));
+            var rel = path.TrimStart('/', '\\').Replace('/', Path.DirectorySeparatorChar);
+            var fullPath = Path.GetFullPath(Path.Combine(appDataRoot, rel));
+            var rootWithSep = appDataRoot.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            if (!fullPath.StartsWith(rootWithSep, StringComparison.OrdinalIgnoreCase) || !System.IO.File.Exists(fullPath))
                 return NotFound();
 
             var provider = new FileExtensionContentTypeProvider();
             if (!provider.TryGetContentType(fullPath, out var contentType))
                 contentType = "application/octet-stream";
 
+            // [SecFix P2-4] Never let the browser MIME-sniff a private upload into executable HTML/JS.
+            Response.Headers["X-Content-Type-Options"] = "nosniff";
             return PhysicalFile(fullPath, contentType, Path.GetFileName(fullPath));
         }
 
@@ -3741,6 +3761,11 @@ namespace MegaForm.Oqtane.Server.Controllers
                     case "paypal":
                     case "stripe":
                     case "square":
+                    // [B310] Legacy field types StripePayment/PayPalPayment (older wizard tiles)
+                    // route through the same unified payment assets. The wizard now emits the
+                    // canonical 'Payment' type, but stored legacy forms still carry these.
+                    case "stripepayment":
+                    case "paypalpayment":
                         AddPaymentAssets(field, scripts, styles);
                         break;
                     case "appointment":
@@ -3796,6 +3821,23 @@ namespace MegaForm.Oqtane.Server.Controllers
                         break;
                     case "contentslider":
                         AddScript(scripts, "megaform-widget-content-slider.js");
+                        break;
+                    // [B310 CatalogReconcile] These widget types are in the AI widget catalog
+                    // (the AI can emit them) but had NO asset-manifest case → the public render
+                    // never injected their plugin script → blank/text-fallback field. The client
+                    // widget-plugin-autoload is a fallback, but the server manifest is the
+                    // authoritative first-paint path. Filenames verified in js/plugins/.
+                    case "datagrid":
+                        AddScript(scripts, "megaform-widget-datagrid.js");
+                        break;
+                    case "map":
+                        AddScript(scripts, "megaform-widget-map.js");
+                        break;
+                    case "dynamiclabel":
+                        AddScript(scripts, "megaform-widget-dynamic-label.js");
+                        break;
+                    case "razor":
+                        AddScript(scripts, "megaform-widget-razor.js");
                         break;
                 }
             }

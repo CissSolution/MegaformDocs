@@ -297,8 +297,18 @@ namespace MegaForm.AspNetCore.Component
             // CORS (opt-in)
             if (options.UseCors)
             {
+                // [SecFix P2-1] Lock CORS to configured origins (MEGAFORM_CORS_ORIGINS) when present;
+                // otherwise keep the permissive default for local/dev.
+                var corsRaw = Environment.GetEnvironmentVariable("MEGAFORM_CORS_ORIGINS") ?? string.Empty;
+                var corsOrigins = corsRaw.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+                for (int i = 0; i < corsOrigins.Length; i++) corsOrigins[i] = corsOrigins[i].Trim();
                 services.AddCors(o => o.AddDefaultPolicy(p =>
-                    p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
+                {
+                    if (corsOrigins.Length > 0)
+                        p.WithOrigins(corsOrigins).AllowAnyMethod().AllowAnyHeader().AllowCredentials();
+                    else
+                        p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+                }));
             }
 
             // Swagger (opt-in)
@@ -311,7 +321,17 @@ namespace MegaForm.AspNetCore.Component
 
         private static void RegisterAuthentication(IServiceCollection services, MegaFormOptions options)
         {
-            var jwtKey = options.JwtKey;
+            // [SecFix 2026-07-03 P0-9] Mirror MegaForm.Web/Program.cs: prefer the JWT signing key +
+            // issuer/audience from the environment so no real secret is baked into config, and
+            // validate issuer/audience whenever they are configured. Previously this extension
+            // hardcoded the key from options and disabled issuer/audience validation entirely —
+            // any host that used it (CorporateWeb / AspNetCore samples) was open to token forgery.
+            var jwtKey = Environment.GetEnvironmentVariable("MEGAFORM_JWT_KEY") ?? options.JwtKey;
+            var jwtIssuer = Environment.GetEnvironmentVariable("MEGAFORM_JWT_ISSUER");
+            var jwtAudience = Environment.GetEnvironmentVariable("MEGAFORM_JWT_AUDIENCE");
+            var isDev = string.Equals(
+                Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "Development",
+                StringComparison.OrdinalIgnoreCase);
             services.AddAuthentication(authOptions =>
             {
                 authOptions.DefaultScheme = options.AuthenticationSchemeName;
@@ -339,7 +359,11 @@ namespace MegaForm.AspNetCore.Component
                 o.Cookie.HttpOnly = true;
                 o.Cookie.IsEssential = true;
                 o.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Lax;
-                o.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest;
+                // [SecFix P2-2] Require Secure cookies outside Development so the auth cookie is
+                // never sent over plain HTTP on a real deployment.
+                o.Cookie.SecurePolicy = isDev
+                    ? Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest
+                    : Microsoft.AspNetCore.Http.CookieSecurePolicy.Always;
             });
 
             if (!string.IsNullOrEmpty(jwtKey))
@@ -348,8 +372,10 @@ namespace MegaForm.AspNetCore.Component
                 {
                     o.TokenValidationParameters = new TokenValidationParameters
                     {
-                        ValidateIssuer = false,
-                        ValidateAudience = false,
+                        ValidateIssuer = !string.IsNullOrEmpty(jwtIssuer),
+                        ValidIssuer = jwtIssuer,
+                        ValidateAudience = !string.IsNullOrEmpty(jwtAudience),
+                        ValidAudience = jwtAudience,
                         ValidateLifetime = true,
                         ValidateIssuerSigningKey = true,
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
