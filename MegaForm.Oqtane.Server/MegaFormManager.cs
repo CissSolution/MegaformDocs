@@ -1,4 +1,5 @@
 using MegaForm.Oqtane.Server.Data;
+using MegaForm.Oqtane.Server.Services;
 using Microsoft.EntityFrameworkCore;
 using Oqtane.Enums;
 using Oqtane.Infrastructure;
@@ -8,6 +9,7 @@ using Oqtane.Models;
 using Oqtane.Repository;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MegaForm.Oqtane.Server
 {
@@ -71,7 +73,34 @@ namespace MegaForm.Oqtane.Server
             }
 
             SeedMigrationHistory(db, version);
+
+            // [KB eager-seed 20260703] The AI Knowledge Base (MF_AI_Knowledge + templates + rules)
+            // is otherwise only populated LAZILY on the first authenticated KB read
+            // (OqtaneAiKnowledgeService.EnsureSeeded). On a fresh install nobody has opened the AI
+            // panel yet, so the table sits at 0 rows — which reads as "the AI premium-edit assistant
+            // has no KB context" and hides the per-template guides. The template_guide seed baked into
+            // migrations 01.06.35/36/37 CANNOT fix this on Oqtane because Install() builds the schema
+            // from the EF model (GenerateCreateScript) and SeedMigrationHistory() marks every migration
+            // applied WITHOUT ever running their Up() SQL — so that seed is dead code here. Seed the KB
+            // now, in the install request scope where the tenant connection is resolved. Idempotent
+            // (empty-check) and defensive (never fail the module install on a seed hiccup).
+            SeedAiKnowledgeIfEmpty(db);
             return true;
+        }
+
+        private static void SeedAiKnowledgeIfEmpty(MegaFormDbContext db)
+        {
+            try
+            {
+                if (db.AiKnowledgeEntries.AsNoTracking().Any()) return;
+                OqtaneKbSeederHostedService.SeedEntries(db, null);
+            }
+            catch (Exception ex)
+            {
+                // A seed hiccup must never break the module install — the lazy first-request seed
+                // (OqtaneAiKnowledgeService.EnsureSeeded) remains as the fallback.
+                System.Console.WriteLine("[MegaForm KB seed] skipped: " + ex.Message);
+            }
         }
 
         // SQL Server: "There is already an object named 'X'" / "already exists"; SQLite/Postgres:
