@@ -98,9 +98,8 @@ namespace MegaForm.Core.Services
                 var type = f.Type ?? "Text";
                 if (string.Equals(type, "Row", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (f.Columns != null)
-                        foreach (var col in f.Columns)
-                            if (col != null && AnyHydrationWidget(col.Fields)) return true;
+                    foreach (var col in GetRowColumns(f))
+                        if (AnyHydrationWidget(col.Fields)) return true;
                     continue;
                 }
                 if (!NativeTypes.Contains(type)) return true;
@@ -222,7 +221,11 @@ namespace MegaForm.Core.Services
 
             // {{script:key}} → anchor span (JS injects the managed script). Keep SEO-neutral.
             html = Regex.Replace(html, @"\{\{script:([a-zA-Z0-9_\-]+)\}\}", m =>
-                "<span class=\"mf-script-anchor\" data-mf-script=\"" + Esc(m.Groups[1].Value) + "\"></span>");
+            {
+                var key = Esc(m.Groups[1].Value);
+                return "<span class=\"mf-script-anchor\" data-mf-script=\"" + key + "\" data-mf-script-key=\"" + key +
+                       "\" data-mf-script-badge=\"FormHtmlRenderer SSR\" style=\"display:none !important;\"></span>";
+            });
 
             // {{field:key}} → field wrapper (label + input)
             var fieldMap = BuildFieldMap(fields);
@@ -386,9 +389,8 @@ namespace MegaForm.Core.Services
                 var type = f.Type ?? "Text";
                 if (string.Equals(type, "Row", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (f.Columns != null)
-                        foreach (var col in f.Columns)
-                            if (col != null) AppendSummaryRows(sb, col.Fields);
+                    foreach (var col in GetRowColumns(f))
+                        AppendSummaryRows(sb, col.Fields);
                     continue;
                 }
                 if (NonSummaryTypes.Contains(type)) continue;
@@ -427,7 +429,7 @@ namespace MegaForm.Core.Services
                 return "<div class=\"mf-field-group\" data-key=\"" + Esc(field.Key) + "\" data-type=\"Html\"" + showIfAttr +
                        "><div class=\"mf-html-block\">" + (tr.HtmlContent ?? field.HtmlContent ?? string.Empty) + "</div></div>";
             // Row
-            if (string.Equals(type, "Row", StringComparison.OrdinalIgnoreCase) && field.Columns != null)
+            if (string.Equals(type, "Row", StringComparison.OrdinalIgnoreCase) && GetRowColumns(field).Count > 0)
                 return RenderRow(field, formId, locale, showIfAttr);
 
             var isWidget = !NativeTypes.Contains(type);
@@ -457,13 +459,14 @@ namespace MegaForm.Core.Services
 
         private static string RenderRow(FormField field, int formId, string locale, string showIfAttr)
         {
-            var colTpl = string.Join(" ", field.Columns.Select(c => (c.Span <= 0 ? 6 : c.Span) + "fr"));
+            var columns = GetRowColumns(field);
+            var colTpl = string.Join(" ", columns.Select(c => (c.Span <= 0 ? 6 : c.Span) + "fr"));
             var sb = new StringBuilder();
             sb.Append("<div class=\"mf-field-group mf-field-group--row\" data-key=\"").Append(Esc(field.Key))
               .Append("\" data-type=\"Row\"").Append(showIfAttr).Append(">");
             sb.Append("<div class=\"mf-row\" style=\"display:grid;grid-template-columns:").Append(colTpl)
               .Append(";gap:var(--mf-field-gap,20px);margin-bottom:var(--mf-field-gap,20px);width:100%;\">");
-            foreach (var col in field.Columns)
+            foreach (var col in columns)
             {
                 sb.Append("<div class=\"mf-row-column\">");
                 foreach (var cf in (col.Fields ?? new List<FormField>()))
@@ -571,11 +574,22 @@ namespace MegaForm.Core.Services
                 case "Rating":
                 {
                     int.TryParse(val, out var rv);
-                    var sb = new StringBuilder("<div class=\"mf-rating\" id=\"" + id + "-rating\" data-name=\"" + name + "\" data-value=\"" + rv + "\">");
+                    // [SSR/client parity fix 2026-07-03] Was: bare <span class="mf-star"> children of the
+                    // grid .mf-rating → each star fell on its own grid row (stars stacked VERTICALLY, the
+                    // reported bug). Match the client renderer (inputs.ts renderRatingInput): wrap the stars
+                    // in the flex .mf-rating-items and use .mf-rating-item so the shared CSS lays them out
+                    // horizontally and the active fill toggles via .mf-rating-on/off.
+                    var sb = new StringBuilder("<div class=\"mf-rating mf-rating--star\" id=\"" + id + "-rating\" data-name=\"" + name + "\" data-value=\"" + rv + "\" data-style=\"star\">");
+                    sb.Append("<div class=\"mf-rating-items\" role=\"radiogroup\" aria-label=\"Rating\">");
                     for (var i = 1; i <= 5; i++)
-                        sb.Append("<span class=\"mf-star\" data-val=\"").Append(i)
-                          .Append("\" style=\"font-size:28px;cursor:pointer;color:").Append(i <= rv ? "#fbbf24" : "#d0d5dd").Append(";\">&#9733;</span>");
-                    return sb.Append("<input type=\"hidden\" name=\"").Append(name).Append("\" value=\"").Append(Esc(val)).Append("\"></div>").ToString();
+                        sb.Append("<button type=\"button\" class=\"mf-rating-item mf-star")
+                          .Append(i <= rv ? " is-active" : "")
+                          .Append("\" data-val=\"").Append(i).Append("\" aria-label=\"").Append(i).Append(" of 5 stars\">")
+                          .Append("<span class=\"mf-rating-on\">&#9733;</span><span class=\"mf-rating-off\">&#9734;</span></button>");
+                    sb.Append("</div>");
+                    sb.Append("<div class=\"mf-rating-value\">").Append(rv > 0 ? rv + " out of 5" : "").Append("</div>");
+                    sb.Append("<input type=\"hidden\" name=\"").Append(name).Append("\" value=\"").Append(Esc(val)).Append("\">");
+                    return sb.Append("</div>").ToString();
                 }
                 case "Signature":
                     return "<div class=\"mf-signature-field\" style=\"border:1px solid #d0d5dd;border-radius:6px;padding:8px;background:#fafafa;\">"
@@ -1460,13 +1474,55 @@ namespace MegaForm.Core.Services
             {
                 if (f?.Key == null) return;
                 map[f.Key] = f;
-                if (string.Equals(f.Type, "Row", StringComparison.OrdinalIgnoreCase) && f.Columns != null)
-                    foreach (var col in f.Columns)
+                if (string.Equals(f.Type, "Row", StringComparison.OrdinalIgnoreCase))
+                    foreach (var col in GetRowColumns(f))
                         foreach (var cf in (col.Fields ?? new List<FormField>()))
                             Add(cf);
             }
             foreach (var f in fields) Add(f);
             return map;
+        }
+
+        private static List<RowColumn> GetRowColumns(FormField field)
+        {
+            var columns = (field?.Columns ?? new List<RowColumn>())
+                .Where(c => c != null)
+                .ToList();
+            if (columns.Count <= 1) return columns;
+
+            // Newtonsoft deserializes legacy payloads that contain both "columns" and "Columns"
+            // into the same Columns list, appending the Pascal-case copy. The browser renderer reads
+            // only field.columns, so SSR must collapse exact column duplicates to keep first paint
+            // byte-parity with the hydrated DOM.
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            var deduped = new List<RowColumn>();
+            foreach (var col in columns)
+            {
+                var signature = RowColumnSignature(col);
+                if (seen.Add(signature)) deduped.Add(col);
+            }
+            return deduped;
+        }
+
+        private static string RowColumnSignature(RowColumn col)
+        {
+            var sb = new StringBuilder();
+            var span = col == null || col.Span <= 0 ? 6 : col.Span;
+            sb.Append(span).Append('|');
+            foreach (var field in (col?.Fields ?? new List<FormField>()))
+            {
+                if (field == null)
+                {
+                    sb.Append("<null>;");
+                    continue;
+                }
+                sb.Append(field.Key ?? string.Empty).Append('|')
+                  .Append(field.Type ?? string.Empty).Append('|')
+                  .Append(field.Label ?? string.Empty).Append('|')
+                  .Append(field.Placeholder ?? string.Empty).Append('|')
+                  .Append(field.Required ? "1" : "0").Append(';');
+            }
+            return sb.ToString();
         }
 
         private static List<FormField> NormalizeFields(FormSchema schema)

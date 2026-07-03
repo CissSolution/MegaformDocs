@@ -175,6 +175,32 @@ body > div[style*="display:none"]:has(.megaform-module) {
 .mf-form-wrapper * { box-sizing: border-box; }
 
 /* ============================================================
+   [B355] FIRST-PAINT ANTI-JANK CLOAK
+   Premium shells hide each step by default and animate it in with a one-shot entrance
+   keyframe: `.au-page{display:none;animation:auFade .25s}` + `.au-page.is-active{display:block}`
+   (amFade on americana, …). Because `.is-active` + the animation live in the SSR template
+   CSS, the first step's auFade PLAYS AT SERVER FIRST PAINT (~250ms) — before the schema
+   even returns — reading as a fade + 6px slide "giật", not an effect (measured: opacity
+   0.44 mid-auFade). So the cloak must be present in the SSR markup: the wrapper ships with
+   `.mf-booting` baked in (see Index.razor / RenderPage), and the renderer lifts it one frame
+   after hydrate.
+
+   We do NOT use `animation:none` here: that would hide animation-name AND restart the
+   entrance the instant the class is removed (the name flips none→auFade → the browser
+   plays it late = the exact bug, just deferred). Instead we push one-shot entrances to
+   their FINAL frame instantly with a large negative delay: no motion, no 0%-flash, and
+   animation-name stays intact so the renderer can permanently pin the on-screen step
+   before lifting the cloak. Infinite animations (spinners) keep looping. Real step-change
+   animations play normally once the class is gone. */
+.mf-form-wrapper.mf-booting,
+.mf-form-wrapper.mf-booting *,
+.mf-form-wrapper.mf-booting *::before,
+.mf-form-wrapper.mf-booting *::after {
+    animation-delay: -1s !important;
+    transition: none !important;
+}
+
+/* ============================================================
    PAGE-THEME INHERITANCE (inline embeds only) — B269
    The server stamps .mf-inherit-type on the wrapper when the author picks
    "Typography source: Inherit from page" in Theme Designer → Global. The form
@@ -1757,6 +1783,11 @@ body > div[style*="display:none"]:has(.megaform-module) {
 /* Rating controls */
 .mf-rating { display: grid; gap: 6px; }
 .mf-rating-items { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
+/* [Rating vertical-stack fix 2026-07-03] Safety net: an .mf-rating whose stars are DIRECT
+   children (legacy/older SSR markup with no .mf-rating-items wrapper) would inherit the grid
+   above and stack each star on its own row. Lay those bare stars out horizontally. Does NOT
+   match the normal structure, where .mf-star lives inside .mf-rating-items (not a direct child). */
+.mf-rating:has(> .mf-star) { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
 .mf-rating-item {
     display: inline-flex;
     align-items: center;
@@ -3257,5 +3288,17 @@ html body:has(.navbar):has(.mfp-americana)
 
 html body:has(.navbar):has(.mfp-americana)
     .mf-form-wrapper.mf-custom-shell-mode.mf-custom-html-mode.mf-premium-native-mode.mf-has-multistep-shell:has(.mfp-americana) .mf-multistep-frame {
+    gap: 0 !important;
+}
+
+/* [B356] GENERAL premium-native multi-step shell — kill the reserved 20px gaps.
+   Premium shells (australia/americana/euro-youth/intake/…) render their OWN stepper +
+   Back/Next/Submit, so the generic multi-step shell's header + footer are hidden. But the
+   frame is `display:flex;gap:20px`, so the (empty, hidden) header→body and body→footer gaps
+   still reserved ~20px above AND below the card. Because the shell is built by JS AFTER the
+   SSR card has painted, those 40px appear LATE — the card drops ~20px and the block grows
+   ~40px = a visible "giật"/jump (the top-padding the user circled). Keying on the canonical
+   .mf-premium-native-mode signal covers every premium template (no per-template :has()). */
+.mf-form-wrapper.mf-premium-native-mode.mf-has-multistep-shell .mf-multistep-frame {
     gap: 0 !important;
 }
