@@ -1,0 +1,329 @@
+{
+  "title": "Project Intake & Onboarding",
+  "slug": "project-intake-onboarding",
+  "description": "A premium multi-step project intake form for agencies and service teams. Fully editable in MegaForm Builder with schema-native fields and native page-break steps.",
+  "category": "Business",
+  "theme": "system",
+  "fields": [
+    {
+      "key": "step_contact",
+      "type": "Section",
+      "label": "Your Details",
+      "pageBreak": true,
+      "stepLabel": "Contact",
+      "stepSubtitle": "Step 1 of 4",
+      "heading": "Let’s get to know you",
+      "intro": "Tell us who you are so we can personalise your experience.",
+      "properties": {
+        "pageBreak": false,
+        "premiumNativeStep": true,
+        "generatedPremiumStep": true,
+        "premiumStepIndex": 1
+      },
+      "Properties": {
+        "pageBreak": false,
+        "premiumNativeStep": true,
+        "generatedPremiumStep": true,
+        "premiumStepIndex": 1
+      }
+    },
+    {
+      "key": "full_name",
+      "type": "Text",
+      "label": "Full Name",
+      "placeholder": "Jane Smith",
+      "required": true
+    },
+    {
+      "key": "email_address",
+      "type": "Email",
+      "label": "Work Email",
+      "placeholder": "jane@company.com",
+      "required": true
+    },
+    {
+      "key": "phone_number",
+      "type": "Phone",
+      "label": "Phone Number",
+      "placeholder": "+1 (555) 000-0000",
+      "required": false
+    },
+    {
+      "key": "company_name",
+      "type": "Text",
+      "label": "Company / Organisation",
+      "placeholder": "Acme Inc.",
+      "required": true
+    },
+    {
+      "key": "step_project",
+      "type": "Section",
+      "label": "Project Overview",
+      "pageBreak": true,
+      "stepLabel": "Project",
+      "stepSubtitle": "Step 2 of 4",
+      "heading": "Tell us about your project",
+      "intro": "Share the high-level details so we can match you with the right team.",
+      "properties": {
+        "pageBreak": true,
+        "premiumNativeStep": true,
+        "generatedPremiumStep": true,
+        "premiumStepIndex": 2
+      },
+      "Properties": {
+        "pageBreak": true,
+        "premiumNativeStep": true,
+        "generatedPremiumStep": true,
+        "premiumStepIndex": 2
+      }
+    },
+    {
+      "key": "project_name",
+      "type": "Text",
+      "label": "Project Name",
+      "placeholder": "My Awesome Project",
+      "required": true
+    },
+    {
+      "key": "project_type",
+      "type": "Select",
+      "label": "Project Type",
+      "required": true,
+      "options": [
+        {
+          "label": "Web Design & Development",
+          "value": "web_design"
+        },
+        {
+          "label": "Mobile App",
+          "value": "mobile_app"
+        },
+        {
+          "label": "Brand Identity",
+          "value": "brand_identity"
+        },
+        {
+          "label": "Digital Marketing",
+          "value": "digital_marketing"
+        },
+        {
+          "label": "Custom Software",
+          "value": "custom_software"
+        },
+        {
+          "label": "Other",
+          "value": "other"
+        }
+      ]
+    },
+    {
+      "key": "project_goals",
+      "type": "MultiSelect",
+      "label": "Primary Goals",
+      "required": true,
+      "options": [
+        {
+          "label": "Increase Brand Awareness",
+          "value": "brand_awareness"
+        },
+        {
+          "label": "Generate More Leads",
+          "value": "lead_generation"
+        },
+        {
+          "label": "Improve User Experience",
+          "value": "ux_improvement"
+        },
+        {
+          "label": "Automate Workflows",
+          "value": "automation"
+        },
+        {
+          "label": "Launch a New Product",
+          "value": "product_launch"
+        },
+        {
+          "label": "Enter a New Market",
+          "value": "new_market"
+        }
+      ]
+    },
+    {
+      "key": "project_description",
+      "type": "Textarea",
+      "label": "Project Description",
+      "placeholder": "Describe your project, key challenges, and what success looks like…",
+      "required": true,
+      "rows": 5
+    },
+    {
+      "key": "step_scope",
+      "type": "Section",
+      "label": "Scope & Budget",
+      "pageBreak": true,
+      "stepLabel": "Scope",
+      "stepSubtitle": "Step 3 of 4",
+      "heading": "Scope, timeline & budget",
+      "intro": "Help us understand the scale of your project so we can put together the best proposal.",
+      "properties": {
+        "pageBreak": true,
+        "premiumNativeStep": true,
+        "generatedPremiumStep": true,
+        "premiumStepIndex": 3
+      },
+      "Properties": {
+        "pageBreak": true,
+        "premiumNativeStep": true,
+        "generatedPremiumStep": true,
+        "premiumStepIndex": 3
+      }
+    },
+    {
+      "key": "project_budget",
+      "type": "Radio",
+      "label": "Estimated Budget",
+      "required": true,
+      "options": [
+        {
+          "label": "Under $5,000",
+          "value": "budget_under_5k"
+        },
+        {
+          "label": "$5,000 – $15,000",
+          "value": "budget_5k_15k"
+        },
+        {
+          "label": "$15,000 – $50,000",
+          "value": "budget_15k_50k"
+        },
+        {
+          "label": "$50,000 – $100,000",
+          "value": "budget_50k_100k"
+        },
+        {
+          "label": "Over $100,000",
+          "value": "budget_over_100k"
+        }
+      ]
+    },
+    {
+      "key": "project_timeline",
+      "type": "Select",
+      "label": "Desired Timeline",
+      "required": true,
+      "options": [
+        {
+          "label": "As soon as possible (under 4 weeks)",
+          "value": "asap"
+        },
+        {
+          "label": "1 – 3 months",
+          "value": "1_3_months"
+        },
+        {
+          "label": "3 – 6 months",
+          "value": "3_6_months"
+        },
+        {
+          "label": "6 – 12 months",
+          "value": "6_12_months"
+        },
+        {
+          "label": "Flexible / ongoing",
+          "value": "flexible"
+        }
+      ]
+    },
+    {
+      "key": "start_date",
+      "type": "Date",
+      "label": "Ideal Start Date",
+      "required": false
+    },
+    {
+      "key": "team_size",
+      "type": "Number",
+      "label": "Your Team Size",
+      "placeholder": "e.g. 12",
+      "required": false
+    },
+    {
+      "key": "has_existing_assets",
+      "type": "Checkbox",
+      "label": "We have existing brand assets (logo, guidelines, etc.)",
+      "required": false
+    },
+    {
+      "key": "step_final",
+      "type": "Section",
+      "label": "Finish Up",
+      "pageBreak": true,
+      "stepLabel": "Final",
+      "stepSubtitle": "Step 4 of 4",
+      "heading": "Almost there!",
+      "intro": "Add any files, extra notes, and rate how urgent this project is.",
+      "properties": {
+        "pageBreak": true,
+        "premiumNativeStep": true,
+        "generatedPremiumStep": true,
+        "premiumStepIndex": 4
+      },
+      "Properties": {
+        "pageBreak": true,
+        "premiumNativeStep": true,
+        "generatedPremiumStep": true,
+        "premiumStepIndex": 4
+      }
+    },
+    {
+      "key": "reference_files",
+      "type": "File",
+      "label": "Reference Files or Attachments",
+      "hint": "Upload briefs, mockups, or brand assets. Max 10 MB per file.",
+      "required": false,
+      "multiple": true,
+      "accept": ".pdf,.zip,.jpg,.png,.ai,.sketch,.fig"
+    },
+    {
+      "key": "project_urgency",
+      "type": "Rating",
+      "label": "Project Urgency",
+      "hint": "1 = no rush, 5 = critical / time-sensitive",
+      "required": false,
+      "max": 5
+    },
+    {
+      "key": "additional_notes",
+      "type": "Textarea",
+      "label": "Anything else we should know?",
+      "placeholder": "Competitor links, tech preferences, must-have features…",
+      "required": false,
+      "rows": 4
+    },
+    {
+      "key": "consent_contact",
+      "type": "Checkbox",
+      "label": "I agree to be contacted regarding this project enquiry.",
+      "required": true
+    },
+    {
+      "key": "referral_source",
+      "type": "Hidden",
+      "label": "Referral Source",
+      "value": ""
+    }
+  ],
+  "customHtml": "<div class=\"mfp mfp-project-intake-onboarding mfp-native-generated\">\n\n  <!-- ===== HEADER ===== -->\n  <div class=\"mfp-header\">\n    <div class=\"mfp-header-inner\">\n      <span class=\"mfp-eyebrow\">New Enquiry</span>\n      <h1 class=\"mfp-form-title\">Project Intake &amp; Onboarding</h1>\n      <p class=\"mfp-form-subtitle\">Complete the four steps below and our team will be in touch within one business day.</p>\n    </div>\n  </div>\n\n  <!-- ===== STEPPER ===== -->\n  <nav class=\"mfp-stepper\" aria-label=\"Form progress\">\n    <ol class=\"mfp-stepper-list\">\n      <li class=\"mfp-stepper-item\" data-step=\"0\" data-mf-native-step=\"0\">\n        <span class=\"mfp-step-indicator\" aria-hidden=\"true\">1</span>\n        <span class=\"mfp-step-info\">\n          <span class=\"step-label\">Contact</span>\n          <span class=\"step-subtitle\">Step 1 of 4</span>\n        </span>\n      </li>\n      <li class=\"mfp-stepper-item\" data-step=\"1\" data-mf-native-step=\"1\">\n        <span class=\"mfp-step-indicator\" aria-hidden=\"true\">2</span>\n        <span class=\"mfp-step-info\">\n          <span class=\"step-label\">Project</span>\n          <span class=\"step-subtitle\">Step 2 of 4</span>\n        </span>\n      </li>\n      <li class=\"mfp-stepper-item\" data-step=\"2\" data-mf-native-step=\"2\">\n        <span class=\"mfp-step-indicator\" aria-hidden=\"true\">3</span>\n        <span class=\"mfp-step-info\">\n          <span class=\"step-label\">Scope</span>\n          <span class=\"step-subtitle\">Step 3 of 4</span>\n        </span>\n      </li>\n      <li class=\"mfp-stepper-item\" data-step=\"3\" data-mf-native-step=\"3\">\n        <span class=\"mfp-step-indicator\" aria-hidden=\"true\">4</span>\n        <span class=\"mfp-step-info\">\n          <span class=\"step-label\">Final</span>\n          <span class=\"step-subtitle\">Step 4 of 4</span>\n        </span>\n      </li>\n    </ol>\n  </nav>\n\n  <!-- ===== STEP 1 — CONTACT ===== -->\n  <div class=\"mfp-page mfp-step\" data-step=\"0\" data-mf-native-page=\"0\">\n    {{field:step_contact}}\n    <div class=\"mfp-step-intro\">\n      <h2 class=\"step-title\">Let’s get to know you</h2>\n      <p class=\"step-intro\">Tell us who you are so we can personalise your experience.</p>\n    </div>\n    <div class=\"mfp-fields-grid mfp-grid-2\">\n      <div class=\"mfp-field-wrap\">{{field:full_name}}</div>\n      <div class=\"mfp-field-wrap\">{{field:email_address}}</div>\n    </div>\n    <div class=\"mfp-fields-grid mfp-grid-2\">\n      <div class=\"mfp-field-wrap\">{{field:phone_number}}</div>\n      <div class=\"mfp-field-wrap\">{{field:company_name}}</div>\n    </div>\n  </div>\n\n  <!-- ===== STEP 2 — PROJECT ===== -->\n  <div class=\"mfp-page mfp-step\" data-step=\"1\" data-mf-native-page=\"1\">\n    {{field:step_project}}\n    <div class=\"mfp-step-intro\">\n      <h2 class=\"step-title\">Tell us about your project</h2>\n      <p class=\"step-intro\">Share the high-level details so we can match you with the right team.</p>\n    </div>\n    <div class=\"mfp-fields-grid mfp-grid-2\">\n      <div class=\"mfp-field-wrap\">{{field:project_name}}</div>\n      <div class=\"mfp-field-wrap\">{{field:project_type}}</div>\n    </div>\n    <div class=\"mfp-field-wrap\">{{field:project_goals}}</div>\n    <div class=\"mfp-field-wrap\">{{field:project_description}}</div>\n  </div>\n\n  <!-- ===== STEP 3 — SCOPE ===== -->\n  <div class=\"mfp-page mfp-step\" data-step=\"2\" data-mf-native-page=\"2\">\n    {{field:step_scope}}\n    <div class=\"mfp-step-intro\">\n      <h2 class=\"step-title\">Scope, timeline &amp; budget</h2>\n      <p class=\"step-intro\">Help us understand the scale of your project so we can put together the best proposal.</p>\n    </div>\n    <div class=\"mfp-field-wrap mfp-radio-card-group\">{{field:project_budget}}</div>\n    <div class=\"mfp-fields-grid mfp-grid-2\">\n      <div class=\"mfp-field-wrap\">{{field:project_timeline}}</div>\n      <div class=\"mfp-field-wrap\">{{field:start_date}}</div>\n    </div>\n    <div class=\"mfp-fields-grid mfp-grid-2\">\n      <div class=\"mfp-field-wrap\">{{field:team_size}}</div>\n      <div class=\"mfp-field-wrap mfp-checkbox-inline\">{{field:has_existing_assets}}</div>\n    </div>\n  </div>\n\n  <!-- ===== STEP 4 — FINAL ===== -->\n  <div class=\"mfp-page mfp-step\" data-step=\"3\" data-mf-native-page=\"3\">\n    {{field:step_final}}\n    <div class=\"mfp-step-intro\">\n      <h2 class=\"step-title\">Almost there!</h2>\n      <p class=\"step-intro\">Add any files, extra notes, and rate how urgent this project is.</p>\n    </div>\n    <div class=\"mfp-field-wrap\">{{field:reference_files}}</div>\n    <div class=\"mfp-field-wrap\">{{field:project_urgency}}</div>\n    <div class=\"mfp-field-wrap\">{{field:additional_notes}}</div>\n    <div class=\"mfp-field-wrap mfp-consent\">{{field:consent_contact}}</div>\n    {{field:referral_source}}\n  </div>\n\n  <!-- ===== ACTIONS ===== -->\n  <div class=\"mfp-actions\">\n    <button type=\"button\" class=\"mfp-btn mfp-btn-back\" data-mf-action=\"prev\" aria-label=\"Go to previous step\" data-mf-native-back>\n      <svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" aria-hidden=\"true\"><path d=\"M10 12L6 8l4-4\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>\n      Back\n    </button>\n    <button type=\"button\" class=\"mfp-btn mfp-btn-next\" data-mf-action=\"next\" aria-label=\"Continue to next step\" data-mf-native-next>\n      Continue\n      <svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" aria-hidden=\"true\"><path d=\"M6 4l4 4-4 4\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>\n    </button>\n    <button type=\"submit\" class=\"mfp-btn mfp-btn-submit\" data-mf-action=\"submit\" aria-label=\"Submit your enquiry\" data-mf-native-submit>\n      Submit Enquiry\n      <svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" aria-hidden=\"true\"><path d=\"M2 8h12M9 4l5 4-5 4\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>\n    </button>\n  </div>\n\n</div>",
+  "customCss": "/* MF-QA-FIX-v1 */\n.mfp.mfp-project-intake-onboarding{--mf-primary:#0bb39b;--mf-accent:#0bb39b;--mf-primary-hover:#079a85;--mf-primary-light:#e2f7f2;--primary:#0bb39b;}\n.mfp.mfp-project-intake-onboarding .mfp-header h1,.mfp.mfp-project-intake-onboarding .mfp-header .mfp-form-title,.mfp.mfp-project-intake-onboarding .mfp-header .mfp-eyebrow,.mfp.mfp-project-intake-onboarding .mfp-header .mfp-form-subtitle{color:#fff!important;}\n/* END-MF-QA-FIX */\n/* ============================================================\n   MegaForm Premium Template — Project Intake & Onboarding\n   Scope: .mfp.mfp-project-intake-onboarding\n   All colours use --mf-* variables; hard-coded values are\n   fallbacks only.\n   ============================================================ */\n\n/* ---------- Reset / Box model ---------- */\n.mfp.mfp-project-intake-onboarding *,\n.mfp.mfp-project-intake-onboarding *::before,\n.mfp.mfp-project-intake-onboarding *::after {\n  box-sizing: border-box;\n}\n\n/* ---------- Wrapper ---------- */\n.mfp.mfp-project-intake-onboarding {\n  font-family: inherit;\n  color: var(--mf-text, #1a1a2e);\n  background: var(--mf-bg, #f8fafc);\n  border-radius: var(--mf-radius, 12px);\n  max-width: 860px;\n  width: 100%;\n  margin: 0 auto;\n  overflow: hidden;\n  box-shadow: var(--mf-shadow, 0 8px 40px rgba(0,0,0,0.10));\n}\n\n/* ---------- Header ---------- */\n.mfp.mfp-project-intake-onboarding .mfp-header {\n  background: var(--mf-primary, #0bb39b);\n  padding: 40px 48px 32px;\n  color: #fff;\n}\n.mfp.mfp-project-intake-onboarding .mfp-eyebrow {\n  display: inline-block;\n  font-size: 11px;\n  font-weight: 700;\n  letter-spacing: 0.12em;\n  text-transform: uppercase;\n  background: rgba(255,255,255,0.18);\n  color: #fff;\n  border-radius: 99px;\n  padding: 3px 12px;\n  margin-bottom: 14px;\n}\n.mfp.mfp-project-intake-onboarding .mfp-form-title {\n  font-size: clamp(22px, 4vw, 32px);\n  font-weight: 800;\n  line-height: 1.2;\n  margin: 0 0 10px;\n  color: #fff;\n}\n.mfp.mfp-project-intake-onboarding .mfp-form-subtitle {\n  font-size: 15px;\n  line-height: 1.6;\n  color: rgba(255,255,255,0.85);\n  margin: 0;\n  max-width: 560px;\n}\n\n/* ---------- Stepper ---------- */\n.mfp.mfp-project-intake-onboarding .mfp-stepper {\n  background: var(--mf-surface, #ffffff);\n  border-bottom: 1px solid var(--mf-border, #e2e8f0);\n  padding: 0 48px;\n  overflow-x: auto;\n  -webkit-overflow-scrolling: touch;\n}\n.mfp.mfp-project-intake-onboarding .mfp-stepper-list {\n  display: flex;\n  list-style: none;\n  margin: 0;\n  padding: 0;\n  gap: 0;\n  min-width: max-content;\n}\n.mfp.mfp-project-intake-onboarding .mfp-stepper-item {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  padding: 18px 24px 18px 0;\n  position: relative;\n  cursor: default;\n  flex: 1;\n  min-width: 120px;\n}\n.mfp.mfp-project-intake-onboarding .mfp-stepper-item + .mfp-stepper-item::before {\n  content: '';\n  position: absolute;\n  left: -4px;\n  top: 50%;\n  transform: translateY(-50%);\n  width: 16px;\n  height: 1px;\n  background: var(--mf-border, #e2e8f0);\n}\n.mfp.mfp-project-intake-onboarding .mfp-step-indicator {\n  width: 32px;\n  height: 32px;\n  border-radius: 50%;\n  background: var(--mf-border, #e2e8f0);\n  color: var(--mf-muted, #64748b);\n  font-size: 13px;\n  font-weight: 700;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n  transition: background 0.2s, color 0.2s;\n}\n.mfp.mfp-project-intake-onboarding .mfp-stepper-item[data-step-state=\"active\"] .mfp-step-indicator,\n.mfp.mfp-project-intake-onboarding .mfp-stepper-item.active .mfp-step-indicator {\n  background: var(--mf-primary, #0bb39b);\n  color: #fff;\n  box-shadow: 0 0 0 4px rgba(11,179,155,0.15);\n}\n.mfp.mfp-project-intake-onboarding .mfp-stepper-item[data-step-state=\"done\"] .mfp-step-indicator,\n.mfp.mfp-project-intake-onboarding .mfp-stepper-item.done .mfp-step-indicator {\n  background: var(--mf-accent, #0bb39b);\n  color: #fff;\n}\n.mfp.mfp-project-intake-onboarding .mfp-step-info {\n  display: flex;\n  flex-direction: column;\n  gap: 1px;\n}\n.mfp.mfp-project-intake-onboarding .step-label {\n  font-size: 13px;\n  font-weight: 700;\n  color: var(--mf-text, #1a1a2e);\n  white-space: nowrap;\n}\n.mfp.mfp-project-intake-onboarding .step-subtitle {\n  font-size: 11px;\n  color: var(--mf-muted, #64748b);\n  white-space: nowrap;\n}\n\n/* ---------- Page / Step body ---------- */\n.mfp.mfp-project-intake-onboarding .mfp-page {\n  background: var(--mf-surface, #ffffff);\n  padding: 40px 48px;\n  display: flex;\n  flex-direction: column;\n  gap: 24px;\n}\n\n/* ---------- Step intro block ---------- */\n.mfp.mfp-project-intake-onboarding .mfp-step-intro {\n  border-left: 3px solid var(--mf-primary, #0bb39b);\n  padding-left: 16px;\n}\n.mfp.mfp-project-intake-onboarding .step-title {\n  font-size: clamp(18px, 3vw, 22px);\n  font-weight: 800;\n  margin: 0 0 6px;\n  color: var(--mf-text, #1a1a2e);\n}\n.mfp.mfp-project-intake-onboarding .step-intro {\n  font-size: 14px;\n  line-height: 1.6;\n  color: var(--mf-muted, #64748b);\n  margin: 0;\n}\n\n/* ---------- Field wrapper ---------- */\n.mfp.mfp-project-intake-onboarding .mfp-field-wrap {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n  width: 100%;\n}\n\n/* ---------- Two-column grid ---------- */\n.mfp.mfp-project-intake-onboarding .mfp-fields-grid {\n  display: grid;\n  gap: 16px;\n  width: 100%;\n}\n.mfp.mfp-project-intake-onboarding .mfp-grid-2 {\n  grid-template-columns: repeat(2, 1fr);\n}\n\n/* ---------- Native input / select / textarea styling ---------- */\n.mfp.mfp-project-intake-onboarding input[type=\"text\"],\n.mfp.mfp-project-intake-onboarding input[type=\"email\"],\n.mfp.mfp-project-intake-onboarding input[type=\"tel\"],\n.mfp.mfp-project-intake-onboarding input[type=\"number\"],\n.mfp.mfp-project-intake-onboarding input[type=\"date\"],\n.mfp.mfp-project-intake-onboarding select,\n.mfp.mfp-project-intake-onboarding textarea {\n  width: 100%;\n  padding: 11px 14px;\n  font-size: 14px;\n  line-height: 1.5;\n  font-family: inherit;\n  color: var(--mf-text, #1a1a2e);\n  background: var(--mf-bg, #f8fafc);\n  border: 1.5px solid var(--mf-border, #e2e8f0);\n  border-radius: var(--mf-radius, 8px);\n  transition: border-color 0.18s, box-shadow 0.18s;\n  -webkit-appearance: none;\n  appearance: none;\n  outline: none;\n}\n.mfp.mfp-project-intake-onboarding input:focus,\n.mfp.mfp-project-intake-onboarding select:focus,\n.mfp.mfp-project-intake-onboarding textarea:focus {\n  border-color: var(--mf-primary, #0bb39b);\n  box-shadow: 0 0 0 3px rgba(11,179,155,0.12);\n  background: var(--mf-surface, #ffffff);\n}\n.mfp.mfp-project-intake-onboarding textarea {\n  resize: vertical;\n  min-height: 110px;\n}\n\n/* ---------- Labels ---------- */\n.mfp.mfp-project-intake-onboarding label {\n  font-size: 13px;\n  font-weight: 600;\n  color: var(--mf-text, #1a1a2e);\n  letter-spacing: 0.01em;\n}\n\n/* ---------- Radio card group ---------- */\n.mfp.mfp-project-intake-onboarding .mfp-radio-card-group .mf-radio-group,\n.mfp.mfp-project-intake-onboarding .mfp-radio-card-group [class*=\"radio-list\"] {\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));\n  gap: 10px;\n}\n.mfp.mfp-project-intake-onboarding .mfp-radio-card-group label {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  border: 1.5px solid var(--mf-border, #e2e8f0);\n  border-radius: var(--mf-radius, 8px);\n  padding: 10px 14px;\n  cursor: pointer;\n  font-weight: 500;\n  transition: border-color 0.18s, background 0.18s;\n}\n.mfp.mfp-project-intake-onboarding .mfp-radio-card-group input[type=\"radio\"]:checked + label,\n.mfp.mfp-project-intake-onboarding .mfp-radio-card-group label:has(input[type=\"radio\"]:checked) {\n  border-color: var(--mf-primary, #0bb39b);\n  background: rgba(11,179,155,0.06);\n  color: var(--mf-primary, #0bb39b);\n}\n\n/* ---------- Inline checkbox ---------- */\n.mfp.mfp-project-intake-onboarding .mfp-checkbox-inline,\n.mfp.mfp-project-intake-onboarding .mfp-consent {\n  justify-content: center;\n}\n\n/* ---------- File upload zone ---------- */\n.mfp.mfp-project-intake-onboarding [class*=\"file-upload\"],\n.mfp.mfp-project-intake-onboarding [class*=\"mf-file\"] {\n  border: 2px dashed var(--mf-border, #e2e8f0);\n  border-radius: var(--mf-radius, 8px);\n  padding: 28px;\n  text-align: center;\n  transition: border-color 0.2s, background 0.2s;\n}\n.mfp.mfp-project-intake-onboarding [class*=\"file-upload\"]:hover,\n.mfp.mfp-project-intake-onboarding [class*=\"mf-file\"]:hover {\n  border-color: var(--mf-primary, #0bb39b);\n  background: rgba(11,179,155,0.04);\n}\n\n/* ---------- Rating ---------- */\n.mfp.mfp-project-intake-onboarding [class*=\"mf-rating\"] svg,\n.mfp.mfp-project-intake-onboarding [class*=\"rating\"] svg {\n  color: var(--mf-primary, #0bb39b);\n}\n\n/* ---------- Actions bar ---------- */\n.mfp.mfp-project-intake-onboarding .mfp-actions {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  gap: 10px;\n  padding: 20px 48px 36px;\n  background: var(--mf-surface, #ffffff);\n  border-top: 1px solid var(--mf-border, #e2e8f0);\n}\n.mfp.mfp-project-intake-onboarding .mfp-btn {\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n  font-size: 14px;\n  font-weight: 700;\n  padding: 11px 22px;\n  border-radius: var(--mf-radius, 8px);\n  border: none;\n  cursor: pointer;\n  transition: background 0.18s, box-shadow 0.18s, transform 0.12s;\n  font-family: inherit;\n  line-height: 1;\n}\n.mfp.mfp-project-intake-onboarding .mfp-btn:active {\n  transform: translateY(1px);\n}\n.mfp.mfp-project-intake-onboarding .mfp-btn-back {\n  background: transparent;\n  color: var(--mf-muted, #64748b);\n  border: 1.5px solid var(--mf-border, #e2e8f0);\n  margin-right: auto;\n}\n.mfp.mfp-project-intake-onboarding .mfp-btn-back:hover {\n  background: var(--mf-bg, #f8fafc);\n  color: var(--mf-text, #1a1a2e);\n}\n.mfp.mfp-project-intake-onboarding .mfp-btn-next {\n  background: var(--mf-primary, #0bb39b);\n  color: #fff;\n  box-shadow: 0 2px 12px rgba(11,179,155,0.28);\n}\n.mfp.mfp-project-intake-onboarding .mfp-btn-next:hover {\n  background: var(--mf-accent, #09a08a);\n  box-shadow: 0 4px 18px rgba(11,179,155,0.36);\n}\n.mfp.mfp-project-intake-onboarding .mfp-btn-submit {\n  background: var(--mf-primary, #0bb39b);\n  color: #fff;\n  box-shadow: 0 2px 12px rgba(11,179,155,0.28);\n  display: none;\n}\n.mfp.mfp-project-intake-onboarding .mfp-btn-submit.visible {\n  display: inline-flex;\n}\n.mfp.mfp-project-intake-onboarding .mfp-btn-submit:hover {\n  background: var(--mf-accent, #09a08a);\n}\n\n/* ---------- Responsive ---------- */\n@media (max-width: 680px) {\n  .mfp.mfp-project-intake-onboarding .mfp-header {\n    padding: 28px 24px 22px;\n  }\n  .mfp.mfp-project-intake-onboarding .mfp-stepper {\n    padding: 0 16px;\n  }\n  .mfp.mfp-project-intake-onboarding .mfp-stepper-item {\n    min-width: 90px;\n    padding: 14px 16px 14px 0;\n  }\n  .mfp.mfp-project-intake-onboarding .mfp-page {\n    padding: 28px 24px;\n    gap: 18px;\n  }\n  .mfp.mfp-project-intake-onboarding .mfp-grid-2 {\n    grid-template-columns: 1fr;\n  }\n  .mfp.mfp-project-intake-onboarding .mfp-radio-card-group .mf-radio-group,\n  .mfp.mfp-project-intake-onboarding .mfp-radio-card-group [class*=\"radio-list\"] {\n    grid-template-columns: 1fr 1fr;\n  }\n  .mfp.mfp-project-intake-onboarding .mfp-actions {\n    padding: 16px 24px 28px;\n    flex-wrap: wrap;\n  }\n  .mfp.mfp-project-intake-onboarding .mfp-btn-back {\n    order: 2;\n  }\n  .mfp.mfp-project-intake-onboarding .mfp-btn-next,\n  .mfp.mfp-project-intake-onboarding .mfp-btn-submit {\n    flex: 1;\n    justify-content: center;\n  }\n}\n@media (max-width: 400px) {\n  .mfp.mfp-project-intake-onboarding .mfp-radio-card-group .mf-radio-group,\n  .mfp.mfp-project-intake-onboarding .mfp-radio-card-group [class*=\"radio-list\"] {\n    grid-template-columns: 1fr;\n  }\n  .mfp.mfp-project-intake-onboarding .mfp-step-info {\n    display: none;\n  }\n}\n\n/* MF-QA-PAGING-v2 */\n.mfp.mfp-project-intake-onboarding .mfp-page{display:none!important;}\n.mfp.mfp-project-intake-onboarding .mfp-page.is-active{display:block!important;}\n.mfp.mfp-project-intake-onboarding .mfp-stepper-item.is-active .mfp-step-indicator,\n.mfp.mfp-project-intake-onboarding .mfp-stepper-item.is-done .mfp-step-indicator{background:var(--mf-primary)!important;border-color:var(--mf-primary)!important;color:#fff!important;}\n.mfp.mfp-project-intake-onboarding .mfp-stepper-item.is-active .step-label{color:var(--mf-text,#0f172a)!important;font-weight:700!important;}\n/* END-MF-QA-PAGING */\n",
+  "customScripts": {},
+  "settings": {
+    "premiumNativePageBreak": true,
+    "premiumGeneratedShell": true,
+    "showProgressBar": true,
+    "themeSelector": {
+      "enabled": false
+    },
+    "multiPage": true
+  },
+  "templateGuideSlug": "tpl-project-intake-onboarding"
+}
