@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MegaForm.Core.Interfaces;
+using MegaForm.Core.Services;
 
 namespace MegaForm.Oqtane.Server.Services
 {
@@ -48,6 +49,12 @@ namespace MegaForm.Oqtane.Server.Services
         {
             if (string.IsNullOrWhiteSpace(actionSql))
                 return new RazorActionResult { Success = false, Error = "empty SQL" };
+
+            // [SecFix 2026-07-03 P0-1] The action SQL still arrives from the client, so gate it
+            // through the destructive-SQL guard before it ever reaches the executor. Legit widget
+            // actions (SELECT / INSERT / UPDATE / DELETE) pass; DROP / EXEC / xp_ / stacking are rejected.
+            if (!RazorActionSqlGuard.IsAllowed(actionSql, out var guardReason))
+                return new RazorActionResult { Success = false, Error = "blocked: " + guardReason };
 
             // Build a parameter object from the dictionary so Dapper / our
             // SQL helpers can bind by :name. Keep it case-insensitive so

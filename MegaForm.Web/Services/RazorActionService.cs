@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MegaForm.Core.Interfaces;
+using MegaForm.Core.Services;
 
 namespace MegaForm.Web.Services
 {
@@ -48,6 +49,12 @@ namespace MegaForm.Web.Services
         {
             if (string.IsNullOrWhiteSpace(actionSql))
                 return new RazorActionResult { Success = false, Error = "empty SQL" };
+
+            // [SecFix 2026-07-03 P0-1] Gate client-supplied action SQL through the destructive-SQL
+            // guard before execution. SELECT / INSERT / UPDATE / DELETE pass; DROP / EXEC / xp_ /
+            // statement-stacking are rejected.
+            if (!RazorActionSqlGuard.IsAllowed(actionSql, out var guardReason))
+                return new RazorActionResult { Success = false, Error = "blocked: " + guardReason };
 
             // Build a parameter object from the dictionary so Dapper / our
             // SQL helpers can bind by :name. Keep it case-insensitive so

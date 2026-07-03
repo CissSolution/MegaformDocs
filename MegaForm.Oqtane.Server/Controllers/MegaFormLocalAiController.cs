@@ -55,10 +55,17 @@ namespace MegaForm.Oqtane.Server.Controllers
             return Content("{\"pong\":true,\"time\":" + DateTimeOffset.UtcNow.ToUnixTimeSeconds() + "}", "application/json");
         }
 
+        // [SecFix 2026-07-02 P0-1 / 2026-07-03 P0-4] Was [AllowAnonymous], then [Authorize] (any
+        // logged-in user). This endpoint is the builder / AI Form Creator assistant (admin surface)
+        // — never a public visitor feature — and it can fall through to a local process spawn, so it
+        // now requires an ADMIN (or Host) user, not merely any authenticated one. Same-origin fetches
+        // from the logged-in Blazor builder carry the auth cookie.
         [HttpPost("chat/completions")]
-        [AllowAnonymous]
+        [Authorize]
         public async Task<IActionResult> ChatCompletions()
         {
+            if (!(User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Host)))
+                return Forbid();
             try
             {
                 string raw;
@@ -240,17 +247,27 @@ namespace MegaForm.Oqtane.Server.Controllers
         private static async Task<string> TryKimiCliAsync(string query)
         {
             if (string.IsNullOrWhiteSpace(query)) return null;
+            // [SecFix 2026-07-02 P0-1] Opt-in ONLY: the local `kimi` CLI fallback spawns a
+            // process, so it stays disabled unless the host explicitly sets
+            // MEGAFORM_ALLOW_LOCAL_AI_CLI=1 (mirrors the MegaForm.Web variant). Combined with
+            // ProcessStartInfo.ArgumentList below (no shell string interpolation) this closes
+            // the RCE surface: args are passed as a discrete list, so no metacharacter in the
+            // user query can escape into the command line.
+            if (!string.Equals(Environment.GetEnvironmentVariable("MEGAFORM_ALLOW_LOCAL_AI_CLI"), "1", StringComparison.Ordinal))
+                return null;
             try
             {
                 var psi = new ProcessStartInfo
                 {
                     FileName = "kimi",
-                    Arguments = $"chat --no-stream \"{query.Replace("\"", "\\\"")}\"",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
                     CreateNoWindow = true,
                 };
+                psi.ArgumentList.Add("chat");
+                psi.ArgumentList.Add("--no-stream");
+                psi.ArgumentList.Add(query.Length > 4000 ? query.Substring(0, 4000) : query);
                 using var proc = Process.Start(psi);
                 if (proc == null) return null;
                 var output = await proc.StandardOutput.ReadToEndAsync();

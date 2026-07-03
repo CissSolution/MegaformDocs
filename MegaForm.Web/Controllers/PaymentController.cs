@@ -70,6 +70,13 @@ namespace MegaForm.Web.Controllers
                 var currency = (body["currency"]?.Value<string>() ?? "USD").ToLower();
                 var fieldKey = body["fieldKey"]?.Value<string>() ?? "payment";
 
+                // [SecFix TODO P0-2] AMOUNT TAMPERING — the amount is still trusted from the client.
+                // A proper fix must resolve the price server-side: the widget should also send formId,
+                // and this controller should load the form schema, find the payment field by fieldKey,
+                // and — when that field is a FIXED price — enforce the schema amount instead of the body
+                // amount (variable/user-entered amount fields, e.g. donations, must still accept the body
+                // value). Not done here because it requires a coordinated widget-JS + schema change and
+                // would otherwise break variable-amount forms. Tracked in the security audit (P0-2).
                 if (amount <= 0)
                     return BadRequest(new { error = "Amount must be greater than 0." });
 

@@ -74,8 +74,9 @@ namespace MegaForm.Core.Services
                 // hasCustomHtml-only gate — see class doc).
                 var customCss = Str(First(settings, "customCss", "CustomCss"));
                 var customHtml = Str(First(settings, "customHtml", "CustomHtml"));
+                var enableTemplateVarBridge = !string.IsNullOrWhiteSpace(presetCss) || HasThemeOverrides(settings);
                 var customCssPlusCompat = HasCustomShell(customHtml, customCss)
-                    ? CustomShellCompatibilityCssService.AppendTo(customCss, scope)
+                    ? CustomShellCompatibilityCssService.AppendTo(customCss, scope, customCss + "\n" + customHtml, enableTemplateVarBridge)
                     : customCss;
                 if (!string.IsNullOrWhiteSpace(customCssPlusCompat)) segments.Add(customCssPlusCompat);
             }
@@ -83,8 +84,17 @@ namespace MegaForm.Core.Services
             // [5] module CSS override — LAST, so the per-module edit wins (module-setting authority).
             if (!string.IsNullOrWhiteSpace(moduleCssOverride)) segments.Add(moduleCssOverride.Trim());
 
-            return string.Join("\n\n", segments);
+            // [SecFix 2026-07-03 P0-6] This string is emitted verbatim inside ONE <style> element.
+            // Authored customCss / moduleCssOverride could contain "</style><script>…" to break out of
+            // the style context (stored XSS). Neutralise the only breakout token — "</" — by escaping
+            // the solidus (CSS reads "<\/" as "/", the HTML rawtext scanner no longer sees "</style").
+            // Server-generated preset/scoped/compat segments never contain "</", so this is inert for them.
+            return NeutralizeStyleBreakout(string.Join("\n\n", segments));
         }
+
+        /// <summary>Escape the "&lt;/" token so authored CSS can't close the &lt;style&gt; element early.</summary>
+        private static string NeutralizeStyleBreakout(string css)
+            => string.IsNullOrEmpty(css) ? css : css.Replace("</", "<\\/");
 
         /// <summary>
         /// The form's wrapper runtime classes (mf-theme-*, mf-style-*, mf-hide-header) the host
@@ -101,6 +111,23 @@ namespace MegaForm.Core.Services
         {
             if (!string.IsNullOrWhiteSpace(customHtml)) return true;
             if (!string.IsNullOrEmpty(customCss) && customCss.IndexOf("mfp", StringComparison.OrdinalIgnoreCase) >= 0) return true;
+            return false;
+        }
+
+        private static bool HasThemeOverrides(JObject settings)
+        {
+            return HasVars(First(settings, "cssOverrides", "CssOverrides") as JObject) ||
+                   HasVars(First(settings, "themeCssOverrides", "ThemeCssOverrides") as JObject);
+        }
+
+        private static bool HasVars(JObject vars)
+        {
+            if (vars == null) return false;
+            foreach (var prop in vars.Properties())
+            {
+                if (prop.Name != null && prop.Name.StartsWith("--", StringComparison.Ordinal) && prop.Value != null)
+                    return true;
+            }
             return false;
         }
 

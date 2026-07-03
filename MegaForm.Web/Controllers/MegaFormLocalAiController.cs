@@ -37,8 +37,12 @@ namespace MegaForm.Web.Controllers
         [AllowAnonymous]
         public IActionResult Ping() => Content("{\"pong\":true,\"time\":" + DateTimeOffset.UtcNow.ToUnixTimeSeconds() + "}", "application/json");
 
+        // [SecFix 2026-07-03 P0-3] Was [AllowAnonymous]. The Local AI assistant is a builder
+        // (admin) surface and can fall through to a local `kimi` process spawn, so it must not be
+        // reachable unauthenticated — require a logged-in user. Removes the unauthenticated RCE
+        // surface (the kimi fallback stays env-gated + argv-array on top of this).
         [HttpPost("chat/completions")]
-        [AllowAnonymous]
+        [Authorize]
         public async Task<IActionResult> ChatCompletions()
         {
             try
@@ -177,17 +181,21 @@ namespace MegaForm.Web.Controllers
         private static async Task<string> TryKimiCliAsync(string query)
         {
             if (string.IsNullOrWhiteSpace(query)) return null;
+            if (!string.Equals(Environment.GetEnvironmentVariable("MEGAFORM_ALLOW_LOCAL_AI_CLI"), "1", StringComparison.Ordinal))
+                return null;
             try
             {
                 var psi = new ProcessStartInfo
                 {
                     FileName = "kimi",
-                    Arguments = $"chat --no-stream \"{query.Replace("\"", "\\\"")}\"",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
                     CreateNoWindow = true,
                 };
+                psi.ArgumentList.Add("chat");
+                psi.ArgumentList.Add("--no-stream");
+                psi.ArgumentList.Add(query.Length > 4000 ? query.Substring(0, 4000) : query);
                 using var proc = Process.Start(psi);
                 if (proc == null) return null;
                 var output = await proc.StandardOutput.ReadToEndAsync();

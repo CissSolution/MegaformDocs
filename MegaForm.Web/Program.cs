@@ -88,7 +88,13 @@ builder.Services.AddScoped<ILocalizationProvider, WebLocalizationProvider>();
 builder.Services.AddMegaFormSdk();
 
 // ── Authentication (Cookie for admin UI + optional JWT for API clients) ──
-var jwtKey = cfg["Jwt:Key"];
+// [SecFix 2026-07-03 P0-5] Prefer the signing key + issuer/audience from the environment so the
+// production secret is NOT the one committed to git (rotate the config value out of source control
+// and set MEGAFORM_JWT_KEY on the host). Issuer/Audience are validated only when configured, so
+// enabling them here cannot break tokens on hosts that don't set them.
+var jwtKey = Environment.GetEnvironmentVariable("MEGAFORM_JWT_KEY") ?? cfg["Jwt:Key"];
+var jwtIssuer = Environment.GetEnvironmentVariable("MEGAFORM_JWT_ISSUER") ?? cfg["Jwt:Issuer"];
+var jwtAudience = Environment.GetEnvironmentVariable("MEGAFORM_JWT_AUDIENCE") ?? cfg["Jwt:Audience"];
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = "MegaFormAuth";
@@ -127,8 +133,10 @@ if (!string.IsNullOrEmpty(jwtKey))
         .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, o => {
             o.TokenValidationParameters = new TokenValidationParameters
             {
-                ValidateIssuer           = false,
-                ValidateAudience         = false,
+                ValidateIssuer           = !string.IsNullOrEmpty(jwtIssuer),
+                ValidIssuer              = jwtIssuer,
+                ValidateAudience         = !string.IsNullOrEmpty(jwtAudience),
+                ValidAudience            = jwtAudience,
                 ValidateLifetime         = true,
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),

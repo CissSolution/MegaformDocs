@@ -1446,6 +1446,15 @@ WHERE a.Slug = @app AND e.Slug = @endpoint AND e.HttpVerb = 'GET'";
                 var firstWord = up.TrimStart().Split(new[] { ' ', '\t', '\r', '\n' }, 2)[0];
                 if (firstWord != "SELECT" && firstWord != "WITH")
                     return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "endpoint SQL must be SELECT (or WITH/CTE)" });
+                // [SecFix 2026-07-03 P0-7] A leading SELECT/WITH is NOT enough: "WITH cte AS (...) DELETE
+                // FROM Users" passes the first-word check yet mutates data. This is a read-only display
+                // endpoint, so reject any DML/DDL/exec keyword appearing ANYWHERE (word-boundary), which
+                // closes the CTE-hidden-write bypass. False positives (the word in a string literal) are
+                // acceptable for an admin-authored read endpoint.
+                if (System.Text.RegularExpressions.Regex.IsMatch(up,
+                        @"\b(INSERT|UPDATE|DELETE|MERGE|DROP|ALTER|CREATE|TRUNCATE|RENAME|EXEC|EXECUTE|GRANT|REVOKE|DENY|BACKUP|RESTORE|RECONFIGURE|OPENROWSET|OPENQUERY|OPENDATASOURCE|WAITFOR)\b|\bXP_|\bSP_",
+                        System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                    return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "endpoint SQL must be read-only (no DML/DDL, even inside a CTE)" });
 
                 // Bind query-string params as :token => value (or @token).
                 using (var conn = registry.GetConnection(string.IsNullOrWhiteSpace(connKey) ? "DashboardDatabase" : connKey, null, null))
