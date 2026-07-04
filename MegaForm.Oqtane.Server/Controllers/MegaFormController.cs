@@ -248,9 +248,20 @@ namespace MegaForm.Oqtane.Server.Controllers
                 : -1;
         }
 
+        // [SecFix 2026-07-04 P1-2 / P1-11] Was `IsAuthenticated`, so ANY logged-in user (incl. a
+        // low-privilege registered user) could POST an arbitrary victim's moduleId to the style /
+        // ModuleConfig / image-upload endpoints below — a cross-module IDOR whose SaveModuleStyle
+        // write is also a stored-XSS vector. These are admin-level surfaces ("admin popup"), so gate
+        // them on the site Admin or Host role.
+        // ⚠️ Deliberately NOT the stricter per-target-module EditModule policy: the cross-platform
+        // settings popup often calls these WITHOUT the alias prefix, so AuthEntityId(Module) can't
+        // resolve the module (see GetModuleConfig's comment) — an EditModule policy / AuthEntityId
+        // match would 403 that legitimate path. Role-gating closes the "any authenticated user" hole
+        // without breaking the no-alias-prefix popup flow. (A per-module ownership check remains a
+        // follow-up once the module context is reliably resolvable on every call path.)
         private bool CanUseAdminPopup()
         {
-            return User?.Identity?.IsAuthenticated == true;
+            return User != null && (User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Host));
         }
 
         // ══════════════════════════════════════════════════════

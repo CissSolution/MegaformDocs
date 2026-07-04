@@ -2,6 +2,7 @@ import { getPlatformRoute } from '@shared/platform-host';
 // [Composite Registry v20260616] Single source for the alias→preset map + labels.
 import { compositeAliasToPresetMap, compositePresetLabel } from '../renderer/helpers';
 import { defaultChipOptions, defaultCardOptions } from '@shared/choice-defaults';
+import { migratePremiumWizardSchemaToNative } from '@shared/premium-native-migration';
 /* ============================================================
    MegaForm Builder — Core (State, Helpers, Public API)
    File: megaform-builder-core.js
@@ -360,6 +361,8 @@ var MegaFormBuilder = (function () {
         s.settings.templateGuideSlug = String(s.settings.templateGuideSlug || '');
         s.settings.TemplateGuideSlug = s.settings.templateGuideSlug;
         s.version = String(s.version || s.Version || '1.0');
+
+        try { migratePremiumWizardSchemaToNative(s); } catch (e) { console.warn('MegaForm: premium native migration skipped', e); }
 
         return s;
     }
@@ -803,6 +806,66 @@ function showToast(message, type) {
         } catch (e) { console.warn('MegaForm: failed to load schema', e); }
     }
 
+    // [InlineEdit→Builder 20260630] The inline-edit running inside the DESIGN-tab Live Preview iframe
+    // posts {type:'mf-inline-edit-apply', schemaJson, settingsJson, submitButtonText, title, description}
+    // here when the host
+    // clicks the inline Save pill. Merge ONLY the inline-editable parts — fields + customHtml /
+    // customContent / layoutMode — and PRESERVE the theme-designer's domain (settings.theme /
+    // cssOverrides / themeCssOverrides / customCss). Mark dirty so the host's Save/Publish persists.
+    // Never writes the DB directly (that would clobber the builder's unsaved theme/field edits).
+    function applyInlineEditFromPreview(payload) {
+        try {
+            if (!payload) return;
+            var inc = {};
+            try { inc = parseSchemaJson(payload.schemaJson || '{}').schema || {}; } catch (e1) { inc = {}; }
+            var incSettings = {};
+            try { incSettings = JSON.parse(payload.settingsJson || '{}') || {}; } catch (e2) { incSettings = {}; }
+            if (!state.schema) state.schema = { version: '1.0', fields: [], settings: {} };
+            if (Array.isArray(inc.fields)) state.schema.fields = inc.fields;
+            if (payload.submitButtonText != null) state.schema.submitButtonText = payload.submitButtonText;
+            var nextTitle = payload.title != null ? String(payload.title) : (inc.title != null ? String(inc.title) : null);
+            var nextDescription = payload.description != null ? String(payload.description) : (inc.description != null ? String(inc.description) : null);
+            if (nextTitle != null) { state.schema.title = nextTitle; setVal(EL.canvasTitle, nextTitle); }
+            if (nextDescription != null) { state.schema.description = nextDescription; setVal(EL.canvasDescription, nextDescription); }
+            if (payload.submitButtonText != null) setVal(EL.submitBtnText, String(payload.submitButtonText));
+            var s = state.schema.settings = state.schema.settings || {};
+            if (incSettings.customHtml != null) s.customHtml = incSettings.customHtml;
+            else if (incSettings.CustomHtml != null) s.customHtml = incSettings.CustomHtml;
+            if (incSettings.customContent != null) s.customContent = incSettings.customContent;
+            else if (incSettings.CustomContent != null) s.customContent = incSettings.CustomContent;
+            if (incSettings.customCss != null) s.customCss = incSettings.customCss;
+            else if (incSettings.CustomCss != null) s.customCss = incSettings.CustomCss;
+            if (incSettings.layoutMode != null) s.layoutMode = incSettings.layoutMode;
+            // Re-canonicalize + sync the hidden schema JSON so the host Save serializes the merged schema.
+            try {
+                var pr = parseSchemaJson(JSON.stringify(state.schema));
+                if (pr && pr.schema) { state.schema = pr.schema; syncSchemaJsonToPage(pr.json, pr); }
+            } catch (e3) { /* keep the in-memory merge even if the page-sync fails */ }
+            state.fieldCounter = (state.schema.fields || []).length;
+            state.isDirty = true;
+            // [autosave 20260701] Persist IMMEDIATELY so inline edits reach the LIVE form in one click —
+            // the previous two-step (inline Save pill → then ALSO click the builder Save/Publish) confused
+            // users ("changes not saved to live"). Keep the form's current status; no redirect. Falls back
+            // to a manual-save prompt if the toolbar module isn't available yet.
+            var saved = false;
+            try {
+                var rootEl = document.getElementById('mf-builder-root');
+                var st = (rootEl && rootEl.dataset && String(rootEl.dataset.formStatus || '').toLowerCase() === 'published') ? 'Published' : 'Draft';
+                if (modules['toolbar'] && typeof modules['toolbar'].saveForm === 'function') {
+                    callModule('toolbar', 'saveForm', [st, { returnAfter: false, toast: builderT('builder.inline_saved_live', 'Saved your inline edits to the form') }]);
+                    saved = true;
+                }
+            } catch (e4) { /* fall through to manual prompt */ }
+            if (!saved) { try { showToast(builderT('builder.inline_applied_hint', 'Applied — click Save/Publish to save to the form'), 'success'); } catch (e5) {} }
+        } catch (e) { console.warn('MegaForm: applyInlineEditFromPreview failed', e); }
+    }
+    window.addEventListener('message', function (ev) {
+        // [SecFix 2026-07-04 P2-8] Only trust inline-edit patches from the SAME origin (our own
+        // preview iframe). A cross-origin frame must never be able to inject a schema/settings patch.
+        try { if (ev && ev.origin && ev.origin !== window.location.origin) return; } catch (e0) { return; }
+        try { var d = ev && ev.data; if (d && d.type === 'mf-inline-edit-apply') applyInlineEditFromPreview(d); } catch (e) {}
+    }, false);
+
     // =========================================================
     //  PUBLIC API
     // =========================================================
@@ -915,6 +978,7 @@ function showToast(message, type) {
         showToast: showToast,
         registerModule: registerModule,
         callModule: callModule,
+        applyInlineEditFromPreview: applyInlineEditFromPreview,
         hasMultiStepSchema: hasMultiStepSchema,
         syncFormActionEditorsFromSchema: syncFormActionEditorsFromSchema,
         persistFormActionEditorsToSchema: persistFormActionEditorsToSchema,
