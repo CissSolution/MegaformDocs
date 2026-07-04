@@ -3104,6 +3104,23 @@ VALUES
                         new { error = "File content does not match its type. Possible security risk." });
                 }
 
+                // ── [SecFix 2026-07-04 P1-9] SVG active-content hardening ──
+                // A .svg passing the magic-byte check can still carry <script>/on*=/javascript: that
+                // executes as stored XSS when the file is later served from the portal origin. Reject it.
+                if (ext == ".svg" || (file.ContentType ?? "").IndexOf("svg", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    file.InputStream.Position = 0;
+                    string svgText;
+                    using (var svgReader = new StreamReader(file.InputStream, System.Text.Encoding.UTF8, true, 4096, true))
+                        svgText = svgReader.ReadToEnd();
+                    file.InputStream.Position = 0;
+                    if (!SvgIsSafe(svgText))
+                    {
+                        return Request.CreateResponse(HttpStatusCode.BadRequest,
+                            new { error = "SVG contains disallowed active content (script / event handlers / external refs)." });
+                    }
+                }
+
                 // ── Store the file ──
                 var portalId = PortalSettings.PortalId;
                 var uploadDir = Path.Combine(
@@ -3198,6 +3215,26 @@ VALUES
             return false;
         }
 
+        /// <summary>
+        /// [SecFix 2026-07-04 P1-9] Reject SVGs carrying active content (script / event handlers /
+        /// external or javascript: refs / entity declarations) which would run as stored XSS when the
+        /// file is later served same-origin. Conservative blocklist of the known vectors.
+        /// </summary>
+        private static bool SvgIsSafe(string svg)
+        {
+            if (string.IsNullOrWhiteSpace(svg)) return false;
+            var opt = System.Text.RegularExpressions.RegexOptions.IgnoreCase;
+            if (System.Text.RegularExpressions.Regex.IsMatch(svg, @"<\s*script", opt)) return false;
+            if (System.Text.RegularExpressions.Regex.IsMatch(svg, @"<\s*foreignObject", opt)) return false;
+            if (System.Text.RegularExpressions.Regex.IsMatch(svg, @"<\s*iframe", opt)) return false;
+            if (System.Text.RegularExpressions.Regex.IsMatch(svg, @"<\s*embed", opt)) return false;
+            if (System.Text.RegularExpressions.Regex.IsMatch(svg, @"\son\w+\s*=", opt)) return false;          // onload=, onclick=, ...
+            if (System.Text.RegularExpressions.Regex.IsMatch(svg, @"javascript\s*:", opt)) return false;
+            if (System.Text.RegularExpressions.Regex.IsMatch(svg, @"<!ENTITY", opt)) return false;              // XXE / entity expansion
+            if (System.Text.RegularExpressions.Regex.IsMatch(svg, @"(?:xlink:)?href\s*=\s*[""']?\s*(?:javascript|data)\s*:", opt)) return false;
+            return true;
+        }
+
         // ──────────────────────────────────────────────────────────
         // GET api/Upload/List  — flat listing of every MegaForm image
         // already uploaded for the current portal. Used by the Token
@@ -3205,7 +3242,9 @@ VALUES
         // assets across forms (sliders, banners, logos).
         // ──────────────────────────────────────────────────────────
         [HttpGet]
-        [AllowAnonymous]
+        // [SecFix 2026-07-04 P1-9] Was [AllowAnonymous] → anonymous enumeration of every uploaded portal
+        // image (information disclosure). The gallery picker is builder-only (authenticated authors), so
+        // drop the override and inherit the class-level [DnnAuthorize].
         public HttpResponseMessage List()
         {
             try

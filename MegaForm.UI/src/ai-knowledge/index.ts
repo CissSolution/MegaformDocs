@@ -15,6 +15,11 @@
  * Badge: MfAiKnowledge v20260528-20
  */
 
+// [SecFix 2026-07-04 P1-12] The KB admin bundle does NOT import platform-host, so install the
+// antiforgery injector directly here — otherwise KB Upsert/Delete/Seed writes 400 once the
+// AiKnowledge* controllers drop class-level [IgnoreAntiforgeryToken].
+import '../shared/antiforgery';
+
 const BADGE = 'MfAiKnowledge v20260528-20';
 (window as any).__MF_AI_KNOWLEDGE_BADGE__ = BADGE;
 

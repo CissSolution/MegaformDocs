@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using MegaForm.Core.Interfaces;
 using MegaForm.Web.Services;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MegaForm.Web.Controllers
@@ -32,6 +33,8 @@ namespace MegaForm.Web.Controllers
             _htmlRenderer = htmlRenderer;
             _services = services;
         }
+
+        private bool IsAdmin => User?.Identity?.IsAuthenticated == true && User.IsInRole("Administrator");
 
         /// <summary>
         /// List all registered Razor widget templates with metadata + parameter
@@ -100,6 +103,8 @@ namespace MegaForm.Web.Controllers
             RazorWidgetMetadata meta = null;
             if (!string.IsNullOrWhiteSpace(req.RazorSource))
             {
+                if (!IsAdmin)
+                    return StatusCode(403, new { error = "Administrator access is required to compile inline Razor source." });
                 var compiler = _services.GetService(typeof(RazorCompilationService)) as RazorCompilationService;
                 if (compiler == null)
                     return StatusCode(500, new { error = "compilation service not registered" });
@@ -218,6 +223,12 @@ namespace MegaForm.Web.Controllers
         {
             if (req == null || string.IsNullOrEmpty(req.ActionSql))
                 return BadRequest(new { error = "actionSql required" });
+
+            // [SecFix 2026-07-04 P0-1] Executes client-supplied DML. RazorActionSqlGuard (inside RunAsync)
+            // blocks DDL/RCE/stacking but DELIBERATELY allows INSERT/UPDATE/DELETE, so an anonymous caller
+            // could tamper data on any registered connection. Arbitrary DML is inherently admin-only → gate it.
+            if (!IsAdmin)
+                return StatusCode(403, new { error = "Administrator access is required to run widget actions." });
 
             var svc  = _services.GetService(typeof(IRazorActionService)) as IRazorActionService;
             if (svc == null) return StatusCode(500, new { error = "action service not registered" });

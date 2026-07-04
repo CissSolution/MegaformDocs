@@ -41,6 +41,17 @@ namespace MegaForm.WebApi
             return v.TrimEnd('/');
         }
 
+        private bool IsAdmin()
+        {
+            return UserInfo != null && (UserInfo.IsSuperUser || UserInfo.IsInRole("Administrators"));
+        }
+
+        private static bool ContainsInlineRazorSource(string body)
+        {
+            return !string.IsNullOrWhiteSpace(body)
+                && body.IndexOf("\"razorSource\"", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
         // ── List ──────────────────────────────────────────────────────────
         [HttpGet]
         [ActionName("List")]
@@ -99,6 +110,9 @@ namespace MegaForm.WebApi
             using (var sr = new StreamReader(await Request.Content.ReadAsStreamAsync().ConfigureAwait(false), Encoding.UTF8))
                 body = await sr.ReadToEndAsync().ConfigureAwait(false);
 
+            if (ContainsInlineRazorSource(body) && !IsAdmin())
+                return Request.CreateResponse(HttpStatusCode.Forbidden, new { error = "Administrator access is required to compile inline Razor source." });
+
             try
             {
                 using (var client = new HttpClient { Timeout = TimeSpan.FromSeconds(15) })
@@ -121,6 +135,11 @@ namespace MegaForm.WebApi
         [ActionName("Action")]
         public async Task<HttpResponseMessage> Action()
         {
+            // [SecFix 2026-07-04 P0-1] This proxies client-supplied DML to the companion Oqtane host.
+            // Arbitrary DML is admin-only → gate locally (mirrors Compile above) so the DNN proxy can't be
+            // abused anonymously. The companion host now enforces the same gate independently.
+            if (!IsAdmin())
+                return Request.CreateResponse(HttpStatusCode.Forbidden, new { error = "Administrator access is required to run widget actions." });
             return await ForwardJsonPost("Action").ConfigureAwait(false);
         }
 
@@ -130,6 +149,8 @@ namespace MegaForm.WebApi
         [ActionName("Compile")]
         public async Task<HttpResponseMessage> Compile()
         {
+            if (!IsAdmin())
+                return Request.CreateResponse(HttpStatusCode.Forbidden, new { error = "Administrator access is required to compile Razor source." });
             return await ForwardJsonPost("Compile").ConfigureAwait(false);
         }
 

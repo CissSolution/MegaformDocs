@@ -22,7 +22,9 @@ namespace MegaForm.Oqtane.Server.Controllers
     /// surface (List / Kinds / Get / Upsert / Delete / History).
     /// </summary>
     [Route("api/[controller]")]
-    [IgnoreAntiforgeryToken]
+    // [SecFix 2026-07-04 P1-12] Removed class-level [IgnoreAntiforgeryToken] so Oqtane's global
+    // antiforgery re-arms on the admin write POSTs (Upsert/Delete/SeedViewModes). GETs are auto-exempt;
+    // read-only SearchScoped keeps a method-level ignore. Client sends X-XSRF-TOKEN-HEADER (antiforgery.ts).
     public class AiKnowledgeController : ModuleControllerBase
     {
         private readonly IAiKnowledgeService _svc;
@@ -82,6 +84,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         }
 
         [HttpPost("SearchScoped")]
+        [IgnoreAntiforgeryToken] // [SecFix 2026-07-04 P1-12] read-only search — no state change, keep exempt
         public IActionResult SearchScoped([FromBody] SearchScopedRequest req)
         {
             if (!IsAdmin) return Forbid();
@@ -226,6 +229,10 @@ namespace MegaForm.Oqtane.Server.Controllers
         [HttpPost("SeedViewModes")]
         public IActionResult SeedViewModes()
         {
+            // [SecFix 2026-07-02] Was the ONLY mutator in this controller missing the IsAdmin
+            // gate that Upsert (L189)/Delete (L219)/Get (L178) all have → an anonymous caller
+            // could upsert/overwrite MF_AI_KB rows. Match the sibling pattern.
+            if (!IsAdmin) return Forbid();
             try {
                 var seeded = 0;
                 var updated = 0;

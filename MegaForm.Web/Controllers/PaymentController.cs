@@ -3,9 +3,11 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Globalization;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using MegaForm.Core.Interfaces;
+using MegaForm.Core.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -37,12 +39,14 @@ namespace MegaForm.Web.Controllers
     {
         private readonly IConfiguration _cfg;
         private readonly IModuleSettingsService _settings;
+        private readonly IFormRepository _formRepo;
         private static readonly HttpClient _http = new HttpClient();
 
-        public PaymentController(IConfiguration cfg, IModuleSettingsService settings)
+        public PaymentController(IConfiguration cfg, IModuleSettingsService settings, IFormRepository formRepo)
         {
             _cfg = cfg;
             _settings = settings;
+            _formRepo = formRepo;
         }
 
         // Helper: DB setting takes priority over appsettings
@@ -51,6 +55,92 @@ namespace MegaForm.Web.Controllers
             var dbVal = NormalizeStoredSetting(_settings.GetSetting(0, dbKey));
             if (!string.IsNullOrWhiteSpace(dbVal)) return dbVal;
             return NormalizeStoredSetting(_cfg[cfgPath]);
+        }
+
+        // ══════════════════════════════════════════════════════════════════
+        //  [SecFix 2026-07-04 P0-2] Server-side price enforcement (amount tampering)
+        // ══════════════════════════════════════════════════════════════════
+        /// <summary>
+        /// Re-derive the payment amount/currency server-side from the saved form schema so a tampered
+        /// client "amount" cannot lower the charge. For a FIXED payment field (widgetProps.amountMode
+        /// == "fixed", or unspecified but with a stored amount) the schema amount/currency are enforced.
+        /// Variable modes ("field"/"listenTotals") are computed client-side and cannot be re-derived from
+        /// the schema alone, so the client amount is preserved (donations / user-entered totals keep working).
+        /// Fail-open (preserve client) when formId/fieldKey are absent or the field can't be resolved, to
+        /// avoid breaking legacy widgets — the hard enforcement kicks in whenever the field IS resolvable.
+        /// Returns (amount, currency-or-null-to-keep-client, error-or-null).
+        /// </summary>
+        private (decimal amount, string currency, string error) ResolveServerAmount(JObject body, decimal clientAmount, string clientCurrency)
+        {
+            var formId   = body?["formId"]?.Value<int?>() ?? 0;
+            var fieldKey = body?["fieldKey"]?.Value<string>();
+            if (formId <= 0 || string.IsNullOrWhiteSpace(fieldKey))
+                return (clientAmount, clientCurrency, null);
+
+            FormSchema schema;
+            try
+            {
+                var form = _formRepo.GetForm(formId);
+                if (form == null || string.IsNullOrWhiteSpace(form.SchemaJson))
+                    return (clientAmount, clientCurrency, null);
+                schema = JsonConvert.DeserializeObject<FormSchema>(form.SchemaJson);
+            }
+            catch
+            {
+                // Lookup/parse failure → fail-open (never break checkout on an infra hiccup).
+                return (clientAmount, clientCurrency, null);
+            }
+
+            var field = FindFieldByKey(schema?.Fields, fieldKey);
+            if (field == null || field.WidgetProps == null)
+                return (clientAmount, clientCurrency, null);
+
+            var mode = GetProp(field.WidgetProps, "amountMode");
+            // Variable modes: price is computed client-side; nothing authoritative to enforce.
+            if (string.Equals(mode, "field", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(mode, "listenTotals", StringComparison.OrdinalIgnoreCase))
+                return (clientAmount, clientCurrency, null);
+
+            // Fixed (or unspecified but with a stored amount): ENFORCE the schema amount/currency.
+            var raw = GetProp(field.WidgetProps, "amount");
+            if (!string.IsNullOrWhiteSpace(raw) &&
+                decimal.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var schemaAmount) &&
+                schemaAmount > 0m)
+            {
+                var schemaCurrency = GetProp(field.WidgetProps, "currency");
+                return (schemaAmount, string.IsNullOrWhiteSpace(schemaCurrency) ? clientCurrency : schemaCurrency, null);
+            }
+
+            // amountMode missing AND no stored amount → legacy fixed widget with no price on record;
+            // preserve the client value rather than breaking existing donation/legacy forms.
+            return (clientAmount, clientCurrency, null);
+        }
+
+        /// <summary>Depth-first find a field by key, recursing into Row → Columns → Fields.</summary>
+        private static FormField FindFieldByKey(List<FormField> fields, string key)
+        {
+            if (fields == null) return null;
+            foreach (var f in fields)
+            {
+                if (f == null) continue;
+                if (string.Equals(f.Key, key, StringComparison.OrdinalIgnoreCase)) return f;
+                if (f.Columns != null)
+                {
+                    foreach (var col in f.Columns)
+                    {
+                        var hit = FindFieldByKey(col?.Fields, key);
+                        if (hit != null) return hit;
+                    }
+                }
+            }
+            return null;
+        }
+
+        /// <summary>Read a boxed widgetProp value as an invariant string (values arrive as JValue/boxed).</summary>
+        private static string GetProp(Dictionary<string, object> props, string key)
+        {
+            if (props == null || !props.TryGetValue(key, out var v) || v == null) return null;
+            return Convert.ToString(v, CultureInfo.InvariantCulture);
         }
 
         // ══════════════════════════════════════════════════════════════════
@@ -70,13 +160,15 @@ namespace MegaForm.Web.Controllers
                 var currency = (body["currency"]?.Value<string>() ?? "USD").ToLower();
                 var fieldKey = body["fieldKey"]?.Value<string>() ?? "payment";
 
-                // [SecFix TODO P0-2] AMOUNT TAMPERING — the amount is still trusted from the client.
-                // A proper fix must resolve the price server-side: the widget should also send formId,
-                // and this controller should load the form schema, find the payment field by fieldKey,
-                // and — when that field is a FIXED price — enforce the schema amount instead of the body
-                // amount (variable/user-entered amount fields, e.g. donations, must still accept the body
-                // value). Not done here because it requires a coordinated widget-JS + schema change and
-                // would otherwise break variable-amount forms. Tracked in the security audit (P0-2).
+                // [SecFix 2026-07-04 P0-2] Amount-tampering fix. Re-derive the price server-side from the
+                // saved schema: for a FIXED payment field (widgetProps.amountMode=="fixed") the schema
+                // amount/currency are enforced and the tampered body values are ignored. Variable modes
+                // ("field"/"listenTotals") are computed client-side and are preserved. See ResolveServerAmount.
+                var (serverAmount, serverCurrency, priceErr) = ResolveServerAmount(body, (decimal)amount, currency);
+                if (priceErr != null) return BadRequest(new { error = priceErr });
+                amount = (double)serverAmount;
+                if (!string.IsNullOrWhiteSpace(serverCurrency)) currency = serverCurrency.ToLowerInvariant();
+
                 if (amount <= 0)
                     return BadRequest(new { error = "Amount must be greater than 0." });
 
@@ -277,6 +369,13 @@ namespace MegaForm.Web.Controllers
                 var intent = NormalizePayPalIntent(body?["intent"]?.Value<string>());
                 var description = body?["description"]?.Value<string>()?.Trim();
                 var fieldKey = body?["fieldKey"]?.Value<string>()?.Trim();
+
+                // [SecFix 2026-07-04 P0-2] Enforce server-side price for FIXED payment fields (see Stripe path).
+                // (Depends on the PayPal widget sending formId+fieldKey; if absent, the client amount is preserved.)
+                var (serverAmount, serverCurrency, priceErr) = ResolveServerAmount(body, amount, currency);
+                if (priceErr != null) return BadRequest(new { error = priceErr });
+                amount = serverAmount;
+                if (!string.IsNullOrWhiteSpace(serverCurrency)) currency = NormalizeCurrency(serverCurrency);
 
                 if (amount <= 0m)
                     return BadRequest(new { error = "Amount must be greater than 0." });

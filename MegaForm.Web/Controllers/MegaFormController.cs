@@ -1032,7 +1032,10 @@ namespace MegaForm.Web.Controllers
         /// Cùng endpoint với DNN — JS Live Style Editor gọi không đổi.
         /// </summary>
         [HttpPost("ModuleConfig/SaveStyle")]
-        [Authorize]
+        // [SecFix 2026-07-04 P1-2] Was [Authorize] (any authenticated user) → any logged-in user could
+        // overwrite MegaForm_CssOverride (persisted + rendered = stored-CSS injection) on ANY moduleId.
+        // Gate to Administrator (only role primitive available in this Web host; no module-ownership svc).
+        [Authorize(Roles = "Administrator")]
         public IActionResult SaveStyle([FromBody] JObject body)
         {
             int moduleId = body.Value<int>("moduleId");

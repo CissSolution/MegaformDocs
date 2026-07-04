@@ -41,6 +41,8 @@ namespace MegaForm.Oqtane.Server.Controllers
             _services = services;
         }
 
+        private bool IsAdmin => User != null && (User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Host));
+
         /// <summary>
         /// List all registered Razor widget templates with metadata + parameter
         /// info. Used by the Builder right-panel template picker + AI tool
@@ -115,6 +117,8 @@ namespace MegaForm.Oqtane.Server.Controllers
             RazorWidgetMetadata meta = null;
             if (!string.IsNullOrWhiteSpace(req.RazorSource))
             {
+                if (!IsAdmin)
+                    return StatusCode(403, new { error = "Administrator access is required to compile inline Razor source." });
                 // SECURITY NOTE (Phase 2 MVP): razorSource is trusted from
                 // the request body. This is safe at form view time only
                 // because the client always loads razorSource from the
@@ -255,6 +259,15 @@ namespace MegaForm.Oqtane.Server.Controllers
         {
             if (req == null || string.IsNullOrEmpty(req.ActionSql))
                 return BadRequest(new { error = "actionSql required" });
+
+            // [SecFix 2026-07-04 P0-1] This endpoint executes client-supplied DML. RazorActionSqlGuard
+            // (inside RunAsync) blocks DDL/RCE/stacking but DELIBERATELY allows INSERT/UPDATE/DELETE, so an
+            // anonymous caller could tamper data on any registered connection. Arbitrary DML is inherently
+            // admin-only → gate it. (ConnectionKey stays client-chosen: it is only a lookup key into the
+            // admin-configured connection registry — not a raw connection string — and multi-DB EditableList
+            // dashboards legitimately target non-default connections; the caller is now a trusted admin.)
+            if (!IsAdmin)
+                return StatusCode(403, new { error = "Administrator access is required to run widget actions." });
 
             var svc  = _services.GetService(typeof(MegaForm.Oqtane.Server.Services.IRazorActionService))
                        as MegaForm.Oqtane.Server.Services.IRazorActionService;

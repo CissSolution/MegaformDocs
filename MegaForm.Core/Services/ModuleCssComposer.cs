@@ -93,7 +93,9 @@ namespace MegaForm.Core.Services
         }
 
         /// <summary>Escape the "&lt;/" token so authored CSS can't close the &lt;style&gt; element early.</summary>
-        private static string NeutralizeStyleBreakout(string css)
+        /// <remarks>[SecFix 2026-07-04 P2-12] Public so fallback CSS-emit paths (e.g. Oqtane RenderPage
+        /// catch-fallback) can neutralize authored customCss instead of emitting it raw.</remarks>
+        public static string NeutralizeStyleBreakout(string css)
             => string.IsNullOrEmpty(css) ? css : css.Replace("</", "<\\/");
 
         /// <summary>

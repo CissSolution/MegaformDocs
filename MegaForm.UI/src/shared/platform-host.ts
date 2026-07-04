@@ -1,3 +1,8 @@
+// [SecFix 2026-07-04] Install the same-origin antiforgery header injector as a side effect.
+// platform-host is imported by every admin bundle, so this guarantees Oqtane admin writes
+// carry X-XSRF-TOKEN-HEADER once the controllers drop class-level [IgnoreAntiforgeryToken].
+import './antiforgery';
+
 export type HostRouteName =
   | 'dashboard'
   | 'builder'
@@ -798,7 +803,9 @@ ${jsUrls.map((src) => `<script src="${src}"></script>`).join('')}
   function notifyHeight(){
     try {
       var h = Math.max(document.documentElement ? document.documentElement.scrollHeight : 0, document.body ? document.body.scrollHeight : 0, document.documentElement ? document.documentElement.offsetHeight : 0, document.body ? document.body.offsetHeight : 0);
-      if (window.parent && window.parent !== window) window.parent.postMessage({ type: 'mf:resize', height: h, formId: CFG.formId, badge: BADGE }, '*');
+      var targetOrigin = window.location.origin;
+      try { if (document.referrer) targetOrigin = new URL(document.referrer).origin; } catch (_originErr) {}
+      if (window.parent && window.parent !== window) window.parent.postMessage({ type: 'mf:resize', height: h, formId: CFG.formId, badge: BADGE }, targetOrigin);
     } catch (_e) { }
   }
   function normalizeMaybeJson(value, fallback){

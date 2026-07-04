@@ -92,9 +92,11 @@ namespace MegaForm.Oqtane.Server.Controllers
             catch
             {
                 // non-fatal: first paint falls back to authored customCss (+ compat for custom-HTML).
-                customCss = hasCustomHtml
+                // [SecFix 2026-07-04 P2-12] Neutralize "</" so authored customCss can't close the <style>
+                // element and inject <script> on this fallback path (the main path neutralizes via ModuleCssComposer.Compose).
+                customCss = ModuleCssComposer.NeutralizeStyleBreakout(hasCustomHtml
                     ? CustomShellCompatibilityCssService.AppendTo(customCss, "#mf-form-wrapper-" + formId)
-                    : (customCss ?? string.Empty);
+                    : (customCss ?? string.Empty));
             }
             inlineCss = string.Empty; // folded into customCss by the composer (one block only)
 
@@ -181,7 +183,7 @@ namespace MegaForm.Oqtane.Server.Controllers
             // Structure mirrors the JS renderer's buildSkeleton() so init() hydrates it
             // (buildSkeleton no-ops because #mf-fields-container-{id} already exists).
             sb.Append("<div id=\"mf-form-mount-").Append(formId).Append("\" data-form-id=\"").Append(formId).Append("\">");
-            sb.Append("<div id=\"mf-form-wrapper-").Append(formId).Append("\" class=\"mf-form-wrapper")
+            sb.Append("<div id=\"mf-form-wrapper-").Append(formId).Append("\" class=\"mf-form-wrapper mf-booting")  // [B355] cloak baked so SSR-first-paint entrance (auFade/amFade) is stilled; renderer lifts it post-hydrate
               .Append(hasCustomHtml ? " mf-custom-shell-mode" : string.Empty)
               .Append(string.IsNullOrWhiteSpace(wrapperRuntimeClasses) ? string.Empty : " " + wrapperRuntimeClasses)
               .Append("\" data-mf-ssr=\"1\">");

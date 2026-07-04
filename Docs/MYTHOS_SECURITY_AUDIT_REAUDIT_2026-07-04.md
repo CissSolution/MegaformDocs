@@ -1,9 +1,9 @@
-# Báo cáo Kiểm tra Bảo mật MegaForm — Re-audit sau 1.7.72 (Mythos)
+# Báo cáo Kiểm tra Bảo mật MegaForm — Re-audit sau 1.7.73 (Mythos)
 
 > **Dự án:** MegaFormSolution_280_Oqtane_um  
-> **Ngày kiểm tra:** 2026-07-04  
-> **Commit đang xem xét:** `7d8edc6` — *feat(templates): pixel-perfect Visual QA pass*  
-> **Build:** 1.7.72 (sau security pass `91c0f4b`)  
+> **Ngày kiểm tra:** 2026-07-04 (cập nhật sau `8101b0f`)  
+> **Commit đang xem xét:** `8101b0f` — *fix(security): re-audit P1-2/P1-11 authz + P2-8 inline-edit postMessage → 1.7.73*  
+> **Build:** 1.7.73  
 > **Branch:** `feat/theme-designer-picker-wizard-gallery-1.7.45`  
 > **Phương pháp:** Mythos-style audit: attack-surface ranking → parallel discovery → exploitability validation → judge synthesis  
 > **Giới hạn:** Chỉ phân tích source code (read-only), không thực hiện tấn công thật, không sửa code.
@@ -12,7 +12,7 @@
 
 ## 1. Executive Summary
 
-Sau khi đánh giá source code mới nhất (build 1.7.72, commit `7d8edc6`), **phần lớn các fix từ Round 3 (2026-07-03) đã được áp dụng đúng**, đặc biệt là P0-8 (Workflow SSRF), P0-9 (AspNetCore.Component JWT), P1-3 (Web Local AI RCE), P1-4/P1-5/P1-6 (SQL guards), P1-8 (path traversal), và P2-4 (download nosniff). Tuy nhiên, codebase vẫn còn **3 lỗ hổng P0 (Critical)** chưa được giải quyết triệt để, trong đó có **2 lỗ hổng unauthenticated** (RazorWidget.Action DML, Payment amount tampering) và **1 P0 residual về stored XSS** (raw CustomHtml). Ngoài ra, lần rà soát này ghi nhận thêm các vấn đề P1/P2 mới phát sinh từ code thay đổi gần đây, đặc biệt là `inline-edit.ts` và các vấn đề CSRF/authorization còn sót lại trên Oqtane.
+Sau khi đánh giá source code mới nhất (build 1.7.73, commit `8101b0f`), **phần lớn các fix từ Round 3 (2026-07-03) đã được áp dụng đúng**, đặc biệt là P0-8 (Workflow SSRF), P0-9 (AspNetCore.Component JWT), P1-3 (Web Local AI RCE), P1-4/P1-5/P1-6 (SQL guards), P1-8 (path traversal), P2-4 (download nosniff), và **hai finding mới được fix trong 1.7.73: P1-2/P1-11 (Oqtane `CanUseAdminPopup` yêu cầu Admin/Host role) và P2-8 (inline-edit `postMessage` không còn tin `document.referrer`)**. Tuy nhiên, codebase vẫn còn **3 lỗ hổng P0 (Critical)** chưa được giải quyết triệt để, trong đó có **2 lỗ hổng unauthenticated** (RazorWidget.Action DML, Payment amount tampering) và **1 P0 residual về stored XSS** (raw CustomHtml). Nhiều vấn đề P1/P2 vẫn còn sót lại.
 
 **Khuyến nghị tổng thể:** MegaForm **vẫn chưa đủ điều kiện triển khai production** cho đến khi tất cả P0 và các P1 liên quan đến auth/CSRF/toàn vẹn dữ liệu được xử lý.
 
@@ -21,21 +21,21 @@ Sau khi đánh giá source code mới nhất (build 1.7.72, commit `7d8edc6`), *
 | Mức độ | Số lượng | Ghi chú |
 |--------|----------|---------|
 | **P0 — Critical** | 3 | Unauth DML (RazorWidget.Action), payment tampering, stored XSS residual (CustomHtml) |
-| **P1 — High** | 9 | CSRF class-level, IDOR SaveStyle/ModuleConfig/Phase2, template overwrite, stored XSS {{content:*}}, AiKnowledge CSRF |
-| **P2 — Medium** | 7 | Cookie SecurePolicy, SSRF residual AppEndpoint, inline-edit postMessage leak, verbose errors, Compute DoS, CSS scope trust, raw customCss render |
+| **P1 — High** | 6 | CSRF class-level, Web SaveStyle IDOR, template overwrite, stored XSS {{content:*}}, AiKnowledge CSRF, DNN Upload/List |
+| **P2 — Medium** | 6 | Cookie SecurePolicy, SSRF residual AppEndpoint, verbose errors, Compute DoS, CSS scope trust, raw customCss render |
 | **P3 — Low** | 4 | Hardcoded demo passwords, placeholder connection strings, config defaults |
 | **Misconfiguration** | 2 | Empty JWT/payment slots, QA fixtures |
-| **Đã fix trong 1.7.72** | 10 | P0-8, P0-9, P1-3, P1-4, P1-5, P1-6, P1-8, P2-1 (Component), P2-2 (Component), P2-4 |
+| **Đã fix trong 1.7.72/1.7.73** | 12 | P0-8, P0-9, P1-2/P1-11 (1.7.73), P1-3, P1-4, P1-5, P1-6, P1-8, P2-1 (Component), P2-2 (Component), P2-4, P2-8 (1.7.73) |
 
 ### Các lỗ hổng P0 cần xử lý ngay lập tức
 
 1. **P0-1 (remain)** `RazorWidgetController.Action` — vẫn **unauthenticated DML** (`INSERT/UPDATE/DELETE`) dù đã có `RazorActionSqlGuard`.
-2. **P0-2 (remain)** `PaymentController` — client-controlled `amount`/`currency`, chưa được sửa trong 1.7.72.
+2. **P0-2 (remain)** `PaymentController` — client-controlled `amount`/`currency`, chưa được sửa trong 1.7.73.
 3. **P0-6 (residual)** `FormHtmlRenderer.RenderCustomHtml` / raw `customCss` — stored XSS qua CustomHtml và CSS override chưa được encode toàn diện.
 
 ---
 
-## 2. Trạng thái các finding từ audit trước (post-1.7.72)
+## 2. Trạng thái các finding từ audit trước (post-1.7.73)
 
 | ID | Lỗ hổng | Trạng thái sau 1.7.72 | Đánh giá chi tiết |
 |----|---------|----------------------|-------------------|
@@ -45,7 +45,7 @@ Sau khi đánh giá source code mới nhất (build 1.7.72, commit `7d8edc6`), *
 | P0-8 | Workflow Webhook SSRF | **Fixed** | `SsrfGuard.cs` mới; wired vào `WebhookNodeExecutor`; chặn private/metadata/loopback. Đóng P0. |
 | P0-9 | AspNetCore.Component JWT forgery | **Fixed** | env-first key, validate issuer/audience khi có giá trị. Đóng P0. |
 | P1-1 | Class-level [IgnoreAntiforgeryToken] | **Không fix** | Vẫn còn trên 20+ controllers Web/Oqtane. Vẫn P1. |
-| P1-2 | SaveStyle IDOR/CSRF | **Không fix** | `CanUseAdminPopup()` vẫn chỉ check `IsAuthenticated`. Vẫn P1. |
+| P1-2 / P1-11 | SaveStyle/ModuleConfig/Phase2 IDOR/CSRF | **Fixed trong 1.7.73 (Oqtane)** | `CanUseAdminPopup()` giờ yêu cầu `RoleNames.Admin` hoặc `RoleNames.Host`. Web `SaveStyle` vẫn chỉ `[Authorize]` any user — còn residual. |
 | P1-3 | Web Local AI authenticated RCE | **Fixed** | `[Authorize]` + role check Administrator/Host/Admin trước khi spawn `kimi`. Đóng P0, còn P1 residual nếu admin bị CSRF. |
 | P1-4 | FieldOptionsService weak guard | **Fixed** | word-boundary regex, reject `;`/comments, stored-proc validation. Đóng P1. |
 | P1-5 | FormDatabaseInsertService multi-statement | **Fixed** | require leading INSERT, reject stacking/comments, word-boundary block. Đóng P1. |
@@ -62,7 +62,7 @@ Sau khi đánh giá source code mới nhất (build 1.7.72, commit `7d8edc6`), *
 
 ## 3. Phương pháp kiểm tra
 
-1. **Kiểm tra git log/status** của commit `7d8edc6` và dirty working tree để xác định phạm vi thay đổi.
+1. **Kiểm tra git log/status** của commit `8101b0f` và dirty working tree để xác định phạm vi thay đổi.
 2. **Verify trực tiếp** các file đã sửa bằng `ReadFile`/`Grep`.
 3. **Rà soát toàn bộ** bằng parallel `explore` agents cho: anonymous endpoints, SQL injection, XSS/SSTI, CSRF/auth, SSRF/upload/RCE, secrets/config.
 4. **Judge triage**: deduplicate, validate exploitability, phân loại lại mức độ.
@@ -201,31 +201,35 @@ Sau khi đánh giá source code mới nhất (build 1.7.72, commit `7d8edc6`), *
   - Chỉ áp dụng `[IgnoreAntiforgeryToken]` trên các action public thực sự (`Submit`, `Upload/File`, public schema).
   - Thêm `[ValidateAntiForgeryToken]` hoặc `[AutoValidateAntiforgeryToken]` cho admin mutators; plumb antiforgery token vào JS fetch layer.
 
-#### P1-2: `SaveStyle` / `SaveModuleStyle` / `ModuleConfig` / `Phase2/*` — IDOR + CSRF
+#### P1-2 (Oqtane fixed trong 1.7.73; Web vẫn còn): `SaveStyle` / `SaveModuleStyle` / `ModuleConfig` / `Phase2/*` — IDOR + CSRF
 
 - **File:**
-  - Oqtane: `MegaForm.Oqtane.Server/Controllers/MegaFormController.cs:251, 2671, 2718, 2773, 2881, 2905, 2995, 3036, 3054`
+  - Oqtane: `MegaForm.Oqtane.Server/Controllers/MegaFormController.cs:262–265, 2683, 2730, 2785, 2874, 2893, 2943, 2980, 3007, 3048, 3066`
   - Web: `MegaForm.Web/Controllers/MegaFormController.cs:1034–1054`
-- **Mô tả:** `CanUseAdminPopup()` trong Oqtane chỉ check `User.Identity.IsAuthenticated`. Kết hợp với class-level `[IgnoreAntiforgeryToken]`, user bất kỳ có thể CSRF-POST để ghi đè style/module CSS, ModuleConfig, AppDefinition, ViewConfig của module khác (stored XSS/defacement/cross-tenant tampering).
-- **Evidence:**
+- **Mô tả:**
+  - **Oqtane (FIXED 1.7.73):** `CanUseAdminPopup()` giờ yêu cầu `RoleNames.Admin` hoặc `RoleNames.Host`. Kết hợp với class-level `[IgnoreAntiforgeryToken]`, vẫn còn CSRF chống lại admin/host, nhưng không còn lỗ hổng "any authenticated user".
+  - **Web (STILL PRESENT):** `SaveStyle` vẫn chỉ có `[Authorize]` (any authenticated user), không kiểm tra ownership/module edit permission. Controller có class-level `[IgnoreAntiforgeryToken]`.
+- **Evidence (Oqtane fixed):**
   ```csharp
-  private bool CanUseAdminPopup() => User?.Identity?.IsAuthenticated == true;
+  private bool CanUseAdminPopup()
+  {
+      return User != null && (User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Host));
+  }
   ```
+- **Evidence (Web still present):**
   ```csharp
-  [HttpPost("ModuleConfig/SaveStyle")]
+  [HttpPost("SaveStyle")]
   [Authorize]
   public IActionResult SaveStyle([FromBody] JsonElement bodyElement)
   {
-      if (!CanUseAdminPopup()) return Forbid();
-      ...
+      ... // writes style settings for arbitrary moduleId from body
   }
   ```
-- **Mức độ:** High
-- **Khai thác:** IDOR + CSRF → stored XSS / defacement / data tampering, confirmed
+- **Mức độ:** High (Web residual)
+- **Khai thác:** IDOR + CSRF → stored XSS / defacement / data tampering, confirmed (Web)
 - **Khuyến nghị:**
-  - Thay `[Authorize]` bằng `[Authorize(Policy = "EditModule")]`.
-  - Validate caller có quyền edit trên `moduleId` / `formId` / `siteId` cụ thể.
-  - Bỏ class-level antiforgery.
+  - **Web:** Thay `[Authorize]` bằng admin role check; validate caller có quyền edit trên `moduleId` cụ thể.
+  - **Cả hai:** Bỏ class-level antiforgery.
 
 #### P1-7: Stored XSS via `FormHtmlRenderer` `{{content:*}}` Token
 
@@ -268,13 +272,19 @@ Sau khi đánh giá source code mới nhất (build 1.7.72, commit `7d8edc6`), *
 - **Khai thác:** CSRF → SSTI/code execution, confirmed
 - **Khuyến nghị:** Thêm antiforgery và validate file path whitelist.
 
-#### P1-11 (new/reclassify): Oqtane `MegaFormController` — Weak Authorization on Module/App Endpoints
+#### P1-11 (fixed trong 1.7.73): Oqtane `MegaFormController` — Weak Authorization on Module/App Endpoints
 
-- **File:** `MegaForm.Oqtane.Server/Controllers/MegaFormController.cs` (dòng 251, 2671, 2718, 2773, 2881, 2905, 2995, 3036, 3054)
-- **Mô tả:** Nhiều endpoint state-changing sử dụng `CanUseAdminPopup()` chỉ kiểm tra `IsAuthenticated`, không kiểm tra `EditModule` policy hay module ownership. Bất kỷ user đăng nhập nào cũng có thể thay đổi ModuleConfig, SaveStyle, SaveModuleStyle, Phase2 view/app definitions.
-- **Mức độ:** High
-- **Khai thác:** Authenticated user / CSRF → cross-module/cross-tenant tampering, confirmed
-- **Khuyến nghị:** Thay `CanUseAdminPopup` bằng `EditModule` policy + module ownership validation.
+- **File:** `MegaForm.Oqtane.Server/Controllers/MegaFormController.cs` (dòng 262–265)
+- **Mô tả:** Đã được fix trong commit `8101b0f`. `CanUseAdminPopup()` giờ yêu cầu `RoleNames.Admin` hoặc `RoleNames.Host`, đóng lỗ hổng "any authenticated user có thể thay đổi ModuleConfig/SaveStyle/SaveModuleStyle/Phase2 definitions".
+- **Evidence:**
+  ```csharp
+  private bool CanUseAdminPopup()
+  {
+      return User != null && (User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Host));
+  }
+  ```
+- **Mức độ:** Fixed
+- **Ghi chú:** Vẫn còn CSRF residual do class-level `[IgnoreAntiforgeryToken]`, nhưng đã được gộp vào P1-1.
 
 #### P1-12 (new/reclassify): Oqtane `AiKnowledge*` Controllers — CSRF on Admin Writes
 
@@ -310,30 +320,22 @@ Sau khi đánh giá source code mới nhất (build 1.7.72, commit `7d8edc6`), *
 - **Khai thác:** Information disclosure
 - **Khuyến nghị:** Log chi tiết server-side, trả về generic message + error ID client-side.
 
-#### P2-8 (new): `inline-edit.ts` — `postMessage` Target Origin Trusts `document.referrer`
+#### P2-8 (fixed trong 1.7.73): `inline-edit.ts` — `postMessage` Target Origin
 
-- **File:** `MegaForm.UI/src/shared/inline-edit.ts:514–535`
-- **Mô tả:** Hàm `savePreviewPatch()` sử dụng `document.referrer` làm target origin cho `window.parent.postMessage`. Nếu preview iframe bị embed bởi attacker, schema/settings đầy đủ của form sẽ bị leak ra origin độc hại.
+- **File:** `MegaForm.UI/src/shared/inline-edit.ts:523–532`
+- **Mô tả:** Đã được fix trong commit `8101b0f`. `savePreviewPatch()` không còn sử dụng `document.referrer`. Target origin được set thành `window.location.origin`; nếu origin opaque (srcdoc) thì fallback về `window.parent.location.origin`.
 - **Evidence:**
   ```typescript
+  // [SecFix 2026-07-04 P2-8] Post the schema/settings ONLY to the same-origin parent...
   let targetOrigin = window.location.origin;
-  try {
-    if (document.referrer) targetOrigin = new URL(document.referrer).origin;
-  } catch { /* defensive */ }
-  window.parent.postMessage({
-    type: 'mf-inline-edit-apply',
-    formId: STATE.cfg!.formId,
-    schemaJson: JSON.stringify(schemaForSave),
-    settingsJson: JSON.stringify(settings),
-    ...
-  }, targetOrigin);
+  if (!targetOrigin || targetOrigin === 'null') {
+    // Opaque origin (e.g. srcdoc): fall back to the same-origin parent's concrete origin.
+    try { targetOrigin = window.parent.location.origin; } catch { targetOrigin = window.location.origin; }
+  }
+  window.parent.postMessage({ ... }, targetOrigin);
   ```
-- **Mức độ:** Medium
-- **Khai thác:** Information disclosure (form schema/settings leak), confirmed
-- **Khuyến nghị:**
-  - Luôn dùng `window.location.origin` làm target origin.
-  - Parent receiver validate `event.origin === window.location.origin`.
-  - Thêm `X-Frame-Options: SAMEORIGIN` / `frame-ancestors 'self'` cho builder/preview.
+- **Mức độ:** Fixed
+- **Ghi chú:** Defense-in-depth: nên thêm `frame-ancestors 'self'` CSP để ngăn embed từ bên ngoài ngay từ đầu.
 
 #### P2-9 (new/residual): DNN `AppEndpoint` — Anonymous SQL Execution Surface
 
@@ -429,14 +431,15 @@ POST /api/megaform/payments/stripe/create-intent
   → Attacker hoàn tất checkout giá thật $100 chỉ với $0.01
 ```
 
-### Chain C: CSRF Oqtane → SaveStyle → Stored XSS
+### Chain C: CSRF Admin/Host → SaveStyle → Stored XSS
 ```
-[IgnoreAntiforgeryToken] class-level
-  → Attacker dụ user click link
+[IgnoreAntiforgeryToken] class-level (Oqtane + Web)
+  → Attacker dụ ADMIN/HOST click link
   → POST /api/MegaForm/ModuleConfig/SaveStyle
   → cssOverride = "}</style><script>alert(1)</script><style>"
   → Victim bị XSS
 ```
+*Ghi chú:* Oqtane đã yêu cầu Admin/Host role từ 1.7.73; Web SaveStyle vẫn chỉ cần any authenticated user.
 
 ### Chain D: CSRF → UserTemplateController.PutSource → SSTI
 ```
@@ -447,13 +450,14 @@ POST /api/megaform/payments/stripe/create-intent
   → Server compiles & executes on next render
 ```
 
-### Chain E: Inline-Edit Preview → Referrer Leak Form Schema
+### Chain E: Inline-Edit Preview → Referrer Leak Form Schema (Mitigated in 1.7.73)
 ```
 Admin opens builder preview in iframe controlled by attacker
-  → document.referrer = attacker origin
-  → savePreviewPatch() postMessage(schemaJson, settingsJson, ...) to attacker origin
-  → Full form schema, custom HTML/CSS, settings leaked
+  → savePreviewPatch() uses window.location.origin (NOT document.referrer)
+  → postMessage only delivered to same-origin parent
+  → Schema leak prevented
 ```
+*Ghi chú:* Defense-in-depth: thêm `frame-ancestors 'self'` CSP để ngăn embed từ bên ngoài.
 
 ---
 
@@ -468,7 +472,7 @@ Admin opens builder preview in iframe controlled by attacker
 ### P1 — Xử lý trong 1 tuần
 
 4. Gỡ class-level `[IgnoreAntiforgeryToken]` trên tất cả admin controllers; plumb antiforgery token vào JS fetch layer.
-5. `SaveStyle`/`SaveModuleStyle`/`ModuleConfig`/`Phase2/*`: require `EditModule` policy + validate module/site ownership.
+5. **Web** `SaveStyle`: require admin role + validate module ownership. Oqtane đã yêu cầu Admin/Host role từ 1.7.73.
 6. HTML-encode `{{content:*}}` token values (hoặc per-token `allowHtml`).
 7. DNN `Upload/List`: yêu cầu auth; sanitize SVG hoặc serve attachment.
 8. `UserTemplateController`: thêm antiforgery + file-path whitelist.
@@ -477,7 +481,7 @@ Admin opens builder preview in iframe controlled by attacker
 ### P2/P3 — Xử lý trong 2–4 tuần
 
 10. Web `Cookie.SecurePolicy`: đổi thành `Always` ngoài Development.
-11. `inline-edit.ts`: dùng `window.location.origin` cho postMessage; thêm frame-ancestors CSP.
+11. `inline-edit.ts` (đã fix postMessage trong 1.7.73): thêm `frame-ancestors 'self'` CSP cho builder/preview làm defense-in-depth.
 12. DNN `AppEndpoint`: dùng SQL tokenizer; read-only DB account; signed token cho anonymous.
 13. `SubformController.Compute`: thêm length/rows/rate limits.
 14. `CustomShellCompatibilityCssService`: validate/escape `scopeSelector`; tự neutralize `</`.
@@ -506,11 +510,45 @@ Admin opens builder preview in iframe controlled by attacker
 
 ## 8. Kết luận
 
-Codebase MegaForm sau build 1.7.72 đã **cải thiện đáng kể** so với Round 3: hầu hết các lỗ hổng SQL guard, SSRF, JWT, path traversal đã được khắc phục đúng. Tuy nhiên, **3 lỗ hổng P0 và 9 lỗ hổng P1 vẫn còn nguy hiểm**, trong đó có 2 surface unauthenticated (RazorWidget.Action DML, Payment tampering) và một loạt vấn đề CSRF/authorization trên Oqtane chưa được xử lý do rủi ro phá vỡ workflow. Các vấn đề mới phát sinh từ `inline-edit.ts` cần được hardening trước khi tính năng này ra production.
+Codebase MegaForm sau build **1.7.73** đã **cải thiện đáng kể** so với Round 3: hầu hết các lỗ hổng SQL guard, SSRF, JWT, path traversal đã được khắc phục đúng, và trong commit `8101b0f` vừa rồi **P1-2/P1-11 (Oqtane `CanUseAdminPopup` yêu cầu Admin/Host) và P2-8 (inline-edit postMessage không tin `document.referrer`)** đã được fix. Tuy nhiên, **3 lỗ hổng P0 và 6 lỗ hổng P1 vẫn còn nguy hiểm**, trong đó có 2 surface unauthenticated (RazorWidget.Action DML, Payment tampering) và một loạt vấn đề CSRF class-level trên Web/Oqtane chưa được xử lý do rủi ro phá vỡ workflow.
 
 **Không nên triển khai production** cho đến khi tất cả P0 và các P1 liên quan đến auth/CSRF/toàn vẹn dữ liệu được khắc phục.
 
-Ưu tiên tuyệt đối: **P0-1, P0-2, P0-6**, sau đó là **P1-1, P1-2, P1-11, P1-12**.
+Ưu tiên tuyệt đối: **P0-1, P0-2, P0-6**, sau đó là **P1-1, P1-2 (Web residual), P1-7, P1-9, P1-10, P1-12**.
+
+---
+
+## 9. Remediation Applied — 2026-07-04 (post-audit, verified vs real code)
+
+> Trước khi sửa, mỗi finding được **re-verify đối chiếu code thật** (workflow 10-agent). Kết luận: **các lỗ hổng đều CÓ THẬT nhưng code mẫu trong `SECURITY_REMEDIATION_GUIDE_P0_P1` gần như toàn bộ tham chiếu API KHÔNG tồn tại** (`IFormRepository.GetSchemaAsync`, `FormField.Settings/.Widgets/.Actions`, `FormWidget`, `PaymentPriceResolver`, `HtmlSanitizer`, payment keys `fixedPrice/allowUserAmount/min/max`, `RunActionBySchemaAsync`…). Các fix dưới đây viết lại theo model THẬT (`FormField.WidgetProps`, `IFormRepository.GetForm` + `RenderModelResolver`, `ModuleCssComposer.NeutralizeStyleBreakout`, `Esc`). Build: **Core / Web / Oqtane.Server / DNN đều 0 error.**
+
+| ID | Trạng thái mới | Thay đổi (file thật) |
+|----|----------------|----------------------|
+| **P0-1** RazorWidget.Action unauth DML | ✅ **FIXED** | Admin-gate (`IsAdmin`) trên `Action` ở cả 3: `MegaForm.Oqtane.Server/Controllers/RazorWidgetController.cs`, `MegaForm.Web/Controllers/RazorWidgetController.cs`, `MegaForm.DNN/WebApi/RazorWidgetController.cs`. Guard `RazorActionSqlGuard` giữ làm defense-in-depth. **Không** schema-lookup (out-of-scope, cần client JS) — admin-gate đóng lỗ unauth. `ConnectionKey` giữ client-chosen (chỉ là lookup key vào registry admin-configured, không phải connection string; multi-DB EditableList cần nó; caller giờ là admin). |
+| **P0-2** Payment amount tampering | ✅ **FIXED (fixed-mode)** | `MegaForm.Web/Controllers/PaymentController.cs`: inject `IFormRepository`; `ResolveServerAmount()` load schema theo `formId`+`fieldKey`, với `widgetProps.amountMode=="fixed"` **ép** `amount`/`currency` từ schema (bỏ body); mode `field`/`listenTotals` (tính client-side) giữ client amount. Áp cho Stripe + PayPal. **Residual:** attacker bỏ `formId`/`fieldKey` → fail-open (giữ client) để không phá form legacy; fix triệt để cần bắt buộc `formId` + đổi widget JS (follow-up). Fixed-price membership/class = vector chính, đã đóng. |
+| **P0-6 / P1-7 / P2-12** Stored XSS | ✅ **FIXED** | `FormHtmlRenderer.cs`: `{{content:*}}` giờ HTML-encode mặc định qua `Esc()`. `ModuleCssComposer.NeutralizeStyleBreakout` → `public`. `MegaFormController.RenderPage.cs` catch-fallback bọc `customCss` qua `NeutralizeStyleBreakout` (main path đã neutralize từ trước). **Không** blanket-sanitize `CustomHtml` (feature custom-shell/premium phụ thuộc HTML nguyên văn có chủ đích → gate qua authz SaveForm, tracked riêng). |
+| **P1-2-Web** SaveStyle IDOR | ✅ **FIXED** | `MegaForm.Web/Controllers/MegaFormController.cs` `SaveStyle`: `[Authorize]` → `[Authorize(Roles = "Administrator")]`. (Tiền đề "class `[IgnoreAntiforgeryToken]`" của guide SAI — Web controller không có attribute đó.) |
+| **P1-9** DNN Upload/List + SVG XSS | ✅ **FIXED** | `MegaForm.DNN/WebApi/MegaFormApiController.cs`: bỏ `[AllowAnonymous]` trên `List()` (thừa kế class `[DnnAuthorize]`); thêm `SvgIsSafe()` reject SVG chứa `<script>/on*=/javascript:/<foreignObject>/<iframe>/<embed>/<!ENTITY>/href=javascript\|data:` trong `Image()`. |
+| **P1-1** class `[IgnoreAntiforgeryToken]` ×23 | ⛔ **DEFERRED** | **Không sửa.** Gỡ class-level + thêm `[ValidateAntiForgeryToken]` sẽ **400 mọi admin write** → vỡ builder: Oqtane SPA không có token antiforgery đọc được từ JS (guide giả định field/header/global của DNN — không tồn tại; `panels.ts:68` stub token=`''`); Web dùng bearer-JWT không gửi token. Cần workstream riêng dựng token plumbing (Index.razor + oqtane.ts + ~20 fetch site) rồi mới siết. |
+| **P1-10** UserTemplate CSRF | ⛔ **DEFERRED** | Path-whitelist/sandbox **đã có sẵn** (`IsWhitelistedSourceFile` + `ResolveSandboxedFilePath`). Chỉ còn CSRF — phụ thuộc token JS (như P1-1). Exploit thực tế thấp (cần admin cookie + `dev.lock` + JSON body). |
+| **P1-12** AiKnowledge* CSRF | ⛔ **DEFERRED** | Guide đúng (chỉ gỡ class attribute) nhưng phụ thuộc P1-1 token plumbing — nếu không, KB admin editor tự 400. Land cùng release với token workstream. |
+
+**Cụm DEFER (P1-1/P1-10/P1-12) chặn chung một prerequisite:** JS antiforgery-token trên Oqtane admin writes. Xem workstream đề xuất trong handoff `CLAUDE_HANDOFF_20260704_SECURITY_VERIFY_AND_FIX.md`.
+
+### 9b. Antiforgery workstream — LANDED + VERIFIED (2026-07-04, cùng ngày)
+
+Workstream token plumbing đã được dựng và **subset an toàn của P1-1/P1-10/P1-12 đã đóng + verify trên QA :5111**.
+
+- **⭐ Cơ chế token (đã xác minh trên host thật):** Oqtane render request token ở `<input name="__RequestVerificationToken">` (có sẵn trong page, kể cả anon) + validate qua header **`X-XSRF-TOKEN-HEADER`** (cookie `X-XSRF-TOKEN-COOKIE` HttpOnly ride tự động). (Guide/verify-agent SAI khi bảo Oqtane không có token JS-readable.)
+- **Client:** `MegaForm.UI/src/shared/antiforgery.ts` — 1 injector fetch/XHR same-origin, thêm `X-XSRF-TOKEN-HEADER` cho mọi mutating request khi token tồn tại (no-op trên Web/JWT). Wire qua `platform-host.ts` (mọi admin bundle) + `ai-knowledge/index.ts`. ⭐Thêm vite entry `ai-knowledge` (trước đó thiếu → bundle stale).
+- **Server (đã đóng):** gỡ class `[IgnoreAntiforgeryToken]` trên 4 `AiKnowledge*` (P1-12, `SearchScoped` read giữ exempt); thêm `[ValidateAntiForgeryToken]` trên `UserTemplate refresh/source` (P1-10) + `MegaFormController SaveStyle/SaveModuleStyle` (P1-1 Chain-C). Giữ class ignore trên controller có endpoint PUBLIC (Submit/Render/Upload) để **không phá public form**.
+- **✅ Verify trên :5111 (net10, hot-patch Debug DLL):** `KB Upsert` no-token → **400** (antiforgery enforce), w/token → **403** (token OK, auth chặn); public `Submit` → **200** (không vỡ); `render/1` → **200**; `SearchScoped` (exempt) → 403 (≠400); injector có trong dashboard/ai-knowledge/builder bundles; site chạy sạch không exception.
+- **⛔ Vẫn DEFER (rủi ro cao / giá trị biên thấp):** blanket-remove class ignore trên `MegaFormController` (mixed public/admin — chỉ gate SaveStyle/SaveModuleStyle), `SubformController` (có `Compute` public), `RazorWidgetController`, `AiToolsController`, `MegaFormLocalAiController`, `AiAssistantController`, `MegaFormPopupPhase2Controller`; Web-half P1-1 (no-op dưới JWT). Injector đã sẵn → mở rộng sau chỉ cần thêm attribute + QA.
+- ⚠️ **Deploy:** :5111 đang hot-patch (Debug) để QA thủ công. Package phân phối cần bump `ModuleInfo.Version` + repack Release. Restore backup: `%TEMP%\claude\mf-verify1772-backup`.
+
+**Guardrail chống tái phạm (mới):** `Docs/SECURITY_CODING_RULES.md` (canonical 12 quy tắc + checklist) + `CLAUDE.md` section security (load mỗi session) + `.claude/hooks/security-reminder.cjs` (PreToolUse nhắc khi sửa file nhạy cảm).
+
+⚠️ **Deploy gate:** thay đổi C# ở Core/Oqtane/DNN cần bump `ModuleInfo.Version` + repack (Oqtane DLL-swap gate) + rebuild DNN để có hiệu lực runtime. Đã verify **compile** (0 error), CHƯA repack/deploy.
 
 ---
 

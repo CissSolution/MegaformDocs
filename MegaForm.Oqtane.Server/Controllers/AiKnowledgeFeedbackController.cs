@@ -16,7 +16,8 @@ namespace MegaForm.Oqtane.Server.Controllers
     /// captured failures into Templates).
     /// </summary>
     [Route("api/[controller]")]
-    [IgnoreAntiforgeryToken]
+    // [SecFix 2026-07-04 P1-12] Removed class-level [IgnoreAntiforgeryToken] → antiforgery validated on
+    // the admin write POSTs (Promote/Review). Client sends X-XSRF-TOKEN-HEADER (antiforgery.ts).
     public class AiKnowledgeFeedbackController : ModuleControllerBase
     {
         private readonly IAiKnowledgeService _svc;

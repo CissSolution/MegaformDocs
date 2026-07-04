@@ -2681,6 +2681,7 @@ namespace MegaForm.Oqtane.Server.Controllers
 
         [HttpPost("ModuleConfig/SaveStyle")]
         [Authorize]
+        [ValidateAntiForgeryToken] // [SecFix 2026-07-04 P1-1/Chain-C] CSRF: overrides class [IgnoreAntiforgeryToken]; blocks CSRF→stored-CSS/XSS on cssOverride
         public IActionResult SaveStyle([FromBody] JsonElement bodyElement)
         {
             if (!CanUseAdminPopup()) return Forbid();

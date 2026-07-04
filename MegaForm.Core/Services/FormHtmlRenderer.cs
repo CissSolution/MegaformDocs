@@ -216,7 +216,10 @@ namespace MegaForm.Core.Services
             html = Regex.Replace(html, @"\{\{content:([a-zA-Z0-9_\-]+)\}\}", m =>
             {
                 var key = m.Groups[1].Value;
-                return content.TryGetValue(key, out var v) ? (v ?? string.Empty) : string.Empty;
+                // [SecFix 2026-07-04 P0-6/P1-7] HTML-encode content-token values by default so a stored
+                // value like "<img src=x onerror=...>" cannot become active markup (stored XSS). Shipped
+                // CustomContent values are plain text / image URLs; Esc() is attribute-safe (encodes both quotes).
+                return content.TryGetValue(key, out var v) ? Esc(v ?? string.Empty) : string.Empty;
             });
 
             // {{script:key}} → anchor span (JS injects the managed script). Keep SEO-neutral.

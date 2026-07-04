@@ -301,6 +301,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         /// is a host-level operation.
         /// </summary>
         [HttpPost("refresh")]
+        [ValidateAntiForgeryToken] // [SecFix 2026-07-04 P1-10] CSRF: overrides class [IgnoreAntiforgeryToken] on this write
         public IActionResult Refresh()
         {
             if (!IsHostOrAdmin())
@@ -437,6 +438,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         /// even for Hosts.
         /// </summary>
         [HttpPost("source")]
+        [ValidateAntiForgeryToken] // [SecFix 2026-07-04 P1-10] CSRF: overrides class [IgnoreAntiforgeryToken]; blocks CSRF→template overwrite/SSTI
         public IActionResult PutSource([FromBody] PutSourceRequest req)
         {
             if (!IsHostOrAdmin())

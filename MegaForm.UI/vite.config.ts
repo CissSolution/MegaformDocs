@@ -28,6 +28,10 @@ const entries: Record<string, string> = {
   presets:          resolve(__dirname, 'src/presets/index.ts'),
   'admin-live':     resolve(__dirname, 'src/admin-live/index.ts'),
   dashboard:        resolve(__dirname, 'src/dashboard/index.ts'),
+  // [SecFix 2026-07-04] Restored the missing KB-editor entry (same class of loss as ai-form-assistant/
+  // my-inbox). megaform-ai-knowledge.js shipped but had no build entry, so its antiforgery-injector
+  // import never rebuilt. Output → megaform-ai-knowledge.js (matches the deployed name).
+  'ai-knowledge':   resolve(__dirname, 'src/ai-knowledge/index.ts'),
   languages:        resolve(__dirname, 'src/languages/index.ts'),
   'settings-popup': resolve(__dirname, 'src/view-designer/settings-popup.ts'),
   'dnn-host':       resolve(__dirname, 'src/dnn-host/index.ts'),
