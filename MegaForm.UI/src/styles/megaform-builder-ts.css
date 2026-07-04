@@ -862,6 +862,8 @@ body.state-theme-mode .mf-canvas-flexgrid::after {
  * ========================================================= */
 .mf-theme-preview-frame {
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   /* [B50 Author C — edge case #4] long forms grow naturally; iframe
    * has scrolling=yes plus the renderer's internal scroll. min-height
    * keeps the placeholder/iframe visible even when the form is empty. */
@@ -874,11 +876,16 @@ body.state-theme-mode .mf-canvas-flexgrid::after {
 }
 body.state-theme-mode #mf-canvas-dropzone {
   padding: 24px !important;
+  box-sizing: border-box !important;
+  min-width: 0 !important;
   /* [B65] Force neutral surround so dark presets (Tech Startup) don't black
      out the canvas. Form CARD inside iframe still gets --mf-form-bg from
      theme — mimicking how form looks published on a normal DNN page. */
   background: #f5f7fa !important;
   overflow-y: auto !important;
+  overflow-x: hidden !important;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
 }
 body.state-theme-mode #mf-canvas-dropzone > *:not(.mf-theme-preview-frame):not(.mf-theme-preview-placeholder) {
   display: none !important;
@@ -2487,6 +2494,10 @@ textarea.mf-slide-text {
   inset: 1.5rem !important;
   z-index: 1 !important;
   pointer-events: none !important;
+}
+body.state-theme-mode .mf-builder-layout > .mf-panel-center {
+  overflow-x: hidden !important;
+  scrollbar-gutter: stable;
 }
 .mf-canvas-dropzone #mf-canvas-fields {
   position: relative !important;

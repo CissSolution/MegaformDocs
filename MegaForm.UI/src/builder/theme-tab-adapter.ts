@@ -1502,8 +1502,21 @@ import { openInspectorColorPalette } from './inspector-color-palette';
         try {
             var dz = document.getElementById('mf-canvas-dropzone');
             if (!dz) return;
+            var changed = false;
+            var setStyle = function (el: HTMLElement, name: string, value: string): void {
+                if ((el.style as any)[name] !== value) {
+                    (el.style as any)[name] = value;
+                    changed = true;
+                }
+            };
+            var setAttr = function (el: Element, name: string, value: string): void {
+                if (el.getAttribute(name) !== value) {
+                    el.setAttribute(name, value);
+                    changed = true;
+                }
+            };
             // Apply via data-attr so canvas.ts CSS rules can also hook in.
-            dz.setAttribute('data-mf-theme-device', currentDevice);
+            setAttr(dz, 'data-mf-theme-device', currentDevice);
 
             // ── Design mode: the live form is INSIDE the preview iframe (its
             //    .mf-form-wrapper is in the iframe's own document, unreachable from
@@ -1511,8 +1524,11 @@ import { openInspectorColorPalette } from './inspector-color-palette';
             //    Render it at a real device width and `zoom`-fit the center column.
             var frame = dz.querySelector('#mf-builder-preview-frame, .mf-theme-preview-frame') as HTMLElement | null;
             if (frame) {
-                var pad = 48; // [B91] design dropzone horizontal padding (24px * 2)
-                var availW = Math.max(320, (dz.clientWidth || 0) - pad);
+                var dzRect = dz.getBoundingClientRect();
+                var dzStyle = window.getComputedStyle(dz);
+                var padX = (parseFloat(dzStyle.paddingLeft || '0') || 0) + (parseFloat(dzStyle.paddingRight || '0') || 0);
+                var padY = (parseFloat(dzStyle.paddingTop || '0') || 0) + (parseFloat(dzStyle.paddingBottom || '0') || 0);
+                var availW = Math.max(320, Math.floor((dzRect.width || dz.offsetWidth || 0) - padX));
                 // Desktop adapts to the column: when there's room (≥1024 after a panel
                 // collapse) it renders 1:1 and crisp; when cramped it renders at the
                 // 1024 desktop breakpoint and zooms to fit (more legible than a fixed
@@ -1520,22 +1536,24 @@ import { openInspectorColorPalette } from './inspector-color-palette';
                 var renderW = currentDevice === 'desktop'
                     ? Math.max(availW, 1024)
                     : (DEVICE_RENDER_WIDTHS[currentDevice] || 1280);
-                var availH = Math.max(420, (dz.clientHeight || 0) - pad);
+                var availH = Math.max(420, Math.floor((dzRect.height || dz.offsetHeight || 0) - padY));
                 var z = renderW > availW ? (availW / renderW) : 1;
-                frame.style.width = renderW + 'px';
-                frame.style.maxWidth = 'none';
+                var nextZoom = z < 1 ? String(Math.round(z * 1000) / 1000) : '';
+                var nextHeight = Math.round((z < 1 ? availH / z : availH)) + 'px';
+                setStyle(frame, 'width', renderW + 'px');
+                setStyle(frame, 'maxWidth', 'none');
                 // `zoom` shrinks the LAYOUT box too (Chromium/Safari/Firefox 126+),
                 // so the scaled iframe fits the column with NO overflow/scrollbar —
                 // unlike transform:scale which leaves the unscaled box behind.
-                (frame.style as any).zoom = z < 1 ? String(Math.round(z * 1000) / 1000) : '';
+                setStyle(frame, 'zoom', nextZoom);
                 // Fill the column height so the preview reads like a page, not a card;
                 // the iframe scrolls internally for tall forms.
-                frame.style.height = Math.round((z < 1 ? availH / z : availH)) + 'px';
-                frame.style.minHeight = '0';
-                frame.style.marginLeft = 'auto';
-                frame.style.marginRight = 'auto';
-                frame.style.transition = 'width .18s ease';
-                frame.setAttribute('data-mf-device', currentDevice);
+                setStyle(frame, 'height', nextHeight);
+                setStyle(frame, 'minHeight', '0');
+                setStyle(frame, 'marginLeft', 'auto');
+                setStyle(frame, 'marginRight', 'auto');
+                setStyle(frame, 'transition', 'none');
+                setAttr(frame, 'data-mf-device', currentDevice);
             }
 
             // ── Build / no-iframe path (native FlexGrid canvas): the form wrapper
@@ -1543,21 +1561,23 @@ import { openInspectorColorPalette } from './inspector-color-palette';
             var width = DEVICE_WIDTHS[currentDevice] || '100%';
             var wrap = dz.querySelector('.mf-form-wrapper') as HTMLElement | null;
             if (wrap) {
-                wrap.style.maxWidth = width;
-                wrap.style.marginLeft = 'auto';
-                wrap.style.marginRight = 'auto';
-                wrap.style.transition = 'max-width 0.18s ease';
+                setStyle(wrap, 'maxWidth', width);
+                setStyle(wrap, 'marginLeft', 'auto');
+                setStyle(wrap, 'marginRight', 'auto');
+                setStyle(wrap, 'transition', 'max-width 0.18s ease');
             }
             var form = dz.querySelector('.mf-form') as HTMLElement | null;
             if (form && !wrap) {
-                form.style.maxWidth = width;
-                form.style.marginLeft = 'auto';
-                form.style.marginRight = 'auto';
-                form.style.transition = 'max-width 0.18s ease';
+                setStyle(form, 'maxWidth', width);
+                setStyle(form, 'marginLeft', 'auto');
+                setStyle(form, 'marginRight', 'auto');
+                setStyle(form, 'transition', 'max-width 0.18s ease');
             }
-            window.dispatchEvent(new CustomEvent('mf:theme-device-change', {
-                detail: { device: currentDevice, width: width }
-            }));
+            if (changed) {
+                window.dispatchEvent(new CustomEvent('mf:theme-device-change', {
+                    detail: { device: currentDevice, width: width }
+                }));
+            }
         } catch (_e) { /* defensive */ }
     }
 
