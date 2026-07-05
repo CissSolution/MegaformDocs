@@ -310,6 +310,10 @@ export async function open(opts: SettingsOpts): Promise<void> {
   let listViewFieldsExpanded = false;
   let listViewTemplatesExpanded = false;
   let listViewAdvancedExpanded = false;
+  // [SettingsTabs 2026-07-05] Which settings section is the active TAB. The popup presents
+  // its sections as tabs (not stacked accordions) so one section shows at a time inside a
+  // bounded, internally-scrolling pane — the dialog never grows past the Save button.
+  let activeSettingsTab = 0;
 
   // ── Build body ───────────────────────────────────────────────────────────
   popup.body.innerHTML = '';
@@ -322,29 +326,82 @@ export async function open(opts: SettingsOpts): Promise<void> {
   // error inside buildListViewModePanel killed the whole popup body, leaving
   // only the basics section visible). Failed sections render an inline error
   // banner so admin can see what went wrong + report it.
+  // [SettingsTabs 2026-07-05] Present the sections as TABS (one visible at a time inside a
+  // bounded, internally-scrolling pane) instead of stacked accordions. Accordions let every
+  // section expand at once, growing the dialog until the Save button scrolled out of view
+  // (esp. inline mode where the dialog has no fixed height). Tabs keep the popup compact so
+  // Save is always reachable. Each existing accordion builder is reused: we run it, then lift
+  // its title + content body out of the <details> chrome into a tab pane.
   function rerender(): void {
     wrap.innerHTML = '';
-    appendSafe('Module form',  buildBasicsSection);
-    appendSafe('Theme & Layout', buildThemeLayoutSection);
-    appendSafe('Current Form settings', buildFormSettingsSection);
-    // [SettingsSimplify v20260623-B236] Renderer host + page binding are
-    // internal routing concepts now. Keep their builders/helpers available for
-    // backward compatibility, but do not expose those accordions in Settings.
-  }
-  function appendSafe(label: string, builder: () => HTMLElement): void {
-    try {
-      const el = builder();
-      if (el) wrap.appendChild(el);
-    } catch (err) {
-      const msg = (err && (err as any).message) || String(err);
-      console.error('[MegaForm Settings] section "' + label + '" failed:', err);
-      const errBlock = h('div', { style: {
-        margin: '8px 0', padding: '12px 16px',
-        background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px',
-        color: '#991b1b', fontSize: '13px',
-      } }, '⚠ "' + label + '" section could not render: ' + msg);
-      wrap.appendChild(errBlock);
-    }
+    wrap.style.display = 'flex';
+    wrap.style.flexDirection = 'column';
+
+    const tabs: Array<{ label: string; title: string; content: HTMLElement }> = [];
+    const addTab = (label: string, builder: () => HTMLElement): void => {
+      try {
+        const details = builder();
+        const titleEl = details.querySelector('summary span') as HTMLElement | null;
+        const title = (titleEl && titleEl.textContent) ? titleEl.textContent : label;
+        const bodyEl = details.querySelector('.mf-vd-details-body') as HTMLElement | null;
+        // The tab pane owns scrolling now — neutralise the accordion body's own height/overflow
+        // so we don't get a nested scrollbar inside the pane.
+        if (bodyEl) {
+          bodyEl.style.maxHeight = 'none';
+          bodyEl.style.height = 'auto';
+          bodyEl.style.overflow = 'visible';
+          bodyEl.style.scrollbarGutter = 'auto';
+        }
+        tabs.push({ label, title, content: bodyEl || details });
+      } catch (err) {
+        const msg = (err && (err as any).message) || String(err);
+        console.error('[MegaForm Settings] section "' + label + '" failed:', err);
+        tabs.push({ label, title: label, content: h('div', { style: {
+          margin: '8px 0', padding: '12px 16px',
+          background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px',
+          color: '#991b1b', fontSize: '13px',
+        } }, '⚠ "' + label + '" section could not render: ' + msg) });
+      }
+    };
+    addTab(T('vd.set.module_form', 'Module form'), buildBasicsSection);
+    addTab(T('vd.set.theme_layout', 'Theme & Layout'), buildThemeLayoutSection);
+    addTab(T('vd.set.form_settings', 'Current Form settings'), buildFormSettingsSection);
+    // [SettingsSimplify v20260623-B236] Renderer host + page binding stay internal (not exposed).
+
+    if (activeSettingsTab >= tabs.length || activeSettingsTab < 0) activeSettingsTab = 0;
+
+    const tabBar = h('div', { style: {
+      display: 'flex', gap: '2px', borderBottom: '1px solid #e2e8f0', padding: '0 2px',
+      flexShrink: '0', flexWrap: 'wrap',
+    } });
+    const pane = h('div', { style: {
+      padding: '12px 2px 4px', overflowY: 'auto', overflowX: 'hidden',
+      flex: '1 1 auto', minHeight: '0', maxHeight: 'min(58vh, 540px)', scrollbarGutter: 'stable',
+    } });
+    const btns: HTMLButtonElement[] = [];
+    const activate = (i: number): void => {
+      activeSettingsTab = i;
+      pane.innerHTML = '';
+      pane.appendChild(tabs[i].content);
+      pane.scrollTop = 0;
+      btns.forEach((b, j) => {
+        const on = j === i;
+        b.style.color = on ? '#6366f1' : '#64748b';
+        b.style.borderBottomColor = on ? '#6366f1' : 'transparent';
+        b.style.background = on ? '#f5f3ff' : 'transparent';
+      });
+    };
+    tabs.forEach((t, i) => {
+      const btn = h('button', { type: 'button', title: t.title, onclick: () => activate(i), style: {
+        appearance: 'none', border: 'none', borderBottom: '2px solid transparent', background: 'transparent',
+        padding: '9px 14px', fontSize: '13px', fontWeight: '600', color: '#64748b', cursor: 'pointer',
+        borderTopLeftRadius: '6px', borderTopRightRadius: '6px', whiteSpace: 'nowrap', marginBottom: '-1px',
+      } }, t.title) as HTMLButtonElement;
+      btns.push(btn);
+      tabBar.appendChild(btn);
+    });
+    wrap.append(tabBar, pane);
+    activate(activeSettingsTab);
   }
 
   function buildFormSettingsSection(): HTMLElement {
