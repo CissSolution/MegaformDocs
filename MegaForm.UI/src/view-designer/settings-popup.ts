@@ -16,6 +16,12 @@
  * Badge: SettingsPopup v20260623-B242
  */
 
+// [SecFix 2026-07-05 SEC-B1] Install the same-origin antiforgery header injector as a side effect.
+// This bundle POSTs SaveStyle/SaveModuleStyle, which now carry [ValidateAntiForgeryToken] on Oqtane.
+// Unlike the dashboard/builder, the settings popup can open on a page that loads ONLY this bundle
+// (module ⚙ over a rendered form), so it must install the chokepoint itself or those writes 400.
+import '../shared/antiforgery';
+
 import {
   h,
   openPopup,
@@ -47,8 +53,27 @@ import {
   type ViewStarterPresetPayload,
 } from './presets';
 
-const BADGE = 'SettingsPopup v20260623-B242';
+const BADGE = 'SettingsPopup v20260626-B281';
 if (typeof window !== 'undefined') (window as any).__MF_SETTINGS_POPUP_BADGE__ = BADGE;
+
+// [i18n B280 2026-06-26] Settings pane localization. The popup loads AFTER
+// megaform-i18n.js (Index.razor Resource order), so the global engine is present
+// and its active-locale catalog is loaded. T(key, english) reads through that
+// global — translated when the key exists for the active locale, otherwise the
+// baked-in English fallback (never blanks, never bundles a 2nd i18n copy). New
+// keys live under the `vd.set.*` namespace in public/i18n/*.json.
+function T(key: string, fallback: string, params?: Record<string, string | number>): string {
+  try {
+    const eng = (window as any).MegaFormI18n;
+    if (eng && typeof eng.t === 'function') {
+      const o = eng.t(key, params);
+      if (o && o !== key) return o;
+    }
+  } catch { /* engine not ready — fall through to English */ }
+  let raw = fallback;
+  if (params) for (const p in params) raw = raw.replace(new RegExp('\\{' + p + '\\}', 'g'), String(params[p]));
+  return raw;
+}
 
 export interface SettingsOpts {
   moduleId: number;
@@ -206,16 +231,16 @@ async function ensureDesigner(kind: 'list' | 'card'): Promise<void> {
 
 export async function open(opts: SettingsOpts): Promise<void> {
   if (!opts.moduleId || opts.moduleId <= 0) {
-    alert('MegaForm Settings: moduleId is required.');
+    alert(T('vd.set.module_required', 'MegaForm Settings: moduleId is required.'));
     return;
   }
 
-  const loadingBody = h('div', { style: { padding: '40px', textAlign: 'center', color: '#64748b', fontSize: '13px' } }, 'Loading module configuration…');
+  const loadingBody = h('div', { style: { padding: '40px', textAlign: 'center', color: '#64748b', fontSize: '13px' } }, T('vd.set.loading', 'Loading module configuration…'));
   const inlineHost = opts.inline ? (opts.inlineHost || opts.inlineHostId) : undefined;
   const restoreInlineSettingsMode = opts.inline ? enterInlineSettingsMode(inlineHost) : undefined;
   const popup = openPopup({
-    title: 'MegaForm Settings',
-    subtitle: 'Configure this module instance — applies the same way on Web, DNN, and Oqtane.',
+    title: T('vd.set.title', 'MegaForm Settings'),
+    // [B281 2026-06-26] Subtitle dropped — it was redundant chrome; the title alone is enough.
     body: loadingBody,
     width: '960px',
     height: 'auto',
@@ -228,7 +253,7 @@ export async function open(opts: SettingsOpts): Promise<void> {
   if (!response) {
     popup.body.innerHTML = '';
     popup.body.appendChild(h('div', { class: 'mf-vd-error', style: { margin: '24px' } },
-      `Could not load module configuration (module #${opts.moduleId}). Make sure you have edit permission.`));
+      T('vd.set.load_failed', 'Could not load module configuration (module #{id}). Make sure you have edit permission.', { id: opts.moduleId })));
     return;
   }
 
@@ -328,8 +353,8 @@ export async function open(opts: SettingsOpts): Promise<void> {
     current.selectedViewKey = '';
     const popupMode = String(current.displayMode || 'fixed').toLowerCase() === 'popup';
     return buildAccordion(
-      'Current Form settings',
-      'Display mode and popup behavior for submit view.',
+      T('vd.set.form_settings', 'Current Form settings'),
+      T('vd.set.form_settings_meta', 'Display mode and popup behavior for submit view.'),
       buildFormModePanel(),
       modeSettingsExpanded,
       (open) => { modeSettingsExpanded = open; },
@@ -395,16 +420,16 @@ export async function open(opts: SettingsOpts): Promise<void> {
         const btn = e.currentTarget as HTMLElement;
         try {
           await navigator.clipboard.writeText(code);
-          btn.textContent = 'Copied';
+          btn.textContent = T('vd.set.copied', 'Copied');
           if (copyTimer) window.clearTimeout(copyTimer);
-          copyTimer = window.setTimeout(() => { btn.textContent = 'Copy'; }, 1100);
+          copyTimer = window.setTimeout(() => { btn.textContent = T('vd.set.copy', 'Copy'); }, 1100);
         } catch {
-          btn.textContent = 'Select text';
+          btn.textContent = T('vd.set.select_text', 'Select text');
           if (copyTimer) window.clearTimeout(copyTimer);
-          copyTimer = window.setTimeout(() => { btn.textContent = 'Copy'; }, 1400);
+          copyTimer = window.setTimeout(() => { btn.textContent = T('vd.set.copy', 'Copy'); }, 1400);
         }
       },
-    }, 'Copy');
+    }, T('vd.set.copy', 'Copy'));
 
     return h('div', {
       style: {
@@ -465,7 +490,7 @@ export async function open(opts: SettingsOpts): Promise<void> {
           gap: '8px',
         },
       },
-        h('strong', { style: { fontSize: '12px', color: '#0f172a' } }, 'Sample HTML triggers'),
+        h('strong', { style: { fontSize: '12px', color: '#0f172a' } }, T('vd.set.sample_triggers', 'Sample HTML triggers')),
         h('code', {
           style: {
             fontSize: '11px',
@@ -477,10 +502,10 @@ export async function open(opts: SettingsOpts): Promise<void> {
         }, 'data-mf-open-form'),
       ),
       h('div', { class: 'mf-vd-help', style: { marginTop: '-2px', color: '#64748b' } },
-        'Paste one snippet into an HTML module or page to open this popup form.'),
-      buildPopupSnippet('Button', sampleButtonHtml()),
-      buildPopupSnippet('Sticky tab - left edge', sampleStickyLeftHtml()),
-      buildPopupSnippet('Sticky tab - right edge', sampleStickyRightHtml()),
+        T('vd.set.sample_triggers_help', 'Paste one snippet into an HTML module or page to open this popup form.')),
+      buildPopupSnippet(T('vd.set.sample_button', 'Button'), sampleButtonHtml()),
+      buildPopupSnippet(T('vd.set.sample_sticky_left', 'Sticky tab - left edge'), sampleStickyLeftHtml()),
+      buildPopupSnippet(T('vd.set.sample_sticky_right', 'Sticky tab - right edge'), sampleStickyRightHtml()),
     );
   }
 
@@ -507,7 +532,7 @@ export async function open(opts: SettingsOpts): Promise<void> {
         color: '#6366f1',
         whiteSpace: 'nowrap',
       },
-    }, isOpen ? 'Collapse' : 'Expand');
+    }, isOpen ? T('vd.set.collapse', 'Collapse') : T('vd.set.expand', 'Expand'));
 
     const summary = h('summary', {},
       h('div', {
@@ -545,7 +570,7 @@ export async function open(opts: SettingsOpts): Promise<void> {
     body.appendChild(content);
     details.append(summary, body);
     details.addEventListener('toggle', () => {
-      toggleText.textContent = details.open ? 'Collapse' : 'Expand';
+      toggleText.textContent = details.open ? T('vd.set.collapse', 'Collapse') : T('vd.set.expand', 'Expand');
       onToggle(details.open);
     });
     return details;
@@ -659,8 +684,8 @@ export async function open(opts: SettingsOpts): Promise<void> {
   }
 
   function summarizeCurrentForm(): string {
-    if (!current.formId || current.formId <= 0) return 'No module form selected yet.';
-    const title = formTitle || `Form #${current.formId}`;
+    if (!current.formId || current.formId <= 0) return T('vd.set.no_form_selected', 'No module form selected yet.');
+    const title = formTitle || T('vd.set.form_n', 'Form #{id}', { id: current.formId });
     return `${title} (#${current.formId})`;
   }
 
@@ -794,18 +819,20 @@ export async function open(opts: SettingsOpts): Promise<void> {
       const hint = h('div', { style: {
         padding: '10px 12px', background: '#fff7ed', border: '1px solid #fdba74',
         borderRadius: '8px', color: '#9a3412', fontSize: '12px',
-      } }, 'Select a module form above to edit its theme preset and layout.');
-      return buildAccordion('Theme & Layout', 'Pick a form first.', hint, false, (open) => { themeLayoutExpanded = open; }, accordionAutoStyle('120px'));
+      } }, T('vd.set.theme_pick_form', 'Select a module form above to edit its theme preset and layout.'));
+      return buildAccordion(T('vd.set.theme_layout', 'Theme & Layout'), T('vd.set.pick_form_first', 'Pick a form first.'), hint, false, (open) => { themeLayoutExpanded = open; }, accordionAutoStyle('120px'));
     }
 
+    // [B281 2026-06-26] Clean-state line dropped — "Active preset: …" duplicated the
+    // accordion meta ("Preset: …"). Only surface a server status error or the unsaved warning.
     const dirtyNote = h('div', { style: {
       fontSize: '11px', marginTop: '6px',
       color: themeDirty ? '#b45309' : '#64748b',
     } }, themeStatus || (themeDirty
-      ? 'Unsaved theme/layout changes — click "Save module settings".'
-      : `Active preset: ${themeState}`));
+      ? T('vd.set.theme_unsaved', 'Unsaved theme/layout changes — click "Save module settings".')
+      : ''));
     const flagDirty = (): void => {
-      dirtyNote.textContent = 'Unsaved theme/layout changes — click "Save module settings".';
+      dirtyNote.textContent = T('vd.set.theme_unsaved', 'Unsaved theme/layout changes — click "Save module settings".');
       dirtyNote.style.color = '#b45309';
     };
 
@@ -893,28 +920,29 @@ export async function open(opts: SettingsOpts): Promise<void> {
       return row;
     };
 
+    const srcOptions: Array<[string, string]> = [['theme', T('vd.set.src_megaform', 'MegaForm')], ['page', T('vd.set.src_page', 'From page')]];
     const content = h('div', { style: { display: 'grid', gap: '14px' } },
       h('div', { style: { display: 'grid', gap: '7px' } },
-        h('div', { style: { fontSize: '12px', fontWeight: '700', color: '#0f172a' } }, 'Theme preset'),
-        h('div', { class: 'mf-vd-help', style: { marginTop: '-2px' } }, 'Same presets as the Theme Designer. Picking one recolors the whole form.'),
+        h('div', { style: { fontSize: '12px', fontWeight: '700', color: '#0f172a' } }, T('vd.set.theme_preset', 'Theme preset')),
+        h('div', { class: 'mf-vd-help', style: { marginTop: '-2px' } }, T('vd.set.theme_preset_help', 'Same presets as the Theme Designer. Picking one recolors the whole form.')),
         grid,
         dirtyNote,
       ),
       h('div', { style: { display: 'grid', gap: '8px', borderTop: '1px dashed #e2e8f0', paddingTop: '12px' } },
-        h('div', { style: { fontSize: '12px', fontWeight: '700', color: '#0f172a' } }, 'Layout'),
-        radioRow('Max width', 'maxw', [['480px', '480'], ['640px', '640'], ['768px', '768'], ['960px', '960'], ['100%', 'Full']], curMaxWidth, (v) => { setLayoutVar('--mf-form-max-width', v); flagDirty(); }),
-        sliderRow('Field spacing', '--mf-field-gap', 6, 40, 20),
+        h('div', { style: { fontSize: '12px', fontWeight: '700', color: '#0f172a' } }, T('vd.set.layout', 'Layout')),
+        radioRow(T('vd.set.max_width', 'Max width'), 'maxw', [['480px', '480'], ['640px', '640'], ['768px', '768'], ['960px', '960'], ['100%', T('vd.set.full', 'Full')]], curMaxWidth, (v) => { setLayoutVar('--mf-form-max-width', v); flagDirty(); }),
+        sliderRow(T('vd.set.field_spacing', 'Field spacing'), '--mf-field-gap', 6, 40, 20),
       ),
       h('div', { style: { display: 'grid', gap: '8px', borderTop: '1px dashed #e2e8f0', paddingTop: '12px' } },
-        h('div', { style: { fontSize: '12px', fontWeight: '700', color: '#0f172a' } }, 'Page integration'),
-        h('div', { class: 'mf-vd-help', style: { marginTop: '-4px' } }, 'Inline embeds only — borrow the host page font / colour.'),
-        radioRow('Typography source', 'inhtype', [['theme', 'MegaForm'], ['page', 'From page']], themeInheritType ? 'page' : 'theme', (v) => { themeInheritType = (v === 'page'); inheritDirty = true; flagDirty(); }),
-        radioRow('Color source', 'inhcol', [['theme', 'MegaForm'], ['page', 'From page']], themeInheritColors ? 'page' : 'theme', (v) => { themeInheritColors = (v === 'page'); inheritDirty = true; flagDirty(); }),
+        h('div', { style: { fontSize: '12px', fontWeight: '700', color: '#0f172a' } }, T('vd.set.page_integration', 'Page integration')),
+        h('div', { class: 'mf-vd-help', style: { marginTop: '-4px' } }, T('vd.set.page_integration_help', 'Inline embeds only — borrow the host page font / colour.')),
+        radioRow(T('vd.set.typography_source', 'Typography source'), 'inhtype', srcOptions, themeInheritType ? 'page' : 'theme', (v) => { themeInheritType = (v === 'page'); inheritDirty = true; flagDirty(); }),
+        radioRow(T('vd.set.color_source', 'Color source'), 'inhcol', srcOptions, themeInheritColors ? 'page' : 'theme', (v) => { themeInheritColors = (v === 'page'); inheritDirty = true; flagDirty(); }),
       ),
     );
 
-    const meta = themeDirty ? 'Unsaved changes' : `Preset: ${themeState}`;
-    return buildAccordion('Theme & Layout', meta, content, themeLayoutExpanded, (open) => { themeLayoutExpanded = open; }, accordionAutoStyle('clamp(320px, 54vh, 580px)'));
+    const meta = themeDirty ? T('vd.set.unsaved_changes', 'Unsaved changes') : T('vd.set.preset', 'Preset: {preset}', { preset: themeState });
+    return buildAccordion(T('vd.set.theme_layout', 'Theme & Layout'), meta, content, themeLayoutExpanded, (open) => { themeLayoutExpanded = open; }, accordionAutoStyle('clamp(320px, 54vh, 580px)'));
   }
 
   function buildSavedViewPayloadFromExisting(view: FormViewOption, isDefault: boolean): SaveFormViewPayload | null {
@@ -948,19 +976,20 @@ export async function open(opts: SettingsOpts): Promise<void> {
       savedViewError = '';
       rerender();
     } }) as HTMLSelectElement;
-    formSel.appendChild(h('option', { value: '0' }, '— Select a form —'));
+    formSel.appendChild(h('option', { value: '0' }, T('vd.set.select_form_opt', '— Select a form —')));
     for (const f of (response!.forms || [])) {
       const opt = h('option', { value: String(f.formId) }, `${f.title} (#${f.formId}, ${f.status})`);
       if (f.formId === current.formId) opt.setAttribute('selected', '');
       formSel.appendChild(opt);
     }
 
+    // [B281 2026-06-26] Inner "Module form" <label> dropped — the accordion header
+    // already reads "Module form", so the label just duplicated it. Dropdown + help remain.
     const content = h('div', { class: 'mf-vd-settings-flat' },
-      h('label', {}, 'Module form'),
       formSel,
-      h('div', { class: 'mf-vd-help' }, 'Pick the published form this module will render.')
+      h('div', { class: 'mf-vd-help' }, T('vd.set.module_form_help', 'Pick the published form this module will render.'))
     );
-    return buildAccordion('Module form', summarizeCurrentForm(), content, basicsExpanded, (open) => { basicsExpanded = open; }, accordionAutoStyle('220px'));
+    return buildAccordion(T('vd.set.module_form', 'Module form'), summarizeCurrentForm(), content, basicsExpanded, (open) => { basicsExpanded = open; }, accordionAutoStyle('220px'));
   }
 
   function buildViewModeSection(): HTMLElement {
@@ -1786,13 +1815,13 @@ export async function open(opts: SettingsOpts): Promise<void> {
 
   function buildFormModePanel(): HTMLElement {
     const displaySel = h('select', { class: 'mf-vd-input', onchange: (e: Event) => { current.displayMode = (e.target as HTMLSelectElement).value; rerender(); } }) as HTMLSelectElement;
-    for (const opt of [{ v: 'fixed', l: 'Fixed form' }, { v: 'popup', l: 'Popup form' }]) {
+    for (const opt of [{ v: 'fixed', l: T('vd.set.mode_fixed', 'Fixed form') }, { v: 'popup', l: T('vd.set.mode_popup', 'Popup form') }]) {
       const o = h('option', { value: opt.v }, opt.l);
       if ((current.displayMode || 'fixed').toLowerCase() === opt.v) o.setAttribute('selected', '');
       displaySel.appendChild(o);
     }
     const panel = h('div', { class: 'mf-vd-settings-flat' },
-      h('div', { class: 'mf-vd-prop-block' }, h('label', {}, 'Display mode'), displaySel)
+      h('div', { class: 'mf-vd-prop-block' }, h('label', {}, T('vd.set.display_mode', 'Display mode')), displaySel)
     );
 
     if ((current.displayMode || '').toLowerCase() === 'popup') {
@@ -1803,14 +1832,14 @@ export async function open(opts: SettingsOpts): Promise<void> {
       current.clickSelector = String(current.clickSelector || '').trim();
 
       const sizeSel = h('select', { class: 'mf-vd-input', onchange: (e: Event) => { current.popupSize = (e.target as HTMLSelectElement).value; } }) as HTMLSelectElement;
-      for (const opt of [{ v: 'small', l: 'Small (420px)' }, { v: 'medium', l: 'Medium (640px)' }, { v: 'large', l: 'Large (880px)' }, { v: 'fullscreen', l: 'Fullscreen' }]) {
+      for (const opt of [{ v: 'small', l: T('vd.set.size_small', 'Small (420px)') }, { v: 'medium', l: T('vd.set.size_medium', 'Medium (640px)') }, { v: 'large', l: T('vd.set.size_large', 'Large (880px)') }, { v: 'fullscreen', l: T('vd.set.size_fullscreen', 'Fullscreen') }]) {
         const o = h('option', { value: opt.v }, opt.l);
         if ((current.popupSize || 'medium').toLowerCase() === opt.v) o.setAttribute('selected', '');
         sizeSel.appendChild(o);
       }
 
       const triggerSel = h('select', { class: 'mf-vd-input', onchange: (e: Event) => { current.triggerType = (e.target as HTMLSelectElement).value; rerender(); } }) as HTMLSelectElement;
-      for (const opt of [{ v: 'time_delay', l: 'Time delay' }, { v: 'scroll_depth', l: 'Scroll percentage' }, { v: 'click_trigger', l: 'Click selector' }]) {
+      for (const opt of [{ v: 'time_delay', l: T('vd.set.trig_time', 'Time delay') }, { v: 'scroll_depth', l: T('vd.set.trig_scroll', 'Scroll percentage') }, { v: 'click_trigger', l: T('vd.set.trig_click', 'Click selector') }]) {
         const o = h('option', { value: opt.v }, opt.l);
         if (triggerType === opt.v) o.setAttribute('selected', '');
         triggerSel.appendChild(o);
@@ -1823,14 +1852,14 @@ export async function open(opts: SettingsOpts): Promise<void> {
           gap: '10px',
         },
       },
-        h('div', { class: 'mf-vd-prop-block', style: { marginBottom: '0' } }, h('label', {}, 'Popup size'), sizeSel),
-        h('div', { class: 'mf-vd-prop-block', style: { marginBottom: '0' } }, h('label', {}, 'Trigger type'), triggerSel),
+        h('div', { class: 'mf-vd-prop-block', style: { marginBottom: '0' } }, h('label', {}, T('vd.set.popup_size', 'Popup size')), sizeSel),
+        h('div', { class: 'mf-vd-prop-block', style: { marginBottom: '0' } }, h('label', {}, T('vd.set.trigger_type', 'Trigger type')), triggerSel),
       );
       panel.appendChild(popupGrid);
 
       if (triggerType === 'time_delay') {
         panel.appendChild(h('div', { class: 'mf-vd-prop-block', style: { marginBottom: '0' } },
-          h('label', {}, 'Delay seconds'),
+          h('label', {}, T('vd.set.delay_seconds', 'Delay seconds')),
           h('input', {
             type: 'number',
             min: '0',
@@ -1842,7 +1871,7 @@ export async function open(opts: SettingsOpts): Promise<void> {
         ));
       } else if (triggerType === 'scroll_depth') {
         panel.appendChild(h('div', { class: 'mf-vd-prop-block', style: { marginBottom: '0' } },
-          h('label', {}, 'Scroll percent'),
+          h('label', {}, T('vd.set.scroll_percent', 'Scroll percent')),
           h('input', {
             type: 'number',
             min: '5',
@@ -1854,7 +1883,7 @@ export async function open(opts: SettingsOpts): Promise<void> {
         ));
       } else if (triggerType === 'click_trigger') {
         panel.appendChild(h('div', { class: 'mf-vd-prop-block', style: { marginBottom: '0' } },
-          h('label', {}, 'Click selector'),
+          h('label', {}, T('vd.set.click_selector', 'Click selector')),
           h('input', {
             type: 'text',
             class: 'mf-vd-input',
@@ -1862,7 +1891,7 @@ export async function open(opts: SettingsOpts): Promise<void> {
             value: String(current.clickSelector || ''),
             oninput: (e: Event) => { current.clickSelector = (e.target as HTMLInputElement).value; },
           }),
-          h('div', { class: 'mf-vd-help' }, 'The runtime also listens for any element with data-mf-open-form.')
+          h('div', { class: 'mf-vd-help' }, T('vd.set.click_selector_help', 'The runtime also listens for any element with data-mf-open-form.'))
         ));
       }
 
@@ -2074,38 +2103,38 @@ export async function open(opts: SettingsOpts): Promise<void> {
   // ── Footer Save (replace the default placeholder) ────────────────────────
   popup.footer.innerHTML = '';
   const status = h('div', { class: 'mf-vd-status' }, '');
-  const cancelBtn = h('button', { class: 'mf-vd-btn mf-vd-btn-ghost', onclick: () => popup.close() }, 'Close');
+  const cancelBtn = h('button', { class: 'mf-vd-btn mf-vd-btn-ghost', onclick: () => popup.close() }, T('vd.set.close', 'Close'));
   const saveBtn = h('button', { class: 'mf-vd-btn mf-vd-btn-primary', onclick: async () => {
     saveBtn.setAttribute('disabled', '');
-    status.textContent = 'Saving…';
+    status.textContent = T('vd.set.saving', 'Saving…');
     // [ThemeInSettings 2026-06-23] Persist the form's theme + layout too, on the SAME
     // button. Patch the FORM (Form/SaveTheme) — same keys the Theme Designer uses — so
     // the two stay in sync. Save this first; abort the module-config save if it fails so
     // the admin doesn't lose unsaved theme edits without notice.
     if (themeDirty && current.formId && current.formId > 0) {
-      status.textContent = 'Saving theme…';
+      status.textContent = T('vd.set.saving_theme', 'Saving theme…');
       // [ModuleStyle v20260624-B262] Save the admin's CSS edits to the MODULE (module-setting wins),
       // not the form (the form stays the seed/template). The public render overlays this module CSS.
       const themeRes = await saveModuleStyle(opts.moduleId, current.formId, themeState, themeOverrides);
       if (!themeRes.ok) {
         saveBtn.removeAttribute('disabled');
-        status.textContent = `Theme save failed (HTTP ${themeRes.status}): ${themeRes.body || 'unknown error'}`;
+        status.textContent = T('vd.set.theme_save_failed', 'Theme save failed (HTTP {status}): {body}', { status: themeRes.status, body: themeRes.body || T('vd.set.unknown_error', 'unknown error') });
         return;
       }
       themeDirty = false;
     }
     // [B274] Persist the page-integration flags to the FORM (form-level, separate from module CSS).
     if (inheritDirty && current.formId && current.formId > 0) {
-      status.textContent = 'Saving page integration…';
+      status.textContent = T('vd.set.saving_page', 'Saving page integration…');
       const inhRes = await saveFormInheritFlags(current.formId, themeInheritType, themeInheritColors);
       if (!inhRes.ok) {
         saveBtn.removeAttribute('disabled');
-        status.textContent = `Page-integration save failed (HTTP ${inhRes.status}): ${inhRes.body || 'unknown error'}`;
+        status.textContent = T('vd.set.page_save_failed', 'Page-integration save failed (HTTP {status}): {body}', { status: inhRes.status, body: inhRes.body || T('vd.set.unknown_error', 'unknown error') });
         return;
       }
       inheritDirty = false;
     }
-    status.textContent = 'Saving…';
+    status.textContent = T('vd.set.saving', 'Saving…');
     const payload = editingSavedViewId > 0
       ? ({ ...current, ...cloneModuleBaseState(moduleBase) } as ModuleConfig)
       : current;
@@ -2115,7 +2144,7 @@ export async function open(opts: SettingsOpts): Promise<void> {
       // and `_listFields/_listTemplate` only read on page load, so without a
       // reload the page keeps mounting the form even after the user picks
       // List/Card view in the popup.
-      status.textContent = 'Saved · reloading…';
+      status.textContent = T('vd.set.saved_reloading', 'Saved · reloading…');
       if (opts.onSaved) opts.onSaved(payload);
       const nextUrl = buildPostSaveNavigationUrl(payload);
       setTimeout(() => {
@@ -2126,9 +2155,9 @@ export async function open(opts: SettingsOpts): Promise<void> {
       }, 350);
     } else {
       saveBtn.removeAttribute('disabled');
-      status.textContent = `Save failed (HTTP ${result.status}): ${result.body || 'unknown error'}`;
+      status.textContent = T('vd.set.save_failed', 'Save failed (HTTP {status}): {body}', { status: result.status, body: result.body || T('vd.set.unknown_error', 'unknown error') });
     }
-  } }, 'Save module settings');
+  } }, T('vd.set.save', 'Save module settings'));
   popup.footer.append(status, cancelBtn, saveBtn);
 
   rerender();

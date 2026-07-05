@@ -2719,12 +2719,23 @@ namespace MegaForm.Oqtane.Server.Controllers
             var storedJson = ReadSetting(settings, "MegaForm:ModuleStyleJson", string.Empty);
             if (int.TryParse(storedFormId, out var sf) && sf == formId && !string.IsNullOrWhiteSpace(storedJson))
             {
-                try { return Ok(new { moduleId, formId, seeded = false, style = JObject.Parse(storedJson) }); }
+                try { JObject.Parse(storedJson); return Ok(new { moduleId, formId, seeded = false, style = StyleAsJsonElement(storedJson) }); }
                 catch { /* corrupt → reseed below */ }
             }
             // The module has no style, or it was bound to a DIFFERENT form → seed from this form's CSS.
             var seeded = SeedModuleStyleFromForm(moduleId, formId);
-            return Ok(new { moduleId, formId, seeded = true, style = seeded });
+            return Ok(new { moduleId, formId, seeded = true, style = StyleAsJsonElement(seeded?.ToString(Newtonsoft.Json.Formatting.None)) });
+        }
+
+        // [Fix 2026-07-05] Return the module style as a System.Text.Json JsonElement, NOT a raw Newtonsoft
+        // JObject. Oqtane serializes controller responses with System.Text.Json, which cannot serialize a
+        // Newtonsoft JObject and emits garbage (e.g. themeCssOverrides → [[[]]]). That made the settings
+        // popup read --mf-field-gap / theme as "unset", so the Field-spacing slider always showed its 20px
+        // default even though SaveModuleStyle persisted correctly AND the public render applied the value.
+        private static System.Text.Json.JsonElement StyleAsJsonElement(string json)
+        {
+            try { using var doc = System.Text.Json.JsonDocument.Parse(string.IsNullOrWhiteSpace(json) ? "{}" : json); return doc.RootElement.Clone(); }
+            catch { using var doc = System.Text.Json.JsonDocument.Parse("{}"); return doc.RootElement.Clone(); }
         }
 
         [HttpPost("ModuleConfig/SaveModuleStyle")]
