@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace MegaForm.Core.Services
 {
@@ -9,16 +11,31 @@ namespace MegaForm.Core.Services
     public static class CustomShellCompatibilityCssService
     {
         public const string Badge = "CustomShellBuilderCompat v20260624-B264-lowspec";
+        private static readonly Regex VarDeclarationRe = new Regex("(?<name>--[a-zA-Z0-9_-]+)\\s*:", RegexOptions.Compiled);
 
         public static string Build(string scopeSelector)
+            => Build(scopeSelector, string.Empty, false);
+
+        public static string Build(string scopeSelector, string authoredTemplateText, bool enableTemplateVarBridge)
         {
             if (string.IsNullOrWhiteSpace(scopeSelector)) return string.Empty;
             var scope = scopeSelector.Trim();
+            var authoredVars = CollectAuthoredCssVarDeclarations(authoredTemplateText);
+            Func<string, string, string> templateVar = (name, value) =>
+                enableTemplateVarBridge || !authoredVars.Contains(name) ? name + ":" + value + ";" : string.Empty;
+            var australiaButtonAccent = enableTemplateVarBridge
+                ? "var(--mf-btn-bg,var(--mf-primary,var(--au-primary)))"
+                : "var(--mf-btn-bg,var(--au-primary))";
             // [CardThuaFix 2026-06-23] Discriminator: only card-style .mfp when it has NO
             // inner .mfp-card/.fr-card. Card-in-child premium templates (pure-grid:
             // .mfp > .mfp-container > .mfp-card) render their own card, so forcing bg+border
             // on .mfp produced a visible double card. Mirror of renderer/index.ts.
-            const string NOINNER = ":not(:has(.mfp-card)):not(:has(.fr-card))";
+            // [StrayShellBorderFix 2026-07-01] Skip the generic .mfp card chrome (bg+border)
+            // when the shell nests its OWN card — otherwise the transparent outer .mfp gets a
+            // 1px #e2e8f0 edge that reads as a stray line above the shell (e.g. euro-youth on a
+            // dark page). .ey-card is the euro-youth per-step content card; templates that paint
+            // .mfp directly (australia/festa via their own blocks below) are unaffected.
+            const string NOINNER = ":not(:has(.mfp-card)):not(:has(.fr-card)):not(:has(.ey-card))";
             var css = new StringBuilder(4096);
 
             css.Append("/* ").Append(Badge).Append(" */\n");
@@ -37,6 +54,45 @@ namespace MegaForm.Core.Services
                .Append("max-width:var(--mf-form-max-width,100%)!important;")
                .Append("margin-left:auto!important;")
                .Append("margin-right:auto!important;")
+               .Append("}\n");
+
+            css.Append(scoped).Append("[data-mf-has-custom-html]>.mf-form-inner,\n")
+               .Append(scoped).Append(".mf-custom-shell-mode>.mf-form-inner,\n")
+               .Append(scoped).Append(".mf-custom-html-mode>.mf-form-inner{")
+               .Append("width:100%!important;")
+               .Append("max-width:none!important;")
+               .Append("margin-left:0!important;")
+               .Append("margin-right:0!important;")
+               .Append("padding-left:0!important;")
+               .Append("padding-right:0!important;")
+               .Append("}\n");
+
+            css.Append(scoped).Append("[data-mf-has-custom-html] .mf-fields-container,\n")
+               .Append(scoped).Append(".mf-custom-shell-mode .mf-fields-container,\n")
+               .Append(scoped).Append(".mf-custom-html-mode .mf-fields-container,\n")
+               .Append(scoped).Append("[data-mf-has-custom-html] .mf-multistep-frame,\n")
+               .Append(scoped).Append(".mf-custom-shell-mode .mf-multistep-frame,\n")
+               .Append(scoped).Append(".mf-custom-html-mode .mf-multistep-frame,\n")
+               .Append(scoped).Append("[data-mf-has-custom-html] .mf-multistep-body,\n")
+               .Append(scoped).Append(".mf-custom-shell-mode .mf-multistep-body,\n")
+               .Append(scoped).Append(".mf-custom-html-mode .mf-multistep-body{")
+               .Append("width:100%!important;")
+               .Append("max-width:none!important;")
+               .Append("margin-left:0!important;")
+               .Append("margin-right:0!important;")
+               .Append("}\n");
+
+            css.Append(scoped).Append(".mf-form-wrapper:has(.mfp-festa-italiana),\n")
+               .Append(scoped).Append(".mf-form-wrapper:has(.mfp-festa-italiana)>.mf-form,\n")
+               .Append(scoped).Append(".mf-form-wrapper:has(.mfp-festa-italiana) .mf-form,\n")
+               .Append(scoped).Append(".mf-form-wrapper:has(.mfp-festa-italiana) .mfp.mfp-festa-italiana,\n")
+               .Append(scoped).Append(".mf-custom-shell-mode .mfp.mfp-festa-italiana,\n")
+               .Append(scoped).Append(".mf-custom-html-mode .mfp.mfp-festa-italiana{")
+               .Append("width:100%!important;")
+               .Append("min-width:0!important;")
+               .Append("max-width:none!important;")
+               .Append("margin-left:0!important;")
+               .Append("margin-right:0!important;")
                .Append("}\n");
 
             css.Append(scoped).Append(" .mfp[class*=\"mfp-\"]{")
@@ -88,9 +144,15 @@ namespace MegaForm.Core.Services
 
             css.Append(scoped).Append(" .mfp[class*=\"mfp-\"],")
                .Append(scoped).Append(" .mfp[class*=\"mfp-\"]>.mfp-container{overflow:visible!important;}\n")
+               // [DoubleBorderFix 2026-07-05] Was `border:1px solid transparent` — a 0.67px reserved band
+               // between the container edge and the inner .mfp-card border. Because the container (and the
+               // stripped .mfp/.mf-form shell above it) are transparent, that band reveals the page/host
+               // background right next to the card's own border → on a dark-backgrounded host (e.g. the
+               // Oqtane home content pane) it reads as a thin second line = a phantom DOUBLE border at the
+               // card edge. The card has its own border; the container needs none, so drop it → card flush.
                .Append(scoped).Append(" .mfp[class*=\"mfp-\"]>.mfp-container{")
                .Append("box-sizing:border-box!important;")
-               .Append("border:1px solid transparent!important;")
+               .Append("border:0!important;")
                .Append("}\n")
                .Append(scoped).Append(" .mfp[class*=\"mfp-\"]>.mfp-card,")
                .Append(scoped).Append(" .mfp[class*=\"mfp-\"]>.mfp-container>.mfp-card,")
@@ -100,14 +162,14 @@ namespace MegaForm.Core.Services
                .Append("}\n");
 
             css.Append(scoped).Append(" .mfp.mfp-australia{")
-               .Append("--au-primary:var(--mf-primary,var(--primary,#0bb39b));")
-               .Append("--au-primary-d:var(--mf-primary-hover,var(--mf-btn-hover-bg,var(--mf-primary,#079a85)));")
-               .Append("--au-soft:var(--mf-primary-light,var(--muted,#e2f7f2));")
-               .Append("--au-ink:var(--mf-text,var(--foreground,#06363a));")
-               .Append("--au-sub:var(--mf-label-color,var(--muted-foreground,#5b8a8c));")
-               .Append("--au-border:var(--mf-input-border-color,var(--mf-border,var(--border,#d2ece8)));")
-               .Append("--au-surface:var(--mf-form-bg,var(--card,#ffffff));")
-               .Append("--au-band:linear-gradient(120deg,var(--mf-form-bg,#eafaf7),var(--mf-primary-light,#f3fbff));")
+               .Append(templateVar("--au-primary", "var(--mf-primary,var(--primary,#0bb39b))"))
+               .Append(templateVar("--au-primary-d", "var(--mf-primary-hover,var(--mf-btn-hover-bg,var(--mf-primary,#079a85)))"))
+               .Append(templateVar("--au-soft", "var(--mf-primary-light,var(--muted,#e2f7f2))"))
+               .Append(templateVar("--au-ink", "var(--mf-text,var(--foreground,#06363a))"))
+               .Append(templateVar("--au-sub", "var(--mf-label-color,var(--muted-foreground,#5b8a8c))"))
+               .Append(templateVar("--au-border", "var(--mf-input-border-color,var(--mf-border,var(--border,#d2ece8)))"))
+               .Append(templateVar("--au-surface", "var(--mf-form-bg,var(--card,#ffffff))"))
+               .Append(templateVar("--au-band", "linear-gradient(120deg,var(--mf-form-bg,#eafaf7),var(--mf-primary-light,#f3fbff))"))
                .Append("background:var(--au-surface)!important;")
                .Append("border-color:var(--au-border)!important;")
                .Append("border-radius:var(--mf-form-radius,39px)!important;")
@@ -218,8 +280,8 @@ namespace MegaForm.Core.Services
                .Append(scoped).Append(" .mfp.mfp-australia .mfp-submit,")
                .Append(scoped).Append(" .mfp.mfp-australia .au-next,")
                .Append(scoped).Append(" .mfp.mfp-australia .au-prev{")
-               .Append("background:var(--mf-btn-bg,var(--mf-primary,var(--au-primary)))!important;")
-               .Append("border-color:var(--mf-btn-bg,var(--mf-primary,var(--au-primary)))!important;")
+               .Append("background:").Append(australiaButtonAccent).Append("!important;")
+               .Append("border-color:").Append(australiaButtonAccent).Append("!important;")
                .Append("border-radius:var(--mf-btn-radius,14px)!important;")
                .Append("color:var(--mf-btn-color,var(--mf-color-text-inverse,#ffffff))!important;")
                .Append("font-family:var(--mf-font-family,'Outfit',system-ui,sans-serif)!important;")
@@ -228,9 +290,23 @@ namespace MegaForm.Core.Services
             return css.ToString();
         }
 
-        public static string AppendTo(string customCss, string scopeSelector)
+        private static HashSet<string> CollectAuthoredCssVarDeclarations(string templateText)
         {
-            var bridge = Build(scopeSelector);
+            var found = new HashSet<string>(StringComparer.Ordinal);
+            foreach (Match match in VarDeclarationRe.Matches(templateText ?? string.Empty))
+            {
+                var name = match.Groups["name"].Value;
+                if (!string.IsNullOrEmpty(name)) found.Add(name);
+            }
+            return found;
+        }
+
+        public static string AppendTo(string customCss, string scopeSelector)
+            => AppendTo(customCss, scopeSelector, string.Empty, false);
+
+        public static string AppendTo(string customCss, string scopeSelector, string authoredTemplateText, bool enableTemplateVarBridge)
+        {
+            var bridge = Build(scopeSelector, authoredTemplateText, enableTemplateVarBridge);
             if (string.IsNullOrWhiteSpace(bridge)) return customCss ?? string.Empty;
             if (string.IsNullOrWhiteSpace(customCss)) return bridge;
             if ((customCss ?? string.Empty).IndexOf(Badge, StringComparison.OrdinalIgnoreCase) >= 0)
