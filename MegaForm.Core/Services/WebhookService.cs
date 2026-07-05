@@ -25,6 +25,14 @@ namespace MegaForm.Core.Services
         public async Task<bool> SendWebhookAsync(FormInfo form, SubmissionInfo submission)
         {
             if (string.IsNullOrWhiteSpace(form.WebhookUrl)) return false;
+            // [SecFix 2026-07-05 SEC-M] SSRF: the webhook URL is user-configured, so it must pass the guard
+            // before we call it (blocks loopback/private/link-local/metadata 169.254.169.254). This path was
+            // missing the guard that WebhookNodeExecutor already applies — enforces coding rule #11.
+            if (!SsrfGuard.IsUrlAllowed(form.WebhookUrl, out var ssrfReason))
+            {
+                _log?.LogError("MegaForm.Webhook", $"Webhook blocked by SSRF guard ({ssrfReason}): {form.WebhookUrl}", null);
+                return false;
+            }
             var payload = JsonConvert.SerializeObject(new
             {
                 @event = "submission.created",
@@ -101,6 +109,13 @@ namespace MegaForm.Core.Services
         /// </summary>
         public async Task<int> SendRawWebhookAsync(string url, string method, string bodyJson, Dictionary<string, string> headers = null)
         {
+            // [SecFix 2026-07-05 SEC-M] SSRF guard on the user-configured URL (defense-in-depth: workflow
+            // callers already guard, but this public method must not trust its caller). Coding rule #11.
+            if (!SsrfGuard.IsUrlAllowed(url, out var ssrfReason))
+            {
+                _log?.LogError("MegaForm.RawWebhook", $"Blocked by SSRF guard ({ssrfReason}): {url}", null);
+                return 0;
+            }
             try
             {
                 var request = new HttpRequestMessage(

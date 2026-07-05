@@ -1393,11 +1393,15 @@ namespace MegaForm.Web.Controllers
             return (true, null, null);
         }
 
+        // [PerfFix 2026-07-05 PERF-C2] Single shared client (was `new HttpClient()` per submission →
+        // socket/port exhaustion under load) with a hard 10s timeout (was default 100s → a slow captcha
+        // endpoint pinned a request thread for up to 100s → thread-pool starvation on the public submit path).
+        private static readonly HttpClient _captchaHttp = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+
         private async Task<(bool success, JObject payload)> VerifyCaptchaTokenAsync(string url, string secret, string token, string remoteIp)
         {
             try
             {
-                using (var client = new HttpClient())
                 using (var content = new FormUrlEncodedContent(new Dictionary<string, string>
                 {
                     ["secret"] = secret ?? string.Empty,
@@ -1405,7 +1409,7 @@ namespace MegaForm.Web.Controllers
                     ["remoteip"] = remoteIp ?? string.Empty
                 }))
                 {
-                    var response = await client.PostAsync(url, content);
+                    var response = await _captchaHttp.PostAsync(url, content);
                     var json = await response.Content.ReadAsStringAsync();
                     JObject payload = null;
                     try { payload = string.IsNullOrWhiteSpace(json) ? new JObject() : JObject.Parse(json); }

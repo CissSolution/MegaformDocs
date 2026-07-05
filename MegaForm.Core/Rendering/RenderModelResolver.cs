@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Security.Cryptography;
+using System.Text;
 using MegaForm.Core.Models;
 using MegaForm.Core.Services;
 using Newtonsoft.Json;
@@ -89,9 +92,70 @@ namespace MegaForm.Core.Rendering
             return ResolveSchemaJson(schemaJson, settingsJson, null, null, null);
         }
 
+        // [PerfFix 2026-07-05 PERF-A1] Content-addressed memoization of the heaviest render step.
+        // ResolveSchemaJson does JObject.Parse + many DeepClone + schema.ToString() of a schema that can be
+        // ~165 KB — the dominant CPU cost AND the main LOH-allocation source, and it runs 5–6× per public
+        // form view (Schema + Form + RenderPage + SSR, no shared cache). Output is a pure function of the
+        // inputs + the license flag, so we memoize the immutable result string. Returning a string (not the
+        // object graph) is safe under concurrency — callers still deserialize their own mutable FormSchema.
+        // Self-invalidating: the key is derived from the exact inputs, so a saved form (new schema/settings)
+        // never hits a stale entry. Bounded to avoid unbounded growth on high form-version churn.
+        private static readonly ConcurrentDictionary<string, string> _resolvedSchemaCache = new ConcurrentDictionary<string, string>();
+        private const int ResolvedSchemaCacheSoftCap = 128;
+
         public static string ResolveSchemaJson(string schemaJson, string settingsJson, string submitButtonText, string successMessage, string redirectUrl)
         {
             if (string.IsNullOrWhiteSpace(schemaJson)) return schemaJson ?? "{}";
+
+            var cacheKey = BuildResolveCacheKey(schemaJson, settingsJson, submitButtonText, successMessage, redirectUrl);
+            if (cacheKey != null && _resolvedSchemaCache.TryGetValue(cacheKey, out var cached))
+                return cached;
+
+            var resolved = ResolveSchemaJsonUncached(schemaJson, settingsJson, submitButtonText, successMessage, redirectUrl);
+
+            if (cacheKey != null)
+            {
+                // Simple bounded eviction: clear when the cap is exceeded. Content-addressed keys mean the
+                // hot set of forms stays cached; a flush only happens on heavy version churn and self-heals.
+                if (_resolvedSchemaCache.Count >= ResolvedSchemaCacheSoftCap)
+                    _resolvedSchemaCache.Clear();
+                _resolvedSchemaCache[cacheKey] = resolved;
+            }
+            return resolved;
+        }
+
+        private static string BuildResolveCacheKey(string schemaJson, string settingsJson, string submitButtonText, string successMessage, string redirectUrl)
+        {
+            try
+            {
+                using (var sha = SHA256.Create())
+                {
+                    // Length-prefixed join so no combination of inputs can collide via delimiter injection.
+                    var sb = new StringBuilder(256);
+                    sb.Append(LicenseService.IsProductionLicensed() ? "P|" : "T|");
+                    Append(sb, schemaJson);
+                    Append(sb, settingsJson);
+                    Append(sb, submitButtonText);
+                    Append(sb, successMessage);
+                    Append(sb, redirectUrl);
+                    var hash = sha.ComputeHash(Encoding.UTF8.GetBytes(sb.ToString()));
+                    return Convert.ToBase64String(hash);
+                }
+            }
+            catch
+            {
+                return null; // never let key computation break resolution — fall through to uncached path
+            }
+        }
+
+        private static void Append(StringBuilder sb, string value)
+        {
+            // Length-prefix makes the join unambiguous (no delimiter-injection collisions).
+            sb.Append(value?.Length ?? -1).Append('|').Append(value ?? string.Empty);
+        }
+
+        private static string ResolveSchemaJsonUncached(string schemaJson, string settingsJson, string submitButtonText, string successMessage, string redirectUrl)
+        {
             try
             {
                 var schema = JObject.Parse(schemaJson);

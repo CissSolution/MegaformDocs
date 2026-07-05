@@ -18,12 +18,30 @@ namespace MegaForm.Core.Services
         public const string Badge = "LicenseService v20260419-09";
         public const string FileName = "license.lic";
 
+        // [PerfFix 2026-07-05 PERF-A1] IsProductionLicensed reads license.lic from disk. It is called on
+        // EVERY render (RenderModelResolver.CanonicalizeTrialMode → ResolveProductionMode), i.e. synchronous
+        // file I/O on the public form hot path. Cache the result for a short TTL: removes the per-render read
+        // and makes the license flag cheap to fold into the render cache key. A license drop takes effect
+        // within TTL seconds. Thread-safe double-checked lock.
+        private const int LicenseCacheTtlSeconds = 30;
+        private static bool _cachedProductionLicensed;
+        private static DateTime _licenseCacheExpiryUtc = DateTime.MinValue;
+        private static readonly object _licenseCacheLock = new object();
+
         public static bool IsProductionLicensed()
         {
-            string licenseValue;
-            string _path;
-            if (!TryReadLicenseValue(out licenseValue, out _path)) return false;
-            return IsValidLicenseValue(licenseValue);
+            var now = DateTime.UtcNow;
+            if (now < _licenseCacheExpiryUtc) return _cachedProductionLicensed;
+            lock (_licenseCacheLock)
+            {
+                if (now < _licenseCacheExpiryUtc) return _cachedProductionLicensed;
+                string licenseValue;
+                string _path;
+                var result = TryReadLicenseValue(out licenseValue, out _path) && IsValidLicenseValue(licenseValue);
+                _cachedProductionLicensed = result;
+                _licenseCacheExpiryUtc = now.AddSeconds(LicenseCacheTtlSeconds);
+                return result;
+            }
         }
 
         public static bool TryReadLicenseValue(out string licenseValue, out string resolvedPath)

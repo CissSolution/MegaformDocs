@@ -40,7 +40,9 @@ namespace MegaForm.Web.Controllers
         private readonly IConfiguration _cfg;
         private readonly IModuleSettingsService _settings;
         private readonly IFormRepository _formRepo;
-        private static readonly HttpClient _http = new HttpClient();
+        // [PerfFix 2026-07-05 PERF-C5] Bound the request time (was default 100s → a degraded Stripe/PayPal
+        // endpoint pinned a request thread up to 100s → thread-pool starvation during a provider incident).
+        private static readonly HttpClient _http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
 
         public PaymentController(IConfiguration cfg, IModuleSettingsService settings, IFormRepository formRepo)
         {
@@ -66,16 +68,23 @@ namespace MegaForm.Web.Controllers
         /// == "fixed", or unspecified but with a stored amount) the schema amount/currency are enforced.
         /// Variable modes ("field"/"listenTotals") are computed client-side and cannot be re-derived from
         /// the schema alone, so the client amount is preserved (donations / user-entered totals keep working).
-        /// Fail-open (preserve client) when formId/fieldKey are absent or the field can't be resolved, to
-        /// avoid breaking legacy widgets — the hard enforcement kicks in whenever the field IS resolvable.
-        /// Returns (amount, currency-or-null-to-keep-client, error-or-null).
+        /// [SecFix 2026-07-05 SEC-B2] Missing form context now fails CLOSED (see below). The remaining
+        /// fail-open branches (form/field unresolvable, variable modes, legacy fixed-with-no-price) are
+        /// documented residuals: the hard enforcement kicks in whenever a fixed-price field IS resolvable.
+        /// Returns (amount, currency-or-null-to-keep-client, error-or-null-to-reject).
         /// </summary>
         private (decimal amount, string currency, string error) ResolveServerAmount(JObject body, decimal clientAmount, string clientCurrency)
         {
             var formId   = body?["formId"]?.Value<int?>() ?? 0;
             var fieldKey = body?["fieldKey"]?.Value<string>();
+            // [SecFix 2026-07-05 SEC-B2] FAIL-CLOSED on missing form context. Previously this fail-opened,
+            // which made the P0-2 enforcement a NO-OP because the payment widget never sent formId → every
+            // request took this branch and trusted the (tamperable) client amount. The unified payment widget
+            // now always sends formId+fieldKey (data-mf-form-id), so an absent context = hand-crafted/tampered
+            // request → reject it. NOTE: requires the rebuilt payment plugin + bumped AssetVersion to ship
+            // together (stale client bundle would omit formId and be rejected). See REMEDIATION_PLAN §S0.2.
             if (formId <= 0 || string.IsNullOrWhiteSpace(fieldKey))
-                return (clientAmount, clientCurrency, null);
+                return (clientAmount, clientCurrency, "Payment form context (formId/fieldKey) is required.");
 
             FormSchema schema;
             try

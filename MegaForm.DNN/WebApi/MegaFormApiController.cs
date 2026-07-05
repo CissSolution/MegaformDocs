@@ -1452,6 +1452,11 @@ VALUES
             return string.IsNullOrWhiteSpace(filtered) ? "submit" : filtered;
         }
 
+        // [PerfFix 2026-07-05 PERF-C2] Single shared client (was `new HttpClient()` per submission →
+        // socket/port exhaustion under load) with a hard 10s timeout (was default 100s → slow captcha
+        // endpoint pinned a request thread up to 100s → thread-pool starvation on the public submit path).
+        private static readonly HttpClient _captchaHttp = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+
         private async Task<CaptchaVerificationResult> VerifyCaptchaSubmissionAsync(int formId, IDictionary<string, object> formData)
         {
             var success = new CaptchaVerificationResult { Success = true };
@@ -1510,7 +1515,6 @@ VALUES
             JObject verifyJson = null;
             try
             {
-                using (var client = new HttpClient())
                 using (var payload = new FormUrlEncodedContent(new[]
                 {
                     new KeyValuePair<string, string>("secret", secret),
@@ -1518,7 +1522,7 @@ VALUES
                     new KeyValuePair<string, string>("remoteip", GetClientIpAddress())
                 }))
                 {
-                    var response = await client.PostAsync(verifyEndpoint, payload);
+                    var response = await _captchaHttp.PostAsync(verifyEndpoint, payload);
                     var json = await response.Content.ReadAsStringAsync();
                     verifyJson = !string.IsNullOrWhiteSpace(json) ? JObject.Parse(json) : new JObject();
                 }

@@ -21,6 +21,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
 using DotNetNuke.Entities.Portals;
@@ -32,6 +33,12 @@ namespace MegaForm.WebApi
     {
         private const string DefaultOqtaneUrl = "http://localhost:5050";
         private const string PortalSettingKey = "MegaForm_RazorWidget_OqtaneUrl";
+
+        // [PerfFix 2026-07-05 PERF-C1] One shared client for all 6 proxy actions. Previously each action did
+        // `new HttpClient(...)` per request → each disposed client left sockets in TIME_WAIT → ephemeral-port
+        // exhaustion under sustained anonymous render/list traffic (SocketException → cascading 503s).
+        // Per-call timeouts are enforced via CancellationTokenSource (the Timeout property is per-client).
+        private static readonly HttpClient _http = new HttpClient();
 
         private string CompanionBaseUrl()
         {
@@ -61,9 +68,9 @@ namespace MegaForm.WebApi
             var url = $"{CompanionBaseUrl()}/api/MegaFormPopup/RazorWidget/List";
             try
             {
-                using (var client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) })
+                using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
                 {
-                    var resp = await client.GetAsync(url).ConfigureAwait(false);
+                    var resp = await _http.GetAsync(url, cts.Token).ConfigureAwait(false);
                     var json = await resp.Content.ReadAsStringAsync().ConfigureAwait(false);
                     return BuildResponse(resp.StatusCode, json);
                 }
@@ -86,9 +93,9 @@ namespace MegaForm.WebApi
             var url = $"{CompanionBaseUrl()}/api/MegaFormPopup/RazorWidget/Source?name={WebUtility.UrlEncode(name)}";
             try
             {
-                using (var client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) })
+                using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
                 {
-                    var resp = await client.GetAsync(url).ConfigureAwait(false);
+                    var resp = await _http.GetAsync(url, cts.Token).ConfigureAwait(false);
                     var json = await resp.Content.ReadAsStringAsync().ConfigureAwait(false);
                     return BuildResponse(resp.StatusCode, json);
                 }
@@ -115,10 +122,10 @@ namespace MegaForm.WebApi
 
             try
             {
-                using (var client = new HttpClient { Timeout = TimeSpan.FromSeconds(15) })
+                using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15)))
                 {
                     var content = new StringContent(body ?? "{}", Encoding.UTF8, "application/json");
-                    var resp = await client.PostAsync(url, content).ConfigureAwait(false);
+                    var resp = await _http.PostAsync(url, content, cts.Token).ConfigureAwait(false);
                     var json = await resp.Content.ReadAsStringAsync().ConfigureAwait(false);
                     return BuildResponse(resp.StatusCode, json);
                 }
@@ -167,10 +174,10 @@ namespace MegaForm.WebApi
 
             try
             {
-                using (var client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) })
+                using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30)))
                 {
                     var content = new StringContent(body ?? "{}", Encoding.UTF8, "application/json");
-                    var resp = await client.PostAsync(url, content).ConfigureAwait(false);
+                    var resp = await _http.PostAsync(url, content, cts.Token).ConfigureAwait(false);
                     var bytes = await resp.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
                     var msg = Request.CreateResponse(resp.StatusCode);
                     msg.Content = new ByteArrayContent(bytes);
@@ -195,9 +202,9 @@ namespace MegaForm.WebApi
             var url = $"{CompanionBaseUrl()}/api/MegaFormPopup/RazorWidget/Preview";
             try
             {
-                using (var client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) })
+                using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30)))
                 {
-                    var resp = await client.GetAsync(url).ConfigureAwait(false);
+                    var resp = await _http.GetAsync(url, cts.Token).ConfigureAwait(false);
                     var html = await resp.Content.ReadAsStringAsync().ConfigureAwait(false);
                     var msg = Request.CreateResponse(resp.StatusCode);
                     msg.Content = new StringContent(html ?? string.Empty, Encoding.UTF8, "text/html");
@@ -219,10 +226,10 @@ namespace MegaForm.WebApi
 
             try
             {
-                using (var client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) })
+                using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30)))
                 {
                     var content = new StringContent(body ?? "{}", Encoding.UTF8, "application/json");
-                    var resp = await client.PostAsync(url, content).ConfigureAwait(false);
+                    var resp = await _http.PostAsync(url, content, cts.Token).ConfigureAwait(false);
                     var json = await resp.Content.ReadAsStringAsync().ConfigureAwait(false);
                     return BuildResponse(resp.StatusCode, json);
                 }

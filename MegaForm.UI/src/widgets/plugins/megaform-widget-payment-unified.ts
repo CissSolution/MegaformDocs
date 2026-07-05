@@ -258,6 +258,10 @@
       var wrap = node as HTMLElement & AnyObj;
       if (wrap._mfwPaymentBound) return;
       wrap._mfwPaymentBound = true;
+      // [SecFix 2026-07-05 SEC-B2] Stamp the authoritative formId so create-intent/create-order
+      // can send it. Server ResolveServerAmount requires BOTH formId+fieldKey to enforce the
+      // schema price; without formId it fail-opens to the (tamperable) client amount.
+      wrap.setAttribute('data-mf-form-id', String(formId));
       setupWrap(wrap);
     });
   }
@@ -524,6 +528,7 @@
         var response = await util().apiCall('POST', props.stripeCreateIntentUrl, {
           amount: value.amount,
           currency: value.currency || props.currency,
+          formId: parseInt(wrap.getAttribute('data-mf-form-id') || '0', 10) || 0, // [SecFix SEC-B2] enable server price enforcement
           fieldKey: wrap.getAttribute('data-field-key'),
           provider: 'stripe'
         });
@@ -565,6 +570,7 @@
           return Promise.resolve(util().apiCall('POST', props.paypalCreateOrderUrl, {
             amount: value.amount,
             currency: value.currency || props.currency,
+            formId: parseInt(wrap.getAttribute('data-mf-form-id') || '0', 10) || 0, // [SecFix SEC-B2] enable server price enforcement
             fieldKey: wrap.getAttribute('data-field-key'),
             provider: 'paypal'
           }).then(function (res: AnyObj) {
@@ -1155,6 +1161,31 @@
       renderProperties: renderProperties,
       meta: { icon: 'fa-credit-card', label: 'Payment • ' + BADGE, category: 'payment', color: '#4f46e5', canonical: true }
     });
+
+    // [B310] Legacy field-type aliases. Older wizard tiles emitted type:'StripePayment' /
+    // 'PayPalPayment', which had NO public-render widget (this plugin only registered
+    // 'Payment') → those fields fell back to a blank text box on the live form. Register
+    // them as aliases that force the matching provider, so stored legacy forms render
+    // correctly. (Builder palette still hides them via canvas.ts hiddenLegacyTypes.)
+    function legacyPaymentAlias(forcedProvider: string): any {
+      return {
+        render: function (field: any, formId: any, val: any) {
+          try {
+            field.widgetProps = field.widgetProps || {};
+            if (!field.widgetProps.provider) field.widgetProps.provider = forcedProvider;
+          } catch (_e) { /* noop */ }
+          return (render as any)(field, formId, val);
+        },
+        bind: bind,
+        collect: collect,
+        validate: validate,
+        defaults: defaults(),
+        renderProperties: renderProperties,
+        meta: { icon: 'fa-credit-card', label: 'Payment (legacy ' + forcedProvider + ') • ' + BADGE, category: 'payment', color: '#4f46e5' }
+      };
+    }
+    widgets.register('StripePayment', legacyPaymentAlias('stripe'));
+    widgets.register('PayPalPayment', legacyPaymentAlias('paypal'));
   }
 
   registerPlugin();

@@ -9,7 +9,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Text;
+using System.Threading.RateLimiting;
 using MegaForm.Core.Interfaces;
 using MegaForm.Core.Services;
 using MegaForm.Core.Services.Workflow;
@@ -170,6 +173,29 @@ builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
         p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
 }));
 
+// ── Rate limiting (OPS-1 2026-07-05) ──────────────────────────────────────
+// The standalone Web host ships anonymous public endpoints (Submit / Upload / Compute) with NO
+// application-layer throttling. Add a per-client-IP flood limiter: generous enough that a human using
+// the builder never hits it (10 req/sec sustained), low enough to shed volumetric abuse. Placed AFTER
+// UseStaticFiles in the pipeline so assets are not throttled. NOTE: behind a reverse proxy add
+// ForwardedHeaders so RemoteIpAddress is the real client (else all users share the proxy IP). For the
+// Oqtane/DNN module deployments the host owns the pipeline — configure rate limiting at the edge/WAF.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+    {
+        var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        return RateLimitPartition.GetFixedWindowLimiter(ip, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 600,
+            Window = TimeSpan.FromMinutes(1),
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            QueueLimit = 0
+        });
+    });
+});
+
 // ── Swagger (development) ─────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(o => o.SwaggerDoc("v1", new() { Title = "MegaForm API", Version = "v1" }));
@@ -210,6 +236,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter(); // [OPS-1] per-IP flood limiter for the public API (see AddRateLimiter above)
 app.MapControllers();
 
 // Trang chủ: nếu chưa setup → SetupMiddleware đã redirect rồi
