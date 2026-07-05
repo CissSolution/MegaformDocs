@@ -836,12 +836,30 @@ export async function open(opts: SettingsOpts): Promise<void> {
       dirtyNote.style.color = '#b45309';
     };
 
-    // Preset grid (16, mirrors Theme Designer left rail).
-    const grid = h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(94px, 1fr))', gap: '8px' } });
+    // Preset grid (16, mirrors Theme Designer left rail). Each tile carries an editable
+    // per-preset colour palette dropdown (▾): the 4 semantic colours — Primary / Text /
+    // Surface / Accent — that mfPresetColorVars expands into the full --mf-* palette. Editing
+    // a colour (native picker or a typed hex) re-applies the palette to themeOverrides and
+    // flags the form dirty; the Save button persists it (module style) and the render consumes it.
+    const grid = h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(94px, 1fr))', gap: '8px', alignItems: 'start' } });
     const tiles: HTMLElement[] = [];
+    const panelClosers: Array<() => void> = [];
+    const normHex = (v: string): string => {
+      if (!v) return '';
+      let s = String(v).trim(); if (s[0] !== '#') s = '#' + s;
+      if (/^#[0-9a-fA-F]{3}$/.test(s)) s = '#' + s[1] + s[1] + s[2] + s[2] + s[3] + s[3];
+      return /^#[0-9a-fA-F]{6}$/.test(s) ? s.toLowerCase() : '';
+    };
+    const setActiveTile = (id: string): void => {
+      tiles.forEach((t) => {
+        const active = t.getAttribute('data-mf-preset') === id;
+        t.style.border = active ? '2px solid #6366f1' : '1px solid #e2e8f0';
+        t.style.boxShadow = active ? '0 0 0 2px rgba(99,102,241,.15)' : 'none';
+      });
+    };
     MF_PRESETS.forEach((p) => {
-      const swatch = h('div', { style: { display: 'flex', height: '20px', borderRadius: '5px', overflow: 'hidden', border: '1px solid rgba(0,0,0,.06)' } },
-        ...p.colors.slice(0, 4).map((c) => h('div', { style: { flex: '1', background: c } })));
+      const swatchCells = p.colors.slice(0, 4).map((c) => h('div', { style: { flex: '1', background: c } }) as HTMLElement);
+      const swatch = h('div', { style: { display: 'flex', height: '20px', borderRadius: '5px', overflow: 'hidden', border: '1px solid rgba(0,0,0,.06)' } }, ...swatchCells);
       const badge = p.badge
         ? h('span', { style: {
             fontSize: '9px', fontWeight: '700', borderRadius: '999px', padding: '0 5px', marginLeft: '4px',
@@ -849,37 +867,75 @@ export async function open(opts: SettingsOpts): Promise<void> {
             background: p.badge === 'Pro' ? '#f3e8ff' : '#e0f2fe',
           } }, p.badge)
         : null;
-      const tile = h('button', {
-        type: 'button',
-        'data-mf-preset': p.id,
-        title: p.name,
-        style: {
-          display: 'grid', gap: '5px', padding: '7px', cursor: 'pointer', textAlign: 'left',
-          background: '#fff', borderRadius: '9px',
-          border: themeState === p.id ? '2px solid #6366f1' : '1px solid #e2e8f0',
-          boxShadow: themeState === p.id ? '0 0 0 2px rgba(99,102,241,.15)' : 'none',
-        },
-        onclick: () => {
-          // Replace the previous palette's color vars, keep layout vars untouched.
-          MF_PRESET_COLOR_VAR_KEYS.forEach((k) => { delete themeOverrides[k]; });
-          Object.assign(themeOverrides, mfPresetColorVars(p));
-          themeState = p.id;
-          themeDirty = true;
-          tiles.forEach((t) => {
-            const active = t.getAttribute('data-mf-preset') === p.id;
-            t.style.border = active ? '2px solid #6366f1' : '1px solid #e2e8f0';
-            t.style.boxShadow = active ? '0 0 0 2px rgba(99,102,241,.15)' : 'none';
-          });
-          flagDirty();
-        },
-      },
+      const caret = h('button', { type: 'button', title: T('vd.set.edit_palette', 'Edit palette'),
+        style: { border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '12px', color: '#64748b', padding: '0 3px', lineHeight: '1' } }, '▾') as HTMLButtonElement;
+
+      // Current colours for THIS preset — the edited overrides when it's the active preset, else defaults.
+      const curColors = (): string[] => (themeState === p.id)
+        ? [themeOverrides['--mf-primary'] || p.colors[0], themeOverrides['--mf-text'] || p.colors[1], themeOverrides['--mf-form-bg'] || p.colors[2], themeOverrides['--mf-border'] || p.colors[3]]
+        : [p.colors[0], p.colors[1], p.colors[2], p.colors[3]];
+
+      const applyColors = (colors: string[]): void => {
+        MF_PRESET_COLOR_VAR_KEYS.forEach((k) => { delete themeOverrides[k]; });
+        Object.assign(themeOverrides, mfPresetColorVars({ ...p, colors }));
+        themeState = p.id; themeDirty = true;
+        swatchCells.forEach((cell, i) => { if (colors[i]) cell.style.background = colors[i]; });
+        setActiveTile(p.id);
+        flagDirty();
+      };
+
+      // Editable palette (Primary / Text / Surface / Accent) — native colour picker + typed hex, in sync.
+      const rowsDef: Array<[string, number]> = [
+        [T('vd.set.pal_primary', 'Primary'), 0], [T('vd.set.pal_text', 'Text'), 1],
+        [T('vd.set.pal_surface', 'Surface'), 2], [T('vd.set.pal_accent', 'Accent'), 3],
+      ];
+      const hexInputs: HTMLInputElement[] = [];
+      const colorInputs: HTMLInputElement[] = [];
+      const commit = (): void => applyColors([0, 1, 2, 3].map((i) => normHex(hexInputs[i].value) || curColors()[i]));
+      const palRows = rowsDef.map(([label, idx]) => {
+        const c = curColors()[idx];
+        const colorIn = h('input', { type: 'color', value: normHex(c) || '#000000',
+          style: { width: '30px', height: '24px', padding: '0', border: '1px solid #e2e8f0', borderRadius: '4px', cursor: 'pointer', background: '#fff' } }) as HTMLInputElement;
+        const hexIn = h('input', { type: 'text', value: c, spellcheck: 'false', maxlength: '7',
+          style: { flex: '1', minWidth: '0', fontSize: '12px', fontFamily: 'monospace', padding: '3px 7px', border: '1px solid #e2e8f0', borderRadius: '4px' } }) as HTMLInputElement;
+        colorIn.oninput = () => { hexIn.value = colorIn.value; commit(); };
+        hexIn.oninput = () => { const n = normHex(hexIn.value); if (n) { colorIn.value = n; commit(); } };
+        colorInputs[idx] = colorIn; hexInputs[idx] = hexIn;
+        return h('div', { style: { display: 'flex', alignItems: 'center', gap: '7px' } },
+          h('span', { style: { fontSize: '11px', color: '#475569', minWidth: '58px' } }, label), colorIn, hexIn);
+      });
+      const resetBtn = h('button', { type: 'button',
+        style: { marginTop: '2px', fontSize: '11px', border: '1px solid #e2e8f0', background: '#f8fafc', borderRadius: '5px', padding: '3px 9px', cursor: 'pointer', color: '#475569', justifySelf: 'start' },
+        onclick: () => { p.colors.forEach((c, i) => { if (hexInputs[i]) { hexInputs[i].value = c; colorInputs[i].value = normHex(c) || '#000000'; } }); applyColors([p.colors[0], p.colors[1], p.colors[2], p.colors[3]]); } },
+        T('vd.set.pal_reset', 'Reset to default'));
+      const panel = h('div', { style: { display: 'none', gridColumn: '1 / -1', gap: '6px', marginTop: '4px', paddingTop: '8px', borderTop: '1px dashed #e2e8f0' } },
+        h('div', { style: { fontSize: '11px', fontWeight: '700', color: '#0f172a' } }, T('vd.set.pal_title', 'Palette — {name}', { name: p.name })),
+        ...palRows, resetBtn) as HTMLElement;
+
+      const refreshPanel = (): void => { const c = curColors(); [0, 1, 2, 3].forEach((i) => { if (hexInputs[i]) { hexInputs[i].value = c[i]; colorInputs[i].value = normHex(c[i]) || '#000000'; } }); };
+      let open = false;
+      const close = (): void => { open = false; panel.style.display = 'none'; wrap.style.gridColumn = ''; caret.textContent = '▾'; };
+      panelClosers.push(close);
+      caret.onclick = (e: Event) => {
+        e.stopPropagation();
+        if (open) { close(); return; }
+        panelClosers.forEach((fn) => fn());
+        open = true; refreshPanel(); panel.style.display = 'grid'; wrap.style.gridColumn = '1 / -1'; caret.textContent = '▴';
+      };
+
+      const applyArea = h('div', { style: { display: 'grid', gap: '5px', cursor: 'pointer' }, title: p.name, onclick: () => applyColors(curColors()) },
         swatch,
         h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
           h('span', { style: { fontSize: '11px', fontWeight: '600', color: '#0f172a' } }, p.name),
-          badge),
-      ) as HTMLElement;
-      tiles.push(tile);
-      grid.appendChild(tile);
+          h('div', { style: { display: 'flex', alignItems: 'center', gap: '4px' } }, badge, caret)));
+
+      const wrap = h('div', { 'data-mf-preset': p.id, style: {
+        display: 'grid', gap: '5px', padding: '7px', background: '#fff', borderRadius: '9px', alignSelf: 'start',
+        border: themeState === p.id ? '2px solid #6366f1' : '1px solid #e2e8f0',
+        boxShadow: themeState === p.id ? '0 0 0 2px rgba(99,102,241,.15)' : 'none',
+      } }, applyArea, panel) as HTMLElement;
+      tiles.push(wrap);
+      grid.appendChild(wrap);
     });
 
     // Layout controls — wired to the --mf-* vars megaform.css ACTUALLY consumes
