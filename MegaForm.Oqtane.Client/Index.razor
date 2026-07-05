@@ -540,6 +540,28 @@
 }
 
 
+@* [FOUC fix 2026-07-05 / extends B357] The admin-surface stylesheets (admin-shell + the per-panel
+   *-ts.css) are declared as Oqtane component Resources, which the Interactive host injects via JS
+   interop ~2.5s AFTER hydration — so Submissions / MyInbox / Languages / Workflow-inbox painted as
+   UNSTYLED raw HTML until the CSS landed (FOUC). B357 only covered the Dashboard panel. Emit the
+   right set for the ACTIVE admin surface here, in the (pre)rendered SSR markup, so the browser has
+   the CSS before first paint. The JS boot still re-injects idempotently for SPA panel nav (it skips
+   a filename that is already present). Public form path (_panelMode==None, not inbox) emits none. *@
+@{
+    var mfAdminCss = _panelMode switch
+    {
+        MfPanelMode.Dashboard   => new[] { "megaform-admin-shell.css" },
+        MfPanelMode.Submissions => new[] { "megaform-admin-shell.css", "megaform-submissions-ts.css" },
+        MfPanelMode.MyInbox     => new[] { "megaform-admin-shell.css", "megaform-submissions-ts.css", "megaform-my-inbox-ts.css" },
+        MfPanelMode.Languages   => new[] { "megaform-admin-shell.css" },
+        _ => (IsWorkflowInboxMode ? new[] { "megaform-admin-shell.css", "megaform-workflow-inbox-ts.css" } : System.Array.Empty<string>())
+    };
+}
+@foreach (var mfCss in mfAdminCss)
+{
+    <link rel="stylesheet" href="@(ModulePath())css/@(mfCss)?v=@OqtaneCoreAssetVersion" />
+}
+
 @if (_panelMode == MfPanelMode.Dashboard)
 {
     <style>
@@ -2936,7 +2958,12 @@ private string BuildStarterBoardUrl()
                     : authoredCustomCss;
             }
 
-            var baseWrapperClass = "mf-form-wrapper" + (_ssrHasCustom ? " mf-custom-shell-mode" : string.Empty);
+            // [B355] Bake .mf-booting into the SSR wrapper: premium shells run their per-step
+            // entrance (auFade/amFade) at server first paint, before the schema returns, so the
+            // cloak that pushes those one-shot entrances to their final frame must be present in
+            // this markup. The renderer lifts it one frame after hydrate (see megaform.css /
+            // renderer/index.ts). Harmless for non-premium forms.
+            var baseWrapperClass = "mf-form-wrapper mf-booting" + (_ssrHasCustom ? " mf-custom-shell-mode" : string.Empty);
             _ssrWrapperClass = string.IsNullOrEmpty(_ssrWrapperRuntimeClasses)
                 ? baseWrapperClass
                 : baseWrapperClass + " " + _ssrWrapperRuntimeClasses;
