@@ -1,0 +1,916 @@
+{
+  "version": "1.0",
+  "slug": "bulgaria-discovery-programme",
+  "title": "Bulgaria Discovery Programme",
+  "description": "Elegant 4-step application form with Rose Valley hero photography, Plovdiv inset, Bulgarian folk borders, and rose, pine, gold palette.",
+  "category": "travel-application",
+  "categories": [
+    "travel-application",
+    "premium",
+    "cultural-programme"
+  ],
+  "icon": "flower-2",
+  "submitButtonText": "Submit Application",
+  "successMessage": "Application received. We will email you within 3 business days.",
+  "fields": [
+    {
+      "key": "premium_step_1",
+      "type": "Section",
+      "label": "Tell us about yourself",
+      "required": false,
+      "properties": {
+        "pageBreak": false,
+        "premiumNativeStep": true,
+        "generatedPremiumStep": true,
+        "premiumStepIndex": 1,
+        "legacyDataStep": 0
+      }
+    },
+    {
+      "key": "row_name",
+      "type": "Row",
+      "label": "Name",
+      "columns": [
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "first_name",
+              "type": "Text",
+              "label": "First Name",
+              "required": true,
+              "placeholder": "Ivelina",
+              "helpText": "",
+              "defaultValue": "",
+              "cssClass": "",
+              "width": "100%",
+              "readOnly": false,
+              "prefillParam": "",
+              "validation": {},
+              "options": [],
+              "showIf": null,
+              "htmlContent": "",
+              "fileSettings": null,
+              "properties": {}
+            }
+          ]
+        },
+        {
+          "span": 6,
+          "fields": [
+            {
+              "key": "last_name",
+              "type": "Text",
+              "label": "Last Name",
+              "required": true,
+              "placeholder": "Georgieva",
+              "helpText": "",
+              "defaultValue": "",
+              "cssClass": "",
+              "width": "100%",
+              "readOnly": false,
+              "prefillParam": "",
+              "validation": {},
+              "options": [],
+              "showIf": null,
+              "htmlContent": "",
+              "fileSettings": null,
+              "properties": {}
+            }
+          ]
+        }
+      ],
+      "placeholder": "",
+      "required": false,
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {}
+    },
+    {
+      "key": "email",
+      "type": "Email",
+      "label": "Email Address",
+      "required": true,
+      "placeholder": "ivelina@example.bg",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {}
+    },
+    {
+      "key": "phone",
+      "type": "Phone",
+      "label": "Phone",
+      "placeholder": "+359 88 123 4567",
+      "required": false,
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {}
+    },
+    {
+      "key": "birth_date",
+      "type": "Date",
+      "label": "Date of Birth",
+      "placeholder": "",
+      "required": false,
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {}
+    },
+    {
+      "key": "gender",
+      "type": "Select",
+      "label": "Gender",
+      "placeholder": "Select gender",
+      "options": [
+        {
+          "label": "Female",
+          "value": "Female"
+        },
+        {
+          "label": "Male",
+          "value": "Male"
+        },
+        {
+          "label": "Non-binary",
+          "value": "Non-binary"
+        },
+        {
+          "label": "Prefer not to say",
+          "value": "Prefer not to say"
+        }
+      ],
+      "required": false,
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {}
+    },
+    {
+      "key": "nationality",
+      "type": "Text",
+      "label": "Nationality",
+      "placeholder": "Bulgarian, French...",
+      "required": false,
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {}
+    },
+    {
+      "key": "premium_step_2",
+      "type": "Section",
+      "label": "What brings you to Bulgaria?",
+      "required": false,
+      "properties": {
+        "pageBreak": true,
+        "premiumNativeStep": true,
+        "generatedPremiumStep": true,
+        "premiumStepIndex": 2,
+        "legacyDataStep": 1
+      }
+    },
+    {
+      "key": "purpose_type",
+      "type": "Radio",
+      "label": "Purpose of visit",
+      "required": true,
+      "options": [
+        {
+          "label": "Study & Research",
+          "value": "study",
+          "meta": "Universities & scholarships",
+          "description": "Academic exchange, research visits, and campus programmes.",
+          "icon": "★"
+        },
+        {
+          "label": "Work & Career",
+          "value": "work",
+          "meta": "Internships & placements",
+          "description": "Professional placements and career discovery in Sofia or Plovdiv.",
+          "icon": "💼"
+        },
+        {
+          "label": "Cultural Heritage",
+          "value": "cultural",
+          "meta": "Folk arts & history",
+          "description": "Traditional crafts, music, festivals, and Thracian heritage.",
+          "icon": "✿"
+        },
+        {
+          "label": "Nature & Eco",
+          "value": "nature",
+          "meta": "Mountains & farms",
+          "description": "Balkan trails, reserves, village stays, and agri-tourism.",
+          "icon": "⛰"
+        },
+        {
+          "label": "Wellness Retreat",
+          "value": "wellness",
+          "meta": "Thermal spas & rose valley",
+          "description": "Mineral baths, rose oil rituals, and restorative countryside stays.",
+          "icon": "✨"
+        },
+        {
+          "label": "Travel & Digital Nomad",
+          "value": "travel",
+          "meta": "Flexible exploration",
+          "description": "Independent route planning, coworking, and local guidance.",
+          "icon": "🌐"
+        }
+      ],
+      "optionDisplay": "cards",
+      "choiceDisplay": "cards",
+      "optionVariant": "cards",
+      "allowOptionHtml": true,
+      "optionColumns": 2,
+      "properties": {
+        "optionDisplay": "cards",
+        "optionColumns": 2
+      },
+      "widgetProps": {
+        "optionDisplay": "cards",
+        "optionColumns": 2
+      },
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null
+    },
+    {
+      "key": "interests",
+      "type": "Checkbox",
+      "label": "Interests",
+      "options": [
+        {
+          "label": "Rose Valley",
+          "value": "rose_valley"
+        },
+        {
+          "label": "Black Sea",
+          "value": "black_sea"
+        },
+        {
+          "label": "Rhodope Folk",
+          "value": "rhodope_folk"
+        },
+        {
+          "label": "Balkan Cuisine",
+          "value": "balkan_cuisine"
+        },
+        {
+          "label": "Thracian History",
+          "value": "thracian_history"
+        },
+        {
+          "label": "Mountain Hiking",
+          "value": "mountain_hiking"
+        },
+        {
+          "label": "Organic Farming",
+          "value": "organic_farming"
+        },
+        {
+          "label": "Sofia Arts",
+          "value": "sofia_arts"
+        },
+        {
+          "label": "Bulgarian Crafts",
+          "value": "bulgarian_crafts"
+        },
+        {
+          "label": "Thermal Spas",
+          "value": "thermal_spas"
+        }
+      ],
+      "optionDisplay": "chips",
+      "choiceDisplay": "chips",
+      "optionVariant": "chips",
+      "properties": {
+        "optionDisplay": "chips"
+      },
+      "widgetProps": {
+        "optionDisplay": "chips"
+      },
+      "placeholder": "",
+      "required": false,
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null
+    },
+    {
+      "key": "experience",
+      "type": "Select",
+      "label": "Prior experience with Bulgaria",
+      "placeholder": "Select level",
+      "options": [
+        {
+          "label": "First time - never visited",
+          "value": "none"
+        },
+        {
+          "label": "Once before",
+          "value": "once"
+        },
+        {
+          "label": "Several times",
+          "value": "several"
+        },
+        {
+          "label": "Resident / long stay",
+          "value": "resident"
+        }
+      ],
+      "required": false,
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {}
+    },
+    {
+      "key": "languages",
+      "type": "Checkbox",
+      "label": "Languages you speak",
+      "options": [
+        {
+          "label": "English",
+          "value": "english"
+        },
+        {
+          "label": "Bulgarian",
+          "value": "bulgarian"
+        },
+        {
+          "label": "German",
+          "value": "german"
+        },
+        {
+          "label": "French",
+          "value": "french"
+        },
+        {
+          "label": "Spanish",
+          "value": "spanish"
+        },
+        {
+          "label": "Italian",
+          "value": "italian"
+        },
+        {
+          "label": "Russian",
+          "value": "russian"
+        },
+        {
+          "label": "Turkish",
+          "value": "turkish"
+        }
+      ],
+      "optionDisplay": "chips",
+      "choiceDisplay": "chips",
+      "optionVariant": "chips",
+      "properties": {
+        "optionDisplay": "chips"
+      },
+      "widgetProps": {
+        "optionDisplay": "chips"
+      },
+      "placeholder": "",
+      "required": false,
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null
+    },
+    {
+      "key": "premium_step_3",
+      "type": "Section",
+      "label": "Plan your stay",
+      "required": false,
+      "properties": {
+        "pageBreak": true,
+        "premiumNativeStep": true,
+        "generatedPremiumStep": true,
+        "premiumStepIndex": 3,
+        "legacyDataStep": 2
+      }
+    },
+    {
+      "key": "region",
+      "type": "Radio",
+      "label": "Preferred region",
+      "required": true,
+      "options": [
+        {
+          "label": "Sofia",
+          "value": "sofia",
+          "meta": "Capital & Mt Vitosha",
+          "description": "Culture, nightlife, universities, and mountain day trips.",
+          "icon": "✨"
+        },
+        {
+          "label": "Plovdiv",
+          "value": "plovdiv",
+          "meta": "Old Town & galleries",
+          "description": "Roman theatre, creative district, and cobbled heritage streets.",
+          "icon": "★"
+        },
+        {
+          "label": "Kazanlak / Rose Valley",
+          "value": "kazanlak",
+          "meta": "Rose fields & festivals",
+          "description": "Attar workshops, folk traditions, and valley villages.",
+          "icon": "✿"
+        },
+        {
+          "label": "Varna / Black Sea",
+          "value": "varna",
+          "meta": "Coast & maritime culture",
+          "description": "Beaches, museums, and relaxed seaside routes.",
+          "icon": "≈"
+        },
+        {
+          "label": "Bansko / Pirin",
+          "value": "bansko",
+          "meta": "Mountain sports",
+          "description": "Hiking, ski culture, and UNESCO nature routes.",
+          "icon": "⛰"
+        },
+        {
+          "label": "Troyan / Balkan Range",
+          "value": "troyan",
+          "meta": "Monastery & nature",
+          "description": "Forest trails, ceramics, local food, and quiet rural stays.",
+          "icon": "🌲"
+        }
+      ],
+      "optionDisplay": "cards",
+      "choiceDisplay": "cards",
+      "optionVariant": "cards",
+      "allowOptionHtml": true,
+      "optionColumns": 2,
+      "properties": {
+        "optionDisplay": "cards",
+        "optionColumns": 2
+      },
+      "widgetProps": {
+        "optionDisplay": "cards",
+        "optionColumns": 2
+      },
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null
+    },
+    {
+      "key": "duration",
+      "type": "Select",
+      "label": "Duration of stay",
+      "required": true,
+      "placeholder": "Select duration",
+      "options": [
+        {
+          "label": "Weekend (2-3 days)",
+          "value": "weekend"
+        },
+        {
+          "label": "1 week",
+          "value": "week"
+        },
+        {
+          "label": "2 weeks",
+          "value": "twoweeks"
+        },
+        {
+          "label": "1 month",
+          "value": "month"
+        },
+        {
+          "label": "Longer than 1 month",
+          "value": "longer"
+        }
+      ],
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {}
+    },
+    {
+      "key": "accommodation",
+      "type": "Select",
+      "label": "Accommodation type",
+      "required": true,
+      "placeholder": "Select accommodation",
+      "options": [
+        {
+          "label": "Hotel / boutique hotel",
+          "value": "hotel"
+        },
+        {
+          "label": "Family guesthouse",
+          "value": "guesthouse"
+        },
+        {
+          "label": "Hostel / backpacker",
+          "value": "hostel"
+        },
+        {
+          "label": "Apartment / Airbnb",
+          "value": "apartment"
+        },
+        {
+          "label": "Eco-lodge / rural stay",
+          "value": "eco"
+        }
+      ],
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {}
+    },
+    {
+      "key": "budget",
+      "type": "Radio",
+      "label": "Budget per day (EUR)",
+      "options": [
+        {
+          "label": "Under EUR 40",
+          "value": "budget"
+        },
+        {
+          "label": "EUR 40 - EUR 100",
+          "value": "mid"
+        },
+        {
+          "label": "EUR 100 - EUR 200",
+          "value": "upper"
+        },
+        {
+          "label": "EUR 200+",
+          "value": "luxury"
+        }
+      ],
+      "optionDisplay": "chips",
+      "choiceDisplay": "chips",
+      "optionVariant": "chips",
+      "properties": {
+        "optionDisplay": "chips"
+      },
+      "widgetProps": {
+        "optionDisplay": "chips"
+      },
+      "placeholder": "",
+      "required": false,
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null
+    },
+    {
+      "key": "dietary",
+      "type": "Checkbox",
+      "label": "Dietary requirements",
+      "options": [
+        {
+          "label": "Vegetarian",
+          "value": "vegetarian"
+        },
+        {
+          "label": "Vegan",
+          "value": "vegan"
+        },
+        {
+          "label": "Gluten-free",
+          "value": "gluten_free"
+        },
+        {
+          "label": "Halal",
+          "value": "halal"
+        },
+        {
+          "label": "Kosher",
+          "value": "kosher"
+        },
+        {
+          "label": "No restrictions",
+          "value": "no_restrictions"
+        }
+      ],
+      "optionDisplay": "chips",
+      "choiceDisplay": "chips",
+      "optionVariant": "chips",
+      "properties": {
+        "optionDisplay": "chips"
+      },
+      "widgetProps": {
+        "optionDisplay": "chips"
+      },
+      "placeholder": "",
+      "required": false,
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null
+    },
+    {
+      "key": "accessibility",
+      "type": "Checkbox",
+      "label": "Accessibility requirements",
+      "options": [
+        {
+          "label": "Wheelchair access, mobility aids, or other support needs",
+          "value": "yes"
+        }
+      ],
+      "placeholder": "",
+      "required": false,
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {}
+    },
+    {
+      "key": "premium_step_4",
+      "type": "Section",
+      "label": "Review & confirm",
+      "required": false,
+      "properties": {
+        "pageBreak": true,
+        "premiumNativeStep": true,
+        "generatedPremiumStep": true,
+        "premiumStepIndex": 4,
+        "legacyDataStep": 3
+      }
+    },
+    {
+      "key": "bio",
+      "type": "Textarea",
+      "label": "Short personal statement",
+      "placeholder": "Tell us why you want to visit Bulgaria and what you hope to experience...",
+      "properties": {
+        "rows": 4,
+        "maxLength": 500
+      },
+      "required": false,
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null
+    },
+    {
+      "key": "referral",
+      "type": "Select",
+      "label": "How did you hear about us?",
+      "placeholder": "Select a source",
+      "options": [
+        {
+          "label": "Social media",
+          "value": "social"
+        },
+        {
+          "label": "Friend / colleague",
+          "value": "friend"
+        },
+        {
+          "label": "Search engine",
+          "value": "search"
+        },
+        {
+          "label": "Event or conference",
+          "value": "event"
+        },
+        {
+          "label": "Press / media",
+          "value": "press"
+        }
+      ],
+      "required": false,
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {}
+    },
+    {
+      "key": "supporting_document",
+      "type": "File",
+      "label": "Supporting document",
+      "required": false,
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {}
+    },
+    {
+      "key": "newsletter",
+      "type": "Checkbox",
+      "label": "Newsletter",
+      "options": [
+        {
+          "label": "Subscribe to the Bulgaria Discovery newsletter - seasonal guides, events, and insider tips.",
+          "value": "yes"
+        }
+      ],
+      "placeholder": "",
+      "required": false,
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {}
+    },
+    {
+      "key": "terms",
+      "type": "Checkbox",
+      "label": "Terms",
+      "required": true,
+      "options": [
+        {
+          "label": "I agree to the Terms of Service and Privacy Policy. My information will be used only for programme coordination.",
+          "value": "yes"
+        }
+      ],
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {}
+    }
+  ],
+  "customHtml": "<div class='mfp mfp-bulgaria mfp-native-generated'><div class='bg-border'></div><div class='bg-card'><header class='bg-hero'><img src='/Modules/MegaForm/img/bulgaria-discovery/bulgaria-rose-hero.png' alt='Rose Valley Bulgaria'><div class='bg-hero-shade'></div><div class='bg-hero-copy'><p>Bulgaria Discovery Programme</p><h1>Discover<br>Bulgaria</h1><span>Rose valleys, ancient Thracian history, Black Sea coasts, and Balkan hospitality.</span></div><figure class='bg-thumb'><img src='/Modules/MegaForm/img/bulgaria-discovery/bulgaria-plovdiv.png' alt='Old town Plovdiv'><figcaption>Plovdiv Old Town</figcaption></figure></header><section class='bg-body'><div class='bg-stepper'><div class='bg-step is-active'><b>01</b><span>Profile</span><em>Who you are</em></div><i class='bg-line'></i><div class='bg-step'><b>02</b><span>Purpose</span><em>What you seek</em></div><i class='bg-line'></i><div class='bg-step'><b>03</b><span>Details</span><em>Preferences</em></div><i class='bg-line'></i><div class='bg-step'><b>04</b><span>Confirm</span><em>Review</em></div></div><div class='bg-folk'></div><section class='bg-page is-active' data-step='0'><h2>Tell us about yourself</h2><div class='bg-grid bg-grid-2 bg-mt'>{{field:row_name}}</div>\n<label class='bg-field bg-mt'><span>Email address *</span>{{field:email}}</label>\n<label class='bg-field'><span>Phone</span>{{field:phone}}</label>\n<label class='bg-field bg-date-field'><span>Date of birth</span>{{field:birth_date}}</label>\n<label class='bg-field'><span>Gender</span>{{field:gender}}</label>\n<label class='bg-field'><span>Nationality</span>{{field:nationality}}</label>\n</section><section class='bg-page' data-step='1'><h2>What brings you to Bulgaria?</h2><div class='bg-folk'></div><label class='bg-field bg-mt'><span>Purpose of visit *</span>{{field:purpose_type}}</label>\n<label class='bg-field bg-mt'><span>Interests - pick all that apply</span>{{field:interests}}</label>\n<label class='bg-field'><span>Prior experience with Bulgaria</span>{{field:experience}}</label>\n<label class='bg-field'><span>Languages you speak</span>{{field:languages}}</label>\n</section><section class='bg-page' data-step='2'><h2>Plan your stay</h2><div class='bg-folk bg-folk-green'></div><label class='bg-field bg-mt bg-region-field'><span>Preferred region *</span>{{field:region}}</label>\n<label class='bg-field'><span>Duration of stay *</span>{{field:duration}}</label>\n<label class='bg-field'><span>Accommodation type *</span>{{field:accommodation}}</label>\n<label class='bg-field bg-mt bg-budget-field'><span>Budget per day (EUR)</span>{{field:budget}}</label>\n<label class='bg-field bg-mt'><span>Dietary requirements</span>{{field:dietary}}</label>\n<div class='bg-toggle bg-mt'>{{field:accessibility}}</div>\n</section><section class='bg-page' data-step='3'><h2>Review & confirm</h2><div class='bg-review bg-mt'><p>Your application summary</p><dl><div><dt>Name</dt><dd data-bg-summary='name'>--</dd></div><div><dt>Email</dt><dd data-bg-summary='email'>--</dd></div><div><dt>Purpose</dt><dd data-bg-summary='purpose'>--</dd></div><div><dt>Region</dt><dd data-bg-summary='region'>--</dd></div><div><dt>Stay</dt><dd data-bg-summary='stay'>--</dd></div><div><dt>Interests</dt><dd data-bg-summary='interests'>--</dd></div></dl></div><div class='bg-post bg-mt'><p>After you submit</p><div><strong>Application review</strong><span>Our Sofia team checks your details within 3 business days.</span></div><div><strong>Programme match</strong><span>We suggest regions, hosts, and seasonal experiences based on your choices.</span></div><div><strong>Welcome pack</strong><span>Approved applicants receive itinerary notes, local contacts, and next-step instructions.</span></div></div><div class='bg-checks bg-mt'></div><label class='bg-field bg-mt'><span>Short personal statement</span>{{field:bio}}<small><b data-bg-count>0</b> / 500</small></label>\n<label class='bg-field'><span>How did you hear about us?</span>{{field:referral}}</label>\n<label class='bg-field'><span>Supporting document (optional)</span>{{field:supporting_document}}</label>\n<div>{{field:newsletter}}</div>\n<div>{{field:terms}}</div>\n</section><div class='bg-actions'><button type='button' class='bg-back'>Back</button><span>Step <b data-bg-current>1</b> of 4</span><button type='button' class='bg-next'>Continue</button><button type='submit' class='bg-submit' hidden>Submit Application</button></div></section></div><p class='bg-footer'>Bulgaria Discovery Programme &copy; 2026 &middot; Sofia, Bulgaria &middot; Privacy &middot; Contact</p><div class='bg-border'></div></div>",
+  "customCss": "@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500;600;700&display=swap');\n.mfp.mfp-bulgaria{--bg-parch:#f5f0e8;--bg-surface:#fff;--bg-dark:#1a1410;--bg-rose:#c94f6d;--bg-rose-soft:#fdf0f3;--bg-green:#2d5a3d;--bg-green-soft:#edf6f0;--bg-gold:#c8853a;--bg-gold-soft:#fdf4ec;--bg-muted:#7c6e62;--bg-border:#e6ddd2;--bg-line:#ded3c7;font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--bg-dark);background:var(--bg-parch);width:100%!important;max-width:760px!important;margin:0 auto!important;padding:0!important;box-sizing:border-box;overflow:visible!important}\n.mfp-bulgaria,.mfp-bulgaria *{box-sizing:border-box}\n.mfp-bulgaria .bg-card{overflow:visible;border:1px solid var(--bg-border);border-radius:24px;background:var(--bg-surface);box-shadow:0 24px 48px rgba(26,20,16,.16)}\n.mfp-bulgaria .bg-border{height:16px;background:repeating-linear-gradient(90deg,rgba(201,79,109,.72) 0 12px,rgba(200,133,58,.65) 12px 16px,rgba(45,90,61,.68) 16px 24px,rgba(200,133,58,.45) 24px 28px);mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}\n.mfp-bulgaria .bg-hero{position:relative;height:288px;overflow:hidden;border-radius:23px 23px 0 0;background:linear-gradient(135deg,#2d5a3d,#c94f6d)}\n.mfp-bulgaria .bg-hero>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}\n.mfp-bulgaria .bg-hero-shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(26,20,16,.84),rgba(26,20,16,.45) 58%,rgba(26,20,16,.12))}\n.mfp-bulgaria .bg-hero-copy{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:32px 48px;color:#fff}\n.mfp-bulgaria .bg-hero-copy p{margin:0 0 8px;color:var(--bg-gold);font-size:12px;line-height:18px;font-weight:700;text-transform:uppercase;letter-spacing:.34em}\n.mfp-bulgaria .bg-hero-copy h1{font-family:'DM Serif Display',Georgia,serif;margin:0;color:#fff;font-size:56px;line-height:.95;font-weight:400;letter-spacing:0;text-shadow:0 2px 22px rgba(0,0,0,.42)}\n.mfp-bulgaria .bg-hero-copy span{display:block;max-width:360px;margin-top:14px;color:rgba(245,240,232,.9);font-size:15px;line-height:24px;font-weight:400}\n.mfp-bulgaria .bg-thumb{position:absolute;right:22px;bottom:18px;width:176px;height:112px;margin:0;overflow:hidden;border:2px solid rgba(255,255,255,.28);border-radius:14px;box-shadow:0 18px 28px rgba(0,0,0,.25)}\n.mfp-bulgaria .bg-thumb img{width:100%;height:100%;object-fit:cover;display:block}\n.mfp-bulgaria .bg-thumb figcaption{position:absolute;left:0;right:0;bottom:0;background:rgba(26,20,16,.68);color:#fff;text-align:center;font-size:12px;line-height:22px}\n.mfp-bulgaria .bg-body{padding:32px 40px 36px;background:var(--bg-surface)!important;color:var(--bg-dark)!important}\n.mfp-bulgaria .bg-stepper{display:flex;align-items:flex-start;justify-content:center;margin-bottom:18px}\n.mfp-bulgaria .bg-step{display:flex;flex-direction:column;align-items:center;text-align:center;min-width:76px}\n.mfp-bulgaria .bg-step b{display:flex;align-items:center;justify-content:center;width:38px;height:38px;border:2px solid var(--bg-line);border-radius:999px;background:var(--bg-parch);color:var(--bg-muted);font-size:12px;line-height:1;font-weight:700}\n.mfp-bulgaria .bg-step span{margin-top:6px;color:var(--bg-muted);font-size:12px;line-height:16px;font-weight:700}\n.mfp-bulgaria .bg-step em{color:var(--bg-muted);font-size:11px;line-height:14px;font-style:normal}\n.mfp-bulgaria .bg-step.is-active b{border-color:var(--bg-rose);background:#fff;color:var(--bg-rose)}\n.mfp-bulgaria .bg-step.is-done b{border-color:var(--bg-rose);background:var(--bg-rose);color:#fff;font-size:0}\n.mfp-bulgaria .bg-step.is-done b:after{content:'\\2713';font-size:16px}\n.mfp-bulgaria .bg-step.is-active span,.mfp-bulgaria .bg-step.is-done span{color:var(--bg-dark)}\n.mfp-bulgaria .bg-line{display:block;width:52px;height:2px;margin:18px 6px 0;background:var(--bg-line)}\n.mfp-bulgaria .bg-line.is-done{background:var(--bg-rose)}\n.mfp-bulgaria .bg-folk{height:16px;margin:0 0 22px;background:linear-gradient(90deg,transparent,rgba(212,201,186,.95),transparent);position:relative}\n.mfp-bulgaria .bg-folk:after{content:'';position:absolute;left:50%;top:50%;width:9px;height:9px;background:var(--bg-rose);transform:translate(-50%,-50%) rotate(45deg);box-shadow:-15px 0 0 rgba(201,79,109,.24),15px 0 0 rgba(201,79,109,.24)}\n.mfp-bulgaria .bg-folk-green:after{background:var(--bg-green);box-shadow:-15px 0 0 rgba(45,90,61,.22),15px 0 0 rgba(45,90,61,.22)}\n.mfp-bulgaria .bg-page{display:none}\n.mfp-bulgaria .bg-page.is-active{display:block}\n.mfp-bulgaria h2{font-family:'DM Serif Display',Georgia,serif;margin:0;color:var(--bg-dark);font-size:24px;line-height:32px;font-weight:400;letter-spacing:0}\n.mfp-bulgaria .bg-mt{margin-top:18px}\n.mfp-bulgaria .bg-grid{display:grid;gap:16px}\n.mfp-bulgaria .bg-grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}\n.mfp-bulgaria .bg-field{display:block;margin-bottom:0}\n.mfp-bulgaria .bg-field>span{display:block;margin:0 0 8px;color:var(--bg-muted);font-size:12px;line-height:18px;font-weight:700;text-transform:uppercase;letter-spacing:.16em}\n.mfp-bulgaria .bg-field small{display:block;margin-top:5px;text-align:right;color:var(--bg-muted);font-size:12px}\n.mfp-bulgaria .mf-row{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:16px!important;width:100%!important}\n.mfp-bulgaria .mf-row .mf-field-group{margin:0!important}\n.mfp-bulgaria .mf-field-label{display:none!important}\n.mfp-bulgaria .mf-row .mf-field-label{display:block!important;margin:0 0 8px!important;color:var(--bg-muted)!important;font-size:12px!important;line-height:18px!important;font-weight:700!important;text-transform:uppercase!important;letter-spacing:.16em!important}\n.mfp-bulgaria .mf-field-group{margin:0!important;width:100%!important}\n.mfp-bulgaria .mf-input,.mfp-bulgaria .mf-select,.mfp-bulgaria .mf-textarea,.mfp-bulgaria input[type='date']{width:100%!important;min-height:46px!important;border:1px solid var(--bg-border)!important;border-radius:8px!important;background:#fbfaf7!important;color:var(--bg-dark)!important;padding:10px 14px!important;font-family:'Inter',system-ui,sans-serif!important;font-size:15px!important;line-height:22px!important;box-shadow:none!important;outline:0!important;transition:border-color .15s ease,box-shadow .15s ease!important}\n.mfp-bulgaria .mf-textarea{min-height:116px!important;height:auto!important;resize:vertical}\n.mfp-bulgaria .mf-input::placeholder,.mfp-bulgaria .mf-textarea::placeholder{color:#a9998c!important;opacity:1}\n.mfp-bulgaria .mf-input:focus,.mfp-bulgaria .mf-select:focus,.mfp-bulgaria .mf-textarea:focus{border-color:var(--bg-rose)!important;box-shadow:0 0 0 2px rgba(201,79,109,.1)!important}\n.mfp-bulgaria .mf-select{appearance:none!important;-webkit-appearance:none!important;padding-right:38px!important}\n.mfp-bulgaria .bg-date-field{position:relative!important;z-index:40!important}\n.mfp-bulgaria .bg-date-field .mf-cal,.mfp-bulgaria .bg-date-field .mf-date-input-wrap{position:relative!important;overflow:visible!important}\n.mfp-bulgaria .bg-date-field .mf-cal-panel{z-index:10000!important}\n.mfp-bulgaria .mf-date-picker,.mfp-bulgaria .mf-datepicker,.mfp-bulgaria .flatpickr-calendar,.mfp-bulgaria .react-datepicker,.mfp-bulgaria [data-datepicker],.mfp-bulgaria .rdp{z-index:9999!important}\n.mfp-bulgaria .mf-field-error{margin-top:5px;color:#b91c1c;font-size:12px;line-height:16px}\n.mfp-bulgaria .mf-option-group--chips{display:flex!important;flex-wrap:wrap!important;align-items:flex-start!important;justify-content:flex-start!important;gap:8px!important}\n.mfp-bulgaria .mf-option-group--chips .mf-option-item{display:inline-flex!important;width:auto!important;max-width:100%!important;flex:0 1 auto!important;margin:0!important;padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important}\n.mfp-bulgaria .mf-option-group--chips .mf-option-control,.mfp-bulgaria .mf-option-group--cards .mf-option-control{position:absolute!important;opacity:0!important;width:1px!important;height:1px!important;overflow:hidden!important;pointer-events:none!important;clip-path:inset(50%)!important}\n.mfp-bulgaria .mf-option-group--chips .mf-option-ui{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:auto!important;min-height:31px!important;padding:6px 14px!important;border:1px solid color-mix(in oklab,var(--bg-border) 64%,var(--bg-rose) 36%)!important;border-radius:999px!important;background:#fff!important;color:var(--bg-muted)!important;box-shadow:0 1px 2px rgba(26,20,16,.04)!important;transition:all .16s ease!important}\n.mfp-bulgaria .mf-option-group--chips .mf-option-label{color:inherit!important;font-size:13px!important;line-height:17px!important;font-weight:600!important;white-space:normal!important}\n.mfp-bulgaria .mf-option-group--chips .mf-option-item:hover .mf-option-ui{border-color:var(--bg-rose)!important;background:var(--bg-rose-soft)!important;transform:translateY(-1px)!important}\n.mfp-bulgaria .mf-option-group--chips .mf-option-control:checked+.mf-option-ui{border-color:var(--bg-rose)!important;background:var(--bg-rose)!important;color:#fff!important;box-shadow:0 8px 20px rgba(201,79,109,.22)!important}\n.mfp-bulgaria .mf-option-group--cards{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}\n.mfp-bulgaria .mf-option-group--cards .mf-option-item{display:block!important;width:100%!important;margin:0!important;padding:0!important;cursor:pointer}\n.mfp-bulgaria .mf-option-group--cards .mf-option-ui{position:relative!important;display:flex!important;align-items:flex-start!important;gap:12px!important;width:100%!important;min-height:88px!important;padding:14px 38px 14px 14px!important;border:1px solid var(--bg-border)!important;border-radius:14px!important;background:#fbfaf7!important;color:var(--bg-dark)!important;box-shadow:none!important;transition:all .16s ease!important}\n.mfp-bulgaria .mf-option-group--cards .mf-option-item:hover .mf-option-ui{border-color:var(--bg-rose)!important;background:var(--bg-rose-soft)!important;transform:translateY(-1px)}\n.mfp-bulgaria .mf-option-group--cards .mf-option-control:checked+.mf-option-ui{border-color:var(--bg-rose)!important;background:var(--bg-rose-soft)!important;box-shadow:0 0 0 1px var(--bg-rose),0 12px 24px rgba(201,79,109,.14)!important}\n.mfp-bulgaria .bg-region-field .mf-option-group--cards .mf-option-control:checked+.mf-option-ui{border-color:var(--bg-green)!important;background:var(--bg-green-soft)!important;box-shadow:0 0 0 1px var(--bg-green),0 12px 24px rgba(45,90,61,.14)!important}\n.mfp-bulgaria .mf-option-group--cards .mf-option-icon{display:flex!important;align-items:center!important;justify-content:center;width:34px!important;height:34px!important;flex:0 0 34px!important;border-radius:10px!important;background:#fff!important;color:var(--bg-rose)!important;font-size:18px!important}\n.mfp-bulgaria .mf-option-group--cards .mf-option-control:checked+.mf-option-ui .mf-option-icon{background:var(--bg-rose)!important;color:#fff!important}\n.mfp-bulgaria .bg-region-field .mf-option-group--cards .mf-option-control:checked+.mf-option-ui .mf-option-icon{background:var(--bg-green)!important;color:#fff!important}\n.mfp-bulgaria .bg-budget-field .mf-option-group--chips .mf-option-control:checked+.mf-option-ui{border-color:var(--bg-gold)!important;background:var(--bg-gold-soft)!important;color:#9a5b16!important;box-shadow:0 0 0 1px rgba(200,133,58,.72),0 8px 18px rgba(200,133,58,.16)!important}\n.mfp-bulgaria .mf-option-group--cards .mf-option-copy{display:grid!important;gap:3px!important;min-width:0!important;flex:1 1 auto!important}\n.mfp-bulgaria .mf-option-group--cards .mf-option-label{color:var(--bg-dark)!important;font-size:14px!important;line-height:19px!important;font-weight:700!important}\n.mfp-bulgaria .mf-option-group--cards .mf-option-meta,.mfp-bulgaria .mf-option-group--cards .mf-option-desc{color:var(--bg-muted)!important;font-size:12px!important;line-height:17px!important;font-weight:500!important}\n.mfp-bulgaria .mf-option-group--cards .mf-option-check{position:absolute!important;right:14px!important;top:14px!important;color:var(--bg-green)!important;font-size:20px!important;line-height:20px!important;opacity:0!important;transform:scale(.8);transition:all .16s ease}\n.mfp-bulgaria .mf-option-group--cards .mf-option-control:checked+.mf-option-ui .mf-option-check{opacity:1!important;transform:scale(1)}\n.mfp-bulgaria .bg-toggle .mf-option-group{display:block!important}\n.mfp-bulgaria .bg-toggle .mf-option-item{display:flex!important;align-items:flex-start!important;gap:12px!important;border:1px solid var(--bg-rose)!important;border-radius:14px!important;background:var(--bg-rose-soft)!important;padding:14px!important}\n.mfp-bulgaria .bg-toggle .mf-option-control{width:20px!important;height:20px!important;margin:2px 0 0!important;accent-color:var(--bg-rose)!important;flex:0 0 auto!important}\n.mfp-bulgaria .bg-review{border:1px solid var(--bg-border);border-radius:14px;background:#faf8f5;padding:18px}\n.mfp-bulgaria .bg-review p,.mfp-bulgaria .bg-post p{font-family:'DM Serif Display',Georgia,serif;margin:0 0 12px;color:var(--bg-dark);font-size:17px;line-height:24px}\n.mfp-bulgaria .bg-review dl{display:grid;gap:0;margin:0}\n.mfp-bulgaria .bg-review div{display:flex;justify-content:space-between;gap:14px;padding:8px 0;border-top:1px solid rgba(212,201,186,.55)}\n.mfp-bulgaria .bg-review dt,.mfp-bulgaria .bg-review dd{margin:0;font-size:13px;line-height:18px}\n.mfp-bulgaria .bg-review dt{color:var(--bg-muted);font-weight:700}\n.mfp-bulgaria .bg-review dd{color:var(--bg-dark);font-weight:600;text-align:right}\n.mfp-bulgaria .bg-post{display:grid;gap:10px;border:1px solid var(--bg-border);border-radius:14px;background:linear-gradient(135deg,var(--bg-green-soft),#fff);padding:18px}\n.mfp-bulgaria .bg-post div{display:grid;gap:2px;padding-left:14px;border-left:3px solid var(--bg-green)}\n.mfp-bulgaria .bg-post strong{color:var(--bg-dark);font-size:13px;line-height:18px}\n.mfp-bulgaria .bg-post span{color:var(--bg-muted);font-size:13px;line-height:19px}\n.mfp-bulgaria .bg-checks{display:grid;gap:12px}\n.mfp-bulgaria .bg-checks .mf-field-label{display:none!important}\n.mfp-bulgaria .bg-checks .mf-option-item{display:flex!important;align-items:flex-start!important;gap:12px!important;border:1px solid var(--bg-border)!important;border-radius:14px!important;background:#faf8f5!important;padding:13px 14px!important}\n.mfp-bulgaria .bg-checks .mf-option-control{width:19px!important;height:19px!important;margin:2px 0 0!important;accent-color:var(--bg-green)!important;flex:0 0 auto!important}\n.mfp-bulgaria .bg-actions{display:flex;align-items:center;justify-content:space-between;margin-top:30px;padding-top:22px;border-top:1px solid var(--bg-border)}\n.mfp-bulgaria .bg-actions span{color:var(--bg-muted);font-size:12px;font-weight:600}\n.mfp-bulgaria .bg-back,.mfp-bulgaria .bg-next,.mfp-bulgaria .bg-submit{border:0;border-radius:999px;padding:10px 24px;font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:20px;font-weight:700;cursor:pointer;transition:all .16s ease}\n.mfp-bulgaria .bg-back{border:1px solid var(--bg-border);background:#fff;color:var(--bg-muted)}\n.mfp-bulgaria .bg-back:disabled{opacity:.32;cursor:not-allowed}\n.mfp-bulgaria .bg-next{background:var(--bg-rose);color:#fff}\n.mfp-bulgaria .bg-submit{background:var(--bg-green);color:#fff}\n.mfp-bulgaria .bg-next:hover:not(:disabled),.mfp-bulgaria .bg-submit:hover:not(:disabled){transform:translateY(-1px);filter:brightness(.96)}\n.mfp-bulgaria .bg-next:disabled,.mfp-bulgaria .bg-submit:disabled{opacity:.4;cursor:not-allowed}\n.mfp.mfp-bulgaria.bg-success-shell{max-width:760px!important}\n.mfp-bulgaria .bg-stepper-success{margin-bottom:20px}\n.mfp-bulgaria .bg-success-panel{display:grid;justify-items:center;text-align:center;padding:34px 24px 10px}\n.mfp-bulgaria .bg-success-check{display:flex;align-items:center;justify-content:center;width:72px;height:72px;border-radius:999px;background:var(--bg-green);color:#fff;font-size:38px;line-height:1;margin-bottom:18px}\n.mfp-bulgaria .bg-success-panel h2{font-size:38px;line-height:46px}\n.mfp-bulgaria .bg-success-panel p{max-width:430px;margin:12px auto 0;color:var(--bg-muted);font-size:15px;line-height:24px}\n.mfp-bulgaria .bg-success-panel strong{color:var(--bg-dark)}\n.mfp-bulgaria .bg-success-panel blockquote{margin:4px 0 22px;color:var(--bg-muted);font-family:'DM Serif Display',Georgia,serif;font-size:18px;line-height:26px;font-style:normal}\n.mfp-bulgaria .bg-restart{border:0;border-radius:999px;background:var(--bg-rose);color:#fff;padding:12px 30px;font-family:'Inter',system-ui,sans-serif;font-size:14px;font-weight:700;line-height:20px;cursor:pointer}\n.mfp-bulgaria .bg-footer{margin:18px 0 0;text-align:center;color:var(--bg-muted);font-size:12px;line-height:18px}\n.mf-form-wrapper:has(.mfp-bulgaria),.mf-form-wrapper:has(.mfp-bulgaria) .mf-form,.mf-form-wrapper:has(.mfp-bulgaria) .mf-form-inner,.mf-form-wrapper:has(.mfp-bulgaria) .mf-fields-container{overflow:visible!important}\n.mf-form-wrapper:has(.bg-success-shell) .mf-success-message,.mf-form-wrapper:has(.bg-success-shell) .mf-postsubmit-pane{display:none!important}\n.mfp-bulgaria .mf-form-title,.mfp-bulgaria .mf-form-description,.mfp-bulgaria .mf-success-message,.mfp-bulgaria+.mf-form-actions,.mf-form-wrapper:has(.mfp-bulgaria) .mf-form-actions{display:none!important}\n.mf-form-wrapper>.mf-form-inner .mfp.mfp-bulgaria{width:100%!important;max-width:760px!important;margin:0 auto!important;padding:0!important;background:var(--bg-parch)!important}\n@media(max-width:720px){.mfp.mfp-bulgaria{max-width:100%!important}.mfp-bulgaria .bg-card{border-radius:20px}.mfp-bulgaria .bg-hero{height:250px}.mfp-bulgaria .bg-hero-copy{padding:28px}.mfp-bulgaria .bg-hero-copy h1{font-size:46px}.mfp-bulgaria .bg-thumb{display:none}.mfp-bulgaria .bg-body{padding:28px 22px 30px}.mfp-bulgaria .bg-step{min-width:54px}.mfp-bulgaria .bg-step em{display:none}.mfp-bulgaria .bg-line{width:22px;margin-left:3px;margin-right:3px}.mfp-bulgaria .bg-grid-2,.mfp-bulgaria .mf-row,.mfp-bulgaria .mf-option-group--cards{grid-template-columns:1fr!important}.mfp-bulgaria .bg-actions{gap:10px}.mfp-bulgaria .bg-back,.mfp-bulgaria .bg-next,.mfp-bulgaria .bg-submit{padding:10px 18px}}\n/*MF-HEROHEAD-FIX-20260626*/.mf-form-wrapper .mfp.mfp-bulgaria .bg-hero-copy h1{color:#fff!important;font-family:'DM Serif Display',Georgia,serif!important}.mf-form-wrapper .mfp.mfp-bulgaria .bg-hero-copy h1 *{color:#fff!important}.mf-form-wrapper .mfp.mfp-bulgaria .bg-hero-copy .bg-eyebrow,.mf-form-wrapper .mfp.mfp-bulgaria .bg-hero-copy p{color:rgba(255,255,255,.9)!important}\n\n/* ===== [QAFix-btn+consent v20260704] ===== */\n.mfp.mfp-bulgaria{--mf-btn-bg:#2d5a3d;--mf-btn-color:#ffffff;--mf-btn-hover-bg:#234730;}\n",
+  "settings": {
+    "theme": "bulgaria-discovery-premium",
+    "multiPage": true,
+    "customContent": {},
+    "customScripts": {},
+    "customHtml": "<div class='mfp mfp-bulgaria mfp-native-generated'><div class='bg-card mfp-card'><header class='bg-hero'><img src='/Modules/MegaForm/img/bulgaria-discovery/bulgaria-rose-hero.png' alt='Rose Valley Bulgaria'><div class='bg-hero-shade'></div><div class='bg-hero-copy'><p>Bulgaria Discovery Programme</p><h1>Discover<br>Bulgaria</h1><span>Rose valleys, ancient Thracian history, Black Sea coasts, and Balkan hospitality.</span></div><figure class='bg-thumb'><img src='/Modules/MegaForm/img/bulgaria-discovery/bulgaria-plovdiv.png' alt='Old town Plovdiv'><figcaption>Plovdiv Old Town</figcaption></figure></header><section class='bg-body'><div class='bg-stepper'><div class='bg-step is-active'><b>01</b><span>Profile</span><em>Who you are</em></div><i class='bg-line'></i><div class='bg-step'><b>02</b><span>Purpose</span><em>What you seek</em></div><i class='bg-line'></i><div class='bg-step'><b>03</b><span>Details</span><em>Preferences</em></div><i class='bg-line'></i><div class='bg-step'><b>04</b><span>Confirm</span><em>Review</em></div></div><div class='bg-folk'></div><section class='bg-page is-active' data-step='0'><h2>Tell us about yourself</h2><div class='bg-mt'>{{field:row_name}}</div>\n<label class='bg-field bg-mt'><span>Email address *</span>{{field:email}}</label>\n<label class='bg-field'><span>Phone</span>{{field:phone}}</label>\n<label class='bg-field bg-date-field'><span>Date of birth</span>{{field:birth_date}}</label>\n<label class='bg-field'><span>Gender</span>{{field:gender}}</label>\n<label class='bg-field'><span>Nationality</span>{{field:nationality}}</label>\n</section><section class='bg-page' data-step='1'><h2>What brings you to Bulgaria?</h2><div class='bg-folk'></div><label class='bg-field bg-mt'><span>Purpose of visit *</span>{{field:purpose_type}}</label>\n<label class='bg-field bg-mt'><span>Interests - pick all that apply</span>{{field:interests}}</label>\n<label class='bg-field'><span>Prior experience with Bulgaria</span>{{field:experience}}</label>\n<label class='bg-field'><span>Languages you speak</span>{{field:languages}}</label>\n</section><section class='bg-page' data-step='2'><h2>Plan your stay</h2><div class='bg-folk bg-folk-green'></div><label class='bg-field bg-mt bg-region-field'><span>Preferred region *</span>{{field:region}}</label>\n<label class='bg-field'><span>Duration of stay *</span>{{field:duration}}</label>\n<label class='bg-field'><span>Accommodation type *</span>{{field:accommodation}}</label>\n<label class='bg-field bg-mt bg-budget-field'><span>Budget per day (EUR)</span>{{field:budget}}</label>\n<label class='bg-field bg-mt'><span>Dietary requirements</span>{{field:dietary}}</label>\n<div class='bg-toggle bg-mt'>{{field:accessibility}}</div>\n</section><section class='bg-page' data-step='3'><h2>Review & confirm</h2><div class='bg-review bg-mt'><p>Your application summary</p><dl><div><dt>Name</dt><dd data-bg-summary='name'>--</dd></div><div><dt>Email</dt><dd data-bg-summary='email'>--</dd></div><div><dt>Purpose</dt><dd data-bg-summary='purpose'>--</dd></div><div><dt>Region</dt><dd data-bg-summary='region'>--</dd></div><div><dt>Stay</dt><dd data-bg-summary='stay'>--</dd></div><div><dt>Interests</dt><dd data-bg-summary='interests'>--</dd></div></dl></div><div class='bg-post bg-mt'><p>After you submit</p><div><strong>Application review</strong><span>Our Sofia team checks your details within 3 business days.</span></div><div><strong>Programme match</strong><span>We suggest regions, hosts, and seasonal experiences based on your choices.</span></div><div><strong>Welcome pack</strong><span>Approved applicants receive itinerary notes, local contacts, and next-step instructions.</span></div></div><div class='bg-checks bg-mt'></div><label class='bg-field bg-mt'><span>Short personal statement</span>{{field:bio}}<small><b data-bg-count>0</b> / 500</small></label>\n<label class='bg-field'><span>How did you hear about us?</span>{{field:referral}}</label>\n<label class='bg-field'><span>Supporting document (optional)</span>{{field:supporting_document}}</label>\n<div>{{field:newsletter}}</div>\n<div>{{field:terms}}</div>\n</section><div class='bg-actions'><button type='button' class='bg-back'>Back</button><span>Step <b data-bg-current>1</b> of 4</span><button type='button' class='bg-next'>Continue</button><button type='submit' class='bg-submit' hidden>Submit Application</button></div></section></div><p class='bg-footer'>Bulgaria Discovery Programme &copy; 2026 &middot; Sofia, Bulgaria &middot; Privacy &middot; Contact</p></div>",
+    "customCss": "@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500;600;700&display=swap');\n.mfp.mfp-bulgaria{--bg-parch:#f5f0e8;--bg-surface: var(--mf-preset-surface, #fff);--bg-dark: var(--mf-preset-text, #1a1410);--bg-rose: var(--mf-preset-primary, #c94f6d);--bg-rose-soft:#fdf0f3;--bg-green: var(--mf-preset-accent, #2d5a3d);--bg-green-soft:#edf6f0;--bg-gold:#c8853a;--bg-gold-soft:#fdf4ec;--bg-muted:#7c6e62;--bg-border: var(--mf-preset-border, #e6ddd2);--bg-line: var(--mf-preset-border, #ded3c7);font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--bg-dark);background:var(--bg-parch);width:100%!important;max-width:760px!important;margin:0 auto!important;padding:0!important;box-sizing:border-box;overflow:visible!important}\n.mfp-bulgaria,.mfp-bulgaria *{box-sizing:border-box}\n.mfp-bulgaria .bg-card{overflow:visible;border:1px solid var(--bg-border);border-radius:24px;background:var(--bg-surface);box-shadow:0 24px 48px rgba(26,20,16,.16)}\n.mfp-bulgaria .bg-border{height:16px;background:repeating-linear-gradient(90deg,rgba(201,79,109,.72) 0 12px,rgba(200,133,58,.65) 12px 16px,rgba(45,90,61,.68) 16px 24px,rgba(200,133,58,.45) 24px 28px);mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}\n.mfp-bulgaria .bg-hero{position:relative;height:288px;overflow:hidden;border-radius:23px 23px 0 0;background:linear-gradient(135deg,#2d5a3d,#c94f6d)}\n.mfp-bulgaria .bg-hero>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}\n.mfp-bulgaria .bg-hero-shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(26,20,16,.84),rgba(26,20,16,.45) 58%,rgba(26,20,16,.12))}\n.mfp-bulgaria .bg-hero-copy{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:32px 48px;color:#fff}\n.mfp-bulgaria .bg-hero-copy p{margin:0 0 8px;color:var(--bg-gold);font-size:12px;line-height:18px;font-weight:700;text-transform:uppercase;letter-spacing:.34em}\n.mfp-bulgaria .bg-hero-copy h1{font-family:'DM Serif Display',Georgia,serif;margin:0;color:#fff;font-size:56px;line-height:.95;font-weight:400;letter-spacing:0;text-shadow:0 2px 22px rgba(0,0,0,.42)}\n.mfp-bulgaria .bg-hero-copy span{display:block;max-width:360px;margin-top:14px;color:rgba(245,240,232,.9);font-size:15px;line-height:24px;font-weight:400}\n.mfp-bulgaria .bg-thumb{position:absolute;right:22px;bottom:18px;width:176px;height:112px;margin:0;overflow:hidden;border:2px solid rgba(255,255,255,.28);border-radius:14px;box-shadow:0 18px 28px rgba(0,0,0,.25)}\n.mfp-bulgaria .bg-thumb img{width:100%;height:100%;object-fit:cover;display:block}\n.mfp-bulgaria .bg-thumb figcaption{position:absolute;left:0;right:0;bottom:0;background:rgba(26,20,16,.68);color:#fff;text-align:center;font-size:12px;line-height:22px}\n.mfp-bulgaria .bg-body{padding:32px 40px 36px;background:var(--bg-surface)!important;color:var(--bg-dark)!important}\n.mfp-bulgaria .bg-stepper{display:flex;align-items:flex-start;justify-content:center;margin-bottom:18px}\n.mfp-bulgaria .bg-step{display:flex;flex-direction:column;align-items:center;text-align:center;min-width:76px}\n.mfp-bulgaria .bg-step b{display:flex;align-items:center;justify-content:center;width:38px;height:38px;border:2px solid var(--bg-line);border-radius:999px;background:var(--bg-parch);color:var(--bg-muted);font-size:12px;line-height:1;font-weight:700}\n.mfp-bulgaria .bg-step span{margin-top:6px;color:var(--bg-muted);font-size:12px;line-height:16px;font-weight:700}\n.mfp-bulgaria .bg-step em{color:var(--bg-muted);font-size:11px;line-height:14px;font-style:normal}\n.mfp-bulgaria .bg-step.is-active b{border-color:var(--bg-rose);background:#fff;color:var(--bg-rose)}\n.mfp-bulgaria .bg-step.is-done b{border-color:var(--bg-rose);background:var(--bg-rose);color:#fff;font-size:0}\n.mfp-bulgaria .bg-step.is-done b:after{content:'\\2713';font-size:16px}\n.mfp-bulgaria .bg-step.is-active span,.mfp-bulgaria .bg-step.is-done span{color:var(--bg-dark)}\n.mfp-bulgaria .bg-line{display:block;width:52px;height:2px;margin:18px 6px 0;background:var(--bg-line)}\n.mfp-bulgaria .bg-line.is-done{background:var(--bg-rose)}\n.mfp-bulgaria .bg-folk{height:16px;margin:0 0 22px;background:linear-gradient(90deg,transparent,rgba(212,201,186,.95),transparent);position:relative}\n.mfp-bulgaria .bg-folk:after{content:'';position:absolute;left:50%;top:50%;width:9px;height:9px;background:var(--bg-rose);transform:translate(-50%,-50%) rotate(45deg);box-shadow:-15px 0 0 rgba(201,79,109,.24),15px 0 0 rgba(201,79,109,.24)}\n.mfp-bulgaria .bg-folk-green:after{background:var(--bg-green);box-shadow:-15px 0 0 rgba(45,90,61,.22),15px 0 0 rgba(45,90,61,.22)}\n.mfp-bulgaria .bg-page{display:none}\n.mfp-bulgaria .bg-page.is-active{display:block}\n.mfp-bulgaria h2{font-family:'DM Serif Display',Georgia,serif;margin:0;color:var(--bg-dark);font-size:24px;line-height:32px;font-weight:400;letter-spacing:0}\n.mfp-bulgaria .bg-mt{margin-top:18px}\n.mfp-bulgaria .bg-grid{display:grid;gap:16px}\n.mfp-bulgaria .bg-grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}\n.mfp-bulgaria .bg-field{display:block;margin-bottom:0}\n.mfp-bulgaria .bg-field>span{display:block;margin:0 0 8px;color:var(--bg-muted);font-size:12px;line-height:18px;font-weight:700;text-transform:uppercase;letter-spacing:.16em}\n.mfp-bulgaria .bg-field small{display:block;margin-top:5px;text-align:right;color:var(--bg-muted);font-size:12px}\n.mfp-bulgaria .mf-row{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:16px!important;width:100%!important}\n.mfp-bulgaria .mf-row .mf-field-group{margin:0!important}\n.mfp-bulgaria .mf-field-label{display:none!important}\n.mfp-bulgaria .mf-row .mf-field-label{display:block!important;margin:0 0 8px!important;color:var(--bg-muted)!important;font-size:12px!important;line-height:18px!important;font-weight:700!important;text-transform:uppercase!important;letter-spacing:.16em!important}\n.mfp-bulgaria .mf-field-group{margin:0!important;width:100%!important}\n.mfp-bulgaria .mf-input,.mfp-bulgaria .mf-select,.mfp-bulgaria .mf-textarea,.mfp-bulgaria input[type='date']{width:100%!important;min-height:46px!important;border:1px solid var(--bg-border)!important;border-radius:8px!important;background:#fbfaf7!important;color:var(--bg-dark)!important;padding:10px 14px!important;font-family:'Inter',system-ui,sans-serif!important;font-size:15px!important;line-height:22px!important;box-shadow:none!important;outline:0!important;transition:border-color .15s ease,box-shadow .15s ease!important}\n.mfp-bulgaria .mf-textarea{min-height:116px!important;height:auto!important;resize:vertical}\n.mfp-bulgaria .mf-input::placeholder,.mfp-bulgaria .mf-textarea::placeholder{color:#a9998c!important;opacity:1}\n.mfp-bulgaria .mf-input:focus,.mfp-bulgaria .mf-select:focus,.mfp-bulgaria .mf-textarea:focus{border-color:var(--bg-rose)!important;box-shadow:0 0 0 2px rgba(201,79,109,.1)!important}\n.mfp-bulgaria .mf-select{appearance:none!important;-webkit-appearance:none!important;padding-right:38px!important}\n.mfp-bulgaria .bg-date-field{position:relative!important;z-index:40!important}\n.mfp-bulgaria .bg-date-field .mf-cal,.mfp-bulgaria .bg-date-field .mf-date-input-wrap{position:relative!important;overflow:visible!important}\n.mfp-bulgaria .bg-date-field .mf-cal-panel{z-index:10000!important}\n.mfp-bulgaria .mf-date-picker,.mfp-bulgaria .mf-datepicker,.mfp-bulgaria .flatpickr-calendar,.mfp-bulgaria .react-datepicker,.mfp-bulgaria [data-datepicker],.mfp-bulgaria .rdp{z-index:9999!important}\n.mfp-bulgaria .mf-field-error{margin-top:5px;color:#b91c1c;font-size:12px;line-height:16px}\n.mfp-bulgaria .mf-option-group--chips{display:flex!important;flex-wrap:wrap!important;align-items:flex-start!important;justify-content:flex-start!important;gap:8px!important}\n.mfp-bulgaria .mf-option-group--chips .mf-option-item{display:inline-flex!important;width:auto!important;max-width:100%!important;flex:0 1 auto!important;margin:0!important;padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important}\n.mfp-bulgaria .mf-option-group--chips .mf-option-control,.mfp-bulgaria .mf-option-group--cards .mf-option-control{position:absolute!important;opacity:0!important;width:1px!important;height:1px!important;overflow:hidden!important;pointer-events:none!important;clip-path:inset(50%)!important}\n.mfp-bulgaria .mf-option-group--chips .mf-option-ui{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:auto!important;min-height:31px!important;padding:6px 14px!important;border:1px solid color-mix(in oklab,var(--bg-border) 64%,var(--bg-rose) 36%)!important;border-radius:999px!important;background:#fff!important;color:var(--bg-muted)!important;box-shadow:0 1px 2px rgba(26,20,16,.04)!important;transition:all .16s ease!important}\n.mfp-bulgaria .mf-option-group--chips .mf-option-label{color:inherit!important;font-size:13px!important;line-height:17px!important;font-weight:600!important;white-space:normal!important}\n.mfp-bulgaria .mf-option-group--chips .mf-option-item:hover .mf-option-ui{border-color:var(--bg-rose)!important;background:var(--bg-rose-soft)!important;transform:translateY(-1px)!important}\n.mfp-bulgaria .mf-option-group--chips .mf-option-control:checked+.mf-option-ui{border-color:var(--bg-rose)!important;background:var(--bg-rose)!important;color:#fff!important;box-shadow:0 8px 20px rgba(201,79,109,.22)!important}\n.mfp-bulgaria .mf-option-group--cards{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}\n.mfp-bulgaria .mf-option-group--cards .mf-option-item{display:block!important;width:100%!important;margin:0!important;padding:0!important;cursor:pointer}\n.mfp-bulgaria .mf-option-group--cards .mf-option-ui{position:relative!important;display:flex!important;align-items:flex-start!important;gap:12px!important;width:100%!important;min-height:88px!important;padding:14px 38px 14px 14px!important;border:1px solid var(--bg-border)!important;border-radius:14px!important;background:#fbfaf7!important;color:var(--bg-dark)!important;box-shadow:none!important;transition:all .16s ease!important}\n.mfp-bulgaria .mf-option-group--cards .mf-option-item:hover .mf-option-ui{border-color:var(--bg-rose)!important;background:var(--bg-rose-soft)!important;transform:translateY(-1px)}\n.mfp-bulgaria .mf-option-group--cards .mf-option-control:checked+.mf-option-ui{border-color:var(--bg-rose)!important;background:var(--bg-rose-soft)!important;box-shadow:0 0 0 1px var(--bg-rose),0 12px 24px rgba(201,79,109,.14)!important}\n.mfp-bulgaria .bg-region-field .mf-option-group--cards .mf-option-control:checked+.mf-option-ui{border-color:var(--bg-green)!important;background:var(--bg-green-soft)!important;box-shadow:0 0 0 1px var(--bg-green),0 12px 24px rgba(45,90,61,.14)!important}\n.mfp-bulgaria .mf-option-group--cards .mf-option-icon{display:flex!important;align-items:center!important;justify-content:center;width:34px!important;height:34px!important;flex:0 0 34px!important;border-radius:10px!important;background:#fff!important;color:var(--bg-rose)!important;font-size:18px!important}\n.mfp-bulgaria .mf-option-group--cards .mf-option-control:checked+.mf-option-ui .mf-option-icon{background:var(--bg-rose)!important;color:#fff!important}\n.mfp-bulgaria .bg-region-field .mf-option-group--cards .mf-option-control:checked+.mf-option-ui .mf-option-icon{background:var(--bg-green)!important;color:#fff!important}\n.mfp-bulgaria .bg-budget-field .mf-option-group--chips .mf-option-control:checked+.mf-option-ui{border-color:var(--bg-gold)!important;background:var(--bg-gold-soft)!important;color:#9a5b16!important;box-shadow:0 0 0 1px rgba(200,133,58,.72),0 8px 18px rgba(200,133,58,.16)!important}\n.mfp-bulgaria .mf-option-group--cards .mf-option-copy{display:grid!important;gap:3px!important;min-width:0!important;flex:1 1 auto!important}\n.mfp-bulgaria .mf-option-group--cards .mf-option-label{color:var(--bg-dark)!important;font-size:14px!important;line-height:19px!important;font-weight:700!important}\n.mfp-bulgaria .mf-option-group--cards .mf-option-meta,.mfp-bulgaria .mf-option-group--cards .mf-option-desc{color:var(--bg-muted)!important;font-size:12px!important;line-height:17px!important;font-weight:500!important}\n.mfp-bulgaria .mf-option-group--cards .mf-option-check{position:absolute!important;right:14px!important;top:14px!important;color:var(--bg-green)!important;font-size:20px!important;line-height:20px!important;opacity:0!important;transform:scale(.8);transition:all .16s ease}\n.mfp-bulgaria .mf-option-group--cards .mf-option-control:checked+.mf-option-ui .mf-option-check{opacity:1!important;transform:scale(1)}\n.mfp-bulgaria .bg-toggle .mf-option-group{display:block!important}\n.mfp-bulgaria .bg-toggle .mf-option-item{display:flex!important;align-items:flex-start!important;gap:12px!important;border:1px solid var(--bg-rose)!important;border-radius:14px!important;background:var(--bg-rose-soft)!important;padding:14px!important}\n.mfp-bulgaria .bg-toggle .mf-option-control{width:20px!important;height:20px!important;margin:2px 0 0!important;accent-color:var(--bg-rose)!important;flex:0 0 auto!important}\n.mfp-bulgaria .bg-review{border:1px solid var(--bg-border);border-radius:14px;background:#faf8f5;padding:18px}\n.mfp-bulgaria .bg-review p,.mfp-bulgaria .bg-post p{font-family:'DM Serif Display',Georgia,serif;margin:0 0 12px;color:var(--bg-dark);font-size:17px;line-height:24px}\n.mfp-bulgaria .bg-review dl{display:grid;gap:0;margin:0}\n.mfp-bulgaria .bg-review div{display:flex;justify-content:space-between;gap:14px;padding:8px 0;border-top:1px solid rgba(212,201,186,.55)}\n.mfp-bulgaria .bg-review dt,.mfp-bulgaria .bg-review dd{margin:0;font-size:13px;line-height:18px}\n.mfp-bulgaria .bg-review dt{color:var(--bg-muted);font-weight:700}\n.mfp-bulgaria .bg-review dd{color:var(--bg-dark);font-weight:600;text-align:right}\n.mfp-bulgaria .bg-post{display:grid;gap:10px;border:1px solid var(--bg-border);border-radius:14px;background:linear-gradient(135deg,var(--bg-green-soft),#fff);padding:18px}\n.mfp-bulgaria .bg-post div{display:grid;gap:2px;padding-left:14px;border-left:3px solid var(--bg-green)}\n.mfp-bulgaria .bg-post strong{color:var(--bg-dark);font-size:13px;line-height:18px}\n.mfp-bulgaria .bg-post span{color:var(--bg-muted);font-size:13px;line-height:19px}\n.mfp-bulgaria .bg-checks{display:grid;gap:12px}\n.mfp-bulgaria .bg-checks .mf-field-label{display:none!important}\n.mfp-bulgaria .bg-checks .mf-option-item{display:flex!important;align-items:flex-start!important;gap:12px!important;border:1px solid var(--bg-border)!important;border-radius:14px!important;background:#faf8f5!important;padding:13px 14px!important}\n.mfp-bulgaria .bg-checks .mf-option-control{width:19px!important;height:19px!important;margin:2px 0 0!important;accent-color:var(--bg-green)!important;flex:0 0 auto!important}\n.mfp-bulgaria .bg-actions{display:flex;align-items:center;justify-content:space-between;margin-top:30px;padding-top:22px;border-top:1px solid var(--bg-border)}\n.mfp-bulgaria .bg-actions span{color:var(--bg-muted);font-size:12px;font-weight:600}\n.mfp-bulgaria .bg-back,.mfp-bulgaria .bg-next,.mfp-bulgaria .bg-submit{border:0;border-radius:999px;padding:10px 24px;font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:20px;font-weight:700;cursor:pointer;transition:all .16s ease}\n.mfp-bulgaria .bg-back{border:1px solid var(--bg-border);background:#fff;color:var(--bg-muted)}\n.mfp-bulgaria .bg-back:disabled{opacity:.32;cursor:not-allowed}\n.mfp-bulgaria .bg-next{background:var(--bg-rose);color:#fff}\n.mfp-bulgaria .bg-submit{background:var(--bg-green);color:#fff}\n.mfp-bulgaria .bg-next:hover:not(:disabled),.mfp-bulgaria .bg-submit:hover:not(:disabled){transform:translateY(-1px);filter:brightness(.96)}\n.mfp-bulgaria .bg-next:disabled,.mfp-bulgaria .bg-submit:disabled{opacity:.4;cursor:not-allowed}\n.mfp.mfp-bulgaria.bg-success-shell{max-width:760px!important}\n.mfp-bulgaria .bg-stepper-success{margin-bottom:20px}\n.mfp-bulgaria .bg-success-panel{display:grid;justify-items:center;text-align:center;padding:34px 24px 10px}\n.mfp-bulgaria .bg-success-check{display:flex;align-items:center;justify-content:center;width:72px;height:72px;border-radius:999px;background:var(--bg-green);color:#fff;font-size:38px;line-height:1;margin-bottom:18px}\n.mfp-bulgaria .bg-success-panel h2{font-size:38px;line-height:46px}\n.mfp-bulgaria .bg-success-panel p{max-width:430px;margin:12px auto 0;color:var(--bg-muted);font-size:15px;line-height:24px}\n.mfp-bulgaria .bg-success-panel strong{color:var(--bg-dark)}\n.mfp-bulgaria .bg-success-panel blockquote{margin:4px 0 22px;color:var(--bg-muted);font-family:'DM Serif Display',Georgia,serif;font-size:18px;line-height:26px;font-style:normal}\n.mfp-bulgaria .bg-restart{border:0;border-radius:999px;background:var(--bg-rose);color:#fff;padding:12px 30px;font-family:'Inter',system-ui,sans-serif;font-size:14px;font-weight:700;line-height:20px;cursor:pointer}\n.mfp-bulgaria .bg-footer{margin:18px 0 0;text-align:center;color:var(--bg-muted);font-size:12px;line-height:18px}\n.mf-form-wrapper:has(.mfp-bulgaria),.mf-form-wrapper:has(.mfp-bulgaria) .mf-form,.mf-form-wrapper:has(.mfp-bulgaria) .mf-form-inner,.mf-form-wrapper:has(.mfp-bulgaria) .mf-fields-container{overflow:visible!important}\n.mf-form-wrapper:has(.bg-success-shell) .mf-success-message,.mf-form-wrapper:has(.bg-success-shell) .mf-postsubmit-pane{display:none!important}\n.mfp-bulgaria .mf-form-title,.mfp-bulgaria .mf-form-description,.mfp-bulgaria .mf-success-message,.mfp-bulgaria+.mf-form-actions,.mf-form-wrapper:has(.mfp-bulgaria) .mf-form-actions:not(.mf-postsubmit-actions):not(.mf-review-actions){display:none!important}\n.mf-form-wrapper>.mf-form-inner .mfp.mfp-bulgaria{width:100%!important;max-width:760px!important;margin:0 auto!important;padding:0!important;background:var(--bg-parch)!important}\n@media(max-width:720px){.mfp.mfp-bulgaria{max-width:100%!important}.mfp-bulgaria .bg-card{border-radius:20px}.mfp-bulgaria .bg-hero{height:250px}.mfp-bulgaria .bg-hero-copy{padding:28px}.mfp-bulgaria .bg-hero-copy h1{font-size:46px}.mfp-bulgaria .bg-thumb{display:none}.mfp-bulgaria .bg-body{padding:28px 22px 30px}.mfp-bulgaria .bg-step{min-width:54px}.mfp-bulgaria .bg-step em{display:none}.mfp-bulgaria .bg-line{width:22px;margin-left:3px;margin-right:3px}.mfp-bulgaria .bg-grid-2,.mfp-bulgaria .mf-row,.mfp-bulgaria .mf-option-group--cards{grid-template-columns:1fr!important}.mfp-bulgaria .bg-actions{gap:10px}.mfp-bulgaria .bg-back,.mfp-bulgaria .bg-next,.mfp-bulgaria .bg-submit{padding:10px 18px}}\n/*MF-HEROHEAD-FIX-20260626*/.mf-form-wrapper .mfp.mfp-bulgaria .bg-hero-copy h1{color:#fff!important;font-family:'DM Serif Display',Georgia,serif!important}.mf-form-wrapper .mfp.mfp-bulgaria .bg-hero-copy h1 *{color:#fff!important}.mf-form-wrapper .mfp.mfp-bulgaria .bg-hero-copy .bg-eyebrow,.mf-form-wrapper .mfp.mfp-bulgaria .bg-hero-copy p{color:rgba(255,255,255,.9)!important}\n\n/* ===== [QAFix-btn+consent v20260704] ===== */\n.mfp.mfp-bulgaria{--mf-btn-bg:#2d5a3d;--mf-btn-color:#ffffff;--mf-btn-hover-bg:#234730;}\n\n/* MF-FIX outer-card 20260705 */\n.mf-form-wrapper.mf-custom-shell-mode .mfp.mfp-bulgaria.mfp-native-generated:not(.zz){background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important}\n\n/* MF-FIX bulgaria-inputs 20260706 - warm inputs to match the rose/parchment theme.\n   CustomShellCompat '#wrapper .mfp[class*=mfp-] .mf-input{...var(--mf-input-*)...!important}'\n   (spec 0,3,0) beats the template's '.mfp-bulgaria .mf-input' (0,2,0), so inputs fell back to\n   the global cool defaults. Set the vars on the wrapper so the bridge resolves the warm values. */\n.mf-form-wrapper .mfp.mfp-bulgaria{--mf-input-bg:#fbfaf7;--mf-input-border:1px solid #e6ddd2;--mf-input-border-color:#e6ddd2;--mf-input-radius:8px;}\n",
+    "premiumNativePageBreak": true,
+    "premiumGeneratedShell": true,
+    "premiumNativeMigrationBadge": "PremiumNativePageBreak v20260628",
+    "showProgressBar": true
+  },
+  "customScripts": {},
+  "rules": [],
+  "workflow": {
+    "enabled": false
+  },
+  "themeSelector": {
+    "enabled": false
+  },
+  "templateGuideSlug": "tpl-bulgaria-discovery-programme",
+  "theme": "bulgaria-discovery-premium",
+  "CustomHtml": "<div class='mfp mfp-bulgaria mfp-native-generated'><div class='bg-border'></div><div class='bg-card'><header class='bg-hero'><img src='/Modules/MegaForm/img/bulgaria-discovery/bulgaria-rose-hero.png' alt='Rose Valley Bulgaria'><div class='bg-hero-shade'></div><div class='bg-hero-copy'><p>Bulgaria Discovery Programme</p><h1>Discover<br>Bulgaria</h1><span>Rose valleys, ancient Thracian history, Black Sea coasts, and Balkan hospitality.</span></div><figure class='bg-thumb'><img src='/Modules/MegaForm/img/bulgaria-discovery/bulgaria-plovdiv.png' alt='Old town Plovdiv'><figcaption>Plovdiv Old Town</figcaption></figure></header><section class='bg-body'><div class='bg-stepper'><div class='bg-step is-active'><b>01</b><span>Profile</span><em>Who you are</em></div><i class='bg-line'></i><div class='bg-step'><b>02</b><span>Purpose</span><em>What you seek</em></div><i class='bg-line'></i><div class='bg-step'><b>03</b><span>Details</span><em>Preferences</em></div><i class='bg-line'></i><div class='bg-step'><b>04</b><span>Confirm</span><em>Review</em></div></div><div class='bg-folk'></div><section class='bg-page is-active' data-step='0'><h2>Tell us about yourself</h2><div class='bg-grid bg-grid-2 bg-mt'>{{field:row_name}}</div>\n<label class='bg-field bg-mt'><span>Email address *</span>{{field:email}}</label>\n<label class='bg-field'><span>Phone</span>{{field:phone}}</label>\n<label class='bg-field bg-date-field'><span>Date of birth</span>{{field:birth_date}}</label>\n<label class='bg-field'><span>Gender</span>{{field:gender}}</label>\n<label class='bg-field'><span>Nationality</span>{{field:nationality}}</label>\n</section><section class='bg-page' data-step='1'><h2>What brings you to Bulgaria?</h2><div class='bg-folk'></div><label class='bg-field bg-mt'><span>Purpose of visit *</span>{{field:purpose_type}}</label>\n<label class='bg-field bg-mt'><span>Interests - pick all that apply</span>{{field:interests}}</label>\n<label class='bg-field'><span>Prior experience with Bulgaria</span>{{field:experience}}</label>\n<label class='bg-field'><span>Languages you speak</span>{{field:languages}}</label>\n</section><section class='bg-page' data-step='2'><h2>Plan your stay</h2><div class='bg-folk bg-folk-green'></div><label class='bg-field bg-mt bg-region-field'><span>Preferred region *</span>{{field:region}}</label>\n<label class='bg-field'><span>Duration of stay *</span>{{field:duration}}</label>\n<label class='bg-field'><span>Accommodation type *</span>{{field:accommodation}}</label>\n<label class='bg-field bg-mt bg-budget-field'><span>Budget per day (EUR)</span>{{field:budget}}</label>\n<label class='bg-field bg-mt'><span>Dietary requirements</span>{{field:dietary}}</label>\n<div class='bg-toggle bg-mt'>{{field:accessibility}}</div>\n</section><section class='bg-page' data-step='3'><h2>Review & confirm</h2><div class='bg-review bg-mt'><p>Your application summary</p><dl><div><dt>Name</dt><dd data-bg-summary='name'>--</dd></div><div><dt>Email</dt><dd data-bg-summary='email'>--</dd></div><div><dt>Purpose</dt><dd data-bg-summary='purpose'>--</dd></div><div><dt>Region</dt><dd data-bg-summary='region'>--</dd></div><div><dt>Stay</dt><dd data-bg-summary='stay'>--</dd></div><div><dt>Interests</dt><dd data-bg-summary='interests'>--</dd></div></dl></div><div class='bg-post bg-mt'><p>After you submit</p><div><strong>Application review</strong><span>Our Sofia team checks your details within 3 business days.</span></div><div><strong>Programme match</strong><span>We suggest regions, hosts, and seasonal experiences based on your choices.</span></div><div><strong>Welcome pack</strong><span>Approved applicants receive itinerary notes, local contacts, and next-step instructions.</span></div></div><div class='bg-checks bg-mt'></div><label class='bg-field bg-mt'><span>Short personal statement</span>{{field:bio}}<small><b data-bg-count>0</b> / 500</small></label>\n<label class='bg-field'><span>How did you hear about us?</span>{{field:referral}}</label>\n<label class='bg-field'><span>Supporting document (optional)</span>{{field:supporting_document}}</label>\n<div>{{field:newsletter}}</div>\n<div>{{field:terms}}</div>\n</section><div class='bg-actions'><button type='button' class='bg-back'>Back</button><span>Step <b data-bg-current>1</b> of 4</span><button type='button' class='bg-next'>Continue</button><button type='submit' class='bg-submit' hidden>Submit Application</button></div></section></div><p class='bg-footer'>Bulgaria Discovery Programme &copy; 2026 &middot; Sofia, Bulgaria &middot; Privacy &middot; Contact</p><div class='bg-border'></div></div>"
+}

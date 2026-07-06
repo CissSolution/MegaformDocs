@@ -3,6 +3,7 @@
 @inject IMegaFormService MegaFormService
 @inject NavigationManager NavigationManager
 @inject IJSRuntime Js
+@inject MegaForm.Core.Interfaces.IAuthUrlProvider AuthUrls
 @using System
 @using System.Collections.Concurrent
 @using System.Collections.Generic
@@ -1650,6 +1651,23 @@ private string _listTemplate = string.Empty;
         var apiBase = "/api/MegaForm/";
         var token = SiteState?.AuthorizationToken ?? string.Empty;
         var tokenJs = string.IsNullOrEmpty(token) ? "null" : $"'{token.Replace("'", "\\'")}'";
+        // [AuthUrl v20260706] Host auth URLs (login / register / external social login) for MegaForm
+        // auth templates. Built via the platform-agnostic IAuthUrlProvider so the same login template
+        // works on Oqtane/DNN/Umbraco/Web. Consumed client-side via window.__MF_PLATFORM__.auth and
+        // the [data-mf-auth="github|facebook|google|login|register"] convention (see the member-login template).
+        string JsUrl(string u) => (u ?? string.Empty).Replace("\\", "\\\\").Replace("'", "\\'");
+        var returnRel = "/" + (NavigationManager.ToBaseRelativePath(NavigationManager.Uri) ?? string.Empty);
+        var authJs =
+            "window.__MF_PLATFORM__.auth={" +
+            $"login:'{JsUrl(AuthUrls.LoginUrl(returnRel))}'," +
+            $"register:'{JsUrl(AuthUrls.RegisterUrl(returnRel))}'," +
+            $"external:'{JsUrl(AuthUrls.ExternalLoginUrl(null, returnRel))}'," +
+            $"google:'{JsUrl(AuthUrls.ExternalLoginUrl(MegaForm.Core.Interfaces.AuthProviders.Google, returnRel))}'," +
+            $"github:'{JsUrl(AuthUrls.ExternalLoginUrl(MegaForm.Core.Interfaces.AuthProviders.GitHub, returnRel))}'," +
+            $"facebook:'{JsUrl(AuthUrls.ExternalLoginUrl(MegaForm.Core.Interfaces.AuthProviders.Facebook, returnRel))}'," +
+            $"currentUrl:'{JsUrl(returnRel)}'," +
+            $"isAuthenticated:{((PageState?.User != null) ? "true" : "false")}" +
+            "};";
         InjectInlineScript(
             "if(window.__MF_PLATFORM__&&window.__MF_PLATFORM__.__booted)return;" +
             "window.__MF_PLATFORM__=window.__MF_PLATFORM__||{};" +
@@ -1660,6 +1678,7 @@ private string _listTemplate = string.Empty;
             $"window.__MF_PLATFORM__.siteId={(SiteState?.Alias?.SiteId ?? 0)};" +
             $"window.__MF_PLATFORM__.pageId={(PageState?.Page?.PageId ?? 0)};" +
             $"window.__MF_PLATFORM__.authToken={tokenJs};" +
+            authJs +
             "window.__MF_PLATFORM__.__booted=true;");
 
         _loading = true;
@@ -2971,6 +2990,15 @@ private string BuildStarterBoardUrl()
             {
                 _ssrWrapperClass += " mf-hide-header";
             }
+            // [PremiumNativeSSR v20260705] Premium-native multi-step custom shells (e.g. classic-americana)
+            // need these classes at SSR so first paint (a) shows the active step and (b) hides the generic
+            // .mf-form-actions via .mf-premium-native-mode CSS — the client only adds them post-hydrate,
+            // which left a ~2.5s broken frame (empty body + a stray "submit" below the shell card).
+            if (MegaForm.Core.Services.FormHtmlRenderer.IsPremiumNativeCustomShell(schema)
+                && !_ssrWrapperClass.Split(' ', StringSplitOptions.RemoveEmptyEntries).Contains("mf-premium-native-mode", StringComparer.Ordinal))
+            {
+                _ssrWrapperClass += " mf-custom-html-mode mf-premium-native-mode mf-has-multistep-shell";
+            }
 
             _ssrIsMultiStep = MegaForm.Core.Services.FormHtmlRenderer.IsStandardMultiStep(schema);
             if (_ssrIsMultiStep) _ssrStepsHtml = MegaForm.Core.Services.FormHtmlRenderer.RenderStepIndicator(schema, null);
@@ -3586,6 +3614,12 @@ private static string ResolveWorkflowLaneLabel(WorkflowNode node, List<string> r
 
     private string BuildRendererBootScript()
     {
+        // [AuthUrl v20260706] Host auth URLs for MegaForm auth templates (login prompt / social
+        // sign-up), resolved via the platform-agnostic IAuthUrlProvider so ONE template works on
+        // Oqtane/DNN/Umbraco/Web. Surfaced as window.__MF_PLATFORM__.auth; the member-login
+        // template's managed customScript sets its [data-mf-auth] button hrefs from it. This is the
+        // PUBLIC form-render boot path (runs for anonymous visitors too).
+        var authReturnRel = "/" + (NavigationManager.ToBaseRelativePath(NavigationManager.Uri) ?? string.Empty);
         var payload = JsonSerializer.Serialize(new
         {
             formId = _formId,
@@ -3594,7 +3628,18 @@ private static string ResolveWorkflowLaneLabel(WorkflowNode node, List<string> r
             rendererHostUrl = _rendererHostUrl,
             moduleViewConfigJson = _moduleViewConfigJson,
             allowThemePresetSelector = _isAdmin && !_liveRenderMode,
-            presetThemeKey = _selectedPresetThemeKey
+            presetThemeKey = _selectedPresetThemeKey,
+            auth = new
+            {
+                login = AuthUrls.LoginUrl(authReturnRel),
+                register = AuthUrls.RegisterUrl(authReturnRel),
+                external = AuthUrls.ExternalLoginUrl(null, authReturnRel),
+                google = AuthUrls.ExternalLoginUrl(MegaForm.Core.Interfaces.AuthProviders.Google, authReturnRel),
+                github = AuthUrls.ExternalLoginUrl(MegaForm.Core.Interfaces.AuthProviders.GitHub, authReturnRel),
+                facebook = AuthUrls.ExternalLoginUrl(MegaForm.Core.Interfaces.AuthProviders.Facebook, authReturnRel),
+                currentUrl = authReturnRel,
+                isAuthenticated = PageState?.User != null
+            }
         });
 
         return "(function(opts){"
@@ -3608,6 +3653,7 @@ private static string ResolveWorkflowLaneLabel(WorkflowNode node, List<string> r
             + "if(opts.rendererHostUrl){platform.rendererHostUrl=opts.rendererHostUrl;}"
             + "platform.allowThemePresetSelector=!!opts.allowThemePresetSelector;"
             + "platform.presetThemeKey=opts.presetThemeKey||platform.presetThemeKey||'';"
+            + "if(opts.auth){platform.auth=opts.auth;}"
             + "window.__MF_PLATFORM__=platform;"
             + "addCss('/Modules/MegaForm/css/megaform-themes.css?v=' + oqtaneResourceBootBadge.split(' ').pop());"
             + "addCss('/Modules/MegaForm/css/megaform-widgets.css?v=' + oqtaneResourceBootBadge.split(' ').pop());"

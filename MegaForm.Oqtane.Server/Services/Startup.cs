@@ -103,6 +103,11 @@ namespace MegaForm.Oqtane.Server.Services
             // is additive — existing scope-passing callers (SdkDemoView) are unaffected.
             services.AddScoped<IPlatformContext, OqtanePlatformContext>();
 
+            // [AuthUrl v20260706] Platform-agnostic host auth URL seam (login/register/external
+            // login) for MegaForm auth templates. Oqtane owns login + external login; MegaForm only
+            // links to it. See IAuthUrlProvider / OqtaneAuthUrlProvider.
+            services.AddScoped<IAuthUrlProvider, OqtaneAuthUrlProvider>();
+
             // Core services
             services.AddScoped<EmailNotificationService>();
             services.AddScoped<WebhookService>();
