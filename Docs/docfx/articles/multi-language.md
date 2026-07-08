@@ -46,7 +46,7 @@ Every screen — the Form Builder, dashboards, submissions, and settings — can
 administrator's own language. Pick a **Display language** and the whole interface switches
 instantly:
 
-![Switching the admin UI display language: English → Vietnamese → French](../images/09-language-switch.gif)
+![Switching the admin UI display language: English → French → German](../images/09-language-switch.gif)
 
 Administrators manage product-UI languages from the **Languages** screen on the Form
 Dashboard:
