@@ -6,6 +6,8 @@
   href: standalone-host.md
 - name: Quick Start
   href: quickstart.md
+- name: Creating Forms
+  href: creating-forms.md
 - name: SDK Reference
   href: sdk-reference.md
 - name: Reading Data

@@ -75,6 +75,12 @@ mock/
 *.gif
 *.webp
 
+# Exceptions: documentation demo assets are intentionally version-controlled
+!demo-gifs/*.gif
+!demo-gifs/**/*.gif
+!Docs/docfx/images/*.gif
+!Docs/docfx/images/*.png
+
 # Built JS bundles (output of MegaForm.UI build → Assets/js). Source is MegaForm.UI/src + Assets/ts.
 Assets/js/
 
