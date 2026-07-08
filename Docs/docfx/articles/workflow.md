@@ -4,6 +4,8 @@ MegaForm **Workflow** turns a form submission into a business process. You desig
 triggers, conditions, and actions; when a submission arrives or a field changes, the workflow
 engine executes the flow.
 
+![Opening the BPMN designer and loading a starter workflow](../images/06-workflow-designer.gif)
+
 ## Core concepts
 
 | Term | Meaning |
@@ -16,28 +18,22 @@ engine executes the flow.
 
 ## Workflow canvas
 
-The visual designer shows the flow from top to bottom:
+Open a form in the **Form Builder** and click **BPMN** — the workflow canvas opens as a full
+BPMN 2.0 editor:
 
-```
-📥 On Submit
-    │
-    ▼
-❓ Priority = critical?
-   YES │      │ NO
-      ▼        ▼
- Assign   Round Robin
- Senior      │
-      │       │
-      ▼       ▼
-  Notify Manager   Notify Agent
-            │
-            ▼
-    📧 Confirm to Submitter
-```
+![The BPMN 2.0 workflow canvas with a loaded sample flow](../images/oq-workflow-canvas.png)
 
-- Drag nodes from the toolbar.
-- Connect nodes by drawing edges.
-- Click a node to edit its properties in the right panel.
+- The **node palette** on the left offers Gateways (*Exclusive Gateway*), Script & Rules
+  (*Business Rule Task*, *Script Task*), and User & Service tasks (*User Task*, *Send Task*,
+  *Service Task*, *Service Task (DB)*, *Service Task (Sheet)*, *End Event*).
+- **Samples** loads a ready-made starter workflow into the canvas — the fastest way to begin;
+  it arrives pre-mapped to your form's fields.
+- **Validate BPMN** checks the flow; **Test** dry-runs it; **Save Draft** keeps work in
+  progress; **Apply BPMN** attaches the workflow to the form.
+- Connect nodes by drawing edges; click any node to edit its properties (and workflow
+  **Variables**) in the right panel.
+- **User Task** steps create approval items in [My Inbox](submissions-inbox.md) for the
+  assigned users or roles.
 
 ## Triggers
 
