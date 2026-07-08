@@ -1,5 +1,7 @@
 - name: Using MegaForm on Oqtane
   items:
+    - name: From a Blank Page to a Working Form
+      href: add-to-page.md
     - name: Creating Forms
       href: creating-forms.md
     - name: Form Builder
