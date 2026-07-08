@@ -16,6 +16,8 @@
       href: multi-language.md
     - name: AI Form Designer
       href: ai-form-designer.md
+    - name: Configuring the AI Assistant
+      href: ai-configuration.md
     - name: AI Prompts for Form Design
       href: ai-prompts-form-design.md
 - name: Programming
