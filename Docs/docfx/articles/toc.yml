@@ -6,8 +6,14 @@
       href: creating-forms.md
     - name: Form Builder
       href: form-builder.md
+    - name: Controls & Widgets
+      href: widgets-reference.md
+    - name: Drag & Drop Layout
+      href: drag-drop-layout.md
     - name: Module Settings & Theme
       href: settings-pane.md
+    - name: After Submission
+      href: after-submission.md
     - name: Submissions & My Inbox
       href: submissions-inbox.md
     - name: Workflow
