@@ -1,37 +1,67 @@
-# MegaForm SDK
+# MegaForm
 
-**MegaForm SDK** is a thin, stable, host-agnostic facade over the MegaForm engine. It lets
-your own code — an Oqtane module, a DNN Razor Host script, a background job, or any .NET
-application — work with MegaForm **forms**, **submissions**, and **uploaded files**
-programmatically, without touching MegaForm internals.
+**MegaForm** is a complete form platform for **Oqtane** (and DNN / ASP.NET Core hosts): a visual
+builder, ready-made premium templates, an AI form designer, submissions with analytics, approval
+workflows, and built-in multi-language support — all inside your own site, on your own database.
 
-```csharp
-// List published forms and read their submissions — from anywhere.
-var forms = await client.Forms.ListFormsAsync(new FormQuery { PageSize = 50 }, scope);
+## Forms that don't look like "form builder" forms
 
-var page  = await client.Submissions.FindAsync(
-    new SubmissionQuery { FormId = 1, PageSize = 100 }, scope);
+Every template below ships in the box and renders exactly like this on an Oqtane page —
+multi-step navigation, hero imagery, and theming included.
 
-// Stream an uploaded file back to the caller.
-var file  = await client.Files.OpenAsync(submissionId: 10, fileId: 1, scope);
-//   file.FileName, file.ContentType, file.Content (byte[])
-```
+![Outback Station Stay — a premium multi-step booking template](images/oq-premium-outback.png)
 
-## Why a separate SDK?
+![EuroYouth application — premium template with hero panel](images/oq-premium-euroyouth.png)
 
-The MegaForm engine evolves constantly. The SDK gives integrators a **small surface that does
-not break** when the engine changes underneath it — guarded by Roslyn public-API analyzers,
-contract tests, and NuGet package validation. See [API Stability](articles/api-stability.md).
+Prefer something simple? The wizard builds a clean standard form in under a minute
+(see [Creating Forms](articles/creating-forms.md)):
 
-## What you can build
+![A standard form created with the wizard](images/oq-standard-contact.png)
 
-This is the exact scenario proven on both Oqtane and DNN: an external module reads MegaForm
-data through **only** the public `IMegaFormClient` and renders a list view with file-download
-links.
+## Right-to-left and multi-language, built in
 
-![MegaForm SDK list view rendered by an external consumer](images/oqtane-sdk-listview.png)
+Forms carry per-language translations with an on-page language switcher, RTL scripts render
+correctly, and the admin UI itself ships in 19 languages —
+see [Multi-language](articles/multi-language.md).
+
+![An Arabic form rendering right-to-left](images/oq-rtl-arabic.png)
+
+## Widgets in action
+
+Beyond standard inputs: multi-step wizards with progress, ratings, signatures, file uploads,
+composite fields — and a full **PDF form** widget that lets visitors fill a real PDF (with
+zoom, full screen, and a downloadable filled copy):
+
+![The PDF form widget — visitors fill a real PDF document](images/oq-widget-pdf.png)
+
+![A multi-step patient-intake template with composite fields](images/oq-widgets-wellness.png)
+
+## Manage everything from the Form Dashboard
+
+Submissions with volume analytics and per-form data grids, an approval **My Inbox**, a visual
+**BPMN workflow designer**, storage integrations (SQL database, Google Sheets), and per-module
+theme settings:
+
+![Submission analytics — volume chart and per-form counts](images/oq-submissions.png)
+
+![The BPMN 2.0 workflow canvas](images/oq-workflow-canvas.png)
 
 ## Start here
+
+**Using MegaForm (Oqtane user guide):**
+
+| Guide | What it covers |
+|-------|----------------|
+| [Creating Forms](articles/creating-forms.md) | Wizard, multi-step, and AI flows — with demo videos |
+| [Form Builder](articles/form-builder.md) | The visual builder in depth |
+| [Module Settings & Theme](articles/settings-pane.md) | Choose the form a page shows; presets, colors, layout |
+| [Submissions & My Inbox](articles/submissions-inbox.md) | Analytics, data grids, statuses, the approval inbox |
+| [Workflow](articles/workflow.md) | The BPMN designer and workflow engine |
+| [Storage & Integrations](articles/storage-options.md) | Your SQL database, Google Sheets |
+| [Multi-language](articles/multi-language.md) | Translated forms and admin UI languages |
+| [AI Form Designer](articles/ai-form-designer.md) | Describe a form; review and apply |
+
+**Programming (SDK & API):**
 
 | Guide | What it covers |
 |-------|----------------|
@@ -42,13 +72,5 @@ links.
 | [SDK Reference](articles/sdk-reference.md) | Complete English reference for every SDK API |
 | [Reading data](articles/reading-data.md) | Forms & submissions queries, paging, scope |
 | [File download](articles/file-download.md) | List & stream uploaded files safely |
-| [Oqtane consumer](articles/oqtane-consumer.md) | Inject `IMegaFormClient` into a Blazor component |
-| [DNN Razor Host](articles/dnn-razor-host.md) | Use the SDK from a `.cshtml` with no DI |
-| [Razor Host Examples](articles/razor-host-examples.md) | Step-by-step DNN list view & input form samples |
-| [Form Builder](articles/form-builder.md) | Build and design forms visually |
-| [Workflow](articles/workflow.md) | Automate business processes around submissions |
-| [AI Form Designer](articles/ai-form-designer.md) | Design forms with the AI assistant |
-| [Template JSON Reference](articles/form-template-json.md) | Complete schema for MegaForm templates |
-| [AI Prompts for Form Design](articles/ai-prompts-form-design.md) | Prompts that preserve design while editing fields and logic |
-| [API Stability](articles/api-stability.md) | How the contract is kept from breaking |
-| [API Reference](api/index.md) | Generated reference for every public type |
+
+Or browse the generated **[API Reference](api/index.md)**.
