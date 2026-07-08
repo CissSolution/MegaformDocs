@@ -21,10 +21,9 @@ carried in the URL (`?locale=fr-FR`), so a link can point straight to a specific
 version of the form.
 
 Texts that have no translation for the selected language fall back to the form's default
-language, so a partially translated form still renders completely.
-
-Both rendering paths honour the translations — the server-rendered first paint **and** the
-interactive client renderer — so there is no flash of untranslated content.
+language, so a partially translated form still renders completely. The selected language is
+also applied to the built-in chrome (buttons, validation messages) from the shared language
+catalog described below.
 
 ### How authors add translations
 
@@ -42,6 +41,12 @@ Then list the languages the form should offer in the form's settings
 (`supportedLanguages`, e.g. `["en-US", "fr-FR", "de-DE"]`) and pick its `defaultLanguage`.
 
 ## The admin UI in your language
+
+Every screen — the Form Builder, dashboards, submissions, and settings — can be shown in the
+administrator's own language. Pick a **Display language** and the whole interface switches
+instantly:
+
+![Switching the admin UI display language: English → Vietnamese → French](../images/09-language-switch.gif)
 
 Administrators manage product-UI languages from the **Languages** screen on the Form
 Dashboard:

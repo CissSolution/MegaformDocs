@@ -16,7 +16,11 @@ and is a stable, supported part of the product.
 > *"Create a contact form with full name, email, phone, and a dropdown for inquiry type."*
 
 The assistant generates the fields, labels, validation, and layout in one pass — including
-premium multi-column looks and multi-step wizards when you ask for them.
+premium looks like **choice cards** and **chips**, multi-column layouts, and multi-step wizards
+when you ask for them. Review the live preview, then **Save & Use Now** — the finished form is
+live on the page:
+
+![Describing a form to the AI; it builds a premium form with choice cards and chips, then it runs live](../images/08-ai-cards-form.gif)
 
 **Modify an existing form.**
 
@@ -58,15 +62,10 @@ Nothing is saved to the server until you save the form, so experimenting is safe
 
 ## Setting up a provider
 
-The assistant works with your own AI account. A site administrator configures it once under
-**⚙ Settings → AI**:
-
-- **OpenAI** (e.g. GPT-4o) — the most common choice
-- **Anthropic** (Claude)
-- **OpenRouter** or any **OpenAI-compatible endpoint** (including locally hosted models)
-
-Enter the API key, pick the model, and save. The key is stored server-side per site and is
-never exposed to page visitors.
+The assistant works with your own AI account (OpenAI, Anthropic, OpenRouter, or any
+OpenAI-compatible endpoint). A site administrator configures it once, enters an API key, and
+saves — the key is stored server-side and never exposed to page visitors. Full step-by-step
+instructions are in **[Configuring the AI Assistant](ai-configuration.md)**.
 
 ## Teaching it your house style
 
