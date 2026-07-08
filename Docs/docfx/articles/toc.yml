@@ -26,6 +26,8 @@
   href: workflow.md
 - name: AI Form Designer
   href: ai-form-designer.md
+- name: Multi-language
+  href: multi-language.md
 - name: Template JSON Reference
   href: form-template-json.md
 - name: AI Prompts for Form Design
