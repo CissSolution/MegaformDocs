@@ -1,5 +1,22 @@
 # Overview
 
+MegaForm is a form platform for **Oqtane**, **DNN**, and standalone **ASP.NET Core / Razor**
+hosts: a visual Form Builder, submissions and reporting, workflows, file handling — plus two
+built-in capabilities worth calling out:
+
+- **[AI Form Designer](ai-form-designer.md)** — describe a form in plain English and the
+  built-in assistant creates or modifies it, including forms bound to your **SQL database**
+  (lookups, cascading selects, data-driven views, and drafting new tables). Stable and in
+  production use.
+- **[Multi-language, built-in](multi-language.md)** — forms carry per-language translations
+  with an on-page language switcher, and the admin UI itself ships in 19 languages. No add-on
+  required.
+
+The rest of this page introduces the **MegaForm SDK** for developers reading and writing
+MegaForm data from code.
+
+## The SDK
+
 The MegaForm SDK (`MegaForm.Sdk`) is a **thin facade** that exposes a stable, host-agnostic
 API over the MegaForm engine. Consumers depend only on a handful of interfaces and DTOs — never
 on MegaForm's internal storage models, repositories, or rendering pipeline.

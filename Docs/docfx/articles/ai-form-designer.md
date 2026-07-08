@@ -1,137 +1,90 @@
 # AI Form Designer
 
-The **AI Form Designer** is a chat assistant inside the MegaForm builder. You describe the form
-you need in plain English; the AI proposes fields, SQL bindings, layouts, and business rules as a
-staged set of operations you can review before applying.
+MegaForm ships with a built-in **AI assistant** for designing forms and the data behind them.
+You describe what you need in plain English; the assistant proposes the changes and shows them
+to you **before anything is applied**. It has been in production use across Oqtane and DNN sites
+and is a stable, supported part of the product.
 
-## How it works
+> [!NOTE]
+> The AI assistant is available with a **production license**. Trial installations show the
+> assistant but keep it locked.
 
-```
-User prompt
-    │
-    ▼
-AI chat panel  →  system prompt + history
-    │
-    ▼
-Provider (OpenAI / Anthropic / OpenRouter / local OpenAI-compatible)
-    │
-    ▼
-Tool dispatcher  →  list_widgets / get_widget / list_sql_tables /
-                    get_table_columns / list_knowledge / find_cascade_pattern /
-                    propose_table_schema
-    │
-    ▼
-MegaForm AI Tools API (DNN / Oqtane)
-    │
-    ▼
-AI emits structured ops  →  staging card  →  Apply / Discard
-    │
-    ▼
-Builder schema mutates
-```
+## What you can do with it
 
-Key design decisions:
+**Create complete forms from a description.**
 
-1. **Tool-use loop**, not a giant system prompt. The AI fetches widget schemas, SQL tables, and
-   knowledge entries on demand so the static prompt stays small and cache-friendly.
-2. **Structured ops**, not code. The AI emits JSON operations such as `add_field` or
-   `replace_form_schema`. You review them in a staging card before applying.
-3. **Browser-side dispatcher**. The actual DOM mutation happens locally; the AI is only the planner.
+> *"Create a contact form with full name, email, phone, and a dropdown for inquiry type."*
 
-## Entry points
+The assistant generates the fields, labels, validation, and layout in one pass — including
+premium multi-column looks and multi-step wizards when you ask for them.
 
-| Surface | How to open |
+**Modify an existing form.**
+
+> *"Make the header blue and move the phone field above email."*
+> *"Add a leave request section with start date, end date, and a reason textarea."*
+
+Changes are shown as a preview you can accept or discard; your current form is never touched
+until you approve.
+
+**Work with your database.** This is where the assistant goes beyond a form generator:
+
+- It can **discover the SQL tables** already in your site's database and build a form on top of
+  them — for example a dropdown whose options come from a table, or two dropdowns that cascade
+  (pick a *player* → see that player's *rounds*).
+- It can **draft a new table** for a form when you ask it to ("create a DB table for this
+  form"), so form fields and storage stay in sync.
+- It can build **data-driven views** — lists, grids, and repeaters that show rows from your
+  tables alongside or instead of input fields.
+
+## Where to find it
+
+| Entry point | What it does |
 |---|---|
-| Floating bubble | Click the AI bubble in the builder header |
-| `+ AI Form` | In the DB tab, pick tables and ask the AI to build a form from them |
-| `Build fields with AI` | One-click batch from selected SQL tables |
-| `Create DB Table` | Ask the AI to draft a `CREATE TABLE` for the current form |
-| Widget-drop watcher | Empty DataRepeater / DynamicLabel / DataGrid greets contextually |
+| **AI bubble** in the Form Builder header | Opens the chat panel for free-form requests on the current form |
+| **+ AI Form** (DB tab) | Pick one or more SQL tables and ask the AI to build a form from them |
+| **Build fields with AI** | One click: generate form fields from the selected tables |
+| **Create DB Table** | Ask the AI to draft a new database table for the current form |
 
-All entry points route through `window.MFAiChat.sendProgrammatic(text)` so history, error handling,
-and tool loops are consistent.
+## The review step
 
-## Tools the AI can call
+Every AI change arrives as a **staging card** in the chat panel:
 
-| Group | Tools |
-|---|---|
-| **Knowledge** | `list_kinds`, `list_knowledge`, `get_knowledge` |
-| **Widgets** | `list_widgets`, `get_widget` |
-| **Forms** | `list_forms`, `get_form` |
-| **SQL** | `list_sql_tables`, `get_table_columns` |
-| **Designers** | `list_designers`, `get_designer` |
-| **Patterns** | `find_cascade_pattern`, `propose_table_schema` |
+1. The assistant explains what it is about to change.
+2. You click **Apply** to accept or **Discard** to reject.
+3. After applying, the builder shows the result immediately — undo is one more prompt away
+   ("put it back the way it was").
 
-Tool results are capped at ~3 KB and arrays are sliced to 50 items to stay within model token
-budgets.
+Nothing is saved to the server until you save the form, so experimenting is safe.
 
-## Knowledge base
+## Setting up a provider
 
-The AI's long-term memory is stored in `MF_AI_Knowledge`:
+The assistant works with your own AI account. A site administrator configures it once under
+**⚙ Settings → AI**:
 
-| Column | Purpose |
-|---|---|
-| `Slug` | Unique identifier |
-| `Kind` | `widget`, `sql_sample`, `row_template`, `pager_template`, `form_pattern`, `designer`, `cascade_pattern`, `system_arch` |
-| `Title` / `Summary` | Shown when the AI lists knowledge |
-| `Body` | Full markdown/JSON content, fetched only when needed |
-| `Tags` | CSV filters |
-| `Examples` | JSON array of example ops |
-| `PortalId` | `NULL` = global; non-null = per-portal override |
-| `Source` | `megaform-builtin` (upgradable) or `customer` (preserved) |
+- **OpenAI** (e.g. GPT-4o) — the most common choice
+- **Anthropic** (Claude)
+- **OpenRouter** or any **OpenAI-compatible endpoint** (including locally hosted models)
 
-Built-in entries ship with MegaForm upgrades via `MERGE` statements that only touch
-`Source='megaform-builtin'`, so your custom entries are never overwritten.
+Enter the API key, pick the model, and save. The key is stored server-side per site and is
+never exposed to page visitors.
 
-Manage entries from the admin dashboard: **AI Knowledge Base**.
+## Teaching it your house style
 
-## Op vocabulary
-
-After the tool loop, the AI emits one or more ops:
-
-| Op | Effect |
-|---|---|
-| `add_field` | Add a new field |
-| `remove_field` | Remove a field by key |
-| `set_field_property` | Set a nested property (`path`, `value`) |
-| `set_field_sql` | Configure SQL options for a field |
-| `apply_dynlabel_preset` | Apply a DynamicLabel preset |
-| `set_form_meta` | Update title, description, submit button, success message |
-| `reorder_fields` | Reorder fields by key list |
-| `replace_form_schema` | Bulk overwrite the whole schema |
-| `set_field_image_unsplash` | Set an Unsplash image |
-| `add_subform_from_table` | Add a subform from a SQL table |
-| `add_field_from_column` | Add a field from a SQL column |
-| `save_form` | Trigger Save |
-| `chat_message` | Reply without changing the form |
-
-The dispatcher normalizes legacy shapes automatically, so older prompts and model drift do not
-break the builder.
+Administrators can add entries to the **AI Knowledge Base** (Form Dashboard → AI Knowledge
+Base): reusable form patterns, SQL samples, and layout templates. The assistant consults these
+when generating, so repeated requests come out in your organisation's style. Built-in entries
+are updated with MegaForm upgrades; entries you add yourself are always preserved.
 
 ## Writing effective prompts
 
 Good prompts are specific:
 
 - *"Create a contact form with full name, email, phone, and a dropdown for inquiry type."*
-- *"Build a golf score viewer: dropdown player → dropdown round → DataRepeater showing scores."*
+- *"Build a golf score viewer: dropdown player → dropdown round → a table of that round's scores."*
 - *"Add a leave request form with start date, end date, reason textarea, and manager approval."*
 
-For SQL-backed forms, mention the table names or let the AI discover them with `list_sql_tables`.
+For database-backed forms, mention the table names if you know them — otherwise just ask
+*"what tables do I have?"* and the assistant will list them.
 
-## Dev vs production mode
-
-When a `dev.lock` file is present on the server, the AI panel shows raw provider errors and
-thinking text. In production it shows friendly messages such as *"AI is busy right now. Please try
-again in a moment."*
-
-## Extending the AI
-
-To teach the AI about a new widget or pattern:
-
-1. Add a `MF_AI_Knowledge` row with the appropriate `Kind`.
-2. If it is a new widget, ensure the widget catalog lists the type.
-3. If it needs new data, add a method on `AiToolsController` (DNN and Oqtane) and register the tool
-   in `tools.ts`.
-4. If it needs a new operation, add a handler in `ops.ts` and advertise it in `listOpSchemas()`.
-
-For full architecture details, see `Docs/AI_FORM_DESIGN_ARCHITECTURE.md`.
+A larger collection of ready-to-use prompts is in
+[AI Prompts for Form Design](ai-prompts-form-design.md).
