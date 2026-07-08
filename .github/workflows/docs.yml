@@ -51,8 +51,11 @@ jobs:
       - name: Install DocFX
         run: dotnet tool install -g docfx
 
-      - name: Build solution (required for API metadata)
-        run: dotnet build MegaForm.sln --nologo
+      # DocFX metadata only reads MegaForm.Sdk (see Docs/docfx/docfx.json → metadata.src).
+      # Building the full multi-platform solution (Oqtane/DNN/Umbraco/Web) fails on the
+      # hosted runner and is unnecessary — every docs deploy since 2026-06-29 failed here.
+      - name: Build SDK (required for API metadata)
+        run: dotnet build MegaForm.Sdk/MegaForm.Sdk.csproj --nologo
 
       - name: Build docs
         run: docfx Docs/docfx/docfx.json
