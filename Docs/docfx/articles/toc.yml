@@ -28,6 +28,20 @@
       href: ai-configuration.md
     - name: AI Prompts for Form Design
       href: ai-prompts-form-design.md
+- name: Using MegaForm on DNN
+  items:
+    - name: Installing on DNN
+      href: dnn-install.md
+    - name: Your First Form on DNN
+      href: dnn-first-form.md
+    - name: Controls & Widgets (shared)
+      href: widgets-reference.md
+    - name: Drag & Drop Layout (shared)
+      href: drag-drop-layout.md
+    - name: After Submission (shared)
+      href: after-submission.md
+    - name: Multi-language (shared)
+      href: multi-language.md
 - name: Programming
   items:
     - name: Overview
