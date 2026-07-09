@@ -380,6 +380,10 @@ function renderOverview(mountEl: HTMLElement): void {
   renderFormsOverview(host, {
     apiBase,
     siteId,
+    onTotalsLoaded: ({ submissions }) => {
+      const count = document.querySelector<HTMLElement>('[data-mf-nav="submissions"] .mf-sb-lk-cnt');
+      if (count) count.textContent = String(submissions || 0);
+    },
     onPickForm: (formId: number) => {
       _viewMode = 'list';
       switchForm(formId).catch(err => handleLoadError(err, 'Failed to open form'));
@@ -471,11 +475,12 @@ function buildSidebar(): HTMLElement {
   mk(logo, li, lc); sHd.appendChild(logo); sb.appendChild(sHd);
 
   const cnt = div('mf-sb-cnt');
-  function group(label: string, items: Array<{title:string;url?:string;icon:string;count?:string;active?:boolean;demoArea?:string}>): HTMLElement {
+  function group(label: string, items: Array<{title:string;url?:string;icon:string;count?:string;active?:boolean;demoArea?:string;navKey?:string}>): HTMLElement {
     const g = div('mf-sb-grp'); g.innerHTML = `<div class="mf-sb-grp-lbl">${label}</div>`;
     const m = div('mf-sb-menu');
     items.forEach(item => {
       const lk = a(`mf-sb-lk${item.active?' is-active':''}`, item.url||'#', '') as HTMLAnchorElement;
+      if (item.navKey) lk.dataset.mfNav = item.navKey;
       bindSkinSafeHashLink(lk, item.url);
       lk.innerHTML = ic(item.icon, 16);
       lk.appendChild(Object.assign(span('mf-sb-lk-lbl'), {textContent: item.title}));
@@ -494,7 +499,7 @@ function buildSidebar(): HTMLElement {
   // dashboard's consolidated pane (#settings opens it on the default tab).
   cnt.appendChild(group(T('dash.nav_main','Main'), [
     {title:T('dash.nav_form_builder','Form Builder'), url:URLS.builder(), icon:'file'},
-    {title:T('dash.nav_submissions','Submissions'), url:URLS.submissions(), icon:'inbox', count: countSubs, active:true},
+    {title:T('dash.nav_submissions','Submissions'), url:URLS.submissions(), icon:'inbox', count: countSubs, active:true, navKey:'submissions'},
     {title:T('dash.nav_my_inbox','My Inbox'), url:URLS.myinbox(), icon:'inbox'},
     {title:T('dash.nav_form_management','Form Management'), url:URLS.dashboard(), icon:'dashboard'},
   ]));
@@ -576,7 +581,7 @@ function render(): void {
   // [Count consistency 2026-06-11] The sidebar is built once BEFORE submissions load, so its
   // Submissions badge captured 0. Keep it in sync with the loaded total on every render so it
   // matches the "Total N" stat + the dashboard's badge.
-  try { const cntEl = document.querySelector('.mf-sb-lk.is-active .mf-sb-lk-cnt'); if (cntEl) cntEl.textContent = String(state.totalCount || 0); } catch { /* non-critical */ }
+  try { const cntEl = document.querySelector('[data-mf-nav="submissions"] .mf-sb-lk-cnt'); if (cntEl) cntEl.textContent = String(state.totalCount || 0); } catch { /* non-critical */ }
 
   // [B162] Back to the forms-overview landing (this list is a drill-in)
   mountEl.appendChild(buildBackBar());

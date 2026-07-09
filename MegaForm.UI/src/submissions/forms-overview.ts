@@ -79,6 +79,7 @@ export interface FormsOverviewCtx {
   apiBase: string;       // e.g. '/api/MegaForm/'
   siteId: number;
   onPickForm: (formId: number, title: string) => void;
+  onTotalsLoaded?: (totals: { submissions: number; forms: number }) => void;
 }
 
 // ── helpers ───────────────────────────────────────────────────
@@ -182,6 +183,10 @@ async function load(): Promise<void> {
         starred: false,
         storage: _storageByForm[f.formId] || 'csv',
       } as FormRow;
+    });
+    _ctx.onTotalsLoaded?.({
+      submissions: sum(_rows.map((row) => row.allTime)),
+      forms: _rows.length,
     });
     paint();
   } catch (err) {
