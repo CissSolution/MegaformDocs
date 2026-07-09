@@ -21,7 +21,7 @@ $ErrorActionPreference = 'Stop'
 $MODULE_NAME  = 'MegaForm'
 # [DNN sync 2026-06-22] Bumped from stale 01.05.00 → 01.06.32 to match the manifest + latest
 # SqlDataProvider scripts. Keep this in lockstep with MegaForm.dnn <package version="...">.
-$VERSION      = '01.06.32'
+$VERSION      = '01.07.99'
 $PROJECT_DIR  = Split-Path -Parent $MyInvocation.MyCommand.Path
 $SOLUTION_DIR = Split-Path -Parent $PROJECT_DIR
 $STAGING      = Join-Path $PROJECT_DIR '_package'
@@ -284,9 +284,12 @@ Get-ChildItem "$assetsDir\js\*.js" -ErrorAction SilentlyContinue | ForEach-Objec
 }
 
 if (Test-Path "$assetsDir\js\builder") {
-    Get-ChildItem "$assetsDir\js\builder\*" -File -ErrorAction SilentlyContinue | ForEach-Object {
-        Copy-Item $_.FullName "$RESOURCES\Assets\js\builder\" -Force
-        Write-Host "  + Assets\js\builder\$($_.Name)" -ForegroundColor Cyan
+    Get-ChildItem "$assetsDir\js\builder\*" -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
+        $rel = $_.FullName.Replace("$assetsDir\js\builder\", '')
+        $destDir = Join-Path "$RESOURCES\Assets\js\builder" (Split-Path $rel)
+        if (-not (Test-Path $destDir)) { New-Item -ItemType Directory -Path $destDir -Force | Out-Null }
+        Copy-Item $_.FullName (Join-Path "$RESOURCES\Assets\js\builder" $rel) -Force
+        Write-Host "  + Assets\js\builder\$rel" -ForegroundColor Cyan
     }
 }
 
@@ -314,6 +317,27 @@ if (Test-Path "$assetsDir\js\locales") {
     Write-Host '  + Assets\js\locales\*'
 }
 
+# [i18n language packs 2026-07-09] EXPLICIT + ROBUST copy of the 39 locale JSON files
+# (+ index.json). These feed BOTH the Languages admin panel (MegaFormApiController.List
+# enumerates these folders) AND runtime lazy-loading of non-English locales. The API
+# ResolveI18nFolders() probes, in order: Assets/js/i18n, Assets/i18n, Assets/js/builder/i18n,
+# Assets/js/bundles/i18n. Previously ONLY builder/i18n rode in via the recursive builder copy
+# (which was intermittently dropping the subfolder → a fresh install shipped ZERO languages,
+# Languages panel showed only the en-US baseline). Copy to ALL THREE js locations explicitly so
+# a locale is found no matter which probe path the host resolves first. Flat folders (40 files).
+foreach ($i18nSub in @('i18n', 'builder\i18n', 'bundles\i18n')) {
+    $i18nSrc = Join-Path "$assetsDir\js" $i18nSub
+    if (Test-Path $i18nSrc) {
+        $i18nDst = Join-Path "$RESOURCES\Assets\js" $i18nSub
+        New-Item -ItemType Directory -Path $i18nDst -Force | Out-Null
+        $n = 0
+        Get-ChildItem "$i18nSrc\*.json" -File -ErrorAction SilentlyContinue | ForEach-Object {
+            Copy-Item $_.FullName $i18nDst -Force; $n++
+        }
+        Write-Host "  + Assets\js\$i18nSub\*.json  ($n language files)" -ForegroundColor Green
+    }
+}
+
 Get-ChildItem "$assetsDir\embed*.html" -ErrorAction SilentlyContinue | ForEach-Object {
     Copy-Item $_.FullName "$RESOURCES\Assets\" -Force
     Write-Host "  + Assets\$($_.Name)"
@@ -325,6 +349,38 @@ if (Test-Path "$assetsDir\themes") {
         Copy-Item $_.FullName "$RESOURCES\Assets\themes\" -Force
     }
     Write-Host '  + Assets\themes\*'
+}
+
+# [DNN pack 2026-07-08] Runtime dirs the code reads but the script never shipped:
+#  - Assets\img (megaform-ai-bear.png + flags/ for phone country picker)
+#  - Resources\PromptRecipes + Resources\TemplateGuides (AiToolsController reads
+#    ~/DesktopModules/MegaForm/Resources/...)
+#  - Templates (BuilderTemplateCatalogService data root — seed the builder gallery)
+if (Test-Path "$assetsDir\img") {
+    New-Item -ItemType Directory -Path "$RESOURCES\Assets\img" -Force | Out-Null
+    Get-ChildItem "$assetsDir\img\*" -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
+        $rel = $_.FullName.Replace("$assetsDir\img\", '')
+        $destDir = Join-Path "$RESOURCES\Assets\img" (Split-Path $rel)
+        if ($destDir -and -not (Test-Path $destDir)) { New-Item -ItemType Directory -Path $destDir -Force | Out-Null }
+        Copy-Item $_.FullName (Join-Path "$RESOURCES\Assets\img" $rel) -Force
+    }
+    Write-Host '  + Assets\img\* (bear + flags)'
+}
+foreach ($resSub in @('PromptRecipes', 'TemplateGuides')) {
+    $src = Join-Path $PROJECT_DIR "Resources\$resSub"
+    if (Test-Path $src) {
+        $dst = Join-Path $RESOURCES "Resources\$resSub"
+        New-Item -ItemType Directory -Path $dst -Force | Out-Null
+        Copy-Item "$src\*" $dst -Recurse -Force
+        Write-Host "  + Resources\$resSub\*"
+    }
+}
+# [2026-07-09] Gallery seed = curated DONEE premium set (user direction: replace golf/pdf defaults).
+$tplSrc = Join-Path $SOLUTION_DIR 'Samples\FormTemplates\Premium\DONEE'
+if (Test-Path $tplSrc) {
+    New-Item -ItemType Directory -Path "$RESOURCES\Templates" -Force | Out-Null
+    Copy-Item "$tplSrc\*" "$RESOURCES\Templates\" -Recurse -Force
+    Write-Host '  + Templates\* (builder gallery seed)'
 }
 
 $samplesDir = "$SOLUTION_DIR\Samples"
@@ -349,6 +405,15 @@ Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\builder\react.
 Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\builder\react-dom.production.min.js') -Label 'Packaged ReactDOM runtime'
 Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\builder\reactflow.min.js') -Label 'Packaged ReactFlow runtime'
 Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\builder\reactflow.min.css') -Label 'Packaged ReactFlow CSS'
+Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\builder\i18n\index.json') -Label 'Packaged i18n locale index'
+Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\builder\i18n\en-US.json') -Label 'Packaged English locale'
+Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\builder\i18n\vi-VN.json') -Label 'Packaged Vietnamese locale'
+# Canonical Assets/js/i18n (MegaFormApiController.List probes this FIRST) — guard the explicit copy.
+Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\i18n\index.json') -Label 'Packaged i18n (js/i18n) index'
+Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\i18n\fr-FR.json') -Label 'Packaged i18n (js/i18n) French'
+$__i18nCount = (Get-ChildItem (Join-Path $RESOURCES 'Assets\js\i18n\*.json') -File -ErrorAction SilentlyContinue | Measure-Object).Count
+if ($__i18nCount -lt 39) { throw "Thieu language packs: chi co $__i18nCount/40 file trong Assets\js\i18n (expected 39 locales + index.json)" }
+Write-Host "  [OK] Language packs: $__i18nCount files in Assets\js\i18n" -ForegroundColor Green
 Write-Host ''
 
 # ============================================================

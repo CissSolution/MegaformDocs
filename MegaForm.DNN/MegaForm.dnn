@@ -1,6 +1,6 @@
 <dotnetnuke type="Package" version="5.0">
   <packages>
-    <package name="MegaForm" type="Module" version="01.06.32">
+    <package name="MegaForm" type="Module" version="01.07.99">
       <friendlyName>MegaForm</friendlyName>
       <description>Dynamic Form Builder Module for DNN - drag-and-drop builder, conditional logic, webhooks, anti-spam, email notifications, workflows, Save and Continue, Row/Column layout.</description>
       <iconFile>~/DesktopModules/MegaForm/Images/module-icon.png</iconFile>
@@ -246,7 +246,7 @@
             <script type="UnInstall">
               <path>SqlScripts</path>
               <name>Uninstall.SqlDataProvider</name>
-              <version>01.06.32</version>
+              <version>01.07.99</version>
             </script>
           </scripts>
         </component>

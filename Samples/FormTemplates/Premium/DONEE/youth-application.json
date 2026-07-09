@@ -1,681 +1,681 @@
 {
-  "version": "1.0",
-  "slug": "euro-youth-application",
-  "title": "EuroYouth 2026 Application",
-  "description": "Apply for European youth mobility programmes across study, language immersion and volunteering tracks.",
-  "category": "event-registration",
-  "categories": [
-    "event-registration",
-    "premium",
-    "youth-programme"
-  ],
-  "icon": "globe-2",
-  "submitButtonText": "Submit application",
-  "successMessage": "Application received. We will email you within 5 working days.",
-  "fields": [
+ "version": "1.0",
+ "slug": "euro-youth-application",
+ "title": "EuroYouth 2026 Application",
+ "description": "Apply for European youth mobility programmes across study, language immersion and volunteering tracks.",
+ "category": "event-registration",
+ "categories": [
+  "event-registration",
+  "premium",
+  "youth-programme"
+ ],
+ "icon": "globe-2",
+ "submitButtonText": "Submit application",
+ "successMessage": "Application received. We will email you within 5 working days.",
+ "fields": [
+  {
+   "key": "premium_step_1",
+   "type": "Section",
+   "label": "Tell us about you",
+   "required": false,
+   "properties": {
+    "pageBreak": false,
+    "premiumNativeStep": true,
+    "generatedPremiumStep": true,
+    "premiumStepIndex": 1,
+    "legacyDataStep": 0
+   }
+  },
+  {
+   "key": "first_name",
+   "type": "Text",
+   "label": "First name",
+   "required": true,
+   "placeholder": "Anna",
+   "helpText": "",
+   "defaultValue": "",
+   "cssClass": "",
+   "width": "100%",
+   "readOnly": false,
+   "prefillParam": "",
+   "validation": {},
+   "options": [],
+   "showIf": null,
+   "htmlContent": "",
+   "fileSettings": null,
+   "properties": {}
+  },
+  {
+   "key": "last_name",
+   "type": "Text",
+   "label": "Last name",
+   "required": true,
+   "placeholder": "Muller",
+   "helpText": "",
+   "defaultValue": "",
+   "cssClass": "",
+   "width": "100%",
+   "readOnly": false,
+   "prefillParam": "",
+   "validation": {},
+   "options": [],
+   "showIf": null,
+   "htmlContent": "",
+   "fileSettings": null,
+   "properties": {}
+  },
+  {
+   "key": "email",
+   "type": "Email",
+   "label": "Email",
+   "required": true,
+   "placeholder": "anna@email.eu",
+   "helpText": "",
+   "defaultValue": "",
+   "cssClass": "",
+   "width": "100%",
+   "readOnly": false,
+   "prefillParam": "",
+   "validation": {},
+   "options": [],
+   "showIf": null,
+   "htmlContent": "",
+   "fileSettings": null,
+   "properties": {}
+  },
+  {
+   "key": "phone",
+   "type": "Phone",
+   "label": "Phone",
+   "placeholder": "+49 170 1234567",
+   "required": false,
+   "helpText": "",
+   "defaultValue": "",
+   "cssClass": "",
+   "width": "100%",
+   "readOnly": false,
+   "prefillParam": "",
+   "validation": {},
+   "options": [],
+   "showIf": null,
+   "htmlContent": "",
+   "fileSettings": null,
+   "properties": {}
+  },
+  {
+   "key": "birth_year",
+   "type": "Text",
+   "label": "Year of birth",
+   "placeholder": "2004",
+   "required": false,
+   "helpText": "",
+   "defaultValue": "",
+   "cssClass": "",
+   "width": "100%",
+   "readOnly": false,
+   "prefillParam": "",
+   "validation": {},
+   "options": [],
+   "showIf": null,
+   "htmlContent": "",
+   "fileSettings": null,
+   "properties": {}
+  },
+  {
+   "key": "country",
+   "type": "Select",
+   "label": "Country of residence",
+   "required": true,
+   "placeholder": "Select country",
+   "options": [
     {
-      "key": "premium_step_1",
-      "type": "Section",
-      "label": "Tell us about you",
-      "required": false,
-      "properties": {
-        "pageBreak": false,
-        "premiumNativeStep": true,
-        "generatedPremiumStep": true,
-        "premiumStepIndex": 1,
-        "legacyDataStep": 0
-      }
+     "label": "Germany",
+     "value": "Germany"
     },
     {
-      "key": "first_name",
-      "type": "Text",
-      "label": "First name",
-      "required": true,
-      "placeholder": "Anna",
-      "helpText": "",
-      "defaultValue": "",
-      "cssClass": "",
-      "width": "100%",
-      "readOnly": false,
-      "prefillParam": "",
-      "validation": {},
-      "options": [],
-      "showIf": null,
-      "htmlContent": "",
-      "fileSettings": null,
-      "properties": {}
+     "label": "France",
+     "value": "France"
     },
     {
-      "key": "last_name",
-      "type": "Text",
-      "label": "Last name",
-      "required": true,
-      "placeholder": "Muller",
-      "helpText": "",
-      "defaultValue": "",
-      "cssClass": "",
-      "width": "100%",
-      "readOnly": false,
-      "prefillParam": "",
-      "validation": {},
-      "options": [],
-      "showIf": null,
-      "htmlContent": "",
-      "fileSettings": null,
-      "properties": {}
+     "label": "Spain",
+     "value": "Spain"
     },
     {
-      "key": "email",
-      "type": "Email",
-      "label": "Email",
-      "required": true,
-      "placeholder": "anna@email.eu",
-      "helpText": "",
-      "defaultValue": "",
-      "cssClass": "",
-      "width": "100%",
-      "readOnly": false,
-      "prefillParam": "",
-      "validation": {},
-      "options": [],
-      "showIf": null,
-      "htmlContent": "",
-      "fileSettings": null,
-      "properties": {}
+     "label": "Italy",
+     "value": "Italy"
     },
     {
-      "key": "phone",
-      "type": "Phone",
-      "label": "Phone",
-      "placeholder": "+49 170 1234567",
-      "required": false,
-      "helpText": "",
-      "defaultValue": "",
-      "cssClass": "",
-      "width": "100%",
-      "readOnly": false,
-      "prefillParam": "",
-      "validation": {},
-      "options": [],
-      "showIf": null,
-      "htmlContent": "",
-      "fileSettings": null,
-      "properties": {}
+     "label": "Portugal",
+     "value": "Portugal"
     },
     {
-      "key": "birth_year",
-      "type": "Text",
-      "label": "Year of birth",
-      "placeholder": "2004",
-      "required": false,
-      "helpText": "",
-      "defaultValue": "",
-      "cssClass": "",
-      "width": "100%",
-      "readOnly": false,
-      "prefillParam": "",
-      "validation": {},
-      "options": [],
-      "showIf": null,
-      "htmlContent": "",
-      "fileSettings": null,
-      "properties": {}
+     "label": "Netherlands",
+     "value": "Netherlands"
     },
     {
-      "key": "country",
-      "type": "Select",
-      "label": "Country of residence",
-      "required": true,
-      "placeholder": "Select country",
-      "options": [
-        {
-          "label": "Germany",
-          "value": "Germany"
-        },
-        {
-          "label": "France",
-          "value": "France"
-        },
-        {
-          "label": "Spain",
-          "value": "Spain"
-        },
-        {
-          "label": "Italy",
-          "value": "Italy"
-        },
-        {
-          "label": "Portugal",
-          "value": "Portugal"
-        },
-        {
-          "label": "Netherlands",
-          "value": "Netherlands"
-        },
-        {
-          "label": "Austria",
-          "value": "Austria"
-        },
-        {
-          "label": "Belgium",
-          "value": "Belgium"
-        },
-        {
-          "label": "Greece",
-          "value": "Greece"
-        },
-        {
-          "label": "Poland",
-          "value": "Poland"
-        },
-        {
-          "label": "Sweden",
-          "value": "Sweden"
-        },
-        {
-          "label": "Ireland",
-          "value": "Ireland"
-        },
-        {
-          "label": "Other",
-          "value": "Other"
-        }
-      ],
-      "helpText": "",
-      "defaultValue": "",
-      "cssClass": "",
-      "width": "100%",
-      "readOnly": false,
-      "prefillParam": "",
-      "validation": {},
-      "showIf": null,
-      "htmlContent": "",
-      "fileSettings": null,
-      "properties": {}
+     "label": "Austria",
+     "value": "Austria"
     },
     {
-      "key": "premium_step_2",
-      "type": "Section",
-      "label": "Choose your track",
-      "required": false,
-      "properties": {
-        "pageBreak": true,
-        "premiumNativeStep": true,
-        "generatedPremiumStep": true,
-        "premiumStepIndex": 2,
-        "legacyDataStep": 1
-      }
+     "label": "Belgium",
+     "value": "Belgium"
     },
     {
-      "key": "programme",
-      "type": "Radio",
-      "label": "Programme",
-      "required": true,
-      "options": [
-        {
-          "label": "Starter",
-          "value": "starter",
-          "icon": "🚀",
-          "badge": "Free",
-          "description": "Get going with the essentials"
-        },
-        {
-          "label": "Growth",
-          "value": "growth",
-          "icon": "📈",
-          "badge": "Popular",
-          "description": "Everything you need to scale"
-        },
-        {
-          "label": "Scale",
-          "value": "scale",
-          "icon": "🏆",
-          "badge": "Best value",
-          "description": "Advanced controls & support"
-        }
-      ],
-      "optionDisplay": "cards",
-      "choiceDisplay": "cards",
-      "optionVariant": "cards",
-      "properties": {
-        "optionDisplay": "cards",
-        "optionColumns": 1
-      },
-      "widgetProps": {
-        "optionDisplay": "cards",
-        "optionColumns": 1
-      },
-      "placeholder": "",
-      "helpText": "",
-      "defaultValue": "",
-      "cssClass": "",
-      "width": "100%",
-      "readOnly": false,
-      "prefillParam": "",
-      "showIf": null,
-      "htmlContent": "",
-      "fileSettings": null,
-      "optionColumns": 2,
-      "validation": {}
+     "label": "Greece",
+     "value": "Greece"
     },
     {
-      "key": "duration",
-      "type": "Select",
-      "label": "Duration (months)",
-      "defaultValue": "3",
-      "options": [
-        {
-          "label": "1 month",
-          "value": "1"
-        },
-        {
-          "label": "3 months",
-          "value": "3"
-        },
-        {
-          "label": "6 months",
-          "value": "6"
-        },
-        {
-          "label": "12 months",
-          "value": "12"
-        }
-      ],
-      "placeholder": "",
-      "required": false,
-      "helpText": "",
-      "cssClass": "",
-      "width": "100%",
-      "readOnly": false,
-      "prefillParam": "",
-      "validation": {},
-      "showIf": null,
-      "htmlContent": "",
-      "fileSettings": null,
-      "properties": {}
+     "label": "Poland",
+     "value": "Poland"
     },
     {
-      "key": "start_month",
-      "type": "Select",
-      "label": "Preferred start",
-      "required": true,
-      "placeholder": "Select month",
-      "options": [
-        {
-          "label": "January 2026",
-          "value": "January"
-        },
-        {
-          "label": "February 2026",
-          "value": "February"
-        },
-        {
-          "label": "March 2026",
-          "value": "March"
-        },
-        {
-          "label": "April 2026",
-          "value": "April"
-        },
-        {
-          "label": "May 2026",
-          "value": "May"
-        },
-        {
-          "label": "June 2026",
-          "value": "June"
-        },
-        {
-          "label": "July 2026",
-          "value": "July"
-        },
-        {
-          "label": "August 2026",
-          "value": "August"
-        },
-        {
-          "label": "September 2026",
-          "value": "September"
-        },
-        {
-          "label": "October 2026",
-          "value": "October"
-        },
-        {
-          "label": "November 2026",
-          "value": "November"
-        },
-        {
-          "label": "December 2026",
-          "value": "December"
-        }
-      ],
-      "helpText": "",
-      "defaultValue": "",
-      "cssClass": "",
-      "width": "100%",
-      "readOnly": false,
-      "prefillParam": "",
-      "validation": {},
-      "showIf": null,
-      "htmlContent": "",
-      "fileSettings": null,
-      "properties": {}
+     "label": "Sweden",
+     "value": "Sweden"
     },
     {
-      "key": "interests",
-      "type": "Checkbox",
-      "label": "Interests",
-      "options": [
-        {
-          "label": "Art & Design",
-          "value": "art_design"
-        },
-        {
-          "label": "Technology",
-          "value": "technology"
-        },
-        {
-          "label": "Sustainability",
-          "value": "sustainability"
-        },
-        {
-          "label": "Music",
-          "value": "music"
-        },
-        {
-          "label": "Sports",
-          "value": "sports"
-        },
-        {
-          "label": "Cuisine",
-          "value": "cuisine"
-        },
-        {
-          "label": "History",
-          "value": "history"
-        },
-        {
-          "label": "Entrepreneurship",
-          "value": "entrepreneurship"
-        }
-      ],
-      "optionDisplay": "chips",
-      "choiceDisplay": "chips",
-      "optionVariant": "chips",
-      "properties": {
-        "optionDisplay": "chips"
-      },
-      "widgetProps": {
-        "optionDisplay": "chips"
-      },
-      "placeholder": "",
-      "required": false,
-      "helpText": "",
-      "defaultValue": "",
-      "cssClass": "",
-      "width": "100%",
-      "readOnly": false,
-      "prefillParam": "",
-      "validation": {},
-      "showIf": null,
-      "htmlContent": "",
-      "fileSettings": null
+     "label": "Ireland",
+     "value": "Ireland"
     },
     {
-      "key": "premium_step_3",
-      "type": "Section",
-      "label": "Stay & support",
-      "required": false,
-      "properties": {
-        "pageBreak": true,
-        "premiumNativeStep": true,
-        "generatedPremiumStep": true,
-        "premiumStepIndex": 3,
-        "legacyDataStep": 2
-      }
-    },
-    {
-      "key": "accommodation",
-      "type": "Radio",
-      "label": "Accommodation preference",
-      "required": true,
-      "options": [
-        {
-          "label": "Host family",
-          "value": "host",
-          "description": "Live with locals"
-        },
-        {
-          "label": "Student dorm",
-          "value": "dorm",
-          "description": "On campus"
-        },
-        {
-          "label": "Shared flat",
-          "value": "shared",
-          "description": "With peers"
-        }
-      ],
-      "optionDisplay": "cards",
-      "choiceDisplay": "cards",
-      "optionVariant": "cards",
-      "properties": {
-        "optionDisplay": "cards",
-        "optionColumns": 1
-      },
-      "widgetProps": {
-        "optionDisplay": "cards",
-        "optionColumns": 1
-      },
-      "allowOptionHtml": true,
-      "optionColumns": 1,
-      "placeholder": "",
-      "helpText": "",
-      "defaultValue": "",
-      "cssClass": "",
-      "width": "100%",
-      "readOnly": false,
-      "prefillParam": "",
-      "validation": {},
-      "showIf": null,
-      "htmlContent": "",
-      "fileSettings": null
-    },
-    {
-      "key": "language_level",
-      "type": "Select",
-      "label": "Language level",
-      "placeholder": "Select level",
-      "options": [
-        {
-          "label": "A1 - Beginner",
-          "value": "A1 - Beginner"
-        },
-        {
-          "label": "A2 - Elementary",
-          "value": "A2 - Elementary"
-        },
-        {
-          "label": "B1 - Intermediate",
-          "value": "B1 - Intermediate"
-        },
-        {
-          "label": "B2 - Upper-int.",
-          "value": "B2 - Upper-int."
-        },
-        {
-          "label": "C1 - Advanced",
-          "value": "C1 - Advanced"
-        },
-        {
-          "label": "C2 - Fluent",
-          "value": "C2 - Fluent"
-        }
-      ],
-      "required": false,
-      "helpText": "",
-      "defaultValue": "",
-      "cssClass": "",
-      "width": "100%",
-      "readOnly": false,
-      "prefillParam": "",
-      "validation": {},
-      "showIf": null,
-      "htmlContent": "",
-      "fileSettings": null,
-      "properties": {}
-    },
-    {
-      "key": "motivation",
-      "type": "Textarea",
-      "label": "Motivation",
-      "placeholder": "Tell us about your motivation...",
-      "properties": {
-        "rows": 4,
-        "maxLength": 500
-      },
-      "required": false,
-      "helpText": "",
-      "defaultValue": "",
-      "cssClass": "",
-      "width": "100%",
-      "readOnly": false,
-      "prefillParam": "",
-      "validation": {},
-      "options": [],
-      "showIf": null,
-      "htmlContent": "",
-      "fileSettings": null
-    },
-    {
-      "key": "scholarship",
-      "type": "Checkbox",
-      "label": "Mobility grant",
-      "options": [
-        {
-          "label": "Apply for a mobility grant",
-          "value": "yes"
-        }
-      ],
-      "optionDisplay": "chips",
-      "choiceDisplay": "chips",
-      "optionVariant": "chips",
-      "properties": {
-        "optionDisplay": "chips"
-      },
-      "widgetProps": {
-        "optionDisplay": "chips"
-      },
-      "placeholder": "",
-      "required": false,
-      "helpText": "",
-      "defaultValue": "",
-      "cssClass": "",
-      "width": "100%",
-      "readOnly": false,
-      "prefillParam": "",
-      "validation": {},
-      "showIf": null,
-      "htmlContent": "",
-      "fileSettings": null
-    },
-    {
-      "key": "premium_step_4",
-      "type": "Section",
-      "label": "Review & confirm",
-      "required": false,
-      "properties": {
-        "pageBreak": true,
-        "premiumNativeStep": true,
-        "generatedPremiumStep": true,
-        "premiumStepIndex": 4,
-        "legacyDataStep": 3
-      }
-    },
-    {
-      "key": "newsletter",
-      "type": "Checkbox",
-      "label": "Newsletter",
-      "options": [
-        {
-          "label": "Send me updates about programmes, deadlines and events.",
-          "value": "yes"
-        }
-      ],
-      "optionDisplay": "chips",
-      "choiceDisplay": "chips",
-      "optionVariant": "chips",
-      "properties": {
-        "optionDisplay": "chips"
-      },
-      "widgetProps": {
-        "optionDisplay": "chips"
-      },
-      "placeholder": "",
-      "required": false,
-      "helpText": "",
-      "defaultValue": "",
-      "cssClass": "",
-      "width": "100%",
-      "readOnly": false,
-      "prefillParam": "",
-      "validation": {},
-      "showIf": null,
-      "htmlContent": "",
-      "fileSettings": null
-    },
-    {
-      "key": "terms",
-      "type": "Checkbox",
-      "label": "Terms",
-      "required": true,
-      "options": [
-        {
-          "label": "I accept the terms and privacy policy and confirm my details are accurate.",
-          "value": "yes"
-        }
-      ],
-      "placeholder": "",
-      "helpText": "",
-      "defaultValue": "",
-      "cssClass": "",
-      "width": "100%",
-      "readOnly": false,
-      "prefillParam": "",
-      "validation": {},
-      "showIf": null,
-      "htmlContent": "",
-      "fileSettings": null,
-      "properties": {}
+     "label": "Other",
+     "value": "Other"
     }
-  ],
-  "customHtml": "<div class='mfp mfp-euro-youth mfp-native-generated' data-ey-wizard='1'><div class='ey-shell'><aside class='ey-hero'><div class='ey-brand'><div class='ey-brand-icon'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='10'></circle><path d='M2 12h20'></path><path d='M12 2a15.3 15.3 0 0 1 0 20'></path><path d='M12 2a15.3 15.3 0 0 0 0 20'></path></svg></div><span>EUROYOUTH&nbsp;2026</span></div><div class='ey-hero-copy'><div class='ey-rating'><svg viewBox='0 0 24 24' fill='currentColor'><path d='m12 2 2.9 6.3 6.9.8-5.1 4.7 1.4 6.8-6.1-3.4-6.1 3.4 1.4-6.8-5.1-4.7 6.9-.8z'></path></svg>Rated 4.9 by 12,000+ participants</div><h1>Your European adventure starts here.</h1><p>Join thousands of young Europeans studying, volunteering and exploring across the continent. One application, endless destinations.</p><div class='ey-stats'><div><strong>27</strong><span>Countries</span></div><i></i><div><strong>340+</strong><span>Universities</span></div><i></i><div><strong>&euro;0</strong><span>Application fee</span></div></div></div></aside><section class='ey-panel'><div class='ey-stepper' aria-label='Application steps'><div class='ey-step is-active' data-step='0'><div class='ey-dot'>01</div><div class='ey-step-text'><strong>Profile</strong><span>About you</span></div></div><i class='ey-line' data-line='0'></i><div class='ey-step' data-step='1'><div class='ey-dot'>02</div><div class='ey-step-text'><strong>Programme</strong><span>Your track</span></div></div><i class='ey-line' data-line='1'></i><div class='ey-step' data-step='2'><div class='ey-dot'>03</div><div class='ey-step-text'><strong>Logistics</strong><span>Stay &amp; support</span></div></div><i class='ey-line' data-line='2'></i><div class='ey-step' data-step='3'><div class='ey-dot'>04</div><div class='ey-step-text'><strong>Confirm</strong><span>Review</span></div></div></div><div class='ey-card'><section class='ey-page is-active' data-step='0'><h2>Tell us about you</h2><p class='ey-lede'>Basic details so we can match you with the right programme.</p><label class='ey-field'><span>First name *</span>{{field:first_name}}</label>\n<label class='ey-field'><span>Last name *</span>{{field:last_name}}</label>\n<label class='ey-field'><span>Email *</span>{{field:email}}</label>\n<label class='ey-field'><span>Phone</span>{{field:phone}}</label>\n<label class='ey-field'><span>Year of birth</span>{{field:birth_year}}</label>\n<label class='ey-field'><span>Country of residence *</span>{{field:country}}</label>\n</section><section class='ey-page' data-step='1'><h2>Choose your track</h2><p class='ey-lede'>Pick the programme that fits your goals.</p><label class='ey-field ey-mt5'><span>Programme *</span>{{field:programme}}</label>\n<label class='ey-field'><span>Duration (months)</span>{{field:duration}}</label>\n<label class='ey-field'><span>Preferred start *</span>{{field:start_month}}</label>\n<label class='ey-field'><span>Interests</span>{{field:interests}}</label>\n</section><section class='ey-page' data-step='2'><h2>Stay &amp; support</h2><p class='ey-lede'>Where you'll live and how we can help.</p><label class='ey-field ey-mt6'><span>Accommodation preference *</span>{{field:accommodation}}</label>\n<label class='ey-field ey-mt5'><span>Language level</span>{{field:language_level}}</label>\n<label class='ey-field ey-mt5'><span>Why do you want to join? (optional)</span>{{field:motivation}}<small><b data-ey-count>0</b>/500</small></label>\n<label class='ey-field'><span>Mobility grant</span>{{field:scholarship}}</label>\n</section><section class='ey-page' data-step='3'><h2>Review &amp; confirm</h2><p class='ey-lede'>Double-check your details before submitting.</p><div class='ey-review ey-mt6'><div><span>Name</span><strong data-ey-summary='name'>&mdash;</strong></div><div><span>Email</span><strong data-ey-summary='email'>&mdash;</strong></div><div><span>Country</span><strong data-ey-summary='country'>&mdash;</strong></div><div><span>Programme</span><strong data-ey-summary='programme'>&mdash;</strong></div><div><span>Duration</span><strong data-ey-summary='duration'>3 months</strong></div><div><span>Start</span><strong data-ey-summary='start'>&mdash;</strong></div><div><span>Accommodation</span><strong data-ey-summary='accommodation'>&mdash;</strong></div><div><span>Interests</span><strong data-ey-summary='interests'>&mdash;</strong></div><div><span>Mobility grant</span><strong data-ey-summary='grant'>No</strong></div></div><label class='ey-field ey-mt5'><span>Newsletter</span>{{field:newsletter}}</label>\n<label class='ey-field'><span>Terms *</span>{{field:terms}}</label>\n</section>      \n      \n      \n      \n      \n      \n<div class='ey-actions'><button class='ey-back' type='button'>&larr; Back</button><a class='ey-cancel' href='/premium-forms'>&larr; Cancel</a><button class='ey-next' type='button' disabled>Continue &rarr;</button><button class='ey-submit' type='submit' hidden disabled>Submit application &check;</button></div></div><p class='ey-footer'>Co-funded by the European Youth Mobility Initiative &middot; Step <span data-ey-current>1</span> of 4</p></section></div></div>",
-  "customCss": "@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap');.mfp.mfp-euro-youth{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;color:#1c1917;background:#f5f5f4;width:100%!important;max-width:1152px!important;margin:0 auto!important;padding:16px!important;box-sizing:border-box;overflow:visible!important}.mfp-euro-youth,.mfp-euro-youth *{box-sizing:border-box}.mfp-euro-youth .ey-shell{display:grid;min-height:auto;max-width:1152px;margin:0 auto;background:#f5f5f4}.mfp-euro-youth .ey-hero{display:none;position:relative;overflow:hidden;flex-direction:column;justify-content:space-between;padding:40px;color:#fff;background-image:linear-gradient(to bottom,rgba(15,23,42,.25),rgba(15,23,42,.85)),url('/Modules/MegaForm/img/euro-youth/euro-youth-hero.png');background-size:cover;background-position:center}.mfp-euro-youth .ey-brand{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.9);font-size:14px;font-weight:600;letter-spacing:.025em}.mfp-euro-youth .ey-brand-icon{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.15);backdrop-filter:blur(8px)}.mfp-euro-youth svg{width:1em;height:1em;display:block}.mfp-euro-youth .ey-brand-icon svg{width:20px;height:20px}.mfp-euro-youth .ey-rating{display:inline-flex;align-items:center;gap:6px;border-radius:999px;background:rgba(255,255,255,.15);padding:4px 12px;font-size:12px;line-height:16px;font-weight:500;backdrop-filter:blur(8px);margin-bottom:16px}.mfp-euro-youth .ey-rating svg{width:14px;height:14px;color:#fcd34d;fill:#fcd34d}.mfp-euro-youth .ey-hero h1{font-family:'Bricolage Grotesque',Inter,sans-serif;margin:0;color:#fff;font-size:36px;line-height:1.1;font-weight:800;letter-spacing:0}.mfp-euro-youth .ey-hero p{margin:12px 0 0;color:rgba(255,255,255,.8);font-size:15px;line-height:1.6}.mfp-euro-youth .ey-stats{display:flex;align-items:center;gap:24px;margin-top:32px}.mfp-euro-youth .ey-stats strong{font-family:'Bricolage Grotesque',Inter,sans-serif;display:block;font-size:24px;line-height:32px;font-weight:700;color:#fff}.mfp-euro-youth .ey-stats span{display:block;color:rgba(255,255,255,.7);font-size:12px;line-height:16px}.mfp-euro-youth .ey-stats i{display:block;width:1px;height:32px;background:rgba(255,255,255,.2)}.mfp-euro-youth .ey-panel{display:flex;flex-direction:column;background:#f5f5f4;padding:32px 24px}.mfp-euro-youth .ey-stepper{display:flex;align-items:center;gap:8px;margin-bottom:32px;height:32px!important}.mfp-euro-youth .ey-step{display:flex;flex:1;align-items:center;gap:8px;min-width:0;height:32px!important}.mfp-euro-youth .ey-dot{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:999px;background:#e7e5e4;color:#a8a29e;font-size:12px;line-height:16px;font-weight:600;transition:all .18s ease;flex:0 0 32px}.mfp-euro-youth .ey-step.is-active .ey-dot{background:#1c1917;color:#fff}.mfp-euro-youth .ey-step.is-done .ey-dot{background:#059669;color:#fff;font-size:0}.mfp-euro-youth .ey-step.is-done .ey-dot:after{content:'\\2713';font-size:16px}.mfp-euro-youth .ey-step-text{display:none;white-space:nowrap}.mfp-euro-youth .ey-step-text strong{display:block;color:#a8a29e;font-size:13px;line-height:1;font-weight:600}.mfp-euro-youth .ey-step-text span{display:block;margin-top:2px;color:#a8a29e;font-size:11px;line-height:14px}.mfp-euro-youth .ey-step.is-active .ey-step-text strong,.mfp-euro-youth .ey-step.is-done .ey-step-text strong{color:#1c1917}.mfp-euro-youth .ey-line{height:1px;background:#e7e5e4;flex:1;transition:all .18s ease}.mfp-euro-youth .ey-line.is-done{background:#059669}.mfp-euro-youth .ey-card{flex:1;border-radius:24px;background:#fff;padding:24px;box-shadow:0 1px 2px rgba(0,0,0,.05)}.mfp-euro-youth .ey-page{display:none}.mfp-euro-youth .ey-page.is-active{display:block}.mfp-euro-youth h2{font-family:'Bricolage Grotesque',Inter,sans-serif;margin:0!important;color:#1c1917;font-size:24px;line-height:32px!important;font-weight:700;letter-spacing:0}.mfp-euro-youth .ey-lede{margin:4px 0 0!important;color:#78716c;font-size:14px;line-height:20px!important}.mfp-euro-youth .ey-mt6{margin-top:24px}.mfp-euro-youth .ey-mt5{margin-top:20px}.mfp-euro-youth .ey-grid{display:grid;gap:16px}.mfp-euro-youth .ey-field{display:block;margin:0}.mfp-euro-youth .ey-field>span{display:block;margin:0 0 8px!important;color:#57534e;font-size:13px;line-height:18px;font-weight:500}.mfp-euro-youth .ey-field .mf-field-label{display:none!important}.mfp-euro-youth .mf-field-group{margin:0!important;width:100%}.mfp-euro-youth .mf-input,.mfp-euro-youth .mf-select,.mfp-euro-youth .mf-textarea{width:100%!important;border:1px solid #d6d3d1!important;border-radius:12px!important;background:#fff!important;padding:12px 16px!important;color:#1c1917!important;font-family:'Inter',system-ui,sans-serif!important;font-size:15px!important;line-height:20px!important;min-height:49px!important;height:49px!important;outline:0!important;box-shadow:none!important;transition:all .15s ease!important}.mfp-euro-youth .mf-textarea{min-height:118px!important;height:auto!important;resize:none}.mfp-euro-youth .mf-input::placeholder,.mfp-euro-youth .mf-textarea::placeholder{color:#a8a29e!important;opacity:1}.mfp-euro-youth .mf-input:focus,.mfp-euro-youth .mf-select:focus,.mfp-euro-youth .mf-textarea:focus{border-color:#1c1917!important;box-shadow:0 0 0 2px rgba(28,25,23,.1)!important}.mfp-euro-youth .mf-select-wrap{position:relative}.mfp-euro-youth .mf-select{appearance:none!important;-webkit-appearance:none!important;padding-right:42px!important}.mfp-euro-youth .mf-field-error{margin-top:5px;color:#dc2626;font-size:12px;line-height:16px}.mfp-euro-youth .ey-programmes{display:grid;gap:12px}.mfp-euro-youth .ey-programme{display:flex;align-items:flex-start;gap:16px;width:100%;border:1px solid #e7e5e4;border-radius:16px;background:#fff;padding:16px;text-align:left;cursor:pointer;transition:all .15s ease}.mfp-euro-youth .ey-programme:hover{border-color:#d6d3d1}.mfp-euro-youth .ey-programme:has(input:checked){border-color:#1c1917;background:#fafaf9;box-shadow:0 0 0 2px rgba(28,25,23,.1)}.mfp-euro-youth .ey-programme input,.mfp-euro-youth .ey-accom input,.mfp-euro-youth .ey-chips input{position:absolute;opacity:0;pointer-events:none}.mfp-euro-youth .ey-programme-icon{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;background:#f5f5f4;color:#57534e;flex:0 0 44px}.mfp-euro-youth .ey-programme:has(input:checked) .ey-programme-icon{background:#1c1917;color:#fff}.mfp-euro-youth .ey-programme-icon svg{width:20px;height:20px}.mfp-euro-youth .ey-programme-copy{display:block;flex:1;min-width:0}.mfp-euro-youth .ey-programme-copy strong{display:block;color:#1c1917;font-size:16px;line-height:22px;font-weight:600}.mfp-euro-youth .ey-programme-copy em{display:flex;align-items:center;gap:4px;margin-top:2px;color:#78716c;font-size:12px;line-height:16px;font-style:normal}.mfp-euro-youth .ey-programme-copy em svg{width:14px;height:14px}.mfp-euro-youth .ey-programme-copy span{display:block;margin-top:4px;color:#57534e;font-size:14px;line-height:20px}.mfp-euro-youth .ey-check{display:none;color:#059669;font-size:20px;line-height:20px}.mfp-euro-youth .ey-programme:has(input:checked) .ey-check{display:block}.mfp-euro-youth .ey-chips{display:flex;flex-wrap:wrap;gap:8px}.mfp-euro-youth .ey-chips label{display:inline-flex}.mfp-euro-youth .ey-chips span{display:inline-flex;border:1px solid #d6d3d1;border-radius:999px;background:#fff;color:#57534e;padding:6px 14px;font-size:14px;line-height:20px;cursor:pointer;transition:all .15s ease}.mfp-euro-youth .ey-chips input:checked+span{border-color:#1c1917;background:#1c1917;color:#fff}.mfp-euro-youth .ey-accom{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.mfp-euro-youth .ey-accom label{display:block;cursor:pointer}.mfp-euro-youth .ey-accom span{display:block;border:1px solid #e7e5e4;border-radius:16px;background:#fff;padding:16px;transition:all .15s ease}.mfp-euro-youth .ey-accom strong{display:block;color:#1c1917;font-size:14px;line-height:20px;font-weight:600}.mfp-euro-youth .ey-accom em{display:block;margin-top:2px;color:#78716c;font-size:12px;line-height:16px;font-style:normal}.mfp-euro-youth .ey-accom input:checked+span{border-color:#1c1917;background:#fafaf9;box-shadow:0 0 0 2px rgba(28,25,23,.1)}.mfp-euro-youth .ey-field small{display:block;margin-top:4px;text-align:right;color:#a8a29e;font-size:12px;line-height:16px}.mfp-euro-youth .ey-grant{display:flex;align-items:flex-start;gap:12px;margin-top:12px;border:1px solid #e7e5e4;border-radius:16px;background:#fafaf9;padding:16px;cursor:pointer}.mfp-euro-youth .ey-grant input,.mfp-euro-youth .ey-checks input{width:20px;height:20px;margin:2px 0 0;accent-color:#1c1917;flex:0 0 auto}.mfp-euro-youth .ey-grant strong{display:block;color:#1c1917;font-size:14px;line-height:20px;font-weight:600}.mfp-euro-youth .ey-grant em{display:block;color:#78716c;font-size:12px;line-height:16px;font-style:normal}.mfp-euro-youth .ey-review{overflow:hidden;border:1px solid #e7e5e4;border-radius:16px}.mfp-euro-youth .ey-review div{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 16px;color:#78716c;font-size:14px;line-height:20px}.mfp-euro-youth .ey-review div:nth-child(even){background:#fafaf9}.mfp-euro-youth .ey-review strong{color:#1c1917;font-weight:500;text-align:right}.mfp-euro-youth .ey-checks{display:grid;gap:12px}.mfp-euro-youth .ey-checks label{display:flex;align-items:flex-start;gap:12px;color:#57534e;font-size:14px;line-height:20px;cursor:pointer}.mfp-euro-youth .ey-checks strong{color:#1c1917;text-decoration:underline}.mfp-euro-youth .ey-actions{display:flex;align-items:center;justify-content:space-between;margin-top:32px;border-top:1px solid #f5f5f4;padding-top:24px}.mfp-euro-youth .ey-back,.mfp-euro-youth .ey-cancel,.mfp-euro-youth .ey-next,.mfp-euro-youth .ey-submit{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:12px;padding:10px 16px;font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:20px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .15s ease}.mfp-euro-youth .ey-back,.mfp-euro-youth .ey-cancel{background:transparent;color:#57534e}.mfp-euro-youth .ey-cancel{color:#a8a29e}.mfp-euro-youth .ey-back:hover,.mfp-euro-youth .ey-cancel:hover{background:#f5f5f4;color:#57534e}.mfp-euro-youth .ey-next,.mfp-euro-youth .ey-submit{background:#1c1917;color:#fff;padding-left:24px;padding-right:24px}.mfp-euro-youth .ey-next:hover{background:#292524}.mfp-euro-youth .ey-submit{background:#059669}.mfp-euro-youth .ey-submit:hover{background:#047857}.mfp-euro-youth .ey-next:disabled,.mfp-euro-youth .ey-submit:disabled{background:#d6d3d1;color:#fff;cursor:not-allowed}.mfp-euro-youth .ey-footer{margin:16px 0 0;text-align:center;color:#a8a29e;font-size:12px;line-height:16px}.mfp-euro-youth .mf-form-title,.mfp-euro-youth .mf-form-description,.mfp-euro-youth .mf-success-message,.mfp-euro-youth .mf-form-actions{display:none!important}.mfp-euro-youth .ey-card{padding:32px}.mfp-euro-youth .ey-grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}.mfp-euro-youth .ey-step-text{display:block}}@media(min-width:1024px){.mfp-euro-youth .ey-shell{grid-template-columns:440px 1fr}.mfp-euro-youth .ey-hero{display:flex}.mfp-euro-youth .ey-panel{padding:32px 48px}}@media(max-width:560px){.mfp-euro-youth .ey-panel{padding:32px 24px}.mfp-euro-youth .ey-card{padding:24px}.mfp-euro-youth .ey-accom{grid-template-columns:1fr}.mfp-euro-youth .ey-programme{gap:12px}.mfp-euro-youth .ey-programme-icon{width:40px;height:40px;flex-basis:40px}.mfp-euro-youth .ey-actions{margin-top:28px}.mfp-euro-youth .ey-next,.mfp-euro-youth .ey-submit{padding-left:20px;padding-right:20px}}.mf-form-wrapper>.mf-form-inner .mfp.mfp-euro-youth{width:100%!important;max-width:1152px!important;margin:0 auto!important;padding:16px!important;background:#f5f5f4!important;box-sizing:border-box!important}\n\n/* [PremiumChoiceChipsCards 2026-06-19] */\n.mf-form-wrapper .mfp.mfp-euro-youth,\n.mfp.mfp-euro-youth,\n.mf-form-wrapper {\n  --mf-choice-accent: var(--primary, var(--accent, var(--mf-choice-accent, var(--primary, var(--accent, #111827)))));\n  --mf-choice-accent-2: var(--accent, var(--primary, var(--mf-choice-accent, var(--primary, var(--accent, #111827)))));\n  --mf-choice-text: var(--foreground, var(--card-foreground, var(--mf-choice-text, var(--foreground, var(--card-foreground, #111827)))));\n  --mf-choice-muted: var(--muted-foreground, var(--mf-choice-muted, var(--muted-foreground, #6b7280)));\n  --mf-choice-border: var(--border, var(--mf-choice-border, var(--border, #e5e7eb)));\n  --mf-choice-card: var(--card, var(--mf-choice-card, var(--card, #ffffff)));\n  --mf-choice-soft: color-mix(in oklab, var(--mf-choice-accent) 9%, transparent);\n  --mf-choice-soft-strong: color-mix(in oklab, var(--mf-choice-accent) 15%, transparent);\n  --mf-choice-on-accent: var(--primary-foreground, #fff);\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips,\n.mfp.mfp-euro-youth .mf-option-group--chips,\n.mf-form-wrapper .mf-option-group--chips {\n  display: flex !important;\n  flex-direction: row !important;\n  flex-wrap: wrap !important;\n  align-items: flex-start !important;\n  justify-content: flex-start !important;\n  gap: 10px !important;\n  text-align: left !important;\n  grid-template-columns: none !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-item,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-item,\n.mf-form-wrapper .mf-option-group--chips .mf-option-item {\n  display: inline-flex !important;\n  width: auto !important;\n  max-width: 100% !important;\n  flex: 0 1 auto !important;\n  margin: 0 !important;\n  padding: 0 !important;\n  min-height: 0 !important;\n  background: transparent !important;\n  border: 0 !important;\n  border-radius: 0 !important;\n  box-shadow: none !important;\n  gap: 0 !important;\n  cursor: pointer !important;\n  text-align: left !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards,\n.mfp.mfp-euro-youth .mf-option-group--cards,\n.mf-form-wrapper .mf-option-group--cards {\n  display: grid !important;\n  grid-template-columns: 1fr !important;\n  gap: 12px !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-control,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-control,\n.mf-form-wrapper .mf-option-group--chips .mf-option-control,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control,\n.mf-form-wrapper .mf-option-group--cards .mf-option-control {\n  position: absolute !important;\n  opacity: 0 !important;\n  width: 1px !important;\n  height: 1px !important;\n  overflow: hidden !important;\n  pointer-events: none !important;\n  appearance: none !important;\n  -webkit-appearance: none !important;\n  clip-path: inset(50%) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-ui,\n.mf-form-wrapper .mf-option-group--chips .mf-option-ui {\n  display: inline-flex !important;\n  align-items: center !important;\n  justify-content: flex-start !important;\n  width: auto !important;\n  max-width: 100% !important;\n  min-height: 30px !important;\n  padding: 6px 12px !important;\n  border: 1px solid color-mix(in oklab, var(--mf-choice-border) 70%, var(--mf-choice-accent) 30%) !important;\n  border-radius: 999px !important;\n  background: color-mix(in oklab, var(--mf-choice-card) 94%, var(--mf-choice-accent) 6%) !important;\n  color: var(--mf-choice-text) !important;\n  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;\n  transition: border-color .16s ease, background .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-ui::before,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-ui::before,\n.mf-form-wrapper .mf-option-group--chips .mf-option-ui::before,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-ui::before,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-ui::before,\n.mf-form-wrapper .mf-option-group--cards .mf-option-ui::before,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-item::before,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-item::before,\n.mf-form-wrapper .mf-option-group--chips .mf-option-item::before,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-item::before,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-item::before,\n.mf-form-wrapper .mf-option-group--cards .mf-option-item::before,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-label::before,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-label::before,\n.mf-form-wrapper .mf-option-group--chips .mf-option-label::before,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-label::before,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-label::before,\n.mf-form-wrapper .mf-option-group--cards .mf-option-label::before {\n  display: none !important;\n  content: \"\" !important;\n  width: 0 !important;\n  height: 0 !important;\n  margin: 0 !important;\n  padding: 0 !important;\n  border: 0 !important;\n  background: none !important;\n  box-shadow: none !important;\n  flex: 0 0 0 !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-label,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-label,\n.mf-form-wrapper .mf-option-group--chips .mf-option-label {\n  color: inherit !important;\n  font-size: 13px !important;\n  line-height: 17px !important;\n  font-weight: 500 !important;\n  white-space: normal !important;\n  min-width: 0 !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-item:hover .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-item:hover .mf-option-ui,\n.mf-form-wrapper .mf-option-group--chips .mf-option-item:hover .mf-option-ui {\n  border-color: var(--mf-choice-accent) !important;\n  background: var(--mf-choice-soft) !important;\n  transform: translateY(-1px) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-control:checked + .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-control:checked + .mf-option-ui,\n.mf-form-wrapper .mf-option-group--chips .mf-option-control:checked + .mf-option-ui {\n  border-color: var(--mf-choice-accent) !important;\n  background: var(--mf-choice-accent) !important;\n  color: var(--mf-choice-on-accent) !important;\n  box-shadow: 0 8px 22px color-mix(in oklab, var(--mf-choice-accent) 24%, transparent) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-item,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-item,\n.mf-form-wrapper .mf-option-group--cards .mf-option-item {\n  display: block !important;\n  width: 100% !important;\n  margin: 0 !important;\n  padding: 0 !important;\n  cursor: pointer !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-ui,\n.mf-form-wrapper .mf-option-group--cards .mf-option-ui {\n  position: relative !important;\n  display: flex !important;\n  align-items: flex-start !important;\n  gap: 14px !important;\n  width: 100% !important;\n  min-height: 48px !important;\n  padding: 12px 42px 12px 14px !important;\n  border: 1px solid var(--mf-choice-border) !important;\n  border-radius: 12px !important;\n  background: var(--mf-choice-card) !important;\n  color: var(--mf-choice-text) !important;\n  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05) !important;\n  transition: border-color .16s ease, background .16s ease, box-shadow .16s ease, transform .16s ease !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-item:hover .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-item:hover .mf-option-ui,\n.mf-form-wrapper .mf-option-group--cards .mf-option-item:hover .mf-option-ui {\n  border-color: var(--mf-choice-accent) !important;\n  background: color-mix(in oklab, var(--mf-choice-card) 92%, var(--mf-choice-accent) 8%) !important;\n  transform: translateY(-1px) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:checked + .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:checked + .mf-option-ui,\n.mf-form-wrapper .mf-option-group--cards .mf-option-control:checked + .mf-option-ui {\n  border-color: var(--mf-choice-accent) !important;\n  background: color-mix(in oklab, var(--mf-choice-card) 88%, var(--mf-choice-accent) 12%) !important;\n  box-shadow: 0 0 0 1px var(--mf-choice-accent), 0 14px 34px color-mix(in oklab, var(--mf-choice-accent) 18%, transparent) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-icon,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-icon,\n.mf-form-wrapper .mf-option-group--cards .mf-option-icon {\n  display: inline-flex !important;\n  align-items: center !important;\n  justify-content: center !important;\n  width: 34px !important;\n  height: 34px !important;\n  flex: 0 0 34px !important;\n  border-radius: 10px !important;\n  background: var(--mf-choice-soft) !important;\n  color: var(--mf-choice-accent) !important;\n  font-size: 18px !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:checked + .mf-option-ui .mf-option-icon,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:checked + .mf-option-ui .mf-option-icon,\n.mf-form-wrapper .mf-option-group--cards .mf-option-control:checked + .mf-option-ui .mf-option-icon {\n  background: var(--mf-choice-accent) !important;\n  color: var(--mf-choice-on-accent) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-copy,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-copy,\n.mf-form-wrapper .mf-option-group--cards .mf-option-copy {\n  display: grid !important;\n  gap: 3px !important;\n  min-width: 0 !important;\n  flex: 1 1 auto !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-label,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-label,\n.mf-form-wrapper .mf-option-group--cards .mf-option-label {\n  color: var(--mf-choice-text) !important;\n  font-size: 14px !important;\n  line-height: 19px !important;\n  font-weight: 700 !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-meta,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-meta,\n.mf-form-wrapper .mf-option-group--cards .mf-option-meta,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-desc,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-desc,\n.mf-form-wrapper .mf-option-group--cards .mf-option-desc {\n  color: var(--mf-choice-muted) !important;\n  font-size: 13px !important;\n  line-height: 18px !important;\n  font-weight: 500 !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .section-icon,\n.mfp.mfp-euro-youth .section-icon,\n.mf-form-wrapper .section-icon,\n.mf-form-wrapper .mfp.mfp-euro-youth .gift-icon,\n.mfp.mfp-euro-youth .gift-icon,\n.mf-form-wrapper .gift-icon {\n  display: none !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-check,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-check,\n.mf-form-wrapper .mf-option-group--cards .mf-option-check {\n  position: absolute !important;\n  top: 18px !important;\n  right: 18px !important;\n  color: var(--mf-choice-accent) !important;\n  font-size: 20px !important;\n  line-height: 20px !important;\n  opacity: 0 !important;\n  transform: scale(.8) !important;\n  transition: opacity .16s ease, transform .16s ease !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:checked + .mf-option-ui .mf-option-check,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:checked + .mf-option-ui .mf-option-check,\n.mf-form-wrapper .mf-option-group--cards .mf-option-control:checked + .mf-option-ui .mf-option-check {\n  opacity: 1 !important;\n  transform: scale(1) !important;\n}\n\n/* V3 hardening: some premium templates append late styles without the custom root,\n   so keep chip/card rendering correct from the MegaForm wrapper as the final fallback. */\n.mf-form-wrapper .mf-option-group--chips,\n.mf-form-wrapper .mf-option-group--cards {\n  align-items: flex-start !important;\n  justify-content: flex-start !important;\n}\n\n.mf-form-wrapper .mf-option-group--chips .mf-option-item {\n  display: inline-flex !important;\n  width: auto !important;\n  max-width: 100% !important;\n  flex: 0 1 auto !important;\n  min-height: 0 !important;\n  margin: 0 !important;\n  padding: 0 !important;\n  background: transparent !important;\n  border: 0 !important;\n  border-radius: 0 !important;\n  box-shadow: none !important;\n  gap: 0 !important;\n}\n\n.mf-form-wrapper .mf-option-group--chips .mf-option-control,\n.mf-form-wrapper .mf-option-group--cards .mf-option-control {\n  position: absolute !important;\n  opacity: 0 !important;\n  width: 1px !important;\n  height: 1px !important;\n  overflow: hidden !important;\n  pointer-events: none !important;\n  appearance: none !important;\n  -webkit-appearance: none !important;\n  clip-path: inset(50%) !important;\n  margin: 0 !important;\n}\n\n.mf-form-wrapper .mf-option-group--chips .mf-option-ui,\n.mf-form-wrapper .mf-option-group--cards .mf-option-ui {\n  box-sizing: border-box !important;\n}\n\n.mf-form-wrapper.mf-theme-pure-grid-premium {\n  --mf-choice-accent: var(--primary, oklch(0.50 0.10 145));\n  --mf-choice-accent-2: var(--accent, oklch(0.75 0.06 85));\n  --mf-choice-text: var(--foreground, oklch(0.25 0.04 145));\n  --mf-choice-border: var(--border, oklch(0.85 0.02 145));\n  --mf-choice-card: var(--card, #ffffff);\n  --mf-choice-on-accent: var(--primary-foreground, #ffffff);\n}\n\n.mf-form-wrapper.mf-theme-pure-grid-premium .mf-option-group--chips .mf-option-ui {\n  background: color-mix(in oklab, var(--mf-choice-card) 92%, var(--mf-choice-accent) 8%) !important;\n  border-color: color-mix(in oklab, var(--mf-choice-border) 64%, var(--mf-choice-accent) 36%) !important;\n  color: var(--mf-choice-text) !important;\n}\n\n.mf-form-wrapper.mf-theme-pure-grid-premium .mf-option-group--chips .mf-option-control:checked + .mf-option-ui {\n  background: var(--mf-choice-accent) !important;\n  border-color: var(--mf-choice-accent) !important;\n  color: var(--mf-choice-on-accent) !important;\n}\n\n.mf-form-wrapper.mf-theme-pure-grid-premium button[type=\"submit\"],\n.mf-form-wrapper.mf-theme-pure-grid-premium .aur-submit,\n.mf-form-wrapper.mf-theme-pure-grid-premium .mfp-submit {\n  background: var(--mf-choice-accent) !important;\n  border-color: var(--mf-choice-accent) !important;\n  color: var(--mf-choice-on-accent) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-nola-glass,\n.mfp.mfp-nola-glass {\n  --mf-choice-accent: var(--nola-gold, #f39c12);\n  --mf-choice-accent-2: var(--nola-green, #27ae60);\n  --mf-choice-text: var(--nola-text, #ffffff);\n  --mf-choice-border: rgba(255,255,255,0.28);\n  --mf-choice-card: rgba(255,255,255,0.10);\n  --mf-choice-on-accent: var(--nola-deep, #1a0a2e);\n}\n\n.mf-form-wrapper .mfp.mfp-nola-glass .mf-option-group--chips .mf-option-ui,\n.mfp.mfp-nola-glass .mf-option-group--chips .mf-option-ui {\n  background: rgba(255,255,255,0.10) !important;\n  border-color: rgba(255,255,255,0.30) !important;\n  color: var(--nola-text, #ffffff) !important;\n  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 1px 2px rgba(0,0,0,0.16) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-nola-glass .mf-option-group--chips .mf-option-label,\n.mfp.mfp-nola-glass .mf-option-group--chips .mf-option-label {\n  color: var(--nola-text, #ffffff) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-nola-glass .mf-option-group--chips .mf-option-control:checked + .mf-option-ui,\n.mfp.mfp-nola-glass .mf-option-group--chips .mf-option-control:checked + .mf-option-ui {\n  background: linear-gradient(135deg, var(--nola-gold, #f39c12), #ffd700) !important;\n  border-color: var(--nola-gold, #f39c12) !important;\n  color: var(--nola-deep, #1a0a2e) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-nola-glass .mfp-submit,\n.mfp.mfp-nola-glass .mfp-submit {\n  display: flex !important;\n  align-items: center !important;\n  justify-content: center !important;\n  width: 100% !important;\n  background: linear-gradient(135deg, var(--nola-gold, #f39c12), #ffd700, var(--nola-gold, #f39c12)) !important;\n  border: 0 !important;\n  border-radius: 12px !important;\n  color: var(--nola-deep, #1a0a2e) !important;\n  font-weight: 700 !important;\n  box-shadow: 0 10px 28px rgba(243,156,18,0.30) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-coachella .mf-option-group--chips {\n  gap: 12px !important;\n}\n\n.mf-form-wrapper .mfp.mfp-coachella .mf-option-group--chips .mf-option-item,\n.mfp.mfp-coachella .mf-option-group--chips .mf-option-item {\n  background: transparent !important;\n  border: 0 !important;\n  border-radius: 0 !important;\n  box-shadow: none !important;\n  padding: 0 !important;\n}\n\n.mf-form-wrapper .mfp.mfp-coachella .mf-option-group--chips .mf-option-ui,\n.mfp.mfp-coachella .mf-option-group--chips .mf-option-ui {\n  min-height: 32px !important;\n  padding: 7px 13px !important;\n  border-color: color-mix(in oklab, var(--mf-choice-border) 58%, var(--mf-choice-accent) 42%) !important;\n  background: color-mix(in oklab, var(--mf-choice-card) 90%, var(--mf-choice-accent) 10%) !important;\n}\n\n.mf-form-wrapper .mfp.aur-form .aur-intro,\n.mfp.aur-form .aur-intro,\n.mf-form-wrapper .mfp.aur-form .aur-section:not(.aur-collection-section),\n.mfp.aur-form .aur-section:not(.aur-collection-section),\n.mf-form-wrapper .mfp.aur-form .aur-newsletter,\n.mfp.aur-form .aur-newsletter,\n.mf-form-wrapper .mfp.aur-form .aur-actions,\n.mfp.aur-form .aur-actions,\n.mf-form-wrapper .mfp.aur-form .aur-footer-note,\n.mfp.aur-form .aur-footer-note {\n  max-width: 920px !important;\n  width: 100% !important;\n}\n\n.mf-form-wrapper .mfp.aur-form .mf-row,\n.mfp.aur-form .mf-row {\n  width: 100% !important;\n  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;\n}\n\n.mf-form-wrapper .mfp.aur-form .aur-submit,\n.mfp.aur-form .aur-submit {\n  background: var(--aur-black, #111111) !important;\n  border-color: var(--aur-black, #111111) !important;\n  color: var(--aur-white, #ffffff) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-control:focus-visible + .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-control:focus-visible + .mf-option-ui,\n.mf-form-wrapper .mf-option-group--chips .mf-option-control:focus-visible + .mf-option-ui,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:focus-visible + .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:focus-visible + .mf-option-ui,\n.mf-form-wrapper .mf-option-group--cards .mf-option-control:focus-visible + .mf-option-ui {\n  outline: 2px solid var(--mf-choice-accent) !important;\n  outline-offset: 2px !important;\n}\n\n@media (max-width: 640px) {\n  .mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips,\n.mfp.mfp-euro-youth .mf-option-group--chips,\n.mf-form-wrapper .mf-option-group--chips {\n    gap: 7px !important;\n  }\n  .mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-ui,\n.mf-form-wrapper .mf-option-group--chips .mf-option-ui {\n    min-height: 30px !important;\n    padding: 6px 11px !important;\n  }\n  .mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-ui,\n.mf-form-wrapper .mf-option-group--cards .mf-option-ui {\n    min-height: 46px !important;\n    padding: 11px 38px 11px 12px !important;\n    border-radius: 12px !important;\n  }\n}\n/* [/PremiumChoiceChipsCards] */\n/*MF-TRANSPARENT-OUTER-20260626*/.mf-form-wrapper .mfp.mfp-euro-youth,.mf-form-wrapper .mfp.mfp-euro-youth .ey-shell,.mf-form-wrapper .mfp.mfp-euro-youth .ey-panel{background:transparent!important}\n.mf-premium-native-mode .mf-form-actions{display:none!important}",
-  "settings": {
-    "theme": "euro-youth-premium",
-    "multiPage": true,
-    "customContent": {},
-    "customScripts": {},
-    "customHtml": "<div class='mfp mfp-euro-youth mfp-native-generated' data-ey-wizard='1'><div class='ey-shell'><aside class='ey-hero'><div class='ey-brand'><div class='ey-brand-icon'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='10'></circle><path d='M2 12h20'></path><path d='M12 2a15.3 15.3 0 0 1 0 20'></path><path d='M12 2a15.3 15.3 0 0 0 0 20'></path></svg></div><span>EUROYOUTH&nbsp;2026</span></div><div class='ey-hero-copy'><div class='ey-rating'><svg viewBox='0 0 24 24' fill='currentColor'><path d='m12 2 2.9 6.3 6.9.8-5.1 4.7 1.4 6.8-6.1-3.4-6.1 3.4 1.4-6.8-5.1-4.7 6.9-.8z'></path></svg>Rated 4.9 by 12,000+ participants</div><h1>Your European adventure starts here.</h1><p>Join thousands of young Europeans studying, volunteering and exploring across the continent. One application, endless destinations.</p><div class='ey-stats'><div><strong>27</strong><span>Countries</span></div><i></i><div><strong>340+</strong><span>Universities</span></div><i></i><div><strong>&euro;0</strong><span>Application fee</span></div></div></div></aside><section class='ey-panel'><div class='ey-stepper' aria-label='Application steps'><div class='ey-step is-active' data-step='0'><div class='ey-dot'>01</div><div class='ey-step-text'><strong>Profile</strong><span>About you</span></div></div><i class='ey-line' data-line='0'></i><div class='ey-step' data-step='1'><div class='ey-dot'>02</div><div class='ey-step-text'><strong>Programme</strong><span>Your track</span></div></div><i class='ey-line' data-line='1'></i><div class='ey-step' data-step='2'><div class='ey-dot'>03</div><div class='ey-step-text'><strong>Logistics</strong><span>Stay &amp; support</span></div></div><i class='ey-line' data-line='2'></i><div class='ey-step' data-step='3'><div class='ey-dot'>04</div><div class='ey-step-text'><strong>Confirm</strong><span>Review</span></div></div></div><div class='ey-card'><section class='ey-page is-active' data-step='0'><h2>Tell us about you</h2><p class='ey-lede'>Basic details so we can match you with the right programme.</p><label class='ey-field'><span>First name *</span>{{field:first_name}}</label>\n<label class='ey-field'><span>Last name *</span>{{field:last_name}}</label>\n<label class='ey-field'><span>Email *</span>{{field:email}}</label>\n<label class='ey-field'><span>Phone</span>{{field:phone}}</label>\n<label class='ey-field'><span>Year of birth</span>{{field:birth_year}}</label>\n<label class='ey-field'><span>Country of residence *</span>{{field:country}}</label>\n</section><section class='ey-page' data-step='1'><h2>Choose your track</h2><p class='ey-lede'>Pick the programme that fits your goals.</p><label class='ey-field ey-mt5'><span>Programme *</span>{{field:programme}}</label>\n<label class='ey-field'><span>Duration (months)</span>{{field:duration}}</label>\n<label class='ey-field'><span>Preferred start *</span>{{field:start_month}}</label>\n<label class='ey-field'><span>Interests</span>{{field:interests}}</label>\n</section><section class='ey-page' data-step='2'><h2>Stay &amp; support</h2><p class='ey-lede'>Where you'll live and how we can help.</p><label class='ey-field ey-mt6'><span>Accommodation preference *</span>{{field:accommodation}}</label>\n<label class='ey-field ey-mt5'><span>Language level</span>{{field:language_level}}</label>\n<label class='ey-field ey-mt5'><span>Why do you want to join? (optional)</span>{{field:motivation}}<small><b data-ey-count>0</b>/500</small></label>\n<label class='ey-field'><span>Mobility grant</span>{{field:scholarship}}</label>\n</section><section class='ey-page' data-step='3'><h2>Review &amp; confirm</h2><p class='ey-lede'>Double-check your details before submitting.</p><div class='ey-review ey-mt6'><div><span>Name</span><strong data-ey-summary='name'>&mdash;</strong></div><div><span>Email</span><strong data-ey-summary='email'>&mdash;</strong></div><div><span>Country</span><strong data-ey-summary='country'>&mdash;</strong></div><div><span>Programme</span><strong data-ey-summary='programme'>&mdash;</strong></div><div><span>Duration</span><strong data-ey-summary='duration'>3 months</strong></div><div><span>Start</span><strong data-ey-summary='start'>&mdash;</strong></div><div><span>Accommodation</span><strong data-ey-summary='accommodation'>&mdash;</strong></div><div><span>Interests</span><strong data-ey-summary='interests'>&mdash;</strong></div><div><span>Mobility grant</span><strong data-ey-summary='grant'>No</strong></div></div><label class='ey-field ey-mt5'><span>Newsletter</span>{{field:newsletter}}</label>\n<label class='ey-field'><span>Terms *</span>{{field:terms}}</label>\n</section>      \n      \n      \n      \n      \n      \n<div class='ey-actions'><button class='ey-back' type='button'>&larr; Back</button><a class='ey-cancel' href='/premium-forms'>&larr; Cancel</a><button class='ey-next' type='button' disabled>Continue &rarr;</button><button class='ey-submit' type='submit' hidden disabled>Submit application &check;</button></div></div><p class='ey-footer'>Co-funded by the European Youth Mobility Initiative &middot; Step <span data-ey-current>1</span> of 4</p></section></div></div>",
-    "customCss": "@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap');.mfp.mfp-euro-youth{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;color:#1c1917;background:#f5f5f4;width:100%!important;max-width:1152px!important;margin:0 auto!important;padding:16px!important;box-sizing:border-box;overflow:visible!important}.mfp-euro-youth,.mfp-euro-youth *{box-sizing:border-box}.mfp-euro-youth .ey-shell{display:grid;min-height:auto;max-width:1152px;margin:0 auto;background:#f5f5f4}.mfp-euro-youth .ey-hero{display:none;position:relative;overflow:hidden;flex-direction:column;justify-content:space-between;padding:40px;color:#fff;background-image:linear-gradient(to bottom,rgba(15,23,42,.25),rgba(15,23,42,.85)),url('/Modules/MegaForm/img/euro-youth/euro-youth-hero.png');background-size:cover;background-position:center}.mfp-euro-youth .ey-brand{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.9);font-size:14px;font-weight:600;letter-spacing:.025em}.mfp-euro-youth .ey-brand-icon{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.15);backdrop-filter:blur(8px)}.mfp-euro-youth svg{width:1em;height:1em;display:block}.mfp-euro-youth .ey-brand-icon svg{width:20px;height:20px}.mfp-euro-youth .ey-rating{display:inline-flex;align-items:center;gap:6px;border-radius:999px;background:rgba(255,255,255,.15);padding:4px 12px;font-size:12px;line-height:16px;font-weight:500;backdrop-filter:blur(8px);margin-bottom:16px}.mfp-euro-youth .ey-rating svg{width:14px;height:14px;color:#fcd34d;fill:#fcd34d}.mfp-euro-youth .ey-hero h1{font-family:'Bricolage Grotesque',Inter,sans-serif;margin:0;color:#fff;font-size:36px;line-height:1.1;font-weight:800;letter-spacing:0}.mfp-euro-youth .ey-hero p{margin:12px 0 0;color:rgba(255,255,255,.8);font-size:15px;line-height:1.6}.mfp-euro-youth .ey-stats{display:flex;align-items:center;gap:24px;margin-top:32px}.mfp-euro-youth .ey-stats strong{font-family:'Bricolage Grotesque',Inter,sans-serif;display:block;font-size:24px;line-height:32px;font-weight:700;color:#fff}.mfp-euro-youth .ey-stats span{display:block;color:rgba(255,255,255,.7);font-size:12px;line-height:16px}.mfp-euro-youth .ey-stats i{display:block;width:1px;height:32px;background:rgba(255,255,255,.2)}.mfp-euro-youth .ey-panel{display:flex;flex-direction:column;background:#f5f5f4;padding:32px 24px}.mfp-euro-youth .ey-stepper{display:flex;align-items:center;gap:8px;margin-bottom:32px;height:32px!important}.mfp-euro-youth .ey-step{display:flex;flex:1;align-items:center;gap:8px;min-width:0;height:32px!important}.mfp-euro-youth .ey-dot{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:999px;background:#e7e5e4;color:#a8a29e;font-size:12px;line-height:16px;font-weight:600;transition:all .18s ease;flex:0 0 32px}.mfp-euro-youth .ey-step.is-active .ey-dot{background:#1c1917;color:#fff}.mfp-euro-youth .ey-step.is-done .ey-dot{background:#059669;color:#fff;font-size:0}.mfp-euro-youth .ey-step.is-done .ey-dot:after{content:'\\2713';font-size:16px}.mfp-euro-youth .ey-step-text{display:none;white-space:nowrap}.mfp-euro-youth .ey-step-text strong{display:block;color:#a8a29e;font-size:13px;line-height:1;font-weight:600}.mfp-euro-youth .ey-step-text span{display:block;margin-top:2px;color:#a8a29e;font-size:11px;line-height:14px}.mfp-euro-youth .ey-step.is-active .ey-step-text strong,.mfp-euro-youth .ey-step.is-done .ey-step-text strong{color:#1c1917}.mfp-euro-youth .ey-line{height:1px;background:#e7e5e4;flex:1;transition:all .18s ease}.mfp-euro-youth .ey-line.is-done{background:#059669}.mfp-euro-youth .ey-card{flex:1;border-radius:24px;background:#fff;padding:24px;box-shadow:0 1px 2px rgba(0,0,0,.05)}.mfp-euro-youth .ey-page{display:none}.mfp-euro-youth .ey-page.is-active{display:block}.mfp-euro-youth h2{font-family:'Bricolage Grotesque',Inter,sans-serif;margin:0!important;color:#1c1917;font-size:24px;line-height:32px!important;font-weight:700;letter-spacing:0}.mfp-euro-youth .ey-lede{margin:4px 0 0!important;color:#78716c;font-size:14px;line-height:20px!important}.mfp-euro-youth .ey-mt6{margin-top:24px}.mfp-euro-youth .ey-mt5{margin-top:20px}.mfp-euro-youth .ey-grid{display:grid;gap:16px}.mfp-euro-youth .ey-field{display:block;margin:0}.mfp-euro-youth .ey-field>span{display:block;margin:0 0 8px!important;color:#57534e;font-size:13px;line-height:18px;font-weight:500}.mfp-euro-youth .ey-field .mf-field-label{display:none!important}.mfp-euro-youth .mf-field-group{margin:0!important;width:100%}.mfp-euro-youth .mf-input,.mfp-euro-youth .mf-select,.mfp-euro-youth .mf-textarea{width:100%!important;border:1px solid #d6d3d1!important;border-radius:12px!important;background:#fff!important;padding:12px 16px!important;color:#1c1917!important;font-family:'Inter',system-ui,sans-serif!important;font-size:15px!important;line-height:20px!important;min-height:49px!important;height:49px!important;outline:0!important;box-shadow:none!important;transition:all .15s ease!important}.mfp-euro-youth .mf-textarea{min-height:118px!important;height:auto!important;resize:none}.mfp-euro-youth .mf-input::placeholder,.mfp-euro-youth .mf-textarea::placeholder{color:#a8a29e!important;opacity:1}.mfp-euro-youth .mf-input:focus,.mfp-euro-youth .mf-select:focus,.mfp-euro-youth .mf-textarea:focus{border-color:#1c1917!important;box-shadow:0 0 0 2px rgba(28,25,23,.1)!important}.mfp-euro-youth .mf-select-wrap{position:relative}.mfp-euro-youth .mf-select{appearance:none!important;-webkit-appearance:none!important;padding-right:42px!important}.mfp-euro-youth .mf-field-error{margin-top:5px;color:#dc2626;font-size:12px;line-height:16px}.mfp-euro-youth .ey-programmes{display:grid;gap:12px}.mfp-euro-youth .ey-programme{display:flex;align-items:flex-start;gap:16px;width:100%;border:1px solid #e7e5e4;border-radius:16px;background:#fff;padding:16px;text-align:left;cursor:pointer;transition:all .15s ease}.mfp-euro-youth .ey-programme:hover{border-color:#d6d3d1}.mfp-euro-youth .ey-programme:has(input:checked){border-color:#1c1917;background:#fafaf9;box-shadow:0 0 0 2px rgba(28,25,23,.1)}.mfp-euro-youth .ey-programme input,.mfp-euro-youth .ey-accom input,.mfp-euro-youth .ey-chips input{position:absolute;opacity:0;pointer-events:none}.mfp-euro-youth .ey-programme-icon{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;background:#f5f5f4;color:#57534e;flex:0 0 44px}.mfp-euro-youth .ey-programme:has(input:checked) .ey-programme-icon{background:#1c1917;color:#fff}.mfp-euro-youth .ey-programme-icon svg{width:20px;height:20px}.mfp-euro-youth .ey-programme-copy{display:block;flex:1;min-width:0}.mfp-euro-youth .ey-programme-copy strong{display:block;color:#1c1917;font-size:16px;line-height:22px;font-weight:600}.mfp-euro-youth .ey-programme-copy em{display:flex;align-items:center;gap:4px;margin-top:2px;color:#78716c;font-size:12px;line-height:16px;font-style:normal}.mfp-euro-youth .ey-programme-copy em svg{width:14px;height:14px}.mfp-euro-youth .ey-programme-copy span{display:block;margin-top:4px;color:#57534e;font-size:14px;line-height:20px}.mfp-euro-youth .ey-check{display:none;color:#059669;font-size:20px;line-height:20px}.mfp-euro-youth .ey-programme:has(input:checked) .ey-check{display:block}.mfp-euro-youth .ey-chips{display:flex;flex-wrap:wrap;gap:8px}.mfp-euro-youth .ey-chips label{display:inline-flex}.mfp-euro-youth .ey-chips span{display:inline-flex;border:1px solid #d6d3d1;border-radius:999px;background:#fff;color:#57534e;padding:6px 14px;font-size:14px;line-height:20px;cursor:pointer;transition:all .15s ease}.mfp-euro-youth .ey-chips input:checked+span{border-color:#1c1917;background:#1c1917;color:#fff}.mfp-euro-youth .ey-accom{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.mfp-euro-youth .ey-accom label{display:block;cursor:pointer}.mfp-euro-youth .ey-accom span{display:block;border:1px solid #e7e5e4;border-radius:16px;background:#fff;padding:16px;transition:all .15s ease}.mfp-euro-youth .ey-accom strong{display:block;color:#1c1917;font-size:14px;line-height:20px;font-weight:600}.mfp-euro-youth .ey-accom em{display:block;margin-top:2px;color:#78716c;font-size:12px;line-height:16px;font-style:normal}.mfp-euro-youth .ey-accom input:checked+span{border-color:#1c1917;background:#fafaf9;box-shadow:0 0 0 2px rgba(28,25,23,.1)}.mfp-euro-youth .ey-field small{display:block;margin-top:4px;text-align:right;color:#a8a29e;font-size:12px;line-height:16px}.mfp-euro-youth .ey-grant{display:flex;align-items:flex-start;gap:12px;margin-top:12px;border:1px solid #e7e5e4;border-radius:16px;background:#fafaf9;padding:16px;cursor:pointer}.mfp-euro-youth .ey-grant input,.mfp-euro-youth .ey-checks input{width:20px;height:20px;margin:2px 0 0;accent-color:#1c1917;flex:0 0 auto}.mfp-euro-youth .ey-grant strong{display:block;color:#1c1917;font-size:14px;line-height:20px;font-weight:600}.mfp-euro-youth .ey-grant em{display:block;color:#78716c;font-size:12px;line-height:16px;font-style:normal}.mfp-euro-youth .ey-review{overflow:hidden;border:1px solid #e7e5e4;border-radius:16px}.mfp-euro-youth .ey-review div{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 16px;color:#78716c;font-size:14px;line-height:20px}.mfp-euro-youth .ey-review div:nth-child(even){background:#fafaf9}.mfp-euro-youth .ey-review strong{color:#1c1917;font-weight:500;text-align:right}.mfp-euro-youth .ey-checks{display:grid;gap:12px}.mfp-euro-youth .ey-checks label{display:flex;align-items:flex-start;gap:12px;color:#57534e;font-size:14px;line-height:20px;cursor:pointer}.mfp-euro-youth .ey-checks strong{color:#1c1917;text-decoration:underline}.mfp-euro-youth .ey-actions{display:flex;align-items:center;justify-content:space-between;margin-top:32px;border-top:1px solid #f5f5f4;padding-top:24px}.mfp-euro-youth .ey-back,.mfp-euro-youth .ey-cancel,.mfp-euro-youth .ey-next,.mfp-euro-youth .ey-submit{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:12px;padding:10px 16px;font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:20px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .15s ease}.mfp-euro-youth .ey-back,.mfp-euro-youth .ey-cancel{background:transparent;color:#57534e}.mfp-euro-youth .ey-cancel{color:#a8a29e}.mfp-euro-youth .ey-back:hover,.mfp-euro-youth .ey-cancel:hover{background:#f5f5f4;color:#57534e}.mfp-euro-youth .ey-next,.mfp-euro-youth .ey-submit{background:#1c1917;color:#fff;padding-left:24px;padding-right:24px}.mfp-euro-youth .ey-next:hover{background:#292524}.mfp-euro-youth .ey-submit{background:#059669}.mfp-euro-youth .ey-submit:hover{background:#047857}.mfp-euro-youth .ey-next:disabled,.mfp-euro-youth .ey-submit:disabled{background:#d6d3d1;color:#fff;cursor:not-allowed}.mfp-euro-youth .ey-footer{margin:16px 0 0;text-align:center;color:#a8a29e;font-size:12px;line-height:16px}.mfp-euro-youth .mf-form-title,.mfp-euro-youth .mf-form-description,.mfp-euro-youth .mf-success-message,.mfp-euro-youth .mf-form-actions:not(.mf-postsubmit-actions):not(.mf-review-actions){display:none!important}.mfp-euro-youth .ey-card{padding:32px}.mfp-euro-youth .ey-grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}.mfp-euro-youth .ey-step-text{display:block}}@media(min-width:1024px){.mfp-euro-youth .ey-shell{grid-template-columns:440px 1fr}.mfp-euro-youth .ey-hero{display:flex}.mfp-euro-youth .ey-panel{padding:32px 48px}}@media(max-width:560px){.mfp-euro-youth .ey-panel{padding:32px 24px}.mfp-euro-youth .ey-card{padding:24px}.mfp-euro-youth .ey-accom{grid-template-columns:1fr}.mfp-euro-youth .ey-programme{gap:12px}.mfp-euro-youth .ey-programme-icon{width:40px;height:40px;flex-basis:40px}.mfp-euro-youth .ey-actions{margin-top:28px}.mfp-euro-youth .ey-next,.mfp-euro-youth .ey-submit{padding-left:20px;padding-right:20px}}.mf-form-wrapper>.mf-form-inner .mfp.mfp-euro-youth{width:100%!important;max-width:1152px!important;margin:0 auto!important;padding:16px!important;background:#f5f5f4!important;box-sizing:border-box!important}\n\n/* [PremiumChoiceChipsCards 2026-06-19] */\n.mf-form-wrapper .mfp.mfp-euro-youth,\n.mfp.mfp-euro-youth,\n.mf-form-wrapper {\n  --mf-choice-accent: var(--primary, var(--accent, var(--mf-choice-accent, var(--primary, var(--accent, #111827)))));\n  --mf-choice-accent-2: var(--accent, var(--primary, var(--mf-choice-accent, var(--primary, var(--accent, #111827)))));\n  --mf-choice-text: var(--foreground, var(--card-foreground, var(--mf-choice-text, var(--foreground, var(--card-foreground, #111827)))));\n  --mf-choice-muted: var(--muted-foreground, var(--mf-choice-muted, var(--muted-foreground, #6b7280)));\n  --mf-choice-border: var(--border, var(--mf-choice-border, var(--border, #e5e7eb)));\n  --mf-choice-card: var(--card, var(--mf-choice-card, var(--card, #ffffff)));\n  --mf-choice-soft: color-mix(in oklab, var(--mf-choice-accent) 9%, transparent);\n  --mf-choice-soft-strong: color-mix(in oklab, var(--mf-choice-accent) 15%, transparent);\n  --mf-choice-on-accent: var(--primary-foreground, #fff);\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips,\n.mfp.mfp-euro-youth .mf-option-group--chips,\n.mf-form-wrapper .mf-option-group--chips {\n  display: flex !important;\n  flex-direction: row !important;\n  flex-wrap: wrap !important;\n  align-items: flex-start !important;\n  justify-content: flex-start !important;\n  gap: 10px !important;\n  text-align: left !important;\n  grid-template-columns: none !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-item,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-item,\n.mf-form-wrapper .mf-option-group--chips .mf-option-item {\n  display: inline-flex !important;\n  width: auto !important;\n  max-width: 100% !important;\n  flex: 0 1 auto !important;\n  margin: 0 !important;\n  padding: 0 !important;\n  min-height: 0 !important;\n  background: transparent !important;\n  border: 0 !important;\n  border-radius: 0 !important;\n  box-shadow: none !important;\n  gap: 0 !important;\n  cursor: pointer !important;\n  text-align: left !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards,\n.mfp.mfp-euro-youth .mf-option-group--cards,\n.mf-form-wrapper .mf-option-group--cards {\n  display: grid !important;\n  grid-template-columns: 1fr !important;\n  gap: 12px !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-control,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-control,\n.mf-form-wrapper .mf-option-group--chips .mf-option-control,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control,\n.mf-form-wrapper .mf-option-group--cards .mf-option-control {\n  position: absolute !important;\n  opacity: 0 !important;\n  width: 1px !important;\n  height: 1px !important;\n  overflow: hidden !important;\n  pointer-events: none !important;\n  appearance: none !important;\n  -webkit-appearance: none !important;\n  clip-path: inset(50%) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-ui,\n.mf-form-wrapper .mf-option-group--chips .mf-option-ui {\n  display: inline-flex !important;\n  align-items: center !important;\n  justify-content: flex-start !important;\n  width: auto !important;\n  max-width: 100% !important;\n  min-height: 30px !important;\n  padding: 6px 12px !important;\n  border: 1px solid color-mix(in oklab, var(--mf-choice-border) 70%, var(--mf-choice-accent) 30%) !important;\n  border-radius: 999px !important;\n  background: color-mix(in oklab, var(--mf-choice-card) 94%, var(--mf-choice-accent) 6%) !important;\n  color: var(--mf-choice-text) !important;\n  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;\n  transition: border-color .16s ease, background .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-ui::before,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-ui::before,\n.mf-form-wrapper .mf-option-group--chips .mf-option-ui::before,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-ui::before,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-ui::before,\n.mf-form-wrapper .mf-option-group--cards .mf-option-ui::before,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-item::before,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-item::before,\n.mf-form-wrapper .mf-option-group--chips .mf-option-item::before,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-item::before,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-item::before,\n.mf-form-wrapper .mf-option-group--cards .mf-option-item::before,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-label::before,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-label::before,\n.mf-form-wrapper .mf-option-group--chips .mf-option-label::before,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-label::before,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-label::before,\n.mf-form-wrapper .mf-option-group--cards .mf-option-label::before {\n  display: none !important;\n  content: \"\" !important;\n  width: 0 !important;\n  height: 0 !important;\n  margin: 0 !important;\n  padding: 0 !important;\n  border: 0 !important;\n  background: none !important;\n  box-shadow: none !important;\n  flex: 0 0 0 !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-label,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-label,\n.mf-form-wrapper .mf-option-group--chips .mf-option-label {\n  color: inherit !important;\n  font-size: 13px !important;\n  line-height: 17px !important;\n  font-weight: 500 !important;\n  white-space: normal !important;\n  min-width: 0 !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-item:hover .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-item:hover .mf-option-ui,\n.mf-form-wrapper .mf-option-group--chips .mf-option-item:hover .mf-option-ui {\n  border-color: var(--mf-choice-accent) !important;\n  background: var(--mf-choice-soft) !important;\n  transform: translateY(-1px) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-control:checked + .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-control:checked + .mf-option-ui,\n.mf-form-wrapper .mf-option-group--chips .mf-option-control:checked + .mf-option-ui {\n  border-color: var(--mf-choice-accent) !important;\n  background: var(--mf-choice-accent) !important;\n  color: var(--mf-choice-on-accent) !important;\n  box-shadow: 0 8px 22px color-mix(in oklab, var(--mf-choice-accent) 24%, transparent) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-item,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-item,\n.mf-form-wrapper .mf-option-group--cards .mf-option-item {\n  display: block !important;\n  width: 100% !important;\n  margin: 0 !important;\n  padding: 0 !important;\n  cursor: pointer !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-ui,\n.mf-form-wrapper .mf-option-group--cards .mf-option-ui {\n  position: relative !important;\n  display: flex !important;\n  align-items: flex-start !important;\n  gap: 14px !important;\n  width: 100% !important;\n  min-height: 48px !important;\n  padding: 12px 42px 12px 14px !important;\n  border: 1px solid var(--mf-choice-border) !important;\n  border-radius: 12px !important;\n  background: var(--mf-choice-card) !important;\n  color: var(--mf-choice-text) !important;\n  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05) !important;\n  transition: border-color .16s ease, background .16s ease, box-shadow .16s ease, transform .16s ease !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-item:hover .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-item:hover .mf-option-ui,\n.mf-form-wrapper .mf-option-group--cards .mf-option-item:hover .mf-option-ui {\n  border-color: var(--mf-choice-accent) !important;\n  background: color-mix(in oklab, var(--mf-choice-card) 92%, var(--mf-choice-accent) 8%) !important;\n  transform: translateY(-1px) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:checked + .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:checked + .mf-option-ui,\n.mf-form-wrapper .mf-option-group--cards .mf-option-control:checked + .mf-option-ui {\n  border-color: var(--mf-choice-accent) !important;\n  background: color-mix(in oklab, var(--mf-choice-card) 88%, var(--mf-choice-accent) 12%) !important;\n  box-shadow: 0 0 0 1px var(--mf-choice-accent), 0 14px 34px color-mix(in oklab, var(--mf-choice-accent) 18%, transparent) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-icon,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-icon,\n.mf-form-wrapper .mf-option-group--cards .mf-option-icon {\n  display: inline-flex !important;\n  align-items: center !important;\n  justify-content: center !important;\n  width: 34px !important;\n  height: 34px !important;\n  flex: 0 0 34px !important;\n  border-radius: 10px !important;\n  background: var(--mf-choice-soft) !important;\n  color: var(--mf-choice-accent) !important;\n  font-size: 18px !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:checked + .mf-option-ui .mf-option-icon,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:checked + .mf-option-ui .mf-option-icon,\n.mf-form-wrapper .mf-option-group--cards .mf-option-control:checked + .mf-option-ui .mf-option-icon {\n  background: var(--mf-choice-accent) !important;\n  color: var(--mf-choice-on-accent) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-copy,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-copy,\n.mf-form-wrapper .mf-option-group--cards .mf-option-copy {\n  display: grid !important;\n  gap: 3px !important;\n  min-width: 0 !important;\n  flex: 1 1 auto !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-label,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-label,\n.mf-form-wrapper .mf-option-group--cards .mf-option-label {\n  color: var(--mf-choice-text) !important;\n  font-size: 14px !important;\n  line-height: 19px !important;\n  font-weight: 700 !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-meta,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-meta,\n.mf-form-wrapper .mf-option-group--cards .mf-option-meta,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-desc,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-desc,\n.mf-form-wrapper .mf-option-group--cards .mf-option-desc {\n  color: var(--mf-choice-muted) !important;\n  font-size: 13px !important;\n  line-height: 18px !important;\n  font-weight: 500 !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .section-icon,\n.mfp.mfp-euro-youth .section-icon,\n.mf-form-wrapper .section-icon,\n.mf-form-wrapper .mfp.mfp-euro-youth .gift-icon,\n.mfp.mfp-euro-youth .gift-icon,\n.mf-form-wrapper .gift-icon {\n  display: none !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-check,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-check,\n.mf-form-wrapper .mf-option-group--cards .mf-option-check {\n  position: absolute !important;\n  top: 18px !important;\n  right: 18px !important;\n  color: var(--mf-choice-accent) !important;\n  font-size: 20px !important;\n  line-height: 20px !important;\n  opacity: 0 !important;\n  transform: scale(.8) !important;\n  transition: opacity .16s ease, transform .16s ease !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:checked + .mf-option-ui .mf-option-check,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:checked + .mf-option-ui .mf-option-check,\n.mf-form-wrapper .mf-option-group--cards .mf-option-control:checked + .mf-option-ui .mf-option-check {\n  opacity: 1 !important;\n  transform: scale(1) !important;\n}\n\n/* V3 hardening: some premium templates append late styles without the custom root,\n   so keep chip/card rendering correct from the MegaForm wrapper as the final fallback. */\n.mf-form-wrapper .mf-option-group--chips,\n.mf-form-wrapper .mf-option-group--cards {\n  align-items: flex-start !important;\n  justify-content: flex-start !important;\n}\n\n.mf-form-wrapper .mf-option-group--chips .mf-option-item {\n  display: inline-flex !important;\n  width: auto !important;\n  max-width: 100% !important;\n  flex: 0 1 auto !important;\n  min-height: 0 !important;\n  margin: 0 !important;\n  padding: 0 !important;\n  background: transparent !important;\n  border: 0 !important;\n  border-radius: 0 !important;\n  box-shadow: none !important;\n  gap: 0 !important;\n}\n\n.mf-form-wrapper .mf-option-group--chips .mf-option-control,\n.mf-form-wrapper .mf-option-group--cards .mf-option-control {\n  position: absolute !important;\n  opacity: 0 !important;\n  width: 1px !important;\n  height: 1px !important;\n  overflow: hidden !important;\n  pointer-events: none !important;\n  appearance: none !important;\n  -webkit-appearance: none !important;\n  clip-path: inset(50%) !important;\n  margin: 0 !important;\n}\n\n.mf-form-wrapper .mf-option-group--chips .mf-option-ui,\n.mf-form-wrapper .mf-option-group--cards .mf-option-ui {\n  box-sizing: border-box !important;\n}\n\n.mf-form-wrapper.mf-theme-pure-grid-premium {\n  --mf-choice-accent: var(--primary, oklch(0.50 0.10 145));\n  --mf-choice-accent-2: var(--accent, oklch(0.75 0.06 85));\n  --mf-choice-text: var(--foreground, oklch(0.25 0.04 145));\n  --mf-choice-border: var(--border, oklch(0.85 0.02 145));\n  --mf-choice-card: var(--card, #ffffff);\n  --mf-choice-on-accent: var(--primary-foreground, #ffffff);\n}\n\n.mf-form-wrapper.mf-theme-pure-grid-premium .mf-option-group--chips .mf-option-ui {\n  background: color-mix(in oklab, var(--mf-choice-card) 92%, var(--mf-choice-accent) 8%) !important;\n  border-color: color-mix(in oklab, var(--mf-choice-border) 64%, var(--mf-choice-accent) 36%) !important;\n  color: var(--mf-choice-text) !important;\n}\n\n.mf-form-wrapper.mf-theme-pure-grid-premium .mf-option-group--chips .mf-option-control:checked + .mf-option-ui {\n  background: var(--mf-choice-accent) !important;\n  border-color: var(--mf-choice-accent) !important;\n  color: var(--mf-choice-on-accent) !important;\n}\n\n.mf-form-wrapper.mf-theme-pure-grid-premium button[type=\"submit\"],\n.mf-form-wrapper.mf-theme-pure-grid-premium .aur-submit,\n.mf-form-wrapper.mf-theme-pure-grid-premium .mfp-submit {\n  background: var(--mf-choice-accent) !important;\n  border-color: var(--mf-choice-accent) !important;\n  color: var(--mf-choice-on-accent) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-nola-glass,\n.mfp.mfp-nola-glass {\n  --mf-choice-accent: var(--nola-gold, #f39c12);\n  --mf-choice-accent-2: var(--nola-green, #27ae60);\n  --mf-choice-text: var(--nola-text, #ffffff);\n  --mf-choice-border: rgba(255,255,255,0.28);\n  --mf-choice-card: rgba(255,255,255,0.10);\n  --mf-choice-on-accent: var(--nola-deep, #1a0a2e);\n}\n\n.mf-form-wrapper .mfp.mfp-nola-glass .mf-option-group--chips .mf-option-ui,\n.mfp.mfp-nola-glass .mf-option-group--chips .mf-option-ui {\n  background: rgba(255,255,255,0.10) !important;\n  border-color: rgba(255,255,255,0.30) !important;\n  color: var(--nola-text, #ffffff) !important;\n  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 1px 2px rgba(0,0,0,0.16) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-nola-glass .mf-option-group--chips .mf-option-label,\n.mfp.mfp-nola-glass .mf-option-group--chips .mf-option-label {\n  color: var(--nola-text, #ffffff) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-nola-glass .mf-option-group--chips .mf-option-control:checked + .mf-option-ui,\n.mfp.mfp-nola-glass .mf-option-group--chips .mf-option-control:checked + .mf-option-ui {\n  background: linear-gradient(135deg, var(--nola-gold, #f39c12), #ffd700) !important;\n  border-color: var(--nola-gold, #f39c12) !important;\n  color: var(--nola-deep, #1a0a2e) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-nola-glass .mfp-submit,\n.mfp.mfp-nola-glass .mfp-submit {\n  display: flex !important;\n  align-items: center !important;\n  justify-content: center !important;\n  width: 100% !important;\n  background: linear-gradient(135deg, var(--nola-gold, #f39c12), #ffd700, var(--nola-gold, #f39c12)) !important;\n  border: 0 !important;\n  border-radius: 12px !important;\n  color: var(--nola-deep, #1a0a2e) !important;\n  font-weight: 700 !important;\n  box-shadow: 0 10px 28px rgba(243,156,18,0.30) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-coachella .mf-option-group--chips {\n  gap: 12px !important;\n}\n\n.mf-form-wrapper .mfp.mfp-coachella .mf-option-group--chips .mf-option-item,\n.mfp.mfp-coachella .mf-option-group--chips .mf-option-item {\n  background: transparent !important;\n  border: 0 !important;\n  border-radius: 0 !important;\n  box-shadow: none !important;\n  padding: 0 !important;\n}\n\n.mf-form-wrapper .mfp.mfp-coachella .mf-option-group--chips .mf-option-ui,\n.mfp.mfp-coachella .mf-option-group--chips .mf-option-ui {\n  min-height: 32px !important;\n  padding: 7px 13px !important;\n  border-color: color-mix(in oklab, var(--mf-choice-border) 58%, var(--mf-choice-accent) 42%) !important;\n  background: color-mix(in oklab, var(--mf-choice-card) 90%, var(--mf-choice-accent) 10%) !important;\n}\n\n.mf-form-wrapper .mfp.aur-form .aur-intro,\n.mfp.aur-form .aur-intro,\n.mf-form-wrapper .mfp.aur-form .aur-section:not(.aur-collection-section),\n.mfp.aur-form .aur-section:not(.aur-collection-section),\n.mf-form-wrapper .mfp.aur-form .aur-newsletter,\n.mfp.aur-form .aur-newsletter,\n.mf-form-wrapper .mfp.aur-form .aur-actions,\n.mfp.aur-form .aur-actions,\n.mf-form-wrapper .mfp.aur-form .aur-footer-note,\n.mfp.aur-form .aur-footer-note {\n  max-width: 920px !important;\n  width: 100% !important;\n}\n\n.mf-form-wrapper .mfp.aur-form .mf-row,\n.mfp.aur-form .mf-row {\n  width: 100% !important;\n  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;\n}\n\n.mf-form-wrapper .mfp.aur-form .aur-submit,\n.mfp.aur-form .aur-submit {\n  background: var(--aur-black, #111111) !important;\n  border-color: var(--aur-black, #111111) !important;\n  color: var(--aur-white, #ffffff) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-control:focus-visible + .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-control:focus-visible + .mf-option-ui,\n.mf-form-wrapper .mf-option-group--chips .mf-option-control:focus-visible + .mf-option-ui,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:focus-visible + .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:focus-visible + .mf-option-ui,\n.mf-form-wrapper .mf-option-group--cards .mf-option-control:focus-visible + .mf-option-ui {\n  outline: 2px solid var(--mf-choice-accent) !important;\n  outline-offset: 2px !important;\n}\n\n@media (max-width: 640px) {\n  .mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips,\n.mfp.mfp-euro-youth .mf-option-group--chips,\n.mf-form-wrapper .mf-option-group--chips {\n    gap: 7px !important;\n  }\n  .mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-ui,\n.mf-form-wrapper .mf-option-group--chips .mf-option-ui {\n    min-height: 30px !important;\n    padding: 6px 11px !important;\n  }\n  .mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-ui,\n.mf-form-wrapper .mf-option-group--cards .mf-option-ui {\n    min-height: 46px !important;\n    padding: 11px 38px 11px 12px !important;\n    border-radius: 12px !important;\n  }\n}\n/* [/PremiumChoiceChipsCards] */\n/*MF-TRANSPARENT-OUTER-20260626*/.mf-form-wrapper .mfp.mfp-euro-youth,.mf-form-wrapper .mfp.mfp-euro-youth .ey-shell,.mf-form-wrapper .mfp.mfp-euro-youth .ey-panel{background:transparent!important}\n.mf-premium-native-mode .mf-form-actions:not(.mf-postsubmit-actions):not(.mf-review-actions){display:none!important}\n\n/* MF-FIX euro-preset 20260706 - euro-youth hardcodes its palette inline with !important; the primary\n   accent (#1c1917 dark) sits on the submit button, the active-step dot and the checked\n   programme icon, and #059669 green on the done-step dot. Wire those to the preset channel\n   so a picked preset recolors them (inputs/title already recolor via the standard vars). */\n.mf-form-wrapper .mfp.mfp-euro-youth .ey-submit,\n.mf-form-wrapper .mfp.mfp-euro-youth .ey-next,\n.mf-form-wrapper .mfp.mfp-euro-youth .ey-step.is-active .ey-dot,\n.mf-form-wrapper .mfp.mfp-euro-youth .ey-programme:has(input:checked) .ey-programme-icon{background:var(--mf-preset-primary, #1c1917)!important;border-color:var(--mf-preset-primary, #1c1917)!important}\n.mf-form-wrapper .mfp.mfp-euro-youth .ey-step.is-done .ey-dot{background:var(--mf-preset-accent, #059669)!important}\n",
-    "themeSelector": {
-      "enabled": false
+   ],
+   "helpText": "",
+   "defaultValue": "",
+   "cssClass": "",
+   "width": "100%",
+   "readOnly": false,
+   "prefillParam": "",
+   "validation": {},
+   "showIf": null,
+   "htmlContent": "",
+   "fileSettings": null,
+   "properties": {}
+  },
+  {
+   "key": "premium_step_2",
+   "type": "Section",
+   "label": "Choose your track",
+   "required": false,
+   "properties": {
+    "pageBreak": true,
+    "premiumNativeStep": true,
+    "generatedPremiumStep": true,
+    "premiumStepIndex": 2,
+    "legacyDataStep": 1
+   }
+  },
+  {
+   "key": "programme",
+   "type": "Radio",
+   "label": "Programme",
+   "required": true,
+   "options": [
+    {
+     "label": "Starter",
+     "value": "starter",
+     "icon": "🚀",
+     "badge": "Free",
+     "description": "Get going with the essentials"
     },
-    "premiumNativePageBreak": true,
-    "premiumGeneratedShell": true,
-    "premiumNativeMigrationBadge": "PremiumNativePageBreak v20260628",
-    "showProgressBar": true
+    {
+     "label": "Growth",
+     "value": "growth",
+     "icon": "📈",
+     "badge": "Popular",
+     "description": "Everything you need to scale"
+    },
+    {
+     "label": "Scale",
+     "value": "scale",
+     "icon": "🏆",
+     "badge": "Best value",
+     "description": "Advanced controls & support"
+    }
+   ],
+   "optionDisplay": "cards",
+   "choiceDisplay": "cards",
+   "optionVariant": "cards",
+   "properties": {
+    "optionDisplay": "cards",
+    "optionColumns": 1
+   },
+   "widgetProps": {
+    "optionDisplay": "cards",
+    "optionColumns": 1
+   },
+   "placeholder": "",
+   "helpText": "",
+   "defaultValue": "",
+   "cssClass": "",
+   "width": "100%",
+   "readOnly": false,
+   "prefillParam": "",
+   "showIf": null,
+   "htmlContent": "",
+   "fileSettings": null,
+   "optionColumns": 2,
+   "validation": {}
   },
-  "customScripts": {},
-  "rules": [],
-  "workflow": {
-    "notifications": []
+  {
+   "key": "duration",
+   "type": "Select",
+   "label": "Duration (months)",
+   "defaultValue": "3",
+   "options": [
+    {
+     "label": "1 month",
+     "value": "1"
+    },
+    {
+     "label": "3 months",
+     "value": "3"
+    },
+    {
+     "label": "6 months",
+     "value": "6"
+    },
+    {
+     "label": "12 months",
+     "value": "12"
+    }
+   ],
+   "placeholder": "",
+   "required": false,
+   "helpText": "",
+   "cssClass": "",
+   "width": "100%",
+   "readOnly": false,
+   "prefillParam": "",
+   "validation": {},
+   "showIf": null,
+   "htmlContent": "",
+   "fileSettings": null,
+   "properties": {}
   },
-  "themeSelector": {
-    "enabled": false
+  {
+   "key": "start_month",
+   "type": "Select",
+   "label": "Preferred start",
+   "required": true,
+   "placeholder": "Select month",
+   "options": [
+    {
+     "label": "January 2026",
+     "value": "January"
+    },
+    {
+     "label": "February 2026",
+     "value": "February"
+    },
+    {
+     "label": "March 2026",
+     "value": "March"
+    },
+    {
+     "label": "April 2026",
+     "value": "April"
+    },
+    {
+     "label": "May 2026",
+     "value": "May"
+    },
+    {
+     "label": "June 2026",
+     "value": "June"
+    },
+    {
+     "label": "July 2026",
+     "value": "July"
+    },
+    {
+     "label": "August 2026",
+     "value": "August"
+    },
+    {
+     "label": "September 2026",
+     "value": "September"
+    },
+    {
+     "label": "October 2026",
+     "value": "October"
+    },
+    {
+     "label": "November 2026",
+     "value": "November"
+    },
+    {
+     "label": "December 2026",
+     "value": "December"
+    }
+   ],
+   "helpText": "",
+   "defaultValue": "",
+   "cssClass": "",
+   "width": "100%",
+   "readOnly": false,
+   "prefillParam": "",
+   "validation": {},
+   "showIf": null,
+   "htmlContent": "",
+   "fileSettings": null,
+   "properties": {}
   },
-  "templateGuideSlug": "tpl-euro-youth-application",
+  {
+   "key": "interests",
+   "type": "Checkbox",
+   "label": "Interests",
+   "options": [
+    {
+     "label": "Art & Design",
+     "value": "art_design"
+    },
+    {
+     "label": "Technology",
+     "value": "technology"
+    },
+    {
+     "label": "Sustainability",
+     "value": "sustainability"
+    },
+    {
+     "label": "Music",
+     "value": "music"
+    },
+    {
+     "label": "Sports",
+     "value": "sports"
+    },
+    {
+     "label": "Cuisine",
+     "value": "cuisine"
+    },
+    {
+     "label": "History",
+     "value": "history"
+    },
+    {
+     "label": "Entrepreneurship",
+     "value": "entrepreneurship"
+    }
+   ],
+   "optionDisplay": "chips",
+   "choiceDisplay": "chips",
+   "optionVariant": "chips",
+   "properties": {
+    "optionDisplay": "chips"
+   },
+   "widgetProps": {
+    "optionDisplay": "chips"
+   },
+   "placeholder": "",
+   "required": false,
+   "helpText": "",
+   "defaultValue": "",
+   "cssClass": "",
+   "width": "100%",
+   "readOnly": false,
+   "prefillParam": "",
+   "validation": {},
+   "showIf": null,
+   "htmlContent": "",
+   "fileSettings": null
+  },
+  {
+   "key": "premium_step_3",
+   "type": "Section",
+   "label": "Stay & support",
+   "required": false,
+   "properties": {
+    "pageBreak": true,
+    "premiumNativeStep": true,
+    "generatedPremiumStep": true,
+    "premiumStepIndex": 3,
+    "legacyDataStep": 2
+   }
+  },
+  {
+   "key": "accommodation",
+   "type": "Radio",
+   "label": "Accommodation preference",
+   "required": true,
+   "options": [
+    {
+     "label": "Host family",
+     "value": "host",
+     "description": "Live with locals"
+    },
+    {
+     "label": "Student dorm",
+     "value": "dorm",
+     "description": "On campus"
+    },
+    {
+     "label": "Shared flat",
+     "value": "shared",
+     "description": "With peers"
+    }
+   ],
+   "optionDisplay": "cards",
+   "choiceDisplay": "cards",
+   "optionVariant": "cards",
+   "properties": {
+    "optionDisplay": "cards",
+    "optionColumns": 1
+   },
+   "widgetProps": {
+    "optionDisplay": "cards",
+    "optionColumns": 1
+   },
+   "allowOptionHtml": true,
+   "optionColumns": 1,
+   "placeholder": "",
+   "helpText": "",
+   "defaultValue": "",
+   "cssClass": "",
+   "width": "100%",
+   "readOnly": false,
+   "prefillParam": "",
+   "validation": {},
+   "showIf": null,
+   "htmlContent": "",
+   "fileSettings": null
+  },
+  {
+   "key": "language_level",
+   "type": "Select",
+   "label": "Language level",
+   "placeholder": "Select level",
+   "options": [
+    {
+     "label": "A1 - Beginner",
+     "value": "A1 - Beginner"
+    },
+    {
+     "label": "A2 - Elementary",
+     "value": "A2 - Elementary"
+    },
+    {
+     "label": "B1 - Intermediate",
+     "value": "B1 - Intermediate"
+    },
+    {
+     "label": "B2 - Upper-int.",
+     "value": "B2 - Upper-int."
+    },
+    {
+     "label": "C1 - Advanced",
+     "value": "C1 - Advanced"
+    },
+    {
+     "label": "C2 - Fluent",
+     "value": "C2 - Fluent"
+    }
+   ],
+   "required": false,
+   "helpText": "",
+   "defaultValue": "",
+   "cssClass": "",
+   "width": "100%",
+   "readOnly": false,
+   "prefillParam": "",
+   "validation": {},
+   "showIf": null,
+   "htmlContent": "",
+   "fileSettings": null,
+   "properties": {}
+  },
+  {
+   "key": "motivation",
+   "type": "Textarea",
+   "label": "Motivation",
+   "placeholder": "Tell us about your motivation...",
+   "properties": {
+    "rows": 4,
+    "maxLength": 500
+   },
+   "required": false,
+   "helpText": "",
+   "defaultValue": "",
+   "cssClass": "",
+   "width": "100%",
+   "readOnly": false,
+   "prefillParam": "",
+   "validation": {},
+   "options": [],
+   "showIf": null,
+   "htmlContent": "",
+   "fileSettings": null
+  },
+  {
+   "key": "scholarship",
+   "type": "Checkbox",
+   "label": "Mobility grant",
+   "options": [
+    {
+     "label": "Apply for a mobility grant",
+     "value": "yes"
+    }
+   ],
+   "optionDisplay": "chips",
+   "choiceDisplay": "chips",
+   "optionVariant": "chips",
+   "properties": {
+    "optionDisplay": "chips"
+   },
+   "widgetProps": {
+    "optionDisplay": "chips"
+   },
+   "placeholder": "",
+   "required": false,
+   "helpText": "",
+   "defaultValue": "",
+   "cssClass": "",
+   "width": "100%",
+   "readOnly": false,
+   "prefillParam": "",
+   "validation": {},
+   "showIf": null,
+   "htmlContent": "",
+   "fileSettings": null
+  },
+  {
+   "key": "premium_step_4",
+   "type": "Section",
+   "label": "Review & confirm",
+   "required": false,
+   "properties": {
+    "pageBreak": true,
+    "premiumNativeStep": true,
+    "generatedPremiumStep": true,
+    "premiumStepIndex": 4,
+    "legacyDataStep": 3
+   }
+  },
+  {
+   "key": "newsletter",
+   "type": "Checkbox",
+   "label": "Newsletter",
+   "options": [
+    {
+     "label": "Send me updates about programmes, deadlines and events.",
+     "value": "yes"
+    }
+   ],
+   "optionDisplay": "chips",
+   "choiceDisplay": "chips",
+   "optionVariant": "chips",
+   "properties": {
+    "optionDisplay": "chips"
+   },
+   "widgetProps": {
+    "optionDisplay": "chips"
+   },
+   "placeholder": "",
+   "required": false,
+   "helpText": "",
+   "defaultValue": "",
+   "cssClass": "",
+   "width": "100%",
+   "readOnly": false,
+   "prefillParam": "",
+   "validation": {},
+   "showIf": null,
+   "htmlContent": "",
+   "fileSettings": null
+  },
+  {
+   "key": "terms",
+   "type": "Checkbox",
+   "label": "Terms",
+   "required": true,
+   "options": [
+    {
+     "label": "I accept the terms and privacy policy and confirm my details are accurate.",
+     "value": "yes"
+    }
+   ],
+   "placeholder": "",
+   "helpText": "",
+   "defaultValue": "",
+   "cssClass": "",
+   "width": "100%",
+   "readOnly": false,
+   "prefillParam": "",
+   "validation": {},
+   "showIf": null,
+   "htmlContent": "",
+   "fileSettings": null,
+   "properties": {}
+  }
+ ],
+ "customHtml": "<div class='mfp mfp-euro-youth mfp-native-generated' data-ey-wizard='1' data-mf-flexgrid=\"locked\"><div class='ey-shell'><aside class='ey-hero'><div class='ey-brand'><div class='ey-brand-icon'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='10'></circle><path d='M2 12h20'></path><path d='M12 2a15.3 15.3 0 0 1 0 20'></path><path d='M12 2a15.3 15.3 0 0 0 0 20'></path></svg></div><span>EUROYOUTH&nbsp;2026</span></div><div class='ey-hero-copy'><div class='ey-rating'><svg viewBox='0 0 24 24' fill='currentColor'><path d='m12 2 2.9 6.3 6.9.8-5.1 4.7 1.4 6.8-6.1-3.4-6.1 3.4 1.4-6.8-5.1-4.7 6.9-.8z'></path></svg>Rated 4.9 by 12,000+ participants</div><h1>Your European adventure starts here.</h1><p>Join thousands of young Europeans studying, volunteering and exploring across the continent. One application, endless destinations.</p><div class='ey-stats'><div><strong>27</strong><span>Countries</span></div><i></i><div><strong>340+</strong><span>Universities</span></div><i></i><div><strong>&euro;0</strong><span>Application fee</span></div></div></div></aside><section class='ey-panel'><div class='ey-stepper' aria-label='Application steps'><div class='ey-step is-active' data-step='0'><div class='ey-dot'>01</div><div class='ey-step-text'><strong>Profile</strong><span>About you</span></div></div><i class='ey-line' data-line='0'></i><div class='ey-step' data-step='1'><div class='ey-dot'>02</div><div class='ey-step-text'><strong>Programme</strong><span>Your track</span></div></div><i class='ey-line' data-line='1'></i><div class='ey-step' data-step='2'><div class='ey-dot'>03</div><div class='ey-step-text'><strong>Logistics</strong><span>Stay &amp; support</span></div></div><i class='ey-line' data-line='2'></i><div class='ey-step' data-step='3'><div class='ey-dot'>04</div><div class='ey-step-text'><strong>Confirm</strong><span>Review</span></div></div></div><div class='ey-card'><section class='ey-page is-active' data-step='0'><h2>Tell us about you</h2><p class='ey-lede'>Basic details so we can match you with the right programme.</p><label class='ey-field'><span>First name *</span>{{field:first_name}}</label>\n<label class='ey-field'><span>Last name *</span>{{field:last_name}}</label>\n<label class='ey-field'><span>Email *</span>{{field:email}}</label>\n<label class='ey-field'><span>Phone</span>{{field:phone}}</label>\n<label class='ey-field'><span>Year of birth</span>{{field:birth_year}}</label>\n<label class='ey-field'><span>Country of residence *</span>{{field:country}}</label>\n</section><section class='ey-page' data-step='1'><h2>Choose your track</h2><p class='ey-lede'>Pick the programme that fits your goals.</p><label class='ey-field ey-mt5'><span>Programme *</span>{{field:programme}}</label>\n<label class='ey-field'><span>Duration (months)</span>{{field:duration}}</label>\n<label class='ey-field'><span>Preferred start *</span>{{field:start_month}}</label>\n<label class='ey-field'><span>Interests</span>{{field:interests}}</label>\n</section><section class='ey-page' data-step='2'><h2>Stay &amp; support</h2><p class='ey-lede'>Where you'll live and how we can help.</p><label class='ey-field ey-mt6'><span>Accommodation preference *</span>{{field:accommodation}}</label>\n<label class='ey-field ey-mt5'><span>Language level</span>{{field:language_level}}</label>\n<label class='ey-field ey-mt5'><span>Why do you want to join? (optional)</span>{{field:motivation}}<small><b data-ey-count>0</b>/500</small></label>\n<label class='ey-field'><span>Mobility grant</span>{{field:scholarship}}</label>\n</section><section class='ey-page' data-step='3'><h2>Review &amp; confirm</h2><p class='ey-lede'>Double-check your details before submitting.</p><div class='ey-review ey-mt6'><div><span>Name</span><strong data-ey-summary='name'>&mdash;</strong></div><div><span>Email</span><strong data-ey-summary='email'>&mdash;</strong></div><div><span>Country</span><strong data-ey-summary='country'>&mdash;</strong></div><div><span>Programme</span><strong data-ey-summary='programme'>&mdash;</strong></div><div><span>Duration</span><strong data-ey-summary='duration'>3 months</strong></div><div><span>Start</span><strong data-ey-summary='start'>&mdash;</strong></div><div><span>Accommodation</span><strong data-ey-summary='accommodation'>&mdash;</strong></div><div><span>Interests</span><strong data-ey-summary='interests'>&mdash;</strong></div><div><span>Mobility grant</span><strong data-ey-summary='grant'>No</strong></div></div><label class='ey-field ey-mt5'><span>Newsletter</span>{{field:newsletter}}</label>\n<label class='ey-field'><span>Terms *</span>{{field:terms}}</label>\n</section>      \n      \n      \n      \n      \n      \n<div class='ey-actions'><button class='ey-back' type='button'>&larr; Back</button><a class='ey-cancel' href='/premium-forms'>&larr; Cancel</a><button class='ey-next' type='button' disabled>Continue &rarr;</button><button class='ey-submit' type='submit' hidden disabled>Submit application &check;</button></div></div><p class='ey-footer'>Co-funded by the European Youth Mobility Initiative &middot; Step <span data-ey-current>1</span> of 4</p></section></div></div>",
+ "customCss": "@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap');.mfp.mfp-euro-youth{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;color:#1c1917;background:#f5f5f4;width:100%!important;max-width:1152px!important;margin:0 auto!important;padding:16px!important;box-sizing:border-box;overflow:visible!important}.mfp-euro-youth,.mfp-euro-youth *{box-sizing:border-box}.mfp-euro-youth .ey-shell{display:grid;min-height:auto;max-width:1152px;margin:0 auto;background:#f5f5f4}.mfp-euro-youth .ey-hero{display:none;position:relative;overflow:hidden;flex-direction:column;justify-content:space-between;padding:40px;color:#fff;background-image:linear-gradient(to bottom,rgba(15,23,42,.25),rgba(15,23,42,.85)),url('/Modules/MegaForm/img/euro-youth/euro-youth-hero.png');background-size:cover;background-position:center}.mfp-euro-youth .ey-brand{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.9);font-size:14px;font-weight:600;letter-spacing:.025em}.mfp-euro-youth .ey-brand-icon{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.15);backdrop-filter:blur(8px)}.mfp-euro-youth svg{width:1em;height:1em;display:block}.mfp-euro-youth .ey-brand-icon svg{width:20px;height:20px}.mfp-euro-youth .ey-rating{display:inline-flex;align-items:center;gap:6px;border-radius:999px;background:rgba(255,255,255,.15);padding:4px 12px;font-size:12px;line-height:16px;font-weight:500;backdrop-filter:blur(8px);margin-bottom:16px}.mfp-euro-youth .ey-rating svg{width:14px;height:14px;color:#fcd34d;fill:#fcd34d}.mfp-euro-youth .ey-hero h1{font-family:'Bricolage Grotesque',Inter,sans-serif;margin:0;color:#fff;font-size:36px;line-height:1.1;font-weight:800;letter-spacing:0}.mfp-euro-youth .ey-hero p{margin:12px 0 0;color:rgba(255,255,255,.8);font-size:15px;line-height:1.6}.mfp-euro-youth .ey-stats{display:flex;align-items:center;gap:24px;margin-top:32px}.mfp-euro-youth .ey-stats strong{font-family:'Bricolage Grotesque',Inter,sans-serif;display:block;font-size:24px;line-height:32px;font-weight:700;color:#fff}.mfp-euro-youth .ey-stats span{display:block;color:rgba(255,255,255,.7);font-size:12px;line-height:16px}.mfp-euro-youth .ey-stats i{display:block;width:1px;height:32px;background:rgba(255,255,255,.2)}.mfp-euro-youth .ey-panel{display:flex;flex-direction:column;background:#f5f5f4;padding:32px 24px}.mfp-euro-youth .ey-stepper{display:flex;align-items:center;gap:8px;margin-bottom:32px;height:32px!important}.mfp-euro-youth .ey-step{display:flex;flex:1;align-items:center;gap:8px;min-width:0;height:32px!important}.mfp-euro-youth .ey-dot{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:999px;background:#e7e5e4;color:#a8a29e;font-size:12px;line-height:16px;font-weight:600;transition:all .18s ease;flex:0 0 32px}.mfp-euro-youth .ey-step.is-active .ey-dot{background:#1c1917;color:#fff}.mfp-euro-youth .ey-step.is-done .ey-dot{background:#059669;color:#fff;font-size:0}.mfp-euro-youth .ey-step.is-done .ey-dot:after{content:'\\2713';font-size:16px}.mfp-euro-youth .ey-step-text{display:none;white-space:nowrap}.mfp-euro-youth .ey-step-text strong{display:block;color:#a8a29e;font-size:13px;line-height:1;font-weight:600}.mfp-euro-youth .ey-step-text span{display:block;margin-top:2px;color:#a8a29e;font-size:11px;line-height:14px}.mfp-euro-youth .ey-step.is-active .ey-step-text strong,.mfp-euro-youth .ey-step.is-done .ey-step-text strong{color:#1c1917}.mfp-euro-youth .ey-line{height:1px;background:#e7e5e4;flex:1;transition:all .18s ease}.mfp-euro-youth .ey-line.is-done{background:#059669}.mfp-euro-youth .ey-card{flex:1;border-radius:24px;background:#fff;padding:24px;box-shadow:0 1px 2px rgba(0,0,0,.05)}.mfp-euro-youth .ey-page{display:none}.mfp-euro-youth .ey-page.is-active{display:block}.mfp-euro-youth h2{font-family:'Bricolage Grotesque',Inter,sans-serif;margin:0!important;color:#1c1917;font-size:24px;line-height:32px!important;font-weight:700;letter-spacing:0}.mfp-euro-youth .ey-lede{margin:4px 0 0!important;color:#78716c;font-size:14px;line-height:20px!important}.mfp-euro-youth .ey-mt6{margin-top:24px}.mfp-euro-youth .ey-mt5{margin-top:20px}.mfp-euro-youth .ey-grid{display:grid;gap:16px}.mfp-euro-youth .ey-field{display:block;margin:0}.mfp-euro-youth .ey-field>span{display:block;margin:0 0 8px!important;color:#57534e;font-size:13px;line-height:18px;font-weight:500}.mfp-euro-youth .ey-field .mf-field-label{display:none!important}.mfp-euro-youth .mf-field-group{margin:0!important;width:100%}.mfp-euro-youth .mf-input,.mfp-euro-youth .mf-select,.mfp-euro-youth .mf-textarea{width:100%!important;border:1px solid #d6d3d1!important;border-radius:12px!important;background:#fff!important;padding:12px 16px!important;color:#1c1917!important;font-family:'Inter',system-ui,sans-serif!important;font-size:15px!important;line-height:20px!important;min-height:49px!important;height:49px!important;outline:0!important;box-shadow:none!important;transition:all .15s ease!important}.mfp-euro-youth .mf-textarea{min-height:118px!important;height:auto!important;resize:none}.mfp-euro-youth .mf-input::placeholder,.mfp-euro-youth .mf-textarea::placeholder{color:#a8a29e!important;opacity:1}.mfp-euro-youth .mf-input:focus,.mfp-euro-youth .mf-select:focus,.mfp-euro-youth .mf-textarea:focus{border-color:#1c1917!important;box-shadow:0 0 0 2px rgba(28,25,23,.1)!important}.mfp-euro-youth .mf-select-wrap{position:relative}.mfp-euro-youth .mf-select{appearance:none!important;-webkit-appearance:none!important;padding-right:42px!important}.mfp-euro-youth .mf-field-error{margin-top:5px;color:#dc2626;font-size:12px;line-height:16px}.mfp-euro-youth .ey-programmes{display:grid;gap:12px}.mfp-euro-youth .ey-programme{display:flex;align-items:flex-start;gap:16px;width:100%;border:1px solid #e7e5e4;border-radius:16px;background:#fff;padding:16px;text-align:left;cursor:pointer;transition:all .15s ease}.mfp-euro-youth .ey-programme:hover{border-color:#d6d3d1}.mfp-euro-youth .ey-programme:has(input:checked){border-color:#1c1917;background:#fafaf9;box-shadow:0 0 0 2px rgba(28,25,23,.1)}.mfp-euro-youth .ey-programme input,.mfp-euro-youth .ey-accom input,.mfp-euro-youth .ey-chips input{position:absolute;opacity:0;pointer-events:none}.mfp-euro-youth .ey-programme-icon{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;background:#f5f5f4;color:#57534e;flex:0 0 44px}.mfp-euro-youth .ey-programme:has(input:checked) .ey-programme-icon{background:#1c1917;color:#fff}.mfp-euro-youth .ey-programme-icon svg{width:20px;height:20px}.mfp-euro-youth .ey-programme-copy{display:block;flex:1;min-width:0}.mfp-euro-youth .ey-programme-copy strong{display:block;color:#1c1917;font-size:16px;line-height:22px;font-weight:600}.mfp-euro-youth .ey-programme-copy em{display:flex;align-items:center;gap:4px;margin-top:2px;color:#78716c;font-size:12px;line-height:16px;font-style:normal}.mfp-euro-youth .ey-programme-copy em svg{width:14px;height:14px}.mfp-euro-youth .ey-programme-copy span{display:block;margin-top:4px;color:#57534e;font-size:14px;line-height:20px}.mfp-euro-youth .ey-check{display:none;color:#059669;font-size:20px;line-height:20px}.mfp-euro-youth .ey-programme:has(input:checked) .ey-check{display:block}.mfp-euro-youth .ey-chips{display:flex;flex-wrap:wrap;gap:8px}.mfp-euro-youth .ey-chips label{display:inline-flex}.mfp-euro-youth .ey-chips span{display:inline-flex;border:1px solid #d6d3d1;border-radius:999px;background:#fff;color:#57534e;padding:6px 14px;font-size:14px;line-height:20px;cursor:pointer;transition:all .15s ease}.mfp-euro-youth .ey-chips input:checked+span{border-color:#1c1917;background:#1c1917;color:#fff}.mfp-euro-youth .ey-accom{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.mfp-euro-youth .ey-accom label{display:block;cursor:pointer}.mfp-euro-youth .ey-accom span{display:block;border:1px solid #e7e5e4;border-radius:16px;background:#fff;padding:16px;transition:all .15s ease}.mfp-euro-youth .ey-accom strong{display:block;color:#1c1917;font-size:14px;line-height:20px;font-weight:600}.mfp-euro-youth .ey-accom em{display:block;margin-top:2px;color:#78716c;font-size:12px;line-height:16px;font-style:normal}.mfp-euro-youth .ey-accom input:checked+span{border-color:#1c1917;background:#fafaf9;box-shadow:0 0 0 2px rgba(28,25,23,.1)}.mfp-euro-youth .ey-field small{display:block;margin-top:4px;text-align:right;color:#a8a29e;font-size:12px;line-height:16px}.mfp-euro-youth .ey-grant{display:flex;align-items:flex-start;gap:12px;margin-top:12px;border:1px solid #e7e5e4;border-radius:16px;background:#fafaf9;padding:16px;cursor:pointer}.mfp-euro-youth .ey-grant input,.mfp-euro-youth .ey-checks input{width:20px;height:20px;margin:2px 0 0;accent-color:#1c1917;flex:0 0 auto}.mfp-euro-youth .ey-grant strong{display:block;color:#1c1917;font-size:14px;line-height:20px;font-weight:600}.mfp-euro-youth .ey-grant em{display:block;color:#78716c;font-size:12px;line-height:16px;font-style:normal}.mfp-euro-youth .ey-review{overflow:hidden;border:1px solid #e7e5e4;border-radius:16px}.mfp-euro-youth .ey-review div{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 16px;color:#78716c;font-size:14px;line-height:20px}.mfp-euro-youth .ey-review div:nth-child(even){background:#fafaf9}.mfp-euro-youth .ey-review strong{color:#1c1917;font-weight:500;text-align:right}.mfp-euro-youth .ey-checks{display:grid;gap:12px}.mfp-euro-youth .ey-checks label{display:flex;align-items:flex-start;gap:12px;color:#57534e;font-size:14px;line-height:20px;cursor:pointer}.mfp-euro-youth .ey-checks strong{color:#1c1917;text-decoration:underline}.mfp-euro-youth .ey-actions{display:flex;align-items:center;justify-content:space-between;margin-top:32px;border-top:1px solid #f5f5f4;padding-top:24px}.mfp-euro-youth .ey-back,.mfp-euro-youth .ey-cancel,.mfp-euro-youth .ey-next,.mfp-euro-youth .ey-submit{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:12px;padding:10px 16px;font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:20px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .15s ease}.mfp-euro-youth .ey-back,.mfp-euro-youth .ey-cancel{background:transparent;color:#57534e}.mfp-euro-youth .ey-cancel{color:#a8a29e}.mfp-euro-youth .ey-back:hover,.mfp-euro-youth .ey-cancel:hover{background:#f5f5f4;color:#57534e}.mfp-euro-youth .ey-next,.mfp-euro-youth .ey-submit{background:#1c1917;color:#fff;padding-left:24px;padding-right:24px}.mfp-euro-youth .ey-next:hover{background:#292524}.mfp-euro-youth .ey-submit{background:#059669}.mfp-euro-youth .ey-submit:hover{background:#047857}.mfp-euro-youth .ey-next:disabled,.mfp-euro-youth .ey-submit:disabled{background:#d6d3d1;color:#fff;cursor:not-allowed}.mfp-euro-youth .ey-footer{margin:16px 0 0;text-align:center;color:#a8a29e;font-size:12px;line-height:16px}.mfp-euro-youth .mf-form-title,.mfp-euro-youth .mf-form-description,.mfp-euro-youth .mf-success-message,.mfp-euro-youth .mf-form-actions{display:none!important}.mfp-euro-youth .ey-card{padding:32px}.mfp-euro-youth .ey-grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}.mfp-euro-youth .ey-step-text{display:block}}@media(min-width:1024px){.mfp-euro-youth .ey-shell{grid-template-columns:440px 1fr}.mfp-euro-youth .ey-hero{display:flex}.mfp-euro-youth .ey-panel{padding:32px 48px}}@media(max-width:560px){.mfp-euro-youth .ey-panel{padding:32px 24px}.mfp-euro-youth .ey-card{padding:24px}.mfp-euro-youth .ey-accom{grid-template-columns:1fr}.mfp-euro-youth .ey-programme{gap:12px}.mfp-euro-youth .ey-programme-icon{width:40px;height:40px;flex-basis:40px}.mfp-euro-youth .ey-actions{margin-top:28px}.mfp-euro-youth .ey-next,.mfp-euro-youth .ey-submit{padding-left:20px;padding-right:20px}}.mf-form-wrapper>.mf-form-inner .mfp.mfp-euro-youth{width:100%!important;max-width:1152px!important;margin:0 auto!important;padding:16px!important;background:#f5f5f4!important;box-sizing:border-box!important}\n\n/* [PremiumChoiceChipsCards 2026-06-19] */\n.mf-form-wrapper .mfp.mfp-euro-youth,\n.mfp.mfp-euro-youth,\n.mf-form-wrapper {\n  --mf-choice-accent: var(--primary, var(--accent, var(--mf-choice-accent, var(--primary, var(--accent, #111827)))));\n  --mf-choice-accent-2: var(--accent, var(--primary, var(--mf-choice-accent, var(--primary, var(--accent, #111827)))));\n  --mf-choice-text: var(--foreground, var(--card-foreground, var(--mf-choice-text, var(--foreground, var(--card-foreground, #111827)))));\n  --mf-choice-muted: var(--muted-foreground, var(--mf-choice-muted, var(--muted-foreground, #6b7280)));\n  --mf-choice-border: var(--border, var(--mf-choice-border, var(--border, #e5e7eb)));\n  --mf-choice-card: var(--card, var(--mf-choice-card, var(--card, #ffffff)));\n  --mf-choice-soft: color-mix(in oklab, var(--mf-choice-accent) 9%, transparent);\n  --mf-choice-soft-strong: color-mix(in oklab, var(--mf-choice-accent) 15%, transparent);\n  --mf-choice-on-accent: var(--primary-foreground, #fff);\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips,\n.mfp.mfp-euro-youth .mf-option-group--chips,\n.mf-form-wrapper .mf-option-group--chips {\n  display: flex !important;\n  flex-direction: row !important;\n  flex-wrap: wrap !important;\n  align-items: flex-start !important;\n  justify-content: flex-start !important;\n  gap: 10px !important;\n  text-align: left !important;\n  grid-template-columns: none !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-item,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-item,\n.mf-form-wrapper .mf-option-group--chips .mf-option-item {\n  display: inline-flex !important;\n  width: auto !important;\n  max-width: 100% !important;\n  flex: 0 1 auto !important;\n  margin: 0 !important;\n  padding: 0 !important;\n  min-height: 0 !important;\n  background: transparent !important;\n  border: 0 !important;\n  border-radius: 0 !important;\n  box-shadow: none !important;\n  gap: 0 !important;\n  cursor: pointer !important;\n  text-align: left !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards,\n.mfp.mfp-euro-youth .mf-option-group--cards,\n.mf-form-wrapper .mf-option-group--cards {\n  display: grid !important;\n  grid-template-columns: 1fr !important;\n  gap: 12px !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-control,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-control,\n.mf-form-wrapper .mf-option-group--chips .mf-option-control,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control,\n.mf-form-wrapper .mf-option-group--cards .mf-option-control {\n  position: absolute !important;\n  opacity: 0 !important;\n  width: 1px !important;\n  height: 1px !important;\n  overflow: hidden !important;\n  pointer-events: none !important;\n  appearance: none !important;\n  -webkit-appearance: none !important;\n  clip-path: inset(50%) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-ui,\n.mf-form-wrapper .mf-option-group--chips .mf-option-ui {\n  display: inline-flex !important;\n  align-items: center !important;\n  justify-content: flex-start !important;\n  width: auto !important;\n  max-width: 100% !important;\n  min-height: 30px !important;\n  padding: 6px 12px !important;\n  border: 1px solid color-mix(in oklab, var(--mf-choice-border) 70%, var(--mf-choice-accent) 30%) !important;\n  border-radius: 999px !important;\n  background: color-mix(in oklab, var(--mf-choice-card) 94%, var(--mf-choice-accent) 6%) !important;\n  color: var(--mf-choice-text) !important;\n  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;\n  transition: border-color .16s ease, background .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-ui::before,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-ui::before,\n.mf-form-wrapper .mf-option-group--chips .mf-option-ui::before,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-ui::before,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-ui::before,\n.mf-form-wrapper .mf-option-group--cards .mf-option-ui::before,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-item::before,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-item::before,\n.mf-form-wrapper .mf-option-group--chips .mf-option-item::before,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-item::before,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-item::before,\n.mf-form-wrapper .mf-option-group--cards .mf-option-item::before,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-label::before,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-label::before,\n.mf-form-wrapper .mf-option-group--chips .mf-option-label::before,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-label::before,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-label::before,\n.mf-form-wrapper .mf-option-group--cards .mf-option-label::before {\n  display: none !important;\n  content: \"\" !important;\n  width: 0 !important;\n  height: 0 !important;\n  margin: 0 !important;\n  padding: 0 !important;\n  border: 0 !important;\n  background: none !important;\n  box-shadow: none !important;\n  flex: 0 0 0 !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-label,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-label,\n.mf-form-wrapper .mf-option-group--chips .mf-option-label {\n  color: inherit !important;\n  font-size: 13px !important;\n  line-height: 17px !important;\n  font-weight: 500 !important;\n  white-space: normal !important;\n  min-width: 0 !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-item:hover .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-item:hover .mf-option-ui,\n.mf-form-wrapper .mf-option-group--chips .mf-option-item:hover .mf-option-ui {\n  border-color: var(--mf-choice-accent) !important;\n  background: var(--mf-choice-soft) !important;\n  transform: translateY(-1px) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-control:checked + .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-control:checked + .mf-option-ui,\n.mf-form-wrapper .mf-option-group--chips .mf-option-control:checked + .mf-option-ui {\n  border-color: var(--mf-choice-accent) !important;\n  background: var(--mf-choice-accent) !important;\n  color: var(--mf-choice-on-accent) !important;\n  box-shadow: 0 8px 22px color-mix(in oklab, var(--mf-choice-accent) 24%, transparent) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-item,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-item,\n.mf-form-wrapper .mf-option-group--cards .mf-option-item {\n  display: block !important;\n  width: 100% !important;\n  margin: 0 !important;\n  padding: 0 !important;\n  cursor: pointer !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-ui,\n.mf-form-wrapper .mf-option-group--cards .mf-option-ui {\n  position: relative !important;\n  display: flex !important;\n  align-items: flex-start !important;\n  gap: 14px !important;\n  width: 100% !important;\n  min-height: 48px !important;\n  padding: 12px 42px 12px 14px !important;\n  border: 1px solid var(--mf-choice-border) !important;\n  border-radius: 12px !important;\n  background: var(--mf-choice-card) !important;\n  color: var(--mf-choice-text) !important;\n  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05) !important;\n  transition: border-color .16s ease, background .16s ease, box-shadow .16s ease, transform .16s ease !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-item:hover .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-item:hover .mf-option-ui,\n.mf-form-wrapper .mf-option-group--cards .mf-option-item:hover .mf-option-ui {\n  border-color: var(--mf-choice-accent) !important;\n  background: color-mix(in oklab, var(--mf-choice-card) 92%, var(--mf-choice-accent) 8%) !important;\n  transform: translateY(-1px) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:checked + .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:checked + .mf-option-ui,\n.mf-form-wrapper .mf-option-group--cards .mf-option-control:checked + .mf-option-ui {\n  border-color: var(--mf-choice-accent) !important;\n  background: color-mix(in oklab, var(--mf-choice-card) 88%, var(--mf-choice-accent) 12%) !important;\n  box-shadow: 0 0 0 1px var(--mf-choice-accent), 0 14px 34px color-mix(in oklab, var(--mf-choice-accent) 18%, transparent) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-icon,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-icon,\n.mf-form-wrapper .mf-option-group--cards .mf-option-icon {\n  display: inline-flex !important;\n  align-items: center !important;\n  justify-content: center !important;\n  width: 34px !important;\n  height: 34px !important;\n  flex: 0 0 34px !important;\n  border-radius: 10px !important;\n  background: var(--mf-choice-soft) !important;\n  color: var(--mf-choice-accent) !important;\n  font-size: 18px !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:checked + .mf-option-ui .mf-option-icon,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:checked + .mf-option-ui .mf-option-icon,\n.mf-form-wrapper .mf-option-group--cards .mf-option-control:checked + .mf-option-ui .mf-option-icon {\n  background: var(--mf-choice-accent) !important;\n  color: var(--mf-choice-on-accent) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-copy,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-copy,\n.mf-form-wrapper .mf-option-group--cards .mf-option-copy {\n  display: grid !important;\n  gap: 3px !important;\n  min-width: 0 !important;\n  flex: 1 1 auto !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-label,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-label,\n.mf-form-wrapper .mf-option-group--cards .mf-option-label {\n  color: var(--mf-choice-text) !important;\n  font-size: 14px !important;\n  line-height: 19px !important;\n  font-weight: 700 !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-meta,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-meta,\n.mf-form-wrapper .mf-option-group--cards .mf-option-meta,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-desc,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-desc,\n.mf-form-wrapper .mf-option-group--cards .mf-option-desc {\n  color: var(--mf-choice-muted) !important;\n  font-size: 13px !important;\n  line-height: 18px !important;\n  font-weight: 500 !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .section-icon,\n.mfp.mfp-euro-youth .section-icon,\n.mf-form-wrapper .section-icon,\n.mf-form-wrapper .mfp.mfp-euro-youth .gift-icon,\n.mfp.mfp-euro-youth .gift-icon,\n.mf-form-wrapper .gift-icon {\n  display: none !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-check,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-check,\n.mf-form-wrapper .mf-option-group--cards .mf-option-check {\n  position: absolute !important;\n  top: 18px !important;\n  right: 18px !important;\n  color: var(--mf-choice-accent) !important;\n  font-size: 20px !important;\n  line-height: 20px !important;\n  opacity: 0 !important;\n  transform: scale(.8) !important;\n  transition: opacity .16s ease, transform .16s ease !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:checked + .mf-option-ui .mf-option-check,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:checked + .mf-option-ui .mf-option-check,\n.mf-form-wrapper .mf-option-group--cards .mf-option-control:checked + .mf-option-ui .mf-option-check {\n  opacity: 1 !important;\n  transform: scale(1) !important;\n}\n\n/* V3 hardening: some premium templates append late styles without the custom root,\n   so keep chip/card rendering correct from the MegaForm wrapper as the final fallback. */\n.mf-form-wrapper .mf-option-group--chips,\n.mf-form-wrapper .mf-option-group--cards {\n  align-items: flex-start !important;\n  justify-content: flex-start !important;\n}\n\n.mf-form-wrapper .mf-option-group--chips .mf-option-item {\n  display: inline-flex !important;\n  width: auto !important;\n  max-width: 100% !important;\n  flex: 0 1 auto !important;\n  min-height: 0 !important;\n  margin: 0 !important;\n  padding: 0 !important;\n  background: transparent !important;\n  border: 0 !important;\n  border-radius: 0 !important;\n  box-shadow: none !important;\n  gap: 0 !important;\n}\n\n.mf-form-wrapper .mf-option-group--chips .mf-option-control,\n.mf-form-wrapper .mf-option-group--cards .mf-option-control {\n  position: absolute !important;\n  opacity: 0 !important;\n  width: 1px !important;\n  height: 1px !important;\n  overflow: hidden !important;\n  pointer-events: none !important;\n  appearance: none !important;\n  -webkit-appearance: none !important;\n  clip-path: inset(50%) !important;\n  margin: 0 !important;\n}\n\n.mf-form-wrapper .mf-option-group--chips .mf-option-ui,\n.mf-form-wrapper .mf-option-group--cards .mf-option-ui {\n  box-sizing: border-box !important;\n}\n\n.mf-form-wrapper.mf-theme-pure-grid-premium {\n  --mf-choice-accent: var(--primary, oklch(0.50 0.10 145));\n  --mf-choice-accent-2: var(--accent, oklch(0.75 0.06 85));\n  --mf-choice-text: var(--foreground, oklch(0.25 0.04 145));\n  --mf-choice-border: var(--border, oklch(0.85 0.02 145));\n  --mf-choice-card: var(--card, #ffffff);\n  --mf-choice-on-accent: var(--primary-foreground, #ffffff);\n}\n\n.mf-form-wrapper.mf-theme-pure-grid-premium .mf-option-group--chips .mf-option-ui {\n  background: color-mix(in oklab, var(--mf-choice-card) 92%, var(--mf-choice-accent) 8%) !important;\n  border-color: color-mix(in oklab, var(--mf-choice-border) 64%, var(--mf-choice-accent) 36%) !important;\n  color: var(--mf-choice-text) !important;\n}\n\n.mf-form-wrapper.mf-theme-pure-grid-premium .mf-option-group--chips .mf-option-control:checked + .mf-option-ui {\n  background: var(--mf-choice-accent) !important;\n  border-color: var(--mf-choice-accent) !important;\n  color: var(--mf-choice-on-accent) !important;\n}\n\n.mf-form-wrapper.mf-theme-pure-grid-premium button[type=\"submit\"],\n.mf-form-wrapper.mf-theme-pure-grid-premium .aur-submit,\n.mf-form-wrapper.mf-theme-pure-grid-premium .mfp-submit {\n  background: var(--mf-choice-accent) !important;\n  border-color: var(--mf-choice-accent) !important;\n  color: var(--mf-choice-on-accent) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-nola-glass,\n.mfp.mfp-nola-glass {\n  --mf-choice-accent: var(--nola-gold, #f39c12);\n  --mf-choice-accent-2: var(--nola-green, #27ae60);\n  --mf-choice-text: var(--nola-text, #ffffff);\n  --mf-choice-border: rgba(255,255,255,0.28);\n  --mf-choice-card: rgba(255,255,255,0.10);\n  --mf-choice-on-accent: var(--nola-deep, #1a0a2e);\n}\n\n.mf-form-wrapper .mfp.mfp-nola-glass .mf-option-group--chips .mf-option-ui,\n.mfp.mfp-nola-glass .mf-option-group--chips .mf-option-ui {\n  background: rgba(255,255,255,0.10) !important;\n  border-color: rgba(255,255,255,0.30) !important;\n  color: var(--nola-text, #ffffff) !important;\n  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 1px 2px rgba(0,0,0,0.16) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-nola-glass .mf-option-group--chips .mf-option-label,\n.mfp.mfp-nola-glass .mf-option-group--chips .mf-option-label {\n  color: var(--nola-text, #ffffff) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-nola-glass .mf-option-group--chips .mf-option-control:checked + .mf-option-ui,\n.mfp.mfp-nola-glass .mf-option-group--chips .mf-option-control:checked + .mf-option-ui {\n  background: linear-gradient(135deg, var(--nola-gold, #f39c12), #ffd700) !important;\n  border-color: var(--nola-gold, #f39c12) !important;\n  color: var(--nola-deep, #1a0a2e) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-nola-glass .mfp-submit,\n.mfp.mfp-nola-glass .mfp-submit {\n  display: flex !important;\n  align-items: center !important;\n  justify-content: center !important;\n  width: 100% !important;\n  background: linear-gradient(135deg, var(--nola-gold, #f39c12), #ffd700, var(--nola-gold, #f39c12)) !important;\n  border: 0 !important;\n  border-radius: 12px !important;\n  color: var(--nola-deep, #1a0a2e) !important;\n  font-weight: 700 !important;\n  box-shadow: 0 10px 28px rgba(243,156,18,0.30) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-coachella .mf-option-group--chips {\n  gap: 12px !important;\n}\n\n.mf-form-wrapper .mfp.mfp-coachella .mf-option-group--chips .mf-option-item,\n.mfp.mfp-coachella .mf-option-group--chips .mf-option-item {\n  background: transparent !important;\n  border: 0 !important;\n  border-radius: 0 !important;\n  box-shadow: none !important;\n  padding: 0 !important;\n}\n\n.mf-form-wrapper .mfp.mfp-coachella .mf-option-group--chips .mf-option-ui,\n.mfp.mfp-coachella .mf-option-group--chips .mf-option-ui {\n  min-height: 32px !important;\n  padding: 7px 13px !important;\n  border-color: color-mix(in oklab, var(--mf-choice-border) 58%, var(--mf-choice-accent) 42%) !important;\n  background: color-mix(in oklab, var(--mf-choice-card) 90%, var(--mf-choice-accent) 10%) !important;\n}\n\n.mf-form-wrapper .mfp.aur-form .aur-intro,\n.mfp.aur-form .aur-intro,\n.mf-form-wrapper .mfp.aur-form .aur-section:not(.aur-collection-section),\n.mfp.aur-form .aur-section:not(.aur-collection-section),\n.mf-form-wrapper .mfp.aur-form .aur-newsletter,\n.mfp.aur-form .aur-newsletter,\n.mf-form-wrapper .mfp.aur-form .aur-actions,\n.mfp.aur-form .aur-actions,\n.mf-form-wrapper .mfp.aur-form .aur-footer-note,\n.mfp.aur-form .aur-footer-note {\n  max-width: 920px !important;\n  width: 100% !important;\n}\n\n.mf-form-wrapper .mfp.aur-form .mf-row,\n.mfp.aur-form .mf-row {\n  width: 100% !important;\n  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;\n}\n\n.mf-form-wrapper .mfp.aur-form .aur-submit,\n.mfp.aur-form .aur-submit {\n  background: var(--aur-black, #111111) !important;\n  border-color: var(--aur-black, #111111) !important;\n  color: var(--aur-white, #ffffff) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-control:focus-visible + .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-control:focus-visible + .mf-option-ui,\n.mf-form-wrapper .mf-option-group--chips .mf-option-control:focus-visible + .mf-option-ui,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:focus-visible + .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:focus-visible + .mf-option-ui,\n.mf-form-wrapper .mf-option-group--cards .mf-option-control:focus-visible + .mf-option-ui {\n  outline: 2px solid var(--mf-choice-accent) !important;\n  outline-offset: 2px !important;\n}\n\n@media (max-width: 640px) {\n  .mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips,\n.mfp.mfp-euro-youth .mf-option-group--chips,\n.mf-form-wrapper .mf-option-group--chips {\n    gap: 7px !important;\n  }\n  .mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-ui,\n.mf-form-wrapper .mf-option-group--chips .mf-option-ui {\n    min-height: 30px !important;\n    padding: 6px 11px !important;\n  }\n  .mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-ui,\n.mf-form-wrapper .mf-option-group--cards .mf-option-ui {\n    min-height: 46px !important;\n    padding: 11px 38px 11px 12px !important;\n    border-radius: 12px !important;\n  }\n}\n/* [/PremiumChoiceChipsCards] */\n/*MF-TRANSPARENT-OUTER-20260626*/.mf-form-wrapper .mfp.mfp-euro-youth,.mf-form-wrapper .mfp.mfp-euro-youth .ey-shell,.mf-form-wrapper .mfp.mfp-euro-youth .ey-panel{background:transparent!important}\n.mf-premium-native-mode .mf-form-actions{display:none!important}\n/* MF-QA-IMGPATH-v1: DNN serves module assets under /DesktopModules/MegaForm/Assets */\n.DnnModule .mfp-euro-youth .ey-hero{background-image:linear-gradient(to bottom,rgba(15,23,42,.25),rgba(15,23,42,.85)),url('/DesktopModules/MegaForm/Assets/img/euro-youth/euro-youth-hero.png')}\n",
+ "settings": {
   "theme": "euro-youth-premium",
-  "CustomHtml": "<div class='mfp mfp-euro-youth mfp-native-generated' data-ey-wizard='1'><div class='ey-shell'><aside class='ey-hero'><div class='ey-brand'><div class='ey-brand-icon'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='10'></circle><path d='M2 12h20'></path><path d='M12 2a15.3 15.3 0 0 1 0 20'></path><path d='M12 2a15.3 15.3 0 0 0 0 20'></path></svg></div><span>EUROYOUTH&nbsp;2026</span></div><div class='ey-hero-copy'><div class='ey-rating'><svg viewBox='0 0 24 24' fill='currentColor'><path d='m12 2 2.9 6.3 6.9.8-5.1 4.7 1.4 6.8-6.1-3.4-6.1 3.4 1.4-6.8-5.1-4.7 6.9-.8z'></path></svg>Rated 4.9 by 12,000+ participants</div><h1>Your European adventure starts here.</h1><p>Join thousands of young Europeans studying, volunteering and exploring across the continent. One application, endless destinations.</p><div class='ey-stats'><div><strong>27</strong><span>Countries</span></div><i></i><div><strong>340+</strong><span>Universities</span></div><i></i><div><strong>&euro;0</strong><span>Application fee</span></div></div></div></aside><section class='ey-panel'><div class='ey-stepper' aria-label='Application steps'><div class='ey-step is-active' data-step='0'><div class='ey-dot'>01</div><div class='ey-step-text'><strong>Profile</strong><span>About you</span></div></div><i class='ey-line' data-line='0'></i><div class='ey-step' data-step='1'><div class='ey-dot'>02</div><div class='ey-step-text'><strong>Programme</strong><span>Your track</span></div></div><i class='ey-line' data-line='1'></i><div class='ey-step' data-step='2'><div class='ey-dot'>03</div><div class='ey-step-text'><strong>Logistics</strong><span>Stay &amp; support</span></div></div><i class='ey-line' data-line='2'></i><div class='ey-step' data-step='3'><div class='ey-dot'>04</div><div class='ey-step-text'><strong>Confirm</strong><span>Review</span></div></div></div><div class='ey-card'><section class='ey-page is-active' data-step='0'><h2>Tell us about you</h2><p class='ey-lede'>Basic details so we can match you with the right programme.</p><label class='ey-field'><span>First name *</span>{{field:first_name}}</label>\n<label class='ey-field'><span>Last name *</span>{{field:last_name}}</label>\n<label class='ey-field'><span>Email *</span>{{field:email}}</label>\n<label class='ey-field'><span>Phone</span>{{field:phone}}</label>\n<label class='ey-field'><span>Year of birth</span>{{field:birth_year}}</label>\n<label class='ey-field'><span>Country of residence *</span>{{field:country}}</label>\n</section><section class='ey-page' data-step='1'><h2>Choose your track</h2><p class='ey-lede'>Pick the programme that fits your goals.</p><label class='ey-field ey-mt5'><span>Programme *</span>{{field:programme}}</label>\n<label class='ey-field'><span>Duration (months)</span>{{field:duration}}</label>\n<label class='ey-field'><span>Preferred start *</span>{{field:start_month}}</label>\n<label class='ey-field'><span>Interests</span>{{field:interests}}</label>\n</section><section class='ey-page' data-step='2'><h2>Stay &amp; support</h2><p class='ey-lede'>Where you'll live and how we can help.</p><label class='ey-field ey-mt6'><span>Accommodation preference *</span>{{field:accommodation}}</label>\n<label class='ey-field ey-mt5'><span>Language level</span>{{field:language_level}}</label>\n<label class='ey-field ey-mt5'><span>Why do you want to join? (optional)</span>{{field:motivation}}<small><b data-ey-count>0</b>/500</small></label>\n<label class='ey-field'><span>Mobility grant</span>{{field:scholarship}}</label>\n</section><section class='ey-page' data-step='3'><h2>Review &amp; confirm</h2><p class='ey-lede'>Double-check your details before submitting.</p><div class='ey-review ey-mt6'><div><span>Name</span><strong data-ey-summary='name'>&mdash;</strong></div><div><span>Email</span><strong data-ey-summary='email'>&mdash;</strong></div><div><span>Country</span><strong data-ey-summary='country'>&mdash;</strong></div><div><span>Programme</span><strong data-ey-summary='programme'>&mdash;</strong></div><div><span>Duration</span><strong data-ey-summary='duration'>3 months</strong></div><div><span>Start</span><strong data-ey-summary='start'>&mdash;</strong></div><div><span>Accommodation</span><strong data-ey-summary='accommodation'>&mdash;</strong></div><div><span>Interests</span><strong data-ey-summary='interests'>&mdash;</strong></div><div><span>Mobility grant</span><strong data-ey-summary='grant'>No</strong></div></div><label class='ey-field ey-mt5'><span>Newsletter</span>{{field:newsletter}}</label>\n<label class='ey-field'><span>Terms *</span>{{field:terms}}</label>\n</section>      \n      \n      \n      \n      \n      \n<div class='ey-actions'><button class='ey-back' type='button'>&larr; Back</button><a class='ey-cancel' href='/premium-forms'>&larr; Cancel</a><button class='ey-next' type='button' disabled>Continue &rarr;</button><button class='ey-submit' type='submit' hidden disabled>Submit application &check;</button></div></div><p class='ey-footer'>Co-funded by the European Youth Mobility Initiative &middot; Step <span data-ey-current>1</span> of 4</p></section></div></div>"
+  "multiPage": true,
+  "customContent": {},
+  "customScripts": {},
+  "customHtml": "<div class='mfp mfp-euro-youth mfp-native-generated' data-ey-wizard='1' data-mf-flexgrid=\"locked\"><div class='ey-shell'><aside class='ey-hero'><div class='ey-brand'><div class='ey-brand-icon'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='10'></circle><path d='M2 12h20'></path><path d='M12 2a15.3 15.3 0 0 1 0 20'></path><path d='M12 2a15.3 15.3 0 0 0 0 20'></path></svg></div><span>EUROYOUTH&nbsp;2026</span></div><div class='ey-hero-copy'><div class='ey-rating'><svg viewBox='0 0 24 24' fill='currentColor'><path d='m12 2 2.9 6.3 6.9.8-5.1 4.7 1.4 6.8-6.1-3.4-6.1 3.4 1.4-6.8-5.1-4.7 6.9-.8z'></path></svg>Rated 4.9 by 12,000+ participants</div><h1>Your European adventure starts here.</h1><p>Join thousands of young Europeans studying, volunteering and exploring across the continent. One application, endless destinations.</p><div class='ey-stats'><div><strong>27</strong><span>Countries</span></div><i></i><div><strong>340+</strong><span>Universities</span></div><i></i><div><strong>&euro;0</strong><span>Application fee</span></div></div></div></aside><section class='ey-panel'><div class='ey-stepper' aria-label='Application steps'><div class='ey-step is-active' data-step='0'><div class='ey-dot'>01</div><div class='ey-step-text'><strong>Profile</strong><span>About you</span></div></div><i class='ey-line' data-line='0'></i><div class='ey-step' data-step='1'><div class='ey-dot'>02</div><div class='ey-step-text'><strong>Programme</strong><span>Your track</span></div></div><i class='ey-line' data-line='1'></i><div class='ey-step' data-step='2'><div class='ey-dot'>03</div><div class='ey-step-text'><strong>Logistics</strong><span>Stay &amp; support</span></div></div><i class='ey-line' data-line='2'></i><div class='ey-step' data-step='3'><div class='ey-dot'>04</div><div class='ey-step-text'><strong>Confirm</strong><span>Review</span></div></div></div><div class='ey-card'><section class='ey-page is-active' data-step='0'><h2>Tell us about you</h2><p class='ey-lede'>Basic details so we can match you with the right programme.</p><div class='ey-grid ey-grid-2 ey-mt6'><label class='ey-field'><span>First name *</span>{{field:first_name}}</label>\n<label class='ey-field'><span>Last name *</span>{{field:last_name}}</label>\n<label class='ey-field'><span>Email *</span>{{field:email}}</label>\n<label class='ey-field'><span>Phone</span>{{field:phone}}</label>\n<label class='ey-field'><span>Year of birth</span>{{field:birth_year}}</label>\n<label class='ey-field'><span>Country of residence *</span>{{field:country}}</label></div>\n</section><section class='ey-page' data-step='1'><h2>Choose your track</h2><p class='ey-lede'>Pick the programme that fits your goals.</p><label class='ey-field ey-mt5'><span>Programme *</span>{{field:programme}}</label>\n<div class='ey-grid ey-grid-2 ey-mt5'><label class='ey-field'><span>Duration (months)</span>{{field:duration}}</label>\n<label class='ey-field'><span>Preferred start *</span>{{field:start_month}}</label></div>\n<label class='ey-field'><span>Interests</span>{{field:interests}}</label>\n</section><section class='ey-page' data-step='2'><h2>Stay &amp; support</h2><p class='ey-lede'>Where you'll live and how we can help.</p><label class='ey-field ey-mt6'><span>Accommodation preference *</span>{{field:accommodation}}</label>\n<label class='ey-field ey-mt5'><span>Language level</span>{{field:language_level}}</label>\n<label class='ey-field ey-mt5'><span>Why do you want to join? (optional)</span>{{field:motivation}}<small><b data-ey-count>0</b>/500</small></label>\n<label class='ey-field'><span>Mobility grant</span>{{field:scholarship}}</label>\n</section><section class='ey-page' data-step='3'><h2>Review &amp; confirm</h2><p class='ey-lede'>Double-check your details before submitting.</p><div class='ey-review ey-mt6'><div><span>Name</span><strong data-ey-summary='name'>&mdash;</strong></div><div><span>Email</span><strong data-ey-summary='email'>&mdash;</strong></div><div><span>Country</span><strong data-ey-summary='country'>&mdash;</strong></div><div><span>Programme</span><strong data-ey-summary='programme'>&mdash;</strong></div><div><span>Duration</span><strong data-ey-summary='duration'>3 months</strong></div><div><span>Start</span><strong data-ey-summary='start'>&mdash;</strong></div><div><span>Accommodation</span><strong data-ey-summary='accommodation'>&mdash;</strong></div><div><span>Interests</span><strong data-ey-summary='interests'>&mdash;</strong></div><div><span>Mobility grant</span><strong data-ey-summary='grant'>No</strong></div></div><label class='ey-field ey-mt5'><span>Newsletter</span>{{field:newsletter}}</label>\n<label class='ey-field'><span>Terms *</span>{{field:terms}}</label>\n</section>      \n      \n      \n      \n      \n      \n<div class='ey-actions'><button class='ey-back' type='button'>&larr; Back</button><a class='ey-cancel' href='/premium-forms'>&larr; Cancel</a><button class='ey-next' type='button' disabled>Continue &rarr;</button><button class='ey-submit' type='submit' hidden disabled>Submit application &check;</button></div></div><p class='ey-footer'>Co-funded by the European Youth Mobility Initiative &middot; Step <span data-ey-current>1</span> of 4</p></section></div></div>",
+  "customCss": "@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap');.mfp.mfp-euro-youth{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;color:#1c1917;background:#f5f5f4;width:100%!important;max-width:1152px!important;margin:0 auto!important;padding:16px!important;box-sizing:border-box;overflow:visible!important}.mfp-euro-youth,.mfp-euro-youth *{box-sizing:border-box}.mfp-euro-youth .ey-shell{display:grid;min-height:auto;max-width:1152px;margin:0 auto;background:#f5f5f4}.mfp-euro-youth .ey-hero{display:none;position:relative;overflow:hidden;flex-direction:column;justify-content:space-between;padding:40px;color:#fff;background-image:linear-gradient(to bottom,rgba(15,23,42,.25),rgba(15,23,42,.85)),url('/Modules/MegaForm/img/euro-youth/euro-youth-hero.png');background-size:cover;background-position:center}.mfp-euro-youth .ey-brand{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.9);font-size:14px;font-weight:600;letter-spacing:.025em}.mfp-euro-youth .ey-brand-icon{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.15);backdrop-filter:blur(8px)}.mfp-euro-youth svg{width:1em;height:1em;display:block}.mfp-euro-youth .ey-brand-icon svg{width:20px;height:20px}.mfp-euro-youth .ey-rating{display:inline-flex;align-items:center;gap:6px;border-radius:999px;background:rgba(255,255,255,.15);padding:4px 12px;font-size:12px;line-height:16px;font-weight:500;backdrop-filter:blur(8px);margin-bottom:16px}.mfp-euro-youth .ey-rating svg{width:14px;height:14px;color:#fcd34d;fill:#fcd34d}.mfp-euro-youth .ey-hero h1{font-family:'Bricolage Grotesque',Inter,sans-serif;margin:0;color:#fff;font-size:36px;line-height:1.1;font-weight:800;letter-spacing:0}.mfp-euro-youth .ey-hero p{margin:12px 0 0;color:rgba(255,255,255,.8);font-size:15px;line-height:1.6}.mfp-euro-youth .ey-stats{display:flex;align-items:center;gap:24px;margin-top:32px}.mfp-euro-youth .ey-stats strong{font-family:'Bricolage Grotesque',Inter,sans-serif;display:block;font-size:24px;line-height:32px;font-weight:700;color:#fff}.mfp-euro-youth .ey-stats span{display:block;color:rgba(255,255,255,.7);font-size:12px;line-height:16px}.mfp-euro-youth .ey-stats i{display:block;width:1px;height:32px;background:rgba(255,255,255,.2)}.mfp-euro-youth .ey-panel{display:flex;flex-direction:column;background:#f5f5f4;padding:32px 24px}.mfp-euro-youth .ey-stepper{display:flex;align-items:center;gap:8px;margin-bottom:32px;height:32px!important}.mfp-euro-youth .ey-step{display:flex;flex:1;align-items:center;gap:8px;min-width:0;height:32px!important}.mfp-euro-youth .ey-dot{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:999px;background:#e7e5e4;color:#a8a29e;font-size:12px;line-height:16px;font-weight:600;transition:all .18s ease;flex:0 0 32px}.mfp-euro-youth .ey-step.is-active .ey-dot{background:#1c1917;color:#fff}.mfp-euro-youth .ey-step.is-done .ey-dot{background:#059669;color:#fff;font-size:0}.mfp-euro-youth .ey-step.is-done .ey-dot:after{content:'\\2713';font-size:16px}.mfp-euro-youth .ey-step-text{display:none;white-space:nowrap}.mfp-euro-youth .ey-step-text strong{display:block;color:#a8a29e;font-size:13px;line-height:1;font-weight:600}.mfp-euro-youth .ey-step-text span{display:block;margin-top:2px;color:#a8a29e;font-size:11px;line-height:14px}.mfp-euro-youth .ey-step.is-active .ey-step-text strong,.mfp-euro-youth .ey-step.is-done .ey-step-text strong{color:#1c1917}.mfp-euro-youth .ey-line{height:1px;background:#e7e5e4;flex:1;transition:all .18s ease}.mfp-euro-youth .ey-line.is-done{background:#059669}.mfp-euro-youth .ey-card{flex:1;border-radius:24px;background:#fff;padding:24px;box-shadow:0 1px 2px rgba(0,0,0,.05)}.mfp-euro-youth .ey-page{display:none}.mfp-euro-youth .ey-page.is-active{display:block}.mfp-euro-youth h2{font-family:'Bricolage Grotesque',Inter,sans-serif;margin:0!important;color:#1c1917;font-size:24px;line-height:32px!important;font-weight:700;letter-spacing:0}.mfp-euro-youth .ey-lede{margin:4px 0 0!important;color:#78716c;font-size:14px;line-height:20px!important}.mfp-euro-youth .ey-mt6{margin-top:24px}.mfp-euro-youth .ey-mt5{margin-top:20px}.mfp-euro-youth .ey-grid{display:grid;gap:16px}.mfp-euro-youth .ey-field{display:block;margin:0}.mfp-euro-youth .ey-field>span{display:block;margin:0 0 8px!important;color:#57534e;font-size:13px;line-height:18px;font-weight:500}.mfp-euro-youth .ey-field .mf-field-label{display:none!important}.mfp-euro-youth .mf-field-group{margin:0!important;width:100%}.mfp-euro-youth .mf-input,.mfp-euro-youth .mf-select,.mfp-euro-youth .mf-textarea{width:100%!important;border:1px solid #d6d3d1!important;border-radius:12px!important;background:#fff!important;padding:12px 16px!important;color:#1c1917!important;font-family:'Inter',system-ui,sans-serif!important;font-size:15px!important;line-height:20px!important;min-height:49px!important;height:49px!important;outline:0!important;box-shadow:none!important;transition:all .15s ease!important}.mfp-euro-youth .mf-textarea{min-height:118px!important;height:auto!important;resize:none}.mfp-euro-youth .mf-input::placeholder,.mfp-euro-youth .mf-textarea::placeholder{color:#a8a29e!important;opacity:1}.mfp-euro-youth .mf-input:focus,.mfp-euro-youth .mf-select:focus,.mfp-euro-youth .mf-textarea:focus{border-color:#1c1917!important;box-shadow:0 0 0 2px rgba(28,25,23,.1)!important}.mfp-euro-youth .mf-select-wrap{position:relative}.mfp-euro-youth .mf-select{appearance:none!important;-webkit-appearance:none!important;padding-right:42px!important}.mfp-euro-youth .mf-field-error{margin-top:5px;color:#dc2626;font-size:12px;line-height:16px}.mfp-euro-youth .ey-programmes{display:grid;gap:12px}.mfp-euro-youth .ey-programme{display:flex;align-items:flex-start;gap:16px;width:100%;border:1px solid #e7e5e4;border-radius:16px;background:#fff;padding:16px;text-align:left;cursor:pointer;transition:all .15s ease}.mfp-euro-youth .ey-programme:hover{border-color:#d6d3d1}.mfp-euro-youth .ey-programme:has(input:checked){border-color:#1c1917;background:#fafaf9;box-shadow:0 0 0 2px rgba(28,25,23,.1)}.mfp-euro-youth .ey-programme input,.mfp-euro-youth .ey-accom input,.mfp-euro-youth .ey-chips input{position:absolute;opacity:0;pointer-events:none}.mfp-euro-youth .ey-programme-icon{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;background:#f5f5f4;color:#57534e;flex:0 0 44px}.mfp-euro-youth .ey-programme:has(input:checked) .ey-programme-icon{background:#1c1917;color:#fff}.mfp-euro-youth .ey-programme-icon svg{width:20px;height:20px}.mfp-euro-youth .ey-programme-copy{display:block;flex:1;min-width:0}.mfp-euro-youth .ey-programme-copy strong{display:block;color:#1c1917;font-size:16px;line-height:22px;font-weight:600}.mfp-euro-youth .ey-programme-copy em{display:flex;align-items:center;gap:4px;margin-top:2px;color:#78716c;font-size:12px;line-height:16px;font-style:normal}.mfp-euro-youth .ey-programme-copy em svg{width:14px;height:14px}.mfp-euro-youth .ey-programme-copy span{display:block;margin-top:4px;color:#57534e;font-size:14px;line-height:20px}.mfp-euro-youth .ey-check{display:none;color:#059669;font-size:20px;line-height:20px}.mfp-euro-youth .ey-programme:has(input:checked) .ey-check{display:block}.mfp-euro-youth .ey-chips{display:flex;flex-wrap:wrap;gap:8px}.mfp-euro-youth .ey-chips label{display:inline-flex}.mfp-euro-youth .ey-chips span{display:inline-flex;border:1px solid #d6d3d1;border-radius:999px;background:#fff;color:#57534e;padding:6px 14px;font-size:14px;line-height:20px;cursor:pointer;transition:all .15s ease}.mfp-euro-youth .ey-chips input:checked+span{border-color:#1c1917;background:#1c1917;color:#fff}.mfp-euro-youth .ey-accom{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.mfp-euro-youth .ey-accom label{display:block;cursor:pointer}.mfp-euro-youth .ey-accom span{display:block;border:1px solid #e7e5e4;border-radius:16px;background:#fff;padding:16px;transition:all .15s ease}.mfp-euro-youth .ey-accom strong{display:block;color:#1c1917;font-size:14px;line-height:20px;font-weight:600}.mfp-euro-youth .ey-accom em{display:block;margin-top:2px;color:#78716c;font-size:12px;line-height:16px;font-style:normal}.mfp-euro-youth .ey-accom input:checked+span{border-color:#1c1917;background:#fafaf9;box-shadow:0 0 0 2px rgba(28,25,23,.1)}.mfp-euro-youth .ey-field small{display:block;margin-top:4px;text-align:right;color:#a8a29e;font-size:12px;line-height:16px}.mfp-euro-youth .ey-grant{display:flex;align-items:flex-start;gap:12px;margin-top:12px;border:1px solid #e7e5e4;border-radius:16px;background:#fafaf9;padding:16px;cursor:pointer}.mfp-euro-youth .ey-grant input,.mfp-euro-youth .ey-checks input{width:20px;height:20px;margin:2px 0 0;accent-color:#1c1917;flex:0 0 auto}.mfp-euro-youth .ey-grant strong{display:block;color:#1c1917;font-size:14px;line-height:20px;font-weight:600}.mfp-euro-youth .ey-grant em{display:block;color:#78716c;font-size:12px;line-height:16px;font-style:normal}.mfp-euro-youth .ey-review{overflow:hidden;border:1px solid #e7e5e4;border-radius:16px}.mfp-euro-youth .ey-review div{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 16px;color:#78716c;font-size:14px;line-height:20px}.mfp-euro-youth .ey-review div:nth-child(even){background:#fafaf9}.mfp-euro-youth .ey-review strong{color:#1c1917;font-weight:500;text-align:right}.mfp-euro-youth .ey-checks{display:grid;gap:12px}.mfp-euro-youth .ey-checks label{display:flex;align-items:flex-start;gap:12px;color:#57534e;font-size:14px;line-height:20px;cursor:pointer}.mfp-euro-youth .ey-checks strong{color:#1c1917;text-decoration:underline}.mfp-euro-youth .ey-actions{display:flex;align-items:center;justify-content:space-between;margin-top:32px;border-top:1px solid #f5f5f4;padding-top:24px}.mfp-euro-youth .ey-back,.mfp-euro-youth .ey-cancel,.mfp-euro-youth .ey-next,.mfp-euro-youth .ey-submit{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:12px;padding:10px 16px;font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:20px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .15s ease}.mfp-euro-youth .ey-back,.mfp-euro-youth .ey-cancel{background:transparent;color:#57534e}.mfp-euro-youth .ey-cancel{color:#a8a29e}.mfp-euro-youth .ey-back:hover,.mfp-euro-youth .ey-cancel:hover{background:#f5f5f4;color:#57534e}.mfp-euro-youth .ey-next,.mfp-euro-youth .ey-submit{background:#1c1917;color:#fff;padding-left:24px;padding-right:24px}.mfp-euro-youth .ey-next:hover{background:#292524}.mfp-euro-youth .ey-submit{background:#059669}.mfp-euro-youth .ey-submit:hover{background:#047857}.mfp-euro-youth .ey-next:disabled,.mfp-euro-youth .ey-submit:disabled{background:#d6d3d1;color:#fff;cursor:not-allowed}.mfp-euro-youth .ey-footer{margin:16px 0 0;text-align:center;color:#a8a29e;font-size:12px;line-height:16px}.mfp-euro-youth .mf-form-title,.mfp-euro-youth .mf-form-description,.mfp-euro-youth .mf-success-message,.mfp-euro-youth .mf-form-actions:not(.mf-postsubmit-actions):not(.mf-review-actions){display:none!important}@media(min-width:640px){.mfp-euro-youth .ey-card{padding:32px}.mfp-euro-youth .ey-grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}.mfp-euro-youth .ey-step-text{display:block}}@media(min-width:1024px){.mfp-euro-youth .ey-shell{grid-template-columns:440px 1fr}.mfp-euro-youth .ey-hero{display:flex}.mfp-euro-youth .ey-panel{padding:32px 48px}}@media(max-width:560px){.mfp-euro-youth .ey-panel{padding:32px 24px}.mfp-euro-youth .ey-card{padding:24px}.mfp-euro-youth .ey-accom{grid-template-columns:1fr}.mfp-euro-youth .ey-programme{gap:12px}.mfp-euro-youth .ey-programme-icon{width:40px;height:40px;flex-basis:40px}.mfp-euro-youth .ey-actions{margin-top:28px}.mfp-euro-youth .ey-next,.mfp-euro-youth .ey-submit{padding-left:20px;padding-right:20px}}.mf-form-wrapper>.mf-form-inner .mfp.mfp-euro-youth{width:100%!important;max-width:1152px!important;margin:0 auto!important;padding:16px!important;background:#f5f5f4!important;box-sizing:border-box!important}\n\n/* [PremiumChoiceChipsCards 2026-06-19] */\n.mf-form-wrapper .mfp.mfp-euro-youth,\n.mfp.mfp-euro-youth,\n.mf-form-wrapper {\n  --mf-choice-accent: var(--primary, var(--accent, var(--mf-choice-accent, var(--primary, var(--accent, #111827)))));\n  --mf-choice-accent-2: var(--accent, var(--primary, var(--mf-choice-accent, var(--primary, var(--accent, #111827)))));\n  --mf-choice-text: var(--foreground, var(--card-foreground, var(--mf-choice-text, var(--foreground, var(--card-foreground, #111827)))));\n  --mf-choice-muted: var(--muted-foreground, var(--mf-choice-muted, var(--muted-foreground, #6b7280)));\n  --mf-choice-border: var(--border, var(--mf-choice-border, var(--border, #e5e7eb)));\n  --mf-choice-card: var(--card, var(--mf-choice-card, var(--card, #ffffff)));\n  --mf-choice-soft: color-mix(in oklab, var(--mf-choice-accent) 9%, transparent);\n  --mf-choice-soft-strong: color-mix(in oklab, var(--mf-choice-accent) 15%, transparent);\n  --mf-choice-on-accent: var(--primary-foreground, #fff);\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips,\n.mfp.mfp-euro-youth .mf-option-group--chips,\n.mf-form-wrapper .mf-option-group--chips {\n  display: flex !important;\n  flex-direction: row !important;\n  flex-wrap: wrap !important;\n  align-items: flex-start !important;\n  justify-content: flex-start !important;\n  gap: 10px !important;\n  text-align: left !important;\n  grid-template-columns: none !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-item,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-item,\n.mf-form-wrapper .mf-option-group--chips .mf-option-item {\n  display: inline-flex !important;\n  width: auto !important;\n  max-width: 100% !important;\n  flex: 0 1 auto !important;\n  margin: 0 !important;\n  padding: 0 !important;\n  min-height: 0 !important;\n  background: transparent !important;\n  border: 0 !important;\n  border-radius: 0 !important;\n  box-shadow: none !important;\n  gap: 0 !important;\n  cursor: pointer !important;\n  text-align: left !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards,\n.mfp.mfp-euro-youth .mf-option-group--cards,\n.mf-form-wrapper .mf-option-group--cards {\n  display: grid !important;\n  grid-template-columns: 1fr !important;\n  gap: 12px !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-control,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-control,\n.mf-form-wrapper .mf-option-group--chips .mf-option-control,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control,\n.mf-form-wrapper .mf-option-group--cards .mf-option-control {\n  position: absolute !important;\n  opacity: 0 !important;\n  width: 1px !important;\n  height: 1px !important;\n  overflow: hidden !important;\n  pointer-events: none !important;\n  appearance: none !important;\n  -webkit-appearance: none !important;\n  clip-path: inset(50%) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-ui,\n.mf-form-wrapper .mf-option-group--chips .mf-option-ui {\n  display: inline-flex !important;\n  align-items: center !important;\n  justify-content: flex-start !important;\n  width: auto !important;\n  max-width: 100% !important;\n  min-height: 30px !important;\n  padding: 6px 12px !important;\n  border: 1px solid color-mix(in oklab, var(--mf-choice-border) 70%, var(--mf-choice-accent) 30%) !important;\n  border-radius: 999px !important;\n  background: color-mix(in oklab, var(--mf-choice-card) 94%, var(--mf-choice-accent) 6%) !important;\n  color: var(--mf-choice-text) !important;\n  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;\n  transition: border-color .16s ease, background .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-ui::before,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-ui::before,\n.mf-form-wrapper .mf-option-group--chips .mf-option-ui::before,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-ui::before,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-ui::before,\n.mf-form-wrapper .mf-option-group--cards .mf-option-ui::before,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-item::before,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-item::before,\n.mf-form-wrapper .mf-option-group--chips .mf-option-item::before,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-item::before,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-item::before,\n.mf-form-wrapper .mf-option-group--cards .mf-option-item::before,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-label::before,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-label::before,\n.mf-form-wrapper .mf-option-group--chips .mf-option-label::before,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-label::before,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-label::before,\n.mf-form-wrapper .mf-option-group--cards .mf-option-label::before {\n  display: none !important;\n  content: \"\" !important;\n  width: 0 !important;\n  height: 0 !important;\n  margin: 0 !important;\n  padding: 0 !important;\n  border: 0 !important;\n  background: none !important;\n  box-shadow: none !important;\n  flex: 0 0 0 !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-label,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-label,\n.mf-form-wrapper .mf-option-group--chips .mf-option-label {\n  color: inherit !important;\n  font-size: 13px !important;\n  line-height: 17px !important;\n  font-weight: 500 !important;\n  white-space: normal !important;\n  min-width: 0 !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-item:hover .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-item:hover .mf-option-ui,\n.mf-form-wrapper .mf-option-group--chips .mf-option-item:hover .mf-option-ui {\n  border-color: var(--mf-choice-accent) !important;\n  background: var(--mf-choice-soft) !important;\n  transform: translateY(-1px) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-control:checked + .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-control:checked + .mf-option-ui,\n.mf-form-wrapper .mf-option-group--chips .mf-option-control:checked + .mf-option-ui {\n  border-color: var(--mf-choice-accent) !important;\n  background: var(--mf-choice-accent) !important;\n  color: var(--mf-choice-on-accent) !important;\n  box-shadow: 0 8px 22px color-mix(in oklab, var(--mf-choice-accent) 24%, transparent) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-item,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-item,\n.mf-form-wrapper .mf-option-group--cards .mf-option-item {\n  display: block !important;\n  width: 100% !important;\n  margin: 0 !important;\n  padding: 0 !important;\n  cursor: pointer !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-ui,\n.mf-form-wrapper .mf-option-group--cards .mf-option-ui {\n  position: relative !important;\n  display: flex !important;\n  align-items: flex-start !important;\n  gap: 14px !important;\n  width: 100% !important;\n  min-height: 48px !important;\n  padding: 12px 42px 12px 14px !important;\n  border: 1px solid var(--mf-choice-border) !important;\n  border-radius: 12px !important;\n  background: var(--mf-choice-card) !important;\n  color: var(--mf-choice-text) !important;\n  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05) !important;\n  transition: border-color .16s ease, background .16s ease, box-shadow .16s ease, transform .16s ease !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-item:hover .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-item:hover .mf-option-ui,\n.mf-form-wrapper .mf-option-group--cards .mf-option-item:hover .mf-option-ui {\n  border-color: var(--mf-choice-accent) !important;\n  background: color-mix(in oklab, var(--mf-choice-card) 92%, var(--mf-choice-accent) 8%) !important;\n  transform: translateY(-1px) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:checked + .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:checked + .mf-option-ui,\n.mf-form-wrapper .mf-option-group--cards .mf-option-control:checked + .mf-option-ui {\n  border-color: var(--mf-choice-accent) !important;\n  background: color-mix(in oklab, var(--mf-choice-card) 88%, var(--mf-choice-accent) 12%) !important;\n  box-shadow: 0 0 0 1px var(--mf-choice-accent), 0 14px 34px color-mix(in oklab, var(--mf-choice-accent) 18%, transparent) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-icon,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-icon,\n.mf-form-wrapper .mf-option-group--cards .mf-option-icon {\n  display: inline-flex !important;\n  align-items: center !important;\n  justify-content: center !important;\n  width: 34px !important;\n  height: 34px !important;\n  flex: 0 0 34px !important;\n  border-radius: 10px !important;\n  background: var(--mf-choice-soft) !important;\n  color: var(--mf-choice-accent) !important;\n  font-size: 18px !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:checked + .mf-option-ui .mf-option-icon,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:checked + .mf-option-ui .mf-option-icon,\n.mf-form-wrapper .mf-option-group--cards .mf-option-control:checked + .mf-option-ui .mf-option-icon {\n  background: var(--mf-choice-accent) !important;\n  color: var(--mf-choice-on-accent) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-copy,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-copy,\n.mf-form-wrapper .mf-option-group--cards .mf-option-copy {\n  display: grid !important;\n  gap: 3px !important;\n  min-width: 0 !important;\n  flex: 1 1 auto !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-label,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-label,\n.mf-form-wrapper .mf-option-group--cards .mf-option-label {\n  color: var(--mf-choice-text) !important;\n  font-size: 14px !important;\n  line-height: 19px !important;\n  font-weight: 700 !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-meta,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-meta,\n.mf-form-wrapper .mf-option-group--cards .mf-option-meta,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-desc,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-desc,\n.mf-form-wrapper .mf-option-group--cards .mf-option-desc {\n  color: var(--mf-choice-muted) !important;\n  font-size: 13px !important;\n  line-height: 18px !important;\n  font-weight: 500 !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .section-icon,\n.mfp.mfp-euro-youth .section-icon,\n.mf-form-wrapper .section-icon,\n.mf-form-wrapper .mfp.mfp-euro-youth .gift-icon,\n.mfp.mfp-euro-youth .gift-icon,\n.mf-form-wrapper .gift-icon {\n  display: none !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-check,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-check,\n.mf-form-wrapper .mf-option-group--cards .mf-option-check {\n  position: absolute !important;\n  top: 18px !important;\n  right: 18px !important;\n  color: var(--mf-choice-accent) !important;\n  font-size: 20px !important;\n  line-height: 20px !important;\n  opacity: 0 !important;\n  transform: scale(.8) !important;\n  transition: opacity .16s ease, transform .16s ease !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:checked + .mf-option-ui .mf-option-check,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:checked + .mf-option-ui .mf-option-check,\n.mf-form-wrapper .mf-option-group--cards .mf-option-control:checked + .mf-option-ui .mf-option-check {\n  opacity: 1 !important;\n  transform: scale(1) !important;\n}\n\n/* V3 hardening: some premium templates append late styles without the custom root,\n   so keep chip/card rendering correct from the MegaForm wrapper as the final fallback. */\n.mf-form-wrapper .mf-option-group--chips,\n.mf-form-wrapper .mf-option-group--cards {\n  align-items: flex-start !important;\n  justify-content: flex-start !important;\n}\n\n.mf-form-wrapper .mf-option-group--chips .mf-option-item {\n  display: inline-flex !important;\n  width: auto !important;\n  max-width: 100% !important;\n  flex: 0 1 auto !important;\n  min-height: 0 !important;\n  margin: 0 !important;\n  padding: 0 !important;\n  background: transparent !important;\n  border: 0 !important;\n  border-radius: 0 !important;\n  box-shadow: none !important;\n  gap: 0 !important;\n}\n\n.mf-form-wrapper .mf-option-group--chips .mf-option-control,\n.mf-form-wrapper .mf-option-group--cards .mf-option-control {\n  position: absolute !important;\n  opacity: 0 !important;\n  width: 1px !important;\n  height: 1px !important;\n  overflow: hidden !important;\n  pointer-events: none !important;\n  appearance: none !important;\n  -webkit-appearance: none !important;\n  clip-path: inset(50%) !important;\n  margin: 0 !important;\n}\n\n.mf-form-wrapper .mf-option-group--chips .mf-option-ui,\n.mf-form-wrapper .mf-option-group--cards .mf-option-ui {\n  box-sizing: border-box !important;\n}\n\n.mf-form-wrapper.mf-theme-pure-grid-premium {\n  --mf-choice-accent: var(--primary, oklch(0.50 0.10 145));\n  --mf-choice-accent-2: var(--accent, oklch(0.75 0.06 85));\n  --mf-choice-text: var(--foreground, oklch(0.25 0.04 145));\n  --mf-choice-border: var(--border, oklch(0.85 0.02 145));\n  --mf-choice-card: var(--card, #ffffff);\n  --mf-choice-on-accent: var(--primary-foreground, #ffffff);\n}\n\n.mf-form-wrapper.mf-theme-pure-grid-premium .mf-option-group--chips .mf-option-ui {\n  background: color-mix(in oklab, var(--mf-choice-card) 92%, var(--mf-choice-accent) 8%) !important;\n  border-color: color-mix(in oklab, var(--mf-choice-border) 64%, var(--mf-choice-accent) 36%) !important;\n  color: var(--mf-choice-text) !important;\n}\n\n.mf-form-wrapper.mf-theme-pure-grid-premium .mf-option-group--chips .mf-option-control:checked + .mf-option-ui {\n  background: var(--mf-choice-accent) !important;\n  border-color: var(--mf-choice-accent) !important;\n  color: var(--mf-choice-on-accent) !important;\n}\n\n.mf-form-wrapper.mf-theme-pure-grid-premium button[type=\"submit\"],\n.mf-form-wrapper.mf-theme-pure-grid-premium .aur-submit,\n.mf-form-wrapper.mf-theme-pure-grid-premium .mfp-submit {\n  background: var(--mf-choice-accent) !important;\n  border-color: var(--mf-choice-accent) !important;\n  color: var(--mf-choice-on-accent) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-nola-glass,\n.mfp.mfp-nola-glass {\n  --mf-choice-accent: var(--nola-gold, #f39c12);\n  --mf-choice-accent-2: var(--nola-green, #27ae60);\n  --mf-choice-text: var(--nola-text, #ffffff);\n  --mf-choice-border: rgba(255,255,255,0.28);\n  --mf-choice-card: rgba(255,255,255,0.10);\n  --mf-choice-on-accent: var(--nola-deep, #1a0a2e);\n}\n\n.mf-form-wrapper .mfp.mfp-nola-glass .mf-option-group--chips .mf-option-ui,\n.mfp.mfp-nola-glass .mf-option-group--chips .mf-option-ui {\n  background: rgba(255,255,255,0.10) !important;\n  border-color: rgba(255,255,255,0.30) !important;\n  color: var(--nola-text, #ffffff) !important;\n  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 1px 2px rgba(0,0,0,0.16) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-nola-glass .mf-option-group--chips .mf-option-label,\n.mfp.mfp-nola-glass .mf-option-group--chips .mf-option-label {\n  color: var(--nola-text, #ffffff) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-nola-glass .mf-option-group--chips .mf-option-control:checked + .mf-option-ui,\n.mfp.mfp-nola-glass .mf-option-group--chips .mf-option-control:checked + .mf-option-ui {\n  background: linear-gradient(135deg, var(--nola-gold, #f39c12), #ffd700) !important;\n  border-color: var(--nola-gold, #f39c12) !important;\n  color: var(--nola-deep, #1a0a2e) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-nola-glass .mfp-submit,\n.mfp.mfp-nola-glass .mfp-submit {\n  display: flex !important;\n  align-items: center !important;\n  justify-content: center !important;\n  width: 100% !important;\n  background: linear-gradient(135deg, var(--nola-gold, #f39c12), #ffd700, var(--nola-gold, #f39c12)) !important;\n  border: 0 !important;\n  border-radius: 12px !important;\n  color: var(--nola-deep, #1a0a2e) !important;\n  font-weight: 700 !important;\n  box-shadow: 0 10px 28px rgba(243,156,18,0.30) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-coachella .mf-option-group--chips {\n  gap: 12px !important;\n}\n\n.mf-form-wrapper .mfp.mfp-coachella .mf-option-group--chips .mf-option-item,\n.mfp.mfp-coachella .mf-option-group--chips .mf-option-item {\n  background: transparent !important;\n  border: 0 !important;\n  border-radius: 0 !important;\n  box-shadow: none !important;\n  padding: 0 !important;\n}\n\n.mf-form-wrapper .mfp.mfp-coachella .mf-option-group--chips .mf-option-ui,\n.mfp.mfp-coachella .mf-option-group--chips .mf-option-ui {\n  min-height: 32px !important;\n  padding: 7px 13px !important;\n  border-color: color-mix(in oklab, var(--mf-choice-border) 58%, var(--mf-choice-accent) 42%) !important;\n  background: color-mix(in oklab, var(--mf-choice-card) 90%, var(--mf-choice-accent) 10%) !important;\n}\n\n.mf-form-wrapper .mfp.aur-form .aur-intro,\n.mfp.aur-form .aur-intro,\n.mf-form-wrapper .mfp.aur-form .aur-section:not(.aur-collection-section),\n.mfp.aur-form .aur-section:not(.aur-collection-section),\n.mf-form-wrapper .mfp.aur-form .aur-newsletter,\n.mfp.aur-form .aur-newsletter,\n.mf-form-wrapper .mfp.aur-form .aur-actions,\n.mfp.aur-form .aur-actions,\n.mf-form-wrapper .mfp.aur-form .aur-footer-note,\n.mfp.aur-form .aur-footer-note {\n  max-width: 920px !important;\n  width: 100% !important;\n}\n\n.mf-form-wrapper .mfp.aur-form .mf-row,\n.mfp.aur-form .mf-row {\n  width: 100% !important;\n  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;\n}\n\n.mf-form-wrapper .mfp.aur-form .aur-submit,\n.mfp.aur-form .aur-submit {\n  background: var(--aur-black, #111111) !important;\n  border-color: var(--aur-black, #111111) !important;\n  color: var(--aur-white, #ffffff) !important;\n}\n\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-control:focus-visible + .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-control:focus-visible + .mf-option-ui,\n.mf-form-wrapper .mf-option-group--chips .mf-option-control:focus-visible + .mf-option-ui,\n.mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:focus-visible + .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-control:focus-visible + .mf-option-ui,\n.mf-form-wrapper .mf-option-group--cards .mf-option-control:focus-visible + .mf-option-ui {\n  outline: 2px solid var(--mf-choice-accent) !important;\n  outline-offset: 2px !important;\n}\n\n@media (max-width: 640px) {\n  .mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips,\n.mfp.mfp-euro-youth .mf-option-group--chips,\n.mf-form-wrapper .mf-option-group--chips {\n    gap: 7px !important;\n  }\n  .mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--chips .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--chips .mf-option-ui,\n.mf-form-wrapper .mf-option-group--chips .mf-option-ui {\n    min-height: 30px !important;\n    padding: 6px 11px !important;\n  }\n  .mf-form-wrapper .mfp.mfp-euro-youth .mf-option-group--cards .mf-option-ui,\n.mfp.mfp-euro-youth .mf-option-group--cards .mf-option-ui,\n.mf-form-wrapper .mf-option-group--cards .mf-option-ui {\n    min-height: 46px !important;\n    padding: 11px 38px 11px 12px !important;\n    border-radius: 12px !important;\n  }\n}\n/* [/PremiumChoiceChipsCards] */\n/*MF-TRANSPARENT-OUTER-20260626*/.mf-form-wrapper .mfp.mfp-euro-youth,.mf-form-wrapper .mfp.mfp-euro-youth .ey-shell,.mf-form-wrapper .mfp.mfp-euro-youth .ey-panel{background:transparent!important}\n.mf-premium-native-mode .mf-form-actions:not(.mf-postsubmit-actions):not(.mf-review-actions){display:none!important}\n\n/* MF-FIX euro-preset 20260706 - euro-youth hardcodes its palette inline with !important; the primary\n   accent (#1c1917 dark) sits on the submit button, the active-step dot and the checked\n   programme icon, and #059669 green on the done-step dot. Wire those to the preset channel\n   so a picked preset recolors them (inputs/title already recolor via the standard vars). */\n.mf-form-wrapper .mfp.mfp-euro-youth .ey-submit,\n.mf-form-wrapper .mfp.mfp-euro-youth .ey-next,\n.mf-form-wrapper .mfp.mfp-euro-youth .ey-step.is-active .ey-dot,\n.mf-form-wrapper .mfp.mfp-euro-youth .ey-programme:has(input:checked) .ey-programme-icon{background:var(--mf-preset-primary, #1c1917)!important;border-color:var(--mf-preset-primary, #1c1917)!important}\n.mf-form-wrapper .mfp.mfp-euro-youth .ey-step.is-done .ey-dot{background:var(--mf-preset-accent, #059669)!important}\n\n/* [CardOutlineMockParity 20260706] unselected card check = empty outline circle (control-library mock parity) */\n.mf-form-wrapper .mfp-euro-youth .mf-option-group--cards .mf-option-check.mf-option-check{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:22px!important;height:22px!important;flex:0 0 22px!important;border:2px solid var(--mf-input-border-color,#cbd5e1)!important;border-radius:999px!important;background:transparent!important;color:transparent!important;opacity:1!important;transform:none!important;font-size:12px!important;line-height:1!important;box-shadow:none!important}\n.mf-form-wrapper .mfp-euro-youth .mf-option-group--cards .mf-option-control:checked + .mf-option-ui .mf-option-check.mf-option-check,.mf-form-wrapper .mfp-euro-youth .mf-option-group--cards .mf-option-item.is-checked .mf-option-check.mf-option-check,.mf-form-wrapper .mfp-euro-youth .mf-option-group--cards .mf-option-item:has(.mf-option-control:checked) .mf-option-check.mf-option-check{border-color:var(--mf-choice-accent, #4f46e5)!important;background:var(--mf-choice-accent, #4f46e5)!important;color:#fff!important;opacity:1!important;transform:none!important}\n\n/* [EyMockParity v20260707] mock ground-truth: hero H1 is WHITE (a shell h1 override was repainting it dark — same failure as the outback hero title), and the right panel is SOLID stone-100 like the mock page (MF-TRANSPARENT-OUTER made it transparent → dark host bg swallowed the stepper labels). */\n.mf-form-wrapper .mfp.mfp-euro-youth .ey-hero h1{color:#fff!important}\n.mf-form-wrapper .mfp.mfp-euro-youth .ey-panel{background:#f5f5f4!important}\n\n/* MF-QA-IMGPATH-v1: DNN serves module assets under /DesktopModules/MegaForm/Assets */\n.DnnModule .mfp-euro-youth .ey-hero{background-image:linear-gradient(to bottom,rgba(15,23,42,.25),rgba(15,23,42,.85)),url('/DesktopModules/MegaForm/Assets/img/euro-youth/euro-youth-hero.png')}\n",
+  "themeSelector": {
+   "enabled": false
+  },
+  "premiumNativePageBreak": true,
+  "premiumGeneratedShell": true,
+  "premiumNativeMigrationBadge": "PremiumNativePageBreak v20260628",
+  "showProgressBar": true
+ },
+ "customScripts": {},
+ "rules": [],
+ "workflow": {
+  "notifications": []
+ },
+ "themeSelector": {
+  "enabled": false
+ },
+ "templateGuideSlug": "tpl-euro-youth-application",
+ "theme": "euro-youth-premium",
+ "CustomHtml": "<div class='mfp mfp-euro-youth mfp-native-generated' data-ey-wizard='1'><div class='ey-shell'><aside class='ey-hero'><div class='ey-brand'><div class='ey-brand-icon'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='10'></circle><path d='M2 12h20'></path><path d='M12 2a15.3 15.3 0 0 1 0 20'></path><path d='M12 2a15.3 15.3 0 0 0 0 20'></path></svg></div><span>EUROYOUTH&nbsp;2026</span></div><div class='ey-hero-copy'><div class='ey-rating'><svg viewBox='0 0 24 24' fill='currentColor'><path d='m12 2 2.9 6.3 6.9.8-5.1 4.7 1.4 6.8-6.1-3.4-6.1 3.4 1.4-6.8-5.1-4.7 6.9-.8z'></path></svg>Rated 4.9 by 12,000+ participants</div><h1>Your European adventure starts here.</h1><p>Join thousands of young Europeans studying, volunteering and exploring across the continent. One application, endless destinations.</p><div class='ey-stats'><div><strong>27</strong><span>Countries</span></div><i></i><div><strong>340+</strong><span>Universities</span></div><i></i><div><strong>&euro;0</strong><span>Application fee</span></div></div></div></aside><section class='ey-panel'><div class='ey-stepper' aria-label='Application steps'><div class='ey-step is-active' data-step='0'><div class='ey-dot'>01</div><div class='ey-step-text'><strong>Profile</strong><span>About you</span></div></div><i class='ey-line' data-line='0'></i><div class='ey-step' data-step='1'><div class='ey-dot'>02</div><div class='ey-step-text'><strong>Programme</strong><span>Your track</span></div></div><i class='ey-line' data-line='1'></i><div class='ey-step' data-step='2'><div class='ey-dot'>03</div><div class='ey-step-text'><strong>Logistics</strong><span>Stay &amp; support</span></div></div><i class='ey-line' data-line='2'></i><div class='ey-step' data-step='3'><div class='ey-dot'>04</div><div class='ey-step-text'><strong>Confirm</strong><span>Review</span></div></div></div><div class='ey-card'><section class='ey-page is-active' data-step='0'><h2>Tell us about you</h2><p class='ey-lede'>Basic details so we can match you with the right programme.</p><label class='ey-field'><span>First name *</span>{{field:first_name}}</label>\n<label class='ey-field'><span>Last name *</span>{{field:last_name}}</label>\n<label class='ey-field'><span>Email *</span>{{field:email}}</label>\n<label class='ey-field'><span>Phone</span>{{field:phone}}</label>\n<label class='ey-field'><span>Year of birth</span>{{field:birth_year}}</label>\n<label class='ey-field'><span>Country of residence *</span>{{field:country}}</label>\n</section><section class='ey-page' data-step='1'><h2>Choose your track</h2><p class='ey-lede'>Pick the programme that fits your goals.</p><label class='ey-field ey-mt5'><span>Programme *</span>{{field:programme}}</label>\n<label class='ey-field'><span>Duration (months)</span>{{field:duration}}</label>\n<label class='ey-field'><span>Preferred start *</span>{{field:start_month}}</label>\n<label class='ey-field'><span>Interests</span>{{field:interests}}</label>\n</section><section class='ey-page' data-step='2'><h2>Stay &amp; support</h2><p class='ey-lede'>Where you'll live and how we can help.</p><label class='ey-field ey-mt6'><span>Accommodation preference *</span>{{field:accommodation}}</label>\n<label class='ey-field ey-mt5'><span>Language level</span>{{field:language_level}}</label>\n<label class='ey-field ey-mt5'><span>Why do you want to join? (optional)</span>{{field:motivation}}<small><b data-ey-count>0</b>/500</small></label>\n<label class='ey-field'><span>Mobility grant</span>{{field:scholarship}}</label>\n</section><section class='ey-page' data-step='3'><h2>Review &amp; confirm</h2><p class='ey-lede'>Double-check your details before submitting.</p><div class='ey-review ey-mt6'><div><span>Name</span><strong data-ey-summary='name'>&mdash;</strong></div><div><span>Email</span><strong data-ey-summary='email'>&mdash;</strong></div><div><span>Country</span><strong data-ey-summary='country'>&mdash;</strong></div><div><span>Programme</span><strong data-ey-summary='programme'>&mdash;</strong></div><div><span>Duration</span><strong data-ey-summary='duration'>3 months</strong></div><div><span>Start</span><strong data-ey-summary='start'>&mdash;</strong></div><div><span>Accommodation</span><strong data-ey-summary='accommodation'>&mdash;</strong></div><div><span>Interests</span><strong data-ey-summary='interests'>&mdash;</strong></div><div><span>Mobility grant</span><strong data-ey-summary='grant'>No</strong></div></div><label class='ey-field ey-mt5'><span>Newsletter</span>{{field:newsletter}}</label>\n<label class='ey-field'><span>Terms *</span>{{field:terms}}</label>\n</section>      \n      \n      \n      \n      \n      \n<div class='ey-actions'><button class='ey-back' type='button'>&larr; Back</button><a class='ey-cancel' href='/premium-forms'>&larr; Cancel</a><button class='ey-next' type='button' disabled>Continue &rarr;</button><button class='ey-submit' type='submit' hidden disabled>Submit application &check;</button></div></div><p class='ey-footer'>Co-funded by the European Youth Mobility Initiative &middot; Step <span data-ey-current>1</span> of 4</p></section></div></div>"
 }
