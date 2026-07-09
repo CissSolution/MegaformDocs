@@ -35,13 +35,20 @@ export interface RendererConfig {
   rules?: unknown[];
 }
 
+export interface ShowIfConditionRule {
+  sourceType?: 'Field' | 'Role' | 'Permission' | 'Query' | 'User' | 'field' | 'role' | 'permission' | 'query' | 'user';
+  key?: string;
+  field?: string;
+  fieldKey?: string;
+  condition?: string;
+  operator?: string;
+  value?: string;
+}
+
 export interface ShowIfRule {
   operator: 'And' | 'Or';
-  conditions: Array<{
-    fieldKey: string;
-    operator: string;
-    value: string;
-  }>;
+  conditions: ShowIfConditionRule[];
+  rules?: ShowIfConditionRule[];
 }
 
 /** HTML-escape a string */

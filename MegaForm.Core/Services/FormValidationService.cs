@@ -278,23 +278,7 @@ namespace MegaForm.Core.Services
         /// </summary>
         public static bool EvaluateShowIf(ShowIfCondition showIf, Dictionary<string, object> data)
         {
-            if (showIf?.Rules == null || showIf.Rules.Count == 0)
-                return true;
-
-            bool isAnd = showIf.Operator == LogicOperator.And;
-            bool result = isAnd;  // AND starts true, OR starts false
-
-            foreach (var rule in showIf.Rules)
-            {
-                bool ruleResult = EvaluateRule(rule, data);
-
-                if (isAnd)
-                    result = result && ruleResult;
-                else
-                    result = result || ruleResult;
-            }
-
-            return result;
+            return SharedRuleEngine.Evaluate(showIf, RuleEvaluationContext.FromFields(data));
         }
 
         private static bool EvaluateRule(ShowIfRule rule, Dictionary<string, object> data)

@@ -242,6 +242,144 @@
         });
     }
 
+    // ── Shared context evaluator ─────────────────────────────────────────
+    // Used by showIf rules and permission-aware display logic. This extends the
+    // original workflow rule evaluator without changing its evaluateRules contract.
+    function stringArray(value) {
+        if (value == null) return [];
+        if (Array.isArray(value)) return value.map(function (v) { return String(v == null ? '' : v); }).filter(Boolean);
+        if (typeof Set !== 'undefined' && value instanceof Set) return Array.from(value).map(function (v) { return String(v == null ? '' : v); }).filter(Boolean);
+        if (typeof value === 'string') return value.split(',').map(function (v) { return v.trim(); }).filter(Boolean);
+        return [String(value)];
+    }
+
+    function firstArray() {
+        for (var i = 0; i < arguments.length; i++) {
+            var arr = stringArray(arguments[i]);
+            if (arr.length) return arr;
+        }
+        return [];
+    }
+
+    function lookup(obj, key) {
+        if (!obj || !key) return undefined;
+        if (Object.prototype.hasOwnProperty.call(obj, key)) return obj[key];
+        var lower = String(key).toLowerCase();
+        var keys = Object.keys(obj);
+        for (var i = 0; i < keys.length; i++) {
+            if (keys[i].toLowerCase() === lower) return obj[keys[i]];
+        }
+        if (String(key).indexOf('.') < 0) return undefined;
+        var parts = String(key).split('.');
+        var cur = obj;
+        for (var p = 0; p < parts.length; p++) {
+            cur = lookup(cur, parts[p]);
+            if (cur == null) return cur;
+        }
+        return cur;
+    }
+
+    function getBrowserRuleContext() {
+        var platform = root.__MF_PLATFORM__ || {};
+        var explicit = root.__MF_RULE_CONTEXT__ || platform.ruleContext || {};
+        var user = explicit.user || platform.user || platform.currentUser || platform.auth || {};
+        var query = {};
+        var srcQuery = explicit.query || platform.query || {};
+        Object.keys(srcQuery || {}).forEach(function (key) { query[key] = srcQuery[key]; });
+        try {
+            var params = new URLSearchParams(root.location && root.location.search || '');
+            params.forEach(function (value, key) {
+                if (query[key] == null) query[key] = value;
+            });
+        } catch (_) {}
+        return {
+            roles: firstArray(explicit.roles, user.roles, user.Roles, platform.roles, platform.userRoles, platform.roleNames),
+            permissions: firstArray(explicit.permissions, user.permissions, user.Permissions, platform.permissions, platform.userPermissions),
+            query: query,
+            user: user || {}
+        };
+    }
+
+    function normalizeSourceName(source) {
+        var raw = String(source || 'field').toLowerCase();
+        if (raw === 'roles') return 'role';
+        if (raw === 'permissions') return 'permission';
+        if (raw === 'querystring') return 'query';
+        return raw || 'field';
+    }
+
+    function userValues(key, ctx) {
+        var user = ctx.user || {};
+        var k = String(key || '').toLowerCase();
+        if (k === 'id' || k === 'userid' || k === 'user_id') return stringArray(lookup(user, 'userId') != null ? lookup(user, 'userId') : lookup(user, 'id'));
+        if (k === 'username' || k === 'user' || k === 'name') return stringArray(lookup(user, 'userName') != null ? lookup(user, 'userName') : (lookup(user, 'username') != null ? lookup(user, 'username') : lookup(user, 'name')));
+        if (k === 'displayname' || k === 'fullname') return stringArray(lookup(user, 'displayName') != null ? lookup(user, 'displayName') : lookup(user, 'fullName'));
+        if (k === 'email' || k === 'emailaddress') return stringArray(lookup(user, 'email') != null ? lookup(user, 'email') : lookup(user, 'emailAddress'));
+        if (k === 'isauthenticated' || k === 'authenticated') return [String(!!(lookup(user, 'isAuthenticated') != null ? lookup(user, 'isAuthenticated') : lookup(user, 'authenticated')))];
+        if (k === 'isadmin' || k === 'admin') return [String(!!(lookup(user, 'isAdmin') != null ? lookup(user, 'isAdmin') : lookup(user, 'admin')))];
+        if (k === 'issuperuser' || k === 'superuser' || k === 'host') return [String(!!(lookup(user, 'isSuperUser') != null ? lookup(user, 'isSuperUser') : (lookup(user, 'superUser') != null ? lookup(user, 'superUser') : lookup(user, 'host'))))];
+        if (k === 'role' || k === 'roles') return ctx.roles || [];
+        return stringArray(lookup(user, key));
+    }
+
+    function resolveContextValues(rule, fieldResolver, ctx) {
+        var source = normalizeSourceName(rule.sourceType);
+        var key = String(rule.key || rule.fieldKey || rule.field || '').trim();
+        if (source === 'role') return ctx.roles || [];
+        if (source === 'permission') {
+            var admin = userValues('isAdmin', ctx)[0] === 'true' || userValues('isSuperUser', ctx)[0] === 'true';
+            return admin ? (ctx.permissions || []).concat(['*']) : (ctx.permissions || []);
+        }
+        if (source === 'query') return stringArray((ctx.query || {})[key]);
+        if (source === 'user') return userValues(key, ctx);
+        return stringArray(fieldResolver ? fieldResolver(key) : undefined);
+    }
+
+    function splitTargets(value) {
+        var parts = String(value == null ? '' : value).split(',').map(function (v) { return v.trim(); }).filter(Boolean);
+        return parts.length ? parts : [''];
+    }
+
+    function equalsTarget(values, target) {
+        if (values.indexOf('*') >= 0) return true;
+        var targets = splitTargets(target).map(function (v) { return v.toLowerCase(); });
+        return (values || []).some(function (v) { return targets.indexOf(String(v || '').toLowerCase()) >= 0; });
+    }
+
+    function compareContextRule(rule, fieldResolver, ctx) {
+        ctx = ctx || getBrowserRuleContext();
+        var source = normalizeSourceName(rule.sourceType);
+        var key = String(rule.key || rule.fieldKey || rule.field || '').trim();
+        var target = String(rule.value != null ? rule.value : ((source === 'role' || source === 'permission') ? key : ''));
+        var values = resolveContextValues(rule, fieldResolver, ctx);
+        var op = String(rule.operator || rule.condition || 'Equals');
+        switch (op) {
+            case 'Equals': case 'eq': return equalsTarget(values, target);
+            case 'NotEquals': case 'neq': return !equalsTarget(values, target);
+            case 'Contains': case 'contains': return values.some(function (v) { return v === '*' || String(v || '').toLowerCase().indexOf(target.toLowerCase()) >= 0; });
+            case 'NotContains': return !values.some(function (v) { return String(v || '').toLowerCase().indexOf(target.toLowerCase()) >= 0; });
+            case 'StartsWith': case 'startsWith': return values.some(function (v) { return String(v || '').toLowerCase().indexOf(target.toLowerCase()) === 0; });
+            case 'EndsWith': case 'endsWith': return values.some(function (v) { var s = String(v || '').toLowerCase(); var t = target.toLowerCase(); return s.slice(-t.length) === t; });
+            case 'GreaterThan': case 'gt': return values.some(function (v) { return Number(v) > Number(target); });
+            case 'LessThan': case 'lt': return values.some(function (v) { return Number(v) < Number(target); });
+            case 'GreaterOrEqual': case 'gte': return values.some(function (v) { return Number(v) >= Number(target); });
+            case 'LessOrEqual': case 'lte': return values.some(function (v) { return Number(v) <= Number(target); });
+            case 'IsEmpty': case 'isEmpty': return values.length === 0 || values.every(function (v) { return !String(v || '').trim(); });
+            case 'IsNotEmpty': case 'isNotEmpty': return values.some(function (v) { return !!String(v || '').trim(); });
+            case 'In': case 'in': return equalsTarget(values, target);
+            case 'NotIn': case 'notIn': return !equalsTarget(values, target);
+            default: return true;
+        }
+    }
+
+    function evaluateRuleGroup(group, fieldResolver, ctx) {
+        if (!group) return true;
+        var conditions = (group.conditions && group.conditions.length) ? group.conditions : (group.rules || []);
+        if (!conditions.length) return true;
+        var results = conditions.map(function (condition) { return compareContextRule(condition, fieldResolver, ctx); });
+        return String(group.operator || 'And').toLowerCase() === 'or' ? results.some(Boolean) : results.every(Boolean);
+    }
+
     // ── Export ────────────────────────────────────────────────────
     var MegaFormRuleEngine = {
         // Evaluate
@@ -256,6 +394,10 @@
         createRuleDefinition:      createRuleDefinition,
         // DOM integration
         applyEffects:              applyEffects,
+        // Shared context evaluation
+        evaluateRuleGroup:         evaluateRuleGroup,
+        evaluateRuleCondition:     compareContextRule,
+        getBrowserRuleContext:     getBrowserRuleContext,
         // Util
         createId:                  createId
     };
@@ -272,6 +414,7 @@
 
     // Global export
     root.MegaFormRuleEngine = MegaFormRuleEngine;
+    root.MegaFormRules = root.MegaFormRules || MegaFormRuleEngine;
 
 }(typeof window !== 'undefined' ? window : this));
 

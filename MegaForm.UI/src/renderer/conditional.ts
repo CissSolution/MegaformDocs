@@ -3,6 +3,7 @@
 // ============================================================
 
 import type { ShowIfRule } from './helpers';
+import { evaluateRuleGroup } from './rule-engine';
 
 /** Get the current value of a field by key (reads from DOM) */
 export function getFieldValue(key: string, type: string, formId?: number): string | string[] {
@@ -35,44 +36,7 @@ export function getFieldValue(key: string, type: string, formId?: number): strin
 
 /** Evaluate a showIf condition against current form values */
 export function evaluateCondition(showIf: ShowIfRule | null | undefined): boolean {
-  if (!showIf?.conditions?.length) return true;
-
-  const results = showIf.conditions.map(cond => {
-    const val = String(getFieldValue(cond.fieldKey, '') || '');
-    const target = cond.value || '';
-
-    switch (cond.operator) {
-      case 'Equals':        return val === target;
-      case 'NotEquals':      return val !== target;
-      case 'Contains':       return val.includes(target);
-      case 'NotContains':    return !val.includes(target);
-      case 'StartsWith':     return val.startsWith(target);
-      case 'EndsWith':       return val.endsWith(target);
-      case 'GreaterThan': {
-        const nv = parseFloat(val), nt = parseFloat(target);
-        return !isNaN(nv) && !isNaN(nt) && nv > nt;
-      }
-      case 'LessThan': {
-        const nv = parseFloat(val), nt = parseFloat(target);
-        return !isNaN(nv) && !isNaN(nt) && nv < nt;
-      }
-      case 'GreaterOrEqual': {
-        const nv = parseFloat(val), nt = parseFloat(target);
-        return !isNaN(nv) && !isNaN(nt) && nv >= nt;
-      }
-      case 'LessOrEqual': {
-        const nv = parseFloat(val), nt = parseFloat(target);
-        return !isNaN(nv) && !isNaN(nt) && nv <= nt;
-      }
-      case 'IsEmpty':    return !val || val.length === 0;
-      case 'IsNotEmpty': return !!val && val.length > 0;
-      case 'In':         return target.split(',').map(s => s.trim()).includes(val);
-      case 'NotIn':      return !target.split(',').map(s => s.trim()).includes(val);
-      default:           return true;
-    }
-  });
-
-  return showIf.operator === 'Or' ? results.some(Boolean) : results.every(Boolean);
+  return evaluateRuleGroup(showIf as any, key => getFieldValue(key, ''));
 }
 
 /** Bind live conditional logic — re-evaluate on input change */
@@ -99,4 +63,6 @@ export function bindConditionalLogic(container: HTMLElement): void {
       inp.addEventListener('input', reevaluate);
     }
   });
+
+  reevaluate();
 }

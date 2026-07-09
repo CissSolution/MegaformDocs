@@ -62,7 +62,11 @@ export interface FormField {
   validation?: Record<string, unknown>;
   properties?: Record<string, unknown>;
   conditions?: FieldCondition[];
-  showIf?: { operator: string; conditions: Array<{ fieldKey: string; operator: string; value: string }> } | null;
+  showIf?: {
+    operator: string;
+    conditions?: Array<{ sourceType?: string; key?: string; field?: string; fieldKey?: string; condition?: string; operator?: string; value?: string }>;
+    rules?: Array<{ sourceType?: string; key?: string; field?: string; fieldKey?: string; condition?: string; operator?: string; value?: string }>;
+  } | null;
   // Row type
   columns?: RowColumn[];
   // Select/Radio/Checkbox

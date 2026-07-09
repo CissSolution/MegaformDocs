@@ -327,10 +327,23 @@ namespace MegaForm.Core.Models
 
         [JsonProperty("rules")]
         public List<ShowIfRule> Rules { get; set; } = new List<ShowIfRule>();
+
+        [JsonProperty("conditions")]
+        public List<ShowIfRule> Conditions { get; set; }
     }
 
     public class ShowIfRule
     {
+        [JsonProperty("sourceType")]
+        [JsonConverter(typeof(StringEnumConverter))]
+        public RuleSourceType SourceType { get; set; } = RuleSourceType.Field;
+
+        [JsonProperty("key")]
+        public string Key { get; set; }
+
+        [JsonProperty("fieldKey")]
+        public string FieldKey { get; set; }
+
         [JsonProperty("field")]
         public string Field { get; set; }       // key of the triggering field
 
@@ -338,11 +351,24 @@ namespace MegaForm.Core.Models
         [JsonConverter(typeof(StringEnumConverter))]
         public ConditionType Condition { get; set; }
 
+        [JsonProperty("operator")]
+        [JsonConverter(typeof(StringEnumConverter))]
+        public ConditionType? Operator { get; set; }
+
         [JsonProperty("value")]
         public string Value { get; set; }
     }
 
     public enum LogicOperator { And, Or }
+
+    public enum RuleSourceType
+    {
+        Field,
+        Role,
+        Permission,
+        Query,
+        User
+    }
 
     public enum ConditionType
     {
@@ -352,10 +378,14 @@ namespace MegaForm.Core.Models
         NotContains,
         GreaterThan,
         LessThan,
+        GreaterOrEqual,
+        LessOrEqual,
         IsEmpty,
         IsNotEmpty,
         StartsWith,
-        EndsWith
+        EndsWith,
+        In,
+        NotIn
     }
 
     public class FileFieldSettings

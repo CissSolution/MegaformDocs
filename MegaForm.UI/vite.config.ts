@@ -22,6 +22,7 @@ const entries: Record<string, string> = {
   'my-inbox':       resolve(__dirname, 'src/my-inbox/index.ts'),
   views:            resolve(__dirname, 'src/views/index.ts'),
   renderer:         resolve(__dirname, 'src/renderer/index.ts'),
+  'rule-engine':    resolve(__dirname, 'src/builder/rule-engine.ts'),
   widgets:          resolve(__dirname, 'src/widgets/index.ts'),
   i18n:             resolve(__dirname, 'src/i18n/index.ts'),
   embed:            resolve(__dirname, 'src/embed/index.ts'),
