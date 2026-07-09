@@ -89,6 +89,19 @@ namespace MegaForm.Core.Services
             int? userId,
             double submissionTimeSeconds = 0)
         {
+            return await ProcessAsync(formId, formData, ipAddress, userAgent, userId, submissionTimeSeconds, null, null);
+        }
+
+        public async Task<SubmissionResult> ProcessAsync(
+            int formId,
+            Dictionary<string, object> formData,
+            string ipAddress,
+            string userAgent,
+            int? userId,
+            double submissionTimeSeconds,
+            UserContext actor,
+            IDictionary<string, string> query = null)
+        {
             var result = new SubmissionResult();
 
             // 1. Load form
@@ -149,7 +162,39 @@ namespace MegaForm.Core.Services
 
             // 7. Server-side validation (localized when a platform/translated provider is wired;
             // the inline en-US default returns the verbatim English fallbacks — zero regression)
-            var validation = FormValidationService.Validate(schema, formData, _loc);
+            ServerSidePermissionEnforcementResult enforcement;
+            try
+            {
+                var actorContext = BuildSubmissionActor(actor, userId, ipAddress);
+                var permissionRules = _phase2Repo != null
+                    ? _phase2Repo.GetFormPermissions(formId)
+                    : new List<FormPermissionInfo>();
+                enforcement = ServerSidePermissionEnforcementService.EnforceSubmit(
+                    form,
+                    schema,
+                    formData,
+                    actorContext,
+                    permissionRules,
+                    query);
+            }
+            catch (Exception ex)
+            {
+                _log?.LogError(nameof(SubmissionProcessor), "Server-side permission enforcement failed.", ex);
+                result.Success = false;
+                result.ErrorMessage = "Permission check failed.";
+                return result;
+            }
+
+            if (!enforcement.Allowed)
+            {
+                result.Success = false;
+                result.ErrorMessage = enforcement.ErrorMessage ?? "You do not have permission to submit this form.";
+                return result;
+            }
+
+            formData = enforcement.Data ?? new Dictionary<string, object>();
+
+            var validation = FormValidationService.Validate(schema, formData, _loc, enforcement.RuleContext);
             if (!validation.IsValid)
             {
                 result.Success = false;
@@ -399,6 +444,26 @@ namespace MegaForm.Core.Services
             }
 
             return result;
+        }
+
+        private static UserContext BuildSubmissionActor(UserContext actor, int? userId, string ipAddress)
+        {
+            var source = actor ?? new UserContext();
+            var next = new UserContext
+            {
+                UserId = source.UserId > 0 ? source.UserId : (userId.HasValue ? userId.Value : 0),
+                UserName = source.UserName,
+                DisplayName = source.DisplayName,
+                Email = source.Email,
+                IsAuthenticated = source.IsAuthenticated || userId.HasValue,
+                IsAdmin = source.IsAdmin,
+                IsSuperUser = source.IsSuperUser,
+                Roles = source.Roles != null
+                    ? source.Roles.Where(r => !string.IsNullOrWhiteSpace(r)).Distinct(StringComparer.OrdinalIgnoreCase).ToList()
+                    : new List<string>(),
+                IpAddress = !string.IsNullOrWhiteSpace(source.IpAddress) ? source.IpAddress : (ipAddress ?? string.Empty)
+            };
+            return next;
         }
 
         private void TryAutoLinkSubmission(int formId, int submissionId, Dictionary<string, object> formData)

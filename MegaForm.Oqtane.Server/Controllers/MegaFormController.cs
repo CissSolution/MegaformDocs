@@ -1444,9 +1444,11 @@ namespace MegaForm.Oqtane.Server.Controllers
             string ua = Request.Headers["User-Agent"].ToString();
             var currentUserId = User.Identity?.IsAuthenticated == true ? ParseClaimsUserId(User) : -1;
             int? userId = currentUserId > 0 ? currentUserId : (int?)null;
+            var actor = GetCurrentUserContextWithRoles();
+            var query = Request.Query.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString(), StringComparer.OrdinalIgnoreCase);
 
             var result = await _processor.ProcessAsync(
-                request.FormId, request.Data, ip, ua, userId, request.SubmissionTime);
+                request.FormId, request.Data, ip, ua, userId, request.SubmissionTime, actor, query);
 
             if (result.Success)
             {

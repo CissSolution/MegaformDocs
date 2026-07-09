@@ -21,7 +21,7 @@ namespace MegaForm.Core.Services
         // form.invalid_email, form.min_value, form.incomplete, …). When loc is null or the inline
         // DefaultLocalizationProvider, the English fallback passed at each call site is returned
         // VERBATIM, so English output is byte-identical to before this change (zero regression).
-        public static ValidationResult Validate(FormSchema schema, Dictionary<string, object> data, ILocalizationProvider loc = null)
+        public static ValidationResult Validate(FormSchema schema, Dictionary<string, object> data, ILocalizationProvider loc = null, RuleEvaluationContext ruleContext = null)
         {
             var result = new ValidationResult();
 
@@ -30,6 +30,8 @@ namespace MegaForm.Core.Services
                 result.Errors.Add("_form", "Invalid form schema");
                 return result;
             }
+
+            var activeRuleContext = BuildRuleContext(data, ruleContext);
 
             // Flatten fields: include nested fields inside Row columns
             var allFields = MegaFormUtils.FlattenFields(schema.Fields);
@@ -41,7 +43,7 @@ namespace MegaForm.Core.Services
                     continue;
 
                 // Check if field should be visible (basic conditional logic server-side)
-                if (field.ShowIf != null && !EvaluateShowIf(field.ShowIf, data))
+                if (field.ShowIf != null && !EvaluateShowIf(field.ShowIf, data, activeRuleContext))
                     continue;  // field is hidden, skip validation
 
                 string value = null;
@@ -276,9 +278,21 @@ namespace MegaForm.Core.Services
         /// Evaluate ShowIf conditions server-side.
         /// Returns true if the field SHOULD be shown.
         /// </summary>
-        public static bool EvaluateShowIf(ShowIfCondition showIf, Dictionary<string, object> data)
+        public static bool EvaluateShowIf(ShowIfCondition showIf, Dictionary<string, object> data, RuleEvaluationContext ruleContext = null)
         {
-            return SharedRuleEngine.Evaluate(showIf, RuleEvaluationContext.FromFields(data));
+            return SharedRuleEngine.Evaluate(showIf, BuildRuleContext(data, ruleContext));
+        }
+
+        private static RuleEvaluationContext BuildRuleContext(Dictionary<string, object> data, RuleEvaluationContext source)
+        {
+            var context = RuleEvaluationContext.FromFields(data);
+            if (source == null)
+                return context;
+
+            context.User = source.User;
+            context.Query = source.Query ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            context.Permissions = source.Permissions ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            return context;
         }
 
         private static bool EvaluateRule(ShowIfRule rule, Dictionary<string, object> data)
