@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MegaForm.Core.Models;
+using MegaForm.Core.Workflow;
 using Oqtane.Modules;
 using Oqtane.Repository;
 using Oqtane.Repository.Databases.Interfaces;
@@ -30,6 +31,9 @@ namespace MegaForm.Oqtane.Server.Data
         public virtual DbSet<WorkflowCaseRow> WorkflowCases { get; set; }
         public virtual DbSet<WorkflowTaskRow> WorkflowTasks { get; set; }
         public virtual DbSet<WorkflowTaskActionRow> WorkflowTaskActions { get; set; }
+        public virtual DbSet<WorkflowTemplateInfo> WorkflowTemplates { get; set; }
+        public virtual DbSet<WorkflowTemplateVersionInfo> WorkflowTemplateVersions { get; set; }
+        public virtual DbSet<FormWorkflowMappingInfo> FormWorkflowMappings { get; set; }
 
         // [v20260530-20] AI Knowledge Base — Oqtane parity with the 5 DNN tables.
         public virtual DbSet<AiKnowledgeEntry>   AiKnowledgeEntries { get; set; }
@@ -198,6 +202,38 @@ namespace MegaForm.Oqtane.Server.Data
                 e.HasKey(x => x.ActionId);
                 e.HasIndex(x => new { x.TaskId, x.CreatedAt });
                 e.HasIndex(x => new { x.CaseId, x.CreatedAt });
+            });
+
+            modelBuilder.Entity<WorkflowTemplateInfo>(e =>
+            {
+                e.ToTable("MF_WorkflowTemplates");
+                e.HasKey(x => x.WorkflowTemplateId);
+                e.HasIndex(x => new { x.PortalId, x.TemplateKey }).IsUnique();
+                e.HasIndex(x => new { x.PortalId, x.IsEnabled });
+                e.Property(x => x.TemplateKey).HasMaxLength(120);
+                e.Property(x => x.Name).HasMaxLength(200);
+                e.Property(x => x.Description).HasMaxLength(1000);
+                e.Property(x => x.Category).HasMaxLength(100);
+            });
+
+            modelBuilder.Entity<WorkflowTemplateVersionInfo>(e =>
+            {
+                e.ToTable("MF_WorkflowTemplateVersions");
+                e.HasKey(x => x.WorkflowVersionId);
+                e.HasIndex(x => new { x.WorkflowTemplateId, x.Version }).IsUnique();
+                e.HasIndex(x => new { x.WorkflowTemplateId, x.IsApplied });
+                e.Property(x => x.Version).HasMaxLength(40);
+                e.Property(x => x.Notes).HasMaxLength(1000);
+            });
+
+            modelBuilder.Entity<FormWorkflowMappingInfo>(e =>
+            {
+                e.ToTable("MF_FormWorkflows");
+                e.HasKey(x => x.MappingId);
+                e.HasIndex(x => new { x.FormId, x.IsActive });
+                e.HasIndex(x => new { x.WorkflowTemplateId, x.IsActive });
+                e.Property(x => x.TriggerType).HasMaxLength(40);
+                e.Property(x => x.AppliedBy).HasMaxLength(200);
             });
 
             // [v20260530-20] AI Knowledge Base — 5 sibling tables.

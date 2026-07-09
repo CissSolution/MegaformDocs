@@ -27,6 +27,7 @@ namespace MegaForm.Core.Services
     public class WorkflowEngineV2 : IWorkflowEngine
     {
         private readonly IWorkflowRepository             _repo;
+        private readonly IWorkflowLibraryRepository      _libraryRepo;
         private readonly IWorkflowEvaluator              _evaluator;
         private readonly IEnumerable<INodeExecutor>      _executors;
         private readonly ILogService                      _log;
@@ -40,11 +41,22 @@ namespace MegaForm.Core.Services
             IWorkflowEvaluator         evaluator,
             IEnumerable<INodeExecutor> executors,
             ILogService                log = null)
+            : this(repo, evaluator, executors, null, log)
         {
-            _repo      = repo;
-            _evaluator = evaluator;
-            _executors = executors;
-            _log       = log;
+        }
+
+        public WorkflowEngineV2(
+            IWorkflowRepository        repo,
+            IWorkflowEvaluator         evaluator,
+            IEnumerable<INodeExecutor> executors,
+            IWorkflowLibraryRepository libraryRepo,
+            ILogService                log = null)
+        {
+            _repo        = repo;
+            _libraryRepo = libraryRepo;
+            _evaluator   = evaluator;
+            _executors   = executors;
+            _log         = log;
         }
 
         // ─── ExecuteAsync ─────────────────────────────────────────────────────
@@ -55,8 +67,10 @@ namespace MegaForm.Core.Services
             Dictionary<string, object> formData,
             CancellationToken ct)
         {
-            // Load WorkflowDefinition
-            var definition = _repo.GetByFormId(formId);
+            // Load WorkflowDefinition. Reusable library mappings win; legacy per-form
+            // WorkflowJson remains the fallback so existing forms continue unchanged.
+            var runtime = ResolveWorkflowForForm(formId);
+            var definition = runtime != null ? runtime.Definition : null;
             if (definition == null)
             {
                 _log?.LogInfo("MegaForm.Workflow", "No applied workflow found for form " + formId + ".");
@@ -71,7 +85,8 @@ namespace MegaForm.Core.Services
             }
 
             // Build execution context
-            var ctx = BuildContext(definition, formId, submissionId, formData);
+            var ctx = BuildContext(definition, formId, submissionId, ApplyFieldMappings(formData, runtime));
+            StampRuntimeMetadata(ctx, runtime);
             _log?.LogInfo("MegaForm.Workflow", "Starting workflow execution " + ctx.ExecutionId + " for form " + formId + " submission " + submissionId + ".");
 
             // Apply DryRun from definition settings
@@ -144,7 +159,8 @@ namespace MegaForm.Core.Services
             if (ctx == null)
                 throw new InvalidOperationException("Workflow execution not found.");
 
-            var definition = _repo.GetByFormId(ctx.FormId);
+            var runtime = ResolveWorkflowForForm(ctx.FormId);
+            var definition = runtime != null ? runtime.Definition : null;
             if (definition == null)
             {
                 _log?.LogInfo("MegaForm.Workflow", "Resume: no applied workflow for form " + ctx.FormId + " — completing case.");
@@ -381,11 +397,12 @@ namespace MegaForm.Core.Services
             Dictionary<string, object> formData,
             CancellationToken ct)
         {
-            var definition = _repo.GetByFormId(formId);
+            var runtime = ResolveWorkflowForForm(formId);
+            var definition = runtime != null ? runtime.Definition : null;
             if (definition == null)
                 return Task.FromResult(new WorkflowNavigationResult());
 
-            var result = _evaluator.EvaluateNavigation(definition, currentNodeId, formData);
+            var result = _evaluator.EvaluateNavigation(definition, currentNodeId, ApplyFieldMappings(formData, runtime));
             return Task.FromResult(result);
         }
 
@@ -437,6 +454,89 @@ namespace MegaForm.Core.Services
             }
 
             return ctx;
+        }
+
+        private WorkflowRuntimeDefinition ResolveWorkflowForForm(int formId)
+        {
+            if (_libraryRepo != null)
+            {
+                try
+                {
+                    var runtime = _libraryRepo.GetActiveDefinitionForForm(formId);
+                    if (runtime != null && runtime.Definition != null)
+                        return runtime;
+                }
+                catch (Exception ex)
+                {
+                    _log?.LogError("MegaForm.Workflow",
+                        "Failed to resolve reusable workflow for form " + formId + ": " + ex.Message, ex);
+                }
+            }
+
+            var legacy = _repo.GetByFormId(formId);
+            if (legacy == null)
+                return null;
+
+            return new WorkflowRuntimeDefinition
+            {
+                Source = "legacy-form",
+                Definition = legacy
+            };
+        }
+
+        private Dictionary<string, object> ApplyFieldMappings(
+            Dictionary<string, object> formData,
+            WorkflowRuntimeDefinition runtime)
+        {
+            var mapped = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            if (formData != null)
+            {
+                foreach (var kv in formData)
+                    mapped[kv.Key] = kv.Value;
+            }
+
+            if (runtime == null || runtime.FieldMappings == null || runtime.FieldMappings.Count == 0)
+                return mapped;
+
+            foreach (var fieldMap in runtime.FieldMappings)
+            {
+                if (fieldMap == null)
+                    continue;
+
+                var workflowKey = (fieldMap.WorkflowFieldKey ?? string.Empty).Trim();
+                var formKey = (fieldMap.FormFieldKey ?? string.Empty).Trim();
+                if (workflowKey.Length == 0 || formKey.Length == 0)
+                    continue;
+
+                object value;
+                if (mapped.TryGetValue(formKey, out value) && !mapped.ContainsKey(workflowKey))
+                    mapped[workflowKey] = value;
+                else if (mapped.TryGetValue(workflowKey, out value) && !mapped.ContainsKey(formKey))
+                    mapped[formKey] = value;
+            }
+
+            return mapped;
+        }
+
+        private void StampRuntimeMetadata(WorkflowExecutionContext ctx, WorkflowRuntimeDefinition runtime)
+        {
+            if (ctx == null || runtime == null || ctx.Variables == null)
+                return;
+
+            ctx.Variables["__workflowSource"] = runtime.Source ?? "legacy-form";
+            if (runtime.Template != null)
+            {
+                ctx.Variables["__workflowTemplateId"] = runtime.Template.WorkflowTemplateId;
+                ctx.Variables["__workflowTemplateKey"] = runtime.Template.TemplateKey ?? string.Empty;
+                ctx.Variables["__workflowTemplateName"] = runtime.Template.Name ?? string.Empty;
+            }
+            if (runtime.Version != null)
+            {
+                ctx.Variables["__workflowVersionId"] = runtime.Version.WorkflowVersionId;
+                ctx.Variables["__workflowVersion"] = runtime.Version.Version ?? string.Empty;
+            }
+            if (runtime.Mapping != null)
+                ctx.Variables["__workflowMappingId"] = runtime.Mapping.MappingId;
         }
 
         private object GetDefaultForType(WorkflowVariableType type)

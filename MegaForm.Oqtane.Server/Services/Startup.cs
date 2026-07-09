@@ -89,6 +89,7 @@ namespace MegaForm.Oqtane.Server.Services
             // and List endpoints return blank.
             services.AddScoped<IPhase2Repository, EfPhase2Repository>();
             services.AddScoped<IWorkflowRepository, EfWorkflowRepository>();
+            services.AddScoped<IWorkflowLibraryRepository, EfWorkflowLibraryRepository>();
 
             // Platform adapters
             services.AddScoped<IEmailSender, OqtaneEmailSender>();
