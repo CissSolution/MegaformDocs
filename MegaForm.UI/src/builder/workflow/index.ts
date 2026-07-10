@@ -28,6 +28,8 @@ import { renderApprovalConfig } from './wf-approval';
 import { APPROVAL_PANEL_BADGE, normalizeApprovalConfig, serializeApprovalConfig, isApprovalHandle, getApprovalEdgeColor, getApprovalEdgeLabel } from './wf-approval-config';
 import { renderConditionConfig, CONDITION_PANEL_BADGE } from './wf-condition';
 import { renderGoogleSheetsConfig, GOOGLE_SHEETS_PANEL_BADGE } from './wf-google-sheets';
+import { createLibraryModal, WORKFLOW_LIBRARY_BADGE } from './wf-library';
+import { SAMPLE_PRESETS, buildSamplePreset, getSampleMeta, reconcileWorkflowToSchema, WORKFLOW_SAMPLES_BADGE } from './wf-samples';
 
 (function (W: IMFWorkflowRF) {
   'use strict';
@@ -402,38 +404,6 @@ import { renderGoogleSheetsConfig, GOOGLE_SHEETS_PANEL_BADGE } from './wf-google
     el.focus();
   }
 
-  var SAMPLE_PRESET_META: AnyObj = {
-    'smart-default': {
-      title: 'Smart starter workflow',
-      summary: 'Receives a submission, checks a key response, sends data to an external endpoint, then emails the submitter a polished confirmation.',
-      details: [
-        'Trigger: starts when the mapped form fields are available.',
-        'Branching: true path continues to webhook + confirmation email; false path skips to a safe end state.',
-        'Emails: confirmation is sent to the submitter using the mapped email field.',
-        'Outcome: good starter for forms that need one external sync and one customer-facing follow-up.'
-      ]
-    },
-    'lead-routing': {
-      title: 'Lead routing workflow',
-      summary: 'Scores a qualified lead, pushes it to CRM, and notifies either sales or manual review depending on the routing decision.',
-      details: [
-        'Trigger: form submit with name + email + a decision field such as service, category, or intent.',
-        'Branching: qualified leads go to CRM + sales notification; other leads go to manual review.',
-        'Emails: success path alerts sales, fallback path alerts operations.',
-        'Outcome: perfect for lead capture, concierge request, booking triage, and premium intake forms.'
-      ]
-    },
-    'approval-branching': {
-      title: 'Approval / rejection workflow',
-      summary: 'Routes a submission to approved or rejected outcomes, sends professional HTML emails, and optionally creates a case for the approved branch.',
-      details: [
-        'Trigger: submission enters the workflow with a mapped applicant name, email, and decision field.',
-        'Branching: approved submissions continue to case creation; rejected submissions notify the submitter.',
-        'Emails: both approval and rejection notices are HTML-ready and token friendly.',
-        'Outcome: ideal for applications, onboarding approvals, scholarship review, or support escalation decisions.'
-      ]
-    }
-  };
 
   function getRootEl(): HTMLElement | null {
     return document.getElementById('mf-builder-root') as HTMLElement | null;
@@ -932,6 +902,7 @@ import { renderGoogleSheetsConfig, GOOGLE_SHEETS_PANEL_BADGE } from './wf-google
     var ZoneBackground       = createZoneBackground(_ctx);
     var NodePalette          = createNodePalette(_ctx, TRIGGER_TYPES, NAV_TYPES, LOGIC_TYPES, ACTION_TYPES, INTEGRATION_TYPES);
     var Toast                = createToast(_ctx);
+    var LibraryModal         = createLibraryModal(_ctx);
     // FieldInsertButton, ConditionGroupEditor, VariablesPanel need getFieldByKey + getOperatorsForFieldType
     // — wired below after those helpers are declared
 
@@ -967,6 +938,12 @@ import { renderGoogleSheetsConfig, GOOGLE_SHEETS_PANEL_BADGE } from './wf-google
 
     function getNodeDisplayLabel(nodeType: string, label: string, config: any): string {
       if (nodeType === 'FormField' && config) {
+        // An explicitly authored label wins. Without this a trigger node named "Form submitted"
+        // was silently renamed to whatever field it anchors on, which is how the old samples
+        // ended up reading "Full Name → Tab 1 → gateway". Auto-labelling still applies when the
+        // node has no name of its own.
+        var authored = String(label || '').trim();
+        if (authored) return authored;
         if (config.isPageNode) return 'Page ' + String((typeof config.pageIndex === 'number' ? config.pageIndex : 0) + 1);
         if (config.fieldKey) return displayFieldLabel(config.fieldKey);
       }
@@ -1901,10 +1878,27 @@ import { renderGoogleSheetsConfig, GOOGLE_SHEETS_PANEL_BADGE } from './wf-google
             h('input', { className: 'mf-rf-toolbar__name-input', value: props.workflowName || '',
               onChange: function (e: any) { props.onWorkflowNameChange(e.target.value); },
               placeholder: 'Untitled BPMN workflow' }),
-            h('div', { className: 'mf-rf-toolbar__meta' }, 'Executable BPMN 2.0 subset editor')
+            // Tell the user at a glance which library template this form actually runs,
+            // and whether it is pinned behind a newer version.
+            props.binding
+              ? h('div', { className: 'mf-rf-toolbar__meta', 'data-mf-wfl-bound': '1',
+                  title: 'This form runs a workflow from the library' },
+                  'Library: ' + props.binding.name
+                    + (props.binding.effectiveVersion ? ' v' + props.binding.effectiveVersion : '')
+                    + (props.binding.autoUpdate ? ' · auto-update' : ' · pinned')
+                    + (props.binding.outdated ? ' · update available' : '')
+                )
+              : h('div', { className: 'mf-rf-toolbar__meta' }, 'Executable BPMN 2.0 subset editor')
           )
         ),
         h('div', { className: 'mf-rf-toolbar__right' },
+          h('button', buttonProps({ className: 'mf-rf-tb-btn', onClick: props.onOpenLibrary,
+              title: 'Save this workflow to the library, or apply a saved one to this form' }),
+            h('svg', { width:14, height:14, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:2 },
+              h('path', { d:'M4 19.5A2.5 2.5 0 0 1 6.5 17H20' }),
+              h('path', { d:'M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z' })
+            ), ' Library'
+          ),
           h('button', buttonProps({ className: 'mf-rf-tb-btn mf-rf-tb-btn--accent', onClick: props.onToggleSample }),
             h('svg', { width:14, height:14, viewBox:'0 0 24 24', fill:'none', stroke:'currentColor', strokeWidth:2 },
               h('path', { d:'M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z' }),
@@ -1998,6 +1992,20 @@ import { renderGoogleSheetsConfig, GOOGLE_SHEETS_PANEL_BADGE } from './wf-google
       if (!fields.length) return mapped;
       var used: AnyObj = {};
       function reserve(key: string): void { if (key) used[key] = true; }
+      var fieldKeyLookup: AnyObj = {};
+      fields.forEach(function (f) { fieldKeyLookup[String(f.key || '').toLowerCase()] = true; });
+      var variableKeyLookup: AnyObj = {};
+      ((mapped.variables || []) as any[]).forEach(function (v: any) {
+        if (v && v.key) variableKeyLookup[String(v.key).toLowerCase()] = true;
+      });
+      function fieldKeyExists(key: any): boolean {
+        var k = String(key || '').toLowerCase();
+        return !!k && !!fieldKeyLookup[k];
+      }
+      function variableKeyExists(key: any): boolean {
+        var k = String(key || '').toLowerCase();
+        return !!k && !!variableKeyLookup[k];
+      }
       function chooseFieldForNode(node: any, index: number): FormSchemaField | null {
         var cfg = (node && node.config) || {};
         var hints = [cfg.fieldKey, node && node.label, cfg.fieldLabel, cfg.placeholder, cfg.fieldName];
@@ -2011,12 +2019,14 @@ import { renderGoogleSheetsConfig, GOOGLE_SHEETS_PANEL_BADGE } from './wf-google
       (mapped.nodes || []).forEach(function (node: any, index: number) {
         if (!node || !node.config) node.config = {};
         if (node.type === 'FormField') {
-          var chosen = chooseFieldForNode(node, index);
-          if (chosen) {
-            node.label = chosen.label || chosen.key;
-            node.config.fieldKey = chosen.key;
-            node.config.pageIndex = typeof chosen.pageIndex === 'number' ? chosen.pageIndex : 0;
-            node.config.isPageNode = false;
+          // Repair only a broken binding; never rename the node (see the module-level twin).
+          if (!fieldKeyExists(node.config.fieldKey)) {
+            var chosen = chooseFieldForNode(node, index);
+            if (chosen) {
+              node.config.fieldKey = chosen.key;
+              node.config.pageIndex = typeof chosen.pageIndex === 'number' ? chosen.pageIndex : 0;
+              node.config.isPageNode = false;
+            }
           }
         }
         if (node.type === 'Switch') {
@@ -2030,6 +2040,8 @@ import { renderGoogleSheetsConfig, GOOGLE_SHEETS_PANEL_BADGE } from './wf-google
           var cc = normalizeConditionConfig(node.config || {});
           (cc.conditionGroups || []).forEach(function (group: any) {
             (group.rules || []).forEach(function (rule: any) {
+              // Already bound to a real field or a declared workflow variable → leave it.
+              if (fieldKeyExists(rule.fieldKey) || variableKeyExists(rule.fieldKey)) return;
               var picked = pickFieldByHints(schema2, [rule.fieldKey, node.label, 'status', 'type', 'category', 'consent'], 0) || pickChoiceField(schema2) || fields[0];
               if (picked) rule.fieldKey = picked.key;
             });
@@ -2040,151 +2052,37 @@ import { renderGoogleSheetsConfig, GOOGLE_SHEETS_PANEL_BADGE } from './wf-google
       return mapped;
     }
 
-    function buildSampleWorkflowPreset(kind: string, schema2: FormSchema): any {
-      var allFields = (schema2 && schema2.fields) || [];
-      var first = allFields[0] || { key: 'field_1', label: 'Field 1', pageIndex: 0 };
-      var second = allFields[1] || first;
-      var emailField = pickEmailField(schema2) || first;
-      var nameField = pickNameField(schema2) || first;
-      var phoneField = pickPhoneField(schema2) || second || first;
-      var choiceField = pickChoiceField(schema2) || second || first;
-      var vars = [
-        { key: 'score', type: 'Number', defaultValue: '0', description: 'Lead/application score' },
-        { key: 'route', type: 'String', defaultValue: '', description: 'Selected branch route' }
-      ];
-      var preset: any;
-      if (kind === 'lead-routing') {
-        preset = {
-          version: '1.0.0',
-          startNodeId: 'node-a',
-          variables: vars,
-          nodes: [
-            { id: 'node-a', type: 'FormField', label: nameField.label || 'Name', zoneType: 'Navigation', position: { x: 70, y: 120 }, config: { fieldKey: nameField.key, isPageNode: false } },
-            { id: 'node-b', type: 'FormField', label: emailField.label || 'Email', zoneType: 'Navigation', position: { x: 70, y: 260 }, config: { fieldKey: emailField.key, isPageNode: false } },
-            { id: 'node-c', type: 'Condition', label: 'Qualified Lead?', zoneType: 'Navigation', position: { x: 70, y: 420 }, config: { conditionGroups: [{ logic: 'and', rules: [{ fieldKey: choiceField.key, operator: 'isNotEmpty', value: '', valueType: 'literal' }] }], trueLabel: 'Qualified', falseLabel: 'Review' } },
-            { id: 'node-d', type: 'Calculate', label: 'Score +25', zoneType: 'Action', position: { x: 500, y: 320 }, config: { targetVariable: 'score', operand1: 'score', operator: 'add', operand2: '25', roundToInt: true } },
-            { id: 'node-e', type: 'Webhook', label: 'Push to CRM', zoneType: 'Action', position: { x: 820, y: 320 }, config: { url: 'https://api.example.com/leads', method: 'POST', headers: [], bodyTemplate: '{"name":"{{' + nameField.key + '}}","email":"{{' + emailField.key + '}}"}', responseVariableKey: 'route', timeoutSeconds: 30 } },
-            { id: 'node-f', type: 'SendEmail', label: 'Notify Sales', zoneType: 'Action', position: { x: 1140, y: 320 }, config: { to: 'sales@example.com', cc: '', subject: 'New qualified lead', body: buildSampleEmailHtml('Qualified lead ready for follow-up', 'A new lead met the routing threshold.', '<p><strong>{{' + nameField.key + '}}</strong> is ready for a sales follow-up.</p><p>Email captured: {{' + emailField.key + '}}</p>', 'Open lead'), replyTo: '' } },
-            { id: 'node-g', type: 'SendEmail', label: 'Manual Review Queue', zoneType: 'Action', position: { x: 500, y: 540 }, config: { to: 'ops@example.com', cc: '', subject: 'Needs manual review', body: buildSampleEmailHtml('Manual review requested', 'A submission needs an operations review before routing.', '<p>Please review the submission for <strong>{{' + nameField.key + '}}</strong>.</p><p>This branch was selected because the routing condition did not qualify automatically.</p>', 'Review submission'), replyTo: '' } },
-            { id: 'node-h', type: 'End', label: 'End', zoneType: 'Action', position: { x: 1440, y: 400 }, config: { endType: 'Success', message: 'Workflow completed', redirectUrl: '' } }
-          ],
-          edges: [
-            { id: 'e1', sourceNodeId: 'node-a', targetNodeId: 'node-b', sourceHandle: 'default', targetHandle: 'in', label: '' },
-            { id: 'e2', sourceNodeId: 'node-b', targetNodeId: 'node-c', sourceHandle: 'default', targetHandle: 'in', label: '' },
-            { id: 'e3', sourceNodeId: 'node-c', targetNodeId: 'node-d', sourceHandle: 'true', targetHandle: 'in', label: 'Qualified' },
-            { id: 'e4', sourceNodeId: 'node-c', targetNodeId: 'node-g', sourceHandle: 'false', targetHandle: 'in', label: 'Review' },
-            { id: 'e5', sourceNodeId: 'node-d', targetNodeId: 'node-e', sourceHandle: 'default', targetHandle: 'in', label: '' },
-            { id: 'e6', sourceNodeId: 'node-e', targetNodeId: 'node-f', sourceHandle: 'default', targetHandle: 'in', label: '' },
-            { id: 'e7', sourceNodeId: 'node-f', targetNodeId: 'node-h', sourceHandle: 'default', targetHandle: 'in', label: '' },
-            { id: 'e8', sourceNodeId: 'node-g', targetNodeId: 'node-h', sourceHandle: 'default', targetHandle: 'in', label: '' }
-          ]
-        };
-      } else if (kind === 'approval-branching') {
-        preset = {
-          version: '1.0.0',
-          startNodeId: 'node-a',
-          variables: vars,
-          nodes: [
-            { id: 'node-a', type: 'FormField', label: nameField.label || 'Applicant', zoneType: 'Navigation', position: { x: 70, y: 120 }, config: { fieldKey: nameField.key, isPageNode: false } },
-            { id: 'node-b', type: 'FormField', label: phoneField.label || 'Phone', zoneType: 'Navigation', position: { x: 70, y: 260 }, config: { fieldKey: phoneField.key, isPageNode: false } },
-            { id: 'node-c', type: 'Approval', label: 'Manager Review', zoneType: 'Action', position: { x: 70, y: 420 }, config: { candidateRoles: ['Reviewer'], candidateUsers: [], allowClaim: true, allowForward: true, allowReassign: true, commentRequiredOnReject: true, dueInHours: 24, pendingSubmissionStatus: 'pending_review', approvedSubmissionStatus: 'approved', rejectedSubmissionStatus: 'rejected' } },
-            { id: 'node-d', type: 'SendEmail', label: 'Approval Notice', zoneType: 'Action', position: { x: 520, y: 320 }, config: { to: '{{' + emailField.key + '}}', cc: '', subject: 'Application approved', body: buildSampleEmailHtml('Your submission was approved', 'Good news — your application moved to the approved branch.', '<p>Hello <strong>{{' + nameField.key + '}}</strong>,</p><p>Your submission has been approved. Our team will follow up with the next steps shortly.</p>', 'View next steps'), replyTo: '' } },
-            { id: 'node-e', type: 'Webhook', label: 'Create Case', zoneType: 'Action', position: { x: 860, y: 320 }, config: { url: 'https://api.example.com/cases', method: 'POST', headers: [], bodyTemplate: '{"name":"{{' + nameField.key + '}}","phone":"{{' + phoneField.key + '}}"}', responseVariableKey: 'route', timeoutSeconds: 30 } },
-            { id: 'node-f', type: 'SendEmail', label: 'Rejection Notice', zoneType: 'Action', position: { x: 520, y: 540 }, config: { to: '{{' + emailField.key + '}}', cc: '', subject: 'Application update', body: buildSampleEmailHtml('We need one more step from you', 'Your submission is still in progress.', '<p>Hello <strong>{{' + nameField.key + '}}</strong>,</p><p>We need a little more information before we can approve your submission. Please reply with any missing details.</p>', 'Update submission'), replyTo: '' } },
-            { id: 'node-g', type: 'End', label: 'Approved', zoneType: 'Action', position: { x: 1200, y: 320 }, config: { endType: 'Success', message: 'Approved branch finished', redirectUrl: '' } },
-            { id: 'node-h', type: 'End', label: 'Rejected', zoneType: 'Action', position: { x: 860, y: 540 }, config: { endType: 'Failure', message: 'Rejected branch finished', redirectUrl: '' } }
-          ],
-          edges: [
-            { id: 'e1', sourceNodeId: 'node-a', targetNodeId: 'node-b', sourceHandle: 'default', targetHandle: 'in', label: '' },
-            { id: 'e2', sourceNodeId: 'node-b', targetNodeId: 'node-c', sourceHandle: 'default', targetHandle: 'in', label: '' },
-            { id: 'e3', sourceNodeId: 'node-c', targetNodeId: 'node-d', sourceHandle: 'approved', targetHandle: 'in', label: 'Approved' },
-            { id: 'e4', sourceNodeId: 'node-c', targetNodeId: 'node-f', sourceHandle: 'rejected', targetHandle: 'in', label: 'Rejected' },
-            { id: 'e5', sourceNodeId: 'node-d', targetNodeId: 'node-e', sourceHandle: 'default', targetHandle: 'in', label: '' },
-            { id: 'e6', sourceNodeId: 'node-e', targetNodeId: 'node-g', sourceHandle: 'default', targetHandle: 'in', label: '' },
-            { id: 'e7', sourceNodeId: 'node-f', targetNodeId: 'node-h', sourceHandle: 'default', targetHandle: 'in', label: '' }
-          ]
-        };
-      } else {
-        preset = {
-          version: '1.0.0',
-          startNodeId: 'node-a',
-          variables: vars,
-          nodes: [
-            { id: 'node-a', type: 'FormField', label: nameField.label || 'Name', zoneType: 'Navigation', position: { x: 70, y: 120 }, config: { fieldKey: nameField.key, isPageNode: false } },
-            { id: 'node-b', type: 'FormField', label: emailField.label || 'Email', zoneType: 'Navigation', position: { x: 70, y: 260 }, config: { fieldKey: emailField.key, isPageNode: false } },
-            { id: 'node-c', type: 'Condition', label: 'Has Response Value?', zoneType: 'Navigation', position: { x: 70, y: 420 }, config: { conditionGroups: [{ logic: 'and', rules: [{ fieldKey: choiceField.key, operator: 'isNotEmpty', value: '', valueType: 'literal' }] }], trueLabel: 'Yes', falseLabel: 'No' } },
-            { id: 'node-d', type: 'Webhook', label: 'Send to API', zoneType: 'Action', position: { x: 520, y: 320 }, config: { url: 'https://api.example.com/forms', method: 'POST', headers: [], bodyTemplate: '{"email":"{{' + emailField.key + '}}"}', responseVariableKey: 'route', timeoutSeconds: 30 } },
-            { id: 'node-e', type: 'SendEmail', label: 'Confirmation Email', zoneType: 'Action', position: { x: 860, y: 320 }, config: { to: '{{' + emailField.key + '}}', cc: '', subject: 'Thanks for your submission', body: buildSampleEmailHtml('We received your form', 'Thanks for submitting your form.', '<p>Hi <strong>{{' + nameField.key + '}}</strong>,</p><p>We received your form and the workflow has started successfully. We will notify you again if any follow-up is required.</p>', 'View submission'), replyTo: '' } },
-            { id: 'node-f', type: 'End', label: 'End', zoneType: 'Action', position: { x: 1200, y: 400 }, config: { endType: 'Success', message: 'Workflow completed', redirectUrl: '' } },
-            { id: 'node-g', type: 'End', label: 'Skip', zoneType: 'Action', position: { x: 520, y: 560 }, config: { endType: 'Success', message: 'Skipped optional branch', redirectUrl: '' } }
-          ],
-          edges: [
-            { id: 'e1', sourceNodeId: 'node-a', targetNodeId: 'node-b', sourceHandle: 'default', targetHandle: 'in', label: '' },
-            { id: 'e2', sourceNodeId: 'node-b', targetNodeId: 'node-c', sourceHandle: 'default', targetHandle: 'in', label: '' },
-            { id: 'e3', sourceNodeId: 'node-c', targetNodeId: 'node-d', sourceHandle: 'true', targetHandle: 'in', label: 'Yes' },
-            { id: 'e4', sourceNodeId: 'node-c', targetNodeId: 'node-g', sourceHandle: 'false', targetHandle: 'in', label: 'No' },
-            { id: 'e5', sourceNodeId: 'node-d', targetNodeId: 'node-e', sourceHandle: 'default', targetHandle: 'in', label: '' },
-            { id: 'e6', sourceNodeId: 'node-e', targetNodeId: 'node-f', sourceHandle: 'default', targetHandle: 'in', label: '' },
-            { id: 'e7', sourceNodeId: 'node-g', targetNodeId: 'node-f', sourceHandle: 'default', targetHandle: 'in', label: '' }
-          ]
-        };
-      }
-      return autoMapWorkflowToSchema(preset, schema2);
-    }
 
-    var SAMPLE_WORKFLOW_JSON = JSON.stringify({
-      "version": "1.0.0",
-      "startNodeId": "node-start",
-      "variables": [
-        { "key": "score", "type": "Number", "defaultValue": "0", "description": "Calculated score" }
-      ],
-      "nodes": [
-        { "id": "node-start",   "type": "FormField", "label": "First Name",      "zoneType": "Navigation", "position": { "x": 80,  "y": 120 }, "config": { "fieldKey": "first_name", "isPageNode": false } },
-        { "id": "node-email",   "type": "FormField", "label": "Email Address",   "zoneType": "Navigation", "position": { "x": 80,  "y": 260 }, "config": { "fieldKey": "email",      "isPageNode": false } },
-        { "id": "node-cond1",   "type": "Condition", "label": "Has Newsletter?", "zoneType": "Navigation", "position": { "x": 80,  "y": 400 }, "config": { "conditionGroups": [{ "logic": "and", "rules": [{ "fieldKey": "newsletter", "operator": "equals", "value": "yes", "valueType": "literal" }] }], "trueLabel": "Yes", "falseLabel": "No" } },
-        { "id": "node-email1",  "type": "SendEmail", "label": "Welcome Email",   "zoneType": "Action",     "position": { "x": 620, "y": 320 }, "config": { "to": "{{email}}", "subject": "Welcome {{first_name}}!", "body": "<p>Thank you for subscribing to our newsletter.</p><p>We will send thoughtful updates to <strong>{{email}}</strong>.</p>", "fromName": "MegaForm" } },
-        { "id": "node-webhook", "type": "Webhook",   "label": "CRM Sync",        "zoneType": "Action",     "position": { "x": 620, "y": 460 }, "config": { "url": "https://crm.example.com/api/contacts", "method": "POST", "headers": "{\"Authorization\":\"Bearer {{api_key}}\"}", "body": "{\"name\":\"{{first_name}}\",\"email\":\"{{email}}\"}" } },
-        { "id": "node-calc",    "type": "Calculate", "label": "Score += 10",     "zoneType": "Action",     "position": { "x": 620, "y": 600 }, "config": { "targetVariable": "score", "expression": "score + 10" } },
-        { "id": "node-end-ok",  "type": "End",       "label": "End (Success)",   "zoneType": "Action",     "position": { "x": 980, "y": 380 }, "config": { "endType": "Success" } },
-        { "id": "node-end-skip","type": "End",       "label": "End (Skip)",      "zoneType": "Action",     "position": { "x": 980, "y": 580 }, "config": { "endType": "Success" } }
-      ],
-      "edges": [
-        { "id": "e1", "sourceNodeId": "node-start",   "targetNodeId": "node-email",   "sourceHandle": "default", "targetHandle": "in", "label": "" },
-        { "id": "e2", "sourceNodeId": "node-email",   "targetNodeId": "node-cond1",   "sourceHandle": "default", "targetHandle": "in", "label": "" },
-        { "id": "e3", "sourceNodeId": "node-cond1",   "targetNodeId": "node-email1",  "sourceHandle": "true",    "targetHandle": "in", "label": "Yes" },
-        { "id": "e4", "sourceNodeId": "node-cond1",   "targetNodeId": "node-end-skip","sourceHandle": "false",   "targetHandle": "in", "label": "No" },
-        { "id": "e5", "sourceNodeId": "node-email1",  "targetNodeId": "node-webhook", "sourceHandle": "default", "targetHandle": "in", "label": "" },
-        { "id": "e6", "sourceNodeId": "node-webhook", "targetNodeId": "node-calc",    "sourceHandle": "default", "targetHandle": "in", "label": "" },
-        { "id": "e7", "sourceNodeId": "node-calc",    "targetNodeId": "node-end-ok",  "sourceHandle": "default", "targetHandle": "in", "label": "" }
-      ]
-    }, null, 2);
 
     function SampleJsonPanel(props: any): any {
-      if (!props.visible) return null;
+      // Hooks must run before the `visible` guard — an early return above them makes the hook
+      // count depend on props and violates the Rules of Hooks (React #310). Guard moved below.
       // useState called as R.useState() directly
-      var statePreset = R.useState('smart-default');
+      var statePreset = R.useState(SAMPLE_PRESETS[0].key);
       var presetKey = statePreset[0], setPresetKey = statePreset[1];
-      var stateJson = R.useState(JSON.stringify(buildSampleWorkflowPreset('smart-default', schema), null, 2));
+      var stateJson = R.useState(JSON.stringify(buildSamplePreset(SAMPLE_PRESETS[0].key, schema), null, 2));
       var jsonText = stateJson[0], setJsonText = stateJson[1];
       var stateErr = R.useState('');
       var err = stateErr[0], setErr = stateErr[1];
-      var presetOptions = [
-        { key: 'smart-default', label: 'Smart starter — API + email + branch' },
-        { key: 'lead-routing', label: 'Lead routing — qualify / manual review' },
-        { key: 'approval-branching', label: 'Approval flow — approve / reject' }
-      ];
-      var presetMeta = SAMPLE_PRESET_META[presetKey] || SAMPLE_PRESET_META['smart-default'];
+
+      if (!props.visible) return null;
+
+      var presetOptions = SAMPLE_PRESETS;
+      var presetMeta = getSampleMeta(presetKey);
 
       function applyPreset(nextKey: string): void {
         setPresetKey(nextKey);
-        setJsonText(JSON.stringify(buildSampleWorkflowPreset(nextKey, schema), null, 2));
+        setJsonText(JSON.stringify(buildSamplePreset(nextKey, schema), null, 2));
         setErr('');
       }
 
       function onLoad(): void {
         try {
           var parsed = JSON.parse(jsonText);
-          props.onLoadJson(ensureWorkflowReadyToSave(autoMapWorkflowToSchema(parsed, schema), schema));
+          // reconcile, NOT autoMap: the old mapper renamed the trigger node to a field label
+          // and rebound every Condition rule to an arbitrary field, which is what made the
+          // samples read as nonsense ("Full Name → Tab 1 → gateway").
+          props.onLoadJson(ensureWorkflowReadyToSave(reconcileWorkflowToSchema(parsed, schema as any), schema));
           setErr('');
           props.onClose();
         } catch (e: any) {
@@ -2208,9 +2106,9 @@ import { renderGoogleSheetsConfig, GOOGLE_SHEETS_PANEL_BADGE } from './wf-google
         }},
         // Modal header
         h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderBottom: '1px solid #e2e8f0', flexShrink: 0 } },
-          h('div', null,
-            h('div', { style: { fontWeight: 700, fontSize: 14, color: '#0f172a' } }, '{ } Sample BPMN JSON'),
-            h('div', { style: { fontSize: 11, color: '#64748b', marginTop: 2 } }, 'Auto-maps BPMN nodes and conditions to the current form schema.')
+          h('div', { 'data-workflow-samples-badge': WORKFLOW_SAMPLES_BADGE },
+            h('div', { style: { fontWeight: 700, fontSize: 14, color: '#0f172a' } }, 'Starter workflows'),
+            h('div', { style: { fontSize: 11, color: '#64748b', marginTop: 2 } }, 'Ten ready-to-run workflows. Each one works on any form — edit the JSON below before loading if you like.')
           ),
           h('button', buttonProps({ onClick: props.onClose, style: { border: 0, background: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: 18, lineHeight: 1, padding: '4px 6px', borderRadius: 6 } }), '✕')
         ),
@@ -2250,12 +2148,8 @@ import { renderGoogleSheetsConfig, GOOGLE_SHEETS_PANEL_BADGE } from './wf-google
           }, '▶ Load into Canvas'),
           h('button', {
             onClick: function () { applyPreset(presetKey); },
-            style: { padding: '9px 14px', background: '#fff', color: '#374151', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 12, cursor: 'pointer' }
-          }, '↺ Refresh mapping'),
-          h('button', {
-            onClick: function () { applyPreset('smart-default'); },
             style: { padding: '9px 14px', background: '#fff', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 12, cursor: 'pointer' }
-          }, 'Reset sample'),
+          }, '↺ Reset this sample'),
           h('button', {
             onClick: props.onClose,
             style: { marginLeft: 'auto', padding: '9px 14px', background: '#fff', color: '#64748b', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 12, cursor: 'pointer' }
@@ -2644,6 +2538,18 @@ import { renderGoogleSheetsConfig, GOOGLE_SHEETS_PANEL_BADGE } from './wf-google
       function workflowValidatePath(): string { return getPlatform() === 'oqtane' ? '/Form/Workflow/Validate'    : '/Workflow/Validate'; }
       function workflowTestRunPath():  string { return getPlatform() === 'oqtane' ? '/Form/Workflow/TestRun'     : '/Workflow/TestRun'; }
 
+      // Reusable workflow library. Only Oqtane exposes these today; other hosts
+      // answer 404, which openLibrary() surfaces as "not available on this host"
+      // rather than an unhandled error.
+      function libraryBase(): string { return getPlatform() === 'oqtane' ? '/Form/Workflow/Library' : '/Workflow/Library'; }
+      function libraryListPath(formId: number):   string { return libraryBase() + '/List?formId=' + formId; }
+      function libraryGetPath(templateId: number): string { return libraryBase() + '/Get?templateId=' + templateId; }
+      function libraryBindingPath(formId: number): string { return libraryBase() + '/FormBinding?formId=' + formId; }
+      function librarySavePath():   string { return libraryBase() + '/SaveCurrent'; }
+      function libraryApplyPath():  string { return libraryBase() + '/ApplyToForm'; }
+      function libraryUnbindPath(): string { return libraryBase() + '/Unbind'; }
+      function libraryDeletePath(): string { return libraryBase() + '/Delete'; }
+
       // ── Normalize server issues response → WorkflowIssue[] ────────────────
       function normalizeIssues(data: any, source: string): any[] {
         var raw: any[] = [];
@@ -2809,6 +2715,150 @@ import { renderGoogleSheetsConfig, GOOGLE_SHEETS_PANEL_BADGE } from './wf-google
 
       var stateShowSample = R.useState(false);
       var showSample = stateShowSample[0], setShowSample = stateShowSample[1];
+
+      // ── Reusable workflow library ──────────────────────────────────────────
+      var stateLibOpen = R.useState(false);
+      var libOpen = stateLibOpen[0], setLibOpen = stateLibOpen[1];
+      var stateLibBusy = R.useState(false);
+      var libBusy = stateLibBusy[0], setLibBusy = stateLibBusy[1];
+      var stateLibErr = R.useState('');
+      var libError = stateLibErr[0], setLibError = stateLibErr[1];
+      var stateLibTpls = R.useState([]);
+      var libTemplates = stateLibTpls[0], setLibTemplates = stateLibTpls[1];
+      var stateLibBinding = R.useState(null);
+      var libBinding = stateLibBinding[0], setLibBinding = stateLibBinding[1];
+
+      function refreshLibrary(cb?: (ok: boolean) => void): void {
+        var fid = resolveCurrentFormId(W._state.formId);
+        apiGet(libraryListPath(fid), function (err: any, data: any) {
+          if (err || !data) {
+            setLibError('Workflow library is not available on this host.');
+            if (cb) cb(false);
+            return;
+          }
+          if (data.supported === false) {
+            setLibError('Workflow library is not available on this host.');
+            if (cb) cb(false);
+            return;
+          }
+          setLibError('');
+          setLibTemplates(data.templates || []);
+          setLibBinding(data.binding || null);
+          if (cb) cb(true);
+        });
+      }
+
+      // Load the binding once on mount so the toolbar can show what the form runs.
+      R.useEffect(function () {
+        var fid = resolveCurrentFormId(W._state.formId);
+        if (!fid) return;
+        apiGet(libraryBindingPath(fid), function (err: any, data: any) {
+          if (!err && data && data.supported !== false) setLibBinding(data.binding || null);
+        });
+      }, []);
+
+      function onOpenLibrary(): void {
+        setLibOpen(true);
+        setLibBusy(true);
+        refreshLibrary(function () { setLibBusy(false); });
+      }
+
+      function onLibrarySave(payload: any): void {
+        var fid = resolveCurrentFormId(W._state.formId);
+        W._state.formId = fid;
+        setLibBusy(true);
+        setLibError('');
+        apiPost(librarySavePath(), {
+          formId: fid,
+          templateId: payload.templateId || 0,
+          name: payload.name,
+          description: payload.description || '',
+          category: payload.category || '',
+          workflow: buildLatestDefinitionPayload()
+        }, function (err: any, data: any) {
+          if (err && !data) {
+            setLibBusy(false);
+            var list = normalizeIssues(err && err.serverData, 'library-save');
+            setLibError(list.length ? list[0].message : (err.message || 'Save failed'));
+            return;
+          }
+          if (data && (data.status || data.Status) === 'library-blocked') {
+            setLibBusy(false);
+            var issues = normalizeIssues(data, 'library-save');
+            setLibError(issues.length ? issues[0].message : 'The workflow has validation errors.');
+            showIssues(issues, 'library-save', true);
+            return;
+          }
+          refreshLibrary(function () {
+            setLibBusy(false);
+            showToastMsg('Saved to library: ' + (data && data.name ? data.name : payload.name) + ' v' + (data && data.version ? data.version : '') + ' ✓');
+          });
+        });
+      }
+
+      function onLibraryLoad(templateId: number): void {
+        setLibBusy(true);
+        setLibError('');
+        apiGet(libraryGetPath(templateId), function (err: any, data: any) {
+          setLibBusy(false);
+          if (err || !data || !data.workflow) {
+            setLibError((err && err.message) || 'This template has no saved version yet.');
+            return;
+          }
+          onLoadJson(data.workflow);
+          setWorkflowName(data.name || '');
+          setLibOpen(false);
+          // The graph now differs from what the form has applied.
+          setDirty(true);
+        });
+      }
+
+      function onLibraryApply(opts: any): void {
+        var fid = resolveCurrentFormId(W._state.formId);
+        W._state.formId = fid;
+        if (!fid) { setLibError('Save the form first so the workflow can be applied to a real form ID.'); return; }
+        setLibBusy(true);
+        setLibError('');
+        apiPost(libraryApplyPath(), {
+          formId: fid,
+          templateId: opts.templateId,
+          autoUpdate: !!opts.autoUpdate
+        }, function (err: any, data: any) {
+          if (err && !data) {
+            setLibBusy(false);
+            setLibError((err && err.message) || 'Apply failed');
+            return;
+          }
+          refreshLibrary(function () {
+            setLibBusy(false);
+            var mode = opts.autoUpdate ? 'auto-update' : 'pinned';
+            showToastMsg('Form now runs "' + (data && data.name ? data.name : 'template') + '" (' + mode + ') ✓');
+          });
+        });
+      }
+
+      function onLibraryUnbind(): void {
+        var fid = resolveCurrentFormId(W._state.formId);
+        if (!fid) return;
+        setLibBusy(true);
+        apiPost(libraryUnbindPath(), { formId: fid }, function (err: any) {
+          if (err) { setLibBusy(false); setLibError(err.message || 'Unbind failed'); return; }
+          refreshLibrary(function () { setLibBusy(false); showToastMsg('Form unbound from the library ✓'); });
+        });
+      }
+
+      function onLibraryDelete(tpl: any): void {
+        var warn = tpl.formsUsing > 0
+          ? 'Delete "' + tpl.name + '"?\n\nIt is applied to ' + tpl.formsUsing + ' form(s). They will revert to their own workflow.'
+          : 'Delete "' + tpl.name + '"?';
+        if (!(window as any).confirm(warn)) return;
+        setLibBusy(true);
+        apiPost(libraryDeletePath(), { templateId: tpl.templateId, force: true }, function (err: any) {
+          if (err) { setLibBusy(false); setLibError(err.message || 'Delete failed'); return; }
+          refreshLibrary(function () { setLibBusy(false); showToastMsg('Template deleted ✓'); });
+        });
+      }
+
       // Right panel tab: 'properties' | 'variables'
 
       var panelGuards = {
@@ -2863,7 +2913,7 @@ import { renderGoogleSheetsConfig, GOOGLE_SHEETS_PANEL_BADGE } from './wf-google
         return function () { document.removeEventListener('keydown', onKey, true); };
       }, [selNode, selEdgeId, nodes, edges]);
 
-      return h('div', { className: 'mf-rf-app', 'data-workflow-z-badge': WORKFLOW_OVERLAY_Z_BADGE, 'data-workflow-host-badge': WORKFLOW_DNN_HOST_BADGE },
+      return h('div', { className: 'mf-rf-app', 'data-workflow-z-badge': WORKFLOW_OVERLAY_Z_BADGE, 'data-workflow-host-badge': WORKFLOW_DNN_HOST_BADGE, 'data-workflow-library-badge': WORKFLOW_LIBRARY_BADGE },
         h(Toolbar, {
           dirty: dirty, saveStatus: saveStatus,
           workflowName: workflowName, workflowDescription: workflowDescription,
@@ -2884,9 +2934,22 @@ import { renderGoogleSheetsConfig, GOOGLE_SHEETS_PANEL_BADGE } from './wf-google
           deleteLabel: selEdgeId ? 'Delete Link' : (selNode ? 'Delete Node' : 'Delete'),
           deleteHint: selEdgeId ? 'Delete selected link (Delete / Backspace)' : (selNode ? 'Delete selected node (Delete / Backspace)' : 'Select a node or link first'),
           onClear: onClear, onClose: W.close,
-          onToggleSample: function () { setShowSample(function (v: boolean) { return !v; }); }
+          onToggleSample: function () { setShowSample(function (v: boolean) { return !v; }); },
+          onOpenLibrary: onOpenLibrary,
+          binding: libBinding
         }),
         h(SampleJsonPanel, { visible: showSample, onClose: function () { setShowSample(false); }, onLoadJson: onLoadJson }),
+        h(LibraryModal, {
+          open: libOpen, busy: libBusy, error: libError,
+          templates: libTemplates, binding: libBinding,
+          currentName: workflowName,
+          onClose: function () { setLibOpen(false); setLibError(''); },
+          onSave: onLibrarySave,
+          onLoad: onLibraryLoad,
+          onApply: onLibraryApply,
+          onUnbind: onLibraryUnbind,
+          onDelete: onLibraryDelete
+        }),
         h('div', { className: 'mf-rf-main' },
           h('div', { className: 'mf-rf-body' },
             h(NodePalette, { collapsed: leftCollapsed, onToggle: function () { setLeftCollapsed(function (v: boolean) { return !v; }); } }),
@@ -3042,6 +3105,20 @@ import { renderGoogleSheetsConfig, GOOGLE_SHEETS_PANEL_BADGE } from './wf-google
     if (!fields.length) return mapped;
     var used: AnyObj = {};
     function reserve(key: string): void { if (key) used[key] = true; }
+    var fieldKeyLookup: AnyObj = {};
+    fields.forEach(function (f) { fieldKeyLookup[String(f.key || '').toLowerCase()] = true; });
+    var variableKeyLookup: AnyObj = {};
+    ((mapped.variables || []) as any[]).forEach(function (v: any) {
+      if (v && v.key) variableKeyLookup[String(v.key).toLowerCase()] = true;
+    });
+    function fieldKeyExists(key: any): boolean {
+      var k = String(key || '').toLowerCase();
+      return !!k && !!fieldKeyLookup[k];
+    }
+    function variableKeyExists(key: any): boolean {
+      var k = String(key || '').toLowerCase();
+      return !!k && !!variableKeyLookup[k];
+    }
     function chooseFieldForNode(node: any, index: number): FormSchemaField | null {
       var cfg = (node && node.config) || {};
       var hints = [cfg.fieldKey, node && node.label, cfg.fieldLabel, cfg.placeholder, cfg.fieldName];
@@ -3055,12 +3132,16 @@ import { renderGoogleSheetsConfig, GOOGLE_SHEETS_PANEL_BADGE } from './wf-google
     (mapped.nodes || []).forEach(function (node: any, index: number) {
       if (!node || !node.config) node.config = {};
       if (node.type === 'FormField') {
-        var chosen = chooseFieldForNode(node, index);
-        if (chosen) {
-          node.label = chosen.label || chosen.key;
-          node.config.fieldKey = chosen.key;
-          node.config.pageIndex = typeof chosen.pageIndex === 'number' ? chosen.pageIndex : 0;
-          node.config.isPageNode = false;
+        // Only repair a binding that is actually broken on THIS form, and never rename the
+        // node. Rewriting node.label to the field label is what turned an authored trigger
+        // ("Form submitted") into "Full Name" / "Tab 1" and made the samples read as nonsense.
+        if (!fieldKeyExists(node.config.fieldKey)) {
+          var chosen = chooseFieldForNode(node, index);
+          if (chosen) {
+            node.config.fieldKey = chosen.key;
+            node.config.pageIndex = typeof chosen.pageIndex === 'number' ? chosen.pageIndex : 0;
+            node.config.isPageNode = false;
+          }
         }
       }
       if (node.type === 'Switch') {
@@ -3074,6 +3155,10 @@ import { renderGoogleSheetsConfig, GOOGLE_SHEETS_PANEL_BADGE } from './wf-google
         var cc = normalizeConditionConfig(node.config || {});
         (cc.conditionGroups || []).forEach(function (group: any) {
           (group.rules || []).forEach(function (rule: any) {
+            // A rule already bound to a real field, or to a declared workflow variable, is
+            // correct — leave it. Blindly rebinding every rule silently turned a condition on
+            // the `score` variable into a condition on an unrelated answer.
+            if (fieldKeyExists(rule.fieldKey) || variableKeyExists(rule.fieldKey)) return;
             var picked = pickFieldByHints(schema2, [rule.fieldKey, node.label, 'status', 'type', 'category', 'consent'], 0) || pickChoiceField(schema2) || fields[0];
             if (picked) rule.fieldKey = picked.key;
           });

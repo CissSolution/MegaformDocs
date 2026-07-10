@@ -47,6 +47,15 @@ namespace MegaForm.Core.Interfaces
 
         /// <summary>Cancel a running execution.</summary>
         Task CancelExecutionAsync(string executionId);
+
+        /// <summary>
+        /// True when the form resolves to an executable workflow — either a reusable
+        /// library mapping or a legacy applied per-form workflow. Drafts do not count.
+        /// The submit pipeline calls this to decide between the workflow path and the
+        /// legacy post-submit actions; without it a library-only form silently ran the
+        /// legacy branch because MF_Forms.WorkflowJson was empty.
+        /// </summary>
+        bool HasExecutableWorkflow(int formId);
     }
 
     // ─────────────────────────────────────────────────────────────────────────

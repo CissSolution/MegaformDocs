@@ -85,7 +85,7 @@ namespace MegaForm.Core.Services
             }
 
             // Build execution context
-            var ctx = BuildContext(definition, formId, submissionId, ApplyFieldMappings(formData, runtime));
+            var ctx = BuildContext(definition, formId, submissionId, ApplyFieldMappings(formData, runtime), runtime);
             StampRuntimeMetadata(ctx, runtime);
             _log?.LogInfo("MegaForm.Workflow", "Starting workflow execution " + ctx.ExecutionId + " for form " + formId + " submission " + submissionId + ".");
 
@@ -432,7 +432,8 @@ namespace MegaForm.Core.Services
         private WorkflowExecutionContext BuildContext(
             WorkflowDefinition definition,
             int formId, int submissionId,
-            Dictionary<string, object> formData)
+            Dictionary<string, object> formData,
+            WorkflowRuntimeDefinition runtime = null)
         {
             var ctx = new WorkflowExecutionContext
             {
@@ -453,7 +454,44 @@ namespace MegaForm.Core.Services
                 }
             }
 
+            // Per-form overrides win over the template's defaults. This is what lets one
+            // shared library template approve through a different person per form.
+            // Only keys already declared as workflow variables are honoured, so a mapping
+            // cannot smuggle arbitrary context keys into node configs.
+            if (runtime != null && runtime.VariableOverrides != null && runtime.VariableOverrides.Count > 0)
+            {
+                foreach (var kv in runtime.VariableOverrides)
+                {
+                    if (string.IsNullOrWhiteSpace(kv.Key)) continue;
+                    if (!ctx.Variables.ContainsKey(kv.Key))
+                    {
+                        _log?.LogWarning("MegaForm.Workflow",
+                            "Ignoring variable override '" + kv.Key + "' for form " + formId +
+                            " — not declared in the template's Variables.");
+                        continue;
+                    }
+                    ctx.Variables[kv.Key] = kv.Value;
+                }
+            }
+
             return ctx;
+        }
+
+        public bool HasExecutableWorkflow(int formId)
+        {
+            if (formId <= 0) return false;
+            try
+            {
+                var runtime = ResolveWorkflowForForm(formId);
+                return runtime != null && runtime.Definition != null;
+            }
+            catch (Exception ex)
+            {
+                // Fail closed: a resolution error must not turn a submit into a 500.
+                _log?.LogError("MegaForm.Workflow",
+                    "HasExecutableWorkflow failed for form " + formId + ": " + ex.Message, ex);
+                return false;
+            }
         }
 
         private WorkflowRuntimeDefinition ResolveWorkflowForForm(int formId)

@@ -33,5 +33,14 @@ namespace MegaForm.Core.Interfaces
         List<FormWorkflowMappingInfo> ListMappingsForTemplate(int workflowTemplateId, bool activeOnly = true);
 
         int ApplyToForm(FormWorkflowMappingInfo mapping);
+
+        /// <summary>Deactivate every mapping for a form. The form reverts to its legacy per-form WorkflowJson.</summary>
+        void ClearMapping(int formId);
+
+        /// <summary>Delete a template with its versions. Forms mapped to it are unbound first.</summary>
+        void DeleteTemplate(int workflowTemplateId);
+
+        /// <summary>Count of forms currently bound to a template — shown before delete.</summary>
+        int CountFormsUsingTemplate(int workflowTemplateId);
     }
 }

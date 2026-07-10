@@ -55,5 +55,11 @@ namespace MegaForm.AspNetCore.Component
         {
             return Task.CompletedTask;
         }
+
+        /// <summary>No engine → no workflow. Submit falls back to legacy post-submit actions.</summary>
+        public bool HasExecutableWorkflow(int formId)
+        {
+            return false;
+        }
     }
 }

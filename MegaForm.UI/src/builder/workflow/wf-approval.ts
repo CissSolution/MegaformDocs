@@ -39,7 +39,11 @@ export function renderApprovalConfig(ctx: any): any {
     ),
     cfgField('Candidate roles (swimlanes)',
       ctx.formId > 0
-        ? renderPrincipalPicker({
+        // h(...) not a direct call: renderPrincipalPicker owns useState/useEffect, and this
+        // branch is conditional. Calling it inline put its hooks on NodeConfigPanel's fiber,
+        // so selecting an Approval node after any other node changed the hook count and threw
+        // React #310. As an element it gets its own fiber and the condition is harmless.
+        ? h(renderPrincipalPicker, {
             h: h, R: R, formId: ctx.formId, kind: 'role',
             value: config.candidateRoles,
             onChange: function (next: string[]) { onTextListChange(setConfig, config, 'candidateRoles', next as any); }
@@ -54,7 +58,7 @@ export function renderApprovalConfig(ctx: any): any {
     ),
     cfgField('Candidate users (assignees)',
       ctx.formId > 0
-        ? renderPrincipalPicker({
+        ? h(renderPrincipalPicker, {
             h: h, R: R, formId: ctx.formId, kind: 'user',
             value: config.candidateUsers,
             onChange: function (next: string[]) { onTextListChange(setConfig, config, 'candidateUsers', next as any); }

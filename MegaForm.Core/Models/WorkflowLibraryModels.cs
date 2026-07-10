@@ -59,6 +59,8 @@ namespace MegaForm.Core.Workflow
     /// <summary>
     /// Links a form to a reusable workflow template/version with per-form field mappings.
     /// FieldMappingsJson stores List&lt;WorkflowFieldMappingInfo&gt;.
+    /// WorkflowVersionId null = follow the template's CurrentVersionId (auto-update);
+    /// non-null = pinned to that exact version.
     /// </summary>
     public class FormWorkflowMappingInfo
     {
@@ -67,6 +69,15 @@ namespace MegaForm.Core.Workflow
         public int WorkflowTemplateId { get; set; }
         public int? WorkflowVersionId { get; set; }
         public string FieldMappingsJson { get; set; }
+
+        /// <summary>
+        /// Per-form overrides for the template's workflow variables, stored as a flat
+        /// JSON object: { "approverEmail": "a@x.com", "thresholdAmount": 5000 }.
+        /// Merged over WorkflowDefinition.Variables[].DefaultValue at execution time,
+        /// which is what makes one shared template behave differently per form.
+        /// </summary>
+        public string VariableOverridesJson { get; set; }
+
         public string TriggerType { get; set; }
         public bool IsActive { get; set; }
         public int? AppliedByUserId { get; set; }
@@ -76,6 +87,7 @@ namespace MegaForm.Core.Workflow
         public FormWorkflowMappingInfo()
         {
             FieldMappingsJson = "[]";
+            VariableOverridesJson = "{}";
             TriggerType = "on_submit";
             IsActive = true;
             AppliedBy = string.Empty;
@@ -117,10 +129,16 @@ namespace MegaForm.Core.Workflow
         public FormWorkflowMappingInfo Mapping { get; set; }
         public List<WorkflowFieldMappingInfo> FieldMappings { get; set; }
 
+        /// <summary>
+        /// Resolved per-form variable overrides. Empty for legacy-form workflows.
+        /// </summary>
+        public Dictionary<string, object> VariableOverrides { get; set; }
+
         public WorkflowRuntimeDefinition()
         {
             Source = "legacy-form";
             FieldMappings = new List<WorkflowFieldMappingInfo>();
+            VariableOverrides = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
         }
     }
 }

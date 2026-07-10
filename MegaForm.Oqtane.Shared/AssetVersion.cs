@@ -26,6 +26,6 @@ namespace MegaForm.Oqtane.Shared
     /// </summary>
     public static class MegaFormAssetVersion
     {
-        public static readonly string Current = "20260709-B381";
+        public static readonly string Current = "20260710-B390";
     }
 }

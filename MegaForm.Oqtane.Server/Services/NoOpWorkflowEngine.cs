@@ -101,5 +101,8 @@ namespace MegaForm.Oqtane.Server.Services
         }
 
         public Task CancelExecutionAsync(string executionId) => Task.CompletedTask;
+
+        /// <summary>No engine → no workflow. Submit falls back to legacy post-submit actions.</summary>
+        public bool HasExecutableWorkflow(int formId) => false;
     }
 }

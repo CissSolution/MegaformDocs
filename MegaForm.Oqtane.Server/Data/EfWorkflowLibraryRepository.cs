@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using MegaForm.Core.Interfaces;
 using MegaForm.Core.Workflow;
 using Microsoft.EntityFrameworkCore;
@@ -18,9 +19,48 @@ namespace MegaForm.Oqtane.Server.Data
             DefaultValueHandling = DefaultValueHandling.Ignore
         };
 
+        // MF_FormWorkflows.VariableOverridesJson was added after the table shipped.
+        // Oqtane never replays migration Up() bodies — MegaFormManager.InstallSchemaFromModel
+        // only issues idempotent CREATE TABLE from the EF model — so an already-installed
+        // site would never receive the new column. Self-heal once per process instead.
+        private static int _schemaEnsured;
+
         public EfWorkflowLibraryRepository(IDbContextFactory<MegaFormDbContext> dbContextFactory)
         {
             _dbContextFactory = dbContextFactory ?? throw new ArgumentNullException(nameof(dbContextFactory));
+            EnsureSchema();
+        }
+
+        private void EnsureSchema()
+        {
+            if (Interlocked.CompareExchange(ref _schemaEnsured, 1, 0) != 0)
+                return;
+
+            try
+            {
+                using var db = _dbContextFactory.CreateDbContext();
+                var provider = db.Database.ProviderName ?? string.Empty;
+
+                string colType, addKeyword;
+                if (provider.IndexOf("Sqlite", StringComparison.OrdinalIgnoreCase) >= 0)
+                { colType = "TEXT"; addKeyword = "ADD COLUMN"; }
+                else if (provider.IndexOf("Npgsql", StringComparison.OrdinalIgnoreCase) >= 0)
+                { colType = "text"; addKeyword = "ADD COLUMN"; }
+                else if (provider.IndexOf("MySql", StringComparison.OrdinalIgnoreCase) >= 0)
+                { colType = "LONGTEXT"; addKeyword = "ADD COLUMN"; }
+                else
+                { colType = "NVARCHAR(MAX)"; addKeyword = "ADD"; }
+
+                db.Database.ExecuteSqlRaw(
+                    "ALTER TABLE MF_FormWorkflows " + addKeyword + " VariableOverridesJson " + colType + " NULL");
+            }
+            catch
+            {
+                // Expected on fresh installs (the EF model already created the column) and on
+                // every process start after the first upgrade. If the column genuinely cannot
+                // be added, GetActiveDefinitionForForm throws, HasExecutableWorkflow catches it
+                // and the form falls back to legacy post-submit actions rather than 500ing.
+            }
         }
 
         public WorkflowRuntimeDefinition GetActiveDefinitionForForm(int formId)
@@ -82,7 +122,8 @@ namespace MegaForm.Oqtane.Server.Data
                 Template = template,
                 Version = version,
                 Mapping = mapping,
-                FieldMappings = ParseFieldMappings(mapping.FieldMappingsJson)
+                FieldMappings = ParseFieldMappings(mapping.FieldMappingsJson),
+                VariableOverrides = ParseVariableOverrides(mapping.VariableOverridesJson)
             };
         }
 
@@ -231,6 +272,64 @@ namespace MegaForm.Oqtane.Server.Data
             return mapping.MappingId;
         }
 
+        public void ClearMapping(int formId)
+        {
+            if (formId <= 0) return;
+            using var db = _dbContextFactory.CreateDbContext();
+            var active = db.FormWorkflowMappings.Where(x => x.FormId == formId && x.IsActive).ToList();
+            if (active.Count == 0) return;
+            foreach (var row in active)
+                row.IsActive = false;
+            db.SaveChanges();
+        }
+
+        public int CountFormsUsingTemplate(int workflowTemplateId)
+        {
+            using var db = _dbContextFactory.CreateDbContext();
+            return db.FormWorkflowMappings.AsNoTracking()
+                .Count(x => x.WorkflowTemplateId == workflowTemplateId && x.IsActive);
+        }
+
+        public void DeleteTemplate(int workflowTemplateId)
+        {
+            using var db = _dbContextFactory.CreateDbContext();
+            var template = db.WorkflowTemplates.FirstOrDefault(x => x.WorkflowTemplateId == workflowTemplateId);
+            if (template == null) return;
+
+            // Unbind forms first so no submit resolves a template that no longer exists.
+            // Those forms revert to their legacy per-form WorkflowJson.
+            var mappings = db.FormWorkflowMappings.Where(x => x.WorkflowTemplateId == workflowTemplateId).ToList();
+            db.FormWorkflowMappings.RemoveRange(mappings);
+
+            var versions = db.WorkflowTemplateVersions.Where(x => x.WorkflowTemplateId == workflowTemplateId).ToList();
+            db.WorkflowTemplateVersions.RemoveRange(versions);
+
+            // CurrentVersionId points at a row we are about to delete — null it in the same
+            // unit of work so SaveChanges never leaves a dangling reference.
+            template.CurrentVersionId = null;
+            db.WorkflowTemplates.Remove(template);
+            db.SaveChanges();
+        }
+
+        private static Dictionary<string, object> ParseVariableOverrides(string json)
+        {
+            var empty = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            if (string.IsNullOrWhiteSpace(json))
+                return empty;
+
+            try
+            {
+                var parsed = JsonConvert.DeserializeObject<Dictionary<string, object>>(json, JsonSettings);
+                if (parsed == null) return empty;
+                return new Dictionary<string, object>(parsed, StringComparer.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                // Hand-edited or corrupted JSON must not take the submit down.
+                return empty;
+            }
+        }
+
         private static List<WorkflowFieldMappingInfo> ParseFieldMappings(string json)
         {
             if (string.IsNullOrWhiteSpace(json))
@@ -267,6 +366,9 @@ namespace MegaForm.Oqtane.Server.Data
             mapping.FieldMappingsJson = string.IsNullOrWhiteSpace(mapping.FieldMappingsJson)
                 ? "[]"
                 : mapping.FieldMappingsJson;
+            mapping.VariableOverridesJson = string.IsNullOrWhiteSpace(mapping.VariableOverridesJson)
+                ? "{}"
+                : mapping.VariableOverridesJson;
             mapping.TriggerType = string.IsNullOrWhiteSpace(mapping.TriggerType)
                 ? "on_submit"
                 : mapping.TriggerType.Trim();

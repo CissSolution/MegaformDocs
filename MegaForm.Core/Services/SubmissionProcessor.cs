@@ -346,16 +346,32 @@ namespace MegaForm.Core.Services
             }
             else
             {
+                // [2026-07-10] A form gets its workflow from one of two places:
+                //   1. MF_Forms.WorkflowJson  — legacy, authored per-form
+                //   2. MF_FormWorkflows       — a mapping onto a reusable library template
+                // The gate used to inspect only (1), so a form bound solely to a library
+                // template silently fell through to the legacy post-submit actions and the
+                // workflow never fired. Ask the engine instead: it owns the resolution
+                // order (library wins, legacy applied is the fallback) and it excludes
+                // drafts. Hosts without a library repository return false, so the three
+                // non-Oqtane platforms keep today's behaviour exactly.
+                bool hasLibraryWorkflow = !workflowState.HasAppliedWorkflow
+                    && _workflowEngine != null
+                    && _workflowEngine.HasExecutableWorkflow(formId);
+
+                bool canRunWorkflow = _workflowEngine != null
+                    && (workflowState.HasAppliedWorkflow || hasLibraryWorkflow);
+
                 try
                 {
-                    _documentRevisionService?.UpsertFromSubmission(form, submission, schema, formData, workflowState.HasAppliedWorkflow);
+                    _documentRevisionService?.UpsertFromSubmission(form, submission, schema, formData, canRunWorkflow);
                 }
                 catch (Exception ex)
                 {
                     _log?.LogWarning(nameof(SubmissionProcessor), "Document revision sync failed: " + ex.Message);
                 }
 
-                if (workflowState.HasDraftWorkflow && !workflowState.HasAppliedWorkflow)
+                if (workflowState.HasDraftWorkflow && !canRunWorkflow)
                 {
                     _log?.LogWarning(nameof(SubmissionProcessor),
                         "Form " + formId +
@@ -363,13 +379,12 @@ namespace MegaForm.Core.Services
                         " will use legacy post-submit actions until the workflow is applied.");
                 }
 
-                bool canRunWorkflow = workflowState.HasAppliedWorkflow && _workflowEngine != null;
-
                 if (!canRunWorkflow)
                 {
                     _log?.LogInfo(nameof(SubmissionProcessor),
                         "Submission " + submissionId + " for form " + formId +
                         " will use legacy post-submit actions. hasAppliedWorkflow=" + workflowState.HasAppliedWorkflow +
+                        ", hasLibraryWorkflow=" + hasLibraryWorkflow +
                         ", workflowEngineRegistered=" + (_workflowEngine != null));
 
                     try
