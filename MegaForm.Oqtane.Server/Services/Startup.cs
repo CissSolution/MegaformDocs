@@ -161,6 +161,13 @@ namespace MegaForm.Oqtane.Server.Services
             services.AddScoped<INodeExecutor, LoopNodeExecutor>();
             services.AddScoped<INodeExecutor, SwitchNodeExecutor>();
             services.AddScoped<INodeExecutor, ApprovalNodeExecutor>();
+            // [SendEmailNode v20260711] The approval samples' rejected branch ends in a SendEmail
+            // node; without this executor the whole execution died with "No executor registered
+            // for node type 'SendEmail'". Its host adapter (OqtaneWorkflowEmailSender, above) is
+            // the same reviewed seam ApprovalNodeExecutor already sends through — so SendEmail
+            // graduates from the opt-in list. Webhook/Database/GoogleSheets stay opt-in: their
+            // outbound-call/SQL surfaces have not been reviewed for this host.
+            services.AddScoped<INodeExecutor, EmailNodeExecutor>();
             services.AddScoped<INodeExecutor, EndNodeExecutor>();
             services.AddScoped<IWorkflowEngine, WorkflowEngineV2>();
             services.AddScoped<WorkflowEngine>();

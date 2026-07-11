@@ -267,9 +267,15 @@ namespace MegaForm.Oqtane.Server.Controllers
         }
 
         [HttpGet("Knowledge")]
-        public IActionResult ListKnowledge(string kind = null, string search = null, int top = 40, bool full = false)
+        public IActionResult ListKnowledge(string kind = null, string search = null, int top = 40, string full = null)
         {
             if (!IsAdmin) return Forbid();
+            // [KbFullBind v20260711] chat.ts sends full=1, but ASP.NET Core's bool binder only
+            // accepts true/false — "1" failed to bind, `full` stayed false, and every prompt_rule
+            // reached the Oqtane AI as summary-only (DNN's Web API binds "1" fine, so only this
+            // twin was degraded). Bind as string and accept both spellings.
+            bool includeBody = string.Equals(full, "1") ||
+                               string.Equals(full, "true", StringComparison.OrdinalIgnoreCase);
             var list = _svc.ListEntries(kind, search, SiteId, Math.Min(top, 80)).ToList();
             return Ok(new
             {
@@ -281,7 +287,7 @@ namespace MegaForm.Oqtane.Server.Controllers
                     // [QA-20260615b] A1-2: include body when full=1 so the chat.ts
                     // prompt-rule loader (reads e.body||e.summary) gets the full rule
                     // text, not just the summary. Mirrors DNN AiToolsController.
-                    body = full ? e.Body : null,
+                    body = includeBody ? e.Body : null,
                 }),
             });
         }

@@ -461,6 +461,16 @@ namespace MegaForm.Oqtane.Server.Controllers
                 }
             }
 
+            // [WfApplyClobber v20260711] The builder toolbar's save payload has never included
+            // WorkflowJson — an applied BPMN workflow lives only in MF_Forms.WorkflowJson, so a
+            // full-entity save with the property ABSENT was erasing it (Apply → Save/Publish →
+            // workflow silently gone). Absent (null) = "not editing the workflow": carry the
+            // stored value forward. An explicit "" still clears it (inline-edit sends '' on purpose).
+            if (dto.WorkflowJson == null && dto.FormId > 0)
+            {
+                dto.WorkflowJson = _formRepo.GetForm(dto.FormId)?.WorkflowJson;
+            }
+
             var entity = ToEntity(dto);
             entity.ModuleId = dto.ModuleId;
             entity.PortalId = dto.SiteId;
@@ -1977,6 +1987,14 @@ namespace MegaForm.Oqtane.Server.Controllers
         {
             if (IsSubmissionAdmin(actor)) return true;
             if (actor == null || !actor.IsAuthenticated) return false;
+            // [ApproverCanSee v20260711] An approver who holds a workflow task on THIS
+            // submission (assignee at any point, or candidate while it is still open) must
+            // be able to READ the record they are approving — the inbox detail calls
+            // GET Submissions/{id} and was getting 403 for ordinary approvers, so the task
+            // pane rendered no data. Membership is resolved server-side from the task tables.
+            if (submission != null && _workflowTasks != null &&
+                _workflowTasks.HoldsTaskForSubmission(submission.SubmissionId, actor))
+                return true;
             if (!HasExplicitSubmissionViewRule(formId)) return false;
             return permissions.CanView(formId, actor) && permissions.CanViewSubmission(formId, submission, actor);
         }

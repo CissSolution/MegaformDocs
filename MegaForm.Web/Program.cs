@@ -63,6 +63,7 @@ builder.Services.AddScoped<PermissionService>();
 builder.Services.AddScoped<IWorkflowRepository,  EfWorkflowRepository>();
 builder.Services.AddScoped<IWorkflowEvaluator,   WorkflowEvaluator>();
 builder.Services.AddScoped<IWorkflowEmailSender, WebWorkflowEmailSender>();
+builder.Services.AddScoped<IWorkflowPrincipalResolver, WebWorkflowPrincipalResolver>();
 builder.Services.AddScoped<IWorkflowEngine,      WorkflowEngineV2>();
 builder.Services.AddSingleton<IWebhookWorkflowNodeUiService, WebhookWorkflowNodeUiService>();
 builder.Services.AddSingleton<IEmailWorkflowNodeUiService, EmailWorkflowNodeUiService>();
@@ -79,6 +80,7 @@ builder.Services.AddScoped<INodeExecutor, DatabaseNodeExecutor>();
 builder.Services.AddScoped<INodeExecutor, GoogleSheetsNodeExecutor>();
 builder.Services.AddScoped<INodeExecutor, SwitchNodeExecutor>();
 builder.Services.AddScoped<INodeExecutor, LoopNodeExecutor>();
+builder.Services.AddScoped<INodeExecutor, ApprovalNodeExecutor>();
 // IConnectionRegistry — reads named connection strings from appsettings (never from frontend)
 builder.Services.AddScoped<IConnectionRegistry, WebConnectionRegistry>();
 builder.Services.AddScoped<IDatabaseWorkflowMetadataService, DatabaseWorkflowMetadataService>();

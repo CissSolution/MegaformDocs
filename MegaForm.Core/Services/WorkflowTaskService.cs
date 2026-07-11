@@ -548,6 +548,35 @@ namespace MegaForm.Core.Services
                 (task.Status == WorkflowTaskStatus.Pending || task.Status == WorkflowTaskStatus.Claimed);
         }
 
+        /// <summary>
+        /// True when the actor holds a workflow task on this submission — assigned to them
+        /// (any status, so an approver keeps read access to what they acted on), or still
+        /// open and claimable by them (candidate role/user). Hosts use this to let an
+        /// approver READ the submission they are approving; membership comes from the
+        /// task tables, never from the request.
+        /// </summary>
+        public bool HoldsTaskForSubmission(int submissionId, UserContext actor)
+        {
+            if (submissionId <= 0 || actor == null || !actor.IsAuthenticated)
+                return false;
+            var tasks = _repo.ListTasks(new WorkflowTaskQuery
+            {
+                SubmissionId = submissionId,
+                OpenOnly = false,
+                PageSize = 100
+            });
+            if (tasks == null)
+                return false;
+            foreach (var task in tasks)
+            {
+                if (IsAssignedToActor(task, actor))
+                    return true;
+                if (IsTaskOpen(task) && CanActorClaim(task, actor))
+                    return true;
+            }
+            return false;
+        }
+
         private void EnsureVisible(WorkflowTaskInstance task, UserContext actor)
         {
             if (!IsAssignedToActor(task, actor) && !CanActorClaim(task, actor))

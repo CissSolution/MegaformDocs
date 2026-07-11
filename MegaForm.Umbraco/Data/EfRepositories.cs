@@ -34,7 +34,13 @@ namespace MegaForm.Umbraco.Data
                 var existing = _db.Forms.Find(form.FormId);
                 if (existing != null)
                 {
+                    // [WfApplyClobber v20260711] SetValues copies nulls too — the builder toolbar
+                    // never sends WorkflowJson, and the applied BPMN workflow lives only in this
+                    // column, so a plain builder Save was wiping it. Null = "not editing the
+                    // workflow": keep the stored value.
+                    var storedWorkflowJson = existing.WorkflowJson;
                     _db.Entry(existing).CurrentValues.SetValues(form);
+                    if (form.WorkflowJson == null) existing.WorkflowJson = storedWorkflowJson;
                     existing.UpdatedOnUtc = DateTime.UtcNow;
                 }
             }

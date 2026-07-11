@@ -81,6 +81,7 @@ namespace MegaForm.Core.Workflow
             WorkflowNodeType.GoogleSheets,
             WorkflowNodeType.Switch,
             WorkflowNodeType.Loop,
+            WorkflowNodeType.Approval,
         };
     }
 

@@ -475,6 +475,17 @@ namespace MegaForm.Web.Data
             form.AutoresponderBody        = form.AutoresponderBody        ?? "";
             form.AppScope                 = form.AppScope                 ?? "";
             form.RulesJson                 = form.RulesJson                 ?? "[]";
+            // [WfApplyClobber v20260711] The builder toolbar never sends WorkflowJson, but an
+            // applied BPMN workflow lives only in this column — coercing null to "" and doing a
+            // full-entity Update() erased it on every builder Save. Null = "not editing the
+            // workflow": carry the stored value forward instead of wiping it.
+            if (form.WorkflowJson == null && form.FormId > 0)
+            {
+                form.WorkflowJson = _db.Forms.AsNoTracking()
+                    .Where(f => f.FormId == form.FormId)
+                    .Select(f => f.WorkflowJson)
+                    .FirstOrDefault();
+            }
             form.WorkflowJson              = form.WorkflowJson              ?? "";
 
             if (form.FormId == 0) { form.CreatedOnUtc = DateTime.UtcNow; _db.Forms.Add(form); }
