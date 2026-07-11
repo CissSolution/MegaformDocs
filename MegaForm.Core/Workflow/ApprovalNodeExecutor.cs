@@ -92,6 +92,7 @@ namespace MegaForm.Core.Services.Workflow
             {
                 created = true;
                 task = BuildTask(ctx, node, workflowCase, config);
+                AssignDirectlyIfSingleUser(task, ctx);
                 _repo.SaveTask(task);
             }
 
@@ -229,6 +230,38 @@ namespace MegaForm.Core.Services.Workflow
                 task.DueAt = DateTime.UtcNow.AddHours(config.DueInHours);
 
             return task;
+        }
+
+        /// <summary>
+        /// When a step names exactly ONE person, hand the task to them instead of dropping it into a
+        /// queue they have to claim.
+        ///
+        /// Until now every task was a pull: candidate roles/users were recorded, AssignedUserId stayed
+        /// null, and the task sat in "Incoming" until somebody clicked Claim. A workflow that says
+        /// "this goes to Nam" was therefore indistinguishable from "anyone in Finance may take this" —
+        /// Nam had to find it himself. A step that names several people, or a role, still queues: with
+        /// more than one candidate there is nobody to hand it to, and claiming is what prevents two
+        /// approvers working the same task.
+        /// </summary>
+        private void AssignDirectlyIfSingleUser(WorkflowTaskInstance task, WorkflowExecutionContext ctx)
+        {
+            if (task == null || task.AssignedUserId.HasValue) return;
+            if (task.CandidateUsers == null || task.CandidateUsers.Count != 1) return;
+            if (_principalResolver == null) return;   // no identity source: leave it claimable
+
+            var candidate = task.CandidateUsers[0];
+            UserPrincipal user = null;
+            try { user = _principalResolver.ResolveUser(candidate, GetPortalId(ctx)); }
+            catch (Exception ex) { _log?.LogWarning("MegaForm.Workflow", "Approval assignee resolve failed: " + ex.Message); }
+
+            // An unresolvable name must not silently become "assigned to nobody" — leave the task in
+            // the queue so a human still sees it.
+            if (user == null || !user.UserId.HasValue || user.UserId.Value <= 0) return;
+
+            task.AssignedUserId = user.UserId;
+            task.AssignedUserName = user.UserName ?? candidate;
+            task.AssignedDisplayName = string.IsNullOrWhiteSpace(user.DisplayName) ? (user.UserName ?? candidate) : user.DisplayName;
+            task.ClaimedAt = DateTime.UtcNow;
         }
 
         private ApprovalNodeConfig ParseConfig(WorkflowNode node)

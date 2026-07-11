@@ -127,6 +127,14 @@ namespace MegaForm.Oqtane.Server.Services
             services.AddScoped<WebhookService>();
             services.AddScoped<UniqueIdService>();
             services.AddScoped<IWorkflowEvaluator, WorkflowEvaluator>();
+            // [Workflow notify 2026-07-11] Both of these classes existed and neither was registered,
+            // so ApprovalNodeExecutor fell back to its 3-argument constructor, _emailSender stayed
+            // null, and every approval task was created in silence: the task appeared in the inbox but
+            // nobody was ever told it was there. The principal resolver is what turns a candidate name
+            // into a real user — without it a step can name a person but never hand them anything.
+            services.AddScoped<IWorkflowEmailSender, OqtaneWorkflowEmailSender>();
+            services.AddScoped<IWorkflowPrincipalResolver, OqtaneWorkflowPrincipalResolver>();
+
             services.AddScoped<WorkflowTaskService>();
 
             // [StarterPlatformAdapter v20260518-01] Bridges the Core starter

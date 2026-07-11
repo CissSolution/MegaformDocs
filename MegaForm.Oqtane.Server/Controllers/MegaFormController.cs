@@ -2786,6 +2786,11 @@ namespace MegaForm.Oqtane.Server.Controllers
                     ViewConfig = viewConfig,
                     CssClass = cssClass,
                     ModuleConfigured = moduleConfigured,
+                    // [ModuleRole 2026-07-11] Pinning a module to a surface (My Inbox / Dashboard /…)
+                    // was readable by Index.razor but never returned here, so the settings popup could
+                    // not show what the module was actually pinned to.
+                    ModuleRole = NormalizeModuleRole(ReadSetting(moduleSettings, "MegaForm:ModuleRole",
+                                     ReadSetting(moduleSettings, "ModuleRole", string.Empty))),
                     DisplayMode = popupConfig.DisplayMode,
                     TriggerType = popupConfig.TriggerType,
                     DelaySeconds = popupConfig.DelaySeconds,
@@ -2988,6 +2993,14 @@ namespace MegaForm.Oqtane.Server.Controllers
             UpsertSetting(EntityNames.Module, config.ModuleId, "ViewConfig", viewConfig, false);
             UpsertSetting(EntityNames.Module, config.ModuleId, "MegaForm:ModuleConfigured", "true", false);
             UpsertSetting(EntityNames.Module, config.ModuleId, "ModuleConfigured", "true", false);
+
+            // [ModuleRole 2026-07-11] Pinning a module to a surface ("this module IS the inbox")
+            // was offered in the settings UI and sent by the client, but this endpoint dropped it —
+            // the select looked like it worked and changed nothing. The value is whitelisted here
+            // rather than trusted: it decides which admin surface the module renders.
+            var moduleRole = NormalizeModuleRole(config.ModuleRole);
+            UpsertSetting(EntityNames.Module, config.ModuleId, "MegaForm:ModuleRole", moduleRole, false);
+            UpsertSetting(EntityNames.Module, config.ModuleId, "ModuleRole", moduleRole, false);
 
             if (siteId > 0)
             {
@@ -3542,6 +3555,20 @@ namespace MegaForm.Oqtane.Server.Controllers
         {
             var trigger = (value ?? string.Empty).Trim().ToLowerInvariant();
             return trigger == "scroll_depth" || trigger == "click_trigger" ? trigger : "time_delay";
+        }
+
+        /// <summary>Which admin surface a module may be pinned to. Whitelisted, not trusted: the value
+        /// arrives from a client and decides what the module renders. Anything unknown means "no role",
+        /// i.e. an ordinary form module — the safe default, never an admin surface.</summary>
+        private static readonly HashSet<string> AllowedModuleRoles = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "dashboard", "myinbox", "inbox", "submissions", "portal", "builder", "languages"
+        };
+
+        private static string NormalizeModuleRole(string value)
+        {
+            var role = (value ?? string.Empty).Trim().ToLowerInvariant();
+            return AllowedModuleRoles.Contains(role) ? role : string.Empty;
         }
 
         private static string NormalizeRendererHostUrl(string urlLike)

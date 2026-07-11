@@ -36,6 +36,7 @@ import {
   getFormThemeLayout,
   saveFormThemeLayout,
   saveFormInheritFlags,
+  saveFormHideHeader,
   getModuleStyle,
   saveModuleStyle,
   type FormViewFetchResult,
@@ -119,6 +120,13 @@ const MF_PRESET_COLOR_VAR_KEYS = [
   '--mf-btn-color', '--mf-btn-text', '--mf-color-text-inverse', '--mf-secondary', '--mf-text',
   '--mf-title-color', '--mf-label-color', '--mf-form-bg', '--mf-input-bg', '--mf-page-bg',
   '--mf-border', '--mf-input-border-color',
+  // [PresetWire v20260706] Dedicated preset channel (no global default) — premium templates
+  // derive their identity palette from var(--mf-preset-*, <own colour>): absent → identity,
+  // present → recoloured. Mirrors the server ThemeFirstPaintCssService [PresetWire] block so
+  // the builder live-preview matches the persisted SSR render. Owned by the preset so a switch
+  // replaces them cleanly.
+  '--mf-preset-primary', '--mf-preset-text', '--mf-preset-surface', '--mf-preset-accent',
+  '--mf-preset-border', '--mf-preset-bg', '--mf-preset-on-primary',
 ];
 
 // Map a preset's 4 swatch colors → the full --mf-* palette the runtime renderer consumes.
@@ -137,6 +145,11 @@ function mfPresetColorVars(p: MfPreset): Record<string, string> {
     '--mf-secondary': c1, '--mf-text': c1, '--mf-title-color': c1, '--mf-label-color': c1,
     '--mf-form-bg': c2, '--mf-input-bg': c2, '--mf-page-bg': c2,
     '--mf-border': c3, '--mf-input-border-color': c3,
+    // [PresetWire v20260706] Dedicated preset channel (see MF_PRESET_COLOR_VAR_KEYS). c0 primary,
+    // c1 ink/text, c2 surface, c3 accent/border. Server mirrors this in ThemeFirstPaintCssService.
+    '--mf-preset-primary': c0, '--mf-preset-text': c1, '--mf-preset-surface': c2,
+    '--mf-preset-accent': c3, '--mf-preset-border': c3, '--mf-preset-bg': c2,
+    '--mf-preset-on-primary': white,
   };
 }
 
@@ -289,6 +302,10 @@ export async function open(opts: SettingsOpts): Promise<void> {
   let themeInheritType = false;
   let themeInheritColors = false;
   let inheritDirty = false;
+  // [HideHeader v20260705] Form-level "hide form header" toggle, editable here (mirrors the builder's
+  // Hide-Form-Header checkbox). Saved to the FORM (saveFormHideHeader) on "Save module settings".
+  let themeHideHeader = false;
+  let hideHeaderDirty = false;
   let themeLayoutExpanded = true;
   let themeStatus = '';
   await loadFormTheme(current.formId);
@@ -845,6 +862,8 @@ export async function open(opts: SettingsOpts): Promise<void> {
     themeInheritType = false;
     themeInheritColors = false;
     inheritDirty = false;
+    themeHideHeader = false;
+    hideHeaderDirty = false;
     if (!formId || formId <= 0) return;
     // [ModuleStyle v20260624-B262] Load the MODULE's owned CSS for this form (server seeds it from
     // the form's CSS on first open / when the module was bound to a different form). The form-level
@@ -862,6 +881,7 @@ export async function open(opts: SettingsOpts): Promise<void> {
     if (formLayout.ok) {
       themeInheritType = !!formLayout.inheritType;
       themeInheritColors = !!formLayout.inheritColors;
+      themeHideHeader = !!formLayout.hideHeader;
     }
   }
 
@@ -1034,6 +1054,52 @@ export async function open(opts: SettingsOpts): Promise<void> {
     };
 
     const srcOptions: Array<[string, string]> = [['theme', T('vd.set.src_megaform', 'MegaForm')], ['page', T('vd.set.src_page', 'From page')]];
+
+    // Typography + Corner radius — surfaced here (out of the Theme Designer) so all form-level
+    // style lives in one popup. Wired to the SAME --mf-* vars megaform.css consumes:
+    //   body font   → --mf-font-family        heading font → --mf-title-font-family
+    //   base size   → --mf-font-size-base(px)  line height → --mf-line-height (unitless!)
+    //   radius      → --mf-form-radius (px)
+    // Fonts stored as `'Name',system-ui,sans-serif` (matches the Theme-Designer format so
+    // values interoperate). Round-trips via the same setLayoutVar → save/GetModuleStyle path.
+    const SETTINGS_FONTS = ['Inter', 'Georgia', 'Roboto', 'Nunito', 'Playfair Display', 'Open Sans', 'Lato', 'Merriweather'];
+    const pickFont = (key: string): string => String(themeOverrides[key] || '').replace(/['"]/g, '').split(',')[0].trim();
+    const fontRow = (label: string, key: string, inheritLabel?: string): HTMLElement => {
+      const cur = pickFont(key);
+      const sel = h('select', {
+        style: { flex: '1', minWidth: '0', fontSize: '12px', padding: '4px 7px', border: '1px solid #e2e8f0', borderRadius: '6px', background: '#fff', color: '#334155', cursor: 'pointer' },
+        onchange: (e: Event) => {
+          const v = (e.target as HTMLSelectElement).value;
+          setLayoutVar(key, v ? `'${v}',system-ui,sans-serif` : '');
+          flagDirty();
+        },
+      }) as HTMLSelectElement;
+      if (inheritLabel) sel.appendChild(h('option', { value: '' }, inheritLabel));
+      SETTINGS_FONTS.forEach((f) => sel.appendChild(h('option', { value: f }, f)));
+      sel.value = cur;
+      return h('div', { style: { display: 'flex', alignItems: 'center', gap: '10px' } },
+        h('label', { style: { fontSize: '12px', color: '#334155', minWidth: '104px' } }, label), sel);
+    };
+    // Line height is a UNITLESS decimal (1.0–2.2) — sliderRow hardcodes 'px' and mfReadPx
+    // truncates decimals (1.5→1), so it needs a dedicated row storing the raw value.
+    const lineHeightRow = (): HTMLElement => {
+      const cur = parseFloat(String(themeOverrides['--mf-line-height'] || '')) || 1.5;
+      const valLabel = h('span', { style: { fontSize: '11px', fontWeight: '700', color: '#475569', minWidth: '44px', textAlign: 'right' } }, cur.toFixed(1));
+      const slider = h('input', {
+        type: 'range', min: '10', max: '22', value: String(Math.round(cur * 10)), style: { flex: '1' },
+        oninput: (e: Event) => {
+          const v = parseInt((e.target as HTMLInputElement).value, 10) / 10;
+          valLabel.textContent = v.toFixed(1);
+          setLayoutVar('--mf-line-height', v.toFixed(1));
+          flagDirty();
+        },
+      }) as HTMLInputElement;
+      return h('div', { style: { display: 'grid', gap: '4px' } },
+        h('label', { style: { fontSize: '12px', color: '#334155' } }, T('vd.set.line_height', 'Line height')),
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: '10px' } }, slider, valLabel));
+    };
+    const curRadius = String(themeOverrides['--mf-form-radius'] || '8px');
+
     const content = h('div', { style: { display: 'grid', gap: '14px' } },
       h('div', { style: { display: 'grid', gap: '7px' } },
         h('div', { style: { fontSize: '12px', fontWeight: '700', color: '#0f172a' } }, T('vd.set.theme_preset', 'Theme preset')),
@@ -1045,6 +1111,25 @@ export async function open(opts: SettingsOpts): Promise<void> {
         h('div', { style: { fontSize: '12px', fontWeight: '700', color: '#0f172a' } }, T('vd.set.layout', 'Layout')),
         radioRow(T('vd.set.max_width', 'Max width'), 'maxw', [['480px', '480'], ['640px', '640'], ['768px', '768'], ['960px', '960'], ['100%', T('vd.set.full', 'Full')]], curMaxWidth, (v) => { setLayoutVar('--mf-form-max-width', v); flagDirty(); }),
         sliderRow(T('vd.set.field_spacing', 'Field spacing'), '--mf-field-gap', 6, 40, 20),
+        (() => {
+          const cb = h('input', { type: 'checkbox', style: { margin: '0' },
+            onchange: (e: Event) => { themeHideHeader = (e.target as HTMLInputElement).checked; hideHeaderDirty = true; flagDirty(); } }) as HTMLInputElement;
+          if (themeHideHeader) cb.checked = true;
+          return h('label', { style: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#334155', cursor: 'pointer', marginTop: '2px' } },
+            cb, T('vd.set.hide_header', 'Hide form header (title + description)'));
+        })(),
+      ),
+      h('div', { style: { display: 'grid', gap: '8px', borderTop: '1px dashed #e2e8f0', paddingTop: '12px' } },
+        h('div', { style: { fontSize: '12px', fontWeight: '700', color: '#0f172a' } }, T('vd.set.typography', 'Typography')),
+        fontRow(T('vd.set.body_font', 'Body font'), '--mf-font-family'),
+        fontRow(T('vd.set.heading_font', 'Heading font'), '--mf-title-font-family', T('vd.set.font_same_as_body', '(same as body)')),
+        sliderRow(T('vd.set.base_size', 'Base text size'), '--mf-font-size-base', 12, 20, 15),
+        lineHeightRow(),
+      ),
+      h('div', { style: { display: 'grid', gap: '8px', borderTop: '1px dashed #e2e8f0', paddingTop: '12px' } },
+        h('div', { style: { fontSize: '12px', fontWeight: '700', color: '#0f172a' } }, T('vd.set.corners', 'Corner radius')),
+        radioRow(T('vd.set.radius_preset', 'Preset'), 'radius', [['4px', T('vd.set.radius_sharp', 'Sharp')], ['8px', T('vd.set.radius_rounded', 'Rounded')], ['16px', T('vd.set.radius_soft', 'Soft')], ['999px', T('vd.set.radius_pill', 'Pill')]], curRadius, (v) => { setLayoutVar('--mf-form-radius', v); flagDirty(); }),
+        sliderRow(T('vd.set.custom_radius', 'Custom radius'), '--mf-form-radius', 0, 32, 8),
       ),
       h('div', { style: { display: 'grid', gap: '8px', borderTop: '1px dashed #e2e8f0', paddingTop: '12px' } },
         h('div', { style: { fontSize: '12px', fontWeight: '700', color: '#0f172a' } }, T('vd.set.page_integration', 'Page integration')),
@@ -1927,15 +2012,55 @@ export async function open(opts: SettingsOpts): Promise<void> {
   }
 
   function buildFormModePanel(): HTMLElement {
-    const displaySel = h('select', { class: 'mf-vd-input', onchange: (e: Event) => { current.displayMode = (e.target as HTMLSelectElement).value; rerender(); } }) as HTMLSelectElement;
-    for (const opt of [{ v: 'fixed', l: T('vd.set.mode_fixed', 'Fixed form') }, { v: 'popup', l: T('vd.set.mode_popup', 'Popup form') }]) {
+    // A module can render a form, or it can BE an admin surface (the inbox, the dashboard).
+    // Both live in this one dropdown because to an author they are the same decision: "what does
+    // this module show?". Surface choices are stored as moduleRole; the form choices as displayMode.
+    const ROLE_PREFIX = 'role:';
+    const currentRole = String(current.moduleRole || '').toLowerCase();
+    const currentValue = currentRole ? ROLE_PREFIX + currentRole : String(current.displayMode || 'fixed').toLowerCase();
+
+    const displaySel = h('select', {
+      class: 'mf-vd-input',
+      onchange: (e: Event) => {
+        const v = (e.target as HTMLSelectElement).value;
+        if (v.startsWith(ROLE_PREFIX)) {
+          current.moduleRole = v.slice(ROLE_PREFIX.length);
+          current.displayMode = 'fixed';       // a pinned surface is never a popup
+        } else {
+          current.moduleRole = '';
+          current.displayMode = v;
+        }
+        rerender();
+      },
+    }) as HTMLSelectElement;
+
+    const options = [
+      { v: 'fixed', l: T('vd.set.mode_fixed', 'Fixed form') },
+      { v: 'popup', l: T('vd.set.mode_popup', 'Popup form') },
+      { v: ROLE_PREFIX + 'myinbox', l: T('vd.set.mode_inbox', 'My Inbox (tasks assigned to the signed-in user)') },
+      { v: ROLE_PREFIX + 'dashboard', l: T('vd.set.mode_dashboard', 'Form Dashboard (submissions & forms)') },
+    ];
+    for (const opt of options) {
       const o = h('option', { value: opt.v }, opt.l);
-      if ((current.displayMode || 'fixed').toLowerCase() === opt.v) o.setAttribute('selected', '');
+      if (currentValue === opt.v) o.setAttribute('selected', '');
       displaySel.appendChild(o);
     }
+
     const panel = h('div', { class: 'mf-vd-settings-flat' },
       h('div', { class: 'mf-vd-prop-block' }, h('label', {}, T('vd.set.display_mode', 'Display mode')), displaySel)
     );
+
+    if (currentRole) {
+      // Say plainly what changes, because the module stops showing the form entirely.
+      panel.appendChild(h('div', {
+        class: 'mf-vd-note',
+        style: { marginTop: '10px', padding: '10px 12px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', fontSize: '12px', color: '#1e40af' },
+      }, T('vd.set.role_note',
+        currentRole === 'myinbox'
+          ? 'This module becomes the My Inbox surface: signed-in users see the approval tasks waiting for them here, not a form. Add ?mfconfig=1 to the page URL to reach these settings again.'
+          : 'This module becomes the Form Dashboard surface: forms and submissions are managed here, not a form. Add ?mfconfig=1 to the page URL to reach these settings again.')));
+      return panel;
+    }
 
     if ((current.displayMode || '').toLowerCase() === 'popup') {
       const triggerType = normalizePopupTriggerType(current.triggerType);
@@ -2246,6 +2371,18 @@ export async function open(opts: SettingsOpts): Promise<void> {
         return;
       }
       inheritDirty = false;
+    }
+    // [HideHeader v20260705] Persist the "hide form header" toggle to the FORM (partial patch, same
+    // Form/SaveTheme endpoint — leaves theme/css/inherit untouched when only HideHeader is sent).
+    if (hideHeaderDirty && current.formId && current.formId > 0) {
+      status.textContent = T('vd.set.saving_header', 'Saving header option…');
+      const hhRes = await saveFormHideHeader(current.formId, themeHideHeader);
+      if (!hhRes.ok) {
+        saveBtn.removeAttribute('disabled');
+        status.textContent = T('vd.set.header_save_failed', 'Header option save failed (HTTP {status}): {body}', { status: hhRes.status, body: hhRes.body || T('vd.set.unknown_error', 'unknown error') });
+        return;
+      }
+      hideHeaderDirty = false;
     }
     status.textContent = T('vd.set.saving', 'Saving…');
     const payload = editingSavedViewId > 0

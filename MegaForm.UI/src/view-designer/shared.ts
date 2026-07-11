@@ -41,6 +41,8 @@ export interface FieldDef {
 export interface ModuleConfig {
   moduleId: number;
   formId: number;
+  /** Pins the module to an admin surface: '' = ordinary form, 'myinbox', 'dashboard', … */
+  moduleRole?: string;
   viewType?: string;
   selectedViewKey?: string;
   viewConfig?: string;
@@ -745,6 +747,7 @@ function normalizeModuleConfigResponse(raw: any, moduleId: number, siteId?: numb
       viewConfig: String(cfg.viewConfig ?? cfg.ViewConfig ?? '{}'),
       cssClass: String(cfg.cssClass ?? cfg.CssClass ?? ''),
       moduleConfigured: !!(cfg.moduleConfigured ?? cfg.ModuleConfigured ?? (formId > 0)),
+      moduleRole: String(cfg.moduleRole ?? cfg.ModuleRole ?? ''),
       displayMode: String(cfg.displayMode ?? cfg.DisplayMode ?? 'fixed'),
       triggerType: String(cfg.triggerType ?? cfg.TriggerType ?? 'time_delay'),
       delaySeconds: toPosInt(cfg.delaySeconds ?? cfg.DelaySeconds ?? 5, 5),
@@ -1000,6 +1003,8 @@ export interface FormThemeLayoutState {
   // [B274] page-theme inheritance flags (form-level), surfaced so the Settings popup can show them.
   inheritType?: boolean;
   inheritColors?: boolean;
+  // [HideHeader v20260705] form-level "hide form header" toggle, surfaced in the Settings popup.
+  hideHeader?: boolean;
 }
 
 function sanitizeVarMap(raw: any): Record<string, string> {
@@ -1032,7 +1037,8 @@ export async function getFormThemeLayout(formId: number): Promise<FormThemeLayou
       settings.themeCssOverrides ?? settings.ThemeCssOverrides ?? settings.cssOverrides ?? settings.CssOverrides ?? {});
     const inheritType = (settings.inheritPageTypography ?? settings.InheritPageTypography) === true;
     const inheritColors = (settings.inheritPageColors ?? settings.InheritPageColors) === true;
-    return { ok: true, status: r.status, theme, overrides, inheritType, inheritColors };
+    const hideHeader = (settings.hideHeader ?? settings.HideHeader) === true;
+    return { ok: true, status: r.status, theme, overrides, inheritType, inheritColors, hideHeader };
   } catch {
     return empty(0);
   }
@@ -1079,6 +1085,30 @@ export async function saveFormInheritFlags(
   if (!formId || formId <= 0) return { ok: false, status: 0, body: 'formId required' };
   try {
     const payload = { FormId: formId, InheritPageTypography: !!inheritType, InheritPageColors: !!inheritColors };
+    const r = await fetch(withPlatformAuth(`${getApiBase()}/Form/SaveTheme`), {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: getPlatformHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(payload),
+    });
+    let body: string | undefined;
+    try { body = await r.text(); } catch { /* swallow */ }
+    return { ok: r.ok, status: r.status, body };
+  } catch (err) {
+    return { ok: false, status: 0, body: String(err) };
+  }
+}
+
+// [HideHeader v20260705] Persist ONLY the "hide form header" toggle to the FORM. Same partial-patch
+// Form/SaveTheme endpoint the inherit flags use — sending just HideHeader leaves theme/css/inherit
+// untouched. Mirrors settings.hideHeader written by the builder's Hide-Form-Header checkbox.
+export async function saveFormHideHeader(
+  formId: number,
+  hideHeader: boolean,
+): Promise<{ ok: boolean; status: number; body?: string }> {
+  if (!formId || formId <= 0) return { ok: false, status: 0, body: 'formId required' };
+  try {
+    const payload = { FormId: formId, HideHeader: !!hideHeader };
     const r = await fetch(withPlatformAuth(`${getApiBase()}/Form/SaveTheme`), {
       method: 'POST',
       credentials: 'same-origin',

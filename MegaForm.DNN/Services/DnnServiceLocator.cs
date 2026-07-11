@@ -43,6 +43,9 @@ namespace MegaForm.DNN.Services
         public IWorkflowRepository WorkflowRepo { get; }
         public IWorkflowEvaluator WorkflowEvaluator { get; }
         public IWorkflowEmailSender WorkflowEmail { get; }
+        /// <summary>Turns a candidate user name into a real DNN user, so an approval step can notify a
+        /// person and hand them the task instead of leaving it in a queue.</summary>
+        public IWorkflowPrincipalResolver WorkflowPrincipals { get; }
         public IWorkflowIdentityProvisioningService WorkflowIdentityProvisioning { get; }
         public IWorkflowEngine WorkflowRuntime { get; }
         public WorkflowTaskService WorkflowTasks { get; }
@@ -98,6 +101,7 @@ namespace MegaForm.DNN.Services
             WorkflowRepo = new DnnWorkflowRepository();
             WorkflowEvaluator = new WorkflowEvaluator();
             WorkflowEmail = new DnnWorkflowEmailSender(EmailSender);
+            WorkflowPrincipals = new DnnWorkflowPrincipalResolver();
             WorkflowIdentityProvisioning = new DnnWorkflowIdentityProvisioningService(ResolveCurrentPortalId());
 
             var connectionRegistry = new DnnConnectionRegistry(ReadPortalSetting);
@@ -110,7 +114,10 @@ namespace MegaForm.DNN.Services
                 new EndNodeExecutor(WorkflowEvaluator),
                 new CalculateNodeExecutor(WorkflowEvaluator),
                 new SetVariableNodeExecutor(WorkflowEvaluator),
-                new ApprovalNodeExecutor(WorkflowRepo, SubmissionRepo, LogService),
+                // [Workflow notify 2026-07-11] This used the 3-argument constructor, which leaves the
+                // email sender and the principal resolver null — so approval tasks were created and
+                // nobody was ever notified, and a step naming one person could not hand them the task.
+                new ApprovalNodeExecutor(WorkflowRepo, SubmissionRepo, WorkflowEvaluator, WorkflowEmail, WorkflowPrincipals, LogService),
                 new DatabaseNodeExecutor(WorkflowEvaluator, connectionRegistry),
                 new GoogleSheetsNodeExecutor(WorkflowEvaluator),
                 new SwitchNodeExecutor(),
@@ -121,7 +128,10 @@ namespace MegaForm.DNN.Services
             };
 
             WorkflowRuntime = new WorkflowEngineV2(WorkflowRepo, WorkflowEvaluator, executors, LogService);
-            WorkflowTasks = new WorkflowTaskService(WorkflowRepo, WorkflowRuntime, SubmissionRepo, LogService);
+            // Forwarding a task also emails the new assignee — but only through the 8-argument
+            // constructor. The 4-argument one left the sender null and forwarded in silence.
+            WorkflowTasks = new WorkflowTaskService(WorkflowRepo, WorkflowRuntime, SubmissionRepo,
+                WorkflowEvaluator, WorkflowEmail, WorkflowPrincipals, LogService);
             Permission = new PermissionService(Phase2Repo);
 
             // [B55 v20260603] DNN connection factory targets the same

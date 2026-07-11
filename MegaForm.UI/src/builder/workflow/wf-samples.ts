@@ -178,6 +178,32 @@ var BUILDERS: { [key: string]: (ctx: Ctx) => any } = {
     ]);
   },
 
+  // Names ONE person instead of a role. The engine hands the task straight to them — it lands in
+  // their inbox already assigned, with no Claim step, and they are emailed. Name a role (or several
+  // users) instead and the task goes back to being a queue anyone eligible can claim.
+  'assign-to-person': function (ctx) {
+    return def('n-start', [], [
+      trigger(ctx),
+      node('n-appr', 'Approval', 'Review by a named person', 300, 220, {
+        candidateRoles: [], candidateUsers: ['host'], dueInHours: 48,
+        approvedSubmissionStatus: 'approved', rejectedSubmissionStatus: 'rejected'
+      }),
+      email('n-ok', 'Tell them it is approved', 560, 130, ctx.emailToken,
+        'Your submission was approved',
+        '<p>Hi ' + ctx.nameToken + ',</p><p>Good news — your submission has been approved.</p>'),
+      email('n-no', 'Tell them it was declined', 560, 320, ctx.emailToken,
+        'Your submission was not approved',
+        '<p>Hi ' + ctx.nameToken + ',</p><p>Thank you for your time. Unfortunately we cannot proceed this time.</p>'),
+      endNode('n-end', 'Done', 820, 220)
+    ], [
+      edge('e1', 'n-start', 'n-appr'),
+      edge('e2', 'n-appr', 'n-ok', 'approved', 'Approved'),
+      edge('e3', 'n-appr', 'n-no', 'rejected', 'Rejected'),
+      edge('e4', 'n-ok', 'n-end'),
+      edge('e5', 'n-no', 'n-end')
+    ]);
+  },
+
   'two-step-approval': function (ctx) {
     return def('n-start', [], [
       trigger(ctx),
@@ -361,6 +387,17 @@ export var SAMPLE_PRESETS: Array<{ key: string; label: string; title: string; su
     ]
   },
   {
+    key: 'assign-to-person', label: 'Assign to one person',
+    title: 'Assign to one person',
+    summary: 'The task is handed to a named user: it arrives in their inbox already assigned, and they are emailed.',
+    details: [
+      'Trigger: any submission.',
+      'Put ONE username in "Candidate users" — the task is assigned to them directly, with no Claim step.',
+      'Name a role, or more than one user, and it becomes a queue that anyone eligible can claim instead.',
+      'The assignee is emailed when the task is created (an SMTP host must be configured).'
+    ]
+  },
+  {
     key: 'two-step-approval', label: 'Two-step approval',
     title: 'Two-step approval',
     summary: 'Manager approves first, then Finance. A rejection at either step ends the flow.',
@@ -368,6 +405,7 @@ export var SAMPLE_PRESETS: Array<{ key: string; label: string; title: string; su
       'Trigger: any submission.',
       'Branching: two sequential User Tasks, each with approved / rejected handles.',
       'Field dependencies: email field for the rejection notice, if present.',
+      'Each step assigns by ROLE, so anyone in that role can claim it. Put a single username in "Candidate users" on a step to hand it to that person instead.',
       'Classic shape for purchase requests, leave, and expense forms.'
     ]
   },
