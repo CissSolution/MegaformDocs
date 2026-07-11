@@ -1,0 +1,14 @@
+﻿SubmissionId|FormId|Status
+------------|------|------
+101|6|approved
+102|6|rejected
+103|7|pending_approval
+104|7|pending_approval
+SubmissionId|NodeLabel|Status|AssignedUserName|Outcome|AllowClaim|CreatedAt|CompletedAt
+------------|---------|------|----------------|-------|----------|---------|-----------
+101|Step 1 — Manager|completed|mgr.nam|approved|1|2026-07-11 14:24:20|2026-07-11 14:36:52
+101|Step 2 — Finance|completed|fin.lan|approved|1|2026-07-11 14:36:52|2026-07-11 14:38:28
+102|Step 1 — Manager|completed|mgr.nam|approved|1|2026-07-11 14:39:43|2026-07-11 14:40:17
+102|Step 2 — Finance|completed|fin.lan|rejected|1|2026-07-11 14:40:17|2026-07-11 14:40:55
+103|Finance direct — fin.lan|pending|fin.lan||1|2026-07-11 14:45:30|NULL
+104|Finance direct — fin.lan|pending|fin.lan||1|2026-07-11 14:45:51|NULL
