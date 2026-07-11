@@ -48,9 +48,38 @@ namespace MegaForm.Oqtane.Server.Data
         // the CRUD + runtime endpoints.
         public virtual DbSet<MegaForm.Oqtane.Server.Controllers.ReportDefinitionRow> ReportDefinitions { get; set; }
 
+        // [ATBE P1] Forms bound to a table in a CUSTOMER database, and the anchor rows that let a
+        // MegaForm submission id address one of that table's records. See ExternalTableStores.cs.
+        public virtual DbSet<ExternalBindingRow> ExternalBindings { get; set; }
+        public virtual DbSet<ExternalRowMapRow> ExternalRowMap { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<ExternalBindingRow>(e =>
+            {
+                e.ToTable("MF_ExternalBinding");
+                e.HasKey(x => x.FormId);
+                e.Property(x => x.FormId).ValueGeneratedNever();
+                e.Property(x => x.ConnectionKey).HasMaxLength(100);
+                e.Property(x => x.DatabaseType).HasMaxLength(50);
+                e.Property(x => x.SchemaName).HasMaxLength(128);
+                e.Property(x => x.TableName).HasMaxLength(128);
+                e.Property(x => x.ProfileHash).HasMaxLength(80);
+                e.Property(x => x.Mode).HasMaxLength(20);
+            });
+
+            modelBuilder.Entity<ExternalRowMapRow>(e =>
+            {
+                e.ToTable("MF_ExternalRowMap");
+                e.HasKey(x => x.SubmissionId);
+                e.Property(x => x.SubmissionId).ValueGeneratedNever();   // the anchor id comes from MF_Submissions
+                e.Property(x => x.RowKeyHash).HasMaxLength(64).IsRequired();
+                e.Property(x => x.RowKeyJson).HasMaxLength(900).IsRequired();
+                // The database, not application code, is what guarantees one anchor per customer row.
+                e.HasIndex(x => new { x.FormId, x.RowKeyHash }).IsUnique();
+            });
 
             modelBuilder.Entity<FormInfo>(e =>
             {

@@ -54,6 +54,31 @@ async function probe(connectionKey: string, schema: string, table: string): Prom
   return await r.json();
 }
 
+/** Oqtane validates POSTs with its OWN antiforgery header name — the ASP.NET default
+ *  (RequestVerificationToken) and the common X-XSRF-TOKEN are both rejected with a bare 400. */
+function antiforgeryHeaders(): Record<string, string> {
+  const input = document.querySelector('input[name="__RequestVerificationToken"]') as HTMLInputElement | null;
+  const token = input ? input.value : '';
+  const h: Record<string, string> = { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' };
+  if (token) {
+    h['X-XSRF-TOKEN-HEADER'] = token;   // Oqtane
+    h['RequestVerificationToken'] = token;   // DNN / Web
+  }
+  return h;
+}
+
+async function bind(connectionKey: string, schema: string, table: string): Promise<any> {
+  const r = await fetch(apiRoot() + 'Bind', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: antiforgeryHeaders(),
+    body: JSON.stringify({ connectionKey, schema, table, formId: 0, timeColumnConfirmed: true }),
+  });
+  const body = await r.json().catch(() => null);
+  if (!r.ok) throw new Error((body && (body.message || body.error)) || ('HTTP ' + r.status));
+  return body;
+}
+
 function flag(on: boolean, label: string): string {
   return '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;'
     + (on ? 'background:#dcfce7;color:#166534' : 'background:#f1f5f9;color:#94a3b8;text-decoration:line-through')
@@ -163,6 +188,32 @@ export async function openCapabilityCard(connectionKey: string, schema: string, 
     const p = await probe(connectionKey, schema, table);
     body.innerHTML = render(p);
     (window as any).__MF_LAST_CAPABILITY_PROFILE__ = p;
+
+    // Binding is offered only when the table is usable at all. A table the probe called
+    // "unsupported" has no honest read path, so there is nothing to bind.
+    if (p.capabilities && p.capabilities.mode !== 'unsupported') {
+      const bar = document.createElement('div');
+      bar.style.cssText = 'display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid #e2e8f0';
+      bar.innerHTML = '<button type="button" data-bind style="background:#0f766e;color:#fff;border:0;border-radius:8px;padding:8px 16px;font-weight:600;cursor:pointer">Tạo form đọc bảng này (chỉ đọc)</button>'
+        + '<span style="font-size:11px;color:#64748b">Dashboard sẽ đọc THẲNG từ bảng của bạn — không sao chép dữ liệu.</span>'
+        + '<span data-bind-msg style="font-size:12px"></span>';
+      body.appendChild(bar);
+
+      const btn = bar.querySelector('[data-bind]') as HTMLButtonElement;
+      const msg = bar.querySelector('[data-bind-msg]') as HTMLElement;
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        msg.textContent = 'Đang tạo…';
+        try {
+          const res = await bind(connectionKey, schema, table);
+          msg.innerHTML = '<b style="color:#059669">Xong.</b> Form #' + esc(res.formId) + ' · ' + esc(res.fields)
+            + ' trường · ' + Number(res.approxRows || 0).toLocaleString('vi-VN') + ' dòng. Mở Submissions để xem.';
+        } catch (e: any) {
+          msg.innerHTML = '<span style="color:#b91c1c">' + esc(e.message || e) + '</span>';
+          btn.disabled = false;
+        }
+      });
+    }
   } catch (err: any) {
     body.innerHTML = '<div style="color:#b91c1c">Không dò được bảng này (' + esc(err.message || err) + ').</div>';
   }

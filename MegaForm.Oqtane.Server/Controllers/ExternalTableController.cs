@@ -9,9 +9,11 @@ using Oqtane.Enums;
 using Oqtane.Infrastructure;
 using Oqtane.Shared;
 using MegaForm.Core.Interfaces;
+using MegaForm.Core.Models;
 using MegaForm.Core.Models.ExternalTable;
 using MegaForm.Core.Services.ExternalTable;
 using MegaForm.Core.Services.Subform;
+using Newtonsoft.Json;
 
 namespace MegaForm.Oqtane.Server.Controllers
 {
@@ -37,18 +39,25 @@ namespace MegaForm.Oqtane.Server.Controllers
     {
         private readonly IConnectionRegistry _registry;
         private readonly IConfiguration _config;
+        private readonly IFormRepository _forms;
+        private readonly IExternalBindingStore _bindings;
 
         public ExternalTableController(
             IConnectionRegistry registry,
             IConfiguration config,
+            IFormRepository forms,
+            IExternalBindingStore bindings,
             ILogManager logger,
             IHttpContextAccessor accessor) : base(logger, accessor)
         {
             _registry = registry;
             _config = config;
+            _forms = forms;
+            _bindings = bindings;
         }
 
         private bool IsAdmin => User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Host);
+        private int SiteId => AuthEntityId(EntityNames.Site);
 
         /// <summary>Connection keys an admin may point at. Configured server-side: a key the operator
         /// never listed can never be probed, whatever the client sends.</summary>
@@ -160,6 +169,112 @@ namespace MegaForm.Oqtane.Server.Controllers
                 _logger.Log(LogLevel.Error, this, LogFunction.Read, ex, "ExternalTable.Probe failed for {Schema}.{Table}", schema, table);
                 return StatusCode(500, new { error = "probe failed" });
             }
+        }
+
+        /// <summary>
+        /// Binds a form to the table: freezes the capability profile, generates the fallback schema,
+        /// and creates the form if one was not supplied.
+        ///
+        /// State-changing, so it is a POST and it goes through Oqtane's antiforgery validation — no
+        /// class-level exemption (rule 4). The binding is stored in its own server-owned table, never
+        /// in SchemaJson, which the builder posts back verbatim.
+        /// </summary>
+        [HttpPost("Bind")]
+        public IActionResult Bind([FromBody] BindBody body)
+        {
+            if (!IsAdmin) return Unauthorized();
+            if (body == null || string.IsNullOrWhiteSpace(body.Table))
+                return BadRequest(new { error = "table required" });
+            if (!IsAllowed(body.ConnectionKey))
+                return BadRequest(new { error = "connection not allowed" });
+
+            try
+            {
+                var probe = new TableCapabilityProbe(_registry);
+                var profile = probe.Probe(new ProbeRequest
+                {
+                    ConnectionKey = body.ConnectionKey,
+                    DatabaseType = DbTypeFor(body.ConnectionKey),
+                    Schema = body.Schema,
+                    Table = body.Table,
+                });
+
+                if (profile.Capabilities.Mode == "unsupported")
+                    return BadRequest(new
+                    {
+                        error = "table unsupported",
+                        reasons = profile.Capabilities.Reasons.Select(r => new { r.Code, r.Message, r.HowToFix }),
+                    });
+
+                var schema = ExternalSchemaBuilder.Build(profile);
+                var schemaJson = JsonConvert.SerializeObject(schema);
+
+                var formId = body.FormId;
+                if (formId <= 0)
+                {
+                    formId = _forms.SaveForm(new FormInfo
+                    {
+                        PortalId = SiteId,
+                        Title = string.IsNullOrWhiteSpace(body.Title)
+                            ? profile.Object.Schema + "." + profile.Object.Name
+                            : body.Title,
+                        SchemaJson = schemaJson,
+                        Status = "published",
+                    });
+                }
+                else
+                {
+                    var form = _forms.GetForm(formId);
+                    if (form == null) return NotFound(new { error = "form not found" });
+                    form.SchemaJson = schemaJson;
+                    _forms.SaveForm(form);
+                }
+
+                _bindings.Save(new ExternalBinding
+                {
+                    FormId = formId,
+                    ConnectionKey = body.ConnectionKey,
+                    DatabaseType = DbTypeFor(body.ConnectionKey),
+                    Schema = profile.Object.Schema,
+                    Table = profile.Object.Name,
+                    ProfileJson = JsonConvert.SerializeObject(profile),
+                    ProfileHash = profile.Hash,
+                    // P1 ships the read path. Even a table we could write to is bound read-only until
+                    // the writer (P3) exists — claiming otherwise would let a submit fail silently.
+                    Mode = "readonly",
+                    TimeColumnConfirmed = body.TimeColumnConfirmed,
+                });
+
+                return Ok(new
+                {
+                    formId,
+                    mode = "readonly",
+                    probedMode = profile.Capabilities.Mode,
+                    fields = schema.Fields.Count,
+                    approxRows = profile.Size.ApproxRows,
+                    hash = profile.Hash,
+                });
+            }
+            catch (ArgumentException)
+            {
+                return BadRequest(new { error = "invalid schema or table name" });
+            }
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Error, this, LogFunction.Create, ex, "ExternalTable.Bind failed for {Schema}.{Table}", body.Schema, body.Table);
+                return StatusCode(500, new { error = "bind failed" });
+            }
+        }
+
+        public class BindBody
+        {
+            public string ConnectionKey { get; set; }
+            public string Schema { get; set; }
+            public string Table { get; set; }
+            /// <summary>0 → create a new form for this table.</summary>
+            public int FormId { get; set; }
+            public string Title { get; set; }
+            public bool TimeColumnConfirmed { get; set; }
         }
 
         /// <summary>Drops the server-only connection facts. The client still learns the provider and

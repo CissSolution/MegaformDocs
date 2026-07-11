@@ -72,8 +72,21 @@ namespace MegaForm.Oqtane.Server.Services
 
             // Data repositories
             services.AddScoped<IFormRepository,       EfFormRepository>();
-            services.AddScoped<ISubmissionRepository, EfSubmissionRepository>();
             services.AddScoped<IDraftRepository,      EfDraftRepository>();
+
+            // [ATBE P1] A form bound to a table in a CUSTOMER database reads its records live from
+            // that table instead of from MF_Submissions. That routing is per form: the concrete
+            // EfSubmissionRepository still serves every ordinary form, and it is also what the anchor
+            // store writes through, so anchor creation cannot recurse back into the decorator.
+            services.AddScoped<EfSubmissionRepository>();
+            services.AddScoped<MegaForm.Core.Models.ExternalTable.IExternalBindingStore, OqtaneExternalBindingStore>();
+            services.AddScoped<MegaForm.Core.Models.ExternalTable.IExternalRowMapStore, OqtaneExternalRowMapStore>();
+            services.AddScoped<MegaForm.Core.Services.ExternalTable.ExternalTableQueryService>();
+            services.AddScoped<ISubmissionRepository>(sp => new MegaForm.Core.Services.ExternalTable.ExternalSubmissionRepository(
+                sp.GetRequiredService<EfSubmissionRepository>(),
+                sp.GetRequiredService<MegaForm.Core.Models.ExternalTable.IExternalBindingStore>(),
+                sp.GetRequiredService<MegaForm.Core.Models.ExternalTable.IExternalRowMapStore>(),
+                sp.GetRequiredService<MegaForm.Core.Services.ExternalTable.ExternalTableQueryService>()));
             // [SDK Files A v20260616] MF_Files repository — powers IMegaFormClient.Files
             // (GetBySubmission / OpenAsync). Rows are created post-submit by the controller
             // (PersistSubmissionFilesFailSoft). Without this, SDK file listings stay empty.

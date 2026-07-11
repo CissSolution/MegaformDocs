@@ -2443,7 +2443,16 @@ namespace MegaForm.Oqtane.Server.Controllers
         public IActionResult UpdateSubmissionData([FromQuery] int submissionId, [FromBody] Dictionary<string, object> data)
         {
             if (submissionId <= 0) return BadRequest(new { error = "submissionId is required" });
-            _subRepo.UpdateData(submissionId, System.Text.Json.JsonSerializer.Serialize(data ?? new Dictionary<string, object>()));
+            try
+            {
+                _subRepo.UpdateData(submissionId, System.Text.Json.JsonSerializer.Serialize(data ?? new Dictionary<string, object>()));
+            }
+            catch (NotSupportedException)
+            {
+                // [ATBE P1] The record lives in the customer's own table and this form is bound
+                // read-only. A 409 says so; a 500 would look like a bug.
+                return Conflict(new { error = "EXTERNAL_READONLY", message = "This record lives in an external table and cannot be edited from MegaForm yet." });
+            }
             return Ok(new { success = true });
         }
 
@@ -2477,7 +2486,16 @@ namespace MegaForm.Oqtane.Server.Controllers
         [Authorize(Policy = "EditModule")]
         public IActionResult DeleteSubmission(int submissionId)
         {
-            _subRepo.Delete(submissionId);
+            try
+            {
+                _subRepo.Delete(submissionId);
+            }
+            catch (NotSupportedException)
+            {
+                // [ATBE P1] Deleting would remove a row from the CUSTOMER's table. Not from a form
+                // that is bound read-only, and never as a side effect of a dashboard button.
+                return Conflict(new { error = "EXTERNAL_READONLY", message = "This record lives in an external table and cannot be deleted from MegaForm." });
+            }
             _logger.Log(LogLevel.Information, this, LogFunction.Delete,
                 "MegaForm Submission Deleted {SubmissionId}", submissionId);
             return Ok();
