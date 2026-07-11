@@ -106,3 +106,32 @@ Kèm 2 đăng ký DI thiếu:
 - Oqtane User API: tạo user OK nhưng `EmailConfirmed=0` → login fail im lặng nếu quên UPDATE.
 - Wizard "Create Form" tạo form **Draft** — form 6 phải publish riêng ("Publish and Return Dashboard").
 - `?formid=N` KHÔNG đè được module pinned `myinbox` — cần trang riêng cho form.
+
+---
+
+## BỔ SUNG (cùng phiên, sau khi owner test tay) — Forward 400 + nút Attach
+
+Owner test tay trên :5123 báo: `Workflow/Tasks/Forward` → 400, và "Attach chưa hoạt động". Điều tra + vá (commit `535fd4f`, đã deploy :5123 dưới AssetVersion **B395**):
+
+1. **Forward 400 = "Task is not open."** — 3-pane inbox render Forward/Comment CẢ trên task đã completed
+   (comment cũ trong code: "Forward/Comment/Export always"); server từ chối đúng → bấm là 400 chắc chắn.
+   Owner đã approve task SUB-104 ("aaa") rồi bấm Forward trên task đóng. Vá `view.ts` (chỉ render 5 action khi
+   task còn mở, Export luôn) + `drawer.ts` (điều kiện `allowForward || !completed` cũng hở y hệt).
+2. **Bug server thật kèm theo:** `ForwardTaskAsync` gọi notify SAU khi đã persist, KHÔNG guard → notify fail
+   là 400 "dối" (forward đã ghi DB rồi). Đã guard như UpdateStatus bên cạnh.
+3. **Forward tới username gõ sai = task biến mất** (gán verbatim cho user không tồn tại, chỉ admin thấy).
+   Giờ resolver validate TRƯỚC khi đụng task: username lạ → 400 rõ "User 'x' was not found."; username thật →
+   gán kèm UserId + DisplayName thật (verified live: forward SUB-103 → AssignedUserId=2, "Nam (Manager)").
+   Target dạng email giữ đường legacy (notifier gửi thẳng địa chỉ).
+4. **Nút Attach trong reply composer là mock-parity chết** từ đầu (`/* reply-attach not yet wired */`) — chưa
+   có kênh attachment nào trên task action (MF_WorkflowTaskActions chỉ có Comment text). Đã ẨN nút cho khỏi
+   đánh lừa; muốn làm thật cần thiết kế: bảng/cột attachment + endpoint upload (whitelist ext, nosniff) + audit.
+5. **Probe HTTP không cần browser** (tái dùng được): login qua FORM `/pages/login/` (POST form-encoded với
+   `__RequestVerificationToken` + username/password — `/api/user/login` KHÔNG set Identity cookie); rồi lấy token
+   MỚI sau login; POST kèm `X-XSRF-TOKEN-HEADER` + `?moduleid=&authmoduleid=&authsiteid=`. 400 rỗng = antiforgery;
+   403 rỗng + log "User null" = cookie identity chưa có.
+6. **Finding mở thêm:** canvas BPMN hiện "⚠ no role" trên node gán đích danh trong screenshot của owner dù
+   envelope DB còn nguyên `CandidateUsers:["fin.lan"]` và chip code có nhánh 👤 — nghi đường reopen/loader
+   (họ hàng bug reopen `dom.ts:2074` phiên trước). Chưa tái hiện được vì browser bị giữ — phiên sau soi loader.
+
+Trạng thái task QA sau nghịch tay + probe: SUB-103 task đã forward sang mgr.nam (claimed) — dữ liệu QA, không cần dọn.
