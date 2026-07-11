@@ -178,25 +178,46 @@ export function openWizardGallery(onPick: (t: WizardTemplate) => void, onImport:
 function stripBom(s: string): string { return s.charCodeAt(0) === 0xFEFF ? s.slice(1) : s; }
 
 /** Open a file picker for a MegaForm export .json and hand back a WizardTemplate. */
+/** Turns raw JSON text into a wizard template, or complains in the user's own words. */
+function loadFromText(text: string, onLoaded: (t: WizardTemplate) => void): void {
+  let raw: any;
+  try { raw = JSON.parse(stripBom(text)); }
+  catch { wizardToast(wt('wiz.import_invalid', 'That file is not valid JSON.'), 'error'); return; }
+  const t = wizardTemplateFromJson(raw);
+  if (!t) { wizardToast(wt('wiz.import_nofields', 'No form fields found in that JSON — export a form/template from MegaForm.'), 'error'); return; }
+  onLoaded(t);
+}
+
 /**
- * Opens the import dialog.
+ * One click, one file picker — the direct path, and the one people expect.
  *
- * This used to click a hidden <input type=file> for the user. That silently does nothing when the
- * browser is driven over the DevTools protocol — an automation/AI extension attached to the tab
- * intercepts file choosers, so the native dialog never appears and the button looks dead. The
- * dialog now offers a file input the user clicks themselves, drag-and-drop, AND paste, so the
- * import no longer depends on a native dialog appearing at all.
+ * It has a failure mode worth knowing about: when the browser is driven over the DevTools protocol
+ * (an automation or AI extension attached to the tab), file choosers are intercepted, the native
+ * dialog never appears, and this button looks dead with nothing in the console. That is what
+ * openImportJsonPaste is for — see the "paste JSON" link beside the button.
  */
 export function openImportJson(onLoaded: (t: WizardTemplate) => void): void {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json,application/json';
+  input.style.display = 'none';
+  input.addEventListener('change', () => {
+    const f = input.files && input.files[0];
+    if (!f) { cleanup(); return; }
+    const reader = new FileReader();
+    reader.onload = () => { cleanup(); loadFromText(String(reader.result || ''), onLoaded); };
+    reader.onerror = () => { cleanup(); wizardToast(wt('wiz.import_read_err', 'Could not read that file.'), 'error'); };
+    reader.readAsText(f);
+  });
+  function cleanup(): void { try { input.remove(); } catch { /* */ } }
+  document.body.appendChild(input);
+  input.click();
+}
+
+/** The escape hatch: choose a file, drop one, or paste the JSON — none of which needs a native dialog. */
+export function openImportJsonPaste(onLoaded: (t: WizardTemplate) => void): void {
   openImportJsonDialog({
     t: (key, fallback) => wt(key, fallback),
-    onText: (text) => {
-      let raw: any;
-      try { raw = JSON.parse(stripBom(text)); }
-      catch { wizardToast(wt('wiz.import_invalid', 'That file is not valid JSON.'), 'error'); return; }
-      const t = wizardTemplateFromJson(raw);
-      if (!t) { wizardToast(wt('wiz.import_nofields', 'No form fields found in that JSON — export a form/template from MegaForm.'), 'error'); return; }
-      onLoaded(t);
-    },
+    onText: (text) => loadFromText(text, onLoaded),
   });
 }
