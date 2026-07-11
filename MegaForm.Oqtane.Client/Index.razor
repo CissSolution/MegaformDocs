@@ -563,6 +563,29 @@
     <link rel="stylesheet" href="@(ModulePath())css/@(mfCss)?v=@OqtaneCoreAssetVersion" />
 }
 
+@* [RolePinBar 2026-07-11] Pinning a module to a surface (My Inbox / Dashboard / …) used to be a
+   one-way door: the pinned panel takes over the module, the settings dock is gone, and the only way
+   back was to know that ?mfconfig=1 exists. Nobody knows that. An admin who pinned a module to the
+   inbox by mistake could not unpin it.
+   So while the surface is role-driven, admins (and only admins — an ordinary visitor sees nothing
+   here) get a slim bar with the way back: Settings, plus the other surfaces. *@
+@if (_panelRoleDriven && _isAdmin && _panelMode != MfPanelMode.None)
+{
+    <style>
+        .mf-oq-rolebar{position:relative;z-index:10001;display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap;margin:0 0 10px;font-family:'Inter',system-ui,sans-serif;}
+        .mf-oq-rolebar .mf-oq-rolebadge{margin-right:auto;display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;background:#eef2ff;color:#4338ca;font-size:12px;font-weight:700;}
+        .mf-oq-rolebar a{border:1px solid #dbe4f0;background:#fff;color:#0f172a;border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:600;line-height:1;text-decoration:none;display:inline-flex;align-items:center;gap:7px;box-shadow:0 6px 16px rgba(15,23,42,.06);}
+        .mf-oq-rolebar a:hover{border-color:#c7d2fe;}
+        .mf-oq-rolebar a.is-primary{background:#0f172a;color:#fff;border-color:#0f172a;}
+    </style>
+    <div class="mf-oq-rolebar" data-mf-rolebar="RolePinBar v20260711-01">
+        <span class="mf-oq-rolebadge"><i class="fas fa-thumbtack"></i> @_moduleRole</span>
+        <a class="is-primary" href="@BuildRolePinConfigUrl()" data-enhance-nav="false" title="Change or remove the pinned surface"><i class="fas fa-cog"></i> Module settings</a>
+        <a href="@BuildPanelUrl("dashboard")" data-enhance-nav="false"><i class="fas fa-table-columns"></i> Dashboard</a>
+        <a href="@BuildPanelUrl("builder")" data-enhance-nav="false"><i class="fas fa-pen-ruler"></i> Builder</a>
+    </div>
+}
+
 @if (_panelMode == MfPanelMode.Dashboard)
 {
     <style>
@@ -2802,6 +2825,36 @@ private string BuildBuilderUrl()
 
         parts.Add("mfconfig=1");
         return parts.Count == 0 ? baseUrl : baseUrl + "?" + string.Join("&", parts);
+    }
+
+    /// <summary>
+    /// The way OUT of a pinned surface: the current page with ?mfconfig=1, which suppresses the
+    /// role pin for that one load so the settings panel is reachable again — and with any ?mfpanel=
+    /// dropped, so the escape works even when the admin arrived through a panel link.
+    ///
+    /// This URL already existed; nothing surfaced it. An admin who pinned a module to My Inbox had
+    /// no visible way back, because the pinned panel replaces the very dock that holds Settings.
+    /// </summary>
+    private string BuildRolePinConfigUrl()
+    {
+        var uri = NavigationManager?.Uri ?? "/";
+        var baseUrl = uri.Split('?')[0].Split('#')[0];
+        var parts = new List<string>();
+        var qIdx = uri.IndexOf('?');
+        if (qIdx >= 0)
+        {
+            var query = uri.Substring(qIdx + 1).Split('#')[0];
+            foreach (var part in query.Split('&', StringSplitOptions.RemoveEmptyEntries))
+            {
+                var key = part.Split('=', 2)[0];
+                if (key.Equals("mfconfig", StringComparison.OrdinalIgnoreCase)) continue;
+                if (key.Equals("mfpanel", StringComparison.OrdinalIgnoreCase)) continue;
+                parts.Add(part);
+            }
+        }
+
+        parts.Add("mfconfig=1");
+        return baseUrl + "?" + string.Join("&", parts);
     }
 
     private string BuildSettingsDockBootScript()
