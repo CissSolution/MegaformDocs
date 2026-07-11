@@ -46,8 +46,14 @@ DB cuối phiên: 101=`approved`, 102=`rejected`, 103/104=`pending_approval` (ta
    - `MegaForm.Core/Services/WorkflowTaskService.cs` — method public mới `HoldsTaskForSubmission(submissionId, actor)`
      (assignee mọi trạng thái, hoặc candidate khi task còn mở — tra MF_WorkflowTasks server-side, không tin client).
    - `MegaForm.Oqtane.Server/Controllers/MegaFormController.cs:CanViewSubmissionRow` gọi nó sau check IsAuthenticated.
-   ⚠️ **TWIN CHƯA VÁ**: DNN/Web/Umbraco có surface my-inbox tương tự — agent đang rà lúc viết handoff này,
-   kết quả ghi ở cuối file (nếu kịp) hoặc phiên sau tự rà `GetSubmission` gate của 3 twin, tái dùng `HoldsTaskForSubmission`.
+   **Twin đã rà đủ 3 (agent):**
+   - **DNN: DÍNH — ĐÃ VÁ** (`MegaForm.DNN/WebApi/MegaFormApiController.cs:CanViewSubmissionRow` ~1860 — gate copy
+     nguyên văn bản pre-fix Oqtane; mirror qua `DnnServiceLocator.Instance.WorkflowTasks.HoldsTaskForSubmission`, build 0 lỗi).
+   - **Web: KHÔNG dính** — `Submissions/Get` chỉ `[Authorize]`, KHÔNG có per-row gate nào → approver xem được.
+     ⚠️ Ngược lại là **quá thoáng**: Web không có RLS per-submission — mọi user authenticated xem được mọi submission.
+     Đây là hardening riêng cho phiên sau (khi thêm gate, nhớ kèm `HoldsTaskForSubmission`).
+   - **Umbraco: KHÔNG dính** — `GetSubmission` gate bằng đúng policy `MegaFormBackOffice` mà inbox cũng cần;
+     member front-end không vào được back-office nên kịch bản không tái hiện.
 
 4. **`full=1` không bind vào `bool` trên ASP.NET Core** → `AiTools/Knowledge` trên Oqtane trả `body=null` cho chat.ts
    (client gửi đúng `full=1` như DNN) → **prompt_rule của AI on-rails Oqtane xưa nay chỉ có summary**. Vá
@@ -79,7 +85,8 @@ Kèm 2 đăng ký DI thiếu:
    candidate act từ pending) nhưng UX "Claim để giữ chỗ" không truy cập được từ surface chính.
 3. **Fields render đôi** trong Details pane (mỗi field xuất hiện 2 lần trong text dump — soi `enrich.ts`/view render).
 4. **Badge "Assigned to Me = 1" khi task chưa claim** (đếm bucket sai ở đâu đó trong workboard mapping).
-5. Twin của fix #3 (xem trên).
+5. ~~Twin của fix #3~~ → ĐÃ RÀ + VÁ DNN trong phiên (xem mục fix #3). Còn lại: **Web thiếu RLS per-submission**
+   (mọi user authenticated xem được mọi submission qua `Submissions/Get` — quá thoáng, hardening phiên sau).
 6. Execution `failed` của SUB-102 là TRƯỚC khi đăng ký EmailNodeExecutor; sau fix chưa re-run nhánh rejected
    end-to-end (cần SMTP mới thấy mail thật — không chặn: status submission vẫn đúng vì task service set trước).
 

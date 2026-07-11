@@ -1861,6 +1861,14 @@ VALUES
         {
             if (IsAdminUser(actor)) return true;
             if (actor == null || !actor.IsAuthenticated) return false;
+            // [ApproverCanSee v20260711] Mirror of the Oqtane fix: an approver who holds a
+            // workflow task on THIS submission (assignee at any point, or candidate while it
+            // is still open) must be able to READ the record they are approving — the inbox
+            // detail calls Submissions/Get and was getting 403 for ordinary approvers.
+            // Membership is resolved server-side from the task tables.
+            if (submission != null &&
+                DnnServiceLocator.Instance.WorkflowTasks.HoldsTaskForSubmission(submission.SubmissionId, actor))
+                return true;
             if (!HasExplicitSubmissionViewRule(formId)) return false;
             var permissions = new PermissionService(new DnnPhase2RepositoryAdapter());
             return permissions.CanView(formId, actor) && permissions.CanViewSubmission(formId, submission, actor);
