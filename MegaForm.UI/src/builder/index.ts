@@ -120,6 +120,7 @@ import './composite-designer';
 //    (DataGrid) field auto-configured from a table, or drag individual
 //    column chips onto canvas to create matching input fields.
 import './db-tables-panel';
+import './external-table/capability-card';   // [ATBE P0] table capability probe card
 
 // ── 20. Razor — Unified Designer adapter + launcher (B39 step 2) ──
 //    Wraps the legacy Razor Studio recipe gallery as a UnifiedTabApi

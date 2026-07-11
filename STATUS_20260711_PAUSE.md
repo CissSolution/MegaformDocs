@@ -2,6 +2,15 @@
 
 Điểm dừng để resume. Chi tiết đầy đủ + 8 "bẫy": `CLAUDE_HANDOFF_20260710_NEXT_ROLE_BASED_VISIBILITY.md` §4.0–4.0.9.
 
+## CẬP NHẬT cuối phiên 2026-07-11 (đọc trước)
+
+- ✅ **ĐÃ COMMIT** role-visibility: `6680c90 feat(security): server-enforced role-based field visibility (3 platforms)` — 21 file (3 service Core mới, 2 file TS permissions, Access tab, controller 3 platform, seed AI, bump 1.7.101/B393). Chưa push. Phần uncommitted còn lại (~514 mục) là tích luỹ nhiều phiên trước, giữ nguyên.
+- ✅ **:5122 đã bật lại** (`Oqtane.Server.exe --urls http://localhost:5122`), serve `?v=20260711-B393`.
+- ✅ **NGHIÊN CỨU XONG** (3 agent): deliverable `Docs/RESEARCH_20260711_Form_On_Existing_SQL_Table_500k.md`.
+- ⭐ **PHẠM VI MỚI do khách chốt**: MegaForm **dùng tiếp DB QUAN HỆ có sẵn** (không import), phải **tự tìm khoá (PK/FK)**, và **giao thiết kế form cho AI on-rails** (model rẻ vẫn đúng) → thiết kế: `Docs/DESIGN_20260711_Enterprise_Form_On_Existing_SQL_Table.md` (3 tầng: SỰ THẬT deterministic → AI thiết kế → MÁY CHẤM + retry).
+- 🔴 **5 giả định SAI** (đã verify code): không có dòng nào đọc `sys.foreign_keys`; "AI phân tích FK" chỉ là prompt đoán tên cột; AI chỉ nhận TÊN BẢNG (không nhận cột); **Subform KHÔNG ghi vào bảng con** (`Subform/Save` không tồn tại); `widget-catalog.gen.ts` là dead code. Chi tiết §0 của DESIGN doc.
+- ▶️ **Việc kế tiếp**: xin **DDL thật của khách** (PK có phải int identity? cột file lưu path hay blob? bảng con nào?) rồi làm P0 (SqlRelationalSchemaReader + RelationGraphBuilder) → P1 (dashboard đọc 500k rows cũ).
+
 ## ĐÃ XONG (verified, chưa commit)
 
 1. **Role-based field visibility — server-enforced, 3 platform (Oqtane/DNN/Web).** Render projection (ẩn field trước khi

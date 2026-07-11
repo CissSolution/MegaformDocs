@@ -431,6 +431,7 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
         '<span class="mf-bdb-table-schema">' + escapeHtml(t.schema || 'dbo') + '</span>' +
         '<span class="mf-bdb-table-name">' + escapeHtml(t.name) + '</span>' +
         '<span class="mf-bdb-table-add-row">' +
+          '<button type="button" class="mf-bdb-table-ai" data-probe title="Dò năng lực: khoá, quyền, index, cột bắt buộc — MegaForm làm được gì với bảng này" style="background:#0f766e">⚡ Năng lực</button>' +
           '<button type="button" class="mf-bdb-table-ai" data-ai title="' + escapeAttr(S.buttonAddAiFormTitle) + '">' + S.buttonAddAiForm + '</button>' +
           '<button type="button" class="mf-bdb-table-add" data-add title="' + escapeAttr(S.buttonAddDataGridTitle) + '">' + S.buttonAddDataGrid + '</button>' +
         '</span>' +
@@ -446,9 +447,19 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
     const addBtn = rowEl.querySelector('[data-add]') as HTMLButtonElement;
     const aiBtn  = rowEl.querySelector('[data-ai]')  as HTMLButtonElement;
 
+    // [ATBE P0] Capability probe — what can MegaForm actually do with this table?
+    const probeBtn = rowEl.querySelector('[data-probe]') as HTMLButtonElement | null;
+    if (probeBtn) probeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = (window as any).__MF_OPEN_CAPABILITY_CARD__;
+      if (typeof open !== 'function') return;
+      const t = (tablesCache || []).find(x => x.name === tableName);
+      open('DashboardDatabase', (t && t.schema) || 'dbo', tableName);
+    });
+
     head.addEventListener('click', async (e) => {
       const tgt = e.target as HTMLElement;
-      if (tgt.hasAttribute('data-add') || tgt.hasAttribute('data-ai')) return;
+      if (tgt.hasAttribute('data-add') || tgt.hasAttribute('data-ai') || tgt.hasAttribute('data-probe')) return;
       const isOpen = rowEl.classList.toggle('is-open');
       if (isOpen && !colsEl.hasChildNodes()) {
         colsEl.innerHTML = '<span style="color:#94a3b8;font-size:11px">' + S.loadingColumns + '</span>';
