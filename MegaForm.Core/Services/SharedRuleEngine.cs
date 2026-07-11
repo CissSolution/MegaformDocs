@@ -79,12 +79,23 @@ namespace MegaForm.Core.Services
 
             context = context ?? new RuleEvaluationContext();
             var source = rule.SourceType;
-            var key = FirstNonEmpty(rule.Key, rule.FieldKey, rule.Field);
+            var key = GetRuleKey(rule);
             var target = rule.Value ?? string.Empty;
-            var op = rule.Operator.HasValue ? rule.Operator.Value : rule.Condition;
+            var op = ResolveOperator(rule);
             var values = ResolveValues(source, key, context);
 
             return Compare(values, target, op);
+        }
+
+        /// <summary>Key a rule reads from, honouring the historical key/fieldKey/field aliases.</summary>
+        internal static string GetRuleKey(ShowIfRule rule)
+        {
+            return rule == null ? string.Empty : FirstNonEmpty(rule.Key, rule.FieldKey, rule.Field);
+        }
+
+        internal static ConditionType ResolveOperator(ShowIfRule rule)
+        {
+            return rule.Operator.HasValue ? rule.Operator.Value : rule.Condition;
         }
 
         public static List<ShowIfRule> GetRules(ShowIfCondition showIf)
@@ -98,7 +109,7 @@ namespace MegaForm.Core.Services
             return (showIf.Rules ?? new List<ShowIfRule>()).Where(r => r != null).ToList();
         }
 
-        private static List<string> ResolveValues(RuleSourceType source, string key, RuleEvaluationContext context)
+        internal static List<string> ResolveValues(RuleSourceType source, string key, RuleEvaluationContext context)
         {
             switch (source)
             {
@@ -159,55 +170,84 @@ namespace MegaForm.Core.Services
 
         private static bool Compare(List<string> values, string target, ConditionType op)
         {
+            bool result;
+            // An operator we cannot evaluate stays permissive on this path: a schema typo must not
+            // make a field vanish from an existing public form. Access decisions do not use this
+            // path — RuleStaticEvaluator treats the same case as deny.
+            return TryCompare(values, target, op, out result) ? result : true;
+        }
+
+        /// <summary>
+        /// Compares resolved values against a target. Returns false when <paramref name="op"/> is not a
+        /// value we know how to evaluate (e.g. an out-of-range enum from hand-edited JSON), leaving the
+        /// caller to choose a permissive or fail-closed default rather than baking one in here.
+        /// </summary>
+        internal static bool TryCompare(List<string> values, string target, ConditionType op, out bool result)
+        {
             values = values ?? new List<string>();
             target = target ?? string.Empty;
+            result = false;
 
             switch (op)
             {
                 case ConditionType.IsEmpty:
-                    return values.Count == 0 || values.All(string.IsNullOrWhiteSpace);
+                    result = values.Count == 0 || values.All(string.IsNullOrWhiteSpace);
+                    return true;
 
                 case ConditionType.IsNotEmpty:
-                    return values.Any(v => !string.IsNullOrWhiteSpace(v));
+                    result = values.Any(v => !string.IsNullOrWhiteSpace(v));
+                    return true;
 
                 case ConditionType.Equals:
-                    return AnyTarget(values, target, true);
+                    result = AnyTarget(values, target, true);
+                    return true;
 
                 case ConditionType.NotEquals:
-                    return !AnyTarget(values, target, true);
+                    result = !AnyTarget(values, target, true);
+                    return true;
 
                 case ConditionType.Contains:
-                    return values.Contains("*", StringComparer.OrdinalIgnoreCase) || values.Any(v => Contains(v, target));
+                    result = values.Contains("*", StringComparer.OrdinalIgnoreCase) || values.Any(v => Contains(v, target));
+                    return true;
 
                 case ConditionType.NotContains:
-                    return !values.Any(v => Contains(v, target));
+                    result = !values.Any(v => Contains(v, target));
+                    return true;
 
                 case ConditionType.StartsWith:
-                    return values.Any(v => (v ?? string.Empty).StartsWith(target, StringComparison.OrdinalIgnoreCase));
+                    result = values.Any(v => (v ?? string.Empty).StartsWith(target, StringComparison.OrdinalIgnoreCase));
+                    return true;
 
                 case ConditionType.EndsWith:
-                    return values.Any(v => (v ?? string.Empty).EndsWith(target, StringComparison.OrdinalIgnoreCase));
+                    result = values.Any(v => (v ?? string.Empty).EndsWith(target, StringComparison.OrdinalIgnoreCase));
+                    return true;
 
                 case ConditionType.GreaterThan:
-                    return CompareNumbers(values, target, (a, b) => a > b);
+                    result = CompareNumbers(values, target, (a, b) => a > b);
+                    return true;
 
                 case ConditionType.LessThan:
-                    return CompareNumbers(values, target, (a, b) => a < b);
+                    result = CompareNumbers(values, target, (a, b) => a < b);
+                    return true;
 
                 case ConditionType.GreaterOrEqual:
-                    return CompareNumbers(values, target, (a, b) => a >= b);
+                    result = CompareNumbers(values, target, (a, b) => a >= b);
+                    return true;
 
                 case ConditionType.LessOrEqual:
-                    return CompareNumbers(values, target, (a, b) => a <= b);
+                    result = CompareNumbers(values, target, (a, b) => a <= b);
+                    return true;
 
                 case ConditionType.In:
-                    return AnyTarget(values, target, true);
+                    result = AnyTarget(values, target, true);
+                    return true;
 
                 case ConditionType.NotIn:
-                    return !AnyTarget(values, target, true);
+                    result = !AnyTarget(values, target, true);
+                    return true;
 
                 default:
-                    return true;
+                    return false;
             }
         }
 

@@ -4137,6 +4137,19 @@
       "Version": 3
     },
     {
+      "Id": 327,
+      "Slug": "role-visibility-is-access-control",
+      "Kind": "prompt_rule",
+      "Title": "Role/permission field visibility is ACCESS CONTROL — set it in the Access tab, never in form rules",
+      "Summary": "To show/hide a field by user role or permission, use the builder Access tab (Field visibility by role) or a field.showIf role rule; NEVER a client form rule.",
+      "Body": "When the user asks to show or hide a field based on the visitor's ROLE, PERMISSION, USERNAME, or login state (e.g. \"only HR sees Salary\", \"hide SSN from anonymous\", \"managers only\"), that is ACCESS CONTROL, not answer-driven logic. It is enforced SERVER-SIDE: the server removes a role-restricted field from the schema before it ever reaches the browser. Configure it in the builder Access tab under \"Field visibility by role\" (tick the roles that may see the field), or equivalently set the field's showIf to a role rule: showIf:{operator:\"And\",rules:[{sourceType:\"Role\",condition:\"In\",value:\"HR,Finance\"}]}. sourceType may be Role, Permission, User, or Query. DO NOT express role/permission/user conditions inside a client form rule (the settings.rules / when-then rule builder): those leaves are field-ANSWER conditions only ({field,operator,value}), they are NOT enforced server-side, and the rule validator rejects a leaf without a `field`. So: answer-driven show/hide (\"show Other-reason when choice = Other\") -> form rule; identity-driven show/hide (\"only role X\") -> Access tab / field.showIf role rule. If asked to hide by role via a form rule, redirect the user to the Access tab instead.",
+      "Tags": "prompt_rule,role,permission,access-control,visibility,showif,field-visibility,security,ai-on-rails",
+      "Examples": "",
+      "PortalId": null,
+      "Source": "megaform-builtin",
+      "Version": 1
+    },
+    {
       "Id": 322,
       "Slug": "tpl-americana-journey",
       "Kind": "template_guide",
@@ -4170,6 +4183,32 @@
       "Summary": "Calm, soft multi-step wellness / patient intake form with grouped health sections and a native step wizard.",
       "Body": "{\"guide_file\": \"wellness-patient-intake.guide.md\"}",
       "Tags": "premium,template-guide,health-intake",
+      "Examples": "",
+      "PortalId": null,
+      "Source": "megaform-builtin",
+      "Version": 1
+    },
+    {
+      "Id": 325,
+      "Slug": "form_pattern-boolean-yesno-field",
+      "Kind": "form_pattern",
+      "Title": "Boolean / Yes-No field (do NOT emit an option-less Checkbox)",
+      "Summary": "A yes/no toggle must render a control AND be usable as a rule trigger. An option-less Checkbox renders only a label.",
+      "Body": "{\"problem\":\"A yes/no toggle (e.g. 'traveling with family') must render a usable control and drive a show/hide rule.\",\"wrong\":\"type:'Checkbox' with NO options -> renders ONLY a label (no checkbox); cannot be toggled and any rule on it never fires.\",\"right_checkbox\":\"type:'Checkbox', options:[{value:'yes',label:'Yes, ...'}] -> renders one checkbox; when checked the collected value is ['yes'].\",\"right_radio\":\"type:'Radio', options:[{value:'yes',label:'Yes'},{value:'no',label:'No'}] -> single choice.\",\"condition_operator\":\"Single-option Checkbox trigger: use operator 'isNotEmpty' (checked = non-empty array). Radio/Select: use 'eq' with value 'yes'. NEVER use 'isTrue' on a Checkbox — its value is an array, never boolean true.\"}",
+      "Tags": "boolean,yesno,checkbox,radio,toggle,conditional,rules,trigger",
+      "Examples": "",
+      "PortalId": null,
+      "Source": "megaform-builtin",
+      "Version": 1
+    },
+    {
+      "Id": 326,
+      "Slug": "form_pattern-setvalue-formula-calc",
+      "Kind": "form_pattern",
+      "Title": "Auto-calculate a Number field with a setValue formula (= expr)",
+      "Summary": "Compute a value from other fields (e.g. total = people * nights * rate) via a rule setValue whose value starts with '='.",
+      "Body": "{\"problem\":\"Compute a numeric field from other fields, e.g. total_cost = number_of_people * nights * rate.\",\"wrong\":\"Inventing a function, e.g. setValue value:'computeCost(:a,:b)' -> NOT supported; it is written to the field literally.\",\"right\":\"Use action setValue with a formula string prefixed by '=': value:'= number_of_people * nights * 2000000'. The renderer substitutes each bare field-key with its numeric value and evaluates arithmetic (+ - * / % and parentheses).\",\"example_rule\":\"when: group/all [ number_of_people gt 0 AND nights gt 0 ]; then: setValue target=total_cost value='= number_of_people * nights * 2000000'\",\"notes\":\"Target (total_cost) is a Number field — mark it readonly. Rules live in settings.rules and execute live at public render (rule-engine wired into the active renderer 2026-07-06).\"}",
+      "Tags": "calculation,formula,setValue,total,price,compute,rules",
       "Examples": "",
       "PortalId": null,
       "Source": "megaform-builtin",

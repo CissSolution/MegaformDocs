@@ -5,8 +5,10 @@ export function createPermissionsTab(): string {
     '<div id="mf-tab-perms" class="mf-right-tab-content" style="display:none">' +
       '<div class="mf-settings-scroll" data-mf-builder-permissions-badge="' + BUILDER_PERMISSIONS_BADGE + '">' +
         '<div class="mf-prop-group">' +
-          '<h6><i class="fas fa-user-shield"></i> Permissions &amp; Access <span class="mf-submit-editor-badge">' + BUILDER_PERMISSIONS_BADGE + '</span></h6>' +
-          '<p style="font-size:11px;color:#64748b;margin:0 0 12px">Shared canonical access rules for submit, inbox, approvals, and record actions across Web, DNN, and Oqtane.</p>' +
+          '<h6 style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span><i class="fas fa-user-shield"></i> Permissions &amp; Access <span class="mf-submit-editor-badge">' + BUILDER_PERMISSIONS_BADGE + '</span></span>' +
+            '<button type="button" id="mf-perm-popup-btn" class="mf-builder-btn" style="font-size:11px;padding:4px 10px;cursor:pointer" title="Open the full matrix in a large popup so no columns are clipped"><i class="fas fa-expand"></i> Expand</button>' +
+          '</h6>' +
+          '<p style="font-size:11px;color:#64748b;margin:0 0 12px">Shared canonical access rules for submit, inbox, approvals, and record actions across Web, DNN, and Oqtane. The matrix is wide — use <strong>Expand</strong> to see every column.</p>' +
           '<div id="mf-perm-empty" style="padding:14px 12px;border:1px dashed #cbd5e1;border-radius:12px;background:#f8fafc;color:#64748b;font-size:12px">Save the form first to configure access rules.</div>' +
           '<div id="mf-perm-editor" style="display:none">' +
             '<div id="mf-perm-catalog-note" style="font-size:11px;color:#64748b;margin:0 0 10px"></div>' +
@@ -17,6 +19,10 @@ export function createPermissionsTab(): string {
             '</div>' +
             '<div id="mf-perm-status" style="font-size:11px;color:#64748b;margin-top:8px"></div>' +
           '</div>' +
+        '</div>' +
+        '<div class="mf-prop-group" id="mf-perm-fieldvis-group" style="display:none">' +
+          '<h6><i class="fas fa-eye"></i> Field visibility by role</h6>' +
+          '<div id="mf-perm-fieldvis"></div>' +
         '</div>' +
       '</div>' +
     '</div>'

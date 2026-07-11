@@ -27,7 +27,12 @@ namespace MegaForm.Core.Services
         private static readonly string[] ManagePermissionTypes = { "manage" };
         private static readonly string[] EffectiveManagePermissions = { "submit", "view", "edit", "delete", "export", "approve", "manage" };
         private static readonly string[] AllowListKeys = { "allow", "allowed", "include", "included", "visible", "canView", "canSubmit", "canEdit", "editable", "writable", "fields" };
-        private static readonly string[] DenyListKeys = { "deny", "denied", "exclude", "excluded", "hidden", "readOnly", "readonly", "blocked", "forbidden" };
+        private static readonly string[] DenyListKeys = { "deny", "denied", "exclude", "excluded", "hidden", "blocked", "forbidden" };
+
+        // Read-only used to live in DenyListKeys, which made "this role may look but not edit" mean the
+        // same thing as "this role may not see it". They differ on the edit path: a denied field is
+        // stripped, a read-only one keeps whatever the database already holds.
+        private static readonly string[] ReadOnlyListKeys = { "readOnly", "readonly", "read-only" };
 
         public static ServerSidePermissionEnforcementResult EnforceSubmit(
             FormInfo form,
@@ -35,7 +40,8 @@ namespace MegaForm.Core.Services
             Dictionary<string, object> data,
             UserContext actor,
             IEnumerable<FormPermissionInfo> permissions,
-            IDictionary<string, string> query = null)
+            IDictionary<string, string> query = null,
+            IDictionary<string, object> existingData = null)
         {
             var result = new ServerSidePermissionEnforcementResult
             {
@@ -76,7 +82,11 @@ namespace MegaForm.Core.Services
             StripContextuallyHiddenFields(schema, result.Data, context, result.RemovedFields);
 
             var fieldPolicy = BuildFieldPolicy(normalizedPermissions, actor);
-            ApplyFieldPolicy(schemaKeys, fieldPolicy, result.Data, context, result.RemovedFields);
+            // Field-scoped readOnlyIf role rules lock a field for the matching visitor. Fold the matches
+            // into the same read-only set the FieldRestrictions path uses, so a POST cannot overwrite a
+            // field the visitor may only view — the stored value is preserved on edit.
+            AddReadOnlyIfFields(schema, context, fieldPolicy);
+            ApplyFieldPolicy(schemaKeys, fieldPolicy, result.Data, context, result.RemovedFields, existingData);
 
             result.RuleContext = BuildRuleContext(result.Data, actor, normalizedPermissions, query, explicitSubmitRules.Count == 0);
             return result;
@@ -115,6 +125,25 @@ namespace MegaForm.Core.Services
 
             context.Permissions = BuildGrantedPermissionSet(permissions, context.User, implicitSubmitAllowed);
             return context;
+        }
+
+        /// <summary>
+        /// The rule context to evaluate a form's showIf conditions against *before* the visitor has
+        /// answered anything: roles, permissions and query string, with no field values. Built from the
+        /// same normalization the submit path uses, so a field withheld at render is also rejected on
+        /// submit and vice versa.
+        /// </summary>
+        public static RuleEvaluationContext BuildRenderContext(
+            int formId,
+            UserContext actor,
+            IEnumerable<FormPermissionInfo> permissions,
+            IDictionary<string, string> query = null)
+        {
+            var normalized = PermissionCatalogService.NormalizeRules(formId, permissions ?? Enumerable.Empty<FormPermissionInfo>());
+            var implicitSubmitAllowed = !normalized.Any(p => IsSubmitPermission(p.PermissionType));
+
+            return BuildRuleContext(new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase),
+                NormalizeActor(actor), normalized, query, implicitSubmitAllowed);
         }
 
         private static ISet<string> BuildGrantedPermissionSet(List<FormPermissionInfo> permissions, UserContext actor, bool implicitSubmitAllowed)
@@ -324,6 +353,56 @@ namespace MegaForm.Core.Services
             }
         }
 
+        /// <summary>
+        /// Field-level policy for <paramref name="actor"/> on <paramref name="formId"/>. The render path calls
+        /// this to decide what may leave the server at all; the submit path gets the same answer via
+        /// <see cref="EnforceSubmit"/>, so the two cannot drift.
+        /// </summary>
+        public static FieldAccessPolicy BuildFieldAccessPolicy(int formId, IEnumerable<FormPermissionInfo> permissions, UserContext actor)
+        {
+            var normalized = PermissionCatalogService.NormalizeRules(formId, permissions ?? Enumerable.Empty<FormPermissionInfo>());
+            return BuildFieldPolicy(normalized, NormalizeActor(actor));
+        }
+
+        /// <summary>
+        /// Adds every field whose <see cref="FormField.ReadOnlyIf"/> role/permission rule holds for the
+        /// current visitor to the policy's read-only set. Same evaluation the render projection uses, so
+        /// a field shown read-only cannot be written on submit.
+        /// </summary>
+        private static void AddReadOnlyIfFields(FormSchema schema, RuleEvaluationContext context, FieldAccessPolicy policy)
+        {
+            if (schema?.Fields == null || policy == null)
+                return;
+
+            foreach (var field in schema.Fields)
+                AddReadOnlyIfRecursive(field, context, policy);
+        }
+
+        private static void AddReadOnlyIfRecursive(FormField field, RuleEvaluationContext context, FieldAccessPolicy policy)
+        {
+            if (field == null)
+                return;
+
+            if (field.ReadOnlyIf != null
+                && RuleStaticEvaluator.IsAccessRule(field.ReadOnlyIf)
+                && RuleStaticEvaluator.Evaluate(field.ReadOnlyIf, context) == RuleTriState.True
+                && !string.IsNullOrWhiteSpace(field.Key))
+            {
+                policy.ReadOnlyFields.Add(field.Key.Trim());
+            }
+
+            if (field.Columns == null)
+                return;
+
+            foreach (var column in field.Columns)
+            {
+                if (column?.Fields == null)
+                    continue;
+                foreach (var child in column.Fields)
+                    AddReadOnlyIfRecursive(child, context, policy);
+            }
+        }
+
         private static FieldAccessPolicy BuildFieldPolicy(List<FormPermissionInfo> permissions, UserContext actor)
         {
             var policy = new FieldAccessPolicy();
@@ -346,17 +425,37 @@ namespace MegaForm.Core.Services
             FieldAccessPolicy policy,
             Dictionary<string, object> data,
             RuleEvaluationContext context,
-            List<string> removedFields)
+            List<string> removedFields,
+            IDictionary<string, object> existingData)
         {
             if (policy == null)
                 return;
 
             foreach (var key in schemaKeys.ToList())
             {
-                var denied = policy.DeniedFields.Contains(key);
-                var outsideAllowList = policy.HasAllowList && !policy.AllowedFields.Contains(key);
-                if (denied || outsideAllowList)
+                if (policy.IsHidden(key))
+                {
                     RemoveField(data, context, key, removedFields);
+                    continue;
+                }
+
+                if (!policy.IsReadOnly(key))
+                    continue;
+
+                // The actor may read this field but not write it. On an edit we restore what the database
+                // already holds, so a full-payload PUT cannot blank it; on a create there is nothing to
+                // restore, so the submitted value is dropped and the field takes its server-side default.
+                object previous;
+                if (existingData != null && existingData.TryGetValue(key, out previous))
+                {
+                    data[key] = previous;
+                    if (context?.Fields != null)
+                        context.Fields[key] = previous;
+                }
+                else
+                {
+                    RemoveField(data, context, key, removedFields);
+                }
             }
         }
 
@@ -414,6 +513,12 @@ namespace MegaForm.Core.Services
                 if (IsMetaRestrictionProperty(prop.Name))
                     continue;
 
+                if (IsReadOnlyListProperty(prop.Name))
+                {
+                    AddReadOnlyFields(policy, ReadFieldList(prop.Value));
+                    continue;
+                }
+
                 if (IsDenyListProperty(prop.Name))
                 {
                     AddDeniedFields(policy, ReadFieldList(prop.Value));
@@ -422,8 +527,9 @@ namespace MegaForm.Core.Services
 
                 if (IsAllowListProperty(prop.Name))
                 {
-                    if (string.Equals(prop.Name, "fields", StringComparison.OrdinalIgnoreCase)
-                        && (mode == "deny" || mode == "denied" || mode == "exclude" || mode == "hidden" || mode == "readonly" || mode == "readOnly"))
+                    if (string.Equals(prop.Name, "fields", StringComparison.OrdinalIgnoreCase) && IsReadOnlyMode(mode))
+                        AddReadOnlyFields(policy, ReadFieldList(prop.Value));
+                    else if (string.Equals(prop.Name, "fields", StringComparison.OrdinalIgnoreCase) && IsDenyMode(mode))
                         AddDeniedFields(policy, ReadFieldList(prop.Value));
                     else
                         AddAllowedFields(policy, ReadFieldList(prop.Value));
@@ -451,11 +557,23 @@ namespace MegaForm.Core.Services
             if (prop.Value.Type == JTokenType.String)
             {
                 var value = (prop.Value.Value<string>() ?? string.Empty).Trim().ToLowerInvariant();
-                if (value == "deny" || value == "denied" || value == "hidden" || value == "readonly" || value == "read-only" || value == "forbidden")
+                if (IsReadOnlyMode(value))
+                    AddReadOnlyFields(policy, new[] { prop.Name });
+                else if (IsDenyMode(value) || value == "forbidden")
                     AddDeniedFields(policy, new[] { prop.Name });
                 else if (value == "allow" || value == "allowed" || value == "visible" || value == "editable" || value == "writable")
                     AddAllowedFields(policy, new[] { prop.Name });
             }
+        }
+
+        private static bool IsReadOnlyMode(string value)
+        {
+            return value == "readonly" || value == "read-only";
+        }
+
+        private static bool IsDenyMode(string value)
+        {
+            return value == "deny" || value == "denied" || value == "exclude" || value == "hidden";
         }
 
         private static bool IsAllowListProperty(string name)
@@ -466,6 +584,11 @@ namespace MegaForm.Core.Services
         private static bool IsDenyListProperty(string name)
         {
             return DenyListKeys.Contains(name ?? string.Empty, StringComparer.OrdinalIgnoreCase);
+        }
+
+        private static bool IsReadOnlyListProperty(string name)
+        {
+            return ReadOnlyListKeys.Contains(name ?? string.Empty, StringComparer.OrdinalIgnoreCase);
         }
 
         private static bool IsMetaRestrictionProperty(string name)
@@ -526,11 +649,45 @@ namespace MegaForm.Core.Services
             }
         }
 
-        private sealed class FieldAccessPolicy
+        private static void AddReadOnlyFields(FieldAccessPolicy policy, IEnumerable<string> fields)
         {
-            public bool HasAllowList { get; set; }
-            public HashSet<string> AllowedFields { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            public HashSet<string> DeniedFields { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var field in fields ?? Enumerable.Empty<string>())
+            {
+                if (!string.IsNullOrWhiteSpace(field))
+                    policy.ReadOnlyFields.Add(field.Trim());
+            }
+        }
+    }
+
+    /// <summary>
+    /// What one actor may see and edit on one form, distilled from every MF_Permissions row that
+    /// matches them. Built once and consumed by both the render path (which withholds fields before
+    /// they reach the browser) and the submit path (which re-checks what came back).
+    /// </summary>
+    public sealed class FieldAccessPolicy
+    {
+        public bool HasAllowList { get; set; }
+        public HashSet<string> AllowedFields { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        public HashSet<string> DeniedFields { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        public HashSet<string> ReadOnlyFields { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        public bool IsEmpty
+        {
+            get { return !HasAllowList && DeniedFields.Count == 0 && ReadOnlyFields.Count == 0; }
+        }
+
+        /// <summary>An explicit deny wins, and an allow-list makes everything it omits a deny.</summary>
+        public bool IsHidden(string key)
+        {
+            if (string.IsNullOrWhiteSpace(key))
+                return false;
+
+            return DeniedFields.Contains(key) || (HasAllowList && !AllowedFields.Contains(key));
+        }
+
+        public bool IsReadOnly(string key)
+        {
+            return !string.IsNullOrWhiteSpace(key) && ReadOnlyFields.Contains(key);
         }
     }
 }

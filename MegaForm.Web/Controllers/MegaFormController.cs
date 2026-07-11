@@ -35,7 +35,7 @@ namespace MegaForm.Web.Controllers
 
     [ApiController]
     [Route("api/MegaForm")]
-    public class MegaFormController : ControllerBase
+    public partial class MegaFormController : ControllerBase
     {
         private const string PdfFormUploadWebBadge = "PdfFormUploadWeb v20260505-01";
         private readonly IFormRepository         _formRepo;
@@ -54,6 +54,7 @@ namespace MegaForm.Web.Controllers
         private readonly BuilderTemplateCatalogService _templateCatalog;
         private readonly PermissionCatalogService _permissionCatalog;
         private readonly IConnectionRegistry _connectionRegistry;
+        private readonly IFileRepository _fileRepo;
 
         public MegaFormController(
             IFormRepository        formRepo,
@@ -70,7 +71,8 @@ namespace MegaForm.Web.Controllers
             IDatabaseWorkflowMetadataService dbMetadata,
             BuilderTemplateCatalogService templateCatalog,
             PermissionCatalogService permissionCatalog,
-            IConnectionRegistry    connectionRegistry)
+            IConnectionRegistry    connectionRegistry,
+            IFileRepository        fileRepo)
         {
             _formRepo       = formRepo;
             _subRepo        = subRepo;
@@ -88,6 +90,7 @@ namespace MegaForm.Web.Controllers
             _dbMetadata     = dbMetadata;
             _templateCatalog = templateCatalog;
             _permissionCatalog = permissionCatalog;
+            _fileRepo       = fileRepo;
         }
 
         private string GetSelectedThemePresetKey(int moduleId)
@@ -144,6 +147,11 @@ namespace MegaForm.Web.Controllers
             return int.TryParse(user.FindFirstValue(ClaimTypes.NameIdentifier) ?? user.FindFirstValue("sub"), out userId)
                 ? userId
                 : -1;
+        }
+
+        private static bool IsAdmin(UserContext actor)
+        {
+            return actor != null && (actor.IsAdmin || actor.IsSuperUser);
         }
 
         // ── FORM ──────────────────────────────────────────────
@@ -235,6 +243,8 @@ namespace MegaForm.Web.Controllers
             string schemaCustomCss = body["SchemaCustomCss"]?.ToString();
             string themeId = body["ThemeId"]?.ToString();
             var cssOverrides = body["CssOverrides"] as JObject;
+            // [HideHeader v20260705] Optional form-header toggle (Settings popup). Partial patch: null = untouched.
+            bool? hideHeader = (body["HideHeader"] is JToken hh && hh.Type == JTokenType.Boolean) ? hh.Value<bool>() : (bool?)null;
             if (formId == 0) return BadRequest(new { error = "FormId required" });
 
             var form = _formRepo.GetForm(formId);
@@ -264,6 +274,7 @@ namespace MegaForm.Web.Controllers
                         schema["CustomCss"] = schemaCustomCss;
                     }
                     if (cssOverrides != null) settings["themeCssOverrides"] = cssOverrides;
+                    if (hideHeader.HasValue) { settings["hideHeader"] = hideHeader.Value; settings["HideHeader"] = hideHeader.Value; }
                     settingsForSave = settings;
                     form.SchemaJson = schema.ToString(Newtonsoft.Json.Formatting.None);
                 }
@@ -283,6 +294,7 @@ namespace MegaForm.Web.Controllers
                     settingsJson["CustomCss"] = schemaCustomCss;
                 }
                 if (cssOverrides != null) settingsJson["themeCssOverrides"] = cssOverrides;
+                if (hideHeader.HasValue) { settingsJson["hideHeader"] = hideHeader.Value; settingsJson["HideHeader"] = hideHeader.Value; }
                 form.SettingsJson = settingsJson.ToString(Newtonsoft.Json.Formatting.None);
             }
             catch { }
@@ -430,17 +442,19 @@ namespace MegaForm.Web.Controllers
         [HttpPost("BuilderTemplates/UploadJson")]
         [Authorize]
         [RequestSizeLimit(10 * 1024 * 1024)]
-        public IActionResult UploadBuilderTemplateJson([FromForm] IFormFile file, [FromForm] string templateJson = null)
+        [Consumes("multipart/form-data")]
+        public IActionResult UploadBuilderTemplateJson([FromForm] UploadBuilderTemplateRequest req)
         {
             try
             {
-                if (file == null && string.IsNullOrWhiteSpace(templateJson))
+                req ??= new UploadBuilderTemplateRequest();
+                if (req.File == null && string.IsNullOrWhiteSpace(req.TemplateJson))
                     return BadRequest(new { error = "Template file or JSON payload is required" });
 
-                var originalName = file?.FileName ?? "uploaded-template.json";
-                using (var stream = file?.OpenReadStream())
+                var originalName = req.File?.FileName ?? "uploaded-template.json";
+                using (var stream = req.File?.OpenReadStream())
                 {
-                    var result = _templateCatalog.SaveUploadedTemplate(originalName, stream, templateJson);
+                    var result = _templateCatalog.SaveUploadedTemplate(originalName, stream, req.TemplateJson);
                     if (!result.Success && result.ImportedTemplateCount <= 0)
                     {
                         return BadRequest(new { error = result.Message, warnings = result.Warnings, skippedTemplateCount = result.SkippedTemplateCount });
@@ -452,6 +466,12 @@ namespace MegaForm.Web.Controllers
             {
                 return BadRequest(new { error = ex.Message });
             }
+        }
+
+        public class UploadBuilderTemplateRequest
+        {
+            public IFormFile File { get; set; }
+            public string TemplateJson { get; set; }
         }
 
         [HttpPost("BuilderTemplates/DevBulkCreateForms")]
@@ -641,6 +661,34 @@ namespace MegaForm.Web.Controllers
 
         // ── PUBLIC SUBMIT ─────────────────────────────────────
 
+        /// <summary>
+        /// Removes fields the caller may not see before a schema leaves the server.
+        /// [AllowAnonymous-reachable] — resolves the actor itself rather than trusting the request, and
+        /// projects as anonymous when it cannot, which withholds more rather than less. Mirrors the
+        /// Oqtane and DNN twins; keep the three in step.
+        /// </summary>
+        private string ProjectSchemaForCurrentActor(int formId, string schemaJson)
+        {
+            if (string.IsNullOrWhiteSpace(schemaJson)) return schemaJson;
+
+            UserContext actor;
+            try { actor = GetCurrentUserContext(); }
+            catch { actor = new UserContext(); }
+
+            var permissions = SafeGetFormPermissions(formId);
+            var query = Request?.Query != null
+                ? Request.Query.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString(), StringComparer.OrdinalIgnoreCase)
+                : null;
+            return MegaForm.Core.Services.FormAccessProjection
+                .ProjectForActor(formId, schemaJson, actor, permissions, query).SchemaJson;
+        }
+
+        private List<FormPermissionInfo> SafeGetFormPermissions(int formId)
+        {
+            try { return (_phase2Repo.GetFormPermissions(formId) ?? Enumerable.Empty<FormPermissionInfo>()).ToList(); }
+            catch { return new List<FormPermissionInfo>(); }
+        }
+
         [HttpGet("Submit/Schema")]
         [AllowAnonymous]
         public IActionResult Schema(int formId)
@@ -649,12 +697,13 @@ namespace MegaForm.Web.Controllers
             if (form == null || !string.Equals(form.Status, "Published", StringComparison.OrdinalIgnoreCase)) return NotFound();
             var resolvedRenderModel = RenderModelResolver.Resolve(form.SchemaJson, form.SettingsJson, form.SubmitButtonText, form.SuccessMessage, form.RedirectUrl);
             var selectedPresetThemeKey = GetSelectedThemePresetKey(form.ModuleId);
+            var visibleSchemaJson = ProjectSchemaForCurrentActor(form.FormId, resolvedRenderModel.SchemaJson);
             return Ok(new
             {
                 formId           = form.FormId,
                 title            = form.Title,
                 description      = form.Description,
-                schema           = resolvedRenderModel.SchemaJson,
+                schema           = visibleSchemaJson,
                 submitButtonText = resolvedRenderModel.SubmitButtonText,
                 enableCaptcha    = form.EnableCaptcha,
                 enableSaveResume = form.EnableSaveResume,
@@ -687,7 +736,17 @@ namespace MegaForm.Web.Controllers
             if (!captchaCheck.Success)
                 return Ok(new { success = false, error = captchaCheck.ErrorMessage, validationErrors = captchaCheck.ValidationErrors });
 
-            var result = await _processor.ProcessAsync(formId, data, ip, ua, null, time);
+            // Pass the real actor so submit-time enforcement evaluates role/permission rules against this
+            // visitor's roles. Without it EnforceSubmit sees empty roles and strips role-gated fields for
+            // everyone, including the roles that are allowed to submit them.
+            UserContext actor = null;
+            try { actor = GetCurrentUserContext(); } catch { actor = null; }
+            var query = Request?.Query != null
+                ? Request.Query.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString(), StringComparer.OrdinalIgnoreCase)
+                : null;
+            int? actorUserId = actor != null && actor.UserId > 0 ? actor.UserId : (int?)null;
+
+            var result = await _processor.ProcessAsync(formId, data, ip, ua, actorUserId, time, actor, query);
             if (result.Success)
                 return Ok(new { success = true, submissionId = result.SubmissionId, successMessage = result.SuccessMessage, message = result.SuccessMessage, redirectUrl = result.RedirectUrl });
             return Ok(new { success = false, error = result.ErrorMessage, validationErrors = result.ValidationErrors });

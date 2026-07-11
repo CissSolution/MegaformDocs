@@ -282,6 +282,12 @@ namespace MegaForm.Oqtane.Server.Controllers
             dto.SettingsJson = resolved.SettingsJson;
             dto.ResolvedSchemaJson = resolved.SchemaJson;
             dto.ResolvedSettingsJson = resolved.SettingsJson;
+
+            // The builder needs every field, so this DTO stays unprojected. The flag tells the prerender
+            // path that this form's markup is actor-specific and must not be served from the shared
+            // SSR snapshot cache, whose key is (site, page, module, form) with no actor in it.
+            dto.HasAccessControl = MegaForm.Core.Services.FormAccessProjection.HasAccessControl(
+                resolved.SchemaJson, SafeGetFormPermissions(formId));
             dto.SubmitButtonText = resolved.SubmitButtonText;
             dto.SuccessMessage = resolved.SuccessMessage;
             dto.RedirectUrl = resolved.RedirectUrl;
@@ -434,6 +440,27 @@ namespace MegaForm.Oqtane.Server.Controllers
                 return BadRequest(new { error = "MegaForm Oqtane save requires a valid moduleId and siteId." });
             }
 
+            // [TrialTighten v20260706] Trial (unlicensed) sites can hold at most MaxTrialForms forms.
+            // Block creating a NEW form beyond the cap (editing/saving an existing form is always
+            // allowed). Production (license.lic="production") is unlimited. 402 Payment Required + a
+            // structured body so the builder can surface an "Upgrade" call-to-action.
+            if (dto.FormId <= 0 && MegaForm.Core.Services.LicenseService.IsTrial())
+            {
+                int existingForms;
+                try { existingForms = (_formRepo.ListForms(dto.SiteId, null, null, 0, MegaForm.Core.Services.LicenseService.MaxTrialForms + 5) ?? new System.Collections.Generic.List<MegaForm.Core.Models.FormInfo>()).Count; }
+                catch { existingForms = 0; }
+                if (existingForms >= MegaForm.Core.Services.LicenseService.MaxTrialForms)
+                {
+                    return StatusCode(402, new
+                    {
+                        error = "trial_form_limit",
+                        message = "Trial mode is limited to " + MegaForm.Core.Services.LicenseService.MaxTrialForms + " forms. Upgrade to create more.",
+                        limit = MegaForm.Core.Services.LicenseService.MaxTrialForms,
+                        upgradeUrl = MegaForm.Core.Services.LicenseService.UpgradeUrl
+                    });
+                }
+            }
+
             var entity = ToEntity(dto);
             entity.ModuleId = dto.ModuleId;
             entity.PortalId = dto.SiteId;
@@ -459,6 +486,15 @@ namespace MegaForm.Oqtane.Server.Controllers
                         UpsertSetting(EntityNames.Module, entity.ModuleId, "FormId",          formId.ToString(), false);
                         UpsertSetting(EntityNames.Module, entity.ModuleId, "MegaForm:ModuleConfigured", "true", false);
                         UpsertSetting(EntityNames.Module, entity.ModuleId, "ModuleConfigured",          "true", false);
+                        // [SaveFormCacheFix v20260706] Flush Oqtane's cached site-state so the ANONYMOUS
+                        // (logged-out) SSR path — which resolves the module→form binding from the cached
+                        // ModuleState.Settings (IMemoryCache), NOT the DB — immediately picks up the new
+                        // MegaForm:FormId. Without this, a rebind (e.g. form 2→3 via this auto-bind) leaves
+                        // anonymous visitors rendering the OLD form until an app restart, while admins (who
+                        // read fresh from the DB via GetModuleConfig) correctly see the new one — the exact
+                        // "same form shows differently logged-in vs logged-out" bug. Mirrors the invalidate
+                        // that SaveStyle/SaveModuleStyle/SaveModuleConfig already perform.
+                        InvalidateSiteSettingsCache();
                     }
                 }
                 catch (Exception ex)
@@ -655,6 +691,9 @@ namespace MegaForm.Oqtane.Server.Controllers
             // Null when the caller is only patching theme/css → those forms are left untouched.
             bool? inheritType = (body["InheritPageTypography"] is JToken it && it.Type == JTokenType.Boolean) ? it.Value<bool>() : (bool?)null;
             bool? inheritColors = (body["InheritPageColors"] is JToken ic && ic.Type == JTokenType.Boolean) ? ic.Value<bool>() : (bool?)null;
+            // [HideHeader v20260705] Optional form-header toggle (Settings popup → Theme & Layout).
+            // Null when the caller is only patching theme/css/inherit → left untouched (partial patch).
+            bool? hideHeader = (body["HideHeader"] is JToken hh && hh.Type == JTokenType.Boolean) ? hh.Value<bool>() : (bool?)null;
             if (formId == 0) return BadRequest(new { error = "FormId required" });
 
             var form = _formRepo.GetForm(formId);
@@ -685,6 +724,7 @@ namespace MegaForm.Oqtane.Server.Controllers
                     if (cssOverrides != null) settings["themeCssOverrides"] = cssOverrides;
                     if (inheritType.HasValue) { settings["inheritPageTypography"] = inheritType.Value; settings["InheritPageTypography"] = inheritType.Value; }
                     if (inheritColors.HasValue) { settings["inheritPageColors"] = inheritColors.Value; settings["InheritPageColors"] = inheritColors.Value; }
+                    if (hideHeader.HasValue) { settings["hideHeader"] = hideHeader.Value; settings["HideHeader"] = hideHeader.Value; }
                     form.SchemaJson = schema.ToString(Newtonsoft.Json.Formatting.None);
                 }
                 catch { }
@@ -705,6 +745,7 @@ namespace MegaForm.Oqtane.Server.Controllers
                 if (cssOverrides != null) settingsJson["themeCssOverrides"] = cssOverrides;
                 if (inheritType.HasValue) { settingsJson["inheritPageTypography"] = inheritType.Value; settingsJson["InheritPageTypography"] = inheritType.Value; }
                 if (inheritColors.HasValue) { settingsJson["inheritPageColors"] = inheritColors.Value; settingsJson["InheritPageColors"] = inheritColors.Value; }
+                if (hideHeader.HasValue) { settingsJson["hideHeader"] = hideHeader.Value; settingsJson["HideHeader"] = hideHeader.Value; }
                 form.SettingsJson = settingsJson.ToString(Newtonsoft.Json.Formatting.None);
             }
             catch { }
@@ -1384,6 +1425,50 @@ namespace MegaForm.Oqtane.Server.Controllers
             }
         }
 
+        private System.Collections.Generic.List<FormPermissionInfo> SafeGetFormPermissions(int formId)
+        {
+            try
+            {
+                return (_phase2Repo.GetFormPermissions(formId) ?? Enumerable.Empty<FormPermissionInfo>()).ToList();
+            }
+            catch
+            {
+                return new System.Collections.Generic.List<FormPermissionInfo>();
+            }
+        }
+
+        /// <summary>
+        /// Removes fields the caller is not allowed to see before a schema leaves the server.
+        /// [AllowAnonymous-reachable] — this runs on the public form path, so it must resolve the actor
+        /// itself rather than trust anything on the request. If the actor cannot be resolved we project
+        /// as anonymous, which withholds more, never less.
+        /// </summary>
+        private string ProjectSchemaForCurrentActor(int formId, string schemaJson)
+        {
+            if (string.IsNullOrWhiteSpace(schemaJson))
+                return schemaJson;
+
+            MegaForm.Core.Services.UserContext actor;
+            try
+            {
+                actor = GetCurrentUserContextWithRoles();
+            }
+            catch
+            {
+                actor = new MegaForm.Core.Services.UserContext();
+            }
+
+            var permissions = SafeGetFormPermissions(formId);
+            var query = Request.Query.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString(), StringComparer.OrdinalIgnoreCase);
+            var projection = MegaForm.Core.Services.FormAccessProjection.ProjectForActor(formId, schemaJson, actor, permissions, query);
+
+            if (projection.FailedClosed)
+                _logger.Log(LogLevel.Warning, this, LogFunction.Read,
+                    "MegaForm schema {FormId} could not be parsed for access projection; served an empty form.", formId);
+
+            return projection.SchemaJson;
+        }
+
         [HttpGet("Schema/{formId}")]
         public IActionResult Schema(int formId)
         {
@@ -1394,13 +1479,20 @@ namespace MegaForm.Oqtane.Server.Controllers
             var resolvedRenderModel = RenderModelResolver.Resolve(form.SchemaJson, form.SettingsJson, form.SubmitButtonText, form.SuccessMessage, form.RedirectUrl);
             var authModuleId = AuthEntityId(EntityNames.Module);
             var selectedPresetThemeKey = GetSelectedThemePresetKey(authModuleId > 0 ? authModuleId : form.ModuleId);
-            var assetManifest = BuildAssetManifest(resolvedRenderModel.SchemaJson ?? "{}");
+
+            // This endpoint is anonymous and the public render page rebuilds the whole form from what it
+            // returns, so a role-gated field left in here is readable with curl no matter what the HTML
+            // shows. Project after RenderModelResolver, never inside it: its resolved-schema cache is
+            // keyed on the schema content alone, so a per-actor result stored there would be served to
+            // the next visitor.
+            var visibleSchemaJson = ProjectSchemaForCurrentActor(form.FormId, resolvedRenderModel.SchemaJson);
+            var assetManifest = BuildAssetManifest(visibleSchemaJson ?? "{}");
             return Ok(new SchemaResponse
             {
                 FormId = form.FormId,
                 Title = form.Title,
                 Description = form.Description,
-                Schema = resolvedRenderModel.SchemaJson,
+                Schema = visibleSchemaJson,
                 SubmitButtonText = resolvedRenderModel.SubmitButtonText,
                 EnableCaptcha = form.EnableCaptcha,
                 EnableSaveResume = form.EnableSaveResume,
@@ -1431,6 +1523,24 @@ namespace MegaForm.Oqtane.Server.Controllers
         {
             if (request.FormId <= 0 || request.Data == null)
                 return BadRequest(new SubmitResponse { Success = false, Error = "formId and data required" });
+
+            // [TrialTighten v20260706] Trial (unlicensed) caps submissions per form at
+            // MaxTrialSubmissionsPerForm. Reject beyond the cap. Production (license.lic="production")
+            // is unlimited. The message shown to the public submitter is neutral (does not expose
+            // "trial"); the real reason is logged for the admin.
+            if (MegaForm.Core.Services.LicenseService.IsTrial())
+            {
+                int existingSubs;
+                try { existingSubs = _subRepo.List(request.FormId, null, null, null, null, 0, 1).TotalCount; }
+                catch { existingSubs = 0; }
+                if (existingSubs >= MegaForm.Core.Services.LicenseService.MaxTrialSubmissionsPerForm)
+                {
+                    _logger.Log(LogLevel.Warning, this, LogFunction.Other,
+                        "MegaForm trial submission cap reached for form {FormId} ({Count}/{Cap})",
+                        request.FormId, existingSubs, MegaForm.Core.Services.LicenseService.MaxTrialSubmissionsPerForm);
+                    return StatusCode(402, new SubmitResponse { Success = false, Error = "This form is not accepting new submissions right now." });
+                }
+            }
 
             // [SubmitJsonElementFix v20260508-01] ASP.NET Core's System.Text.Json
             // deserialises Dictionary<string, object> values as JsonElement structs.
@@ -2755,7 +2865,12 @@ namespace MegaForm.Oqtane.Server.Controllers
             var formId = (int?)body["formId"] ?? 0;
             if (moduleId <= 0 || formId <= 0) return BadRequest(new { error = "moduleId and formId required" });
             var style = new JObject();
-            foreach (var key in new[] { "theme", "themeCssOverrides", "customCss", "cssOverrides" })
+            // [ModuleStyleCustomCss v20260707] customCss is deliberately NOT accepted: the module
+            // snapshot used to copy the form's customCss and then overlay the stale copy over the
+            // form's live CSS on public render (image/CSS edits in the builder never showed on the
+            // page until the snapshot was deleted). The snapshot owns theme/var-map style only;
+            // customCss always comes fresh from the form.
+            foreach (var key in new[] { "theme", "themeCssOverrides", "cssOverrides" })
             {
                 var tok = body[key];
                 if (tok != null && tok.Type != JTokenType.Null) style[key] = tok;
@@ -2776,7 +2891,10 @@ namespace MegaForm.Oqtane.Server.Controllers
                     var sObj = string.IsNullOrWhiteSpace(resolved?.SchemaJson) ? null : JObject.Parse(resolved.SchemaJson)["settings"] as JObject;
                     if (sObj != null)
                     {
-                        foreach (var key in new[] { "theme", "themeCssOverrides", "customCss", "cssOverrides" })
+                        // [ModuleStyleCustomCss v20260707] Do NOT copy customCss into the snapshot —
+                        // a copied customCss goes stale the moment the form is edited and then wins
+                        // over the form's live CSS at render (see SaveModuleStyle note).
+                        foreach (var key in new[] { "theme", "themeCssOverrides", "cssOverrides" })
                         {
                             var tok = sObj[key] ?? sObj[char.ToUpperInvariant(key[0]) + key.Substring(1)];
                             if (tok != null && tok.Type != JTokenType.Null) style[key] = tok;

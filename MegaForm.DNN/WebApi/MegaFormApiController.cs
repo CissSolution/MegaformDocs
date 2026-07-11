@@ -326,6 +326,25 @@ namespace MegaForm.WebApi
             return null;
         }
 
+        private string ResolveWritableI18nFolder()
+        {
+            return HttpContext.Current.Server.MapPath(
+                "~/DesktopModules/MegaForm/Assets/js/builder/i18n");
+        }
+
+        private static string SafeLocale(string locale)
+        {
+            return new string((locale ?? string.Empty)
+                .Where(c => char.IsLetterOrDigit(c) || c == '-' || c == '_')
+                .ToArray());
+        }
+
+        private static JObject SafeParseI18n(string json)
+        {
+            try { return JObject.Parse(json); }
+            catch { return new JObject(); }
+        }
+
         [HttpGet]
         [ActionName("List")]
         public HttpResponseMessage List()
@@ -337,7 +356,8 @@ namespace MegaForm.WebApi
                     catch { return new string[0]; }
                 })
                 .Select(Path.GetFileNameWithoutExtension)
-                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Where(x => !string.IsNullOrWhiteSpace(x) &&
+                            !x.Equals("index", StringComparison.OrdinalIgnoreCase))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(x => x)
                 .ToList();
@@ -367,6 +387,95 @@ namespace MegaForm.WebApi
             var response = Request.CreateResponse(HttpStatusCode.OK);
             response.Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
             return response;
+        }
+
+        [HttpPost]
+        [ActionName("Create")]
+        public HttpResponseMessage Create(JObject body)
+        {
+            return Upsert(body);
+        }
+
+        [HttpPost]
+        [ActionName("Save")]
+        public HttpResponseMessage Save(JObject body)
+        {
+            return Upsert(body);
+        }
+
+        [HttpPost]
+        [ActionName("Import")]
+        public HttpResponseMessage Import(JObject body)
+        {
+            return Upsert(body);
+        }
+
+        private HttpResponseMessage Upsert(JObject body)
+        {
+            try
+            {
+                var locale = SafeLocale(body != null ? body.Value<string>("locale") : null);
+                if (string.IsNullOrEmpty(locale))
+                    return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "locale required" });
+                if (locale.Equals("en-US", StringComparison.OrdinalIgnoreCase))
+                    return Request.CreateResponse(HttpStatusCode.BadRequest,
+                        new { error = "en-US is the built-in source locale and cannot be overwritten." });
+                if (locale.Equals("index", StringComparison.OrdinalIgnoreCase))
+                    return Request.CreateResponse(HttpStatusCode.BadRequest,
+                        new { error = "'index' is the locale manifest and cannot be overwritten." });
+
+                var folder = ResolveWritableI18nFolder();
+                Directory.CreateDirectory(folder);
+                var path = Path.Combine(folder, locale + ".json");
+                JObject result;
+
+                var jsonText = body != null ? body.Value<string>("jsonText") : null;
+                if (!string.IsNullOrWhiteSpace(jsonText))
+                {
+                    try { result = JObject.Parse(jsonText); }
+                    catch
+                    {
+                        return Request.CreateResponse(HttpStatusCode.BadRequest,
+                            new { error = "jsonText is not valid JSON" });
+                    }
+                }
+                else if (body != null && body["entries"] is JObject entries)
+                {
+                    result = File.Exists(path)
+                        ? SafeParseI18n(File.ReadAllText(path, Encoding.UTF8))
+                        : new JObject();
+                    foreach (var item in entries.Properties())
+                        result[item.Name] = item.Value.Type == JTokenType.String
+                            ? item.Value.Value<string>()
+                            : item.Value.ToString(Formatting.None);
+                }
+                else
+                {
+                    if (File.Exists(path))
+                        return Request.CreateResponse(HttpStatusCode.OK,
+                            new { ok = true, locale, existed = true });
+
+                    var copyFrom = SafeLocale(body != null ? body.Value<string>("copyFrom") : null);
+                    var source = string.IsNullOrEmpty(copyFrom) ? null : ResolveI18nFile(copyFrom);
+                    result = !string.IsNullOrEmpty(source) && File.Exists(source)
+                        ? SafeParseI18n(File.ReadAllText(source, Encoding.UTF8))
+                        : new JObject();
+                }
+
+                File.WriteAllText(path, result.ToString(Formatting.Indented), new UTF8Encoding(false));
+                return Request.CreateResponse(HttpStatusCode.OK,
+                    new { ok = true, locale, count = result.Count });
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Request.CreateResponse(HttpStatusCode.InternalServerError,
+                    new { error = "Locale write failed: the DNN module folder is not writable." });
+            }
+            catch (Exception ex)
+            {
+                return Request.CreateResponse(HttpStatusCode.InternalServerError,
+                    new { error = "Locale write failed: " + ex.Message });
+            }
         }
     }
 
@@ -624,6 +733,8 @@ namespace MegaForm.WebApi
             string schemaCustomCss = body["SchemaCustomCss"]?.ToString();
             string themeId = body["ThemeId"]?.ToString();
             var cssOverrides = body["CssOverrides"] as JObject;
+            // [HideHeader v20260705] Optional form-header toggle (Settings popup). Partial patch: null = untouched.
+            bool? hideHeader = (body["HideHeader"] is JToken hh && hh.Type == JTokenType.Boolean) ? hh.Value<bool>() : (bool?)null;
             if (formId == 0) return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "FormId required" });
 
             var form = FormRepository.GetForm(formId);
@@ -652,6 +763,7 @@ namespace MegaForm.WebApi
                         schema["CustomCss"] = schemaCustomCss;
                     }
                     if (cssOverrides != null) settings["themeCssOverrides"] = cssOverrides;
+                    if (hideHeader.HasValue) { settings["hideHeader"] = hideHeader.Value; settings["HideHeader"] = hideHeader.Value; }
                     form.SchemaJson = schema.ToString(Newtonsoft.Json.Formatting.None);
                 }
                 catch { }
@@ -670,6 +782,7 @@ namespace MegaForm.WebApi
                     settingsJson["CustomCss"] = schemaCustomCss;
                 }
                 if (cssOverrides != null) settingsJson["themeCssOverrides"] = cssOverrides;
+                if (hideHeader.HasValue) { settingsJson["hideHeader"] = hideHeader.Value; settingsJson["HideHeader"] = hideHeader.Value; }
                 form.SettingsJson = settingsJson.ToString(Newtonsoft.Json.Formatting.None);
             }
             catch { }
@@ -980,8 +1093,12 @@ namespace MegaForm.WebApi
                 }
             }
 
+            // Enforce role/permission rules against this visitor when persisting. The processor runs
+            // EnforceSubmit internally; passing the actor makes it evaluate against real roles instead of
+            // stripping role-gated fields for everyone. (The preInsert hook and DatabaseInsert paths above
+            // still see the raw formData — those run admin-authored SQL and are a separate concern.)
             var result = await SubmissionController.ProcessSubmissionAsync(
-                formId, formData, ipAddress, userAgent, userId, submissionTime);
+                formId, formData, ipAddress, userAgent, userId, submissionTime, BuildCurrentActor(), BuildQueryDictionary());
 
             if (result.Success)
             {
@@ -1230,6 +1347,60 @@ VALUES
         [ActionName("FieldOptions")]
         public HttpResponseMessage FieldOptionsOptions() { return WithCors(Request.CreateResponse(HttpStatusCode.OK)); }
 
+        /// <summary>
+        /// Removes fields the caller may not see before a schema leaves the server.
+        /// [public-reachable] — resolves the actor from UserInfo rather than trusting the request, and
+        /// projects as anonymous on any failure, which withholds more rather than less. Mirrors the
+        /// Oqtane and Web twins; keep the three in step.
+        /// </summary>
+        /// <summary>Builds a UserContext from DNN's UserInfo; never throws (falls back to anonymous).</summary>
+        private UserContext BuildCurrentActor()
+        {
+            try
+            {
+                return new UserContext
+                {
+                    UserId = UserInfo != null ? UserInfo.UserID : 0,
+                    UserName = UserInfo != null ? (UserInfo.Username ?? string.Empty) : string.Empty,
+                    DisplayName = UserInfo != null ? (UserInfo.DisplayName ?? string.Empty) : string.Empty,
+                    Email = UserInfo != null ? (UserInfo.Email ?? string.Empty) : string.Empty,
+                    IsAuthenticated = UserInfo != null && UserInfo.UserID > 0,
+                    IsAdmin = UserInfo != null && UserInfo.IsInRole("Administrators"),
+                    IsSuperUser = UserInfo != null && UserInfo.IsSuperUser,
+                    Roles = UserInfo != null && UserInfo.Roles != null ? UserInfo.Roles.ToList() : new List<string>()
+                };
+            }
+            catch { return new UserContext(); }
+        }
+
+        private Dictionary<string, string> BuildQueryDictionary()
+        {
+            try
+            {
+                if (Request?.RequestUri == null) return null;
+                var nvc = System.Web.HttpUtility.ParseQueryString(Request.RequestUri.Query);
+                var query = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                foreach (string k in nvc.Keys)
+                    if (!string.IsNullOrEmpty(k)) query[k] = nvc[k];
+                return query;
+            }
+            catch { return null; }
+        }
+
+        private string ProjectSchemaForCurrentActor(int formId, string schemaJson)
+        {
+            if (string.IsNullOrWhiteSpace(schemaJson)) return schemaJson;
+
+            var actor = BuildCurrentActor();
+
+            List<FormPermissionInfo> permissions;
+            try { permissions = (FormRepository.GetFormPermissions(formId) ?? Enumerable.Empty<FormPermissionInfo>()).ToList(); }
+            catch { permissions = new List<FormPermissionInfo>(); }
+
+            return MegaForm.Core.Services.FormAccessProjection
+                .ProjectForActor(formId, schemaJson, actor, permissions, BuildQueryDictionary()).SchemaJson;
+        }
+
         /// <summary>GET api/Submit/Schema?formId=1 — Get form schema for rendering (public)</summary>
         [HttpGet]
         public HttpResponseMessage Schema(int formId)
@@ -1305,6 +1476,12 @@ VALUES
                 }
             }
             catch (Exception i18nEx) { i18nTrace = "outer:" + i18nEx.Message.Substring(0, Math.Min(40, i18nEx.Message.Length)); }
+
+            // Withhold fields the caller may not see before the schema leaves the server. This endpoint
+            // is public and the JS host rebuilds the form from what it returns, so a role-gated field left
+            // here is readable regardless of the rendered HTML. Runs after i18n so translation and
+            // projection both apply. Mirrors the Oqtane and Web twins.
+            schemaJsonOut = ProjectSchemaForCurrentActor(form.FormId, schemaJsonOut);
 
             return WithCors(Request.CreateResponse(HttpStatusCode.OK, new
             {

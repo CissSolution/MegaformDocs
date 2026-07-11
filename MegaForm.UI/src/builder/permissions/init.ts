@@ -2,6 +2,8 @@ import { fetchPermissionsCatalog, savePermissionsCatalog } from './api';
 import { BUILDER_PERMISSIONS_BADGE } from './badge';
 import { getPermissionsContext } from './context';
 import { renderPermissionsEditor } from './render';
+import { handleFieldVisibilityChange, renderFieldVisibility } from './field-visibility';
+import { openAccessPopup } from './access-popup';
 import type { PermissionCatalog, PermissionRule, PermissionsEditorState } from './types';
 
 const state: PermissionsEditorState = {
@@ -53,6 +55,16 @@ function setStatus(message: string, tone: 'muted' | 'success' | 'error'): void {
 function render(): void {
   state.formId = getPermissionsContext().formId;
   renderPermissionsEditor(state);
+  renderFieldVisibilitySection();
+}
+
+// The field-visibility table reads the live builder schema, so it is rendered separately from the
+// permission matrix (which is driven by the catalog) and refreshed on every render pass.
+function renderFieldVisibilitySection(): void {
+  const group = document.getElementById('mf-perm-fieldvis-group');
+  const show = state.formId > 0 && !!state.catalog;
+  if (group) group.style.display = show ? '' : 'none';
+  if (show) renderFieldVisibility(state.catalog);
 }
 
 async function ensureLoaded(force?: boolean): Promise<void> {
@@ -195,23 +207,37 @@ function bindUi(): void {
     ensureLoaded(false);
   });
 
-  panel.addEventListener('click', function (event) {
+  // Bound on `document`, not the panel: the Expand popup MOVES the editor nodes to a body-level modal,
+  // so their clicks/changes no longer bubble through #mf-tab-perms. The target checks below are specific
+  // enough (permission-only classes / ids) that a document-level listener is safe.
+  document.addEventListener('click', function (event) {
     const target = event.target as HTMLElement | null;
-    const saveBtn = target && target.closest('#mf-perm-save-btn');
-    if (saveBtn) {
+    if (!target) return;
+    if (target.closest('#mf-perm-popup-btn')) {
+      event.preventDefault();
+      openAccessPopup();
+      return;
+    }
+    if (target.closest('#mf-perm-save-btn')) {
       event.preventDefault();
       saveRules();
     }
   });
 
-  panel.addEventListener('change', function (event) {
-    const target = event.target as HTMLInputElement | null;
-    if (!target || target.type !== 'checkbox' || !target.classList.contains('mf-perm-cell')) return;
-    const perm = String(target.getAttribute('data-perm') || '');
-    const ptype = String(target.getAttribute('data-ptype') || '');
-    const pid = String(target.getAttribute('data-pid') || '');
+  document.addEventListener('change', function (event) {
+    const target = event.target as HTMLElement | null;
+    if (!target) return;
+
+    // Field-visibility role chips edit the schema directly (not the permission matrix).
+    if (handleFieldVisibilityChange(target, state.catalog)) return;
+
+    const cell = target as HTMLInputElement;
+    if (cell.type !== 'checkbox' || !cell.classList.contains('mf-perm-cell')) return;
+    const perm = String(cell.getAttribute('data-perm') || '');
+    const ptype = String(cell.getAttribute('data-ptype') || '');
+    const pid = String(cell.getAttribute('data-pid') || '');
     if (!perm || !ptype) return;
-    toggleCell(perm, ptype, pid, target.checked);
+    toggleCell(perm, ptype, pid, cell.checked);
   });
 }
 

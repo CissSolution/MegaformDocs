@@ -538,11 +538,9 @@ namespace MegaForm.DNN.Components
                         ClientResourceManager.RegisterScript(Page, ASSETS + "js/Sortable.min.js", 116);
                         ClientResourceManager.RegisterScript(Page, ASSETS + "js/megaform-dashboard.js" + V, 118);
                         ClientResourceManager.RegisterScript(Page, ASSETS + "js/megaform-submissions.js" + V, 119);
-                        // [SubmissionInboxRoute v20260518-04] Gmail-style cross-form Submission Inbox.
-                        // dnn-host's bootSubmissions() now prefers window.MFSubmissionInbox.mount() when
-                        // present; falling back to legacy initSubmissions ensures older packages still work.
-                        ClientResourceManager.RegisterStyleSheet(Page, ASSETS + "css/megaform-submission-inbox.css" + V, 217);
-                        ClientResourceManager.RegisterScript(Page, ASSETS + "js/megaform-submission-inbox.js" + V, 119);
+                        // The canonical SubmissionsShell is provided by megaform-submissions.js.
+                        // The retired Gmail-style submission-inbox bundle is intentionally not
+                        // registered: it is no longer built and caused a 404 on every admin page.
                         ClientResourceManager.RegisterScript(Page, ASSETS + "js/megaform-languages.js" + V, 119);
                         // [B200 2026-06-19] LAZY BUILDER ON RENDER PAGE — the ~1.2 MB builder
                         // bundle (+ the workflow ReactFlow bundle) is NO LONGER eager-loaded
@@ -699,7 +697,12 @@ namespace MegaForm.DNN.Components
             // Get form associated with this module / optional public live query
             int selectedFormId = 0;
             bool explicitRenderMode = false;
-            int requestedFormId = ResolveRequestedFormId();
+            // [FormIdGate 2026-06-26] The ?formid= URL override (render an ARBITRARY form by id on this
+            // module page) is ADMIN-ONLY — same rule as Oqtane Index.razor so all platforms behave
+            // identically. Non-admin/public visitors passing ?formid= are ignored and fall through to
+            // the module's CONFIGURED form below; they can't browse arbitrary forms (incl. drafts) by id.
+            var isAdminUser = UserInfo != null && (UserInfo.IsInRole("Administrators") || UserInfo.IsSuperUser);
+            int requestedFormId = isAdminUser ? ResolveRequestedFormId() : 0;
             int shellFormId = ResolveRequestedShellFormId();
             RequestedFormId = requestedFormId > 0 ? requestedFormId : shellFormId;
             bool rendererHostRequest = IsCurrentRendererHostPage && requestedFormId > 0;
@@ -709,7 +712,7 @@ namespace MegaForm.DNN.Components
             // → ThemeDesigner CSS not loaded, dnn-host not rendered, #mf-theme broken for admins.
             // When user is admin, ?formid= and ?mfFormId= are equivalent: both select a form.
             // Only non-admin public renderer-host requests need LiveRenderMode=true.
-            var isAdminUser = UserInfo.IsInRole("Administrators") || UserInfo.IsSuperUser;
+            // isAdminUser already computed above (FormIdGate); non-admins never reach here with requestedFormId>0.
             if (requestedFormId > 0)
             {
                 selectedFormId = requestedFormId;
@@ -850,6 +853,13 @@ namespace MegaForm.DNN.Components
             // TS field properties). Used in ASCX instead of JsonConvert.SerializeObject(Schema)
             // so unknown field props (e.g. optionColumns) survive C# deserialization. (CORE single trust)
             vm.ResolvedSchemaJson = resolvedRenderModel?.SchemaJson ?? form.SchemaJson ?? "{}";
+
+            // Withhold fields this visitor may not see before the schema is inlined into the page. The
+            // public renderer (FormView.ascx) rebuilds the whole form from ResolvedSchemaJson client-side,
+            // so a role-gated field left in it is readable in view-source regardless of the rendered HTML.
+            // The builder branch uses the raw SchemaJson (vm.SchemaJson), which is untouched, and holders
+            // of the manage permission are bypassed inside ProjectForActor, so an admin still sees all.
+            vm.ResolvedSchemaJson = ProjectSchemaForCurrentVisitor(form.FormId, vm.ResolvedSchemaJson);
             // [SingleSource v20260624-B260] Compose the form's FULL CSS into ONE block server-side
             // (preset + scoped theme vars + authored customCss + custom-shell compat + module
             // CssOverride last) — identical Core composer to the Oqtane host. DNN public JS then
@@ -1308,6 +1318,46 @@ namespace MegaForm.DNN.Components
                 return string.IsNullOrWhiteSpace(v) ? null : v.Trim();
             }
             catch { return null; }
+        }
+
+        /// <summary>
+        /// Removes fields the current visitor may not see from a schema before it is inlined into the
+        /// page. Resolves the actor from DNN's UserInfo; on any failure it projects as anonymous, which
+        /// withholds more rather than less. Mirrors the schema-endpoint twins on all three platforms.
+        /// </summary>
+        private string ProjectSchemaForCurrentVisitor(int formId, string schemaJson)
+        {
+            if (string.IsNullOrWhiteSpace(schemaJson)) return schemaJson;
+
+            try
+            {
+                var actor = new UserContext
+                {
+                    UserId = UserInfo != null ? UserInfo.UserID : 0,
+                    UserName = UserInfo != null ? (UserInfo.Username ?? string.Empty) : string.Empty,
+                    Email = UserInfo != null ? (UserInfo.Email ?? string.Empty) : string.Empty,
+                    IsAuthenticated = UserInfo != null && UserInfo.UserID > 0,
+                    IsAdmin = UserInfo != null && UserInfo.IsInRole("Administrators"),
+                    IsSuperUser = UserInfo != null && UserInfo.IsSuperUser,
+                    Roles = UserInfo != null && UserInfo.Roles != null ? UserInfo.Roles.ToList() : new List<string>()
+                };
+
+                var permissions = FormRepository.GetFormPermissions(formId) ?? Enumerable.Empty<FormPermissionInfo>();
+
+                var query = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                if (Request != null && Request.QueryString != null)
+                    foreach (string k in Request.QueryString.Keys)
+                        if (!string.IsNullOrEmpty(k)) query[k] = Request.QueryString[k];
+
+                return MegaForm.Core.Services.FormAccessProjection
+                    .ProjectForActor(formId, schemaJson, actor, permissions, query).SchemaJson;
+            }
+            catch
+            {
+                // Never let projection failure fall through to serving the unfiltered schema.
+                return MegaForm.Core.Services.FormAccessProjection
+                    .ProjectForActor(formId, schemaJson, new UserContext(), Enumerable.Empty<FormPermissionInfo>(), null).SchemaJson;
+            }
         }
 
         private static int CountFields(string schemaJson)

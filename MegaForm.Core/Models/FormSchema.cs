@@ -94,6 +94,13 @@ namespace MegaForm.Core.Models
         [JsonProperty("width")]
         public string Width { get; set; }  // e.g. "50%", "col-6"
 
+        // [PDF-grid / FlexGrid layout v20260629] Presentation-only 2-D grid placement for the
+        // opt-in flexgrid layout mode (settings.layoutMode == "flexgrid"). Fields STAY FLAT in
+        // schema.fields (so flattenFields/validation/submission/summary are untouched); this only
+        // controls where the field's .mf-flexgrid-item sits on the 12-col responsive grid.
+        [JsonProperty("placement")]
+        public FlexPlacementSet Placement { get; set; }
+
         [JsonProperty("order")]
         public int Order { get; set; }
 
@@ -111,6 +118,13 @@ namespace MegaForm.Core.Models
         // --- Conditional Logic ---
         [JsonProperty("showIf")]
         public ShowIfCondition ShowIf { get; set; }
+
+        // A role/permission rule that, when satisfied for the current visitor, makes this field
+        // read-only (visible but not editable). Same shape and engine as ShowIf; evaluated server-side
+        // by the render projection (sets readOnly) and re-checked on submit (writes are rejected — the
+        // stored value is preserved). Used by the Access tab's "Read-only for roles" control.
+        [JsonProperty("readOnlyIf")]
+        public ShowIfCondition ReadOnlyIf { get; set; }
 
         // --- File-specific settings ---
         [JsonProperty("fileSettings")]
@@ -316,8 +330,9 @@ namespace MegaForm.Core.Models
     }
 
     /// <summary>
-    /// Conditional show/hide — evaluated client-side.
-    /// Supports: equals, notEquals, contains, greaterThan, lessThan, isEmpty, isNotEmpty, and/or.
+    /// Conditional show/hide rules. The shared rule engine evaluates the same rule shape
+    /// client-side and server-side, including contextual sources such as roles,
+    /// permissions, query string values, and user properties.
     /// </summary>
     public class ShowIfCondition
     {
@@ -415,10 +430,45 @@ namespace MegaForm.Core.Models
         public ShowIfCondition ShowIf { get; set; }  // page-level skip logic
     }
 
+    // [PDF-grid / FlexGrid layout v20260629] Per-field 2-D grid placement on a responsive 12-col
+    // grid. Shape matches the runtime FlexGrid items' placement so the CSS-var mapping is identical.
+    public class FlexPlacementSet
+    {
+        [JsonProperty("lg")] public FlexPlacement Lg { get; set; }
+        [JsonProperty("md")] public FlexPlacement Md { get; set; }
+        [JsonProperty("sm")] public FlexPlacement Sm { get; set; }
+    }
+
+    public class FlexPlacement
+    {
+        [JsonProperty("x")] public int X { get; set; }   // 0-based column start
+        [JsonProperty("y")] public int Y { get; set; }   // 0-based row
+        [JsonProperty("w")] public int W { get; set; }   // column span
+        [JsonProperty("h")] public int H { get; set; }   // row span
+    }
+
+    public class FlexGridConfig
+    {
+        // [PDF-grid finer v20260629] Default 24 cols → ~4% snap granularity (vs 12 = ~8%) for a
+        // freer, PDF-like 2-D placement while staying responsive (the CSS media queries collapse to
+        // the sm placement on mobile). Per-form gridConfig.cols can still override.
+        [JsonProperty("cols")] public int Cols { get; set; } = 24;
+        [JsonProperty("rowHeight")] public int RowHeight { get; set; } = 64;
+        [JsonProperty("gap")] public int Gap { get; set; } = 12;
+    }
+
     public class FormSettings
     {
         [JsonProperty("multiPage")]
         public bool MultiPage { get; set; }
+
+        // [PDF-grid / FlexGrid layout v20260629] "flexgrid" opts a standard form into the 2-D grid
+        // presentation layer (else null/"flow" = today's flow+data-width behavior, unchanged).
+        [JsonProperty("layoutMode")]
+        public string LayoutMode { get; set; }
+
+        [JsonProperty("gridConfig")]
+        public FlexGridConfig GridConfig { get; set; }
 
         [JsonProperty("displayOnly")]
         public bool DisplayOnly { get; set; }
