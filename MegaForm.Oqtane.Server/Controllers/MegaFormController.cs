@@ -2534,7 +2534,13 @@ namespace MegaForm.Oqtane.Server.Controllers
             if (form == null) return NotFound(new { error = "Form not found." });
 
             var env = WorkflowEnvelope.ParseOrMigrate(form.WorkflowJson);
-            return Ok(new
+            // [WfGetStj v20260711] MUST be JsonOk, not Ok: WorkflowNode.Config is a
+            // Dictionary<string, object> whose values are Newtonsoft JTokens (ParseOrMigrate
+            // uses JsonConvert). Oqtane's System.Text.Json output serialized those JTokens
+            // to garbage, so the editor reopened every approval node with EMPTY config —
+            // "⚠ no role", blank candidate fields — while the DB envelope was intact.
+            // Same trap as [reference: STJ corrupts JObject]; JsonOk serializes via Newtonsoft.
+            return JsonOk(new
             {
                 formId,
                 hasWorkflow = env.DraftWorkflow != null || env.AppliedWorkflow != null,
