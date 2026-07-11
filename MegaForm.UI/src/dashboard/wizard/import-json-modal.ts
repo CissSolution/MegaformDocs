@@ -32,10 +32,13 @@ export function openImportJsonDialog(opts: ImportDialogOptions): void {
   // wizard instead — the exact failure this dialog exists to fix.
   back.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:24px';
 
+  // Every colour here is stated outright. The admin shell paints headings white for its own dark
+  // chrome, and a heading that inherits that rule lands white-on-white inside this panel — present
+  // in the DOM, invisible on screen.
   back.innerHTML = `
-    <div style="background:#fff;border-radius:14px;width:100%;max-width:560px;padding:20px 22px;box-shadow:0 24px 60px rgba(0,0,0,.35)">
+    <div style="background:#fff;color:#0f172a;border-radius:14px;width:100%;max-width:560px;padding:20px 22px;box-shadow:0 24px 60px rgba(0,0,0,.35)">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <h3 style="margin:0;font-size:16px">${esc(t('wiz.import.title', 'Import a MegaForm JSON'))}</h3>
+        <h3 style="margin:0;font-size:16px;color:#0f172a;font-weight:700">${esc(t('wiz.import.title', 'Import a MegaForm JSON'))}</h3>
         <button type="button" data-close style="border:0;background:#f1f5f9;border-radius:6px;padding:6px 12px;cursor:pointer">${esc(t('wiz.import.close', 'Close'))}</button>
       </div>
       <p style="margin:0 0 14px;font-size:12px;color:#64748b">${esc(t('wiz.import.hint', 'Choose a file, drop one here, or paste the JSON — whichever works for you.'))}</p>
