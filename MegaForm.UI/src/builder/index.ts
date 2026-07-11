@@ -121,6 +121,7 @@ import './composite-designer';
 //    column chips onto canvas to create matching input fields.
 import './db-tables-panel';
 import './external-table/capability-card';   // [ATBE P0] table capability probe card
+import './external-table/ai-designer';       // [ATBE P2] AI designs the form, the machine marks it
 
 // ── 20. Razor — Unified Designer adapter + launcher (B39 step 2) ──
 //    Wraps the legacy Razor Studio recipe gallery as a UnifiedTabApi

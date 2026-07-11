@@ -68,8 +68,14 @@ namespace MegaForm.Oqtane.Server.Controllers
             {
                 var id = AuthEntityId(EntityNames.Site);
                 if (id > 0) return id;
+
                 var claim = User?.FindFirst("siteid")?.Value ?? User?.FindFirst("SiteId")?.Value;
-                return int.TryParse(claim, out var pid) && pid > 0 ? pid : 0;
+                if (int.TryParse(claim, out var pid) && pid > 0) return pid;
+
+                // Same fallback the other admin endpoints use: the popup calls /api/MegaForm/... with
+                // no alias prefix, so site context has to come from the query string. The admin gate
+                // above still decides access — this only fills in which site, never whether.
+                return int.TryParse(Request?.Query["siteId"], out var qid) && qid > 0 ? qid : 0;
             }
         }
 
@@ -292,6 +298,153 @@ namespace MegaForm.Oqtane.Server.Controllers
             public int FormId { get; set; }
             public string Title { get; set; }
             public bool TimeColumnConfirmed { get; set; }
+        }
+
+        // ─────────────────────────────────────────────────────────────────────────────
+        //  AI ON RAILS  [ATBE P2]
+        //
+        //  The model never sees the database. It sees an envelope: the columns a human may fill in,
+        //  each with its verdict already decided (required? which widgets are legal?). It returns a
+        //  blueprint — labels, grouping, widget choices — and this server marks it. A blueprint that
+        //  invents a column, picks an unoffered widget, or drops a NOT NULL column is REJECTED with
+        //  reasons, which the client feeds back so the model can fix itself. Three failures and the
+        //  deterministic schema is used instead.
+        //
+        //  That is why a cheap model is safe here: it cannot be wrong in a way that reaches the
+        //  customer's table, because it never decides anything that has a right answer.
+        // ─────────────────────────────────────────────────────────────────────────────
+
+        [HttpGet("Envelope")]
+        public IActionResult Envelope([FromQuery] string connectionKey, [FromQuery] string schema, [FromQuery] string table)
+        {
+            if (!IsAdmin) return Unauthorized();
+            if (string.IsNullOrWhiteSpace(table)) return BadRequest(new { error = "table required" });
+            if (!IsAllowed(connectionKey)) return BadRequest(new { error = "connection not allowed" });
+
+            try
+            {
+                var profile = ProbeOf(connectionKey, schema, table);
+                if (profile.Capabilities.Mode == "unsupported")
+                    return BadRequest(new { error = "table unsupported" });
+
+                return Ok(AiDesignEnvelope.Build(profile));
+            }
+            catch (ArgumentException) { return BadRequest(new { error = "invalid schema or table name" }); }
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Error, this, LogFunction.Read, ex, "ExternalTable.Envelope failed for {Schema}.{Table}", schema, table);
+                return StatusCode(500, new { error = "envelope failed" });
+            }
+        }
+
+        [HttpPost("ApplyBlueprint")]
+        public IActionResult ApplyBlueprint([FromBody] BlueprintBody body)
+        {
+            if (!IsAdmin) return Unauthorized();
+            if (body == null || string.IsNullOrWhiteSpace(body.Table))
+                return BadRequest(new { error = "table required" });
+            if (!IsAllowed(body.ConnectionKey))
+                return BadRequest(new { error = "connection not allowed" });
+
+            try
+            {
+                // Re-probed, not taken from the request: a blueprint is only as safe as the picture it
+                // is checked against, and the client cannot be the source of that picture.
+                var profile = ProbeOf(body.ConnectionKey, body.Schema, body.Table);
+                if (profile.Capabilities.Mode == "unsupported")
+                    return BadRequest(new { error = "table unsupported" });
+
+                var validation = BlueprintValidator.Validate(body.Blueprint, profile);
+                if (!validation.Ok)
+                    return StatusCode(422, new
+                    {
+                        error = "blueprint rejected",
+                        errors = validation.Errors.Select(e => new { e.Code, e.Column, e.Message }),
+                    });
+
+                var formId = SaveBoundForm(body.FormId, body.Title, profile, validation.Schema);
+                if (formId <= 0) return BadRequest(new { error = "site context missing" });
+
+                return Ok(new
+                {
+                    formId,
+                    fields = validation.Schema.Fields.Count,
+                    mode = "readonly",
+                    probedMode = profile.Capabilities.Mode,
+                    source = "ai",
+                });
+            }
+            catch (ArgumentException) { return BadRequest(new { error = "invalid schema or table name" }); }
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Error, this, LogFunction.Create, ex, "ExternalTable.ApplyBlueprint failed for {Schema}.{Table}", body.Schema, body.Table);
+                return StatusCode(500, new { error = "apply failed" });
+            }
+        }
+
+        public class BlueprintBody
+        {
+            public string ConnectionKey { get; set; }
+            public string Schema { get; set; }
+            public string Table { get; set; }
+            public int FormId { get; set; }
+            public string Title { get; set; }
+            public BlueprintValidator.Blueprint Blueprint { get; set; }
+        }
+
+        private CapabilityProfile ProbeOf(string connectionKey, string schema, string table)
+        {
+            var probe = new TableCapabilityProbe(_registry);
+            return probe.Probe(new ProbeRequest
+            {
+                ConnectionKey = connectionKey,
+                DatabaseType = DbTypeFor(connectionKey),
+                Schema = schema,
+                Table = table,
+            });
+        }
+
+        /// <summary>Creates (or updates) the form for a table and freezes the binding. Shared by the
+        /// deterministic Bind and the AI path so both end up with exactly the same guarantees.</summary>
+        private int SaveBoundForm(int formId, string title, CapabilityProfile profile, FormSchema schema)
+        {
+            var schemaJson = JsonConvert.SerializeObject(schema);
+
+            if (formId <= 0)
+            {
+                var siteId = SiteId;
+                if (siteId <= 0) return 0;
+
+                formId = _forms.SaveForm(new FormInfo
+                {
+                    PortalId = siteId,
+                    Title = string.IsNullOrWhiteSpace(title) ? profile.Object.Schema + "." + profile.Object.Name : title,
+                    SchemaJson = schemaJson,
+                    Status = "Published",
+                });
+            }
+            else
+            {
+                var form = _forms.GetForm(formId);
+                if (form == null) return 0;
+                form.SchemaJson = schemaJson;
+                _forms.SaveForm(form);
+            }
+
+            _bindings.Save(new ExternalBinding
+            {
+                FormId = formId,
+                ConnectionKey = profile.Connection.ConnectionKey,
+                DatabaseType = DbTypeFor(profile.Connection.ConnectionKey),
+                Schema = profile.Object.Schema,
+                Table = profile.Object.Name,
+                ProfileJson = JsonConvert.SerializeObject(profile),
+                ProfileHash = profile.Hash,
+                Mode = "readonly",   // the writer lands in P3; until then a bound form only reads
+                TimeColumnConfirmed = true,
+            });
+
+            return formId;
         }
 
         /// <summary>Drops the server-only connection facts. The client still learns the provider and

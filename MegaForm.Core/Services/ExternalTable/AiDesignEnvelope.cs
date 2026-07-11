@@ -1,0 +1,114 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using MegaForm.Core.Models.ExternalTable;
+
+namespace MegaForm.Core.Services.ExternalTable
+{
+    /// <summary>
+    /// [ATBE P2] What the AI is allowed to see, and nothing else.
+    ///
+    /// The model never meets the database. It gets this envelope: the columns a human may fill in,
+    /// each with its verdict already computed (required? which widgets are legal? what enum values
+    /// exist?) and a closed list of choices. It gets no connection, no SQL, no key strategy and no
+    /// mode — those are decisions with a right answer, and a wrong one loses the customer's data.
+    ///
+    /// This is the whole reason a cheap model can be trusted here: it is not asked to discover
+    /// anything. It is asked to name things well and group them sensibly, inside a space the machine
+    /// already narrowed to only-correct options.
+    /// </summary>
+    public static class AiDesignEnvelope
+    {
+        public class Envelope
+        {
+            public string Table { get; set; }
+            public long ApproxRows { get; set; }
+            public string Mode { get; set; }
+            /// <summary>Columns the AI may place on the form. Anything absent from this list does not
+            /// exist as far as the model is concerned.</summary>
+            public List<EnvelopeColumn> Columns { get; set; } = new List<EnvelopeColumn>();
+            /// <summary>Columns the machine fills or the database generates — listed so the AI can see
+            /// they exist and NOT ask a user for them.</summary>
+            public List<string> HandledForYou { get; set; } = new List<string>();
+            public List<string> Rules { get; set; } = new List<string>();
+        }
+
+        public class EnvelopeColumn
+        {
+            public string Column { get; set; }
+            public string UiType { get; set; }
+            public bool Required { get; set; }
+            public int? MaxLength { get; set; }
+            public List<string> AllowedWidgets { get; set; }
+            public string SuggestedWidget { get; set; }
+            public List<string> EnumValues { get; set; }
+            public string Note { get; set; }
+        }
+
+        public static Envelope Build(CapabilityProfile p)
+        {
+            var env = new Envelope
+            {
+                Table = p.Object.Schema + "." + p.Object.Name,
+                ApproxRows = p.Size.ApproxRows,
+                Mode = p.Capabilities.Mode,
+            };
+
+            foreach (var c in p.Columns)
+            {
+                if (IsHandledForYou(c))
+                {
+                    env.HandledForYou.Add(c.Name + " (" + DescribeHandling(c) + ")");
+                    continue;
+                }
+                if (c.Unsupported || c.IsEncrypted) continue;
+
+                env.Columns.Add(new EnvelopeColumn
+                {
+                    Column = c.Name,
+                    UiType = c.UiType,
+                    Required = c.Required,
+                    MaxLength = c.MaxLengthChars,
+                    AllowedWidgets = c.AllowedWidgets != null && c.AllowedWidgets.Count > 0
+                        ? new List<string>(c.AllowedWidgets)
+                        : new List<string> { "Text" },
+                    SuggestedWidget = c.DefaultWidget,
+                    EnumValues = c.Enum != null && c.Enum.Values != null && c.Enum.Values.Count > 0
+                        ? new List<string>(c.Enum.Values)
+                        : null,
+                    Note = c.MachineNote,
+                });
+            }
+
+            env.Rules = new List<string>
+            {
+                "Use ONLY the columns listed. Do not invent, rename, merge or split a column.",
+                "Pick a widget only from that column's allowedWidgets. There is no other legal value.",
+                "Do not change 'required': it comes from the database, not from taste.",
+                "Do not write SQL, and do not mention tables, keys or connections.",
+                "Every column may appear at most once.",
+                "Write labels and help text for the people who will fill this in, in their language.",
+                "Group related columns into sections, and order them the way a human would fill them.",
+                "If something about the data is genuinely ambiguous, ask in questionsForAdmin — do not guess.",
+            };
+
+            return env;
+        }
+
+        private static bool IsHandledForYou(ColumnFacts c)
+        {
+            return c.IsIdentity || c.IsComputed || c.IsRowVersion
+                   || (c.IsPrimaryKey && (c.IsIdentity || c.HasDefault))
+                   || !string.IsNullOrEmpty(c.ServerFill);
+        }
+
+        private static string DescribeHandling(ColumnFacts c)
+        {
+            if (c.IsIdentity || (c.IsPrimaryKey && c.HasDefault)) return "key generated by the database";
+            if (c.IsComputed) return "computed by the database";
+            if (c.IsRowVersion) return "row version";
+            if (!string.IsNullOrEmpty(c.ServerFill)) return "filled by the server: " + c.ServerFill;
+            return "handled automatically";
+        }
+    }
+}

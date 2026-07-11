@@ -36,6 +36,14 @@ function esc(s: any): string {
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' } as any)[c]);
 }
 
+/** Oqtane resolves site context from the URL alias; an admin XHR has none, so the site id must
+ *  ride along or the server cannot tell which site a new form belongs to. */
+function siteQs(): string {
+  const pf = (window as any).__MF_PLATFORM__ || {};
+  const siteId = Number(pf.siteId || pf.SiteId || 0);
+  return siteId > 0 ? 'siteId=' + siteId : '';
+}
+
 function apiRoot(): string {
   const pf = (window as any).__MF_PLATFORM__ || {};
   const isOqtane = String(pf.platform || '').toLowerCase() === 'oqtane';
@@ -68,7 +76,7 @@ function antiforgeryHeaders(): Record<string, string> {
 }
 
 async function bind(connectionKey: string, schema: string, table: string): Promise<any> {
-  const r = await fetch(apiRoot() + 'Bind', {
+  const r = await fetch(apiRoot() + 'Bind?' + siteQs(), {
     method: 'POST',
     credentials: 'same-origin',
     headers: antiforgeryHeaders(),
@@ -193,14 +201,17 @@ export async function openCapabilityCard(connectionKey: string, schema: string, 
     // "unsupported" has no honest read path, so there is nothing to bind.
     if (p.capabilities && p.capabilities.mode !== 'unsupported') {
       const bar = document.createElement('div');
-      bar.style.cssText = 'display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid #e2e8f0';
-      bar.innerHTML = '<button type="button" data-bind style="background:#0f766e;color:#fff;border:0;border-radius:8px;padding:8px 16px;font-weight:600;cursor:pointer">Tạo form đọc bảng này (chỉ đọc)</button>'
-        + '<span style="font-size:11px;color:#64748b">Dashboard sẽ đọc THẲNG từ bảng của bạn — không sao chép dữ liệu.</span>'
-        + '<span data-bind-msg style="font-size:12px"></span>';
+      bar.style.cssText = 'display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid #e2e8f0;flex-wrap:wrap';
+      bar.innerHTML = '<button type="button" data-bind style="background:#0f766e;color:#fff;border:0;border-radius:8px;padding:8px 16px;font-weight:600;cursor:pointer">Tạo form (máy sinh)</button>'
+        + '<button type="button" data-ai style="background:#7c3aed;color:#fff;border:0;border-radius:8px;padding:8px 16px;font-weight:600;cursor:pointer">✨ Thiết kế bằng AI</button>'
+        + '<span style="font-size:11px;color:#64748b">Dashboard đọc THẲNG bảng của bạn — không sao chép dữ liệu.</span>'
+        + '<div data-bind-msg style="font-size:12px;flex-basis:100%"></div>';
       body.appendChild(bar);
 
       const btn = bar.querySelector('[data-bind]') as HTMLButtonElement;
+      const aiBtn = bar.querySelector('[data-ai]') as HTMLButtonElement;
       const msg = bar.querySelector('[data-bind-msg]') as HTMLElement;
+
       btn.addEventListener('click', async () => {
         btn.disabled = true;
         msg.textContent = 'Đang tạo…';
@@ -211,6 +222,33 @@ export async function openCapabilityCard(connectionKey: string, schema: string, 
         } catch (e: any) {
           msg.innerHTML = '<span style="color:#b91c1c">' + esc(e.message || e) + '</span>';
           btn.disabled = false;
+        }
+      });
+
+      aiBtn.addEventListener('click', async () => {
+        const design = (window as any).__MF_DESIGN_TABLE_WITH_AI__;
+        if (typeof design !== 'function') { msg.textContent = 'AI designer chưa nạp.'; return; }
+        aiBtn.disabled = true; btn.disabled = true;
+
+        try {
+          const res = await design(connectionKey, schema, table, (s: string) => { msg.textContent = s; });
+
+          // The rejected attempts are shown, not swallowed: an admin who sees WHAT the machine
+          // refused can judge whether to trust the result — and it is the proof the rails work.
+          const rej = (res.rejections || []).map((list: string[], i: number) =>
+            '<div style="margin-top:4px"><b>Lần ' + (i + 1) + ' bị trả lại:</b><br>' + list.map(esc).join('<br>') + '</div>').join('');
+
+          msg.innerHTML = (res.source === 'ai'
+              ? '<b style="color:#059669">AI thiết kế xong</b> sau ' + esc(res.attempts) + ' lần (máy đã chấm đạt).'
+              : '<b style="color:#b45309">Dùng bản máy sinh</b> — AI không qua được validator.')
+            + ' Form #' + esc(res.formId) + ' · ' + esc(res.fields) + ' trường.'
+            + (res.questions && res.questions.length
+                ? '<div style="margin-top:6px;color:#7c3aed"><b>AI hỏi bạn:</b> ' + res.questions.map(esc).join(' · ') + '</div>' : '')
+            + (rej ? '<div style="margin-top:6px;color:#64748b;font-size:11px">' + rej + '</div>' : '');
+        } catch (e: any) {
+          msg.innerHTML = '<span style="color:#b91c1c">' + esc(e.message || e) + '</span>';
+        } finally {
+          aiBtn.disabled = false; btn.disabled = false;
         }
       });
     }
