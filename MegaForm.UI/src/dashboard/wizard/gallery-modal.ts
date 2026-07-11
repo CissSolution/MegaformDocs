@@ -6,7 +6,9 @@
 // Reuses the wizard's already-loaded catalog (templates.ts → GET BuilderTemplates/List, the
 // SAME catalog the builder gallery uses) so this stays inside the dashboard bundle — no
 // cross-bundle coupling with builder/gallery.ts.
+import { openImportJsonDialog } from './import-json-modal';
 import { h, icon, wt, wizardToast } from './ui';
+import { isTrialMode, showTrialUpgrade, trialLockBadge } from '@shared/trial';
 import { WizardTemplate, templatesState, loadTemplates, wizardTemplateFromJson } from './templates';
 import { buildTemplateThumbnail, openTemplatePreview, ensurePreviewCss } from './gallery-preview';
 
@@ -130,23 +132,28 @@ export function openWizardGallery(onPick: (t: WizardTemplate) => void, onImport:
     if (!items.length) { grid.appendChild(h('div', { class: 'mfwg-empty' }, wt('wiz.gallery.no_match', 'No templates match your search.'))); return; }
     const previewLabel = wt('wiz.gallery.preview', 'Preview');
     items.forEach((t) => {
-      const pick = () => { close(); onPick(t); };
+      // [TrialTighten v20260706] Premium templates are locked in trial: dim + lock badge, and clicking
+      // opens the Upgrade CTA instead of applying/previewing the template.
+      const locked = isTrialMode() && (t as any).isPremium;
+      const pick = locked
+        ? () => showTrialUpgrade({ title: wt('trial.premium_title', 'Premium template'), message: wt('trial.premium_msg', 'Premium templates need a paid license. Upgrade to use this template.') })
+        : () => { close(); onPick(t); };
       // Live thumbnail (iframe render for custom-shell / mock skeleton for standard);
       // falls back to an icon only when the template has nothing renderable.
       const thumbHtml = buildTemplateThumbnail(t);
-      const thumb = h('div', { class: 'mfwg-thumb' + (thumbHtml ? ' mfwg-thumb-live' : ''), style: thumbHtml ? 'background:' + thumbGradient(t.category) : undefined });
+      const thumb = h('div', { class: 'mfwg-thumb' + (thumbHtml ? ' mfwg-thumb-live' : ''), style: (thumbHtml ? 'background:' + thumbGradient(t.category) : '') + (locked ? ';filter:grayscale(.5);opacity:.72' : '') });
       if (thumbHtml) thumb.innerHTML = thumbHtml;
       else {
         // Only render real FontAwesome classes as glyphs; lucide-style catalog names
         // (compass / globe-2 / flower-2) aren't FA classes → show a neutral glyph, not raw text.
         thumb.appendChild(t.icon && t.icon.indexOf('fa-') === 0 ? icon(t.icon) : icon(t.isPremium ? 'fa-wand-magic-sparkles' : 'fa-file-lines'));
       }
-      if (t.isPremium) thumb.appendChild(h('span', { class: 'mfwg-badge' }, 'Premium'));
+      if (t.isPremium) thumb.appendChild(h('span', { class: 'mfwg-badge' }, locked ? '\u{1F512} ' + trialLockBadge() : 'Premium'));
       thumb.appendChild(h('div', { class: 'mfwg-thumb-ov' }, [
-        h('button', { type: 'button', class: 'mfwg-peek', title: previewLabel, onclick: (e: any) => { e.stopPropagation(); openTemplatePreview(t, pick); } }, [icon('fa-eye'), document.createTextNode(' ' + previewLabel)]),
+        h('button', { type: 'button', class: 'mfwg-peek', title: previewLabel, onclick: (e: any) => { e.stopPropagation(); if (locked) { pick(); } else { openTemplatePreview(t, pick); } } }, [icon(locked ? 'fa-lock' : 'fa-eye'), document.createTextNode(' ' + (locked ? trialLockBadge() : previewLabel))]),
       ]));
       grid.appendChild(h('div', {
-        class: 'mfwg-card', role: 'button', tabindex: '0', onclick: pick,
+        class: 'mfwg-card' + (locked ? ' mfwg-locked' : ''), role: 'button', tabindex: '0', onclick: pick,
         onkeydown: (e: any) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } },
       }, [
         thumb,
@@ -171,28 +178,25 @@ export function openWizardGallery(onPick: (t: WizardTemplate) => void, onImport:
 function stripBom(s: string): string { return s.charCodeAt(0) === 0xFEFF ? s.slice(1) : s; }
 
 /** Open a file picker for a MegaForm export .json and hand back a WizardTemplate. */
+/**
+ * Opens the import dialog.
+ *
+ * This used to click a hidden <input type=file> for the user. That silently does nothing when the
+ * browser is driven over the DevTools protocol — an automation/AI extension attached to the tab
+ * intercepts file choosers, so the native dialog never appears and the button looks dead. The
+ * dialog now offers a file input the user clicks themselves, drag-and-drop, AND paste, so the
+ * import no longer depends on a native dialog appearing at all.
+ */
 export function openImportJson(onLoaded: (t: WizardTemplate) => void): void {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = '.json,application/json';
-  input.style.display = 'none';
-  input.addEventListener('change', () => {
-    const f = input.files && input.files[0];
-    if (!f) { cleanup(); return; }
-    const reader = new FileReader();
-    reader.onload = () => {
-      cleanup();
+  openImportJsonDialog({
+    t: (key, fallback) => wt(key, fallback),
+    onText: (text) => {
       let raw: any;
-      try { raw = JSON.parse(stripBom(String(reader.result || ''))); }
+      try { raw = JSON.parse(stripBom(text)); }
       catch { wizardToast(wt('wiz.import_invalid', 'That file is not valid JSON.'), 'error'); return; }
       const t = wizardTemplateFromJson(raw);
       if (!t) { wizardToast(wt('wiz.import_nofields', 'No form fields found in that JSON — export a form/template from MegaForm.'), 'error'); return; }
       onLoaded(t);
-    };
-    reader.onerror = () => { cleanup(); wizardToast(wt('wiz.import_read_err', 'Could not read that file.'), 'error'); };
-    reader.readAsText(f);
+    },
   });
-  function cleanup(): void { try { input.remove(); } catch { /* */ } }
-  document.body.appendChild(input);
-  input.click();
 }
