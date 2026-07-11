@@ -289,11 +289,19 @@
     var grad = gradientFor(tpl.category || 'general');
     var sourceBadge = String(tpl.id || '').indexOf('file-') === 0 ? '<span class="tpl-source-badge">uploaded</span>' : '';
     var fileChip = tpl.fileName ? '<div class="tpl-filename-chip" title="' + escAttr(tpl.fileName) + '">' + escHtml(tpl.fileName) + '</div>' : '';
+    // Lucide-style catalog names (compass / sparkles / globe-2) aren't glyphs → neutral FA glyph,
+    // never raw text. fa-* passes through; emoji/symbols render as-is (matches gallery cardHTML).
+    var iconRaw = String(tpl.icon || '');
+    var iconHtml = iconRaw.indexOf('fa-') === 0
+      ? '<i class="fa-solid ' + escAttr(iconRaw) + '"></i>'
+      : /^[a-z][a-z0-9-]*$/.test(iconRaw)
+        ? '<i class="fa-solid fa-file-lines"></i>'
+        : escHtml(iconRaw || '✦');
     return [
       '<div class="tpl-card" data-tpl="', escAttr(tpl.id), '">',
       '<div class="tpl-thumb" style="background:', escAttr(grad), '">',
       sourceBadge,
-      '<div class="tpl-hero-icon">', escHtml(tpl.icon || '✦'), '</div>',
+      '<div class="tpl-hero-icon">', iconHtml, '</div>',
       '<div class="tpl-thumb-surface"></div>',
       '<div class="tpl-thumb-overlay"><button class="tpl-use-overlay-btn">Use Template →</button></div>',
       '</div>',

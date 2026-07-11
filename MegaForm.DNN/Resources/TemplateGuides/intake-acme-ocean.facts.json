@@ -6,7 +6,7 @@
   "title": "Acme Platform Intake",
   "tokenStyle": "double",
   "rootSelector": ".mfp.mfp-intake.mfp-native-generated",
-  "stepMechanism": "customHtml-wizard",
+  "stepMechanism": "premium-native",
   "stepAnchor": "data-step",
   "stepCount": 3,
   "steps": [

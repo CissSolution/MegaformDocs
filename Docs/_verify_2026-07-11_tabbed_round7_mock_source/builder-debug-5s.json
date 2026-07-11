@@ -1,0 +1,63 @@
+{
+  "url": "http://localhost:5122/?mfpanel=builder&formId=5",
+  "title": "Home - Default Site",
+  "bodyText": " Home\n(current)\n Private\n My Page\n host Logout \n\nOqtane is an open source CMS and Application Framework that provides advanced functionality for developing web, mobile, and desktop applications on .NET. It leverages Blazor to compose a fully dynamic digital experience. Whether you are looking for a platform to accelerate your web development efforts, or simply interested in exploring the anatomy of a large-scale Blazor application, Oqtane provides a solid foundation based on proven enterprise architectural principles and patterns.\n\nJoin Our Community  Clone Our Repo\n\nBlazor is a modern front-end web framework based on HTML, CSS, and C# that helps you build web applications faster. Blazor provides a component-based architecture with server-side rendering and full client-side interactivity in a single solution, where you can switch between server-side and client-side rendering modes and even mix them in the same web page. For desktop or mobile scenarios, Blazor Hybrid is part of .NET MAUI and uses a Web View to render components natively on all modern devices.\n\nBlazor is a feature of ASP.NET, the popular cross platform development framework from Microsoft that provides powerful tools and libraries for building modern software applications.\n\nCopyright (c) 2018-2026 .NET Foundation\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHAN",
+  "forms": 0,
+  "iframes": [
+    {
+      "src": "",
+      "w": 0,
+      "h": 0
+    },
+    {
+      "src": "",
+      "w": 0,
+      "h": 0
+    },
+    {
+      "src": "",
+      "w": 0,
+      "h": 0
+    },
+    {
+      "src": "",
+      "w": 0,
+      "h": 0
+    },
+    {
+      "src": "",
+      "w": 0,
+      "h": 0
+    },
+    {
+      "src": "",
+      "w": 0,
+      "h": 0
+    },
+    {
+      "src": "",
+      "w": 0,
+      "h": 0
+    },
+    {
+      "src": "",
+      "w": 0,
+      "h": 0
+    },
+    {
+      "src": "",
+      "w": 0,
+      "h": 0
+    },
+    {
+      "src": "",
+      "w": 0,
+      "h": 0
+    },
+    {
+      "src": "",
+      "w": 0,
+      "h": 0
+    }
+  ]
+}

@@ -16,6 +16,7 @@
 // ============================================================
 // @ts-nocheck
 'use strict';
+import { wt } from './designer-i18n';
 
 (function init() {
   if ((window as any).__MFTokenDesignerLoaded) return;
@@ -64,6 +65,46 @@
       return _m;
     });
     return keys;
+  }
+
+  // ── Inline <img> detection inside Custom HTML ─────────────────────
+  // Authors don't always use {{content:*}} tokens; detect raw <img src>
+  // tags so they can be edited from the Image tokens tab without hand-editing HTML.
+  function detectInlineImages(html: string): any[] {
+    var imgs: any[] = [];
+    var re = /<img\b([^>]*)>/gi;
+    var m: any;
+    while ((m = re.exec(String(html || ''))) !== null) {
+      var attrs = m[1];
+      var srcM = /\ssrc=(["'])([^"']*)\1/i.exec(attrs);
+      var classM = /\sclass=(["'])([^"']*)\1/i.exec(attrs);
+      var altM = /\salt=(["'])([^"']*)\1/i.exec(attrs);
+      imgs.push({
+        kind: 'inline',
+        index: imgs.length,
+        start: m.index,
+        attrBlock: attrs,
+        src: srcM ? srcM[2] : '',
+        className: classM ? classM[2] : '',
+        alt: altM ? altM[2] : ''
+      });
+    }
+    return imgs;
+  }
+
+  function setInlineImageSrc(inline: any, newSrc: string) {
+    var s = B.state.schema.settings;
+    var html = s.customHtml || s.CustomHtml || '';
+    var occ = 0;
+    var replaced = html.replace(/(<img\b[^>]*?\ssrc=["'])([^"']*)(["'])/gi, function (match, p1, _src, p3) {
+      if (occ === inline.index) { occ++; return p1 + newSrc + p3; }
+      occ++; return match;
+    });
+    s.customHtml = s.CustomHtml = replaced;
+    inline.src = newSrc;
+    B.state.isDirty = true;
+    if (B.markDirty) B.markDirty();
+    try { B.callModule('canvas', 'render'); } catch (e) {}
   }
 
   function ensureContent(): Record<string, string> {
@@ -120,7 +161,7 @@
           return r.json();
         })
         .then(function (j) {
-          if (!j || !j.url) throw new Error('Upload returned no URL');
+          if (!j || !j.url) throw new Error(wt('des.shell.uploadNoUrl', 'Upload returned no URL'));
           resolve(j.url);
         })
         .catch(reject);
@@ -155,6 +196,7 @@
     content = next;
 
     var imageKeys = keys.filter(isImageToken);
+    var inlineImages = detectInlineImages(html);
     var mapKey = detectMapToken(keys, content);
     var textKeys = keys.filter(function (k) { return !isImageToken(k) && k !== mapKey; });
     // [Request B] detect sliders → show a "Slides" tab that edits each slide's
@@ -174,35 +216,35 @@
     // forced display:none by the takeover.
     modal.setAttribute('data-mf-overlay', '1');
     modal.innerHTML =
-      '<div class="mf-token-designer-shell" role="dialog" aria-label="HTML Token Designer">' +
+      '<div class="mf-token-designer-shell" role="dialog" aria-label="' + wt('des.shell.htmlTokenDesigner', 'HTML Token Designer') + '">' +
         '<div class="mf-token-designer-head">' +
           '<div class="mf-token-designer-title">' +
             '<i class="fas fa-paint-roller"></i>' +
-            '<span>HTML Token Designer</span>' +
-            '<span class="mf-token-designer-badge">v20260623-B242</span>' +
+            '<span>' + wt('des.shell.htmlTokenDesigner', 'HTML Token Designer') + '</span>' +
+            '<span class="mf-token-designer-badge">v20260626-B245</span>' +
           '</div>' +
-          '<button type="button" class="mf-token-designer-close" aria-label="Close">&times;</button>' +
+          '<button type="button" class="mf-token-designer-close" aria-label="' + wt('des.shell.close', 'Close') + '">&times;</button>' +
         '</div>' +
         '<div class="mf-token-designer-tabs">' +
           (hasSlides
             ? '<button type="button" class="mf-token-designer-tab active" data-tab="slides">' +
-                '<i class="fas fa-layer-group"></i> Slides <span class="mf-token-designer-count">' +
+                '<i class="fas fa-layer-group"></i> ' + wt('des.shell.tabSlides', 'Slides') + ' <span class="mf-token-designer-count">' +
                 slideGroups.reduce(function (a: number, g: any) { return a + g.indices.length; }, 0) + '</span>' +
               '</button>'
             : '') +
           '<button type="button" class="mf-token-designer-tab' + (hasSlides ? '' : ' active') + '" data-tab="text">' +
-            '<i class="fas fa-font"></i> Text tokens <span class="mf-token-designer-count">' + textKeys.length + '</span>' +
+            '<i class="fas fa-font"></i> ' + wt('des.shell.tabTextTokens', 'Text tokens') + ' <span class="mf-token-designer-count">' + textKeys.length + '</span>' +
           '</button>' +
           '<button type="button" class="mf-token-designer-tab" data-tab="image">' +
-            '<i class="fas fa-image"></i> Image tokens <span class="mf-token-designer-count">' + imageKeys.length + '</span>' +
+            '<i class="fas fa-image"></i> ' + wt('des.shell.tabImageTokens', 'Image tokens') + ' <span class="mf-token-designer-count">' + (imageKeys.length + inlineImages.length) + '</span>' +
           '</button>' +
           (hasMap
             ? '<button type="button" class="mf-token-designer-tab" data-tab="map">' +
-                '<i class="fas fa-map-location-dot"></i> Map' +
+                '<i class="fas fa-map-location-dot"></i> ' + wt('des.shell.tabMap', 'Map') +
               '</button>'
             : '') +
           '<button type="button" class="mf-token-designer-tab" data-tab="form">' +
-            '<i class="fas fa-sliders-h"></i> Form strings' +
+            '<i class="fas fa-sliders-h"></i> ' + wt('des.shell.tabFormStrings', 'Form strings') +
           '</button>' +
         '</div>' +
         '<div class="mf-token-designer-body">' +
@@ -214,9 +256,9 @@
         '</div>' +
         '<div class="mf-token-designer-foot">' +
           '<div class="mf-token-designer-foot-hint">' +
-            '<i class="fas fa-info-circle"></i> Changes save into the form schema. Press <kbd>Esc</kbd> to close.' +
+            '<i class="fas fa-info-circle"></i> ' + wt('des.shell.footHintPre', 'Changes save into the form schema. Press') + ' <kbd>Esc</kbd> ' + wt('des.shell.footHintPost', 'to close.') +
           '</div>' +
-          '<button type="button" class="mf-builder-btn mf-token-designer-done"><i class="fas fa-check"></i> Done</button>' +
+          '<button type="button" class="mf-builder-btn mf-token-designer-done"><i class="fas fa-check"></i> ' + wt('des.shell.done', 'Done') + '</button>' +
         '</div>' +
       '</div>';
     getMountTarget().appendChild(modal);
@@ -269,8 +311,8 @@
     host.innerHTML = '';
     if (!keys.length) {
       host.innerHTML = '<div class="mf-token-designer-empty">' +
-        '<i class="fas fa-circle-info"></i> No text tokens detected. ' +
-        'Add <code>{{content:my_key}}</code> markers inside your Custom HTML.' +
+        '<i class="fas fa-circle-info"></i> ' + wt('des.shell.noTextTokens', 'No text tokens detected.') + ' ' +
+        wt('des.shell.addTokenMarkersPre', 'Add') + ' <code>{{content:my_key}}</code> ' + wt('des.shell.addTokenMarkersPost', 'markers inside your Custom HTML.') +
       '</div>';
       return;
     }
@@ -286,7 +328,7 @@
       ta.className = 'mf-code-editor mf-token-row-input';
       ta.rows = 2;
       ta.value = String(content[key] || '');
-      ta.placeholder = 'Editable content for ' + key;
+      ta.placeholder = wt('des.shell.editableContentFor', 'Editable content for') + ' ' + key;
       ta.addEventListener('input', function () {
         content[key] = ta.value;
         B.state.isDirty = true;
@@ -362,7 +404,7 @@
     var n = g.max;
     var others = g.indices.filter(function (i: number) { return i !== n; }).map(function (i: number) { return imgTok(g.keyOf(i)); });
     var card = findCardEl(tpl.content, imgTok(g.keyOf(n)), others);
-    if (!card) { if (B.toast) B.toast('Could not locate the slide to clone', 'error'); return; }
+    if (!card) { if (B.toast) B.toast(wt('des.shell.cannotLocateClone', 'Could not locate the slide to clone'), 'error'); return; }
     var re = new RegExp('\\{\\{content:' + escapeRe(g.prefix) + n + '(?![0-9])', 'g');
     var cloneHtml = card.outerHTML.replace(re, '{{content:' + g.prefix + (n + 1));
     var holder = document.createElement('template');
@@ -374,24 +416,24 @@
       var srcKey = nk.replace(g.prefix + (n + 1), g.prefix + n);
       content[nk] = isImageToken(nk) ? '' : String(content[srcKey] || '');
     });
-    if (B.toast) B.toast('Slide added', 'success');
+    if (B.toast) B.toast(wt('des.shell.slideAdded', 'Slide added'), 'success');
     afterStructureChange(content, refresh);
   }
 
   // Remove one slide: delete its card element + its tokens from content.
   function removeSlide(g: any, n: number, content: Record<string, string>, refresh: () => void) {
-    if (g.indices.length <= 1) { if (B.toast) B.toast('A slider needs at least one image', 'error'); return; }
+    if (g.indices.length <= 1) { if (B.toast) B.toast(wt('des.shell.sliderNeedsOneImage', 'A slider needs at least one image'), 'error'); return; }
     var s = B.state.schema.settings = B.state.schema.settings || {};
     var html = s.customHtml || s.CustomHtml || '';
     var tpl = document.createElement('template');
     tpl.innerHTML = html;
     var others = g.indices.filter(function (i: number) { return i !== n; }).map(function (i: number) { return imgTok(g.keyOf(i)); });
     var card = findCardEl(tpl.content, imgTok(g.keyOf(n)), others);
-    if (!card) { if (B.toast) B.toast('Could not locate the slide to remove', 'error'); return; }
+    if (!card) { if (B.toast) B.toast(wt('des.shell.cannotLocateRemove', 'Could not locate the slide to remove'), 'error'); return; }
     parseTokenKeys(card.outerHTML).forEach(function (k) { delete content[k]; });
     (card.parentNode as Node).removeChild(card);
     s.customHtml = s.CustomHtml = tpl.innerHTML;
-    if (B.toast) B.toast('Slide removed', 'success');
+    if (B.toast) B.toast(wt('des.shell.slideRemoved', 'Slide removed'), 'success');
     afterStructureChange(content, refresh);
   }
 
@@ -524,9 +566,9 @@
         '<div class="mf-slide-img-ctrl">' +
           '<input type="text" class="mf-slide-img-url" value="' + B.escAttr(cur) + '" placeholder="/Portals/0/MegaForm/Images/..."/>' +
           '<div class="mf-slide-img-btns">' +
-            '<button type="button" class="mf-builder-btn mf-slide-up"><i class="fas fa-cloud-upload-alt"></i> Upload</button>' +
-            '<button type="button" class="mf-builder-btn mf-slide-gal"><i class="fas fa-images"></i> Gallery</button>' +
-            '<button type="button" class="mf-builder-btn mf-slide-clr" title="Clear"><i class="fas fa-times"></i></button>' +
+            '<button type="button" class="mf-builder-btn mf-slide-up"><i class="fas fa-cloud-upload-alt"></i> ' + wt('des.shell.upload', 'Upload') + '</button>' +
+            '<button type="button" class="mf-builder-btn mf-slide-gal"><i class="fas fa-images"></i> ' + wt('des.shell.gallery', 'Gallery') + '</button>' +
+            '<button type="button" class="mf-builder-btn mf-slide-clr" title="' + wt('des.shell.clear', 'Clear') + '"><i class="fas fa-times"></i></button>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -538,8 +580,8 @@
       var inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
       inp.addEventListener('change', function () {
         var f = inp.files && inp.files[0]; if (!f) return;
-        uploadImage(f).then(function (u) { setUrl(u); if (B.toast) B.toast('Image uploaded', 'success'); _galleryCache = null; })
-          .catch(function (err) { if (B.toast) B.toast('Upload failed: ' + (err && err.message || err), 'error'); });
+        uploadImage(f).then(function (u) { setUrl(u); if (B.toast) B.toast(wt('des.shell.imageUploaded', 'Image uploaded'), 'success'); _galleryCache = null; })
+          .catch(function (err) { if (B.toast) B.toast(wt('des.shell.uploadFailed', 'Upload failed:') + ' ' + (err && err.message || err), 'error'); });
       });
       inp.click();
     });
@@ -570,8 +612,8 @@
     var html = String((B.state.schema.settings || {}).customHtml || (B.state.schema.settings || {}).CustomHtml || '');
     var groups = detectSlideGroups(parseTokenKeys(html));
     if (!groups.length) {
-      host.innerHTML = '<div class="mf-token-designer-empty"><i class="fas fa-circle-info"></i> No slider detected. ' +
-        'A slider is repeating tokens like <code>{{content:p1_image}}</code> + <code>{{content:p1_name}}</code>, <code>p2_image</code>… — each slide is then editable here as one element.</div>';
+      host.innerHTML = '<div class="mf-token-designer-empty"><i class="fas fa-circle-info"></i> ' + wt('des.shell.noSliderDetected', 'No slider detected.') + ' ' +
+        wt('des.shell.sliderExplainPre', 'A slider is repeating tokens like') + ' <code>{{content:p1_image}}</code> + <code>{{content:p1_name}}</code>, <code>p2_image</code>… — ' + wt('des.shell.sliderExplainPost', 'each slide is then editable here as one element.') + '</div>';
       return;
     }
     function slideSummary(g: any, idx: number, content: Record<string, string>): string {
@@ -588,7 +630,7 @@
         var vv = String(content[slide[f]] || '').trim();
         if (vv) return vv;
       }
-      return 'Slide ' + idx;
+      return wt('des.shell.slideN', 'Slide {n}', { n: idx });
     }
 
     function imageForSlide(g: any, idx: number, content: Record<string, string>): string {
@@ -600,8 +642,8 @@
       var imgRep = { prefix: g.prefix, suffix: '_' + g.imgField, indices: g.indices, max: g.max, keyOf: function (n: number) { return g.prefix + n + '_' + g.imgField; } };
       var bar = document.createElement('div');
       bar.className = 'mf-token-slider-bar';
-      bar.innerHTML = '<span class="mf-token-slider-label"><i class="fas fa-images"></i> Slider <code>' + B.escHtml(g.prefix + 'N') + '</code> · ' + g.indices.length + ' slides</span>' +
-        '<button type="button" class="mf-builder-btn mf-token-slider-add"><i class="fas fa-plus"></i> Add slide</button>';
+      bar.innerHTML = '<span class="mf-token-slider-label"><i class="fas fa-images"></i> ' + wt('des.shell.slider', 'Slider') + ' <code>' + B.escHtml(g.prefix + 'N') + '</code> · ' + g.indices.length + ' ' + wt('des.shell.slidesSuffix', 'slides') + '</span>' +
+        '<button type="button" class="mf-builder-btn mf-token-slider-add"><i class="fas fa-plus"></i> ' + wt('des.shell.addSlide', 'Add slide') + '</button>';
       (bar.querySelector('.mf-token-slider-add') as HTMLButtonElement).addEventListener('click', function () { addSlide(imgRep, content, refresh); });
       var group = document.createElement('div');
       group.className = 'mf-token-slider-group';
@@ -632,7 +674,7 @@
                 : '<i class="fas fa-image"></i>') +
             '</span>' +
             '<span class="mf-slide-nav-copy">' +
-              '<strong>Slide ' + navIdx + '</strong>' +
+              '<strong>' + wt('des.shell.slideN', 'Slide {n}', { n: navIdx }) + '</strong>' +
               '<span>' + B.escHtml(slideSummary(g, navIdx, content)) + '</span>' +
             '</span>';
           item.addEventListener('click', function () { renderWorkbench(navIdx); });
@@ -643,9 +685,9 @@
         var slide = g.slides[idx];
         var card = document.createElement('div'); card.className = 'mf-slide-card mf-slide-editor';
         var head = document.createElement('div'); head.className = 'mf-slide-card-head';
-        head.innerHTML = '<span class="mf-slide-card-title"><i class="fas fa-layer-group"></i> Slide ' + idx + '</span>' +
+        head.innerHTML = '<span class="mf-slide-card-title"><i class="fas fa-layer-group"></i> ' + wt('des.shell.slideN', 'Slide {n}', { n: idx }) + '</span>' +
           '<span class="mf-slide-card-token"><code>' + B.escHtml(g.prefix + idx + '_*') + '</code></span>' +
-          '<button type="button" class="mf-builder-btn mf-token-slide-remove"><i class="fas fa-trash-alt"></i> Remove</button>';
+          '<button type="button" class="mf-builder-btn mf-token-slide-remove"><i class="fas fa-trash-alt"></i> ' + wt('des.shell.remove', 'Remove') + '</button>';
         (head.querySelector('.mf-token-slide-remove') as HTMLButtonElement).addEventListener('click', function () { removeSlide(imgRep, idx, content, refresh); });
         card.appendChild(head);
         var body = document.createElement('div'); body.className = 'mf-slide-card-body';
@@ -668,6 +710,9 @@
       var h2 = String((B.state.schema.settings || {}).customHtml || (B.state.schema.settings || {}).CustomHtml || '');
       renderImagePane(host, parseTokenKeys(h2).filter(isImageToken), ensureContent());
     }
+    var html = String((B.state.schema.settings || {}).customHtml || (B.state.schema.settings || {}).CustomHtml || '');
+    var inlineImages = detectInlineImages(html);
+
     // Slider controls: for each repeater group, an "Add image" header
     var repeaters = detectRepeaters(keys);
     var keyToGroup: Record<string, any> = {};
@@ -676,21 +721,22 @@
       var bar = document.createElement('div');
       bar.className = 'mf-token-slider-bar';
       bar.innerHTML =
-        '<span class="mf-token-slider-label"><i class="fas fa-images"></i> Slider <code>' +
-          B.escHtml(g.prefix + 'N' + g.suffix) + '</code> · ' + g.indices.length + ' images</span>' +
-        '<button type="button" class="mf-builder-btn mf-token-slider-add"><i class="fas fa-plus"></i> Add image</button>';
+        '<span class="mf-token-slider-label"><i class="fas fa-images"></i> ' + wt('des.shell.slider', 'Slider') + ' <code>' +
+          B.escHtml(g.prefix + 'N' + g.suffix) + '</code> · ' + g.indices.length + ' ' + wt('des.shell.imagesSuffix', 'images') + '</span>' +
+        '<button type="button" class="mf-builder-btn mf-token-slider-add"><i class="fas fa-plus"></i> ' + wt('des.shell.addImage', 'Add image') + '</button>';
       var addBtn = bar.querySelector('.mf-token-slider-add') as HTMLButtonElement;
       addBtn.addEventListener('click', function () { addSlide(g, content, refresh); });
       host.appendChild(bar);
     });
-    if (!keys.length) {
+
+    if (!keys.length && !inlineImages.length) {
       host.innerHTML = '<div class="mf-token-designer-empty">' +
-        '<i class="fas fa-circle-info"></i> No image tokens detected. ' +
-        'Name tokens like <code>{{content:slider_image_1}}</code>, <code>{{content:logo_url}}</code>, ' +
-        '<code>{{content:hero_bg}}</code> and they will appear here automatically.' +
+        '<i class="fas fa-circle-info"></i> ' + wt('des.shell.noImageTokens', 'No image tokens or inline images detected.') + ' ' +
+        wt('des.shell.useImageTokenPre', 'Use') + ' <code>{{content:hero_image}}</code> ' + wt('des.shell.useImageTokenMid', 'tokens, or place a regular') + ' <code>&lt;img src="..."&gt;</code> ' + wt('des.shell.useImageTokenPost', 'in your Custom HTML.') +
       '</div>';
       return;
     }
+
     keys.forEach(function (key) {
       var row = document.createElement('div');
       row.className = 'mf-token-row mf-token-row-image';
@@ -704,16 +750,16 @@
           '<div class="mf-token-image-preview">' +
             (curUrl
               ? '<img src="' + B.escAttr(curUrl) + '" alt="" onerror="this.style.opacity=.25"/>'
-              : '<span class="mf-token-image-empty"><i class="fas fa-image"></i><br>no image</span>') +
+              : '<span class="mf-token-image-empty"><i class="fas fa-image"></i><br>' + wt('des.shell.noImage', 'no image') + '</span>') +
           '</div>' +
           '<div class="mf-token-image-controls">' +
             '<input type="text" class="mf-token-image-url" value="' + B.escAttr(curUrl) + '" placeholder="/Portals/0/MegaForm/Images/..."/>' +
             '<div class="mf-token-image-buttons">' +
-              '<button type="button" class="mf-builder-btn mf-token-image-upload"><i class="fas fa-cloud-upload-alt"></i> Upload</button>' +
-              '<button type="button" class="mf-builder-btn mf-token-image-gallery"><i class="fas fa-images"></i> Gallery</button>' +
-              '<button type="button" class="mf-builder-btn mf-token-image-clear" title="Clear URL"><i class="fas fa-times"></i></button>' +
+              '<button type="button" class="mf-builder-btn mf-token-image-upload"><i class="fas fa-cloud-upload-alt"></i> ' + wt('des.shell.upload', 'Upload') + '</button>' +
+              '<button type="button" class="mf-builder-btn mf-token-image-gallery"><i class="fas fa-images"></i> ' + wt('des.shell.gallery', 'Gallery') + '</button>' +
+              '<button type="button" class="mf-builder-btn mf-token-image-clear" title="' + wt('des.shell.clearUrl', 'Clear URL') + '"><i class="fas fa-times"></i></button>' +
               (keyToGroup[key]
-                ? '<button type="button" class="mf-builder-btn mf-token-slide-remove" title="Remove this slide from the slider"><i class="fas fa-trash-alt"></i> Remove slide</button>'
+                ? '<button type="button" class="mf-builder-btn mf-token-slide-remove" title="' + wt('des.shell.removeSlideTitle', 'Remove this slide from the slider') + '"><i class="fas fa-trash-alt"></i> ' + wt('des.shell.removeSlide', 'Remove slide') + '</button>'
                 : '') +
             '</div>' +
           '</div>' +
@@ -737,7 +783,7 @@
       function refreshPreview(u: string) {
         previewBox.innerHTML = u
           ? '<img src="' + B.escAttr(u) + '" alt="" onerror="this.style.opacity=.25"/>'
-          : '<span class="mf-token-image-empty"><i class="fas fa-image"></i><br>no image</span>';
+          : '<span class="mf-token-image-empty"><i class="fas fa-image"></i><br>' + wt('des.shell.noImage', 'no image') + '</span>';
       }
       function setUrl(u: string) {
         urlInput.value = u;
@@ -757,20 +803,20 @@
           var f = inp.files && inp.files[0];
           if (!f) return;
           btnUpload.disabled = true;
-          btnUpload.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading…';
+          btnUpload.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + wt('des.shell.uploading', 'Uploading…');
           uploadImage(f)
             .then(function (u) {
               setUrl(u);
-              if (B.toast) B.toast('Image uploaded', 'success');
+              if (B.toast) B.toast(wt('des.shell.imageUploaded', 'Image uploaded'), 'success');
               _galleryCache = null; // bust gallery cache so new file shows next time
             })
             .catch(function (err) {
-              if (B.toast) B.toast('Upload failed: ' + (err && err.message || err), 'error');
-              else alert('Upload failed: ' + (err && err.message || err));
+              if (B.toast) B.toast(wt('des.shell.uploadFailed', 'Upload failed:') + ' ' + (err && err.message || err), 'error');
+              else alert(wt('des.shell.uploadFailed', 'Upload failed:') + ' ' + (err && err.message || err));
             })
             .then(function () {
               btnUpload.disabled = false;
-              btnUpload.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Upload';
+              btnUpload.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> ' + wt('des.shell.upload', 'Upload');
             });
         });
         inp.click();
@@ -782,15 +828,350 @@
 
       btnClear.addEventListener('click', function () { setUrl(''); });
     });
+
+    // ── Inline <img> tags that are NOT wrapped in {{content:*}} tokens ──
+    if (inlineImages.length) {
+      var section = document.createElement('div');
+      section.className = 'mf-token-inline-section';
+      section.style.marginTop = keys.length ? '18px' : '0';
+      section.innerHTML =
+        '<div style="font-size:12px;font-weight:700;color:#0f172a;margin-bottom:10px;display:flex;align-items:center;gap:6px;">' +
+          '<i class="fas fa-code"></i> ' + wt('des.shell.inlineImagesInHtml', 'Inline images in Custom HTML') +
+        '</div>';
+      inlineImages.forEach(function (inline) {
+        section.appendChild(buildInlineImageRow(inline));
+      });
+      host.appendChild(section);
+    }
+
+    function buildInlineImageRow(inline: any): HTMLElement {
+      var row = document.createElement('div');
+      row.className = 'mf-token-row mf-token-row-image';
+      var label = inline.className
+        ? ('.' + String(inline.className).split(/\s+/)[0])
+        : wt('des.shell.inlineImageN', 'Inline image #{n}', { n: inline.index + 1 });
+      var curUrl = inline.src;
+      row.innerHTML =
+        '<div class="mf-token-row-head">' +
+          '<span class="mf-token-row-label"><i class="fas fa-image"></i> ' + B.escHtml(label) + '</span>' +
+          '<code class="mf-token-row-tag">&lt;img&gt;</code>' +
+        '</div>' +
+        '<div class="mf-token-image-grid">' +
+          '<div class="mf-token-image-preview">' +
+            (curUrl
+              ? '<img src="' + B.escAttr(curUrl) + '" alt="" onerror="this.style.opacity=.25"/>'
+              : '<span class="mf-token-image-empty"><i class="fas fa-image"></i><br>' + wt('des.shell.noImage', 'no image') + '</span>') +
+          '</div>' +
+          '<div class="mf-token-image-controls">' +
+            '<input type="text" class="mf-token-image-url" value="' + B.escAttr(curUrl) + '" placeholder="https://... or /Portals/0/..."/>' +
+            '<div class="mf-token-image-buttons">' +
+              '<button type="button" class="mf-builder-btn mf-token-image-upload"><i class="fas fa-cloud-upload-alt"></i> ' + wt('des.shell.upload', 'Upload') + '</button>' +
+              '<button type="button" class="mf-builder-btn mf-token-image-gallery"><i class="fas fa-images"></i> ' + wt('des.shell.gallery', 'Gallery') + '</button>' +
+              '<button type="button" class="mf-builder-btn mf-token-image-clear" title="' + wt('des.shell.clearUrl', 'Clear URL') + '"><i class="fas fa-times"></i></button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+
+      var urlInput = row.querySelector('.mf-token-image-url') as HTMLInputElement;
+      var previewBox = row.querySelector('.mf-token-image-preview') as HTMLElement;
+      var btnUpload = row.querySelector('.mf-token-image-upload') as HTMLButtonElement;
+      var btnGallery = row.querySelector('.mf-token-image-gallery') as HTMLButtonElement;
+      var btnClear = row.querySelector('.mf-token-image-clear') as HTMLButtonElement;
+
+      function refreshPreview(u: string) {
+        previewBox.innerHTML = u
+          ? '<img src="' + B.escAttr(u) + '" alt="" onerror="this.style.opacity=.25"/>'
+          : '<span class="mf-token-image-empty"><i class="fas fa-image"></i><br>' + wt('des.shell.noImage', 'no image') + '</span>';
+      }
+      function setUrl(u: string) {
+        setInlineImageSrc(inline, u);
+        urlInput.value = u;
+        refreshPreview(u);
+      }
+
+      urlInput.addEventListener('input', function () { setUrl(urlInput.value); });
+
+      btnUpload.addEventListener('click', function () {
+        var inp = document.createElement('input');
+        inp.type = 'file';
+        inp.accept = 'image/*';
+        inp.addEventListener('change', function () {
+          var f = inp.files && inp.files[0];
+          if (!f) return;
+          btnUpload.disabled = true;
+          btnUpload.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + wt('des.shell.uploading', 'Uploading…');
+          uploadImage(f)
+            .then(function (u) {
+              setUrl(u);
+              if (B.toast) B.toast(wt('des.shell.imageUploaded', 'Image uploaded'), 'success');
+              _galleryCache = null;
+            })
+            .catch(function (err) {
+              if (B.toast) B.toast(wt('des.shell.uploadFailed', 'Upload failed:') + ' ' + (err && err.message || err), 'error');
+              else alert(wt('des.shell.uploadFailed', 'Upload failed:') + ' ' + (err && err.message || err));
+            })
+            .then(function () {
+              btnUpload.disabled = false;
+              btnUpload.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> ' + wt('des.shell.upload', 'Upload');
+            });
+        });
+        inp.click();
+      });
+
+      btnGallery.addEventListener('click', function () {
+        openGalleryPicker(function (u) { setUrl(u); });
+      });
+
+      btnClear.addEventListener('click', function () { setUrl(''); });
+      return row;
+    }
+  }
+
+  // ── Premium shell strings inside customHtml ─────────────────────
+  function tdEsc(s: any): string {
+    if (B.escHtml) return B.escHtml(String(s == null ? '' : s));
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function tdEscAttr(s: any): string {
+    if (B.escAttr) return B.escAttr(String(s == null ? '' : s));
+    return tdEsc(s).replace(/`/g, '&#96;');
+  }
+
+  function shellText(el: Element | null): string {
+    if (!el) return '';
+    var html = String((el as HTMLElement).innerHTML || '').replace(/<br\s*\/?>/gi, '\n');
+    var tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    return String(tmp.textContent || '')
+      .replace(/\u00a0/g, ' ')
+      .replace(/[ \t]+\n/g, '\n')
+      .replace(/\n[ \t]+/g, '\n')
+      .replace(/[ \t]{2,}/g, ' ')
+      .trim();
+  }
+
+  function setShellText(el: Element | null, value: string) {
+    if (!el) return;
+    var v = String(value == null ? '' : value);
+    var html = String((el as HTMLElement).innerHTML || '');
+    if (/<br\s*\/?>/i.test(html) || v.indexOf('\n') >= 0) {
+      (el as HTMLElement).innerHTML = tdEsc(v).replace(/\n/g, '<br>');
+    } else {
+      (el as HTMLElement).textContent = v;
+    }
+  }
+
+  function customHtmlNow(settings?: any): string {
+    var s = settings || (B.state.schema.settings = B.state.schema.settings || {});
+    return String(s.customHtml || s.CustomHtml || '');
+  }
+
+  function customHtmlDom(settings?: any): HTMLTemplateElement {
+    var tpl = document.createElement('template');
+    tpl.innerHTML = customHtmlNow(settings);
+    return tpl;
+  }
+
+  function commitCustomHtml(tpl: HTMLTemplateElement, reason: string) {
+    var s = B.state.schema.settings = B.state.schema.settings || {};
+    s.customHtml = s.CustomHtml = tpl.innerHTML;
+    B.state.isDirty = true;
+    if (B.markDirty) B.markDirty();
+    try { if (B.syncCustomHtmlBidirectional) B.syncCustomHtmlBidirectional({ reason: reason }); } catch (e) {}
+    try { B.callModule('canvas', 'render'); } catch (e) {}
+  }
+
+  function hasTemplateToken(el: Element | null): boolean {
+    return !!(el && /\{\{(?:field|content|form):/i.test(String((el as HTMLElement).innerHTML || '')));
+  }
+
+  function classBlob(el: Element | null): string {
+    if (!el) return '';
+    var parent = el.parentElement;
+    return String((el.getAttribute('class') || '') + ' ' + (parent ? parent.getAttribute('class') || '' : '')).toLowerCase();
+  }
+
+  function isStepContentNode(el: Element): boolean {
+    return hasTemplateToken(el) || /\b(page|panel|content|body)\b/i.test(String(el.getAttribute('class') || ''));
+  }
+
+  function navDataStepNodes(root: ParentNode): Element[] {
+    var out: Element[] = [];
+    Array.prototype.forEach.call(root.querySelectorAll('[data-step]'), function (el: Element) {
+      if (hasTemplateToken(el)) return;
+      if (isStepContentNode(el)) return;
+      if (el.querySelector('h1,h2,h3')) return;
+      out.push(el);
+    });
+    return out;
+  }
+
+  function bgStepNodes(root: ParentNode): Element[] {
+    var out: Element[] = [];
+    Array.prototype.forEach.call(root.querySelectorAll('.bg-step'), function (el: Element) {
+      if (hasTemplateToken(el)) return;
+      out.push(el);
+    });
+    return out;
+  }
+
+  function contentStepNodes(root: ParentNode): Element[] {
+    var out: Element[] = [];
+    Array.prototype.forEach.call(root.querySelectorAll('[data-step]'), function (el: Element) {
+      if (hasTemplateToken(el)) out.push(el);
+    });
+    return out;
+  }
+
+  function navLabelNode(el: Element): Element | null {
+    return el.querySelector('[class*="step-l"],[class*="step-label"],strong') ||
+      Array.prototype.filter.call(el.querySelectorAll('span'), function (s: Element) {
+        return !/\bstep-n\b/i.test(String(s.getAttribute('class') || '')) && shellText(s);
+      })[0] || null;
+  }
+
+  function navSubtitleNode(el: Element): Element | null {
+    return el.querySelector('[class*="step-sub"],.ey-step-text span,em') || null;
+  }
+
+  function contentTitleNode(el: Element): Element | null {
+    return el.querySelector('h1,h2,h3');
+  }
+
+  function contentIntroNode(el: Element): Element | null {
+    var ps = Array.prototype.slice.call(el.querySelectorAll('p')) as Element[];
+    for (var i = 0; i < ps.length; i++) {
+      if (!hasTemplateToken(ps[i]) && !ps[i].closest('label') && shellText(ps[i])) return ps[i];
+    }
+    return null;
+  }
+
+  function collectHeaderTargets(root: ParentNode, includeBlank?: boolean): any[] {
+    var out: any[] = [];
+    Array.prototype.forEach.call(root.querySelectorAll('h1,h2,h3,p,span,strong,em,figcaption,a'), function (el: Element) {
+      if (el.closest('svg,[data-step],label,.mf-field-group,.mf-custom-field,.bg-step,.au-preset-menu')) return;
+      if (hasTemplateToken(el)) return;
+      var text = shellText(el);
+      var cls = classBlob(el);
+      var tag = String(el.tagName || '').toUpperCase();
+      var important = /hero|brand|title|subtitle|tagline|eyebrow|rating|stats|footer|caption|preset|thumb|copy|head|logo|programme|program/.test(cls) ||
+        /^H[1-3]$/.test(tag) ||
+        !!el.closest('header,aside,footer');
+      if (!important) return;
+      if (!includeBlank && !text) return;
+      if (text.length > 180) return;
+      out.push({ el: el, value: text, label: headerTargetLabel(el, out.length), multiline: text.length > 70 || /\n/.test(text) });
+    });
+    // Disambiguate repeated roles: two "Header button" → "Header button 1", "Header button 2".
+    var counts: any = {};
+    out.forEach(function (h: any) { counts[h.label] = (counts[h.label] || 0) + 1; });
+    var seen: any = {};
+    out.forEach(function (h: any) { if (counts[h.label] > 1) { seen[h.label] = (seen[h.label] || 0) + 1; h.label = h.label + ' ' + seen[h.label]; } });
+    return out;
+  }
+
+  // [B311] Semantic, human-readable role for a header shell string — replaces the old
+  // opaque "Header string N". Drives the Token-Designer label + the on-canvas edit chip,
+  // so a user editing the premium hero sees "Hero headline" / "Brand title" / "Header
+  // button" instead of "Header string 3". Duplicate roles get a 1/2/3 suffix downstream.
+  function headerTargetLabel(el: Element, i: number): string {
+    var cls = classBlob(el);
+    var tag = String(el.tagName || '').toUpperCase();
+    var inFooter = !!el.closest('footer,.bg-footer,.au-footer,.ey-footer,[class*="footer"]');
+    if (tag === 'A' || /\bbtn\b|\bbutton\b|\bcta\b|pill-link|chip-link/.test(cls)) return wt('des.shell.roleHeaderButton', 'Header button');
+    if (/preset-n|preset-name/.test(cls)) return wt('des.shell.roleActivePresetLabel', 'Active preset label');
+    if (/\brating\b|\bstars?\b/.test(cls)) return wt('des.shell.roleHeroRating', 'Hero rating');
+    if (/\bstat|metric|\bcount\b|\bnumber\b/.test(cls)) return wt('des.shell.roleHeroStat', 'Hero stat');
+    if (/badge|eyebrow|kicker|\btag\b/.test(cls)) return wt('des.shell.roleHeroBadge', 'Hero badge');
+    if (tag === 'FIGCAPTION' || /caption|thumb/.test(cls)) return wt('des.shell.roleImageCaption', 'Image caption');
+    if (inFooter || /footer/.test(cls)) return wt('des.shell.roleFooterText', 'Footer text');
+    if (/brand/.test(cls) && (tag === 'P' || tag === 'H1' || tag === 'H2' || /title|name|logo/.test(cls))) return wt('des.shell.roleBrandTitle', 'Brand title');
+    if (/brand/.test(cls)) return wt('des.shell.roleBrandSubtitle', 'Brand subtitle');
+    if (tag === 'H1') return wt('des.shell.roleHeroHeadline', 'Hero headline');
+    if (tag === 'H2' && /hero|head/.test(cls)) return wt('des.shell.roleHeroHeadline', 'Hero headline');
+    if (/subtitle|tagline|\blede\b|\blead\b|\bcopy\b|\bsub\b/.test(cls)) return wt('des.shell.roleHeroSubtitle', 'Hero subtitle');
+    if (/title|\bhead\b|hero/.test(cls) || tag === 'H2' || tag === 'H3') return wt('des.shell.roleHeroTitle', 'Hero title');
+    return wt('des.shell.roleHeaderTextN', 'Header text {n}', { n: i + 1 });
+  }
+
+  function mutateShell(locator: any, value: string) {
+    var tpl = customHtmlDom();
+    var root = tpl.content;
+    var target: Element | null = null;
+    if (locator.kind === 'header') {
+      var headers = collectHeaderTargets(root, true);
+      target = headers[locator.index] ? headers[locator.index].el : null;
+    } else if (locator.kind === 'navLabel' || locator.kind === 'navSubtitle') {
+      var navs = locator.source === 'bg' ? bgStepNodes(root) : navDataStepNodes(root);
+      var nav = navs[locator.index];
+      target = nav ? (locator.kind === 'navLabel' ? navLabelNode(nav) : navSubtitleNode(nav)) : null;
+    } else if (locator.kind === 'contentTitle' || locator.kind === 'contentIntro') {
+      var panels = contentStepNodes(root);
+      var panel = panels[locator.index];
+      target = panel ? (locator.kind === 'contentTitle' ? contentTitleNode(panel) : contentIntroNode(panel)) : null;
+    }
+    if (!target) return;
+    setShellText(target, value);
+    commitCustomHtml(tpl, 'token-designer-form-shell');
+  }
+
+  function collectShellStringDescriptors(settings: any): any[] {
+    var html = customHtmlNow(settings);
+    if (!html || html.indexOf('<') < 0) return [];
+    var tpl = customHtmlDom(settings);
+    var root = tpl.content;
+    var out: any[] = [];
+
+    collectHeaderTargets(root, false).forEach(function (hit: any, i: number) {
+      out.push({
+        group: wt('des.shell.groupHeader', 'Header'),
+        label: hit.label,
+        tag: 'customHtml',
+        value: hit.value,
+        multiline: hit.multiline,
+        locator: { kind: 'header', index: i }
+      });
+    });
+
+    var navs = navDataStepNodes(root);
+    navs.forEach(function (nav: Element, i: number) {
+      var label = navLabelNode(nav);
+      var subtitle = navSubtitleNode(nav);
+      if (label && shellText(label)) out.push({ group: wt('des.shell.groupStepNavigation', 'Step navigation'), label: wt('des.shell.stepNLabel', 'Step {n} label', { n: i + 1 }), tag: 'data-step', value: shellText(label), locator: { kind: 'navLabel', source: 'data', index: i } });
+      if (subtitle && shellText(subtitle)) out.push({ group: wt('des.shell.groupStepNavigation', 'Step navigation'), label: wt('des.shell.stepNSubtitle', 'Step {n} subtitle', { n: i + 1 }), tag: 'data-step', value: shellText(subtitle), locator: { kind: 'navSubtitle', source: 'data', index: i } });
+    });
+
+    if (!navs.length) {
+      bgStepNodes(root).forEach(function (nav: Element, i: number) {
+        var label = nav.querySelector('span');
+        var subtitle = nav.querySelector('em');
+        if (label && shellText(label)) out.push({ group: wt('des.shell.groupStepNavigation', 'Step navigation'), label: wt('des.shell.stepNLabel', 'Step {n} label', { n: i + 1 }), tag: '.bg-step', value: shellText(label), locator: { kind: 'navLabel', source: 'bg', index: i } });
+        if (subtitle && shellText(subtitle)) out.push({ group: wt('des.shell.groupStepNavigation', 'Step navigation'), label: wt('des.shell.stepNSubtitle', 'Step {n} subtitle', { n: i + 1 }), tag: '.bg-step', value: shellText(subtitle), locator: { kind: 'navSubtitle', source: 'bg', index: i } });
+      });
+    }
+
+    contentStepNodes(root).forEach(function (panel: Element, i: number) {
+      var title = contentTitleNode(panel);
+      var intro = contentIntroNode(panel);
+      if (title && shellText(title)) out.push({ group: wt('des.shell.groupStepContent', 'Step content'), label: wt('des.shell.stepNHeading', 'Step {n} heading', { n: i + 1 }), tag: wt('des.shell.tagPageTitle', 'page title'), value: shellText(title), locator: { kind: 'contentTitle', index: i } });
+      if (intro && shellText(intro)) out.push({ group: wt('des.shell.groupStepContent', 'Step content'), label: wt('des.shell.stepNIntro', 'Step {n} intro', { n: i + 1 }), tag: wt('des.shell.tagPageIntro', 'page intro'), value: shellText(intro), multiline: true, locator: { kind: 'contentIntro', index: i } });
+    });
+    return out;
   }
 
   // ── Render: form strings (title, description, submit) ───────────
   function renderFormPane(host: HTMLElement, settings: any) {
     host.innerHTML = '';
     var rows: Array<{ key: string; label: string; tag: string; multiline?: boolean }> = [
-      { key: 'title',         label: 'Form title',         tag: '{{form:title}}' },
-      { key: 'description',   label: 'Form description',   tag: '{{form:description}}', multiline: true },
-      { key: 'submitText',    label: 'Submit button text', tag: '{{form:submit}}' }
+      { key: 'title',         label: wt('des.shell.formTitle', 'Form title'),         tag: '{{form:title}}' },
+      { key: 'description',   label: wt('des.shell.formDescription', 'Form description'),   tag: '{{form:description}}', multiline: true },
+      { key: 'submitText',    label: wt('des.shell.submitButtonText', 'Submit button text'), tag: '{{form:submit}}' }
     ];
     rows.forEach(function (def) {
       var row = document.createElement('div');
@@ -819,6 +1200,57 @@
       row.appendChild(inputEl);
       host.appendChild(row);
     });
+
+    var shellRows = collectShellStringDescriptors(settings);
+    if (!shellRows.length) return;
+
+    var section = document.createElement('div');
+    section.className = 'mf-token-shell-strings';
+    section.style.cssText = 'margin-top:16px;border-top:1px solid #e2e8f0;padding-top:14px;';
+    section.innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;">' +
+        '<div style="font-weight:800;font-size:13px;color:#0f172a;display:flex;align-items:center;gap:7px;">' +
+          '<i class="fas fa-wand-magic-sparkles" style="color:#7c3aed;"></i> ' + wt('des.shell.premiumShellStrings', 'Premium shell strings') +
+        '</div>' +
+        '<span class="mf-token-designer-count">' + shellRows.length + '</span>' +
+      '</div>';
+    host.appendChild(section);
+
+    var currentGroup = '';
+    shellRows.forEach(function (def: any) {
+      if (def.group !== currentGroup) {
+        currentGroup = def.group;
+        var group = document.createElement('div');
+        group.style.cssText = 'margin:12px 0 7px;font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;';
+        group.textContent = currentGroup;
+        section.appendChild(group);
+      }
+
+      var row = document.createElement('div');
+      row.className = 'mf-token-row';
+      row.innerHTML =
+        '<div class="mf-token-row-head">' +
+          '<span class="mf-token-row-label">' + tdEsc(def.label) + '</span>' +
+          '<code class="mf-token-row-tag">' + tdEsc(def.tag || 'customHtml') + '</code>' +
+        '</div>';
+
+      var inputEl: HTMLInputElement | HTMLTextAreaElement;
+      if (def.multiline) {
+        inputEl = document.createElement('textarea') as HTMLTextAreaElement;
+        (inputEl as HTMLTextAreaElement).rows = 2;
+      } else {
+        inputEl = document.createElement('input') as HTMLInputElement;
+        (inputEl as HTMLInputElement).type = 'text';
+      }
+      inputEl.className = 'mf-code-editor mf-token-row-input';
+      inputEl.value = String(def.value || '');
+      inputEl.setAttribute('data-mf-shell-string', tdEscAttr(def.label));
+      inputEl.addEventListener('input', function () {
+        mutateShell(def.locator, (inputEl as any).value);
+      });
+      row.appendChild(inputEl);
+      section.appendChild(row);
+    });
   }
 
   // ── Render: map editor (when a map_embed_url token is detected) ──
@@ -835,36 +1267,36 @@
     wrap.innerHTML =
       '<div class="mf-token-map-top">' +
         '<div class="mf-token-row">' +
-          '<label class="mf-token-row-label">Search address</label>' +
+          '<label class="mf-token-row-label">' + wt('des.shell.searchAddress', 'Search address') + '</label>' +
           '<div style="display:flex;gap:6px;">' +
-            '<input type="text" class="mf-token-row-input mf-map-search-addr" placeholder="123 Main St, City, Country" style="flex:1;"/>' +
-            '<button type="button" class="mf-builder-btn mf-map-search-btn"><i class="fas fa-search-location"></i> Find</button>' +
+            '<input type="text" class="mf-token-row-input mf-map-search-addr" placeholder="' + wt('des.shell.addressPlaceholder', '123 Main St, City, Country') + '" style="flex:1;"/>' +
+            '<button type="button" class="mf-builder-btn mf-map-search-btn"><i class="fas fa-search-location"></i> ' + wt('des.shell.find', 'Find') + '</button>' +
           '</div>' +
           '<div class="mf-map-search-status" style="margin-top:6px;font-size:11px;color:#64748b;min-height:14px;"></div>' +
         '</div>' +
         '<div class="mf-token-row" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
-          '<div><label class="mf-token-row-label">Latitude</label><input type="number" step="0.000001" min="-85" max="85" class="mf-token-row-input mf-map-lat"/></div>' +
-          '<div><label class="mf-token-row-label">Longitude</label><input type="number" step="0.000001" min="-180" max="180" class="mf-token-row-input mf-map-lng"/></div>' +
+          '<div><label class="mf-token-row-label">' + wt('des.shell.latitude', 'Latitude') + '</label><input type="number" step="0.000001" min="-85" max="85" class="mf-token-row-input mf-map-lat"/></div>' +
+          '<div><label class="mf-token-row-label">' + wt('des.shell.longitude', 'Longitude') + '</label><input type="number" step="0.000001" min="-180" max="180" class="mf-token-row-input mf-map-lng"/></div>' +
         '</div>' +
         '<div class="mf-token-row">' +
           '<label class="mf-token-row-label" style="display:flex;justify-content:space-between;align-items:center;">' +
-            '<span>Zoom</span><span class="mf-map-zoom-badge" style="background:#0f172a;color:#fff;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">' + zoom + '</span>' +
+            '<span>' + wt('des.shell.zoom', 'Zoom') + '</span><span class="mf-map-zoom-badge" style="background:#0f172a;color:#fff;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">' + zoom + '</span>' +
           '</label>' +
           '<input type="range" min="1" max="20" step="1" class="mf-map-zoom" value="' + zoom + '" style="width:100%;"/>' +
-          '<div style="display:flex;justify-content:space-between;font-size:10px;color:#94a3b8;margin-top:2px;"><span>World</span><span>City</span><span>Street</span></div>' +
+          '<div style="display:flex;justify-content:space-between;font-size:10px;color:#94a3b8;margin-top:2px;"><span>' + wt('des.shell.zoomWorld', 'World') + '</span><span>' + wt('des.shell.zoomCity', 'City') + '</span><span>' + wt('des.shell.zoomStreet', 'Street') + '</span></div>' +
         '</div>' +
         '<div class="mf-token-row">' +
-          '<label class="mf-token-row-label">Generated embed URL</label>' +
+          '<label class="mf-token-row-label">' + wt('des.shell.generatedEmbedUrl', 'Generated embed URL') + '</label>' +
           '<input type="text" class="mf-token-row-input mf-map-url" readonly style="font-size:11px;color:#64748b;background:#f8fafc;"/>' +
         '</div>' +
       '</div>' +
       '<div class="mf-token-map-preview">' +
         '<div style="font-size:12px;font-weight:600;color:#0f172a;display:flex;align-items:center;gap:6px;margin-bottom:6px;">' +
-          '<i class="fas fa-eye" style="color:#10b981;"></i> Live preview' +
+          '<i class="fas fa-eye" style="color:#10b981;"></i> ' + wt('des.shell.livePreview', 'Live preview') +
           '<span class="mf-map-preview-coords" style="margin-left:auto;font-family:Consolas,Menlo,monospace;font-size:11px;color:#64748b;font-weight:500;"></span>' +
         '</div>' +
         '<div class="mf-token-map-frame-wrap">' +
-          '<iframe class="mf-token-map-frame" style="width:100%;height:100%;border:0;display:block;" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Map preview"></iframe>' +
+          '<iframe class="mf-token-map-frame" style="width:100%;height:100%;border:0;display:block;" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="' + wt('des.shell.mapPreview', 'Map preview') + '"></iframe>' +
         '</div>' +
       '</div>';
     host.appendChild(wrap);
@@ -920,16 +1352,16 @@
 
     function runFind() {
       var q = addrInp.value.trim();
-      if (!q) { addrStatus.textContent = 'Enter an address first.'; addrStatus.style.color = '#b45309'; return; }
+      if (!q) { addrStatus.textContent = wt('des.shell.enterAddressFirst', 'Enter an address first.'); addrStatus.style.color = '#b45309'; return; }
       addrBtn.disabled = true;
       var orig = addrBtn.innerHTML;
-      addrBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Looking up…';
-      addrStatus.textContent = 'Searching OpenStreetMap…';
+      addrBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + wt('des.shell.lookingUp', 'Looking up…');
+      addrStatus.textContent = wt('des.shell.searchingOsm', 'Searching OpenStreetMap…');
       addrStatus.style.color = '#64748b';
       geocodeAddress(q)
         .then(function (hit) {
           if (!hit) {
-            addrStatus.textContent = 'No matching address found. Try a more specific query.';
+            addrStatus.textContent = wt('des.shell.noMatchingAddress', 'No matching address found. Try a more specific query.');
             addrStatus.style.color = '#b45309';
             return;
           }
@@ -941,7 +1373,7 @@
           commit();
         })
         .catch(function (err) {
-          addrStatus.textContent = 'Geocoder error: ' + (err && err.message ? err.message : String(err));
+          addrStatus.textContent = wt('des.shell.geocoderError', 'Geocoder error:') + ' ' + (err && err.message ? err.message : String(err));
           addrStatus.style.color = '#dc2626';
         })
         .then(function () {
@@ -967,12 +1399,12 @@
     overlay.innerHTML =
       '<div class="mf-token-gallery-shell">' +
         '<div class="mf-token-gallery-head">' +
-          '<div class="mf-token-gallery-title"><i class="fas fa-images"></i> Image Gallery</div>' +
-          '<input type="search" class="mf-token-gallery-search" placeholder="Filter by file name…"/>' +
-          '<button type="button" class="mf-token-gallery-close" aria-label="Close">&times;</button>' +
+          '<div class="mf-token-gallery-title"><i class="fas fa-images"></i> ' + wt('des.shell.imageGallery', 'Image Gallery') + '</div>' +
+          '<input type="search" class="mf-token-gallery-search" placeholder="' + wt('des.shell.filterByFileName', 'Filter by file name…') + '"/>' +
+          '<button type="button" class="mf-token-gallery-close" aria-label="' + wt('des.shell.close', 'Close') + '">&times;</button>' +
         '</div>' +
         '<div class="mf-token-gallery-body">' +
-          '<div class="mf-token-gallery-loading"><i class="fas fa-spinner fa-spin"></i> Loading images…</div>' +
+          '<div class="mf-token-gallery-loading"><i class="fas fa-spinner fa-spin"></i> ' + wt('des.shell.loadingImages', 'Loading images…') + '</div>' +
         '</div>' +
       '</div>';
     getMountTarget().appendChild(overlay);
@@ -997,13 +1429,13 @@
       });
       if (!_items.length) {
         body.innerHTML = '<div class="mf-token-designer-empty">' +
-          '<i class="fas fa-circle-info"></i> No images uploaded yet. Use the <strong>Upload</strong> button to add the first one.' +
+          '<i class="fas fa-circle-info"></i> ' + wt('des.shell.noImagesUploadedPre', 'No images uploaded yet. Use the') + ' <strong>' + wt('des.shell.upload', 'Upload') + '</strong> ' + wt('des.shell.noImagesUploadedPost', 'button to add the first one.') +
         '</div>';
         return;
       }
       if (!view.length) {
         body.innerHTML = '<div class="mf-token-designer-empty">' +
-          '<i class="fas fa-circle-info"></i> No matches for "' + B.escHtml(filter) + '".' +
+          '<i class="fas fa-circle-info"></i> ' + wt('des.shell.noMatchesFor', 'No matches for') + ' "' + B.escHtml(filter) + '".' +
         '</div>';
         return;
       }

@@ -733,13 +733,17 @@ var MegaFormRenderer = (function () {
   function postHostedEmbedResize(formId: number): void {
     if (typeof window === 'undefined' || !window.parent || window.parent === window) return;
     try {
+      var targetOrigin = window.location.origin;
+      try {
+        if (document.referrer) targetOrigin = new URL(document.referrer).origin;
+      } catch (_originError) {}
       var h = Math.max(
         document.documentElement ? document.documentElement.scrollHeight : 0,
         document.body ? document.body.scrollHeight : 0,
         document.documentElement ? document.documentElement.offsetHeight : 0,
         document.body ? document.body.offsetHeight : 0
       );
-      window.parent.postMessage({ type: 'mf:resize', height: h, formId: formId, badge: CHROMELESS_EMBED_HOST_BADGE }, '*');
+      window.parent.postMessage({ type: 'mf:resize', height: h, formId: formId, badge: CHROMELESS_EMBED_HOST_BADGE }, targetOrigin);
     } catch (_error) {
     }
   }

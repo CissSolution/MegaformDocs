@@ -1,0 +1,20 @@
+{
+  "rootCount": 1,
+  "reviewErrCount": 1,
+  "tabCount": 6,
+  "tabs": [
+    "✓ Account Your details",
+    "✓ Company Where you work",
+    "✓ Billing Choose a plan",
+    "✓ Preferences Tailor your setup",
+    "✓ Security Protect your account",
+    "✓ Review Confirm and submit"
+  ],
+  "afterReviewSubmit": {
+    "active": "✓ Review Confirm and submit",
+    "reviewErrorVisible": true,
+    "reviewErrorText": "Some sections are incomplete. Open the highlighted tabs to finish.",
+    "invalidTabs": 5,
+    "errors": 0
+  }
+}

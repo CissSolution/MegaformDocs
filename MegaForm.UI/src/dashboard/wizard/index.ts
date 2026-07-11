@@ -3,13 +3,14 @@
 // fully populated. Keep the existing builder; only add this wizard. Entry:
 // openFormCreationWizard() (also window.MegaFormWizard.open()).
 import { WizardData, SetFn, defaultWizardData, WIZARD_STEPS } from './types';
-import { h, icon, injectWizardCss } from './ui';
+import { h, icon, injectWizardCss, wt } from './ui';
 import { renderSetup } from './step-setup';
 import { renderFields, resetFields } from './step-fields';
 import { renderWorkflow } from './step-workflow';
 import { renderDesign } from './step-design';
 import { renderPublish } from './step-publish';
 import { renderPreview } from './preview';
+import { showTrialUpgrade } from '@shared/trial';
 import { wizardToDto } from './transform';
 import { postWizardForm, builderUrlFor, wizardCtx } from './save';
 import { loadSiteCatalog, resetSiteCatalog } from './principals';
@@ -51,11 +52,11 @@ export function openFormCreationWizard(): void {
       const cls = 'ri' + (i === step ? ' active' : '') + (i < step ? ' done' : '');
       rail.appendChild(h('div', { class: cls, onclick: () => { if (i <= step || canLeave(step)) { step = i; renderAll(); } } }, [
         h('span', { class: 'ic' }, [i < step ? icon('fa-check') : icon(s.icon)]),
-        h('span', null, [h('b', null, s.label), h('small', null, s.desc)]),
+        h('span', null, [h('b', null, wt('wiz.step.' + s.key + '.label', s.label)), h('small', null, wt('wiz.step.' + s.key + '.desc', s.desc))]),
       ]));
     });
     rail.appendChild(h('div', { class: 'mfw-rail-foot' }, [
-      document.createTextNode('Step ' + (step + 1) + ' of 5 — ' + WIZARD_STEPS[step].desc),
+      document.createTextNode(wt('wiz.step_of', 'Step {n} of 5 — {desc}', { n: step + 1, desc: wt('wiz.step.' + WIZARD_STEPS[step].key + '.desc', WIZARD_STEPS[step].desc) })),
       h('div', { class: 'mfw-rail-prog' }, [h('i', { style: 'width:' + ((step + 1) / 5 * 100) + '%' })]),
     ]));
   }
@@ -66,19 +67,19 @@ export function openFormCreationWizard(): void {
       if (i) topSteps.appendChild(h('span', { class: 'chev' }, [icon('fa-chevron-right')]));
       topSteps.appendChild(h('span', { class: 's' + (i === step ? ' active' : '') + (i < step ? ' done' : '') }, [
         h('span', { class: 'n' }, [i < step ? icon('fa-check') : document.createTextNode(String(i + 1))]),
-        document.createTextNode(s.label),
+        document.createTextNode(wt('wiz.step.' + s.key + '.label', s.label)),
       ]));
     });
   }
 
   function renderFooter(): void {
     footer.innerHTML = '';
-    footer.appendChild(h('button', { class: 'mfw-btn', disabled: step === 0 ? '' : null, onclick: () => { if (step > 0) { step--; renderAll(); } } }, [icon('fa-chevron-left'), document.createTextNode(' Back')]));
+    footer.appendChild(h('button', { class: 'mfw-btn', disabled: step === 0 ? '' : null, onclick: () => { if (step > 0) { step--; renderAll(); } } }, [icon('fa-chevron-left'), document.createTextNode(' ' + wt('wiz.back', 'Back'))]));
     footer.appendChild(h('div', { class: 'dots' }, WIZARD_STEPS.map((_, i) => h('i', { class: i === step ? 'on' : '' }))));
     if (step < 4) {
-      footer.appendChild(h('button', { class: 'mfw-btn primary', disabled: canLeave(step) ? null : '', onclick: () => { if (canLeave(step)) { step++; renderAll(); } } }, [document.createTextNode('Continue '), icon('fa-chevron-right')]));
+      footer.appendChild(h('button', { class: 'mfw-btn primary', disabled: canLeave(step) ? null : '', onclick: () => { if (canLeave(step)) { step++; renderAll(); } } }, [document.createTextNode(wt('wiz.continue', 'Continue') + ' '), icon('fa-chevron-right')]));
     } else {
-      footer.appendChild(h('button', { class: 'mfw-btn primary cta', disabled: busy ? '' : null, onclick: doCreate }, [icon(busy ? 'fa-spinner fa-spin' : 'fa-wand-magic-sparkles'), document.createTextNode(busy ? ' Creating…' : ' Create Form')]));
+      footer.appendChild(h('button', { class: 'mfw-btn primary cta', disabled: busy ? '' : null, onclick: doCreate }, [icon(busy ? 'fa-spinner fa-spin' : 'fa-wand-magic-sparkles'), document.createTextNode(' ' + (busy ? wt('wiz.creating', 'Creating…') : wt('wiz.create', 'Create Form')))]));
     }
   }
 
@@ -94,6 +95,13 @@ export function openFormCreationWizard(): void {
       const res = await postWizardForm(dto);
       if (res.ok && res.formId) { window.location.href = builderUrlFor(res.formId); return; }
       busy = false; renderFooter();
+      // [TrialTighten v20260706] Server returns 402 + "trial_form_limit" when a trial site is at the
+      // MaxTrialForms cap — show the Upgrade CTA instead of a raw HTTP error.
+      if (res.status === 402 || (res.text && res.text.indexOf('trial_form_limit') >= 0)) {
+        let lim = 3; try { lim = Number(JSON.parse(res.text).limit) || 3; } catch { /* */ }
+        showTrialUpgrade({ title: wt('trial.form_limit_title', 'Form limit reached'), message: wt('trial.form_limit_msg', 'Trial mode is limited to {n} forms. Upgrade to create more.', { n: lim }) });
+        return;
+      }
       alert('Could not create the form (HTTP ' + res.status + ').\n' + res.text);
     } catch (e: any) { busy = false; renderFooter(); alert('Create failed: ' + (e && e.message || e)); }
   }
@@ -101,9 +109,9 @@ export function openFormCreationWizard(): void {
   function close(): void { try { overlay.remove(); } catch { /* */ } }
 
   overlay.appendChild(h('div', { class: 'mfw-top' }, [
-    h('div', { class: 'mfw-brand' }, [h('span', { class: 'mfw-logo' }, [icon('fa-wand-magic-sparkles')]), h('span', null, [document.createTextNode('Form Wizard'), h('small', null, 'Create a new form')])]),
+    h('div', { class: 'mfw-brand' }, [h('span', { class: 'mfw-logo' }, [icon('fa-wand-magic-sparkles')]), h('span', null, [document.createTextNode(wt('wiz.title', 'Form Wizard')), h('small', null, wt('wiz.subtitle', 'Create a new form'))])]),
     topSteps,
-    h('button', { class: 'mfw-cancel', onclick: close }, 'Cancel'),
+    h('button', { class: 'mfw-cancel', onclick: close }, wt('wiz.cancel', 'Cancel')),
   ]));
   overlay.appendChild(h('div', { class: 'mfw-body' }, [
     rail,

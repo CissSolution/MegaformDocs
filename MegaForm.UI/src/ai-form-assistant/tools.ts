@@ -16,6 +16,7 @@
  */
 
 import type { ToolDef, ToolCall } from './providers';
+import { mockCatalogImageForText } from '@shared/rich-choice-catalog';
 
 export const TOOLS_BADGE = 'MfAiTools v20260622-01';
 
@@ -78,14 +79,14 @@ export const TOOL_DEFS: ToolDef[] = [
   },
   {
     name: 'get_safe_image_url',
-    description: 'Returns a GUARANTEED-WORKING image URL you can paste into <img src="…">. Never hallucinate image URLs — call this first. The URL is from an allowlisted host (picsum.photos seed-based — same keyword always returns the same photo).',
+    description: 'Returns a MegaForm mock-catalog image URL you can paste into <img src="…">. Never hallucinate image URLs — call this first. The URL is a bundled relative /Modules/MegaForm/img/mock/... asset.',
     parameters: {
       type: 'object',
       properties: {
         keywords: { type: 'string', description: 'Subject keywords, e.g. "ocean sunrise" or "team meeting".' },
-        width: { type: 'number', description: 'Image width in px (default 800, max 2400).' },
-        height: { type: 'number', description: 'Image height in px (default 400, max 2400).' },
-        style: { type: 'string', description: 'Optional style hint: "photo" (default, real photo via picsum.photos), or "placeholder" (placehold.co labeled box, useful for logos/banners without subject matter).' },
+        width: { type: 'number', description: 'Ignored; catalog images keep their native bundled asset.' },
+        height: { type: 'number', description: 'Ignored; catalog images keep their native bundled asset.' },
+        style: { type: 'string', description: 'Ignored; catalog image selection is based on keywords.' },
       },
       required: ['keywords'],
       additionalProperties: false,
@@ -407,19 +408,12 @@ export async function dispatchToolCall(call: ToolCall): Promise<any> {
         };
       })();
     case 'get_safe_image_url':
-      // Client-side helper — no round trip needed. Build the URL inline
-      // so the AI never sees a placeholder it could hallucinate around.
+      // Client-side helper — no round trip needed. Return a bundled mock
+      // catalog asset so the AI never invents external image URLs.
       return (() => {
         const kw = String(a.keywords || '').trim();
         if (!kw) return { error: 'keywords required' };
-        const w = Math.min(2400, Math.max(80, Number(a.width)  || 800));
-        const h = Math.min(2400, Math.max(80, Number(a.height) || 400));
-        const seed = encodeURIComponent(kw.replace(/\s+/g, '-').slice(0, 60));
-        if (String(a.style || '').toLowerCase() === 'placeholder') {
-          const label = encodeURIComponent(kw.slice(0, 40));
-          return { url: 'https://placehold.co/' + w + 'x' + h + '/eef2ff/6366f1?text=' + label, source: 'placehold.co' };
-        }
-        return { url: 'https://picsum.photos/seed/' + seed + '/' + w + '/' + h, source: 'picsum.photos' };
+        return { url: mockCatalogImageForText(kw), source: 'megaform-mock-catalog' };
       })();
     case 'get_widget_bundle':
       return fetchJson(buildUrl('GetWidgetBundle', { slug: a.slug, recentLessons: a.recentLessons }));

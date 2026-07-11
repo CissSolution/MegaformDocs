@@ -11,6 +11,7 @@
 
 
 import { MegaFormBuilder } from './core';
+import { fetchFormGetOnce } from './boot-fetch-dedup';
 import { getEmbedFormUrl, getPublicFormUrl, resolveAssetUrl } from '@shared/platform-host';
 const IFRAME_RESIZE_BADGE = 'Iframe resize v20260401-01';
 if (typeof window !== 'undefined') (window as any).__MF_IFRAME_RESIZE_BADGE__ = IFRAME_RESIZE_BADGE;
@@ -467,8 +468,7 @@ function initFormLoader(): void {
         }
     } catch (_) {}
 
-    fetch(API_BASE + 'Form/Get?formId=' + FORM_ID + '&moduleId=0&portalId=' + _portalIdQ, { headers: _panelSfHeaders })
-        .then(function(r) { return r.ok ? r.json() : Promise.reject('HTTP ' + r.status); })
+    fetchFormGetOnce(FORM_ID, API_BASE + 'Form/Get?formId=' + FORM_ID + '&moduleId=0&portalId=' + _portalIdQ, { headers: _panelSfHeaders })   // [dedup] shared with dom.ts boot path
         .then(function(form: any) {
             var title  = form.title || form.Title || form.formName || form.FormName || 'Untitled';
             var resolvedModel = form.resolvedRenderModel || form.ResolvedRenderModel || null;
@@ -748,6 +748,23 @@ function bootApp(): void {
     initFormLoader();
     bootPanels();
 }
+
+// [B359] Re-boot hook for Blazor enhanced-nav. The builder bundle only auto-boots ONCE (module
+// load). When the tab navigates to a DIFFERENT builder in-place (?mfpanel=builder&formId=N), a
+// fresh EMPTY #mf-builder-root is mounted but the already-loaded bundle never boots it → blank.
+// The loader (loadBuilderBundle / boot) already calls MegaFormBuilder.reInit() in that path; it
+// was just never wired. Wire it to bootApp, guarded to only build a freshly-mounted EMPTY root so
+// re-entering an already-built root is a no-op (no double-build). initFormLoader inside reads the
+// fresh window.FORM_ID / root data set by the new page's boot script.
+try {
+    if (typeof (window as any).MegaFormBuilder !== 'undefined') {
+        (window as any).MegaFormBuilder.reInit = function () {
+            var r = document.getElementById('mf-builder-root');
+            if (!r || r.children.length > 0) return;
+            bootApp();
+        };
+    }
+} catch (_e) { /* reInit is best-effort */ }
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() { setTimeout(bootApp, 200); });

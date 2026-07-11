@@ -34,7 +34,8 @@
     "build:theme-designer": "node scripts/build-entry.cjs theme-designer",
     "build:theme-inspector": "node scripts/build-entry.cjs theme-inspector",
     "build:dnn-host": "node scripts/build-entry.cjs dnn-host",
-    "build:languages": "node scripts/build-entry.cjs languages"
+    "build:languages": "node scripts/build-entry.cjs languages",
+    "build:widget-pdf-form": "node scripts/build-entry.cjs widget-pdf-form"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",

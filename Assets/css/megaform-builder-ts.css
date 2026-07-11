@@ -1949,6 +1949,29 @@ body[data-mf-mode="build"] .mf-canvas-field.mf-page-break-section.mf-selected {
 .mf-token-image-url:focus, .mf-slide-img-url:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.18); }
 .mf-token-image-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
 .mf-token-image-buttons .mf-builder-btn { font-size: 11px; padding: 6px 10px; }
+
+/* ── [SliderDesignerFields 20260701] Slider Designer / Image-Choice Designer per-row slide/option editor.
+   Classes shared by src/builder/slider-designer.ts AND imagechoice-designer.ts. Without them the
+   mini-labels sat inline beside their inputs (overlapping) and inputs were not full-width — the slide
+   fields rendered completely unstyled. Non-!important so sibling designers keep their overrides. ── */
+.mf-slider-designer-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.mf-slider-designer-toolbar-hint { font-size: 11px; color: #94a3b8; }
+.mf-slider-designer-slides { display: flex; flex-direction: column; gap: 12px; }
+.mf-slider-designer-row { border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; padding: 12px; }
+.mf-slider-designer-row-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.mf-slider-designer-grip { color: #94a3b8; cursor: grab; font-size: 13px; }
+.mf-slider-designer-row-label { font-weight: 700; font-size: 13px; color: #0f172a; }
+.mf-slider-designer-row-actions { margin-left: auto; display: flex; gap: 6px; }
+.mf-slider-designer-row-actions .mf-builder-btn { font-size: 11px; padding: 6px 9px; }
+.mf-slider-designer-row-body { display: flex; gap: 12px; align-items: flex-start; }
+.mf-slider-designer-thumb { flex: 0 0 120px; width: 120px; height: 96px; }
+.mf-slider-designer-row-fields { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.mf-slider-designer-mini-label { display: block; font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 3px; }
+.mf-slider-designer-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mf-slider-designer-grid2 > div { min-width: 0; }
+.mf-token-row-input { width: 100%; box-sizing: border-box; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 12px; font-family: Inter, system-ui, sans-serif; color: #0f172a; background: #fff; }
+textarea.mf-token-row-input { resize: vertical; min-height: 44px; line-height: 1.45; }
+.mf-token-row-input:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.18); }
 .mf-token-image-upload { background: #6366f1; color: #fff; border-color: #6366f1; }
 .mf-token-image-upload:hover { background: #4f46e5; border-color: #4f46e5; }
 .mf-token-image-gallery { background: #0ea5e9; color: #fff; border-color: #0ea5e9; }
@@ -2472,6 +2495,10 @@ textarea.mf-slide-text {
   overflow-x: hidden !important;
   overflow-y: auto !important; /* canvas scrolls internally */
 }
+body.state-theme-mode .mf-builder-layout > .mf-panel-center {
+  overflow-x: hidden !important;
+  scrollbar-gutter: stable;
+}
 
 /* ── Hide empty dropzone when Custom HTML Active banner is present ──────────
    When .mf-custom-html-banner exists, the top empty zone is useless clutter.
@@ -2494,10 +2521,6 @@ textarea.mf-slide-text {
   inset: 1.5rem !important;
   z-index: 1 !important;
   pointer-events: none !important;
-}
-body.state-theme-mode .mf-builder-layout > .mf-panel-center {
-  overflow-x: hidden !important;
-  scrollbar-gutter: stable;
 }
 .mf-canvas-dropzone #mf-canvas-fields {
   position: relative !important;
@@ -3647,6 +3670,58 @@ body.state-theme-mode .mf-builder-layout > .mf-panel-center {
 }
 .mfw-qr-settings .mfw-qr-logo-preview img { max-width: 48px; max-height: 48px; }
 .mfw-qr-settings .mfw-qr-logo-preview span { color: #94a3b8; font-size: 11px; }
+
+/* [MapSettingsAlign 20260701] Map (OSM) widget uses a custom renderProperties wrapper
+   (.mfw-map-settings) instead of .mfw-auto-props, so the canonical widget-settings layout
+   rules never matched and rows rendered ragged ("xộc xệch"). Mirror the tidy 2-column grid
+   used by .mfw-qr-settings so LATITUDE/LONGITUDE/ZOOM/LABEL/HEIGHT/WIDTH/MARKER COLOR line
+   up in a neat aligned table. */
+.mfw-map-settings { display: flex; flex-direction: column; gap: 6px; padding: 4px 2px 2px; }
+.mfw-map-settings .mfw-prop-row {
+  display: grid !important;
+  grid-template-columns: 120px 1fr !important;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 4px 0;
+  font-size: 12px;
+}
+.mfw-map-settings .mfw-prop-label {
+  color: #475569 !important;
+  font-weight: 600 !important;
+  font-size: 10.5px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  min-width: 0 !important;
+}
+.mfw-map-settings .mfw-prop-row input[type=text],
+.mfw-map-settings .mfw-prop-row input[type=number],
+.mfw-map-settings .mfw-prop-row select {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 32px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #0f172a;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}
+.mfw-map-settings .mfw-prop-row input[type=color] {
+  width: 56px !important;
+  height: 32px;
+  padding: 2px 4px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  justify-self: start;
+}
+.mfw-map-settings .mfw-prop-row input:focus,
+.mfw-map-settings .mfw-prop-row select:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+}
+.mfw-map-settings .mfw-prop-hint { grid-column: 1 / -1; }
 
 /* [B95] Build mode left tabs and center canvas mock parity */
 body[data-mf-mode="build"] {

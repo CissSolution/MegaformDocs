@@ -8,12 +8,12 @@
     <div class="container">
         <h1>Build smarter forms in your ASP.NET Core apps</h1>
         <p>
-            This demo site shows how a normal corporate website can embed a
-            MegaForm contact form using the MegaForm ASP.NET Core NuGet package.
+            This corporate demo site shows how a normal ASP.NET Core website can
+            embed MegaForm using the <code>MegaForm.AspNetCore.Component</code> NuGet package.
         </p>
         <div class="cta-row">
             <a class="btn btn-primary" href="/Contact">Get in touch</a>
-            <a class="btn btn-secondary" href="/Details">Learn more</a>
+            <a class="btn btn-secondary" href="/admin-dashboard">Admin dashboard</a>
         </div>
     </div>
 </section>
@@ -32,12 +32,46 @@
             </div>
             <div class="feature-card">
                 <h3>Form embedding</h3>
-                <p>The contact page renders a MegaForm using the <code>&lt;megaform&gt;</code> TagHelper.</p>
+                <p>See contact, support, and landing pages embed MegaForm using the <code>&lt;megaform&gt;</code> TagHelper.</p>
             </div>
             <div class="feature-card">
-                <h3>Self-seeding demo</h3>
-                <p>A hosted service seeds a published contact form on first run so the sample works immediately.</p>
+                <h3>Admin dashboard</h3>
+                <p>A built-in dashboard page connects to MegaForm services and links to the admin console.</p>
             </div>
+        </div>
+    </div>
+</section>
+
+<section class="steps">
+    <div class="container">
+        <h2 class="section-title">Integration in 3 steps</h2>
+        <div class="steps-grid">
+            <div class="step-card">
+                <span class="step-number">1</span>
+                <h3>Add the package</h3>
+                <p>Reference <code>MegaForm.AspNetCore.Component</code> from your project.</p>
+            </div>
+            <div class="step-card">
+                <span class="step-number">2</span>
+                <h3>Wire it up</h3>
+                <p>Call <code>AddMegaForm</code>, <code>EnsureMegaFormDatabaseReady</code>, and <code>UseMegaForm</code>.</p>
+            </div>
+            <div class="step-card">
+                <span class="step-number">3</span>
+                <h3>Embed anywhere</h3>
+                <p>Use the TagHelper or HtmlHelper to render forms in any Razor view.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section">
+    <div class="container">
+        <h2>Ready to see it in action?</h2>
+        <p>Open the contact form or explore the MegaForm admin console seeded by this sample.</p>
+        <div class="cta-row">
+            <a class="btn btn-primary" href="/Contact">View contact form</a>
+            <a class="btn btn-secondary" href="/admin-dashboard">Open admin dashboard</a>
         </div>
     </div>
 </section>

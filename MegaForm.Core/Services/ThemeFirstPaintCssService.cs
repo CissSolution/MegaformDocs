@@ -28,6 +28,7 @@ namespace MegaForm.Core.Services
 
         private static readonly Regex VarNameRe = new Regex("^--[a-zA-Z0-9_-]+$", RegexOptions.Compiled);
         private static readonly Regex PrefixScanRe = new Regex("--([a-z][a-z0-9]{1,14})-[a-z0-9_-]+", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex VarDeclarationRe = new Regex("(?<name>--[a-zA-Z0-9_-]+)\\s*:", RegexOptions.Compiled);
         private static readonly Regex StyleCloseRe = new Regex("</style", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         // ─────────────────────────────────────────────────────────────────────────────
@@ -100,13 +101,17 @@ namespace MegaForm.Core.Services
         {
             if (settings == null) return string.Empty;
             var overrides = CollectThemeCssOverrides(settings);
+            var customCss = Str(First(settings, "customCss", "CustomCss"));
+            var customHtml = Str(First(settings, "customHtml", "CustomHtml"));
+            var templateText = customCss + "\n" + customHtml;
+            var preservePremiumPalette = HasAuthoredPremiumPalette(templateText);
 
             // Page-theme "borrow colours" (inline embeds only): the form blends into the host skin
             // — transparent OUTER panel + the host's primary accent (Bootstrap --bs-primary on
             // Oqtane, skin var on DNN, safe literal fallback last). Available on EVERY form type
             // (incl. .mfp premium / AI custom-HTML shells) — opt-in, reversible, author's choice.
             var borrowColors = ReadBool(First(settings, "inheritPageColors", "InheritPageColors"));
-            if (borrowColors)
+            if (borrowColors && !preservePremiumPalette)
             {
                 // Inject the host primary into the override map BEFORE alias expansion so
                 // BuildPremiumThemeAliasVars propagates it to EVERY primary-family alias
@@ -120,9 +125,7 @@ namespace MegaForm.Core.Services
 
             if (overrides.Count == 0) return string.Empty;
 
-            var customCss = Str(First(settings, "customCss", "CustomCss"));
-            var customHtml = Str(First(settings, "customHtml", "CustomHtml"));
-            var aliases = BuildPremiumThemeAliasVars(overrides, customCss + "\n" + customHtml);
+            var aliases = BuildPremiumThemeAliasVars(overrides, templateText);
 
             // effective = aliases ∪ overrides, overrides authoritative. BuildPremiumThemeAliasVars
             // already skips keys present in `overrides`, so the union has no collisions.
@@ -132,7 +135,7 @@ namespace MegaForm.Core.Services
 
             // Outer panel only — applied AFTER aliases so it is not propagated into card-bg
             // derivations (a .mfp card would otherwise go transparent and vanish).
-            if (borrowColors) effective["--mf-page-bg"] = "transparent";
+            if (borrowColors && !preservePremiumPalette) effective["--mf-page-bg"] = "transparent";
 
             return BuildScopedCss(formId, effective);
         }
@@ -140,6 +143,20 @@ namespace MegaForm.Core.Services
         // ─────────────────────────────────────────────────────────────────────────────
         // collectThemeCssOverrides
         // ─────────────────────────────────────────────────────────────────────────────
+
+        private static bool HasAuthoredPremiumPalette(string templateText)
+        {
+            var vars = CollectAuthoredCssVarDeclarations(templateText);
+            foreach (var prefix in KnownPremiumVarPrefixes)
+            {
+                if (vars.Contains("--" + prefix + "-primary") ||
+                    vars.Contains("--" + prefix + "-bg") ||
+                    vars.Contains("--" + prefix + "-surface") ||
+                    vars.Contains("--" + prefix + "-ink"))
+                    return true;
+            }
+            return false;
+        }
 
         private static Dictionary<string, string> CollectThemeCssOverrides(JObject settings)
         {
@@ -189,6 +206,16 @@ namespace MegaForm.Core.Services
 
             if (IsEmpty(primary) && IsEmpty(formBg) && IsEmpty(foreground) && IsEmpty(border)) return outMap;
 
+            var authoredVars = CollectAuthoredCssVarDeclarations(templateText);
+            if (authoredVars.Count > 0)
+            {
+                vars = new Dictionary<string, string>(vars, StringComparer.Ordinal);
+                foreach (var name in authoredVars)
+                {
+                    if (!vars.ContainsKey(name)) vars[name] = "__mf-authored-template-var__";
+                }
+            }
+
             Put(outMap, vars, "--mf-primary", primary);
             Put(outMap, vars, "--mf-primary-hover", primaryHover);
             Put(outMap, vars, "--mf-primary-light", primaryLight);
@@ -208,6 +235,23 @@ namespace MegaForm.Core.Services
             Put(outMap, vars, "--mf-btn-color", buttonText);
             Put(outMap, vars, "--mf-btn-text", buttonText);
             Put(outMap, vars, "--mf-color-text-inverse", buttonText);
+
+            // [PresetWire v20260706] Dedicated preset channel — emitted ONLY when a theme
+            // preset/override is active (this whole builder runs only for a non-empty override
+            // map). Unlike --mf-primary/--mf-text/--mf-form-bg/--mf-border (which the base CSS
+            // sets globally, so var(--mf-primary, orig) always resolves to the global value and
+            // a template can never tell "no preset" from "preset=default"), --mf-preset-* has NO
+            // global default. Premium templates derive their identity palette from
+            // var(--mf-preset-primary, <own colour>) etc.: absent → the template's own colour
+            // (identity preserved); present → the picked preset recolours the form. Reserved
+            // names (templates USE them via var() but never declare them), so Put always emits.
+            Put(outMap, vars, "--mf-preset-primary", primary);
+            Put(outMap, vars, "--mf-preset-text", foreground);
+            Put(outMap, vars, "--mf-preset-surface", Or(formBg, pageBg));
+            Put(outMap, vars, "--mf-preset-accent", Or(primaryLight, primary));
+            Put(outMap, vars, "--mf-preset-border", border);
+            Put(outMap, vars, "--mf-preset-bg", Or(pageBg, formBg));
+            Put(outMap, vars, "--mf-preset-on-primary", buttonText);
 
             Put(outMap, vars, "--background", Or(pageBg, formBg));
             Put(outMap, vars, "--foreground", foreground);
@@ -283,6 +327,18 @@ namespace MegaForm.Core.Services
             }
 
             return outMap;
+        }
+
+        private static HashSet<string> CollectAuthoredCssVarDeclarations(string templateText)
+        {
+            var found = new HashSet<string>(StringComparer.Ordinal);
+            var text = templateText ?? string.Empty;
+            foreach (Match match in VarDeclarationRe.Matches(text))
+            {
+                var name = match.Groups["name"].Value;
+                if (!string.IsNullOrEmpty(name)) found.Add(name);
+            }
+            return found;
         }
 
         private static List<string> DetectPremiumVarPrefixes(string templateText)

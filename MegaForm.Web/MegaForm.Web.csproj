@@ -1,16 +1,21 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Razor">
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <RootNamespace>MegaForm.Web</RootNamespace>
     <AssemblyName>MegaForm.Web</AssemblyName>
-    <Version>1.7.1</Version>
+    <Version>1.7.3</Version>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <IsPackable>true</IsPackable>
     <PackageId>MegaForm.Web</PackageId>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <!-- Expose wwwroot as static web assets and serve them at the site root
+         so consumers see /megaform/css/* instead of /_content/MegaForm.Web/* -->
+    <StaticWebAssetBasePath>/</StaticWebAssetBasePath>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
   </PropertyGroup>
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="..\MegaForm.Core\MegaForm.Core.csproj" />
     <ProjectReference Include="..\MegaForm.Sdk\MegaForm.Sdk.csproj" />
   </ItemGroup>
@@ -39,6 +44,8 @@
     <PackageReference Include="Swashbuckle.AspNetCore"                           Version="7.2.0" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Remove="Program.cs" />
+    <EmbeddedResource Include="..\MegaForm.Core\Seed\ai-knowledge-seed.json" LogicalName="MegaForm.Web.Seed.ai-knowledge-seed.json" />
     <Content Include="license.lic" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

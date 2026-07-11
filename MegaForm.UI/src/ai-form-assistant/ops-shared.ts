@@ -1,4 +1,6 @@
 /* [split 2026-06-27] Extracted from the former 2408-line ops.ts. */
+import { enrichRichChoiceOptionsFromCatalog } from '@shared/rich-choice-catalog';
+
 // [v20260601-B27] Platform-aware Subform endpoint resolver.
 // DNN:    /DesktopModules/MegaForm/API/Subform/<path>
 // Oqtane: /api/MegaFormPopup/Subform/<path>  (NOT /api/MegaForm/Subform — that 404s)
@@ -266,6 +268,13 @@ export function normalizeOptionFields(field: any): void {
   if (p.optionsSource === 'sql' && !p.optionsType) p.optionsType = 'sql';
   if (p.optionsSource === 'sql' && !p.optionsConnectionKey) p.optionsConnectionKey = 'DashboardDatabase';
   if (p.optionsSource === 'sql' && p.optionsReloadOnChange === undefined) p.optionsReloadOnChange = true;
+
+  const type = String(field.type || '').toLowerCase().replace(/[\s_-]+/g, '');
+  const display = String(field.optionDisplay || p.optionDisplay || wp.optionDisplay || '').toLowerCase().trim();
+  if (Array.isArray(field.options) && field.options.length > 0) {
+    if (type === 'cards' || display === 'cards') enrichRichChoiceOptionsFromCatalog(field, 'cards');
+    if (type === 'chips' || display === 'chips') enrichRichChoiceOptionsFromCatalog(field, 'chips');
+  }
 }
 
 /**
@@ -464,6 +473,14 @@ export function validateRuleArray(arr: any[]): { ok: boolean; rules: any[]; erro
       return null;
     }
     if (node.type === 'rule') {
+      // Role/permission/user/query conditions are ACCESS CONTROL, enforced server-side, and are
+      // authored in the builder Access tab ("Field visibility by role") or a field.showIf role rule —
+      // NOT here. Form rules gate on a field ANSWER only. Reject with actionable guidance rather than a
+      // confusing "field is required".
+      const src = String(node.sourceType || '').toLowerCase();
+      if (src && src !== 'field') {
+        return path + ': role/permission/user conditions are access control — set them in the Access tab (Field visibility by role), not in a form rule';
+      }
       if (!node.field || typeof node.field !== 'string') return path + ': rule.field is required';
       if (!node.operator || !VALID_OPS.has(node.operator)) return path + ': rule.operator must be one of ' + Array.from(VALID_OPS).join(',');
       return null;

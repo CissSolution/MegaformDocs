@@ -8,6 +8,7 @@
 // multi-select, card style, accent color).
 // ============================================================
 // @ts-nocheck
+import { wt } from './designer-i18n';
 'use strict';
 
 (function () {
@@ -18,20 +19,20 @@
   if (!B) return;
 
   var CARD_STYLES = [
-    { id: 'bordered', label: 'Bordered', desc: 'Solid border around each card.', icon: 'fa-square' },
-    { id: 'shadow',   label: 'Shadow',   desc: 'Soft drop-shadow, no border.',  icon: 'fa-clone' },
-    { id: 'minimal',  label: 'Minimal',  desc: 'No border, no shadow.',         icon: 'fa-grip' }
+    { id: 'bordered', label: wt('des.img.cardBordered', 'Bordered'), desc: wt('des.img.cardBorderedDesc', 'Solid border around each card.'), icon: 'fa-square' },
+    { id: 'shadow',   label: wt('des.img.cardShadow', 'Shadow'),   desc: wt('des.img.cardShadowDesc', 'Soft drop-shadow, no border.'),  icon: 'fa-clone' },
+    { id: 'minimal',  label: wt('des.img.cardMinimal', 'Minimal'),  desc: wt('des.img.cardMinimalDesc', 'No border, no shadow.'),         icon: 'fa-grip' }
   ];
 
   function uploadImage(file: File): Promise<string> {
     var td: any = (window as any).MFTokenDesigner;
     if (td && td.uploadImage) return td.uploadImage(file);
-    return Promise.reject(new Error('Upload helper missing'));
+    return Promise.reject(new Error(wt('des.img.uploadHelperMissing', 'Upload helper missing')));
   }
   function openGalleryPicker(onPick: (url: string) => void) {
     var td: any = (window as any).MFTokenDesigner;
     if (td && td.openGalleryPicker) td.openGalleryPicker(onPick);
-    else B.showToast('Gallery helper missing', 'error');
+    else B.showToast(wt('des.img.galleryHelperMissing', 'Gallery helper missing'), 'error');
   }
 
   function ensureOptions(field: any): any[] {
@@ -44,7 +45,7 @@
 
   function open(field: any, onClose?: () => void) {
     if (!field || field.type !== 'ImageChoice') {
-      B.showToast && B.showToast('Image Choice Designer only works for ImageChoice', 'error');
+      B.showToast && B.showToast(wt('des.img.onlyImageChoice', 'Image Choice Designer only works for ImageChoice'), 'error');
       return;
     }
     var wp = field.widgetProps = field.widgetProps || {};
@@ -63,19 +64,19 @@
     modal.className = 'mf-token-designer-backdrop';
     modal.setAttribute('data-mf-overlay', '1'); // [B30] survive Builder fullscreen takeover
     modal.innerHTML =
-      '<div class="mf-token-designer-shell mf-slider-designer-shell" role="dialog" aria-label="Image Choice Designer">' +
+      '<div class="mf-token-designer-shell mf-slider-designer-shell" role="dialog" aria-label="' + wt('des.img.dialogAria', 'Image Choice Designer') + '">' +
         '<div class="mf-token-designer-head">' +
           '<div class="mf-token-designer-title">' +
             '<i class="fas fa-th"></i>' +
-            '<span>Image Choice Designer</span>' +
+            '<span>' + wt('des.img.title', 'Image Choice Designer') + '</span>' +
             '<span class="mf-token-designer-badge">v20260601-B27</span>' +
           '</div>' +
-          '<button type="button" class="mf-token-designer-close" aria-label="Close">&times;</button>' +
+          '<button type="button" class="mf-token-designer-close" aria-label="' + wt('des.img.close', 'Close') + '">&times;</button>' +
         '</div>' +
         '<div class="mf-token-designer-tabs">' +
-          '<button type="button" class="mf-token-designer-tab active" data-tab="style"><i class="fas fa-palette"></i> Style</button>' +
-          '<button type="button" class="mf-token-designer-tab" data-tab="options"><i class="fas fa-images"></i> Options <span class="mf-token-designer-count" id="mf-ic-designer-count">0</span></button>' +
-          '<button type="button" class="mf-token-designer-tab" data-tab="settings"><i class="fas fa-sliders-h"></i> Settings</button>' +
+          '<button type="button" class="mf-token-designer-tab active" data-tab="style"><i class="fas fa-palette"></i> ' + wt('des.img.tabStyle', 'Style') + '</button>' +
+          '<button type="button" class="mf-token-designer-tab" data-tab="options"><i class="fas fa-images"></i> ' + wt('des.img.tabOptions', 'Options') + ' <span class="mf-token-designer-count" id="mf-ic-designer-count">0</span></button>' +
+          '<button type="button" class="mf-token-designer-tab" data-tab="settings"><i class="fas fa-sliders-h"></i> ' + wt('des.img.tabSettings', 'Settings') + '</button>' +
         '</div>' +
         '<div class="mf-token-designer-body">' +
           '<div class="mf-token-designer-pane" data-pane="style"></div>' +
@@ -83,8 +84,8 @@
           '<div class="mf-token-designer-pane" data-pane="settings" style="display:none"></div>' +
         '</div>' +
         '<div class="mf-token-designer-foot">' +
-          '<div class="mf-token-designer-foot-hint"><i class="fas fa-info-circle"></i> Changes save into the field. Press <kbd>Esc</kbd> to close.</div>' +
-          '<button type="button" class="mf-builder-btn mf-token-designer-done"><i class="fas fa-check"></i> Done</button>' +
+          '<div class="mf-token-designer-foot-hint"><i class="fas fa-info-circle"></i> ' + wt('des.img.footHint', 'Changes save into the field. Press') + ' <kbd>Esc</kbd> ' + wt('des.img.footHintClose', 'to close.') + '</div>' +
+          '<button type="button" class="mf-builder-btn mf-token-designer-done"><i class="fas fa-check"></i> ' + wt('des.img.done', 'Done') + '</button>' +
         '</div>' +
       '</div>';
     // [B31] mount inside Builder shell to dodge fullscreen-takeover
@@ -148,7 +149,7 @@
       color.className = 'mf-token-row';
       color.style.marginTop = '12px';
       color.innerHTML =
-        '<label class="mf-token-row-label">Accent color (selected card)</label>' +
+        '<label class="mf-token-row-label">' + wt('des.img.accentColor', 'Accent color (selected card)') + '</label>' +
         '<input type="color" class="mf-ic-accent" value="' + B.escAttr(wp.selectedColor || '#4f46e5') + '" style="width:120px;height:36px;border:1px solid #cbd5e1;border-radius:8px;padding:2px"/>';
       paneStyle.appendChild(color);
       (color.querySelector('.mf-ic-accent') as HTMLInputElement).addEventListener('input', function (e: any) {
@@ -164,8 +165,8 @@
       var toolbar = document.createElement('div');
       toolbar.className = 'mf-slider-designer-toolbar';
       toolbar.innerHTML =
-        '<button type="button" class="mf-builder-btn mf-ic-designer-add"><i class="fas fa-plus"></i> Add option</button>' +
-        '<span class="mf-slider-designer-toolbar-hint">Each option becomes a selectable image card on the published form.</span>';
+        '<button type="button" class="mf-builder-btn mf-ic-designer-add"><i class="fas fa-plus"></i> ' + wt('des.img.addOption', 'Add option') + '</button>' +
+        '<span class="mf-slider-designer-toolbar-hint">' + wt('des.img.addOptionHint', 'Each option becomes a selectable image card on the published form.') + '</span>';
       paneOptions.appendChild(toolbar);
 
       var list = document.createElement('div');
@@ -184,7 +185,7 @@
       if (!opts.length) {
         var empty = document.createElement('div');
         empty.className = 'mf-token-designer-empty';
-        empty.innerHTML = '<i class="fas fa-circle-info"></i> No options yet. Click <strong>Add option</strong> to create the first one.';
+        empty.innerHTML = '<i class="fas fa-circle-info"></i> ' + wt('des.img.noOptionsYet', 'No options yet. Click') + ' <strong>' + wt('des.img.addOptionStrong', 'Add option') + '</strong> ' + wt('des.img.toCreateFirstOne', 'to create the first one.');
         list.appendChild(empty);
         return;
       }
@@ -194,35 +195,35 @@
         row.className = 'mf-token-row mf-slider-designer-row';
         row.innerHTML =
           '<div class="mf-slider-designer-row-head">' +
-            '<span class="mf-slider-designer-grip" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>' +
-            '<span class="mf-slider-designer-row-label">Option ' + (idx + 1) + '</span>' +
+            '<span class="mf-slider-designer-grip" title="' + wt('des.img.dragToReorder', 'Drag to reorder') + '"><i class="fas fa-grip-vertical"></i></span>' +
+            '<span class="mf-slider-designer-row-label">' + wt('des.img.optionN', 'Option {n}', { n: (idx + 1) }) + '</span>' +
             '<div class="mf-slider-designer-row-actions">' +
-              '<button type="button" class="mf-builder-btn mf-ic-up" title="Move up" ' + (idx === 0 ? 'disabled' : '') + '><i class="fas fa-arrow-up"></i></button>' +
-              '<button type="button" class="mf-builder-btn mf-ic-down" title="Move down" ' + (idx === opts.length - 1 ? 'disabled' : '') + '><i class="fas fa-arrow-down"></i></button>' +
-              '<button type="button" class="mf-builder-btn mf-ic-remove" title="Remove"><i class="fas fa-trash"></i></button>' +
+              '<button type="button" class="mf-builder-btn mf-ic-up" title="' + wt('des.img.moveUp', 'Move up') + '" ' + (idx === 0 ? 'disabled' : '') + '><i class="fas fa-arrow-up"></i></button>' +
+              '<button type="button" class="mf-builder-btn mf-ic-down" title="' + wt('des.img.moveDown', 'Move down') + '" ' + (idx === opts.length - 1 ? 'disabled' : '') + '><i class="fas fa-arrow-down"></i></button>' +
+              '<button type="button" class="mf-builder-btn mf-ic-remove" title="' + wt('des.img.remove', 'Remove') + '"><i class="fas fa-trash"></i></button>' +
             '</div>' +
           '</div>' +
           '<div class="mf-slider-designer-row-body">' +
             '<div class="mf-token-image-preview mf-slider-designer-thumb">' +
               (opt.image
                 ? '<img src="' + B.escAttr(opt.image) + '" alt="" onerror="this.style.opacity=.25"/>'
-                : '<span class="mf-token-image-empty"><i class="fas fa-image"></i><br>no image</span>') +
+                : '<span class="mf-token-image-empty"><i class="fas fa-image"></i><br>' + wt('des.img.noImage', 'no image') + '</span>') +
             '</div>' +
             '<div class="mf-slider-designer-row-fields">' +
               '<div class="mf-token-image-buttons" style="margin-bottom:6px">' +
-                '<button type="button" class="mf-builder-btn mf-ic-upload"><i class="fas fa-cloud-upload-alt"></i> Upload</button>' +
-                '<button type="button" class="mf-builder-btn mf-ic-gallery"><i class="fas fa-images"></i> Gallery</button>' +
+                '<button type="button" class="mf-builder-btn mf-ic-upload"><i class="fas fa-cloud-upload-alt"></i> ' + wt('des.img.upload', 'Upload') + '</button>' +
+                '<button type="button" class="mf-builder-btn mf-ic-gallery"><i class="fas fa-images"></i> ' + wt('des.img.gallery', 'Gallery') + '</button>' +
               '</div>' +
-              '<label class="mf-slider-designer-mini-label">Image URL</label>' +
-              '<input type="text" class="mf-token-row-input mf-ic-url" value="' + B.escAttr(opt.image || '') + '" placeholder="https://… or /Portals/0/MegaForm/Images/…"/>' +
+              '<label class="mf-slider-designer-mini-label">' + wt('des.img.imageUrl', 'Image URL') + '</label>' +
+              '<input type="text" class="mf-token-row-input mf-ic-url" value="' + B.escAttr(opt.image || '') + '" placeholder="' + wt('des.img.urlPlaceholder', 'https://… or /Portals/0/MegaForm/Images/…') + '"/>' +
               '<div class="mf-slider-designer-grid2">' +
-                '<div><label class="mf-slider-designer-mini-label">Label</label><input type="text" class="mf-token-row-input mf-ic-label" value="' + B.escAttr(opt.label || '') + '"/></div>' +
-                '<div><label class="mf-slider-designer-mini-label">Value (key)</label><input type="text" class="mf-token-row-input mf-ic-value" value="' + B.escAttr(opt.value || '') + '"/></div>' +
+                '<div><label class="mf-slider-designer-mini-label">' + wt('des.img.label', 'Label') + '</label><input type="text" class="mf-token-row-input mf-ic-label" value="' + B.escAttr(opt.label || '') + '"/></div>' +
+                '<div><label class="mf-slider-designer-mini-label">' + wt('des.img.valueKey', 'Value (key)') + '</label><input type="text" class="mf-token-row-input mf-ic-value" value="' + B.escAttr(opt.value || '') + '"/></div>' +
               '</div>' +
-              '<label class="mf-slider-designer-mini-label">Description</label>' +
+              '<label class="mf-slider-designer-mini-label">' + wt('des.img.description', 'Description') + '</label>' +
               '<textarea class="mf-token-row-input mf-ic-desc" rows="2">' + B.escHtml(opt.description || '') + '</textarea>' +
-              '<label class="mf-slider-designer-mini-label">Price (optional, shown if "Show price" is on)</label>' +
-              '<input type="text" class="mf-token-row-input mf-ic-price" value="' + B.escAttr(String(opt.price == null ? '' : opt.price)) + '" placeholder="29.99 or $29"/>' +
+              '<label class="mf-slider-designer-mini-label">' + wt('des.img.priceOptional', 'Price (optional, shown if "Show price" is on)') + '</label>' +
+              '<input type="text" class="mf-token-row-input mf-ic-price" value="' + B.escAttr(String(opt.price == null ? '' : opt.price)) + '" placeholder="' + wt('des.img.pricePlaceholder', '29.99 or $29') + '"/>' +
             '</div>' +
           '</div>';
         list.appendChild(row);
@@ -277,15 +278,15 @@
             var f = inp.files && inp.files[0]; if (!f) return;
             btnUpload.disabled = true;
             var oldHtml = btnUpload.innerHTML;
-            btnUpload.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading…';
+            btnUpload.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + wt('des.img.uploading', 'Uploading…');
             uploadImage(f)
               .then(function (u: string) {
                 setImg(u);
-                if (B.showToast) B.showToast('Image uploaded', 'success');
+                if (B.showToast) B.showToast(wt('des.img.imageUploaded', 'Image uploaded'), 'success');
               })
               .catch(function (err: any) {
                 var msg = (err && err.message) || String(err);
-                if (B.showToast) B.showToast('Upload failed: ' + msg, 'error'); else alert('Upload failed: ' + msg);
+                if (B.showToast) B.showToast(wt('des.img.uploadFailed', 'Upload failed: ') + msg, 'error'); else alert(wt('des.img.uploadFailed', 'Upload failed: ') + msg);
               })
               .then(function () { btnUpload.disabled = false; btnUpload.innerHTML = oldHtml; });
           });
@@ -303,7 +304,7 @@
           B.state.isDirty = true; rerender();
         });
         btnRemove.addEventListener('click', function () {
-          if (!confirm('Remove this option?')) return;
+          if (!confirm(wt('des.img.removeThisOption', 'Remove this option?'))) return;
           opts.splice(idx, 1); B.state.isDirty = true; rerender();
         });
       });
@@ -316,21 +317,21 @@
       grid.className = 'mf-slider-designer-settings-grid';
       grid.innerHTML =
         '<div class="mf-token-row">' +
-          '<label class="mf-token-row-label">Columns</label>' +
+          '<label class="mf-token-row-label">' + wt('des.img.columns', 'Columns') + '</label>' +
           '<select class="mf-token-row-input mf-ic-s-cols">' +
-            '<option value="2"' + (String(wp.columns) === '2' ? ' selected' : '') + '>2 columns</option>' +
-            '<option value="3"' + (String(wp.columns) === '3' ? ' selected' : '') + '>3 columns</option>' +
-            '<option value="4"' + (String(wp.columns) === '4' ? ' selected' : '') + '>4 columns</option>' +
+            '<option value="2"' + (String(wp.columns) === '2' ? ' selected' : '') + '>' + wt('des.img.cols2', '2 columns') + '</option>' +
+            '<option value="3"' + (String(wp.columns) === '3' ? ' selected' : '') + '>' + wt('des.img.cols3', '3 columns') + '</option>' +
+            '<option value="4"' + (String(wp.columns) === '4' ? ' selected' : '') + '>' + wt('des.img.cols4', '4 columns') + '</option>' +
           '</select>' +
         '</div>' +
         '<div class="mf-token-row">' +
-          '<label class="mf-token-row-label">Selection</label>' +
-          '<label class="mf-slider-designer-mini-label"><input type="checkbox" class="mf-ic-s-multi"' + (wp.multiSelect ? ' checked' : '') + ' style="margin-right:6px"/> Allow multiple selection</label>' +
+          '<label class="mf-token-row-label">' + wt('des.img.selection', 'Selection') + '</label>' +
+          '<label class="mf-slider-designer-mini-label"><input type="checkbox" class="mf-ic-s-multi"' + (wp.multiSelect ? ' checked' : '') + ' style="margin-right:6px"/> ' + wt('des.img.allowMultiple', 'Allow multiple selection') + '</label>' +
         '</div>' +
         '<div class="mf-token-row">' +
-          '<label class="mf-token-row-label">Display</label>' +
-          '<label class="mf-slider-designer-mini-label"><input type="checkbox" class="mf-ic-s-showdesc"' + (wp.showDescription ? ' checked' : '') + ' style="margin-right:6px"/> Show description under label</label>' +
-          '<label class="mf-slider-designer-mini-label"><input type="checkbox" class="mf-ic-s-showprice"' + (wp.showPrice ? ' checked' : '') + ' style="margin-right:6px"/> Show price under description</label>' +
+          '<label class="mf-token-row-label">' + wt('des.img.display', 'Display') + '</label>' +
+          '<label class="mf-slider-designer-mini-label"><input type="checkbox" class="mf-ic-s-showdesc"' + (wp.showDescription ? ' checked' : '') + ' style="margin-right:6px"/> ' + wt('des.img.showDescription', 'Show description under label') + '</label>' +
+          '<label class="mf-slider-designer-mini-label"><input type="checkbox" class="mf-ic-s-showprice"' + (wp.showPrice ? ' checked' : '') + ' style="margin-right:6px"/> ' + wt('des.img.showPrice', 'Show price under description') + '</label>' +
         '</div>';
       paneSettings.appendChild(grid);
       (grid.querySelector('.mf-ic-s-cols') as HTMLSelectElement).addEventListener('change', function (e: any) { wp.columns = e.target.value; B.state.isDirty = true; });

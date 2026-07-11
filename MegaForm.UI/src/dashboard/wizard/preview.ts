@@ -3,6 +3,8 @@
 import { WizardData, WizardField, themeMeta, fontStack, roundnessPx } from './types';
 import { catalogLabel, catalogPreview } from './field-catalog';
 import { h, icon } from './ui';
+import { fieldStepMap } from '@shared/custom-html-insert';
+import { premiumStepDetailsFor } from './premium-steps';
 
 function fieldPreview(f: WizardField, radius: number): HTMLElement {
   const hint = catalogPreview(f.type);
@@ -55,28 +57,59 @@ function inputBox(ph: string, radius: number, caret?: boolean): HTMLElement {
 function premiumPreview(data: WizardData): HTMLElement {
   const t = data.templateRecord || {};
   const html = String((t.settings && t.settings.customHtml) || '');
-  const steps = (html.match(/data-step\s*=/g) || []).length;
-  const fieldCount = Array.isArray(data.premiumFields)
-    ? data.premiumFields.filter((f: any) => f && f.type !== 'Section' && f.type !== 'Hidden').length
-    : (t.fieldCount || 0);
+  const details = premiumStepDetailsFor(t, data.premiumStepDetails);
+  const stepMap = fieldStepMap(html);
+  const fields = Array.isArray(data.premiumFields) ? data.premiumFields : (Array.isArray(t.fields) ? t.fields : []);
+  const ownField = (f: any) => f && f.type !== 'Section' && f.type !== 'Hidden';
+  const fieldCount = fields.filter(ownField).length || t.fieldCount || 0;
+  const firstFields = fields.filter((f: any) => ownField(f) && ((f.__step != null ? f.__step : stepMap[String(f.key)]?.ordinal) || 1) === 1).slice(0, 7);
+  const first = details[0] || { navLabel: 'Step 1', navSubtitle: '', title: data.formName || t.title || 'Premium form', description: '' };
   const access = data.accessLevel === 'authenticated' ? 'Members' : data.accessLevel === 'restricted' ? 'Invite' : 'Public';
   return h('div', null, [
     h('div', { class: 'lbl' }, [icon('fa-eye'), document.createTextNode('Live Preview')]),
     h('div', { class: 'mfw-phone' }, [
       h('div', { class: 'mfw-phone-bar' }, [h('i', { style: 'background:#f87171' }), h('i', { style: 'background:#fbbf24' }), h('i', { style: 'background:#34d399' }), h('span', { class: 'mfw-phone-url' }, 'forms.example.com/' + (t.slug || 'premium'))]),
-      h('div', { class: 'mfw-phone-body', style: 'text-align:center;padding:28px 16px' }, [
-        h('div', { style: 'width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:20px' }, [icon('fa-wand-magic-sparkles')]),
-        h('div', { style: 'font-size:15px;font-weight:800;margin-bottom:4px' }, data.formName || t.title || 'Premium form'),
-        h('div', { style: 'font-size:12px;color:#94a3b8;margin-bottom:14px' }, steps > 1 ? steps + '-step premium layout' : 'Premium single-page layout'),
-        h('div', { style: 'display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:#7c3aed;background:#f3e8ff;border-radius:99px;padding:5px 12px' }, [icon('fa-lock'), document.createTextNode('Custom design preserved')]),
+      h('div', { class: 'mfw-phone-body mfw-premium-preview' }, [
+        h('div', { class: 'mfw-premium-steps' }, details.map((s, i) => h('div', { class: 'mfw-premium-step' + (i === 0 ? ' active' : '') }, [
+          h('b', null, String(i + 1).padStart(2, '0')),
+          h('span', null, [h('strong', null, s.navLabel || s.title || ('Step ' + (i + 1))), h('small', null, s.navSubtitle || '')]),
+        ]))),
+        h('div', { class: 'mfw-premium-card' }, [
+          h('h3', null, first.title || data.formName || t.title || 'Premium form'),
+          first.description ? h('p', null, first.description) : null,
+          firstFields.length ? h('div', null, firstFields.map(f => premiumSchemaFieldPreview(f))) : h('div', { style: 'text-align:center;color:#cbd5e1;font-size:12px;padding:18px 0' }, 'No fields on this step'),
+          h('button', { type: 'button' }, details.length > 1 ? 'Next step' : 'Submit'),
+        ]),
       ]),
     ]),
     h('div', { class: 'mfw-summ' }, [
       summ(String(fieldCount), 'Fields'),
-      summ(steps > 1 ? String(steps) : '1', steps > 1 ? 'Steps' : 'Page'),
+      summ(details.length > 1 ? String(details.length) : '1', details.length > 1 ? 'Steps' : 'Page'),
       summ('Premium', 'Style'),
       summ(access, 'Access'),
     ]),
+  ]);
+}
+
+function premiumSchemaFieldPreview(f: any): HTMLElement {
+  const type = String(f?.type || '');
+  const preset = String(f?.widgetProps?.preset || f?.WidgetProps?.preset || '').toLowerCase();
+  const label = String(f?.label || f?.Label || f?.key || 'Field');
+  const req = !!(f?.required || f?.Required);
+  if (type === 'Row') {
+    return h('div', { class: 'mfw-premium-field' }, [
+      h('label', null, label),
+      h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:6px' }, [h('i', null), h('i', null)]),
+    ]);
+  }
+  if (type === 'Checkbox' || preset === 'checkbox') {
+    return h('div', { class: 'mfw-premium-check' }, [h('i', null), h('span', null, label + (req ? ' *' : ''))]);
+  }
+  const isTextarea = type === 'Textarea' || preset === 'textarea';
+  const isChoice = type === 'Select' || type === 'MultiSelect' || type === 'Radio' || type === 'Cards' || type === 'Chips';
+  return h('div', { class: 'mfw-premium-field' }, [
+    h('label', null, label + (req ? ' *' : '')),
+    h('i', { class: isTextarea ? 'area' : '' }, isChoice ? 'Select option' : ''),
   ]);
 }
 

@@ -149,7 +149,7 @@
         <p style="font-size:13px;color:#64748b;margin-bottom:12px;">Just paste this one line — the form will appear where you place the script.</p>
         <div class="code-block" id="code-script">
             <button class="copy-btn" onclick="copyCode('code-script')">Copy</button>
-            <span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="str">"<span id="code-src"></span>"</span> <span class="attr">data-form-id</span>=<span class="str">"<span id="code-fid">4</span>"</span> <span class="attr">data-server</span>=<span class="str">"<span id="code-srv"></span>"</span><span class="tag">&gt;&lt;/script&gt;</span>
+            <span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="str">"<span id="code-src"></span>"</span><span class="tag">&gt;&lt;/script&gt;</span>
         </div>
     </div>
 
@@ -162,14 +162,7 @@
             <span class="cmt">&lt;!-- Place this where you want the form --&gt;</span><br>
             <span class="tag">&lt;div</span> <span class="attr">id</span>=<span class="str">"my-contact-form"</span><span class="tag">&gt;&lt;/div&gt;</span><br><br>
             <span class="cmt">&lt;!-- Place this before &lt;/body&gt; --&gt;</span><br>
-            <span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="str">"<span id="code-src2"></span>"</span><span class="tag">&gt;&lt;/script&gt;</span><br>
-            <span class="tag">&lt;script&gt;</span><br>
-            &nbsp;&nbsp;MegaFormEmbed.render({<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;formId: <span id="code-fid2">4</span>,<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;server: '<span id="code-srv2"></span>',<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;container: '#my-contact-form'<br>
-            &nbsp;&nbsp;});<br>
-            <span class="tag">&lt;/script&gt;</span>
+            <span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="str">"<span id="code-src2"></span>"</span><span class="tag">&gt;&lt;/script&gt;</span>
         </div>
     </div>
 
@@ -200,15 +193,11 @@
     function generateCode() {
         var formId = document.getElementById('cfg-form-id').value;
         var server = document.getElementById('cfg-server').value.replace(/\/$/, '');
-        var embedSrc = server + '/DesktopModules/MegaForm/Assets/js/megaform-embed.js';
-        var iframeSrc = server + '/DesktopModules/MegaForm/Assets/embed.html?formId=' + formId + '&server=' + encodeURIComponent(server);
+        var scriptSrc = server + '/megaform/form/' + formId + '/script';
+        var iframeSrc = server + '/megaform/form/' + formId + '/embed';
 
-        document.getElementById('code-src').textContent = embedSrc;
-        document.getElementById('code-src2').textContent = embedSrc;
-        document.getElementById('code-fid').textContent = formId;
-        document.getElementById('code-fid2').textContent = formId;
-        document.getElementById('code-srv').textContent = server;
-        document.getElementById('code-srv2').textContent = server;
+        document.getElementById('code-src').textContent = scriptSrc;
+        document.getElementById('code-src2').textContent = scriptSrc;
         document.getElementById('code-iframe-src').textContent = iframeSrc;
 
         // Load live preview
@@ -223,9 +212,7 @@
         if (existing) existing.remove();
         var script = document.createElement('script');
         script.id = 'embed-preview-script';
-        script.src = embedSrc;
-        script.setAttribute('data-form-id', formId);
-        script.setAttribute('data-server', server);
+        script.src = scriptSrc;
         preview.appendChild(script);
     }
 

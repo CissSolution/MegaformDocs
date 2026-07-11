@@ -22,7 +22,8 @@
 import { addressPartsForScheme } from '../renderer/composite-address';
 // [Composite Registry v20260616] Single source — seed parts from COMPOSITE_PRESETS and list
 // presets from COMPOSITE_PRESET_META (was a local PRESETS/DIAL_CODES mirror that could drift).
-import { COMPOSITE_PRESETS, COMPOSITE_DIAL_CODES, compositePresetKeys, compositePresetLabel } from '../renderer/helpers';
+import { COMPOSITE_PRESETS, COMPOSITE_DIAL_CODES, compositePresetKeys, compositePresetLabel, compositePartLabel } from '../renderer/helpers';
+import { wt } from './designer-i18n';
 
 (function () {
   if ((window as any).__MFCompositeDesignerLoaded) return;
@@ -182,7 +183,7 @@ import { COMPOSITE_PRESETS, COMPOSITE_DIAL_CODES, compositePresetKeys, composite
   // value → friendly label. Fraction tokens map to flex-basis %, 'auto' grows to fill,
   // 'custom' reveals a raw width box (px / %).
   var WIDTHS = [
-    { value: 'auto', label: 'Auto (grow)' },
+    { value: 'auto', label: wt('des.comp.autoGrow', 'Auto (grow)') },
     { value: '1/6', label: '16% · 1/6' },
     { value: '1/5', label: '20% · 1/5' },
     { value: '1/4', label: '25% · 1/4' },
@@ -191,7 +192,7 @@ import { COMPOSITE_PRESETS, COMPOSITE_DIAL_CODES, compositePresetKeys, composite
     { value: '2/3', label: '67% · 2/3' },
     { value: '3/4', label: '75% · 3/4' },
     { value: 'full', label: '100% · Full' },
-    { value: 'custom', label: 'Custom (px/%)' }
+    { value: 'custom', label: wt('des.comp.customPxPercent', 'Custom (px/%)') }
   ];
   var FRACTIONS: any = { '1/6': 16.6667, '1/5': 20, '1/4': 25, '1/3': 33.3333, '2/5': 40, '1/2': 50, '3/5': 60, '2/3': 66.6667, '3/4': 75, '4/5': 80, 'full': 100, '1/1': 100 };
 
@@ -223,7 +224,7 @@ import { COMPOSITE_PRESETS, COMPOSITE_DIAL_CODES, compositePresetKeys, composite
   }
   function widthLabelOf(p: any): string {
     var v = widthValueOf(p);
-    if (v === 'auto') return 'Auto';
+    if (v === 'auto') return wt('des.comp.autoShort', 'Auto');
     if (v === 'custom') return String(p.width || '');
     if (Object.prototype.hasOwnProperty.call(FRACTIONS, v)) return Math.round(FRACTIONS[v]) + '%';
     return v;
@@ -238,7 +239,7 @@ import { COMPOSITE_PRESETS, COMPOSITE_DIAL_CODES, compositePresetKeys, composite
     return 'flex:1 1 0;min-width:0;';
   }
   function partTitle(p: any): string {
-    return p.label || p.sublabel || (p.key ? (p.key.charAt(0).toUpperCase() + p.key.slice(1).replace(/[_-]+/g, ' ')) : 'Field');
+    return p.label || p.sublabel || (p.key ? (p.key.charAt(0).toUpperCase() + p.key.slice(1).replace(/[_-]+/g, ' ')) : wt('des.comp.fieldFallback', 'Field'));
   }
   function inputType(t: string): string {
     switch (t) { case 'email': return 'email'; case 'number': return 'number'; case 'tel': return 'tel'; case 'date': return 'date'; case 'password': return 'password'; case 'url': return 'url'; default: return 'text'; }
@@ -253,7 +254,7 @@ import { COMPOSITE_PRESETS, COMPOSITE_DIAL_CODES, compositePresetKeys, composite
   function open(field: any, onClose?: () => void) {
     var B: any = getB();
     if (!field || field.type !== 'Composite') {
-      B.showToast && B.showToast('Input Designer only works for Input fields', 'error');
+      B.showToast && B.showToast(wt('des.comp.onlyInputFields', 'Input Designer only works for Input fields'), 'error');
       return;
     }
     var wp = field.widgetProps = field.widgetProps || {};
@@ -275,27 +276,27 @@ import { COMPOSITE_PRESETS, COMPOSITE_DIAL_CODES, compositePresetKeys, composite
     modal.className = 'mf-token-designer-backdrop';
     modal.setAttribute('data-mf-overlay', '1');
     modal.innerHTML =
-      '<div class="mf-token-designer-shell mf-composite-designer-shell" role="dialog" aria-label="Input Designer">' +
+      '<div class="mf-token-designer-shell mf-composite-designer-shell" role="dialog" aria-label="' + wt('des.comp.inputDesigner', 'Input Designer') + '">' +
         '<div class="mf-token-designer-head">' +
           '<div class="mf-token-designer-title">' +
             '<i class="fas fa-object-group"></i>' +
-            '<span>Input Designer</span>' +
+            '<span>' + wt('des.comp.inputDesigner', 'Input Designer') + '</span>' +
             '<span class="mf-token-designer-badge">v20260615-B168</span>' +
           '</div>' +
-          '<button type="button" class="mf-token-designer-close" aria-label="Close">&times;</button>' +
+          '<button type="button" class="mf-token-designer-close" aria-label="' + wt('des.comp.close', 'Close') + '">&times;</button>' +
         '</div>' +
         '<div class="mf-comp-des-layout" id="mf-comp-des-layout"></div>' +
         '<div class="mf-token-designer-tabs">' +
-          '<button type="button" class="mf-token-designer-tab active" data-tab="parts"><i class="fas fa-list"></i> Parts <span class="mf-token-designer-count" id="mf-comp-des-count">0</span></button>' +
-          '<button type="button" class="mf-token-designer-tab" data-tab="preview"><i class="fas fa-eye"></i> Live Preview</button>' +
+          '<button type="button" class="mf-token-designer-tab active" data-tab="parts"><i class="fas fa-list"></i> ' + wt('des.comp.parts', 'Parts') + ' <span class="mf-token-designer-count" id="mf-comp-des-count">0</span></button>' +
+          '<button type="button" class="mf-token-designer-tab" data-tab="preview"><i class="fas fa-eye"></i> ' + wt('des.comp.livePreview', 'Live Preview') + '</button>' +
         '</div>' +
         '<div class="mf-token-designer-body">' +
           '<div class="mf-token-designer-pane" data-pane="parts"></div>' +
           '<div class="mf-token-designer-pane" data-pane="preview" style="display:none"></div>' +
         '</div>' +
         '<div class="mf-token-designer-foot">' +
-          '<div class="mf-token-designer-foot-hint"><i class="fas fa-info-circle"></i> One field, several sub-inputs, submitted as a single value. Press <kbd>Esc</kbd> to close.</div>' +
-          '<button type="button" class="mf-builder-btn mf-token-designer-done"><i class="fas fa-check"></i> Done</button>' +
+          '<div class="mf-token-designer-foot-hint"><i class="fas fa-info-circle"></i> ' + wt('des.comp.footHintPre', 'One field, several sub-inputs, submitted as a single value. Press') + ' <kbd>Esc</kbd> ' + wt('des.comp.footHintPost', 'to close.') + '</div>' +
+          '<button type="button" class="mf-builder-btn mf-token-designer-done"><i class="fas fa-check"></i> ' + wt('des.comp.done', 'Done') + '</button>' +
         '</div>' +
       '</div>';
 
@@ -344,37 +345,37 @@ import { COMPOSITE_PRESETS, COMPOSITE_DIAL_CODES, compositePresetKeys, composite
       layoutBar.innerHTML =
         '<div class="mf-comp-des-lb-grid">' +
           '<div class="mf-comp-des-lb-cell">' +
-            '<label>Preset</label>' +
+            '<label>' + wt('des.comp.preset', 'Preset') + '</label>' +
             '<select class="mf-comp-des-sel" data-lb="preset">' +
               // [Composite Registry v20260616] Generated from the single source so new presets appear.
               compositePresetKeys().map(function (k) { return '<option value="' + k + '"' + (wp.preset === k ? ' selected' : '') + '>' + esc(compositePresetLabel(k)) + '</option>'; }).join('') +
             '</select>' +
           '</div>' +
           (isAddr
-            ? '<div class="mf-comp-des-lb-cell"><label>Address format</label>' +
+            ? '<div class="mf-comp-des-lb-cell"><label>' + wt('des.comp.addressFormat', 'Address format') + '</label>' +
               '<select class="mf-comp-des-sel" data-lb="scheme">' +
-                '<option value="us"' + (wp.addressScheme === 'us' || !wp.addressScheme ? ' selected' : '') + '>🇺🇸 United States</option>' +
-                '<option value="intl"' + (wp.addressScheme === 'intl' ? ' selected' : '') + '>🌍 International</option>' +
-                '<option value="canada"' + (wp.addressScheme === 'canada' ? ' selected' : '') + '>🇨🇦 Canada</option>' +
-                '<option value="uk"' + (wp.addressScheme === 'uk' ? ' selected' : '') + '>🇬🇧 UK / Australia</option>' +
+                '<option value="us"' + (wp.addressScheme === 'us' || !wp.addressScheme ? ' selected' : '') + '>🇺🇸 ' + wt('des.comp.addrUs', 'United States') + '</option>' +
+                '<option value="intl"' + (wp.addressScheme === 'intl' ? ' selected' : '') + '>🌍 ' + wt('des.comp.addrIntl', 'International') + '</option>' +
+                '<option value="canada"' + (wp.addressScheme === 'canada' ? ' selected' : '') + '>🇨🇦 ' + wt('des.comp.addrCanada', 'Canada') + '</option>' +
+                '<option value="uk"' + (wp.addressScheme === 'uk' ? ' selected' : '') + '>🇬🇧 ' + wt('des.comp.addrUk', 'UK / Australia') + '</option>' +
               '</select></div>'
             : '') +
-          '<div class="mf-comp-des-lb-cell"><label>Keyboard</label>' +
+          '<div class="mf-comp-des-lb-cell"><label>' + wt('des.comp.keyboard', 'Keyboard') + '</label>' +
             '<select class="mf-comp-des-sel" data-lb="nav">' +
-              '<option value="roving"' + (wp.nav !== 'tab' ? ' selected' : '') + '>Arrow keys · one tab stop</option>' +
-              '<option value="tab"' + (wp.nav === 'tab' ? ' selected' : '') + '>Tab between parts</option>' +
+              '<option value="roving"' + (wp.nav !== 'tab' ? ' selected' : '') + '>' + wt('des.comp.arrowOneTab', 'Arrow keys · one tab stop') + '</option>' +
+              '<option value="tab"' + (wp.nav === 'tab' ? ' selected' : '') + '>' + wt('des.comp.tabBetween', 'Tab between parts') + '</option>' +
             '</select></div>' +
-          '<div class="mf-comp-des-lb-cell"><label>Arrow direction</label>' +
+          '<div class="mf-comp-des-lb-cell"><label>' + wt('des.comp.arrowDirection', 'Arrow direction') + '</label>' +
             '<select class="mf-comp-des-sel" data-lb="orient">' +
-              '<option value="horizontal"' + (wp.orient === 'horizontal' ? ' selected' : '') + '>Horizontal &larr; &rarr;</option>' +
-              '<option value="vertical"' + (wp.orient === 'vertical' ? ' selected' : '') + '>Vertical &uarr; &darr;</option>' +
-              '<option value="both"' + (wp.orient === 'both' ? ' selected' : '') + '>Both (grid)</option>' +
+              '<option value="horizontal"' + (wp.orient === 'horizontal' ? ' selected' : '') + '>' + wt('des.comp.horizontal', 'Horizontal') + ' &larr; &rarr;</option>' +
+              '<option value="vertical"' + (wp.orient === 'vertical' ? ' selected' : '') + '>' + wt('des.comp.vertical', 'Vertical') + ' &uarr; &darr;</option>' +
+              '<option value="both"' + (wp.orient === 'both' ? ' selected' : '') + '>' + wt('des.comp.bothGrid', 'Both (grid)') + '</option>' +
             '</select></div>' +
-          '<div class="mf-comp-des-lb-cell"><label>Part labels</label>' +
+          '<div class="mf-comp-des-lb-cell"><label>' + wt('des.comp.partLabels', 'Part labels') + '</label>' +
             '<select class="mf-comp-des-sel" data-lb="labelPos">' +
-              '<option value="bottom"' + (wp.labelPos !== 'top' && wp.labelPos !== 'hidden' ? ' selected' : '') + '>Below the box</option>' +
-              '<option value="top"' + (wp.labelPos === 'top' ? ' selected' : '') + '>Above the box</option>' +
-              '<option value="hidden"' + (wp.labelPos === 'hidden' ? ' selected' : '') + '>Hidden (placeholder only)</option>' +
+              '<option value="bottom"' + (wp.labelPos !== 'top' && wp.labelPos !== 'hidden' ? ' selected' : '') + '>' + wt('des.comp.belowBox', 'Below the box') + '</option>' +
+              '<option value="top"' + (wp.labelPos === 'top' ? ' selected' : '') + '>' + wt('des.comp.aboveBox', 'Above the box') + '</option>' +
+              '<option value="hidden"' + (wp.labelPos === 'hidden' ? ' selected' : '') + '>' + wt('des.comp.hiddenPlaceholderOnly', 'Hidden (placeholder only)') + '</option>' +
             '</select></div>' +
         '</div>';
 
@@ -411,9 +412,9 @@ import { COMPOSITE_PRESETS, COMPOSITE_DIAL_CODES, compositePresetKeys, composite
       var toolbar = document.createElement('div');
       toolbar.className = 'mf-comp-des-toolbar';
       toolbar.innerHTML =
-        '<button type="button" class="mf-builder-btn mf-comp-des-add"><i class="fas fa-plus"></i> Add Part</button>' +
-        '<button type="button" class="mf-builder-btn mf-comp-des-reset" title="Discard customisations, reload the preset/scheme defaults"><i class="fas fa-undo"></i> Reset to preset</button>' +
-        '<span class="mf-comp-des-toolbar-hint">Drag-free reorder with the arrows. Hidden parts stay in the config but never render.</span>';
+        '<button type="button" class="mf-builder-btn mf-comp-des-add"><i class="fas fa-plus"></i> ' + wt('des.comp.addPart', 'Add Part') + '</button>' +
+        '<button type="button" class="mf-builder-btn mf-comp-des-reset" title="' + wt('des.comp.resetTitle', 'Discard customisations, reload the preset/scheme defaults') + '"><i class="fas fa-undo"></i> ' + wt('des.comp.resetToPreset', 'Reset to preset') + '</button>' +
+        '<span class="mf-comp-des-toolbar-hint">' + wt('des.comp.toolbarHint', 'Drag-free reorder with the arrows. Hidden parts stay in the config but never render.') + '</span>';
       paneParts.appendChild(toolbar);
 
       var list = document.createElement('div');
@@ -422,7 +423,7 @@ import { COMPOSITE_PRESETS, COMPOSITE_DIAL_CODES, compositePresetKeys, composite
 
       toolbar.querySelector('.mf-comp-des-add')!.addEventListener('click', function () {
         var k = uniqueKey(parts, 'field');
-        parts.push({ key: k, label: 'New Field', sublabel: '', placeholder: '', type: 'text', width: '1/2', required: false });
+        parts.push({ key: k, label: wt('des.comp.newField', 'New Field'), sublabel: '', placeholder: '', type: 'text', width: '1/2', required: false });
         openRows[parts.length - 1] = true;
         commit(); renderParts(); refreshCount();
       });
@@ -437,7 +438,7 @@ import { COMPOSITE_PRESETS, COMPOSITE_DIAL_CODES, compositePresetKeys, composite
       if (!parts.length) {
         var empty = document.createElement('div');
         empty.className = 'mf-token-designer-empty';
-        empty.innerHTML = '<i class="fas fa-circle-info"></i> No parts. Click <strong>Add Part</strong> to create the first sub-input.';
+        empty.innerHTML = '<i class="fas fa-circle-info"></i> ' + wt('des.comp.emptyPre', 'No parts. Click') + ' <strong>' + wt('des.comp.addPart', 'Add Part') + '</strong> ' + wt('des.comp.emptyPost', 'to create the first sub-input.');
         list.appendChild(empty);
         return;
       }
@@ -459,15 +460,15 @@ import { COMPOSITE_PRESETS, COMPOSITE_DIAL_CODES, compositePresetKeys, composite
           '<span class="mf-comp-des-part-name">' + esc(partTitle(p)) + '</span>' +
           '<span class="mf-comp-des-pill mf-comp-des-pill-type">' + esc(p.type || 'text') + '</span>' +
           '<span class="mf-comp-des-pill mf-comp-des-pill-w">' + esc(widthLabelOf(p)) + '</span>' +
-          '<button type="button" class="mf-comp-des-badge ' + (p.required ? 'is-on' : '') + '" data-act="req" title="Toggle required">' +
-            '<i class="fas ' + (p.required ? 'fa-check' : 'fa-circle') + '"></i> Required</button>' +
-          '<button type="button" class="mf-comp-des-icon" data-act="vis" title="' + (p.hidden ? 'Show' : 'Hide') + '"><i class="fas ' + (p.hidden ? 'fa-eye-slash' : 'fa-eye') + '"></i></button>' +
+          '<button type="button" class="mf-comp-des-badge ' + (p.required ? 'is-on' : '') + '" data-act="req" title="' + wt('des.comp.toggleRequired', 'Toggle required') + '">' +
+            '<i class="fas ' + (p.required ? 'fa-check' : 'fa-circle') + '"></i> ' + wt('des.comp.required', 'Required') + '</button>' +
+          '<button type="button" class="mf-comp-des-icon" data-act="vis" title="' + (p.hidden ? wt('des.comp.show', 'Show') : wt('des.comp.hide', 'Hide')) + '"><i class="fas ' + (p.hidden ? 'fa-eye-slash' : 'fa-eye') + '"></i></button>' +
           '<span class="mf-comp-des-move">' +
-            '<button type="button" class="mf-comp-des-icon" data-act="up" ' + (idx === 0 ? 'disabled' : '') + ' title="Move up"><i class="fas fa-chevron-up"></i></button>' +
-            '<button type="button" class="mf-comp-des-icon" data-act="down" ' + (idx === parts.length - 1 ? 'disabled' : '') + ' title="Move down"><i class="fas fa-chevron-down"></i></button>' +
+            '<button type="button" class="mf-comp-des-icon" data-act="up" ' + (idx === 0 ? 'disabled' : '') + ' title="' + wt('des.comp.moveUp', 'Move up') + '"><i class="fas fa-chevron-up"></i></button>' +
+            '<button type="button" class="mf-comp-des-icon" data-act="down" ' + (idx === parts.length - 1 ? 'disabled' : '') + ' title="' + wt('des.comp.moveDown', 'Move down') + '"><i class="fas fa-chevron-down"></i></button>' +
           '</span>' +
-          '<button type="button" class="mf-comp-des-icon ' + (isOpen ? 'is-on' : '') + '" data-act="gear" title="Configure"><i class="fas fa-sliders-h"></i></button>' +
-          '<button type="button" class="mf-comp-des-icon mf-comp-des-del" data-act="del" title="Remove"><i class="fas fa-trash"></i></button>' +
+          '<button type="button" class="mf-comp-des-icon ' + (isOpen ? 'is-on' : '') + '" data-act="gear" title="' + wt('des.comp.configure', 'Configure') + '"><i class="fas fa-sliders-h"></i></button>' +
+          '<button type="button" class="mf-comp-des-icon mf-comp-des-del" data-act="del" title="' + wt('des.comp.remove', 'Remove') + '"><i class="fas fa-trash"></i></button>' +
         '</div>' +
         (isOpen ? renderPartBody(p, idx) : '');
 
@@ -498,36 +499,36 @@ import { COMPOSITE_PRESETS, COMPOSITE_DIAL_CODES, compositePresetKeys, composite
 
       return '<div class="mf-comp-des-part-body">' +
         '<div class="mf-comp-des-grid">' +
-          '<div class="mf-comp-des-fld"><label>Label (a11y)</label><input class="mf-comp-des-in" data-f="label" value="' + escA(p.label || '') + '" placeholder="First Name"></div>' +
-          '<div class="mf-comp-des-fld"><label>Sub-label (hint)</label><input class="mf-comp-des-in" data-f="sublabel" value="' + escA(p.sublabel || '') + '" placeholder="First"></div>' +
-          '<div class="mf-comp-des-fld"><label>Key (field name)</label><input class="mf-comp-des-in" data-f="key" value="' + escA(p.key || '') + '" placeholder="first"></div>' +
-          '<div class="mf-comp-des-fld"><label>Placeholder</label><input class="mf-comp-des-in" data-f="placeholder" value="' + escA(p.placeholder || '') + '" placeholder="Type here…"></div>' +
-          '<div class="mf-comp-des-fld"><label>Type</label><select class="mf-comp-des-in" data-f="type">' + typeOpts + '</select></div>' +
-          '<div class="mf-comp-des-fld"><label>Column width</label><select class="mf-comp-des-in" data-f="width">' + widthOpts + '</select></div>' +
-          '<div class="mf-comp-des-fld" data-custom-width style="display:' + (wv === 'custom' ? '' : 'none') + ';"><label>Custom width</label><input class="mf-comp-des-in" data-f="widthRaw" value="' + escA(wv === 'custom' ? (p.width || '') : '') + '" placeholder="96px or 30%"></div>' +
-          '<div class="mf-comp-des-fld"><label>Default value</label><input class="mf-comp-des-in" data-f="def" value="' + escA(p.def || '') + '" placeholder="(optional)"></div>' +
+          '<div class="mf-comp-des-fld"><label>' + wt('des.comp.labelA11y', 'Label (a11y)') + '</label><input class="mf-comp-des-in" data-f="label" value="' + escA(p.label || '') + '" placeholder="' + escA(wt('des.comp.phFirstName', 'First Name')) + '"></div>' +
+          '<div class="mf-comp-des-fld"><label>' + wt('des.comp.sublabelHint', 'Sub-label (hint)') + '</label><input class="mf-comp-des-in" data-f="sublabel" value="' + escA(p.sublabel || '') + '" placeholder="' + escA(wt('des.comp.phFirst', 'First')) + '"></div>' +
+          '<div class="mf-comp-des-fld"><label>' + wt('des.comp.keyFieldName', 'Key (field name)') + '</label><input class="mf-comp-des-in" data-f="key" value="' + escA(p.key || '') + '" placeholder="' + escA(wt('des.comp.phFirstLower', 'first')) + '"></div>' +
+          '<div class="mf-comp-des-fld"><label>' + wt('des.comp.placeholder', 'Placeholder') + '</label><input class="mf-comp-des-in" data-f="placeholder" value="' + escA(p.placeholder || '') + '" placeholder="' + escA(wt('des.comp.phTypeHere', 'Type here…')) + '"></div>' +
+          '<div class="mf-comp-des-fld"><label>' + wt('des.comp.type', 'Type') + '</label><select class="mf-comp-des-in" data-f="type">' + typeOpts + '</select></div>' +
+          '<div class="mf-comp-des-fld"><label>' + wt('des.comp.columnWidth', 'Column width') + '</label><select class="mf-comp-des-in" data-f="width">' + widthOpts + '</select></div>' +
+          '<div class="mf-comp-des-fld" data-custom-width style="display:' + (wv === 'custom' ? '' : 'none') + ';"><label>' + wt('des.comp.customWidth', 'Custom width') + '</label><input class="mf-comp-des-in" data-f="widthRaw" value="' + escA(wv === 'custom' ? (p.width || '') : '') + '" placeholder="' + escA(wt('des.comp.phCustomWidth', '96px or 30%')) + '"></div>' +
+          '<div class="mf-comp-des-fld"><label>' + wt('des.comp.defaultValue', 'Default value') + '</label><input class="mf-comp-des-in" data-f="def" value="' + escA(p.def || '') + '" placeholder="' + escA(wt('des.comp.phOptional', '(optional)')) + '"></div>' +
         '</div>' +
-        '<div class="mf-comp-des-sub-title">Validation</div>' +
+        '<div class="mf-comp-des-sub-title">' + wt('des.comp.validation', 'Validation') + '</div>' +
         '<div class="mf-comp-des-grid">' +
-          '<div class="mf-comp-des-fld"><label>Min length</label><input class="mf-comp-des-in" type="number" min="0" data-f="minLength" value="' + (p.minLength != null ? p.minLength : '') + '" placeholder="—"></div>' +
-          '<div class="mf-comp-des-fld"><label>Max length</label><input class="mf-comp-des-in" type="number" min="0" data-f="maxLength" value="' + (p.maxLength != null ? p.maxLength : '') + '" placeholder="—"></div>' +
-          '<div class="mf-comp-des-fld"><label>Regex pattern</label><input class="mf-comp-des-in" data-f="pattern" value="' + escA(p.pattern || '') + '" placeholder="^[A-Za-z]+$"></div>' +
-          '<div class="mf-comp-des-fld"><label>Pattern message</label><input class="mf-comp-des-in" data-f="patternMsg" value="' + escA(p.patternMsg || '') + '" placeholder="Letters only"></div>' +
+          '<div class="mf-comp-des-fld"><label>' + wt('des.comp.minLength', 'Min length') + '</label><input class="mf-comp-des-in" type="number" min="0" data-f="minLength" value="' + (p.minLength != null ? p.minLength : '') + '" placeholder="—"></div>' +
+          '<div class="mf-comp-des-fld"><label>' + wt('des.comp.maxLength', 'Max length') + '</label><input class="mf-comp-des-in" type="number" min="0" data-f="maxLength" value="' + (p.maxLength != null ? p.maxLength : '') + '" placeholder="—"></div>' +
+          '<div class="mf-comp-des-fld"><label>' + wt('des.comp.regexPattern', 'Regex pattern') + '</label><input class="mf-comp-des-in" data-f="pattern" value="' + escA(p.pattern || '') + '" placeholder="^[A-Za-z]+$"></div>' +
+          '<div class="mf-comp-des-fld"><label>' + wt('des.comp.patternMessage', 'Pattern message') + '</label><input class="mf-comp-des-in" data-f="patternMsg" value="' + escA(p.patternMsg || '') + '" placeholder="' + escA(wt('des.comp.phLettersOnly', 'Letters only')) + '"></div>' +
         '</div>' +
         '<div class="mf-comp-des-grid">' +
-          '<div class="mf-comp-des-fld"><label>Mask <span class="mf-comp-des-hint">(# digit, A letter, * alnum)</span></label><input class="mf-comp-des-in" data-f="mask" value="' + escA(p.mask || '') + '" placeholder="###-##-####"></div>' +
-          '<div class="mf-comp-des-fld"><label>Input mode</label><input class="mf-comp-des-in" data-f="inputMode" value="' + escA(p.inputMode || '') + '" placeholder="numeric / tel"></div>' +
-          '<div class="mf-comp-des-fld"><label>Min value</label><input class="mf-comp-des-in" type="number" data-f="min" value="' + (p.min != null ? p.min : '') + '" placeholder="—"></div>' +
-          '<div class="mf-comp-des-fld"><label>Max value</label><input class="mf-comp-des-in" type="number" data-f="max" value="' + (p.max != null ? p.max : '') + '" placeholder="—"></div>' +
+          '<div class="mf-comp-des-fld"><label>' + wt('des.comp.mask', 'Mask') + ' <span class="mf-comp-des-hint">' + wt('des.comp.maskHint', '(# digit, A letter, * alnum)') + '</span></label><input class="mf-comp-des-in" data-f="mask" value="' + escA(p.mask || '') + '" placeholder="###-##-####"></div>' +
+          '<div class="mf-comp-des-fld"><label>' + wt('des.comp.inputModeLabel', 'Input mode') + '</label><input class="mf-comp-des-in" data-f="inputMode" value="' + escA(p.inputMode || '') + '" placeholder="numeric / tel"></div>' +
+          '<div class="mf-comp-des-fld"><label>' + wt('des.comp.minValue', 'Min value') + '</label><input class="mf-comp-des-in" type="number" data-f="min" value="' + (p.min != null ? p.min : '') + '" placeholder="—"></div>' +
+          '<div class="mf-comp-des-fld"><label>' + wt('des.comp.maxValue', 'Max value') + '</label><input class="mf-comp-des-in" type="number" data-f="max" value="' + (p.max != null ? p.max : '') + '" placeholder="—"></div>' +
         '</div>' +
-        '<div class="mf-comp-des-sub-title">Cross-part match</div>' +
+        '<div class="mf-comp-des-sub-title">' + wt('des.comp.crossPartMatch', 'Cross-part match') + '</div>' +
         '<div class="mf-comp-des-grid">' +
-          '<div class="mf-comp-des-fld"><label>Match sibling key</label><input class="mf-comp-des-in" data-f="matchKey" value="' + escA(p.matchKey || '') + '" placeholder="e.g. email"></div>' +
-          '<div class="mf-comp-des-fld"><label>Mismatch message</label><input class="mf-comp-des-in" data-f="matchMsg" value="' + escA(p.matchMsg || '') + '" placeholder="Does not match"></div>' +
+          '<div class="mf-comp-des-fld"><label>' + wt('des.comp.matchSiblingKey', 'Match sibling key') + '</label><input class="mf-comp-des-in" data-f="matchKey" value="' + escA(p.matchKey || '') + '" placeholder="' + escA(wt('des.comp.phEgEmail', 'e.g. email')) + '"></div>' +
+          '<div class="mf-comp-des-fld"><label>' + wt('des.comp.mismatchMessage', 'Mismatch message') + '</label><input class="mf-comp-des-in" data-f="matchMsg" value="' + escA(p.matchMsg || '') + '" placeholder="' + escA(wt('des.comp.phDoesNotMatch', 'Does not match')) + '"></div>' +
         '</div>' +
         (isSel
-          ? '<div class="mf-comp-des-sub-title">Options <span class="mf-comp-des-hint">one per line: <code>value | Label</code></span></div>' +
-            '<textarea class="mf-comp-des-in mf-comp-des-opts" data-f="options" rows="4" placeholder="us | United States\nca | Canada">' + esc(optsTxt) + '</textarea>'
+          ? '<div class="mf-comp-des-sub-title">' + wt('des.comp.options', 'Options') + ' <span class="mf-comp-des-hint">' + wt('des.comp.optionsHint', 'one per line:') + ' <code>value | Label</code></span></div>' +
+            '<textarea class="mf-comp-des-in mf-comp-des-opts" data-f="options" rows="4" placeholder="' + escA(wt('des.comp.optionsPlaceholder', 'us | United States\nca | Canada')) + '">' + esc(optsTxt) + '</textarea>'
           : '') +
         '</div>';
     }
@@ -623,7 +624,11 @@ import { COMPOSITE_PRESETS, COMPOSITE_DIAL_CODES, compositePresetKeys, composite
           ctrl = '<input type="' + inputType(p.type || 'text') + '" class="mf-input" style="' + st + '" placeholder="' + escA(p.placeholder || '') + '" value="' + escA(p.def || '') + '">';
         }
         var lp = String(wp.labelPos || 'bottom');
-        var sub = (lp !== 'hidden' && (p.sublabel || p.required)) ? '<small class="mf-composite-sub mf-composite-sub--' + (lp === 'top' ? 'top' : 'bottom') + '">' + esc(p.sublabel || '') + (p.required ? ' <span class="mf-composite-req">*</span>' : '') + '</small>' : '';
+        // [BUG3 fix 20260701] Mirror the runtime: fall back to the accessible label when a part has
+        // no explicit sublabel, so the 'Full Name' (name) preset shows First/Last labels above the
+        // box under labelPos='top' (was: empty sublabel => no label rendered for either part).
+        var subTxt = (p.sublabel != null && String(p.sublabel) !== '') ? String(p.sublabel) : (lp !== 'hidden' ? compositePartLabel(p) : '');
+        var sub = (lp !== 'hidden' && (subTxt || p.required)) ? '<small class="mf-composite-sub mf-composite-sub--' + (lp === 'top' ? 'top' : 'bottom') + '">' + esc(subTxt) + (p.required ? ' <span class="mf-composite-req">*</span>' : '') + '</small>' : '';
         var sepHtml = p.sep ? '<span class="mf-composite-sep" aria-hidden="true" style="align-self:flex-start;display:flex;align-items:center;height:38px;padding:0 2px;color:#64748b;font-weight:700;">' + esc(String(p.sep)) + '</span>' : '';
         var inner = lp === 'top' ? (sub + ctrl) : (ctrl + sub);
         return '<div class="mf-composite-cell" style="' + cellStyle(p) + '">' + inner + '</div>' + sepHtml;
@@ -632,12 +637,12 @@ import { COMPOSITE_PRESETS, COMPOSITE_DIAL_CODES, compositePresetKeys, composite
       var rows = order.map(function (r) { return '<div class="mf-composite-row" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;">' + groups[r].map(cell).join('') + '</div>'; }).join('');
       panePreview.innerHTML =
         '<div class="mf-comp-des-preview-wrap">' +
-          '<p class="mf-comp-des-preview-cap">LIVE PREVIEW</p>' +
+          '<p class="mf-comp-des-preview-cap">' + wt('des.comp.livePreviewCaption', 'LIVE PREVIEW') + '</p>' +
           '<div class="mf-comp-des-preview-card">' +
-            '<label class="mf-comp-des-preview-label">' + esc(field.label || 'Composite Field') + (field.required ? ' <span class="mf-composite-req">*</span>' : '') + '</label>' +
-            '<div class="mf-composite" style="display:flex;flex-direction:column;gap:8px;margin-top:6px;">' + (rows || '<em style="color:#94a3b8;font-size:13px;">All parts hidden.</em>') + '</div>' +
+            '<label class="mf-comp-des-preview-label">' + esc(field.label || wt('des.comp.compositeField', 'Composite Field')) + (field.required ? ' <span class="mf-composite-req">*</span>' : '') + '</label>' +
+            '<div class="mf-composite" style="display:flex;flex-direction:column;gap:8px;margin-top:6px;">' + (rows || '<em style="color:#94a3b8;font-size:13px;">' + wt('des.comp.allPartsHidden', 'All parts hidden.') + '</em>') + '</div>' +
           '</div>' +
-          '<p class="mf-comp-des-preview-note"><i class="fas fa-info-circle"></i> Submitted as one combined value via a hidden <code>' + esc(field.key || 'field') + '</code> input.</p>' +
+          '<p class="mf-comp-des-preview-note"><i class="fas fa-info-circle"></i> ' + wt('des.comp.submittedNoteA', 'Submitted as one combined value via a hidden') + ' <code>' + esc(field.key || 'field') + '</code> ' + wt('des.comp.submittedNoteB', 'input.') + '</p>' +
         '</div>';
     }
 

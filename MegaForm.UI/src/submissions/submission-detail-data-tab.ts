@@ -56,6 +56,9 @@ export function renderSubmissionDataTab(options: SubmissionDataTabOptions): HTML
   );
   const values = getSubmissionValues(detail);
   const displayFields = getDisplayFields(detail, options.fallbackFields);
+  // [StaticChoiceLabelMap v20260706] Index option value→label from the schema for read-only mapping.
+  indexChoiceOptions(options.fallbackFields as any[]);
+  indexChoiceOptions(((detail as any)?.schema?.fields) || ((detail as any)?.form?.schema?.fields) || []);
   const editFields = new Map<string, HTMLInputElement | HTMLTextAreaElement>();
   const readOnly = !!options.readOnly;
   const showTypePills = options.showTypePills !== false;
@@ -199,7 +202,7 @@ function renderFieldCell(
     if (field.rawValue && typeof field.rawValue === 'object' && !Array.isArray(field.rawValue)) {
       cell.appendChild(buildStructuredReadValue(field.rawValue as Record<string, unknown>));
     } else {
-      cell.appendChild(h('div', { class: 'mf-modal-read-value' }, formatPlainValue(field.rawValue)));
+      cell.appendChild(h('div', { class: 'mf-modal-read-value' }, formatPlainValue(mapChoiceLabels(field.key, field.rawValue))));
     }
     return;
   }
@@ -214,6 +217,39 @@ function renderFieldCell(
 // renderSubmissionDataTab so renderFieldCell can reach formId without
 // changing every signature in the chain.
 const fkContext = { formId: 0 };
+
+// [StaticChoiceLabelMap v20260706] Map static (inline-options) choice VALUES → LABELS in the
+// READ-ONLY detail view. The server DisplayValue envelope already maps labels for the summary
+// panel, but this client "Data View" tab reads the raw DataJson and showed the raw option VALUE
+// (e.g. "music" instead of "Music") for static Radio/Select/Checkbox/Chips/Cards. Editable inputs
+// deliberately keep the raw value so save still round-trips correctly.
+const choiceOptionsByKey: Record<string, Array<{ value: string; label: string }>> = {};
+
+function indexChoiceOptions(fields: any[]): void {
+  if (!Array.isArray(fields)) return;
+  for (const f of fields) {
+    if (!f) continue;
+    if (Array.isArray(f.options) && f.options.length && f.key) {
+      choiceOptionsByKey[String(f.key)] = f.options.map((o: any) => ({
+        value: String(o && o.value != null ? o.value : ''),
+        label: String(o && o.label != null ? o.label : (o && o.value != null ? o.value : '')),
+      }));
+    }
+    if (Array.isArray(f.fields)) indexChoiceOptions(f.fields);
+    if (Array.isArray(f.columns)) f.columns.forEach((c: any) => c && indexChoiceOptions(c.fields || c));
+  }
+}
+
+function mapChoiceLabels(fieldKey: string, rawValue: unknown): unknown {
+  const opts = choiceOptionsByKey[String(fieldKey)];
+  if (!opts) return rawValue;
+  const one = (v: unknown): string => {
+    const s = String(v == null ? '' : v);
+    const m = opts.find(o => o.value === s);
+    return m ? m.label : s;
+  };
+  return Array.isArray(rawValue) ? rawValue.map(one) : one(rawValue);
+}
 
 function isSelectField(field: { type: string; rawValue: unknown }): boolean {
   const t = String(field.type || '').toLowerCase();

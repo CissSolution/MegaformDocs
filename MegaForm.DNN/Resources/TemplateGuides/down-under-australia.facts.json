@@ -5,51 +5,65 @@
   "theme": "down-under-reef-premium",
   "title": "Down Under Australia Experience",
   "tokenStyle": "double",
-  "rootSelector": ".mfp.mfp-australia",
-  "stepMechanism": "customHtml-wizard",
+  "rootSelector": ".mfp.mfp-australia.mfp-native-generated",
+  "stepMechanism": "premium-native",
   "stepAnchor": "data-step",
   "stepCount": 4,
   "steps": [
     {
       "index": 0,
-      "fieldKeys": []
-    },
-    {
-      "index": 1,
-      "fieldKeys": []
-    },
-    {
-      "index": 2,
-      "fieldKeys": []
-    },
-    {
-      "index": 3,
       "fieldKeys": [
         "row_name",
         "email",
         "phone",
         "dob",
-        "nationality",
-        "purpose",
+        "nationality"
+      ]
+    },
+    {
+      "index": 1,
+      "fieldKeys": [
+        "purpose"
+      ]
+    },
+    {
+      "index": 2,
+      "fieldKeys": [
         "region",
         "interests",
         "duration",
         "stay",
         "budget",
         "arrival",
-        "notes",
+        "notes"
+      ]
+    },
+    {
+      "index": 3,
+      "fieldKeys": [
         "terms"
       ]
     }
   ],
   "fields": [
     {
+      "key": "premium_step_1",
+      "type": "Section",
+      "label": "Tell us about you",
+      "display": "input",
+      "optionCount": 0,
+      "step": null,
+      "placeholder": "{{field:premium_step_1}}",
+      "inCustomHtml": false,
+      "required": false
+    },
+    {
       "key": "row_name",
       "type": "Row",
       "label": "Name",
       "display": "input",
       "optionCount": 0,
-      "step": 3,
+      "step": 0,
       "placeholder": "{{field:row_name}}",
       "inCustomHtml": true,
       "required": false
@@ -60,7 +74,7 @@
       "label": "First name",
       "display": "input",
       "optionCount": 0,
-      "step": 3,
+      "step": 0,
       "placeholder": "{{field:row_name}}",
       "inCustomHtml": true,
       "required": true,
@@ -72,7 +86,7 @@
       "label": "Last name",
       "display": "input",
       "optionCount": 0,
-      "step": 3,
+      "step": 0,
       "placeholder": "{{field:row_name}}",
       "inCustomHtml": true,
       "required": true,
@@ -84,7 +98,7 @@
       "label": "Email address",
       "display": "input",
       "optionCount": 0,
-      "step": 3,
+      "step": 0,
       "placeholder": "{{field:email}}",
       "inCustomHtml": true,
       "required": true
@@ -95,7 +109,7 @@
       "label": "Phone",
       "display": "input",
       "optionCount": 0,
-      "step": 3,
+      "step": 0,
       "placeholder": "{{field:phone}}",
       "inCustomHtml": true,
       "required": false
@@ -106,7 +120,7 @@
       "label": "Date of birth",
       "display": "input",
       "optionCount": 0,
-      "step": 3,
+      "step": 0,
       "placeholder": "{{field:dob}}",
       "inCustomHtml": true,
       "required": false
@@ -117,9 +131,20 @@
       "label": "Nationality",
       "display": "choice",
       "optionCount": 11,
-      "step": 3,
+      "step": 0,
       "placeholder": "{{field:nationality}}",
       "inCustomHtml": true,
+      "required": false
+    },
+    {
+      "key": "premium_step_2",
+      "type": "Section",
+      "label": "What brings you here?",
+      "display": "input",
+      "optionCount": 0,
+      "step": null,
+      "placeholder": "{{field:premium_step_2}}",
+      "inCustomHtml": false,
       "required": false
     },
     {
@@ -128,10 +153,21 @@
       "label": "Purpose",
       "display": "cards",
       "optionCount": 6,
-      "step": 3,
+      "step": 1,
       "placeholder": "{{field:purpose}}",
       "inCustomHtml": true,
       "required": true
+    },
+    {
+      "key": "premium_step_3",
+      "type": "Section",
+      "label": "Shape your journey",
+      "display": "input",
+      "optionCount": 0,
+      "step": null,
+      "placeholder": "{{field:premium_step_3}}",
+      "inCustomHtml": false,
+      "required": false
     },
     {
       "key": "region",
@@ -139,7 +175,7 @@
       "label": "Destination region",
       "display": "cards",
       "optionCount": 6,
-      "step": 3,
+      "step": 2,
       "placeholder": "{{field:region}}",
       "inCustomHtml": true,
       "required": true
@@ -150,7 +186,7 @@
       "label": "Interests",
       "display": "chips",
       "optionCount": 12,
-      "step": 3,
+      "step": 2,
       "placeholder": "{{field:interests}}",
       "inCustomHtml": true,
       "required": false
@@ -161,7 +197,7 @@
       "label": "Duration",
       "display": "chips",
       "optionCount": 5,
-      "step": 3,
+      "step": 2,
       "placeholder": "{{field:duration}}",
       "inCustomHtml": true,
       "required": true
@@ -172,7 +208,7 @@
       "label": "Accommodation",
       "display": "chips",
       "optionCount": 5,
-      "step": 3,
+      "step": 2,
       "placeholder": "{{field:stay}}",
       "inCustomHtml": true,
       "required": false
@@ -183,7 +219,7 @@
       "label": "Budget tier",
       "display": "cards",
       "optionCount": 3,
-      "step": 3,
+      "step": 2,
       "placeholder": "{{field:budget}}",
       "inCustomHtml": true,
       "required": false
@@ -194,7 +230,7 @@
       "label": "Arrival date",
       "display": "input",
       "optionCount": 0,
-      "step": 3,
+      "step": 2,
       "placeholder": "{{field:arrival}}",
       "inCustomHtml": true,
       "required": false
@@ -205,9 +241,20 @@
       "label": "Anything else?",
       "display": "input",
       "optionCount": 0,
-      "step": 3,
+      "step": 2,
       "placeholder": "{{field:notes}}",
       "inCustomHtml": true,
+      "required": false
+    },
+    {
+      "key": "premium_step_4",
+      "type": "Section",
+      "label": "Review & confirm",
+      "display": "input",
+      "optionCount": 0,
+      "step": null,
+      "placeholder": "{{field:premium_step_4}}",
+      "inCustomHtml": false,
       "required": false
     },
     {
@@ -256,9 +303,7 @@
     "--au-surface": "#ffffff"
   },
   "contentTokens": [],
-  "scriptTokens": [
-    "au_wizard"
-  ],
+  "scriptTokens": [],
   "formTokens": [],
   "shellTexts": [
     "Down Under Experience",
@@ -419,11 +464,11 @@
   "orphanFieldPlaceholders": [],
   "hashes": {
     "customCssSha256": "091af7542ef9c511053f5fe063da2b690fc531831d839f8060e854883e91552c",
-    "customHtmlSha256": "1d280a677bc158cbf115b67bdcf4c780a6ff37e79ba868849bf05dec464bcc45",
-    "shellSha256": "33a267bd52a7c721684f2bad56ab3d4fbd4d1d9101823419fd0c1e5ea6102668"
+    "customHtmlSha256": "67178a357406bae931e64a9722b7b65c52039af8136b7586e5508eafb05231ce",
+    "shellSha256": "b80ff63e4a0a0f28a1c2a078edb389438c74bc958dee5fd38ca24b1508f8bbb6"
   },
   "counts": {
-    "fields": 16,
+    "fields": 20,
     "fieldTokens": 14,
     "steps": 4
   },

@@ -439,9 +439,10 @@ WHERE UserId = @UserId;",
             if (!string.IsNullOrWhiteSpace(explicitPassword))
                 return explicitPassword;
 
-            return request == null || request.GeneratePasswordIfEmpty
-                ? "MegaForm!2026"
-                : "MegaForm!2026";
+            if (request?.GeneratePasswordIfEmpty == false)
+                return string.Empty;
+
+            return "MF" + Guid.NewGuid().ToString("N").Substring(0, 12) + "!";
         }
 
         private void EnsureAutoAssignedRoles(int userId, int siteId)

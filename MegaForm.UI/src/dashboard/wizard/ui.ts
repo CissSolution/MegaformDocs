@@ -1,5 +1,16 @@
 // [2026-06-27] Tiny DOM helpers + scoped stylesheet for the Form Creation Wizard.
 // Keeps each step file small + readable (no Tailwind in the vanilla-TS product).
+import { t as i18nT } from '@i18n';
+
+// [WizardI18n 2026-07-01] Translate a wiz.* key with an English fallback baked in
+// (never blanks the UI). Mirrors the dashboard's T(). Keys live under `wiz.*` in the
+// locale catalog so the in-product "Translate (AI)" tool can fill them per locale.
+export function wt(key: string, fallback: string, params?: Record<string, string | number>): string {
+  let out = fallback;
+  try { const o = i18nT(key, params); if (o && o !== key) { return o; } } catch { /* engine */ }
+  if (params) for (const p in params) out = out.replace(new RegExp('\\{' + p + '\\}', 'g'), String(params[p]));
+  return out;
+}
 
 type Attrs = Record<string, any>;
 export function h(tag: string, attrs?: Attrs | null, children?: Array<Node | string | null | undefined> | string): HTMLElement {
@@ -20,6 +31,28 @@ export function h(tag: string, attrs?: Attrs | null, children?: Array<Node | str
 }
 
 export const icon = (name: string, cls?: string): HTMLElement => h('i', { class: 'fas ' + name + (cls ? ' ' + cls : '') });
+
+// [ImportFeedback 2026-07-01] Transient toast inside the wizard overlay so actions like
+// "Import JSON" give visible confirmation (was silent → felt like nothing happened).
+export function wizardToast(message: string, kind: 'ok' | 'error' = 'ok'): void {
+  try {
+    if (!document.getElementById('mfw-toast-style')) {
+      const st = document.createElement('style');
+      st.id = 'mfw-toast-style';
+      st.textContent =
+        '.mfw-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(8px);z-index:2147483647;' +
+        'display:flex;align-items:center;gap:9px;max-width:520px;padding:11px 16px;border-radius:11px;font:600 13px/1.35 Inter,system-ui,sans-serif;' +
+        'color:#fff;background:#0f172a;box-shadow:0 14px 34px rgba(15,23,42,.4);opacity:0;transition:opacity .18s,transform .18s;}' +
+        '.mfw-toast.is-in{opacity:1;transform:translateX(-50%) translateY(0);}' +
+        '.mfw-toast.err{background:#b91c1c;}.mfw-toast i{font-size:14px;}';
+      document.head.appendChild(st);
+    }
+    const el = h('div', { class: 'mfw-toast' + (kind === 'error' ? ' err' : '') }, [icon(kind === 'error' ? 'fa-triangle-exclamation' : 'fa-circle-check'), h('span', null, message)]);
+    document.body.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('is-in'));
+    setTimeout(() => { el.classList.remove('is-in'); setTimeout(() => { try { el.remove(); } catch { /* */ } }, 220); }, 2600);
+  } catch { /* non-fatal */ }
+}
 
 // A styled on/off toggle.
 export function toggle(checked: boolean, onChange: (v: boolean) => void): HTMLElement {
@@ -95,6 +128,10 @@ textarea.mfw-in{height:auto;padding:10px 13px;resize:vertical}
 .mfw-toggle-knob{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
 .mfw-toggle.is-on .mfw-toggle-knob{left:21px}
 .mfw-card{border:1px solid #e2e8f0;border-radius:14px;background:#fff;padding:14px}
+.mfw-step-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 12px;padding:10px;border:1px solid #f1f5f9;border-radius:12px;background:#fafbff}
+.mfw-step-detail-grid label{min-width:0}
+.mfw-step-detail-grid label span{display:block;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#94a3b8;margin-bottom:4px}
+.mfw-step-detail-grid .mfw-in{height:32px;border-radius:9px;font-size:12px;padding:0 10px}
 .mfw-pick{border:1px solid #e2e8f0;border-radius:14px;background:#fff;padding:12px;cursor:pointer;text-align:left;transition:all .15s}
 .mfw-pick:hover{border-color:#c7d2fe}
 .mfw-pick.sel{border-color:var(--mfw-p);box-shadow:0 0 0 3px rgba(99,102,241,.15)}
@@ -106,6 +143,24 @@ textarea.mfw-in{height:auto;padding:10px 13px;resize:vertical}
 .mfw-phone-bar i{width:9px;height:9px;border-radius:50%}
 .mfw-phone-url{margin-left:8px;font-size:11px;color:#94a3b8;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:2px 8px;flex:1}
 .mfw-phone-body{padding:16px}
+.mfw-premium-preview{background:#f8fafc}
+.mfw-premium-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-bottom:10px;overflow:hidden}
+.mfw-premium-step{min-width:0;display:flex;align-items:center;gap:5px;color:#94a3b8}
+.mfw-premium-step b{width:20px;height:20px;border-radius:50%;background:#e2e8f0;color:#64748b;display:flex;align-items:center;justify-content:center;font-size:9px;flex:0 0 20px}
+.mfw-premium-step.active b{background:#0f172a;color:#fff}
+.mfw-premium-step span{min-width:0;display:block;line-height:1.05}
+.mfw-premium-step strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9px;color:#334155}
+.mfw-premium-step small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:8px;color:#94a3b8}
+.mfw-premium-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:12px;box-shadow:0 6px 18px rgba(15,23,42,.06)}
+.mfw-premium-card h3{font-size:15px;line-height:1.15;margin:0 0 4px;color:#0f172a}
+.mfw-premium-card p{font-size:11px;line-height:1.35;color:#64748b;margin:0 0 10px}
+.mfw-premium-field{margin-bottom:8px}
+.mfw-premium-field label{display:block;font-size:10px;font-weight:700;margin-bottom:3px;color:#334155}
+.mfw-premium-field i{display:flex;align-items:center;height:30px;border:1px solid #dbe3ef;border-radius:9px;background:#fff;color:#cbd5e1;font-style:normal;font-size:10px;padding:0 9px}
+.mfw-premium-field i.area{height:48px}
+.mfw-premium-check{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:700;color:#334155;margin-bottom:8px}
+.mfw-premium-check i{width:14px;height:14px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;flex:0 0 14px}
+.mfw-premium-card button{width:100%;height:34px;border:0;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-size:12px;font-weight:800;margin-top:4px}
 .mfw-summ{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
 .mfw-summ .c{border:1px solid #e2e8f0;border-radius:11px;padding:9px 11px;text-align:center}
 .mfw-summ .c b{font-size:18px;display:block;color:#0f172a}

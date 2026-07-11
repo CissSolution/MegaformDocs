@@ -1,22 +1,283 @@
 {
   "locales": [
-    { "code": "en-US", "name": "English",             "nativeName": "English",         "bundled": true  },
-    { "code": "es-ES", "name": "Spanish",             "nativeName": "Español",         "bundled": false },
-    { "code": "fr-FR", "name": "French",              "nativeName": "Français",        "bundled": false },
-    { "code": "de-DE", "name": "German",              "nativeName": "Deutsch",         "bundled": false },
-    { "code": "pt-BR", "name": "Portuguese (Brazil)", "nativeName": "Português (BR)",  "bundled": false },
-    { "code": "it-IT", "name": "Italian",             "nativeName": "Italiano",        "bundled": false },
-    { "code": "nl-NL", "name": "Dutch",               "nativeName": "Nederlands",      "bundled": false },
-    { "code": "pl-PL", "name": "Polish",              "nativeName": "Polski",          "bundled": false },
-    { "code": "ru-RU", "name": "Russian",             "nativeName": "Русский",         "bundled": false },
-    { "code": "tr-TR", "name": "Turkish",             "nativeName": "Türkçe",          "bundled": false },
-    { "code": "ar-SA", "name": "Arabic",              "nativeName": "العربية",          "bundled": false, "rtl": true },
-    { "code": "vi-VN", "name": "Vietnamese",          "nativeName": "Tiếng Việt",      "bundled": false },
-    { "code": "th-TH", "name": "Thai",                "nativeName": "ไทย",             "bundled": false },
-    { "code": "id-ID", "name": "Indonesian",          "nativeName": "Bahasa Indonesia","bundled": false },
-    { "code": "hi-IN", "name": "Hindi",               "nativeName": "हिन्दी",           "bundled": false },
-    { "code": "ja-JP", "name": "Japanese",            "nativeName": "日本語",           "bundled": false },
-    { "code": "ko-KR", "name": "Korean",              "nativeName": "한국어",           "bundled": false },
-    { "code": "zh-CN", "name": "Chinese SC",          "nativeName": "简体中文",         "bundled": false }
-  ]
+    {
+      "code": "ar-SA",
+      "name": "Arabic",
+      "nativeName": "العربية",
+      "bundled": false,
+      "rtl": true
+    },
+    {
+      "code": "bg-BG",
+      "name": "Bulgarian",
+      "nativeName": "Български",
+      "bundled": false
+    },
+    {
+      "code": "cs-CZ",
+      "name": "Czech",
+      "nativeName": "Čeština",
+      "bundled": false
+    },
+    {
+      "code": "da-DK",
+      "name": "Danish",
+      "nativeName": "Dansk",
+      "bundled": false
+    },
+    {
+      "code": "de-DE",
+      "name": "German",
+      "nativeName": "Deutsch",
+      "bundled": false
+    },
+    {
+      "code": "el-GR",
+      "name": "Greek",
+      "nativeName": "Ελληνικά",
+      "bundled": false
+    },
+    {
+      "code": "en-GB",
+      "name": "English (UK)",
+      "nativeName": "English (UK)",
+      "bundled": false
+    },
+    {
+      "code": "en-US",
+      "name": "English",
+      "nativeName": "English",
+      "bundled": true
+    },
+    {
+      "code": "es-ES",
+      "name": "Spanish",
+      "nativeName": "Español",
+      "bundled": false
+    },
+    {
+      "code": "es-MX",
+      "name": "Spanish (Mexico)",
+      "nativeName": "Español (MX)",
+      "bundled": false
+    },
+    {
+      "code": "et-EE",
+      "name": "Estonian",
+      "nativeName": "Eesti",
+      "bundled": false
+    },
+    {
+      "code": "fi-FI",
+      "name": "Finnish",
+      "nativeName": "Suomi",
+      "bundled": false
+    },
+    {
+      "code": "fr-FR",
+      "name": "French",
+      "nativeName": "Français",
+      "bundled": false
+    },
+    {
+      "code": "hi-IN",
+      "name": "Hindi",
+      "nativeName": "हिन्दी",
+      "bundled": false
+    },
+    {
+      "code": "hr-HR",
+      "name": "Croatian",
+      "nativeName": "Hrvatski",
+      "bundled": false
+    },
+    {
+      "code": "hu-HU",
+      "name": "Hungarian",
+      "nativeName": "Magyar",
+      "bundled": false
+    },
+    {
+      "code": "id-ID",
+      "name": "Indonesian",
+      "nativeName": "Bahasa Indonesia",
+      "bundled": false
+    },
+    {
+      "code": "it-IT",
+      "name": "Italian",
+      "nativeName": "Italiano",
+      "bundled": false
+    },
+    {
+      "code": "ja-JP",
+      "name": "Japanese",
+      "nativeName": "日本語",
+      "bundled": false
+    },
+    {
+      "code": "ko-KR",
+      "name": "Korean",
+      "nativeName": "한국어",
+      "bundled": false
+    },
+    {
+      "code": "lt-LT",
+      "name": "Lithuanian",
+      "nativeName": "Lietuvių",
+      "bundled": false
+    },
+    {
+      "code": "lv-LV",
+      "name": "Latvian",
+      "nativeName": "Latviešu",
+      "bundled": false
+    },
+    {
+      "code": "nb-NO",
+      "name": "Norwegian (Bokmål)",
+      "nativeName": "Norsk bokmål",
+      "bundled": false
+    },
+    {
+      "code": "nl-NL",
+      "name": "Dutch",
+      "nativeName": "Nederlands",
+      "bundled": false
+    },
+    {
+      "code": "pl-PL",
+      "name": "Polish",
+      "nativeName": "Polski",
+      "bundled": false
+    },
+    {
+      "code": "pt-BR",
+      "name": "Portuguese (Brazil)",
+      "nativeName": "Português (BR)",
+      "bundled": false
+    },
+    {
+      "code": "pt-PT",
+      "name": "Portuguese (Portugal)",
+      "nativeName": "Português (PT)",
+      "bundled": false
+    },
+    {
+      "code": "ro-RO",
+      "name": "Romanian",
+      "nativeName": "Română",
+      "bundled": false
+    },
+    {
+      "code": "ru-RU",
+      "name": "Russian",
+      "nativeName": "Русский",
+      "bundled": false
+    },
+    {
+      "code": "sk-SK",
+      "name": "Slovak",
+      "nativeName": "Slovenčina",
+      "bundled": false
+    },
+    {
+      "code": "sl-SI",
+      "name": "Slovenian",
+      "nativeName": "Slovenščina",
+      "bundled": false
+    },
+    {
+      "code": "sr-Latn-RS",
+      "name": "Serbian (Latin)",
+      "nativeName": "Srpski",
+      "bundled": false
+    },
+    {
+      "code": "sv-SE",
+      "name": "Swedish",
+      "nativeName": "Svenska",
+      "bundled": false
+    },
+    {
+      "code": "th-TH",
+      "name": "Thai",
+      "nativeName": "ไทย",
+      "bundled": false
+    },
+    {
+      "code": "tr-TR",
+      "name": "Turkish",
+      "nativeName": "Türkçe",
+      "bundled": false
+    },
+    {
+      "code": "uk-UA",
+      "name": "Ukrainian",
+      "nativeName": "Українська",
+      "bundled": false
+    },
+    {
+      "code": "vi-VN",
+      "name": "Vietnamese",
+      "nativeName": "Tiếng Việt",
+      "bundled": false
+    },
+    {
+      "code": "zh-CN",
+      "name": "Chinese SC",
+      "nativeName": "简体中文",
+      "bundled": false
+    }
+  ],
+  "wiz.title": "Form Wizard",
+  "wiz.subtitle": "Create a new form",
+  "wiz.cancel": "Cancel",
+  "wiz.back": "Back",
+  "wiz.continue": "Continue",
+  "wiz.create": "Create Form",
+  "wiz.creating": "Creating…",
+  "wiz.step_of": "Step {n} of 5 — {desc}",
+  "wiz.step.setup.label": "Setup",
+  "wiz.step.setup.desc": "Name & template",
+  "wiz.step.fields.label": "Fields",
+  "wiz.step.fields.desc": "Add form fields",
+  "wiz.step.workflow.label": "Workflow",
+  "wiz.step.workflow.desc": "Approval chain",
+  "wiz.step.design.label": "Design",
+  "wiz.step.design.desc": "Colors & typography",
+  "wiz.step.publish.label": "Publish",
+  "wiz.step.publish.desc": "Access & sharing",
+  "wiz.setup.title": "Set up your form",
+  "wiz.setup.subtitle": "Start from a template, import a form, or build from scratch below.",
+  "wiz.setup.gallery": "Template Gallery",
+  "wiz.setup.gallery_sub": "Browse the full library",
+  "wiz.setup.import": "Import JSON",
+  "wiz.setup.import_sub": "Load a MegaForm export",
+  "wiz.setup.form_name": "Form Name",
+  "wiz.setup.form_name_ph": "e.g. Employee Leave Request",
+  "wiz.setup.description": "Description (optional)",
+  "wiz.setup.description_ph": "Briefly describe the purpose of this form…",
+  "wiz.setup.category": "Category",
+  "wiz.setup.quick_start": "Quick start",
+  "wiz.setup.blank": "Blank Form",
+  "wiz.setup.blank_sub": "Start from scratch",
+  "wiz.setup.template_library": "Template library",
+  "wiz.setup.library_count": "({n} from this site)",
+  "wiz.setup.library_loading": "Loading template library…",
+  "wiz.setup.library_error": "Template library unavailable — use a quick start above.",
+  "wiz.setup.library_empty": "No saved templates on this site yet.",
+  "wiz.gallery.title": "Template Gallery",
+  "wiz.gallery.close": "Close",
+  "wiz.gallery.import": "Import JSON",
+  "wiz.gallery.import_hint": "Upload a MegaForm export (.json) to start from it, or pick a template above.",
+  "wiz.gallery.search_ph": "Search templates…",
+  "wiz.gallery.all": "All templates",
+  "wiz.gallery.loading": "Loading templates…",
+  "wiz.gallery.unavailable": "Template library unavailable. You can still Import JSON below.",
+  "wiz.gallery.no_match": "No templates match your search.",
+  "wiz.import_ok": "Imported \"{title}\" — {n} fields loaded",
+  "wiz.import_invalid": "That file is not valid JSON.",
+  "wiz.import_nofields": "No form fields found in that JSON — export a form/template from MegaForm.",
+  "wiz.import_read_err": "Could not read that file."
 }

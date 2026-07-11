@@ -386,7 +386,7 @@ export function listOpSchemas(): Array<{ op: string; description: string; params
     { op: 'save_form', description: 'Trigger the Save button', params: '{}' },
     { op: 'chat_message', description: 'Send a textual message back to the user (the AI uses this to explain its actions)', params: '{text}' },
     { op: 'replace_form_schema', description: 'Replace the entire form schema in one shot (use for big structural rewrites instead of dozens of small ops)', params: '{schema: {version, fields:[...], settings:{...}}}' },
-    { op: 'set_field_image_unsplash', description: 'Set a real visible Unsplash image URL on a field (no API key needed, always renders). Pass `query` keywords; we generate the URL.', params: '{key, query, width?, height?, alt?, target?: "defaultValue"|"htmlContent"|"widgetProps.imageUrl"}' },
+    { op: 'set_field_image_unsplash', description: 'Set a bundled MegaForm mock-catalog image URL on a field. Pass `query` keywords; we choose the catalog URL.', params: '{key, query, width?, height?, alt?, target?: "defaultValue"|"htmlContent"|"widgetProps.imageUrl"}' },
     { op: 'add_subform_from_table', description: 'Insert a Subform (DataGrid) bound to a SQL table on the DashboardDatabase. Columns auto-detected via /Subform/Columns. Set totalField + totalFormula="Sum(\"qty * price\")" for live totals.', params: '{tableName, parentKeyColumn?, totalField?, totalFormula?, label?}' },
     { op: 'add_field_from_column', description: 'Insert a single input field bound to a SQL column from a DashboardDatabase table. Type inferred from data type.', params: '{tableName, columnName, key?}' },
     // [v20260531-AppBatch] Multi-form + relational-DB-table creation in ONE turn.

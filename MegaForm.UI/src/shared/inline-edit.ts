@@ -199,7 +199,34 @@ function markEditable(el: HTMLElement, kind: string, key: string): void {
 function onFocus(e: Event): void {
   const el = e.currentTarget as HTMLElement;
   el.classList.add('mf-ie-active');
-  if (isHeroTextStyleTarget(el)) openHeroTextStylePanel(el);
+  // [HeroEditUX v20260707] Do NOT auto-open the Text-style panel on focus — it landed on top of
+  // the text the user had just clicked to EDIT, so typing felt impossible ("click vào là pop ngay
+  // css changer"). Focus now shows a small floating 🖉-style trigger next to the element; the
+  // panel opens only when that trigger is clicked. Typing works immediately on click.
+  if (isHeroTextStyleTarget(el)) showHeroStyleTrigger(el);
+}
+
+const HERO_TRIGGER_ID = 'mf-ie-style-trigger';
+function hideHeroStyleTrigger(): void {
+  const t = document.getElementById(HERO_TRIGGER_ID);
+  if (t && t.parentNode) t.parentNode.removeChild(t);
+}
+function showHeroStyleTrigger(el: HTMLElement): void {
+  hideHeroStyleTrigger();
+  const b = document.createElement('button');
+  b.id = HERO_TRIGGER_ID;
+  b.type = 'button';
+  b.className = 'mf-ie-style-trigger';
+  b.title = 'Text style';
+  b.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i>';
+  document.body.appendChild(b);
+  const r = el.getBoundingClientRect();
+  b.style.top = Math.max(4, r.top - 34) + 'px';
+  b.style.left = Math.max(4, Math.min(window.innerWidth - 40, r.right - 28)) + 'px';
+  // mousedown preventDefault keeps the caret in the contenteditable (no blur) …
+  b.addEventListener('mousedown', (ev) => { ev.preventDefault(); ev.stopPropagation(); });
+  // … so the click can open the panel for the still-focused element.
+  b.addEventListener('click', (ev) => { ev.preventDefault(); ev.stopPropagation(); hideHeroStyleTrigger(); openHeroTextStylePanel(el); });
 }
 
 function onKey(e: KeyboardEvent): void {
@@ -211,6 +238,7 @@ function onKey(e: KeyboardEvent): void {
 function onBlur(e: Event): void {
   const el = e.currentTarget as HTMLElement;
   el.classList.remove('mf-ie-active');
+  hideHeroStyleTrigger();
   const orig = el.getAttribute('data-mf-ie-orig') || '';
   const next = plainText(el);
   if (next === orig) return;
@@ -2180,6 +2208,8 @@ function injectStyle(): void {
     '.mf-ie-img-editable:hover{outline-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.2);}' +
     '.mf-ie-bg-editable{cursor:pointer;transition:outline-color .15s;}' +
     '.mf-ie-bg-editable:hover{outline:2px dashed #2563eb!important;outline-offset:-2px;}' +
+    '.mf-ie-style-trigger{position:fixed;z-index:2147483551;width:28px;height:28px;border-radius:8px;border:1px solid #dbe3ef;background:#fff;color:#4f46e5;box-shadow:0 6px 18px rgba(15,23,42,.18);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;padding:0;}' +
+    '.mf-ie-style-trigger:hover{background:#eef2ff;}' +
     '.mf-ie-hero-panel{position:fixed;z-index:2147483550;width:280px;background:#fff;border:1px solid #dbe3ef;border-radius:12px;box-shadow:0 18px 46px rgba(15,23,42,.24);padding:10px;font-family:Inter,Segoe UI,system-ui,sans-serif;color:#0f172a;}' +
     '.mf-ie-hero-panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;font-size:13px;font-weight:800;}' +
     '.mf-ie-hero-panel-head span{display:inline-flex;align-items:center;gap:7px;}' +

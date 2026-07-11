@@ -1,0 +1,94 @@
+[
+  {
+    "label": "desktop-initial",
+    "active": "0",
+    "progress": "0 of 5 sections complete",
+    "invalid": [],
+    "done": [],
+    "errorGroups": 0,
+    "tabbar": {
+      "left": 0,
+      "client": 1042,
+      "scroll": 1042,
+      "canLeft": false,
+      "canRight": false,
+      "leftBtn": "none",
+      "rightBtn": "none"
+    },
+    "overflowX": false
+  },
+  {
+    "label": "after-fill-account",
+    "active": "0",
+    "progress": "1 of 5 sections complete",
+    "invalid": [],
+    "done": [],
+    "errorGroups": 0,
+    "tabbar": {
+      "left": 0,
+      "client": 1042,
+      "scroll": 1042,
+      "canLeft": false,
+      "canRight": false,
+      "leftBtn": "none",
+      "rightBtn": "none"
+    },
+    "overflowX": false
+  },
+  {
+    "label": "after-continue-account-valid",
+    "active": "1",
+    "progress": "1 of 5 sections complete",
+    "invalid": [],
+    "done": [
+      "0"
+    ],
+    "errorGroups": 0,
+    "tabbar": {
+      "left": 0,
+      "client": 1042,
+      "scroll": 1042,
+      "canLeft": false,
+      "canRight": false,
+      "leftBtn": "none",
+      "rightBtn": "none"
+    },
+    "overflowX": false
+  },
+  {
+    "label": "mobile-initial",
+    "active": "0",
+    "progress": "0 of 5 sections complete",
+    "invalid": [],
+    "done": [],
+    "errorGroups": 0,
+    "tabbar": {
+      "left": 0,
+      "client": 292,
+      "scroll": 755,
+      "canLeft": false,
+      "canRight": true,
+      "leftBtn": "none",
+      "rightBtn": "grid"
+    },
+    "overflowX": false
+  },
+  {
+    "label": "mobile-after-scroll-right",
+    "active": "0",
+    "progress": "0 of 5 sections complete",
+    "invalid": [],
+    "done": [],
+    "errorGroups": 0,
+    "tabbar": {
+      "left": 260,
+      "client": 292,
+      "scroll": 785,
+      "canLeft": true,
+      "canRight": true,
+      "leftBtn": "grid",
+      "rightBtn": "grid"
+    },
+    "overflowX": false
+  }
+]

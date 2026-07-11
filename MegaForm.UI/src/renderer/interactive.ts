@@ -173,6 +173,36 @@ function markDatePopoverHost(root: HTMLElement): void {
     node = node.parentElement;
   }
 }
+
+// [DatePopoverOverflowLift v20260705] Premium template cards pin `.mfp{overflow:hidden!important}` at
+// specificity (0,5,0), which BEATS the (0,3,0) `.mf-has-date-popover .mf-date-popover-host{overflow:visible}`
+// stylesheet override → the calendar/picker panel is clipped at the card's rounded bottom edge. When the
+// picker opens (root gains .is-open), set INLINE `overflow:visible !important` on each ancestor up to the
+// form wrapper — an inline !important beats any stylesheet !important, so the clip is lifted regardless of
+// template specificity — then restore on close. No re-parenting: the panel's own click / outside-click
+// handlers are untouched. Standard forms already render correctly; this only unclips the premium case.
+function attachDatePopoverLift(root: HTMLElement): void {
+  const wrapper = root.closest<HTMLElement>('.mf-form-wrapper');
+  if (!wrapper || (root as any).__mfPopoverLift) return;
+  (root as any).__mfPopoverLift = true;
+  const lift = (on: boolean): void => {
+    let node: HTMLElement | null = root;
+    for (let guard = 0; node && guard < 24; guard++) {
+      if (on) node.style.setProperty('overflow', 'visible', 'important');
+      else node.style.removeProperty('overflow');
+      if (node === wrapper) break;
+      node = node.parentElement;
+    }
+  };
+  let wasOpen = false;
+  const obs = new MutationObserver(() => {
+    const isOpen = root.classList.contains('is-open');
+    if (isOpen === wasOpen) return;
+    wasOpen = isOpen;
+    lift(isOpen);
+  });
+  obs.observe(root, { attributes: true, attributeFilter: ['class'] });
+}
 // Localized month names (long for the calendar title/list, short for columns).
 function dtpMonthNames(locale: string, style: 'long' | 'short'): string[] {
   try {
@@ -210,6 +240,7 @@ function bindDateTimePickers(): void {
     const panel = root.querySelector<HTMLElement>('.mf-dtp-panel');
     if (!hidden || !trigger || !valueEl || !panel) return;
     markDatePopoverHost(root);
+    attachDatePopoverLift(root);
 
     const mode = normalizeDateMode(root.dataset.mode);
     const timeFormat = root.dataset.timeFormat === '12h' ? '12h' : '24h';
@@ -484,6 +515,7 @@ function bindCalendarDatePickers(): void {
     const panel = root.querySelector<HTMLElement>('.mf-cal-panel');
     if (!hidden || !trigger || !valueEl || !panel) return;
     markDatePopoverHost(root);
+    attachDatePopoverLift(root);
 
     const mode = normalizeDateMode(root.dataset.mode);
     const placeholder = root.dataset.placeholder || 'Select a date';

@@ -1,0 +1,78 @@
+{
+  "desktop": {
+    "root": {
+      "x": 0,
+      "y": 0,
+      "width": 1280,
+      "height": 900,
+      "top": 0,
+      "right": 1280,
+      "bottom": 900,
+      "left": 0
+    },
+    "frame": {
+      "x": 64,
+      "y": 169.16,
+      "width": 1152,
+      "height": 561.69,
+      "top": 169.16,
+      "right": 1216,
+      "bottom": 730.84,
+      "left": 64
+    },
+    "card": {
+      "x": 64,
+      "y": 169.16,
+      "width": 1152,
+      "height": 529.19,
+      "top": 169.16,
+      "right": 1216,
+      "bottom": 698.34,
+      "left": 64
+    },
+    "activeStep": "0",
+    "back": {
+      "display": "flex",
+      "opacity": "0.45"
+    },
+    "overflow": []
+  },
+  "mobile": {
+    "root": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 844,
+      "top": 0,
+      "right": 390,
+      "bottom": 844,
+      "left": 0
+    },
+    "frame": {
+      "x": 10,
+      "y": 16,
+      "width": 370,
+      "height": 758.88,
+      "top": 16,
+      "right": 380,
+      "bottom": 774.88,
+      "left": 10
+    },
+    "card": {
+      "x": 10,
+      "y": 16,
+      "width": 370,
+      "height": 703.88,
+      "top": 16,
+      "right": 380,
+      "bottom": 719.88,
+      "left": 10
+    },
+    "activeStep": "0",
+    "back": {
+      "display": "flex",
+      "opacity": "0.45"
+    },
+    "overflow": []
+  }
+}

@@ -22,9 +22,21 @@ export function getFieldValue(key: string, type: string, formId?: number): strin
     const checked = document.querySelector<HTMLInputElement>(`input[name="${key}"]:checked`);
     return checked?.value ?? '';
   }
-  if (type === 'Checkbox') {
-    const checks = document.querySelectorAll<HTMLInputElement>(`input[name="${key}"]:checked`);
-    return Array.from(checks).map(c => c.value);
+  // [MultiChoiceCollectFix v20260706] Checkbox & Chips are checkbox-skinned (multi → array);
+  // Cards is radio-skinned (single). Previously ONLY Checkbox had a branch, so Chips/Cards fell
+  // through to the generic `[name=key]` selector below, which returns the FIRST matching input's
+  // value — so a multi-select Chips silently collected only ONE option and dropped the rest at
+  // submit. Detect the input kind from the DOM so a single-select Chips or a multi Cards still
+  // round-trips correctly. collectFormData() delegates here, so this fixes the stored value too.
+  if (type === 'Checkbox' || type === 'Chips' || type === 'Cards') {
+    const inputs = document.querySelectorAll<HTMLInputElement>(`input[name="${key}"]`);
+    if (inputs.length) {
+      const isRadio = (inputs[0].type || '').toLowerCase() === 'radio';
+      const checked = document.querySelectorAll<HTMLInputElement>(`input[name="${key}"]:checked`);
+      return isRadio
+        ? (checked.length ? checked[0].value : '')
+        : Array.from(checked).map(c => c.value);
+    }
   }
   if (type === 'Rating' || type === 'Signature') {
     const hidden = document.querySelector<HTMLInputElement>(`input[type="hidden"][name="${key}"]`);

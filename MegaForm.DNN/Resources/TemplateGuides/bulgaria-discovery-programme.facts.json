@@ -5,8 +5,8 @@
   "theme": "bulgaria-discovery-premium",
   "title": "Bulgaria Discovery Programme",
   "tokenStyle": "double",
-  "rootSelector": ".mfp.mfp-bulgaria",
-  "stepMechanism": "customHtml-wizard",
+  "rootSelector": ".mfp.mfp-bulgaria.mfp-native-generated",
+  "stepMechanism": "premium-native",
   "stepAnchor": "data-step",
   "stepCount": 4,
   "steps": [
@@ -53,6 +53,17 @@
     }
   ],
   "fields": [
+    {
+      "key": "premium_step_1",
+      "type": "Section",
+      "label": "Tell us about yourself",
+      "display": "input",
+      "optionCount": 0,
+      "step": null,
+      "placeholder": "{{field:premium_step_1}}",
+      "inCustomHtml": false,
+      "required": false
+    },
     {
       "key": "row_name",
       "type": "Row",
@@ -144,6 +155,17 @@
       "required": false
     },
     {
+      "key": "premium_step_2",
+      "type": "Section",
+      "label": "What brings you to Bulgaria?",
+      "display": "input",
+      "optionCount": 0,
+      "step": null,
+      "placeholder": "{{field:premium_step_2}}",
+      "inCustomHtml": false,
+      "required": false
+    },
+    {
       "key": "purpose_type",
       "type": "Radio",
       "label": "Purpose of visit",
@@ -185,6 +207,17 @@
       "step": 1,
       "placeholder": "{{field:languages}}",
       "inCustomHtml": true,
+      "required": false
+    },
+    {
+      "key": "premium_step_3",
+      "type": "Section",
+      "label": "Plan your stay",
+      "display": "input",
+      "optionCount": 0,
+      "step": null,
+      "placeholder": "{{field:premium_step_3}}",
+      "inCustomHtml": false,
       "required": false
     },
     {
@@ -251,6 +284,17 @@
       "step": 2,
       "placeholder": "{{field:accessibility}}",
       "inCustomHtml": true,
+      "required": false
+    },
+    {
+      "key": "premium_step_4",
+      "type": "Section",
+      "label": "Review & confirm",
+      "display": "input",
+      "optionCount": 0,
+      "step": null,
+      "placeholder": "{{field:premium_step_4}}",
+      "inCustomHtml": false,
       "required": false
     },
     {
@@ -350,9 +394,7 @@
     "--bg-line": "#ded3c7"
   },
   "contentTokens": [],
-  "scriptTokens": [
-    "bulgaria_wizard"
-  ],
+  "scriptTokens": [],
   "formTokens": [],
   "shellTexts": [
     "Bulgaria Discovery Programme",
@@ -392,9 +434,6 @@
     "Region",
     "Stay",
     "Interests",
-    "Short personal statement",
-    "How did you hear about us?",
-    "Supporting document (optional)",
     "After you submit",
     "Application review",
     "Our Sofia team checks your details within 3 business days.",
@@ -402,6 +441,9 @@
     "We suggest regions, hosts, and seasonal experiences based on your choices.",
     "Welcome pack",
     "Approved applicants receive itinerary notes, local contacts, and next-step instructions.",
+    "Short personal statement",
+    "How did you hear about us?",
+    "Supporting document (optional)",
     "Back",
     "Step",
     "of 4",
@@ -490,11 +532,11 @@
   "orphanFieldPlaceholders": [],
   "hashes": {
     "customCssSha256": "c5429cdb917e3b5b870fa6d95468fe8e71a21c9c822d645f4032c7cd4e172778",
-    "customHtmlSha256": "0ecf035e247eae2e770c9834e62a7f9b10a7da1e38d3529a7fd4735b470724af",
-    "shellSha256": "28941213769592ef6549262750668bbbf4f4a73bc677755f25eca2c5998a2231"
+    "customHtmlSha256": "84e3418071a3819ce9ed619f32c5594585f11fb1fa6999075ba4eaa133573ff6",
+    "shellSha256": "9ae4d83e9fd6ded20b2add340ef33eca74cfddcb68292e94a73834b60822c58f"
   },
   "counts": {
-    "fields": 23,
+    "fields": 27,
     "fieldTokens": 21,
     "steps": 4
   },

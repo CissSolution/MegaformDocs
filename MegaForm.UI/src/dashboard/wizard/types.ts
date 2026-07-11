@@ -11,6 +11,7 @@ export type SetFn = (patch: Partial<WizardData>, opts?: { rerender?: boolean }) 
 export interface WizardField { id: string; type: string; label: string; required: boolean; }
 export interface FormPage { id: string; title: string; fields: WizardField[]; }
 export interface ApprovalNode { id: string; role: string; name: string; type: 'approve' | 'review' | 'notify'; required: boolean; }
+export interface PremiumStepDetail { step: number; navLabel: string; navSubtitle: string; title: string; description: string; }
 
 export interface WizardData {
   // 1 — Setup
@@ -21,6 +22,9 @@ export interface WizardData {
   // Editable working copy of a premium template's fields (③ — add/remove in the wizard;
   // customHtml is reconciled via syncFieldPlaceholders on Create). null when not premium.
   premiumFields: any[] | null;
+  // Editable stepper labels + page headings for premium templates. These patch customHtml
+  // before native migration so the created form keeps the edited step copy.
+  premiumStepDetails: PremiumStepDetail[];
   // 2 — Fields
   isMultiStep: boolean; fields: WizardField[]; formPages: FormPage[]; showProgressBar: boolean;
   // 3 — Workflow
@@ -35,7 +39,7 @@ export interface WizardData {
 export function defaultWizardData(): WizardData {
   return {
     formName: '', formDescription: '', category: '', template: null,
-    templateRecord: null, templateIsPremium: false, premiumFields: null,
+    templateRecord: null, templateIsPremium: false, premiumFields: null, premiumStepDetails: [],
     isMultiStep: false, fields: [], formPages: [{ id: 'page-1', title: 'Step 1', fields: [] }], showProgressBar: true,
     approvalEnabled: false, approvalNodes: [], notifySubmitter: true, deadlineDays: '3',
     theme: 'clean', primaryColor: '#3b82f6', accentColor: '#8b5cf6', fontStyle: 'inter', roundness: 'md',

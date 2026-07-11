@@ -62,7 +62,7 @@ namespace MegaForm.Core.Services.Starters
         public const string HrManagerRole       = "Recruitment HR Managers";
         public const string HiringManagerRole   = "Recruitment Hiring Managers";
         public const string InterviewerRole     = "Recruitment Interviewers";
-        public const string StarterPassword     = "MegaForm!2026";
+        public const string StarterPassword     = "";
         public const string HrManagerUserName     = "recruit.hr";
         public const string HiringManagerUserName = "recruit.hiring";
         public const string InterviewerUserName   = "recruit.interviewer";
@@ -769,7 +769,7 @@ namespace MegaForm.Core.Services.Starters
                     Password = StarterPassword,
                     ApproveUser = true,
                     UpdateIfExists = true,
-                    GeneratePasswordIfEmpty = false,
+                    GeneratePasswordIfEmpty = true,
                     Actor = actor
                 }, CancellationToken.None).GetAwaiter().GetResult();
             }

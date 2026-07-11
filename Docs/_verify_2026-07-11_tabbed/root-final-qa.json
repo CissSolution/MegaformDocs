@@ -1,0 +1,38 @@
+{
+  "hasTemplate": true,
+  "hasManaged": true,
+  "root": {
+    "x": 0,
+    "y": 112.78,
+    "width": 1280,
+    "height": 1121.11,
+    "top": 112.78,
+    "right": 1280,
+    "bottom": 1233.89,
+    "left": 0
+  },
+  "frame": {
+    "x": 64,
+    "y": 160.78,
+    "width": 1152,
+    "height": 1025.11,
+    "top": 160.78,
+    "right": 1216,
+    "bottom": 1185.89,
+    "left": 64
+  },
+  "card": {
+    "x": 64,
+    "y": 160.78,
+    "width": 1152,
+    "height": 992.61,
+    "top": 160.78,
+    "right": 1216,
+    "bottom": 1153.39,
+    "left": 64
+  },
+  "activeStep": "1",
+  "activePage": "1",
+  "visibleText": "Company name * Website Your role * Founder / CEO Leading the company. ✓ Product Product and design teams. ✓ Engineering ",
+  "overflow": []
+}

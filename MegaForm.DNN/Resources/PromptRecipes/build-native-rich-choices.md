@@ -3,7 +3,7 @@
 ## When to use
 The user wants Radio / Checkbox options to look RICH — pricing cards, selectable
 "pass" tiers, pill/chip tag pickers, option cards with title + description + price
-badge + icon — like a premium booking/registration form.
+badge + catalog icon — like a premium booking/registration form.
 
 **Do this with NATIVE field properties, NOT hand-written `<input type=radio>` inside
 `customHtml`.** Native = the Admin can edit every option in the Builder Options panel,
@@ -32,7 +32,7 @@ Per **option** (each entry in `options[]`) — all optional except `label`/`valu
 | `description` | muted sub-line (aliases: `desc`,`helpText`,`subLabel`) | `"Posto riservato, cena a 4 portate"` |
 | `meta`        | small kicker line (aliases: `location`,`kicker`) | `"Berlin · Paris · Madrid"` |
 | `badge`       | pill on the right (great for PRICE) | `"€95"` |
-| `icon`        | leading icon/emoji (text or HTML if `allowOptionHtml`) | `"🍷"` |
+| `icon`        | leading icon assigned by MegaForm catalog | omit in AI output |
 | `richHtml`    | full custom label HTML (needs `allowOptionHtml:true`; sanitized) | `"<b>VIP</b> …"` |
 
 Rendered DOM (so themers know the hooks): `.mf-option-group--cards` / `--chips` wraps
@@ -68,16 +68,12 @@ Rendered DOM (so themers know the hooks): `.mf-option-group--cards` / `--chips` 
 That alone renders bordered selectable cards (title + description + price badge + check)
 and pill chips — responsive (1/2/3 cols by count, single col for cards). No HTML, no JS.
 
-## Optional brand skin (still no HTML)
-If a brand colour is wanted, add a SMALL `customCss` that only recolours the native hooks —
-never hand-write the options. Example (festa burgundy):
-```css
-.mf-option-group--cards .mf-option-item.is-checked .mf-option-ui,
-.mf-option-group--cards .mf-option-item:has(.mf-option-control:checked) .mf-option-ui{ border-color:#9d2235; background:#fbeef0; }
-.mf-option-badge{ color:#9d2235; border-color:#e7c3c9; background:#fbeef0; }
-.mf-option-group--chips .mf-option-item.is-checked .mf-option-ui,
-.mf-option-group--chips .mf-option-item:has(.mf-option-control:checked) .mf-option-ui{ background:#9d2235; border-color:#9d2235; color:#fff; }
-```
+## Design rails
+Do not write custom CSS for Cards/Chips. The renderer applies the global
+`.mf-option-group--cards` / `.mf-option-group--chips` skin and theme variables recolour it.
+Do not invent emoji icons, FontAwesome names, SVG, iconHtml, or option images. MegaForm assigns
+icons from the bundled mock source catalog (rich-selection-controls plus premium form icons such as
+ticket, users, wine, pizza, cake, calendar, map-pin). AI output should stay text-only.
 
 ## Reference template
 `DefaultTemplates - Deployed/Premium/festa-italiana-native.json` — full registration form
@@ -96,17 +92,16 @@ label row, or set the field `label` to match the section title).
 
 ## Builder (Admin) equivalence
 Everything above is exposed in the Builder → field Options panel: **Choice Display**
-(default/chips/cards), **Allow sanitized HTML in labels**, **Columns**, a **Sample template**
-one-click picker (below), plus per-option rows for description / badge / icon / Rich HTML.
-So Admins reproduce any of this without code.
+(default/chips/cards), **Columns**, and per-option rows for description / meta / badge.
+Icons and CSS are catalog/theme-owned, not AI-authored.
 
 ## One-click "Sample template" starters (Builder → Options)
-The Builder ships ready-made starters that fill `options[]` AND set Choice Display / Allow-HTML /
-Columns in one click: **Pricing cards** (price + features), **Plan cards** (badge + description),
-**Feature cards** (icon + blurb), **Yes/No cards**, **Satisfaction cards** (emoji), **Interest chips**
-(emoji tags), **Size chips** (S/M/L/XL), **Rich HTML card** (custom markup). The AI can emit the same
-shapes directly — e.g. an interest-chip set is `optionDisplay:"chips"` + options each with an `icon` emoji;
-a pricing set is `optionDisplay:"cards"` + options with `meta`/`description`/`badge`.
+The Builder ships ready-made starters that fill `options[]` AND set Choice Display / Columns in
+one click: **Pricing cards** (price + features), **Plan cards** (badge + description),
+**Feature cards** (catalog icon + blurb), **Yes/No cards**, **Satisfaction cards**,
+**Interest chips**, **Size chips**. The AI should emit the same text shapes directly:
+an interest-chip set is `optionDisplay:"chips"` + text options; a pricing set is
+`optionDisplay:"cards"` + options with `meta`/`description`/`badge`.
 
 ## Complete option-object reference (authoritative — for the AI)
 Copy-paste shape; every key except `label`/`value` is optional:
@@ -115,15 +110,15 @@ Copy-paste shape; every key except `label`/`value` is optional:
   "description": "10 projects · priority support",    // muted sub-line — aliases: desc, helpText, subLabel
   "meta": "Most popular",                              // small kicker line — aliases: location, kicker
   "badge": "$29/mo",                                   // pill on the right — PLAIN TEXT ONLY (HTML is escaped)
-  "icon": "⭐",                                         // leading emoji/icon (HTML only if allowOptionHtml) — alias: iconHtml
   "richHtml": "<strong>Pro</strong> <small>…</small>"  // full custom label; needs field.allowOptionHtml:true; sanitized — aliases: labelHtml, html
 }
 ```
 Rules the AI MUST respect:
 - **`badge` is TEXT only** — HTML is escaped. Put price/short labels here, never markup.
+- **Do not emit `icon`, `iconHtml`, SVG, emoji, or FontAwesome** for Cards/Chips. MegaForm fills catalog icons.
 - **`richHtml` is sanitized** — only these tags survive: `a b br code div em i li ol p small span strong sub sup u ul`;
   only attrs `class title aria-label` (plus `href target rel` on `<a>`). Stripped: `style`, `on*` handlers,
   `<script>`, `<img>`, `<button>`, `javascript:` URIs. Must set `allowOptionHtml:true` on the field to use it.
 - **`optionColumns`** auto-responsive when omitted: cards stack (≈1 col), chips wrap inline (≈2–3). Set `1`–`4` to force.
-- **Prefer structured keys** (`icon` + `meta` + `description` + `badge`) over `richHtml` — Admin-editable and always safe.
+- **Prefer structured text keys** (`meta` + `description` + `badge`) over `richHtml` — Admin-editable and always safe.
 - **Never** emit `<input type=radio>`/`<label>` inside `customHtml` — use the native field + `options[]`.

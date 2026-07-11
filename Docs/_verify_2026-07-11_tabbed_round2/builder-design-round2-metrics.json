@@ -1,0 +1,363 @@
+{
+  "main": {
+    "url": "http://localhost:5122/?mfpanel=builder&formId=5",
+    "hasRoot": false,
+    "root": null,
+    "frame": null,
+    "card": null,
+    "preview": {
+      "x": 445.5,
+      "y": 145.56,
+      "width": 436,
+      "height": 667,
+      "top": 145.56,
+      "right": 881.5,
+      "bottom": 812.56,
+      "left": 445.5
+    },
+    "rootStyle": null,
+    "mode": {
+      "build": "w-mode-btn",
+      "design": "w-mode-btn is-active",
+      "designSel": "true"
+    },
+    "iframes": [
+      {
+        "i": 11,
+        "id": "mf-builder-preview-frame",
+        "cls": "mf-theme-preview-frame",
+        "src": "",
+        "rect": {
+          "x": 466.45,
+          "y": 169.56,
+          "width": 388.09,
+          "height": 619.28,
+          "top": 169.56,
+          "right": 854.55,
+          "bottom": 788.84,
+          "left": 466.45
+        }
+      }
+    ],
+    "text": " Home\n(current)\n Private\n My Page\n host Logout \nDefault Pane\nWelcome To Oqtane...\nEdit Content\n\nOqtane is an open source CMS and Application Framework that provides advanced functionality for developing web, mobile, and desktop applications on .NET. It leverages Blazor to compose a fully dynamic digital experience. Whether you are looking for a platform to accelerate your web development efforts, or simply interested in exploring the anatomy of a large-scale Blazor application, Oqtane provides a solid foundation based on proven enterprise architectural principles and patterns.\n\nJoin Our Community  Clone Our Repo\n\nBlazor is a modern front-end web framework based on HTML, CSS, and C# that helps you build web applications faster. Blazor provides a component-based architecture with server-side rendering and full client-side interactivity in a single solution, where you can switch between server-side and client-side rendering modes and even mix them in the same web page. For desktop or mobi"
+  },
+  "frames": [
+    {
+      "url": "http://localhost:5122/?mfpanel=builder&formId=5",
+      "data": {
+        "url": "http://localhost:5122/?mfpanel=builder&formId=5",
+        "hasRoot": false,
+        "root": null,
+        "frame": null,
+        "card": null,
+        "h1": null,
+        "body": {
+          "scrollWidth": 1365,
+          "innerWidth": 1365,
+          "scrollHeight": 2276,
+          "innerHeight": 768
+        },
+        "rootStyle": null,
+        "text": " Home\n(current)\n Private\n My Page\n host Logout \nDefault Pane\nWelcome To Oqtane...\nEdit Content\n\nOqtane is an open source CMS and Application Framework that provides advanced functionality for developing web, mobile, and desktop applications on .NET. It leverages Blazor to compose a fully dynamic dig"
+      }
+    },
+    {
+      "url": "about:srcdoc",
+      "data": {
+        "url": "about:srcdoc",
+        "hasRoot": false,
+        "root": null,
+        "frame": null,
+        "card": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "h1": null,
+        "body": {
+          "scrollWidth": 0,
+          "innerWidth": 0,
+          "scrollHeight": 0,
+          "innerHeight": 0
+        },
+        "rootStyle": null,
+        "text": "Get In TouchWe'd love to hear from you. Fill out the form below and we'll respond as soon as possible.Personal InformationFieldField placeholderContact DetailsFieldField placeholderFieldField placeholderFieldField placeholderPreferencesFieldField placeholderFieldField placeholderFieldField placehold"
+      }
+    },
+    {
+      "url": "about:srcdoc",
+      "data": {
+        "url": "about:srcdoc",
+        "hasRoot": false,
+        "root": null,
+        "frame": null,
+        "card": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "h1": null,
+        "body": {
+          "scrollWidth": 0,
+          "innerWidth": 0,
+          "scrollHeight": 0,
+          "innerHeight": 0
+        },
+        "rootStyle": null,
+        "text": "Vendor ApplicationApply to become an approved supplier or event vendor.Contact InformationFieldField placeholderFieldField placeholderVendor DetailsFieldField placeholderFieldField placeholderPortfolioFieldField placeholderFieldField placeholderSubmitWe typically respond within one business day."
+      }
+    },
+    {
+      "url": "about:srcdoc",
+      "data": {
+        "url": "about:srcdoc",
+        "hasRoot": false,
+        "root": null,
+        "frame": null,
+        "card": null,
+        "h1": null,
+        "body": {
+          "scrollWidth": 0,
+          "innerWidth": 0,
+          "scrollHeight": 0,
+          "innerHeight": 0
+        },
+        "rootStyle": null,
+        "text": "\n\n  \n  \n    \n      \n      Verdant Health\n    \n    Patient Intake\n    A few gentle questions so we can care for you better. Takes about 3 minutes.\n  \n\n  \n  \n    \n      \n        1\n        About You\n      \n      \n        2\n        Health\n      \n      \n        3\n        Lifestyle\n      \n      \n        4"
+      }
+    },
+    {
+      "url": "about:srcdoc",
+      "data": {
+        "url": "about:srcdoc",
+        "hasRoot": false,
+        "root": null,
+        "frame": null,
+        "card": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "h1": null,
+        "body": {
+          "scrollWidth": 0,
+          "innerWidth": 0,
+          "scrollHeight": 0,
+          "innerHeight": 0
+        },
+        "rootStyle": null,
+        "text": "\n  \n    \n      \n      \n      \n        ★\n        The Great American Journey\n      \n      \n        Plan your American road trip\n        From desert highways to coastal cliffs — tell us how you want to see the country.\n      \n    \n    \n      \n        \n          01\n          / 04 · TravelerThe RouteExpe"
+      }
+    },
+    {
+      "url": "about:srcdoc",
+      "data": {
+        "url": "about:srcdoc",
+        "hasRoot": false,
+        "root": null,
+        "frame": null,
+        "card": null,
+        "h1": null,
+        "body": {
+          "scrollWidth": 0,
+          "innerWidth": 0,
+          "scrollHeight": 0,
+          "innerHeight": 0
+        },
+        "rootStyle": null,
+        "text": "\n\n/* MF-QA-HOSTSHELL-v11 */\n.mfp.mfp-classic-americana-registration.mfp-native-generated{font-family:ui-sans-serif,system-ui,sans-serif!important;font-size:16px!important;line-height:24px!important;color:#3a2f28!important;background:#f6efe2!important;border:1px solid #e2d3ba!important;border-radius:"
+      }
+    },
+    {
+      "url": "about:srcdoc",
+      "data": {
+        "url": "about:srcdoc",
+        "hasRoot": false,
+        "root": null,
+        "frame": null,
+        "card": null,
+        "h1": null,
+        "body": {
+          "scrollWidth": 0,
+          "innerWidth": 0,
+          "scrollHeight": 0,
+          "innerHeight": 0
+        },
+        "rootStyle": null,
+        "text": "\n  \n    \n      ●\n      Welcome back\n      Sign in to continue to your account\n    \n\n    \n      You are already signed in.\n      Continue\n    \n\n    \n      \n        Continue with GitHub\n      \n      \n        Continue with Facebook\n      \n    \n\n    or\n\n    Sign in with email & password\n\n    New here? C"
+      }
+    },
+    {
+      "url": "about:srcdoc",
+      "data": {
+        "url": "about:srcdoc",
+        "hasRoot": false,
+        "root": null,
+        "frame": null,
+        "card": null,
+        "h1": null,
+        "body": {
+          "scrollWidth": 0,
+          "innerWidth": 0,
+          "scrollHeight": 0,
+          "innerHeight": 0
+        },
+        "rootStyle": null,
+        "text": "Benvenuti allaFesta ItalianaUna serata di vino, musica e tradizione · 14 SettembreIL'OspiteThe GuestIIL'EsperienzaThe ExperienceIIILa ConfermaConfirmationRaccontaci di teNome *First nameNomeGiulia\nCognome *Last nameCognomeRossi\nEmail *Indirizzo emailEmailgiulia@email.it\nTelefonoPhoneTelefono+39 333 "
+      }
+    },
+    {
+      "url": "about:srcdoc",
+      "data": {
+        "url": "about:srcdoc",
+        "hasRoot": false,
+        "root": null,
+        "frame": null,
+        "card": null,
+        "h1": null,
+        "body": {
+          "scrollWidth": 0,
+          "innerWidth": 0,
+          "scrollHeight": 0,
+          "innerHeight": 0
+        },
+        "rootStyle": null,
+        "text": "Down Under ExperienceTell us about your Australian journeyGreat Barrier12 Premium PresetsGreat BarrierReef TurquoiseRed CentreOutback OchreGolden WattleSunlit AmberEucalypt BushForest SageCoral CoastSunset CoralPacific DeepOcean NavyDesert NightMidnight PlumSandstoneWarm NeutralMonochromeEditorial I"
+      }
+    },
+    {
+      "url": "about:srcdoc",
+      "data": {
+        "url": "about:srcdoc",
+        "hasRoot": false,
+        "root": null,
+        "frame": null,
+        "card": null,
+        "h1": null,
+        "body": {
+          "scrollWidth": 0,
+          "innerWidth": 0,
+          "scrollHeight": 0,
+          "innerHeight": 0
+        },
+        "rootStyle": null,
+        "text": "Bulgaria Discovery ProgrammeDiscoverBulgariaRose valleys, ancient Thracian history, Black Sea coasts, and Balkan hospitality.Plovdiv Old Town01ProfileWho you are02PurposeWhat you seek03DetailsPreferences04ConfirmReviewTell us about yourselfFieldField placeholder\nEmail address *Email Addressivelina@e"
+      }
+    },
+    {
+      "url": "about:srcdoc",
+      "data": {
+        "url": "about:srcdoc",
+        "hasRoot": false,
+        "root": null,
+        "frame": null,
+        "card": null,
+        "h1": null,
+        "body": {
+          "scrollWidth": 0,
+          "innerWidth": 0,
+          "scrollHeight": 0,
+          "innerHeight": 0
+        },
+        "rootStyle": null,
+        "text": "EUROYOUTH 2026Rated 4.9 by 12,000+ participantsYour European adventure starts here.Join thousands of young Europeans studying, volunteering and exploring across the continent. One application, endless destinations.27Countries340+Universities€0Application fee01ProfileAbout you02ProgrammeYour track03L"
+      }
+    },
+    {
+      "url": "about:srcdoc",
+      "data": {
+        "url": "about:srcdoc",
+        "hasRoot": false,
+        "root": null,
+        "frame": null,
+        "card": null,
+        "h1": null,
+        "body": {
+          "scrollWidth": 0,
+          "innerWidth": 0,
+          "scrollHeight": 0,
+          "innerHeight": 0
+        },
+        "rootStyle": null,
+        "text": "\n\n  \n  \n\n    \n    \n      \n\n        \n        \n          \n          Event Registration\n        \n\n        \n        \n          Join the Event\n          Secure your spot in four quick steps. All ticket types include the evening reception.\n        \n\n        \n        \n          \n            \n              "
+      }
+    },
+    {
+      "url": "about:srcdoc",
+      "data": {
+        "url": "about:srcdoc",
+        "hasRoot": true,
+        "root": {
+          "x": 509.19,
+          "y": 12,
+          "width": 943.97,
+          "height": 668.78,
+          "top": 12,
+          "right": 1453.17,
+          "bottom": 680.78,
+          "left": 509.19
+        },
+        "frame": {
+          "x": 525.19,
+          "y": 59.99,
+          "width": 911.98,
+          "height": 588.8,
+          "top": 59.99,
+          "right": 1437.17,
+          "bottom": 648.79,
+          "left": 525.19
+        },
+        "card": {
+          "x": 525.19,
+          "y": 59.99,
+          "width": 911.98,
+          "height": 556.32,
+          "top": 59.99,
+          "right": 1437.17,
+          "bottom": 616.3,
+          "left": 525.19
+        },
+        "h1": {
+          "x": 575.82,
+          "y": 122.61,
+          "width": 810.73,
+          "height": 35.08,
+          "top": 122.61,
+          "right": 1386.54,
+          "bottom": 157.69,
+          "left": 575.82
+        },
+        "body": {
+          "scrollWidth": 1018,
+          "innerWidth": 1018,
+          "scrollHeight": 1627,
+          "innerHeight": 1627
+        },
+        "rootStyle": {
+          "width": "943.973px",
+          "minHeight": "0px",
+          "padding": "48px 16px 32px",
+          "marginLeft": "0px",
+          "left": "471.966px",
+          "justify": "flex-start"
+        },
+        "text": "ACCOUNT SETUP\nCreate your workspace\n\nJump between tabs freely, or complete each one and continue. It only takes a minute.\n\nAccount\nYour details\nCompany\nWhere you work\nBilling\nChoose a plan\nPreferences\nTailor your setup\nSecurity\nProtect your account\nReview\nConfirm and submit\nFirst name *\nLast name *\n"
+      }
+    }
+  ]
+}

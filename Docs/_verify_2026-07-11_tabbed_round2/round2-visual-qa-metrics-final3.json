@@ -1,0 +1,747 @@
+{
+  "generatedAt": "2026-07-11T09:27:08.041Z",
+  "viewport": {
+    "width": 1365,
+    "height": 768
+  },
+  "mock": [
+    {
+      "step": 0,
+      "label": "AccountYour detailsAccount",
+      "card": {
+        "x": 106.5,
+        "y": 92.73,
+        "w": 1152,
+        "h": 546.52,
+        "right": 1258.5,
+        "bottom": 639.25
+      },
+      "root": {
+        "x": 0,
+        "y": 0,
+        "w": 1365,
+        "h": 768,
+        "right": 1365,
+        "bottom": 768
+      },
+      "overflow": false,
+      "progress": "0 of 5 sections complete"
+    },
+    {
+      "step": 1,
+      "label": "CompanyWhere you workCompany",
+      "card": {
+        "x": 106.5,
+        "y": 48,
+        "w": 1152,
+        "h": 872.61,
+        "right": 1258.5,
+        "bottom": 920.61
+      },
+      "root": {
+        "x": 0,
+        "y": 0,
+        "w": 1365,
+        "h": 1004.61,
+        "right": 1365,
+        "bottom": 1004.61
+      },
+      "overflow": false,
+      "progress": "0 of 5 sections complete"
+    },
+    {
+      "step": 2,
+      "label": "BillingChoose a planBilling",
+      "card": {
+        "x": 106.5,
+        "y": 115.86,
+        "w": 1152,
+        "h": 500.27,
+        "right": 1258.5,
+        "bottom": 616.13
+      },
+      "root": {
+        "x": 0,
+        "y": 0,
+        "w": 1365,
+        "h": 768,
+        "right": 1365,
+        "bottom": 768
+      },
+      "overflow": false,
+      "progress": "0 of 5 sections complete"
+    },
+    {
+      "step": 3,
+      "label": "PreferencesTailor your setupPreferences",
+      "card": {
+        "x": 106.5,
+        "y": 48,
+        "w": 1152,
+        "h": 714.77,
+        "right": 1258.5,
+        "bottom": 762.77
+      },
+      "root": {
+        "x": 0,
+        "y": 0,
+        "w": 1365,
+        "h": 846.77,
+        "right": 1365,
+        "bottom": 846.77
+      },
+      "overflow": false,
+      "progress": "0 of 5 sections complete"
+    },
+    {
+      "step": 4,
+      "label": "SecurityProtect your accountSecurity",
+      "card": {
+        "x": 106.5,
+        "y": 119.86,
+        "w": 1152,
+        "h": 492.27,
+        "right": 1258.5,
+        "bottom": 612.13
+      },
+      "root": {
+        "x": 0,
+        "y": 0,
+        "w": 1365,
+        "h": 768,
+        "right": 1365,
+        "bottom": 768
+      },
+      "overflow": false,
+      "progress": "0 of 5 sections complete"
+    },
+    {
+      "step": 5,
+      "label": "ReviewConfirm & submitReview",
+      "card": {
+        "x": 106.5,
+        "y": 48,
+        "w": 1152,
+        "h": 848.77,
+        "right": 1258.5,
+        "bottom": 896.77
+      },
+      "root": {
+        "x": 0,
+        "y": 0,
+        "w": 1365,
+        "h": 980.77,
+        "right": 1365,
+        "bottom": 980.77
+      },
+      "overflow": false,
+      "progress": "0 of 5 sections complete"
+    }
+  ],
+  "oqtane": [
+    {
+      "surface": "oqtane-page",
+      "step": 0,
+      "label": "? Account Your details",
+      "activeStep": "0",
+      "activePage": "0",
+      "card": {
+        "x": 106.5,
+        "y": 48.38,
+        "w": 1152,
+        "h": 545.19,
+        "right": 1258.5,
+        "bottom": 593.56
+      },
+      "root": {
+        "x": 0,
+        "y": 0.38,
+        "w": 1365,
+        "h": 657.69,
+        "right": 1365,
+        "bottom": 658.06
+      },
+      "activePageRect": {
+        "x": 155.5,
+        "y": 299.97,
+        "w": 1054,
+        "h": 147.09,
+        "right": 1209.5,
+        "bottom": 447.06
+      },
+      "nativeHost": null,
+      "nativeDisplay": null,
+      "rootStyle": {
+        "display": "flex",
+        "width": "1365px",
+        "left": "520px",
+        "padding": "48px 16px 32px",
+        "margin": "0px 0px 0px -682.5px",
+        "overflow": "visible/visible"
+      },
+      "overflow": false,
+      "cardBeyond": false,
+      "progress": "0 of 5 sections complete",
+      "text": "First name * Last name * Work email * Phone"
+    },
+    {
+      "surface": "oqtane-page",
+      "step": 1,
+      "label": "? Company Where you work",
+      "activeStep": "1",
+      "activePage": "1",
+      "card": {
+        "x": 106.5,
+        "y": 48.38,
+        "w": 1152,
+        "h": 992.61,
+        "right": 1258.5,
+        "bottom": 1040.98
+      },
+      "root": {
+        "x": 0,
+        "y": 0.38,
+        "w": 1365,
+        "h": 1105.11,
+        "right": 1365,
+        "bottom": 1105.48
+      },
+      "activePageRect": {
+        "x": 155.5,
+        "y": 299.97,
+        "w": 1054,
+        "h": 594.52,
+        "right": 1209.5,
+        "bottom": 894.48
+      },
+      "nativeHost": null,
+      "nativeDisplay": null,
+      "rootStyle": {
+        "display": "flex",
+        "width": "1365px",
+        "left": "520px",
+        "padding": "48px 16px 32px",
+        "margin": "0px 0px 0px -682.5px",
+        "overflow": "visible/visible"
+      },
+      "overflow": false,
+      "cardBeyond": false,
+      "progress": "1 of 5 sections complete",
+      "text": "Company name * Website Your role *Founder / CEOLeading the company.✓ProductProduct and design teams.✓EngineeringBuilding the software.✓MarketingGrowth and deman"
+    },
+    {
+      "surface": "oqtane-page",
+      "step": 2,
+      "label": "? Billing Choose a plan",
+      "activeStep": "2",
+      "activePage": "2",
+      "card": {
+        "x": 106.5,
+        "y": 48.38,
+        "w": 1152,
+        "h": 560.27,
+        "right": 1258.5,
+        "bottom": 608.64
+      },
+      "root": {
+        "x": 0,
+        "y": 0.38,
+        "w": 1365,
+        "h": 672.77,
+        "right": 1365,
+        "bottom": 673.14
+      },
+      "activePageRect": {
+        "x": 155.5,
+        "y": 299.97,
+        "w": 1054,
+        "h": 162.17,
+        "right": 1209.5,
+        "bottom": 462.14
+      },
+      "nativeHost": null,
+      "nativeDisplay": null,
+      "rootStyle": {
+        "display": "flex",
+        "width": "1365px",
+        "left": "520px",
+        "padding": "48px 16px 32px",
+        "margin": "0px 0px 0px -682.5px",
+        "overflow": "visible/visible"
+      },
+      "overflow": false,
+      "cardBeyond": false,
+      "progress": "2 of 5 sections complete",
+      "text": "Choose your plan *Starter$0For small teams getting going.✓Pro$29For growing teams that need more.Popular✓EnterpriseCustomAdvanced security and support.✓"
+    },
+    {
+      "surface": "oqtane-page",
+      "step": 3,
+      "label": "? Preferences Tailor your setup",
+      "activeStep": "3",
+      "activePage": "3",
+      "card": {
+        "x": 106.5,
+        "y": 48.38,
+        "w": 1152,
+        "h": 752.98,
+        "right": 1258.5,
+        "bottom": 801.36
+      },
+      "root": {
+        "x": 0,
+        "y": 0.38,
+        "w": 1365,
+        "h": 865.48,
+        "right": 1365,
+        "bottom": 865.86
+      },
+      "activePageRect": {
+        "x": 155.5,
+        "y": 299.97,
+        "w": 1054,
+        "h": 354.89,
+        "right": 1209.5,
+        "bottom": 654.86
+      },
+      "nativeHost": null,
+      "nativeDisplay": null,
+      "rootStyle": {
+        "display": "flex",
+        "width": "1365px",
+        "left": "520px",
+        "padding": "48px 16px 32px",
+        "margin": "0px 0px 0px -682.5px",
+        "overflow": "visible/visible"
+      },
+      "overflow": false,
+      "cardBeyond": false,
+      "progress": "3 of 5 sections complete",
+      "text": "What are you interested in? *AnalyticsAutomationSecurityCollaborationIntegrationsReporting Preferred contact method *EmailWe will write to you.✓Phone callA quic"
+    },
+    {
+      "surface": "oqtane-page",
+      "step": 4,
+      "label": "? Security Protect your account",
+      "activeStep": "4",
+      "activePage": "4",
+      "card": {
+        "x": 106.5,
+        "y": 48.38,
+        "w": 1152,
+        "h": 527.64,
+        "right": 1258.5,
+        "bottom": 576.02
+      },
+      "root": {
+        "x": 0,
+        "y": 0.38,
+        "w": 1365,
+        "h": 640.14,
+        "right": 1365,
+        "bottom": 640.52
+      },
+      "activePageRect": {
+        "x": 155.5,
+        "y": 299.97,
+        "w": 1054,
+        "h": 129.55,
+        "right": 1209.5,
+        "bottom": 429.52
+      },
+      "nativeHost": null,
+      "nativeDisplay": null,
+      "rootStyle": {
+        "display": "flex",
+        "width": "1365px",
+        "left": "520px",
+        "padding": "48px 16px 32px",
+        "margin": "0px 0px 0px -682.5px",
+        "overflow": "visible/visible"
+      },
+      "overflow": false,
+      "cardBeyond": false,
+      "progress": "4 of 5 sections complete",
+      "text": "Two-factor authentication *Authenticator appMost secure option.✓SMS codeText to your phone.✓Password onlySet up 2FA later.✓"
+    },
+    {
+      "surface": "oqtane-page",
+      "step": 5,
+      "label": "? Review Confirm and submit",
+      "activeStep": "5",
+      "activePage": "5",
+      "card": {
+        "x": 106.5,
+        "y": 48.38,
+        "w": 1152,
+        "h": 908.59,
+        "right": 1258.5,
+        "bottom": 956.97
+      },
+      "root": {
+        "x": 0,
+        "y": 0.38,
+        "w": 1365,
+        "h": 1021.09,
+        "right": 1365,
+        "bottom": 1021.47
+      },
+      "activePageRect": {
+        "x": 155.5,
+        "y": 299.97,
+        "w": 1054,
+        "h": 510.5,
+        "right": 1209.5,
+        "bottom": 810.47
+      },
+      "nativeHost": null,
+      "nativeDisplay": null,
+      "rootStyle": {
+        "display": "flex",
+        "width": "1365px",
+        "left": "520px",
+        "padding": "48px 16px 32px",
+        "margin": "0px 0px 0px -682.5px",
+        "overflow": "visible/visible"
+      },
+      "overflow": false,
+      "cardBeyond": false,
+      "progress": "5 of 5 sections complete",
+      "text": "Review your details below. Tap any tab above to make changes. First nameLast nameWork emailPhoneCompany nameWebsiteYour roleCompany sizeChoose your planWhat are"
+    }
+  ],
+  "builder": [
+    {
+      "surface": "builder-design-frame",
+      "step": 0,
+      "label": "? Account Your details",
+      "activeStep": "0",
+      "activePage": "0",
+      "card": {
+        "x": 49.22,
+        "y": 35.99,
+        "w": 919.98,
+        "h": 556.32,
+        "right": 969.2,
+        "bottom": 592.31
+      },
+      "root": {
+        "x": 37.23,
+        "y": 12,
+        "w": 943.97,
+        "h": 636.79,
+        "right": 981.2,
+        "bottom": 648.79
+      },
+      "activePageRect": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 146.93,
+        "right": 918.58,
+        "bottom": 439.31
+      },
+      "nativeHost": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 146.93,
+        "right": 918.58,
+        "bottom": 439.31
+      },
+      "nativeDisplay": "block",
+      "rootStyle": {
+        "display": "flex",
+        "width": "943.973px",
+        "left": "0px",
+        "padding": "24px 12px",
+        "margin": "0px",
+        "overflow": "visible/visible"
+      },
+      "overflow": false,
+      "cardBeyond": false,
+      "progress": "0 of 5 sections complete",
+      "text": "First name * Last name * Work email * Phone"
+    },
+    {
+      "surface": "builder-design-frame",
+      "step": 1,
+      "label": "? Company Where you work",
+      "activeStep": "1",
+      "activePage": "1",
+      "card": {
+        "x": 49.22,
+        "y": 35.99,
+        "w": 919.98,
+        "h": 1021.52,
+        "right": 969.2,
+        "bottom": 1057.51
+      },
+      "root": {
+        "x": 37.23,
+        "y": 12,
+        "w": 943.97,
+        "h": 1102,
+        "right": 981.2,
+        "bottom": 1113.99
+      },
+      "activePageRect": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 612.14,
+        "right": 918.58,
+        "bottom": 904.52
+      },
+      "nativeHost": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 612.14,
+        "right": 918.58,
+        "bottom": 904.52
+      },
+      "nativeDisplay": "block",
+      "rootStyle": {
+        "display": "flex",
+        "width": "943.973px",
+        "left": "0px",
+        "padding": "24px 12px",
+        "margin": "0px",
+        "overflow": "visible/visible"
+      },
+      "overflow": false,
+      "cardBeyond": false,
+      "progress": "1 of 5 sections complete",
+      "text": "Company name * Website Your role *Founder / CEOLeading the company.✓ProductProduct and design teams.✓EngineeringBuilding the software.✓MarketingGrowth and deman"
+    },
+    {
+      "surface": "builder-design-frame",
+      "step": 2,
+      "label": "? Billing Choose a plan",
+      "activeStep": "2",
+      "activePage": "2",
+      "card": {
+        "x": 49.22,
+        "y": 35.99,
+        "w": 919.98,
+        "h": 640.58,
+        "right": 969.2,
+        "bottom": 676.57
+      },
+      "root": {
+        "x": 37.23,
+        "y": 12,
+        "w": 943.97,
+        "h": 721.06,
+        "right": 981.2,
+        "bottom": 733.06
+      },
+      "activePageRect": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 231.2,
+        "right": 918.58,
+        "bottom": 523.58
+      },
+      "nativeHost": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 231.2,
+        "right": 918.58,
+        "bottom": 523.58
+      },
+      "nativeDisplay": "block",
+      "rootStyle": {
+        "display": "flex",
+        "width": "943.973px",
+        "left": "0px",
+        "padding": "24px 12px",
+        "margin": "0px",
+        "overflow": "visible/visible"
+      },
+      "overflow": false,
+      "cardBeyond": false,
+      "progress": "2 of 5 sections complete",
+      "text": "Choose your plan *Starter$0For small teams getting going.✓Pro$29For growing teams that need more.Popular✓EnterpriseCustomAdvanced security and support.✓"
+    },
+    {
+      "surface": "builder-design-frame",
+      "step": 3,
+      "label": "? Preferences Tailor your setup",
+      "activeStep": "3",
+      "activePage": "3",
+      "card": {
+        "x": 49.22,
+        "y": 35.99,
+        "w": 919.98,
+        "h": 821.03,
+        "right": 969.2,
+        "bottom": 857.03
+      },
+      "root": {
+        "x": 37.23,
+        "y": 12,
+        "w": 943.97,
+        "h": 901.51,
+        "right": 981.2,
+        "bottom": 913.51
+      },
+      "activePageRect": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 411.65,
+        "right": 918.58,
+        "bottom": 704.03
+      },
+      "nativeHost": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 411.65,
+        "right": 918.58,
+        "bottom": 704.03
+      },
+      "nativeDisplay": "block",
+      "rootStyle": {
+        "display": "flex",
+        "width": "943.973px",
+        "left": "0px",
+        "padding": "24px 12px",
+        "margin": "0px",
+        "overflow": "visible/visible"
+      },
+      "overflow": false,
+      "cardBeyond": false,
+      "progress": "3 of 5 sections complete",
+      "text": "What are you interested in? *AnalyticsAutomationSecurityCollaborationIntegrationsReporting Preferred contact method *EmailWe will write to you.✓Phone callA quic"
+    },
+    {
+      "surface": "builder-design-frame",
+      "step": 4,
+      "label": "? Security Protect your account",
+      "activeStep": "4",
+      "activePage": "4",
+      "card": {
+        "x": 49.22,
+        "y": 35.99,
+        "w": 919.98,
+        "h": 559.04,
+        "right": 969.2,
+        "bottom": 595.03
+      },
+      "root": {
+        "x": 37.23,
+        "y": 12,
+        "w": 943.97,
+        "h": 639.51,
+        "right": 981.2,
+        "bottom": 651.51
+      },
+      "activePageRect": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 149.65,
+        "right": 918.58,
+        "bottom": 442.03
+      },
+      "nativeHost": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 149.65,
+        "right": 918.58,
+        "bottom": 442.03
+      },
+      "nativeDisplay": "block",
+      "rootStyle": {
+        "display": "flex",
+        "width": "943.973px",
+        "left": "0px",
+        "padding": "24px 12px",
+        "margin": "0px",
+        "overflow": "visible/visible"
+      },
+      "overflow": false,
+      "cardBeyond": false,
+      "progress": "4 of 5 sections complete",
+      "text": "Two-factor authentication *Authenticator appMost secure option.✓SMS codeText to your phone.✓Password onlySet up 2FA later.✓"
+    },
+    {
+      "surface": "builder-design-frame",
+      "step": 5,
+      "label": "? Review Confirm and submit",
+      "activeStep": "5",
+      "activePage": "5",
+      "card": {
+        "x": 49.22,
+        "y": 35.99,
+        "w": 919.98,
+        "h": 962.15,
+        "right": 969.2,
+        "bottom": 998.14
+      },
+      "root": {
+        "x": 37.23,
+        "y": 12,
+        "w": 943.97,
+        "h": 1042.63,
+        "right": 981.2,
+        "bottom": 1054.63
+      },
+      "activePageRect": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 552.77,
+        "right": 918.58,
+        "bottom": 845.15
+      },
+      "nativeHost": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 552.77,
+        "right": 918.58,
+        "bottom": 845.15
+      },
+      "nativeDisplay": "block",
+      "rootStyle": {
+        "display": "flex",
+        "width": "943.973px",
+        "left": "0px",
+        "padding": "24px 12px",
+        "margin": "0px",
+        "overflow": "visible/visible"
+      },
+      "overflow": false,
+      "cardBeyond": false,
+      "progress": "5 of 5 sections complete",
+      "text": "Review your details below. Tap any tab above to make changes. First nameLast nameWork emailPhoneCompany nameWebsiteYour roleCompany sizeChoose your planWhat are"
+    }
+  ],
+  "builderOuter": {
+    "iframe": {
+      "x": 466.45,
+      "y": 169.56,
+      "w": 388.09,
+      "h": 619.28,
+      "right": 854.55,
+      "bottom": 788.84
+    },
+    "canvas": {
+      "x": 445.5,
+      "y": 145.56,
+      "w": 436,
+      "h": 667,
+      "right": 881.5,
+      "bottom": 812.56
+    },
+    "overflow": false
+  },
+  "warnings": []
+}

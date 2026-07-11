@@ -18,6 +18,17 @@ namespace MegaForm.Core.Services
         public const string Badge = "LicenseService v20260419-09";
         public const string FileName = "license.lic";
 
+        // [TrialTighten v20260706] Hard caps enforced when NOT production-licensed. Production
+        // (license.lic = "production") is unlimited. Trial gets a small form/submission budget +
+        // premium templates and AI are locked (server + client). The public form no longer shows a
+        // "Trial Mode" footer — the gate is these limits, not a watermark.
+        public const int MaxTrialForms = 10;
+        public const int MaxTrialSubmissionsPerForm = 25;
+        public const string UpgradeUrl = "https://dnndefender.com";
+
+        /// <summary>True when the install is running unlicensed (trial). Inverse of IsProductionLicensed.</summary>
+        public static bool IsTrial() => !IsProductionLicensed();
+
         // [PerfFix 2026-07-05 PERF-A1] IsProductionLicensed reads license.lic from disk. It is called on
         // EVERY render (RenderModelResolver.CanonicalizeTrialMode → ResolveProductionMode), i.e. synchronous
         // file I/O on the public form hot path. Cache the result for a short TTL: removes the per-render read

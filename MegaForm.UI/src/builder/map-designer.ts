@@ -21,6 +21,7 @@
 // ============================================================
 // @ts-nocheck
 'use strict';
+import { wt } from './designer-i18n';
 
 (function () {
   if ((window as any).__MFMapDesignerLoaded) return;
@@ -91,7 +92,7 @@
 
   function open(field: any, onClose?: () => void) {
     if (!field || field.type !== 'Map') {
-      if (B.showToast) B.showToast('Map Designer only works for Map fields', 'error');
+      if (B.showToast) B.showToast(wt('des.map.onlyMapFields', 'Map Designer only works for Map fields'), 'error');
       return;
     }
     var wp = field.widgetProps = field.widgetProps || {};
@@ -121,14 +122,14 @@
     modal.className = 'mf-token-designer-backdrop';
     modal.setAttribute('data-mf-overlay', '1');
     modal.innerHTML =
-      '<div class="mf-token-designer-shell mf-map-designer-shell" role="dialog" aria-label="Map Designer" style="max-width:960px;width:96vw;">' +
+      '<div class="mf-token-designer-shell mf-map-designer-shell" role="dialog" aria-label="' + wt('des.map.dialogAria', 'Map Designer') + '" style="max-width:960px;width:96vw;">' +
         '<div class="mf-token-designer-head">' +
           '<div class="mf-token-designer-title">' +
             '<i class="fas fa-map-location-dot"></i>' +
-            '<span>Map Designer</span>' +
+            '<span>' + wt('des.map.title', 'Map Designer') + '</span>' +
             '<span class="mf-token-designer-badge">v20260602-B42</span>' +
           '</div>' +
-          '<button type="button" class="mf-token-designer-close" aria-label="Close">&times;</button>' +
+          '<button type="button" class="mf-token-designer-close" aria-label="' + wt('des.map.close', 'Close') + '">&times;</button>' +
         '</div>' +
         '<div class="mf-token-designer-body" style="padding:14px 16px;">' +
           '<div class="mf-map-designer-grid" style="display:grid;grid-template-columns:minmax(260px,340px) 1fr;gap:16px;align-items:start;">' +
@@ -136,69 +137,69 @@
             // ── Left column: controls ─────────────────────────
             '<div class="mf-map-designer-controls" style="display:flex;flex-direction:column;gap:12px;">' +
               '<div class="mf-token-row">' +
-                '<label class="mf-token-row-label" style="font-weight:600;">Search address (Nominatim)</label>' +
+                '<label class="mf-token-row-label" style="font-weight:600;">' + wt('des.map.searchAddress', 'Search address (Nominatim)') + '</label>' +
                 '<div style="display:flex;gap:6px;">' +
-                  '<input type="text" class="mf-token-row-input mf-map-d-addr" placeholder="123 Main St, City, Country" style="flex:1;"/>' +
-                  '<button type="button" class="mf-builder-btn mf-map-d-find" title="Geocode via OpenStreetMap Nominatim (no API key)"><i class="fas fa-search-location"></i> Find</button>' +
+                  '<input type="text" class="mf-token-row-input mf-map-d-addr" placeholder="' + wt('des.map.addrPlaceholder', '123 Main St, City, Country') + '" style="flex:1;"/>' +
+                  '<button type="button" class="mf-builder-btn mf-map-d-find" title="' + wt('des.map.findTitle', 'Geocode via OpenStreetMap Nominatim (no API key)') + '"><i class="fas fa-search-location"></i> ' + wt('des.map.find', 'Find') + '</button>' +
                 '</div>' +
                 '<div class="mf-map-d-addr-status" style="margin-top:6px;font-size:11px;color:#64748b;min-height:14px;"></div>' +
               '</div>' +
 
               '<div class="mf-token-row" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">' +
                 '<div>' +
-                  '<label class="mf-token-row-label" style="font-weight:600;">Latitude</label>' +
+                  '<label class="mf-token-row-label" style="font-weight:600;">' + wt('des.map.latitude', 'Latitude') + '</label>' +
                   '<input type="number" step="0.000001" min="-85" max="85" class="mf-token-row-input mf-map-d-lat" value="' + draft.lat + '"/>' +
                 '</div>' +
                 '<div>' +
-                  '<label class="mf-token-row-label" style="font-weight:600;">Longitude</label>' +
+                  '<label class="mf-token-row-label" style="font-weight:600;">' + wt('des.map.longitude', 'Longitude') + '</label>' +
                   '<input type="number" step="0.000001" min="-180" max="180" class="mf-token-row-input mf-map-d-lng" value="' + draft.lng + '"/>' +
                 '</div>' +
               '</div>' +
 
               '<div class="mf-token-row">' +
                 '<label class="mf-token-row-label" style="font-weight:600;display:flex;justify-content:space-between;align-items:center;">' +
-                  '<span>Zoom</span>' +
+                  '<span>' + wt('des.map.zoom', 'Zoom') + '</span>' +
                   '<span class="mf-map-d-zoom-badge" style="background:#0f172a;color:#fff;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">' + draft.zoom + '</span>' +
                 '</label>' +
                 '<input type="range" min="1" max="18" step="1" class="mf-map-d-zoom" value="' + draft.zoom + '" style="width:100%;"/>' +
-                '<div style="display:flex;justify-content:space-between;font-size:10px;color:#94a3b8;margin-top:2px;"><span>1 World</span><span>10 City</span><span>18 Street</span></div>' +
+                '<div style="display:flex;justify-content:space-between;font-size:10px;color:#94a3b8;margin-top:2px;"><span>' + wt('des.map.zoomWorld', '1 World') + '</span><span>' + wt('des.map.zoomCity', '10 City') + '</span><span>' + wt('des.map.zoomStreet', '18 Street') + '</span></div>' +
               '</div>' +
 
               '<div class="mf-token-row">' +
-                '<label class="mf-token-row-label" style="font-weight:600;">Label / caption</label>' +
-                '<input type="text" class="mf-token-row-input mf-map-d-label" value="' + (B.escAttr ? B.escAttr(draft.label) : draft.label) + '" placeholder="Optional title shown above the map"/>' +
+                '<label class="mf-token-row-label" style="font-weight:600;">' + wt('des.map.labelCaption', 'Label / caption') + '</label>' +
+                '<input type="text" class="mf-token-row-input mf-map-d-label" value="' + (B.escAttr ? B.escAttr(draft.label) : draft.label) + '" placeholder="' + wt('des.map.labelPlaceholder', 'Optional title shown above the map') + '"/>' +
               '</div>' +
 
               '<div class="mf-token-row" style="display:grid;grid-template-columns:1fr 110px;gap:8px;">' +
                 '<div>' +
-                  '<label class="mf-token-row-label" style="font-weight:600;">Height</label>' +
+                  '<label class="mf-token-row-label" style="font-weight:600;">' + wt('des.map.height', 'Height') + '</label>' +
                   '<input type="text" class="mf-token-row-input mf-map-d-height" value="' + (B.escAttr ? B.escAttr(draft.height) : draft.height) + '" placeholder="300px"/>' +
                 '</div>' +
                 '<div>' +
-                  '<label class="mf-token-row-label" style="font-weight:600;">Pin color</label>' +
+                  '<label class="mf-token-row-label" style="font-weight:600;">' + wt('des.map.pinColor', 'Pin color') + '</label>' +
                   '<input type="color" class="mf-token-row-input mf-map-d-color" value="' + draft.markerColor + '" style="height:38px;padding:2px;"/>' +
                 '</div>' +
               '</div>' +
 
               '<div style="font-size:11px;color:#64748b;line-height:1.5;background:#f1f5f9;border-radius:8px;padding:8px 10px;">' +
-                '<strong>About this designer:</strong><br>' +
-                'Uses OpenStreetMap + Nominatim geocoder. No API key, no quota signup. ' +
-                'Be considerate: avoid burst-geocoding (one search per click). ' +
-                'For high-traffic production sites, consider self-hosting Nominatim.' +
+                '<strong>' + wt('des.map.aboutTitle', 'About this designer:') + '</strong><br>' +
+                wt('des.map.aboutLine1', 'Uses OpenStreetMap + Nominatim geocoder. No API key, no quota signup.') + ' ' +
+                wt('des.map.aboutLine2', 'Be considerate: avoid burst-geocoding (one search per click).') + ' ' +
+                wt('des.map.aboutLine3', 'For high-traffic production sites, consider self-hosting Nominatim.') +
               '</div>' +
             '</div>' +
 
             // ── Right column: live preview ────────────────────
             '<div class="mf-map-designer-preview" style="display:flex;flex-direction:column;gap:8px;min-height:380px;">' +
               '<div style="font-size:12px;font-weight:600;color:#0f172a;display:flex;align-items:center;gap:6px;">' +
-                '<i class="fas fa-eye" style="color:#10b981;"></i> Live preview' +
+                '<i class="fas fa-eye" style="color:#10b981;"></i> ' + wt('des.map.livePreview', 'Live preview') +
                 '<span class="mf-map-d-preview-coords" style="margin-left:auto;font-family:Consolas,Menlo,monospace;font-size:11px;color:#64748b;font-weight:500;"></span>' +
               '</div>' +
               '<div class="mf-map-d-frame-wrap" style="position:relative;width:100%;flex:1;min-height:380px;border:1px solid #dbe4f0;border-radius:10px;overflow:hidden;background:#eef2f7;">' +
-                '<iframe class="mf-map-d-frame" style="width:100%;height:100%;border:0;display:block;" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Map preview"></iframe>' +
+                '<iframe class="mf-map-d-frame" style="width:100%;height:100%;border:0;display:block;" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="' + wt('des.map.mapPreviewTitle', 'Map preview') + '"></iframe>' +
                 '<div class="mf-map-d-pin-chip" style="position:absolute;left:10px;bottom:10px;background:rgba(255,255,255,.95);border:1px solid rgba(15,23,42,.12);border-radius:999px;padding:4px 10px;font-size:11px;font-weight:600;color:#0f172a;display:inline-flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(15,23,42,.15);">' +
                   '<span class="mf-map-d-pin-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + draft.markerColor + ';box-shadow:0 0 0 2px rgba(255,255,255,.9),0 1px 3px rgba(15,23,42,.4);"></span>' +
-                  '<span class="mf-map-d-pin-text">Pin</span>' +
+                  '<span class="mf-map-d-pin-text">' + wt('des.map.pin', 'Pin') + '</span>' +
                 '</div>' +
               '</div>' +
             '</div>' +
@@ -206,9 +207,9 @@
           '</div>' +
         '</div>' +
         '<div class="mf-token-designer-foot">' +
-          '<div class="mf-token-designer-foot-hint"><i class="fas fa-info-circle"></i> Apply writes back to the field. Press <kbd>Esc</kbd> to close.</div>' +
-          '<button type="button" class="mf-builder-btn mf-map-d-cancel" style="margin-right:8px;">Cancel</button>' +
-          '<button type="button" class="mf-builder-btn mf-token-designer-done mf-map-d-apply" style="background:#10b981;color:#fff;border-color:#059669;"><i class="fas fa-check"></i> Apply</button>' +
+          '<div class="mf-token-designer-foot-hint"><i class="fas fa-info-circle"></i> ' + wt('des.map.footHintPre', 'Apply writes back to the field. Press') + ' <kbd>Esc</kbd> ' + wt('des.map.footHintPost', 'to close.') + '</div>' +
+          '<button type="button" class="mf-builder-btn mf-map-d-cancel" style="margin-right:8px;">' + wt('des.map.cancel', 'Cancel') + '</button>' +
+          '<button type="button" class="mf-builder-btn mf-token-designer-done mf-map-d-apply" style="background:#10b981;color:#fff;border-color:#059669;"><i class="fas fa-check"></i> ' + wt('des.map.apply', 'Apply') + '</button>' +
         '</div>' +
       '</div>';
 
@@ -267,16 +268,16 @@
     // Find button -> geocode
     function runFind() {
       var q = addrInp.value.trim();
-      if (!q) { addrStatus.textContent = 'Enter an address first.'; addrStatus.style.color = '#b45309'; return; }
+      if (!q) { addrStatus.textContent = wt('des.map.enterAddressFirst', 'Enter an address first.'); addrStatus.style.color = '#b45309'; return; }
       addrBtn.disabled = true;
       var origBtnHtml = addrBtn.innerHTML;
-      addrBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Looking up...';
-      addrStatus.textContent = 'Searching OpenStreetMap...';
+      addrBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + wt('des.map.lookingUp', 'Looking up...');
+      addrStatus.textContent = wt('des.map.searchingOsm', 'Searching OpenStreetMap...');
       addrStatus.style.color = '#64748b';
       geocodeAddress(q)
         .then(function (hit) {
           if (!hit) {
-            addrStatus.textContent = 'No matching address found. Try a more specific query.';
+            addrStatus.textContent = wt('des.map.noMatch', 'No matching address found. Try a more specific query.');
             addrStatus.style.color = '#b45309';
             return;
           }
@@ -288,7 +289,7 @@
           updatePreview();
         })
         .catch(function (err) {
-          addrStatus.textContent = 'Geocoder error: ' + (err && err.message ? err.message : String(err));
+          addrStatus.textContent = wt('des.map.geocoderError', 'Geocoder error:') + ' ' + (err && err.message ? err.message : String(err));
           addrStatus.style.color = '#dc2626';
         })
         .then(function () {
@@ -331,7 +332,7 @@
           try { B.callModule('canvas', 'render', []); } catch (_) {}
           try { B.callModule('properties', 'showProps', [field]); } catch (_) {}
         }
-        if (B.showToast) B.showToast('Map updated', 'success');
+        if (B.showToast) B.showToast(wt('des.map.mapUpdated', 'Map updated'), 'success');
       } catch (_) { /* ignore */ }
       close();
     });

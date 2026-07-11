@@ -16,7 +16,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>megaform;forms;aspnetcore;mvc;razor;workflow</PackageTags>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Version>0.2.1-preview</Version>
+    <Version>0.2.4-preview</Version>
     <NoWarn>$(NoWarn);NU5128</NoWarn>
   </PropertyGroup>
   <ItemGroup>

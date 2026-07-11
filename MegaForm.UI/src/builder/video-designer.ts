@@ -29,6 +29,8 @@
 // @ts-nocheck
 'use strict';
 
+import { wt } from './designer-i18n';
+
 (function () {
   if ((window as any).__MFVideoDesignerLoaded) return;
   (window as any).__MFVideoDesignerLoaded = true;
@@ -207,19 +209,19 @@
     modal.className = 'mf-token-designer-backdrop';
     modal.setAttribute('data-mf-overlay', '1'); // [B30] survive Builder fullscreen takeover
     modal.innerHTML =
-      '<div class="mf-token-designer-shell mf-video-designer-shell" role="dialog" aria-label="Video Embed Designer" style="max-width:880px">' +
+      '<div class="mf-token-designer-shell mf-video-designer-shell" role="dialog" aria-label="' + wt('des.video.title', 'Video Embed Designer') + '" style="max-width:880px">' +
         '<div class="mf-token-designer-head">' +
           '<div class="mf-token-designer-title">' +
             '<i class="fas fa-video"></i>' +
-            '<span>Video Embed Designer</span>' +
+            '<span>' + wt('des.video.title', 'Video Embed Designer') + '</span>' +
             '<span class="mf-token-designer-badge">v20260602-B42</span>' +
           '</div>' +
-          '<button type="button" class="mf-token-designer-close" aria-label="Close">&times;</button>' +
+          '<button type="button" class="mf-token-designer-close" aria-label="' + wt('des.video.close', 'Close') + '">&times;</button>' +
         '</div>' +
         '<div class="mf-token-designer-tabs">' +
-          '<button type="button" class="mf-token-designer-tab active" data-tab="url"><i class="fas fa-link"></i> URL</button>' +
-          '<button type="button" class="mf-token-designer-tab" data-tab="params"><i class="fas fa-sliders-h"></i> Params</button>' +
-          '<button type="button" class="mf-token-designer-tab" data-tab="preview"><i class="fas fa-play-circle"></i> Preview</button>' +
+          '<button type="button" class="mf-token-designer-tab active" data-tab="url"><i class="fas fa-link"></i> ' + wt('des.video.tabUrl', 'URL') + '</button>' +
+          '<button type="button" class="mf-token-designer-tab" data-tab="params"><i class="fas fa-sliders-h"></i> ' + wt('des.video.tabParams', 'Params') + '</button>' +
+          '<button type="button" class="mf-token-designer-tab" data-tab="preview"><i class="fas fa-play-circle"></i> ' + wt('des.video.tabPreview', 'Preview') + '</button>' +
         '</div>' +
         '<div class="mf-token-designer-body">' +
           '<div class="mf-token-designer-pane" data-pane="url"></div>' +
@@ -227,9 +229,9 @@
           '<div class="mf-token-designer-pane" data-pane="preview" style="display:none"></div>' +
         '</div>' +
         '<div class="mf-token-designer-foot">' +
-          '<div class="mf-token-designer-foot-hint"><i class="fas fa-info-circle"></i> Paste any YouTube, Vimeo or Loom link. Press <kbd>Esc</kbd> to cancel.</div>' +
-          '<button type="button" class="mf-builder-btn mf-video-designer-cancel" style="margin-right:6px"><i class="fas fa-times"></i> Cancel</button>' +
-          '<button type="button" class="mf-builder-btn mf-video-designer-apply" style="background:#0ea5e9;color:#fff"><i class="fas fa-check"></i> Apply</button>' +
+          '<div class="mf-token-designer-foot-hint"><i class="fas fa-info-circle"></i> ' + wt('des.video.footHintBefore', 'Paste any YouTube, Vimeo or Loom link. Press') + ' <kbd>Esc</kbd> ' + wt('des.video.footHintAfter', 'to cancel.') + '</div>' +
+          '<button type="button" class="mf-builder-btn mf-video-designer-cancel" style="margin-right:6px"><i class="fas fa-times"></i> ' + wt('des.video.cancel', 'Cancel') + '</button>' +
+          '<button type="button" class="mf-builder-btn mf-video-designer-apply" style="background:#0ea5e9;color:#fff"><i class="fas fa-check"></i> ' + wt('des.video.apply', 'Apply') + '</button>' +
         '</div>' +
       '</div>';
 
@@ -265,7 +267,7 @@
     // ── URL pane ──────────────────────────────────────────────
     paneUrl.innerHTML =
       '<div class="mf-token-row">' +
-        '<label class="mf-token-row-label" style="font-weight:600">Video URL</label>' +
+        '<label class="mf-token-row-label" style="font-weight:600">' + wt('des.video.videoUrl', 'Video URL') + '</label>' +
         '<input type="text" class="mf-token-row-input mf-video-designer-url" ' +
           'placeholder="https://youtu.be/dQw4w9WgXcQ  ·  https://vimeo.com/123456789  ·  https://loom.com/share/abc123" ' +
           'value="' + escAttr(rawUrl) + '" ' +
@@ -276,7 +278,7 @@
         '</div>' +
       '</div>' +
       '<div class="mf-token-row" style="margin-top:14px">' +
-        '<label class="mf-token-row-label" style="font-weight:600">Supported sources</label>' +
+        '<label class="mf-token-row-label" style="font-weight:600">' + wt('des.video.supportedSources', 'Supported sources') + '</label>' +
         '<ul style="font-size:12px;color:#64748b;line-height:1.7;margin:6px 0 0 18px;padding:0">' +
           '<li><strong>YouTube</strong> — youtube.com/watch?v=ID · youtu.be/ID · youtube.com/embed/ID · youtube.com/shorts/ID</li>' +
           '<li><strong>Vimeo</strong> — vimeo.com/ID · player.vimeo.com/video/ID</li>' +
@@ -292,18 +294,18 @@
       var k = detectKind(rawUrl);
       var id: string | null = null;
       var ok = false;
-      var label = 'No URL';
+      var label = wt('des.video.noUrl', 'No URL');
       var color = '#9ca3af';
       if (k === 'youtube') { id = parseYouTubeId(rawUrl); label = 'YouTube'; color = '#dc2626'; ok = !!id; }
       else if (k === 'vimeo') { id = parseVimeoId(rawUrl); label = 'Vimeo'; color = '#1ab7ea'; ok = !!id; }
       else if (k === 'loom')  { id = parseLoomId(rawUrl);  label = 'Loom';  color = '#625df5'; ok = !!id; }
-      else if (rawUrl) { label = 'Unknown source'; color = '#f59e0b'; }
+      else if (rawUrl) { label = wt('des.video.unknownSource', 'Unknown source'); color = '#f59e0b'; }
 
       var check = ok
         ? '<i class="fas fa-check-circle" style="color:#16a34a"></i> '
         : (rawUrl ? '<i class="fas fa-exclamation-triangle" style="color:#f59e0b"></i> ' : '<i class="fas fa-circle" style="color:#cbd5e1"></i> ');
       kindBadge.innerHTML = check + '<strong style="color:' + color + '">' + escHtml(label) + '</strong>' +
-        (ok ? ' <span style="color:#16a34a;font-weight:600">— detected</span>' : '');
+        (ok ? ' <span style="color:#16a34a;font-weight:600">— ' + wt('des.video.detected', 'detected') + '</span>' : '');
       idLabel.textContent = id ? ('id: ' + id) : '';
     }
     urlInput.addEventListener('input', function () {
@@ -317,31 +319,30 @@
       '<div class="mf-video-designer-params" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">' +
         '<label class="mf-token-row" style="display:flex;align-items:center;gap:8px;font-weight:600;cursor:pointer">' +
           '<input type="checkbox" class="mf-vd-autoplay"' + (state.autoplay ? ' checked' : '') + '>' +
-          '<span><i class="fas fa-play" style="color:#0ea5e9"></i> Autoplay</span>' +
+          '<span><i class="fas fa-play" style="color:#0ea5e9"></i> ' + wt('des.video.autoplay', 'Autoplay') + '</span>' +
         '</label>' +
         '<label class="mf-token-row" style="display:flex;align-items:center;gap:8px;font-weight:600;cursor:pointer">' +
           '<input type="checkbox" class="mf-vd-mute"' + (state.mute ? ' checked' : '') + '>' +
-          '<span><i class="fas fa-volume-mute" style="color:#0ea5e9"></i> Start muted</span>' +
+          '<span><i class="fas fa-volume-mute" style="color:#0ea5e9"></i> ' + wt('des.video.startMuted', 'Start muted') + '</span>' +
         '</label>' +
         '<label class="mf-token-row" style="display:flex;align-items:center;gap:8px;font-weight:600;cursor:pointer">' +
           '<input type="checkbox" class="mf-vd-controls"' + (state.controls ? ' checked' : '') + '>' +
-          '<span><i class="fas fa-sliders-h" style="color:#0ea5e9"></i> Show controls</span>' +
+          '<span><i class="fas fa-sliders-h" style="color:#0ea5e9"></i> ' + wt('des.video.showControls', 'Show controls') + '</span>' +
         '</label>' +
         '<div></div>' +
         '<div class="mf-token-row">' +
-          '<label class="mf-token-row-label">Start (seconds)</label>' +
+          '<label class="mf-token-row-label">' + wt('des.video.startSeconds', 'Start (seconds)') + '</label>' +
           '<input type="number" min="0" step="1" class="mf-token-row-input mf-vd-start" value="' + Number(state.start) + '"/>' +
           '<input type="range" min="0" max="600" step="1" class="mf-vd-start-range" value="' + Number(state.start) + '" style="width:100%;margin-top:6px"/>' +
         '</div>' +
         '<div class="mf-token-row">' +
-          '<label class="mf-token-row-label">End (seconds, 0 = none)</label>' +
+          '<label class="mf-token-row-label">' + wt('des.video.endSeconds', 'End (seconds, 0 = none)') + '</label>' +
           '<input type="number" min="0" step="1" class="mf-token-row-input mf-vd-end" value="' + Number(state.end) + '"/>' +
           '<input type="range" min="0" max="600" step="1" class="mf-vd-end-range" value="' + Number(state.end) + '" style="width:100%;margin-top:6px"/>' +
         '</div>' +
       '</div>' +
       '<div style="margin-top:14px;font-size:12px;color:#64748b">' +
-        '<i class="fas fa-info-circle"></i> Note: Loom honors autoplay + start; end-time clipping is only supported on YouTube. ' +
-        'Autoplaying videos are muted automatically by browsers.' +
+        '<i class="fas fa-info-circle"></i> ' + wt('des.video.paramsNote', 'Note: Loom honors autoplay + start; end-time clipping is only supported on YouTube. Autoplaying videos are muted automatically by browsers.') +
       '</div>';
 
     var cbAutoplay = paneParams.querySelector('.mf-vd-autoplay') as HTMLInputElement;
@@ -393,7 +394,7 @@
         var empty = document.createElement('div');
         empty.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:14px;text-align:center;padding:20px';
         empty.innerHTML = '<div><i class="fas fa-video-slash" style="font-size:36px;display:block;margin-bottom:10px;color:#475569"></i>' +
-          (rawUrl ? 'Couldn\'t parse a video ID from this URL.' : 'Paste a URL on the first tab to see the preview.') +
+          (rawUrl ? wt('des.video.parseError', 'Couldn\'t parse a video ID from this URL.') : wt('des.video.pastePrompt', 'Paste a URL on the first tab to see the preview.')) +
           '</div>';
         box.appendChild(empty);
       }
@@ -418,9 +419,9 @@
 
       var srcRow = document.createElement('div');
       srcRow.innerHTML =
-        '<div style="font-weight:600;font-size:12px;color:#475569;margin-bottom:4px">Embed HTML</div>' +
+        '<div style="font-weight:600;font-size:12px;color:#475569;margin-bottom:4px">' + wt('des.video.embedHtml', 'Embed HTML') + '</div>' +
         '<textarea readonly rows="3" style="width:100%;font-family:Menlo,Consolas,monospace;font-size:11px;padding:8px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;color:#0f172a;resize:vertical">' +
-          escHtml(r.embedHtml || '— no embed code available —') +
+          escHtml(r.embedHtml || wt('des.video.noEmbedCode', '— no embed code available —')) +
         '</textarea>';
       shell.appendChild(srcRow);
 
@@ -431,12 +432,12 @@
     modal.querySelector('.mf-video-designer-apply')!.addEventListener('click', function () {
       var r = buildResult(rawUrl, state);
       if (!r.videoId) {
-        if (B && B.showToast) B.showToast('No valid video URL — please paste a YouTube / Vimeo / Loom link first.', 'error');
-        else { try { alert('No valid video URL.'); } catch (_) {} }
+        if (B && B.showToast) B.showToast(wt('des.video.noValidUrlToast', 'No valid video URL — please paste a YouTube / Vimeo / Loom link first.'), 'error');
+        else { try { alert(wt('des.video.noValidUrlAlert', 'No valid video URL.')); } catch (_) {} }
         return;
       }
       try { onApply(r); } catch (e: any) { try { console.error('[mf-video-designer] onApply failed', e); } catch (_) {} }
-      if (B && B.showToast) B.showToast('Video embed applied', 'success');
+      if (B && B.showToast) B.showToast(wt('des.video.appliedToast', 'Video embed applied'), 'success');
       close();
     });
   }

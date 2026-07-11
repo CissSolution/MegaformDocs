@@ -888,6 +888,24 @@ function wirePresetsPane(panel: HTMLElement): void {
           presetVars['--mf-input-border'] = '1px solid ' + c4b;
           presetVars['--mf-input-border-color'] = c4b;
         }
+        // [PresetWire v20260707] Mirror the ⚙-Settings preset channel
+        // (settings-popup mfPresetColorVars) so premium templates wired to
+        // var(--mf-preset-*, <identity colour>) recolor from the builder
+        // Presets rail too — previously only the Settings popup emitted these,
+        // so rail presets changed accents but never template surfaces.
+        if (c1) {
+          presetVars['--mf-preset-primary'] = c1;
+          presetVars['--mf-preset-on-primary'] = '#ffffff';
+        }
+        if (c2) presetVars['--mf-preset-text'] = c2;
+        if (c3) {
+          presetVars['--mf-preset-surface'] = c3;
+          presetVars['--mf-preset-bg'] = c3;
+        }
+        if (c4) {
+          presetVars['--mf-preset-accent'] = c4;
+          presetVars['--mf-preset-border'] = c4;
+        }
         if (adapter && typeof adapter.applyPresetVars === 'function') {
           adapter.applyPresetVars(id, presetVars);
         } else if (adapter && typeof adapter.setPreset === 'function') {

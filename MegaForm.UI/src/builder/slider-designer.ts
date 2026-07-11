@@ -10,6 +10,8 @@
 // @ts-nocheck
 'use strict';
 
+import { wt } from './designer-i18n';
+
 (function () {
   if ((window as any).__MFSliderDesignerLoaded) return;
   (window as any).__MFSliderDesignerLoaded = true;
@@ -21,9 +23,9 @@
   // on the rendered widget (see megaform-widget-content-slider.ts). Pick once,
   // edit the slides, done — no markup to write by hand.
   var STYLES = [
-    { id: 'overlay', label: 'Overlay', desc: 'Full-bleed photo with the title, caption and dots floating on top. Bold, editorial, swipe-first. Ken Burns zoom + autoplay.', icon: 'fa-image' },
-    { id: 'card',    label: 'Card',    desc: 'Photo on top, caption panel below with dots + a counter. Clean and easy to read.', icon: 'fa-id-card' },
-    { id: 'cards',   label: 'Cards',   desc: 'A row of product cards that scrolls 1–3 at a time. Great for catalogues and showcases.', icon: 'fa-th-large' }
+    { id: 'overlay', label: wt('des.slider.styleOverlayLabel', 'Overlay'), desc: wt('des.slider.styleOverlayDesc', 'Full-bleed photo with the title, caption and dots floating on top. Bold, editorial, swipe-first. Ken Burns zoom + autoplay.'), icon: 'fa-image' },
+    { id: 'card',    label: wt('des.slider.styleCardLabel', 'Card'),    desc: wt('des.slider.styleCardDesc', 'Photo on top, caption panel below with dots + a counter. Clean and easy to read.'), icon: 'fa-id-card' },
+    { id: 'cards',   label: wt('des.slider.styleCardsLabel', 'Cards'),   desc: wt('des.slider.styleCardsDesc', 'A row of product cards that scrolls 1–3 at a time. Great for catalogues and showcases.'), icon: 'fa-th-large' }
   ];
 
   // Tiny inline-styled mock of each template so the picker reads as a visual
@@ -49,7 +51,7 @@
     }
     // overlay (default)
     return '<div style="position:relative;width:100%;height:100%;border-radius:8px;overflow:hidden;border:1px solid #e2e8f0;background:linear-gradient(135deg,#64748b,#94a3b8);">' +
-      '<span style="position:absolute;left:6px;top:6px;padding:1px 6px;border-radius:999px;background:' + ACCENT + ';color:#fff;font-size:8px;font-weight:700;">Badge</span>' +
+      '<span style="position:absolute;left:6px;top:6px;padding:1px 6px;border-radius:999px;background:' + ACCENT + ';color:#fff;font-size:8px;font-weight:700;">' + wt('des.slider.previewBadge', 'Badge') + '</span>' +
       '<div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.85),rgba(0,0,0,0) 70%);"></div>' +
       '<div style="position:absolute;left:7px;bottom:14px;"><div style="width:70px;height:6px;border-radius:3px;background:#fff;"></div><div style="width:96px;height:4px;border-radius:3px;background:rgba(255,255,255,.7);margin-top:4px;"></div></div>' +
       '<div style="position:absolute;left:50%;transform:translateX(-50%);bottom:5px;display:flex;gap:3px;align-items:center;padding:3px 6px;border-radius:999px;background:rgba(0,0,0,.3);"><span style="width:12px;height:4px;border-radius:3px;background:#fff;"></span><span style="width:4px;height:4px;border-radius:3px;background:rgba(255,255,255,.6);"></span><span style="width:4px;height:4px;border-radius:3px;background:rgba(255,255,255,.6);"></span></div>' +
@@ -59,12 +61,12 @@
   function uploadImage(file: File): Promise<string> {
     var td: any = (window as any).MFTokenDesigner;
     if (td && td.uploadImage) return td.uploadImage(file);
-    return Promise.reject(new Error('Upload helper missing'));
+    return Promise.reject(new Error(wt('des.slider.uploadHelperMissing', 'Upload helper missing')));
   }
   function openGalleryPicker(onPick: (url: string) => void) {
     var td: any = (window as any).MFTokenDesigner;
     if (td && td.openGalleryPicker) td.openGalleryPicker(onPick);
-    else B.showToast('Gallery helper missing', 'error');
+    else B.showToast(wt('des.slider.galleryHelperMissing', 'Gallery helper missing'), 'error');
   }
 
   function ensureItems(field: any): any[] {
@@ -75,7 +77,7 @@
 
   function open(field: any, onClose?: () => void) {
     if (!field || field.type !== 'ContentSlider') {
-      B.showToast && B.showToast('Slider Designer only works for ContentSlider', 'error');
+      B.showToast && B.showToast(wt('des.slider.onlyContentSlider', 'Slider Designer only works for ContentSlider'), 'error');
       return;
     }
     var wp = field.widgetProps = field.widgetProps || {};
@@ -97,19 +99,19 @@
     modal.className = 'mf-token-designer-backdrop';
     modal.setAttribute('data-mf-overlay', '1'); // [B30] survive Builder fullscreen takeover
     modal.innerHTML =
-      '<div class="mf-token-designer-shell mf-slider-designer-shell" role="dialog" aria-label="Slider Designer">' +
+      '<div class="mf-token-designer-shell mf-slider-designer-shell" role="dialog" aria-label="' + wt('des.slider.title', 'Slider Designer') + '">' +
         '<div class="mf-token-designer-head">' +
           '<div class="mf-token-designer-title">' +
             '<i class="fas fa-images"></i>' +
-            '<span>Slider Designer</span>' +
+            '<span>' + wt('des.slider.title', 'Slider Designer') + '</span>' +
             '<span class="mf-token-designer-badge">v20260601-B27</span>' +
           '</div>' +
-          '<button type="button" class="mf-token-designer-close" aria-label="Close">&times;</button>' +
+          '<button type="button" class="mf-token-designer-close" aria-label="' + wt('des.slider.close', 'Close') + '">&times;</button>' +
         '</div>' +
         '<div class="mf-token-designer-tabs">' +
-          '<button type="button" class="mf-token-designer-tab active" data-tab="style"><i class="fas fa-palette"></i> Style</button>' +
-          '<button type="button" class="mf-token-designer-tab" data-tab="slides"><i class="fas fa-images"></i> Slides <span class="mf-token-designer-count" id="mf-slider-designer-count">0</span></button>' +
-          '<button type="button" class="mf-token-designer-tab" data-tab="settings"><i class="fas fa-sliders-h"></i> Settings</button>' +
+          '<button type="button" class="mf-token-designer-tab active" data-tab="style"><i class="fas fa-palette"></i> ' + wt('des.slider.tabStyle', 'Style') + '</button>' +
+          '<button type="button" class="mf-token-designer-tab" data-tab="slides"><i class="fas fa-images"></i> ' + wt('des.slider.slides', 'Slides') + ' <span class="mf-token-designer-count" id="mf-slider-designer-count">0</span></button>' +
+          '<button type="button" class="mf-token-designer-tab" data-tab="settings"><i class="fas fa-sliders-h"></i> ' + wt('des.slider.tabSettings', 'Settings') + '</button>' +
         '</div>' +
         '<div class="mf-token-designer-body">' +
           '<div class="mf-token-designer-pane" data-pane="style"></div>' +
@@ -117,8 +119,8 @@
           '<div class="mf-token-designer-pane" data-pane="settings" style="display:none"></div>' +
         '</div>' +
         '<div class="mf-token-designer-foot">' +
-          '<div class="mf-token-designer-foot-hint"><i class="fas fa-info-circle"></i> Changes save into the field. Press <kbd>Esc</kbd> to close.</div>' +
-          '<button type="button" class="mf-builder-btn mf-token-designer-done"><i class="fas fa-check"></i> Done</button>' +
+          '<div class="mf-token-designer-foot-hint"><i class="fas fa-info-circle"></i> ' + wt('des.slider.footHintPre', 'Changes save into the field. Press') + ' <kbd>Esc</kbd> ' + wt('des.slider.footHintPost', 'to close.') + '</div>' +
+          '<button type="button" class="mf-builder-btn mf-token-designer-done"><i class="fas fa-check"></i> ' + wt('des.slider.done', 'Done') + '</button>' +
         '</div>' +
       '</div>';
     // [B31] mount inside Builder shell to dodge fullscreen-takeover
@@ -184,7 +186,7 @@
       });
       var hint = document.createElement('div');
       hint.style.cssText = 'margin-top:12px;font-size:11px;color:#64748b;display:flex;align-items:center;gap:6px;';
-      hint.innerHTML = '<i class="fas fa-circle-info"></i> Pick a template, then add your photos in the <strong>Slides</strong> tab. The form preview updates when you press Done.';
+      hint.innerHTML = '<i class="fas fa-circle-info"></i> ' + wt('des.slider.stylePaneHintPre', 'Pick a template, then add your photos in the') + ' <strong>' + wt('des.slider.slides', 'Slides') + '</strong> ' + wt('des.slider.stylePaneHintPost', 'tab. The form preview updates when you press Done.');
       paneStyle.appendChild(grid);
       paneStyle.appendChild(hint);
     }
@@ -197,8 +199,8 @@
       var toolbar = document.createElement('div');
       toolbar.className = 'mf-slider-designer-toolbar';
       toolbar.innerHTML =
-        '<button type="button" class="mf-builder-btn mf-slider-designer-add"><i class="fas fa-plus"></i> Add slide</button>' +
-        '<span class="mf-slider-designer-toolbar-hint">Reorder by dragging the grip. Cards auto-update on save.</span>';
+        '<button type="button" class="mf-builder-btn mf-slider-designer-add"><i class="fas fa-plus"></i> ' + wt('des.slider.addSlide', 'Add slide') + '</button>' +
+        '<span class="mf-slider-designer-toolbar-hint">' + wt('des.slider.toolbarHint', 'Reorder by dragging the grip. Cards auto-update on save.') + '</span>';
       paneSlides.appendChild(toolbar);
 
       var list = document.createElement('div');
@@ -208,7 +210,7 @@
       function rerender() { renderSlidesPane(); refreshCount(); }
 
       toolbar.querySelector('.mf-slider-designer-add')!.addEventListener('click', function () {
-        items.push({ imageUrl: '', title: 'New slide', description: '', badge: '', meta: '' });
+        items.push({ imageUrl: '', title: wt('des.slider.newSlide', 'New slide'), description: '', badge: '', meta: '' });
         B.state.isDirty = true;
         rerender();
       });
@@ -216,7 +218,7 @@
       if (!items.length) {
         var empty = document.createElement('div');
         empty.className = 'mf-token-designer-empty';
-        empty.innerHTML = '<i class="fas fa-circle-info"></i> No slides yet. Click <strong>Add slide</strong> to create the first one.';
+        empty.innerHTML = '<i class="fas fa-circle-info"></i> ' + wt('des.slider.emptyPre', 'No slides yet. Click') + ' <strong>' + wt('des.slider.addSlide', 'Add slide') + '</strong> ' + wt('des.slider.emptyPost', 'to create the first one.');
         list.appendChild(empty);
         return;
       }
@@ -226,35 +228,35 @@
         row.className = 'mf-token-row mf-slider-designer-row';
         row.innerHTML =
           '<div class="mf-slider-designer-row-head">' +
-            '<span class="mf-slider-designer-grip" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>' +
-            '<span class="mf-slider-designer-row-label">Slide ' + (idx + 1) + '</span>' +
+            '<span class="mf-slider-designer-grip" title="' + wt('des.slider.dragToReorder', 'Drag to reorder') + '"><i class="fas fa-grip-vertical"></i></span>' +
+            '<span class="mf-slider-designer-row-label">' + wt('des.slider.slideN', 'Slide {n}', { n: idx + 1 }) + '</span>' +
             '<div class="mf-slider-designer-row-actions">' +
-              '<button type="button" class="mf-builder-btn mf-slider-designer-up" title="Move up" ' + (idx === 0 ? 'disabled' : '') + '><i class="fas fa-arrow-up"></i></button>' +
-              '<button type="button" class="mf-builder-btn mf-slider-designer-down" title="Move down" ' + (idx === items.length - 1 ? 'disabled' : '') + '><i class="fas fa-arrow-down"></i></button>' +
-              '<button type="button" class="mf-builder-btn mf-slider-designer-remove" title="Remove"><i class="fas fa-trash"></i></button>' +
+              '<button type="button" class="mf-builder-btn mf-slider-designer-up" title="' + wt('des.slider.moveUp', 'Move up') + '" ' + (idx === 0 ? 'disabled' : '') + '><i class="fas fa-arrow-up"></i></button>' +
+              '<button type="button" class="mf-builder-btn mf-slider-designer-down" title="' + wt('des.slider.moveDown', 'Move down') + '" ' + (idx === items.length - 1 ? 'disabled' : '') + '><i class="fas fa-arrow-down"></i></button>' +
+              '<button type="button" class="mf-builder-btn mf-slider-designer-remove" title="' + wt('des.slider.remove', 'Remove') + '"><i class="fas fa-trash"></i></button>' +
             '</div>' +
           '</div>' +
           '<div class="mf-slider-designer-row-body">' +
             '<div class="mf-token-image-preview mf-slider-designer-thumb">' +
               (it.imageUrl
                 ? '<img src="' + B.escAttr(it.imageUrl) + '" alt="" onerror="this.style.opacity=.25"/>'
-                : '<span class="mf-token-image-empty"><i class="fas fa-image"></i><br>no image</span>') +
+                : '<span class="mf-token-image-empty"><i class="fas fa-image"></i><br>' + wt('des.slider.noImage', 'no image') + '</span>') +
             '</div>' +
             '<div class="mf-slider-designer-row-fields">' +
               '<div class="mf-token-image-buttons" style="margin-bottom:6px">' +
-                '<button type="button" class="mf-builder-btn mf-slider-designer-upload"><i class="fas fa-cloud-upload-alt"></i> Upload</button>' +
-                '<button type="button" class="mf-builder-btn mf-slider-designer-gallery"><i class="fas fa-images"></i> Gallery</button>' +
+                '<button type="button" class="mf-builder-btn mf-slider-designer-upload"><i class="fas fa-cloud-upload-alt"></i> ' + wt('des.slider.upload', 'Upload') + '</button>' +
+                '<button type="button" class="mf-builder-btn mf-slider-designer-gallery"><i class="fas fa-images"></i> ' + wt('des.slider.gallery', 'Gallery') + '</button>' +
               '</div>' +
-              '<label class="mf-slider-designer-mini-label">Image URL</label>' +
-              '<input type="text" class="mf-token-row-input mf-slider-designer-url" value="' + B.escAttr(it.imageUrl || '') + '" placeholder="https://… or /Portals/0/MegaForm/Images/…"/>' +
+              '<label class="mf-slider-designer-mini-label">' + wt('des.slider.imageUrl', 'Image URL') + '</label>' +
+              '<input type="text" class="mf-token-row-input mf-slider-designer-url" value="' + B.escAttr(it.imageUrl || '') + '" placeholder="' + wt('des.slider.imageUrlPlaceholder', 'https://… or /Portals/0/MegaForm/Images/…') + '"/>' +
               '<div class="mf-slider-designer-grid2">' +
-                '<div><label class="mf-slider-designer-mini-label">Title</label><input type="text" class="mf-token-row-input mf-slider-designer-title" value="' + B.escAttr(it.title || '') + '"/></div>' +
-                '<div><label class="mf-slider-designer-mini-label">Badge</label><input type="text" class="mf-token-row-input mf-slider-designer-badge" value="' + B.escAttr(it.badge || '') + '" placeholder="NEW / SALE"/></div>' +
+                '<div><label class="mf-slider-designer-mini-label">' + wt('des.slider.fieldTitle', 'Title') + '</label><input type="text" class="mf-token-row-input mf-slider-designer-title" value="' + B.escAttr(it.title || '') + '"/></div>' +
+                '<div><label class="mf-slider-designer-mini-label">' + wt('des.slider.fieldBadge', 'Badge') + '</label><input type="text" class="mf-token-row-input mf-slider-designer-badge" value="' + B.escAttr(it.badge || '') + '" placeholder="' + wt('des.slider.badgePlaceholder', 'NEW / SALE') + '"/></div>' +
               '</div>' +
-              '<label class="mf-slider-designer-mini-label">Description</label>' +
+              '<label class="mf-slider-designer-mini-label">' + wt('des.slider.fieldDescription', 'Description') + '</label>' +
               '<textarea class="mf-token-row-input mf-slider-designer-desc" rows="2">' + B.escHtml(it.description || '') + '</textarea>' +
-              '<label class="mf-slider-designer-mini-label">Meta / Price</label>' +
-              '<input type="text" class="mf-token-row-input mf-slider-designer-meta" value="' + B.escAttr(it.meta || '') + '" placeholder="$29.99"/>' +
+              '<label class="mf-slider-designer-mini-label">' + wt('des.slider.fieldMetaPrice', 'Meta / Price') + '</label>' +
+              '<input type="text" class="mf-token-row-input mf-slider-designer-meta" value="' + B.escAttr(it.meta || '') + '" placeholder="' + wt('des.slider.metaPlaceholder', '$29.99') + '"/>' +
             '</div>' +
           '</div>';
         list.appendChild(row);
@@ -276,7 +278,7 @@
           urlInp.value = u;
           thumb.innerHTML = u
             ? '<img src="' + B.escAttr(u) + '" alt="" onerror="this.style.opacity=.25"/>'
-            : '<span class="mf-token-image-empty"><i class="fas fa-image"></i><br>no image</span>';
+            : '<span class="mf-token-image-empty"><i class="fas fa-image"></i><br>' + wt('des.slider.noImage', 'no image') + '</span>';
           B.state.isDirty = true;
         }
 
@@ -294,16 +296,16 @@
             var f = inp.files && inp.files[0]; if (!f) return;
             btnUpload.disabled = true;
             var oldHtml = btnUpload.innerHTML;
-            btnUpload.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading…';
+            btnUpload.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + wt('des.slider.uploading', 'Uploading…');
             uploadImage(f)
               .then(function (u: string) {
                 setUrl(u);
-                if (B.toast) B.toast('Image uploaded', 'success');
-                else if (B.showToast) B.showToast('Image uploaded', 'success');
+                if (B.toast) B.toast(wt('des.slider.imageUploaded', 'Image uploaded'), 'success');
+                else if (B.showToast) B.showToast(wt('des.slider.imageUploaded', 'Image uploaded'), 'success');
               })
               .catch(function (err: any) {
                 var msg = (err && err.message) || String(err);
-                if (B.showToast) B.showToast('Upload failed: ' + msg, 'error'); else alert('Upload failed: ' + msg);
+                if (B.showToast) B.showToast(wt('des.slider.uploadFailed', 'Upload failed:') + ' ' + msg, 'error'); else alert(wt('des.slider.uploadFailed', 'Upload failed:') + ' ' + msg);
               })
               .then(function () { btnUpload.disabled = false; btnUpload.innerHTML = oldHtml; });
           });
@@ -329,7 +331,7 @@
           rerender();
         });
         btnRemove.addEventListener('click', function () {
-          if (!confirm('Remove this slide?')) return;
+          if (!confirm(wt('des.slider.confirmRemoveSlide', 'Remove this slide?'))) return;
           items.splice(idx, 1);
           B.state.isDirty = true;
           rerender();
@@ -344,25 +346,25 @@
       grid.className = 'mf-slider-designer-settings-grid';
       grid.innerHTML =
         '<div class="mf-token-row">' +
-          '<label class="mf-token-row-label">Height (px)</label>' +
+          '<label class="mf-token-row-label">' + wt('des.slider.heightPx', 'Height (px)') + '</label>' +
           '<input type="number" min="120" max="640" step="20" class="mf-token-row-input mf-slider-s-height" value="' + Number(wp.height || 240) + '"/>' +
         '</div>' +
         '<div class="mf-token-row">' +
-          '<label class="mf-token-row-label">Corner radius (px)</label>' +
+          '<label class="mf-token-row-label">' + wt('des.slider.cornerRadiusPx', 'Corner radius (px)') + '</label>' +
           '<input type="number" min="0" max="48" step="2" class="mf-token-row-input mf-slider-s-radius" value="' + Number(wp.radius != null ? wp.radius : 18) + '"/>' +
         '</div>' +
         '<div class="mf-token-row">' +
-          '<label class="mf-token-row-label">Image fit</label>' +
+          '<label class="mf-token-row-label">' + wt('des.slider.imageFit', 'Image fit') + '</label>' +
           '<select class="mf-token-row-input mf-slider-s-fit">' +
-            '<option value="cover"' + (wp.imageFit === 'cover' ? ' selected' : '') + '>Cover (crop to fill)</option>' +
-            '<option value="contain"' + (wp.imageFit === 'contain' ? ' selected' : '') + '>Contain (fit inside)</option>' +
+            '<option value="cover"' + (wp.imageFit === 'cover' ? ' selected' : '') + '>' + wt('des.slider.fitCover', 'Cover (crop to fill)') + '</option>' +
+            '<option value="contain"' + (wp.imageFit === 'contain' ? ' selected' : '') + '>' + wt('des.slider.fitContain', 'Contain (fit inside)') + '</option>' +
           '</select>' +
         '</div>' +
         '<div class="mf-token-row">' +
           '<label class="mf-token-row-label">' +
-            '<input type="checkbox" class="mf-slider-s-autoplay"' + (wp.autoplay ? ' checked' : '') + ' style="margin-right:6px"/> Autoplay' +
+            '<input type="checkbox" class="mf-slider-s-autoplay"' + (wp.autoplay ? ' checked' : '') + ' style="margin-right:6px"/> ' + wt('des.slider.autoplay', 'Autoplay') +
           '</label>' +
-          '<label class="mf-slider-designer-mini-label" style="margin-top:8px">Interval (ms)</label>' +
+          '<label class="mf-slider-designer-mini-label" style="margin-top:8px">' + wt('des.slider.intervalMs', 'Interval (ms)') + '</label>' +
           '<input type="number" min="1500" max="12000" step="500" class="mf-token-row-input mf-slider-s-interval" value="' + Number(wp.interval || 4000) + '"/>' +
         '</div>';
       paneSettings.appendChild(grid);

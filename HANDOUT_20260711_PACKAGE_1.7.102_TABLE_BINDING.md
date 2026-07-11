@@ -47,7 +47,11 @@ Trong **MegaForm Settings → Current Form settings → Display mode** có thêm
 
 (Trước đây lựa chọn "Module Role" tồn tại trong UI nhưng **server bỏ qua khi lưu** → chọn xong không có gì xảy ra.)
 
-### 1.5 Sửa lỗi nặng: trang Submissions treo trên site lớn
+### 1.5 Wizard: nút "Import JSON" nay có đường dự phòng
+
+Bấm **Import JSON** vẫn bung hộp chọn file ngay như cũ (một click). Thêm link nhỏ *"File picker not opening? Paste or drop the JSON instead"* — dành cho trường hợp trình duyệt bị công cụ khác điều khiển qua DevTools protocol (extension AI/automation gắn vào tab), khi đó hộp thoại chọn tệp **bị nuốt** và nút trông như chết mà console không báo gì. Link đó cho phép **chọn tệp / kéo-thả / dán JSON**, không cần hộp thoại native.
+
+### 1.6 Sửa lỗi nặng: trang Submissions treo trên site lớn
 
 Đếm submission của mọi form (`WHERE IsSpam=0 GROUP BY FormId`) **không có index nào phủ `IsSpam`** → quét toàn bảng: **19,5 giây** với 1 triệu dòng, vượt timeout 30s → trang báo *"Unable to load the forms overview"*. Thêm index `(IsSpam, FormId, SubmittedOnUtc)` → **0,45 giây**; biểu đồ sparkline cũng thôi nạp 1 triệu dòng vào memory để vẽ 30 điểm.
 

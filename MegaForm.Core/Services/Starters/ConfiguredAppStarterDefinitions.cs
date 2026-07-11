@@ -16,7 +16,7 @@ namespace MegaForm.Core.Services.Starters
         private const string BlogLegalRole = "Content Legal Reviewers";
         private const string BlogPublisherRole = "Blog Publishers";
         private const string BlogImageField = "featured_image_upload";
-        private const string StarterPassword = "MegaForm!2026";
+        private const string StarterPassword = "";
 
 #pragma warning disable CS8603
         public static AppStarterDefinition Get(string key)

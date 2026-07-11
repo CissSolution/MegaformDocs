@@ -117,6 +117,10 @@ function getI18nApiBase(root: HTMLElement): string {
   return /i18n\/?$/i.test(base) ? base.replace(/\/?$/, '/') : base + 'i18n/';
 }
 
+function buildLocaleWriteUrl(base: string, action: 'create' | 'save' | 'import'): string {
+  return String(base || '').replace(/\/?$/, '/') + action;
+}
+
 function esc(input: any): string {
   return String(input == null ? '' : input)
     .replace(/&/g, '&amp;')
@@ -969,7 +973,7 @@ class LanguageDashboard {
     const input = this.root.querySelector<HTMLInputElement>('#mf-loc-new');
     const locale = (input?.value || '').trim();
     if (!locale) { toast('Enter a locale code first.', 'error'); return; }
-    await postJson('/api/MegaForm/i18n/create', { locale, copyFrom: 'en-US' });
+    await postJson(buildLocaleWriteUrl(this.apiBase, 'create'), { locale, copyFrom: 'en-US' });
     this.clearRuntimeLocaleCache(locale);
     toast(`Created ${locale}`, 'success');
     await this.refreshLocales(locale);
@@ -977,7 +981,7 @@ class LanguageDashboard {
 
   private async onSave(): Promise<void> {
     const entries = this.collectEntriesFromDom();
-    await postJson('/api/MegaForm/i18n/save', { locale: this.currentLocale, entries });
+    await postJson(buildLocaleWriteUrl(this.apiBase, 'save'), { locale: this.currentLocale, entries });
     this.clearRuntimeLocaleCache(this.currentLocale);
     this.currentEntries = entries;
     toast(`Saved ${this.currentLocale}`, 'success');
@@ -992,7 +996,7 @@ class LanguageDashboard {
     if (!jsonText.trim()) { toast('That file is empty.', 'error'); return; }
     try { JSON.parse(jsonText); } catch { toast('That file is not valid JSON.', 'error'); return; }
     try {
-      await postJson('/api/MegaForm/i18n/import', { locale: this.currentLocale, jsonText });
+      await postJson(buildLocaleWriteUrl(this.apiBase, 'import'), { locale: this.currentLocale, jsonText });
     } catch (e: any) {
       toast('Upload failed: ' + (e && e.message ? e.message : e), 'error');
       return;

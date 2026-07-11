@@ -5,7 +5,8 @@
  * to MegaForm canonical TS. Default provider: OpenAI GPT-4o.
  *
  * Storage:
- *   1. localStorage['megaform-ai'] = { provider, baseUrl, apiKey, model }
+ *   1. localStorage['megaform-ai'] = { provider, baseUrl, model }
+ *      API keys are kept in memory only and should come from server defaults.
  *   2. Server fallback: GET /DesktopModules/MegaForm/API/AiAssistant/DefaultConfig
  *      (reads MegaForm_AI_* HostSettings — see MegaForm.Core/Services/AiAssistant)
  *
@@ -224,18 +225,30 @@ declare global {
 
   const STORAGE_KEY = 'megaform-ai';
   let _serverDefaultLoaded = false;
+  let _sessionConfig: Partial<AIConfig> = {};
 
-  function getConfig(): AIConfig {
+  function readStoredConfig(): Partial<AIConfig> {
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') as Partial<AIConfig>;
-      return saved.apiKey ? (saved as AIConfig) : { ...DEFAULT_PROVIDER, ...saved };
+      if (saved && typeof saved === 'object' && saved.apiKey) {
+        delete saved.apiKey;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+      }
+      return saved || {};
     } catch {
-      return { ...DEFAULT_PROVIDER };
+      return {};
     }
   }
 
+  function getConfig(): AIConfig {
+    const saved = readStoredConfig();
+    return { ...DEFAULT_PROVIDER, ...saved, ..._sessionConfig } as AIConfig;
+  }
+
   function setConfig(cfg: AIConfig): void {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
+    _sessionConfig = { ...cfg };
+    const { apiKey: _discardedApiKey, ...persisted } = cfg;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
   }
 
   /**
@@ -292,8 +305,8 @@ declare global {
     if (_serverDefaultLoaded) return;
     _serverDefaultLoaded = true;
     try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') as Partial<AIConfig>;
-      if (saved.apiKey) return;
+      readStoredConfig();
+      if (_sessionConfig.apiKey) return;
       const r = await fetch(withPortalIdQuery(aiAssistantDefaultConfigUrl()), {
         credentials: 'same-origin',
         cache: 'no-store',

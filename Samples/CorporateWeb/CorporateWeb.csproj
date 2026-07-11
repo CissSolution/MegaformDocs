@@ -9,8 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MegaForm.AspNetCore.Component" Version="0.2.1-preview" />
+    <!-- Reference the free MegaForm component plus the Premium add-on.
+         In a real customer project you would reference only the package you purchased. -->
+    <PackageReference Include="MegaForm.AspNetCore.Component" Version="0.2.4-preview" />
+    <PackageReference Include="MegaForm.Premium.AspNetCore" Version="0.2.4-preview" />
   </ItemGroup>
-
 
 </Project>

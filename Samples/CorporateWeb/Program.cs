@@ -1,4 +1,5 @@
 using MegaForm.AspNetCore.Component;
+using MegaForm.Premium.AspNetCore;
 using MegaForm.Samples.CorporateWeb;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +13,9 @@ builder.Services.AddHostedService<SetupCompletionService>();
 // Seed the demo contact form on startup.
 builder.Services.AddHostedService<ContactFormSeeder>();
 
+// Seed additional sample forms (newsletter, support ticket) for the embed demos.
+builder.Services.AddHostedService<SampleFormsSeeder>();
+
 // Add MegaForm to the ASP.NET Core host.
 builder.AddMegaForm(options =>
 {
@@ -24,10 +28,16 @@ builder.AddMegaForm(options =>
     options.UseSetupWizard = false;
 });
 
+// Unlock the Premium add-on (workflow editor, premium templates, workflow engine).
+builder.AddMegaFormPremium();
+
 var app = builder.Build();
 
 // Ensure MegaForm tables exist before the seeders and pipeline run.
 app.EnsureMegaFormDatabaseReady();
+
+// Wire MegaForm Premium middleware (serves embedded workflow assets) before core MegaForm.
+app.UseMegaFormPremium();
 
 // Wire MegaForm middleware, static assets, auth and controllers.
 app.UseMegaForm();

@@ -65,7 +65,6 @@ function displayKind(f) {
 // each {{field:KEY}} token to the step it falls inside. Works for the customHtml-wizard
 // pattern used by every premium template (data-step="N" blocks driven by a customScript).
 function deriveSteps(html, fieldKeys) {
-  const steps = [];
   // Collect indices of step-block openers in document order.
   const re = /<([a-z0-9]+)[^>]*\bdata-step\s*=\s*["']?(\d+)["']?[^>]*>/gi;
   const marks = [];
@@ -77,17 +76,36 @@ function deriveSteps(html, fieldKeys) {
     const railSteps = (html.match(/class="[^"]*\bin-step\b(?![-\w])[^"]*"/gi) || []).length;
     return { mechanism: railSteps ? 'rail-content' : 'single', anchor: railSteps ? 'in-step' : null, count: railSteps || 1, steps: [] };
   }
-  // Dedup by step number keeping first occurrence order; compute segment [start,nextStart).
-  const seen = new Set();
-  const ordered = [];
-  for (const mk of marks) { if (!seen.has(mk.step)) { seen.add(mk.step); ordered.push(mk); } }
-  for (let i = 0; i < ordered.length; i++) {
-    const start = ordered[i].idx;
-    const end = i + 1 < ordered.length ? ordered[i + 1].idx : html.length;
-    const seg = html.slice(start, end);
-    const keys = (seg.match(/\{\{field:([a-zA-Z0-9_\-]+)\}\}/g) || []).map(t => t.replace(/\{\{field:|\}\}/g, ''));
-    steps.push({ index: ordered[i].step, fieldKeys: keys });
-  }
+  // Slice [start,nextStart) per marker in `ordered` and bucket the {{field:KEY}} tokens.
+  const segmentBy = (ordered) => {
+    const out = [];
+    for (let i = 0; i < ordered.length; i++) {
+      const start = ordered[i].idx;
+      const end = i + 1 < ordered.length ? ordered[i + 1].idx : html.length;
+      const seg = html.slice(start, end);
+      const keys = (seg.match(/\{\{field:([a-zA-Z0-9_\-]+)\}\}/g) || []).map(t => t.replace(/\{\{field:|\}\}/g, ''));
+      out.push({ index: ordered[i].step, fieldKeys: keys });
+    }
+    return out;
+  };
+  // A premium shell repeats each data-step="N" TWICE: the stepper-NAV item (rendered
+  // first, holds NO field tokens) and the content PANEL (holds the {{field:KEY}}
+  // tokens). Deduping by FIRST occurrence picks the nav markers, whose final segment
+  // then swallows every field token into the last step (the bug). So build BOTH a
+  // keep-first and a keep-last ordered set, segment each, and keep whichever spreads
+  // tokens across MORE non-empty steps — the content-panel set wins. Single-marker
+  // templates (one data-step per number) tie and fall back to keep-first (unchanged).
+  const firstSeen = new Set(), firstOrdered = [];
+  for (const mk of marks) { if (!firstSeen.has(mk.step)) { firstSeen.add(mk.step); firstOrdered.push(mk); } }
+  const lastByStep = new Map();
+  for (const mk of marks) lastByStep.set(mk.step, mk);            // later occurrence overwrites
+  const lastOrdered = [...lastByStep.values()].sort((a, b) => a.idx - b.idx);
+  const firstSteps = segmentBy(firstOrdered);
+  const lastSteps = segmentBy(lastOrdered);
+  const nonEmpty = (arr) => arr.filter(s => s.fieldKeys.length).length;
+  const useLast = nonEmpty(lastSteps) > nonEmpty(firstSteps);
+  const ordered = useLast ? lastOrdered : firstOrdered;
+  const steps = useLast ? lastSteps : firstSteps;
   return { mechanism: 'customHtml-wizard', anchor: 'data-step', count: ordered.length, steps };
 }
 
@@ -163,6 +181,18 @@ function buildFacts(tpl) {
   const { fieldToks, contentToks, scriptToks, formToks } = tokenInventory(html);
   const stepInfo = deriveSteps(html, fieldKeys);
 
+  // [native-step detect 20260630] The premium→native migration (premium-native-migration.ts)
+  // STRIPS the wizard JS (scriptTokens emptied, root gains class `mfp-native-generated`,
+  // settings.premiumNativePageBreak=true) but KEEPS the data-step panels — the NATIVE renderer
+  // (Section + pageBreak), NOT a customScript, now drives navigation. Relabel the mechanism so the
+  // AI guidance (C4/C5) describes native Section/pageBreak steps instead of a now-DELETED wizard
+  // script. (Fixes stale stepMechanism='customHtml-wizard' on migrated templates.)
+  const isPremiumNative = stepInfo.anchor === 'data-step' && (
+    settings.premiumNativePageBreak === true || settings.PremiumNativePageBreak === true ||
+    /\bmfp-native-generated\b/.test(html) || scriptToks.length === 0
+  );
+  if (isPremiumNative) { stepInfo.mechanism = 'premium-native'; }
+
   // map key -> step index (0-based; preserve step 0 explicitly)
   const keyStep = {};
   for (const s of stepInfo.steps) for (const k of s.fieldKeys) keyStep[k] = s.index;
@@ -198,8 +228,14 @@ function buildFacts(tpl) {
   const cssClasses = [...new Set((css.match(/\.[a-zA-Z][\w\-]+/g) || []).map(s => s.slice(1)))]
     .filter(c => !/^(googleapis|com|gstatic)$/.test(c));
 
-  // A field is "missing" only if neither its own token nor its parent-Row token exists.
-  const missingFieldPlaceholders = fields.filter(f => !f.inCustomHtml).map(f => f.key);
+  // A field is "missing" only if neither its own token nor its parent-Row token exists —
+  // EXCEPT structural/layout markers (Section page-breaks like premium_step_N, plain Html
+  // blocks) which are rendered by position, never via a {{field:KEY}} token. Flagging them
+  // as "missing" wrongly invited the AI to inject tokens for them and break the native shell.
+  const STRUCTURAL_NO_TOKEN = new Set(['Section', 'Html']);
+  const missingFieldPlaceholders = fields
+    .filter(f => !f.inCustomHtml && !STRUCTURAL_NO_TOKEN.has(f.type))
+    .map(f => f.key);
   const orphanFieldPlaceholders = fieldToks
     .map(t => t.replace(/\{\{field:|\}\}/g, ''))
     .filter(k => !fieldKeys.includes(k));
@@ -318,11 +354,13 @@ ${(f.shellTexts || []).slice(0, 28).map(t => '- "' + t.replace(/"/g, '\\"') + '"
 ## Formulas (fill the slots — never change the op shape)
 - **C1 Change content/title**: form title \`{op:"set_form_meta", title:"New title", designDecision:"preserve"}\`; a field's editable label \`{op:"set_field_property", key:"<key>", path:"label", value:"New label", designDecision:"preserve"}\`; a {{content:*}} token \`{op:"set_form_meta", customContent:{"<token>":"New text"}, designDecision:"preserve"}\`; **a hardcoded shell heading/caption** \`{op:"set_html_text", find:"<exact current text from the list above>", replace:"New text", designDecision:"preserve"}\` (text-only swap; never include HTML tags in find/replace).
 - **C6 Edit CHIP options** (fields: ${f.chipFields.join(', ') || 'none'}): \`{op:"set_field_property", key:"${chip}", path:"options", value:[{"value":"v1","label":"Label 1"},…], designDecision:"preserve"}\`. Keep the field's \`optionDisplay:"chips"\` — set ONLY options. The chip look (\`.mf-option-group--chips\`) is in customCss and stays.
-- **C7 Edit CARD options** (fields: ${f.cardFields.join(', ') || 'none'}): \`{op:"set_field_property", key:"${card}", path:"options", value:[{"value":"v1","label":"Title","meta":"Subtitle","description":"…","icon":"★"},…], designDecision:"preserve"}\`. Keep \`optionDisplay:"cards"\`. Card chrome (\`.mf-option-group--cards\`) stays.
+- **C7 Edit CARD options** (fields: ${f.cardFields.join(', ') || 'none'}): \`{op:"set_field_property", key:"${card}", path:"options", value:[{"value":"v1","label":"Title","meta":"Subtitle","description":"…"},…], designDecision:"preserve"}\`. Keep \`optionDisplay:"cards"\`. Card chrome (\`.mf-option-group--cards\`) stays. ⚠ ICONS — do NOT invent, change, or remove icons: MegaForm's rich-choice catalog/theme owns icon assignment. If an option ALREADY has an \`icon\`, keep it byte-for-byte; if it has none, OMIT the \`icon\` field (never emit a plain descriptive word like "city"/"beach" — it renders as literal text). Edit ONLY \`label\`/\`meta\`/\`description\`/\`value\`.
 - **C2 Add field**: \`{op:"add_field", type:"Text", key:"new_key", label:"…", step:${lastStep}, designDecision:"preserve"}\` — the dispatcher inserts \`{{field:new_key}}\` into the matching \`${f.stepAnchor || 'panel'}\` block. Pick a snake_case key not already used.
 - **C3 Remove field**: \`{op:"remove_field", key:"<key>", designDecision:"preserve"}\` — removes the field and its token; leaves zero orphan placeholders.
 - **C8 Change COLOUR (only if the user explicitly asks)**: \`{op:"set_form_meta", themeCssOverrides:{"<scoped-var>":"#hex",…}, designDecision:"preserve"}\`. ⚠ This template scopes its palette under TEMPLATE-SPECIFIC vars — target THOSE exact names (the generic \`--primary\`/\`--accent\` are INERT here). Available colour vars (current value):\n${Object.keys(f.colorVars || {}).length ? Object.entries(f.colorVars).slice(0, 14).map(([k, v]) => `  - \`${k}\`: ${v}`).join('\n') : '  - _(none detected — fall back to --primary/--accent)_'}\n  NEVER edit customCss for colour — customCss must stay byte-identical (sha256 \`${f.hashes.customCssSha256.slice(0, 12)}…\`).
-- **C4/C5 Add/Remove step** (ADVANCED — ${f.stepMechanism}): steps are \`${f.stepAnchor || 'panel'}\` blocks in customHtml driven by \`${(f.scriptTokens[0] || 'the wizard script')}\`. Only attempt if the user explicitly asks; clone an existing \`${f.stepAnchor}\` block via \`customHtmlAppend\` (NEVER touch customCss), renumber the stepper, and add the new fields with placeholders. If unsure, ask the user instead of guessing.
+- **C4/C5 Add/Remove step** (ADVANCED — ${f.stepMechanism}): ${f.stepMechanism === 'premium-native'
+    ? 'steps are NATIVE — driven by `Section` fields with `properties.pageBreak:true` (one marker per step) alongside the `' + (f.stepAnchor || 'data-step') + '` panels in customHtml. There is NO wizard script. To ADD a step: append a new `' + (f.stepAnchor || 'data-step') + '` panel block via `customHtmlAppend` (NEVER touch customCss), add a `Section` field with `properties.pageBreak:true`, and place the new fields/placeholders inside that panel. To REMOVE: delete the panel + its `Section` marker + its fields.'
+    : 'steps are `' + (f.stepAnchor || 'panel') + '` blocks in customHtml driven by `' + (f.scriptTokens[0] || 'the wizard script') + '`. Clone an existing `' + (f.stepAnchor || 'panel') + '` block via `customHtmlAppend` (NEVER touch customCss), renumber the stepper, and add the new fields with placeholders.'} Only attempt if the user explicitly asks. If unsure, ask the user instead of guessing.
 
 ## Hard invariants (a change that breaks any of these is a FAILURE — refuse the op)
 - customCss sha256 stays \`${f.hashes.customCssSha256.slice(0, 16)}…\` · customHtml shell sha256 stays \`${f.hashes.shellSha256.slice(0, 16)}…\` (unless C2/C4 legitimately add a node).

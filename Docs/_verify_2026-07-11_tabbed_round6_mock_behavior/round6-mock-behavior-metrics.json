@@ -1,0 +1,445 @@
+{
+  "desktop": [
+    {
+      "label": "initial",
+      "active": "0",
+      "activeText": "✓ Account Your details",
+      "progress": "0 of 5 sections complete",
+      "errorGroups": 0,
+      "inlineErrors": 0,
+      "invalid": [
+        "✓ Account Your details",
+        "✓ Company Where you work",
+        "✓ Billing Choose a plan",
+        "✓ Preferences Tailor your setup",
+        "✓ Security Protect your account"
+      ],
+      "done": [],
+      "tabbar": {
+        "x": 161.5,
+        "y": 367.97,
+        "w": 1042,
+        "h": 63,
+        "right": 1203.5,
+        "bottom": 430.97
+      },
+      "tabbarScroll": {
+        "left": 0,
+        "client": 1042,
+        "scroll": 1042,
+        "canLeft": false,
+        "canRight": false,
+        "leftBtn": "none",
+        "rightBtn": "none"
+      },
+      "root": {
+        "x": 160.5,
+        "y": 207.38,
+        "w": 1044,
+        "h": 551.69,
+        "right": 1204.5,
+        "bottom": 759.06
+      },
+      "card": {
+        "x": 160.5,
+        "y": 207.38,
+        "w": 1044,
+        "h": 529.19,
+        "right": 1204.5,
+        "bottom": 736.56
+      },
+      "rootStyle": {
+        "display": "block",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "width": "1044px",
+        "maxWidth": "100%",
+        "minHeight": "0px",
+        "overflow": "visible"
+      },
+      "cardStyle": {
+        "display": "block",
+        "position": "static",
+        "background": "rgb(255, 255, 255)",
+        "padding": "0px",
+        "margin": "0px",
+        "width": "1044px",
+        "maxWidth": "none",
+        "minHeight": "0px",
+        "overflow": "hidden"
+      },
+      "bodyBg": "rgb(6, 6, 6)",
+      "overflowX": false
+    },
+    {
+      "label": "after-empty-continue-account",
+      "active": "0",
+      "activeText": "✓ Account Your details",
+      "progress": "0 of 5 sections complete",
+      "errorGroups": 3,
+      "inlineErrors": 3,
+      "invalid": [
+        "✓ Account Your details"
+      ],
+      "done": [],
+      "tabbar": {
+        "x": 161.5,
+        "y": 366.97,
+        "w": 1042,
+        "h": 63,
+        "right": 1203.5,
+        "bottom": 429.97
+      },
+      "tabbarScroll": {
+        "left": 0,
+        "client": 1042,
+        "scroll": 1042,
+        "canLeft": false,
+        "canRight": false,
+        "leftBtn": "none",
+        "rightBtn": "none"
+      },
+      "root": {
+        "x": 160.5,
+        "y": 206.38,
+        "w": 1044,
+        "h": 598.06,
+        "right": 1204.5,
+        "bottom": 804.44
+      },
+      "card": {
+        "x": 160.5,
+        "y": 206.38,
+        "w": 1044,
+        "h": 575.56,
+        "right": 1204.5,
+        "bottom": 781.94
+      },
+      "rootStyle": {
+        "display": "block",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "width": "1044px",
+        "maxWidth": "100%",
+        "minHeight": "0px",
+        "overflow": "visible"
+      },
+      "cardStyle": {
+        "display": "block",
+        "position": "static",
+        "background": "rgb(255, 255, 255)",
+        "padding": "0px",
+        "margin": "0px",
+        "width": "1044px",
+        "maxWidth": "none",
+        "minHeight": "0px",
+        "overflow": "hidden"
+      },
+      "bodyBg": "rgb(6, 6, 6)",
+      "overflowX": false
+    },
+    {
+      "label": "after-direct-company-tab",
+      "active": "1",
+      "activeText": "✓ Company Where you work",
+      "progress": "0 of 5 sections complete",
+      "errorGroups": 0,
+      "inlineErrors": 3,
+      "invalid": [
+        "✓ Company Where you work",
+        "✓ Billing Choose a plan",
+        "✓ Preferences Tailor your setup",
+        "✓ Security Protect your account"
+      ],
+      "done": [],
+      "tabbar": {
+        "x": 161.5,
+        "y": 366.97,
+        "w": 1042,
+        "h": 63,
+        "right": 1203.5,
+        "bottom": 429.97
+      },
+      "tabbarScroll": {
+        "left": 0,
+        "client": 1042,
+        "scroll": 1042,
+        "canLeft": false,
+        "canRight": false,
+        "leftBtn": "none",
+        "rightBtn": "none"
+      },
+      "root": {
+        "x": 160.5,
+        "y": 206.38,
+        "w": 1044,
+        "h": 877.23,
+        "right": 1204.5,
+        "bottom": 1083.61
+      },
+      "card": {
+        "x": 160.5,
+        "y": 206.38,
+        "w": 1044,
+        "h": 854.73,
+        "right": 1204.5,
+        "bottom": 1061.11
+      },
+      "rootStyle": {
+        "display": "block",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "width": "1044px",
+        "maxWidth": "100%",
+        "minHeight": "0px",
+        "overflow": "visible"
+      },
+      "cardStyle": {
+        "display": "block",
+        "position": "static",
+        "background": "rgb(255, 255, 255)",
+        "padding": "0px",
+        "margin": "0px",
+        "width": "1044px",
+        "maxWidth": "none",
+        "minHeight": "0px",
+        "overflow": "hidden"
+      },
+      "bodyBg": "rgb(6, 6, 6)",
+      "overflowX": false
+    },
+    {
+      "label": "after-empty-continue-company",
+      "active": "1",
+      "activeText": "✓ Company Where you work",
+      "progress": "0 of 5 sections complete",
+      "errorGroups": 3,
+      "inlineErrors": 6,
+      "invalid": [
+        "✓ Account Your details",
+        "✓ Company Where you work"
+      ],
+      "done": [],
+      "tabbar": {
+        "x": 161.5,
+        "y": 366.97,
+        "w": 1042,
+        "h": 63,
+        "right": 1203.5,
+        "bottom": 429.97
+      },
+      "tabbarScroll": {
+        "left": 0,
+        "client": 1042,
+        "scroll": 1042,
+        "canLeft": false,
+        "canRight": false,
+        "leftBtn": "none",
+        "rightBtn": "none"
+      },
+      "root": {
+        "x": 160.5,
+        "y": 206.38,
+        "w": 1044,
+        "h": 946.8,
+        "right": 1204.5,
+        "bottom": 1153.17
+      },
+      "card": {
+        "x": 160.5,
+        "y": 206.38,
+        "w": 1044,
+        "h": 924.3,
+        "right": 1204.5,
+        "bottom": 1130.67
+      },
+      "rootStyle": {
+        "display": "block",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "width": "1044px",
+        "maxWidth": "100%",
+        "minHeight": "0px",
+        "overflow": "visible"
+      },
+      "cardStyle": {
+        "display": "block",
+        "position": "static",
+        "background": "rgb(255, 255, 255)",
+        "padding": "0px",
+        "margin": "0px",
+        "width": "1044px",
+        "maxWidth": "none",
+        "minHeight": "0px",
+        "overflow": "hidden"
+      },
+      "bodyBg": "rgb(6, 6, 6)",
+      "overflowX": false
+    }
+  ],
+  "mobile": [
+    {
+      "label": "mobile-initial",
+      "active": "0",
+      "activeText": "✓ Account Your details",
+      "progress": "0 of 5 sections complete",
+      "errorGroups": 0,
+      "inlineErrors": 0,
+      "invalid": [
+        "✓ Account Your details",
+        "✓ Company Where you work",
+        "✓ Billing Choose a plan",
+        "✓ Preferences Tailor your setup",
+        "✓ Security Protect your account"
+      ],
+      "done": [],
+      "tabbar": {
+        "x": 49,
+        "y": 342.23,
+        "w": 292,
+        "h": 58,
+        "right": 341,
+        "bottom": 400.23
+      },
+      "tabbarScroll": {
+        "left": 0,
+        "client": 292,
+        "scroll": 755,
+        "canLeft": false,
+        "canRight": true,
+        "leftBtn": "none",
+        "rightBtn": "grid"
+      },
+      "root": {
+        "x": 48,
+        "y": 119.36,
+        "w": 294,
+        "h": 802.56,
+        "right": 342,
+        "bottom": 921.92
+      },
+      "card": {
+        "x": 48,
+        "y": 119.36,
+        "w": 294,
+        "h": 757.56,
+        "right": 342,
+        "bottom": 876.92
+      },
+      "rootStyle": {
+        "display": "block",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "width": "294px",
+        "maxWidth": "100%",
+        "minHeight": "0px",
+        "overflow": "visible"
+      },
+      "cardStyle": {
+        "display": "block",
+        "position": "static",
+        "background": "rgb(255, 255, 255)",
+        "padding": "0px",
+        "margin": "0px",
+        "width": "294px",
+        "maxWidth": "none",
+        "minHeight": "0px",
+        "overflow": "hidden"
+      },
+      "bodyBg": "rgb(6, 6, 6)",
+      "overflowX": false
+    },
+    {
+      "label": "mobile-after-scroll-right",
+      "active": "0",
+      "activeText": "✓ Account Your details",
+      "progress": "0 of 5 sections complete",
+      "errorGroups": 0,
+      "inlineErrors": 0,
+      "invalid": [
+        "✓ Account Your details",
+        "✓ Company Where you work",
+        "✓ Billing Choose a plan",
+        "✓ Preferences Tailor your setup",
+        "✓ Security Protect your account"
+      ],
+      "done": [],
+      "tabbar": {
+        "x": 49,
+        "y": 319.23,
+        "w": 292,
+        "h": 58,
+        "right": 341,
+        "bottom": 377.23
+      },
+      "tabbarScroll": {
+        "left": 260,
+        "client": 292,
+        "scroll": 785,
+        "canLeft": true,
+        "canRight": true,
+        "leftBtn": "grid",
+        "rightBtn": "grid"
+      },
+      "root": {
+        "x": 48,
+        "y": 96.36,
+        "w": 294,
+        "h": 802.56,
+        "right": 342,
+        "bottom": 898.92
+      },
+      "card": {
+        "x": 48,
+        "y": 96.36,
+        "w": 294,
+        "h": 757.56,
+        "right": 342,
+        "bottom": 853.92
+      },
+      "rootStyle": {
+        "display": "block",
+        "position": "static",
+        "background": "rgba(0, 0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "width": "294px",
+        "maxWidth": "100%",
+        "minHeight": "0px",
+        "overflow": "visible"
+      },
+      "cardStyle": {
+        "display": "block",
+        "position": "static",
+        "background": "rgb(255, 255, 255)",
+        "padding": "0px",
+        "margin": "0px",
+        "width": "294px",
+        "maxWidth": "none",
+        "minHeight": "0px",
+        "overflow": "hidden"
+      },
+      "bodyBg": "rgb(6, 6, 6)",
+      "overflowX": false
+    }
+  ],
+  "mockLive": {
+    "url": "http://localhost:3005/forms/tabbed",
+    "title": "Tabbed Account Setup — Premium Form",
+    "hasTabbed": true,
+    "tabCount": 6,
+    "docW": 1365,
+    "bodyText": true
+  },
+  "warnings": []
+}

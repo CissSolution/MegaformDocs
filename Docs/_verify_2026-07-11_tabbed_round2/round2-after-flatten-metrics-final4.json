@@ -1,0 +1,649 @@
+{
+  "oqtane": [
+    {
+      "step": 0,
+      "active": "0",
+      "label": "? Account Your details",
+      "card": {
+        "x": 106.5,
+        "y": 1343.38,
+        "w": 1152,
+        "h": 545.19,
+        "right": 1258.5,
+        "bottom": 1888.56
+      },
+      "page": {
+        "x": 155.5,
+        "y": 1594.97,
+        "w": 1054,
+        "h": 147.09,
+        "right": 1209.5,
+        "bottom": 1742.06
+      },
+      "nativeHost": null,
+      "nativeDisplay": null,
+      "item": null,
+      "ui": null,
+      "itemStyle": null,
+      "uiStyle": null,
+      "overflow": false,
+      "cardBeyond": false,
+      "progress": "0 of 5 sections complete"
+    },
+    {
+      "step": 1,
+      "active": "1",
+      "label": "? Company Where you work",
+      "card": {
+        "x": 106.5,
+        "y": 48.38,
+        "w": 1152,
+        "h": 870.73,
+        "right": 1258.5,
+        "bottom": 919.11
+      },
+      "page": {
+        "x": 155.5,
+        "y": 299.97,
+        "w": 1054,
+        "h": 472.64,
+        "right": 1209.5,
+        "bottom": 772.61
+      },
+      "nativeHost": null,
+      "nativeDisplay": null,
+      "item": {
+        "x": 155.5,
+        "y": 411.06,
+        "w": 522,
+        "h": 74,
+        "right": 677.5,
+        "bottom": 485.06
+      },
+      "ui": {
+        "x": 155.5,
+        "y": 411.06,
+        "w": 522,
+        "h": 74,
+        "right": 677.5,
+        "bottom": 485.06
+      },
+      "itemStyle": {
+        "display": "flex",
+        "padding": "0px",
+        "border": "0px none rgb(51, 51, 51)",
+        "width": "522px",
+        "height": "74px",
+        "minHeight": "0px",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      "uiStyle": {
+        "display": "flex",
+        "padding": "14px",
+        "border": "1px solid rgb(228, 231, 236)",
+        "width": "522px",
+        "height": "74px",
+        "minHeight": "74px",
+        "background": "rgb(255, 255, 255)"
+      },
+      "overflow": false,
+      "cardBeyond": false,
+      "progress": "1 of 5 sections complete"
+    },
+    {
+      "step": 2,
+      "active": "2",
+      "label": "? Billing Choose a plan",
+      "card": {
+        "x": 106.5,
+        "y": 48.38,
+        "w": 1152,
+        "h": 524.27,
+        "right": 1258.5,
+        "bottom": 572.64
+      },
+      "page": {
+        "x": 155.5,
+        "y": 299.97,
+        "w": 1054,
+        "h": 126.17,
+        "right": 1209.5,
+        "bottom": 426.14
+      },
+      "nativeHost": null,
+      "nativeDisplay": null,
+      "item": {
+        "x": 155.5,
+        "y": 323.52,
+        "w": 344.66,
+        "h": 86.44,
+        "right": 500.16,
+        "bottom": 409.95
+      },
+      "ui": {
+        "x": 155.5,
+        "y": 323.52,
+        "w": 344.66,
+        "h": 86.44,
+        "right": 500.16,
+        "bottom": 409.95
+      },
+      "itemStyle": {
+        "display": "flex",
+        "padding": "0px",
+        "border": "0px none rgb(51, 51, 51)",
+        "width": "344.656px",
+        "height": "86.4375px",
+        "minHeight": "0px",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      "uiStyle": {
+        "display": "flex",
+        "padding": "14px",
+        "border": "1px solid rgb(228, 231, 236)",
+        "width": "344.656px",
+        "height": "86.4375px",
+        "minHeight": "74px",
+        "background": "rgb(255, 255, 255)"
+      },
+      "overflow": false,
+      "cardBeyond": false,
+      "progress": "2 of 5 sections complete"
+    },
+    {
+      "step": 3,
+      "active": "3",
+      "label": "? Preferences Tailor your setup",
+      "card": {
+        "x": 106.5,
+        "y": 48.38,
+        "w": 1152,
+        "h": 720.98,
+        "right": 1258.5,
+        "bottom": 769.36
+      },
+      "page": {
+        "x": 155.5,
+        "y": 299.97,
+        "w": 1054,
+        "h": 322.89,
+        "right": 1209.5,
+        "bottom": 622.86
+      },
+      "nativeHost": null,
+      "nativeDisplay": null,
+      "item": {
+        "x": 155.5,
+        "y": 405.81,
+        "w": 344.66,
+        "h": 74,
+        "right": 500.16,
+        "bottom": 479.81
+      },
+      "ui": {
+        "x": 155.5,
+        "y": 405.81,
+        "w": 344.66,
+        "h": 74,
+        "right": 500.16,
+        "bottom": 479.81
+      },
+      "itemStyle": {
+        "display": "flex",
+        "padding": "0px",
+        "border": "0px none rgb(51, 51, 51)",
+        "width": "344.656px",
+        "height": "74px",
+        "minHeight": "0px",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      "uiStyle": {
+        "display": "flex",
+        "padding": "14px",
+        "border": "1px solid rgb(228, 231, 236)",
+        "width": "344.656px",
+        "height": "74px",
+        "minHeight": "74px",
+        "background": "rgb(255, 255, 255)"
+      },
+      "overflow": false,
+      "cardBeyond": false,
+      "progress": "3 of 5 sections complete"
+    },
+    {
+      "step": 4,
+      "active": "4",
+      "label": "? Security Protect your account",
+      "card": {
+        "x": 106.5,
+        "y": 48.38,
+        "w": 1152,
+        "h": 495.64,
+        "right": 1258.5,
+        "bottom": 544.02
+      },
+      "page": {
+        "x": 155.5,
+        "y": 299.97,
+        "w": 1054,
+        "h": 97.55,
+        "right": 1209.5,
+        "bottom": 397.52
+      },
+      "nativeHost": null,
+      "nativeDisplay": null,
+      "item": {
+        "x": 155.5,
+        "y": 323.52,
+        "w": 344.66,
+        "h": 74,
+        "right": 500.16,
+        "bottom": 397.52
+      },
+      "ui": {
+        "x": 155.5,
+        "y": 323.52,
+        "w": 344.66,
+        "h": 74,
+        "right": 500.16,
+        "bottom": 397.52
+      },
+      "itemStyle": {
+        "display": "flex",
+        "padding": "0px",
+        "border": "0px none rgb(51, 51, 51)",
+        "width": "344.656px",
+        "height": "74px",
+        "minHeight": "0px",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      "uiStyle": {
+        "display": "flex",
+        "padding": "14px",
+        "border": "1px solid rgb(228, 231, 236)",
+        "width": "344.656px",
+        "height": "74px",
+        "minHeight": "74px",
+        "background": "rgb(255, 255, 255)"
+      },
+      "overflow": false,
+      "cardBeyond": false,
+      "progress": "4 of 5 sections complete"
+    },
+    {
+      "step": 5,
+      "active": "5",
+      "label": "? Review Confirm and submit",
+      "card": {
+        "x": 106.5,
+        "y": 48.38,
+        "w": 1152,
+        "h": 908.59,
+        "right": 1258.5,
+        "bottom": 956.97
+      },
+      "page": {
+        "x": 155.5,
+        "y": 299.97,
+        "w": 1054,
+        "h": 510.5,
+        "right": 1209.5,
+        "bottom": 810.47
+      },
+      "nativeHost": null,
+      "nativeDisplay": null,
+      "item": null,
+      "ui": null,
+      "itemStyle": null,
+      "uiStyle": null,
+      "overflow": false,
+      "cardBeyond": false,
+      "progress": "5 of 5 sections complete"
+    }
+  ],
+  "builder": [
+    {
+      "step": 0,
+      "active": "0",
+      "label": "? Account Your details",
+      "card": {
+        "x": 49.22,
+        "y": 35.99,
+        "w": 919.98,
+        "h": 556.32,
+        "right": 969.2,
+        "bottom": 592.31
+      },
+      "page": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 146.93,
+        "right": 918.58,
+        "bottom": 439.31
+      },
+      "nativeHost": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 146.93,
+        "right": 918.58,
+        "bottom": 439.31
+      },
+      "nativeDisplay": "block",
+      "item": null,
+      "ui": null,
+      "itemStyle": null,
+      "uiStyle": null,
+      "overflow": false,
+      "cardBeyond": false,
+      "progress": "0 of 5 sections complete"
+    },
+    {
+      "step": 1,
+      "active": "1",
+      "label": "? Company Where you work",
+      "card": {
+        "x": 49.22,
+        "y": 35.99,
+        "w": 919.98,
+        "h": 881.6,
+        "right": 969.2,
+        "bottom": 917.59
+      },
+      "page": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 472.21,
+        "right": 918.58,
+        "bottom": 764.59
+      },
+      "nativeHost": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 472.21,
+        "right": 918.58,
+        "bottom": 764.59
+      },
+      "nativeDisplay": "block",
+      "item": {
+        "x": 99.85,
+        "y": 403.32,
+        "w": 404.35,
+        "h": 73.96,
+        "right": 504.21,
+        "bottom": 477.28
+      },
+      "ui": {
+        "x": 99.85,
+        "y": 403.32,
+        "w": 404.35,
+        "h": 73.96,
+        "right": 504.21,
+        "bottom": 477.28
+      },
+      "itemStyle": {
+        "display": "flex",
+        "padding": "0px",
+        "border": "0px none rgb(51, 51, 51)",
+        "width": "404.354px",
+        "height": "73.9611px",
+        "minHeight": "0px",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      "uiStyle": {
+        "display": "flex",
+        "padding": "14px",
+        "border": "2.63852px solid rgb(228, 231, 236)",
+        "width": "404.354px",
+        "height": "73.9611px",
+        "minHeight": "74px",
+        "background": "rgb(255, 255, 255)"
+      },
+      "overflow": false,
+      "cardBeyond": false,
+      "progress": "1 of 5 sections complete"
+    },
+    {
+      "step": 2,
+      "active": "2",
+      "label": "? Billing Choose a plan",
+      "card": {
+        "x": 49.22,
+        "y": 35.99,
+        "w": 919.98,
+        "h": 554.83,
+        "right": 969.2,
+        "bottom": 590.82
+      },
+      "page": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 145.45,
+        "right": 918.58,
+        "bottom": 437.83
+      },
+      "nativeHost": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 145.45,
+        "right": 918.58,
+        "bottom": 437.83
+      },
+      "nativeDisplay": "block",
+      "item": {
+        "x": 99.85,
+        "y": 315.88,
+        "w": 266.24,
+        "h": 105.79,
+        "right": 366.09,
+        "bottom": 421.67
+      },
+      "ui": {
+        "x": 99.85,
+        "y": 315.88,
+        "w": 266.24,
+        "h": 105.79,
+        "right": 366.09,
+        "bottom": 421.67
+      },
+      "itemStyle": {
+        "display": "flex",
+        "padding": "0px",
+        "border": "0px none rgb(51, 51, 51)",
+        "width": "266.243px",
+        "height": "105.788px",
+        "minHeight": "0px",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      "uiStyle": {
+        "display": "flex",
+        "padding": "14px",
+        "border": "2.63852px solid rgb(228, 231, 236)",
+        "width": "266.243px",
+        "height": "105.788px",
+        "minHeight": "74px",
+        "background": "rgb(255, 255, 255)"
+      },
+      "overflow": false,
+      "cardBeyond": false,
+      "progress": "2 of 5 sections complete"
+    },
+    {
+      "step": 3,
+      "active": "3",
+      "label": "? Preferences Tailor your setup",
+      "card": {
+        "x": 49.22,
+        "y": 35.99,
+        "w": 919.98,
+        "h": 784.51,
+        "right": 969.2,
+        "bottom": 820.5
+      },
+      "page": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 375.12,
+        "right": 918.58,
+        "bottom": 667.5
+      },
+      "nativeHost": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 375.12,
+        "right": 918.58,
+        "bottom": 667.5
+      },
+      "nativeDisplay": "block",
+      "item": {
+        "x": 99.85,
+        "y": 449.41,
+        "w": 266.24,
+        "h": 73.96,
+        "right": 366.09,
+        "bottom": 523.38
+      },
+      "ui": {
+        "x": 99.85,
+        "y": 449.41,
+        "w": 266.24,
+        "h": 73.96,
+        "right": 366.09,
+        "bottom": 523.38
+      },
+      "itemStyle": {
+        "display": "flex",
+        "padding": "0px",
+        "border": "0px none rgb(51, 51, 51)",
+        "width": "266.243px",
+        "height": "73.9611px",
+        "minHeight": "0px",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      "uiStyle": {
+        "display": "flex",
+        "padding": "14px",
+        "border": "2.63852px solid rgb(228, 231, 236)",
+        "width": "266.243px",
+        "height": "73.9611px",
+        "minHeight": "74px",
+        "background": "rgb(255, 255, 255)"
+      },
+      "overflow": false,
+      "cardBeyond": false,
+      "progress": "3 of 5 sections complete"
+    },
+    {
+      "step": 4,
+      "active": "4",
+      "label": "? Security Protect your account",
+      "card": {
+        "x": 49.22,
+        "y": 35.99,
+        "w": 919.98,
+        "h": 506.84,
+        "right": 969.2,
+        "bottom": 542.83
+      },
+      "page": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 97.46,
+        "right": 918.58,
+        "bottom": 389.84
+      },
+      "nativeHost": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 97.46,
+        "right": 918.58,
+        "bottom": 389.84
+      },
+      "nativeDisplay": "block",
+      "item": {
+        "x": 99.85,
+        "y": 315.88,
+        "w": 266.24,
+        "h": 73.96,
+        "right": 366.09,
+        "bottom": 389.84
+      },
+      "ui": {
+        "x": 99.85,
+        "y": 315.88,
+        "w": 266.24,
+        "h": 73.96,
+        "right": 366.09,
+        "bottom": 389.84
+      },
+      "itemStyle": {
+        "display": "flex",
+        "padding": "0px",
+        "border": "0px none rgb(51, 51, 51)",
+        "width": "266.243px",
+        "height": "73.9611px",
+        "minHeight": "0px",
+        "background": "rgba(0, 0, 0, 0)"
+      },
+      "uiStyle": {
+        "display": "flex",
+        "padding": "14px",
+        "border": "2.63852px solid rgb(228, 231, 236)",
+        "width": "266.243px",
+        "height": "73.9611px",
+        "minHeight": "74px",
+        "background": "rgb(255, 255, 255)"
+      },
+      "overflow": false,
+      "cardBeyond": false,
+      "progress": "4 of 5 sections complete"
+    },
+    {
+      "step": 5,
+      "active": "5",
+      "label": "? Review Confirm and submit",
+      "card": {
+        "x": 49.22,
+        "y": 35.99,
+        "w": 919.98,
+        "h": 962.15,
+        "right": 969.2,
+        "bottom": 998.14
+      },
+      "page": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 552.77,
+        "right": 918.58,
+        "bottom": 845.15
+      },
+      "nativeHost": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 552.77,
+        "right": 918.58,
+        "bottom": 845.15
+      },
+      "nativeDisplay": "block",
+      "item": null,
+      "ui": null,
+      "itemStyle": null,
+      "uiStyle": null,
+      "overflow": false,
+      "cardBeyond": false,
+      "progress": "5 of 5 sections complete"
+    }
+  ],
+  "warnings": []
+}

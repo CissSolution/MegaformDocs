@@ -5,7 +5,9 @@
 import { WizardData, WizardField, themeMeta, fontStack, roundnessPx, FONT_STYLES } from './types';
 import { mfField, buildFieldFromCatalog, catalogLabel } from './field-catalog';
 import { syncFieldPlaceholders } from '@shared/custom-html-insert';
+import { migratePremiumWizardSchemaToNative } from '@shared/premium-native-migration';
 import { applyDefaultPureGridShell } from '../ai-form-creator';
+import { applyPremiumStepDetailsToFields, applyPremiumStepDetailsToHtml } from './premium-steps';
 
 function slug(s: string, used: Set<string>): string {
   let base = String(s || 'field').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'field';
@@ -97,10 +99,8 @@ function buildWorkflow(data: WizardData): string {
 
 export interface WizardSaveCtx { moduleId: number; siteId: number; }
 
-// PREMIUM (custom-shell) faithful emit: keep the template's customHtml/customCss/
-// customScripts/customContent/theme exactly (the wizard does NOT edit its structure — see
-// au_wizard per-index coupling). Only the name/description, Publish flags and the approval
-// Workflow are layered on; the premium look (theme/customCss) is preserved untouched.
+// PREMIUM (custom-shell) emit: keep template styling/scripts, but patch editable step copy
+// and field placeholders before the native migration builds Section.pageBreak pages.
 function premiumDto(data: WizardData, ctx: WizardSaveCtx): any {
   const t = data.templateRecord || {};
   const settings: any = JSON.parse(JSON.stringify(t.settings || {}));
@@ -109,10 +109,11 @@ function premiumDto(data: WizardData, ctx: WizardSaveCtx): any {
   const srcFields = Array.isArray(data.premiumFields) ? data.premiumFields : (Array.isArray(t.fields) ? t.fields : []);
   const fields = JSON.parse(JSON.stringify(srcFields));
   fields.forEach((f: any) => { if (f && f.__step != null) delete f.__step; });
-  // Reconcile the custom-shell layout so add/remove reflects in the premium HTML: new fields
-  // are cloned into the right data-step panel with the template's label styling; removed
-  // fields' labels + review-summary rows are cleaned (syncFieldPlaceholders, proven on form 13).
+  applyPremiumStepDetailsToFields(fields, data.premiumStepDetails);
+  // Reconcile the custom-shell layout so add/remove reflects in the premium HTML before the
+  // native migration turns data-step wizard structure into schema Section.pageBreak.
   if (typeof settings.customHtml === 'string' && settings.customHtml) {
+    settings.customHtml = applyPremiumStepDetailsToHtml(settings.customHtml, data.premiumStepDetails);
     settings.customHtml = syncFieldPlaceholders(settings.customHtml, fields);
   }
   // Layer Publish options (additive — no style clobber).
@@ -125,6 +126,7 @@ function premiumDto(data: WizardData, ctx: WizardSaveCtx): any {
   settings.createdFromTemplateId = t.id || '';
 
   const schema = { version: '1.0', fields, settings };
+  migratePremiumWizardSchemaToNative(schema);
   const requireAuth = data.accessLevel === 'authenticated' || data.accessLevel === 'restricted';
   const workflowJson = buildWorkflow(data);
   const theme = typeof settings.theme === 'string' ? settings.theme : '';

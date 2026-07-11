@@ -1,6 +1,7 @@
 /* [split 2026-06-27] Extracted from the former 2408-line ops.ts. */
 import { insertIntoCardBody, syncFieldPlaceholders } from '@shared/custom-html-insert';
 import { applyHtmlTextSwaps, collectHtmlTextNodes } from '@shared/html-text-swap';
+import { mockCatalogImageForText, replaceInventedImageUrlsWithCatalog } from '@shared/rich-choice-catalog';
 import {
   type Op, type OpResult,
   getSchema, getBuilder, findField, setByPath, uniqKey, reRenderCanvas,
@@ -9,6 +10,38 @@ import {
   isAllowedImageUrl, getActiveTemplateGuide, guideForbiddenTypes, guideLockedKeys,
   guideImmutableDesign, validateRuleArray,
 } from './ops-shared';
+
+function normalizeCatalogImageUrlsDeep(node: any, contextText: string, depth = 0): void {
+  if (!node || typeof node !== 'object' || depth > 8) return;
+  if (Array.isArray(node)) { node.forEach((v) => normalizeCatalogImageUrlsDeep(v, contextText, depth + 1)); return; }
+  const localContext = [
+    contextText,
+    node.title,
+    node.description,
+    node.label,
+    node.key,
+    node.name,
+    node.placeholder,
+  ].map((v) => String(v || '')).join(' ');
+  Object.keys(node).forEach((k) => {
+    const v = node[k];
+    if (typeof v === 'string') node[k] = replaceInventedImageUrlsWithCatalog(v, localContext);
+    else if (v && typeof v === 'object') normalizeCatalogImageUrlsDeep(v, localContext, depth + 1);
+  });
+}
+
+function normalizeSchemaFieldRails(field: any, contextText = ''): void {
+  if (!field || typeof field !== 'object') return;
+  normalizeCompositeField(field);
+  normalizeOptionFields(field);
+  normalizeDynamicLabelProps(field);
+  normalizeDataRepeaterProps(field);
+  normalizeCatalogImageUrlsDeep(field, contextText);
+  if (String(field.type || '') === 'Row' && Array.isArray(field.columns)) {
+    field.columns.forEach((c: any) => (c.fields || []).forEach((f: any) => normalizeSchemaFieldRails(f, contextText)));
+  }
+  if (Array.isArray(field.fields)) field.fields.forEach((f: any) => normalizeSchemaFieldRails(f, contextText));
+}
 export function opAddField(op: Op): OpResult {
   const schema = getSchema();
   if (!schema) return { op: op.op, ok: false, message: 'No active form schema' };
@@ -62,6 +95,7 @@ export function opAddField(op: Op): OpResult {
   normalizeOptionFields(field);
   normalizeDynamicLabelProps(field);
   normalizeDataRepeaterProps(field);
+  normalizeCatalogImageUrlsDeep(field, [label, key, type].join(' '));
 
   // [v20260530-10] HARD BLOCK: don't add a DynamicLabel with placeholder
   // text and no SQL — the user sees meaningless "Hello World" / "Dynamic
@@ -464,8 +498,11 @@ export function opReplaceFormSchema(op: Op): OpResult {
   if (!next || !Array.isArray(next.fields)) {
     return { op: op.op, ok: false, message: 'replace_form_schema requires { schema: { fields: [...] } }' };
   }
-  // [B172] Normalise any composite alias field-types to the canonical Composite shape.
-  next.fields.forEach(normalizeCompositeField);
+  // [B172/B330] Normalise composite aliases plus AI-on-rails rich choices/images
+  // before the schema reaches the canvas or renderer.
+  const schemaContext = [next.title, next.description, next.settings?.title, next.settings?.description].map((v) => String(v || '')).join(' ');
+  next.fields.forEach((f: any) => normalizeSchemaFieldRails(f, schemaContext));
+  normalizeCatalogImageUrlsDeep(next.settings || {}, schemaContext);
 
   // [v20260530-16] PRESERVE-002 — refuse to wipe a customised premium form.
   // When the existing form has non-empty customHtml / customCss / customScripts
@@ -591,11 +628,9 @@ export function opReplaceFormSchema(op: Op): OpResult {
 }
 
 /**
- * [v20260528-14] Attach a real Unsplash image URL to a field. Uses
- * source.unsplash.com which serves a working JPEG with no API key and is
- * always cacheable + visible. The AI passes a search query ("ocean", "team
- * meeting", etc.); we build the URL deterministically so the AI can't
- * hallucinate a 404.
+ * [B330] Attach a mock-catalog image URL to a field. The legacy op name says
+ * "unsplash" for compatibility, but the URL now comes from the bundled
+ * MegaForm mock asset catalog so AI never invents an external image.
  *
  *   { op:'set_field_image_unsplash', key:'hero', query:'mountain sunrise',
  *     width:1200, height:600, target:'defaultValue'|'widgetProps.imageUrl' }
@@ -605,17 +640,7 @@ export function opSetFieldImageUnsplash(op: Op): OpResult {
   if (!field) return { op: op.op, ok: false, message: 'Field not found: ' + op.key };
   const q = String(op.query || op.search || '').trim();
   if (!q) return { op: op.op, ok: false, message: 'set_field_image_unsplash needs a query' };
-  const w = Number(op.width)  > 0 ? Math.min(2400, Number(op.width))  : 800;
-  const h = Number(op.height) > 0 ? Math.min(2400, Number(op.height)) : 600;
-  // [v20260530-13] source.unsplash.com/random was deprecated in 2024 and
-  // now returns intermittent 404 / redirect chains that frequently render
-  // as a broken-image icon in the form. Picsum.photos with a seed derived
-  // from the user's keywords is a stable, no-API-key alternative that
-  // always returns a real cacheable JPEG. The seed makes the image
-  // deterministic per query so the same prompt always renders the same
-  // photo (useful for preview testing). See KB rule IMG-001.
-  const seed = encodeURIComponent(q.replace(/\s+/g, '-').slice(0, 60));
-  const url = 'https://picsum.photos/seed/' + seed + '/' + w + '/' + h;
+  const url = mockCatalogImageForText(q);
   const target = String(op.target || '').trim() || 'defaultValue';
   if (target.indexOf('widgetProps') === 0) {
     field.widgetProps = field.widgetProps || {};
@@ -628,7 +653,7 @@ export function opSetFieldImageUnsplash(op: Op): OpResult {
     field.defaultValue = url;
   }
   reRenderCanvas();
-  return { op: op.op, ok: true, message: 'Set Unsplash image on ' + field.key + ' (' + q + ')', detail: { url, query: q } };
+  return { op: op.op, ok: true, message: 'Set mock catalog image on ' + field.key + ' (' + q + ')', detail: { url, query: q } };
 }
 
 /**

@@ -142,63 +142,8 @@ namespace MegaForm.Umbraco.Data
             _db.SubmissionValues.AddRange(values);
             _db.SaveChanges();
         }
-    }
 
-    // Stub repositories — implement as needed
-    public class UmbracoDraftRepository : IDraftRepository
-    {
-        public int SaveDraft(SavedDraftInfo draft) => 0;
-        public SavedDraftInfo GetDraft(string resumeToken) => null;
-        public void DeleteDraft(string resumeToken) { }
-        public void CleanExpiredDrafts() { }
-    }
-
-    public class UmbracoFileRepository : IFileRepository
-    {
-        public int InsertFile(MegaForm.Core.Models.FileInfo file) => 0;
-        public List<MegaForm.Core.Models.FileInfo> GetBySubmission(int submissionId) => new();
-        public void DeleteBySubmission(int submissionId) { }
-    }
-
-    public class UmbracoPhase2Repository : IPhase2Repository
-    {
-        private readonly MegaFormDbContext _db;
-        public UmbracoPhase2Repository(MegaFormDbContext db) { _db = db; }
-
-        public List<FormViewInfo> GetFormViews(int formId)
-            => _db.FormViews.Where(v => v.FormId == formId).OrderBy(v => v.SortOrder).ToList();
-
-        public int SaveFormView(FormViewInfo view)
-        {
-            if (view.ViewId > 0) _db.FormViews.Update(view);
-            else _db.FormViews.Add(view);
-            _db.SaveChanges();
-            return view.ViewId;
-        }
-
-        public void DeleteFormView(int viewId)
-        {
-            var v = _db.FormViews.Find(viewId);
-            if (v != null) { _db.FormViews.Remove(v); _db.SaveChanges(); }
-        }
-
-        // Stubs for remaining Phase2 methods
-        public List<TemplateInfo> ListTemplates(int portalId, string category = null) => new();
-        public int SaveTemplate(TemplateInfo template) => 0;
-        public void DeleteTemplate(int portalId, string slug) { }
-        public List<FormPermissionInfo> GetFormPermissions(int formId) => new();
-        public void SaveFormPermissions(int formId, List<FormPermissionInfo> perms) { }
-        public List<WorkflowInfo> GetWorkflows(int formId) => new();
-        public int SaveWorkflow(WorkflowInfo wf) => 0;
-        public void DeleteWorkflow(int workflowId) { }
-        public long CreateWorkflowRun(int workflowId, int submissionId) => 0;
-        public void CompleteWorkflowRun(long runId, string status, string error) { }
-        public void LogWorkflowStep(long runId, string stepId, string stepType, string status, string output, string error) { }
-        public void InsertAuditLog(AuditLogInfo log) { }
-        public long IncrementUniqueId(int formId, string fieldKey, long startValue) => startValue;
-        public long GetUniqueIdCounter(int formId, string fieldKey) => 0;
-        public void InsertWebhookLog(WebhookLogInfo log) { }
-        public int GetRecentSubmissionCount(string ipAddress, int windowMinutes) => 0;
-        public void InsertRateLimitEntry(string ipAddress, int formId) { }
+        public List<SubmissionValueInfo> GetValues(int submissionId)
+            => _db.SubmissionValues.AsNoTracking().Where(v => v.SubmissionId == submissionId).ToList();
     }
 }

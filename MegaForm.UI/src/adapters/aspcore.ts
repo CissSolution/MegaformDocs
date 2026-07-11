@@ -277,6 +277,14 @@ export function createAspCoreAdapter(ctx: InitContext): PlatformAdapter {
     showToast,
 
     getUrl(view: 'builder' | 'submissions' | 'settings', formId?: number) {
+      if (ctx.platform === 'umbraco') {
+        switch (view) {
+          case 'builder':     return formId ? `/umbraco/MegaForm/Builder/${formId}` : '/umbraco/MegaForm/Builder';
+          case 'submissions': return formId ? `/umbraco/MegaForm/Submissions?formId=${formId}` : '/umbraco/MegaForm/Submissions';
+          case 'settings':    return '/umbraco/MegaForm/Admin#settings';
+          default:            return '/umbraco/MegaForm/Admin';
+        }
+      }
       switch (view) {
         case 'builder':     return formId ? `/admin/builder?formId=${formId}` : '/admin/builder';
         case 'submissions': return formId ? `/admin/submissions?formId=${formId}` : '/admin/submissions';

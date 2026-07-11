@@ -1,9 +1,118 @@
 {
-  "$schema": "../umbraco-package-schema.json",
+  "$schema": "../../umbraco-package-schema.json",
   "id": "MegaForm.Umbraco",
   "name": "MegaForm",
   "version": "1.5.0",
   "allowTelemetry": true,
   "allowPublicAccess": true,
-  "extensions": []
+  "extensions": [
+    {
+      "type": "section",
+      "alias": "MegaForm.Section",
+      "name": "MegaForm",
+      "meta": {
+        "label": "MegaForm",
+        "pathname": "megaform"
+      }
+    },
+    {
+      "type": "sectionView",
+      "alias": "MegaForm.SectionView.Dashboard",
+      "name": "MegaForm Dashboard",
+      "element": "/App_Plugins/MegaForm/backoffice/megaform-dashboard-view.js",
+      "meta": {
+        "label": "Dashboard",
+        "icon": "icon-home",
+        "pathname": "dashboard"
+      },
+      "conditions": [
+        {
+          "alias": "Umb.Condition.SectionAlias",
+          "match": "MegaForm.Section"
+        }
+      ]
+    },
+    {
+      "type": "sectionView",
+      "alias": "MegaForm.SectionView.Builder",
+      "name": "MegaForm Builder",
+      "element": "/App_Plugins/MegaForm/backoffice/megaform-builder-view.js",
+      "meta": {
+        "label": "Builder",
+        "icon": "icon-edit",
+        "pathname": "builder"
+      },
+      "conditions": [
+        {
+          "alias": "Umb.Condition.SectionAlias",
+          "match": "MegaForm.Section"
+        }
+      ]
+    },
+    {
+      "type": "sectionView",
+      "alias": "MegaForm.SectionView.Submissions",
+      "name": "MegaForm Submissions",
+      "element": "/App_Plugins/MegaForm/backoffice/megaform-submissions-view.js",
+      "meta": {
+        "label": "Submissions",
+        "icon": "icon-inbox",
+        "pathname": "submissions"
+      },
+      "conditions": [
+        {
+          "alias": "Umb.Condition.SectionAlias",
+          "match": "MegaForm.Section"
+        }
+      ]
+    },
+    {
+      "type": "sectionView",
+      "alias": "MegaForm.SectionView.Languages",
+      "name": "MegaForm Languages",
+      "element": "/App_Plugins/MegaForm/backoffice/megaform-languages-view.js",
+      "meta": {
+        "label": "Languages",
+        "icon": "icon-globe",
+        "pathname": "languages"
+      },
+      "conditions": [
+        {
+          "alias": "Umb.Condition.SectionAlias",
+          "match": "MegaForm.Section"
+        }
+      ]
+    },
+    {
+      "type": "contentApp",
+      "alias": "MegaForm.ContentApp.Submissions",
+      "name": "MegaForm Submissions",
+      "element": "/App_Plugins/MegaForm/backoffice/content-apps/megaform-submissions-app.js",
+      "elementName": "megaform-submissions-app",
+      "meta": {
+        "label": "MegaForm",
+        "icon": "icon-inbox",
+        "weight": 20
+      },
+      "conditions": [
+        {
+          "alias": "Umb.Condition.WorkspaceAlias",
+          "match": "Umb.Workspace.Document"
+        }
+      ]
+    },
+    {
+      "type": "propertyEditorUi",
+      "alias": "MegaForm.PropertyEditorUi.FormPicker",
+      "name": "MegaForm Form Picker UI",
+      "element": "/App_Plugins/MegaForm/backoffice/property-editors/megaform-form-picker.js",
+      "elementName": "megaform-form-picker",
+      "meta": {
+        "label": "MegaForm Form Picker",
+        "icon": "icon-umb-contour",
+        "group": "pickers",
+        "propertyEditorSchemaAlias": "MegaForm.FormPicker"
+      }
+    }
+  ]
 }

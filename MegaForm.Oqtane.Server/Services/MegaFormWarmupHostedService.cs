@@ -111,8 +111,70 @@ namespace MegaForm.Oqtane.Server.Services
                     _logger.LogInformation("[MegaForm Warmup] {Url} failed ({Reason})", path, ex.GetType().Name);
                 }
             }
+
+            // [SsrPrewarm v20260707] Also prerender EVERY site page once. The Blazor prerender of a
+            // form page stores an SsrSnapshot (Index.razor TryBuildSsrFormHtml→StoreSsrSnapshot);
+            // without it, the FIRST soft-nav (enhanced-nav click) to a form page misses the cache and
+            // the interactive _loading render shows the FastPaint skeleton, then the JS renderer
+            // rebuilds the form client-side — the "wireframe → form" first-load jank. Warming here
+            // means even the first click after a restart hits a snapshot and paints the real form.
+            // Page list comes from the site's own /sitemap.xml (public pages only); anonymous,
+            // read-only, fail-soft, capped.
+            await WarmSitePagesAsync(http, baseUrl);
+
             sw.Stop();
             _logger.LogInformation("[MegaForm Warmup] anon form path pre-JITed in {Ms}ms via {Base}", sw.ElapsedMilliseconds, baseUrl);
+        }
+
+        // [SsrPrewarm v20260707] Fetch the site's sitemap and GET each listed page once so its
+        // Blazor prerender runs (and, for MegaForm pages, an SsrSnapshot is stored). Only the
+        // PATH of each <loc> is used — the sitemap advertises the public alias host, which may
+        // not be loopback-reachable; requests go to the resolved loopback base instead.
+        private const int MaxPrewarmPages = 40;
+
+        private async Task WarmSitePagesAsync(HttpClient http, string baseUrl)
+        {
+            try
+            {
+                var root = baseUrl.TrimEnd('/');
+                string xml;
+                using (var resp = await http.GetAsync(root + "/sitemap.xml", HttpCompletionOption.ResponseContentRead))
+                {
+                    if (!resp.IsSuccessStatusCode)
+                    {
+                        _logger.LogInformation("[MegaForm Warmup] sitemap.xml -> {Status}; page prewarm skipped", (int)resp.StatusCode);
+                        return;
+                    }
+                    xml = await resp.Content.ReadAsStringAsync();
+                }
+
+                var paths = System.Text.RegularExpressions.Regex.Matches(xml, "<loc>\\s*(.*?)\\s*</loc>")
+                    .Select(m => m.Groups[1].Value)
+                    .Select(loc => Uri.TryCreate(loc, UriKind.Absolute, out var u) ? u.PathAndQuery : loc)
+                    .Where(p => p.StartsWith("/", StringComparison.Ordinal) && p != "/")
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .Take(MaxPrewarmPages)
+                    .ToList();
+
+                var ok = 0;
+                foreach (var path in paths)
+                {
+                    try
+                    {
+                        using var resp = await http.GetAsync(root + path, HttpCompletionOption.ResponseContentRead);
+                        if (resp.IsSuccessStatusCode) ok++;
+                    }
+                    catch
+                    {
+                        // fail-soft per page — a broken page must not stop the sweep
+                    }
+                }
+                _logger.LogInformation("[MegaForm Warmup] prewarmed {Ok}/{Total} site pages (SSR snapshots)", ok, paths.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogInformation("[MegaForm Warmup] page prewarm skipped ({Reason})", ex.GetType().Name);
+            }
         }
 
         /// <summary>

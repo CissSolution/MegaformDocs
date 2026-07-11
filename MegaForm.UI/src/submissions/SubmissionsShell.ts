@@ -20,6 +20,11 @@ import {
   type Submission, type SubmissionFormOption,
 } from './state';
 import { renderFormsOverview } from './forms-overview';
+import {
+  advState, buildScopeSelector, buildAddFilterButton, buildPresetsButton, buildChipsRow,
+  applyAdvancedFilters, advActiveCount, advServerStatusLabel, advHasClientRefinement,
+  type AdvFilterField, type AdvFieldType, type AdvDeps,
+} from './submission-advanced-filter';
 import { showSubmissionModal } from './SubmissionModal';
 import { exportClientCsv } from './export';
 import { openLiveDbRowsModal } from './submission-livedb-modal';
@@ -96,6 +101,20 @@ const I: Record<string, string> = {
   close: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>`,
   maximize: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>`,
   minimize: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>`,
+  // [AdvFilter 2026-07-10] icons for the advanced filter + presets (mock parity)
+  chevronRight: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>`,
+  chevronDown: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>`,
+  x: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`,
+  bookmark: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>`,
+  bookmarkCheck: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/><path d="m9 10 2 2 4-4"/></svg>`,
+  phone: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`,
+  tag: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg>`,
+  hash: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" x2="20" y1="9" y2="9"/><line x1="4" x2="20" y1="15" y2="15"/><line x1="10" x2="8" y1="3" y2="21"/><line x1="16" x2="14" y1="3" y2="21"/></svg>`,
+  mapPin: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>`,
+  monitor: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>`,
+  globe: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`,
+  alignLeft: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" x2="3" y1="6" y2="6"/><line x1="15" x2="3" y1="12" y2="12"/><line x1="17" x2="3" y1="18" y2="18"/></svg>`,
+  text: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 6.1H3"/><path d="M21 12.1H3"/><path d="M15.1 18H3"/></svg>`,
 };
 
 function ic(k: string, sz = 16): string {
@@ -599,14 +618,17 @@ function render(): void {
 
   // Filters row
   const filtersRow = div('mf-subs-filters');
-  const searchWrap = div('mf-subs-search-wrap');
+  // [AdvFilter 2026-07-10] Search box holds the field-scope selector inside it on
+  // the right (border-left), matching the mock's SubmissionFilterBar search box.
+  const searchWrap = div('mf-subs-search-wrap mf-advf-searchbox');
   const searchIcon = span('mf-subs-search-icon'); searchIcon.innerHTML = ic('search', 14);
   const searchInp = document.createElement('input') as HTMLInputElement;
   searchInp.type = 'text'; searchInp.className = 'mf-input mf-subs-search'; searchInp.placeholder = T('subs.search_ph', 'Search submissions…'); searchInp.value = state.filters.search;
   searchInp.style.paddingLeft = '2.5rem';
   searchInp.style.textIndent = '0';
   searchIcon.style.left = '0.75rem';
-  mk(searchWrap, searchIcon, searchInp);
+  const scopeSel = buildScopeSelector(advDeps(), buildAdvFilterFields(state));
+  mk(searchWrap, searchIcon, searchInp, scopeSel);
 
   const selWrap = div('mf-subs-sel-group');
   const statusSel = buildStatusSelect(state.filters.status) as HTMLSelectElement;
@@ -621,6 +643,8 @@ function render(): void {
   mk(cardHdTop, cardTitle, filtersRow);
   cardHd.appendChild(cardHdTop);
   cardHd.appendChild(buildManageToolbar(state));
+  const advChips = buildAdvChipsRow(state);
+  if (advChips) cardHd.appendChild(advChips);
   if (_manageOpen) cardHd.appendChild(buildManagePanel(state));
   card.appendChild(cardHd);
 
@@ -654,6 +678,131 @@ function render(): void {
   });
 }
 
+// ── Advanced filter (mock parity: Add filter + Presets + scope + chips) ──────
+// The field SET is adapted from MegaForm's REAL columns; the UI/logic mirror the
+// redesign mock's submission-filter-bar. Filtering is client-side over the loaded
+// page (same model as applyDateRange). Server-side status/form/search stay intact.
+const ADV_STATUS_OPTIONS = ['New', 'Processed', 'Starred', 'Archived', 'Spam'];
+const ADV_DEVICE_OPTIONS = ['Desktop', 'Mobile', 'Tablet'];
+// Response-field keys that look like a capture "source" → surface a Source filter.
+const SOURCE_KEY_RE = /^(utm_source|source|referrer|referer|channel)$/i;
+
+function advFieldType(colType?: string): AdvFieldType {
+  const t = String(colType || '').toLowerCase();
+  if (t.includes('email')) return 'email';
+  if (t.includes('phone') || t.includes('tel')) return 'phone';
+  if (t.includes('date') || t.includes('time')) return 'date';
+  if (t === 'number' || t.includes('numeric')) return 'number';
+  if (t.includes('textarea') || t.includes('paragraph')) return 'textarea';
+  if (t === 'select' || t === 'dropdown' || t === 'radio' || t.includes('choice')) return 'select';
+  return 'text';
+}
+
+function buildAdvFilterFields(state: ReturnType<typeof getSubsState>): AdvFilterField[] {
+  const out: AdvFilterField[] = [];
+  // Response fields — from the live column library (real form field keys/labels).
+  getResponseFieldDefs(state).forEach((c) => {
+    let type: AdvFieldType = 'text';
+    let options: string[] | undefined;
+    const sch = state.config.schema && state.config.schema.fields;
+    if (Array.isArray(sch)) {
+      const raw = c.key.replace(/^f:/, '');
+      const f = flattenFields(sch).find((x: any) => String(x.key || x.Key) === raw) as any;
+      type = advFieldType(f && (f.type || f.Type));
+      // Extract real choice options so select fields show value pills (mock parity).
+      const rawOpts = f && (f.options || f.Options || f.choices || f.Choices);
+      if (Array.isArray(rawOpts) && rawOpts.length) {
+        options = rawOpts
+          .map((o: any) => (o == null ? '' : typeof o === 'object' ? String(o.label ?? o.Label ?? o.value ?? o.Value ?? '') : String(o)))
+          .filter((s: string) => s !== '');
+        if (options.length && type !== 'date' && type !== 'number') type = 'select';
+      }
+    }
+    const isSource = SOURCE_KEY_RE.test(c.key.replace(/^f:/, ''));
+    out.push({ key: c.key, label: c.label, type: isSource ? 'select' : type, group: 'response', options });
+  });
+  // Metadata — real, always-present submission attributes.
+  out.push({ key: 'name', label: T('subs.col_submitted_by', 'Submitted By'), type: 'text', group: 'metadata' });
+  out.push({ key: 'date', label: T('subs.col_date', 'Date'), type: 'date', group: 'metadata' });
+  out.push({ key: 'status', label: T('subs.col_status', 'Status'), type: 'select', group: 'metadata', options: ADV_STATUS_OPTIONS });
+  out.push({ key: 'device', label: T('subs.col_device', 'Device'), type: 'device', group: 'metadata', options: ADV_DEVICE_OPTIONS });
+  if (state.config.formId <= 0) {
+    const forms = (state.availableForms || []).map((f) => f.title).filter(Boolean);
+    out.push({ key: 'form', label: T('subs.col_form', 'Form'), type: 'select', group: 'metadata', options: forms.length ? forms : undefined });
+  }
+  // System.
+  out.push({ key: 'id', label: T('subs.col_id', 'ID'), type: 'number', group: 'system' });
+  return out;
+}
+
+/** Derive a coarse device class from the user-agent (real signal). */
+function deviceFromUA(ua: string): string {
+  const s = String(ua || '').toLowerCase();
+  if (!s) return '';
+  if (/ipad|tablet|playbook|silk|(android(?!.*mobile))/.test(s)) return 'Tablet';
+  if (/mobi|iphone|ipod|android|blackberry|windows phone/.test(s)) return 'Mobile';
+  return 'Desktop';
+}
+
+/** Resolve a submission's value for any advanced-filter field key. */
+function advGetValue(sub: Submission, key: string, state: ReturnType<typeof getSubsState>): string {
+  if (key.startsWith('f:')) {
+    const v = rowData(sub)[key.slice(2)];
+    if (v == null) return '';
+    return Array.isArray(v) ? v.join(', ') : String(v);
+  }
+  switch (key) {
+    case 'id': return String((sub as any).id ?? (sub as any).submissionId ?? '');
+    case 'name': return String((sub as any).submittedBy ?? (sub as any).name ?? '');
+    case 'date': return String(sub.submittedOnUtc ?? '');
+    case 'status': return statusLabel(sub.status);
+    case 'device': return deviceFromUA(String((sub as any).userAgent ?? ''));
+    case 'form': return String((sub as any).formTitle ?? (sub as any).formName ?? '');
+    default: return '';
+  }
+}
+
+// UI status label (New/Processed/…) → server status value (Submitted/Read/…).
+function uiStatusToServer(label: string): string {
+  switch (String(label || '').toLowerCase()) {
+    case 'new': return 'Submitted';
+    case 'processed': return 'Read';
+    case 'starred': return 'Starred';
+    case 'archived': return 'Archived';
+    default: return ''; // 'Spam' etc. → no server status (spam is a separate flag)
+  }
+}
+
+// [AdvFilter] When advanced filters change: a "Status is X" filter is pushed to
+// the SERVER (filters ALL 500k, correct pagination); everything else refines the
+// loaded page client-side. Only re-fetch when the server status actually changes.
+function onAdvancedChange(): void {
+  const label = advServerStatusLabel();
+  const nextStatus = label ? uiStatusToServer(label) : '';
+  if (nextStatus !== getSubsState().filters.status) {
+    setFilters({ status: nextStatus });
+    loadSubmissions(); // async → re-renders when data returns
+    return;
+  }
+  render();
+}
+
+let _advDeps: AdvDeps | null = null;
+function advDeps(): AdvDeps {
+  if (!_advDeps) {
+    _advDeps = {
+      ic: (k: string, sz?: number) => ic(k, sz ?? 14),
+      T,
+      onChange: () => onAdvancedChange(),
+      getDateRange: () => _dateRange,
+      setDateRange: (v: string) => { _dateRange = v; },
+      // Same bucket scheme as the column store — presets never leak across forms.
+      getFormKey: () => { const id = getSubsState().config.formId; return id > 0 ? 'f' + id : 'all'; },
+    };
+  }
+  return _advDeps;
+}
+
 // ── Date-range + Manage Columns toolbar (mock parity) ─────────
 let _manageTab: ColGroup = 'response';
 
@@ -680,10 +829,33 @@ function buildManageToolbar(state: ReturnType<typeof getSubsState>): HTMLElement
   );
   manageBtn.setAttribute('aria-expanded', String(_manageOpen));
 
+  // [AdvFilter 2026-07-10] Add filter + Presets (mock parity), client-side over
+  // the loaded page. Placed next to the date-range like the redesign mock's row.
+  const advFields = buildAdvFilterFields(state);
+  const addFilterBtn = buildAddFilterButton(advDeps(), advFields);
+  const presetsBtn = buildPresetsButton(advDeps(), state.filters.search);
+
   const count = span('mf-subs-cols-count', T('subs.columns_shown', '{n} columns shown', { n: _columnDefs.length }));
 
-  mk(row, dateWrap, manageBtn, count);
+  // [AdvFilter] Honest result count: client-side refinements (field filters, scoped
+  // search, date range) narrow the LOADED page — show "N of M on this page" so the
+  // filter is visibly applied even though pagination shows the server total.
+  mk(row, dateWrap, addFilterBtn, presetsBtn, manageBtn, count);
+  const loaded = (state.submissions || []).length;
+  const shown = applyAdvancedFilters(applyDateRange(state.submissions), state.filters.search, advFields, (r, k) => advGetValue(r, k, state)).length;
+  const clientActive = advHasClientRefinement(state.filters.search) || _dateRange !== 'all';
+  if (clientActive && loaded > 0) {
+    const fc = span('mf-subs-filtered-count',
+      T('subs.filtered_count', '{n} of {m} on this page', { n: String(shown), m: String(loaded) }));
+    fc.title = T('subs.filtered_count_hint', 'Field filters, scoped search and date range refine the loaded page. Status and all-fields search filter every submission.');
+    mk(row, fc);
+  }
   return row;
+}
+
+// [AdvFilter 2026-07-10] Active filter chips row (mock parity Row 2).
+function buildAdvChipsRow(state: ReturnType<typeof getSubsState>): HTMLElement | null {
+  return buildChipsRow(advDeps(), buildAdvFilterFields(state));
 }
 
 function buildManagePanel(state: ReturnType<typeof getSubsState>): HTMLElement {
@@ -809,7 +981,13 @@ function applyDateRange(subs: Submission[]): Submission[] {
 
 function buildTable(state: ReturnType<typeof getSubsState>): HTMLElement {
   const isAllForms = state.config.formId <= 0;
-  const subs = applyDateRange(state.submissions);   // [mock] client-side date-range filter
+  // [mock] client-side date-range filter, then [AdvFilter] scoped-search + custom filters.
+  const subs = applyAdvancedFilters(
+    applyDateRange(state.submissions),
+    state.filters.search,
+    buildAdvFilterFields(state),
+    (row, key) => advGetValue(row, key, state),
+  );
   const sorted = [...subs].sort(compareSubmissions);
 
   const table = document.createElement('table'); table.className = 'mf-t mf-subs-t';

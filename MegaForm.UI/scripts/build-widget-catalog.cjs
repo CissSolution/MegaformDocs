@@ -26,7 +26,12 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 const PLUGIN_DIR = path.join(ROOT, 'src', 'widgets', 'plugins');
 const FIELD_PLUGINS = path.join(ROOT, 'src', 'builder', 'field-plugins', '_index.ts');
+const HELPERS = path.join(ROOT, 'src', 'renderer', 'helpers.ts');
 const OUT = path.join(ROOT, 'src', 'ai-form-assistant', 'widget-catalog.gen.ts');
+
+// Scalar presets are ALSO base field types (Text/Textarea/Email/Number/Url) already in
+// the catalog via field-plugins — don't duplicate them as Composite* aliases.
+const SCALAR_COMPOSITE_PRESETS = new Set(['text', 'textarea', 'email', 'number', 'url']);
 
 function fileText(p) {
   try { return fs.readFileSync(p, 'utf8'); } catch { return ''; }
@@ -170,6 +175,39 @@ function extractFieldPlugins(idxSrc) {
   return out;
 }
 
+// Composite preset palette tiles live in COMPOSITE_PRESET_META (renderer/helpers.ts), not as
+// individual FieldPlugins.register calls, so extractFieldPlugins misses them. Emit one catalog
+// entry per alias (CompositePhone/Name/Address/… + the Layout field-groups DateRange/Money/…)
+// so the AI can discover every preset. Skip the scalar presets (Text/Textarea/Email/Number/Url)
+// — those are already in the catalog as base field types. Each entry documents the canonical
+// emission shape {type:'Composite', widgetProps:{preset:'<key>'}} so the AI stays on rails.
+function extractCompositeAliases(helpersSrc) {
+  const out = [];
+  // Anchor on the DECLARATION (the name also appears in earlier comments).
+  let start = helpersSrc.indexOf('export const COMPOSITE_PRESET_META');
+  if (start < 0) start = helpersSrc.search(/COMPOSITE_PRESET_META\s*(?::[^=]*)?=\s*\{/);
+  if (start < 0) return out;
+  const braceIdx = helpersSrc.indexOf('{', start);
+  if (braceIdx < 0) return out;
+  const end = matchBrace(helpersSrc, braceIdx);
+  const block = helpersSrc.substring(braceIdx + 1, end - 1);
+  // META rows are flat single-line objects: `phone: { label:'…', alias:'CompositePhone', … }`.
+  const rowRe = /(^|\n)\s*([a-z_]+)\s*:\s*\{([^}]*)\}/g;
+  let m;
+  while ((m = rowRe.exec(block))) {
+    const presetKey = m[2];
+    if (SCALAR_COMPOSITE_PRESETS.has(presetKey)) continue;
+    const rowBody = m[3];
+    const alias = (rowBody.match(/alias\s*:\s*['"]([^'"]+)['"]/) || [, ''])[1];
+    if (!alias) continue;
+    const label = (rowBody.match(/label\s*:\s*['"]([^'"]+)['"]/) || [, ''])[1] || alias;
+    const icon = (rowBody.match(/icon\s*:\s*['"]([^'"]+)['"]/) || [, ''])[1];
+    const category = (rowBody.match(/category\s*:\s*['"]([^'"]+)['"]/) || [, ''])[1] || 'basic';
+    out.push({ presetKey, alias, label, icon, category });
+  }
+  return out;
+}
+
 function buildCatalog() {
   const entries = [];
   const seen = new Map(); // type → entry index
@@ -190,6 +228,22 @@ function buildCatalog() {
     };
     seen.set(ft.type, entries.length);
     entries.push(entry);
+  });
+
+  // 1b. Composite preset aliases (palette tiles → {type:'Composite', widgetProps.preset}).
+  extractCompositeAliases(fileText(HELPERS)).forEach((a) => {
+    if (seen.has(a.alias)) return;
+    seen.set(a.alias, entries.length);
+    entries.push({
+      type: a.alias,
+      label: a.label,
+      icon: a.icon || '',
+      category: a.category || 'basic',
+      kind: 'field',
+      properties: [],
+      notes: "Composite preset tile — emit as {type:'Composite', widgetProps:{preset:'" + a.presetKey +
+        "'}}. The alias '" + a.alias + "' is rewritten to Composite+preset on save.",
+    });
   });
 
   // 2. Widget plugins (advanced widgets with widgetProps)

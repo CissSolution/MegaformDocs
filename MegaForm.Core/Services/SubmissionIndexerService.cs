@@ -193,7 +193,7 @@ namespace MegaForm.Core.Services
             date = null;
 
             if (raw == null) return;
-            string s = Convert.ToString(raw, CultureInfo.InvariantCulture);
+            string s = ProjectRawToText(raw);
             if (string.IsNullOrWhiteSpace(s)) return;
 
             string t = (fieldType ?? "").Trim();
@@ -228,6 +228,34 @@ namespace MegaForm.Core.Services
             // large values so a 5 MB textarea doesn't dominate the index.
             if (s.Length > 8000) s = s.Substring(0, 8000);
             text = s;
+        }
+
+        // [ProjectValueCollectionFix v20260706] The reporting flat index (MF_SubmissionValues.ValueText,
+        // read by the Reports/SubmissionData grid + SQL search) previously did Convert.ToString(raw)
+        // only, so a multi-value field — which reaches here as a Newtonsoft JArray (backfill) or a CLR
+        // List<object> (Oqtane STJ submit, MegaFormController.NormalizeJsonValue) — produced the .NET
+        // type-name "System.Collections.Generic.List`1[System.Object]". Flatten collections to a
+        // comma-joined VALUE string (option labels aren't available at this projection layer; the
+        // Details envelope's DisplayValue already carries labels).
+        private static string ProjectRawToText(object raw)
+        {
+            if (raw == null) return string.Empty;
+            if (raw is string rs) return rs;
+            if (raw is Newtonsoft.Json.Linq.JArray ja)
+            {
+                var parts = new System.Collections.Generic.List<string>();
+                foreach (var v in ja) parts.Add(v == null ? string.Empty : v.ToString());
+                return string.Join(", ", parts);
+            }
+            if (raw is Newtonsoft.Json.Linq.JValue || raw is Newtonsoft.Json.Linq.JObject)
+                return raw.ToString();
+            if (raw is System.Collections.IEnumerable en)
+            {
+                var parts = new System.Collections.Generic.List<string>();
+                foreach (var item in en) parts.Add(Convert.ToString(item, CultureInfo.InvariantCulture));
+                return string.Join(", ", parts);
+            }
+            return Convert.ToString(raw, CultureInfo.InvariantCulture);
         }
 
         private static void AddParam(DbCommand cmd, string name, object value)

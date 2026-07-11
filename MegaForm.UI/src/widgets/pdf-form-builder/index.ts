@@ -17,11 +17,28 @@
 //   - In runtime/RederHost (end-user filling) → mode='fill'
 //   - Toolbar lets admin/user toggle between Edit/Preview/Fill at runtime
 
-import './styles.css';
+// [PluginBuildEntry v20260708] styles.css is imported ?inline and injected
+// here explicitly. The deployed plugin has ALWAYS shipped as ONE self-contained
+// js/plugins/megaform-widget-pdf-form.js with its CSS baked in (the render
+// page loads no pdf-form css <link>), but the repo had no build entry for it —
+// the old bundle came from a one-off config. The explicit inject keeps the
+// single-file contract under the standard `npm run build:widget-pdf-form`.
+import cssText from './styles.css?inline';
 import { PdfFormBuilderRenderer } from './renderer/PdfFormBuilderRenderer';
 import './builder/PdfFormBuilderConfig';
 
-const BADGE = 'PdfForm v20260602-B40';
+(function injectStylesOnce() {
+  try {
+    if (typeof document === 'undefined') return;
+    if (document.getElementById('mfw-pdf-form-styles')) return;
+    const s = document.createElement('style');
+    s.id = 'mfw-pdf-form-styles';
+    s.textContent = cssText as unknown as string;
+    (document.head || document.documentElement).appendChild(s);
+  } catch { /* non-DOM host */ }
+})();
+
+const BADGE = 'PdfForm v20260708-B41';
 const ADMIN_UPLOAD_PATH = 'PdfForm/UploadTemplate'; // admin upload (template)
 const SUBMIT_UPLOAD_PATH = 'Upload/File';           // end-user upload (filled PDF)
 
@@ -466,9 +483,9 @@ const SUBMIT_UPLOAD_PATH = 'Upload/File';           // end-user upload (filled P
       const next = Math.min(3.0, +(z + 0.1).toFixed(2));
       renderer.setZoom(next).then(syncZoomLabel);
     });
-    zoomFit.addEventListener('click', function (ev) {
-      ev.preventDefault();
-      // PdfFormBuilderRenderer.fitToWidth is private — fallback: compute via setZoom
+    // PdfFormBuilderRenderer.fitToWidth is private — fallback: compute via setZoom.
+    // Shared by the Fit button and the fullscreen enter/exit handler below.
+    function fitToWidth(): void {
       const pages = (renderer as any).pdfRenderer && (renderer as any).pdfRenderer.pageInfos;
       const viewportEl = (renderer as any).viewportEl as HTMLElement | undefined;
       if (!pages || !pages.length || !viewportEl) return;
@@ -476,6 +493,10 @@ const SUBMIT_UPLOAD_PATH = 'Upload/File';           // end-user upload (filled P
       const z = targetW / pages[0].width;
       const next = Math.max(0.4, Math.min(3.0, +z.toFixed(2)));
       renderer.setZoom(next).then(syncZoomLabel);
+    }
+    zoomFit.addEventListener('click', function (ev) {
+      ev.preventDefault();
+      fitToWidth();
     });
     dlBtn.addEventListener('click', function (ev) {
       ev.preventDefault();
@@ -504,12 +525,28 @@ const SUBMIT_UPLOAD_PATH = 'Upload/File';           // end-user upload (filled P
           }
         }
       });
+      // [PdfFullscreen v20260708-2] Entering fullscreen keeps the old zoom, so
+      // the page rendered small on a huge black canvas ("chưa full được").
+      // Auto fit-to-width once the fullscreen layout has settled, and restore
+      // the previous zoom on exit. Works for the button, F11-style API calls
+      // and Esc alike because it hooks fullscreenchange, not the button click.
+      let preFsZoom: number | null = null;
       document.addEventListener('fullscreenchange', function () {
         const docAny = document as any;
-        const inFs = docAny.fullscreenElement || docAny.webkitFullscreenElement || docAny.msFullscreenElement;
-        fsBtn.title = inFs ? 'Exit full screen' : 'Toggle full screen';
+        const fsEl = docAny.fullscreenElement || docAny.webkitFullscreenElement || docAny.msFullscreenElement;
+        fsBtn.title = fsEl ? 'Exit full screen' : 'Toggle full screen';
+        if (fsEl === wrap) {
+          preFsZoom = (renderer as any).zoom || 1;
+          // Two rAFs ≈ after the browser applied the :fullscreen styles and
+          // the viewport got its final size — clientWidth is then correct.
+          requestAnimationFrame(() => requestAnimationFrame(() => fitToWidth()));
+        } else if (!fsEl && preFsZoom != null) {
+          const restore = preFsZoom;
+          preFsZoom = null;
+          renderer.setZoom(restore).then(syncZoomLabel);
+        }
       });
-      (window as any).__MF_PDF_RUNTIME_FS_BADGE__ = 'PdfRuntimeFullscreen v20260507-19';
+      (window as any).__MF_PDF_RUNTIME_FS_BADGE__ = 'PdfFullscreen v20260708-2';
     }
     syncZoomLabel();
 
@@ -947,6 +984,7 @@ const SUBMIT_UPLOAD_PATH = 'Upload/File';           // end-user upload (filled P
       + '<div class="mfpdf-style-emptyhint" style="background:#fef3c7;border:1px solid #fde68a;border-radius:6px;padding:10px;font-size:11px;color:#854d0e;line-height:1.45">'
       + '  <strong style="display:block;margin-bottom:4px">Tip</strong>'
       + '  Pick a tool from the palette above the PDF, then click on the page to drop. Click any field to apply the swatches above. Drag a PDF file onto the canvas to replace.'
+      + '  <b>Ctrl+C</b> copies the selected field, <b>Ctrl+V</b> pastes it at the mouse position (repeatable), <b>Ctrl+D</b> duplicates in place.'
       + '</div>';
     (window as any).__MF_PDF_LEFT_STYLE_BADGE__ = 'LeftStylePane v20260507-14';
     bodyWrap.appendChild(leftPane);
@@ -1305,6 +1343,11 @@ const SUBMIT_UPLOAD_PATH = 'Upload/File';           // end-user upload (filled P
 
     html += '<hr style="border:0;border-top:1px solid #e2e8f0;margin:14px 0">'
       + '<div style="font-size:10px;color:#94a3b8;margin-bottom:8px">Position: x=' + Math.round(f.x || 0) + ', y=' + Math.round(f.y || 0) + ', w=' + Math.round(f.width || 0) + ', h=' + Math.round(f.height || 0) + '</div>'
+      // [FieldClipboard v20260708-1] Duplicate = clone with the SAME size/style
+      // (+16px offset). Keyboard path: Ctrl+C on a selected field, then Ctrl+V
+      // pastes at the mouse position — repeatable for many placements.
+      + '<button type="button" data-mfpdf-prop="duplicate" style="width:100%;background:#0ea5e9;color:#fff;border:0;padding:8px 12px;border-radius:4px;cursor:pointer;font-size:13px;font-weight:600;margin-bottom:8px">⧉ Duplicate field <span style="opacity:.75;font-weight:500">(Ctrl+D)</span></button>'
+      + '<div style="font-size:10px;color:#94a3b8;margin:0 0 8px;line-height:1.5">Tip: <b>Ctrl+C</b> copies this field, <b>Ctrl+V</b> pastes a clone at the mouse position — paste as many times as you need.</div>'
       + '<button type="button" data-mfpdf-prop="delete" style="width:100%;background:#dc2626;color:#fff;border:0;padding:8px 12px;border-radius:4px;cursor:pointer;font-size:13px;font-weight:600">🗑 Delete this field</button>';
 
     return html;
@@ -1333,7 +1376,7 @@ const SUBMIT_UPLOAD_PATH = 'Upload/File';           // end-user upload (filled P
             return { label: trimmed.substring(0, i).trim(), value: trimmed.substring(i + 1).trim() };
           }).filter(x => !!x);
           patch.options = opts;
-        } else if (prop === 'delete') {
+        } else if (prop === 'delete' || prop === 'duplicate') {
           // Handled separately as click below
           return;
         } else {
@@ -1343,6 +1386,16 @@ const SUBMIT_UPLOAD_PATH = 'Upload/File';           // end-user upload (filled P
       };
       el.addEventListener('input', handler);
       el.addEventListener('change', handler);
+    });
+
+    // [FieldClipboard v20260708-1] Duplicate → renderer clones the field
+    // (same size/style, +16px offset) and selects it; the pfb:select event
+    // refreshes this sidebar onto the new clone automatically.
+    const dupBtn = sidebar.querySelector('[data-mfpdf-prop="duplicate"]') as HTMLButtonElement | null;
+    if (dupBtn) dupBtn.addEventListener('click', () => {
+      if (typeof (renderer as any).duplicateField === 'function') {
+        (renderer as any).duplicateField(id);
+      }
     });
 
     const delBtn = sidebar.querySelector('[data-mfpdf-prop="delete"]') as HTMLButtonElement | null;

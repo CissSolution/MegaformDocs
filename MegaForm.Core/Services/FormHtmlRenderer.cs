@@ -167,6 +167,73 @@ namespace MegaForm.Core.Services
             return GetPageCount(schema) > 1;
         }
 
+        // [PremiumNativeSSR v20260705] True for a premium-native custom-HTML shell — the native
+        // generator stamps mfp-native-generated / data-mf-native-page markers into the authored HTML
+        // (durable, unlike the runtime settings.premiumNativePageBreak flag which persist may strip).
+        // The client applies mf-premium-native-mode on hydrate; the SSR wrapper must match so first
+        // paint shows the active step and the CSS (.mf-premium-native-mode .mf-form-actions{display:none})
+        // hides the generic action bar (the stray "submit" that otherwise paints below the shell card).
+        public static bool IsPremiumNativeCustomShell(FormSchema schema)
+        {
+            var html = schema?.Settings?.CustomHtml;
+            if (string.IsNullOrWhiteSpace(html)) return false;
+            return html.IndexOf("mfp-native-generated", StringComparison.OrdinalIgnoreCase) >= 0
+                || html.IndexOf("data-mf-native-page", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        // Add is-active to the FIRST premium-native step (data-mf-native-page) so SSR shows step 1.
+        // The shell's authored CSS is `.mfp-page{display:none!important}` + `.mfp-page.is-active{display:block}`,
+        // so without this every step is hidden at first paint (empty body) until the client activates
+        // step 0 post-hydrate. Idempotent: skips if the first native page already carries is-active (some
+        // templates, e.g. americana-journey, bake it). Inert when the HTML has no data-mf-native-page.
+        internal static string EnsureFirstNativePageActive(string html)
+        {
+            if (string.IsNullOrEmpty(html)) return html;
+            int marker = html.IndexOf("data-mf-native-page", StringComparison.OrdinalIgnoreCase);
+            if (marker < 0) return html;
+            int tagStart = html.LastIndexOf('<', marker);
+            int tagEnd = html.IndexOf('>', marker);
+            if (tagStart < 0 || tagEnd < 0 || tagEnd < tagStart) return html;
+            var tag = html.Substring(tagStart, tagEnd - tagStart + 1);
+            var classMatch = Regex.Match(tag, "class\\s*=\\s*(['\"])(.*?)\\1", RegexOptions.IgnoreCase);
+            if (!classMatch.Success) return html; // no class attribute on the page tag → leave untouched
+            var classVal = classMatch.Groups[2].Value;
+            if (Regex.IsMatch(classVal, "\\bis-active\\b", RegexOptions.IgnoreCase)) return html; // already active
+            var quote = classMatch.Groups[1].Value;
+            var newTag = tag.Substring(0, classMatch.Index)
+                + "class=" + quote + (classVal + " is-active").Trim() + quote
+                + tag.Substring(classMatch.Index + classMatch.Length);
+            return html.Substring(0, tagStart) + newTag + html.Substring(tagEnd + 1);
+        }
+
+        // [PremiumNativeSSR v20260707] Bake the step-0 BUTTON state into the SSR markup for
+        // premium-native MULTI-step shells: Back and Submit are hidden on the first step, but that
+        // was applied only client-side (setButtonState) → first paint flashed all three buttons
+        // until the renderer booted. setButtonState re-syncs hidden+display BOTH ways on every step
+        // change, so baking the initial state cannot strand a button. Single-step shells (one page)
+        // keep their Submit visible. Idempotent: tags already carrying `hidden` are left untouched.
+        internal static string BakeNativeButtonInitialState(string html)
+        {
+            if (string.IsNullOrEmpty(html)) return html;
+            var pageCount = Regex.Matches(html, "data-mf-native-page", RegexOptions.IgnoreCase).Count;
+            if (pageCount < 2) return html;
+            return Regex.Replace(html, "<([a-zA-Z][a-zA-Z0-9]*)((?:[^>'\"]|'[^']*'|\"[^\"]*\")*?data-mf-native-(?:back|submit)(?:[^>'\"]|'[^']*'|\"[^\"]*\")*?)>", m =>
+            {
+                var tag = m.Value;
+                if (Regex.IsMatch(m.Groups[2].Value, "(^|\\s)hidden(\\s|=|$)", RegexOptions.IgnoreCase)) return tag;
+                var styleMatch = Regex.Match(tag, "style\\s*=\\s*(['\"])(.*?)\\1", RegexOptions.IgnoreCase);
+                if (styleMatch.Success)
+                {
+                    var quote = styleMatch.Groups[1].Value;
+                    tag = tag.Substring(0, styleMatch.Index)
+                        + "style=" + quote + "display:none;" + styleMatch.Groups[2].Value + quote
+                        + tag.Substring(styleMatch.Index + styleMatch.Length);
+                    return tag.Insert(1 + m.Groups[1].Value.Length, " hidden");
+                }
+                return tag.Insert(1 + m.Groups[1].Value.Length, " hidden style=\"display:none\"");
+            });
+        }
+
         public static string RenderStepIndicator(FormSchema schema, string locale = null)
         {
             if (!IsStandardMultiStep(schema)) return string.Empty;
@@ -257,7 +324,9 @@ namespace MegaForm.Core.Services
                       .Append("\" value=\"").Append(Esc(f.DefaultValue ?? string.Empty)).Append("\">");
                 }
             }
-            return sb.ToString();
+            // [PremiumNativeSSR v20260705] Reveal the first premium-native step at SSR (see helper).
+            // [PremiumNativeSSR v20260707] + bake step-0 Back/Submit hidden (no all-buttons flash).
+            return BakeNativeButtonInitialState(EnsureFirstNativePageActive(sb.ToString()));
         }
 
         // ────────────────────────────────────────────────────────────────
@@ -506,6 +575,10 @@ namespace MegaForm.Core.Services
                     return Input("password", id, name, val, ph, ro + req);
                 case "Email":
                     return Input("email", id, name, val, ph, ro + req);
+                case "Time":
+                    // [TimeInput v20260707] ~25 sample templates use type:"Time"; without this
+                    // case it fell through to the widget-plugin placeholder branch.
+                    return Input("time", id, name, val, ph, ro + req);
                 case "Number":
                 {
                     var v = field.Validation;
@@ -566,9 +639,16 @@ namespace MegaForm.Core.Services
                     var fs = field.FileSettings ?? new FileFieldSettings();
                     var accept = string.Join(",", fs.AllowedExtensions ?? new List<string>());
                     var multi = (fs.MaxFiles > 1) ? " multiple" : string.Empty;
+                    // [UploadMockParity v20260706] SSR markup now mirrors the client renderer (inputs.ts):
+                    // a .mf-file-dropzone-inner wrapper (carries the 34px padding) + SVG up-arrow + hint line.
+                    // Was a flat fa-cloud-upload with NO inner wrapper → padding:0 → cramped vs the mock.
+                    var fileHint = string.IsNullOrEmpty(accept) ? ("Up to " + fs.MaxSizeMB + "MB") : (accept + " up to " + fs.MaxSizeMB + "MB");
                     return "<div class=\"mf-file-dropzone\" id=\"" + id + "-zone\">"
-                        + "<div class=\"mf-file-icon\"><i class=\"fa fa-cloud-upload-alt\"></i></div>"
-                        + "<div class=\"mf-file-text\">Click or drag files here</div>"
+                        + "<div class=\"mf-file-dropzone-inner\">"
+                        + "<div class=\"mf-file-icon\"><svg viewBox=\"0 0 24 24\"><path d=\"M12 3v12M17 8l-5-5-5 5M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/></svg></div>"
+                        + "<div class=\"mf-file-text\">Drop files here or click to upload</div>"
+                        + "<div class=\"mf-file-hint\">" + Esc(fileHint) + "</div>"
+                        + "</div>"
                         + "<input type=\"file\" data-field-key=\"" + name + "\" id=\"" + id + "\" style=\"display:none;\""
                         + (string.IsNullOrEmpty(accept) ? "" : " accept=\"" + Esc(accept) + "\"") + multi + ">"
                         + "<input type=\"hidden\" name=\"" + name + "\" id=\"" + id + "-value\" value=\"" + Esc(val) + "\">"
@@ -686,7 +766,7 @@ namespace MegaForm.Core.Services
 
             return "<div class=\"mf-composite\" role=\"group\" aria-label=\"" + Esc(field.Label ?? name) + "\" data-key=\"" + Esc(name)
                 + "\" data-preset=\"" + Esc(preset) + "\" data-mf-nav=\"" + Esc(nav) + "\" data-mf-orient=\"" + Esc(orient)
-                + "\" style=\"display:flex;flex-direction:column;gap:8px;\">" + rows
+                + "\" style=\"display:flex;flex-direction:column;gap:var(--mf-field-gap, 12px);\">" + rows
                 + "</div><input type=\"hidden\" name=\"" + Esc(name) + "\" id=\"" + Esc(id) + "\" value=\"" + Esc(val) + "\">";
         }
 

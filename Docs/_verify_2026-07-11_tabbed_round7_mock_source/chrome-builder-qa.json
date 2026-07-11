@@ -1,0 +1,40 @@
+{
+  "tabs": [
+    {
+      "i": 0,
+      "active": "Account Your details",
+      "pageSnippet": "First name * Last name * Work email * Phone"
+    },
+    {
+      "i": 1,
+      "active": "Company Where you work",
+      "pageSnippet": "Company name * Website Your role * Founder / CEO Leading the company. ✓ Product Product and design teams. ✓ Engineering "
+    },
+    {
+      "i": 2,
+      "active": "Billing Choose a plan",
+      "pageSnippet": "Choose your plan * Starter $0 For small teams getting going. ✓ Pro $29 For growing teams that need more. POPULAR ✓ Enter"
+    },
+    {
+      "i": 3,
+      "active": "Preferences Tailor your setup",
+      "pageSnippet": "What are you interested in? * Analytics Automation Security Collaboration Integrations Reporting Preferred contact metho"
+    },
+    {
+      "i": 4,
+      "active": "Security Protect your account",
+      "pageSnippet": "Two-factor authentication * Authenticator app Most secure option. ✓ SMS code Text to your phone. ✓ Password only Set up "
+    },
+    {
+      "i": 5,
+      "active": "Review Confirm and submit",
+      "pageSnippet": "Review your details below. Tap any tab above to make changes. First name Last name Work email Phone Company name Website"
+    }
+  ],
+  "afterEmptyContinue": {
+    "active": "Account Your details",
+    "errors": 3,
+    "invalidTabs": 1,
+    "progress": "0 of 5 sections complete"
+  }
+}

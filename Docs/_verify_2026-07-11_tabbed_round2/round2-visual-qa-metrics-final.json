@@ -1,0 +1,1368 @@
+{
+  "generatedAt": "2026-07-11T09:23:50.000Z",
+  "viewport": {
+    "width": 1365,
+    "height": 768
+  },
+  "tabs": [
+    "Account",
+    "Company",
+    "Billing",
+    "Preferences",
+    "Security",
+    "Review"
+  ],
+  "mock": [
+    {
+      "surface": "mock",
+      "step": 0,
+      "label": "AccountYour detailsAccount",
+      "viewport": {
+        "w": 1365,
+        "h": 768,
+        "scrollY": 0,
+        "docW": 1365,
+        "bodyW": 1365
+      },
+      "root": {
+        "x": 0,
+        "y": 0,
+        "w": 1365,
+        "h": 768,
+        "right": 1365,
+        "bottom": 768
+      },
+      "frame": {
+        "x": 106.5,
+        "y": 92.73,
+        "w": 1152,
+        "h": 582.52,
+        "right": 1258.5,
+        "bottom": 675.25
+      },
+      "card": {
+        "x": 106.5,
+        "y": 92.73,
+        "w": 1152,
+        "h": 546.52,
+        "right": 1258.5,
+        "bottom": 639.25
+      },
+      "tabbar": {
+        "x": 107.5,
+        "y": 248.75,
+        "w": 1150,
+        "h": 62,
+        "right": 1257.5,
+        "bottom": 310.75
+      },
+      "bodyOverflowX": false
+    },
+    {
+      "surface": "mock",
+      "step": 1,
+      "label": "CompanyWhere you workCompany",
+      "viewport": {
+        "w": 1365,
+        "h": 768,
+        "scrollY": 0,
+        "docW": 1365,
+        "bodyW": 1365
+      },
+      "root": {
+        "x": 0,
+        "y": 0,
+        "w": 1365,
+        "h": 1004.61,
+        "right": 1365,
+        "bottom": 1004.61
+      },
+      "frame": {
+        "x": 106.5,
+        "y": 48,
+        "w": 1152,
+        "h": 908.61,
+        "right": 1258.5,
+        "bottom": 956.61
+      },
+      "card": {
+        "x": 106.5,
+        "y": 48,
+        "w": 1152,
+        "h": 872.61,
+        "right": 1258.5,
+        "bottom": 920.61
+      },
+      "tabbar": {
+        "x": 107.5,
+        "y": 204.02,
+        "w": 1150,
+        "h": 62,
+        "right": 1257.5,
+        "bottom": 266.02
+      },
+      "bodyOverflowX": false
+    },
+    {
+      "surface": "mock",
+      "step": 2,
+      "label": "BillingChoose a planBilling",
+      "viewport": {
+        "w": 1365,
+        "h": 768,
+        "scrollY": 0,
+        "docW": 1365,
+        "bodyW": 1365
+      },
+      "root": {
+        "x": 0,
+        "y": 0,
+        "w": 1365,
+        "h": 768,
+        "right": 1365,
+        "bottom": 768
+      },
+      "frame": {
+        "x": 106.5,
+        "y": 115.86,
+        "w": 1152,
+        "h": 536.27,
+        "right": 1258.5,
+        "bottom": 652.13
+      },
+      "card": {
+        "x": 106.5,
+        "y": 115.86,
+        "w": 1152,
+        "h": 500.27,
+        "right": 1258.5,
+        "bottom": 616.13
+      },
+      "tabbar": {
+        "x": 107.5,
+        "y": 271.88,
+        "w": 1150,
+        "h": 62,
+        "right": 1257.5,
+        "bottom": 333.88
+      },
+      "bodyOverflowX": false
+    },
+    {
+      "surface": "mock",
+      "step": 3,
+      "label": "PreferencesTailor your setupPreferences",
+      "viewport": {
+        "w": 1365,
+        "h": 768,
+        "scrollY": 0,
+        "docW": 1365,
+        "bodyW": 1365
+      },
+      "root": {
+        "x": 0,
+        "y": 0,
+        "w": 1365,
+        "h": 846.77,
+        "right": 1365,
+        "bottom": 846.77
+      },
+      "frame": {
+        "x": 106.5,
+        "y": 48,
+        "w": 1152,
+        "h": 750.77,
+        "right": 1258.5,
+        "bottom": 798.77
+      },
+      "card": {
+        "x": 106.5,
+        "y": 48,
+        "w": 1152,
+        "h": 714.77,
+        "right": 1258.5,
+        "bottom": 762.77
+      },
+      "tabbar": {
+        "x": 107.5,
+        "y": 204.02,
+        "w": 1150,
+        "h": 62,
+        "right": 1257.5,
+        "bottom": 266.02
+      },
+      "bodyOverflowX": false
+    },
+    {
+      "surface": "mock",
+      "step": 4,
+      "label": "SecurityProtect your accountSecurity",
+      "viewport": {
+        "w": 1365,
+        "h": 768,
+        "scrollY": 0,
+        "docW": 1365,
+        "bodyW": 1365
+      },
+      "root": {
+        "x": 0,
+        "y": 0,
+        "w": 1365,
+        "h": 768,
+        "right": 1365,
+        "bottom": 768
+      },
+      "frame": {
+        "x": 106.5,
+        "y": 119.86,
+        "w": 1152,
+        "h": 528.27,
+        "right": 1258.5,
+        "bottom": 648.13
+      },
+      "card": {
+        "x": 106.5,
+        "y": 119.86,
+        "w": 1152,
+        "h": 492.27,
+        "right": 1258.5,
+        "bottom": 612.13
+      },
+      "tabbar": {
+        "x": 107.5,
+        "y": 275.88,
+        "w": 1150,
+        "h": 62,
+        "right": 1257.5,
+        "bottom": 337.88
+      },
+      "bodyOverflowX": false
+    },
+    {
+      "surface": "mock",
+      "step": 5,
+      "label": "ReviewConfirm & submitReview",
+      "viewport": {
+        "w": 1365,
+        "h": 768,
+        "scrollY": 0,
+        "docW": 1365,
+        "bodyW": 1365
+      },
+      "root": {
+        "x": 0,
+        "y": 0,
+        "w": 1365,
+        "h": 980.77,
+        "right": 1365,
+        "bottom": 980.77
+      },
+      "frame": {
+        "x": 106.5,
+        "y": 48,
+        "w": 1152,
+        "h": 884.77,
+        "right": 1258.5,
+        "bottom": 932.77
+      },
+      "card": {
+        "x": 106.5,
+        "y": 48,
+        "w": 1152,
+        "h": 848.77,
+        "right": 1258.5,
+        "bottom": 896.77
+      },
+      "tabbar": {
+        "x": 107.5,
+        "y": 204.02,
+        "w": 1150,
+        "h": 62,
+        "right": 1257.5,
+        "bottom": 266.02
+      },
+      "bodyOverflowX": false
+    }
+  ],
+  "oqtanePageTop": {
+    "surface": "oqtane-page-top",
+    "step": 0,
+    "label": "? Account Your details",
+    "activeStep": "0",
+    "activePage": "0",
+    "viewport": {
+      "w": 1365,
+      "h": 768,
+      "scrollY": 0,
+      "docW": 1365,
+      "bodyW": 1365
+    },
+    "root": {
+      "x": 0,
+      "y": 1436.38,
+      "w": 1365,
+      "h": 657.69,
+      "right": 1365,
+      "bottom": 2094.06
+    },
+    "frame": {
+      "x": 106.5,
+      "y": 1484.38,
+      "w": 1152,
+      "h": 577.69,
+      "right": 1258.5,
+      "bottom": 2062.06
+    },
+    "card": {
+      "x": 106.5,
+      "y": 1484.38,
+      "w": 1152,
+      "h": 545.19,
+      "right": 1258.5,
+      "bottom": 2029.56
+    },
+    "tabbar": {
+      "x": 107.5,
+      "y": 1644.97,
+      "w": 1150,
+      "h": 63,
+      "right": 1257.5,
+      "bottom": 1707.97
+    },
+    "activePageRect": {
+      "x": 155.5,
+      "y": 1735.97,
+      "w": 1054,
+      "h": 147.09,
+      "right": 1209.5,
+      "bottom": 1883.06
+    },
+    "nativeHost": null,
+    "rootStyle": {
+      "display": "flex",
+      "visibility": "visible",
+      "left": "520px",
+      "width": "1365px",
+      "maxWidth": "1365px",
+      "minHeight": "0px",
+      "padding": "48px 16px 32px",
+      "margin": "0px 0px 0px -682.5px",
+      "justifyContent": "flex-start",
+      "position": "relative",
+      "overflow": "visible/visible"
+    },
+    "nativeHostStyle": null,
+    "bodyOverflowX": false,
+    "rootOverflowX": false,
+    "cardBeyondViewport": false
+  },
+  "oqtanePage": [
+    {
+      "surface": "oqtane-page-scrolled",
+      "step": 0,
+      "label": "? Account Your details",
+      "activeStep": "0",
+      "activePage": "0",
+      "viewport": {
+        "w": 1365,
+        "h": 768,
+        "scrollY": 1436,
+        "docW": 1365,
+        "bodyW": 1365
+      },
+      "root": {
+        "x": 0,
+        "y": 0.38,
+        "w": 1365,
+        "h": 657.69,
+        "right": 1365,
+        "bottom": 658.06
+      },
+      "frame": {
+        "x": 106.5,
+        "y": 48.38,
+        "w": 1152,
+        "h": 577.69,
+        "right": 1258.5,
+        "bottom": 626.06
+      },
+      "card": {
+        "x": 106.5,
+        "y": 48.38,
+        "w": 1152,
+        "h": 545.19,
+        "right": 1258.5,
+        "bottom": 593.56
+      },
+      "tabbar": {
+        "x": 107.5,
+        "y": 208.97,
+        "w": 1150,
+        "h": 63,
+        "right": 1257.5,
+        "bottom": 271.97
+      },
+      "activePageRect": {
+        "x": 155.5,
+        "y": 299.97,
+        "w": 1054,
+        "h": 147.09,
+        "right": 1209.5,
+        "bottom": 447.06
+      },
+      "nativeHost": null,
+      "rootStyle": {
+        "display": "flex",
+        "visibility": "visible",
+        "left": "520px",
+        "width": "1365px",
+        "maxWidth": "1365px",
+        "minHeight": "0px",
+        "padding": "48px 16px 32px",
+        "margin": "0px 0px 0px -682.5px",
+        "justifyContent": "flex-start",
+        "position": "relative",
+        "overflow": "visible/visible"
+      },
+      "nativeHostStyle": null,
+      "bodyOverflowX": false,
+      "rootOverflowX": false,
+      "cardBeyondViewport": false
+    },
+    {
+      "surface": "oqtane-page-scrolled",
+      "step": 1,
+      "label": "? Company Where you work",
+      "activeStep": "1",
+      "activePage": "1",
+      "viewport": {
+        "w": 1365,
+        "h": 768,
+        "scrollY": 1436,
+        "docW": 1365,
+        "bodyW": 1365
+      },
+      "root": {
+        "x": 0,
+        "y": 0.38,
+        "w": 1365,
+        "h": 1105.11,
+        "right": 1365,
+        "bottom": 1105.48
+      },
+      "frame": {
+        "x": 106.5,
+        "y": 48.38,
+        "w": 1152,
+        "h": 1025.11,
+        "right": 1258.5,
+        "bottom": 1073.48
+      },
+      "card": {
+        "x": 106.5,
+        "y": 48.38,
+        "w": 1152,
+        "h": 992.61,
+        "right": 1258.5,
+        "bottom": 1040.98
+      },
+      "tabbar": {
+        "x": 107.5,
+        "y": 208.97,
+        "w": 1150,
+        "h": 63,
+        "right": 1257.5,
+        "bottom": 271.97
+      },
+      "activePageRect": {
+        "x": 155.5,
+        "y": 299.97,
+        "w": 1054,
+        "h": 594.52,
+        "right": 1209.5,
+        "bottom": 894.48
+      },
+      "nativeHost": null,
+      "rootStyle": {
+        "display": "flex",
+        "visibility": "visible",
+        "left": "520px",
+        "width": "1365px",
+        "maxWidth": "1365px",
+        "minHeight": "0px",
+        "padding": "48px 16px 32px",
+        "margin": "0px 0px 0px -682.5px",
+        "justifyContent": "flex-start",
+        "position": "relative",
+        "overflow": "visible/visible"
+      },
+      "nativeHostStyle": null,
+      "bodyOverflowX": false,
+      "rootOverflowX": false,
+      "cardBeyondViewport": false
+    },
+    {
+      "surface": "oqtane-page-scrolled",
+      "step": 2,
+      "label": "? Billing Choose a plan",
+      "activeStep": "2",
+      "activePage": "2",
+      "viewport": {
+        "w": 1365,
+        "h": 768,
+        "scrollY": 1436,
+        "docW": 1365,
+        "bodyW": 1365
+      },
+      "root": {
+        "x": 0,
+        "y": 0.38,
+        "w": 1365,
+        "h": 672.77,
+        "right": 1365,
+        "bottom": 673.14
+      },
+      "frame": {
+        "x": 106.5,
+        "y": 48.38,
+        "w": 1152,
+        "h": 592.77,
+        "right": 1258.5,
+        "bottom": 641.14
+      },
+      "card": {
+        "x": 106.5,
+        "y": 48.38,
+        "w": 1152,
+        "h": 560.27,
+        "right": 1258.5,
+        "bottom": 608.64
+      },
+      "tabbar": {
+        "x": 107.5,
+        "y": 208.97,
+        "w": 1150,
+        "h": 63,
+        "right": 1257.5,
+        "bottom": 271.97
+      },
+      "activePageRect": {
+        "x": 155.5,
+        "y": 299.97,
+        "w": 1054,
+        "h": 162.17,
+        "right": 1209.5,
+        "bottom": 462.14
+      },
+      "nativeHost": null,
+      "rootStyle": {
+        "display": "flex",
+        "visibility": "visible",
+        "left": "520px",
+        "width": "1365px",
+        "maxWidth": "1365px",
+        "minHeight": "0px",
+        "padding": "48px 16px 32px",
+        "margin": "0px 0px 0px -682.5px",
+        "justifyContent": "flex-start",
+        "position": "relative",
+        "overflow": "visible/visible"
+      },
+      "nativeHostStyle": null,
+      "bodyOverflowX": false,
+      "rootOverflowX": false,
+      "cardBeyondViewport": false
+    },
+    {
+      "surface": "oqtane-page-scrolled",
+      "step": 3,
+      "label": "? Preferences Tailor your setup",
+      "activeStep": "3",
+      "activePage": "3",
+      "viewport": {
+        "w": 1365,
+        "h": 768,
+        "scrollY": 1436,
+        "docW": 1365,
+        "bodyW": 1365
+      },
+      "root": {
+        "x": 0,
+        "y": 0.38,
+        "w": 1365,
+        "h": 865.48,
+        "right": 1365,
+        "bottom": 865.86
+      },
+      "frame": {
+        "x": 106.5,
+        "y": 48.38,
+        "w": 1152,
+        "h": 785.48,
+        "right": 1258.5,
+        "bottom": 833.86
+      },
+      "card": {
+        "x": 106.5,
+        "y": 48.38,
+        "w": 1152,
+        "h": 752.98,
+        "right": 1258.5,
+        "bottom": 801.36
+      },
+      "tabbar": {
+        "x": 107.5,
+        "y": 208.97,
+        "w": 1150,
+        "h": 63,
+        "right": 1257.5,
+        "bottom": 271.97
+      },
+      "activePageRect": {
+        "x": 155.5,
+        "y": 299.97,
+        "w": 1054,
+        "h": 354.89,
+        "right": 1209.5,
+        "bottom": 654.86
+      },
+      "nativeHost": null,
+      "rootStyle": {
+        "display": "flex",
+        "visibility": "visible",
+        "left": "520px",
+        "width": "1365px",
+        "maxWidth": "1365px",
+        "minHeight": "0px",
+        "padding": "48px 16px 32px",
+        "margin": "0px 0px 0px -682.5px",
+        "justifyContent": "flex-start",
+        "position": "relative",
+        "overflow": "visible/visible"
+      },
+      "nativeHostStyle": null,
+      "bodyOverflowX": false,
+      "rootOverflowX": false,
+      "cardBeyondViewport": false
+    },
+    {
+      "surface": "oqtane-page-scrolled",
+      "step": 4,
+      "label": "? Security Protect your account",
+      "activeStep": "4",
+      "activePage": "4",
+      "viewport": {
+        "w": 1365,
+        "h": 768,
+        "scrollY": 1436,
+        "docW": 1365,
+        "bodyW": 1365
+      },
+      "root": {
+        "x": 0,
+        "y": 0.38,
+        "w": 1365,
+        "h": 640.14,
+        "right": 1365,
+        "bottom": 640.52
+      },
+      "frame": {
+        "x": 106.5,
+        "y": 48.38,
+        "w": 1152,
+        "h": 560.14,
+        "right": 1258.5,
+        "bottom": 608.52
+      },
+      "card": {
+        "x": 106.5,
+        "y": 48.38,
+        "w": 1152,
+        "h": 527.64,
+        "right": 1258.5,
+        "bottom": 576.02
+      },
+      "tabbar": {
+        "x": 107.5,
+        "y": 208.97,
+        "w": 1150,
+        "h": 63,
+        "right": 1257.5,
+        "bottom": 271.97
+      },
+      "activePageRect": {
+        "x": 155.5,
+        "y": 299.97,
+        "w": 1054,
+        "h": 129.55,
+        "right": 1209.5,
+        "bottom": 429.52
+      },
+      "nativeHost": null,
+      "rootStyle": {
+        "display": "flex",
+        "visibility": "visible",
+        "left": "520px",
+        "width": "1365px",
+        "maxWidth": "1365px",
+        "minHeight": "0px",
+        "padding": "48px 16px 32px",
+        "margin": "0px 0px 0px -682.5px",
+        "justifyContent": "flex-start",
+        "position": "relative",
+        "overflow": "visible/visible"
+      },
+      "nativeHostStyle": null,
+      "bodyOverflowX": false,
+      "rootOverflowX": false,
+      "cardBeyondViewport": false
+    },
+    {
+      "surface": "oqtane-page-scrolled",
+      "step": 5,
+      "label": "? Review Confirm and submit",
+      "activeStep": "5",
+      "activePage": "5",
+      "viewport": {
+        "w": 1365,
+        "h": 768,
+        "scrollY": 1436,
+        "docW": 1365,
+        "bodyW": 1365
+      },
+      "root": {
+        "x": 0,
+        "y": 0.38,
+        "w": 1365,
+        "h": 1021.09,
+        "right": 1365,
+        "bottom": 1021.47
+      },
+      "frame": {
+        "x": 106.5,
+        "y": 48.38,
+        "w": 1152,
+        "h": 941.09,
+        "right": 1258.5,
+        "bottom": 989.47
+      },
+      "card": {
+        "x": 106.5,
+        "y": 48.38,
+        "w": 1152,
+        "h": 908.59,
+        "right": 1258.5,
+        "bottom": 956.97
+      },
+      "tabbar": {
+        "x": 107.5,
+        "y": 208.97,
+        "w": 1150,
+        "h": 63,
+        "right": 1257.5,
+        "bottom": 271.97
+      },
+      "activePageRect": {
+        "x": 155.5,
+        "y": 299.97,
+        "w": 1054,
+        "h": 510.5,
+        "right": 1209.5,
+        "bottom": 810.47
+      },
+      "nativeHost": null,
+      "rootStyle": {
+        "display": "flex",
+        "visibility": "visible",
+        "left": "520px",
+        "width": "1365px",
+        "maxWidth": "1365px",
+        "minHeight": "0px",
+        "padding": "48px 16px 32px",
+        "margin": "0px 0px 0px -682.5px",
+        "justifyContent": "flex-start",
+        "position": "relative",
+        "overflow": "visible/visible"
+      },
+      "nativeHostStyle": null,
+      "bodyOverflowX": false,
+      "rootOverflowX": false,
+      "cardBeyondViewport": false
+    }
+  ],
+  "builderOuter": {
+    "url": "http://localhost:5122/?mfpanel=builder&formId=5",
+    "viewport": {
+      "w": 1365,
+      "h": 768,
+      "docW": 1365,
+      "bodyW": 1365
+    },
+    "iframe": {
+      "x": 466.45,
+      "y": 169.56,
+      "w": 388.09,
+      "h": 619.28,
+      "right": 854.55,
+      "bottom": 788.84
+    },
+    "canvas": {
+      "x": 445.5,
+      "y": 145.56,
+      "w": 436,
+      "h": 667,
+      "right": 881.5,
+      "bottom": 812.56
+    },
+    "bodyOverflowX": false
+  },
+  "builderFrame": [
+    {
+      "surface": "builder-design-frame",
+      "step": 0,
+      "label": "? Account Your details",
+      "activeStep": "0",
+      "activePage": "0",
+      "viewport": {
+        "w": 1018,
+        "h": 1627,
+        "scrollY": 0,
+        "docW": 1018,
+        "bodyW": 1018
+      },
+      "root": {
+        "x": 37.23,
+        "y": 12,
+        "w": 943.97,
+        "h": 636.79,
+        "right": 981.2,
+        "bottom": 648.79
+      },
+      "frame": {
+        "x": 49.22,
+        "y": 35.99,
+        "w": 919.98,
+        "h": 588.8,
+        "right": 969.2,
+        "bottom": 624.79
+      },
+      "card": {
+        "x": 49.22,
+        "y": 35.99,
+        "w": 919.98,
+        "h": 556.32,
+        "right": 969.2,
+        "bottom": 592.31
+      },
+      "tabbar": {
+        "x": 51.86,
+        "y": 198.18,
+        "w": 914.7,
+        "h": 66.21,
+        "right": 966.56,
+        "bottom": 264.39
+      },
+      "activePageRect": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 146.93,
+        "right": 918.58,
+        "bottom": 439.31
+      },
+      "nativeHost": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 146.93,
+        "right": 918.58,
+        "bottom": 439.31
+      },
+      "rootStyle": {
+        "display": "flex",
+        "visibility": "visible",
+        "left": "0px",
+        "width": "943.973px",
+        "maxWidth": "960px",
+        "minHeight": "0px",
+        "padding": "24px 12px",
+        "margin": "0px",
+        "justifyContent": "flex-start",
+        "position": "relative",
+        "overflow": "visible/visible"
+      },
+      "nativeHostStyle": {
+        "display": "block",
+        "visibility": "visible",
+        "left": "auto",
+        "width": "818.725px",
+        "maxWidth": "none",
+        "minHeight": "0px",
+        "padding": "0px",
+        "margin": "0px",
+        "justifyContent": "normal",
+        "position": "static",
+        "overflow": "visible/visible"
+      },
+      "bodyOverflowX": false,
+      "rootOverflowX": false,
+      "cardBeyondViewport": false
+    },
+    {
+      "surface": "builder-design-frame",
+      "step": 1,
+      "label": "? Company Where you work",
+      "activeStep": "1",
+      "activePage": "1",
+      "viewport": {
+        "w": 1018,
+        "h": 1627,
+        "scrollY": 0,
+        "docW": 1018,
+        "bodyW": 1018
+      },
+      "root": {
+        "x": 37.23,
+        "y": 12,
+        "w": 943.97,
+        "h": 1102,
+        "right": 981.2,
+        "bottom": 1113.99
+      },
+      "frame": {
+        "x": 49.22,
+        "y": 35.99,
+        "w": 919.98,
+        "h": 1054.01,
+        "right": 969.2,
+        "bottom": 1090
+      },
+      "card": {
+        "x": 49.22,
+        "y": 35.99,
+        "w": 919.98,
+        "h": 1021.52,
+        "right": 969.2,
+        "bottom": 1057.51
+      },
+      "tabbar": {
+        "x": 51.86,
+        "y": 198.18,
+        "w": 914.7,
+        "h": 66.21,
+        "right": 966.56,
+        "bottom": 264.39
+      },
+      "activePageRect": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 612.14,
+        "right": 918.58,
+        "bottom": 904.52
+      },
+      "nativeHost": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 612.14,
+        "right": 918.58,
+        "bottom": 904.52
+      },
+      "rootStyle": {
+        "display": "flex",
+        "visibility": "visible",
+        "left": "0px",
+        "width": "943.973px",
+        "maxWidth": "960px",
+        "minHeight": "0px",
+        "padding": "24px 12px",
+        "margin": "0px",
+        "justifyContent": "flex-start",
+        "position": "relative",
+        "overflow": "visible/visible"
+      },
+      "nativeHostStyle": {
+        "display": "block",
+        "visibility": "visible",
+        "left": "auto",
+        "width": "818.725px",
+        "maxWidth": "none",
+        "minHeight": "0px",
+        "padding": "0px",
+        "margin": "0px",
+        "justifyContent": "normal",
+        "position": "static",
+        "overflow": "visible/visible"
+      },
+      "bodyOverflowX": false,
+      "rootOverflowX": false,
+      "cardBeyondViewport": false
+    },
+    {
+      "surface": "builder-design-frame",
+      "step": 2,
+      "label": "? Billing Choose a plan",
+      "activeStep": "2",
+      "activePage": "2",
+      "viewport": {
+        "w": 1018,
+        "h": 1627,
+        "scrollY": 0,
+        "docW": 1018,
+        "bodyW": 1018
+      },
+      "root": {
+        "x": 37.23,
+        "y": 12,
+        "w": 943.97,
+        "h": 721.06,
+        "right": 981.2,
+        "bottom": 733.06
+      },
+      "frame": {
+        "x": 49.22,
+        "y": 35.99,
+        "w": 919.98,
+        "h": 673.07,
+        "right": 969.2,
+        "bottom": 709.06
+      },
+      "card": {
+        "x": 49.22,
+        "y": 35.99,
+        "w": 919.98,
+        "h": 640.58,
+        "right": 969.2,
+        "bottom": 676.57
+      },
+      "tabbar": {
+        "x": 51.86,
+        "y": 198.18,
+        "w": 914.7,
+        "h": 66.21,
+        "right": 966.56,
+        "bottom": 264.39
+      },
+      "activePageRect": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 231.2,
+        "right": 918.58,
+        "bottom": 523.58
+      },
+      "nativeHost": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 231.2,
+        "right": 918.58,
+        "bottom": 523.58
+      },
+      "rootStyle": {
+        "display": "flex",
+        "visibility": "visible",
+        "left": "0px",
+        "width": "943.973px",
+        "maxWidth": "960px",
+        "minHeight": "0px",
+        "padding": "24px 12px",
+        "margin": "0px",
+        "justifyContent": "flex-start",
+        "position": "relative",
+        "overflow": "visible/visible"
+      },
+      "nativeHostStyle": {
+        "display": "block",
+        "visibility": "visible",
+        "left": "auto",
+        "width": "818.725px",
+        "maxWidth": "none",
+        "minHeight": "0px",
+        "padding": "0px",
+        "margin": "0px",
+        "justifyContent": "normal",
+        "position": "static",
+        "overflow": "visible/visible"
+      },
+      "bodyOverflowX": false,
+      "rootOverflowX": false,
+      "cardBeyondViewport": false
+    },
+    {
+      "surface": "builder-design-frame",
+      "step": 3,
+      "label": "? Preferences Tailor your setup",
+      "activeStep": "3",
+      "activePage": "3",
+      "viewport": {
+        "w": 1018,
+        "h": 1627,
+        "scrollY": 0,
+        "docW": 1018,
+        "bodyW": 1018
+      },
+      "root": {
+        "x": 37.23,
+        "y": 12,
+        "w": 943.97,
+        "h": 901.51,
+        "right": 981.2,
+        "bottom": 913.51
+      },
+      "frame": {
+        "x": 49.22,
+        "y": 35.99,
+        "w": 919.98,
+        "h": 853.52,
+        "right": 969.2,
+        "bottom": 889.51
+      },
+      "card": {
+        "x": 49.22,
+        "y": 35.99,
+        "w": 919.98,
+        "h": 821.03,
+        "right": 969.2,
+        "bottom": 857.03
+      },
+      "tabbar": {
+        "x": 51.86,
+        "y": 198.18,
+        "w": 914.7,
+        "h": 66.21,
+        "right": 966.56,
+        "bottom": 264.39
+      },
+      "activePageRect": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 411.65,
+        "right": 918.58,
+        "bottom": 704.03
+      },
+      "nativeHost": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 411.65,
+        "right": 918.58,
+        "bottom": 704.03
+      },
+      "rootStyle": {
+        "display": "flex",
+        "visibility": "visible",
+        "left": "0px",
+        "width": "943.973px",
+        "maxWidth": "960px",
+        "minHeight": "0px",
+        "padding": "24px 12px",
+        "margin": "0px",
+        "justifyContent": "flex-start",
+        "position": "relative",
+        "overflow": "visible/visible"
+      },
+      "nativeHostStyle": {
+        "display": "block",
+        "visibility": "visible",
+        "left": "auto",
+        "width": "818.725px",
+        "maxWidth": "none",
+        "minHeight": "0px",
+        "padding": "0px",
+        "margin": "0px",
+        "justifyContent": "normal",
+        "position": "static",
+        "overflow": "visible/visible"
+      },
+      "bodyOverflowX": false,
+      "rootOverflowX": false,
+      "cardBeyondViewport": false
+    },
+    {
+      "surface": "builder-design-frame",
+      "step": 4,
+      "label": "? Security Protect your account",
+      "activeStep": "4",
+      "activePage": "4",
+      "viewport": {
+        "w": 1018,
+        "h": 1627,
+        "scrollY": 0,
+        "docW": 1018,
+        "bodyW": 1018
+      },
+      "root": {
+        "x": 37.23,
+        "y": 12,
+        "w": 943.97,
+        "h": 489.86,
+        "right": 981.2,
+        "bottom": 501.86
+      },
+      "frame": {
+        "x": 49.22,
+        "y": 35.99,
+        "w": 919.98,
+        "h": 441.87,
+        "right": 969.2,
+        "bottom": 477.86
+      },
+      "card": {
+        "x": 49.22,
+        "y": 35.99,
+        "w": 919.98,
+        "h": 409.38,
+        "right": 969.2,
+        "bottom": 445.37
+      },
+      "tabbar": {
+        "x": 51.86,
+        "y": 198.18,
+        "w": 914.7,
+        "h": 66.21,
+        "right": 966.56,
+        "bottom": 264.39
+      },
+      "activePageRect": {
+        "x": 0,
+        "y": 0,
+        "w": 0,
+        "h": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "nativeHost": {
+        "x": 0,
+        "y": 0,
+        "w": 0,
+        "h": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "rootStyle": {
+        "display": "flex",
+        "visibility": "visible",
+        "left": "0px",
+        "width": "943.973px",
+        "maxWidth": "960px",
+        "minHeight": "0px",
+        "padding": "24px 12px",
+        "margin": "0px",
+        "justifyContent": "flex-start",
+        "position": "relative",
+        "overflow": "visible/visible"
+      },
+      "nativeHostStyle": {
+        "display": "none",
+        "visibility": "visible",
+        "left": "auto",
+        "width": "100%",
+        "maxWidth": "none",
+        "minHeight": "0px",
+        "padding": "0px",
+        "margin": "0px",
+        "justifyContent": "normal",
+        "position": "static",
+        "overflow": "visible/visible"
+      },
+      "bodyOverflowX": false,
+      "rootOverflowX": false,
+      "cardBeyondViewport": false
+    },
+    {
+      "surface": "builder-design-frame",
+      "step": 5,
+      "label": "? Review Confirm and submit",
+      "activeStep": "5",
+      "activePage": "5",
+      "viewport": {
+        "w": 1018,
+        "h": 1627,
+        "scrollY": 0,
+        "docW": 1018,
+        "bodyW": 1018
+      },
+      "root": {
+        "x": 37.23,
+        "y": 12,
+        "w": 943.97,
+        "h": 1042.63,
+        "right": 981.2,
+        "bottom": 1054.63
+      },
+      "frame": {
+        "x": 49.22,
+        "y": 35.99,
+        "w": 919.98,
+        "h": 994.64,
+        "right": 969.2,
+        "bottom": 1030.63
+      },
+      "card": {
+        "x": 49.22,
+        "y": 35.99,
+        "w": 919.98,
+        "h": 962.15,
+        "right": 969.2,
+        "bottom": 998.14
+      },
+      "tabbar": {
+        "x": 51.86,
+        "y": 198.18,
+        "w": 914.7,
+        "h": 66.21,
+        "right": 966.56,
+        "bottom": 264.39
+      },
+      "activePageRect": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 552.77,
+        "right": 918.58,
+        "bottom": 845.15
+      },
+      "nativeHost": {
+        "x": 99.85,
+        "y": 292.38,
+        "w": 818.73,
+        "h": 552.77,
+        "right": 918.58,
+        "bottom": 845.15
+      },
+      "rootStyle": {
+        "display": "flex",
+        "visibility": "visible",
+        "left": "0px",
+        "width": "943.973px",
+        "maxWidth": "960px",
+        "minHeight": "0px",
+        "padding": "24px 12px",
+        "margin": "0px",
+        "justifyContent": "flex-start",
+        "position": "relative",
+        "overflow": "visible/visible"
+      },
+      "nativeHostStyle": {
+        "display": "block",
+        "visibility": "visible",
+        "left": "auto",
+        "width": "818.725px",
+        "maxWidth": "none",
+        "minHeight": "0px",
+        "padding": "0px",
+        "margin": "0px",
+        "justifyContent": "normal",
+        "position": "static",
+        "overflow": "visible/visible"
+      },
+      "bodyOverflowX": false,
+      "rootOverflowX": false,
+      "cardBeyondViewport": false
+    }
+  ],
+  "warnings": []
+}

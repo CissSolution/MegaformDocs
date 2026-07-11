@@ -4,6 +4,7 @@
 
 import type { FormField } from '@core/types';
 import { addressPartsForScheme, combineAddress, type AddressScheme } from './composite-address';
+import { migratePremiumWizardSchemaToNative } from '@shared/premium-native-migration';
 
 export interface RendererConfig {
   formId: number;
@@ -199,6 +200,7 @@ export function normalizeSchema(config: RendererConfig): void {
     }
   }
   if (s.fields) normalizeFields(s.fields);
+  try { migratePremiumWizardSchemaToNative(s); } catch (e) { try { console.warn('MegaForm: premium native migration skipped', e); } catch { /* noop */ } }
 
   // [HtmlFieldTokens v20260501-04] Pre-substitute {{form:title|description|submit}}
   // and {{content:xxx}} tokens inside Html field htmlContent so templates that

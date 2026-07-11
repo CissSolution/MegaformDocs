@@ -240,7 +240,7 @@ namespace MegaForm.DNN.Services
             if (request == null || request.GeneratePasswordIfEmpty)
                 return UserController.GeneratePassword(12);
 
-            return "MegaForm!2026";
+            return string.Empty;
         }
 
         private static bool ApplyUserChanges(UserInfo existing, WorkflowUserProvisionRequest request, string email)

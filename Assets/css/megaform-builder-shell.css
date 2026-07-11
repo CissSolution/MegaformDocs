@@ -2761,13 +2761,21 @@ body[data-mf-mode="design"] .mf-theme-pane {
 }
 .mf-tr-font-select {
   width: 100%; height: 32px;
-  padding: 0 8px;
-  border: 1px solid #e2e8f0; border-radius: 6px;
+  padding: 0 30px 0 10px;
+  /* [2026-07-02] Clearly visible border (was near-invisible #e2e8f0, and a host
+     Bootstrap .form-control rule could win the cascade → looked borderless).
+     !important keeps the dropdown outline visible regardless of host CSS. */
+  border: 1px solid #cbd5e1 !important; border-radius: 8px;
   background: #ffffff;
+  /* Native chevron affordance so it reads as a dropdown. */
+  -webkit-appearance: none; -moz-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
   font: 12.5px var(--font); color: #1e293b;
   cursor: pointer;
 }
-.mf-tr-font-select:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+.mf-tr-font-select:hover { border-color: #94a3b8 !important; }
+.mf-tr-font-select:focus { outline: none; border-color: #6366f1 !important; box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
 
 /* Shape preset cards (Rounded / Pill / Sharp / Soft) */
 .mf-tr-shape-cards {

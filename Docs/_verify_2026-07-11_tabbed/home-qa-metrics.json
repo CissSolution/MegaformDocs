@@ -1,0 +1,621 @@
+{
+  "desktop": {
+    "png": "E:\\DNNDEFENDER AND AI DESIGNES\\AI DESIGNES\\MegaFormSolution_280_Oqtane_um\\Docs\\_verify_2026-07-11_tabbed\\home-form-desktop-1280x900.png",
+    "before": {
+      "scrollY": 1124,
+      "root": {
+        "x": 0,
+        "y": -0.22,
+        "width": 1280,
+        "height": 900,
+        "top": -0.22,
+        "right": 1280,
+        "bottom": 899.78,
+        "left": 0
+      },
+      "frame": {
+        "x": 64,
+        "y": 168.94,
+        "width": 1152,
+        "height": 561.69,
+        "top": 168.94,
+        "right": 1216,
+        "bottom": 730.63,
+        "left": 64
+      },
+      "card": {
+        "x": 64,
+        "y": 168.94,
+        "width": 1152,
+        "height": 529.19,
+        "top": 168.94,
+        "right": 1216,
+        "bottom": 698.13,
+        "left": 64
+      },
+      "h1": {
+        "x": 113,
+        "y": 229.94,
+        "width": 1054,
+        "height": 35.09,
+        "top": 229.94,
+        "right": 1167,
+        "bottom": 265.03,
+        "left": 113
+      },
+      "tabs": 6,
+      "pages": 6,
+      "activeStep": "0",
+      "activePage": "0",
+      "controls": [
+        {
+          "tag": "input",
+          "type": "text",
+          "name": "first_name",
+          "id": "mf-5-first_name",
+          "placeholder": "Eleanor"
+        },
+        {
+          "tag": "input",
+          "type": "text",
+          "name": "last_name",
+          "id": "mf-5-last_name",
+          "placeholder": "Hayes"
+        },
+        {
+          "tag": "input",
+          "type": "email",
+          "name": "work_email",
+          "id": "mf-5-work_email",
+          "placeholder": "eleanor@company.com"
+        },
+        {
+          "tag": "input",
+          "type": "tel",
+          "name": "phone_number",
+          "id": "mf-5-phone_number",
+          "placeholder": "(555) 010-2233"
+        },
+        {
+          "tag": "input",
+          "type": "text",
+          "name": "company_name",
+          "id": "mf-5-company_name",
+          "placeholder": "Northwind Co."
+        },
+        {
+          "tag": "input",
+          "type": "text",
+          "name": "website",
+          "id": "mf-5-website",
+          "placeholder": "northwind.com"
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "role",
+          "id": "mf-5-role-founder",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "role",
+          "id": "mf-5-role-product",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "role",
+          "id": "mf-5-role-engineering",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "role",
+          "id": "mf-5-role-marketing",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "company_size",
+          "id": "mf-5-company_size-1-10",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "company_size",
+          "id": "mf-5-company_size-11-50",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "company_size",
+          "id": "mf-5-company_size-51-200",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "company_size",
+          "id": "mf-5-company_size-200-plus",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "plan",
+          "id": "mf-5-plan-starter",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "plan",
+          "id": "mf-5-plan-pro",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "plan",
+          "id": "mf-5-plan-enterprise",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "checkbox",
+          "name": "interests",
+          "id": "mf-5-interests-analytics",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "checkbox",
+          "name": "interests",
+          "id": "mf-5-interests-automation",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "checkbox",
+          "name": "interests",
+          "id": "mf-5-interests-security",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "checkbox",
+          "name": "interests",
+          "id": "mf-5-interests-collaboration",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "checkbox",
+          "name": "interests",
+          "id": "mf-5-interests-integrations",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "checkbox",
+          "name": "interests",
+          "id": "mf-5-interests-reporting",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "contact_method",
+          "id": "mf-5-contact_method-email",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "contact_method",
+          "id": "mf-5-contact_method-phone",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "contact_method",
+          "id": "mf-5-contact_method-none",
+          "placeholder": null
+        },
+        {
+          "tag": "textarea",
+          "type": null,
+          "name": "notes",
+          "id": "mf-5-notes",
+          "placeholder": "Tell us about your goals (optional)"
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "two_factor",
+          "id": "mf-5-two_factor-app",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "two_factor",
+          "id": "mf-5-two_factor-sms",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "two_factor",
+          "id": "mf-5-two_factor-none",
+          "placeholder": null
+        }
+      ],
+      "controlNames": [
+        "first_name",
+        "last_name",
+        "work_email",
+        "phone_number",
+        "company_name",
+        "website",
+        "role",
+        "role",
+        "role",
+        "role",
+        "company_size",
+        "company_size",
+        "company_size",
+        "company_size",
+        "plan",
+        "plan",
+        "plan",
+        "interests",
+        "interests",
+        "interests",
+        "interests",
+        "interests",
+        "interests",
+        "contact_method",
+        "contact_method",
+        "contact_method",
+        "notes",
+        "two_factor",
+        "two_factor",
+        "two_factor"
+      ],
+      "overflow": [
+        {
+          "tag": "input",
+          "cls": "",
+          "left": -9881,
+          "right": -9701,
+          "width": 180
+        }
+      ]
+    },
+    "clickOutcome": {
+      "attempted": true,
+      "activeStep": "0",
+      "activePage": "0",
+      "visibleText": "First name * Last name * Work email * Phone",
+      "back": {
+        "hidden": true,
+        "display": "flex"
+      }
+    }
+  },
+  "mobile": {
+    "png": "E:\\DNNDEFENDER AND AI DESIGNES\\AI DESIGNES\\MegaFormSolution_280_Oqtane_um\\Docs\\_verify_2026-07-11_tabbed\\home-form-mobile-390x844.png",
+    "before": {
+      "scrollY": 2201,
+      "root": {
+        "x": 0,
+        "y": 0.19,
+        "width": 390,
+        "height": 844,
+        "top": 0.19,
+        "right": 390,
+        "bottom": 844.19,
+        "left": 0
+      },
+      "frame": {
+        "x": 10,
+        "y": 16.19,
+        "width": 370,
+        "height": 758.88,
+        "top": 16.19,
+        "right": 380,
+        "bottom": 775.06,
+        "left": 10
+      },
+      "card": {
+        "x": 10,
+        "y": 16.19,
+        "width": 370,
+        "height": 703.88,
+        "top": 16.19,
+        "right": 380,
+        "bottom": 720.06,
+        "left": 10
+      },
+      "h1": {
+        "x": 31,
+        "y": 71.19,
+        "width": 328,
+        "height": 31.19,
+        "top": 71.19,
+        "right": 359,
+        "bottom": 102.38,
+        "left": 31
+      },
+      "tabs": 6,
+      "pages": 6,
+      "activeStep": "0",
+      "activePage": "0",
+      "controls": [
+        {
+          "tag": "input",
+          "type": "text",
+          "name": "first_name",
+          "id": "mf-5-first_name",
+          "placeholder": "Eleanor"
+        },
+        {
+          "tag": "input",
+          "type": "text",
+          "name": "last_name",
+          "id": "mf-5-last_name",
+          "placeholder": "Hayes"
+        },
+        {
+          "tag": "input",
+          "type": "email",
+          "name": "work_email",
+          "id": "mf-5-work_email",
+          "placeholder": "eleanor@company.com"
+        },
+        {
+          "tag": "input",
+          "type": "tel",
+          "name": "phone_number",
+          "id": "mf-5-phone_number",
+          "placeholder": "(555) 010-2233"
+        },
+        {
+          "tag": "input",
+          "type": "text",
+          "name": "company_name",
+          "id": "mf-5-company_name",
+          "placeholder": "Northwind Co."
+        },
+        {
+          "tag": "input",
+          "type": "text",
+          "name": "website",
+          "id": "mf-5-website",
+          "placeholder": "northwind.com"
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "role",
+          "id": "mf-5-role-founder",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "role",
+          "id": "mf-5-role-product",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "role",
+          "id": "mf-5-role-engineering",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "role",
+          "id": "mf-5-role-marketing",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "company_size",
+          "id": "mf-5-company_size-1-10",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "company_size",
+          "id": "mf-5-company_size-11-50",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "company_size",
+          "id": "mf-5-company_size-51-200",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "company_size",
+          "id": "mf-5-company_size-200-plus",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "plan",
+          "id": "mf-5-plan-starter",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "plan",
+          "id": "mf-5-plan-pro",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "plan",
+          "id": "mf-5-plan-enterprise",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "checkbox",
+          "name": "interests",
+          "id": "mf-5-interests-analytics",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "checkbox",
+          "name": "interests",
+          "id": "mf-5-interests-automation",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "checkbox",
+          "name": "interests",
+          "id": "mf-5-interests-security",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "checkbox",
+          "name": "interests",
+          "id": "mf-5-interests-collaboration",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "checkbox",
+          "name": "interests",
+          "id": "mf-5-interests-integrations",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "checkbox",
+          "name": "interests",
+          "id": "mf-5-interests-reporting",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "contact_method",
+          "id": "mf-5-contact_method-email",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "contact_method",
+          "id": "mf-5-contact_method-phone",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "contact_method",
+          "id": "mf-5-contact_method-none",
+          "placeholder": null
+        },
+        {
+          "tag": "textarea",
+          "type": null,
+          "name": "notes",
+          "id": "mf-5-notes",
+          "placeholder": "Tell us about your goals (optional)"
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "two_factor",
+          "id": "mf-5-two_factor-app",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "two_factor",
+          "id": "mf-5-two_factor-sms",
+          "placeholder": null
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "two_factor",
+          "id": "mf-5-two_factor-none",
+          "placeholder": null
+        }
+      ],
+      "controlNames": [
+        "first_name",
+        "last_name",
+        "work_email",
+        "phone_number",
+        "company_name",
+        "website",
+        "role",
+        "role",
+        "role",
+        "role",
+        "company_size",
+        "company_size",
+        "company_size",
+        "company_size",
+        "plan",
+        "plan",
+        "plan",
+        "interests",
+        "interests",
+        "interests",
+        "interests",
+        "interests",
+        "interests",
+        "contact_method",
+        "contact_method",
+        "contact_method",
+        "notes",
+        "two_factor",
+        "two_factor",
+        "two_factor"
+      ],
+      "overflow": [
+        {
+          "tag": "input",
+          "cls": "",
+          "left": -9951,
+          "right": -9771,
+          "width": 180
+        }
+      ]
+    },
+    "clickOutcome": {
+      "attempted": false
+    }
+  }
+}

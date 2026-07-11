@@ -54,7 +54,11 @@ function Tp(baseKey: string, count: number, fallbackOther: string): string {
 }
 import { openDashboardEmbedModal } from './embed-modal';
 import { openAiFormCreator } from './ai-form-creator';
+import { isTrialMode, showTrialUpgrade } from '@shared/trial';
 import { openSubmissionReport } from './submission-report';
+// [2026-06-27] Form Creation Wizard — "New Form" opens the 5-step wizard which, on
+// "Create Form", saves a fully-populated form and redirects into the existing builder.
+import { openFormCreationWizard } from './wizard';
 
 // [v20260530-29] Helper for the gradient "✨ Create with AI" button next to
 // every "+ New Form" — opens the AI Form Creator modal (chat + live preview
@@ -63,10 +67,17 @@ function makeAiCreateBtn(): HTMLButtonElement {
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'mf-btn mf-btn-sm mf-btn-ai-create';
-  btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px;font-weight:600;"><span style="font-size:14px;line-height:1">✨</span>' + T('dash.create_with_ai', 'Create with AI') + '</span>';
-  btn.style.cssText = 'background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:0;cursor:pointer;';
-  btn.title = T('dash.ai_create_hint', 'Describe a form in plain language — AI builds it for you');
-  btn.addEventListener('click', () => openAiFormCreator());
+  // [TrialTighten v20260706] AI is a premium feature — in trial the button stays VISIBLE but shows a
+  // lock + opens the Upgrade CTA (the server also withholds the AI key + enabled flag as enforcement).
+  const trial = isTrialMode();
+  const glyph = trial ? '<i class="fas fa-lock" style="font-size:12px;line-height:1"></i>' : '<span style="font-size:14px;line-height:1">✨</span>';
+  btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px;font-weight:600;">' + glyph + T('dash.create_with_ai', 'Create with AI') + '</span>';
+  btn.style.cssText = 'background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:0;cursor:pointer;' + (trial ? 'opacity:.78;' : '');
+  btn.title = trial ? T('trial.ai_msg', 'AI form building is a premium feature. Upgrade to use it.') : T('dash.ai_create_hint', 'Describe a form in plain language — AI builds it for you');
+  btn.addEventListener('click', () => {
+    if (isTrialMode()) { showTrialUpgrade({ title: T('trial.ai_title', 'AI is a premium feature'), message: T('trial.ai_msg', 'AI form building is a premium feature. Upgrade to use it.') }); return; }
+    openAiFormCreator();
+  });
   return btn;
 }
 
@@ -95,47 +106,6 @@ const URLS = {
   viewLogs: () => getPlatformRoute('viewLogs'),
   logout: () => getPlatformRoute('logout'),
 };
-
-function getNewFormBuilderUrl(): string {
-  const base = URLS.builder();
-  const hostCfg = getPlatformHostConfig();
-  const platform = String(hostCfg.platform || '').toLowerCase();
-
-  if (platform === 'dnn') {
-    try {
-      const dashboardUrl = hostCfg.returnUrl || URLS.dashboard() || base || window.location.pathname || '/';
-      const url = new URL(dashboardUrl, window.location.origin);
-      // DNN overlay route: DO NOT force configure=1 here.
-      // configure=1 opens the fullscreen server builder path, while the dashboard
-      // shell already has dnn-host loaded and can open the new-form gallery via hash.
-      url.searchParams.delete('configure');
-      url.searchParams.delete('formId');
-      url.searchParams.delete('formid');
-      url.searchParams.set('new', '1');
-      url.hash = '#mf-builder-new';
-      return url.pathname + url.search + url.hash;
-    } catch {
-      const path = String(URLS.dashboard() || base || '').split('?')[0].split('#')[0] || (window.location.pathname || '/');
-      return path + '?new=1#mf-builder-new';
-    }
-  }
-
-  if (platform === 'oqtane') {
-    try {
-      const url = new URL(base || (window.location.pathname || '/'), window.location.origin);
-      url.searchParams.delete('formId');
-      url.searchParams.delete('formid');
-      url.searchParams.set('new', '1');
-      url.hash = '';
-      return url.pathname + url.search;
-    } catch {
-      const path = String(base || '').split('?')[0].split('#')[0] || ((window.location.pathname || '/').replace(/\/(submissions|settings)\/?$/i, '/builder'));
-      return path + '?new=1';
-    }
-  }
-
-  return base;
-}
 
 /**
  * [v20260528-14] In-memory cache of every "pinned" DNN page in the current
@@ -2485,8 +2455,12 @@ function buildHeader(sb: HTMLElement, counts?: DashboardData['counts']): HTMLEle
   const rb = el('button','mf-btn mf-btn-outline mf-btn-sm'); rb.type='button';
   rb.innerHTML=ic('refresh',14)+' '+T('dash.refresh','Refresh'); rb.onclick=()=>location.reload();
   const nb = el('a','mf-btn mf-btn-primary mf-btn-sm');
-  nb.href = getNewFormBuilderUrl();
   nb.innerHTML=ic('plus',14)+' '+T('dash.new_form','New Form');
+  // [WizardEntry 2026-06-27] Open the 5-step creation wizard. NO href → a hrefless anchor
+  // never navigates (and Blazor enhanced-nav skips it), so the click reliably opens the
+  // wizard instead of jumping to the blank builder.
+  nb.setAttribute('data-mf-new-form-wizard', '1'); nb.style.cursor = 'pointer';
+  nb.onclick = (e) => { e.preventDefault(); openFormCreationWizard(); };
   // [DnnBusinessStarters v20260518-01] Open the App Builder modal — same
   // 3 cards Oqtane Index.razor renders on its "Business Starters" panel.
   // Calls window.MFStarter.launch (DNN shim emitted by dnn-host/index.ts)
@@ -3030,7 +3004,12 @@ function openCustomAppEditor(existing: AppDefRow | null, parentBody: HTMLElement
 async function renderAssignedForms(app: AppDefRow, host: HTMLElement): Promise<void> {
   const cfg = getPlatformHostConfig();
   const detailUrl = String(cfg.apiBase || (getApiBase() + '/')) + 'Phase2/AppDefinitionGet?appKey=' + encodeURIComponent(app.appKey);
-  const allFormsUrl = String(cfg.apiBase || (getApiBase() + '/')) + 'Form/ListAll';
+  // [Form/ListAll-404-fix v20260701] There is no Form/ListAll route; use the
+  // scoped Form/List (siteId so ALL site forms are assignable) + Oqtane auth params.
+  const _laSite = mfSiteId();
+  const _laMod = mfModuleId();
+  let allFormsUrl = String(cfg.apiBase || (getApiBase() + '/')) + 'Form/List?siteId=' + _laSite + '&moduleId=' + _laMod;
+  if (isOqtanePlatform()) allFormsUrl += _laMod ? '&entityid=' + _laMod + '&entityname=Module' : '&entityid=' + _laSite + '&entityname=Site';
   try {
     const [bundleResp, formsResp] = await Promise.all([
       fetch(detailUrl, { credentials: 'same-origin', headers: dnnAuthHeaders() }),
@@ -4093,8 +4072,9 @@ function buildNormalFormsCard(forms: DashboardData['recentForms'], totalAll: num
   bulkBtn.disabled=true;
 
   const nb=el('a','mf-btn mf-btn-primary mf-btn-sm');
-  nb.href = getNewFormBuilderUrl();
   nb.innerHTML=ic('plus',14)+' New Form';
+  nb.setAttribute('data-mf-new-form-wizard', '1'); nb.style.cursor = 'pointer';
+  nb.onclick = (e) => { e.preventDefault(); openFormCreationWizard(); };
   const aib3 = makeAiCreateBtn();
   mk(hdActions,searchWrap,bulkBtn,aib3,nb);
   mk(ch,ttlWrap,hdActions); c.appendChild(ch);
@@ -4444,6 +4424,59 @@ function maybeWarnMissingRendererHost(data: DashboardData): void {
   toast('Renderer Host is not configured yet. View and embed links will use the current page until you choose a renderer host.', 'info');
 }
 
+// [DashClientFormsFetch v20260701] The dashboard normally renders from the
+// server-embedded `data-dashboard` blob (BuildDashboardJsonAsync). When that
+// blob arrives empty (SSR ran without a resolved site/module context), the
+// "Apps & Forms" list, "{n} forms" header and "Total Forms" stat all show 0
+// even though forms exist. This client-side fallback fetches the forms itself
+// with the correct scope (siteId preferred so ALL site forms show; moduleId as
+// a secondary hint) and, on Oqtane, appends entityid/entityname auth params.
+function mfSiteId(): number {
+  const pf = (window as any).__MF_PLATFORM__ || {};
+  const fromCfg = Number(getPlatformHostConfig().portalId || 0) || 0;
+  const fromRoot = Number(document.getElementById('mf-dash-root')?.getAttribute('data-site-id') || 0) || 0;
+  return Number(pf.siteId ?? pf.portalId ?? 0) || fromCfg || fromRoot || 0;
+}
+async function fetchDashboardFormsClient(): Promise<DashboardData['recentForms']> {
+  try {
+    const siteId = mfSiteId();
+    const moduleId = mfModuleId();
+    if (!siteId && !moduleId) return [];
+    let url = dashApiBase() + 'Form/List?siteId=' + siteId + '&moduleId=' + moduleId;
+    if (isOqtanePlatform()) {
+      url += moduleId
+        ? '&entityid=' + moduleId + '&entityname=Module'
+        : '&entityid=' + siteId + '&entityname=Site';
+    }
+    const r = await fetch(url, { credentials: 'same-origin', headers: dnnAuthHeaders(), cache: 'no-store' });
+    if (!r.ok) return [];
+    const arr = await r.json().catch(() => null);
+    if (!Array.isArray(arr)) return [];
+    return arr.map((f: any) => ({
+      formId:   Number(f.formId ?? f.FormId ?? 0) || 0,
+      title:    String(f.title ?? f.Title ?? '') || ('Form #' + (f.formId ?? f.FormId ?? '')),
+      status:   String(f.status ?? f.Status ?? '') || 'Draft',
+      modified: String(f.updatedOnUtc ?? f.UpdatedOnUtc ?? f.createdOnUtc ?? f.CreatedOnUtc ?? ''),
+    })) as DashboardData['recentForms'];
+  } catch { return []; }
+}
+async function hydrateDashboardFormsIfEmpty(root: HTMLElement, data: DashboardData): Promise<void> {
+  if ((data.recentForms || []).length > 0) return;
+  const forms = await fetchDashboardFormsClient();
+  if (!forms.length) return;
+  data.recentForms = forms;
+  data.counts = Object.assign({}, data.counts || {}, { forms: forms.length });
+  const published = forms.filter(f => String(f.status || '').toLowerCase() === 'published').length;
+  const stats = (data.stats && data.stats.length) ? data.stats.slice() : [
+    { label: 'Total Forms', value: forms.length, meta: published + ' published', icon: 'file' },
+    { label: 'Submissions', value: '—', meta: 'Recent across this site', icon: 'inbox' },
+  ];
+  const tf = stats.find(s => String(s.label) === 'Total Forms');
+  if (tf) { tf.value = forms.length; tf.meta = published + ' published'; }
+  data.stats = stats;
+  render(root, data);
+}
+
 function render(root: HTMLElement, data: DashboardData) {
   // Initialize locked IDs from server data FIRST (cross-device authoritative)
   initServerLockedIds(data.lockedFormIds || []);
@@ -4527,6 +4560,10 @@ function render(root: HTMLElement, data: DashboardData) {
         if (loc && loc !== 'en-US') await loadLocale(loc, resolveI18nBase());
       } catch { /* English fallback */ }
       render(root, data);
+      // [DashClientFormsFetch v20260701] If the server payload shipped no forms,
+      // fetch + re-render them client-side with the correct scope so the list,
+      // header count and Total Forms stat populate even when SSR came up empty.
+      void hydrateDashboardFormsIfEmpty(root, data);
     })();
 
     // [P2-#4] Listen for AI app_batch completion in this tab + cross-tab

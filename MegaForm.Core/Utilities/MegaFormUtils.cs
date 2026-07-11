@@ -246,9 +246,21 @@ namespace MegaForm.Core.Utilities
         private static string ToRawString(object raw)
         {
             if (raw == null) return string.Empty;
+            if (raw is string rs) return rs;
             if (raw is JValue jv) return jv.ToString();
             if (raw is JArray ja) return ja.ToString(Formatting.None);
             if (raw is JObject jo) return jo.ToString(Formatting.None);
+            // [RawStringCollectionFix v20260706] Oqtane's STJ submit path normalizes JSON arrays to a
+            // CLR List<object> and JSON objects to a Dictionary<string,object> (MegaFormController.
+            // NormalizeJsonValue). Without these branches raw.ToString() emitted the .NET type-name
+            // ("System.Collections.Generic.List`1[System.Object]") into SubmissionFieldSnapshot.RawValue
+            // — the value shown in the submissions list columns / CSV. Serialize to JSON instead, so a
+            // multi-value field reads as ["music","food"], matching the Newtonsoft JArray branch above.
+            if (raw is System.Collections.IEnumerable)
+            {
+                try { return JsonConvert.SerializeObject(raw, Formatting.None); }
+                catch { return raw.ToString(); }
+            }
             return raw.ToString();
         }
 
@@ -469,6 +481,27 @@ namespace MegaForm.Core.Utilities
         {
             if (raw == null) return string.Empty;
 
+            // [DisplayTypeBranches v20260706] A few field types store a BLOB (base64 data-URL / a JSON
+            // object or array), not display text. Without a per-type branch their DisplayValue — used by
+            // the Summary column, email, CSV, PDF, and the per-field snapshot the submission Details
+            // envelope reads — showed a raw base64 image or raw JSON. Render a short human summary; the
+            // client Data tab still renders the image/links from the raw DataJson.
+            var ftype = (field != null ? field.Type : null) ?? string.Empty;
+            if (string.Equals(ftype, "Signature", StringComparison.OrdinalIgnoreCase))
+            {
+                var sv = ToRawString(raw);
+                return sv.StartsWith("data:", StringComparison.OrdinalIgnoreCase) ? "[signature]" : sv;
+            }
+            if (string.Equals(ftype, "Payment", StringComparison.OrdinalIgnoreCase))
+                return DescribePaymentValue(raw);
+            if (string.Equals(ftype, "File", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(ftype, "Image", StringComparison.OrdinalIgnoreCase))
+                return DescribeFileValue(raw);
+            if (string.Equals(ftype, "DataGrid", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(ftype, "GridRepeater", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(ftype, "DataRepeater", StringComparison.OrdinalIgnoreCase))
+                return DescribeGridValue(raw);
+
             if (raw is JArray jarr)
             {
                 var values = jarr.Select(v => v == null ? string.Empty : v.ToString()).ToList();
@@ -500,6 +533,72 @@ namespace MegaForm.Core.Utilities
             }
 
             return string.Join(", ", list);
+        }
+
+        // [DisplayTypeBranches v20260706] Parse a stored blob value (which may be a JToken already, or a
+        // JSON string, or a bare scalar string) into a JToken; null on failure so callers fall back.
+        private static JToken TryParseToken(object raw)
+        {
+            try
+            {
+                if (raw is JToken t) return t;
+                if (raw is string s)
+                {
+                    var trimmed = s.Trim();
+                    if (trimmed.Length > 0 && (trimmed[0] == '{' || trimmed[0] == '[')) return JToken.Parse(trimmed);
+                    return new JValue(s);
+                }
+                return raw == null ? null : JToken.FromObject(raw);
+            }
+            catch { return null; }
+        }
+
+        private static string DescribePaymentValue(object raw)
+        {
+            var obj = TryParseToken(raw) as JObject;
+            if (obj == null) return ToRawString(raw);
+            string Get(params string[] keys) => keys.Select(k => obj.Value<string>(k)).FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));
+            var amount = Get("amount", "Amount");
+            var currency = Get("currency", "Currency");
+            var status = Get("status", "Status");
+            var txn = Get("transactionId", "TransactionId", "transaction_id");
+            var parts = new List<string>();
+            if (!string.IsNullOrWhiteSpace(amount)) parts.Add(((currency ?? string.Empty).Trim() + " " + amount.Trim()).Trim());
+            if (!string.IsNullOrWhiteSpace(status)) parts.Add(status.Trim());
+            if (!string.IsNullOrWhiteSpace(txn)) parts.Add("txn " + txn.Trim());
+            return parts.Count > 0 ? string.Join(" · ", parts) : ToRawString(raw);
+        }
+
+        private static string FileEntryName(JToken t)
+        {
+            var o = t as JObject;
+            if (o == null) return t == null ? string.Empty : t.ToString();
+            return o.Value<string>("fileName") ?? o.Value<string>("FileName")
+                ?? o.Value<string>("name") ?? o.Value<string>("Name") ?? string.Empty;
+        }
+
+        private static string DescribeFileValue(object raw)
+        {
+            var tok = TryParseToken(raw);
+            if (tok is JArray arr)
+            {
+                var names = arr.Select(FileEntryName).Where(n => !string.IsNullOrWhiteSpace(n)).ToList();
+                if (names.Count > 0) return string.Join(", ", names);
+            }
+            if (tok is JObject)
+            {
+                var n = FileEntryName(tok);
+                if (!string.IsNullOrWhiteSpace(n)) return n;
+            }
+            var s = raw as string;
+            return string.IsNullOrWhiteSpace(s) ? ToRawString(raw) : s;
+        }
+
+        private static string DescribeGridValue(object raw)
+        {
+            var tok = TryParseToken(raw);
+            if (tok is JArray arr) return arr.Count + (arr.Count == 1 ? " row" : " rows");
+            return ToRawString(raw);
         }
 
         /// <summary>

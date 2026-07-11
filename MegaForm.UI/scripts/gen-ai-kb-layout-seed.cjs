@@ -153,7 +153,7 @@ const entries = [
           type: 'Html',
           key: 'header_banner',
           label: '',
-          htmlContent: '<div style="margin:-20px -20px 20px;height:180px;overflow:hidden;border-radius:10px 10px 0 0;"><img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=1200&h=400&fit=crop" alt="Header" style="width:100%;height:100%;object-fit:cover;display:block;"/></div>',
+          htmlContent: '<div style="margin:-20px -20px 20px;height:180px;overflow:hidden;border-radius:10px 10px 0 0;"><img src="/Modules/MegaForm/img/mock/event-hero.png" alt="Header" style="width:100%;height:100%;object-fit:cover;display:block;"/></div>',
           insertAt: 0
         }
       ],
@@ -238,7 +238,7 @@ const entries = [
 // ─── Templates (concrete preset shapes attached to entries) ─────────────
 const templates = [
   // header banner under form_pattern-header-image
-  { slug: 'form_pattern-header-image', key: 'image-cover', kind: 'preset', title: 'Cover image banner', summary: 'Full-width header image with bleed and rounded corners.', body: { type: 'Html', key: 'header_banner', htmlContent: '<div style="margin:-20px -20px 20px;height:180px;overflow:hidden;border-radius:10px 10px 0 0;"><img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=1200&h=400&fit=crop" alt="" style="width:100%;height:100%;object-fit:cover;display:block;"/></div>', insertAt: 0 } },
+  { slug: 'form_pattern-header-image', key: 'image-cover', kind: 'preset', title: 'Cover image banner', summary: 'Full-width header image with bleed and rounded corners.', body: { type: 'Html', key: 'header_banner', htmlContent: '<div style="margin:-20px -20px 20px;height:180px;overflow:hidden;border-radius:10px 10px 0 0;"><img src="/Modules/MegaForm/img/mock/event-hero.png" alt="" style="width:100%;height:100%;object-fit:cover;display:block;"/></div>', insertAt: 0 } },
   { slug: 'form_pattern-header-image', key: 'gradient-hero', kind: 'preset', title: 'Gradient hero banner', summary: 'Styled gradient div with title + subtitle (no image).', body: { type: 'Html', key: 'header_hero', htmlContent: '<div style="background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);padding:30px;margin:-20px -20px 20px;border-radius:10px 10px 0 0;color:#fff;text-align:center;"><h2 style="margin:0 0 4px;font-weight:700">Welcome</h2><p style="margin:0;opacity:.9">Tell us a bit about you</p></div>', insertAt: 0 } },
 
   // multi-column under form_pattern-multi-column-layout

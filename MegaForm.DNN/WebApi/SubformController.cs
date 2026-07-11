@@ -72,6 +72,11 @@ namespace MegaForm.WebApi
             return conn;
         }
 
+        private static bool IsSqlite(DbConnection conn)
+        {
+            return conn.GetType().FullName?.IndexOf("Sqlite", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
         // [v20260529-07] Apply-generated CREATE TABLE DDL coming from the AI
         // "Create DB Table" wizard. Runs against DashboardDatabase, refuses
         // anything other than a CREATE TABLE statement, and returns the new
@@ -319,21 +324,22 @@ namespace MegaForm.WebApi
 
         [HttpGet]
         [ActionName("Rows")]
-        [AllowAnonymous]
         public HttpResponseMessage GetRows(string tableName = null, string parentKeyColumn = null, long submissionId = 0)
         {
             if (string.IsNullOrWhiteSpace(tableName) || string.IsNullOrWhiteSpace(parentKeyColumn) || submissionId <= 0)
                 return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "tableName, parentKeyColumn, submissionId required" });
-            if (tableName.IndexOfAny(new[] { ';', '\'', '"', '[', ']' }) >= 0)
+            if (!IsSafeIdentifier(tableName))
                 return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "invalid tableName" });
-            if (parentKeyColumn.IndexOfAny(new[] { ';', '\'', '"', '[', ']', ' ' }) >= 0)
+            if (!IsSafeIdentifier(parentKeyColumn))
                 return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "invalid parentKeyColumn" });
             try
             {
                 using (var conn = OpenDashboardConnection())
                 using (var cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = "SELECT * FROM [" + tableName + "] WHERE [" + parentKeyColumn + "] = @p";
+                    if (!TableColumnExists(conn, tableName, parentKeyColumn))
+                        return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "unknown table or parentKeyColumn" });
+                    cmd.CommandText = "SELECT * FROM " + QuoteIdentifier(tableName) + " WHERE " + QuoteIdentifier(parentKeyColumn) + " = @p";
                     var p = cmd.CreateParameter(); p.ParameterName = "@p"; p.Value = submissionId; cmd.Parameters.Add(p);
                     using (var r = cmd.ExecuteReader())
                     {
@@ -355,6 +361,44 @@ namespace MegaForm.WebApi
             {
                 return Request.CreateResponse(HttpStatusCode.InternalServerError, new { error = ex.Message });
             }
+        }
+
+        private static bool IsSafeIdentifier(string value)
+        {
+            return !string.IsNullOrWhiteSpace(value)
+                && System.Text.RegularExpressions.Regex.IsMatch(value, @"^[A-Za-z_][A-Za-z0-9_]*$");
+        }
+
+        private static string QuoteIdentifier(string identifier)
+        {
+            return "[" + identifier.Replace("]", "]]") + "]";
+        }
+
+        private static bool TableColumnExists(DbConnection conn, string tableName, string columnName)
+        {
+            using (var cmd = conn.CreateCommand())
+            {
+                if (IsSqlite(conn))
+                {
+                    cmd.CommandText = "SELECT 1 FROM pragma_table_info(" + QuoteStringLiteral(tableName) + ") WHERE name = @column LIMIT 1";
+                    var column = cmd.CreateParameter(); column.ParameterName = "@column"; column.Value = columnName; cmd.Parameters.Add(column);
+                    return cmd.ExecuteScalar() != null;
+                }
+
+                cmd.CommandText = @"
+                    SELECT 1
+                    FROM INFORMATION_SCHEMA.COLUMNS
+                    WHERE TABLE_NAME = @tableName
+                      AND COLUMN_NAME = @columnName";
+                var table = cmd.CreateParameter(); table.ParameterName = "@tableName"; table.Value = tableName; cmd.Parameters.Add(table);
+                var col = cmd.CreateParameter(); col.ParameterName = "@columnName"; col.Value = columnName; cmd.Parameters.Add(col);
+                return cmd.ExecuteScalar() != null;
+            }
+        }
+
+        private static string QuoteStringLiteral(string value)
+        {
+            return "'" + (value ?? string.Empty).Replace("'", "''") + "'";
         }
 
         // Save endpoint deliberately deferred to Phase 2 — Subform inline edit

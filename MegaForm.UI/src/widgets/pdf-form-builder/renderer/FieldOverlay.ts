@@ -391,12 +391,23 @@ export class FieldOverlay {
     };
     const finish = () => {
       const f = (el as any).__field as AnyField;
+      // [FieldClipboard v20260708-1] Plain clicks (no actual move/resize) must
+      // NOT fire onChange: the host's patchField → refreshField REPLACES the
+      // element mid-gesture, so the browser retargets the follow-up `click` to
+      // the overlay (the original element is detached) → the overlay handler
+      // ran deselectAll() and selection never stuck. Only report real changes.
+      if (f.x === startField.x && f.y === startField.y
+          && f.width === startField.width && f.height === startField.height) return;
       if (this.cb.onChange) this.cb.onChange(f.id, { x: f.x, y: f.y, width: f.width, height: f.height });
     };
 
     el.addEventListener('mousedown', (ev) => {
       if (!start(ev.clientX, ev.clientY, ev.target as HTMLElement)) return;
       ev.preventDefault(); ev.stopPropagation();
+      // [FieldClipboard v20260708-1] Select on mousedown (Sejda/Adobe
+      // convention) so the selection survives even when a drag follows, and
+      // so Ctrl+C always has a current field regardless of click retargeting.
+      this.select(field.id);
       const onMove = (e: MouseEvent) => move(e.clientX, e.clientY, e.altKey);
       const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); finish(); };
       window.addEventListener('mousemove', onMove);

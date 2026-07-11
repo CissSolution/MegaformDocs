@@ -26,6 +26,13 @@ namespace MegaForm.Oqtane.Shared.Models
         public string ResolvedSchemaJson { get; set; }
         public string ResolvedSettingsJson { get; set; }
         public string ResolverBadge { get; set; }
+
+        /// <summary>
+        /// True when what this form renders depends on who is looking (a role/permission rule, or a
+        /// per-role field restriction). The prerender path must not cache or reuse markup across
+        /// visitors for such a form, because its snapshot key does not include the actor.
+        /// </summary>
+        public bool HasAccessControl { get; set; }
         public string InitialInlineCss { get; set; }
         public bool EnableCaptcha { get; set; }
         public bool EnableSaveResume { get; set; }

@@ -266,3 +266,33 @@
 .sig-adjust-controls { display: flex; gap: 10px; align-items: center; margin: 10px 0; flex-wrap: wrap; font-size: 12px; }
 .sig-adjust-controls input[type=range] { flex: 1; min-width: 100px; max-width: 200px; }
 .img-modal .img-preview { max-width: 100%; max-height: 220px; display: block; margin: 8px auto; border: 1px solid #c4d3e0; border-radius: 4px; background: #fff; }
+
+/* [PdfFullscreen v20260708-2] Real full screen for the runtime ⛶ button.
+   requestFullscreen() targets the .mfw-pdf-form wrap; without these rules the
+   wrap keeps no background (black FS backdrop shows through), .pfb-root stays
+   capped at 1100px and .pfb-viewport at 75vh — "fullscreen" rendered as a
+   small grey box floating on black. Stretch the whole chain and let the
+   viewport own all remaining height. Kept as SEPARATE :fullscreen and
+   -webkit-full-screen blocks — one unknown pseudo-class would invalidate a
+   combined selector list. */
+.mfw-pdf-form:fullscreen {
+  background: #fff;
+  width: 100%; height: 100%;
+  padding: 10px 14px; box-sizing: border-box;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.mfw-pdf-form:fullscreen .mfw-pdf-host { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.mfw-pdf-form:fullscreen .pfb-root { max-width: none; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.mfw-pdf-form:fullscreen .pfb-viewport { flex: 1 1 auto; max-height: none; min-height: 0; }
+
+.mfw-pdf-form:-webkit-full-screen {
+  background: #fff;
+  width: 100%; height: 100%;
+  padding: 10px 14px; box-sizing: border-box;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.mfw-pdf-form:-webkit-full-screen .mfw-pdf-host { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.mfw-pdf-form:-webkit-full-screen .pfb-root { max-width: none; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.mfw-pdf-form:-webkit-full-screen .pfb-viewport { flex: 1 1 auto; max-height: none; min-height: 0; }

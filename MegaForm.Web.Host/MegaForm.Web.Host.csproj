@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MegaForm.AspNetCore.Component" Version="0.2.1-preview" />
+    <PackageReference Include="MegaForm.AspNetCore.Component" Version="0.2.2-preview" />
   </ItemGroup>
 
   <ItemGroup>

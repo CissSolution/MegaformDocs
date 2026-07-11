@@ -121,6 +121,90 @@ function getSignatureCanvasHeight(field: FormField): number {
   return 120;
 }
 
+// [B311] An option `icon` may be a GLYPH (emoji ★🚀, HTML entity &#128188;, or inline <i>/<img> HTML)
+// OR a bare icon NAME the AI emitted expecting an icon ("city" / "rocket" / "fa-city"). Glyphs render
+// as-is; a bare ASCII token resolves to a FontAwesome icon (FA is loaded site-wide) so the card shows a
+// real glyph instead of the literal word "city". Mirrors C# FormHtmlRenderer.ResolveOptionIcon.
+function resolveOptionIconHtml(field: FormField, opt: ChoiceOption, raw: unknown): string {
+  const s = String(raw ?? '').trim();
+  if (!s) return '';
+  if (/[<&]/.test(s) || /[^\x00-\x7F]/.test(s)) return renderOptionPart(field, opt, s, true); // glyph/entity/HTML → as-is
+  let cls: string;
+  if (/^(fa-(solid|regular|light|thin|brands|duotone|sharp)|fas|far|fal|fat|fab|fad)\b/.test(s)) cls = s;
+  else if (/^fa-/.test(s)) cls = 'fa-solid ' + s;
+  else {
+    const key = s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    const alias: Record<string, string> = {
+      building2: 'building',
+      'building-2': 'building',
+      code2: 'code',
+      ticket: 'ticket-alt',
+      megaphone: 'bullhorn',
+      zap: 'bolt',
+      sparkles: 'wand-magic-sparkles',
+      graduationcap: 'graduation-cap',
+      'calendar-days': 'calendar-alt',
+      calendardays: 'calendar-alt',
+      'map-pin': 'map-marker-alt',
+      mappin: 'map-marker-alt',
+      mail: 'envelope',
+      phone: 'phone',
+      user: 'user',
+      users: 'users',
+      briefcase: 'briefcase',
+      'file-text': 'file-alt',
+      filetext: 'file-alt',
+      upload: 'upload',
+      wallet: 'wallet',
+      home: 'home',
+      compass: 'compass',
+      palmtree: 'umbrella-beach',
+      'tree-palm': 'tree',
+      treepalm: 'tree',
+      waves: 'water',
+      mountain: 'mountain',
+      snowflake: 'snowflake',
+      'heart-handshake': 'handshake',
+      hearthandshake: 'handshake',
+      heart: 'heart',
+      flower2: 'seedling',
+      'flower-2': 'seedling',
+      'tree-pine': 'tree',
+      treepine: 'tree',
+      'party-popper': 'gift',
+      partypopper: 'gift',
+      cake: 'birthday-cake',
+      gift: 'gift',
+      utensils: 'utensils',
+      wine: 'wine-glass-alt',
+      'glass-water': 'glass-water',
+      glasswater: 'glass-water',
+      drumstick: 'drumstick-bite',
+      salad: 'leaf',
+      pizza: 'pizza-slice',
+      'ice-cream': 'ice-cream',
+      icecream: 'ice-cream',
+      mic2: 'microphone',
+      'mic-2': 'microphone',
+      disc3: 'compact-disc',
+      'disc-3': 'compact-disc',
+      tent: 'campground',
+      'pen-line': 'pen',
+      penline: 'pen',
+      'layout-grid': 'th-large',
+      layoutgrid: 'th-large',
+      'line-chart': 'chart-line',
+      linechart: 'chart-line',
+      headphones: 'headphones',
+      send: 'paper-plane',
+      'clipboard-list': 'clipboard-list',
+      clipboardlist: 'clipboard-list',
+    };
+    cls = 'fa-solid fa-' + (alias[key] || key);
+  }
+  return `<i class="${esc(cls)}" aria-hidden="true"></i>`;
+}
+
 function renderOptionItem(inputType: 'radio' | 'checkbox', name: string, opt: ChoiceOption, checked: boolean, field: FormField, forcedDisplay?: OptionDisplay): string {
   const display = forcedDisplay || getOptionDisplay(field);
   const value = String(opt.value ?? opt.label ?? '');
@@ -134,7 +218,7 @@ function renderOptionItem(inputType: 'radio' | 'checkbox', name: string, opt: Ch
   if (display !== 'default') classes.push(`mf-option-item--${display}`);
   if (checked) classes.push('is-checked');
   if (optionHtmlEnabled(field, opt)) classes.push('mf-option-item--html');
-  const iconHtml = icon ? `<span class="mf-option-icon" aria-hidden="true">${renderOptionPart(field, opt, icon, true)}</span>` : '';
+  const iconHtml = icon ? `<span class="mf-option-icon" aria-hidden="true">${resolveOptionIconHtml(field, opt, icon)}</span>` : '';
   const metaHtml = meta ? `<span class="mf-option-meta">${renderOptionPart(field, opt, meta, true)}</span>` : '';
   const descHtml = description ? `<span class="mf-option-desc">${renderOptionPart(field, opt, description, true)}</span>` : '';
   const badgeHtml = badge ? `<span class="mf-option-badge">${renderOptionPart(field, opt, badge, false)}</span>` : '';
@@ -413,6 +497,11 @@ export function renderInput(field: FormField, formId: number, formData: Record<s
     case 'Email':
       return `<input type="email" class="mf-input" id="${id}" name="${name}" value="${esc(val)}" placeholder="${esc(ph)}"${ro}${req}${heightAttr}>`;
 
+    case 'Time':
+      // [TimeInput v20260707] ~25 sample templates use type:"Time"; without this case it
+      // fell through to the widget-plugin branch ("plugin not installed" placeholder).
+      return `<input type="time" class="mf-input" id="${id}" name="${name}" value="${esc(val)}"${ro}${req}${heightAttr}>`;
+
     case 'Number': {
       const v = field.validation || {};
       const minA = (v as any).min != null ? ` min="${(v as any).min}"` : '';
@@ -664,7 +753,11 @@ export function renderInput(field: FormField, formId: number, formData: Record<s
         }
         // Sub-label (Gravity-style hint). Positioned per cLabelPos: 'top' (above), 'bottom' (default,
         // below) or 'hidden'. A required part appends a red *.
-        const subTxt = (p.sublabel != null && String(p.sublabel) !== '') ? String(p.sublabel) : '';
+        // [BUG3 fix 20260701] Visible per-part label falls back to the accessible label (al =
+        // compositePartLabel: label -> sublabel -> known-key map -> placeholder -> humanized key)
+        // when the part has no explicit sublabel — so presets like 'name' (First/Last, no sublabels)
+        // still show a label above/below EVERY box under labelPos top/bottom (was: empty => no label).
+        const subTxt = (p.sublabel != null && String(p.sublabel) !== '') ? String(p.sublabel) : (cLabelPos !== 'hidden' ? al : '');
         const subHtml = (cLabelPos !== 'hidden' && (subTxt || p.required))
           ? `<small class="mf-composite-sub mf-composite-sub--${cLabelPos === 'top' ? 'top' : 'bottom'}">${esc(subTxt)}${p.required ? ' <span class="mf-composite-req" aria-hidden="true">*</span>' : ''}</small>`
           : '';
@@ -685,7 +778,9 @@ export function renderInput(field: FormField, formId: number, formData: Record<s
         gi++;
       });
       const rowsHtml = rowOrder.map((r) => `<div class="mf-composite-row" style="display:flex;gap:8px;align-items:stretch;">${rowMap[r].join('')}</div>`).join('');
-      return `<div class="mf-composite" role="group" aria-label="${esc(field.label || name)}" data-key="${esc(name)}" data-preset="${esc(cPreset)}" data-mf-nav="${esc(cNav)}" data-mf-orient="${esc(cOrient)}" style="display:flex;flex-direction:column;gap:8px;">${rowsHtml}</div>` +
+      // [CompositeRowGap v20260707] Row-to-row gap tracks --mf-field-gap (12px default) so
+      // in-field rows share the top-level field rhythm. Cell gap within a row stays 8px.
+      return `<div class="mf-composite" role="group" aria-label="${esc(field.label || name)}" data-key="${esc(name)}" data-preset="${esc(cPreset)}" data-mf-nav="${esc(cNav)}" data-mf-orient="${esc(cOrient)}" style="display:flex;flex-direction:column;gap:var(--mf-field-gap, 12px);">${rowsHtml}</div>` +
         `<input type="hidden" name="${name}" id="${id}" value="${esc(val)}">`;
     }
     default: {
@@ -723,6 +818,9 @@ export function renderSingleFieldElement(field: FormField, formId: number, formD
   group.className = 'mf-field-group';
   group.setAttribute('data-key', field.key);
   group.setAttribute('data-type', field.type);
+  // Per-field width (inline-edit resize): emit data-width so the flow CSS sizes the field.
+  // Omitted for the 100% default so untouched fields keep the :not([data-width]) full-width rule.
+  if ((field as any).width && (field as any).width !== '100%') group.setAttribute('data-width', String((field as any).width));
 
   if (field.showIf) {
     group.setAttribute('data-show-if', JSON.stringify(field.showIf));

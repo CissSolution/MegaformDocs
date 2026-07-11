@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using MegaForm.Core.Interfaces;
 using MegaForm.Core.Services;
+using MegaForm.Core.Services.Starters;
 using MegaForm.Core.Services.Workflow;
 using MegaForm.Core.Services.AiKnowledge;
 using MegaForm.Core.i18n;
@@ -106,6 +107,8 @@ namespace MegaForm.AspNetCore.Component
         {
             var options = app.Services.GetRequiredService<MegaFormOptions>();
             configureOptions?.Invoke(options);
+
+            app.UseResponseCompression();
 
             if (options.UseCors)
                 app.UseCors();
@@ -219,9 +222,9 @@ namespace MegaForm.AspNetCore.Component
             services.AddScoped<IWorkflowEvaluator, WorkflowEvaluator>();
             services.AddScoped<IWorkflowEmailSender, WebWorkflowEmailSender>();
             services.AddScoped<IWorkflowIdentityProvisioningService, WebWorkflowIdentityProvisioningService>();
-            // Free tier: no-op workflow engine. The premium add-on replaces this
-            // with the real WorkflowEngineV2 implementation.
-            services.AddScoped<IWorkflowEngine, NoOpWorkflowEngine>();
+            // WorkflowEngineV2 — real graph-based workflow runtime for the ASP.NET Core host.
+            // (The NoOpWorkflowEngine implementation remains available in Core for hosts that need it.)
+            services.AddScoped<IWorkflowEngine, WorkflowEngineV2>();
             services.AddScoped<WorkflowTaskService>();
             services.AddScoped<WorkflowTransparencyService>();
             services.AddScoped<SubmissionWorkflowDetailService>();
@@ -250,6 +253,16 @@ namespace MegaForm.AspNetCore.Component
 
             services.AddScoped<IConnectionRegistry, WebConnectionRegistry>();
             services.AddScoped<IDatabaseWorkflowMetadataService, DatabaseWorkflowMetadataService>();
+
+            // Business Starter platform adapter + services
+            services.AddScoped<IStarterPlatformAdapter, WebStarterPlatformAdapter>();
+            services.AddScoped<StarterStatusService>();
+            services.AddScoped<LeaveRequestStarterService>();
+            services.AddScoped<ProposalStarterService>();
+            services.AddScoped<DocumentExchangeStarterService>();
+            services.AddScoped<PurchaseOrderStarterService>();
+            services.AddScoped<RecruitmentStarterService>();
+            services.AddScoped<ConfiguredAppStarterService>();
 
             // Feature flags (free tier)
             services.AddSingleton<IMegaFormFeatureToggles, DefaultMegaFormFeatureToggles>();
@@ -280,6 +293,11 @@ namespace MegaForm.AspNetCore.Component
 
             // AI Knowledge Base
             services.AddScoped<IAiKnowledgeService, WebAiKnowledgeService>();
+
+            // Hosted services (warmup, KB seed, blog scheduler)
+            services.AddHostedService<MegaForm.Web.HostedServices.MegaFormWarmupHostedService>();
+            services.AddHostedService<MegaForm.Web.HostedServices.WebKbSeederHostedService>();
+            services.AddHostedService<MegaForm.Web.HostedServices.BlogScheduledHostedService>();
 
             // Reporting indexer (B55)
             services.AddScoped<SubmissionIndexerService>(sp =>
@@ -315,8 +333,18 @@ namespace MegaForm.AspNetCore.Component
             if (options.UseSwagger)
             {
                 services.AddEndpointsApiExplorer();
-                services.AddSwaggerGen(o => o.SwaggerDoc("v1", new() { Title = "MegaForm API", Version = "v1" }));
+                services.AddSwaggerGen(o =>
+                {
+                    o.SwaggerDoc("v1", new() { Title = "MegaForm API", Version = "v1" });
+                    o.CustomSchemaIds(type => type.FullName?.Replace("+", "_") ?? type.Name);
+                });
             }
+
+            // Response compression for public form pages and API payloads
+            services.AddResponseCompression(options =>
+            {
+                options.EnableForHttps = true;
+            });
         }
 
         private static void RegisterAuthentication(IServiceCollection services, MegaFormOptions options)

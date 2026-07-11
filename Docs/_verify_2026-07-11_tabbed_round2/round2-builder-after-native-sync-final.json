@@ -1,0 +1,224 @@
+[
+  {
+    "step": 0,
+    "current": "0",
+    "card": {
+      "x": 49.22,
+      "y": 35.99,
+      "w": 919.98,
+      "h": 556.32,
+      "right": 969.2,
+      "bottom": 592.31
+    },
+    "activePage": {
+      "x": 99.85,
+      "y": 292.38,
+      "w": 818.73,
+      "h": 146.93,
+      "right": 918.58,
+      "bottom": 439.31
+    },
+    "nativeHost": {
+      "x": 99.85,
+      "y": 292.38,
+      "w": 818.73,
+      "h": 146.93,
+      "right": 918.58,
+      "bottom": 439.31
+    },
+    "nativeStyle": {
+      "display": "block",
+      "visibility": "visible",
+      "padding": "0px",
+      "margin": "0px"
+    },
+    "bodyOverflowX": false,
+    "cardBeyond": false,
+    "text": "First name * Last name * Work email * Phone"
+  },
+  {
+    "step": 1,
+    "current": "1",
+    "card": {
+      "x": 49.22,
+      "y": 35.99,
+      "w": 919.98,
+      "h": 1021.52,
+      "right": 969.2,
+      "bottom": 1057.51
+    },
+    "activePage": {
+      "x": 99.85,
+      "y": 292.38,
+      "w": 818.73,
+      "h": 612.14,
+      "right": 918.58,
+      "bottom": 904.52
+    },
+    "nativeHost": {
+      "x": 99.85,
+      "y": 292.38,
+      "w": 818.73,
+      "h": 612.14,
+      "right": 918.58,
+      "bottom": 904.52
+    },
+    "nativeStyle": {
+      "display": "block",
+      "visibility": "visible",
+      "padding": "0px",
+      "margin": "0px"
+    },
+    "bodyOverflowX": false,
+    "cardBeyond": false,
+    "text": "Company name * Website Your role *Founder / CEOLeading the company.✓ProductProduct and design teams.✓EngineeringBuilding"
+  },
+  {
+    "step": 2,
+    "current": "2",
+    "card": {
+      "x": 49.22,
+      "y": 35.99,
+      "w": 919.98,
+      "h": 640.58,
+      "right": 969.2,
+      "bottom": 676.57
+    },
+    "activePage": {
+      "x": 99.85,
+      "y": 292.38,
+      "w": 818.73,
+      "h": 231.2,
+      "right": 918.58,
+      "bottom": 523.58
+    },
+    "nativeHost": {
+      "x": 99.85,
+      "y": 292.38,
+      "w": 818.73,
+      "h": 231.2,
+      "right": 918.58,
+      "bottom": 523.58
+    },
+    "nativeStyle": {
+      "display": "block",
+      "visibility": "visible",
+      "padding": "0px",
+      "margin": "0px"
+    },
+    "bodyOverflowX": false,
+    "cardBeyond": false,
+    "text": "Choose your plan *Starter$0For small teams getting going.✓Pro$29For growing teams that need more.Popular✓EnterpriseCusto"
+  },
+  {
+    "step": 3,
+    "current": "3",
+    "card": {
+      "x": 49.22,
+      "y": 35.99,
+      "w": 919.98,
+      "h": 821.03,
+      "right": 969.2,
+      "bottom": 857.03
+    },
+    "activePage": {
+      "x": 99.85,
+      "y": 292.38,
+      "w": 818.73,
+      "h": 411.65,
+      "right": 918.58,
+      "bottom": 704.03
+    },
+    "nativeHost": {
+      "x": 99.85,
+      "y": 292.38,
+      "w": 818.73,
+      "h": 411.65,
+      "right": 918.58,
+      "bottom": 704.03
+    },
+    "nativeStyle": {
+      "display": "block",
+      "visibility": "visible",
+      "padding": "0px",
+      "margin": "0px"
+    },
+    "bodyOverflowX": false,
+    "cardBeyond": false,
+    "text": "What are you interested in? *AnalyticsAutomationSecurityCollaborationIntegrationsReporting Preferred contact method *Ema"
+  },
+  {
+    "step": 4,
+    "current": "4",
+    "card": {
+      "x": 49.22,
+      "y": 35.99,
+      "w": 919.98,
+      "h": 559.04,
+      "right": 969.2,
+      "bottom": 595.03
+    },
+    "activePage": {
+      "x": 99.85,
+      "y": 292.38,
+      "w": 818.73,
+      "h": 149.65,
+      "right": 918.58,
+      "bottom": 442.03
+    },
+    "nativeHost": {
+      "x": 99.85,
+      "y": 292.38,
+      "w": 818.73,
+      "h": 149.65,
+      "right": 918.58,
+      "bottom": 442.03
+    },
+    "nativeStyle": {
+      "display": "block",
+      "visibility": "visible",
+      "padding": "0px",
+      "margin": "0px"
+    },
+    "bodyOverflowX": false,
+    "cardBeyond": false,
+    "text": "Two-factor authentication *Authenticator appMost secure option.✓SMS codeText to your phone.✓Password onlySet up 2FA late"
+  },
+  {
+    "step": 5,
+    "current": "5",
+    "card": {
+      "x": 49.22,
+      "y": 35.99,
+      "w": 919.98,
+      "h": 962.15,
+      "right": 969.2,
+      "bottom": 998.14
+    },
+    "activePage": {
+      "x": 99.85,
+      "y": 292.38,
+      "w": 818.73,
+      "h": 552.77,
+      "right": 918.58,
+      "bottom": 845.15
+    },
+    "nativeHost": {
+      "x": 99.85,
+      "y": 292.38,
+      "w": 818.73,
+      "h": 552.77,
+      "right": 918.58,
+      "bottom": 845.15
+    },
+    "nativeStyle": {
+      "display": "block",
+      "visibility": "visible",
+      "padding": "0px",
+      "margin": "0px"
+    },
+    "bodyOverflowX": false,
+    "cardBeyond": false,
+    "text": "Review your details below. Tap any tab above to make changes. First nameLast nameWork emailPhoneCompany nameWebsiteYour "
+  }
+]

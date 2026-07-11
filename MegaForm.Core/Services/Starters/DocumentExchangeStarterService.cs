@@ -46,7 +46,7 @@ namespace MegaForm.Core.Services.Starters
         public const string RequesterRole = "Document Submitters";
         public const string ManagerRole = "Document Department Reviewers";
         public const string FinanceRole = "Document Records Officers";
-        public const string StarterPassword = "MegaForm!2026";
+        public const string StarterPassword = "";
         public const string RequesterUserName = "document.submitter";
         public const string ManagerUserName = "document.department";
         public const string FinanceUserName = "document.records";
@@ -356,7 +356,7 @@ namespace MegaForm.Core.Services.Starters
                     Password = StarterPassword,
                     ApproveUser = true,
                     UpdateIfExists = true,
-                    GeneratePasswordIfEmpty = false,
+                    GeneratePasswordIfEmpty = true,
                     Actor = actor
                 }, CancellationToken.None).GetAwaiter().GetResult();
             }
@@ -1533,4 +1533,3 @@ namespace MegaForm.Core.Services.Starters
         }
     }
 }
-

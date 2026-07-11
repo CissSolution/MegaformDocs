@@ -107,6 +107,7 @@ namespace MegaForm.Web.Controllers
                     new { title = "Theme Designer", subtitle = "Open the Vite/TS theme editor", icon = "fa-solid fa-palette", href = forms.Count > 0 ? $"/admin/theme-designer?formId={forms[0].FormId}" : "/admin/theme-designer" },
                     new { title = "View Logs", subtitle = "Inspect email, payment, and workflow logs", icon = "fa-solid fa-file-waveform", href = "/admin/viewlogs" },
                     new { title = "Languages", subtitle = "Manage widget and control language packs", icon = "fa-solid fa-language", href = "/admin/languages" },
+                    new { title = "My Inbox", subtitle = "Workflow tasks assigned to you", icon = "fa-solid fa-inbox", href = "/admin/myinbox" },
                     new { title = "Export", subtitle = "Download submissions as CSV or JSON", icon = "fa-solid fa-download", href = "/admin/submissions" },
                     new { title = "Settings", subtitle = "Payment, email, and setup", icon = "fa-solid fa-sliders", href = "/setup/reset" },
                 },
@@ -278,6 +279,18 @@ namespace MegaForm.Web.Controllers
             ViewBag.HasDevLock = HasDevLock();
             ViewBag.HasDemoLock = HasDemoLock();
             return View("~/Views/Admin/Languages.cshtml");
+        }
+
+        [HttpGet("myinbox")]
+        public IActionResult MyInbox()
+        {
+            if (!SetupController.IsSetupComplete(_env))
+                return Redirect("/setup");
+
+            ViewBag.ApiBaseUrl = "/api/MegaForm/";
+            ViewBag.HasDevLock = HasDevLock();
+            ViewBag.HasDemoLock = HasDemoLock();
+            return View("~/Views/Admin/MyInbox.cshtml");
         }
 
         [HttpGet("viewlogs")]

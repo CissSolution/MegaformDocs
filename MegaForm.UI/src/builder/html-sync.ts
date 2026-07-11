@@ -1,5 +1,6 @@
 import { MegaFormBuilder } from './core';
-import { insertIntoCardBody, syncFieldPlaceholders } from '@shared/custom-html-insert';
+import { insertIntoCardBody, syncFieldPlaceholders, reorderFieldTokens } from '@shared/custom-html-insert';
+import { isPremiumNativeSchema, syncPremiumNativeShellToSchema } from '@shared/premium-native-migration';
 
 (function () {
     'use strict';
@@ -335,6 +336,26 @@ import { insertIntoCardBody, syncFieldPlaceholders } from '@shared/custom-html-i
         var beforeSync = html;
         var afterSync = syncFieldPlaceholders(html, schemaFields);
         if (afterSync !== beforeSync) { html = afterSync; injected++; }
+
+        // [2026-06-28 D1] On an EXPLICIT reorder (builder drag), move each field WRAPPER so the
+        // customHtml token order matches the new schema order — this is what makes drag-reorder
+        // take effect at render time for custom-shell forms (layout = token order, not schema
+        // order). Gated on options.reorder: it must NOT run during AI rebrand/keep-style, which
+        // preserves the shell byte-for-byte (the schema order from the model is not authoritative
+        // there). Whole-step reorder is intentionally NOT done here (data-step nodes are fixed).
+        if (options.reorder) {
+            var reordered = reorderFieldTokens(html, schemaFields);
+            if (reordered !== html) { html = reordered; injected++; }
+        }
+
+        if (isPremiumNativeSchema(B.state.schema)) {
+            B.state.schema.settings.customHtml = html;
+            B.state.schema.settings.CustomHtml = html;
+            if (syncPremiumNativeShellToSchema(B.state.schema)) {
+                html = getCustomHtml();
+                injected++;
+            }
+        }
 
         if (html !== originalHtml) {
             setCustomHtml(html);

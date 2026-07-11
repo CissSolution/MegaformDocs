@@ -21,7 +21,23 @@
     const BUILDER_PREVIEW_CSS_BADGE = 'BuilderPreviewCss v20260422-01';
     const BUILDER_PERMISSIONS_BADGE = 'BuilderPermissions v20260424-01';
     const BUILDER_PDF_FORM_LOAD_BADGE = 'BuilderPdfFormLoad v20260505-01';
-    const BUILDER_BUNDLE_VERSION = '20260623-B243';
+    // [CacheBustFix B284 2026-06-26] Derive the builder bundle/CSS cache-bust version from THIS
+    // loader's OWN ?v= (Index.razor / FormView load the loader at ?v=AssetVersion). This was a
+    // HARDCODED constant ('20260626-B244') that nobody bumped when megaform-builder.js was rebuilt
+    // → the browser kept serving a STALE cached builder.js (e.g. an old gallery missing the
+    // file-input data-mf-overlay fix → "Upload Template" file dialog never opened; old preview
+    // code). Reading the version off the loader src ties it to AssetVersion forever, so one
+    // AssetVersion bump busts loader + builder + builder CSS together.
+    function getLoaderBundleVersion(): string {
+        try {
+            const el = (document.currentScript as HTMLScriptElement | null)
+                || document.querySelector<HTMLScriptElement>('script[src*="megaform-builder-loader"]');
+            const m = (el && el.src || '').match(/[?&]v=([^&]+)/);
+            if (m && m[1]) return decodeURIComponent(m[1]);
+        } catch (_e) { /* fall through to fallback */ }
+        return '20260626-B284';
+    }
+    const BUILDER_BUNDLE_VERSION = getLoaderBundleVersion();
     if (typeof window !== 'undefined') {
         (window as any).__MF_BUILDER_PREVIEW_CSS_BADGE__ = BUILDER_PREVIEW_CSS_BADGE;
         (window as any).__MF_BUILDER_PERMISSIONS_BADGE__ = BUILDER_PERMISSIONS_BADGE;
@@ -400,6 +416,14 @@
             if (!document.body || !document.body.contains(root)) return;
             document.querySelectorAll<HTMLElement>('.mf-form-wrapper').forEach(wrapper => {
                 if (root.contains(wrapper)) return;
+                // [PreviewSuppressFix B284 2026-06-26] Never suppress a wrapper that lives inside
+                // one of MegaForm's OWN floating overlays (data-mf-overlay) — e.g. the gallery
+                // "Template Preview" modal renders an in-memory .mf-form-wrapper into a body-level
+                // [data-mf-overlay] modal that is OUTSIDE the builder root, so the old root.contains
+                // guard missed it and this live-form suppressor cloaked the preview
+                // (display:none!important … pointer-events:none) → blank preview pane. hideChrome
+                // already exempts data-mf-overlay; mirror that here.
+                if (wrapper.closest('[data-mf-overlay]')) return;
                 suppressElement(wrapper.closest<HTMLElement>('.megaform-module') || wrapper);
                 suppressCustomCss(wrapper);
             });
@@ -638,21 +662,19 @@
         // every execution re-injects CSS, re-hoists #mf-builder-root, re-runs the
         // fullscreen pump/observer, and re-loads megaform-builder.js — duplicating
         // plugin registrations and eventually freezing the tab.
-        if (w.__mfBuilderLoaderRan === true) {
-            console.log('[MF-Loader] Already executed; skipping duplicate boot.');
+        // [B359 per-root guard] The old guard was a GLOBAL `w.__mfBuilderLoaderRan` flag. Oqtane
+        // is a Blazor enhanced-nav SPA, so that global survived across in-tab navigations: once a
+        // tab had booted ANY builder, navigating to a DIFFERENT builder (?mfpanel=builder&formId=N)
+        // mounted a fresh empty #mf-builder-root but the loader short-circuited here as a
+        // "duplicate" → the new builder rendered BLANK. Guard PER-ROOT instead: skip only when THIS
+        // specific root has already booted (root.dataset.mfBooted). A freshly-mounted root always
+        // boots (reInit below when the bundle is already loaded). The old global is kept only as a
+        // legacy no-op marker; it no longer gates the boot.
+        const root = document.getElementById('mf-builder-root') as HTMLElement | null;
+        if (root && root.dataset.mfBooted === '1') {
+            console.log('[MF-Loader] This builder root already booted; skipping.');
             return;
         }
-
-        // [NoRootRetryFix v20260613-B160] Set the "ran" guard ONLY once #mf-builder-root
-        // is actually present. The loader is a page Resource on EVERY MegaForm page, so it
-        // also executes on form/dashboard pages (and during the brief Blazor render window
-        // before BuilderView mounts the root) where the root does NOT yet exist. Previously
-        // the flag was set BEFORE the root check → that early no-root run "used up" the
-        // guard, and the real boot (after the root mounts / on ?mfpanel=builder) was then
-        // skipped as a "duplicate" → builder rendered BLANK. By deferring the flag until the
-        // root exists, a no-root run is a no-op that lets a later real run boot, while a
-        // second run AFTER a successful boot is still correctly short-circuited.
-        const root = document.getElementById('mf-builder-root') as HTMLElement | null;
         if (!root) {
             // [P2 noise fix] The loader is a Resource on EVERY MegaForm page, so a
             // no-root execution is normal (form/dashboard pages + the pre-mount
@@ -665,12 +687,14 @@
             }
             return;
         }
-        w.__mfBuilderLoaderRan = true;
+        root.dataset.mfBooted = '1';   // [B359] per-root boot marker (replaces the global guard)
+        w.__mfBuilderLoaderRan = true; // legacy marker, no longer gates the boot
 
-        // Extra guard: if the builder bundle has already been loaded/registered,
-        // only re-init (mirrors the check in loadBuilderBundle).
+        // Extra guard: if the builder bundle has already been loaded/registered, only re-init
+        // (mirrors the check in loadBuilderBundle). On enhanced-nav to a NEW builder root this is
+        // the path that re-binds the already-loaded bundle to the freshly-mounted (empty) root.
         if (typeof w.MegaFormBuilder !== 'undefined' && typeof w.MegaFormBuilder.reInit === 'function') {
-            console.log('[MF-Loader] Builder bundle already present; reInit only.');
+            console.log('[MF-Loader] Builder bundle already present; reInit for this root.');
             w.MegaFormBuilder.reInit();
             return;
         }

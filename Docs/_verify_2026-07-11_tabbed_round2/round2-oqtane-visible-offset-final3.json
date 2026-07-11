@@ -1,0 +1,176 @@
+[
+  {
+    "step": 0,
+    "root": {
+      "x": 0,
+      "y": 568.38,
+      "w": 1365,
+      "h": 657.69,
+      "right": 1365,
+      "bottom": 1226.06
+    },
+    "card": {
+      "x": 106.5,
+      "y": 616.38,
+      "w": 1152,
+      "h": 545.19,
+      "right": 1258.5,
+      "bottom": 1161.56
+    },
+    "nav": {
+      "x": 0,
+      "y": 0,
+      "w": 1365,
+      "h": 97,
+      "right": 1365,
+      "bottom": 97
+    },
+    "overflow": false,
+    "progress": "0 of 5 sections complete"
+  },
+  {
+    "step": 1,
+    "root": {
+      "x": 0,
+      "y": 62.38,
+      "w": 1365,
+      "h": 1105.11,
+      "right": 1365,
+      "bottom": 1167.48
+    },
+    "card": {
+      "x": 106.5,
+      "y": 110.38,
+      "w": 1152,
+      "h": 992.61,
+      "right": 1258.5,
+      "bottom": 1102.98
+    },
+    "nav": {
+      "x": 0,
+      "y": 0,
+      "w": 1365,
+      "h": 97,
+      "right": 1365,
+      "bottom": 97
+    },
+    "overflow": false,
+    "progress": "1 of 5 sections complete"
+  },
+  {
+    "step": 2,
+    "root": {
+      "x": 0,
+      "y": 62.38,
+      "w": 1365,
+      "h": 672.77,
+      "right": 1365,
+      "bottom": 735.14
+    },
+    "card": {
+      "x": 106.5,
+      "y": 110.38,
+      "w": 1152,
+      "h": 560.27,
+      "right": 1258.5,
+      "bottom": 670.64
+    },
+    "nav": {
+      "x": 0,
+      "y": 0,
+      "w": 1365,
+      "h": 97,
+      "right": 1365,
+      "bottom": 97
+    },
+    "overflow": false,
+    "progress": "2 of 5 sections complete"
+  },
+  {
+    "step": 3,
+    "root": {
+      "x": 0,
+      "y": 62.38,
+      "w": 1365,
+      "h": 865.48,
+      "right": 1365,
+      "bottom": 927.86
+    },
+    "card": {
+      "x": 106.5,
+      "y": 110.38,
+      "w": 1152,
+      "h": 752.98,
+      "right": 1258.5,
+      "bottom": 863.36
+    },
+    "nav": {
+      "x": 0,
+      "y": 0,
+      "w": 1365,
+      "h": 97,
+      "right": 1365,
+      "bottom": 97
+    },
+    "overflow": false,
+    "progress": "3 of 5 sections complete"
+  },
+  {
+    "step": 4,
+    "root": {
+      "x": 0,
+      "y": 62.38,
+      "w": 1365,
+      "h": 640.14,
+      "right": 1365,
+      "bottom": 702.52
+    },
+    "card": {
+      "x": 106.5,
+      "y": 110.38,
+      "w": 1152,
+      "h": 527.64,
+      "right": 1258.5,
+      "bottom": 638.02
+    },
+    "nav": {
+      "x": 0,
+      "y": 0,
+      "w": 1365,
+      "h": 97,
+      "right": 1365,
+      "bottom": 97
+    },
+    "overflow": false,
+    "progress": "4 of 5 sections complete"
+  },
+  {
+    "step": 5,
+    "root": {
+      "x": 0,
+      "y": 62.38,
+      "w": 1365,
+      "h": 1021.09,
+      "right": 1365,
+      "bottom": 1083.47
+    },
+    "card": {
+      "x": 106.5,
+      "y": 110.38,
+      "w": 1152,
+      "h": 908.59,
+      "right": 1258.5,
+      "bottom": 1018.97
+    },
+    "nav": {
+      "x": 0,
+      "y": 0,
+      "w": 1365,
+      "h": 97,
+      "right": 1365,
+      "bottom": 97
+    },
+    "overflow": false,
+    "progress": "5 of 5 sections complete"
+  }
+]

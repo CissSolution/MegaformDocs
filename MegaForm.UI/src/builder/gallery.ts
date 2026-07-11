@@ -1223,7 +1223,15 @@
     var isMulti = stats.pageCount > 1;
     var badge = isMulti ? '<span class="tpl-badge">' + stats.pageCount + ' pages</span>' : '';
     var catLabel = cat.charAt(0).toUpperCase() + cat.slice(1);
-    var icon = String(tpl.icon || '✦');
+    var iconRaw = String(tpl.icon || '');
+    // Only fa-* classes and real glyphs (emoji/symbols) render. Lucide-style catalog names
+    // (compass / sparkles / globe-2 / flower-2) are NOT glyphs → they'd print as raw text in the
+    // hero-icon. Fall back to a neutral FA glyph for those (matches gallery-modal / step-setup).
+    var iconHtml = iconRaw.indexOf('fa-') === 0
+      ? '<i class="fa-solid ' + escAttr(iconRaw) + '"></i>'
+      : /^[a-z][a-z0-9-]*$/.test(iconRaw)
+        ? '<i class="fa-solid fa-file-lines"></i>'
+        : escHtml(iconRaw || '✦');
     var sourceBadge = id.indexOf('file-') === 0 ? '<span class="tpl-source-badge">uploaded</span>' : '';
     var quickPeek = '<button type="button" class="tpl-quickpeek-btn" data-preview="' + escAttr(id) + '"><i class="fa-regular fa-eye"></i><span>Preview</span></button>';
     // FileName comes from BuilderTemplateRecord.FileName (Newtonsoft → PascalCase)
@@ -1248,7 +1256,7 @@
       + '<div class="tpl-thumb" style="background:' + escAttr(grad) + '">'
       + badge
       + sourceBadge
-      + '<div class="tpl-hero-icon">' + escHtml(icon) + '</div>'
+      + '<div class="tpl-hero-icon">' + iconHtml + '</div>'
       + '<div class="tpl-thumb-surface">' + buildThumbnailMarkup(tpl) + '</div>'
       + '<div class="tpl-thumb-overlay">'
       + '<div class="tpl-thumb-actions">'

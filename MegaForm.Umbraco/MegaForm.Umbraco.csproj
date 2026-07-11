@@ -6,30 +6,56 @@
     <Version>1.5.0</Version>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
-    <Description>MegaForm module for Umbraco CMS — form builder, multi-view, submissions</Description>
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <StaticWebAssetBasePath>App_Plugins/MegaForm</StaticWebAssetBasePath>
+
+    <!-- NuGet packaging -->
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageId>MegaForm.Umbraco</PackageId>
+    <Authors>MegaForm Team</Authors>
+    <Company>MegaForm</Company>
+    <Product>MegaForm for Umbraco</Product>
+    <Description>MegaForm module for Umbraco CMS — form builder, multi-view, submissions, and workflow extensibility.</Description>
+    <Copyright>© 2026 MegaForm. All rights reserved.</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/nicknguyen-oqtane/MegaForm</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/nicknguyen-oqtane/MegaForm.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>umbraco;umbraco-marketplace;form-builder;forms;workflow;submissions</PackageTags>
+    <PackageReleaseNotes>Initial packable release for Umbraco 14+ (Bellissima). Static web assets are served under /App_Plugins/MegaForm/.</PackageReleaseNotes>
+    <NoWarn>$(NoWarn);NU5104</NoWarn>
   </PropertyGroup>
+
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\MegaForm.Core\MegaForm.Core.csproj" />
     <ProjectReference Include="..\MegaForm.Sdk\MegaForm.Sdk.csproj" />
   </ItemGroup>
+
   <ItemGroup>
     <!-- Umbraco 14+ (Bellissima) -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.11" />
     <PackageReference Include="Umbraco.Cms.Web.Common" Version="14.*" />
+    <PackageReference Include="Umbraco.Cms.Core" Version="14.*" />
+    <PackageReference Include="Umbraco.Cms.Infrastructure" Version="14.*" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.11" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
+
   <ItemGroup>
-    <Content Include="wwwroot\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="Views\**\*.cshtml" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-  </ItemGroup>
-  <ItemGroup>
+    <!-- Packaged metadata files (at package root only, not as consumer content) -->
+    <None Include="icon.png" Pack="true" PackagePath="\" />
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="umbraco-marketplace.json" Pack="true" PackagePath="\" />
+    <Content Remove="umbraco-marketplace.json" />
+    <!-- License file copied to build/publish output -->
     <Content Include="license.lic" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="wwwroot\license.lic" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

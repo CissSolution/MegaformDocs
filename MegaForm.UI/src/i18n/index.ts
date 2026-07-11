@@ -39,16 +39,26 @@ export function setLocale(locale: string, strings: LocaleStrings): void {
 const RTL_LANGS = /^(ar|he|iw|fa|ur|yi|dv|ps|sd)(-|_|$)/i;
 
 // The locales MegaForm can resolve to (launch set + pre-existing bundles).
+// [FullLocaleSet 2026-07-02] MUST include EVERY locale we ship a public/i18n/<loc>.json for,
+// otherwise normalizeLocale() falls the code back to en-US and the (now fully-translated) pack
+// is never loaded/applied when the user picks it in the Language Manager. This list mirrors the
+// 39 shipped locale files.
 const KNOWN_LOCALES = [
-  'en-US', 'es-ES', 'fr-FR', 'de-DE', 'pt-BR', 'ar-SA',
+  'en-US', 'en-GB', 'es-ES', 'es-MX', 'fr-FR', 'de-DE', 'pt-BR', 'pt-PT', 'ar-SA',
   'ja-JP', 'ko-KR', 'zh-CN', 'zh-TW', 'vi-VN', 'it-IT', 'th-TH',
-  // [PopularLangs 2026-06-12] newly-shipped complete packs
   'nl-NL', 'pl-PL', 'ru-RU', 'tr-TR', 'id-ID', 'hi-IN',
+  // [FullLocaleSet 2026-07-02] remaining shipped packs (were missing → fell back to en-US)
+  'bg-BG', 'cs-CZ', 'da-DK', 'el-GR', 'et-EE', 'fi-FI', 'hr-HR', 'hu-HU', 'lt-LT',
+  'lv-LV', 'nb-NO', 'ro-RO', 'sk-SK', 'sl-SI', 'sr-Latn-RS', 'sv-SE', 'uk-UA',
 ];
 const LANG_DEFAULT: Record<string, string> = {
   en: 'en-US', es: 'es-ES', fr: 'fr-FR', de: 'de-DE', pt: 'pt-BR', ar: 'ar-SA',
   ja: 'ja-JP', ko: 'ko-KR', zh: 'zh-CN', vi: 'vi-VN', it: 'it-IT', th: 'th-TH',
   nl: 'nl-NL', pl: 'pl-PL', ru: 'ru-RU', tr: 'tr-TR', id: 'id-ID', hi: 'hi-IN',
+  // [FullLocaleSet 2026-07-02] base-language → default region for the newly-recognized packs
+  bg: 'bg-BG', cs: 'cs-CZ', da: 'da-DK', el: 'el-GR', et: 'et-EE', fi: 'fi-FI', hr: 'hr-HR',
+  hu: 'hu-HU', lt: 'lt-LT', lv: 'lv-LV', nb: 'nb-NO', ro: 'ro-RO', sk: 'sk-SK', sl: 'sl-SI',
+  sr: 'sr-Latn-RS', sv: 'sv-SE', uk: 'uk-UA',
 };
 
 /** True when `locale` (or the current locale) is right-to-left. */
@@ -182,7 +192,7 @@ function resolveLocaleUrl(baseUrl: string | undefined, locale: string): string {
  */
 // Bump when the shipped catalog changes so stale localStorage caches are dropped.
 // 20260619-4: +18 ref keys, +64 dashboard/subs (Phase 0), +36 builder palette tile labels.
-const I18N_CACHE_VERSION = '20260619-4';
+const I18N_CACHE_VERSION = '20260702-1';
 
 export async function loadLocale(locale: string, baseUrl?: string): Promise<boolean> {
   locale = normalizeLocale(locale);
@@ -305,8 +315,18 @@ export function resolveI18nBase(): string {
     }
     if (!api) {
       const w = window as any;
-      if (w.Oqtane || w.__OQTANE__ || (typeof document !== 'undefined' && document.querySelector('[data-platform="oqtane"]'))) api = '/api/MegaForm/';
-      else api = '/DesktopModules/MegaForm/API/';
+      // Positive DNN evidence ONLY — otherwise assume Oqtane (the primary target).
+      // Oqtane markers (window.Oqtane / [data-platform=oqtane]) can boot late, so the
+      // old `else -> DNN` default made the builder/theme-designer resolve the DNN static
+      // path on Oqtane -> /DesktopModules/MegaForm/Assets/js/builder/i18n/<loc>.json = 404.
+      // Oqtane serves builder i18n via /api/MegaForm/i18n/Get; only the DNN static path
+      // 404s on Oqtane, so never fall back to it without real DNN evidence. DNN keeps
+      // working: it supplies an explicit /DesktopModules apiBase or matches isDnn below.
+      const isDnn =
+        (typeof document !== 'undefined' && !!document.querySelector('[data-platform="dnn"]')) ||
+        (typeof location !== 'undefined' && /\/DesktopModules\//i.test(location.pathname)) ||
+        (typeof window !== 'undefined' && !!w.dnn && !w.Oqtane && !w.__OQTANE__);
+      api = isDnn ? '/DesktopModules/MegaForm/API/' : '/api/MegaForm/';
     }
     api = String(api).replace(/\/+$/, '');
     // DNN has NO i18n API route — the locale JSON ships as static assets under

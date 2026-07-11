@@ -30,8 +30,10 @@ const entryBody = {
     Number: ['amount','price','cost','budget','quantity','count','total','salary','income','age','duration','distance','weight'],
     Textarea: ['message','description','comments','notes','feedback','bio','about','address','details','remarks','question'],
     Select: ['country','city','state','province','region','category','department','industry','type of *','language','currency','timezone'],
+    Cards: ['plan','pricing plan','membership plan','tier','package','pass type','ticket type','option picker','choose one option','service level'],
+    Chips: ['interests','hobbies','products you are interested in','services you need','skills','tools you use','features wanted','preferences (multi)','tags','topics'],
     Radio: ['gender','marital status','contact method','meeting mode','virtual or in person','urgency level','satisfaction (5-level)'],
-    Checkbox: ['interests','hobbies','products you are interested in','services you need','skills','tools you use','features wanted','preferences (multi)'],
+    Checkbox: ['long multi-select','check all that apply','multi-choice with long labels'],
     SingleCheckbox: ['agree to terms','accept privacy','subscribe newsletter','i agree','i confirm','opt-in'],
     Rating: ['rating','score','satisfaction (1-5 stars)','quality','recommendation score'],
     File: ['upload','attachment','resume','cv','document','image','photo','file'],
@@ -83,9 +85,26 @@ const entryBody = {
     },
   },
 
-  // ── 3. optionColumns for Radio / Checkbox / Select-with-radio-look ─
+  // ── 3. Rich choice defaults + optionColumns fallback ─
+  rich_choice_defaults: {
+    rule: 'Default to rich choices for short option sets: single-choice <=6 options -> Cards; multi-choice short labels -> Chips.',
+    equivalent_shapes: [
+      'Cards is equivalent to Radio + optionDisplay:"cards" and renders .mf-option-group--cards.',
+      'Chips is equivalent to Checkbox + optionDisplay:"chips" and renders .mf-option-group--chips.'
+    ],
+    fallback: [
+      'Use plain Radio/Checkbox only when labels are long sentences, legal acknowledgements, or the option count is >8.',
+      'Use Select for very long single-choice lists.'
+    ],
+    design_rails: [
+      'Do not invent rich-choice CSS, emoji icons, FontAwesome names, iconHtml, SVG, or image URLs.',
+      'MegaForm assigns icons from the bundled mock source catalog (rich-selection-controls plus premium form icons such as ticket, users, wine, pizza, cake, calendar, map-pin).',
+      'AI should emit text only: value, label, card description, meta, badge. The renderer applies global Chips/Cards CSS.'
+    ],
+    card_option_text_metadata: ['meta', 'description', 'badge'],
+  },
   option_columns: {
-    rule: 'When a Radio or Checkbox has many options, the renderer can lay them in N columns via the top-level field property optionColumns:1|2|3|4.',
+    rule: 'When falling back to plain Radio or Checkbox with many options, the renderer can lay them in N columns via the top-level field property optionColumns:1|2|3|4.',
     auto_defaults: '≥9 options → 3 cols, ≥6 → 2 cols, else 1. The renderer adds class .mf-option-group--cols .mf-cols-N.',
     when_to_set: [
       { options: '1-3', recommended: 'leave default (1 col)', reason: 'few options, vertical reads cleanly' },
@@ -123,14 +142,14 @@ const entryBody = {
         { span: 6, fields: [{ key: 'date', type: 'Date', label: 'Preferred date', required: true }] },
         { span: 6, fields: [{ key: 'time', type: 'Time', label: 'Preferred time', required: true }] },
       ] },
-      { key: 'meeting_mode', type: 'Radio', label: 'Meeting mode', optionColumns: 2,
-        options: [{ value: 'office', label: 'In-office' }, { value: 'virtual', label: 'Virtual' }, { value: 'home', label: 'At home' }, { value: 'phone', label: 'Phone call' }] },
+      { key: 'meeting_mode', type: 'Cards', label: 'Meeting mode',
+        options: [{ value: 'office', label: 'In-office', description: 'Meet on site with the team.' }, { value: 'virtual', label: 'Virtual', description: 'Connect online from anywhere.' }, { value: 'home', label: 'At home', description: 'A convenient visit at your location.' }, { value: 'phone', label: 'Phone call', description: 'Quick conversation by phone.' }] },
       { key: 'notes', type: 'Textarea', label: 'Additional notes' },
     ],
     survey_form: [
       { key: 'overall_satisfaction', type: 'Radio', label: 'Overall satisfaction', required: true,
         options: ['Very dissatisfied','Dissatisfied','Neutral','Satisfied','Very satisfied'].map((l,i)=>({ value: String(i+1), label: l })) },
-      { key: 'features_used', type: 'Checkbox', label: 'Which features did you use?', optionColumns: 2,
+      { key: 'features_used', type: 'Chips', label: 'Which features did you use?',
         options: ['Dashboard','Reports','Mobile app','Email alerts','API','Integrations','Support chat','Webhooks'].map(l=>({ value: l.toLowerCase().replace(/ /g,'_'), label: l })) },
       { key: 'recommend', type: 'Rating', label: 'How likely are you to recommend us? (0-10)' },
       { key: 'comments',  type: 'Textarea', label: 'Anything else you would like to share?' },
@@ -139,9 +158,11 @@ const entryBody = {
       { type: 'Row', key: 'row_name',    columns: [{ span: 6, fields: [{ key: 'first_name', type: 'Text', label: 'First name', required: true }] }, { span: 6, fields: [{ key: 'last_name', type: 'Text', label: 'Last name', required: true }] }] },
       { type: 'Row', key: 'row_login',   columns: [{ span: 6, fields: [{ key: 'email', type: 'Email', label: 'Email', required: true }] }, { span: 6, fields: [{ key: 'username', type: 'Text', label: 'Username', required: true }] }] },
       { key: 'date_of_birth', type: 'Date', label: 'Date of birth', required: true },
+      { key: 'membership_plan', type: 'Cards', label: 'Membership plan', required: true,
+        options: [{ value: 'basic', label: 'Basic', description: 'Core access' }, { value: 'plus', label: 'Plus', description: 'Events and resources', badge: 'Popular' }, { value: 'pro', label: 'Pro', description: 'Priority support and perks' }] },
       { key: 'gender',        type: 'Radio', label: 'Gender', optionColumns: 3,
         options: [{ value: 'male', label: 'Male' }, { value: 'female', label: 'Female' }, { value: 'other', label: 'Other' }] },
-      { key: 'interests',     type: 'Checkbox', label: 'Interests', optionColumns: 2,
+      { key: 'interests',     type: 'Chips', label: 'Interests',
         options: ['Tech','Sport','Music','Travel','Food','Art'].map(l=>({ value: l.toLowerCase(), label: l })) },
       { key: 'agree_terms',   type: 'Checkbox', label: 'I agree to the terms', required: true, options: [{ value: 'y', label: 'I agree' }] },
     ],
@@ -166,7 +187,9 @@ const entryBody = {
   // ── 5. Anti-patterns ──────────────────────────────────────────────
   anti_patterns: [
     { bad: '10 fields all type:Text, each one its own line', why: 'Lazy mapping — most are Email/Phone/Date/Number. Plus reads like a long ladder', good: 'Match field type per keyword + group short related fields in Row [6,6]' },
-    { bad: 'Radio with 8 options stacked vertically', why: 'Looks unbalanced + scrolls', good: 'set_field_property path:optionColumns value:2' },
+    { bad: 'Plan/tier/package picker rendered as a plain Radio ladder', why: 'Looks basic and misses the premium rich-choice renderer', good: 'Use type:Cards or Radio + optionDisplay:"cards"' },
+    { bad: 'Interests/tags/features rendered as a plain Checkbox ladder', why: 'Looks basic and wastes vertical space', good: 'Use type:Chips or Checkbox + optionDisplay:"chips"' },
+    { bad: 'Radio with 8 long options stacked vertically', why: 'Looks unbalanced + scrolls', good: 'set_field_property path:optionColumns value:2 or use Select' },
     { bad: 'Row.columns=[{span:6,fields:[Textarea]}, {span:6,fields:[File]}]', why: 'Textarea + File both need full width', good: 'Leave Textarea and File at top-level (no Row)' },
     { bad: 'Trying to set widgetProps.style on Row to make it 2 columns', why: 'STYLE-001 — Row reads only columns[]', good: 'columns:[{span:6,fields:[...]},{span:6,fields:[...]}]' },
     { bad: 'Nested Row inside Row.columns[].fields[]', why: 'LAYOUT-003 — canvas blocks Row drop into a column', good: 'Flatten into top-level Rows + Section as heading between' },
@@ -180,8 +203,10 @@ const entryBody = {
     '  → a date / datetime?           type:Date / Time',
     '  → a number (price, qty)?       type:Number',
     '  → a long paragraph?            type:Textarea',
-    '  → one choice from many?        type:Select (>=7 options) OR Radio (<=6)',
-    '  → many choices?                type:Checkbox',
+    '  → one short choice from <=6?   type:Cards (or Radio + optionDisplay:"cards")',
+    '  → one choice from many?        type:Select (>=7 options) OR Radio with optionColumns fallback',
+    '  → many short choices?          type:Chips (or Checkbox + optionDisplay:"chips")',
+    '  → many long choices?           type:Checkbox with optionColumns fallback',
     '  → a single yes/no?             type:Checkbox with 1 option (e.g. agree terms)',
     '  → a 1-5 / 0-10 rating?         type:Rating',
     '  → an uploaded file?            type:File',
@@ -196,19 +221,25 @@ const entryBody = {
     'Q: Three short fields semantically grouped (date+time+tz)?',
     '  → Row with columns:[{span:4,fields:[A]},{span:4,fields:[B]},{span:4,fields:[C]}]',
     '',
-    'Q: Radio/Checkbox with 4+ options?',
+    'Q: Plan/tier/package/pass picker with <=6 short options?',
+    '  → use Cards; each option should include text description/meta/badge when useful; do not invent icons/CSS/images',
+    '',
+    'Q: Interests/tags/skills/features with short labels?',
+    '  → use Chips',
+    '',
+    'Q: Plain Radio/Checkbox fallback with 4+ options?',
     '  → after add_field, emit set_field_property path:"optionColumns" value:2 (or 3 if labels short)',
     '',
     'Q: Form needs a heading / step break?',
     '  → Section field with properties.pageBreak (true for multi-step) or false (just heading)',
   ],
 
-  hard_rules: ['LAYOUT-001', 'LAYOUT-002', 'LAYOUT-003', 'STYLE-001', 'STYLE-002', 'LAYOUT-004', 'LAYOUT-005', 'FIELDTYPE-001'],
+  hard_rules: ['LAYOUT-001', 'LAYOUT-002', 'LAYOUT-003', 'STYLE-001', 'STYLE-002', 'LAYOUT-004', 'LAYOUT-005', 'FIELDTYPE-001', 'CHOICE-001'],
 };
 
 const lines = [
   `-- AUTO-GENERATED ${new Date().toISOString()}`,
-  `-- form_pattern-layout-grammar — canonical field-type + Row/columns + optionColumns guide`,
+  `-- form_pattern-layout-grammar — canonical field-type + Row/columns + rich-choice guide`,
   ``,
   `MERGE dbo.MF_AI_Knowledge AS t`,
   `USING (SELECT N'form_pattern-layout-grammar' AS Slug, CAST(NULL AS INT) AS PortalId) AS s`,
@@ -216,17 +247,17 @@ const lines = [
   `WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET`,
   `  Kind = N'form_pattern',`,
   `  Title = N'Field-type + Row/Column layout grammar (stop defaulting to Text, stop stacking everything vertically)',`,
-  `  Summary = N'Canonical mapping of intent → field type (Email/CompositePhone/Date/Number/Textarea/Select/Radio/Checkbox/Rating/File/Signature/Url/Hidden, not always Text), Row + columns:[{span,fields[]}] grammar with 8 span presets, optionColumns:2|3|4 for Radio/Checkbox, and 5 composite patterns (contact / booking / survey / registration / order).',`,
+  `  Summary = N'Canonical mapping of intent → field type (Email/CompositePhone/Date/Number/Textarea/Select/Cards/Chips/Radio/Checkbox/Rating/File/Signature/Url/Hidden, not always Text), Row + columns:[{span,fields[]}] grammar with 8 span presets, rich-choice defaults, optionColumns fallback, and 5 composite patterns (contact / booking / survey / registration / order).',`,
   `  Body = ${json(entryBody)},`,
-  `  Tags = N'layout,grammar,field-type,row,columns,optioncolumns,radio,checkbox,form_pattern',`,
+  `  Tags = N'layout,grammar,field-type,row,columns,optioncolumns,radio,checkbox,chips,cards,rich-choice,form_pattern',`,
   `  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()`,
   `WHEN NOT MATCHED THEN INSERT`,
   `  (Slug, Kind, Title, Summary, Body, Tags, Examples, PortalId, Source, Version, CreatedOnDate)`,
   `  VALUES (N'form_pattern-layout-grammar', N'form_pattern',`,
   `          N'Field-type + Row/Column layout grammar',`,
-  `          N'Canonical mapping intent → type + Row grammar + optionColumns.',`,
+  `          N'Canonical mapping intent → type + Row grammar + rich choices.',`,
   `          ${json(entryBody)},`,
-  `          N'layout,grammar,field-type,row,columns,optioncolumns,form_pattern',`,
+  `          N'layout,grammar,field-type,row,columns,optioncolumns,chips,cards,rich-choice,form_pattern',`,
   `          NULL, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());`,
   `GO`,
   ``,
@@ -258,7 +289,7 @@ for (const t of templates) {
 lines.push(`END;`);
 lines.push(`GO`);
 
-// 3 new rules
+// Rich-choice + layout rules
 const rules = [
   {
     id: 'LAYOUT-004',
@@ -273,19 +304,28 @@ const rules = [
     id: 'LAYOUT-005',
     widget: null,
     sev: 'normalize',
-    title: 'Radio/Checkbox with many options needs optionColumns',
-    cond: 'Radio or Checkbox field with >=4 options has no optionColumns set explicitly',
-    reject: 'Stacking 4+ options vertically wastes space and reads as a long ladder.',
-    fix: 'After add_field for the Radio/Checkbox, emit set_field_property path:"optionColumns" value:2 (4-6 options) or 3 (7-12 options) or 4 (13+ options). The renderer auto-applies .mf-cols-N. For 13+ options consider Select dropdown instead.',
+    title: 'Plain Radio/Checkbox fallback with many options needs optionColumns',
+    cond: 'Plain Radio or Checkbox field with >=4 options has no optionColumns set explicitly',
+    reject: 'Stacking 4+ plain options vertically wastes space and reads as a long ladder.',
+    fix: 'First prefer Cards for single-choice <=6 short options and Chips for multi-choice short labels. If plain Radio/Checkbox is still the right fallback, emit set_field_property path:"optionColumns" value:2 (4-6 options) or 3 (7-12 options) or 4 (13+ options). For 13+ single-choice options consider Select dropdown instead.',
   },
   {
     id: 'FIELDTYPE-001',
     widget: null,
     sev: 'normalize',
     title: 'Field key/label suggests a specific semantic — do not default to Text',
-    cond: 'field.key OR field.label matches a known semantic keyword (email/phone/date/url/age/price/budget/message/comments/country/gender/agree/upload/signature/rating) but field.type=Text',
+    cond: 'field.key OR field.label matches a known semantic keyword (email/phone/date/url/age/price/budget/message/comments/country/plan/tier/interests/tags/gender/agree/upload/signature/rating) but field.type=Text',
     reject: 'Text input loses validation + UX of the dedicated type (Email validates, Phone formats, Date shows picker, etc).',
-    fix: 'Map to the canonical type from form_pattern-layout-grammar field_type_by_keyword. Examples: "email" → Email; "phone" → CompositePhone (type:Composite preset:phone); "date of birth" → Date; "age|amount|budget" → Number; "message|comments|address" → Textarea; "country|city" → Select; "gender|meeting mode" → Radio (with optionColumns:2 if >=4 options); "interests|features" → Checkbox; "agree to terms" → Checkbox single; "rating|score" → Rating; "upload|resume|attachment" → File; "signature" → Signature; "url|website" → Url.',
+    fix: 'Map to the canonical type from form_pattern-layout-grammar field_type_by_keyword. Examples: "email" → Email; "phone" → CompositePhone (type:Composite preset:phone); "date of birth" → Date; "age|amount|budget" → Number; "message|comments|address" → Textarea; "country|city" → Select; "plan|tier|package" → Cards; "interests|features|tags|skills" → Chips; "gender|meeting mode with long labels" → Radio; "agree to terms" → Checkbox single; "rating|score" → Rating; "upload|resume|attachment" → File; "signature" → Signature; "url|website" → Url.',
+  },
+  {
+    id: 'CHOICE-001',
+    widget: null,
+    sev: 'normalize',
+    title: 'Use rich choices by default for short option sets',
+    cond: 'AI emits plain Radio for plan/tier/package/pass with <=6 short options OR plain Checkbox for interests/tags/skills/features/preferences with short labels',
+    reject: 'Plain Radio/Checkbox makes new AI forms look default/basic even though the renderer supports premium cards/chips.',
+    fix: 'Use type:"Cards" for single-choice plan/tier/package/pass pickers, or Radio + optionDisplay:"cards". Use type:"Chips" for multi-choice interests/tags/skills/features/preferences, or Checkbox + optionDisplay:"chips". Plain Radio/Checkbox only for >8 options or long sentence labels. Emit text/description/meta/badge only; MegaForm assigns mock-catalog icons and global CSS.',
   },
 ];
 

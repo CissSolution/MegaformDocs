@@ -201,6 +201,110 @@ const widgets = [
   },
 
   {
+    slug: 'widget-chips',
+    widgetType: 'Chips',
+    title: 'Chips - Multi-select pill choices',
+    summary: 'Premium multi-select choice control for tags, interests, skills, services, preferences, and other short labels. Renders checkbox semantics as .mf-option-group--chips.',
+    tags: 'chips,chip,pills,tags,interests,skills,preferences,checkbox,multi-choice,optionDisplay,premium,choice',
+    body: {
+      widgetType: 'Chips',
+      purpose: 'Compact multi-select pill cloud. Use by default for short multi-choice labels such as interests, tags, skills, services, features, preferences, and hobbies.',
+      when_to_use: {
+        yes: ['interests / skills / hobbies / tags', 'multi-select short labels', 'feature or service pickers with concise option labels'],
+        no: ['single-choice plans or tiers -> Cards', 'long sentence labels or legal acknowledgements -> plain Checkbox', 'more than 12 choices -> Select/MultiSelect if available']
+      },
+      shape: {
+        type: 'Chips',
+        key: 'interests',
+        label: 'Interests',
+        options: [
+          { value: 'design', label: 'Design' },
+          { value: 'development', label: 'Development' },
+          { value: 'marketing', label: 'Marketing' }
+        ]
+      },
+      equivalent_shape: {
+        type: 'Checkbox',
+        key: 'interests',
+        label: 'Interests',
+        optionDisplay: 'chips',
+        properties: { optionDisplay: 'chips' },
+        options: [
+          { value: 'design', label: 'Design' },
+          { value: 'automation', label: 'Automation' }
+        ]
+      },
+      required: ['options:[{value,label},...]'],
+      optional: ['optionColumns:1|2|3|4', 'options[].meta', 'options[].description', 'options[].badge'],
+      design_rails: {
+        icons: 'Do not invent emoji, FontAwesome, iconHtml, SVG, or image URLs. MegaForm assigns icons from the bundled mock source catalog (rich-selection-controls plus premium form icons such as ticket, users, wine, pizza, cake, calendar, map-pin).',
+        css: 'Do not emit per-field CSS for Chips. The renderer applies the global .mf-option-group--chips skin from MegaForm.'
+      },
+      anti_patterns: [
+        { bad: 'Checkbox ladder for interests with 4-8 short options', why: 'Looks basic and wastes vertical space', good: 'Use type:"Chips" or Checkbox + optionDisplay:"chips"' },
+        { bad: 'Chips for a single-choice plan picker', why: 'Chips are multi-select checkbox semantics', good: 'Use Cards for single-choice plan/tier/package pickers' }
+      ],
+      version_history: [{ v: 1, date: '2026-06-29', changes: 'Initial rich-choice widget KB entry' }]
+    },
+    examples: [
+      { type: 'Chips', key: 'interests', label: 'Interests', options: [{ value: 'events', label: 'Events' }, { value: 'travel', label: 'Travel' }, { value: 'food', label: 'Food' }] }
+    ]
+  },
+
+  {
+    slug: 'widget-cards',
+    widgetType: 'Cards',
+    title: 'Cards - Single-choice option tiles',
+    summary: 'Premium single-choice tile control for plans, tiers, packages, passes, membership levels, and option pickers with <=6 short options. Renders radio semantics as .mf-option-group--cards.',
+    tags: 'cards,tiles,plans,tiers,packages,pricing,radio,single-choice,optionDisplay,premium,choice',
+    body: {
+      widgetType: 'Cards',
+      purpose: 'Single-choice rich option tiles. Use by default for plan/tier/package/pass/option pickers with six or fewer concise options.',
+      when_to_use: {
+        yes: ['membership plan picker', 'pricing tier selector', 'event pass choice', 'package or option tiles with <=6 options'],
+        no: ['multi-select tags/interests -> Chips', 'more than 8 choices -> Select or plain Radio with columns', 'long paragraph labels -> plain Radio']
+      },
+      shape: {
+        type: 'Cards',
+        key: 'membership_plan',
+        label: 'Membership plan',
+        required: true,
+        options: [
+          { value: 'starter', label: 'Starter', meta: 'Free', description: 'For individuals getting started with the essentials.' },
+          { value: 'pro', label: 'Professional', meta: '$29/mo', description: 'Advanced tools for growing teams and power users.', badge: 'Popular' },
+          { value: 'enterprise', label: 'Enterprise', meta: 'Custom', description: 'Dedicated support, SSO and unlimited everything.' }
+        ]
+      },
+      equivalent_shape: {
+        type: 'Radio',
+        key: 'membership_plan',
+        label: 'Membership plan',
+        optionDisplay: 'cards',
+        properties: { optionDisplay: 'cards' },
+        options: [
+          { value: 'basic', label: 'Basic', description: 'Core access' },
+          { value: 'pro', label: 'Pro', badge: 'Popular' }
+        ]
+      },
+      required: ['options:[{value,label},...]'],
+      optional: ['options[].meta', 'options[].description', 'options[].badge'],
+      design_rails: {
+        icons: 'Do not invent emoji, FontAwesome, iconHtml, SVG, or image URLs. MegaForm assigns icons from the bundled mock source catalog (rich-selection-controls plus premium form icons such as ticket, users, wine, pizza, cake, calendar, map-pin).',
+        css: 'Do not emit per-field CSS for Cards. The renderer applies the global .mf-option-group--cards skin from MegaForm.',
+        descriptions: 'Cards should have concise option descriptions. If omitted, the MegaForm normalizer fills a sensible fallback.'
+      },
+      anti_patterns: [
+        { bad: 'Plain Radio for a plan/tier/package picker with 3 options', why: 'Looks default instead of premium', good: 'Use type:"Cards" or Radio + optionDisplay:"cards"' },
+        { bad: 'Cards for interests/tags where users pick many', why: 'Cards are single-choice radio semantics', good: 'Use Chips for multi-select tags/interests' }
+      ],
+      version_history: [{ v: 1, date: '2026-06-29', changes: 'Initial rich-choice widget KB entry' }]
+    },
+    examples: [
+      { type: 'Cards', key: 'plan', label: 'Plan', options: [{ value: 'starter', label: 'Starter', description: 'Just the basics' }, { value: 'plus', label: 'Plus', description: 'Most popular', badge: 'Popular' }] }
+    ]
+  },
+
+  {
     slug: 'widget-contentslider',
     widgetType: 'ContentSlider',
     title: 'ContentSlider — Static image/content carousel',
@@ -362,7 +466,7 @@ const templates = [
   { slug: 'widget-select', key: 'sql-cascade-2lvl', kind: 'pattern', title: 'Cascade Select → Select', summary: 'Parent select feeds child select via optionsDependsOn.', body: { parent: { type: 'Select', key: 'category_id', properties: { optionsSource: 'sql', optionsSql: 'SELECT CategoryId AS value, Name AS label FROM Categories' } }, child: { type: 'Select', key: 'product_id', properties: { optionsSource: 'sql', optionsSql: 'SELECT ProductId AS value, Name AS label FROM Products WHERE CategoryId = :category_id', optionsDependsOn: ['category_id'] } } } },
 
   // ContentSlider ─────────────────────────────────────────────────────────
-  { slug: 'widget-contentslider', key: 'feature-3', kind: 'preset', title: '3 feature cards', summary: 'Three static feature cards with image+title+description+badge.', body: { items: [ { imageUrl: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800', title: 'Feature one', description: 'Headline copy.', badge: 'New', meta: 'Learn more' }, { imageUrl: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800', title: 'Feature two', description: 'Headline copy.', badge: 'Hot', meta: 'Learn more' }, { imageUrl: 'https://images.unsplash.com/photo-1531497865144-0464ef8fb9a9?w=800', title: 'Feature three', description: 'Headline copy.', badge: '', meta: 'Learn more' } ], interval: 4500, autoplay: true } },
+  { slug: 'widget-contentslider', key: 'feature-3', kind: 'preset', title: '3 feature cards', summary: 'Three static feature cards with image+title+description+badge.', body: { items: [ { imageUrl: '/Modules/MegaForm/img/mock/event-hero.png', title: 'Feature one', description: 'Headline copy.', badge: 'New', meta: 'Learn more' }, { imageUrl: '/Modules/MegaForm/img/mock/party-festival.png', title: 'Feature two', description: 'Headline copy.', badge: 'Hot', meta: 'Learn more' }, { imageUrl: '/Modules/MegaForm/img/mock/australia-hero.png', title: 'Feature three', description: 'Headline copy.', badge: '', meta: 'Learn more' } ], interval: 4500, autoplay: true } },
 
   // PhonePro ──────────────────────────────────────────────────────────────
   { slug: 'widget-phonepro', key: 'vn-international', kind: 'preset', title: 'VN-first international', summary: 'VN default, VN/US/GB preferred, JSON storage.', body: { mode: 'international', defaultCountry: 'VN', preferredCountries: ['VN','US','GB'], saveFormat: 'json' } },

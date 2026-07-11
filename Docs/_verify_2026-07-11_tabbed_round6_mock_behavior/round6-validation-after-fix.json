@@ -1,0 +1,133 @@
+[
+  {
+    "label": "initial-after-boot",
+    "active": "0",
+    "progress": "0 of 5 sections complete",
+    "errorGroups": 0,
+    "invalid": [],
+    "done": [],
+    "tabbar": {
+      "left": 0,
+      "client": 1042,
+      "scroll": 1042,
+      "canLeft": false,
+      "canRight": false,
+      "rightBtn": "none"
+    },
+    "classes": [
+      {
+        "idx": "0",
+        "cls": "mfp-tab is-active"
+      },
+      {
+        "idx": "1",
+        "cls": "mfp-tab"
+      },
+      {
+        "idx": "2",
+        "cls": "mfp-tab"
+      },
+      {
+        "idx": "3",
+        "cls": "mfp-tab"
+      },
+      {
+        "idx": "4",
+        "cls": "mfp-tab"
+      },
+      {
+        "idx": "5",
+        "cls": "mfp-tab"
+      }
+    ],
+    "overflowX": false
+  },
+  {
+    "label": "after-empty-continue-account",
+    "active": "0",
+    "progress": "0 of 5 sections complete",
+    "errorGroups": 3,
+    "invalid": [
+      "0"
+    ],
+    "done": [],
+    "tabbar": {
+      "left": 0,
+      "client": 1042,
+      "scroll": 1042,
+      "canLeft": false,
+      "canRight": false,
+      "rightBtn": "none"
+    },
+    "classes": [
+      {
+        "idx": "0",
+        "cls": "mfp-tab is-active is-invalid"
+      },
+      {
+        "idx": "1",
+        "cls": "mfp-tab"
+      },
+      {
+        "idx": "2",
+        "cls": "mfp-tab"
+      },
+      {
+        "idx": "3",
+        "cls": "mfp-tab"
+      },
+      {
+        "idx": "4",
+        "cls": "mfp-tab"
+      },
+      {
+        "idx": "5",
+        "cls": "mfp-tab"
+      }
+    ],
+    "overflowX": false
+  },
+  {
+    "label": "after-direct-company-tab",
+    "active": "1",
+    "progress": "0 of 5 sections complete",
+    "errorGroups": 0,
+    "invalid": [],
+    "done": [],
+    "tabbar": {
+      "left": 0,
+      "client": 1042,
+      "scroll": 1042,
+      "canLeft": false,
+      "canRight": false,
+      "rightBtn": "none"
+    },
+    "classes": [
+      {
+        "idx": "0",
+        "cls": "mfp-tab"
+      },
+      {
+        "idx": "1",
+        "cls": "mfp-tab is-active"
+      },
+      {
+        "idx": "2",
+        "cls": "mfp-tab"
+      },
+      {
+        "idx": "3",
+        "cls": "mfp-tab"
+      },
+      {
+        "idx": "4",
+        "cls": "mfp-tab"
+      },
+      {
+        "idx": "5",
+        "cls": "mfp-tab"
+      }
+    ],
+    "overflowX": false
+  }
+]

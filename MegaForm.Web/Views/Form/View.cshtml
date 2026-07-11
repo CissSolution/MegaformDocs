@@ -1,4 +1,5 @@
 @model MegaForm.Web.Controllers.FormViewModel
+@using Newtonsoft.Json
 @using Newtonsoft.Json.Linq
 @{
     Layout = null; // standalone page — no shared layout
@@ -27,6 +28,15 @@
     {
         hasCustomHtml = false;
     }
+
+    var htmlSafeJsonSettings = new JsonSerializerSettings
+    {
+        StringEscapeHandling = StringEscapeHandling.EscapeHtml
+    };
+    Func<string, string, string> safeJsonString = (value, fallback) =>
+        JsonConvert.SerializeObject(string.IsNullOrWhiteSpace(value) ? fallback : value, htmlSafeJsonSettings);
+    Func<string, string> safeJsonValue = value =>
+        JsonConvert.SerializeObject(value ?? string.Empty, htmlSafeJsonSettings);
 }
 <!DOCTYPE html>
 <html lang="@Model.Locale" data-mf-locale="@Model.Locale">
@@ -210,24 +220,24 @@ else
   // ── Server data injected server-side ──────────────────────────────────────
   var _MF_CONFIG = {
     formId:          @Model.FormId,
-    title:           @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Title)),
-    description:     @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Description)),
-    schemaJson:      @Html.Raw(Model.SchemaJson),
-    settingsJson:    @Html.Raw(Model.SettingsJson),
-    themeJson:       @Html.Raw(string.IsNullOrWhiteSpace(Model.ThemeJson) ? "{}" : Model.ThemeJson),
-    rulesJson:       @Html.Raw(Model.RulesJson),
-    submitButtonText:@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.SubmitButtonText)),
-    successMessage:  @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.SuccessMessage)),
+    title:           @Html.Raw(safeJsonValue(Model.Title)),
+    description:     @Html.Raw(safeJsonValue(Model.Description)),
+    schemaJson:      @Html.Raw(safeJsonString(Model.SchemaJson, "{}")),
+    settingsJson:    @Html.Raw(safeJsonString(Model.SettingsJson, "{}")),
+    themeJson:       @Html.Raw(safeJsonString(Model.ThemeJson, "{}")),
+    rulesJson:       @Html.Raw(safeJsonString(Model.RulesJson, "[]")),
+    submitButtonText:@Html.Raw(safeJsonValue(Model.SubmitButtonText)),
+    successMessage:  @Html.Raw(safeJsonValue(Model.SuccessMessage)),
     enableCaptcha:   @Model.EnableCaptcha.ToString().ToLower(),
     requireAuth:     @Model.RequireAuth.ToString().ToLower(),
     apiBase:         '@apiBase',
     isPreview:       @isPreview.ToString().ToLower(),
     captchaConfig: {
-      badgeVersion: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.CaptchaBadgeVersion ?? "")),
-      reCaptchaSiteKey: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.ReCaptchaSiteKey ?? "")),
-      hCaptchaSiteKey: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.HCaptchaSiteKey ?? ""))
+      badgeVersion: @Html.Raw(safeJsonValue(Model.CaptchaBadgeVersion ?? "")),
+      reCaptchaSiteKey: @Html.Raw(safeJsonValue(Model.ReCaptchaSiteKey ?? "")),
+      hCaptchaSiteKey: @Html.Raw(safeJsonValue(Model.HCaptchaSiteKey ?? ""))
     },
-    locale: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Locale ?? "en-US"))
+    locale: @Html.Raw(safeJsonValue(Model.Locale ?? "en-US"))
   };
   window.__MegaFormCaptchaConfig = _MF_CONFIG.captchaConfig || {};
 
@@ -240,6 +250,14 @@ else
         : _MF_CONFIG.schemaJson;
     } catch (e) {
       schema = { fields: [] };
+    }
+    var rulesJson = [];
+    try {
+      rulesJson = typeof _MF_CONFIG.rulesJson === 'string'
+        ? JSON.parse(_MF_CONFIG.rulesJson || '[]')
+        : (_MF_CONFIG.rulesJson || []);
+    } catch (e) {
+      rulesJson = [];
     }
 
     if (!schema || !schema.fields || schema.fields.length === 0) {
@@ -272,17 +290,17 @@ else
       successMessage:  _MF_CONFIG.successMessage,
       apiBase:         _MF_CONFIG.apiBase,
       isPreview:       _MF_CONFIG.isPreview,
-      rules:           _MF_CONFIG.rulesJson || [],
+      rules:           rulesJson,
       locale:          _MF_CONFIG.locale || 'en-US'
     });
 
     // Backup rule pass for public view — renderer also binds internally.
-    if (typeof MegaFormRules !== 'undefined' && Array.isArray(_MF_CONFIG.rulesJson) && _MF_CONFIG.rulesJson.length) {
+    if (typeof MegaFormRules !== 'undefined' && Array.isArray(rulesJson) && rulesJson.length) {
       var formMount = document.getElementById('mf-form-mount');
       var formRoot = document.getElementById('mf-form-wrapper-' + _MF_CONFIG.formId) || formMount;
       var runLegacyRules = function () {
         var data = MegaFormRenderer.collectData ? MegaFormRenderer.collectData() : {};
-        var effects = MegaFormRules.evaluateRules(_MF_CONFIG.rulesJson, data);
+        var effects = MegaFormRules.evaluateRules(rulesJson, data);
         if (MegaFormRenderer.applyRuleEffects) MegaFormRenderer.applyRuleEffects(effects, formRoot);
         else MegaFormRules.applyEffects(effects, formRoot);
       };
@@ -300,7 +318,11 @@ else
   function notifyParentHeight() {
     var h = document.body.scrollHeight;
     if (window.parent && window.parent !== window) {
-      window.parent.postMessage({ type: 'mf:resize', height: h, formId: _MF_CONFIG.formId }, '*');
+      var targetOrigin = window.location.origin;
+      try {
+        if (document.referrer) targetOrigin = new URL(document.referrer).origin;
+      } catch (_originErr) { }
+      window.parent.postMessage({ type: 'mf:resize', height: h, formId: _MF_CONFIG.formId }, targetOrigin);
     }
   }
   // Fire on load and on DOM mutations

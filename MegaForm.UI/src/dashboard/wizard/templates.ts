@@ -5,11 +5,10 @@
 // Two kinds of records:
 //   • STANDARD (no settings.customHtml) → hydrated into the wizard's editable field list
 //     (mapped to the simple WizardField model); emitted via the normal transform path.
-//   • PREMIUM  (custom-shell: settings.customHtml present) → emitted FAITHFULLY by
-//     transform.ts (customHtml/customCss/customScripts/customContent/theme preserved).
-//     Their structure is NOT editable in the wizard — edit in the builder after creation
-//     (see au_wizard per-index coupling in the handoff). isPremium drives that branch.
+//   • PREMIUM  (custom-shell: settings.customHtml present) → keep styling/scripts, while
+//     step labels/headings and field membership are editable before Create.
 import { getPlatformHostConfig } from '@shared/platform-host';
+import { migratePremiumWizardSchemaToNative } from '@shared/premium-native-migration';
 import { wizardCtx } from './save';
 import { WizardField } from './types';
 
@@ -83,6 +82,9 @@ function normalizeRecord(raw: any): WizardTemplate {
   const settings = normalizeSettings(pick(raw, 'settings', 'Settings') || {});
   let fields = pick(raw, 'fields', 'Fields');
   fields = Array.isArray(fields) ? fields : [];
+  const schema = { version: '1.0', fields: JSON.parse(JSON.stringify(fields)), settings };
+  migratePremiumWizardSchemaToNative(schema);
+  fields = schema.fields || fields;
   return {
     id: String(pick(raw, 'id', 'Id') || ''),
     slug: String(pick(raw, 'slug', 'Slug') || ''),
@@ -114,6 +116,46 @@ export function loadTemplates(onReady?: () => void): Promise<typeof _cache> {
 export function templatesState() { return _cache; }
 export function findTemplate(id: string): WizardTemplate | null { return _cache.list.find((t) => t.id === id) || null; }
 export function resetTemplates() { _cache = { status: 'idle', list: [] }; _promise = null; }
+
+// [ImportJson 2026-07-01] Build a WizardTemplate from an uploaded MegaForm export .json.
+// Accepts the BuilderTemplates record shape, a { schemaJson, settingsJson } form export,
+// or a raw { fields, settings } schema. Returns null when no usable fields are present.
+//
+// ⭐The DEPLOYED default templates put customHtml/customCss/customContent/customScripts
+// (+ theme/multiPage) at the TOP LEVEL, not inside `settings`. Without merging them the
+// premium shell was dropped → the form imported as a plain standard form (design lost).
+function mergeTopLevelSettings(raw: any): any {
+  const s = (raw && raw.settings && typeof raw.settings === 'object' && !Array.isArray(raw.settings)) ? JSON.parse(JSON.stringify(raw.settings)) : {};
+  for (const k of ['customHtml', 'customCss', 'customContent', 'customScripts', 'theme', 'multiPage', 'themeSelector', 'submitButtonText', 'successMessage']) {
+    const cap = k.charAt(0).toUpperCase() + k.slice(1);
+    const topV = raw[k] !== undefined ? raw[k] : raw[cap];
+    const cur = s[k] !== undefined ? s[k] : s[cap];
+    const curEmpty = cur === undefined || cur === null || cur === '';
+    if (topV !== undefined && topV !== null && topV !== '' && curEmpty) s[k] = topV;
+  }
+  return s;
+}
+export function wizardTemplateFromJson(raw: any): WizardTemplate | null {
+  if (!raw || typeof raw !== 'object') return null;
+  let rec: any = { ...raw, settings: mergeTopLevelSettings(raw) };
+  const sj = raw.schemaJson != null ? raw.schemaJson : raw.SchemaJson;
+  const stj = raw.settingsJson != null ? raw.settingsJson : raw.SettingsJson;
+  if (typeof sj === 'string') {
+    try {
+      const schema = JSON.parse(sj || '{}');
+      const settings = typeof stj === 'string' ? JSON.parse(stj || '{}') : (schema.settings || schema.Settings || {});
+      rec = { title: pick(raw, 'name', 'Name', 'title', 'Title') || pick(schema, 'title', 'Title'), fields: schema.fields || schema.Fields || [], settings, category: pick(raw, 'category', 'Category'), submitButtonText: pick(raw, 'submitButtonText', 'SubmitButtonText'), successMessage: pick(raw, 'successMessage', 'SuccessMessage') };
+    } catch { return null; }
+  } else if ((raw.version || raw.Version) && (raw.fields || raw.Fields) && !(raw.id || raw.Id)) {
+    // raw schema blob { version, fields, settings, customHtml@top, … }
+    rec = { title: pick(raw, 'title', 'Title', 'name', 'Name'), fields: raw.fields || raw.Fields || [], settings: mergeTopLevelSettings(raw), category: pick(raw, 'category', 'Category'), icon: pick(raw, 'icon', 'Icon'), submitButtonText: pick(raw, 'submitButtonText', 'SubmitButtonText'), successMessage: pick(raw, 'successMessage', 'SuccessMessage') };
+  }
+  const t = normalizeRecord(rec);
+  if (!t.fields || !t.fields.length) return null;
+  if (!t.id) t.id = 'import-' + Date.now();
+  if (!t.title) t.title = 'Imported form';
+  return t;
+}
 
 // ── Standard-template hydration → editable wizard fields ──────────────────────
 const MEGA_TO_WIZARD: Record<string, string> = {

@@ -71,9 +71,12 @@ const otherDefs: FieldDef[] = [
   { key: 'section', label: 'Section / Page Break', icon: 'fa-grip-lines', group: 'layout', curated: false, preview: 'section', build: (k, l) => mfField('Section', k, l || 'Section', false, { properties: { pageBreak: false } }) },
   { key: 'heading', label: 'Heading / HTML', icon: 'fa-heading', group: 'layout', curated: false, preview: 'html', build: (k, l) => mfField('Html', k, l || 'Heading', false, { htmlContent: '<h3>' + (l || 'Heading') + '</h3>' }) },
   { key: 'hidden', label: 'Hidden Field', icon: 'fa-eye-slash', group: 'layout', curated: false, preview: 'input', build: (k, l) => mfField('Hidden', k, l, false, { defaultValue: '' }) },
-  // Payment
-  { key: 'stripe', label: 'Stripe Payment', icon: 'fa-credit-card', group: 'payment', curated: false, preview: 'input', build: (k, l) => mfField('StripePayment', k, l || 'Payment', false, { properties: {} }) },
-  { key: 'paypal', label: 'PayPal Payment', icon: 'fa-brands fa-paypal', group: 'payment', curated: false, preview: 'input', build: (k, l) => mfField('PayPalPayment', k, l || 'Payment', false, { properties: {} }) },
+  // Payment — emit the MODERN unified 'Payment' widget (+ provider) instead of the legacy
+  // 'StripePayment'/'PayPalPayment' field types. Legacy types have no public-render widget
+  // (the plugin only registers 'Payment') and no asset-manifest/autoload case → they render
+  // as a blank/text fallback on the live form. 'Payment'+provider loads correctly end-to-end.
+  { key: 'stripe', label: 'Stripe Payment', icon: 'fa-credit-card', group: 'payment', curated: false, preview: 'input', build: (k, l) => mfField('Payment', k, l || 'Payment', false, { widgetProps: { provider: 'stripe' } }) },
+  { key: 'paypal', label: 'PayPal Payment', icon: 'fa-brands fa-paypal', group: 'payment', curated: false, preview: 'input', build: (k, l) => mfField('Payment', k, l || 'Payment', false, { widgetProps: { provider: 'paypal' } }) },
 ];
 
 export const FIELD_CATALOG: FieldDef[] = compositeDefs.concat(otherDefs);

@@ -6,7 +6,7 @@
   "title": "Festa Italiana",
   "tokenStyle": "double",
   "rootSelector": ".mfp.mfp-festa-italiana.mfp-native-generated",
-  "stepMechanism": "customHtml-wizard",
+  "stepMechanism": "premium-native",
   "stepAnchor": "data-step",
   "stepCount": 3,
   "steps": [

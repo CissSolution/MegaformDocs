@@ -64,6 +64,8 @@ namespace MegaForm.Web.Services
                 var dashboardProvider = _moduleSettings == null ? string.Empty : _moduleSettings.GetSetting(0, "Database_Provider", "Sqlite");
                 var dashboardConn = _moduleSettings == null ? string.Empty : _moduleSettings.GetSetting(0, "Database_ConnectionString", "");
                 if (string.IsNullOrWhiteSpace(dashboardConn))
+                    dashboardConn = _config.GetConnectionString(DashboardConnectionName);
+                if (string.IsNullOrWhiteSpace(dashboardConn))
                     throw new InvalidOperationException("Dashboard database connection is not configured.");
                 return CreateExternalConnection(string.IsNullOrWhiteSpace(databaseType) ? dashboardProvider : databaseType, dashboardConn);
             }

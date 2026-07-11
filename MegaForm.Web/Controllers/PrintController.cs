@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MegaForm.Core.Interfaces;
 using MegaForm.Core.Services;
@@ -73,7 +74,12 @@ namespace MegaForm.Web.Controllers
 
         // ── POST /f/{formId}/print/settings ──────────────────────────────────
 
+        // [SecFix 2026-07-02 P0-5] Was unauthenticated → anyone could rewrite a form's
+        // PrintSettings (headerHtml/footerHtml) → stored XSS in the print view. Restrict to
+        // the admin role (matches AiTools/AiKnowledge/AiAssistant controllers). Read + preview
+        // stay public so end-users can still print.
         [HttpPost("settings")]
+        [Authorize(Roles = "Administrator")]
         public IActionResult SavePrintSettings(int formId, [FromBody] MegaForm.Core.Models.PrintSettings settings)
         {
             var form = _formRepo.GetForm(formId);

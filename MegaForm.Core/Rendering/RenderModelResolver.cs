@@ -360,7 +360,11 @@ namespace MegaForm.Core.Rendering
 
             var explicitText = FirstUsable(settings["trialFooterText"], settings["TrialFooterText"], null);
             if (!string.IsNullOrWhiteSpace(explicitText)) return explicitText.Trim();
-            return "https://dnndefender.com  Megaform Trial Mode";
+            // [TrialTighten v20260706] Removed the default public "Megaform Trial Mode" footer nag — the
+            // trial gate is now the form/submission caps + premium/AI locks (admin-facing), not a
+            // watermark on the visitor-facing form. An explicit per-form trialFooterText set by the
+            // admin is still honored above.
+            return string.Empty;
         }
 
         private static bool? FirstUsableNullableBool(params JToken[] tokens)

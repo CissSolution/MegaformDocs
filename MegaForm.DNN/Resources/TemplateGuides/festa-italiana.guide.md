@@ -5,7 +5,7 @@
   "theme": "festa-italiana-premium",
   "rootSelector": ".mfp.mfp-festa-italiana.mfp-native-generated",
   "tokenStyle": "double",
-  "stepMechanism": "customHtml-wizard",
+  "stepMechanism": "premium-native",
   "stepAnchor": "data-step",
   "stepCount": 3,
   "stepFieldKeys": [
@@ -151,7 +151,7 @@
 ---
 # AI Edit Guide — Festa Italiana
 
-Theme `festa-italiana-premium` · root `.mfp.mfp-festa-italiana.mfp-native-generated` · 16 fields · 3 steps (customHtml-wizard).
+Theme `festa-italiana-premium` · root `.mfp.mfp-festa-italiana.mfp-native-generated` · 16 fields · 3 steps (premium-native).
 
 ## DETERMINISTIC EDIT PROTOCOL (follow exactly — do NOT improvise structure/CSS)
 This is a PREMIUM form. Its look lives in `settings.customHtml` + `settings.customCss` + `settings.theme`, which are **IMMUTABLE**. You may ONLY emit these ops, and ONLY against keys/tokens listed in the frontmatter map:
@@ -220,7 +220,7 @@ Some visible text (hero heading, step labels, section/field captions) is baked i
 ## Formulas (fill the slots — never change the op shape)
 - **C1 Change content/title**: form title `{op:"set_form_meta", title:"New title", designDecision:"preserve"}`; a field's editable label `{op:"set_field_property", key:"<key>", path:"label", value:"New label", designDecision:"preserve"}`; a {{content:*}} token `{op:"set_form_meta", customContent:{"<token>":"New text"}, designDecision:"preserve"}`; **a hardcoded shell heading/caption** `{op:"set_html_text", find:"<exact current text from the list above>", replace:"New text", designDecision:"preserve"}` (text-only swap; never include HTML tags in find/replace).
 - **C6 Edit CHIP options** (fields: pass, dietary, newsletter): `{op:"set_field_property", key:"pass", path:"options", value:[{"value":"v1","label":"Label 1"},…], designDecision:"preserve"}`. Keep the field's `optionDisplay:"chips"` — set ONLY options. The chip look (`.mf-option-group--chips`) is in customCss and stays.
-- **C7 Edit CARD options** (fields: none): `{op:"set_field_property", key:"<cardFieldKey>", path:"options", value:[{"value":"v1","label":"Title","meta":"Subtitle","description":"…","icon":"🏙️"},…], designDecision:"preserve"}`. Keep `optionDisplay:"cards"`. Card chrome (`.mf-option-group--cards`) stays. ⚠ `icon` MUST be a single EMOJI (🏙️ 🚀 ★ ✿ ⛰ 🏆) OR a FontAwesome name (`fa-city`, `fa-rocket`) — give each option a DISTINCT, meaningful glyph. NEVER use a plain descriptive word like "city"/"beach" alone (it renders as literal text). Match the template's existing icon style (most premium cards use emoji).
+- **C7 Edit CARD options** (fields: none): `{op:"set_field_property", key:"<cardFieldKey>", path:"options", value:[{"value":"v1","label":"Title","meta":"Subtitle","description":"…"},…], designDecision:"preserve"}`. Keep `optionDisplay:"cards"`. Card chrome (`.mf-option-group--cards`) stays. ⚠ ICONS — do NOT invent, change, or remove icons: MegaForm's rich-choice catalog/theme owns icon assignment. If an option ALREADY has an `icon`, keep it byte-for-byte; if it has none, OMIT the `icon` field (never emit a plain descriptive word like "city"/"beach" — it renders as literal text). Edit ONLY `label`/`meta`/`description`/`value`.
 - **C2 Add field**: `{op:"add_field", type:"Text", key:"new_key", label:"…", step:2, designDecision:"preserve"}` — the dispatcher inserts `{{field:new_key}}` into the matching `data-step` block. Pick a snake_case key not already used.
 - **C3 Remove field**: `{op:"remove_field", key:"<key>", designDecision:"preserve"}` — removes the field and its token; leaves zero orphan placeholders.
 - **C8 Change COLOUR (only if the user explicitly asks)**: `{op:"set_form_meta", themeCssOverrides:{"<scoped-var>":"#hex",…}, designDecision:"preserve"}`. ⚠ This template scopes its palette under TEMPLATE-SPECIFIC vars — target THOSE exact names (the generic `--primary`/`--accent` are INERT here). Available colour vars (current value):
@@ -236,7 +236,7 @@ Some visible text (hero heading, step labels, section/field captions) is baked i
   - `--fi-card-line`: #e3d8c2
   - `--fi-gold`: #d4af6a
   NEVER edit customCss for colour — customCss must stay byte-identical (sha256 `f00e3a4f3c37…`).
-- **C4/C5 Add/Remove step** (ADVANCED — customHtml-wizard): steps are `data-step` blocks in customHtml driven by `the wizard script`. Only attempt if the user explicitly asks; clone an existing `data-step` block via `customHtmlAppend` (NEVER touch customCss), renumber the stepper, and add the new fields with placeholders. If unsure, ask the user instead of guessing.
+- **C4/C5 Add/Remove step** (ADVANCED — premium-native): steps are NATIVE — driven by `Section` fields with `properties.pageBreak:true` (one marker per step) alongside the `data-step` panels in customHtml. There is NO wizard script. To ADD a step: append a new `data-step` panel block via `customHtmlAppend` (NEVER touch customCss), add a `Section` field with `properties.pageBreak:true`, and place the new fields/placeholders inside that panel. To REMOVE: delete the panel + its `Section` marker + its fields. Only attempt if the user explicitly asks. If unsure, ask the user instead of guessing.
 
 ## Hard invariants (a change that breaks any of these is a FAILURE — refuse the op)
 - customCss sha256 stays `f00e3a4f3c37aad6…` · customHtml shell sha256 stays `86104a511e7d238e…` (unless C2/C4 legitimately add a node).

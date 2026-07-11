@@ -1,0 +1,650 @@
+{
+  "initial": {
+    "url": "http://localhost:5122/?formid=5",
+    "root": {
+      "x": 161,
+      "y": 545,
+      "w": 1044,
+      "h": 667,
+      "bottom": 1212,
+      "right": 1205
+    },
+    "rootStyle": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "padding": "0px",
+      "margin": "0px",
+      "minH": "0px",
+      "width": "1044px",
+      "overflowX": "visible"
+    },
+    "card": {
+      "x": 161,
+      "y": 545,
+      "w": 1044,
+      "h": 644,
+      "bottom": 1190,
+      "right": 1205
+    },
+    "cardStyle": {
+      "bg": "rgb(255, 255, 255)",
+      "padding": "0px",
+      "margin": "0px",
+      "minH": "0px",
+      "width": "1044px",
+      "overflowX": "hidden"
+    },
+    "active": "✓ Account Your details",
+    "progress": "0 of 5 sections complete",
+    "errors": 0,
+    "invalidTabs": [],
+    "reviewErrorVisible": false,
+    "reviewErrorText": "",
+    "tabbar": {
+      "x": 162,
+      "y": 706,
+      "w": 1042,
+      "h": 63,
+      "bottom": 769,
+      "right": 1204
+    },
+    "tabbarScroll": {
+      "clientW": 1042,
+      "scrollW": 1042,
+      "left": 0,
+      "canLeft": false,
+      "canRight": false
+    },
+    "overflowX": false,
+    "hasRound7": false
+  },
+  "tabs": [
+    {
+      "url": "http://localhost:5122/?formid=5",
+      "root": {
+        "x": 161,
+        "y": 545,
+        "w": 1044,
+        "h": 667,
+        "bottom": 1212,
+        "right": 1205
+      },
+      "rootStyle": {
+        "bg": "rgba(0, 0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "minH": "0px",
+        "width": "1044px",
+        "overflowX": "visible"
+      },
+      "card": {
+        "x": 161,
+        "y": 545,
+        "w": 1044,
+        "h": 644,
+        "bottom": 1190,
+        "right": 1205
+      },
+      "cardStyle": {
+        "bg": "rgb(255, 255, 255)",
+        "padding": "0px",
+        "margin": "0px",
+        "minH": "0px",
+        "width": "1044px",
+        "overflowX": "hidden"
+      },
+      "active": "✓ Account Your details",
+      "progress": "0 of 5 sections complete",
+      "errors": 0,
+      "invalidTabs": [],
+      "reviewErrorVisible": false,
+      "reviewErrorText": "",
+      "tabbar": {
+        "x": 162,
+        "y": 706,
+        "w": 1042,
+        "h": 63,
+        "bottom": 769,
+        "right": 1204
+      },
+      "tabbarScroll": {
+        "clientW": 1042,
+        "scrollW": 1042,
+        "left": 0,
+        "canLeft": false,
+        "canRight": false
+      },
+      "overflowX": false,
+      "hasRound7": false
+    },
+    {
+      "url": "http://localhost:5122/?formid=5",
+      "root": {
+        "x": 161,
+        "y": 545,
+        "w": 1044,
+        "h": 899,
+        "bottom": 1444,
+        "right": 1205
+      },
+      "rootStyle": {
+        "bg": "rgba(0, 0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "minH": "0px",
+        "width": "1044px",
+        "overflowX": "visible"
+      },
+      "card": {
+        "x": 161,
+        "y": 545,
+        "w": 1044,
+        "h": 876,
+        "bottom": 1422,
+        "right": 1205
+      },
+      "cardStyle": {
+        "bg": "rgb(255, 255, 255)",
+        "padding": "0px",
+        "margin": "0px",
+        "minH": "0px",
+        "width": "1044px",
+        "overflowX": "hidden"
+      },
+      "active": "✓ Company Where you work",
+      "progress": "0 of 5 sections complete",
+      "errors": 0,
+      "invalidTabs": [],
+      "reviewErrorVisible": false,
+      "reviewErrorText": "",
+      "tabbar": {
+        "x": 162,
+        "y": 706,
+        "w": 1042,
+        "h": 63,
+        "bottom": 769,
+        "right": 1204
+      },
+      "tabbarScroll": {
+        "clientW": 1042,
+        "scrollW": 1042,
+        "left": 0,
+        "canLeft": false,
+        "canRight": false
+      },
+      "overflowX": false,
+      "hasRound7": false
+    },
+    {
+      "url": "http://localhost:5122/?formid=5",
+      "root": {
+        "x": 161,
+        "y": 545,
+        "w": 1044,
+        "h": 531,
+        "bottom": 1076,
+        "right": 1205
+      },
+      "rootStyle": {
+        "bg": "rgba(0, 0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "minH": "0px",
+        "width": "1044px",
+        "overflowX": "visible"
+      },
+      "card": {
+        "x": 161,
+        "y": 545,
+        "w": 1044,
+        "h": 508,
+        "bottom": 1054,
+        "right": 1205
+      },
+      "cardStyle": {
+        "bg": "rgb(255, 255, 255)",
+        "padding": "0px",
+        "margin": "0px",
+        "minH": "0px",
+        "width": "1044px",
+        "overflowX": "hidden"
+      },
+      "active": "✓ Billing Choose a plan",
+      "progress": "0 of 5 sections complete",
+      "errors": 0,
+      "invalidTabs": [],
+      "reviewErrorVisible": false,
+      "reviewErrorText": "",
+      "tabbar": {
+        "x": 162,
+        "y": 706,
+        "w": 1042,
+        "h": 63,
+        "bottom": 769,
+        "right": 1204
+      },
+      "tabbarScroll": {
+        "clientW": 1042,
+        "scrollW": 1042,
+        "left": 0,
+        "canLeft": false,
+        "canRight": false
+      },
+      "overflowX": false,
+      "hasRound7": false
+    },
+    {
+      "url": "http://localhost:5122/?formid=5",
+      "root": {
+        "x": 161,
+        "y": 545,
+        "w": 1044,
+        "h": 683,
+        "bottom": 1229,
+        "right": 1205
+      },
+      "rootStyle": {
+        "bg": "rgba(0, 0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "minH": "0px",
+        "width": "1044px",
+        "overflowX": "visible"
+      },
+      "card": {
+        "x": 161,
+        "y": 545,
+        "w": 1044,
+        "h": 661,
+        "bottom": 1206,
+        "right": 1205
+      },
+      "cardStyle": {
+        "bg": "rgb(255, 255, 255)",
+        "padding": "0px",
+        "margin": "0px",
+        "minH": "0px",
+        "width": "1044px",
+        "overflowX": "hidden"
+      },
+      "active": "✓ Preferences Tailor your setup",
+      "progress": "0 of 5 sections complete",
+      "errors": 0,
+      "invalidTabs": [],
+      "reviewErrorVisible": false,
+      "reviewErrorText": "",
+      "tabbar": {
+        "x": 162,
+        "y": 706,
+        "w": 1042,
+        "h": 63,
+        "bottom": 769,
+        "right": 1204
+      },
+      "tabbarScroll": {
+        "clientW": 1042,
+        "scrollW": 1042,
+        "left": 0,
+        "canLeft": false,
+        "canRight": false
+      },
+      "overflowX": false,
+      "hasRound7": false
+    },
+    {
+      "url": "http://localhost:5122/?formid=5",
+      "root": {
+        "x": 161,
+        "y": 545,
+        "w": 1044,
+        "h": 502,
+        "bottom": 1048,
+        "right": 1205
+      },
+      "rootStyle": {
+        "bg": "rgba(0, 0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "minH": "0px",
+        "width": "1044px",
+        "overflowX": "visible"
+      },
+      "card": {
+        "x": 161,
+        "y": 545,
+        "w": 1044,
+        "h": 480,
+        "bottom": 1025,
+        "right": 1205
+      },
+      "cardStyle": {
+        "bg": "rgb(255, 255, 255)",
+        "padding": "0px",
+        "margin": "0px",
+        "minH": "0px",
+        "width": "1044px",
+        "overflowX": "hidden"
+      },
+      "active": "✓ Security Protect your account",
+      "progress": "0 of 5 sections complete",
+      "errors": 0,
+      "invalidTabs": [],
+      "reviewErrorVisible": false,
+      "reviewErrorText": "",
+      "tabbar": {
+        "x": 162,
+        "y": 706,
+        "w": 1042,
+        "h": 63,
+        "bottom": 769,
+        "right": 1204
+      },
+      "tabbarScroll": {
+        "clientW": 1042,
+        "scrollW": 1042,
+        "left": 0,
+        "canLeft": false,
+        "canRight": false
+      },
+      "overflowX": false,
+      "hasRound7": false
+    },
+    {
+      "url": "http://localhost:5122/?formid=5",
+      "root": {
+        "x": 161,
+        "y": 545,
+        "w": 1044,
+        "h": 915,
+        "bottom": 1460,
+        "right": 1205
+      },
+      "rootStyle": {
+        "bg": "rgba(0, 0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "minH": "0px",
+        "width": "1044px",
+        "overflowX": "visible"
+      },
+      "card": {
+        "x": 161,
+        "y": 545,
+        "w": 1044,
+        "h": 893,
+        "bottom": 1438,
+        "right": 1205
+      },
+      "cardStyle": {
+        "bg": "rgb(255, 255, 255)",
+        "padding": "0px",
+        "margin": "0px",
+        "minH": "0px",
+        "width": "1044px",
+        "overflowX": "hidden"
+      },
+      "active": "✓ Review Confirm and submit",
+      "progress": "0 of 5 sections complete",
+      "errors": 0,
+      "invalidTabs": [],
+      "reviewErrorVisible": false,
+      "reviewErrorText": "",
+      "tabbar": {
+        "x": 162,
+        "y": 706,
+        "w": 1042,
+        "h": 63,
+        "bottom": 769,
+        "right": 1204
+      },
+      "tabbarScroll": {
+        "clientW": 1042,
+        "scrollW": 1042,
+        "left": 0,
+        "canLeft": false,
+        "canRight": false
+      },
+      "overflowX": false,
+      "hasRound7": false
+    }
+  ],
+  "afterReviewSubmitIncomplete": {
+    "url": "http://localhost:5122/?formid=5",
+    "root": {
+      "x": 161,
+      "y": 21,
+      "w": 1044,
+      "h": 736,
+      "bottom": 758,
+      "right": 1205
+    },
+    "rootStyle": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "padding": "0px",
+      "margin": "0px",
+      "minH": "0px",
+      "width": "1044px",
+      "overflowX": "visible"
+    },
+    "card": {
+      "x": 161,
+      "y": 21,
+      "w": 1044,
+      "h": 714,
+      "bottom": 735,
+      "right": 1205
+    },
+    "cardStyle": {
+      "bg": "rgb(255, 255, 255)",
+      "padding": "0px",
+      "margin": "0px",
+      "minH": "0px",
+      "width": "1044px",
+      "overflowX": "hidden"
+    },
+    "active": "✓ Account Your details",
+    "progress": "0 of 5 sections complete",
+    "errors": 3,
+    "invalidTabs": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "reviewErrorVisible": false,
+    "reviewErrorText": "",
+    "tabbar": {
+      "x": 162,
+      "y": 182,
+      "w": 1042,
+      "h": 63,
+      "bottom": 245,
+      "right": 1204
+    },
+    "tabbarScroll": {
+      "clientW": 1042,
+      "scrollW": 1042,
+      "left": 0,
+      "canLeft": false,
+      "canRight": false
+    },
+    "overflowX": false,
+    "hasRound7": false
+  },
+  "afterAccountContinueEmpty": {
+    "url": "http://localhost:5122/?formid=5",
+    "root": {
+      "x": 161,
+      "y": 91,
+      "w": 1044,
+      "h": 736,
+      "bottom": 828,
+      "right": 1205
+    },
+    "rootStyle": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "padding": "0px",
+      "margin": "0px",
+      "minH": "0px",
+      "width": "1044px",
+      "overflowX": "visible"
+    },
+    "card": {
+      "x": 161,
+      "y": 91,
+      "w": 1044,
+      "h": 714,
+      "bottom": 805,
+      "right": 1205
+    },
+    "cardStyle": {
+      "bg": "rgb(255, 255, 255)",
+      "padding": "0px",
+      "margin": "0px",
+      "minH": "0px",
+      "width": "1044px",
+      "overflowX": "hidden"
+    },
+    "active": "✓ Account Your details",
+    "progress": "0 of 5 sections complete",
+    "errors": 3,
+    "invalidTabs": [
+      0
+    ],
+    "reviewErrorVisible": false,
+    "reviewErrorText": "",
+    "tabbar": {
+      "x": 162,
+      "y": 252,
+      "w": 1042,
+      "h": 63,
+      "bottom": 315,
+      "right": 1204
+    },
+    "tabbarScroll": {
+      "clientW": 1042,
+      "scrollW": 1042,
+      "left": 0,
+      "canLeft": false,
+      "canRight": false
+    },
+    "overflowX": false,
+    "hasRound7": false
+  },
+  "mobileInitial": {
+    "url": "http://localhost:5122/?formid=5",
+    "root": {
+      "x": 48,
+      "y": 564,
+      "w": 294,
+      "h": 755,
+      "bottom": 1319,
+      "right": 342
+    },
+    "rootStyle": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "padding": "0px",
+      "margin": "0px",
+      "minH": "0px",
+      "width": "294px",
+      "overflowX": "visible"
+    },
+    "card": {
+      "x": 48,
+      "y": 564,
+      "w": 294,
+      "h": 710,
+      "bottom": 1274,
+      "right": 342
+    },
+    "cardStyle": {
+      "bg": "rgb(255, 255, 255)",
+      "padding": "0px",
+      "margin": "0px",
+      "minH": "0px",
+      "width": "294px",
+      "overflowX": "hidden"
+    },
+    "active": "✓ Account Your details",
+    "progress": "0 of 5 sections complete",
+    "errors": 0,
+    "invalidTabs": [],
+    "reviewErrorVisible": false,
+    "reviewErrorText": "",
+    "tabbar": {
+      "x": 49,
+      "y": 787,
+      "w": 292,
+      "h": 58,
+      "bottom": 845,
+      "right": 341
+    },
+    "tabbarScroll": {
+      "clientW": 292,
+      "scrollW": 755,
+      "left": 0,
+      "canLeft": false,
+      "canRight": true
+    },
+    "overflowX": false,
+    "hasRound7": false
+  },
+  "mobileAfterRightScroll": {
+    "url": "http://localhost:5122/?formid=5",
+    "root": {
+      "x": 48,
+      "y": 564,
+      "w": 294,
+      "h": 755,
+      "bottom": 1319,
+      "right": 342
+    },
+    "rootStyle": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "padding": "0px",
+      "margin": "0px",
+      "minH": "0px",
+      "width": "294px",
+      "overflowX": "visible"
+    },
+    "card": {
+      "x": 48,
+      "y": 564,
+      "w": 294,
+      "h": 710,
+      "bottom": 1274,
+      "right": 342
+    },
+    "cardStyle": {
+      "bg": "rgb(255, 255, 255)",
+      "padding": "0px",
+      "margin": "0px",
+      "minH": "0px",
+      "width": "294px",
+      "overflowX": "hidden"
+    },
+    "active": "✓ Account Your details",
+    "progress": "0 of 5 sections complete",
+    "errors": 0,
+    "invalidTabs": [],
+    "reviewErrorVisible": false,
+    "reviewErrorText": "",
+    "tabbar": {
+      "x": 49,
+      "y": 787,
+      "w": 292,
+      "h": 58,
+      "bottom": 845,
+      "right": 341
+    },
+    "tabbarScroll": {
+      "clientW": 292,
+      "scrollW": 785,
+      "left": 260,
+      "canLeft": true,
+      "canRight": true
+    },
+    "overflowX": false,
+    "hasRound7": false
+  }
+}

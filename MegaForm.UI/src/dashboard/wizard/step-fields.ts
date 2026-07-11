@@ -1,15 +1,17 @@
 // Wizard step 2 — Fields: palette + field list + the multi-step STEPS panel.
 // formPages[] maps 1:1 to MegaForm Section pageBreak (see transform.ts).
-import { WizardData, SetFn, WizardField, FormPage } from './types';
+import { WizardData, SetFn, WizardField, FormPage, PremiumStepDetail } from './types';
 import { curatedFields, fieldsInGroup, FIELD_GROUPS, catalogLabel, catalogIcon, buildFieldFromCatalog, FieldDef } from './field-catalog';
 import { parseWizardStructure, fieldStepMap } from '@shared/custom-html-insert';
 import { h, icon, toggle } from './ui';
+import { premiumStepDetailsFor } from './premium-steps';
 
 let counter = 2000;
 const fid = () => 'wf-' + (++counter);
 let activePageId = 'page-1';
+let activePremiumStepOrdinal = 1;
 let paletteExpanded = false;
-export function resetFields(): void { activePageId = 'page-1'; paletteExpanded = false; }
+export function resetFields(): void { activePageId = 'page-1'; activePremiumStepOrdinal = 1; paletteExpanded = false; }
 
 // ── Field palette: curated tiles + an expandable "more fields" registry view ──
 function paletteTile(d: FieldDef, onAdd: (type: string) => void): HTMLElement {
@@ -84,12 +86,6 @@ function premiumFieldIcon(f: any): string {
   const M: Record<string, string> = { Select: 'fa-caret-down', MultiSelect: 'fa-list-check', Radio: 'fa-circle-dot', Checkbox: 'fa-square-check', Date: 'fa-calendar', Rating: 'fa-star', File: 'fa-paperclip', Signature: 'fa-signature', RichText: 'fa-paragraph', Row: 'fa-table-columns', Html: 'fa-heading', Section: 'fa-grip-lines', Hidden: 'fa-eye-slash', UniqueId: 'fa-fingerprint', Captcha: 'fa-shield-halved', TermsPrivacy: 'fa-file-contract' };
   return (f && M[f.type]) || 'fa-font';
 }
-function addFieldSelect(onPick: (catalogKey: string) => void): HTMLElement {
-  return h('select', { class: 'mfw-in', style: 'height:34px;font-size:12px;background:#fff', onchange: (e: any) => { const v = e.target.value; e.target.value = ''; if (v) onPick(v); } },
-    [h('option', { value: '' }, '+ Add field to this step…') as Node].concat(
-      FIELD_GROUPS.map(g => h('optgroup', { label: g.label }, fieldsInGroup(g.id).map(d => h('option', { value: d.key }, d.label))))
-    ));
-}
 function premiumRow(f: any, onLabel: (v: string) => void, onReq: () => void, onDel: () => void): HTMLElement {
   return h('div', { style: 'display:flex;align-items:center;gap:9px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;padding:7px 10px;margin-bottom:6px' }, [
     h('span', { style: 'width:26px;height:26px;border-radius:7px;background:#f3e8ff;color:#7c3aed;display:flex;align-items:center;justify-content:center;flex:0 0 26px' }, [icon(premiumFieldIcon(f))]),
@@ -104,6 +100,7 @@ function premiumFieldsEditor(data: WizardData, set: SetFn): HTMLElement {
   const html = String((t.settings && t.settings.customHtml) || '');
   const struct = parseWizardStructure(html);
   const stepMap = fieldStepMap(html);
+  const details = premiumStepDetailsFor(t, data.premiumStepDetails);
   const fields: any[] = data.premiumFields || [];
   const used = collectFieldKeys(fields);
   const ownField = (f: any) => f && f.type !== 'Section' && f.type !== 'Hidden';
@@ -116,6 +113,20 @@ function premiumFieldsEditor(data: WizardData, set: SetFn): HTMLElement {
   const setLabel = (key: string, v: string) => { const f = byKey(key); if (f) f.label = v; set({}, { rerender: false }); };
   const toggleReq = (key: string) => { const f = byKey(key); if (f) f.required = !f.required; set({ premiumFields: fields.slice() }); };
   const removeKey = (key: string) => set({ premiumFields: fields.filter(f => f.key !== key) });
+  const setStepDetail = (index: number, key: keyof PremiumStepDetail, value: string) => {
+    const next = premiumStepDetailsFor(t, data.premiumStepDetails);
+    next[index] = { ...next[index], [key]: value };
+    data.premiumStepDetails = next;
+    set({ premiumStepDetails: next }, { rerender: false });
+  };
+  const onStepDetailInput = (index: number, key: keyof PremiumStepDetail, fallback: string) => (e: any) => {
+    const value = e.target.value;
+    setStepDetail(index, key, value);
+    if (key === 'navLabel') {
+      const title = e.target.closest('.mfw-card')?.querySelector('[data-mfw-step-title]');
+      if (title) title.textContent = value || fallback;
+    }
+  };
   const addField = (ordinal: number | null, stepVal: number | null, catalogKey: string) => {
     const label = catalogLabel(catalogKey);
     const nf = buildFieldFromCatalog(catalogKey, uniqueFieldKey(label, used), label, false);
@@ -133,44 +144,107 @@ function premiumFieldsEditor(data: WizardData, set: SetFn): HTMLElement {
     set({ premiumFields: next });
   };
 
-  const fieldRows = (stepFields: any[], ordinal: number | null, stepVal: number | null) => {
+  const onMore = () => { paletteExpanded = !paletteExpanded; set({}, { rerender: true }); };
+  const premiumFieldListEl = (stepFields: any[], ordinal: number | null, stepVal: number | null, emptyLabel: string) => {
     const items = stepFields.map((f: any) => premiumRow(f, v => setLabel(f.key, v), () => toggleReq(f.key), () => removeKey(f.key)));
     return h('div', null, [
-      items.length ? h('div', null, items) : h('div', { style: 'font-size:12px;color:#94a3b8;padding:4px 0 8px' }, 'No fields in this step'),
-      h('div', { style: 'margin-top:6px' }, [addFieldSelect(ck => addField(ordinal, stepVal, ck))]),
+      palette(ck => addField(ordinal, stepVal, ck), onMore),
+      h('div', { class: 'mfw-flbl', style: 'margin-bottom:8px' }, 'Fields'),
+      items.length
+        ? h('div', null, items)
+        : h('div', { style: 'border:1.5px dashed #e2e8f0;border-radius:12px;padding:22px;text-align:center;color:#94a3b8;font-size:13px' }, [
+            h('div', { style: 'font-size:20px;margin-bottom:4px' }, [icon('fa-circle-plus')]),
+            h('div', null, emptyLabel),
+          ]),
     ]);
   };
 
-  const cards: Array<Node> = [];
   if (struct.isWizard) {
-    struct.steps.forEach((s, i) => {
-      const ordinal = i + 1;
-      const stepFields = fields.filter(f => ownField(f) && f.__step === ordinal);
-      cards.push(h('div', { class: 'mfw-card', style: 'margin-bottom:12px' }, [
-        h('div', { style: 'display:flex;align-items:center;gap:9px;margin-bottom:10px' }, [
-          h('span', { style: 'width:24px;height:24px;border-radius:50%;background:#7c3aed;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:0 0 24px' }, String(ordinal)),
-          h('div', { style: 'font-weight:700;font-size:14px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap' }, s.stepLabel || ('Step ' + ordinal)),
-          h('span', { style: 'font-size:11px;color:#94a3b8' }, stepFields.length + ' field' + (stepFields.length !== 1 ? 's' : '')),
+    if (!details[activePremiumStepOrdinal - 1]) activePremiumStepOrdinal = 1;
+    const activeIndex = Math.max(0, Math.min(activePremiumStepOrdinal - 1, Math.max(0, details.length - 1)));
+    const activeStruct = struct.steps[activeIndex] || struct.steps[0];
+    const activeDetail = details[activeIndex] || {
+      step: activeStruct ? activeStruct.step : activePremiumStepOrdinal,
+      navLabel: 'Step ' + activePremiumStepOrdinal,
+      navSubtitle: '',
+      title: 'Step ' + activePremiumStepOrdinal,
+      description: '',
+    };
+    const total = fields.filter(ownField).length;
+    const stepFields = fields.filter(f => ownField(f) && f.__step === activePremiumStepOrdinal);
+    const header = h('div', { style: 'display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px' }, [
+      h('div', null, [h('h2', null, 'Build your form'), h('p', { class: 'sub', style: 'margin:4px 0 0' }, 'Add fields to each step. ' + total + ' field' + (total !== 1 ? 's' : '') + ' total.')]),
+      h('div', { style: 'display:flex;flex-direction:column;gap:8px;align-items:flex-end' }, [
+        h('div', { class: 'mfw-card', style: 'display:flex;align-items:center;gap:12px;padding:9px 12px' }, [
+          h('div', null, [h('div', { style: 'font-size:12px;font-weight:700' }, 'Multi-step form'), h('div', { style: 'font-size:10px;color:#94a3b8' }, 'Premium template flow')]),
+          h('button', { type: 'button', class: 'mfw-toggle is-on', role: 'switch', 'aria-checked': 'true', disabled: true, style: 'cursor:default' }, [h('span', { class: 'mfw-toggle-knob' })]),
         ]),
-        fieldRows(stepFields, ordinal, s.step),
-      ]));
-    });
+        h('div', { class: 'mfw-card', style: 'display:flex;align-items:center;gap:12px;padding:9px 12px' }, [
+          h('div', { style: 'font-size:12px;font-weight:600' }, 'Progress bar'),
+          h('button', { type: 'button', class: 'mfw-toggle is-on', role: 'switch', 'aria-checked': 'true', disabled: true, style: 'cursor:default' }, [h('span', { class: 'mfw-toggle-knob' })]),
+        ]),
+      ]),
+    ]);
+
+    const sidebar = h('div', { style: 'width:170px;flex:0 0 170px;background:#fff;border-radius:11px;padding:9px;box-shadow:0 1px 3px rgba(15,23,42,.05)' }, [
+      h('div', { class: 'mfw-flbl', style: 'margin-bottom:6px' }, 'Steps (' + details.length + ')'),
+      ...details.map((d, i) => {
+        const ordinal = i + 1;
+        const isActive = ordinal === activePremiumStepOrdinal;
+        const count = fields.filter(f => ownField(f) && f.__step === ordinal).length;
+        return h('button', {
+          type: 'button',
+          style: 'display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:0;border-radius:9px;padding:8px 9px;cursor:pointer;font-size:12px;font-weight:600;margin-bottom:4px;' + (isActive ? 'background:#eef2ff;color:#6366f1' : 'background:none;color:#64748b'),
+          onclick: () => { activePremiumStepOrdinal = ordinal; set({}); },
+        }, [
+          h('span', { style: 'width:20px;height:20px;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:0 0 20px;' + (isActive ? 'background:#6366f1;color:#fff' : 'background:#e2e8f0;color:#64748b') }, String(ordinal)),
+          h('span', { style: 'flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap' }, d.navLabel || d.title || ('Step ' + ordinal)),
+          h('span', { style: 'font-size:9px;color:#94a3b8' }, String(count)),
+        ]);
+      }),
+      h('div', { style: 'margin-top:6px;border:1.5px dashed #cbd5e1;border-radius:9px;padding:8px;font-size:11px;font-weight:600;color:#94a3b8;background:#f8fafc;text-align:center' }, 'Template steps fixed'),
+      h('div', { style: 'margin-top:10px;background:#f8fafc;border-radius:8px;padding:7px;text-align:center;font-size:10px;color:#94a3b8;font-weight:600' }, total + ' fields across ' + details.length + ' steps'),
+    ]);
+
+    const editor = h('div', { style: 'flex:1;min-width:0;background:#fff;border-radius:11px;padding:13px;box-shadow:0 1px 3px rgba(15,23,42,.05)' }, [
+      h('div', { style: 'display:flex;align-items:center;gap:8px;margin-bottom:12px' }, [
+        h('span', { style: 'width:20px;height:20px;border-radius:50%;background:#6366f1;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center' }, String(activePremiumStepOrdinal)),
+        h('input', { class: 'mfw-in', style: 'height:28px;border:0;font-weight:700;font-size:14px;padding:0;flex:1', value: activeDetail.navLabel || '', oninput: onStepDetailInput(activeIndex, 'navLabel', activeDetail.title || ('Step ' + activePremiumStepOrdinal)) }),
+      ]),
+      h('div', { class: 'mfw-step-detail-grid' }, [
+        h('label', null, [h('span', null, 'Step subtitle'), h('input', { class: 'mfw-in', value: activeDetail.navSubtitle || '', oninput: (e: any) => setStepDetail(activeIndex, 'navSubtitle', e.target.value) })]),
+        h('label', null, [h('span', null, 'Content heading'), h('input', { class: 'mfw-in', value: activeDetail.title || '', oninput: (e: any) => setStepDetail(activeIndex, 'title', e.target.value) })]),
+        h('label', null, [h('span', null, 'Intro text'), h('input', { class: 'mfw-in', value: activeDetail.description || '', oninput: (e: any) => setStepDetail(activeIndex, 'description', e.target.value) })]),
+      ]),
+      premiumFieldListEl(stepFields, activePremiumStepOrdinal, activeStruct ? activeStruct.step : activeDetail.step, 'No fields on ' + (activeDetail.navLabel || activeDetail.title || ('Step ' + activePremiumStepOrdinal))),
+    ]);
+
     const orphan = fields.filter(f => ownField(f) && f.__step == null);
-    if (orphan.length) cards.push(h('div', { class: 'mfw-card', style: 'margin-bottom:12px' }, [h('div', { style: 'font-weight:700;font-size:13px;margin-bottom:8px' }, 'Other fields'), fieldRows(orphan, null, null)]));
-  } else {
-    cards.push(h('div', { class: 'mfw-card', style: 'margin-bottom:12px' }, [h('div', { style: 'font-weight:700;font-size:14px;margin-bottom:10px' }, 'Fields'), fieldRows(fields.filter(ownField), null, null)]));
+    const orphanCard = orphan.length
+      ? h('div', { class: 'mfw-card', style: 'margin-top:12px;background:#fff' }, [
+          h('div', { style: 'font-weight:700;font-size:13px;margin-bottom:8px' }, 'Other fields'),
+          premiumFieldListEl(orphan, null, null, 'No unassigned fields'),
+        ])
+      : null;
+
+    return h('div', null, [
+      header,
+      h('div', { style: 'display:flex;gap:12px;background:#f8fafc;border-radius:14px;padding:8px' }, [sidebar, editor]),
+      orphanCard,
+    ]);
   }
 
   return h('div', null, [
-    h('div', { style: 'display:flex;align-items:center;gap:10px;margin-bottom:4px' }, [
-      h('h2', { style: 'margin:0' }, 'Edit ' + (t.title || 'premium form')),
-      h('span', { class: 'mfw-badge', style: 'color:#7c3aed;background:#7c3aed1a' }, 'Premium'),
+    h('div', { style: 'display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px' }, [
+      h('div', null, [h('h2', null, 'Build your form'), h('p', { class: 'sub', style: 'margin:4px 0 0' }, 'Add fields. ' + fields.filter(ownField).length + ' field' + (fields.filter(ownField).length !== 1 ? 's' : '') + ' total.')]),
+      h('span', { class: 'mfw-badge', style: 'color:#7c3aed;background:#7c3aed1a;margin-top:2px' }, 'Premium'),
     ]),
-    h('p', { class: 'sub' }, struct.isWizard ? 'Add or remove fields in each step. The premium layout, styling and step flow stay in sync.' : 'Add or remove fields. The premium layout and styling stay in sync.'),
-    ...cards,
+    h('div', { class: 'mfw-card', style: 'background:#fafbfc;margin-bottom:12px' }, [
+      premiumFieldListEl(fields.filter(ownField), null, null, 'No fields yet - click a type above to add'),
+    ]),
     h('div', { style: 'display:flex;align-items:flex-start;gap:10px;border:1.5px dashed #ddd6fe;border-radius:12px;background:#faf5ff;padding:11px 13px;font-size:12px;color:#6b21a8;line-height:1.5' }, [
       h('span', { style: 'color:#7c3aed;margin-top:1px' }, [icon('fa-circle-info')]),
-      document.createTextNode('New fields inherit the template’s field styling and drop into the right step; removed fields are cleaned from the layout and the review screen on Create.'),
+      document.createTextNode('New fields inherit the template styling; removed fields are cleaned from the layout on Create.'),
     ]),
   ]);
 }

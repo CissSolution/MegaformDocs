@@ -152,13 +152,19 @@ namespace MegaForm.Oqtane.Server.Controllers
                 enabled = string.Equals(rawEnabled, "true", System.StringComparison.OrdinalIgnoreCase);
             else
                 enabled = localAi;
+            // [TrialTighten v20260706] AI is a licensed feature. On a trial (unlicensed) install we
+            // never hand out the API key and force enabled=false, so the assistant/form-creator cannot
+            // actually run even if a client were bypassed. The `trial` flag lets the builder show a
+            // locked "Upgrade" CTA instead of the AI UI.
+            var trialLocked = MegaForm.Core.Services.LicenseService.IsTrial();
             return Ok(new
             {
                 provider = read(AiSettingKeys.Provider, localAi ? "megaform-local" : "openai"),
                 baseUrl = read(AiSettingKeys.BaseUrl, localAi ? "/api/MegaFormAi" : "https://api.openai.com/v1"),
                 model = read(AiSettingKeys.Model, localAi ? "megaform-local-kb" : "gpt-4o"),
-                apiKey = includeKey ? read(AiSettingKeys.ApiKey, string.Empty) : string.Empty,
-                enabled,
+                apiKey = (includeKey && !trialLocked) ? read(AiSettingKeys.ApiKey, string.Empty) : string.Empty,
+                enabled = enabled && !trialLocked,
+                trial = trialLocked,
             });
         }
 

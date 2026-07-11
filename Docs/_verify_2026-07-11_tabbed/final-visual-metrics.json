@@ -1,0 +1,84 @@
+{
+  "desktop": {
+    "root": {
+      "x": 0,
+      "y": -0.22,
+      "width": 1280,
+      "height": 900,
+      "top": -0.22,
+      "right": 1280,
+      "bottom": 899.78,
+      "left": 0
+    },
+    "frame": {
+      "x": 64,
+      "y": 168.94,
+      "width": 1152,
+      "height": 561.69,
+      "top": 168.94,
+      "right": 1216,
+      "bottom": 730.63,
+      "left": 64
+    },
+    "card": {
+      "x": 64,
+      "y": 168.94,
+      "width": 1152,
+      "height": 529.19,
+      "top": 168.94,
+      "right": 1216,
+      "bottom": 698.13,
+      "left": 64
+    },
+    "activeStep": "0",
+    "activePage": "0",
+    "back": {
+      "hidden": true,
+      "disabled": true,
+      "display": "flex",
+      "opacity": "0.45"
+    },
+    "overflow": []
+  },
+  "mobile": {
+    "root": {
+      "x": 0,
+      "y": 0.19,
+      "width": 390,
+      "height": 844,
+      "top": 0.19,
+      "right": 390,
+      "bottom": 844.19,
+      "left": 0
+    },
+    "frame": {
+      "x": 10,
+      "y": 16.19,
+      "width": 370,
+      "height": 758.88,
+      "top": 16.19,
+      "right": 380,
+      "bottom": 775.06,
+      "left": 10
+    },
+    "card": {
+      "x": 10,
+      "y": 16.19,
+      "width": 370,
+      "height": 703.88,
+      "top": 16.19,
+      "right": 380,
+      "bottom": 720.06,
+      "left": 10
+    },
+    "activeStep": "0",
+    "activePage": "0",
+    "back": {
+      "hidden": true,
+      "disabled": true,
+      "display": "flex",
+      "opacity": "0.45"
+    },
+    "overflow": []
+  }
+}

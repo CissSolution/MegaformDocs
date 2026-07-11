@@ -1,7 +1,66 @@
 (function (global: any) {
   'use strict';
 
-  var BADGE = 'MfpContentSlider v20260628-04';
+  var BADGE = 'MfpContentSlider v20260628-05';
+
+  // [SelfContainedCss v20260628-05] The overlay/card variant CSS lives in
+  // Assets/css/plugins/megaform-widgets-builtin.css too, BUT that file is loaded
+  // under a HARD-CODED ?v= stamp that doesn't bump on deploy, so browsers serve a
+  // stale copy without these rules → slides stacked / unstyled. Inject the variant
+  // CSS from the plugin itself (which DOES cache-bust with the JS) so the premium
+  // slider is self-contained and renders correctly regardless of the external CSS.
+  var SLIDER_CSS =
+    '.mfp-slider-widget[data-mode="single"]{-webkit-user-select:none;user-select:none;}' +
+    '.mfp-slider-widget[data-mode="single"] .mfp-sl-frame{position:relative;overflow:hidden;border-radius:var(--mfp-sl-radius,18px);border:1px solid var(--mfp-sl-ring,#e2e8f0);background:var(--mfp-sl-surface,#fff);box-shadow:0 20px 48px -28px rgba(0,0,0,.45);}' +
+    '.mfp-slider-widget[data-mode="single"] .mfp-sl-track{display:flex;will-change:transform;cursor:grab;transition:transform 560ms cubic-bezier(.22,1,.36,1);}' +
+    '.mfp-slider-widget[data-mode="single"].is-dragging .mfp-sl-track{cursor:grabbing;}' +
+    '.mfp-slider-widget[data-mode="single"] .mfp-sl-slide{flex:0 0 100%;width:100%;min-width:0;}' +
+    '.mfp-slider-widget[data-mode="single"] .mfp-sl-media{position:relative;width:100%;overflow:hidden;height:var(--mfp-sl-h,224px);background:#0b0b0c;}' +
+    '.mfp-slider-widget[data-style="card"] .mfp-sl-media{height:var(--mfp-sl-h,176px);}' +
+    '.mfp-slider-widget[data-mode="single"] .mfp-sl-img{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:var(--mfp-slider-fit,cover);transform:scale(1);transition:transform 6000ms ease-out;-webkit-user-drag:none;user-select:none;}' +
+    '.mfp-slider-widget[data-mode="single"] .mfp-sl-img-placeholder{background:linear-gradient(135deg,#e2e8f0 0%,#f8fafc 100%);}' +
+    '.mfp-slider-widget[data-mode="single"]:not(.is-dragging) .mfp-sl-slide.is-active .mfp-sl-img{transform:scale(1.08);}' +
+    '.mfp-slider-widget[data-style="card"]:not(.is-dragging) .mfp-sl-slide.is-active .mfp-sl-img{transform:scale(1.06);}' +
+    '.mfp-slider-widget[data-mode="single"] .mfp-sl-grad{position:absolute;inset:0;pointer-events:none;background:linear-gradient(to top,rgba(0,0,0,.88) 0%,rgba(0,0,0,.32) 52%,rgba(0,0,0,0) 82%);}' +
+    '.mfp-slider-widget[data-mode="single"] .mfp-sl-badge{position:absolute;left:10px;top:10px;z-index:2;display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:600;line-height:1.5;letter-spacing:.01em;background:var(--mfp-sl-accent,#4a90d9);color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.18);}' +
+    '.mfp-slider-widget[data-style="overlay"] .mfp-sl-badge{-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}' +
+    '.mfp-slider-widget[data-style="overlay"] .mfp-sl-cap{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:12px 12px 28px;}' +
+    '.mfp-slider-widget[data-style="overlay"] .mfp-sl-title{margin:0;font-size:16px;font-weight:700;line-height:1.25;color:#fff;text-shadow:0 1px 12px rgba(0,0,0,.5);}' +
+    '.mfp-slider-widget[data-style="overlay"] .mfp-sl-desc{margin:2px 0 0;max-width:28rem;font-size:12px;line-height:1.35;color:rgba(255,255,255,.85);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}' +
+    '.mfp-slider-widget[data-style="card"] .mfp-sl-panel{padding:10px 14px;}' +
+    '.mfp-slider-widget[data-style="card"] .mfp-sl-title{margin:0;font-size:14px;font-weight:700;line-height:1.3;color:var(--mfp-sl-ink,#1a1a2e);}' +
+    '.mfp-slider-widget[data-style="card"] .mfp-sl-desc{margin:2px 0 0;font-size:12px;line-height:1.35;color:var(--mfp-sl-sub,#888);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}' +
+    '.mfp-slider-widget[data-style="card"] .mfp-sl-meta{margin-top:4px;font-size:13px;font-weight:700;color:var(--mfp-sl-accent,#4a90d9);}' +
+    '.mfp-slider-widget[data-mode="single"] .mfp-sl-nav{position:absolute;z-index:3;top:50%;transform:translateY(-50%);width:34px;height:34px;border:0;border-radius:999px;cursor:pointer;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.82);color:#111;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:0 8px 20px -8px rgba(0,0,0,.5);transition:transform .12s ease,background .12s ease;}' +
+    '.mfp-slider-widget[data-mode="single"] .mfp-sl-nav:hover{background:#fff;}' +
+    '.mfp-slider-widget[data-mode="single"] .mfp-sl-nav:active{transform:translateY(-50%) scale(.9);}' +
+    '.mfp-slider-widget[data-mode="single"] .mfp-sl-nav svg{width:20px;height:20px;}' +
+    '.mfp-slider-widget[data-mode="single"] .mfp-sl-prev{left:8px;}' +
+    '.mfp-slider-widget[data-mode="single"] .mfp-sl-next{right:8px;}' +
+    '.mfp-slider-widget[data-style="card"] .mfp-sl-nav{top:calc(var(--mfp-sl-h,176px)/2);}' +
+    '.mfp-slider-widget .mfp-sl-dots--glass{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:3;display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(0,0,0,.28);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}' +
+    '.mfp-slider-widget .mfp-sl-dots--glass .mfp-sl-dot{width:6px;height:6px;border:0;padding:0;border-radius:999px;cursor:pointer;background:rgba(255,255,255,.5);transition:width .3s ease,background .3s ease;appearance:none;-webkit-appearance:none;}' +
+    '.mfp-slider-widget .mfp-sl-dots--glass .mfp-sl-dot.is-active{width:18px;background:#fff;}' +
+    '.mfp-slider-widget .mfp-sl-progress{position:absolute;left:0;right:0;bottom:0;height:2px;z-index:3;background:rgba(255,255,255,.18);}' +
+    '.mfp-slider-widget[data-style="card"] .mfp-sl-progress{background:rgba(0,0,0,.08);}' +
+    '.mfp-slider-widget .mfp-sl-bar{height:100%;width:0;background:#fff;}' +
+    '.mfp-slider-widget[data-style="card"] .mfp-sl-bar{background:var(--mfp-sl-accent,#4a90d9);}' +
+    '.mfp-slider-widget .mfp-sl-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;}' +
+    '.mfp-slider-widget .mfp-sl-dots--solid{display:inline-flex;align-items:center;gap:6px;}' +
+    '.mfp-slider-widget .mfp-sl-dots--solid .mfp-sl-dot{width:8px;height:8px;border:0;padding:0;border-radius:999px;cursor:pointer;background:var(--mfp-sl-ring,#e2e8f0);transition:width .25s ease,background .25s ease;appearance:none;-webkit-appearance:none;}' +
+    '.mfp-slider-widget .mfp-sl-dots--solid .mfp-sl-dot.is-active{width:22px;background:var(--mfp-sl-accent,#4a90d9);}' +
+    '.mfp-slider-widget .mfp-sl-counter{font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--mfp-sl-sub,#888);}' +
+    '.mfp-slider-widget .mfp-sl-dot:focus-visible,.mfp-slider-widget[data-mode="single"] .mfp-sl-nav:focus-visible{outline:2px solid var(--mfp-sl-accent,#4a90d9);outline-offset:2px;}' +
+    '@media (max-width:560px){.mfp-slider-widget[data-mode="single"] .mfp-sl-nav{display:none;}}';
+
+  function ensureSliderStyles(): void {
+    if (typeof document === 'undefined') return;
+    if (document.getElementById('mfp-sl-inline-styles')) return;
+    var st = document.createElement('style');
+    st.id = 'mfp-sl-inline-styles';
+    st.textContent = SLIDER_CSS;
+    (document.head || document.documentElement).appendChild(st);
+  }
 
   interface AnyObj { [key: string]: any; }
   interface SliderItem {
@@ -292,6 +351,7 @@
   }
 
   function bind(formId: number): void {
+    ensureSliderStyles();
     var selector = '.mfw-content-slider[id^="' + cssEscape(fmtId(formId, '')) + '"]';
     var roots = document.querySelectorAll(selector);
     for (var i = 0; i < roots.length; i++) {
@@ -332,6 +392,15 @@
       var dragPct = width ? (dragPx / width) * 100 : 0;
       if (!isFinite(dragPct)) dragPct = 0;
       var translate = -index * 100 + dragPct;
+      // [SliderEdgeResist v20260706] Rubber-band the drag at the ends. Dragging past the first/last
+      // slide used to slide the track into empty space (a blank panel appeared when you swiped to the
+      // very end). Damp the over-scroll to ~22% so only a small elastic offset shows; the release
+      // handler still snaps/wraps to a valid slide (index is always modulo-clamped by go()).
+      if (dragging) {
+        var maxT = 0, minT = -(count - 1) * 100;
+        if (translate > maxT) translate = maxT + (translate - maxT) * 0.22;
+        else if (translate < minT) translate = minT + (translate - minT) * 0.22;
+      }
       track!.style.transform = 'translate3d(' + translate + '%,0,0)';
       track!.style.transition = dragging ? 'none' : 'transform 560ms cubic-bezier(0.22,1,0.36,1)';
     }

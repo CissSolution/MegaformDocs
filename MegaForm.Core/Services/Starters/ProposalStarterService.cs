@@ -47,7 +47,7 @@ namespace MegaForm.Core.Services.Starters
         public const string RequesterRole = "Proposal Requesters";
         public const string ManagerRole = "Proposal Managers";
         public const string FinanceRole = "Proposal Finance";
-        public const string StarterPassword = "MegaForm!2026";
+        public const string StarterPassword = "";
         public const string RequesterUserName = "proposal.requester";
         public const string ManagerUserName = "proposal.manager";
         public const string FinanceUserName = "proposal.finance";
@@ -355,7 +355,7 @@ namespace MegaForm.Core.Services.Starters
                     Password = StarterPassword,
                     ApproveUser = true,
                     UpdateIfExists = true,
-                    GeneratePasswordIfEmpty = false,
+                    GeneratePasswordIfEmpty = true,
                     Actor = actor
                 }, CancellationToken.None).GetAwaiter().GetResult();
             }

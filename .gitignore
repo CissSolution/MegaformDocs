@@ -75,6 +75,12 @@ mock/
 *.gif
 *.webp
 
+# Exceptions: documentation demo assets are intentionally version-controlled
+!demo-gifs/*.gif
+!demo-gifs/**/*.gif
+!Docs/docfx/images/*.gif
+!Docs/docfx/images/*.png
+
 # Built JS bundles (output of MegaForm.UI build → Assets/js). Source is MegaForm.UI/src + Assets/ts.
 Assets/js/
 
@@ -124,3 +130,6 @@ MegaForm.Umbraco/wwwroot/js/
 MegaForm.Umbraco/wwwroot/css/
 MegaForm.Umbraco/wwwroot/lib/
 MegaForm.Premium.AspNetCore/wwwroot/megaform/
+
+# Marketplace publishing SOP — contains plaintext GitHub/oqtane credentials; never commit
+CLAUDE_HANDOFF_20260708_OQTANE_MARKETPLACE_PUBLISH_SOP.md

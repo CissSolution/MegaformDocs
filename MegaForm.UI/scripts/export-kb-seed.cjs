@@ -16,8 +16,8 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 const OUT = path.resolve(__dirname, '../../MegaForm.Core/Seed/ai-knowledge-seed.json');
-const SQL_SERVER = 'WINDOWS-11\\SQLEXPRESS';
-const DB = 'DNN10322_MegaF';
+const SQL_SERVER = process.env.MF_KB_SQL_SERVER || 'WINDOWS-11\\SQLEXPRESS';
+const DB = process.env.MF_KB_DB || 'DNN10322_MegaF';
 
 function sqlcmdJson(query) {
   // -y 0 / -Y 0 = no truncation (huge body fields). Avoid -W (conflicts).

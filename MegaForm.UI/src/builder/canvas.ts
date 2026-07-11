@@ -227,6 +227,32 @@ import { fieldStepMap } from '@shared/custom-html-insert';
         return '/DesktopModules/MegaForm/Assets';
     }
 
+    function getPreviewAssetVersion(): string {
+        try {
+            var w = window as any;
+            var pf = (w.__MF_PLATFORM__ || {}) as any;
+            var direct = w.__MF_ASSET_VERSION__ || pf.assetVersion || pf.AssetVersion || pf.assetsVersion || pf.resourceVersion;
+            if (direct) return String(direct);
+
+            var scripts = Array.prototype.slice.call(document.scripts || []) as HTMLScriptElement[];
+            for (var i = 0; i < scripts.length; i++) {
+                var src = String((scripts[i] && scripts[i].src) || '');
+                if (!src) continue;
+                var isMegaFormAsset =
+                    src.indexOf('/Modules/MegaForm/') >= 0 ||
+                    src.indexOf('/DesktopModules/MegaForm/') >= 0 ||
+                    src.indexOf('megaform-') >= 0;
+                if (!isMegaFormAsset) continue;
+                try {
+                    var url = new URL(src, window.location.href);
+                    var version = url.searchParams.get('v');
+                    if (version) return version;
+                } catch (_eUrl) { /* ignore malformed script src */ }
+            }
+        } catch (_e) { /* defensive */ }
+        return '20260704-B361';
+    }
+
     function getPreviewApiBase(): string {
         // Reuse B51 platform-aware base for runtime renderer config.
         var w = window as any;
@@ -246,6 +272,10 @@ import { fieldStepMap } from '@shared/custom-html-insert';
         var assetBase = getPlatformAssetBase();
         var apiBase = getPreviewApiBase();
         var origin = (window.location.origin || '').replace(/\/+$/, '');
+        var assetVersion = getPreviewAssetVersion();
+        function assetUrl(path: string): string {
+            return origin + assetBase + path + '?v=' + encodeURIComponent(assetVersion);
+        }
         var stateAny = (B && B.state) as any;
         var schema = (stateAny && stateAny.schema) ? stateAny.schema : { fields: [], settings: {} };
         var settings: any = schema.settings || {};
@@ -460,8 +490,10 @@ import { fieldStepMap } from '@shared/custom-html-insert';
 
         var parts: string[] = [
             '<!DOCTYPE html><html><head><meta charset="utf-8">',
-            '<link rel="stylesheet" href="' + origin + assetBase + '/css/megaform.css">',
-            '<link rel="stylesheet" href="' + origin + assetBase + '/css/plugins/megaform-widgets-builtin.css">',
+            '<link rel="stylesheet" href="' + assetUrl('/css/megaform.css') + '">',
+            '<link rel="stylesheet" href="' + assetUrl('/css/megaform-widgets.css') + '">',
+            '<link rel="stylesheet" href="' + assetUrl('/css/megaform-themes.css') + '">',
+            '<link rel="stylesheet" href="' + assetUrl('/css/plugins/megaform-widgets-builtin.css') + '">',
             '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">',
             '<style id="mf-theme-live-preview"></style>',
             // [B58 FormWidthParity] Force the iframe form wrapper to use the
@@ -547,7 +579,8 @@ import { fieldStepMap } from '@shared/custom-html-insert';
             '</head><body>',
             '<div id="mf-mount"></div>',
             '<script>', renderInit, '<\/script>',
-            '<script src="' + origin + assetBase + '/js/megaform-renderer.js?v=20260609-B107"><\/script>',
+            '<script src="' + assetUrl('/js/megaform-widgets.js') + '"><\/script>',
+            '<script src="' + assetUrl('/js/megaform-renderer.js') + '"><\/script>',
             '<script>', bootstrap, '<\/script>',
             '</body></html>'
         ];
@@ -607,19 +640,9 @@ import { fieldStepMap } from '@shared/custom-html-insert';
             return;
         }
 
-        // ── [B50 Author C — edge case #5, unsaved schema changes] ──
-        // Iframe will load the LAST SAVED schema. Warn the user via a
-        // toast so they understand why what they see may differ from
-        // their in-progress edits. Toast (not blocking) — they may
-        // genuinely want to compare saved-vs-live theme.
-        try {
-            if (isSchemaDirtyForPreview()) {
-                notifyPreviewToast(
-                    'Unsaved changes — preview shows the last saved schema. ' +
-                    'Click Save to refresh.'
-                );
-            }
-        } catch (_e) { /* defensive */ }
+        // [B66] The default srcdoc path renders B.state.schema directly, so
+        // dirty drafts are previewed from the current in-memory schema. Only
+        // the legacy URL fallback can show last-saved data.
 
         const frame = document.createElement('iframe');
         frame.className = 'mf-theme-preview-frame';
@@ -692,6 +715,13 @@ import { fieldStepMap } from '@shared/custom-html-insert';
             frame.srcdoc = buildThemePreviewSrcdoc(formId);
         } catch (e) {
             try { console.warn('[mf-theme-preview] srcdoc build failed, falling back to URL src', e); } catch (_) {}
+            try {
+                if (isSchemaDirtyForPreview()) {
+                    notifyPreviewToast(
+                        'Preview fallback is loading the last saved form. Save to persist current draft changes.'
+                    );
+                }
+            } catch (_eDirty) { /* defensive */ }
             frame.src = buildThemePreviewUrl(formId);
         }
         dropzone.appendChild(frame);

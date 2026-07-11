@@ -15,6 +15,7 @@ using System.Text;
 using System.Threading.RateLimiting;
 using MegaForm.Core.Interfaces;
 using MegaForm.Core.Services;
+using MegaForm.Core.Services.Starters;
 using MegaForm.Core.Services.Workflow;
 using MegaForm.Sdk;
 using MegaForm.Web.Controllers;
@@ -81,9 +82,25 @@ builder.Services.AddScoped<INodeExecutor, LoopNodeExecutor>();
 // IConnectionRegistry — reads named connection strings from appsettings (never from frontend)
 builder.Services.AddScoped<IConnectionRegistry, WebConnectionRegistry>();
 builder.Services.AddScoped<IDatabaseWorkflowMetadataService, DatabaseWorkflowMetadataService>();
+
+// Business Starter platform adapter + services
+builder.Services.AddScoped<IStarterPlatformAdapter, WebStarterPlatformAdapter>();
+builder.Services.AddScoped<StarterStatusService>();
+builder.Services.AddScoped<LeaveRequestStarterService>();
+builder.Services.AddScoped<ProposalStarterService>();
+builder.Services.AddScoped<DocumentExchangeStarterService>();
+builder.Services.AddScoped<PurchaseOrderStarterService>();
+builder.Services.AddScoped<RecruitmentStarterService>();
+builder.Services.AddScoped<ConfiguredAppStarterService>();
+
 builder.Services.AddScoped<SubmissionProcessor>();
 builder.Services.AddScoped<PrintFormRenderer>();
 builder.Services.AddScoped<ILocalizationProvider, WebLocalizationProvider>();
+
+// Hosted services (warmup, KB seed, blog scheduler)
+builder.Services.AddHostedService<MegaForm.Web.HostedServices.MegaFormWarmupHostedService>();
+builder.Services.AddHostedService<MegaForm.Web.HostedServices.WebKbSeederHostedService>();
+builder.Services.AddHostedService<MegaForm.Web.HostedServices.BlogScheduledHostedService>();
 
 // ── MegaForm SDK (IMegaFormClient facade) ────────────────────────────────────
 // Resolves the repositories + IPlatformContext + IStorageService + SubmissionProcessor
@@ -180,6 +197,11 @@ builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
 // UseStaticFiles in the pipeline so assets are not throttled. NOTE: behind a reverse proxy add
 // ForwardedHeaders so RemoteIpAddress is the real client (else all users share the proxy IP). For the
 // Oqtane/DNN module deployments the host owns the pipeline — configure rate limiting at the edge/WAF.
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+});
+
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -198,7 +220,11 @@ builder.Services.AddRateLimiter(options =>
 
 // ── Swagger (development) ─────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(o => o.SwaggerDoc("v1", new() { Title = "MegaForm API", Version = "v1" }));
+builder.Services.AddSwaggerGen(o =>
+{
+    o.SwaggerDoc("v1", new() { Title = "MegaForm API", Version = "v1" });
+    o.CustomSchemaIds(type => type.FullName?.Replace("+", "_") ?? type.Name);
+});
 
 var app = builder.Build();
 
@@ -223,6 +249,7 @@ if (MegaForm.Web.Controllers.SetupController.IsSetupComplete(app.Environment))
 // ── Middleware ─────────────────────────────────────────────────────────────
 app.UseCors();
 app.UseStaticFiles();
+app.UseResponseCompression();
 
 // ⚡ SetupMiddleware phải đứng ĐẦU — trước Swagger, trước Auth, trước Controllers
 // Nếu setup.lock chưa có → redirect tất cả về /setup (trừ /setup/* và static files)

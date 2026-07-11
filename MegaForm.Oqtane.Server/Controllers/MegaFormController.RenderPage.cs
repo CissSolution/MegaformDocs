@@ -47,12 +47,17 @@ namespace MegaForm.Oqtane.Server.Controllers
             var resolved = RenderModelResolver.Resolve(form.SchemaJson, form.SettingsJson, form.SubmitButtonText, form.SuccessMessage, form.RedirectUrl);
             var presetKey = GetSelectedThemePresetKey(form.ModuleId);
             var inlineCss = ThemePresetInlineCssService.Build(resolved.SettingsJson, presetKey, "#mf-form-wrapper-" + formId) ?? string.Empty;
-            var schemaJson = resolved.SchemaJson ?? "{}";
+
+            // Project before the schema is deserialized, so the server-rendered HTML and the schema the
+            // boot script re-fetches from GET Schema/{formId} withhold the same fields. Filtering only
+            // one of the two either leaks the field in view-source or lets the client rebuild it.
+            var schemaJson = ProjectSchemaForCurrentActor(formId, resolved.SchemaJson) ?? "{}";
 
             string fieldsBody = string.Empty;
             string stepperHtml = string.Empty;
             bool isStandardMultiStep = false;
             bool hasCustomHtml = false;
+            bool isPremiumNativeShell = false;
             string customCss = string.Empty;
             try
             {
@@ -69,6 +74,7 @@ namespace MegaForm.Oqtane.Server.Controllers
                         form.Description,
                         resolved.SubmitButtonText);
                     isStandardMultiStep = FormHtmlRenderer.IsStandardMultiStep(schema);
+                    isPremiumNativeShell = FormHtmlRenderer.IsPremiumNativeCustomShell(schema);
                     if (isStandardMultiStep) stepperHtml = FormHtmlRenderer.RenderStepIndicator(schema, null);
                 }
             }
@@ -116,6 +122,7 @@ namespace MegaForm.Oqtane.Server.Controllers
                 stepperHtml,
                 isStandardMultiStep,
                 hasCustomHtml,
+                isPremiumNativeShell,
                 hideHeader,
                 wrapperRuntimeClasses,
                 manifest?.ScriptFiles ?? new List<string>(),
@@ -128,6 +135,7 @@ namespace MegaForm.Oqtane.Server.Controllers
             int formId, string schemaJson, string settingsJson, string themeJson,
             string formTitle, string formDescription, string submitButtonText, string successMessage,
             string inlineCss, string customCss, string fieldsBody, string stepperHtml, bool isStandardMultiStep, bool hasCustomHtml,
+            bool isPremiumNativeShell,
             bool hideHeader,
             string wrapperRuntimeClasses,
             List<string> pluginScripts, List<string> pluginStyles)
@@ -185,6 +193,9 @@ namespace MegaForm.Oqtane.Server.Controllers
             sb.Append("<div id=\"mf-form-mount-").Append(formId).Append("\" data-form-id=\"").Append(formId).Append("\">");
             sb.Append("<div id=\"mf-form-wrapper-").Append(formId).Append("\" class=\"mf-form-wrapper mf-booting")  // [B355] cloak baked so SSR-first-paint entrance (auFade/amFade) is stilled; renderer lifts it post-hydrate
               .Append(hasCustomHtml ? " mf-custom-shell-mode" : string.Empty)
+              // [PremiumNativeSSR v20260705] parity with Index.razor: premium-native multi-step shells
+              // need mf-premium-native-mode at SSR so first paint hides the generic .mf-form-actions.
+              .Append(isPremiumNativeShell ? " mf-custom-html-mode mf-premium-native-mode mf-has-multistep-shell" : string.Empty)
               .Append(string.IsNullOrWhiteSpace(wrapperRuntimeClasses) ? string.Empty : " " + wrapperRuntimeClasses)
               .Append("\" data-mf-ssr=\"1\">");
             sb.Append("<div class=\"mf-form-inner\">");

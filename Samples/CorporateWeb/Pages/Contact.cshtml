@@ -9,23 +9,82 @@
         <div class="contact-intro">
             <h1>Contact us</h1>
             <p>
-                This form is hosted and rendered by MegaForm. It was seeded
-                automatically when the sample started.
+                A corporate contact page embeds a MegaForm directly into its own layout.
+                The form below is rendered by the <code>&lt;megaform&gt;</code> TagHelper, not as a separate form page.
             </p>
         </div>
 
-        @if (Model.FormId > 0)
-        {
-            <div class="contact-form-host">
-                <megaform form-id="@Model.FormId" mode="embed" min-height="720" theme="corporate"></megaform>
+        <div class="two-column contact-layout">
+            <div class="text-column contact-info">
+                <h2>Get in touch</h2>
+                <p>
+                    <strong>MegaForm Corporate Demo</strong><br />
+                    123 Sample Street<br />
+                    Suite 400, Demo City
+                </p>
+                <p>
+                    <strong>Email</strong><br />
+                    <a href="mailto:hello@example.com">hello@example.com</a>
+                </p>
+                <p>
+                    <strong>Phone</strong><br />
+                    <a href="tel:+15550123456">+1 (555) 012-3456</a>
+                </p>
+                <p>
+                    <strong>Hours</strong><br />
+                    Monday – Friday, 9am – 5pm
+                </p>
             </div>
-        }
-        else
-        {
-            <div class="no-form">
-                <p>No published MegaForm was found. Make sure the app has finished starting.</p>
-                <a class="btn btn-secondary" href="/admin" target="_blank">Open MegaForm admin</a>
+
+            <div class="form-column">
+                @if (Model.FormId > 0)
+                {
+                    <div class="contact-form-host">
+                        <megaform form-id="@Model.FormId" mode="embed" min-height="720" theme="corporate" radius="12"></megaform>
+                    </div>
+                }
+                else
+                {
+                    <div class="no-form">
+                        <p>No published MegaForm was found. Make sure the app has finished starting.</p>
+                        <a class="btn btn-secondary" href="/admin" target="_blank">Open MegaForm admin</a>
+                    </div>
+                }
             </div>
-        }
+        </div>
+
+        <div class="code-snippet-section">
+            <h2>Code used on this page</h2>
+            <p>
+                The model loads the published <strong>Contact Us</strong> form by title. This keeps the contact
+                page stable even if other sample forms are added later.
+            </p>
+            <div class="code-block">
+                <pre><code>public void OnGet()
+{
+    var form = _formRepo.ListForms(portalId: 0, status: "published", pageSize: 100)
+                        .FirstOrDefault(f =&gt; f.Title == "Contact Us");
+    FormId = form?.FormId ?? 0;
+}</code></pre>
+            </div>
+            <p>
+                The view renders the form inside the corporate layout:
+            </p>
+            <div class="code-block">
+                <pre><code>&lt;div class="two-column contact-layout"&gt;
+    &lt;div class="text-column contact-info"&gt;
+        &lt;!-- Address, email, phone --&gt;
+    &lt;/div&gt;
+    &lt;div class="form-column"&gt;
+        &lt;megaform form-id="@@Model.FormId" mode="embed" min-height="720" theme="corporate" radius="12"&gt;&lt;/megaform&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+            </div>
+
+            <div class="cta-row">
+                <a class="btn btn-primary" href="/embedding">Read the embedding guide</a>
+                <a class="btn btn-secondary" href="/admin-dashboard">Admin dashboard</a>
+            </div>
+        </div>
     </div>
 </section>

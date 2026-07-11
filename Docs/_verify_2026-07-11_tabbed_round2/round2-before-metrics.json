@@ -1,0 +1,127 @@
+{
+  "mock": {
+    "kind": "mock",
+    "url": "http://localhost:3005/forms/tabbed",
+    "title": "Tabbed Account Setup — Premium Form",
+    "hasTemplate": false,
+    "hasMockH1": true,
+    "root": {
+      "x": 106.5,
+      "y": 92.73,
+      "width": 1152,
+      "height": 546.52,
+      "top": 92.73,
+      "right": 1258.5,
+      "bottom": 639.25,
+      "left": 106.5
+    },
+    "frame": {
+      "x": 106.5,
+      "y": 92.73,
+      "width": 1152,
+      "height": 546.52,
+      "top": 92.73,
+      "right": 1258.5,
+      "bottom": 639.25,
+      "left": 106.5
+    },
+    "card": {
+      "x": 106.5,
+      "y": 92.73,
+      "width": 1152,
+      "height": 546.52,
+      "top": 92.73,
+      "right": 1258.5,
+      "bottom": 639.25,
+      "left": 106.5
+    },
+    "h1": {
+      "x": 155.5,
+      "y": 165.73,
+      "width": 1054,
+      "height": 36.27,
+      "top": 165.73,
+      "right": 1209.5,
+      "bottom": 202,
+      "left": 155.5
+    },
+    "builderPreview": null,
+    "body": {
+      "scrollWidth": 1365,
+      "innerWidth": 1365,
+      "scrollHeight": 768,
+      "innerHeight": 768,
+      "bg": "lab(97.6833 -0.330806 -0.66179)"
+    },
+    "wrapper": null,
+    "active": null,
+    "visibleText": "ACCOUNT SETUP Create your workspace Jump between tabs freely, or complete each one and continue. It only takes a minute. Account Your details Company Where you work Billing Choose ",
+    "overflows": []
+  },
+  "pageInitial": {
+    "kind": "pageInitial",
+    "url": "http://localhost:5122/?formid=5",
+    "title": "Home - Default Site",
+    "hasTemplate": false,
+    "hasMockH1": false,
+    "root": null,
+    "frame": null,
+    "card": null,
+    "h1": null,
+    "builderPreview": null,
+    "body": {
+      "scrollWidth": 1365,
+      "innerWidth": 1365,
+      "scrollHeight": 1883,
+      "innerHeight": 768,
+      "bg": "rgb(6, 6, 6)"
+    },
+    "wrapper": null,
+    "active": null,
+    "overflows": []
+  },
+  "pageScrolled": {
+    "kind": "pageScrolled",
+    "url": "http://localhost:5122/?formid=5",
+    "title": "Home - Default Site",
+    "hasTemplate": false,
+    "hasMockH1": false,
+    "root": null,
+    "frame": null,
+    "card": null,
+    "h1": null,
+    "builderPreview": null,
+    "body": {
+      "scrollWidth": 1365,
+      "innerWidth": 1365,
+      "scrollHeight": 1883,
+      "innerHeight": 768,
+      "bg": "rgb(6, 6, 6)"
+    },
+    "wrapper": null,
+    "active": null,
+    "overflows": []
+  },
+  "builder": {
+    "kind": "builder",
+    "url": "http://localhost:5122/",
+    "title": "Home - Default Site",
+    "hasTemplate": false,
+    "hasMockH1": false,
+    "root": null,
+    "frame": null,
+    "card": null,
+    "h1": null,
+    "builderPreview": null,
+    "body": {
+      "scrollWidth": 1365,
+      "innerWidth": 1365,
+      "scrollHeight": 1883,
+      "innerHeight": 768,
+      "bg": "rgb(6, 6, 6)"
+    },
+    "wrapper": null,
+    "active": null,
+    "overflows": []
+  }
+}

@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using MegaForm.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -17,7 +18,10 @@ public class ContactModel : PageModel
 
     public void OnGet()
     {
-        var form = _formRepo.ListForms(portalId: 0, status: "published", pageSize: 1).FirstOrDefault();
+        // Load the specific "Contact Us" form so this page is stable even when
+        // other sample forms (newsletter, support ticket) exist in the same host.
+        var form = _formRepo.ListForms(portalId: 0, status: "published", pageSize: 100)
+                            .FirstOrDefault(f => "Contact Us".Equals(f.Title, StringComparison.OrdinalIgnoreCase));
         FormId = form?.FormId ?? 0;
     }
 }

@@ -17,10 +17,15 @@ namespace MegaForm.DNN.Controllers
             string ipAddress,
             string userAgent,
             int? userId,
-            double submissionTimeSeconds = 0)
+            double submissionTimeSeconds = 0,
+            UserContext actor = null,
+            System.Collections.Generic.IDictionary<string, string> query = null)
         {
+            // Pass the actor so submit-time enforcement (EnforceSubmit inside the processor) evaluates
+            // role/permission rules against this visitor. Without it the processor sees empty roles and
+            // strips role-gated fields for everyone, including the roles allowed to submit them.
             return await DnnServiceLocator.Instance.SubmissionProcessor.ProcessAsync(
-                formId, formData, ipAddress, userAgent, userId, submissionTimeSeconds);
+                formId, formData, ipAddress, userAgent, userId, submissionTimeSeconds, actor, query);
         }
     }
 }

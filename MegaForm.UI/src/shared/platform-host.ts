@@ -376,6 +376,29 @@ export function getPlatformRoute(name: HostRouteName, formId?: number): string {
     }
   }
 
+  if (platform === 'umbraco') {
+    switch (name) {
+      case 'dashboard':
+        return '/umbraco/MegaForm/Admin';
+      case 'builder':
+        return formId ? `/umbraco/MegaForm/Builder/${formId}` : '/umbraco/MegaForm/Builder';
+      case 'submissions':
+        return formId ? `/umbraco/MegaForm/Submissions?formId=${formId}` : '/umbraco/MegaForm/Submissions';
+      case 'myinbox':
+        return '/umbraco/MegaForm/Admin';
+      case 'settings':
+        return '/umbraco/MegaForm/Admin#settings';
+      case 'themeDesigner':
+        return formId ? `/umbraco/MegaForm/Builder/${formId}?mode=theme` : '/umbraco/MegaForm/Builder';
+      case 'languages':
+        return '/umbraco/MegaForm/Languages';
+      case 'viewLogs':
+        return '/umbraco/MegaForm/Admin';
+      case 'logout':
+        return '/umbraco';
+    }
+  }
+
   switch (name) {
     case 'dashboard':
       return '/admin';

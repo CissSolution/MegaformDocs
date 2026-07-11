@@ -1,6 +1,7 @@
 @using MegaForm.Umbraco.Services
 @model MegaForm.Umbraco.ViewModels.MegaFormViewModel
 @inject IUmbracoModuleConfigService ModuleConfigService
+@inject Umbraco.Cms.Core.Models.PublishedContent.IVariationContextAccessor VariationContextAccessor
 
 @{
     var moduleConfig = ModuleConfigService.GetConfig(Model.ContentId);
@@ -22,19 +23,23 @@
     @await Html.PartialAsync("~/Views/Partials/MegaForm/MegaFormCurrentPage.cshtml")
 *@
 
+@{
+    var currentCulture = VariationContextAccessor.VariationContext?.Culture ?? "en-US";
+}
 <div id="mf-root-@Model.ContentId" 
      class="megaform-root"
      data-platform="umbraco" 
      data-instance-id="@Model.ContentId"
      data-form-id="@effectiveFormId"
-     data-api-base="/umbraco/api/megaform/"
+     data-api-base="/umbraco/MegaForm/MegaFormApi/"
      data-is-admin="@Model.IsAdmin.ToString().ToLower()"
      data-view-type="@effectiveViewType"
+     data-locale="@currentCulture"
      data-config='@effectiveConfigJson'>
 </div>
 
 <link rel="stylesheet" href="/App_Plugins/MegaForm/css/megaform.css" />
-<script src="/App_Plugins/MegaForm/js/bundles/megaform-config.js"></script>
+<script src="/App_Plugins/MegaForm/js/megaform-config.js"></script>
 @if (effectiveViewType == "submit" || string.IsNullOrEmpty(effectiveViewType))
 {
     <script src="/App_Plugins/MegaForm/js/megaform-renderer.js"></script>
@@ -42,9 +47,40 @@
 }
 else
 {
-    <script src="/App_Plugins/MegaForm/js/bundles/megaform-views.js"></script>
+    <script src="/App_Plugins/MegaForm/js/megaform-views.js"></script>
 }
 
 <script>
-    MegaForm.init(document.getElementById('mf-root-@Model.ContentId'));
+(function () {
+    var root = document.getElementById('mf-root-@Model.ContentId');
+    var formId = root.getAttribute('data-form-id');
+    var apiBase = root.getAttribute('data-api-base') || '/umbraco/api/megaform/';
+    if (!formId || formId === '0') {
+        root.innerHTML = '<p style="padding:1rem;color:#64748b;">Form is not configured for this content.</p>';
+        return;
+    }
+    fetch(apiBase + 'schema?formId=' + encodeURIComponent(formId))
+        .then(function (r) { return r.ok ? r.json() : Promise.reject(r.statusText); })
+        .then(function (payload) {
+            if (!payload || !payload.schema) {
+                root.innerHTML = '<p style="padding:1rem;color:#dc2626;">Unable to load form schema.</p>';
+                return;
+            }
+            var schema = typeof payload.schema === 'string' ? JSON.parse(payload.schema) : payload.schema;
+            window.MegaFormRenderer.init({
+                container: root,
+                formId: parseInt(formId, 10),
+                apiBaseUrl: apiBase,
+                schema: schema,
+                title: payload.title || '',
+                description: payload.description || '',
+                submitButtonText: payload.submitButtonText || 'Submit',
+                locale: root.getAttribute('data-locale') || document.documentElement.lang || 'en-US'
+            });
+        })
+        .catch(function (e) {
+            console.error('[MegaForm.Umbraco] Failed to load form schema', e);
+            root.innerHTML = '<p style="padding:1rem;color:#dc2626;">Error loading form. Please try again later.</p>';
+        });
+})();
 </script>

@@ -3,6 +3,7 @@
 **Date:** 2026-07-10  
 **Audience:** Product owner, implementation team, QA, support/hand-over team  
 **Scope:** Oqtane MegaForm, with Core concepts shared by DNN/Web hosts where registered  
+**Verification status:** Re-verified 2026-07-10 against code + live 500K Oqtane site + DNN DB. **See §0b (addendum) for corrections — two are security-critical.** Note: "Dynamic Role/Permission Display" in the title refers to the *rule engine capability*; role/permission-based **visual** hiding on the published form is not wired today (addendum item D). There is **no tab control** despite "tabs" wording elsewhere (addendum item E).  
 **Related implementation commits:**
 
 - `1e14114` — `feat(workflow): add reusable workflow library`
@@ -37,6 +38,24 @@ MegaForm now has the foundation for three enterprise features:
    - DataRepeater supports custom SQL/stored procedures, parameterized filters, paging, sort, export, and a privacy gate for MegaForm submission data.
 
 Important hand-over note: the backend/runtime foundation is implemented. Some admin UX screens for workflow-library management may still need to be built on top of the repository APIs/tables.
+
+---
+
+## 0b. ⚠️ Verification addendum (2026-07-10) — read before quoting this document
+
+Every technical claim below was re-checked against the actual code and the live 500K-row Oqtane site (:5120) and DNN DB (`DNNQA1799`). **§1 (workflow library) verified accurate (34/34).** The following corrections apply to §2 and §3 — the inline text at those sections has been annotated too. Two are **security-critical**.
+
+| # | Where | Status | Correction (verified) |
+|---|---|---|---|
+| A | §3.6 index DDL | ❌ **Does not run** | `CREATE INDEX … ON MF_SubmissionValues (FormId, FieldKey, FieldValue)` **fails on both platforms** — `Msg 1919`, because `FieldKey`/`FieldValue` are `nvarchar(MAX)` (un-indexable as key columns). Use the corrected, tested DDL now inline in §3.6. |
+| B | §3.5 / §3.9 SQL DataRepeater | 🔴 **CRITICAL security** | The raw **SQL / stored-proc** `DataRepeater/Query` + `Export` endpoints are **anonymous with no field whitelist** (verified: anonymous HTTP request → `200`). A §3.5-style support-ticket SQL grid on a **public** page leaks all rows (emails, subjects) to any visitor. Use the `megaform_submissions` whitelist source, or host such grids on **authenticated** pages only. |
+| C | §2.2 server enforcement | 🔴 **CRITICAL scope** | Full role/permission/query enforcement is wired **only on Oqtane**. DNN/Web/Umbraco submit paths call the processor with `actor:null, query:null`, so on those platforms role/permission/query rules evaluate against an anonymous user. "Server enforcement = security" holds end-to-end **only on Oqtane** today. |
+| D | §2 title + §2.4/§2.5 | 🟡 **Overstated** | Role/permission `showIf` **does not visually hide fields on the published form**: the server never ships the user's roles to the browser (`__MF_RULE_CONTEXT__` is never populated; boot script emits no roles), so a role rule hides the field for *everyone*. Client-side role/permission hiding needs a custom step (inject roles into the render context). The builder UI also cannot author role/permission conditions (JSON only). |
+| E | "tabs" wording (title, §2, §0) | 🟡 **No tabs** | There is **no tab control** in the product — no `Tab` field type, no tab markup, no palette item. The equivalent is a **multi-step wizard** (Next/Back). Do not tell customers "tabbed forms." |
+| F | §1 tables | ℹ️ Scope | The 3 workflow-library tables exist **only on Oqtane** and are currently **empty (0 templates)** with **no admin screen** — seed via API/SQL. (Not a defect; matches the §0 hand-over note.) |
+| G | §3.6 EAV on Oqtane | ℹ️ Data | `MF_SubmissionValues` is **un-indexed and effectively empty on Oqtane** (0 rows for the 500K form): the shared indexer's INSERT omits the `NOT NULL` `FieldValue` column, so on Oqtane every index write fails (`Msg 515`) and is swallowed. Field-value grids over EAV return blank/zero on Oqtane until this is fixed. DNN's EAV is correctly populated and indexed. |
+
+A prospect-facing, plain-language version of these answers is in **`Docs/ANSWER_Customer_Capability_Questions_2026-07-10.md`**.
 
 ---
 
@@ -408,6 +427,10 @@ Client hide = UX
 Server enforcement = security
 ```
 
+> ⚠️ **CORRECTIONS 2026-07-10 (addendum items C & D):**
+> - **`Client hide` for role/permission rules does not actually hide anything on the published form.** The browser rule engine reads the user's roles from `window.__MF_RULE_CONTEXT__` / `__MF_PLATFORM__`, but the server never populates them — the page boot script emits no roles and `__MF_RULE_CONTEXT__` is never assigned anywhere. A role rule therefore sees an empty role set and hides the field for **everyone**. Field-value rules ("show B when A=X") are unaffected and work correctly. Making role-based *display* work requires a customization that injects the signed-in user's roles into the render context.
+> - **`Server enforcement = security` holds end-to-end only on Oqtane.** The 8-step enforcement runs inside the shared `SubmissionProcessor`, but only the **Oqtane** submit controller passes the real `actor`+`query` into it. DNN, Web, and Umbraco call the older 6-arg overload → `ProcessAsync(…, actor:null, query:null)`, so on those three platforms role/permission/query rules and role-scoped `FieldRestrictions` evaluate against an anonymous principal. Field-value ShowIf and schema-whitelist stripping still work everywhere. Fix: update the DNN/Web/Umbraco controllers to call the 8-arg overload with a populated actor + query (mirror `MegaForm.Oqtane.Server/Controllers/MegaFormController.cs:1500-1504`).
+
 ### 2.3. ShowIf JSON format
 
 The rule shape:
@@ -607,7 +630,7 @@ Submit behavior:
 
 - If a form has no explicit `submit` rules, submit remains open as before, subject to existing form settings such as `RequireAuth`.
 - If explicit `submit` rules exist, user must match a granted `submit` rule or a granted `manage` rule.
-- Admin/host/superuser bypasses regular restrictions.
+- ~~Admin/host/superuser bypasses regular restrictions.~~ **CORRECTED 2026-07-10:** admin/host/superuser are treated as holding all permissions **only for ShowIf / permission-source rules** (granted `"*"`). They are **still subject to the explicit submit-permission gate** (no admin bypass there) and to `all_users`-scoped `FieldRestrictions`. An admin not granted `submit`/`manage` and not covered by `all_users`/`authenticated` **is blocked** from submitting.
 
 ### 2.10. FieldRestrictions examples
 
@@ -759,8 +782,10 @@ Security model:
 - Client sends only `formId`, `widgetKey`, paging/sort/filter values.
 - Raw SQL is read from saved form schema `widgetProps`, not from the client request.
 - User-provided values are parameterized.
-- Non-SELECT SQL is blocked for SQL mode.
-- Row count is capped by `MaxRows` and absolute cap.
+- Non-SELECT SQL is blocked for SQL mode (stored-proc mode is exempt — a proc may do DML).
+- Row count is capped by `MaxRows` and absolute cap (5000). Note this is a **hard window**, not a page cursor: the SQL path reads ≤5000 rows and paginates in memory, so `TotalRows` and deep paging are wrong past 5000. True DB-side paging exists only in the `megaform_submissions` source (§3.7).
+
+> 🔴 **CRITICAL — verified 2026-07-10 (addendum item B).** The `DataRepeater/Query`, `FilterOptions`, `ColumnOptions`, and `Export` endpoints are **anonymous** (no `[Authorize]` on Oqtane; explicit `[AllowAnonymous]` on Web) and the **field whitelist is NOT applied to the SQL / stored-proc source** — only to `megaform_submissions`. An anonymous request to `/api/MegaForm/DataRepeater/Query?formId=…&widgetKey=…` returned **HTTP 200** and reached the query engine. The `formId` and `widgetKey` are visible in public page HTML. **Consequence:** any raw-SQL DataRepeater grid placed on a **public** page exposes all its rows to anonymous visitors. For submission/PII data, use the `megaform_submissions` whitelist source (§3.7) **or** place the grid on an authenticated page. Do not follow §3.5 verbatim on a public page.
 
 ### 3.4. DataRepeater SQL parameter style
 
@@ -905,13 +930,37 @@ ORDER BY s.SubmittedOnUtc DESC
 
 Recommended indexes:
 
-```sql
-CREATE INDEX IX_MF_SubmissionValues_Form_Field_Value
-ON MF_SubmissionValues (FormId, FieldKey, FieldValue);
+> ⚠️ **CORRECTED 2026-07-10 (addendum item A).** The originally-published index below **does not run** — it errors `Msg 1919` on both platforms because `FieldKey`/`FieldValue` are `nvarchar(MAX)` and cannot be index key columns. Do **not** use it:
+>
+> ```sql
+> -- ❌ FAILS: Msg 1919, invalid key column type
+> -- CREATE INDEX IX_MF_SubmissionValues_Form_Field_Value ON MF_SubmissionValues (FormId, FieldKey, FieldValue);
+> ```
 
-CREATE INDEX IX_MF_Submissions_Form_Submitted
-ON MF_Submissions (FormId, SubmittedOnUtc DESC);
+Use these instead (each tested — creates cleanly inside `BEGIN TRAN … ROLLBACK`):
+
+```sql
+-- 1) Covering index for the LEFT JOIN seek (FormId, SubmissionId are int → OK on BOTH platforms):
+CREATE INDEX IX_MF_SubmissionValues_Form_Sub_Cover
+  ON dbo.MF_SubmissionValues (FormId, SubmissionId) INCLUDE (FieldKey, FieldValue);
+
+-- 2) Value-search index.
+--    DNN (ValueText is nvarchar(400) → directly indexable):
+CREATE INDEX IX_MF_SubmissionValues_Form_Field_ValueText
+  ON dbo.MF_SubmissionValues (FormId, FieldKey, ValueText);
+
+--    Oqtane (FieldKey/FieldValue/ValueText are ALL nvarchar(MAX) → add bounded persisted
+--    computed columns first, then index those):
+ALTER TABLE dbo.MF_SubmissionValues
+  ADD FieldKeyB   AS CAST(FieldKey   AS nvarchar(200)) PERSISTED,
+      FieldValueB AS CAST(FieldValue AS nvarchar(400)) PERSISTED;
+CREATE INDEX IX_MF_SubmissionValues_Form_FieldB_ValueB
+  ON dbo.MF_SubmissionValues (FormId, FieldKeyB, FieldValueB) INCLUDE (SubmissionId);
 ```
+
+The `MF_Submissions (FormId, SubmittedOnUtc)` index the original text recommended **already exists** on both platforms (`IX_MF_Submissions_FormId_SubmittedOnUtc` on Oqtane, `IX_MF_Submissions_FormId` on DNN) — do not recreate it.
+
+> ⚠️ **On Oqtane the EAV table is currently empty and un-indexed** (addendum items A & G): `MF_SubmissionValues` has 0 rows for the 500K form because the shared indexer's INSERT omits the `NOT NULL` `FieldValue` column (fails `Msg 515`, swallowed). So the value-JOIN pattern above returns **blank/zero on Oqtane** until the indexer is fixed to also write `FieldValue` (or the column is made nullable / dropped). It works on DNN, whose EAV is populated and indexed.
 
 Actual index names may differ by migration; verify before creating duplicates.
 

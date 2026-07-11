@@ -9,6 +9,8 @@
 | `e64b920` | **FIX** — Submissions overview timeout 30s trên site 1 triệu dòng (index + GROUP BY trong SQL) + form external báo sai số dòng + PortalId -1 |
 | `7b18193` | **Workflow + module role** — push-assign đích danh, DI notify (Oqtane+DNN), module = Inbox/Dashboard |
 | `c6cf4c1` | **P2** — AI on-rails (Envelope → Blueprint → validator server + retry 3 lần + fallback máy sinh) |
+| `85746e0` | **Release 1.7.102 / B394** — bump + nuspec + handout + handoff |
+| `a2e4bda` → `913e548` → `7481343` | **Wizard Import JSON** — thêm dialog dán/kéo-thả → sửa tiêu đề trắng-trên-trắng → **trả lại một-click file picker**, dialog thành link phụ |
 
 **Package:** `MegaForm.Oqtane.1.7.102.nupkg` (78.8MB) — ModuleInfo 1.7.102, AssetVersion **B394**. Đã verify nội dung (ExternalTableController, TableCapabilityProbe, BlueprintValidator, builder bundle, B394).
 
@@ -27,6 +29,9 @@
 4. **Oqtane KHÔNG chạy thân migration `Up()`**: bảng EF mới (`MF_ExternalBinding`, `MF_ExternalRowMap`) **tự sinh trên site cài mới** (đã kiểm chứng :5123), nhưng **site cũ phải chạy DDL tay**. Index mới cũng vậy.
 5. **`npm run build` (full) FAIL vì i18n drift** (44 key thiếu ở locale phụ — tồn đọng từ phiên advanced-filter). Build từng bundle (`npm run build:builder`, `build:settings-popup`, `build:workflow`) thì OK.
 6. Response API của Oqtane là **PascalCase** (`Items`, `TotalCount`, `Config.ModuleRole`) — client TS có lớp normalize; test script phải đọc cả 2 kiểu.
+7. **Hộp thoại chọn tệp bị NUỐT khi trình duyệt đang bị debug qua CDP** (extension AI/automation gắn vào tab). Nút "Import JSON" khi đó **trông như chết**: không cửa sổ, không lỗi, console sạch. Đừng đi sửa code — kiểm tra xem tab có đang bị debug không. (Đã thêm link "Paste or drop the JSON" làm đường thoát.)
+8. **Overlay của wizard ở `z-index: 2147483646`.** Modal mới đặt thấp hơn vẫn **nhìn thấy** (qua nền mờ) nhưng **mọi click rơi xuống wizard** → "bấm không ăn". Modal mới phải ≥ 2147483647.
+9. **Admin shell ép `h3 { color:#fff }`.** Modal tự dựng phải **khai màu tường minh**, không thì tiêu đề trắng-trên-trắng: có trong DOM, vô hình trên màn hình.
 
 ## Việc tiếp theo (theo SPEC)
 

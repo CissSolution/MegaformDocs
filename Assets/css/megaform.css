@@ -69,9 +69,9 @@ body > div[style*="display:none"]:has(.megaform-module) {
 
     /* --- Labels --- */
     --mf-label-font-size:       14px;
-    --mf-label-font-weight:     600;
+    --mf-label-font-weight:     500;
     --mf-label-color:           #333333;
-    --mf-label-margin-bottom:   6px;
+    --mf-label-margin-bottom:   8px;
     --mf-sublabel-font-size:    12px;
     --mf-sublabel-color:        #888888;
 
@@ -140,7 +140,13 @@ body > div[style*="display:none"]:has(.megaform-module) {
     --mf-file-hover-bg:         #f0f4ff;
 
     /* --- Field Spacing --- */
-    --mf-field-gap:             20px;
+    /* [FieldGapConsistency v20260706] Was 20px. The label-above already gives each top-level field
+       ~27px of separation (a 21px label + its 6px margin) — the SAME rhythm the composite sub-rows use
+       for their label-below spacing. The extra 20px flex gap stacked on top made top-level fields sit
+       ~47px apart (input→input) versus ~27px inside a composite: visually "too tall" and inconsistent.
+       12px keeps fields distinct without doubling the label's separation, tightening top-level to
+       ~39px and much closer to the composite density. (User-adjustable via ⚙ Settings → Field spacing.) */
+    --mf-field-gap:             16px;
 }
 
 /* ============================================================
@@ -834,6 +840,20 @@ body > div[style*="display:none"]:has(.megaform-module) {
     background: #10b981;
 }
 
+/* Tabbed multi-page mode: step indicators are real navigation tabs, not a locked wizard rail. */
+.mf-tabbed-form-mode [data-mf-tabnav="1"] {
+    cursor: pointer;
+}
+.mf-tabbed-form-mode [data-mf-tabnav="1"]:hover .mf-step-circle {
+    border-color: var(--mf-primary, #4f46e5);
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.10);
+}
+.mf-tabbed-form-mode [data-mf-tabnav="1"]:focus-visible {
+    outline: 3px solid rgba(79, 70, 229, 0.35);
+    outline-offset: 4px;
+    border-radius: 12px;
+}
+
 /* Responsive */
 @media (max-width: 480px) {
     .mf-step-label { display: none; }
@@ -945,6 +965,41 @@ body > div[style*="display:none"]:has(.megaform-module) {
     padding: 0 !important;
     max-width: none !important;
     margin: 0 !important;
+}
+
+/* ============================================================
+   [PdfFormChromeless v20260708] PDF-only forms — no outer card.
+   The PdfForm widget is a full-canvas surface: it paints its own
+   sticky toolbar card + the PDF pages. Wrapping that in the standard
+   chrome (wrapper #f5f5f5 frame + white .mf-form-inner card with
+   24x28 padding) double-cards it — "card thừa bao bên ngoài".
+   Scoped via :has() to forms whose ONLY top-level field is the
+   PdfForm widget (mixed forms keep the standard card so ordinary
+   fields never float on the page background). Same approach as the
+   B286 wizard frame fix above. An explicit data-mf-chrome="card"
+   opt-in (Builder Form Settings) still wins via the :not() guard.
+   SSR + TS renderers both emit .mf-field-group[data-type="PdfForm"],
+   so this stays in parity on all platforms with zero markup change.
+   ============================================================ */
+/* Two shapes, one form: SSR emits the field-group directly under the
+   fields-container; the TS renderer re-wraps it in a single .mf-page on
+   hydrate. Match both so the chrome never flashes back post-hydrate. */
+.mf-form-wrapper:not([data-mf-chrome="card"]):has(.mf-fields-container > .mf-field-group[data-type="PdfForm"]:only-child),
+.mf-form-wrapper:not([data-mf-chrome="card"]):has(.mf-fields-container > .mf-page:only-child > .mf-field-group[data-type="PdfForm"]:only-child) {
+    background: transparent !important;
+    background-image: none !important;
+    padding: 0 !important;
+}
+.mf-form-wrapper:not([data-mf-chrome="card"]):has(.mf-fields-container > .mf-field-group[data-type="PdfForm"]:only-child) > .mf-form-inner,
+.mf-form-wrapper:not([data-mf-chrome="card"]):has(.mf-fields-container > .mf-page:only-child > .mf-field-group[data-type="PdfForm"]:only-child) > .mf-form-inner {
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    /* PDF pages benefit from the widget's own 1100px cap (.pfb-root),
+       not the 760px text-form default. Theme var still wins if set. */
+    max-width: var(--mf-form-max-width, 1100px);
 }
 
 /* ============================================================
@@ -1143,7 +1198,19 @@ body > div[style*="display:none"]:has(.megaform-module) {
 .mf-form-wrapper.mf-has-date-popover .mf-form-inner,
 .mf-form-wrapper.mf-has-date-popover .mf-form,
 .mf-form-wrapper.mf-has-date-popover .mf-fields-container,
-.mf-form-wrapper.mf-has-date-popover .mf-date-popover-host {
+.mf-form-wrapper.mf-has-date-popover .mf-date-popover-host,
+/* [DatePopoverPremiumFix v20260705] Premium native shells nest the fields inside
+   .mfp > .mfp-card > .mfp-body > .mfp-page > .mfp-grid > .mfp-cell, several of which
+   clip with overflow:hidden — the popover was clipped by .mfp (verified). Lift overflow
+   on those containers too (NOT .mfp-hero, whose own overflow clips the wavy hero edge).
+   Only active while a date popover is open (the class is toggled per-open). */
+.mf-form-wrapper.mf-has-date-popover .mfp,
+.mf-form-wrapper.mf-has-date-popover .mfp-card,
+.mf-form-wrapper.mf-has-date-popover .mfp-body,
+.mf-form-wrapper.mf-has-date-popover .mfp-content,
+.mf-form-wrapper.mf-has-date-popover .mfp-page,
+.mf-form-wrapper.mf-has-date-popover .mfp-grid,
+.mf-form-wrapper.mf-has-date-popover .mfp-cell {
     overflow: visible !important;
 }
 .mf-form-wrapper.mf-has-date-popover .mf-dtp .mf-dtp-panel {
@@ -1657,12 +1724,21 @@ body > div[style*="display:none"]:has(.megaform-module) {
     align-items: center;
     justify-content: center;
     border-radius: 6px;
-    color: #fff;
-    background: var(--mf-primary, #4a90d9);
+    /* [CardCheckOutline v20260706] Unselected = an EMPTY bordered box (matches the mock,
+       which always shows a checkbox/radio outline); selected fills primary + reveals the
+       glyph. Was opacity:0 (fully invisible when unselected). */
+    border: 2px solid var(--mf-input-border-color, #cbd5e1);
+    color: transparent;
+    background: transparent;
     font-size: 12px;
     line-height: 1;
     font-weight: 800;
-    opacity: 0;
+    opacity: 1;
+    transition: background .16s ease, border-color .16s ease, color .16s ease;
+}
+/* single-select (radio) cards → circular indicator per mock; multi-select (checkbox) keeps the rounded square */
+.mf-option-group--cards .mf-option-item:has(.mf-option-control[type="radio"]) .mf-option-check {
+    border-radius: 50%;
 }
 /* [ChipCardBorder v20260628] Mouse hover = single coloured border + soft lift, NO ring. */
 .mf-option-group--cards .mf-option-item:hover .mf-option-ui {
@@ -1688,6 +1764,9 @@ body > div[style*="display:none"]:has(.megaform-module) {
 }
 .mf-option-group--cards .mf-option-item.is-checked .mf-option-check,
 .mf-option-group--cards .mf-option-item:has(.mf-option-control:checked) .mf-option-check {
+    border-color: var(--mf-primary, #4a90d9);
+    background: var(--mf-primary, #4a90d9);
+    color: #fff;
     opacity: 1;
 }
 @media (max-width: 640px) {
@@ -1912,6 +1991,9 @@ body > div[style*="display:none"]:has(.megaform-module) {
     font-size: var(--mf-section-title-size);
     font-weight: 600;
     color: var(--mf-section-title-color);
+    /* [StandardFormPolish v20260707] Kept at 4px: the Section field-group already
+       contributes ~16px (--mf-field-gap) below it, so a larger title margin double-stacked
+       into an over-airy heading→field gap. The field-gap + label metric bumps carry the polish. */
     margin: 0 0 4px 0;
 }
 .mf-html-block { padding: 8px 0; color: var(--mf-color-text); }
@@ -1959,7 +2041,13 @@ body > div[style*="display:none"]:has(.megaform-module) {
    (§6 "double button"). The JS hide raced/missed on some shells; the wrapper class
    .mf-premium-native-mode is the canonical, always-set signal, so hide the generic block
    from first paint deterministically. */
-.mf-premium-native-mode .mf-form-actions { display: none !important; }
+/* [ThankYouActionsFix v20260705] This hides the GENERIC multi-step footer that duplicates the premium
+   shell's own Back/Next/Submit. But .mf-form-actions is ALSO reused by the post-submit thank-you pane
+   (.mf-postsubmit-actions: "Submit another"/"Done"/CTA) and the review pane (.mf-review-actions:
+   "Edit"/"Confirm & Submit"), which live inside the same .mf-premium-native-mode wrapper → they were
+   wrongly hidden, so submit showed a thank-you with no button. Exclude those two so only the duplicate
+   footer stays hidden. (Premium per-template customCss carries a copy of this rule — patched there too.) */
+.mf-premium-native-mode .mf-form-actions:not(.mf-postsubmit-actions):not(.mf-review-actions) { display: none !important; }
 .mf-btn-submit {
     background: var(--mf-btn-bg);
     color: var(--mf-btn-color);
@@ -2531,6 +2619,19 @@ body > div[style*="display:none"]:has(.megaform-module) {
 .mf-cal-trigger,.mf-cal-value,.mf-cal-placeholder,.mf-mccb-trigger,.mf-mccb-value,.mf-mccb-placeholder{text-align:left}
 .mf-cal.is-empty .mf-cal-value,.mf-mccb-placeholder,.mf-ms-placeholder{color:var(--mfv-muted-fg)}
 .mf-cal .mf-date-icon{position:static;top:auto;right:auto;left:auto;z-index:auto;display:inline-flex;align-items:center;justify-content:center;flex:0 0 20px;width:20px;height:20px;transform:none;pointer-events:none;color:var(--mfv-muted-fg)}
+/* [DateIconFix v20260705] The calendar icon is a STATIC flex item that .mf-cal-trigger's flex+
+   space-between pins to the right. Premium templates style .mf-input at very high specificity
+   (e.g. classic-americana: body .mf-form-wrapper[..] .mfp.mfp-<slug>.mfp-native-generated .mf-input,
+   ~(0,6,1)) which can flip the trigger to display:block → the static icon collapses to mid-field
+   (over the placeholder). Rather than out-specificity-war the trigger's display, pin the icon
+   ABSOLUTELY to the right of the (position:relative) trigger so it's correct whether the trigger is
+   flex OR block; pad the value so its text never runs under the icon. Nothing else styles
+   .mf-cal .mf-date-icon, so this (0,2,0)!important wins cleanly. */
+.mf-cal .mf-date-icon{
+  position:absolute !important; right:12px !important; left:auto !important; top:50% !important;
+  transform:translateY(-50%) !important; flex:0 0 auto;
+}
+.mf-cal .mf-cal-value{ padding-right:24px; }
 .mf-cal .mf-date-icon svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;color:currentColor}
 .mf-cal-panel,.mf-ms-panel,.mf-mccb-panel{display:none;position:absolute;top:calc(100% + .5rem);left:0;right:0;z-index:1000;background:var(--mfv-bg);border:1px solid var(--mfv-border);border-radius:var(--mfv-radius);box-shadow:0 14px 30px rgba(15,23,42,.16);overflow:hidden}
 .mf-cal.is-open .mf-cal-panel,.mf-ms.is-open .mf-ms-panel,.mf-mccb.is-open .mf-mccb-panel{display:block}

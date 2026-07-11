@@ -1,0 +1,146 @@
+[
+  {
+    "step": 0,
+    "active": "0",
+    "card": {
+      "x": 37.12,
+      "y": 11.99,
+      "w": 943.99,
+      "h": 540.27,
+      "right": 981.11,
+      "bottom": 552.26
+    },
+    "page": {
+      "x": 87.71,
+      "y": 268.32,
+      "w": 842.81,
+      "h": 147.03,
+      "right": 930.52,
+      "bottom": 415.35
+    },
+    "nativeDisplay": "block",
+    "progress": "0 of 5 sections complete",
+    "overflowX": false,
+    "text": "First name * Last name * Work email * Phone"
+  },
+  {
+    "step": 1,
+    "active": "1",
+    "card": {
+      "x": 37.12,
+      "y": 11.99,
+      "w": 943.99,
+      "h": 865.66,
+      "right": 981.11,
+      "bottom": 877.65
+    },
+    "page": {
+      "x": 87.71,
+      "y": 268.32,
+      "w": 842.81,
+      "h": 472.42,
+      "right": 930.52,
+      "bottom": 740.74
+    },
+    "nativeDisplay": "block",
+    "progress": "0 of 5 sections complete",
+    "overflowX": false,
+    "text": "Company name * Website Your role *Founder / CEOLeading the company.✓ProductProduct and design teams."
+  },
+  {
+    "step": 2,
+    "active": "2",
+    "card": {
+      "x": 37.12,
+      "y": 11.99,
+      "w": 943.99,
+      "h": 538.67,
+      "right": 981.11,
+      "bottom": 550.67
+    },
+    "page": {
+      "x": 87.71,
+      "y": 268.32,
+      "w": 842.81,
+      "h": 145.44,
+      "right": 930.52,
+      "bottom": 413.76
+    },
+    "nativeDisplay": "block",
+    "progress": "0 of 5 sections complete",
+    "overflowX": false,
+    "text": "Choose your plan *Starter$0For small teams getting going.✓Pro$29For growing teams that need more.Pop"
+  },
+  {
+    "step": 3,
+    "active": "3",
+    "card": {
+      "x": 37.12,
+      "y": 11.99,
+      "w": 943.99,
+      "h": 768.6,
+      "right": 981.11,
+      "bottom": 780.6
+    },
+    "page": {
+      "x": 87.71,
+      "y": 268.32,
+      "w": 842.81,
+      "h": 375.37,
+      "right": 930.52,
+      "bottom": 643.68
+    },
+    "nativeDisplay": "block",
+    "progress": "0 of 5 sections complete",
+    "overflowX": false,
+    "text": "What are you interested in? *AnalyticsAutomationSecurityCollaborationIntegrationsReporting Preferred"
+  },
+  {
+    "step": 4,
+    "active": "4",
+    "card": {
+      "x": 37.12,
+      "y": 11.99,
+      "w": 943.99,
+      "h": 490.74,
+      "right": 981.11,
+      "bottom": 502.73
+    },
+    "page": {
+      "x": 87.71,
+      "y": 268.32,
+      "w": 842.81,
+      "h": 97.5,
+      "right": 930.52,
+      "bottom": 365.82
+    },
+    "nativeDisplay": "block",
+    "progress": "0 of 5 sections complete",
+    "overflowX": false,
+    "text": "Two-factor authentication *Authenticator appMost secure option.✓SMS codeText to your phone.✓Password"
+  },
+  {
+    "step": 5,
+    "active": "5",
+    "card": {
+      "x": 37.12,
+      "y": 11.99,
+      "w": 943.99,
+      "h": 917.75,
+      "right": 981.11,
+      "bottom": 929.75
+    },
+    "page": {
+      "x": 87.71,
+      "y": 268.32,
+      "w": 842.81,
+      "h": 524.52,
+      "right": 930.52,
+      "bottom": 792.84
+    },
+    "nativeDisplay": "block",
+    "progress": "0 of 5 sections complete",
+    "overflowX": false,
+    "text": "Review your details below. Tap any tab above to make changes. First nameLast nameWork emailPhoneComp"
+  }
+]

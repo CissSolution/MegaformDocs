@@ -58,7 +58,7 @@ namespace MegaForm.Core.Services.Starters
         public const string EmployeeRole = "Leave Employees";
         public const string ManagerRole = "Leave Managers";
         public const string HrRole = "HR Review";
-        public const string StarterPassword = "MegaForm!2026";
+        public const string StarterPassword = "";
         public const string EmployeeUserName = "leave.employee";
         public const string ManagerUserName = "leave.manager";
         public const string HrUserName = "leave.hr";
@@ -367,7 +367,7 @@ namespace MegaForm.Core.Services.Starters
                     Password = StarterPassword,
                     ApproveUser = true,
                     UpdateIfExists = true,
-                    GeneratePasswordIfEmpty = false,
+                    GeneratePasswordIfEmpty = true,
                     Actor = actor
                 }, CancellationToken.None).GetAwaiter().GetResult();
             }

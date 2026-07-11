@@ -11,8 +11,9 @@
 import type { AnyField, FieldKind, ImageState, PdfFormBuilderProps, SignatureState } from '../types';
 import { PdfRenderer } from './PdfRenderer';
 import { FieldOverlay } from './FieldOverlay';
+import { FieldClipboard } from './FieldClipboard';
 
-const VERSION = 'PdfFormBuilder v20260504-6';
+const VERSION = 'PdfFormBuilder v20260708-7';
 const PDF_LIB_CDN = 'https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js';
 
 declare global { interface Window { PDFLib?: any; } }
@@ -85,6 +86,10 @@ export class PdfFormBuilderRenderer {
   private snapEnabled = false;        // ★ v6: default OFF
   private gridSize = 8;
   private systemFont: string;          // ★ v6
+  // [FieldClipboard v20260708-1] selection tracked here so copy/paste knows
+  // which field is active; clipboard listeners attach in mount().
+  private selectedId: string | null = null;
+  private clipboard: FieldClipboard | null = null;
 
   constructor(host: HTMLElement, props: PdfFormBuilderProps) {
     this.host = host;
@@ -114,6 +119,13 @@ export class PdfFormBuilderRenderer {
 
     if (this.shouldShowToolbar()) this.renderToolbar();
     if (this.mode === 'edit') this.renderPalette();
+
+    // [FieldClipboard v20260708-1] Ctrl+C / Ctrl+V / Ctrl+D on placed fields.
+    // Attached in every mode (mode can switch at runtime); acts in edit only.
+    if (!this.clipboard) {
+      this.clipboard = new FieldClipboard(this);
+      this.clipboard.attach();
+    }
 
     this.viewportEl = document.createElement('div');
     this.viewportEl.className = 'pfb-viewport';
@@ -370,7 +382,10 @@ export class PdfFormBuilderRenderer {
     if (fo) fo.renderField(f);
   }
 
-  private deselectAll(): void { this.overlays.forEach(fo => fo.select(null)); }
+  private deselectAll(): void {
+    this.selectedId = null;
+    this.overlays.forEach(fo => fo.select(null));
+  }
 
   /**
    * [PatchFieldPublic v20260506-08] Made public so the field properties
@@ -392,6 +407,7 @@ export class PdfFormBuilderRenderer {
     this.fields = this.fields.filter(f => f.id !== id);
     delete this.sigStates[id]; delete this.imgStates[id]; delete this.fillValues[id];
     this.overlays.forEach(fo => fo.removeField(id));
+    if (this.selectedId === id) this.selectedId = null;
   }
 
   /** Public delete (used by adapter sidebar Delete button). */
@@ -400,6 +416,7 @@ export class PdfFormBuilderRenderer {
   }
 
   private selectField(id: string): void {
+    this.selectedId = id;
     // Pass fireCallback=false so propagating the selection across overlays
     // doesn't re-enter onSelect → infinite loop.
     this.overlays.forEach(fo => fo.select(id, false));
@@ -774,9 +791,92 @@ export class PdfFormBuilderRenderer {
 
   public destroy(): void {
     this.detachCursorGhost();
+    if (this.clipboard) { this.clipboard.detach(); this.clipboard = null; }
     if (this.pdfRenderer) this.pdfRenderer.destroy();
     this.host.innerHTML = '';
     this.overlays.clear();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // [FieldClipboard v20260708-1] ClipboardHost implementation — copy/paste/
+  // duplicate of placed fields (Ctrl+C / Ctrl+V / Ctrl+D + sidebar button).
+  // ═══════════════════════════════════════════════════════════════════════
+
+  public isEditMode(): boolean { return this.mode === 'edit'; }
+  public getRootEl(): HTMLElement | null { return this.rootEl; }
+  public getSelectedFieldId(): string | null { return this.selectedId; }
+
+  public getFieldSnapshot(id: string): AnyField | null {
+    const f = this.fields.find(x => x.id === id);
+    return f ? JSON.parse(JSON.stringify(f)) : null;
+  }
+
+  /** Map a viewport point to { page, x, y } in PDF units, or null if the
+   *  point isn't over any rendered page overlay. */
+  public clientPointToPage(clientX: number, clientY: number): { page: number; x: number; y: number } | null {
+    if (!this.pdfRenderer) return null;
+    for (const pi of this.pdfRenderer.pageInfos) {
+      const overlay = this.pdfRenderer.getOverlay(pi.pageNumber);
+      if (!overlay) continue;
+      const r = overlay.getBoundingClientRect();
+      if (clientX < r.left || clientX > r.right || clientY < r.top || clientY > r.bottom) continue;
+      const scale = pi.cssScale || 1;
+      return { page: pi.pageNumber, x: (clientX - r.left) / scale, y: (clientY - r.top) / scale };
+    }
+    return null;
+  }
+
+  /** Clone `src` (new id + unique name/label) and place its top-left at
+   *  (x, y) on `page`, clamped inside the page. Selects the clone. */
+  public addClonedField(src: AnyField, page: number, x: number, y: number): string | null {
+    if (!src || !src.kind) return null;
+    const clone: AnyField = JSON.parse(JSON.stringify(src));
+    clone.id = 'fld_' + Math.random().toString(36).slice(2, 10);
+    clone.page = page;
+
+    // Unique data key: strip a trailing _N from the source name, then pick
+    // the first free suffix. Label mirrors the same numbering.
+    const names = new Set(this.fields.map(f => String((f as any).name || '')));
+    const baseName = String((src as any).name || src.kind).replace(/_\d+$/, '');
+    let n = 2;
+    while (names.has(baseName + '_' + n)) n++;
+    (clone as any).name = baseName + '_' + n;
+    const baseLabel = String((src as any).label || '').replace(/\s+\d+$/, '');
+    if (baseLabel) (clone as any).label = baseLabel + ' ' + n;
+
+    // Clamp inside the page so a paste near an edge stays reachable.
+    const pi = this.pdfRenderer ? this.pdfRenderer.pageInfos.find(p => p.pageNumber === page) : null;
+    if (pi) {
+      clone.x = Math.max(0, Math.min(x, pi.width - clone.width));
+      clone.y = Math.max(0, Math.min(y, pi.height - clone.height));
+    } else {
+      clone.x = Math.max(0, x);
+      clone.y = Math.max(0, y);
+    }
+
+    this.fields.push(clone);
+    const fo = this.overlays.get(page);
+    if (fo) fo.renderField(clone);
+    this.selectField(clone.id);
+    // Bubble a change so the host adapter's hidden-input sync (which listens
+    // for input/change/click on the widget wrap) picks up the new layout.
+    if (this.rootEl) this.rootEl.dispatchEvent(new Event('change', { bubbles: true }));
+    return clone.id;
+  }
+
+  /** Paste `src` at a viewport point (palette-drop convention: point = the
+   *  clone's top-left). Falls back to source position + 16px offset. */
+  public pasteFieldAt(src: AnyField, point: { clientX: number; clientY: number } | null): string | null {
+    const target = point ? this.clientPointToPage(point.clientX, point.clientY) : null;
+    if (target) return this.addClonedField(src, target.page, target.x, target.y);
+    return this.addClonedField(src, src.page || 1, (src.x || 0) + 16, (src.y || 0) + 16);
+  }
+
+  /** Duplicate an existing field in place (+16px offset). Returns new id. */
+  public duplicateField(id: string): string | null {
+    const src = this.fields.find(f => f.id === id);
+    if (!src) return null;
+    return this.addClonedField(src, src.page, (src.x || 0) + 16, (src.y || 0) + 16);
   }
 
   public getFields(): AnyField[] { return JSON.parse(JSON.stringify(this.fields)); }

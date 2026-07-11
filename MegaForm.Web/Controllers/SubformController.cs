@@ -74,7 +74,10 @@ namespace MegaForm.Web.Controllers
                     list.Add(new SubformTableInfo { Schema = r.GetString(0), Name = r.GetString(1) });
                 return Ok(new { tables = list });
             }
-            catch (InvalidOperationException ioe) when (ioe.Message.Contains("Connection string", StringComparison.OrdinalIgnoreCase))
+            catch (InvalidOperationException ioe) when (
+                ioe.Message.Contains("Connection string", StringComparison.OrdinalIgnoreCase) ||
+                ioe.Message.Contains("Dashboard database connection", StringComparison.OrdinalIgnoreCase) ||
+                ioe.Message.Contains("connection is not configured", StringComparison.OrdinalIgnoreCase))
             {
                 return Ok(new { tables = new List<SubformTableInfo>(), warning = ioe.Message });
             }
@@ -142,18 +145,20 @@ namespace MegaForm.Web.Controllers
         }
 
         [HttpGet("Rows")]
-        [AllowAnonymous]
+        [Authorize(Roles = "Administrator")]
         public IActionResult GetRows([FromQuery] string tableName, [FromQuery] string parentKeyColumn, [FromQuery] long submissionId)
         {
             if (string.IsNullOrWhiteSpace(tableName) || string.IsNullOrWhiteSpace(parentKeyColumn) || submissionId <= 0)
                 return BadRequest(new { error = "tableName, parentKeyColumn, submissionId required" });
-            if (tableName.IndexOfAny(new[] { ';', '\'', '"', '[', ']' }) >= 0) return BadRequest(new { error = "invalid tableName" });
-            if (parentKeyColumn.IndexOfAny(new[] { ';', '\'', '"', '[', ']', ' ' }) >= 0) return BadRequest(new { error = "invalid parentKeyColumn" });
+            if (!IsSafeIdentifier(tableName)) return BadRequest(new { error = "invalid tableName" });
+            if (!IsSafeIdentifier(parentKeyColumn)) return BadRequest(new { error = "invalid parentKeyColumn" });
             try
             {
                 using var conn = OpenDashboardConnection();
+                if (!TableColumnExists(conn, tableName, parentKeyColumn))
+                    return BadRequest(new { error = "unknown table or parentKeyColumn" });
                 using var cmd = conn.CreateCommand();
-                cmd.CommandText = "SELECT * FROM [" + tableName + "] WHERE [" + parentKeyColumn + "] = @p";
+                cmd.CommandText = "SELECT * FROM " + QuoteIdentifier(tableName) + " WHERE " + QuoteIdentifier(parentKeyColumn) + " = @p";
                 var p = cmd.CreateParameter(); p.ParameterName = "@p"; p.Value = submissionId; cmd.Parameters.Add(p);
                 using var r = cmd.ExecuteReader();
                 var rows = new List<Dictionary<string, object>>();
@@ -168,6 +173,34 @@ namespace MegaForm.Web.Controllers
             }
             catch (Exception ex) { return StatusCode(500, new { error = ex.Message }); }
         }
+
+        private static bool IsSafeIdentifier(string value)
+            => !string.IsNullOrWhiteSpace(value)
+               && System.Text.RegularExpressions.Regex.IsMatch(value, @"^[A-Za-z_][A-Za-z0-9_]*$");
+
+        private static string QuoteIdentifier(string identifier) => "[" + identifier.Replace("]", "]]") + "]";
+
+        private static bool TableColumnExists(DbConnection conn, string tableName, string columnName)
+        {
+            using var cmd = conn.CreateCommand();
+            if (IsSqlite(conn))
+            {
+                cmd.CommandText = "SELECT 1 FROM pragma_table_info(" + QuoteStringLiteral(tableName) + ") WHERE name = @column LIMIT 1";
+                var column = cmd.CreateParameter(); column.ParameterName = "@column"; column.Value = columnName; cmd.Parameters.Add(column);
+                return cmd.ExecuteScalar() != null;
+            }
+
+            cmd.CommandText = @"
+                SELECT 1
+                FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_NAME = @tableName
+                  AND COLUMN_NAME = @columnName";
+            var table = cmd.CreateParameter(); table.ParameterName = "@tableName"; table.Value = tableName; cmd.Parameters.Add(table);
+            var col = cmd.CreateParameter(); col.ParameterName = "@columnName"; col.Value = columnName; cmd.Parameters.Add(col);
+            return cmd.ExecuteScalar() != null;
+        }
+
+        private static string QuoteStringLiteral(string value) => "'" + (value ?? string.Empty).Replace("'", "''") + "'";
 
         private static string ClassifyUiType(string sqlType)
         {

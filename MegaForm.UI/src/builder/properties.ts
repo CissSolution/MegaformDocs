@@ -5,6 +5,7 @@
    ============================================================ */
 import { MegaFormBuilder } from './core';
 import { ensureFieldSettingsBadge, getActiveField, hasActiveFieldSelection } from './field-settings';
+import { openIconPalette, ensureIconPaletteStyles } from './icon-palette';
 (function () {
     'use strict';
     var B = MegaFormBuilder;
@@ -2739,7 +2740,10 @@ import { ensureFieldSettingsBadge, getActiveField, hasActiveFieldSelection } fro
                     '<button type="button" class="mf-option-remove" data-index="' + i + '" title="Remove"><i class="fas fa-times"></i></button>' +
                 '</div>' +
                 '<div class="mf-option-extra">' +
-                    '<input type="text" class="mf-opt-icon" value="' + B.escAttr(opt.icon || '') + '" placeholder="Icon / HTML icon" data-index="' + i + '" />' +
+                    '<div class="mf-opt-icon-wrap">' +
+                        '<input type="text" class="mf-opt-icon" value="' + B.escAttr(opt.icon || '') + '" placeholder="Icon / emoji" data-index="' + i + '" />' +
+                        '<button type="button" class="mf-opt-icon-pick" data-index="' + i + '" title="Pick from icon palette" aria-label="Pick icon"><i class="fas fa-icons"></i></button>' +
+                    '</div>' +
                     '<input type="text" class="mf-opt-meta" value="' + B.escAttr(opt.meta || '') + '" placeholder="Meta (location, short note)" data-index="' + i + '" />' +
                     '<input type="text" class="mf-opt-description" value="' + B.escAttr(opt.description || opt.desc || opt.subLabel || '') + '" placeholder="Description" data-index="' + i + '" />' +
                     '<input type="text" class="mf-opt-badge" value="' + B.escAttr(opt.badge || '') + '" placeholder="Badge" data-index="' + i + '" />' +
@@ -2790,6 +2794,23 @@ import { ensureFieldSettingsBadge, getActiveField, hasActiveFieldSelection } fro
             });
         });
         bindOptionExtra('.mf-opt-icon', 'icon', true);
+        // [IconPalette 2026-07-01] Pick-button next to each icon input opens a
+        // popover of curated emoji + MegaForm's built-in icon catalog. Picking
+        // writes the value into the sibling .mf-opt-icon input and dispatches a
+        // 'change' so the existing bindOptionExtra('.mf-opt-icon') persists it.
+        ensureIconPaletteStyles();
+        container.querySelectorAll('.mf-opt-icon-pick').forEach(function (btn) {
+            btn.addEventListener('click', function (ev) {
+                ev.preventDefault();
+                var wrap = (this as HTMLElement).closest('.mf-opt-icon-wrap');
+                var input = wrap ? wrap.querySelector('.mf-opt-icon') as HTMLInputElement | null : null;
+                if (!input) return;
+                openIconPalette(this as HTMLElement, input.value, function (val) {
+                    input!.value = val;
+                    input!.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+            });
+        });
         bindOptionExtra('.mf-opt-meta', 'meta', true);
         bindOptionExtra('.mf-opt-description', 'description', true);
         bindOptionExtra('.mf-opt-badge', 'badge', true);

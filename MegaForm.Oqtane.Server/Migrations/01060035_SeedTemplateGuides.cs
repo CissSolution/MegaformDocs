@@ -16,7 +16,11 @@ namespace MegaForm.Oqtane.Server.Migrations
     /// Idempotent via MERGE (SQL Server) or INSERT ... WHERE NOT EXISTS (SQLite).
     /// </summary>
     [DbContext(typeof(MegaFormDbContext))]
-    [Migration("MegaForm.01.06.00.34")]
+    // [pkg-fix 20260625] Was MegaForm.01.06.00.34 — DUPLICATE of 01060034_AddSubmissionStatusIndex
+    // (same [Migration] id) → EF's MigrationsAssembly.get_Migrations() threw "An item with the same
+    // key has already been added" on a CLEAN host, so NO MegaForm migration ran (0 MF_ tables).
+    // Re-numbered to .35 (unique, ordered last). Idempotent (MERGE/WHERE NOT EXISTS) → safe to (re)run.
+    [Migration("MegaForm.01.06.00.35")]
     public class SeedTemplateGuides : MultiDatabaseMigration
     {
         public SeedTemplateGuides(IDatabase database) : base(database)

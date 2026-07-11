@@ -436,7 +436,7 @@ namespace MegaForm.Core.Services.Starters
                     Password = role.Password,
                     ApproveUser = true,
                     UpdateIfExists = true,
-                    GeneratePasswordIfEmpty = false,
+                    GeneratePasswordIfEmpty = true,
                     Actor = actor
                 }, CancellationToken.None).GetAwaiter().GetResult();
             }

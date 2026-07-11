@@ -188,6 +188,43 @@ const TD_INSPECTOR_SEED_BADGE = 'TDInspectorSeed v20260413-05';
 const TD_SYNC_TO_BUILDER_BADGE = 'TDSyncToBuilder v20260413-06';
 const TD_FORM_WIDTH_UI_BADGE = 'TDFormWidthUI v20260413-11';
 const TD_FORM_WIDTH_SAVE_BADGE = 'TDFormWidthSave v20260413-11';
+
+function getPreviewAssetVersion(): string {
+  try {
+    const w = window as any;
+    const pf = (w.__MF_PLATFORM__ || {}) as Record<string, unknown>;
+    const direct = w.__MF_ASSET_VERSION__ || pf.assetVersion || pf.AssetVersion || pf.assetsVersion || pf.resourceVersion;
+    if (direct) return String(direct);
+
+    const scripts = Array.from(document.scripts || []) as HTMLScriptElement[];
+    for (const script of scripts) {
+      const src = String(script?.src || '');
+      if (!src) continue;
+      const isMegaFormAsset =
+        src.includes('/Modules/MegaForm/') ||
+        src.includes('/DesktopModules/MegaForm/') ||
+        src.includes('megaform-');
+      if (!isMegaFormAsset) continue;
+      try {
+        const url = new URL(src, window.location.href);
+        const version = url.searchParams.get('v');
+        if (version) return version;
+      } catch (_error) {
+        // Ignore malformed script src values.
+      }
+    }
+  } catch (_error) {
+    // Defensive fallback for unusual host shells.
+  }
+  return '20260704-B361';
+}
+
+function resolvePreviewAssetUrl(relativePath: string): string {
+  const raw = `${window.location.origin}${resolveAssetUrl(relativePath)}`;
+  const sep = raw.includes('?') ? '&' : '?';
+  return `${raw}${sep}v=${encodeURIComponent(getPreviewAssetVersion())}`;
+}
+
 if (typeof window !== 'undefined') {
   (window as any).__MF_THEME_BACK_ROUTE_BADGE__ = THEME_BACK_ROUTE_BADGE;
   (window as any).__MF_TD_CSS_HYDRATE_BADGE__ = TD_CSS_HYDRATE_BADGE;
@@ -1284,7 +1321,7 @@ class ThemeDesignerApp {
     const varsCss = this.buildVarCss(this.getLiveCssVars());
     const mergedCss = this.buildMergedPieces().mergedFullCss;
     const themeStylesheet = this.currentTheme !== 'default'
-      ? `<link rel="stylesheet" href="${window.location.origin}${resolveAssetUrl('css/megaform-themes.css')}">`
+      ? `<link rel="stylesheet" href="${resolvePreviewAssetUrl('css/megaform-themes.css')}">`
       : '';
     const escapedCss = mergedCss.replace(/<\//g, '<\\/');
 
@@ -1322,8 +1359,8 @@ class ThemeDesignerApp {
 <html>
 <head>
 <meta charset="utf-8">
-<link rel="stylesheet" href="${window.location.origin}${resolveAssetUrl('css/megaform.css')}">
-<link rel="stylesheet" href="${window.location.origin}${resolveAssetUrl('css/megaform-widgets.css')}">
+<link rel="stylesheet" href="${resolvePreviewAssetUrl('css/megaform.css')}">
+<link rel="stylesheet" href="${resolvePreviewAssetUrl('css/megaform-widgets.css')}">
 ${themeStylesheet}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style id="td-preview-shell-style">
@@ -1347,7 +1384,8 @@ window.__CFG={
   apiBaseUrl:${JSON.stringify(this.apiBase)}
 };
 <\/script>
-<script src="${window.location.origin}${resolveAssetUrl('js/megaform-renderer.js')}?v=td-clean"><\/script>
+<script src="${resolvePreviewAssetUrl('js/megaform-widgets.js')}"><\/script>
+<script src="${resolvePreviewAssetUrl('js/megaform-renderer.js')}"><\/script>
 <script>
 document.addEventListener('DOMContentLoaded',function(){
   if (typeof MegaFormRenderer !== 'undefined' && MegaFormRenderer && typeof MegaFormRenderer.init === 'function') {
@@ -1365,7 +1403,9 @@ document.addEventListener('DOMContentLoaded',function(){
     var h=Math.max(300,Math.ceil(rectH||target.scrollHeight||document.body.scrollHeight||document.documentElement.scrollHeight||0));
     if(Math.abs(h-lastH)>1){
       lastH=h;
-      window.parent.postMessage({type:'td-h',h:h},'*');
+      var targetOrigin=window.location.origin;
+      try{if(document.referrer)targetOrigin=new URL(document.referrer).origin;}catch(_originErr){}
+      window.parent.postMessage({type:'td-h',h:h},targetOrigin);
     }
   }
   function queueSendH(){

@@ -1678,8 +1678,20 @@ private string _listTemplate = string.Empty;
             $"window.__MF_PLATFORM__.siteId={(SiteState?.Alias?.SiteId ?? 0)};" +
             $"window.__MF_PLATFORM__.pageId={(PageState?.Page?.PageId ?? 0)};" +
             $"window.__MF_PLATFORM__.authToken={tokenJs};" +
+            // [TrialTighten v20260706] Expose the license/trial flag to the builder/dashboard/wizard so
+            // the client can lock premium templates + AI and show an "Upgrade" CTA. Production
+            // (license.lic="production") → productionMode=true (nothing locked).
+            $"window.__MF_PLATFORM__.productionMode={MegaForm.Core.Services.LicenseService.IsProductionLicensed().ToString().ToLowerInvariant()};" +
+            $"window.__MF_PLATFORM__.trialUpgradeUrl={JsonSerializer.Serialize(MegaForm.Core.Services.LicenseService.UpgradeUrl)};" +
             authJs +
             "window.__MF_PLATFORM__.__booted=true;");
+        // [TrialTighten v20260706] Also stamp the license flag onto DEDICATED globals. The dashboard/
+        // builder client loader REPLACES window.__MF_PLATFORM__ wholesale (adding tabId/dashboardShellBadge),
+        // which wipes any productionMode we set on it above. These standalone globals survive that and are
+        // the authoritative source read by the client isTrialMode() helper (premium/AI lock + Upgrade CTA).
+        InjectInlineScript(
+            $"window.__MF_PRODUCTION_MODE__={MegaForm.Core.Services.LicenseService.IsProductionLicensed().ToString().ToLowerInvariant()};" +
+            $"window.__MF_TRIAL_UPGRADE_URL__={JsonSerializer.Serialize(MegaForm.Core.Services.LicenseService.UpgradeUrl)};");
 
         _loading = true;
         _isAdmin = UserSecurity.IsAuthorized(PageState.User, PermissionNames.Edit, ModuleState.PermissionList);
@@ -2932,6 +2944,18 @@ private string BuildStarterBoardUrl()
         _ssrPreviousText = "Previous";
         _ssrNextText = "Next";
         _ssrHoneypotName = $"mf_hp_{_formId}_{Guid.NewGuid().ToString("N").Substring(0, 5)}";
+
+        // [access-control 20260710] This form renders differently per visitor, and the snapshot cache
+        // below is keyed on (site, page, module, form) with no actor in it — one of its keys is even
+        // "form:{id}" alone. Prerendering here would let one visitor's markup be served to the next.
+        // Leave the body empty and let the client build from GET Schema/{id}, which projects per actor
+        // and is not cached. Evict too: a snapshot may predate the rule that made this form restricted.
+        if (form != null && form.HasAccessControl)
+        {
+            EvictSsrSnapshot();
+            return;
+        }
+
         try
         {
             if (string.IsNullOrWhiteSpace(schemaJson)) return;
@@ -3058,13 +3082,32 @@ private string BuildStarterBoardUrl()
         SsrSnapshots[SsrSnapshotFormKey()] = snapshot;
     }
 
+    /// <summary>Drops every cached body for this form, and the body this request had already restored.</summary>
+    private void EvictSsrSnapshot()
+    {
+        if (_formId <= 0) return;
+        SsrSnapshots.TryRemove(SsrSnapshotKey(), out _);
+        SsrSnapshots.TryRemove(SsrSnapshotSiteFormKey(), out _);
+        SsrSnapshots.TryRemove(SsrSnapshotFormKey(), out _);
+        _ssrFieldsHtml = string.Empty;
+        _ssrStepsHtml = string.Empty;
+    }
+
     private void TryRestoreSsrSnapshot()
     {
         if (!SsrMode || _formId <= 0 || !string.IsNullOrWhiteSpace(_ssrFieldsHtml)) return;
         if (!SsrSnapshots.TryGetValue(SsrSnapshotKey(), out var s)
             && !SsrSnapshots.TryGetValue(SsrSnapshotSiteFormKey(), out s)
             && !SsrSnapshots.TryGetValue(SsrSnapshotFormKey(), out s)) return;
-        if (DateTimeOffset.UtcNow - s.CreatedUtc > TimeSpan.FromMinutes(5))
+        // [SsrSnapshotTtl v20260707] Was 5 minutes — too short: any soft-nav (enhanced nav click)
+        // to a form page whose snapshot had lapsed missed the cache, so the interactive _loading
+        // render tore the page into the FastPaint skeleton and the JS renderer REBUILT the form
+        // client-side ("MegaForm: rendering N fields") — exactly the wireframe→form jank this
+        // cache exists to prevent. The snapshot is re-computed and re-stored on EVERY completed
+        // form load (TryBuildSsrFormHtml→StoreSsrSnapshot), so a long TTL only risks a stale
+        // first paint for the sub-second _loading window after a form EDIT — which the fresh
+        // render then replaces. 6h keeps every visited form warm across a workday.
+        if (DateTimeOffset.UtcNow - s.CreatedUtc > TimeSpan.FromHours(6))
         {
             SsrSnapshots.TryRemove(SsrSnapshotKey(), out _);
             SsrSnapshots.TryRemove(SsrSnapshotSiteFormKey(), out _);
@@ -3112,7 +3155,13 @@ private string BuildStarterBoardUrl()
             if (!ModuleState.Settings.TryGetValue("MegaForm:ModuleStyleJson", out var msJson)
                 || string.IsNullOrWhiteSpace(msJson)) return;
             var ms = Newtonsoft.Json.Linq.JObject.Parse(msJson);
-            foreach (var key in new[] { "theme", "themeCssOverrides", "customCss", "cssOverrides" })
+            // [ModuleStyleCustomCss v20260707] customCss is EXCLUDED from the overlay: old
+            // snapshots (seeded before this fix) carry a stale copy of the form's customCss,
+            // and overlaying it hid every builder CSS/image edit on the public page until the
+            // snapshot was manually deleted. Skipping it here heals those sites in place —
+            // customCss always renders fresh from the form; the snapshot only wins for
+            // theme/var-map style fields.
+            foreach (var key in new[] { "theme", "themeCssOverrides", "cssOverrides" })
             {
                 var tok = ms[key] ?? ms[char.ToUpperInvariant(key[0]) + key.Substring(1)];
                 if (tok != null) settingsObj[key] = tok;

@@ -1,0 +1,149 @@
+{
+  "desktop": {
+    "png": "E:\\DNNDEFENDER AND AI DESIGNES\\AI DESIGNES\\MegaFormSolution_280_Oqtane_um\\Docs\\_verify_2026-07-11_tabbed\\live-desktop2-1280x900.png",
+    "metrics": {
+      "rootStyle": {
+        "display": "flex",
+        "flexDirection": "column",
+        "justifyContent": "center",
+        "padding": "48px 16px",
+        "backgroundColor": "rgb(244, 244, 247)"
+      },
+      "frameRect": {
+        "x": 64,
+        "y": 169.16,
+        "width": 1152,
+        "height": 561.69,
+        "top": 169.16,
+        "right": 1216,
+        "bottom": 730.84,
+        "left": 64
+      },
+      "cardRect": {
+        "x": 64,
+        "y": 169.16,
+        "width": 1152,
+        "height": 529.19,
+        "top": 169.16,
+        "right": 1216,
+        "bottom": 698.34,
+        "left": 64
+      },
+      "h1Rect": {
+        "x": 113,
+        "y": 230.16,
+        "width": 1054,
+        "height": 35.09,
+        "top": 230.16,
+        "right": 1167,
+        "bottom": 265.25,
+        "left": 113
+      },
+      "back": {
+        "hidden": true,
+        "disabled": true,
+        "aria": "true",
+        "rect": {
+          "x": 113,
+          "y": 628.84,
+          "width": 105.11,
+          "height": 44.5,
+          "top": 628.84,
+          "right": 218.11,
+          "bottom": 673.34,
+          "left": 113
+        },
+        "display": "flex",
+        "opacity": "1"
+      },
+      "tabs": 6,
+      "pages": 6,
+      "activeTabs": 1,
+      "activePages": 1,
+      "tokenCount": 0,
+      "uniqueTokenCount": 0,
+      "dupKeys": [],
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "overflow": []
+    }
+  },
+  "tabClick": {
+    "activeStep": "0",
+    "activePage": "0",
+    "pageText": "First name * Last name * Work email * Phone",
+    "back": {
+      "hidden": true,
+      "display": "flex"
+    }
+  },
+  "mobile": {
+    "png": "E:\\DNNDEFENDER AND AI DESIGNES\\AI DESIGNES\\MegaFormSolution_280_Oqtane_um\\Docs\\_verify_2026-07-11_tabbed\\live-mobile2-390x844.png",
+    "metrics": {
+      "rootStyle": {
+        "display": "flex",
+        "flexDirection": "column",
+        "justifyContent": "flex-start",
+        "padding": "16px 10px",
+        "backgroundColor": "rgb(244, 244, 247)"
+      },
+      "frameRect": {
+        "x": 10,
+        "y": 16,
+        "width": 370,
+        "height": 758.88,
+        "top": 16,
+        "right": 380,
+        "bottom": 774.88,
+        "left": 10
+      },
+      "cardRect": {
+        "x": 10,
+        "y": 16,
+        "width": 370,
+        "height": 703.88,
+        "top": 16,
+        "right": 380,
+        "bottom": 719.88,
+        "left": 10
+      },
+      "h1Rect": {
+        "x": 31,
+        "y": 71,
+        "width": 328,
+        "height": 31.19,
+        "top": 71,
+        "right": 359,
+        "bottom": 102.19,
+        "left": 31
+      },
+      "back": {
+        "hidden": true,
+        "disabled": true,
+        "aria": "true",
+        "rect": {
+          "x": 31,
+          "y": 622.38,
+          "width": 140.34,
+          "height": 44.5,
+          "top": 622.38,
+          "right": 171.34,
+          "bottom": 666.88,
+          "left": 31
+        },
+        "display": "flex",
+        "opacity": "1"
+      },
+      "tabs": 6,
+      "pages": 6,
+      "activeTabs": 1,
+      "activePages": 1,
+      "tokenCount": 0,
+      "uniqueTokenCount": 0,
+      "dupKeys": [],
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "overflow": []
+    }
+  }
+}

@@ -37,6 +37,11 @@ const entries: Record<string, string> = {
   'settings-popup': resolve(__dirname, 'src/view-designer/settings-popup.ts'),
   'dnn-host':       resolve(__dirname, 'src/dnn-host/index.ts'),
   workflow:         resolve(__dirname, 'src/builder/workflow/index.ts'),
+  // [PluginBuildEntry v20260708] PDF Form widget plugin — ships as
+  // js/plugins/megaform-widget-pdf-form.js (self-contained, CSS inlined via
+  // ?inline import in its index.ts). Before this entry existed the deployed
+  // bundle came from a one-off config and src edits never rebuilt.
+  'widget-pdf-form': resolve(__dirname, 'src/widgets/pdf-form-builder/index.ts'),
   // [B200 2026-06-19] Restored the standalone Monaco entry. monaco-editor (~3.9 MB raw /
   // ~990 KB gz) was being inlined into megaform-builder.js because no other entry
   // externalized it. This entry rebuilds megaform-unified-monaco.js, which publishes
@@ -52,11 +57,13 @@ const isWorkflow = entry === 'workflow';
 // The unified-monaco entry is the ONE bundle that must CONTAIN monaco-editor. Every
 // other entry externalizes it. Guard against externalizing it out of its own bundle.
 const isMonaco   = entry === 'unified-monaco';
-const outSubDir  = isBundle ? 'js/bundles' : isWorkflow ? 'js/builder' : 'js';
+// [PluginBuildEntry v20260708] widget plugins live under js/plugins/.
+const isWidgetPlugin = entry.startsWith('widget-');
+const outSubDir  = isBundle ? 'js/bundles' : isWorkflow ? 'js/builder' : isWidgetPlugin ? 'js/plugins' : 'js';
 
 const PLATFORMS = {
-  oqtane: resolve(__dirname, '../MegaForm.Oqtane.Server/wwwroot/Modules/MegaForm'),
-  web:    resolve(__dirname, '../MegaForm.Web/wwwroot/megaform'),
+  oqtane:  resolve(__dirname, '../MegaForm.Oqtane.Server/wwwroot/Modules/MegaForm'),
+  web:     resolve(__dirname, '../MegaForm.Web/wwwroot/megaform'),
   // BUG FIX: DNN uses Assets/ directly. When building the workflow entry,
   // react.production.min.js / react-dom.production.min.js / reactflow.min.js
   // must also be present in Assets/js/builder/ alongside megaform-workflow-reactflow.js.
@@ -64,7 +71,9 @@ const PLATFORMS = {
   // so DNN loaded /megaform/js/builder/react.production.min.js → 404 → canvas fail.
   // Note: Assets/ IS the DNN deploy folder — we sync JS here so build.cmd / Deploy-DNN.bat
   // picks them up automatically without touching any running Web project.
-  dnn: resolve(__dirname, '../Assets'),
+  dnn:     resolve(__dirname, '../Assets'),
+  // Umbraco host serves the RCL wwwroot under /App_Plugins/MegaForm/.
+  umbraco: resolve(__dirname, '../MegaForm.Umbraco/wwwroot'),
 };
 
 // ── CSS files owned by each entry ─────────────────────────────────────────────
@@ -172,7 +181,7 @@ function syncPlatforms(): Plugin {
   };
 }
 
-const outDirBase = isBundle ? 'Assets/js/bundles' : isWorkflow ? 'Assets/js/builder' : 'Assets/js';
+const outDirBase = isBundle ? 'Assets/js/bundles' : isWorkflow ? 'Assets/js/builder' : isWidgetPlugin ? 'Assets/js/plugins' : 'Assets/js';
 const outputFilename = isWorkflow ? 'megaform-workflow-reactflow.js' : `megaform-${entry}.js`;
 
 export default defineConfig({
