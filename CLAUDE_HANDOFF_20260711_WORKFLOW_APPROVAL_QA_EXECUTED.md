@@ -135,3 +135,16 @@ Owner test tay trên :5123 báo: `Workflow/Tasks/Forward` → 400, và "Attach c
    (họ hàng bug reopen `dom.ts:2074` phiên trước). Chưa tái hiện được vì browser bị giữ — phiên sau soi loader.
 
 Trạng thái task QA sau nghịch tay + probe: SUB-103 task đã forward sang mgr.nam (claimed) — dữ liệu QA, không cần dọn.
+
+## BỔ SUNG 2 (cùng phiên) — "save xong load lại mất roles/users" = bẫy STJ×JToken (commit `1dfdd70`)
+
+Owner repro: add roles/users vào approval node → Save → mở lại BPMN → mọi node "⚠ no role", panel trống —
+trong khi DB envelope CÒN NGUYÊN config. Root cause: `Form/Workflow/Get` trả `Ok(...)` trần, mà
+`WorkflowNode.Config` là `Dictionary<string,object>` chứa **Newtonsoft JToken** (ParseOrMigrate dùng JsonConvert)
+→ STJ của Oqtane băm giá trị JToken thành rác → editor nhận config RỖNG, và nếu Save từ view đó thì **ghi cái rỗng
+đè lên node chưa đụng tới**. Fix 1 chữ: dùng `JsonOk` (helper Newtonsoft sẵn có, các endpoint workflow bên cạnh đều dùng).
+Đây là biến thể mới của bẫy ⭐ `reference_oqtane_stj_no_raw_jobject` — lần này JToken TRỐN TRONG `Dictionary<string,object>`,
+không lộ ở signature. Verified: GET trả CandidateRoles/Users nguyên vẹn; edit của owner qua view hỏng vẫn còn trong draft DB.
+Rà thêm: chỉ GetWorkflow dính (SaveDraft/Apply/Validate trả status payload không chứa Config; JsonOk dùng ở WorkflowStarter).
+⚠️ Ghi chú liên quan: principal picker lưu candidate user bằng **DisplayName** ("Hoa (Employee)") thay vì username — match
+được lúc claim (GetActorIdentifiers có display name) nhưng nên chuẩn hoá về username — việc phiên sau.
