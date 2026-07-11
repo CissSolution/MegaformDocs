@@ -133,7 +133,9 @@ export function openTaskDrawer(opts: TaskDrawerOptions): void {
     mk(row, approve, reject);
     panelEl.appendChild(row);
 
-    if (task.allowForward || task.status !== STATUS_COMPLETED) {
+    // [v20260711] The old `allowForward || not-completed` OR let a completed task keep its
+    // Forward input — the server refuses with "Task is not open." Forward only while open.
+    if (task.allowForward !== false && task.status !== STATUS_COMPLETED) {
       const fwd = div('mf-mi-fwd');
       const fInput = document.createElement('input');
       fInput.type = 'text'; fInput.className = 'mf-mi-fwd-input'; fInput.placeholder = T('inbox.forward_placeholder', 'Forward to (username)…');

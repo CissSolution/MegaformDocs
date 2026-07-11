@@ -269,6 +269,21 @@ namespace MegaForm.Core.Services
             bool isRoleForward = targetUser.Trim().StartsWith("role:", StringComparison.OrdinalIgnoreCase);
             string roleName = isRoleForward ? targetUser.Trim().Substring(5).Trim() : null;
 
+            // [ForwardResolve v20260711] Resolve the named user BEFORE touching the task —
+            // a typo'd username used to be assigned verbatim, silently parking the task on a
+            // user who does not exist (invisible to everyone but admins). With a resolver
+            // present, an unknown name is now a clear error; the resolved id/display name
+            // also makes the reassignment show up properly in the target's Assigned to Me.
+            UserPrincipal resolvedTarget = null;
+            if (!isRoleForward && _principalResolver != null)
+            {
+                resolvedTarget = _principalResolver.ResolveUser(targetUser.Trim(), GetPortalId(task));
+                // Email-shaped targets keep the legacy verbatim path (the notifier already
+                // treats them as a raw address); an unknown plain username is a hard error.
+                if (resolvedTarget == null && targetUser.IndexOf('@') < 0)
+                    throw new InvalidOperationException("User '" + targetUser.Trim() + "' was not found.");
+            }
+
             if (isRoleForward)
             {
                 task.Status = WorkflowTaskStatus.Pending;
@@ -285,9 +300,13 @@ namespace MegaForm.Core.Services
             else
             {
                 task.Status = WorkflowTaskStatus.Claimed;
-                task.AssignedUserId = TryParseUserId(targetUser);
-                task.AssignedUserName = (targetUser ?? string.Empty).Trim();
-                task.AssignedDisplayName = task.AssignedUserName;
+                task.AssignedUserId = resolvedTarget != null ? resolvedTarget.UserId : TryParseUserId(targetUser);
+                task.AssignedUserName = resolvedTarget != null && !string.IsNullOrWhiteSpace(resolvedTarget.UserName)
+                    ? resolvedTarget.UserName
+                    : (targetUser ?? string.Empty).Trim();
+                task.AssignedDisplayName = resolvedTarget != null && !string.IsNullOrWhiteSpace(resolvedTarget.DisplayName)
+                    ? resolvedTarget.DisplayName
+                    : task.AssignedUserName;
                 task.ClaimedAt = DateTime.UtcNow;
                 task.Comment = comment ?? string.Empty;
             }
@@ -303,7 +322,17 @@ namespace MegaForm.Core.Services
                 catch (Exception ex) { _log?.LogWarning("MegaForm.Workflow", "Forward document status sync failed: " + ex.Message); }
             }
 
-            await SendForwardNotificationAsync(task, actor, targetUser, comment, isRoleForward, roleName, ct).ConfigureAwait(false);
+            // [ForwardNotify guard v20260711] The forward is already persisted above — a failed
+            // notification (no SMTP, resolver hiccup) must not surface as a 400 that makes the
+            // client believe the forward failed. Same contract as the guarded status update.
+            try
+            {
+                await SendForwardNotificationAsync(task, actor, targetUser, comment, isRoleForward, roleName, ct).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _log?.LogWarning("MegaForm.Workflow", "Forward notification failed: " + ex.Message);
+            }
 
             return BuildResult(task);
         }

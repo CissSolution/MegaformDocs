@@ -479,19 +479,21 @@ function buildActionBar(ctx: BoardContext, task: InboxTaskItem): HTMLElement {
       mk(bar, mkAct('export', 'download', T('inbox.export', 'Export'), 'mf-mi3-act-export'));
       return bar;
     }
-    // [§4-9] Approve/Reject/Return only while pending; Forward/Comment/Export always.
+    // [§4-9 → v20260711] Approve/Reject/Return/Forward/Comment only while the task is
+    // OPEN — the server rejects all five on a completed task ("Task is not open." → 400),
+    // so offering Forward/Comment on completed tasks just manufactured errors. Export always.
     if (pending) {
       mk(bar,
         mkAct('approve', 'thumbsUp', T('inbox.approve', 'Approve'), 'mf-mi3-act-approve'),
         mkAct('reject', 'thumbsDown', T('inbox.reject', 'Reject'), 'mf-mi3-act-reject'),
         mkAct('return', 'rotateCcw', T('inbox.return', 'Return'), 'mf-mi3-act-return'),
+        mkAct('forward', 'forward', T('inbox.forward', 'Forward'), 'mf-mi3-act-forward'),
+        mkAct('comment', 'messageSquare', T('inbox.comment', 'Comment'), 'mf-mi3-act-comment'),
       );
     } else {
       bar.appendChild(span('mf-mi3-detail-done', `${T('inbox.completed', 'Task completed')}`));
     }
     mk(bar,
-      mkAct('forward', 'forward', T('inbox.forward', 'Forward'), 'mf-mi3-act-forward'),
-      mkAct('comment', 'messageSquare', T('inbox.comment', 'Comment'), 'mf-mi3-act-comment'),
       mkAct('export', 'download', T('inbox.export', 'Export'), 'mf-mi3-act-export'),
     );
     return bar;
@@ -519,8 +521,10 @@ function buildActionBar(ctx: BoardContext, task: InboxTaskItem): HTMLElement {
   bar.appendChild(ta);
 
   const footer = div('mf-mi3-reply-footer');
-  // [§4-10] Attach (left) — visual parity with the mock (reply attachments not wired to submit yet)
-  footer.appendChild(btn('mf-mi3-reply-attach', `${ic('paperclip', 14)}${T('inbox.attach', 'Attach')}`, () => { /* reply-attach not yet wired */ }));
+  // [§4-10 → v20260711] The mock-parity "Attach" button was a dead control — no upload
+  // channel exists on task actions yet (MF_WorkflowTaskActions has only Comment text).
+  // A button that swallows clicks reads as broken, so it is hidden until reply
+  // attachments are actually designed (file storage + endpoint + audit link).
   // Forward confirm = "Send to {firstName}", disabled until a recipient is picked.
   const confirmLabel = mode === 'forward'
     ? (ctx.forwardTarget ? T('inbox.send_to', 'Send to {name}', { name: (ctx.forwardTargetName || ctx.forwardTarget).split(' ')[0] }) : T('inbox.select_recipient', 'Select recipient'))
