@@ -1,4 +1,4 @@
-namespace MegaForm.Oqtane.Shared
+﻿namespace MegaForm.Oqtane.Shared
 {
     /// <summary>
     /// [P0c 20260620-B215] SINGLE SOURCE OF TRUTH for the cache-bust <c>?v=</c> stamp on ALL
@@ -26,6 +26,6 @@ namespace MegaForm.Oqtane.Shared
     /// </summary>
     public static class MegaFormAssetVersion
     {
-        public static readonly string Current = "20260711-B393";
+        public static readonly string Current = "20260711-B394";
     }
 }
