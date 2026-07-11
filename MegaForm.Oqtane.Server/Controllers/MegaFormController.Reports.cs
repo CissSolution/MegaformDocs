@@ -110,16 +110,19 @@ namespace MegaForm.Oqtane.Server.Controllers
                     .ToList()
                     .ToDictionary(x => x.FormId, x => x.Count);
 
-                var windowRows = db.Submissions.AsNoTracking()
+                // [Perf 2026-07-11] Count per (form, day) IN SQL. This used to project every
+                // submission inside the window into memory and bucket it in C# — on a site with a
+                // million submissions in the last 30 days that meant materialising a million rows
+                // for a sparkline, which took ~30s and made the Submissions landing page time out
+                // (the browser aborted and reported "Unexpected end of JSON input").
+                // The result set is now at most forms × days rows.
+                var dayCounts = db.Submissions.AsNoTracking()
                     .Where(s => !s.IsSpam && s.SubmittedOnUtc >= since && formIds.Contains(s.FormId))
-                    .Select(s => new { s.FormId, s.SubmittedOnUtc })
+                    .GroupBy(s => new { s.FormId, Day = s.SubmittedOnUtc.Date })
+                    .Select(g => new { g.Key.FormId, g.Key.Day, Count = g.Count() })
                     .ToList();
 
-                // [Perf 2026-06-19 fix #8] Pre-bucket the window rows by FormId ONCE
-                // instead of re-scanning windowRows.Where(r => r.FormId == ...) inside
-                // the forms.Select below (that was an O(forms × rows) quadratic). The
-                // per-day bucketing / timezone logic in the projection is unchanged.
-                var byForm = windowRows.ToLookup(r => r.FormId);
+                var byForm = dayCounts.ToLookup(r => r.FormId);
 
                 // [Completion 2026-06-14] REAL field-completion per form: average over the
                 // form's (non-spam) submissions of (filled input fields / total input fields).
@@ -129,27 +132,52 @@ namespace MegaForm.Oqtane.Server.Controllers
                 foreach (var fid in allTime.Where(kv => kv.Value > 0).Select(kv => kv.Key))
                     completionByForm[fid] = ComputeFormCompletion(db, fid);
 
+                // [ATBE P1] A form bound to a customer table has no submissions of its own — only the
+                // anchor rows for records an admin has already looked at. Counting those would report
+                // "59 submissions" for a table holding half a million. The honest number is the row
+                // count the probe measured, and completion is meaningless for a table we do not own.
+                var externalRows = new Dictionary<int, long>();
+                foreach (var b in db.ExternalBindings.AsNoTracking()
+                                    .Where(x => formIds.Contains(x.FormId))
+                                    .Select(x => new { x.FormId, x.ProfileJson })
+                                    .ToList())
+                {
+                    long approx = 0;
+                    try
+                    {
+                        var size = Newtonsoft.Json.Linq.JObject.Parse(b.ProfileJson ?? "{}")["Size"];
+                        if (size != null) approx = size.Value<long?>("ApproxRows") ?? 0;
+                    }
+                    catch { /* a malformed profile must not take the overview down */ }
+                    externalRows[b.FormId] = approx;
+                    completionByForm[b.FormId] = null;
+                }
+
                 var result = forms.Select(f =>
                 {
-                    var fr = byForm[f.FormId];           // grouped once above — no per-form scan
+                    var fr = byForm[f.FormId];           // already aggregated per day in SQL
                     var series = new int[days];
                     int frCount = 0;
                     foreach (var r in fr)
                     {
-                        frCount++;
-                        var idx = (int)(r.SubmittedOnUtc.Date - since).TotalDays;
-                        if (idx >= 0 && idx < days) series[idx]++;
+                        frCount += r.Count;
+                        var idx = (int)(r.Day - since).TotalDays;
+                        if (idx >= 0 && idx < days) series[idx] += r.Count;
                     }
+                    bool isExternal = externalRows.TryGetValue(f.FormId, out var extRows);
                     return new
                     {
                         formId = f.FormId,
                         title = string.IsNullOrWhiteSpace(f.Title) ? ("Form #" + f.FormId) : f.Title,
                         status = f.Status ?? string.Empty,
                         createdOnUtc = f.CreatedOnUtc.Year > 1 ? (DateTime?)f.CreatedOnUtc : null,
-                        allTime = allTime.TryGetValue(f.FormId, out var c) ? c : 0,
-                        last7 = frCount,
+                        allTime = isExternal
+                            ? (extRows > int.MaxValue ? int.MaxValue : (int)extRows)
+                            : (allTime.TryGetValue(f.FormId, out var c) ? c : 0),
+                        last7 = isExternal ? 0 : frCount,
                         completion = completionByForm.TryGetValue(f.FormId, out var comp) ? comp : null,
-                        series,
+                        series = isExternal ? new int[days] : series,
+                        external = isExternal,
                     };
                 })
                 .OrderByDescending(x => x.allTime)

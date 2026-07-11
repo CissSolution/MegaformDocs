@@ -57,7 +57,21 @@ namespace MegaForm.Oqtane.Server.Controllers
         }
 
         private bool IsAdmin => User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Host);
-        private int SiteId => AuthEntityId(EntityNames.Site);
+
+        /// <summary>The site the new form belongs to. AuthEntityId(Site) returns -1 when the request
+        /// carries no module/site context — as an admin XHR from the builder does — and a form saved
+        /// with PortalId -1 exists but is invisible: every list is scoped by site. Fall back to the
+        /// user's own siteid claim, exactly like MegaFormController.ResolvePortalId does.</summary>
+        private int SiteId
+        {
+            get
+            {
+                var id = AuthEntityId(EntityNames.Site);
+                if (id > 0) return id;
+                var claim = User?.FindFirst("siteid")?.Value ?? User?.FindFirst("SiteId")?.Value;
+                return int.TryParse(claim, out var pid) && pid > 0 ? pid : 0;
+            }
+        }
 
         /// <summary>Connection keys an admin may point at. Configured server-side: a key the operator
         /// never listed can never be probed, whatever the client sends.</summary>
@@ -212,14 +226,17 @@ namespace MegaForm.Oqtane.Server.Controllers
                 var formId = body.FormId;
                 if (formId <= 0)
                 {
+                    var siteId = SiteId;
+                    if (siteId <= 0) return BadRequest(new { error = "site context missing" });
+
                     formId = _forms.SaveForm(new FormInfo
                     {
-                        PortalId = SiteId,
+                        PortalId = siteId,
                         Title = string.IsNullOrWhiteSpace(body.Title)
                             ? profile.Object.Schema + "." + profile.Object.Name
                             : body.Title,
                         SchemaJson = schemaJson,
-                        Status = "published",
+                        Status = "Published",   // the status every other form carries; lists filter on it
                     });
                 }
                 else

@@ -114,6 +114,16 @@ namespace MegaForm.Oqtane.Server.Data
                 // the migration 01060034_AddSubmissionStatusIndex that creates it.
                 e.HasIndex(x => new { x.FormId, x.Status, x.SubmittedOnUtc })
                     .HasDatabaseName("IX_MF_Submissions_FormId_Status_SubmittedOnUtc");
+                // [Perf 2026-07-11] The Submissions landing page counts every form's submissions
+                // (WHERE IsSpam = 0 GROUP BY FormId). IsSpam was in no index, so that count scanned
+                // the whole table — 19.5s on a site with a million submissions, which blew the 30s
+                // command timeout and left the page showing "Unable to load the forms overview".
+                // With this index the same count takes ~0.45s.
+                // NOTE: Oqtane builds the schema from the EF model, so a FRESH install gets this
+                // index — but it never runs migration Up() bodies, so EXISTING sites need the
+                // CREATE INDEX run by hand.
+                e.HasIndex(x => new { x.IsSpam, x.FormId, x.SubmittedOnUtc })
+                    .HasDatabaseName("IX_MF_Submissions_Spam_Form_Date");
             });
 
             modelBuilder.Entity<SubmissionValueInfo>(e =>
