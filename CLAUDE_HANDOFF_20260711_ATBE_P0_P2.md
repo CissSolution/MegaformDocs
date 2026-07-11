@@ -33,6 +33,17 @@
 8. **Overlay của wizard ở `z-index: 2147483646`.** Modal mới đặt thấp hơn vẫn **nhìn thấy** (qua nền mờ) nhưng **mọi click rơi xuống wizard** → "bấm không ăn". Modal mới phải ≥ 2147483647.
 9. **Admin shell ép `h3 { color:#fff }`.** Modal tự dựng phải **khai màu tường minh**, không thì tiêu đề trắng-trên-trắng: có trong DOM, vô hình trên màn hình.
 
+## QA PHIÊN SAU (owner yêu cầu) — `Docs/QA_PLAN_20260712_Workflow_Approval_Tabbed_Form.md`
+
+Kịch bản: tạo role `Manager`/`Finance` + user `mgr.nam`/`fin.lan`/`emp.hoa` → workflow duyệt 2 bước gắn vào **2 form dựng từ mẫu tabbed** → submit **bằng browser thật** → chứng minh task xuất hiện **TUẦN TỰ** trong inbox đúng người (Finance chỉ thấy sau khi Manager approve) → approve/deny theo đúng nhánh → **visual QA từng mốc**. Có sẵn bảng kiểm 5.1→5.8 + câu SQL đối chứng + 4 bẫy đã biết trong file trên.
+
+Đã làm sẵn ở phiên này để QA đó chạy được:
+- **DocFX**: `Docs/docfx/articles/workflow-approvals.md` (+ `toc.yml`) — giải thích role-queue vs push-assign, inbox cho user thường, luồng approve/reject, và 2 điều kiện thực tế (role là role của host; email cần SMTP).
+- **KB AI on-rails** (`MegaForm.Core/Seed/ai-knowledge-seed.json`):
+  - `328 edit-premium-template-structure-only` — sửa form tabbed: **chỉ** đổi section/tab, field, rules, copy. **CẤM** chế CSS / đổi class shell / restyle (muốn đổi màu → Theme Designer + preset channel).
+  - `329 readonly-by-role-is-access-control` — show/hide theo role = `showIf` (Access tab); **read-only theo role = `readOnlyIf`** (Access tab → "Read-only for"), server render readOnly **và** khôi phục giá trị DB khi submit. Không bao giờ nằm ở tab Rules.
+  - ⚠️ KB seed **chỉ tự nạp trên site cài mới**; site đang chạy phải insert vào `MF_AI_Knowledge` trước khi QA phần AI.
+
 ## Việc tiếp theo (theo SPEC)
 
 **P3 — ĐƯỜNG GHI** (`Docs/SPEC_20260711_Adaptive_Table_Binding_Engine.md` §8):

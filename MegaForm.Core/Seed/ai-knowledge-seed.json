@@ -4213,6 +4213,32 @@
       "PortalId": null,
       "Source": "megaform-builtin",
       "Version": 1
+    },
+    {
+      "Id": 328,
+      "Slug": "edit-premium-template-structure-only",
+      "Kind": "prompt_rule",
+      "Title": "Editing a premium/tabbed template: change structure, fields and rules — never the CSS",
+      "Summary": "A premium template (tabbed-account-setup, wizard shells, DONEE set) ships a hand-built shell whose CSS and markup classes are frozen. Change sections/tabs, fields, labels and rules. Do not write new CSS, rename shell classes, or restyle anything.",
+      "Body": "A premium template's look is not yours to redesign. Its shell (customHtml + customCss) was built by hand and is BYTE-FROZEN: the tab rail, the card, the step dots, the plan cards, the review panel and the footer all depend on exact class names and exact CSS. Invent a class and it renders unstyled; restyle a class and you silently break every other template that shares the shell.\n\nWHAT YOU MAY CHANGE when the user asks to modify a tabbed/premium form:\n1. SECTION / TAB STRUCTURE — add, remove, rename, reorder the sections (tabs/steps). Keep each section's marker attributes intact (data-mf-section / premiumStepIndex); a section you add must copy the shape of an existing one, not a shape you imagined.\n2. FIELDS — add/remove/reorder fields inside a section; change field key, label, placeholder, helpText, required, options. Reuse the field types the template already uses.\n3. RULES — showIf / conditional logic between fields (answer-driven), validation, and the page/step flow.\n4. COPY — headings, intro text, button labels, confirmation text.\n\nWHAT YOU MUST NOT DO:\n- Do NOT write new CSS, do NOT edit customCss, do NOT add style attributes, do NOT change colours, spacing, fonts or layout. If the user asks for a different look, tell them to use the Theme Designer / preset channel (--mf-preset-*), which recolours the template without touching its CSS.\n- Do NOT rename or drop the shell's existing classes or wrapper elements.\n- Do NOT convert a premium template into a plain form by rebuilding its markup.\n\nIn short: you are editing the CONTENT and the LOGIC of a designed form, not designing a form.",
+      "Tags": "prompt_rule,premium,template,tabbed,custom-shell,css-frozen,structure,rules,ai-on-rails",
+      "Examples": "",
+      "PortalId": null,
+      "Source": "megaform-builtin",
+      "Version": 1
+    },
+    {
+      "Id": 329,
+      "Slug": "readonly-by-role-is-access-control",
+      "Kind": "prompt_rule",
+      "Title": "Read-only-for-a-role is ACCESS CONTROL — set readOnlyIf in the Access tab, never a form rule",
+      "Summary": "To make a field read-only (or hidden) for some roles, use the Access tab: Visible-to for show/hide, Read-only-for for locked fields. Both are enforced server-side; a client rule is not.",
+      "Body": "There are two different requests and they map to two different settings:\n\nSHOW / HIDE by role → field.showIf with a Role/Permission/User leaf, set in the builder Access tab under \"Field visibility by role\" (tick the roles that may SEE the field). The server REMOVES the field from the schema before it reaches the browser, and strips it from a POST that tries to sneak it back in.\n\nREAD-ONLY by role → field.readOnlyIf, set in the Access tab under \"Read-only for\". The field is rendered with readOnly=true for those roles, and on submit the server RESTORES the value already in the database instead of taking the one that was posted — so a locked field cannot be changed by editing the HTML.\n\nNeither belongs in the Rules tab. A client form rule can only react to ANSWERS the user gives; it cannot decide anything about WHO the user is, and anything enforced only in the browser is not enforced at all. If the user says \"only Finance can edit the amount, everyone else just sees it\", that is: visible to all roles, read-only for every role except Finance.\n\nRoles come from the host platform (Oqtane/DNN). Use the role names the site actually has; do not invent role names.",
+      "Tags": "prompt_rule,role,permission,readonly,readOnlyIf,access-control,visibility,security,ai-on-rails",
+      "Examples": "",
+      "PortalId": null,
+      "Source": "megaform-builtin",
+      "Version": 1
     }
   ],
   "templates": [

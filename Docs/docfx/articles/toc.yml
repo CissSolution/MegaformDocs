@@ -8,6 +8,8 @@
   href: quickstart.md
 - name: Creating Forms
   href: creating-forms.md
+- name: Approval Workflows & Inbox
+  href: workflow-approvals.md
 - name: SDK Reference
   href: sdk-reference.md
 - name: Reading Data
