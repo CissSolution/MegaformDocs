@@ -121,6 +121,52 @@ Dùng `curl.exe` + cookie jar; trong Git Bash phải `export MSYS_NO_PATHCONV=1`
 (16/17 file đã tracked; file tabbed vừa được commit). **Clone sạch rồi pack sẽ ra gói THIẾU template** cho tới khi có ai đó
 copy DONEE → wwwroot. Không có script tự động làm việc này.
 
+### 2.5 FRESH INSTALL 1.7.103 + QA REGRESSION — ✅ PASS (site mới `:5124`)
+
+Site sạch `Oqtane.MegaForm.Fresh1803` / DB `Oqtane_MegaForm_Fresh1803` / host `abc@ABC1024`.
+
+⚠️⚠️ **BẪY LỚN — framework template BỊ NHIỄM.** `Oqtane.Framework.10.1.0_1` (nguồn clone của mọi lần fresh)
+**đã có sẵn MegaForm 1.6.5**: DLL ở root, `wwwroot/Modules/MegaForm/`, **`App_Data/MegaForm/Templates/` (catalog đã seed)**,
+và `Oqtane.Server/Packages/` chứa nupkg 1.7.22 + 1.7.23. Nếu không dọn thì:
+(a) đó là test **upgrade**, không phải fresh install; (b) **`App_Data` có catalog cũ ⇒ `SeedTemplatesIfEmpty` no-op ⇒
+test template sẽ PASS GIẢ trên dữ liệu cũ**, không chứng minh được gói có ship template hay không.
+→ Phải xoá sạch: `MegaForm*` ở root + `wwwroot/Modules/MegaForm` + **`App_Data/MegaForm`** + `Content` + `Data` + `*.db`
++ `Oqtane.Server/Packages/MegaForm*`. Sau đó rescan `-Filter "*MegaForm*" -Recurse` phải ra **rỗng**.
+
+| Kiểm chứng trên site sạch | Kết quả |
+|---|---|
+| Module đăng ký | `ModuleDefinition.Version = **1.7.103**` ✅ |
+| Bảng DB | 29 bảng `MF_*` tạo mới ✅ |
+| Template trong wwwroot (từ gói) | **17** (có `tabbed-account-setup.json`) ✅ |
+| Seed sang App_Data | **17** ✅ |
+| API gallery `BuilderTemplates/List` | phục vụ **17**, có "Tabbed Account Setup", icon `fa-table-columns` ✅ |
+| Tabbed template đầy đủ? | **19 field, 6 Section (=6 tab)**, customHtml 7.9KB, customCss 22KB ✅ |
+| KB rule mới (seed từ GÓI, không insert tay) | 2 dòng: `edit-premium-template-structure-only`, `readonly-by-role-is-access-control` ✅ (Id trong DB là **identity**, không phải 328/329 — tra theo **slug**) |
+| Payment endpoint trên fresh install | `paypal/public-config` **400**, `stripe/create-intent` **400**, `stripe/webhook` **400** — **fail-closed, KHÔNG còn 404** ✅ |
+| Admin API (không regression) | `Form/List` → 200 ✅ |
+
+⚠️ **`pack.cmd` XOÁ các nupkg cũ** trong `MegaForm.Oqtane.Package/` → không còn bản 1.7.102 để đối chứng.
+Muốn giữ thì backup trước khi pack.
+
+### 2.6 ⭐ KIỂM CHỨNG CÂU HỎI KHÁCH: xoá field → dữ liệu cũ CÓ CÒN KHÔNG?
+
+Chạy thật trên :5123 (form 6, submission 106): xoá field `phone_number` → restart → mở lại bản ghi cũ.
+
+| | Kết quả |
+|---|---|
+| Field còn trong form? | ❌ đã xoá (schema còn 18) |
+| Giá trị lịch sử còn phục vụ? | ✅ **CÒN** — `label='Phone'`, `value='0901234567'` |
+| `DataJson` thô | ✅ còn nguyên |
+
+**Cơ chế:** chi tiết bản ghi đọc từ **snapshot đã lưu** (`MF_SubmissionValues`, đông cứng key+label+type+value lúc submit),
+**không phải** từ schema hiện tại → field đã xoá vẫn hiện đúng nhãn cũ. `SubmissionQueryService.GetDetail:102`.
+⚠️ Nếu submission **không có** snapshot (`hasSnapshot=false`) thì fallback suy ra từ schema hiện tại → field đã xoá **sẽ không hiện**.
+⚠️ Cột trong **grid vẫn biến mất** (grid dựng cột theo form hiện tại) — dữ liệu không mất, chỉ là không hiển thị ở grid.
+
+⭐⭐ **BẪY khi sửa schema bằng SQL:** `SchemaJson` chứa **CẢ `fields` LẪN `Fields`** (mỗi mảng 19 field).
+Xoá một mảng thôi → field **vẫn còn** (API merge cả hai → ra 37 field). Phải xoá **cả hai**.
+(Cũng phát hiện: snapshot có **26 dòng cho 19 field** ⇒ đúng là dữ liệu bị lặp — xác nhận gốc của bug "fields render đôi" đã vá.)
+
 ## 3. CÒN LẠI (chưa làm — việc của phiên sau)
 
 ### 3.1 🔴 Test bypass thanh toán end-to-end — **ĐANG DANG DỞ, làm tiếp trước tiên**
@@ -146,7 +192,11 @@ Key OpenAI tạm ở `<scratchpad>/openai-key-5123.txt` (**KHÔNG commit**). Cá
 Prompt test: *"ẩn cột Salary với mọi role trừ Finance, và khoá Amount chỉ Finance sửa được"*
 → kỳ vọng AI sinh `showIf`/`readOnlyIf` (tab Access), **không** sinh rule client, **không** chế CSS.
 
-### 3.4 ~~Pack 1.7.103~~ ✅ ĐÃ XONG (§2.4) — còn **fresh install + QA regression**
+### 3.0 ⭐ VIỆC CHÍNH CỦA PHIÊN SAU = `SPEC_20260712_DOCFX_CUSTOMER_QUESTIONS_AND_GIFS.md`
+Owner yêu cầu: bổ sung **tài liệu DocFX + GIF demo** trả lời 7 câu hỏi của khách. Spec chi tiết đã viết sẵn ở file trên.
+**Ưu tiên 1 trong spec: chạy THẬT một giao dịch Stripe test** — đây là câu duy nhất chưa biết chắc kết quả.
+
+### 3.4 ~~Pack 1.7.103~~ ✅ ĐÃ XONG (§2.4) — ~~fresh install + QA~~ ✅ CŨNG XONG (§2.5)
 Gói `MegaForm.Oqtane.1.7.103.nupkg` (78.9 MB) đã sẵn sàng và đã tự copy vào Oqtane Packages folder.
 **Chưa làm: cài lên 1 site Oqtane SẠCH và QA chống regression** (owner yêu cầu "không được regression"). Checklist:
 - clone site Oqtane mới + appsettings SQL + silent install + bỏ nupkg vào `Packages/` → khởi động;
