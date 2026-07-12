@@ -200,6 +200,19 @@ namespace MegaForm.Oqtane.Server.Services
                     }
                 });
             });
+            // [PAY-2 v20260712] Payment stack. Registered BEFORE SubmissionProcessor
+            // conceptually but order does not matter for DI — what matters is that
+            // PaymentSubmissionVerifier IS registered: SubmissionProcessor's optional
+            // ctor param picks it up, and without it any form containing a payment
+            // field is rejected (fail closed) instead of trusting the client's
+            // "status":"paid". PaymentGatewayClient is a singleton — it owns the
+            // bounded outbound-concurrency gate and the PayPal token cache.
+            services.AddSingleton<MegaForm.Core.Payments.PaymentGatewayClient>();
+            services.AddScoped<MegaForm.Core.Payments.IPaymentGatewayStore, OqtanePaymentGatewayStore>();
+            services.AddScoped<MegaForm.Core.Payments.PaymentEndpointService>();
+            services.AddScoped<MegaForm.Core.Payments.PaymentSubmissionVerifier>();
+            services.AddScoped<MegaForm.Core.Payments.PaymentWebhookService>();
+
             services.AddScoped<SubmissionProcessor>();
 
             // Blog publishing & analytics services

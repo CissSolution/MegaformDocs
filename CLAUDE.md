@@ -14,7 +14,7 @@ Codebase này đã qua nhiều đợt audit và **các lớp lỗ hổng dưới
 4. **KHÔNG `[IgnoreAntiforgeryToken]` ở CLASS level** trên controller admin. Chỉ action-level cho action public. Siết antiforgery phải đồng bộ JS gửi `RequestVerificationToken`.
 5. **HTML-encode mặc định** `{{content:*}}`, `CustomHtml`, nhãn/tiêu đề (dùng helper encode SẴN CÓ của `FormHtmlRenderer`). HTML chỉ qua allowHtml whitelist có chủ đích.
 6. **Mọi CSS emit phải qua `ModuleCssComposer.NeutralizeStyleBreakout`** — kể cả nhánh catch-fallback trong `RenderPage.cs`.
-7. **Payment:** server resolve giá từ payment field settings (`fixedPrice`/`allowUserAmount`/`minAmount`/`maxAmount`), KHÔNG tin `amount` client.
+7. **Payment:** server resolve giá từ payment field settings — field thật là `widgetProps.amountMode` (`fixed`/`field`/`listenTotals`) + `amount`/`currency` + bounds `minAmount`/`maxAmount` cho mode biến thiên. KHÔNG tin `amount`/`status:"paid"` client: create-intent đi qua `PaymentEndpointService.ResolveCreateAmount` (fail-closed khi form/field không resolve được), và **mọi submission có payment field phải qua `PaymentSubmissionVerifier`** (gọi lại Stripe/PayPal xác minh tiền thật + chống replay transactionId + check metadata formId). Verifier fail-CLOSED khi host chưa đăng ký.
 8. **File path client** → whitelist extension + `Path.GetFullPath` + chặn `..`/`:`/`~`. SVG/HTML upload → sanitize hoặc serve attachment + `nosniff`.
 9. **URL ngoài do user cấu hình** (webhook/app-endpoint) → `SsrfGuard`.
 10. **KHÔNG trả `ex.Message`/`ex.StackTrace` cho client.** KHÔNG hardcode secret; KHÔNG fallback secret về config ngoài Development.

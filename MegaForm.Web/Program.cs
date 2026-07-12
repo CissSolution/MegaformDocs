@@ -95,6 +95,18 @@ builder.Services.AddScoped<PurchaseOrderStarterService>();
 builder.Services.AddScoped<RecruitmentStarterService>();
 builder.Services.AddScoped<ConfiguredAppStarterService>();
 
+// [PAY-2 v20260712] Minimal payment-verifier wiring. SubmissionProcessor now
+// fails CLOSED on payment fields when no verifier is registered — this keeps
+// Web's public submit flow working while the full Web controller hardening is
+// deferred (owner's call 2026-07-12). Reads the same Payment_* settings the
+// dashboard already saves via IModuleSettingsService, appsettings fallback.
+builder.Services.AddSingleton<MegaForm.Core.Payments.PaymentGatewayClient>();
+builder.Services.AddScoped<MegaForm.Core.Payments.IPaymentGatewayStore>(sp =>
+    new MegaForm.Core.Payments.ModuleSettingsPaymentGatewayStore(
+        sp.GetRequiredService<IModuleSettingsService>(),
+        key => cfg[key]));
+builder.Services.AddScoped<MegaForm.Core.Payments.PaymentSubmissionVerifier>();
+
 builder.Services.AddScoped<SubmissionProcessor>();
 builder.Services.AddScoped<PrintFormRenderer>();
 builder.Services.AddScoped<ILocalizationProvider, WebLocalizationProvider>();

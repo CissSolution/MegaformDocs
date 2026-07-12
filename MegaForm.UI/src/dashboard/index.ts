@@ -4527,6 +4527,13 @@ function render(root: HTMLElement, data: DashboardData) {
   if(!(window as any).MegaForm)(window as any).MegaForm={};
   (window as any).MegaForm.initDashboard = function(root: HTMLElement) {
     API = root.getAttribute('data-api-base') || '/api/MegaForm/';
+    // [PAY-2 v20260712] DNN hosts payment endpoints under
+    // /DesktopModules/MegaForm/API/payments/* (Web/Oqtane keep the default
+    // /api/megaform/payments/). Remap so the dashboard's Stripe/PayPal
+    // test buttons hit a real endpoint on DNN.
+    if (API.toLowerCase().indexOf('desktopmodules') >= 0) {
+      PAY_API = API.replace(/\/?$/, '/') + 'payments/';
+    }
     root.id = 'mf-dash-root';  // referenced by delete button
     // [OqtaneSaveFix] Publish the host ids globally so the AI creator (and any
     // other bundle) can resolve module/site context without relying solely on

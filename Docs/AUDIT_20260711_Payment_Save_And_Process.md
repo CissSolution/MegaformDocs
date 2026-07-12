@@ -99,3 +99,17 @@ field bình thường (Oqtane `MegaFormController.cs:351-477`).
    phía server trong `FormValidationService`.
 
 > Chưa đụng code payment trong phiên này — đây là báo cáo để owner quyết phạm vi.
+
+---
+
+## 6. TRẠNG THÁI VÁ — 2026-07-12 (owner duyệt scope: Oqtane + DNN trước)
+
+| Finding §4 | Trạng thái |
+|---|---|
+| 🔴 #1 Bypass thanh toán (client tự khai `status:"paid"`) | ✅ **ĐÃ ĐÓNG** — `PaymentSubmissionVerifier` (bước 9d trong `SubmissionProcessor`): gọi lại Stripe/PayPal xác minh tiền thật, chống replay transactionId (in-process + tra trùng DataJson + stamp `formId` vào intent/order để chặn replay chéo form), ghi số tiền **server xác minh** vào DataJson. Fail-CLOSED mọi nhánh mơ hồ, kể cả khi host chưa đăng ký verifier. `requiredPaid` giờ enforce server-side tại đây. |
+| 🟠 #2 Rule #7 sai tên field + fail-open mode `field`/`listenTotals` | ✅ **ĐÃ ĐÓNG** — `PaymentEndpointService.ResolveCreateAmount`: form/schema/field không resolve được = REJECT (hết fail-open); mode biến thiên bị chặn bởi `minAmount`/`maxAmount` (widgetProps mới, UI đã thêm) và check lại lần cuối lúc submit (mode `field` re-derive từ chính data submission). CLAUDE.md rule #7 đã sửa khớp tên field thật. |
+| 🟠 #3 Số tiền lưu là số client | ✅ **ĐÃ ĐÓNG** — DataJson giờ chứa giá trị gateway xác nhận (`verified:true`, `verifiedAtUtc`). |
+| 🟠 #4 Không webhook/verify chữ ký | ✅ **ĐÃ ĐÓNG (OQ+DNN)** — `PaymentWebhookService` + endpoint `stripe/webhook`, `paypal/webhook` trên Oqtane và DNN; Stripe HMAC (WebhookSecret đã thu giờ ĐƯỢC DÙNG), PayPal verify qua Webhook ID. |
+| 🟡 #5 Lệch pha nền tảng | ✅ **Oqtane + DNN đã có backend đầy đủ** (create/confirm/capture/config/test/webhook, dùng chung `PaymentEndpointService` trong Core — `IPaymentProvider` cũ vẫn là dead code, subsystem mới nằm cạnh nó). Web giữ controller cũ (harden DEFER theo chỉ đạo owner 2026-07-12); Umbraco mới có verifier (endpoints DEFER). |
+
+Bonus: sửa lỗi zero-decimal currency (VND/JPY bị nhân 100 khi tạo intent Stripe) + PayPal token cache + Idempotency-Key/PayPal-Request-Id + rate-limit per-IP + bulkhead 16-wide cho mọi call gateway. Chi tiết capacity: `Docs/PAYMENT_CAPACITY_AND_LIMITS_ANALYSIS.md` §7.

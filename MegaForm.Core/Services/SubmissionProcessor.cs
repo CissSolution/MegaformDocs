@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using MegaForm.Core.Interfaces;
 using MegaForm.Core.i18n;
 using MegaForm.Core.Models;
+using MegaForm.Core.Payments;
 using MegaForm.Core.Rendering;
 using MegaForm.Core.Utilities;
 using MegaForm.Core.Workflow;
@@ -37,6 +38,12 @@ namespace MegaForm.Core.Services
         // the snapshot block below silently falls back to the legacy JSON
         // snapshot rows only.
         private readonly SubmissionIndexerService _reportingIndexer;
+        // [SecFix 2026-07-12 PAY-1] Submit-time payment gate. Optional at the
+        // ctor for DI compatibility, but NOT optional at runtime: a form that
+        // contains a payment field is REJECTED when no verifier is registered —
+        // the alternative is the original bypass (client-claimed "paid" saved
+        // verbatim). All four platforms register/construct one.
+        private readonly PaymentSubmissionVerifier _paymentVerifier;
 
         public SubmissionProcessor(
             IFormRepository formRepo,
@@ -50,7 +57,8 @@ namespace MegaForm.Core.Services
             IWorkflowEngine workflowEngine,
             ILocalizationProvider loc = null,
             DocumentRevisionService documentRevisionService = null,
-            SubmissionIndexerService reportingIndexer = null)
+            SubmissionIndexerService reportingIndexer = null,
+            PaymentSubmissionVerifier paymentVerifier = null)
         {
             _formRepo = formRepo ?? throw new ArgumentNullException(nameof(formRepo));
             _subRepo = subRepo ?? throw new ArgumentNullException(nameof(subRepo));
@@ -64,6 +72,7 @@ namespace MegaForm.Core.Services
             _workflowEngine = workflowEngine;
             _documentRevisionService = documentRevisionService;
             _reportingIndexer = reportingIndexer;
+            _paymentVerifier = paymentVerifier;
         }
 
         public SubmissionProcessor(
@@ -236,6 +245,48 @@ namespace MegaForm.Core.Services
                 {
                     if (field?.Type == "Captcha")
                         formData.Remove(field.Key);
+                }
+            }
+
+            // 9d. [SecFix 2026-07-12 PAY-1] Payment verification. The hidden payment
+            // input is client-controlled; before this gate, POSTing {"status":"paid"}
+            // submitted a paid-only form without paying. The verifier asks the
+            // gateway whether the money moved, checks amount/currency against the
+            // server-resolved price, blocks transactionId replay, and rewrites the
+            // stored value with the gateway-confirmed numbers. Runs BEFORE the save
+            // so an unpaid submission never reaches MF_Submissions. Fails CLOSED —
+            // including when the host forgot to register a verifier.
+            if (PaymentSubmissionVerifier.HasPaymentFields(schema))
+            {
+                if (_paymentVerifier == null)
+                {
+                    _log?.LogError(nameof(SubmissionProcessor),
+                        "Form " + formId + " contains a payment field but no PaymentSubmissionVerifier is registered on this host. Rejecting submission (fail closed).");
+                    result.Success = false;
+                    result.ErrorMessage = "Payment verification is not available. Please contact the site administrator.";
+                    return result;
+                }
+
+                PaymentVerificationOutcome paymentOutcome;
+                try
+                {
+                    paymentOutcome = await _paymentVerifier.VerifyAsync(form, schema, formData);
+                }
+                catch (Exception ex)
+                {
+                    _log?.LogError(nameof(SubmissionProcessor),
+                        "Payment verification threw for form " + formId + ": " + ex.Message, ex);
+                    result.Success = false;
+                    result.ErrorMessage = "Payment could not be verified right now. Please try again.";
+                    return result;
+                }
+
+                if (!paymentOutcome.Allowed)
+                {
+                    result.Success = false;
+                    result.ErrorMessage = paymentOutcome.ErrorMessage ?? "Payment could not be verified.";
+                    result.ValidationErrors = paymentOutcome.FieldErrors;
+                    return result;
                 }
             }
 

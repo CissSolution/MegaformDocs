@@ -45,6 +45,66 @@ namespace MegaForm.WebApi
                 defaults: new { controller = "UploadFile", action = "File" },
                 namespaces: new[] { "MegaForm.WebApi" }
             );
+            // [PAY-2 v20260712] Payment gateway endpoints (PaymentApiController).
+            // URL shape mirrors the other platforms' /api/megaform/payments/*;
+            // the unified payment widget maps its default URLs onto this prefix
+            // when it detects the DNN host.
+            mapRouteManager.MapHttpRoute(
+                moduleFolderName: "MegaForm",
+                routeName: "MegaFormPaymentsStripeCreateIntent",
+                url: "payments/stripe/create-intent",
+                defaults: new { controller = "Payment", action = "StripeCreateIntent" },
+                namespaces: new[] { "MegaForm.WebApi" }
+            );
+            mapRouteManager.MapHttpRoute(
+                moduleFolderName: "MegaForm",
+                routeName: "MegaFormPaymentsStripeConfirm",
+                url: "payments/stripe/confirm",
+                defaults: new { controller = "Payment", action = "StripeConfirm" },
+                namespaces: new[] { "MegaForm.WebApi" }
+            );
+            mapRouteManager.MapHttpRoute(
+                moduleFolderName: "MegaForm",
+                routeName: "MegaFormPaymentsStripeWebhook",
+                url: "payments/stripe/webhook",
+                defaults: new { controller = "Payment", action = "StripeWebhook" },
+                namespaces: new[] { "MegaForm.WebApi" }
+            );
+            mapRouteManager.MapHttpRoute(
+                moduleFolderName: "MegaForm",
+                routeName: "MegaFormPaymentsPayPalPublicConfig",
+                url: "payments/paypal/public-config",
+                defaults: new { controller = "Payment", action = "PayPalPublicConfig" },
+                namespaces: new[] { "MegaForm.WebApi" }
+            );
+            mapRouteManager.MapHttpRoute(
+                moduleFolderName: "MegaForm",
+                routeName: "MegaFormPaymentsPayPalTestCredentials",
+                url: "payments/paypal/test-credentials",
+                defaults: new { controller = "Payment", action = "PayPalTestCredentials" },
+                namespaces: new[] { "MegaForm.WebApi" }
+            );
+            mapRouteManager.MapHttpRoute(
+                moduleFolderName: "MegaForm",
+                routeName: "MegaFormPaymentsPayPalCreateOrder",
+                url: "payments/paypal/create-order",
+                defaults: new { controller = "Payment", action = "PayPalCreateOrder" },
+                namespaces: new[] { "MegaForm.WebApi" }
+            );
+            mapRouteManager.MapHttpRoute(
+                moduleFolderName: "MegaForm",
+                routeName: "MegaFormPaymentsPayPalCaptureOrder",
+                url: "payments/paypal/capture-order",
+                defaults: new { controller = "Payment", action = "PayPalCaptureOrder" },
+                namespaces: new[] { "MegaForm.WebApi" }
+            );
+            mapRouteManager.MapHttpRoute(
+                moduleFolderName: "MegaForm",
+                routeName: "MegaFormPaymentsPayPalWebhook",
+                url: "payments/paypal/webhook",
+                defaults: new { controller = "Payment", action = "PayPalWebhook" },
+                namespaces: new[] { "MegaForm.WebApi" }
+            );
             // Specific routes for settings sub-paths (must come before generic route)
             mapRouteManager.MapHttpRoute(
                 moduleFolderName: "MegaForm",

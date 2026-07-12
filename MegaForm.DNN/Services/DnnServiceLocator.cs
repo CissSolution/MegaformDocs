@@ -54,6 +54,14 @@ namespace MegaForm.DNN.Services
         // the SubmissionProcessor and exposed so the reporting controller
         // can drive a backfill / re-index on demand.
         public SubmissionIndexerService ReportingIndexer { get; }
+        // [PAY-2 v20260712] Payment stack. The verifier is handed to
+        // SubmissionProcessor below — without it any form containing a payment
+        // field is rejected (fail closed) instead of trusting the client's
+        // "status":"paid". The gateway client owns the bounded
+        // outbound-concurrency gate and the PayPal token cache (process-wide).
+        public MegaForm.Core.Payments.PaymentGatewayClient PaymentGateway { get; }
+        public MegaForm.Core.Payments.IPaymentGatewayStore PaymentStore { get; }
+        public MegaForm.Core.Payments.PaymentSubmissionVerifier PaymentVerifier { get; }
         public SubmissionProcessor SubmissionProcessor { get; }
 
         // [DnnStarterApps v20260518-01] App Builder primitives. DNN now exposes
@@ -145,11 +153,17 @@ namespace MegaForm.DNN.Services
                 return cn;
             });
 
+            PaymentGateway = new MegaForm.Core.Payments.PaymentGatewayClient();
+            PaymentStore = new DnnPaymentGatewayStore();
+            PaymentVerifier = new MegaForm.Core.Payments.PaymentSubmissionVerifier(
+                PaymentStore, SubmissionRepo, PaymentGateway, LogService);
+
             SubmissionProcessor = new SubmissionProcessor(
                 FormRepo, SubmissionRepo, DraftRepo, Phase2Repo,
                 EmailNotification, Webhook, UniqueId, LogService, WorkflowRuntime,
                 loc: null, documentRevisionService: null,
-                reportingIndexer: ReportingIndexer);
+                reportingIndexer: ReportingIndexer,
+                paymentVerifier: PaymentVerifier);
 
             // [DnnStarterApps v20260518-01] Construct the App Builder graph
             // and the Leave Request starter wired to the DNN platform

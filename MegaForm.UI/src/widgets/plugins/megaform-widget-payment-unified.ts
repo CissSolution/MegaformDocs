@@ -9,6 +9,11 @@
     provider: PaymentProvider;
     amountMode: AmountMode;
     amount: number;
+    // [PAY-2 v20260712] Server-enforced bounds for the variable amount modes
+    // (field / listenTotals). 0 = unset. The server rejects create-intent and
+    // submit-verification outside these bounds.
+    minAmount: number;
+    maxAmount: number;
     amountFieldKey: string;
     currency: string;
     locale: string;
@@ -86,6 +91,8 @@
       provider: 'both',
       amountMode: 'fixed',
       amount: 0,
+      minAmount: 0,
+      maxAmount: 0,
       amountFieldKey: '',
       currency: 'USD',
       locale: 'en-US',
@@ -133,6 +140,8 @@
       provider: asProvider(src.provider, d.provider),
       amountMode: asAmountMode(src.amountMode, d.amountMode),
       amount: toNumber(src.amount, d.amount),
+      minAmount: toNumber(src.minAmount, d.minAmount),
+      maxAmount: toNumber(src.maxAmount, d.maxAmount),
       amountFieldKey: toString(src.amountFieldKey, d.amountFieldKey),
       currency: toString(src.currency, d.currency).toUpperCase(),
       locale: toString(src.locale, d.locale),
@@ -148,14 +157,40 @@
       pendingLabel: toString(src.pendingLabel, d.pendingLabel),
       errorLabel: toString(src.errorLabel, d.errorLabel),
       stripePublishableKey: toString(src.stripePublishableKey, d.stripePublishableKey),
-      stripeCreateIntentUrl: toString(src.stripeCreateIntentUrl, d.stripeCreateIntentUrl),
+      stripeCreateIntentUrl: adaptPayUrl(toString(src.stripeCreateIntentUrl, d.stripeCreateIntentUrl)),
       stripeConfirmReturnUrl: toString(src.stripeConfirmReturnUrl, d.stripeConfirmReturnUrl),
       stripeAppearanceTheme: toString(src.stripeAppearanceTheme, d.stripeAppearanceTheme),
       paypalClientId: toString(src.paypalClientId, d.paypalClientId),
-      paypalCreateOrderUrl: toString(src.paypalCreateOrderUrl, d.paypalCreateOrderUrl),
-      paypalCaptureOrderUrl: toString(src.paypalCaptureOrderUrl, d.paypalCaptureOrderUrl),
+      paypalCreateOrderUrl: adaptPayUrl(toString(src.paypalCreateOrderUrl, d.paypalCreateOrderUrl)),
+      paypalCaptureOrderUrl: adaptPayUrl(toString(src.paypalCaptureOrderUrl, d.paypalCaptureOrderUrl)),
       paypalIntent: toString(src.paypalIntent, d.paypalIntent)
     };
+  }
+
+  // [PAY-2 v20260712] The default endpoint URLs are the ASP.NET-style
+  // /api/megaform/payments/* (Web + Oqtane). On DNN the same endpoints live
+  // under /DesktopModules/MegaForm/API/payments/* — detect the DNN host via
+  // the __MF_PLATFORM__ marker (or the ServicesFramework sniff) and remap.
+  function adaptPayUrl(url: string): string {
+    var u = String(url || '');
+    var marker = '/api/megaform/payments/';
+    var idx = u.indexOf(marker);
+    if (idx < 0) return u;
+    var base = dnnApiBase();
+    if (!base) return u;
+    return base + 'payments/' + u.substring(idx + marker.length);
+  }
+
+  function dnnApiBase(): string {
+    try {
+      var plat: AnyObj = (window as AnyObj).__MF_PLATFORM__;
+      var apiBase = plat && plat.apiBase ? String(plat.apiBase) : '';
+      if (apiBase && apiBase.toLowerCase().indexOf('desktopmodules') >= 0) return apiBase.replace(/\/?$/, '/');
+      if (apiBase) return '';
+      var w: AnyObj = window as AnyObj;
+      if (w.$ && w.$.ServicesFramework) return '/DesktopModules/MegaForm/API/';
+    } catch (_e) { /* fall through */ }
+    return '';
   }
 
   function getInitialValue(existingValue: any, props: PaymentProps): PaymentValue {
@@ -660,6 +695,8 @@
       '<div class="mfw-paycfg-mode" data-amount-mode="fixed">' + renderNumber('Fixed amount', 'amount', props.amount, '0.01') + '</div>',
       '<div class="mfw-paycfg-mode" data-amount-mode="field">' + renderSelect('Source field', 'amountFieldKey', props.amountFieldKey, fields) + '<div class="mfw-paycfg-help">Choose a Number, Calculator, hidden amount field, or pricing field.</div></div>',
       '<div class="mfw-paycfg-mode" data-amount-mode="listenTotals">' + renderText('Totals event name', 'listenEventName', props.listenEventName) + renderText('Event target selector', 'listenSelector', props.listenSelector) + '</div>',
+      '<div class="mfw-paycfg-mode" data-amount-mode="field">' + renderNumber('Minimum amount', 'minAmount', props.minAmount, '0.01') + renderNumber('Maximum amount', 'maxAmount', props.maxAmount, '0.01') + '<div class="mfw-paycfg-help">Server-enforced bounds for variable amounts (0 = no bound).</div></div>',
+      '<div class="mfw-paycfg-mode" data-amount-mode="listenTotals">' + renderNumber('Minimum amount', 'minAmount', props.minAmount, '0.01') + renderNumber('Maximum amount', 'maxAmount', props.maxAmount, '0.01') + '<div class="mfw-paycfg-help">Server-enforced bounds for variable amounts (0 = no bound).</div></div>',
       renderText('Currency', 'currency', props.currency),
       renderCheckbox('Require payment before submit', 'requiredPaid', props.requiredPaid),
       '</div>',
