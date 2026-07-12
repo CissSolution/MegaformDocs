@@ -6,13 +6,18 @@
 
 ---
 
-## 1. TRẠNG THÁI — 11 commit trên `feat/theme-designer-picker-wizard-gallery-1.7.45`, CHƯA push
+## 1. TRẠNG THÁI — 13 commit trên `feat/theme-designer-picker-wizard-gallery-1.7.45`, CHƯA push
 
 | Commit | Nội dung |
 |---|---|
+| `b842d61` | **release(oqtane) 1.7.103** — ĐÃ PACK XONG (chi tiết §2.4) |
+| `cd211ce` | docs: bàn giao (file này) |
 | `4c35a76` | **fix(workflow+inbox)**: 6 finding QA (chi tiết §2.2) |
 | `d974e57` | **fix(payment)**: server xác minh tiền thật + Oqtane/DNN có backend + capacity (chi tiết §2.1) |
 | `7412845`…`1830200` | (9 commit của phiên trước — xem `CLAUDE_HANDOFF_20260712_NEXT_SESSION.md`) |
+
+### ✅ PACKAGE ĐÃ CÓ: `MegaForm.Oqtane.Package/MegaForm.Oqtane.1.7.103.nupkg` (78.9 MB)
+Gói **đã tự copy vào Oqtane Packages folder** (pack.cmd làm bước cuối). `.nupkg` bị gitignore (đúng chuẩn) — chỉ nguồn được commit.
 
 ⚠️ **2 file Umbraco vẫn modified trong working tree KHÔNG phải của phiên này**
 (`Composers/MegaFormComposer.cs` + `Controllers/MegaFormApiController.cs` — policy `MegaFormBackOffice`, nghi Codex).
@@ -94,6 +99,28 @@ Dùng `curl.exe` + cookie jar; trong Git Bash phải `export MSYS_NO_PATHCONV=1`
 
 ---
 
+### 2.4 PACKAGE 1.7.103 (`b842d61`) — ĐÃ PACK + VERIFY
+
+- **Tabbed template giờ mới thật sự ship**: `tabbed-account-setup.json` có sẵn trong `Samples/.../DONEE/`
+  nhưng **chưa bao giờ được copy vào catalog mà gói mang theo** → không install nào từng thấy nó.
+  Đã copy vào `MegaForm.Oqtane.Server/wwwroot/Modules/MegaForm/Templates/`.
+  ⭐ Icon của nó là **mojibake `"??"`** → gallery chỉ render class `fa-*` và glyph thật, nên nó sẽ **in ra chữ "??"**.
+  Đã đổi thành `fa-table-columns` (icon codebase đã dùng sẵn).
+- **KB 328/329 giờ mới ship**: đã nằm sẵn trong `MegaForm.Core/Seed/ai-knowledge-seed.json`, chỉ cần **build lại Server DLL**
+  là embedded resource mang theo. (Gói 1.7.102 pack TRƯỚC commit KB → install mới từ 1.7.102 **vĩnh viễn** không có
+  vì seeder chỉ chạy khi bảng rỗng.)
+- **Version**: `ModuleInfo.Version = 1.7.103` **+ thêm `1.7.103` vào `ReleaseVersions`** (thiếu 1 trong 2 → Oqtane không swap DLL).
+  nuspec `<version>` + releaseNotes viết lại. AssetVersion đã ở **B396** từ trước.
+- **VERIFY BẰNG ARTIFACT, không tin build log** (script: `<scratchpad>/verify_nupkg.py`, **32/32 PASS**):
+  đủ 4 DLL × 2 TFM (net9 + net10); Server DLL **embed KB seed + chứa slug 328/329**; Shared DLL stamp **B396**;
+  Core DLL chứa đủ 5 class payment; gói có **17 template** (16 + tabbed hợp lệ, `tabbedForm=true`, 19 field);
+  JS trong gói là bản **rebuild** (payment widget có `adaptPayUrl` + min/max; my-inbox đọc `submittedByDisplayName`).
+
+⚠️ **Bẫy hạ tầng**: `MegaForm.Oqtane.Server/wwwroot/Modules/MegaForm/` **bị .gitignore** (bản deploy).
+16 template kia chỉ tồn tại **trên đĩa máy này**, không có trong git — nguồn canonical là `Samples/FormTemplates/Premium/DONEE/`
+(16/17 file đã tracked; file tabbed vừa được commit). **Clone sạch rồi pack sẽ ra gói THIẾU template** cho tới khi có ai đó
+copy DONEE → wwwroot. Không có script tự động làm việc này.
+
 ## 3. CÒN LẠI (chưa làm — việc của phiên sau)
 
 ### 3.1 🔴 Test bypass thanh toán end-to-end — **ĐANG DANG DỞ, làm tiếp trước tiên**
@@ -119,22 +146,17 @@ Key OpenAI tạm ở `<scratchpad>/openai-key-5123.txt` (**KHÔNG commit**). Cá
 Prompt test: *"ẩn cột Salary với mọi role trừ Finance, và khoá Amount chỉ Finance sửa được"*
 → kỳ vọng AI sinh `showIf`/`readOnlyIf` (tab Access), **không** sinh rule client, **không** chế CSS.
 
-### 3.4 Pack 1.7.103 + fresh install (owner yêu cầu, kèm tabbed template + KB)
-Đã điều tra xong đường đi, **chưa thực hiện**:
-- **Tabbed template**: file có sẵn `Samples/FormTemplates/Premium/DONEE/tabbed-account-setup.json` nhưng
-  **CHƯA nằm trong catalog ship**. Chỉ cần **copy** nó vào
-  `MegaForm.Oqtane.Server/wwwroot/Modules/MegaForm/Templates/` → nuspec wildcard tự ship, `BuilderTemplateCatalogService.SeedTemplatesIfEmpty`
-  tự copy sang App_Data lúc chạy lần đầu → hiện ở `/templates`. (Đừng bỏ vào `Samples/FormTemplates/Premium/` top-level:
-  `verify-package-complete.cjs` sẽ **abort pack** nếu thiếu `.facts.json` + `.guide.md` + seed SQL.)
-- **KB 328/329**: **đã có sẵn** trong `MegaForm.Core/Seed/ai-knowledge-seed.json` (dòng 4218, 4231) — chỉ cần **build lại**
-  Server DLL là embedded resource mang theo. (gói 1.7.102 pack TRƯỚC commit KB nên mới thiếu.)
-- **Bump version** (3 chỗ): `MegaForm.Oqtane.Package/MegaForm.Oqtane.nuspec:5` (+ releaseNotes:16);
-  `MegaForm.Oqtane.Client/ModuleInfo.cs:12` `Version = "1.7.103"` **và** thêm `,1.7.103` vào `ReleaseVersions` (dòng 14).
-  **AssetVersion đã ở B396 rồi** (phiên này bump).
-  ⚠️ **KHÔNG bump ModuleInfo.Version = DLL không swap khi cài.**
-- **Pack**: chạy `pack.cmd` ở root (nó tự build TS + Shared/Core/Client/Server Release net9+net10 + `nuget.exe pack … -NoPackageAnalysis`).
-- **Fresh install + QA regression** (owner yêu cầu "không được regression"): clone site mới, cài nupkg, verify:
-  16+1 template ở `/templates`, submit công khai, builder mở được, KB 328/329 có trong `MF_AI_Knowledge`, My Inbox hiển thị submitter thật.
+### 3.4 ~~Pack 1.7.103~~ ✅ ĐÃ XONG (§2.4) — còn **fresh install + QA regression**
+Gói `MegaForm.Oqtane.1.7.103.nupkg` (78.9 MB) đã sẵn sàng và đã tự copy vào Oqtane Packages folder.
+**Chưa làm: cài lên 1 site Oqtane SẠCH và QA chống regression** (owner yêu cầu "không được regression"). Checklist:
+- clone site Oqtane mới + appsettings SQL + silent install + bỏ nupkg vào `Packages/` → khởi động;
+- verify: **17 template** ở `/templates` (có "Tabbed Account Setup", icon hiện đúng không phải "??");
+- mở template tabbed → 6 tab bấm chuyển được, submit được;
+- submit form công khai + builder mở được (không regression);
+- `SELECT * FROM MF_AI_Knowledge WHERE Id IN (328,329)` → **có 2 dòng** (seeder chạy trên bảng rỗng);
+- My Inbox hiển thị **tên người nộp thật** (không phải "Unknown");
+- payment endpoint trả 400 fail-closed (không phải 404).
+⭐ **Chạy `pack.cmd` phải gọi `.\pack.cmd`** — máy này có `NoDefaultCurrentDirectoryInExePath=1` nên `pack.cmd` trơn = "not recognized".
 
 ### 3.5 Việc còn treo từ audit capacity (KHÔNG chặn payment)
 - ❌ **`IncrementUniqueId` không thread-safe** (audit owner đúng): Oqtane dùng `ConcurrentDictionary` **static in-memory**
