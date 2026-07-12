@@ -14,7 +14,7 @@ Phiên 07-12 đã **tự tay kiểm chứng** một số câu. Cái nào đã ve
 
 | # | Câu hỏi của khách | Trạng thái | Bằng chứng / việc phải làm |
 |---|---|---|---|
-| Q1 | Thu thập dữ liệu form rồi chuyển sang thanh toán có mượt không? | ⚠️ **CHƯA E2E** | Backend đã có + đã verify fail-closed. **CHƯA từng chạy 1 giao dịch thật với Stripe test key.** → §Q1 |
+| Q1 | Thu thập dữ liệu form rồi chuyển sang thanh toán có mượt không? | ✅ **ĐÃ E2E VỚI THẺ THẬT** (1.7.104) | Đã quẹt thẻ test thật, tiền chuyển thật, 5 đòn tấn công đều bị chặn → §Q1 |
 | Q2 | Xoá field đi thì dữ liệu cũ còn trong DB và còn truy cập được không? | ✅ **ĐÃ VERIFY** | Chạy thật trên :5123 — xem §Q2. Câu trả lời: **CÓ** (có 1 lưu ý quan trọng) |
 | Q3 | Phân quyền view/readonly ở mức field & section theo role/user | ✅ ĐÃ SHIP (1.7.101) | `showIf`/`readOnlyIf` + tab Access; enforce server-side |
 | Q4 | Một workflow áp cho nhiều form (hoặc dùng workflow phức tạp có sẵn) | ✅ ĐÃ SHIP | Workflow Library (`MF_FormWorkflows` mapping) |
@@ -71,35 +71,55 @@ Phải xoá ở **cả hai**. (Sửa qua builder UI thì không dính bẫy này
 
 ---
 
-## Q1 — THANH TOÁN: THU DỮ LIỆU RỒI CHUYỂN SANG TRẢ TIỀN (⚠️ PHẢI CHẠY THẬT TRƯỚC KHI VIẾT)
+## Q1 — THANH TOÁN: ✅ ĐÃ CHẠY THẬT VỚI THẺ THẬT (1.7.104)
 
 **Khách hỏi:** *"Thu thập dữ liệu form rồi chuyển tiếp sang quy trình thanh toán có dễ/mượt không?"*
 
-**Trạng thái thật:** 1.7.103 vừa làm cho payment **an toàn** và **có backend trên Oqtane/DNN lần đầu**.
-Nhưng phiên 07-12 **CHƯA CHẠY MỘT GIAO DỊCH THẬT NÀO** — mới chỉ verify endpoint tồn tại và fail-closed đúng.
-**KHÔNG ĐƯỢC viết "mượt mà, chỉ vài cú click" khi chưa tự tay trả tiền qua nó.**
+**Đã kiểm chứng E2E trên site sạch :5124** bằng Stripe test key thật của owner. Toàn bộ số liệu dưới đây là
+**đo thật, không suy luận** — dùng thẳng vào tài liệu được.
 
-### Việc bắt buộc trước khi viết
-1. Lấy **Stripe test key** (`pk_test_…` / `sk_test_…`) — hỏi owner hoặc tạo tài khoản Stripe test.
-2. :5124 (site 1.7.103 sạch) → Dashboard → **Payment Settings** → nhập key → Save.
-   (Endpoint mới của Oqtane: `POST /api/MegaForm/ModuleConfig/PaymentSettings`, chỉ Admin/Host.)
-3. Tạo form: vài field thường (tên, email) + **1 field Payment** (`amountMode: fixed`, `amount: 49.99`, `requiredPaid: true`).
-4. Publish → mở form public → điền → bấm Pay → dùng thẻ test `4242 4242 4242 4242`.
-5. **Quan sát và ghi lại đúng sự thật:** người dùng phải làm mấy bước? Form có bị reload không? Trả tiền xong
-   có phải bấm Submit lần nữa không? Nếu trả tiền xong mà bấm Submit lỗi → **đó là bug, phải sửa, không được giấu**.
-6. Kiểm tra DB: `DataJson` phải chứa `"verified":true` + số tiền **do gateway xác nhận**.
+### ⚠️ E2E ĐÃ TÌM RA 1 BUG NGHIÊM TRỌNG (đã vá → 1.7.104)
+**Mọi endpoint payment của Oqtane trong 1.7.103 đều đọc body RỖNG.** Oqtane không đăng ký Newtonsoft với MVC
+→ tham số `[FromBody] JObject` **bind = null**. Lưu key trả `"body required"`; create-intent/confirm/capture
+cũng không thấy gì. **Smoke test không bắt được** vì nó dừng ở check "chưa có key" — check này chạy **trước khi**
+đọc body. Endpoint *trông như còn sống trong khi đang điếc*.
+→ Vá: bind `[FromBody] JsonElement` rồi parse (đúng cách `MegaFormController.SaveForm` đã làm từ lâu).
+⭐ **Bài học ghi vào tài liệu nội bộ: chỉ E2E mới lộ ra loại lỗi này.**
 
-### Điểm bán hàng (nếu chạy đúng thì mới được viết)
-- Payment là **một field trong form**, không phải trang riêng → dữ liệu form và tiền đi cùng một lần nộp.
-- **Server tự xác minh với Stripe/PayPal** trước khi lưu: không ai submit được form "đã trả tiền" mà chưa trả.
-  (Trước 1.7.103, sửa 1 dòng JSON trong request là submit chùa được — đã bịt.)
-- Giá **do server tự tính lại từ schema**, không tin số của trình duyệt.
-- Chịu tải: hàng đợi giới hạn 16 call đồng thời ra gateway + rate-limit theo IP → burst 1000 người trả tiền cùng lúc
-  thì người dư nhận thông báo "thử lại" chứ **không sập server**.
+### Kết quả E2E (sau khi vá) — dùng nguyên si cho tài liệu
+| Bước | Kết quả thật |
+|---|---|
+| Lưu Stripe key qua Payment Settings (Oqtane) | ✅ 200; secret lưu `IsPrivate=1`, đọc lại **đã che** (`sk_test_…`) |
+| `create-intent` (ẩn danh, như khách vãng lai) | ✅ Tạo **PaymentIntent thật**: `pi_3TsL7V9…`, 49.99 USD |
+| Quẹt thẻ test `4242…` | ✅ Stripe: `status=succeeded`, `amount_received=4999` cents — **tiền chuyển thật** |
+| Nộp form với giao dịch đó | ✅ 200, submission #1; DataJson có **`"verified":true`** + số tiền **do gateway xác nhận** |
 
-### Test tiêu cực PHẢI quay vào GIF (đây là điểm mạnh nhất, khách rất thích)
-Dùng `curl` gửi thẳng submission với `{"status":"paid","transactionId":"pi_fake"}` → **server từ chối**.
-Cho khách thấy tận mắt là hệ thống không tin trình duyệt.
+### 🛡️ 5 ĐÒN TẤN CÔNG — TẤT CẢ ĐỀU BỊ CHẶN (đây là điểm bán hàng mạnh nhất, PHẢI quay GIF)
+| # | Tấn công | Server trả lời |
+|---|---|---|
+| 1 | Khai giá 1.00 USD trong khi schema là 49.99 | Server **tự dùng giá của mình** — Stripe xác nhận intent là **4999 cents** |
+| 2 | Khai `status:"paid"` với transactionId **bịa** | ❌ *"Payment could not be verified"* |
+| 3 | **Dùng lại** giao dịch đã trả cho lần nộp thứ hai | ❌ *"This payment has already been used by another submission"* |
+| 4 | Bỏ qua thanh toán (`requiredPaid=true`) | ❌ *"Payment is required before this form can be submitted"* |
+| 5 | Lấy giao dịch trả cho **form 1** đem nộp **form 2** | ❌ *"Payment could not be verified for this form"* |
+
+**DB sau 5 đòn: đúng 2 bản ghi, cả hai đều là người trả tiền thật, cả hai đều `gateway-verified`.
+Không bản ghi gian lận nào lọt.**
+
+⭐ **Chi tiết đáng khen (nên nói trong doc):** sau khi đòn #5 bị chặn, **chính giao dịch đó vẫn nộp được cho form 1**
+(submission #2) → guard **nhả đặt chỗ khi verify thất bại**, người trả tiền thật **không bao giờ bị khoá nhầm**.
+
+### Điểm bán hàng (giờ đã có quyền viết)
+- Payment là **một field trong form**, không phải trang riêng → dữ liệu form và tiền đi **cùng một lần nộp**.
+- **Server tự hỏi lại Stripe/PayPal** trước khi lưu — không tin trình duyệt một chữ nào.
+- Giá **server tự tính lại từ schema**.
+- Chịu tải: hàng đợi 16 call đồng thời + rate-limit theo IP → burst lớn thì người dư nhận "thử lại", **không sập**.
+  (⚠️ vẫn **chưa load test 1000 đồng thời** — đừng ghi con số.)
+
+### Cách tái hiện để quay GIF
+Script/lệnh đã dùng nằm trong lịch sử phiên 07-12. Tóm tắt: nạp key → tạo form fixed 49.99 requiredPaid →
+`create-intent` → confirm bằng `pm_card_visa` (hoặc quẹt `4242 4242 4242 4242` trên UI) → submit.
+**GIF `06-payment-bypass-blocked.gif` nên quay đúng 5 đòn ở bảng trên** — khách rất thích thấy tận mắt.
 
 ---
 
