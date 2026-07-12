@@ -4,8 +4,12 @@
       href: add-to-page.md
     - name: Creating Forms
       href: creating-forms.md
+    - name: Form Templates
+      href: form-templates.md
     - name: Form Builder
       href: form-builder.md
+    - name: Field Permissions
+      href: field-permissions.md
     - name: Controls & Widgets
       href: widgets-reference.md
     - name: Drag & Drop Layout
@@ -16,8 +20,14 @@
       href: after-submission.md
     - name: Submissions & My Inbox
       href: submissions-inbox.md
+    - name: Submissions Grid — Filters at Scale
+      href: submissions-grid.md
     - name: Workflow
       href: workflow.md
+    - name: Approval Workflows & Inbox
+      href: workflow-approvals.md
+    - name: Workflow Library
+      href: workflow-library.md
     - name: Storage & Integrations
       href: storage-options.md
     - name: Multi-language

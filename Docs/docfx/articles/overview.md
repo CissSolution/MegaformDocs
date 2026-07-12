@@ -78,3 +78,16 @@ Both paths are covered in [Installation](installation.md).
 
 `MegaForm.Sdk` multi-targets **net472**, **net8.0**, **net9.0**, and **net10.0**, so the same
 package works on classic DNN (net472) and modern Oqtane (net10.0).
+
+## Product capability walkthroughs
+
+Evaluating MegaForm rather than coding against it? Each of these pages answers one recurring
+evaluation question, with a screen recording of the real product:
+
+| Question | Walkthrough |
+|---|---|
+| Can fields or sections be hidden / locked per role or user? | [Field Permissions](field-permissions.md) |
+| Can one workflow be reused across many forms? Can complex flows be designed visually? | [Workflow Library](workflow-library.md) |
+| Do approval tasks reach the right person's inbox automatically? | [Approval Workflows & Inbox](workflow-approvals.md) |
+| Can the data grid be searched and filtered, at scale? | [Submissions Grid](submissions-grid.md) |
+| Is there a tabbed (free-navigation) form template? | [Form Templates](form-templates.md) |
