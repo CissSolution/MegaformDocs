@@ -74,6 +74,39 @@ namespace MegaForm.Oqtane.Server.Controllers
                     };
                 }
 
+                // [Submitter fix 2026-07-12] The task rows don't carry the submitter
+                // (fixed columns, no schema change on live installs), and the client
+                // used to fall back to candidateUsers[0] — an APPROVER — hence
+                // "Unknown"/wrong names. Resolve submission.UserId → real user here;
+                // works for existing tasks too, not only ones created after the fix.
+                var submitters = new Dictionary<string, object>();
+                var submissionIds = board.Incoming
+                    .Concat(board.InProgress)
+                    .Concat(board.Completed)
+                    .Select(t => t.SubmissionId)
+                    .Where(id => id > 0)
+                    .Distinct()
+                    .ToList();
+                foreach (var sid in submissionIds)
+                {
+                    try
+                    {
+                        var sub = _subRepo.Get(sid);
+                        if (sub == null || !sub.UserId.HasValue || sub.UserId.Value <= 0) continue;
+                        var submitterUser = _users.GetUser(sub.UserId.Value);
+                        if (submitterUser == null) continue;
+                        submitters[sid.ToString()] = new
+                        {
+                            userId = submitterUser.UserId,
+                            userName = submitterUser.Username ?? string.Empty,
+                            displayName = !string.IsNullOrWhiteSpace(submitterUser.DisplayName)
+                                ? submitterUser.DisplayName
+                                : (submitterUser.Username ?? string.Empty)
+                        };
+                    }
+                    catch { /* one bad submission must not blank the whole board */ }
+                }
+
                 return JsonOk(new
                 {
                     user = new
@@ -94,6 +127,7 @@ namespace MegaForm.Oqtane.Server.Controllers
                     inProgress = board.InProgress,
                     completed = board.Completed,
                     forms,
+                    submitters,
                     generatedAt = board.GeneratedAt
                 });
             }

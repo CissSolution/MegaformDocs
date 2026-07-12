@@ -760,6 +760,19 @@ namespace MegaForm.Web.Controllers
             DateTime? dateFrom = null, DateTime? dateTo = null, int pageIndex = 0, int page = -1, int pageSize = 50)
         {
             if (page >= 0 && pageIndex == 0) pageIndex = page;
+            // [WebRLS v20260712] Plain [Authorize] let ANY logged-in user list every
+            // submission. Gate mirrors Oqtane: admin, or explicit view/manage rules.
+            var actor = GetSubmissionActorWithRoles();
+            var permissions = new PermissionService(_phase2Repo);
+            if (formId > 0)
+            {
+                if (!CanUseSubmissionManagement(formId, actor, permissions))
+                    return StatusCode(403, new { error = "You do not have permission to view submissions for this form." });
+            }
+            else if (!IsSubmissionAdmin(actor))
+            {
+                return StatusCode(403, new { error = "You do not have permission to view submissions." });
+            }
             var result = _submissionQueries.List(new SubmissionListQuery
             {
                 FormId = formId,
@@ -790,6 +803,16 @@ namespace MegaForm.Web.Controllers
         [Authorize]
         public IActionResult GetSubmission(int submissionId)
         {
+            // [WebRLS v20260712] Row-level gate (admin -> task holder -> explicit
+            // permission rules). The row is resolved server-side by id — the gate
+            // never trusts anything from the request beyond the id itself.
+            var actorRls = GetSubmissionActorWithRoles();
+            var permissionsRls = new PermissionService(_phase2Repo);
+            var rowRls = _subRepo.Get(submissionId);
+            if (rowRls == null) return NotFound();
+            if (!CanViewSubmissionRow(rowRls.FormId, rowRls, actorRls, permissionsRls))
+                return StatusCode(403, new { error = "You do not have permission to view this submission." });
+
             var detail = _submissionQueries.GetDetail(submissionId);
             if (detail == null) return NotFound();
 
@@ -813,6 +836,11 @@ namespace MegaForm.Web.Controllers
         {
             int id    = body.Value<int>("submissionId");
             string st = body.Value<string>("status");
+            // [WebRLS v20260712] formId comes from the ROW, not the request.
+            var row = _subRepo.Get(id);
+            if (row == null) return NotFound();
+            if (!CanMutateSubmissions(row.FormId, GetSubmissionActorWithRoles(), new PermissionService(_phase2Repo)))
+                return StatusCode(403, new { error = "You do not have permission to modify this submission." });
             _subRepo.UpdateStatus(id, st);
             return Ok(new { success = true });
         }
@@ -822,6 +850,10 @@ namespace MegaForm.Web.Controllers
         public IActionResult UpdateSubmissionData(int submissionId, [FromBody] JObject body)
         {
             if (submissionId <= 0) return BadRequest(new { error = "submissionId required" });
+            var row = _subRepo.Get(submissionId);
+            if (row == null) return NotFound();
+            if (!CanMutateSubmissions(row.FormId, GetSubmissionActorWithRoles(), new PermissionService(_phase2Repo)))
+                return StatusCode(403, new { error = "You do not have permission to modify this submission." });
             _subRepo.UpdateData(submissionId, body != null ? body.ToString() : "{}");
             return Ok(new { success = true });
         }
@@ -831,6 +863,10 @@ namespace MegaForm.Web.Controllers
         public IActionResult DeleteSubmission([FromBody] JObject body)
         {
             int id = body.Value<int>("submissionId");
+            var row = _subRepo.Get(id);
+            if (row == null) return NotFound();
+            if (!CanMutateSubmissions(row.FormId, GetSubmissionActorWithRoles(), new PermissionService(_phase2Repo), delete: true))
+                return StatusCode(403, new { error = "You do not have permission to delete this submission." });
             _subRepo.Delete(id);
             return Ok(new { success = true });
         }
@@ -841,6 +877,8 @@ namespace MegaForm.Web.Controllers
         {
             int formId  = body.Value<int>("formId");
             var ids     = body["ids"]?.ToObject<int[]>() ?? Array.Empty<int>();
+            if (!CanMutateSubmissions(formId, GetSubmissionActorWithRoles(), new PermissionService(_phase2Repo), delete: true))
+                return StatusCode(403, new { error = "You do not have permission to delete submissions for this form." });
             _subRepo.BulkDelete(formId, ids);
             return Ok(new { success = true, deleted = ids.Length });
         }
@@ -861,6 +899,10 @@ namespace MegaForm.Web.Controllers
         public IActionResult UpdateSubmissionStatusRest(int submissionId, [FromBody] JObject body)
         {
             string st = body?.Value<string>("status") ?? body?.Value<string>("Status");
+            var row = _subRepo.Get(submissionId);
+            if (row == null) return NotFound();
+            if (!CanMutateSubmissions(row.FormId, GetSubmissionActorWithRoles(), new PermissionService(_phase2Repo)))
+                return StatusCode(403, new { error = "You do not have permission to modify this submission." });
             _subRepo.UpdateStatus(submissionId, st);
             return Ok(new { success = true });
         }
@@ -1656,6 +1698,9 @@ namespace MegaForm.Web.Controllers
         [Authorize]
         public IActionResult ExportSubmissions(int formId, string format = "csv")
         {
+            // [WebRLS v20260712] Export dumps every row — same gate as the list.
+            if (!CanUseSubmissionManagement(formId, GetSubmissionActorWithRoles(), new PermissionService(_phase2Repo)))
+                return StatusCode(403, new { error = "You do not have permission to export submissions for this form." });
             var form = _formRepo.GetForm(formId);
             if (form == null) return NotFound(new { error = "form not found" });
 

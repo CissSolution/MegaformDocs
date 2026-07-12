@@ -45,6 +45,10 @@ namespace MegaForm.Core.Models
         public string PrincipalType { get; set; }
         public string PrincipalId { get; set; }
         public string DisplayName { get; set; }
+        // [Picker fix 2026-07-12] Stable login name for user principals. The
+        // workflow principal picker stores THIS (not the display name) as the
+        // candidate, so claim/assign matching keys off a real username.
+        public string UserName { get; set; }
         public string Description { get; set; }
         public string RoleName { get; set; }
         public int? UserId { get; set; }

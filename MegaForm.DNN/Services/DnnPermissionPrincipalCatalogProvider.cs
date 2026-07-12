@@ -47,6 +47,7 @@ namespace MegaForm.DNN.Services
                     PrincipalType = "user",
                     PrincipalId = user.UserID.ToString(),
                     UserId = user.UserID,
+                    UserName = user.Username ?? string.Empty,
                     DisplayName = !string.IsNullOrWhiteSpace(user.DisplayName) ? user.DisplayName : user.Username,
                     Description = !string.IsNullOrWhiteSpace(user.Email) ? user.Email : user.Username,
                     IsUser = true

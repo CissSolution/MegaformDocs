@@ -483,6 +483,14 @@ function buildActionBar(ctx: BoardContext, task: InboxTaskItem): HTMLElement {
     // OPEN — the server rejects all five on a completed task ("Task is not open." → 400),
     // so offering Forward/Comment on completed tasks just manufactured errors. Export always.
     if (pending) {
+      // [Claim 3-pane 2026-07-12] The drawer/standalone views offered Claim on an
+      // unclaimed claimable task, but the 3-pane bar skipped straight to Approve —
+      // nobody could take ownership without opening the drawer. Same gate as
+      // drawer.ts: pending status + claimable + not yet assigned.
+      if (task.source.allowClaim && task.source.status === 1 && !task.source.assignedUserId) {
+        mk(bar, btn('mf-mi3-act-btn mf-mi3-act-claim', `${ic('hand', 14)}${T('inbox.claim', 'Claim')}`, () =>
+          ctx.onQuickAction('claim', task.source)));
+      }
       mk(bar,
         mkAct('approve', 'thumbsUp', T('inbox.approve', 'Approve'), 'mf-mi3-act-approve'),
         mkAct('reject', 'thumbsDown', T('inbox.reject', 'Reject'), 'mf-mi3-act-reject'),
@@ -861,10 +869,17 @@ function sortTasks(list: InboxTaskItem[], sortBy: InboxSort): InboxTaskItem[] {
   return arr;
 }
 
+// [Badge fix 2026-07-12] "Assigned to Me" used to count every 'pending' task —
+// including Incoming ones nobody has claimed yet. Assignment is a fact
+// (assignedUserId on the raw task), not a derived status.
+function isAssignedOpen(t: InboxTaskItem): boolean {
+  return t.source.assignedUserId != null && !['done', 'approved', 'rejected'].includes(t.status);
+}
+
 function countByView(tasks: InboxTaskItem[]): Record<InboxView, number> {
   return {
     inbox: tasks.filter((t) => !['done', 'approved', 'rejected'].includes(t.status)).length,
-    assigned: tasks.filter((t) => t.status === 'pending').length,
+    assigned: tasks.filter(isAssignedOpen).length,
     forwarded: tasks.filter((t) => t.status === 'forwarded').length,
     completed: tasks.filter((t) => ['done', 'approved', 'rejected'].includes(t.status)).length,
     starred: tasks.filter((t) => t.isStarred).length,
@@ -876,7 +891,7 @@ function filterTasks(ctx: BoardContext): InboxTaskItem[] {
   let list: InboxTaskItem[] = [];
   switch (ctx.activeView) {
     case 'inbox': list = all.filter((t) => !['done', 'approved', 'rejected'].includes(t.status)); break;
-    case 'assigned': list = all.filter((t) => t.status === 'pending'); break;
+    case 'assigned': list = all.filter(isAssignedOpen); break;
     case 'forwarded': list = all.filter((t) => t.status === 'forwarded'); break;
     case 'completed': list = all.filter((t) => ['done', 'approved', 'rejected'].includes(t.status)); break;
     case 'starred': list = all.filter((t) => t.isStarred); break;

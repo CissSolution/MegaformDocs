@@ -50,6 +50,11 @@ export interface WorkflowInboxTask {
   claimedAt: string | null;
   dueAt: string | null;
   completedAt: string | null;
+  // [Submitter fix 2026-07-12] Stamped client-side from MyInboxResult.submitters
+  // (the server resolves submission.UserId → real user). Optional: absent for
+  // anonymous submissions and on older payloads.
+  submittedByUserName?: string;
+  submittedByDisplayName?: string;
 }
 
 export interface WorkflowInboxTaskAction {
@@ -116,6 +121,9 @@ export interface MyInboxResult {
   inProgress: WorkflowInboxTask[];
   completed: WorkflowInboxTask[];
   forms: Record<string, MyInboxFormRef>;
+  // [Submitter fix 2026-07-12] submissionId (string key) → who actually
+  // submitted, resolved server-side from submission.UserId.
+  submitters?: Record<string, { userId?: number; userName?: string; displayName?: string }>;
   generatedAt: string;
 }
 

@@ -475,9 +475,20 @@ namespace MegaForm.Core.Services
                         var workflowData = new Dictionary<string, object>(formData, StringComparer.OrdinalIgnoreCase);
                         workflowData["__portalId"] = form.PortalId;
                         workflowData["__actorUserId"] = userId.HasValue ? userId.Value : 0;
-                        workflowData["__actorUserName"] = userId.HasValue ? ("user-" + userId.Value) : "anonymous";
-                        workflowData["__actorDisplayName"] = userId.HasValue ? ("user-" + userId.Value) : "anonymous";
-                        workflowData["__actorEmail"] = string.Empty;
+                        // [Submitter fix 2026-07-12] The real actor was already in scope
+                        // (controllers pass a full UserContext) but these keys stamped a
+                        // "user-<id>" placeholder — which is why approval tasks showed the
+                        // submitter as "Unknown". Use the actor; keep the placeholder only
+                        // as the last resort.
+                        workflowData["__actorUserName"] = !string.IsNullOrWhiteSpace(actor?.UserName)
+                            ? actor.UserName
+                            : (userId.HasValue ? ("user-" + userId.Value) : "anonymous");
+                        workflowData["__actorDisplayName"] = !string.IsNullOrWhiteSpace(actor?.DisplayName)
+                            ? actor.DisplayName
+                            : (!string.IsNullOrWhiteSpace(actor?.UserName)
+                                ? actor.UserName
+                                : (userId.HasValue ? ("user-" + userId.Value) : "anonymous"));
+                        workflowData["__actorEmail"] = actor?.Email ?? string.Empty;
 
                         _log?.LogInfo(nameof(SubmissionProcessor),
                             "Starting applied workflow for form " + formId + " submission " + submissionId + ".");

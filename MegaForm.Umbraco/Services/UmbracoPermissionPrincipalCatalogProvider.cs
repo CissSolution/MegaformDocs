@@ -5,13 +5,18 @@ using MegaForm.Core.Models;
 using MegaForm.Core.Services;
 using Microsoft.AspNetCore.Http;
 
-namespace MegaForm.Web.Services
+namespace MegaForm.Umbraco.Services
 {
-    public class WebPermissionPrincipalCatalogProvider : IPermissionPrincipalCatalogProvider
+    /// <summary>
+    /// Umbraco implementation of IPermissionPrincipalCatalogProvider.
+    /// Phase 1: returns principals from the current HTTP context claims.
+    /// Phase 2/3: can be extended to query Umbraco users/groups.
+    /// </summary>
+    public class UmbracoPermissionPrincipalCatalogProvider : IPermissionPrincipalCatalogProvider
     {
         private readonly IHttpContextAccessor _http;
 
-        public WebPermissionPrincipalCatalogProvider(IHttpContextAccessor http)
+        public UmbracoPermissionPrincipalCatalogProvider(IHttpContextAccessor http)
         {
             _http = http;
         }

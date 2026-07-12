@@ -56,8 +56,10 @@ function selectionKeyForPrincipal(p: PermissionPrincipal, kind: 'role' | 'user')
   if (kind === 'role') {
     return String(p.roleName || p.principalId || p.displayName || '').trim();
   }
-  // For users, store the displayName (or email-like principalId) — same convention as freetext today.
-  return String(p.displayName || p.principalId || '').trim();
+  // [Picker fix 2026-07-12] Store the stable USERNAME (emp.hoa), not the
+  // display name ("Hoa (Employee)") — display strings drift and make weak
+  // claim/assign matches. displayName stays as a legacy fallback only.
+  return String(p.userName || p.displayName || p.principalId || '').trim();
 }
 
 interface PickerProps {

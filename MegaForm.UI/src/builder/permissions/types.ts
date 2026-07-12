@@ -29,6 +29,8 @@ export interface PermissionPrincipal {
   principalType: string;
   principalId: string;
   displayName: string;
+  // [Picker fix 2026-07-12] stable login name for user principals (emp.hoa).
+  userName?: string;
   description?: string;
   roleName?: string;
   userId?: number | null;

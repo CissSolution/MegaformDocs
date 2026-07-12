@@ -179,6 +179,24 @@ namespace MegaForm.Core.Services.Workflow
                 catch { }
             }
 
+            // [Submitter fix 2026-07-12] The case used to record the NUMERIC user id
+            // as the "name" ("3"). The submit pipeline now stamps the real actor into
+            // the workflow data (__actorUserName/__actorDisplayName) — prefer those.
+            string startedByName = string.Empty;
+            if (ctx.FormData != null)
+            {
+                object raw;
+                if (ctx.FormData.TryGetValue("__actorDisplayName", out raw) && raw != null)
+                    startedByName = raw.ToString();
+                if (string.IsNullOrWhiteSpace(startedByName) &&
+                    ctx.FormData.TryGetValue("__actorUserName", out raw) && raw != null)
+                    startedByName = raw.ToString();
+                if (startedByName == "anonymous" || startedByName.StartsWith("user-", StringComparison.Ordinal))
+                    startedByName = string.Empty;
+            }
+            if (string.IsNullOrWhiteSpace(startedByName) && submission != null && submission.UserId.HasValue)
+                startedByName = submission.UserId.Value.ToString();
+
             return new WorkflowCaseInstance
             {
                 ExecutionId = ctx.ExecutionId,
@@ -186,9 +204,7 @@ namespace MegaForm.Core.Services.Workflow
                 SubmissionId = ctx.SubmissionId,
                 CurrentNodeId = node != null ? node.Id : string.Empty,
                 StartedByUserId = submission != null ? submission.UserId : null,
-                StartedByUserName = submission != null && submission.UserId.HasValue
-                    ? submission.UserId.Value.ToString()
-                    : string.Empty,
+                StartedByUserName = startedByName ?? string.Empty,
                 Status = WorkflowCaseStatus.Waiting
             };
         }

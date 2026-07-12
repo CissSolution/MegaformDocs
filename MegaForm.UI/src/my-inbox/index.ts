@@ -157,6 +157,16 @@ export function initMyInbox(root: HTMLElement): void {
     busy = true; error = ''; render();
     try {
       data = await api.getMyInbox(25);
+      // [Submitter fix 2026-07-12] Stamp the server-resolved submitter onto each
+      // task so adaptTask stops guessing from candidateUsers (the approvers).
+      const submitters = data?.submitters || {};
+      for (const t of [...(data?.incoming || []), ...(data?.inProgress || []), ...(data?.completed || [])]) {
+        const s = submitters[String(t.submissionId)];
+        if (s) {
+          t.submittedByUserName = s.userName || '';
+          t.submittedByDisplayName = s.displayName || s.userName || '';
+        }
+      }
       // If the active tab is empty but another has items, surface the busiest one.
       if (!tasksFor(tab).length) {
         const order: Array<'incoming' | 'inProgress' | 'completed'> = ['inProgress', 'incoming', 'completed'];

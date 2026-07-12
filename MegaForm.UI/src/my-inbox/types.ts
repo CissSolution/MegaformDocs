@@ -174,7 +174,11 @@ export function adaptTask(
     form: formTitle || `Form #${task.formId}`,
     formColor: deriveFormColor(task.formId),
     subject: task.nodeLabel || 'Task',
-    submitter: task.candidateUsers?.[0] || 'Unknown',
+    // [Submitter fix 2026-07-12] candidateUsers are the APPROVERS, never the
+    // submitter — that old fallback is why the inbox said "Unknown" (or worse,
+    // named an approver) for logged-in submitters. The server now resolves the
+    // real submitter from submission.UserId (stamped in load()).
+    submitter: task.submittedByDisplayName || task.submittedByUserName || 'Unknown',
     submitterEmail: '',
     assignedTo: task.assignedDisplayName || task.assignedUserName || '',
     priority,

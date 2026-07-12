@@ -79,11 +79,18 @@ function isSkippableField(snapType: string, value: string): boolean {
 export function mapFields(detail: SubmissionDetailInfo): InboxField[] {
   const snaps: SubmissionFieldSnapshot[] = Array.isArray(detail.fieldSnapshots) ? detail.fieldSnapshots : [];
   const out: InboxField[] = [];
+  // [Dedup 2026-07-12] Snapshots can repeat a field (composite widgets emit the
+  // combined value alongside parts; legacy double-writes) — without dedup the
+  // Details pane rendered those answers twice.
+  const seen = new Set<string>();
   for (const s of snaps) {
     const label = (s.label || s.key || '').trim();
     const value = (s.displayValue != null && s.displayValue !== '') ? String(s.displayValue) : str(s.value);
     if (!label) continue;
     if (isSkippableField(String(s.type || ''), value)) continue;
+    const dedupKey = String(s.key || label).trim().toLowerCase();
+    if (seen.has(dedupKey)) continue;
+    seen.add(dedupKey);
     const ftype = String(s.type || '').toLowerCase();
     out.push({ label, value, type: inferFieldType(label, value, ftype), fieldType: ftype });
   }
