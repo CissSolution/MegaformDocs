@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
@@ -52,10 +53,21 @@ namespace MegaForm.Oqtane.Server.Controllers
 
         [HttpPost("ModuleConfig/PaymentSettings")]
         [Authorize]
-        public IActionResult SavePaymentSettings([FromBody] JObject body)
+        public IActionResult SavePaymentSettings([FromBody] JsonElement bodyElement)
         {
             if (!IsPaymentSettingsAdmin()) return Forbid();
-            if (body == null) return BadRequest(new { error = "body required" });
+            // STJ cannot bind a Newtonsoft JObject on Oqtane (no AddNewtonsoftJson)
+            // — a JObject parameter would arrive null and every save would 400.
+            JObject body = null;
+            if (bodyElement.ValueKind != JsonValueKind.Undefined && bodyElement.ValueKind != JsonValueKind.Null)
+            {
+                var raw = bodyElement.GetRawText();
+                if (!string.IsNullOrWhiteSpace(raw))
+                {
+                    try { body = JObject.Parse(raw); } catch { body = null; }
+                }
+            }
+            if (body == null) return BadRequest(new { error = "Request body is empty or not valid JSON." });
             int siteId = ResolvePaymentSiteId();
 
             void Save(string key, string value, bool isPrivate)

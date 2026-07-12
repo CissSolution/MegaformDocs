@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,9 +26,14 @@ namespace MegaForm.Oqtane.Server.Controllers
     /// by Stripe/PayPal servers which cannot carry an antiforgery token —
     /// they authenticate via signature verification instead).
     ///
-    /// STJ trap guard: every response body here is a Newtonsoft JObject
-    /// (PayPal passthrough fields are JTokens), so responses are serialized
-    /// explicitly with Newtonsoft via JsonPayload() — never bare Ok().
+    /// STJ trap, BOTH directions (this bit is easy to get wrong):
+    ///  • RESPONSE — payloads carry Newtonsoft JTokens (PayPal passthrough), so
+    ///    they are serialized explicitly with Newtonsoft via JsonPayload(),
+    ///    never bare Ok().
+    ///  • REQUEST — Oqtane does NOT call .AddNewtonsoftJson(), so a
+    ///    [FromBody] JObject parameter binds as NULL and the endpoint sees an
+    ///    empty body. Bind [FromBody] JsonElement and parse it, exactly as
+    ///    MegaFormController.SaveForm does.
     /// </summary>
     [Route("api/megaform/payments")]
     public class PaymentController : ControllerBase
@@ -51,8 +57,10 @@ namespace MegaForm.Oqtane.Server.Controllers
         [HttpPost("stripe/create-intent")]
         [AllowAnonymous]
         [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> StripeCreateIntent([FromBody] JObject body)
+        public async Task<IActionResult> StripeCreateIntent([FromBody] JsonElement bodyElement)
         {
+            var body = ParseBody(bodyElement);
+            if (body == null) return JsonPayload(PaymentApiResult.Error(400, "Request body is empty or not valid JSON."));
             var result = await _payments.StripeCreateIntentAsync(ResolveSiteId(body), body, ClientIp());
             return JsonPayload(result);
         }
@@ -60,8 +68,10 @@ namespace MegaForm.Oqtane.Server.Controllers
         [HttpPost("stripe/confirm")]
         [AllowAnonymous]
         [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> StripeConfirm([FromBody] JObject body)
+        public async Task<IActionResult> StripeConfirm([FromBody] JsonElement bodyElement)
         {
+            var body = ParseBody(bodyElement);
+            if (body == null) return JsonPayload(PaymentApiResult.Error(400, "Request body is empty or not valid JSON."));
             var result = await _payments.StripeConfirmAsync(ResolveSiteId(body), body, ClientIp());
             return JsonPayload(result);
         }
@@ -76,8 +86,10 @@ namespace MegaForm.Oqtane.Server.Controllers
         [HttpPost("paypal/create-order")]
         [AllowAnonymous]
         [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> PayPalCreateOrder([FromBody] JObject body)
+        public async Task<IActionResult> PayPalCreateOrder([FromBody] JsonElement bodyElement)
         {
+            var body = ParseBody(bodyElement);
+            if (body == null) return JsonPayload(PaymentApiResult.Error(400, "Request body is empty or not valid JSON."));
             var result = await _payments.PayPalCreateOrderAsync(ResolveSiteId(body), body, ClientIp());
             return JsonPayload(result);
         }
@@ -85,8 +97,10 @@ namespace MegaForm.Oqtane.Server.Controllers
         [HttpPost("paypal/capture-order")]
         [AllowAnonymous]
         [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> PayPalCaptureOrder([FromBody] JObject body)
+        public async Task<IActionResult> PayPalCaptureOrder([FromBody] JsonElement bodyElement)
         {
+            var body = ParseBody(bodyElement);
+            if (body == null) return JsonPayload(PaymentApiResult.Error(400, "Request body is empty or not valid JSON."));
             var result = await _payments.PayPalCaptureOrderAsync(ResolveSiteId(body), body, ClientIp());
             return JsonPayload(result);
         }
@@ -96,11 +110,12 @@ namespace MegaForm.Oqtane.Server.Controllers
         [HttpPost("paypal/test-credentials")]
         [Authorize]
         [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> PayPalTestCredentials([FromBody] JObject body)
+        public async Task<IActionResult> PayPalTestCredentials([FromBody] JsonElement bodyElement)
         {
             // Accepts credential overrides from the body → admin only.
             if (!User.IsInRole(RoleNames.Admin) && !User.IsInRole(RoleNames.Host))
                 return Forbid();
+            var body = ParseBody(bodyElement) ?? new JObject();
             var result = await _payments.PayPalTestCredentialsAsync(ResolveSiteId(body), body);
             return JsonPayload(result);
         }
@@ -179,6 +194,19 @@ namespace MegaForm.Oqtane.Server.Controllers
         {
             try { return HttpContext.Connection.RemoteIpAddress?.ToString() ?? "?"; }
             catch { return "?"; }
+        }
+
+        /// <summary>System.Text.Json (Oqtane's serializer) cannot bind a Newtonsoft
+        /// JObject — the parameter arrives null. Bind the native JsonElement and
+        /// re-parse, so the shared Core service keeps its JObject contract.</summary>
+        private static JObject ParseBody(JsonElement bodyElement)
+        {
+            if (bodyElement.ValueKind == JsonValueKind.Undefined || bodyElement.ValueKind == JsonValueKind.Null)
+                return null;
+            var raw = bodyElement.GetRawText();
+            if (string.IsNullOrWhiteSpace(raw)) return null;
+            try { return JObject.Parse(raw); }
+            catch { return null; }
         }
 
         /// <summary>Newtonsoft-serialized response — [reference_oqtane_stj_no_raw_jobject]
