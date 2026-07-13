@@ -36,9 +36,10 @@ dropdowns**. A dropdown becomes SQL-driven through its field properties:
 ```
 
 The first selected column is the stored value, the second is the label (the Currency dropdown
-uses ``CurrencyName + ' (' + Symbol + ')'`` for labels like *Vietnamese Dong (₫)*). Options are
-fetched live per render — add a row to `dbo.Country` and it appears on the next load. Queries are
-SELECT-only, run server-side on the named connection, and support `:field` tokens for
+uses ``CurrencyName + ' (' + Symbol + ')'`` for labels like *Zephyrian Crown (Ƶ)* — the demo data
+uses the fictional country of Zephyria and its currency). Options are fetched live per render —
+add a row to `dbo.Country` and it appears on the next load. Queries are SELECT-only, run
+server-side on the named connection, and support `:field` tokens for
 [cascading dropdowns](form-builder.md).
 
 The Store form also **writes back to the ERP database**: a per-form database insert
@@ -75,9 +76,12 @@ database live:
 | **Currency** | `dbo.Currency` master table |
 
 plus `amount` (Number), `transaction_date` (Date), `description`, and a **Vendor receipt** File
-field (PDF/JPG/PNG, 10 MB limit). Receipts are held in private storage — never under the public
-web root — recorded against their transaction, and streamed back through an authenticated
-download URL (see [File download](file-download.md)).
+field (PDF/JPG/PNG, 10 MB limit). In the recording the receipt is attached right on the form —
+the dropzone uploads it as soon as it is picked (⏳ → ✓) — and after submit the file shows up as
+a **paperclip download link** on the transaction's row in the submissions grid and in the detail
+panel's *Attachments* section. Receipts are held in private storage — never under the public web
+root — recorded against their transaction, and streamed back through an authenticated download
+URL (see [File download](file-download.md)).
 
 > One dropdown gotcha worth knowing: give the label column an **alias** when it is derived
 > (`VendorName + ' (' + CountryCode + ')' AS VendorLabel`) — a result set that repeats the same
@@ -117,8 +121,9 @@ Each form also has a one-click **Reports** view:
 
 - **Status Breakdown** is the *transaction summary with invoice status*: the donut splits
   `invoiced` vs `pending_approval` straight from the workflow's outcome statuses.
-- **Field Completion Rates** shows data quality per field (the demo's *Vendor receipt* sits at
-  25% — exactly one of four transactions carries a receipt).
+- **Field Completion Rates** shows data quality per field — only the transactions that actually
+  carried a receipt count toward the *Vendor receipt* bar, so it doubles as a "receipts missing"
+  indicator.
 - **Country-wise and currency-wise views** come from the grid itself: add a filter chip
   (*Country is VN*, *Currency is USD*), save it as a preset, and **Export** the slice — see
   [Submissions Grid](submissions-grid.md).
@@ -130,7 +135,7 @@ Each form also has a one-click **Reports** view:
 | Master data without UI | Plain SQL tables (`Country`, `Currency`) read live by dropdowns |
 | Store / Vendor entry | Forms with SQL-driven reference dropdowns, mirrored into ERP tables |
 | Transaction with references | Store, Vendor, Country, Currency dropdowns all resolved from the ERP database |
-| Receipt upload | File field with type/size validation; receipts stored privately per transaction |
+| Receipt upload | File field with type/size validation; receipts stored privately, downloadable from the grid and the detail panel |
 | Invoice generation | Approval workflow stamps `invoiced` automatically on completion |
 | Dashboard & reports | All-forms dashboard + per-form report with invoice-status breakdown + filterable, exportable grid |
 
