@@ -28,6 +28,8 @@
       href: workflow-approvals.md
     - name: Workflow Library
       href: workflow-library.md
+    - name: "End-to-End Demo: ERP Flow"
+      href: erp-end-to-end.md
     - name: Storage & Integrations
       href: storage-options.md
     - name: Multi-language
