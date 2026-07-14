@@ -168,3 +168,43 @@ là endpoint ẩn danh → §10 security rules).
 - **Phase 3**: **selector nguồn dữ liệu** trong Submissions dashboard: `JSON submissions (mặc định)` |
   `SQL table rows` (read-only trước), chỉ hiện với form có `databaseInsert.enabled`.
 - Chưa runtime-QA fix Oqtane trên site thật (:5123/:5125).
+
+---
+
+# PHẦN 3 — DEMO ERP trên DNN (chạy live) + 4 fix DNN nữa
+
+## Commits
+`0dc6a2c` pinned surface không ghi hash · `0b19bd5` dock = Oqtane (Settings/Form Builder/Form Dashboard) ·
+`520f6d0` one-surface-at-a-time + AI-SQL fallback + ModuleStyle · `9a46bd2` demo ERP + `_submissionId` cho DNN.
+
+## Demo ERP (yêu cầu của owner) — ĐÃ CHẠY THẬT
+Trang: `http://dnn10322_megaclean.ai/TestPinPage456`, DB = **chính DB của site** (`DNN10322_MegaClean`).
+
+| Thành phần | Kết quả |
+|---|---|
+| Master data (không UI) | `MFDemo_Country` 10 dòng, `MFDemo_Currency` 9 dòng |
+| Store (form 39) | Country/Currency = dropdown đọc SQL; submit → `MFDemo_Store` |
+| Vendor (form 40) | → `MFDemo_Vendor` |
+| Transaction (form 41) | 4 dropdown tham chiếu (Store/Vendor/Country/Currency) + **upload receipt** → `MFDemo_Transaction` |
+| Invoice | **Tự sinh** bằng workflow Database node → `MFDemo_Invoice`. Live: TXN-8/9/10 → INV-8/9/10 (ISSUED) |
+| Dashboard & Reports (form 42) | KPI + 7 report DataRepeater đọc SQL live (stores, vendors, transactions, country-wise, currency-wise, invoice status, invoice register) |
+| Chứng từ | `/DesktopModules/MegaForm/API/Submissions/{id}/Print` render OK |
+
+Tài liệu đầy đủ + script tái lập: `Docs/DEMO_DNN_ERP_STORE_VENDOR_TRANSACTION_INVOICE_2026-07-14.md`, `Docs/demo/`.
+
+## ⭐ Bẫy khi dựng demo (nhớ để khỏi mất giờ)
+1. **Thiếu `optionsConnectionKey` → dropdown SQL trả `[]` IM LẶNG.**
+2. **`Workflow/Apply` trả 401 nếu chỉ gửi antiforgery** — phải gửi thêm header `ModuleId` + `TabId`.
+3. Input `File` bị `display:none` (dropzone) → phải hiện ra mới upload được bằng automation.
+4. **DNN cache ModuleSettings**: `UPDATE ModuleSettings` thẳng DB không có tác dụng tới khi app recycle.
+
+## Lỗi sản phẩm demo lôi ra (đã vá)
+`databaseInsert` không nhận submission id → `SubmissionId` NULL ở mọi bảng custom, invoice không join
+được về transaction. Đã merge `_submissionId/_formId/_submittedOnUtc` vào data lúc submit trên **DNN**
+(`9a46bd2`) và **Oqtane** (`d2d3e2d`).
+
+## Còn nợ
+- **Repack gói DNN** (`BuildPackage-DNN.ps1`) — site vẫn đang hot-swap.
+- Phase 2–3 của audit SQL/JSON: port `CustomTableRows`/`SubmissionDbView` sang Oqtane + selector nguồn
+  dữ liệu (JSON | SQL) trong Submissions dashboard.
+- Fix Oqtane insert-reliability (`d2d3e2d`) **chưa QA runtime** trên site Oqtane thật.
