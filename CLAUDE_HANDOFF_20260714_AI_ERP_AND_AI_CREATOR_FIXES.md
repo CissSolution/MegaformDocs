@@ -61,3 +61,65 @@ chính cho bài docs "Build an ERP with AI".
 - Chạy tiếp BƯỚC 5b → 9 (prompt mẫu nguyên văn trong `CLAUDE_HANDOFF_20260714_AI_ERP_STEPWISE_PLAN.md` §3).
 - Twin check: fix Core #5 ảnh hưởng cả Web/Umbraco — nên QA lại 1 form SQL-dropdown trên Web.
 - Umbraco print twin (404) + Docs Q1/Q2 — nợ từ phiên trước.
+
+---
+
+# 6. 🔴 CODEX BÀN GIAO — SDK facade (Dashboard / SubmissionDashboard / Inbox) — PHẢI ĐỌC & XỬ LÝ
+
+**Handout gốc của Codex**: `Docs/HANDOUT_CLAUDE_SDK_SURFACE_INBOX_DASHBOARD_2026-07-14.md`
+**Mục tiêu Codex làm**: SDK/API facade **same-host** (chưa có remote controller) để khách tự code
+dashboard tổng quan, submission dashboard (search/detail/update status), inbox+workflow
+(claim/approve/reject/forward/comment/attach file/send submission). Yêu cầu: **minimal change**.
+
+### 6.1 Tôi đã VERIFY hộ (Codex dừng trước khi kiểm) — kết quả: **XANH HẾT**
+
+Codex ghi "PublicAPI.Unshipped.txt **chưa verify**, build có thể còn RS0016/RS0017". Tôi đã chạy:
+
+| Lệnh | Kết quả THẬT (07-14) |
+|---|---|
+| `dotnet build MegaForm.Sdk\MegaForm.Sdk.csproj -f net8.0 -v:minimal -clp:ErrorsOnly` | ✅ **Build succeeded, 0 Errors** — PublicAPI baseline **KHÔNG còn RS0016/RS0017**, không cần sửa gì thêm |
+| `dotnet build MegaForm.Sdk\MegaForm.Sdk.csproj` (full targets) | ✅ **0 Errors** |
+| `dotnet test MegaForm.Sdk.Tests\MegaForm.Sdk.Tests.csproj` | ✅ **Passed: 49 / Failed: 0** |
+
+→ **Việc "đầu tiên Claude phải làm" trong handout Codex coi như XONG.** Phiên sau KHÔNG cần chạy lại,
+trừ khi có ai đụng vào SDK.
+
+### 6.2 Trạng thái git: **7 file SDK đang DIRTY, CHƯA COMMIT**
+
+```
+ M MegaForm.Sdk/IMegaFormClient.cs          ← + IDashboardApi / ISubmissionDashboardApi / IInboxApi
+ M MegaForm.Sdk/Dtos.cs                     ← + ~20 DTO + MegaFormScope thêm actor fields (Roles, IsAdmin…)
+ M MegaForm.Sdk/MegaFormClient.cs           ← implement 13 method; Inbox gọi thẳng WorkflowTaskService
+ M MegaForm.Sdk/ServiceCollectionExtensions.cs ← inject optional WorkflowTaskService + IWorkflowRepository
+ M MegaForm.Sdk/PublicAPI.Unshipped.txt     ← baseline mới (đã verify PASS)
+ M MegaForm.Sdk.Tests/InMemoryRepositories.cs      ← + InMemoryWorkflowRepository + FakeWorkflowEngine
+ M MegaForm.Sdk.Tests/MegaFormClientContractTests.cs ← + test dashboard/submission/inbox
+?? Docs/HANDOUT_CLAUDE_SDK_SURFACE_INBOX_DASHBOARD_2026-07-14.md
+```
+**Quyết định cần owner**: commit đợt SDK này thành 1 commit riêng (build+test đã xanh) hay chờ review API naming (§6.4).
+
+### 6.3 🔴 LỖI THẬT tôi tìm ra khi review — `SearchAsync` với `FormId = 0` (all-forms) PHÂN TRANG SAI
+
+Codex ghi đây là "cần kiểm tra". Tôi kiểm rồi — **đúng là lỗi**, và nguy hiểm vì im lặng:
+
+- `SubmissionQueryService.List` **CÓ** hỗ trợ `FormId <= 0` = tất cả form (nó batch-resolve title/schema theo từng FormId) → phần này Codex làm đúng.
+- **NHƯNG** `ISubmissionRepository.List(formId, status, search, dateFrom, dateTo, …)` **không có tham số portalId** → ở chế độ all-forms, repo trả submission của **MỌI portal**, rồi `MegaFormClient.SearchAsync` mới lọc portal **SAU KHI ĐÃ PHÂN TRANG** (`MegaForm.Sdk/MegaFormClient.cs:382`) và trả `TotalCount = items.Count` (`:389`).
+- **Hậu quả**: khách gọi page 1 size 50 trên host nhiều site → nhận về ví dụ 12 dòng, `TotalCount = 12` → **tưởng hết dữ liệu trong khi còn hàng trăm dòng ở page sau**. Trang bị "thủng" im lặng, không lỗi, không cảnh báo. (Dữ liệu **không** rò sang portal khác — bộ lọc vẫn chạy — nhưng số liệu + phân trang sai.)
+- **Fix tối thiểu đề xuất**: ở nhánh `FormId == 0`, list form của portal trước (`IFormRepository.ListForms(portalId)`), rồi query theo tập formId đó với paging đúng; hoặc bổ sung overload repo nhận `portalId`. **Không được** để lọc-sau-phân-trang.
+
+### 6.4 Điểm Codex xin review trước khi chốt public API (SDK là package công khai → đổi tên sau = breaking)
+
+1. Tên: `SubmissionDashboard` vs `SubmissionsDashboard`.
+2. `AttachFileAsync` nên nằm ở `Inbox` hay `Files`?
+3. `SendSubmissionAsync` có đủ rõ nghĩa "tạo ad-hoc inbox task" chưa?
+4. `AttachFileAsync` lưu vào folder `MegaForm/Inbox/form-{formId}/submission-{submissionId}` — cần verify `IStorageService` của DNN/Oqtane/Web chấp nhận và vào **private storage**.
+5. `AttachFileAsync` **chưa đọc portal upload settings** (max size / allowed extensions) — mới dùng default blocked-ext + magic validation của `FileUploadSecurityService`. Chấp nhận tạm (minimal), nhưng **phải ghi vào docs cho khách**.
+6. ⚠️ **Role matching**: inbox workflow cần `MegaFormScope.Roles`. Caller same-host **không truyền Roles** → task theo role-queue **không hiện** (im lặng). Phải ghi rõ trong docs SDK.
+7. `Files.ListForSubmissionAsync/OpenAsync` **cũ vẫn không tenant-check** — Codex cố ý không sửa (ngoài scope). Nếu siết thì làm riêng, cân nhắc breaking.
+
+### 6.5 Thứ tự việc phiên sau (đề xuất)
+1. Đọc `Docs/HANDOUT_CLAUDE_SDK_SURFACE_INBOX_DASHBOARD_2026-07-14.md` (bản gốc Codex) + §6 này.
+2. **Vá lỗi §6.3** (paging all-forms) — đây là lỗi correctness, ưu tiên hơn cosmetics.
+3. Chốt naming §6.4 với owner → sửa 1 lần → cập nhật `PublicAPI.Unshipped.txt` → build + test lại.
+4. Commit đợt SDK.
+5. Rồi mới quay lại AI-ERP BƯỚC 5b.
