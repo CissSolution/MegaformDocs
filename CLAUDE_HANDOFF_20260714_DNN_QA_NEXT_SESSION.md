@@ -26,15 +26,27 @@ bảng `MFDemo_*`, invoice TXN-8/9/10 → INV-8/9/10).
 
 ## 1. VIỆC PHIÊN SAU — danh sách QA/fix (ưu tiên từ trên xuống)
 
-### 1.1 🔴 AI designer vẫn hiện "No tables in this database" — **đã tìm ra, sửa 1 dòng**
-- `AiTools/SqlConnections` + `DbProvider` đã có (commit `ebf44a1`), panel đã thấy connection.
-- **Nguyên nhân còn lại:** DNN `AiTools/SqlTables` trả **`{ count, results }`**, còn client dùng chung đọc
-  **`j.tables`** (Oqtane trả `{ count, tables }`) → panel luôn thấy 0 bảng.
-  - Client: `MegaForm.UI/src/dashboard/ai-form-creator.ts:589` — `Array.isArray(j.tables) ? … : []`
-  - Server DNN: `MegaForm.DNN/WebApi/AiToolsController.cs` action `SqlTables` → đổi `results` → `tables`
-    (giữ `results` song song nếu sợ vỡ caller cũ: `new { count, tables = list, results = list }`).
-- **QA sau khi sửa:** Dashboard → Create with AI → tab **Database** phải liệt kê 189 bảng của site
-  (đã verify endpoint trả `count: 189`).
+### 1.1 ✅ XONG (commit `1b3fc31`) — AI designer đã thấy bảng của site
+Hoá ra **3 lỗi**, không phải 1 dòng:
+1. `SqlTables` trả `{count, results}` còn panel đọc `j.tables` (shape Oqtane) → 189 bảng đọc thành 0.
+   DNN nay trả canonical `{count, tables}`; client nhận **cả hai** shape nên bundle cũ không làm sống lại bug.
+2. `SqlTables`/`SqlColumns` **bỏ qua `connectionKey`** dù client gửi và `SqlConnections` chào key đó →
+   chọn DB ngoài sẽ liệt kê bảng **DB site** dưới tên DB ngoài. Server giờ tự resolve connection và
+   chặn key ngoài whitelist (rule 1) → `connectionKey=NotAllowedKey` = **400**.
+3. `SqlConnections` liệt kê cả `DashboardDatabase` — client đã có sẵn mục "Current database" → picker
+   hiện **một DB hai lần**. Nay chỉ trả các key phụ (đúng semantics Oqtane; không có key phụ → ẩn picker).
+- Rule 10: 2 action này từng trả `ex.Message` (tên server/login) → nay log vào DNN event log, trả message chung.
+- **Verify live:** 189 bảng, `MFDemo_Store` bung đúng cột thật (`StoreId/StoreCode/StoreName/SubmissionId`…).
+
+### 1.1b ✅ XONG (commit `f258204`) — **canvas tab Build trắng trơn** (owner phát hiện giữa phiên)
+- CSS `[OneSurfaceAtATime v20260714-01]` (`FormView.ascx`) ẩn `.mf-form-wrapper` **không định danh** khi
+  mở surface admin. Nhưng class đó **không của riêng form public**: canvas builder (và submission detail,
+  My Inbox) render form vào đúng class ấy → `!important` ở tầng body **xoá luôn canvas**. 19 field vẫn nằm
+  trong DOM, chỉ là nằm dưới một tổ tiên `display:none`. Tab Design không sao vì preview ở container khác —
+  chính điều đó khiến bug đọc ra như "builder mất field".
+- Sửa: ẩn form **của trang**, không ẩn bản mà surface admin tự render (`:not(.mf-host-overlay …)`).
+  ⚠️ **Đừng "bật lại" bằng `display:block`** — wrapper canvas thật ra là `flex`, ép block sẽ vỡ layout.
+- Verify: public wrapper `display:none`, canvas wrapper `display:flex` (2369px), 19 field row hiện.
 
 ### 1.2 🔴 Gap quá cao giữa module và admin dock (ảnh owner gửi)
 - Dock (`.mf-host-admin-dock`) nằm trong `#mf-dnn-host`, dưới nó là khoảng trắng lớn trước card form.
@@ -172,5 +184,17 @@ cp MegaForm.DNN/Views/FormView.ascx  E:/DNN_SITES/DNN10322_MegaClean/Website/Des
 cp Assets/js/megaform-*.js           E:/DNN_SITES/DNN10322_MegaClean/Website/DesktopModules/MegaForm/Assets/js/
 ```
 
-⚠️ Browser: Playwright MCP dùng chung profile với Codex → bật Chrome riêng
-`--remote-debugging-port=9222 --user-data-dir=<temp>` rồi dùng **chrome-devtools MCP**.
+⚠️ Sửa `.ascx` xong phải **touch `web.config`** (recycle app) — ASP.NET không nhận CSS/markup mới ngay.
+
+### Browser QA — 4 bẫy đã trả giá (07-14 p5)
+- Playwright MCP dùng chung profile với Codex → bật Chrome riêng
+  `--remote-debugging-port=9222 --user-data-dir=C:\Users\Administrator\AppData\Local\Temp\chrome-qa-5116`.
+  **Profile này KHÔNG có sẵn phiên host** → phải login `host`/`dnnhost` (form `dnn_ctr_Login_Login_DNN_txtUsername`).
+- Khi **MCP browser không lên** (chrome-devtools/playwright đều không nạp được): lái CDP thẳng bằng
+  `node` (Node ≥22 có `WebSocket` sẵn) → script mẫu ở scratchpad `cdp-eval.mjs` / `cdp-drive.mjs`.
+- ⭐⭐**ĐỪNG `Page.reload` tab builder**: builder có beforeunload; reload bị ngắt giữa chừng làm **kẹt renderer**,
+  và vì mọi tab cùng origin **dùng chung 1 renderer process** → **treo sạch cả 10 tab** (Page.enable/Runtime.evaluate
+  im lặng, chỉ lệnh phía browser còn trả lời). Cách gỡ duy nhất là đóng tab → Chrome tự thoát nếu đó là tab cuối.
+  Luôn `Page.navigate` **kèm query cache-bust** thay vì reload.
+- ⭐`Page.navigate` tới **đúng URL hiện tại** (chỉ khác hash) = điều hướng same-document → **không tải lại**;
+  DOM vẫn là bản render cũ và ta tưởng bản vá không ăn. Thêm `&_cb=<random>`.
