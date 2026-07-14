@@ -1225,8 +1225,17 @@ namespace MegaForm.WebApi
                     var settings = preLoadedSchema?.Settings;
                     if (settings?.DatabaseInsert != null && settings.DatabaseInsert.Enabled)
                     {
+                        // [DbInsertJoinKey v20260714-01] Hand the SQL row the server-side identity of the
+                        // submission it mirrors (same merge as the Oqtane twin). Without it a custom table
+                        // cannot be joined back to MF_Submissions, so an invoice / DB View can only guess
+                        // "latest row". insertSql opts in by naming :_submissionId / :_formId / :_submittedOnUtc.
+                        var insertData = new Dictionary<string, object>(formData ?? new Dictionary<string, object>(), StringComparer.OrdinalIgnoreCase);
+                        insertData["_submissionId"] = result.SubmissionId;
+                        insertData["_formId"] = formId;
+                        insertData["_submittedOnUtc"] = DateTime.UtcNow;
+
                         var insertSvc = new MegaForm.Core.Services.FormDatabaseInsertService(lifecycleRegistry);
-                        insertSvc.Execute(settings, formData);
+                        insertSvc.Execute(settings, insertData);
                     }
                 }
                 catch (Exception dbEx)
