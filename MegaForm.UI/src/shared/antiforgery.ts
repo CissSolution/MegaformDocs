@@ -27,6 +27,15 @@
 const HEADER = 'X-XSRF-TOKEN-HEADER';
 const UNSAFE = /^(POST|PUT|DELETE|PATCH)$/i;
 
+// ── [ShellPlatform v20260714-01] DNN branch ──────────────────────────────────
+// This file is the ONE place the UI is allowed to know how a host authenticates a
+// mutating request. It used to know only Oqtane, so every DNN-bound POST written in
+// shared feature code (SubmissionsShell's "Send to Inbox", the settings popup, …) either
+// carried hand-rolled DNN header logic or — more often — silently 401'd. DNN validates
+// `RequestVerificationToken` and resolves the module from `ModuleId`/`TabId`, so the
+// chokepoint now adds those too. Feature code stays platform-agnostic: it just fetches.
+const DNN_TOKEN_HEADER = 'RequestVerificationToken';
+
 function readToken(): string {
   try {
     const el = document.querySelector('input[name="__RequestVerificationToken"]') as HTMLInputElement | null;
@@ -34,6 +43,32 @@ function readToken(): string {
   } catch {
     return '';
   }
+}
+
+function isDnnHost(): boolean {
+  try {
+    const p = (window as any).__MF_PLATFORM__;
+    return String((p && p.platform) || '').toLowerCase() === 'dnn';
+  } catch { return false; }
+}
+
+/**
+ * DNN's antiforgery token, straight from its own ServicesFramework.
+ *
+ * Deliberately NOT sending ModuleId/TabId: DNN cross-checks those headers against the
+ * alias-resolved portal and 400s on child-portal subpath aliases ([v20260527-04]). The server
+ * side therefore must not authorize off request headers either — MegaForm's DNN endpoints
+ * resolve the actor from UserInfo (see ModuleStyleController.IsPortalAdmin / WorkflowInboxController),
+ * which is both safer and what lets this chokepoint stay this small.
+ */
+function dnnToken(): string {
+  try {
+    const w = window as any;
+    const platform = w.__MF_PLATFORM__ || {};
+    const moduleId = Number(platform.moduleId || platform.instanceId || 0) || 0;
+    const sf = w.jQuery && w.jQuery.ServicesFramework ? w.jQuery.ServicesFramework(moduleId) : null;
+    return sf ? String(sf.getAntiForgeryValue() || '') : '';
+  } catch { return ''; }
 }
 
 function isSameOrigin(url: string): boolean {
@@ -58,12 +93,13 @@ export function installMegaFormAntiforgery(): void {
         const url = isReq ? (input as Request).url : String(input);
         if (UNSAFE.test(method) && isSameOrigin(url)) {
           const token = readToken();
-          if (token) {
+          const dnn = isDnnHost() ? dnnToken() : '';
+          if (token || dnn) {
             const headers = new Headers((init && init.headers) || (isReq ? (input as Request).headers : undefined));
-            if (!headers.has(HEADER)) {
-              headers.set(HEADER, token);
-              init = { ...(init || {}), headers };
-            }
+            let touched = false;
+            if (token && !headers.has(HEADER)) { headers.set(HEADER, token); touched = true; }
+            if (dnn && !headers.has(DNN_TOKEN_HEADER)) { headers.set(DNN_TOKEN_HEADER, dnn); touched = true; }
+            if (touched) init = { ...(init || {}), headers };
           }
         }
       } catch {
@@ -91,6 +127,10 @@ export function installMegaFormAntiforgery(): void {
           const token = readToken();
           if (token) {
             try { this.setRequestHeader(HEADER, token); } catch { /* header phase passed */ }
+          }
+          if (isDnnHost()) {
+            const dnn = dnnToken();
+            if (dnn) { try { this.setRequestHeader(DNN_TOKEN_HEADER, dnn); } catch { /* header phase passed */ } }
           }
         }
       } catch {

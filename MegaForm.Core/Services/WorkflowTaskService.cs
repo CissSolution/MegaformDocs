@@ -153,6 +153,19 @@ namespace MegaForm.Core.Services
             if (string.IsNullOrWhiteSpace(targetUser))
                 throw new InvalidOperationException("targetUser is required.");
 
+            // [AdHocAssign v20260713] Resolve the target BEFORE creating the task — same
+            // contract as ForwardTaskAsync ([ForwardResolve v20260711]): a typo'd username
+            // is a clear error instead of a task silently parked on a user who does not
+            // exist, and the resolved UserId is what lets clients count the task under
+            // "Assigned to Me" (name-only matching kept AssignedUserId NULL).
+            UserPrincipal resolvedTarget = null;
+            if (_principalResolver != null)
+            {
+                resolvedTarget = _principalResolver.ResolveUser(targetUser.Trim(), 0);
+                if (resolvedTarget == null && targetUser.IndexOf('@') < 0)
+                    throw new InvalidOperationException("User '" + targetUser.Trim() + "' was not found.");
+            }
+
             var nowUtc = DateTime.UtcNow;
             var caseInst = new WorkflowCaseInstance
             {
@@ -160,6 +173,13 @@ namespace MegaForm.Core.Services
                 FormId = formId,
                 SubmissionId = submissionId,
                 WorkflowId = "adhoc-inbox",
+                // [AdHocExecutionId v20260714-01] An ad-hoc "Send to Inbox" case has no workflow
+                // execution behind it, so ExecutionId used to be left empty — and MF_WorkflowCases
+                // carries a UNIQUE index on ExecutionId (IX_MF_WorkflowCases_ExecutionId). The FIRST
+                // send on a site therefore inserted '' fine and EVERY later one died with "Cannot
+                // insert duplicate key … The duplicate key value is ()". Give each ad-hoc case its
+                // own synthetic id: unique by construction, and still recognisable as ad-hoc.
+                ExecutionId = "adhoc-" + Guid.NewGuid().ToString("N"),
                 CurrentNodeId = "adhoc-review",
                 Status = WorkflowCaseStatus.Running,
                 StartedByUserId = actor.UserId,
@@ -174,9 +194,13 @@ namespace MegaForm.Core.Services
                 NodeId = "adhoc-review",
                 NodeLabel = string.IsNullOrWhiteSpace(title) ? "Review submission" : title.Trim(),
                 Status = WorkflowTaskStatus.Claimed,
-                AssignedUserId = TryParseUserId(targetUser),
-                AssignedUserName = (targetUser ?? string.Empty).Trim(),
-                AssignedDisplayName = (targetUser ?? string.Empty).Trim(),
+                AssignedUserId = resolvedTarget != null ? resolvedTarget.UserId : TryParseUserId(targetUser),
+                AssignedUserName = resolvedTarget != null && !string.IsNullOrWhiteSpace(resolvedTarget.UserName)
+                    ? resolvedTarget.UserName
+                    : (targetUser ?? string.Empty).Trim(),
+                AssignedDisplayName = resolvedTarget != null && !string.IsNullOrWhiteSpace(resolvedTarget.DisplayName)
+                    ? resolvedTarget.DisplayName
+                    : (targetUser ?? string.Empty).Trim(),
                 ClaimedAt = nowUtc,
                 AllowClaim = true,
                 AllowForward = true,

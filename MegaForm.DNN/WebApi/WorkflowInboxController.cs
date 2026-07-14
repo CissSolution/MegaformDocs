@@ -11,6 +11,7 @@ using MegaForm.Core.Interfaces;
 using MegaForm.Core.Services;
 using MegaForm.Core.Workflow;
 using MegaForm.DNN.Services;
+using MegaForm.Core.Models;
 using Newtonsoft.Json.Linq;
 
 namespace MegaForm.WebApi
@@ -206,46 +207,159 @@ namespace MegaForm.WebApi
             catch (Exception ex) { return Fail(ex); }
         }
 
-        // ── Forward picker directory ─────────────────────────────────────────────
-        /// <summary>Portal users grouped by role, for the Forward picker. Enumerating users is an
-        /// admin-only read — a plain member must not be able to harvest the portal directory.</summary>
+        // ── Forward picker directory + ad-hoc assignment ─────────────────────────
+        /// <summary>
+        /// [ShellPlatform v20260714-01] Portal users grouped by role, for the Forward / Send-to-Inbox
+        /// pickers. Built on the CORE catalog (IPermissionPrincipalCatalogProvider) that DNN, Oqtane and
+        /// AspNetCore all already implement — so this action is a thin shell: resolve the actor, ask Core,
+        /// shape the response. It used to be [DnnModuleAuthorize(Edit)], which resolves the module from
+        /// the ModuleId/TabId REQUEST HEADERS — headers the shared Submissions UI does not send (and which
+        /// DNN 400s on child-portal aliases). Result: the picker showed "(no directory users)". The gate is
+        /// now the actor itself, never the request.
+        /// </summary>
         [HttpGet]
         [ActionName("Directory")]
-        [DnnModuleAuthorize(AccessLevel = DotNetNuke.Security.SecurityAccessLevel.Edit)]
         public HttpResponseMessage Directory()
         {
             try
             {
-                var portalId = PortalSettings.PortalId;
-                var system = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-                {
-                    "Registered Users", "All Users", "Unauthenticated Users", "Subscribers", "Translator (en-US)"
-                };
+                var actor = BuildActor();
+                if (!(actor.IsAdmin || actor.IsSuperUser))
+                    return Request.CreateResponse(HttpStatusCode.Forbidden, new { error = "Administrators only." });
 
-                var groups = new List<object>();
-                var roles = RoleController.Instance.GetRoles(portalId)
-                    .Where(r => r != null && !system.Contains(r.RoleName))
-                    .OrderBy(r => r.RoleName, StringComparer.OrdinalIgnoreCase);
+                var portalId = PortalSettings != null ? PortalSettings.PortalId : 0;
+                var principals = new DnnPermissionPrincipalCatalogProvider(portalId).GetPrincipals(portalId, actor)
+                    ?? new List<MegaForm.Core.Models.PermissionPrincipalInfo>();
 
-                foreach (var role in roles)
-                {
-                    var users = RoleController.Instance.GetUsersByRole(portalId, role.RoleName)
-                        .Where(u => u != null && !u.IsDeleted)
-                        .OrderBy(u => string.IsNullOrWhiteSpace(u.DisplayName) ? u.Username : u.DisplayName, StringComparer.OrdinalIgnoreCase)
-                        .Select(u => new
+                // Group the user principals by their role; the picker renders one <optgroup> per group.
+                var groups = principals
+                    .Where(p => string.Equals(p.PrincipalType, "user", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(p.UserName))
+                    .GroupBy(p => string.IsNullOrWhiteSpace(p.RoleName) ? "Users" : p.RoleName, StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(g => g.Key, StringComparer.OrdinalIgnoreCase)
+                    .Select(g => new
+                    {
+                        name = g.Key,
+                        userCount = g.Count(),
+                        users = g.Select(p => new
                         {
-                            userId = u.UserID,
-                            userName = u.Username ?? string.Empty,
-                            displayName = !string.IsNullOrWhiteSpace(u.DisplayName) ? u.DisplayName : (u.Username ?? string.Empty),
-                            email = u.Email ?? string.Empty,
-                            roleName = role.RoleName
-                        })
-                        .ToList();
-                    if (users.Count > 0)
-                        groups.Add(new { roleId = role.RoleID, name = role.RoleName, userCount = users.Count, users });
-                }
+                            userId = p.UserId ?? 0,
+                            userName = p.UserName ?? string.Empty,
+                            displayName = !string.IsNullOrWhiteSpace(p.DisplayName) ? p.DisplayName : (p.UserName ?? string.Empty),
+                            email = p.Description ?? string.Empty,
+                            roleName = g.Key
+                        }).OrderBy(u => u.displayName, StringComparer.OrdinalIgnoreCase).ToList()
+                    })
+                    .Where(g => g.users.Count > 0)
+                    .ToList();
 
                 return Request.CreateResponse(HttpStatusCode.OK, new { portalId, groups });
+            }
+            catch (Exception ex) { return Fail(ex); }
+        }
+
+        /// <summary>
+        /// POST Workflow/Tasks/SendSubmission — route a submission straight to a teammate's inbox
+        /// (no pre-configured workflow). The twin of Oqtane's endpoint; the work itself is Core's
+        /// WorkflowTaskService.CreateAdHocReviewTask, so DNN only adapts the request/response.
+        /// This is what "Send to Inbox" in the Submissions shell calls — it simply did not exist on DNN.
+        /// </summary>
+        [HttpPost]
+        [ActionName("SendSubmission")]
+        [ValidateAntiForgeryToken]
+        public HttpResponseMessage SendSubmission([FromBody] JObject body)
+        {
+            try
+            {
+                var actor = BuildActor();
+                if (!(actor.IsAdmin || actor.IsSuperUser))
+                    return Request.CreateResponse(HttpStatusCode.Forbidden, new { error = "Administrators only." });
+
+                var formId = body != null ? (body.Value<int?>("formId") ?? 0) : 0;
+                var submissionId = body != null ? (body.Value<int?>("submissionId") ?? 0) : 0;
+                var targetUser = Text(body, "targetUser");
+                if (string.IsNullOrWhiteSpace(targetUser))
+                    return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "targetUser is required." });
+                if (submissionId <= 0)
+                    return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "submissionId is required." });
+
+                var task = Tasks.CreateAdHocReviewTask(formId, submissionId, targetUser, Text(body, "title"), Text(body, "comment"), actor);
+                return Request.CreateResponse(HttpStatusCode.OK, new
+                {
+                    ok = true,
+                    taskId = task != null ? task.TaskId : null,
+                    assignedTo = task != null ? task.AssignedUserName : null,
+                    formId,
+                    submissionId
+                });
+            }
+            catch (Exception ex) { return Fail(ex); }
+        }
+
+        /// <summary>
+        /// POST Workflow/SeedOrgDirectory — create a small demo organisation (departments as roles +
+        /// real users) so the Forward / Send-to-Inbox pickers have somebody to pick. The DNN twin of
+        /// Oqtane's endpoint; the work is Core's IWorkflowIdentityProvisioningService, so this action
+        /// only adapts the request. Idempotent. Admin/host only.
+        /// </summary>
+        [HttpPost]
+        [ActionName("SeedOrgDirectory")]
+        [ValidateAntiForgeryToken]
+        public HttpResponseMessage SeedOrgDirectory()
+        {
+            try
+            {
+                var actor = BuildActor();
+                if (!(actor.IsAdmin || actor.IsSuperUser))
+                    return Request.CreateResponse(HttpStatusCode.Forbidden, new { error = "Administrators only." });
+
+                var portalId = PortalSettings != null ? PortalSettings.PortalId : 0;
+                var prov = DnnServiceLocator.Instance.WorkflowIdentityProvisioning;
+                var ct = System.Threading.CancellationToken.None;
+
+                var org = new[]
+                {
+                    new { Dept = "Finance",    User = "fin.lan",  Email = "fin.lan@megaform.local",  Display = "Le Thi Lan" },
+                    new { Dept = "Finance",    User = "fin.minh", Email = "fin.minh@megaform.local", Display = "Tran Minh" },
+                    new { Dept = "Operations", User = "ops.nam",  Email = "ops.nam@megaform.local",  Display = "Nguyen Van Nam" },
+                    new { Dept = "Operations", User = "ops.hoa",  Email = "ops.hoa@megaform.local",  Display = "Pham Thi Hoa" },
+                    new { Dept = "Procurement",User = "buy.kien", Email = "buy.kien@megaform.local", Display = "Do Trung Kien" },
+                };
+
+                var depts = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                int usersCreated = 0, membershipsCreated = 0;
+
+                foreach (var row in org)
+                {
+                    if (depts.Add(row.Dept))
+                    {
+                        prov.EnsureRoleAsync(new WorkflowRoleProvisionRequest
+                        {
+                            PortalId = portalId, Actor = actor, RoleName = row.Dept,
+                            Description = "MegaForm demo department"
+                        }, ct).GetAwaiter().GetResult();
+                    }
+
+                    var user = prov.EnsureUserAsync(new WorkflowUserProvisionRequest
+                    {
+                        PortalId = portalId, Actor = actor,
+                        UserName = row.User, Email = row.Email, DisplayName = row.Display,
+                        ApproveUser = true, UpdateIfExists = true, GeneratePasswordIfEmpty = true
+                    }, ct).GetAwaiter().GetResult();
+                    if (user != null) usersCreated++;
+
+                    prov.AddUserToRoleAsync(new WorkflowUserRoleProvisionRequest
+                    {
+                        PortalId = portalId, Actor = actor,
+                        UserIdentifier = row.User, RoleName = row.Dept, AutoCreateRole = true
+                    }, ct).GetAwaiter().GetResult();
+                    membershipsCreated++;
+                }
+
+                return Request.CreateResponse(HttpStatusCode.OK, new
+                {
+                    ok = true, portalId,
+                    departments = depts.Count, users = usersCreated, memberships = membershipsCreated
+                });
             }
             catch (Exception ex) { return Fail(ex); }
         }
@@ -319,6 +433,9 @@ namespace MegaForm.WebApi
         private HttpResponseMessage Fail(Exception ex)
         {
             try { DnnServiceLocator.Instance.LogService.LogError("MegaForm.WorkflowInbox", ex.ToString()); } catch { }
+            // Also hand it to DNN's own logger so it lands in the Admin Logs UI / EventLog — the
+            // MegaForm log sink alone proved invisible when diagnosing a live 400.
+            try { DotNetNuke.Services.Exceptions.Exceptions.LogException(ex); } catch { }
             return Request.CreateResponse(HttpStatusCode.BadRequest,
                 new { error = "The inbox request could not be completed." });
         }

@@ -176,6 +176,22 @@ namespace MegaForm.WebApi
                 defaults: new { controller = "WorkflowInbox", action = "Comment" },
                 namespaces: new[] { "MegaForm.WebApi" }
             );
+            // [ShellPlatform v20260714-01] "Send to Inbox" in the Submissions shell posts here.
+            // The endpoint existed only on Oqtane, so on DNN the button did nothing.
+            mapRouteManager.MapHttpRoute(
+                moduleFolderName: "MegaForm",
+                routeName: "MegaFormWorkflowTasksSendSubmission",
+                url: "Workflow/Tasks/SendSubmission",
+                defaults: new { controller = "WorkflowInbox", action = "SendSubmission" },
+                namespaces: new[] { "MegaForm.WebApi" }
+            );
+            mapRouteManager.MapHttpRoute(
+                moduleFolderName: "MegaForm",
+                routeName: "MegaFormWorkflowSeedOrgDirectory",
+                url: "Workflow/SeedOrgDirectory",
+                defaults: new { controller = "WorkflowInbox", action = "SeedOrgDirectory" },
+                namespaces: new[] { "MegaForm.WebApi" }
+            );
             // BUG FIX v20260405-16: Workflow Database sub-routes.
             // Default route {controller}/{action}/{id} resolves Workflow/Database/Connections as
             // controller=Workflow, action=Database, id=Connections — no such action exists → 404.
