@@ -123,3 +123,94 @@ Codex ghi đây là "cần kiểm tra". Tôi kiểm rồi — **đúng là lỗi
 3. Chốt naming §6.4 với owner → sửa 1 lần → cập nhật `PublicAPI.Unshipped.txt` → build + test lại.
 4. Commit đợt SDK.
 5. Rồi mới quay lại AI-ERP BƯỚC 5b.
+
+---
+
+# 7. 🆕 YÊU CẦU KHÁCH: SHARE-LINK "kiểu ChatGPT" — live preview FORM + WORKFLOW để dev thảo luận
+
+**Đề bài (owner 07-14)**: khách muốn **live preview form + workflow đang chạy**, chia sẻ bằng **link
+giống ChatGPT share link**, để **các dev bàn luận với nhau về form/workflow**.
+
+Tôi đã khảo sát repo (không phải đoán) — dưới đây là cái ĐÃ CÓ, cái THIẾU, và **1 lỗ bảo mật phải vá
+TRƯỚC** vì tính năng này biến "phục vụ ẩn danh" thành thiết kế chủ đích.
+
+## 7.1 🔴🔴 CHẶN ĐƯỜNG: `Schema/{formId}` ĐANG RÒ SQL NỘI BỘ CHO NGƯỜI LẠ (verify live, không cookie)
+
+```
+GET http://localhost:5125/api/MegaForm/Schema/7      ← KHÔNG gửi cookie, HTTP 200
+→ insertSql     : INSERT INTO [dbo].[Stores]([StoreCode],[StoreName],[Address],[CountryCode],…)
+→ optionsSql    : SELECT CountryCode AS value, CountryName AS label FROM Country
+→ connectionKey : DashboardDatabase
+```
+
+- **Nguyên nhân**: `FormAccessProjection.ProjectForActor` (gọi từ `ProjectSchemaForCurrentActor`,
+  `MegaForm.Oqtane.Server/Controllers/MegaFormController.cs:1461`) **chỉ lược bỏ FIELD theo role** —
+  **KHÔNG lược bỏ PROPERTY nhạy cảm**. Endpoint `Schema/{formId}` là ẩn danh (public form path).
+- **Ảnh hưởng cả 3 platform** (DNN `MegaFormApiController.cs`, Web + Oqtane `MegaFormController.cs`
+  đều gọi chung projection này) → lỗi hệ thống, không cá biệt.
+- **Mức độ**: không lộ connection string, nhưng lộ **tên bảng/cột thật + câu SQL + tên param** →
+  đúng thứ kẻ tấn công cần để dò injection. Vi phạm tinh thần Rule 1/10 của `Docs/SECURITY_CODING_RULES.md`.
+- **Fix bắt buộc TRƯỚC khi làm share-link**: thêm bước **strip property nhạy cảm** trong
+  `FormAccessProjection` cho mọi caller **không phải admin**: `optionsSql`, `optionsConnectionKey`,
+  `optionsType`, `settings.databaseInsert.*` (nhất là `insertSql`), `widgetProps.masterQuery`,
+  `widgetProps.connectionKey`, RazorWidget action SQL, webhook/app-endpoint URL, payment settings.
+  Renderer **không cần** các field này (options nạp qua `Field/Options`, insert chạy server-side).
+  → **Đây là việc P0, làm riêng, có giá trị cả khi khách bỏ ý định share-link.**
+
+## 7.2 ĐÃ CÓ SẴN (đã verify file:line — bám vào đây, đừng viết lại)
+
+| Mảnh | Ở đâu | Dùng được gì |
+|---|---|---|
+| **Trang form public, standalone** | `MegaForm.Oqtane.Server/Controllers/MegaFormController.RenderPage.cs:39` — `[HttpGet("render/{formId}")]` + `[AllowAnonymous]` | **Nền tảng của share-link form**: đã SSR + hydrate, đã ẩn danh, đã áp field-visibility qua projection |
+| **Schema API ẩn danh** | `MegaFormController.cs:1487` `Schema/{formId}` (đi qua `ProjectSchemaForCurrentActor`) | Client render lại form từ đây |
+| **Iframe/embed** | `MegaForm.UI/src/embed/index.ts` + `embed-iframe.ts` (bundle `megaform-embed.js`) | Nhúng form vào trang khác — đúng cơ chế cần cho preview |
+| **Workflow visual (reactflow)** | `MegaForm.UI/src/builder/workflow/index.ts` → bundle **`megaform-workflow-reactflow.js`**; `WorkflowApp` mount ở `:2165`, `mountReactApp` ở `:891` | **Đã có diagram workflow chạy được** — nhưng hiện là **overlay TRONG builder**, chỉ admin |
+| **Comment** | `WorkflowTaskService` (`CreateAdHocReviewTask`/`Claim`/`Approve`/`Reject`/`Forward` đều nhận `comment`) → `MF_WorkflowTaskActions` | Chỉ gắn với **TASK/SUBMISSION** |
+
+## 7.3 THIẾU (phải làm mới)
+
+1. **Không có store token share nào.** ⚠️ Bẫy: `MF_SubmissionLinks` **KHÔNG phải** share-link — nó là
+   quan hệ cha/con giữa submission (`MegaForm.Core/Models/EntityModels.cs:176` `SubmissionLinkInfo`:
+   `RelationId`/`ParentSubmissionId`/`ChildSubmissionId`). Đừng nhầm.
+2. **Không có viewer workflow read-only đứng riêng** — diagram chỉ sống trong builder (admin).
+3. **Không có nơi lưu comment gắn vào FORM hoặc WORKFLOW DEFINITION** (chỉ có comment theo task/submission).
+4. Không có chế độ render **read-only / no-submit** cho form (preview mà bấm Submit là ghi dữ liệu thật).
+
+## 7.4 THIẾT KẾ TỐI THIỂU ĐỀ XUẤT (bám vào cái đã có)
+
+**Bảng mới `MF_ShareLinks`** (1 bảng, không đụng schema cũ):
+`ShareId · Token (GUID/32-char, index unique) · PortalId · FormId · Kind ('form'|'workflow'|'both')
+· AllowComments bit · ExpiresOnUtc null · RevokedOnUtc null · CreatedBy · CreatedOnUtc · ViewCount`
+
+**Endpoint mới** (2 cái, đều `[AllowAnonymous]` + gate bằng token, KHÔNG bằng role):
+- `GET /api/MegaForm/Share/{token}` → trả **schema đã strip** (§7.1) + workflow definition **đã strip**
+  (bỏ tên user assignee, role name nội bộ, SQL trong node) + metadata form.
+- `POST /api/MegaForm/Share/{token}/Comment` → chỉ mở khi `AllowComments=1`; rate-limit; body encode HTML.
+
+**Trang xem** `/Modules/MegaForm/share.html?t={token}` (bundle mới `megaform-share.js`, entry nhỏ theo
+đúng RULE "file TS nhỏ, feature mới = file mới"):
+- trái: form render **read-only** (tái dùng renderer, thêm cờ `readOnly` → disable input + ẩn nút Submit),
+- phải: workflow diagram **read-only** (tái dùng `megaform-workflow-reactflow.js`, thêm cờ `readOnly`
+  → bỏ pane sửa/kéo thả),
+- dưới: khung comment (nếu bật).
+
+**Luật bảo mật bắt buộc (đọc `Docs/SECURITY_CODING_RULES.md` trước khi code):**
+- Token là **capability** → phải **revocable + có expiry**; log view; **không** cho suy ra formId từ token.
+- **Share link KHÔNG BAO GIỜ trả submission data** (PII) — chỉ trả **định nghĩa** form/workflow.
+- Chạy schema qua **strip §7.1** (bắt buộc) + projection ẩn danh sẵn có.
+- Endpoint comment: `[AllowAnonymous]` action-level, có antiforgery/rate-limit, HTML-encode mặc định.
+- Fix `FormAccessProjection` phải rà **cả 3 platform twin**.
+
+## 7.5 ACCEPTANCE (khi nào coi là xong)
+1. Admin bấm "Share" trên form → nhận link `…/share.html?t=…`; mở link ở **cửa sổ ẩn danh** (không login) → thấy form render đúng + diagram workflow đúng.
+2. `curl` link đó → **KHÔNG** thấy `insertSql` / `optionsSql` / `connectionKey` / tên user assignee ở bất kỳ đâu.
+3. Bấm Submit trên trang share → **không** tạo submission (read-only thật, không chỉ ẩn nút).
+4. Revoke link → mở lại = 404/410. Link hết hạn = 410.
+5. Dev để lại comment → hiện ra; XSS payload trong comment bị encode.
+6. Form có field role-gated → viewer ẩn danh **không** thấy field đó (projection cũ vẫn chạy).
+
+## 7.6 ƯU TIÊN
+- **P0 (làm ngay, độc lập)**: vá rò SQL §7.1 — đây là lỗ bảo mật đang sống, không phụ thuộc share-link.
+- **P1**: `MF_ShareLinks` + `GET Share/{token}` + trang share read-only (form + workflow).
+- **P2**: comment trên share link.
+- Ước lượng: P0 nửa ngày (1 chỗ Core + rà 3 twin + test). P1 1–2 ngày. P2 nửa ngày.
