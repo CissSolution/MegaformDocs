@@ -117,3 +117,54 @@ có đủ 4 fix. Sau đó mới QA tiếp.
 - Gọi thẳng API `InstallPackage` bằng fetch **không được**: GET zip trong `/Install/Module/` trả 200 nhưng
   đọc body thất bại.
 - `upload_file` (chrome-devtools) chỉ nhận file **trong workspace roots** → copy zip vào scratchpad trước.
+
+---
+
+# PHẦN 2 (cùng phiên) — preview form, mode Inbox, bỏ Renderer Host, và SQL-vs-JSON
+
+## Commit `f803a6b` — 3 việc DNN (đã QA live)
+
+1. **Preview form**: `getPublicFormUrl()` không tự dựng URL — nó **kế thừa base** từ
+   `getCurrentBasePath()`, vốn trả `window.location.pathname` NGUYÊN VĂN trên DNN. DNN nhét tham số
+   vào path (`/ctl/ManageModule/mid/385`) → link preview thành
+   `/Page/ctl/ManageModule/mid/385?formid=37` → DNN route theo `ctl` → ra trang settings.
+   Fix: base = `returnUrl` (tab path sạch do server render); `normalizeRendererHostUrl` scrub luôn các
+   segment `ctl/mid/formid/...` để `viewUrl` per-form đã nhiễm tự lành; thêm `data-return-url` vào
+   `#mf-host-dashboard-root` (vì `detectRoot()` chọn phần tử này TRƯỚC).
+   ⚠️ URL sạch chưa đủ: nhánh Admin-Dashboard trong `FormView.ascx` **không render form body**, và
+   `dnn-host` tự mở overlay dashboard đè lên. Cả hai giờ đứng im khi URL có `?formid=`.
+
+2. **Mode My Inbox** (giống `ModuleRole=myinbox` của Oqtane): admin mở như surface từ dock; **user
+   thường** (approver, không phải admin) không có shell → inbox mount **inline** trong module pane.
+   ⚠️ `NormalizeModuleMode` bị **nhân đôi** (ManageModule.ascx.cs + FormView.ascx.cs) — thiếu 1 bên là
+   mode âm thầm degrade về `render`.
+
+3. **Bỏ Renderer Host**: khái niệm này đã vô dụng từ trước — `?formid=` chỉ admin dùng được (FormIdGate
+   06-26), và mode renderer_host còn **chặn** module tự tìm form của nó. Xoá: option mode, nút dock,
+   checkbox ở ManageModule/Settings, và **GET/POST `ModuleConfig/RendererHost`** — endpoint này là
+   `[DnnAuthorize]` (MỌI user đăng nhập) nên bất kỳ Registered User nào cũng đổi được renderer host
+   toàn portal = đổi link View/Embed của mọi admin. Setting cũ `renderer_host` tự degrade về `render`.
+   Ghost `localStorage` bị xoá lúc boot; `getStoredRendererHostUrl()` giờ chỉ còn Oqtane.
+
+## Commit `d2d3e2d` — Oqtane: insert SQL thật sự chạy (Phase 1 của audit)
+
+Audit của owner (`Docs/AUDIT_SUBMISSION_DASHBOARD_SQL_JSON_SOURCE_2026-07-14.md`) — tôi đã **verify 2
+claim P0 là ĐÚNG**:
+- `OqtaneConnectionRegistry` chỉ đọc `appsettings.json` → connection lưu trong **DB Settings popup**
+  (site settings `MegaForm_DashboardDb_*`) KHÔNG bao giờ tới runtime.
+- `databaseType` rỗng → mặc định SQL Server (sai trên tenant SQLite/MySQL/Postgres).
+Vì submit hook **fail-soft**, khách thấy "submitted" mà bảng SQL rỗng.
+
+Đã sửa: registry đọc site override trước (theo alias đã lưu + `DashboardDatabase`), sniff provider từ
+connection string khi `databaseType` rỗng, và submit hook merge `_submissionId`/`_formId`/`_submittedOnUtc`
+vào data để INSERT có khoá join về `MF_Submissions`. **Lỗi insert chỉ log, KHÔNG trả về client** (submit
+là endpoint ẩn danh → §10 security rules).
+
+## CÒN LẠI (Phase 2 + 3 của audit)
+
+- **Phase 2**: port `AiTools/CustomTableRows` + `AiTools/SubmissionDbView` từ DNN sang Oqtane (Oqtane
+  đang 404 → tab DB View vô dụng), dùng chung service Core để khỏi drift. Kèm surface báo lỗi insert
+  cho admin.
+- **Phase 3**: **selector nguồn dữ liệu** trong Submissions dashboard: `JSON submissions (mặc định)` |
+  `SQL table rows` (read-only trước), chỉ hiện với form có `databaseInsert.enabled`.
+- Chưa runtime-QA fix Oqtane trên site thật (:5123/:5125).
