@@ -490,6 +490,50 @@ namespace MegaForm.WebApi
             return conn;
         }
 
+        /// <summary>
+        /// GET AiTools/SqlConnections — the connection keys the AI DB panel may pick from.
+        /// [ShellParity v20260714-01] This existed only on Oqtane; on DNN the panel's first call
+        /// 404'd, so the "Database" tab of the AI designer could never list a connection — and
+        /// therefore never list a table. DNN always has its own site DB (DashboardDatabase, which
+        /// now falls back to the DNN connection), plus any extra keys an admin registered as
+        /// MegaForm_&lt;key&gt; host settings via the whitelist below.
+        /// </summary>
+        [HttpGet]
+        [ActionName("SqlConnections")]
+        public HttpResponseMessage SqlConnections()
+        {
+            var gate = RejectIfDisabled(); if (gate != null) return gate;
+            var connections = new List<string> { "DashboardDatabase" };
+            try
+            {
+                // Same allow-list contract as Oqtane: a comma-separated host setting naming the
+                // EXTRA connections AI may touch. Never a connection string — only a key.
+                var raw = DotNetNuke.Entities.Controllers.HostController.Instance
+                    .GetString("MegaForm_ExternalTables_AllowedConnections", string.Empty) ?? string.Empty;
+                foreach (var key in raw.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var k = key.Trim();
+                    if (k.Length == 0) continue;
+                    if (string.Equals(k, "DashboardDatabase", StringComparison.OrdinalIgnoreCase)) continue;
+                    if (!connections.Contains(k)) connections.Add(k);
+                }
+            }
+            catch { /* no whitelist configured — the site DB alone is a valid answer */ }
+
+            return Request.CreateResponse(HttpStatusCode.OK, new { connections });
+        }
+
+        /// <summary>GET AiTools/DbProvider — which SQL dialect the AI should generate for.</summary>
+        [HttpGet]
+        [ActionName("DbProvider")]
+        public HttpResponseMessage DbProvider()
+        {
+            var gate = RejectIfDisabled(); if (gate != null) return gate;
+            // DNN only runs on SQL Server, so the answer is not in doubt — but the AI panel asks
+            // every host the same question, and an unanswered one leaves it generating blind.
+            return Request.CreateResponse(HttpStatusCode.OK, new { provider = "sqlserver" });
+        }
+
         [HttpGet]
         [ActionName("SqlTables")]
         public HttpResponseMessage SqlTables(string search = null, int top = 80)
