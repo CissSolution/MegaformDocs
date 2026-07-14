@@ -586,7 +586,10 @@ async function loadTablesStrip(modal: HTMLElement, state: any): Promise<void> {
     }
     const j = await r.json().catch(() => ({} as any));
     if (requestedConn !== String(state.activeConnection || '')) return; // stale reply
-    const tables = Array.isArray(j.tables) ? j.tables.map((t: any) => String(t.name || t.Name || t)) : [];
+    // Canonical shape is `{count, tables}`; older DNN builds answered `{count, results}`
+    // and this list read as empty on a perfectly healthy database. Accept either.
+    const rows = (Array.isArray(j.tables) ? j.tables : (Array.isArray(j.results) ? j.results : []));
+    const tables = rows.map((t: any) => String(t.name || t.Name || t));
     state.allTables = tables.filter((t: string) => t && !/^(sys|MS_|MF_AI_|MegaForm_Sample_)/i.test(t)).sort();
     state.dbLoaded = true;
     renderTablesStrip(modal, state);

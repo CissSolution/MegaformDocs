@@ -473,7 +473,7 @@ namespace MegaForm.WebApi
         //  SQL introspection (DashboardDatabase)
         // ─────────────────────────────────────────────────────────────────
 
-        private DbConnection OpenDashboardConnection()
+        private DnnConnectionRegistry BuildRegistry()
         {
             string GetSetting(string key, string defaultValue = "")
             {
@@ -484,8 +484,58 @@ namespace MegaForm.WebApi
                 }
                 catch { return defaultValue; }
             }
-            var registry = new DnnConnectionRegistry(GetSetting);
-            var conn = registry.GetConnection("DashboardDatabase");
+            return new DnnConnectionRegistry(GetSetting);
+        }
+
+        private DbConnection OpenDashboardConnection()
+        {
+            var conn = BuildRegistry().GetConnection("DashboardDatabase");
+            conn.Open();
+            return conn;
+        }
+
+        /// <summary>
+        /// The EXTRA connection keys AI may browse — never a connection string, only a key, and
+        /// never DashboardDatabase: the client already offers the site DB as "Current database",
+        /// so listing it here too would show the same database twice in the data-source picker.
+        /// </summary>
+        private List<string> AllowedExternalConnections()
+        {
+            var connections = new List<string>();
+            try
+            {
+                // Same allow-list contract as Oqtane, expressed as a DNN host setting.
+                var raw = DotNetNuke.Entities.Controllers.HostController.Instance
+                    .GetString("MegaForm_ExternalTables_AllowedConnections", string.Empty) ?? string.Empty;
+                foreach (var key in raw.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var k = key.Trim();
+                    if (k.Length == 0) continue;
+                    if (string.Equals(k, "DashboardDatabase", StringComparison.OrdinalIgnoreCase)) continue;
+                    if (!connections.Contains(k)) connections.Add(k);
+                }
+            }
+            catch { /* no allow-list configured — the site DB alone is a valid answer */ }
+            return connections;
+        }
+
+        /// <summary>
+        /// [ShellParity v20260714-02] The client sends the connection the user picked; the SERVER
+        /// decides whether it may be opened (rule 1). Before this, DNN ignored connectionKey and
+        /// always opened the site DB — so picking an external connection silently listed the site
+        /// DB's tables under the external connection's name.
+        /// </summary>
+        private DbConnection OpenAiConnection(string connectionKey)
+        {
+            if (string.IsNullOrWhiteSpace(connectionKey)
+                || string.Equals(connectionKey.Trim(), "DashboardDatabase", StringComparison.OrdinalIgnoreCase))
+                return OpenDashboardConnection();
+
+            var key = AllowedExternalConnections()
+                .FirstOrDefault(k => string.Equals(k, connectionKey.Trim(), StringComparison.OrdinalIgnoreCase));
+            if (key == null) throw new UnauthorizedAccessException("connection not allowed");
+
+            var conn = BuildRegistry().GetConnection(key);
             conn.Open();
             return conn;
         }
@@ -503,24 +553,7 @@ namespace MegaForm.WebApi
         public HttpResponseMessage SqlConnections()
         {
             var gate = RejectIfDisabled(); if (gate != null) return gate;
-            var connections = new List<string> { "DashboardDatabase" };
-            try
-            {
-                // Same allow-list contract as Oqtane: a comma-separated host setting naming the
-                // EXTRA connections AI may touch. Never a connection string — only a key.
-                var raw = DotNetNuke.Entities.Controllers.HostController.Instance
-                    .GetString("MegaForm_ExternalTables_AllowedConnections", string.Empty) ?? string.Empty;
-                foreach (var key in raw.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries))
-                {
-                    var k = key.Trim();
-                    if (k.Length == 0) continue;
-                    if (string.Equals(k, "DashboardDatabase", StringComparison.OrdinalIgnoreCase)) continue;
-                    if (!connections.Contains(k)) connections.Add(k);
-                }
-            }
-            catch { /* no whitelist configured — the site DB alone is a valid answer */ }
-
-            return Request.CreateResponse(HttpStatusCode.OK, new { connections });
+            return Request.CreateResponse(HttpStatusCode.OK, new { connections = AllowedExternalConnections() });
         }
 
         /// <summary>GET AiTools/DbProvider — which SQL dialect the AI should generate for.</summary>
@@ -534,19 +567,24 @@ namespace MegaForm.WebApi
             return Request.CreateResponse(HttpStatusCode.OK, new { provider = "sqlserver" });
         }
 
+        /// <summary>
+        /// [ShellParity v20260714-02] Response shape is the Oqtane one — `{count, tables}`. DNN used
+        /// to answer `{count, results}`, which the AI designer's DB tab reads as "no tables at all"
+        /// (it looks at `j.tables`), so the tab was permanently empty on DNN.
+        /// </summary>
         [HttpGet]
         [ActionName("SqlTables")]
-        public HttpResponseMessage SqlTables(string search = null, int top = 80)
+        public HttpResponseMessage SqlTables(string search = null, int top = 200, string connectionKey = null)
         {
             var gate = RejectIfDisabled(); if (gate != null) return gate;
             try
             {
                 var list = new List<object>();
-                using (var conn = OpenDashboardConnection())
+                using (var conn = OpenAiConnection(connectionKey))
                 using (var cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = @"
-                        SELECT TOP (" + Math.Max(1, Math.Min(top, 200)) + @") TABLE_SCHEMA, TABLE_NAME
+                        SELECT TOP (" + Math.Max(1, Math.Min(top, 500)) + @") TABLE_SCHEMA, TABLE_NAME
                         FROM INFORMATION_SCHEMA.TABLES
                         WHERE TABLE_TYPE = 'BASE TABLE'
                           AND TABLE_NAME NOT LIKE 'sys%'" +
@@ -560,17 +598,24 @@ namespace MegaForm.WebApi
                         while (r.Read())
                             list.Add(new { schema = (string)r["TABLE_SCHEMA"], name = (string)r["TABLE_NAME"] });
                 }
-                return Request.CreateResponse(HttpStatusCode.OK, new { count = list.Count, results = list });
+                return Request.CreateResponse(HttpStatusCode.OK, new { count = list.Count, tables = list });
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "connection not allowed" });
             }
             catch (Exception ex)
             {
-                return Request.CreateResponse(HttpStatusCode.OK, new { count = 0, results = new object[0], error = ex.Message });
+                // Rule 10: a SQL error names servers/logins — log it, never echo it.
+                try { DotNetNuke.Services.Exceptions.Exceptions.LogException(ex); } catch { }
+                return Request.CreateResponse(HttpStatusCode.InternalServerError,
+                    new { error = "could not list tables — check the connection in Settings and the DNN event log" });
             }
         }
 
         [HttpGet]
         [ActionName("SqlColumns")]
-        public HttpResponseMessage SqlColumns(string table)
+        public HttpResponseMessage SqlColumns(string table, string connectionKey = null)
         {
             var gate = RejectIfDisabled(); if (gate != null) return gate;
             if (string.IsNullOrWhiteSpace(table))
@@ -578,7 +623,7 @@ namespace MegaForm.WebApi
             try
             {
                 var list = new List<object>();
-                using (var conn = OpenDashboardConnection())
+                using (var conn = OpenAiConnection(connectionKey))
                 using (var cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = @"
@@ -599,9 +644,16 @@ namespace MegaForm.WebApi
                 }
                 return Request.CreateResponse(HttpStatusCode.OK, new { table, count = list.Count, columns = list });
             }
+            catch (UnauthorizedAccessException)
+            {
+                return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "connection not allowed" });
+            }
             catch (Exception ex)
             {
-                return Request.CreateResponse(HttpStatusCode.OK, new { table, count = 0, columns = new object[0], error = ex.Message });
+                // Rule 10: never echo the SQL error — it names servers and logins.
+                try { DotNetNuke.Services.Exceptions.Exceptions.LogException(ex); } catch { }
+                return Request.CreateResponse(HttpStatusCode.InternalServerError,
+                    new { error = "could not read columns — check the connection in Settings and the DNN event log" });
             }
         }
 
