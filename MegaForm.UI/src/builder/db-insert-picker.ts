@@ -22,10 +22,14 @@
 export interface DbInsertColumn {
   name: string;
   dataType?: string;
+  type?: string;      // DNN's SqlColumns returns the SQL type under `type`, not `dataType`
   nullable?: boolean;
   isPrimary?: boolean;
   uiType?: string;
 }
+
+// Oqtane returns the SQL type as `dataType`, DNN as `type` — read whichever is present.
+function colType(c: DbInsertColumn | undefined): string { return String((c && (c.dataType || c.type)) || ''); }
 
 export interface DbInsertPickerDeps {
   /** The live databaseInsert config object (connectionKey/insertSql/parameterMapping are read + written). */
@@ -71,7 +75,7 @@ function norm(s: string): string { return String(s || '').toLowerCase().replace(
 
 /** True for columns the DB fills itself (identity PK / rowversion) — omit from INSERT. */
 function isLikelyAuto(c: DbInsertColumn): boolean {
-  const dt = String(c.dataType || '').toLowerCase();
+  const dt = colType(c).toLowerCase();
   const numericOrGuid = /\b(int|bigint|smallint|tinyint|uniqueidentifier|rowversion|timestamp)\b/.test(dt);
   return !!c.isPrimary && numericOrGuid;
 }
@@ -177,7 +181,8 @@ export function wireDbInsertPicker(deps: DbInsertPickerDeps): void {
     let rows: Array<{ schema?: string; name?: string; Schema?: string; Name?: string }> = [];
     try {
       const j = await getJson('AiTools/SqlTables?top=500' + (conn ? '&connectionKey=' + encodeURIComponent(conn) : ''));
-      rows = (j && (j.tables || j.Tables || j)) || [];
+      // Oqtane returns the list under `tables`, DNN under `results` — accept either (or a bare array).
+      rows = (j && (j.tables || j.Tables || j.results || j.Results || j)) || [];
       if (!Array.isArray(rows)) rows = [];
     } catch (_e) { rows = []; }
     const opts = rows.map(t => {
@@ -281,7 +286,7 @@ export function wireDbInsertPicker(deps: DbInsertPickerDeps): void {
   // 7-char '__test_code' that truncates. Keyed by the FIELD the column maps to (the Test payload
   // binds :field tokens by field key). Falls back to the legacy generator when no table is loaded.
   function sampleValueFor(c: DbInsertColumn | undefined): string {
-    const dt = String((c && c.dataType) || '').toLowerCase();
+    const dt = colType(c).toLowerCase();
     if (/\bbit\b/.test(dt)) return '0';
     if (/(int|decimal|numeric|float|real|money)/.test(dt)) return '1';
     if (/(date|time)/.test(dt)) return '2000-01-01';

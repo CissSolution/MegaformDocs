@@ -583,6 +583,38 @@ export function autoWireFkDropdowns(fields: any[], tablesByCol: Record<string, {
   return count;
 }
 
+// [AI-on-Rails v20260714] Load a table's REAL columns so buildInsertSqlFor emits column names
+// that match the DB — even when the AI binds a form to an EXISTING table (no CREATE TABLE DDL in
+// this batch to parse). Without this, resolveCol() falls back to the raw field key and a cheap
+// model's "INSERT INTO Country (name, code)" ships as-is against a table whose columns are
+// CountryName / CountryCode. Returns a synthetic ParsedTable, or null on any failure (fail-soft:
+// the caller then keeps the previous best-effort behaviour).
+async function fetchRealColumns(tableName: string, schemaName?: string): Promise<ParsedTable | null> {
+  try {
+    const url = subformUrl('Columns', { tableName });
+    const tok = (document.querySelector('input[name="__RequestVerificationToken"]') as HTMLInputElement | null)?.value || '';
+    const r = await fetch(url, { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest', RequestVerificationToken: tok } });
+    if (!r.ok) return null;
+    const j: any = await r.json();
+    const raw = (j && (j.columns || j.Columns)) || [];
+    if (!Array.isArray(raw) || !raw.length) return null;
+    const columns = raw.map((c: any) => ({
+      name: String(c.name != null ? c.name : c.Name),
+      sqlType: String(c.dataType != null ? c.dataType : (c.sqlType != null ? c.sqlType : '')),
+      nullable: !!(c.nullable != null ? c.nullable : c.Nullable),
+    })).filter((c: any) => c.name);
+    if (!columns.length) return null;
+    const pkCol = raw.find((c: any) => c.isPrimary || c.isIdentity || c.IsPrimary);
+    return {
+      name: tableName,
+      schemaName: schemaName || 'dbo',
+      columns,
+      pk: pkCol ? String(pkCol.name != null ? pkCol.name : pkCol.Name) : columns[0].name,
+      fks: [],
+    };
+  } catch { return null; }
+}
+
 export function opAppBatch(op: Op): OpResult {
   const spec = (op as any) as AppBatchSpec;
   if ((!spec.tables || !spec.tables.length) && (!spec.forms || !spec.forms.length)) {
@@ -641,16 +673,25 @@ export function opAppBatch(op: Op): OpResult {
     // each create_form builds provider-correct INSERT SQL (SQLite/MySQL/Postgres).
     let providerKey = '';
     try { providerKey = await getDbProviderKey(); } catch { /* default mssql */ }
-    const formPromises = (spec.forms || []).map(f => {
+    const formPromises = (spec.forms || []).map(async f => {
       const sub: Op = { op: 'create_form', ...f } as any;
       if (!sub.bindToTable && (f as any).tableName) {
         sub.bindToTable = { tableName: (f as any).tableName, schemaName: (f as any).schemaName };
       }
-      // Pass parsed DDL so buildInsertSqlFor can resolve real column names.
-      (sub as any).__parsedTables = parsedTables;
+      // [AI-on-Rails] If the form binds to a table NOT created in this batch (no DDL to parse),
+      // load its REAL columns so buildInsertSqlFor maps fields to actual column names instead of
+      // echoing the field keys. Fail-soft: on any error keep the previous behaviour.
+      let effectiveParsed = parsedTables;
+      const bt: any = (sub as any).bindToTable;
+      if (bt && bt.tableName && !parsedTables.some(t => t.name.toLowerCase() === String(bt.tableName).toLowerCase())) {
+        const fetched = await fetchRealColumns(String(bt.tableName), bt.schemaName);
+        if (fetched) effectiveParsed = parsedTables.concat([fetched]);
+      }
+      // Pass parsed DDL (+ any fetched real columns) so buildInsertSqlFor resolves real column names.
+      (sub as any).__parsedTables = effectiveParsed;
       (sub as any).__providerKey = providerKey;
       // Run FK auto-wire on a copy of the fields before sending
-      if (sub.fields && parsedTables.length) {
+      if (sub.fields && effectiveParsed.length) {
         const wired = autoWireFkDropdowns(sub.fields, tablesByCol);
         summary.fkWiredFields += wired;
       }
