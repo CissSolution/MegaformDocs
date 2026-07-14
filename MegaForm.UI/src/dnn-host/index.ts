@@ -1019,7 +1019,9 @@ function setLiveEditorTriggerVisible(visible: boolean): void {
 // already needed to render the public form), so the builder boots with the SAME plugin
 // set as before — only the heavy bundle defers. The open('builder') init-retry loop
 // below tolerates the bundle not being ready yet, so no extra wiring is required.
-const BUILDER_LAZY_VERSION = '20260622-B232';
+// Bump whenever the builder bundle's CONTENT changes: the URL is the cache key, so a stale
+// stamp serves yesterday's bundle from the browser cache and the fix "does not work".
+const BUILDER_LAZY_VERSION = '20260714-B234';
 let _builderBundleRequested = false;
 function ensureBuilderBundleLazyLoaded(assetsBase: string): void {
   if (_builderBundleRequested) return;

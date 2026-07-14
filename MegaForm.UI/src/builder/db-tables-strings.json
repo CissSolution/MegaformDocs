@@ -1,6 +1,6 @@
 {
   "panelTitle": "Database Tables",
-  "panelHint": "Click \"+ DataGrid\" on a table to insert a self-configured Subform. Drag column chips onto the canvas to create matching input fields, or click \"+ AI Form\" to let the AI assistant build a complete form.",
+  "panelHint": "Click \"⚡ Capability\" to see what MegaForm can do with a table — and to build a form from it, by machine or with AI. \"+ DataGrid\" inserts a self-configured Subform, and column chips can be dragged onto the canvas as input fields.",
   "filterPlaceholder": "Filter tables…",
   "loadingTables": "Loading tables…",
   "loadingColumns": "Loading columns…",
@@ -14,6 +14,8 @@
   "selectedEmpty": "No tables selected yet.",
   "buttonAddDataGrid": "+ DataGrid",
   "buttonAddDataGridTitle": "Insert as Subform / DataGrid widget",
+  "buttonProbe": "⚡ Capability",
+  "buttonProbeTitle": "Probe capability: key, permissions, indexes, required columns — what MegaForm can do with this table",
   "buttonAddAiForm": "+ Use",
   "buttonAddAiFormTitle": "Add this table to the form's working set. AI will only be invoked when you click 'Build with AI' on the strip below.",
   "buttonBuildWithAi": "🤖 Build fields with AI",

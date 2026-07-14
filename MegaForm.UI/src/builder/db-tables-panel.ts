@@ -254,7 +254,7 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
 
   // [v20260530-27] Detect form-session change. Was: just formId. That misses
   // "new form opened twice" because both have formId=0. Now we key on
-  // formId + URL hash so navigating to the New-Form route resets the strip.
+  // formId + URL hash so opening another form does not inherit its tables.
   let __lastSeenSessionKey = '';
   function refreshIfFormChanged(): void {
     const k = sessionKey();
@@ -262,7 +262,6 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
       __lastSeenSessionKey = k;
       selectedTables = loadPersistedSelected();
       (window as any).__MF_SELECTED_DB_TABLES__ = selectedTables.slice();
-      try { renderSelected(); } catch { /* host not mounted yet */ }
     }
   }
   if (typeof window !== 'undefined') {
@@ -278,101 +277,12 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
     try { localStorage.removeItem('mf-db-selected-tables:0'); } catch {}
   }
 
-  function getSelectedHost(): HTMLElement | null {
-    return document.getElementById('mf-db-tables-selected');
-  }
-
-  function ensureSelectedHost(panelHost: HTMLElement): HTMLElement {
-    let sel = getSelectedHost();
-    if (sel) return sel;
-    sel = document.createElement('div');
-    sel.id = 'mf-db-tables-selected';
-    sel.innerHTML =
-      '<h4>' + S.selectedHeading + '</h4>' +
-      '<p class="mfsel-hint">' + S.selectedHint + '</p>' +
-      '<div class="mfsel-list"></div>' +
-      '<div class="mfsel-actions">' +
-        '<button type="button" class="mfsel-btn-ai" data-act="build-ai" title="' + escapeAttr(S.buttonBuildWithAiTitle || '') + '" disabled>' + (S.buttonBuildWithAi || '🤖 Build fields with AI') + '</button>' +
-        '<button type="button" class="mfsel-btn-clear" data-act="clear" title="' + escapeAttr(S.buttonClearSelectedTitle || '') + '" disabled>' + (S.buttonClearSelected || 'Clear') + '</button>' +
-      '</div>';
-    // Append to the OUTER host (mf-db-tables-host) so it sits below the
-    // scrollable list, above the Connection footer.
-    const outer = panelHost.closest('#mf-db-tables-host') || panelHost.parentElement;
-    if (outer) {
-      const footer = outer.querySelector('[data-conn-footer]') || outer.lastElementChild;
-      outer.insertBefore(sel, footer);
-    }
-    // [v20260529-07] Wire Build/Clear once (mounted host persists).
-    sel.querySelector('[data-act="build-ai"]')?.addEventListener('click', () => {
-      if (!selectedTables.length) return;
-      const w = window as any;
-      if (!w.MFAiChat || typeof w.MFAiChat.sendProgrammatic !== 'function') {
-        alert('AI assistant not loaded. Enable it via dev.lock + reload.'); return;
-      }
-      const listStr = selectedTables.map(t => '"' + t + '"').join(', ');
-      // [v20260530-06] Prompt hardened against AI hallucinating existing
-      // fields. Symptoms before: AI emitted set_field_property / remove_field
-      // ops targeting field keys that don't exist (e.g. round_display,
-      // score_details). The dispatcher rejected them, leaving a half-built
-      // form. Force-rules: only add_field, only against the listed tables,
-      // verify columns via get_table_columns before SQL.
-      const prompt = [
-        'TASK: Build input form fields for the following SQL tables on DashboardDatabase:',
-        listStr,
-        '',
-        'STRICT RULES — failure to follow these breaks the form:',
-        '1. Use ONLY `add_field` ops. Do NOT use set_field_property or remove_field. If you want to rename a field, just emit it with the right label from the start.',
-        '2. Trust the CURRENT FORM SNAPSHOT below. If a field is NOT in the snapshot, do NOT reference its key in any op. The user wants a FRESH build on top of whatever is already there.',
-        '3. For EACH table call get_table_columns(tableName) ONCE before writing SQL. Do NOT guess column names. Do NOT write a WHERE clause referencing a column that does not appear in the tool result.',
-        '4. For Select fields backed by SQL, use this exact shape: `properties:{optionsSource:"sql", optionsConnectionKey:"DashboardDatabase", optionsSql:"SELECT <id> AS value, <label> AS label FROM <table>"}`. Cascading children add `properties.optionsDependsOn:["parent_key"]`.',
-        '5. For DataRepeater/DataGrid use widgetProps.{connectionKey:"DashboardDatabase", masterQuery, queryDependsOn:[...]}.',
-        '6. Skip identity primary keys when picking columns. Keep field keys snake_case.',
-        '7. End with a chat_message op summarising what was added.',
-      ].join('\n');
-      w.MFAiChat.sendProgrammatic(prompt);
-    });
-    sel.querySelector('[data-act="clear"]')?.addEventListener('click', () => {
-      if (!selectedTables.length) return;
-      if (!confirm('Remove all ' + selectedTables.length + ' tables from the working set?')) return;
-      selectedTables = [];
-      (window as any).__MF_SELECTED_DB_TABLES__ = [];
-      savePersistedSelected();
-      renderSelected();
-    });
-    return sel;
-  }
-
-  function renderSelected() {
-    const sel = getSelectedHost(); if (!sel) return;
-    const list = sel.querySelector('.mfsel-list') as HTMLElement;
-    const buildBtn = sel.querySelector('[data-act="build-ai"]') as HTMLButtonElement | null;
-    const clearBtn = sel.querySelector('[data-act="clear"]') as HTMLButtonElement | null;
-    if (buildBtn) buildBtn.disabled = selectedTables.length === 0;
-    if (clearBtn) clearBtn.disabled = selectedTables.length === 0;
-    if (!selectedTables.length) {
-      list.innerHTML = '<span class="mfsel-empty">' + S.selectedEmpty + '</span>';
-      return;
-    }
-    list.innerHTML = selectedTables.map((t) =>
-      '<span class="mfsel-pill" data-sel="' + escapeAttr(t) + '">' + escapeHtml(t) + '<button type="button" title="Remove">×</button></span>'
-    ).join('');
-    list.querySelectorAll('.mfsel-pill button').forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        const pill = (e.target as HTMLElement).closest('[data-sel]') as HTMLElement;
-        const t = pill?.getAttribute('data-sel') || '';
-        selectedTables = selectedTables.filter((x) => x !== t);
-        (window as any).__MF_SELECTED_DB_TABLES__ = selectedTables.slice();
-        savePersistedSelected();
-        renderSelected();
-      });
-    });
-  }
-
+  /// Remembers which tables this form already pulls from. Nothing renders it any more — the AI chat
+  /// reads the list (window.__MF_SELECTED_DB_TABLES__) to know what "the tables I added" means.
   function markSelected(tableName: string) {
     if (!selectedTables.includes(tableName)) selectedTables.push(tableName);
     (window as any).__MF_SELECTED_DB_TABLES__ = selectedTables.slice();
     savePersistedSelected();
-    renderSelected();
   }
 
   function mountTabContent(host: HTMLElement) {
@@ -393,12 +303,12 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
       tablesCache = null; // force refetch
       loadAndRender(host, search.value.trim().toLowerCase());
     });
-    ensureSelectedHost(host);
-    // [v20260530-01] Rehydrate strip from localStorage before first render
-    // so a reload of the form shows the previously-picked tables.
+    // [NoWorkingSetStrip v20260714] The "In use by this form" strip (+ its "Build fields with AI"
+    // and "Clear" buttons) is gone: it was a SECOND, unvalidated AI path sitting next to the one in
+    // the Capability card, and nothing explained which was which. Tables inserted with "+ DataGrid"
+    // are still tracked here (invisibly) because the AI chat uses the list as context.
     selectedTables = loadPersistedSelected();
     (window as any).__MF_SELECTED_DB_TABLES__ = selectedTables.slice();
-    renderSelected();
     loadAndRender(host, '');
   }
 
@@ -431,8 +341,10 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
         '<span class="mf-bdb-table-schema">' + escapeHtml(t.schema || 'dbo') + '</span>' +
         '<span class="mf-bdb-table-name">' + escapeHtml(t.name) + '</span>' +
         '<span class="mf-bdb-table-add-row">' +
-          '<button type="button" class="mf-bdb-table-ai" data-probe title="Dò năng lực: khoá, quyền, index, cột bắt buộc — MegaForm làm được gì với bảng này" style="background:#0f766e">⚡ Năng lực</button>' +
-          '<button type="button" class="mf-bdb-table-ai" data-ai title="' + escapeAttr(S.buttonAddAiFormTitle) + '">' + S.buttonAddAiForm + '</button>' +
+          // [NoWorkingSetStrip v20260714] "+ Use" is gone with the strip it fed: on its own it did
+          // nothing a user could see. Building a form from a table now has ONE door — Capability,
+          // which shows what the table actually supports before offering to design against it.
+          '<button type="button" class="mf-bdb-table-ai" data-probe title="' + escapeAttr(S.buttonProbeTitle || '') + '" style="background:#0f766e">' + (S.buttonProbe || '⚡ Capability') + '</button>' +
           '<button type="button" class="mf-bdb-table-add" data-add title="' + escapeAttr(S.buttonAddDataGridTitle) + '">' + S.buttonAddDataGrid + '</button>' +
         '</span>' +
       '</div>' +
@@ -445,7 +357,6 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
     const head = rowEl.querySelector('.mf-bdb-table-head') as HTMLElement;
     const colsEl = rowEl.querySelector('[data-cols]') as HTMLElement;
     const addBtn = rowEl.querySelector('[data-add]') as HTMLButtonElement;
-    const aiBtn  = rowEl.querySelector('[data-ai]')  as HTMLButtonElement;
 
     // [ATBE P0] Capability probe — what can MegaForm actually do with this table?
     const probeBtn = rowEl.querySelector('[data-probe]') as HTMLButtonElement | null;
@@ -459,7 +370,7 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
 
     head.addEventListener('click', async (e) => {
       const tgt = e.target as HTMLElement;
-      if (tgt.hasAttribute('data-add') || tgt.hasAttribute('data-ai') || tgt.hasAttribute('data-probe')) return;
+      if (tgt.hasAttribute('data-add') || tgt.hasAttribute('data-probe')) return;
       const isOpen = rowEl.classList.toggle('is-open');
       if (isOpen && !colsEl.hasChildNodes()) {
         colsEl.innerHTML = '<span style="color:#94a3b8;font-size:11px">' + S.loadingColumns + '</span>';
@@ -504,18 +415,6 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
       }
     });
 
-    // [v20260529-07] "+ Use" button (formerly "+ AI Form") — adds the table
-    // to the per-form working set ONLY. Does NOT fire the AI chat. The strip
-    // at the bottom collects what user picked, then a separate "Build with
-    // AI" button (rendered on the strip) is the explicit trigger that hands
-    // the whole picked list to the assistant. Avoids the previous footgun
-    // where every click ambushed the user with an AI request.
-    aiBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      markSelected(tableName);
-      aiBtn.textContent = S.buttonAddedOk;
-      setTimeout(() => { aiBtn.textContent = S.buttonAddAiForm; }, 1200);
-    });
   }
 
   async function loadColumns(tableName: string): Promise<DbColumn[]> {
