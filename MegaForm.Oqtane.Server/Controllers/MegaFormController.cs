@@ -1619,6 +1619,11 @@ namespace MegaForm.Oqtane.Server.Controllers
                 // Optional: also INSERT into a custom database if FormSettings.DatabaseInsert is enabled.
                 // Fail-soft — log error but never fail the submission.
                 // Badge: FormDatabaseInsert v20260430-01
+                // NOTE: the insert error is logged, never returned. Submit is reachable anonymously,
+                // and a SQL/connection error message would leak schema and server internals to a
+                // public visitor (SECURITY_CODING_RULES §10). Admin-visible reporting belongs on the
+                // admin-only DB View surface, not on the public submit response.
+                string databaseInsertError = null;
                 try
                 {
                     var form = _formRepo.GetForm(request.FormId);
@@ -1628,10 +1633,21 @@ namespace MegaForm.Oqtane.Server.Controllers
                         var settings = resolved?.Schema?.Settings;
                         if (settings?.DatabaseInsert != null && settings.DatabaseInsert.Enabled)
                         {
+                            // [DbInsertJoinKey v20260714-01] Hand the SQL row the server-side identity of
+                            // the submission it mirrors. Without it the custom table cannot be joined back
+                            // to MF_Submissions, so a "DB View" tab can only guess (latest row) — the exact
+                            // gap called out in AUDIT_SUBMISSION_DASHBOARD_SQL_JSON_SOURCE_2026-07-14 §P2.
+                            // insertSql opts in by naming :_submissionId / :_formId / :_submittedOnUtc.
+                            var insertData = new Dictionary<string, object>(request.Data ?? new Dictionary<string, object>(), StringComparer.OrdinalIgnoreCase);
+                            insertData["_submissionId"] = result.SubmissionId;
+                            insertData["_formId"] = request.FormId;
+                            insertData["_submittedOnUtc"] = DateTime.UtcNow;
+
                             var insertSvc = new MegaForm.Core.Services.FormDatabaseInsertService(_connectionRegistry);
-                            var insertResult = insertSvc.Execute(settings, request.Data);
+                            var insertResult = insertSvc.Execute(settings, insertData);
                             if (insertResult.Executed && !insertResult.Success)
                             {
+                                databaseInsertError = insertResult.Error;
                                 _logger.Log(LogLevel.Warning, this, LogFunction.Other,
                                     "MegaForm DatabaseInsert failed for form {FormId}: {Error}", request.FormId, insertResult.Error);
                             }
@@ -1640,6 +1656,7 @@ namespace MegaForm.Oqtane.Server.Controllers
                 }
                 catch (Exception dbEx)
                 {
+                    databaseInsertError = dbEx.Message;
                     _logger.Log(LogLevel.Warning, this, LogFunction.Other,
                         "MegaForm DatabaseInsert exception for form {FormId}: {Message}", request.FormId, dbEx.Message);
                 }

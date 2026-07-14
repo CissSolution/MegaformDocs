@@ -374,16 +374,78 @@ namespace MegaForm.Oqtane.Server.Services
     /// </summary>
     public sealed class OqtaneConnectionRegistry : IConnectionRegistry
     {
-        public const string Badge = "OqtaneConnectionRegistry v20260430-06";
+        public const string Badge = "OqtaneConnectionRegistry v20260714-07";
 
         private readonly IConfiguration _config;
-        public OqtaneConnectionRegistry(IConfiguration config) { _config = config; }
+        private readonly global::Oqtane.Repository.ISettingRepository _settings;
+        private readonly global::Oqtane.Infrastructure.ITenantManager _tenants;
+
+        // [SavedDbSettings v20260714-01] The Database Settings popup persists the customer's
+        // connection to SITE settings (MegaForm_DashboardDb_ConnectionString/_Provider/_Alias,
+        // MegaFormController.ModuleConfigDatabase.cs:207-209) — but this registry only ever read
+        // appsettings.json, so a connection saved in the UI never reached the runtime. Every
+        // databaseInsert then ran against DefaultConnection (or threw), and because the submit
+        // hook is fail-soft the customer saw "submitted" with no row in their table. Read the
+        // saved override FIRST; appsettings stays the fallback.
+        public OqtaneConnectionRegistry(
+            IConfiguration config,
+            global::Oqtane.Repository.ISettingRepository settings = null,
+            global::Oqtane.Infrastructure.ITenantManager tenants = null)
+        {
+            _config = config;
+            _settings = settings;
+            _tenants = tenants;
+        }
+
+        /// <summary>Site-level DashboardDatabase override saved by the Database Settings popup.</summary>
+        private (string ConnectionString, string Provider, string Alias) ReadSavedSiteDb()
+        {
+            try
+            {
+                if (_settings == null || _tenants == null) return (null, null, null);
+                var alias = _tenants.GetAlias();
+                var siteId = alias != null ? alias.SiteId : 0;
+                if (siteId <= 0) return (null, null, null);
+                var all = _settings.GetSettings(global::Oqtane.Shared.EntityNames.Site, siteId);
+                if (all == null) return (null, null, null);
+                string Get(string key)
+                {
+                    foreach (var s in all)
+                        if (string.Equals(s.SettingName, key, StringComparison.OrdinalIgnoreCase))
+                            return s.SettingValue;
+                    return null;
+                }
+                return (Get("MegaForm_DashboardDb_ConnectionString"),
+                        Get("MegaForm_DashboardDb_Provider"),
+                        Get("MegaForm_DashboardDb_Alias"));
+            }
+            catch { return (null, null, null); }
+        }
 
         public System.Data.Common.DbConnection GetConnection(string connectionName, string databaseType = null, string connectionString = null)
         {
+            var saved = ReadSavedSiteDb();
+            var savedAlias = string.IsNullOrWhiteSpace(saved.Alias) ? "DashboardDatabase" : saved.Alias.Trim();
+            // The saved override answers for its own alias (and for a caller that named none).
+            var wantsSavedAlias = string.IsNullOrWhiteSpace(connectionName)
+                || string.Equals(connectionName, savedAlias, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(connectionName, "DashboardDatabase", StringComparison.OrdinalIgnoreCase);
+
             var connStr = !string.IsNullOrWhiteSpace(connectionString)
                 ? connectionString
-                : (_config?.GetConnectionString(connectionName) ?? string.Empty);
+                : (wantsSavedAlias && !string.IsNullOrWhiteSpace(saved.ConnectionString)
+                    ? saved.ConnectionString
+                    : (_config?.GetConnectionString(connectionName) ?? string.Empty));
+
+            // An empty databaseType used to mean "SQL Server" — wrong on a SQLite/MySQL/Postgres
+            // tenant, and the resulting failure was swallowed by the fail-soft submit hook. Take
+            // the provider the admin saved, else sniff it from the connection string itself.
+            if (string.IsNullOrWhiteSpace(databaseType))
+            {
+                databaseType = wantsSavedAlias && !string.IsNullOrWhiteSpace(saved.Provider)
+                    ? saved.Provider
+                    : SniffProvider(connStr);
+            }
             // [DashboardDbFallback v20260625] Stock Oqtane installs ship ONLY "DefaultConnection".
             // MegaForm's dashboard / DB-bound-form / AI-SQL tools resolve the app DB by the
             // conventional alias "DashboardDatabase" (DNN already alias-resolves it). When that
@@ -422,6 +484,22 @@ namespace MegaForm.Oqtane.Server.Services
             if (s == "postgresql" || s == "postgres" || s == "npgsql") return "Npgsql";
             // Default: SQL Server (most common Oqtane setup)
             return "Microsoft.Data.SqlClient";
+        }
+
+        /// <summary>
+        /// [SavedDbSettings v20260714-01] Guess the provider from the connection string when the
+        /// caller left databaseType empty — the AI/app builder often does. Defaulting to SQL Server
+        /// on a SQLite tenant produced an insert that always failed, silently. Same rules as the
+        /// Database Settings popup's DetectDbProvider so the two cannot disagree.
+        /// </summary>
+        private static string SniffProvider(string connectionString)
+        {
+            var cs = (connectionString ?? string.Empty).ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(cs)) return string.Empty;   // let the default apply
+            if (cs.Contains("sqlite") || cs.Contains(".db") || cs.Contains(".sqlite")) return "sqlite";
+            if (cs.Contains("host=") && (cs.Contains("username=") || cs.Contains("user id=") || cs.Contains("port=5432"))) return "postgresql";
+            if ((cs.Contains("server=") || cs.Contains("host=")) && (cs.Contains("uid=") || cs.Contains("port=3306"))) return "mysql";
+            return "sqlserver";
         }
 
         // [Recovered June-15] Create a provider DbConnection (no connection string set)
