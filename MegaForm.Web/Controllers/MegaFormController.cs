@@ -79,7 +79,10 @@ namespace MegaForm.Web.Controllers
             _draftRepo      = draftRepo;
             _phase2Repo     = phase2Repo;
             _moduleSettings = moduleSettings;
-            _submissionQueries = new SubmissionQueryService(subRepo, formRepo, null);
+            // [SubmissionFilesFix v20260713] fileRepo was already injected but not
+            // handed to the query service → GET Submissions/{id} returned files:[]
+            // and attachments never showed in the detail views (DNN parity fix).
+            _submissionQueries = new SubmissionQueryService(subRepo, formRepo, fileRepo);
             _ctx            = ctx;
             _processor      = processor;
             _connectionRegistry = connectionRegistry;
@@ -683,6 +686,28 @@ namespace MegaForm.Web.Controllers
                 .ProjectForActor(formId, schemaJson, actor, permissions, query).SchemaJson;
         }
 
+        /// <summary>
+        /// Strips server-only settings (databaseInsert / lifecycle SQL) from the SettingsJson shipped
+        /// alongside the schema — that blob bypasses the schema projection and otherwise leaks the INSERT
+        /// statement + connection alias to anonymous callers. Same manage gate as the schema. Mirrors the
+        /// Oqtane and DNN twins; keep the three in step.
+        /// </summary>
+        private string ProjectSettingsForCurrentActor(int formId, string settingsJson)
+        {
+            if (string.IsNullOrWhiteSpace(settingsJson)) return settingsJson;
+
+            UserContext actor;
+            try { actor = GetCurrentUserContext(); }
+            catch { actor = new UserContext(); }
+
+            var permissions = SafeGetFormPermissions(formId);
+            var query = Request?.Query != null
+                ? Request.Query.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString(), StringComparer.OrdinalIgnoreCase)
+                : null;
+            return MegaForm.Core.Services.FormAccessProjection
+                .ProjectSettingsForActor(formId, settingsJson, actor, permissions, query);
+        }
+
         private List<FormPermissionInfo> SafeGetFormPermissions(int formId)
         {
             try { return (_phase2Repo.GetFormPermissions(formId) ?? Enumerable.Empty<FormPermissionInfo>()).ToList(); }
@@ -698,6 +723,8 @@ namespace MegaForm.Web.Controllers
             var resolvedRenderModel = RenderModelResolver.Resolve(form.SchemaJson, form.SettingsJson, form.SubmitButtonText, form.SuccessMessage, form.RedirectUrl);
             var selectedPresetThemeKey = GetSelectedThemePresetKey(form.ModuleId);
             var visibleSchemaJson = ProjectSchemaForCurrentActor(form.FormId, resolvedRenderModel.SchemaJson);
+            // Strip the client-facing settings too; the CSS build stays on raw settings (server-side).
+            var visibleSettingsJson = ProjectSettingsForCurrentActor(form.FormId, resolvedRenderModel.SettingsJson);
             return Ok(new
             {
                 formId           = form.FormId,
@@ -709,7 +736,7 @@ namespace MegaForm.Web.Controllers
                 enableSaveResume = form.EnableSaveResume,
                 theme            = form.ThemeJson,
                 themeJson        = form.ThemeJson,
-                settingsJson     = resolvedRenderModel.SettingsJson,
+                settingsJson     = visibleSettingsJson,
                 initialInlineCss = ThemePresetInlineCssService.Build(resolvedRenderModel.SettingsJson, selectedPresetThemeKey, "#mf-form-wrapper-" + form.FormId),
                 requireAuth      = form.RequireAuth,
             });
@@ -893,6 +920,39 @@ namespace MegaForm.Web.Controllers
         [HttpGet("Submissions/{submissionId}")]
         [Authorize]
         public IActionResult GetSubmissionById(int submissionId) => GetSubmission(submissionId);
+
+        // [SubmissionPrint v20260713] Print-ready document for ONE submission (values
+        // merged into the form's Print layout). Twin of the Oqtane endpoint; same
+        // row-level gate as GetSubmission ([WebRLS v20260712]) — submission data is PII.
+        [HttpGet("Submissions/{submissionId}/Print")]
+        [Authorize]
+        public IActionResult PrintSubmissionById(int submissionId)
+        {
+            var actor = GetSubmissionActorWithRoles();
+            var permissions = new PermissionService(_phase2Repo);
+            var row = _subRepo.Get(submissionId);
+            if (row == null) return NotFound();
+            if (!CanViewSubmissionRow(row.FormId, row, actor, permissions))
+                return StatusCode(403, new { error = "You do not have permission to view this submission." });
+
+            var detail = _submissionQueries.GetDetail(submissionId);
+            if (detail == null) return NotFound();
+
+            var data = MegaForm.Core.Services.PrintSubmissionData.FromDetail(detail);
+            string baseUrl = $"{Request.Scheme}://{Request.Host}";
+            string html = new MegaForm.Core.Services.PrintFormRenderer().RenderHtml(detail.Form, detail.Schema, baseUrl, data);
+
+            string title = System.Web.HttpUtility.HtmlEncode(detail.Form?.Title ?? "Submission");
+            string toolbar = "<div class=\"mf-print-toolbar\">"
+                + $"<span>🖨️ <b style=\"color:#e2e8f0\">{title}</b> · SUB-{detail.Submission.SubmissionId}</span>"
+                + "<div style=\"flex:1\"></div>"
+                + "<button class=\"mf-print-tb-btn ghost\" onclick=\"window.close()\">✕ Close</button>"
+                + "<button class=\"mf-print-tb-btn primary\" onclick=\"window.print()\">🖨️ Print / Save PDF</button>"
+                + "</div><div style=\"height:44px\"></div>";
+            html = html.Replace("<body>", "<body>" + toolbar);
+
+            return Content(html, "text/html");
+        }
 
         [HttpPost("Submissions/{submissionId}/Status")]
         [Authorize]

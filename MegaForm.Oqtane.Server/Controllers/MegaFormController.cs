@@ -102,6 +102,7 @@ namespace MegaForm.Oqtane.Server.Controllers
             IConfiguration configuration,
             ISyncManager syncManager,
             ITenantManager tenantManager,
+            MegaForm.Core.Interfaces.IFileRepository fileRepo,
             ILogManager logger,
             IHttpContextAccessor accessor) : base(logger, accessor)
         {
@@ -126,7 +127,11 @@ namespace MegaForm.Oqtane.Server.Controllers
             _configuration = configuration;
             _syncManager = syncManager;
             _tenantManager = tenantManager;
-            _submissionQueries = new SubmissionQueryService(_subRepo, _formRepo, null);
+            // [SubmissionFilesFix v20260713] The files repo was null here, so
+            // GET Submissions/{id} always returned files:[] and the detail
+            // drawer / inbox never showed uploaded attachments (MF_Files had
+            // the rows all along). DNN already passes its repo — parity fix.
+            _submissionQueries = new SubmissionQueryService(_subRepo, _formRepo, fileRepo);
             _templateCatalog = new BuilderTemplateCatalogService(env);
         }
 
@@ -1479,6 +1484,32 @@ namespace MegaForm.Oqtane.Server.Controllers
             return projection.SchemaJson;
         }
 
+        /// <summary>
+        /// Strips server-only settings (databaseInsert / lifecycle SQL) from the SettingsJson this
+        /// endpoint ships alongside the schema. That blob never passes through the schema projection,
+        /// so it leaked the INSERT statement + connection alias to anonymous callers. Same manage gate
+        /// as the schema — an admin previewing the form still gets full settings. Mirrors Web + DNN.
+        /// </summary>
+        private string ProjectSettingsForCurrentActor(int formId, string settingsJson)
+        {
+            if (string.IsNullOrWhiteSpace(settingsJson))
+                return settingsJson;
+
+            MegaForm.Core.Services.UserContext actor;
+            try
+            {
+                actor = GetCurrentUserContextWithRoles();
+            }
+            catch
+            {
+                actor = new MegaForm.Core.Services.UserContext();
+            }
+
+            var permissions = SafeGetFormPermissions(formId);
+            var query = Request.Query.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString(), StringComparer.OrdinalIgnoreCase);
+            return MegaForm.Core.Services.FormAccessProjection.ProjectSettingsForActor(formId, settingsJson, actor, permissions, query);
+        }
+
         [HttpGet("Schema/{formId}")]
         public IActionResult Schema(int formId)
         {
@@ -1496,6 +1527,9 @@ namespace MegaForm.Oqtane.Server.Controllers
             // keyed on the schema content alone, so a per-actor result stored there would be served to
             // the next visitor.
             var visibleSchemaJson = ProjectSchemaForCurrentActor(form.FormId, resolvedRenderModel.SchemaJson);
+            // The client-facing SettingsJson must be stripped too; the CSS build below stays on the raw
+            // settings because it runs server-side and needs the theme keys, not databaseInsert.
+            var visibleSettingsJson = ProjectSettingsForCurrentActor(form.FormId, resolvedRenderModel.SettingsJson);
             var assetManifest = BuildAssetManifest(visibleSchemaJson ?? "{}");
             return Ok(new SchemaResponse
             {
@@ -1507,7 +1541,7 @@ namespace MegaForm.Oqtane.Server.Controllers
                 EnableCaptcha = form.EnableCaptcha,
                 EnableSaveResume = form.EnableSaveResume,
                 ThemeJson = form.ThemeJson,
-                SettingsJson = resolvedRenderModel.SettingsJson,
+                SettingsJson = visibleSettingsJson,
                 InitialInlineCss = ThemePresetInlineCssService.Build(resolvedRenderModel.SettingsJson, selectedPresetThemeKey, "#mf-form-wrapper-" + form.FormId),
                 RequireAuth = form.RequireAuth,
                 AssetSelectionBadge = assetManifest.Badge,
@@ -2444,6 +2478,51 @@ namespace MegaForm.Oqtane.Server.Controllers
                 hasSnapshot = detail.HasSnapshot,
                 workflowDetail = detail.WorkflowDetail
             });
+        }
+
+        // [SubmissionPrint v20260713] Print-ready A4 document for ONE submission —
+        // the form's Print layout with the submitted values merged in (invoice/voucher
+        // use-case; the blank-form print stays a Web-platform route). Same authorization
+        // as GET Submissions/{id}: CanViewSubmissionRow (admin / approver holding a task
+        // / explicit RLS view rule) — submission data is PII, never public.
+        [HttpGet("Submissions/{submissionId}/Print")]
+        [AllowAnonymous] // real gate below — mirrors GetSubmission
+        public IActionResult PrintSubmission(int submissionId)
+        {
+            var detail = _submissionQueries.GetDetail(submissionId);
+            if (detail == null) return NotFound();
+            var actor = GetCurrentUserContextWithRoles();
+            var permissions = new PermissionService(_phase2Repo);
+            var formId = detail.Form != null ? detail.Form.FormId : (detail.Submission != null ? detail.Submission.FormId : 0);
+            if (formId <= 0 || !CanViewSubmissionRow(formId, detail.Submission, actor, permissions))
+                return StatusCode(403, new { error = "You do not have permission to view this submission." });
+
+            string submittedBy = null;
+            try
+            {
+                if (detail.Submission.UserId.HasValue && detail.Submission.UserId.Value > 0)
+                {
+                    var u = _users.GetUser(detail.Submission.UserId.Value);
+                    submittedBy = u != null ? (string.IsNullOrWhiteSpace(u.DisplayName) ? u.Username : u.DisplayName) : null;
+                }
+            }
+            catch { /* name is cosmetic — the document prints without it */ }
+
+            var data = PrintSubmissionData.FromDetail(detail, submittedBy);
+            string baseUrl = $"{Request.Scheme}://{Request.Host}";
+            string html = new PrintFormRenderer().RenderHtml(detail.Form, detail.Schema, baseUrl, data);
+
+            // Same toolbar the Web print preview injects: Print / Save PDF + Close.
+            string title = System.Web.HttpUtility.HtmlEncode(detail.Form?.Title ?? "Submission");
+            string toolbar = "<div class=\"mf-print-toolbar\">"
+                + $"<span>🖨️ <b style=\"color:#e2e8f0\">{title}</b> · SUB-{detail.Submission.SubmissionId}</span>"
+                + "<div style=\"flex:1\"></div>"
+                + "<button class=\"mf-print-tb-btn ghost\" onclick=\"window.close()\">✕ Close</button>"
+                + "<button class=\"mf-print-tb-btn primary\" onclick=\"window.print()\">🖨️ Print / Save PDF</button>"
+                + "</div><div style=\"height:44px\"></div>";
+            html = html.Replace("<body>", "<body>" + toolbar);
+
+            return Content(html, "text/html");
         }
 
         [HttpPost("Submissions/{submissionId}/Status")]

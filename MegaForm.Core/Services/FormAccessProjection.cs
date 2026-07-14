@@ -29,12 +29,45 @@ namespace MegaForm.Core.Services
 
             // Whoever can manage the form already reads every field in the builder, so withholding any
             // here buys no secrecy and does break the admin surfaces that load the same schema endpoint
-            // to enumerate fields (module settings panel, view designer).
+            // to enumerate fields (module settings panel, view designer). Admins also need the SQL /
+            // connection config the stripper below removes, so the manage path returns it untouched.
             if (context.Permissions != null && context.Permissions.Contains("manage"))
                 return new SchemaProjectionResult { SchemaJson = schemaJson };
 
             var policy = ServerSidePermissionEnforcementService.BuildFieldAccessPolicy(formId, permissions, actor);
-            return FormSchemaVisibilityFilter.Project(schemaJson, context, policy);
+            var projection = FormSchemaVisibilityFilter.Project(schemaJson, context, policy);
+
+            // Field visibility decides which fields this actor sees; it never touches the server-only
+            // SQL / connection config baked into the schema (optionsSql, optionsConnectionKey, the
+            // databaseInsert + lifecycle blocks). That config is resolved server-side by (formId,
+            // fieldKey) and the renderer never reads it, so strip it for every non-admin caller. Runs
+            // even when no field was hidden — a form with zero access rules still carries optionsSql,
+            // and the visibility filter fast-paths straight past such a form without parsing it.
+            projection.SchemaJson = FormSchemaSensitivePropertyStripper.Strip(projection.SchemaJson);
+            return projection;
+        }
+
+        /// <summary>
+        /// The render response ships the form's settings a second time as a separate SettingsJson
+        /// string that never passes through <see cref="ProjectForActor"/>, yet it carries the same
+        /// server-only databaseInsert / lifecycle SQL. Strip it for every non-admin caller, on the same
+        /// manage gate the schema uses so an admin previewing the form still gets the full settings.
+        /// </summary>
+        public static string ProjectSettingsForActor(
+            int formId,
+            string settingsJson,
+            UserContext actor,
+            IEnumerable<FormPermissionInfo> permissions,
+            IDictionary<string, string> query = null)
+        {
+            if (string.IsNullOrWhiteSpace(settingsJson))
+                return settingsJson;
+
+            var context = ServerSidePermissionEnforcementService.BuildRenderContext(formId, actor, permissions, query);
+            if (context.Permissions != null && context.Permissions.Contains("manage"))
+                return settingsJson;
+
+            return FormSchemaSensitivePropertyStripper.Strip(settingsJson);
         }
 
         /// <summary>

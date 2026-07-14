@@ -134,7 +134,13 @@ giống ChatGPT share link**, để **các dev bàn luận với nhau về form/
 Tôi đã khảo sát repo (không phải đoán) — dưới đây là cái ĐÃ CÓ, cái THIẾU, và **1 lỗ bảo mật phải vá
 TRƯỚC** vì tính năng này biến "phục vụ ẩn danh" thành thiết kế chủ đích.
 
-## 7.1 🔴🔴 CHẶN ĐƯỜNG: `Schema/{formId}` ĐANG RÒ SQL NỘI BỘ CHO NGƯỜI LẠ (verify live, không cookie)
+## 7.1 🟢 ĐÃ VÁ + VERIFY LIVE (07-14): `Schema/{formId}` KHÔNG còn rò SQL nội bộ
+
+> **RESOLVED 07-14.** Strip qua **`MegaForm.Core/Services/FormSchemaSensitivePropertyStripper.cs`** (mới) — wire vào `FormAccessProjection.ProjectForActor` (schema) **+ vector 2**: `insertSql/databaseInsert/connectionKey` rò từ **`SettingsJson` blob RIÊNG** (không qua projection) → thêm `FormAccessProjection.ProjectSettingsForActor` + `ProjectSettingsForCurrentActor` ở 3 controller Schema action. Strip **surgical** (`field.properties.{optionsSql,optionsConnectionKey,optionsType,optionsDatabaseType}` + `settings.{databaseInsert,lifecycle}`), giữ manage-check (admin full). **Verify LIVE :5125**: schema+settingsJson đều sạch, `Field/Options` vẫn trả country 8 / currency 7 options (dropdown KHÔNG vỡ). 3 twin compile 0-error (net10/net9/net472). Hot-swap :5125 OK; **CHƯA commit** (3 controller trộn thay đổi Codex), **CHƯA pack 1.7.106**.
+>
+> **Tier 2 CHƯA vá** (strip thẳng sẽ vỡ widget): `widgetProps.{masterQuery,razorSource,razorSourceOverride,connectionKey}` + `columns[].optionsSql` — runtime client đọc (`megaform-widget-razor.ts:309/266`); cần widget fetch-by-(formId,widgetKey) trước. Và **`Form/Get` `[Authorize]` any-user** rò `WorkflowJson/RulesJson/databaseInsert` cho mọi user login (IDOR builder-load). Chi tiết: memory `project_20260714_schema_api_leaks_sql_anon`.
+
+<details><summary>Bối cảnh gốc (lỗ trước khi vá)</summary>
 
 ```
 GET http://localhost:5125/api/MegaForm/Schema/7      ← KHÔNG gửi cookie, HTTP 200
@@ -156,6 +162,8 @@ GET http://localhost:5125/api/MegaForm/Schema/7      ← KHÔNG gửi cookie, HT
   `widgetProps.connectionKey`, RazorWidget action SQL, webhook/app-endpoint URL, payment settings.
   Renderer **không cần** các field này (options nạp qua `Field/Options`, insert chạy server-side).
   → **Đây là việc P0, làm riêng, có giá trị cả khi khách bỏ ý định share-link.**
+
+</details>
 
 ## 7.2 ĐÃ CÓ SẴN (đã verify file:line — bám vào đây, đừng viết lại)
 

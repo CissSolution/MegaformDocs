@@ -45,6 +45,16 @@ namespace MegaForm.WebApi
                 defaults: new { controller = "UploadFile", action = "File" },
                 namespaces: new[] { "MegaForm.WebApi" }
             );
+            // [SubmissionPrint v20260713] Per-submission print document — same URL
+            // shape as the Oqtane/Web twins (Submissions/{id}/Print) so the shared
+            // client print button needs no DNN special-case.
+            mapRouteManager.MapHttpRoute(
+                moduleFolderName: "MegaForm",
+                routeName: "MegaFormSubmissionPrint",
+                url: "Submissions/{submissionId}/Print",
+                defaults: new { controller = "Submissions", action = "Print" },
+                namespaces: new[] { "MegaForm.WebApi" }
+            );
             // [PAY-2 v20260712] Payment gateway endpoints (PaymentApiController).
             // URL shape mirrors the other platforms' /api/megaform/payments/*;
             // the unified payment widget maps its default URLs onto this prefix
@@ -1461,6 +1471,26 @@ VALUES
                 .ProjectForActor(formId, schemaJson, actor, permissions, BuildQueryDictionary()).SchemaJson;
         }
 
+        /// <summary>
+        /// Strips server-only settings (databaseInsert / lifecycle SQL) from the SettingsJson shipped
+        /// alongside the schema — that blob bypasses the schema projection and otherwise leaks the INSERT
+        /// statement + connection alias to anonymous callers. Same manage gate as the schema. Mirrors the
+        /// Oqtane and Web twins; keep the three in step.
+        /// </summary>
+        private string ProjectSettingsForCurrentActor(int formId, string settingsJson)
+        {
+            if (string.IsNullOrWhiteSpace(settingsJson)) return settingsJson;
+
+            var actor = BuildCurrentActor();
+
+            List<FormPermissionInfo> permissions;
+            try { permissions = (FormRepository.GetFormPermissions(formId) ?? Enumerable.Empty<FormPermissionInfo>()).ToList(); }
+            catch { permissions = new List<FormPermissionInfo>(); }
+
+            return MegaForm.Core.Services.FormAccessProjection
+                .ProjectSettingsForActor(formId, settingsJson, actor, permissions, BuildQueryDictionary());
+        }
+
         /// <summary>GET api/Submit/Schema?formId=1 — Get form schema for rendering (public)</summary>
         [HttpGet]
         public HttpResponseMessage Schema(int formId)
@@ -1542,6 +1572,9 @@ VALUES
             // here is readable regardless of the rendered HTML. Runs after i18n so translation and
             // projection both apply. Mirrors the Oqtane and Web twins.
             schemaJsonOut = ProjectSchemaForCurrentActor(form.FormId, schemaJsonOut);
+            // The SettingsJson blob ships separately and never passes through the schema projection, so
+            // strip its server-only databaseInsert / lifecycle SQL here too (manage-gated). Mirrors twins.
+            var visibleSettingsJson = ProjectSettingsForCurrentActor(form.FormId, resolvedRenderModel.SettingsJson);
 
             return WithCors(Request.CreateResponse(HttpStatusCode.OK, new
             {
@@ -1553,7 +1586,7 @@ VALUES
                 enableCaptcha = form.EnableCaptcha,
                 enableSaveResume = form.EnableSaveResume,
                 theme = form.ThemeJson,
-                settingsJson = resolvedRenderModel.SettingsJson,
+                settingsJson = visibleSettingsJson,
                 requireAuth = form.RequireAuth,
                 resolverBadge = resolvedRenderModel.Badge,
                 appliedLocale,
@@ -2296,6 +2329,55 @@ VALUES
                 hasSnapshot = detail.HasSnapshot,
                 workflowDetail = detail.WorkflowDetail
             });
+        }
+
+        // [SubmissionPrint v20260713] Print-ready A4 document for ONE submission —
+        // DNN twin of the Oqtane/Web endpoints (values merged into the form's Print
+        // layout). Same gate as Get: CanViewSubmissionRow (admin / task holder /
+        // explicit RLS view rule) — submission data is PII, never public.
+        [HttpGet]
+        [AllowAnonymous] // real gate below — mirrors Get(submissionId)
+        public HttpResponseMessage Print(int submissionId)
+        {
+            var service = new SubmissionQueryService(new DnnSubmissionRepository(), new DnnFormRepository(), new DnnFileRepository());
+            var detail = service.GetDetail(submissionId);
+            if (detail == null) return Request.CreateResponse(HttpStatusCode.NotFound);
+            var actor = CurrentSubmissionUser;
+            var formId = detail.Form != null ? detail.Form.FormId : (detail.Submission != null ? detail.Submission.FormId : 0);
+            if (formId <= 0 || !CanViewSubmissionRow(formId, detail.Submission, actor))
+                return Request.CreateResponse(HttpStatusCode.Forbidden, new { error = "You do not have permission to view this submission." });
+
+            string submittedBy = null;
+            try
+            {
+                if (detail.Submission.UserId.HasValue && detail.Submission.UserId.Value > 0)
+                {
+                    var portalId = PortalSettings != null ? PortalSettings.PortalId : 0;
+                    var u = DotNetNuke.Entities.Users.UserController.Instance.GetUserById(portalId, detail.Submission.UserId.Value);
+                    submittedBy = u != null ? (string.IsNullOrWhiteSpace(u.DisplayName) ? u.Username : u.DisplayName) : null;
+                }
+            }
+            catch { /* name is cosmetic — the document prints without it */ }
+
+            var data = PrintSubmissionData.FromDetail(detail, submittedBy);
+            string baseUrl = Request.RequestUri != null
+                ? Request.RequestUri.Scheme + "://" + Request.RequestUri.Authority
+                : string.Empty;
+            string html = new PrintFormRenderer().RenderHtml(detail.Form, detail.Schema, baseUrl, data);
+
+            // Same toolbar the other platforms inject: Print / Save PDF + Close.
+            string title = System.Web.HttpUtility.HtmlEncode(detail.Form != null ? (detail.Form.Title ?? "Submission") : "Submission");
+            string toolbar = "<div class=\"mf-print-toolbar\">"
+                + "<span>🖨️ <b style=\"color:#e2e8f0\">" + title + "</b> · SUB-" + detail.Submission.SubmissionId + "</span>"
+                + "<div style=\"flex:1\"></div>"
+                + "<button class=\"mf-print-tb-btn ghost\" onclick=\"window.close()\">✕ Close</button>"
+                + "<button class=\"mf-print-tb-btn primary\" onclick=\"window.print()\">🖨️ Print / Save PDF</button>"
+                + "</div><div style=\"height:44px\"></div>";
+            html = html.Replace("<body>", "<body>" + toolbar);
+
+            var resp = Request.CreateResponse(HttpStatusCode.OK);
+            resp.Content = new System.Net.Http.StringContent(html, System.Text.Encoding.UTF8, "text/html");
+            return resp;
         }
 
         [HttpPost]
