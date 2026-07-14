@@ -3676,114 +3676,10 @@ VALUES
             catch { return fallback; }
         }
 
-        private string GetRendererHostPortalSetting(string key, string defaultValue = "")
-        {
-            try
-            {
-                return PortalController.GetPortalSetting("MegaForm_" + key, ResolveTargetPortalId(), defaultValue) ?? defaultValue;
-            }
-            catch
-            {
-                return defaultValue;
-            }
-        }
-
-        private void SetRendererHostPortalSetting(string key, string value)
-        {
-            try
-            {
-                PortalController.UpdatePortalSetting(ResolveTargetPortalId(), "MegaForm_" + key, value ?? string.Empty, true);
-            }
-            catch { }
-        }
-
-        private int GetRendererHostPortalSettingInt(string key)
-        {
-            int value;
-            return int.TryParse(GetRendererHostPortalSetting(key, "0"), out value) && value > 0 ? value : 0;
-        }
-
-        private static string NormalizeRendererHostUrl(string urlLike)
-        {
-            var raw = (urlLike ?? string.Empty).Trim();
-            if (string.IsNullOrWhiteSpace(raw)) return string.Empty;
-            // [RendererHostSanitize v20260518-09] Auto-heal the two real-world
-            // bugs we've observed in stored RendererHostUrl values:
-            //   1. Path typo `RederHost` → `RendererHost` (silent until 404)
-            //   2. Hostname that doesn't match THIS site (admin pasted a URL
-            //      from a different DNN install). Blanks the URL so the View
-            //      Live button falls back to current page path.
-            raw = System.Text.RegularExpressions.Regex.Replace(raw, @"\bRederHost\b", "RendererHost", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-            try
-            {
-                Uri absolute;
-                var hasAbsolute = Uri.TryCreate(raw, UriKind.Absolute, out absolute);
-                var uri = hasAbsolute ? absolute : new Uri(new Uri("http://localhost"), raw);
-                var query = HttpUtility.ParseQueryString(uri.Query ?? string.Empty);
-                query.Remove("formId");
-                query.Remove("formid");
-                query.Remove("embed");
-                query.Remove("configure");
-                query.Remove("new");
-                var path = uri.AbsolutePath;
-                var nextQuery = query.ToString();
-                var hash = string.Empty;
-                if (!string.IsNullOrWhiteSpace(uri.Fragment) && !uri.Fragment.StartsWith("#mf-", StringComparison.OrdinalIgnoreCase)) hash = uri.Fragment;
-                var result = path + (string.IsNullOrWhiteSpace(nextQuery) ? string.Empty : "?" + nextQuery) + hash;
-                if (hasAbsolute && !string.Equals(uri.Host, "localhost", StringComparison.OrdinalIgnoreCase))
-                {
-                    // Reject hostnames that don't match any alias of the current portal.
-                    // PortalSettings.Current.PortalAlias.HTTPAlias is the canonical alias
-                    // for the user's current request. Aliases come without scheme; compare
-                    // case-insensitive on the host portion only.
-                    var current = string.Empty;
-                    try { current = (PortalSettings.Current?.PortalAlias?.HTTPAlias ?? string.Empty).Split('/')[0]; } catch { }
-                    if (!string.IsNullOrWhiteSpace(current) &&
-                        !string.Equals(uri.Host, current.Split(':')[0], StringComparison.OrdinalIgnoreCase))
-                    {
-                        return string.Empty;
-                    }
-                    result = uri.GetLeftPart(UriPartial.Authority) + result;
-                }
-                return result;
-            }
-            catch
-            {
-                return raw;
-            }
-        }
-
-        [HttpGet]
-        [ActionName("RendererHost")]
-        public HttpResponseMessage GetRendererHost(int moduleId = 0)
-        {
-            var rendererHostUrl = NormalizeRendererHostUrl(GetRendererHostPortalSetting("RendererHostUrl", string.Empty));
-            var rendererHostTabId = GetRendererHostPortalSettingInt("RendererHostTabId");
-            var rendererHostModuleId = GetRendererHostPortalSettingInt("RendererHostModuleId");
-            return Request.CreateResponse(HttpStatusCode.OK, new
-            {
-                configured = !string.IsNullOrWhiteSpace(rendererHostUrl),
-                rendererHostUrl,
-                rendererHostTabId,
-                rendererHostModuleId,
-                moduleId
-            });
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [ActionName("RendererHost")]
-        public HttpResponseMessage SaveRendererHost([FromBody] JObject body)
-        {
-            if (body == null) return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "body required" });
-            var rendererHostUrl = NormalizeRendererHostUrl(body.Value<string>("url"));
-            var rendererHostTabId = body.Value<int?>("tabId") ?? 0;
-            var rendererHostModuleId = body.Value<int?>("moduleId") ?? 0;
-            SetRendererHostPortalSetting("RendererHostUrl", rendererHostUrl);
-            SetRendererHostPortalSetting("RendererHostTabId", rendererHostTabId > 0 ? rendererHostTabId.ToString() : string.Empty);
-            SetRendererHostPortalSetting("RendererHostModuleId", rendererHostModuleId > 0 ? rendererHostModuleId.ToString() : string.Empty);
-            return GetRendererHost(rendererHostModuleId);
-        }
+        // [RendererHostRetired v20260714-01] GET/POST ModuleConfig/RendererHost are gone.
+        // Beyond the feature removal this closes a real hole: ModuleConfigController is
+        // [DnnAuthorize] = ANY authenticated user, so any Registered User could POST here and
+        // repoint the PORTAL-WIDE renderer host — i.e. every admin's View/Embed link.
 
         /// <summary>GET api/ModuleConfig/Get?moduleId=123</summary>
         [HttpGet]
@@ -3801,10 +3697,7 @@ VALUES
                     configured = false,
                     moduleId,
                     forms = forms.Select(f => new { formId = f.FormId, title = f.Title, status = f.Status, fieldCount = 0 }),
-                    config = (object)null,
-                    rendererHostUrl = NormalizeRendererHostUrl(GetRendererHostPortalSetting("RendererHostUrl", string.Empty)),
-                    rendererHostTabId = GetRendererHostPortalSettingInt("RendererHostTabId"),
-                    rendererHostModuleId = GetRendererHostPortalSettingInt("RendererHostModuleId")
+                    config = (object)null
                 });
             }
 
@@ -3860,10 +3753,7 @@ VALUES
                     endAt = popupConfig.EndAt,
                     formTitle = form?.Title
                 },
-                fields = flatFields,
-                rendererHostUrl = NormalizeRendererHostUrl(GetRendererHostPortalSetting("RendererHostUrl", string.Empty)),
-                rendererHostTabId = GetRendererHostPortalSettingInt("RendererHostTabId"),
-                rendererHostModuleId = GetRendererHostPortalSettingInt("RendererHostModuleId")
+                fields = flatFields
             });
         }
 

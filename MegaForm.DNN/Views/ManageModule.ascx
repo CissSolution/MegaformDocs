@@ -3,7 +3,7 @@
 
 <div class="dnnForm mf-manage-module-form">
     <div class="dnnFormMessage dnnFormInfo">
-        Configure how this MegaForm module instance behaves on this page. Save one clear module mode here: render a selected form on this page, dedicate this page as the public Renderer Host, or open the Admin Dashboard for administrators.
+        Configure how this MegaForm module instance behaves on this page. Save one clear module mode here: render a selected form, open the Admin Dashboard for administrators, or turn this module into a My Inbox workboard.
     </div>
 
     <asp:Panel ID="pnlNoFormsInfo" runat="server" CssClass="dnnFormMessage dnnFormWarning" Visible="false">
@@ -20,7 +20,7 @@
             <dnn:Label ID="lblDefaultView" runat="server"
                        ControlName="ddlDefaultView"
                        Text="Module mode"
-                       HelpText="Choose whether this module acts as a normal form renderer, the portal Renderer Host page, or an Admin Dashboard for administrators." />
+                       HelpText="Choose whether this module renders a form, is the Admin Dashboard, or is the My Inbox workboard." />
             <asp:DropDownList ID="ddlDefaultView" runat="server" CssClass="form-control" AutoPostBack="true" OnSelectedIndexChanged="ConfigurationSelectionChanged" />
         </asp:Panel>
         <asp:Panel ID="pnlDisplayModeNotApplicable" runat="server" CssClass="dnnFormMessage dnnFormInfo" Visible="false" />
@@ -31,30 +31,10 @@
                        HelpText="Choose which form this module instance should render." />
             <asp:DropDownList ID="ddlForms" runat="server" CssClass="form-control" />
             <div style="margin-top:6px;color:#64748b;font:500 12px/1.6 'Inter',system-ui,sans-serif;">
-                This selector appears only in <strong>Form Renderer</strong> mode. Renderer Host pages route by <code>?formid=</code> and do not bind one fixed form here, while Admin Dashboard mode opens the management surface for administrators.
+                This selector appears only in <strong>Form Renderer</strong> mode. Admin Dashboard mode opens the management surface for administrators, and My Inbox mode shows each signed-in user their own approval workboard.
             </div>
         </asp:Panel>
     </fieldset>
-
-    <fieldset>
-        <legend style="font-size:14px;font-weight:600;color:#334155;border-bottom:1px solid #e2e8f0;padding-bottom:6px;margin-bottom:12px;">🖥️ Renderer host</legend>
-        <div class="dnnFormItem">
-            <dnn:Label ID="lblRendererHost" runat="server"
-                       ControlName="chkUseThisPageAsRendererHost"
-                       Text="Renderer host"
-                       HelpText="Choose one portal page as the public Renderer Host for View and Embed links. Enable this on the page that should render public MegaForm links." />
-            <div>
-                <asp:CheckBox ID="chkUseThisPageAsRendererHost" runat="server" Text="Choose this page as Renderer Host" AutoPostBack="true" OnCheckedChanged="ConfigurationSelectionChanged" Visible="false" />
-                <div style="margin-top:6px;color:#64748b;font:500 12px/1.6 'Inter',system-ui,sans-serif;">
-                    <asp:Literal ID="litRendererHostStatus" runat="server" />
-                </div>
-                <div style="margin-top:6px;color:#64748b;font:500 12px/1.6 'Inter',system-ui,sans-serif;">
-                    All <code>?formid=</code>-based View and embedded links will route to this page. For best public rendering, use the DNN built-in NoSkin page skin or another lightweight page skin here.
-                </div>
-            </div>
-        </div>
-    </fieldset>
-
 
     <asp:Panel ID="pnlDisplaySettings" runat="server" Visible="true">
         <fieldset>
@@ -145,11 +125,11 @@
                 <dnn:Label ID="lblAutoQrCode" runat="server"
                            ControlName="chkEnableAutoQrCode"
                            Text="Auto QR code"
-                           HelpText="When enabled, MegaForm automatically adds one QR code inside the form at the top-right corner. It points to the public Renderer Host link for this form, so users can scan and continue on mobile without adding a QR widget to each template." />
+                           HelpText="When enabled, MegaForm automatically adds one QR code inside the form at the top-right corner. It points to this form's public link, so users can scan and continue on mobile without adding a QR widget to each template." />
                 <div>
                     <asp:CheckBox ID="chkEnableAutoQrCode" runat="server" Text="Automatically show QR code in the form" />
                     <div style="margin-top:6px;color:#64748b;font:500 12px/1.6 'Inter',system-ui,sans-serif;">
-                        Uses the public Renderer Host URL when available; otherwise falls back to the current live form URL.
+                        Uses the form's public view URL when set; otherwise the page the form is rendered on.
                     </div>
                 </div>
             </asp:Panel>

@@ -43,10 +43,15 @@ namespace MegaForm.DNN.Components
         public bool HasDemoLock { get; private set; }
 
         public string ThemeDesignerHostHtml { get; private set; } = string.Empty;
-        public string RendererHostUrl { get; private set; } = string.Empty;
-        public int RendererHostTabId { get; private set; }
-        public int RendererHostModuleId { get; private set; }
-        public bool IsCurrentRendererHostPage { get; private set; }
+        // [RendererHostRetired v20260714-01] RendererHostUrl/TabId/ModuleId + IsCurrentRendererHostPage
+        // are gone. The concept (one portal page hosting every public ?formid= link) was retired on
+        // Oqtane first; DNN links now use the module's own clean tab path. The ASCX still binds these
+        // names in a couple of legacy spots, so they stay as inert, always-empty stubs until that
+        // markup is cleaned up — no reader consults them any more.
+        public string RendererHostUrl { get { return string.Empty; } }
+        public int RendererHostTabId { get { return 0; } }
+        public int RendererHostModuleId { get { return 0; } }
+        public bool IsCurrentRendererHostPage { get { return false; } }
         public int RequestedFormId { get; private set; }
 
         protected string GetTemplateContextJson()
@@ -136,13 +141,6 @@ namespace MegaForm.DNN.Components
             try { return JObject.Parse(rawJson); } catch { return new JObject(); }
         }
 
-        private void LoadRendererHostSettings()
-        {
-            RendererHostUrl = ReadPortalSetting("RendererHostUrl");
-            RendererHostTabId = ParsePositiveInt(ReadPortalSetting("RendererHostTabId"));
-            RendererHostModuleId = ParsePositiveInt(ReadPortalSetting("RendererHostModuleId"));
-        }
-
         private string ReadPortalSetting(string key, string defaultValue = "")
         {
             var fullKey = "MegaForm_" + key;
@@ -164,86 +162,22 @@ namespace MegaForm.DNN.Components
             return int.TryParse(raw, out value) && value > 0 ? value : 0;
         }
 
+        /// <summary>
+        /// Module modes: render | admin_dashboard | myinbox.
+        /// [RendererHostRetired v20260714-01] "renderer_host" is gone (Oqtane dropped the concept
+        /// first). A module still carrying the old setting degrades to "render" — no migration
+        /// needed. [DnnInboxMode v20260714-01] "myinbox" pins the module to the My Inbox surface,
+        /// mirroring Oqtane's ModuleRole=myinbox. Keep this in step with the twin in
+        /// ManageModule.ascx.cs — a mode known to only one of the two silently degrades to render.
+        /// </summary>
         private static string NormalizeModuleMode(string raw)
         {
             var value = (raw ?? string.Empty).Trim();
-            if (value.Equals("renderer_host", StringComparison.OrdinalIgnoreCase) || value.Equals("renderer-host", StringComparison.OrdinalIgnoreCase) || value.Equals("rendererhost", StringComparison.OrdinalIgnoreCase))
-                return "renderer_host";
             if (value.Equals("admin_dashboard", StringComparison.OrdinalIgnoreCase) || value.Equals("admin-dashboard", StringComparison.OrdinalIgnoreCase) || value.Equals("admindashboard", StringComparison.OrdinalIgnoreCase))
                 return "admin_dashboard";
+            if (value.Equals("myinbox", StringComparison.OrdinalIgnoreCase) || value.Equals("my_inbox", StringComparison.OrdinalIgnoreCase) || value.Equals("my-inbox", StringComparison.OrdinalIgnoreCase) || value.Equals("inbox", StringComparison.OrdinalIgnoreCase))
+                return "myinbox";
             return "render";
-        }
-
-        private string NormalizeRendererHostUrl(string urlLike)
-        {
-            try
-            {
-                var raw = (urlLike ?? string.Empty).Trim();
-                if (string.IsNullOrWhiteSpace(raw)) return string.Empty;
-                // [RendererHostSanitize v20260518-09] Auto-heal the two real-world
-                // bugs seen in stored RendererHostUrl values:
-                //   1. Path typo `RederHost` → `RendererHost`
-                //   2. Absolute URL with hostname that doesn't match this DNN
-                //      site (admin pasted from a different install) → blank,
-                //      so the View Live button falls back to current page path.
-                raw = System.Text.RegularExpressions.Regex.Replace(raw, @"\bRederHost\b", "RendererHost", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-                var hasAbsolute = raw.StartsWith("http", StringComparison.OrdinalIgnoreCase);
-                var uri = hasAbsolute
-                    ? new Uri(raw, UriKind.Absolute)
-                    : new Uri(new Uri("http://localhost"), raw);
-                if (hasAbsolute)
-                {
-                    var currentHost = string.Empty;
-                    try
-                    {
-                        var alias = (DotNetNuke.Entities.Portals.PortalSettings.Current?.PortalAlias?.HTTPAlias ?? string.Empty).Split('/')[0];
-                        currentHost = alias.Split(':')[0];
-                    }
-                    catch { }
-                    if (!string.IsNullOrWhiteSpace(currentHost) &&
-                        !string.Equals(uri.Host, currentHost, StringComparison.OrdinalIgnoreCase))
-                    {
-                        return string.Empty;
-                    }
-                }
-                var query = System.Web.HttpUtility.ParseQueryString(uri.Query ?? string.Empty);
-                query.Remove("formId");
-                query.Remove("formid");
-                query.Remove("FormId");
-                query.Remove("embed");
-                query.Remove("configure");
-                query.Remove("new");
-                var path = uri.AbsolutePath;
-                var queryString = query.ToString();
-                var hash = uri.Fragment ?? string.Empty;
-                if (hash.StartsWith("#mf-", StringComparison.OrdinalIgnoreCase)) hash = string.Empty;
-                return path + (string.IsNullOrWhiteSpace(queryString) ? string.Empty : "?" + queryString) + hash;
-            }
-            catch
-            {
-                return string.Empty;
-            }
-        }
-
-        private bool IsRendererHostRequestPage()
-        {
-            try
-            {
-                var saved = NormalizeRendererHostUrl(RendererHostUrl);
-                if (!string.IsNullOrWhiteSpace(saved))
-                {
-                    var current = NormalizeRendererHostUrl(Request != null && Request.Url != null
-                        ? Request.Url.PathAndQuery
-                        : (Request != null ? Request.RawUrl : string.Empty));
-                    if (!string.IsNullOrWhiteSpace(current) && string.Equals(saved, current, StringComparison.OrdinalIgnoreCase))
-                        return true;
-                }
-                return RendererHostTabId > 0 && RendererHostTabId == TabId;
-            }
-            catch
-            {
-                return false;
-            }
         }
 
         private bool ShouldSuppressInlineAdminEmptyState(FormRenderViewModel vm)
@@ -382,8 +316,6 @@ namespace MegaForm.DNN.Components
                 HasDevLock = HasLockFile("dev.lock");
                 HasDemoLock = HasLockFile("demo.lock");
 
-                LoadRendererHostSettings();
-                IsCurrentRendererHostPage = IsRendererHostRequestPage();
 
                 // ── Build ViewModel first so we know ShowConfigPanel ──
                 ViewModel = BuildRenderViewModel();
@@ -421,6 +353,9 @@ namespace MegaForm.DNN.Components
                     && ViewModel.IsAdmin
                     && ViewModel.IsInEditMode
                     && !ViewModel.IsAdminDashboardMode
+                    // A My Inbox module has no bound form BY DESIGN — without this it would be
+                    // read as a half-dropped module and the whole shell suppressed (blank page).
+                    && !ViewModel.IsMyInboxMode
                     && !ViewModel.ShowConfigPanel
                     && !ViewModel.LiveRenderMode
                     && !hasStableModuleState;
@@ -504,6 +439,25 @@ namespace MegaForm.DNN.Components
                     {
                         ClientResourceManager.RegisterStyleSheet(Page, ASSETS + "css/megaform-listview.css" + V, 215);
                         ClientResourceManager.RegisterScript(Page,    ASSETS + "js/megaform-listview.js"   + V, 118);
+                    }
+
+                    // [DnnInboxMode v20260714-01] A module pinned to My Inbox renders the inbox for
+                    // EVERY authenticated user — an approver is usually not an admin. Admins get it
+                    // through the admin-shell overlay below; everyone else gets the inline root in
+                    // the ASCX, which still needs the bundle + stylesheet.
+                    var shouldLoadInboxAssetsForMember = ViewModel != null
+                        && ViewModel.IsMyInboxMode
+                        && !ViewModel.IsAdmin
+                        && ViewModel.IsAuthenticated
+                        && !ViewModel.EmbedMode;
+
+                    if (shouldLoadInboxAssetsForMember)
+                    {
+                        ClientResourceManager.RegisterStyleSheet(Page, ASSETS + "css/megaform-admin-shell.css" + V, 205);
+                        ClientResourceManager.RegisterStyleSheet(Page, ASSETS + "css/megaform-submissions-ts.css" + V, 210);
+                        ClientResourceManager.RegisterStyleSheet(Page, ASSETS + "css/megaform-my-inbox-ts.css" + V, 211);
+                        ClientResourceManager.RegisterScript(Page, ASSETS + "js/megaform-i18n.js" + V, 95);
+                        ClientResourceManager.RegisterScript(Page, ASSETS + "js/megaform-my-inbox.js" + V, 121);
                     }
 
                     // Keep asset registration aligned with the ASCX shell gate.
@@ -697,7 +651,7 @@ namespace MegaForm.DNN.Components
             var moduleConfig = FormRepository.GetModuleViewConfig(ModuleId);
             var currentModuleMode = NormalizeModuleMode(Settings.Contains(SettingKeyModuleMode)
                 ? Convert.ToString(Settings[SettingKeyModuleMode])
-                : (IsCurrentRendererHostPage ? "renderer_host" : "render"));
+                : "render");
 
             // Get form associated with this module / optional public live query
             int selectedFormId = 0;
@@ -710,7 +664,6 @@ namespace MegaForm.DNN.Components
             int requestedFormId = isAdminUser ? ResolveRequestedFormId() : 0;
             int shellFormId = ResolveRequestedShellFormId();
             RequestedFormId = requestedFormId > 0 ? requestedFormId : shellFormId;
-            bool rendererHostRequest = IsCurrentRendererHostPage && requestedFormId > 0;
 
             // ADMIN-SHELL-FIX v20260412-01:
             // ?formid=N sets explicitRenderMode=true → LiveRenderMode=true → admin shell skipped
@@ -801,6 +754,7 @@ namespace MegaForm.DNN.Components
 
                 vm.ModuleMode = currentModuleMode;
                 vm.IsAdminDashboardMode = string.Equals(vm.ModuleMode, "admin_dashboard", StringComparison.OrdinalIgnoreCase);
+                vm.IsMyInboxMode = string.Equals(vm.ModuleMode, "myinbox", StringComparison.OrdinalIgnoreCase);
                 // For builder: pass raw schema JSON
                 if (form != null)
                 {
@@ -1456,8 +1410,12 @@ namespace MegaForm.DNN.Components
         {
             try
             {
+                // [RendererHostRetired v20260714-01] The portal Renderer Host used to outrank the
+                // form's own public URL here — the priority was backwards, and the concept is gone.
+                // The form's explicit view URL is now the only override; otherwise the QR points at
+                // the page the form is actually rendering on (Request.Url, resolved below).
                 var explicitViewUrl = form != null ? ReadViewUrl(form.SettingsJson) : null;
-                var preferred = !string.IsNullOrWhiteSpace(RendererHostUrl) ? RendererHostUrl : explicitViewUrl;
+                var preferred = explicitViewUrl;
 
                 Uri baseUri = null;
                 if (!string.IsNullOrWhiteSpace(preferred))

@@ -89,7 +89,6 @@
   if (!p.portalId)          p.portalId          = <%= PortalId %>;
   if (!p.formId)            p.formId            = <%= ViewModel.FormId %>;
   if (!p.returnUrl)         p.returnUrl         = base;
-  if (!p.rendererHostUrl)   p.rendererHostUrl   = '<%= System.Web.HttpUtility.JavaScriptStringEncode(RendererHostUrl ?? "") %>';
   var captchaCfg = {
     badgeVersion: '<%= System.Web.HttpUtility.JavaScriptStringEncode(ViewModel.CaptchaBadgeVersion ?? "") %>',
     reCaptchaSiteKey: '<%= System.Web.HttpUtility.JavaScriptStringEncode(ViewModel.ReCaptchaSiteKey ?? "") %>',
@@ -199,16 +198,12 @@ body > .mf-langpick-panel{z-index:100030;}
      data-dashboard-json='<%= Server.HtmlEncode(DashboardJson ?? "{}") %>'
      data-live-render='<%= ViewModel.LiveRenderMode.ToString().ToLower() %>'
      data-embed-mode='<%= ViewModel.EmbedMode.ToString().ToLower() %>'
-     data-renderer-host-url='<%= Server.HtmlEncode(RendererHostUrl ?? "") %>'
-     data-renderer-host-tab-id='<%= RendererHostTabId %>'
-     data-renderer-host-module-id='<%= RendererHostModuleId %>'
      data-admin-dashboard-mode='<%= ViewModel.IsAdminDashboardMode.ToString().ToLower() %>'
      data-module-mode='<%= ViewModel.ModuleMode ?? "render" %>'>
     <div class="mf-host-admin-dock">
         <a class="mf-host-admin-btn" href="<%= Server.HtmlEncode(homeUrl) %>" title="Back to home page"><i class="fas fa-house"></i> Home</a>
         <span class="mf-host-admin-pill"><i class="fas fa-eye"></i> Render</span>
-        <button type="button" class="mf-host-admin-btn" data-mf-renderer-host-status="1" title="<%= IsCurrentRendererHostPage ? (RendererHostModuleId == ModuleId ? "This module is currently attached to the public Renderer Host page for this portal." : "This page is currently the public Renderer Host for this portal.") : (!string.IsNullOrWhiteSpace(RendererHostUrl) ? Server.HtmlEncode(RendererHostUrl) : "Choose a portal page to act as the public Renderer Host for View and Embed links.") %>"><i class="fas <%= IsCurrentRendererHostPage ? "fa-circle-check" : (!string.IsNullOrWhiteSpace(RendererHostUrl) ? "fa-arrow-up-right-from-square" : "fa-triangle-exclamation") %>"></i> <%= IsCurrentRendererHostPage ? (RendererHostModuleId == ModuleId ? "This module is Renderer Host" : "This page is Renderer Host") : (!string.IsNullOrWhiteSpace(RendererHostUrl) ? "Renderer Host is another page" : "Renderer Host not set") %></button>
-        <button type="button" class="mf-host-admin-btn" data-mf-open="views"><i class="fas fa-clone"></i> Renderer Host &amp; Views</button>
+        <button type="button" class="mf-host-admin-btn" data-mf-open="views"><i class="fas fa-clone"></i> Module View</button>
         <button type="button" class="mf-host-admin-btn" id="mf-host-theme-preset-save" style="display:none;"><i class="fas fa-palette"></i> Update Theme</button>
         <button type="button" class="mf-host-admin-btn is-primary" data-mf-open="dashboard"><i class="fas fa-table-columns"></i> Form Dashboard</button>
     </div>
@@ -217,6 +212,11 @@ body > .mf-langpick-panel{z-index:100030;}
     <div class="mf-host-head"><div class="mf-host-title"><i class="fas fa-table-columns"></i> MegaForm Dashboard</div><div style="display:flex;gap:8px;align-items:center;"><a class="mf-host-close" href="<%= Server.HtmlEncode(homeUrl) %>" title="Back to home page"><i class="fas fa-house"></i> Home</a><button type="button" class="mf-host-close" data-mf-close><i class="fas fa-times"></i> Close</button></div></div>
     <div id="mf-host-dashboard-root" class="mf-host-body"
          data-platform="dnn"
+         <%-- [DnnPreviewBase v20260714-01] platform-host detectRoot() picks THIS element first, so
+              the clean tab path must be on it too — otherwise getPublicFormUrl() falls back to
+              window.location.pathname, which on DNN can carry /ctl/ManageModule/mid/N segments and
+              sends the "View live form" link to module settings instead of the form. --%>
+         data-return-url="<%= ReturnUrl %>"
          data-instance-id="<%= ModuleId %>"
          data-module-id="<%= ModuleId %>"
          data-tab-id="<%= TabId %>"
@@ -228,8 +228,8 @@ body > .mf-langpick-panel{z-index:100030;}
     </div>
 </div>
 <div id="mf-host-views-overlay" class="mf-host-overlay" aria-hidden="true">
-    <div class="mf-host-head"><div class="mf-host-title"><i class="fas fa-clone"></i> Renderer Host &amp; Module View</div><button type="button" class="mf-host-close" data-mf-close><i class="fas fa-times"></i> Close</button></div>
-    <div class="mf-host-body"><div class="mf-host-views"><div class="mf-host-views-card"><div style="font:600 18px/1.2 'Inter',system-ui,sans-serif;color:#0f172a;">Renderer Host &amp; form for this page</div><div style="margin-top:6px;color:#64748b;font:500 13px/1.5 'Inter',system-ui,sans-serif;">Step 1: choose one portal page as the public Renderer Host for View and Embed links. Step 2: choose which form this module instance should render on this page.</div><div id="mf-host-views-grid" class="mf-host-views-grid"></div><div class="mf-host-views-actions"><button type="button" class="mf-host-admin-btn" data-mf-close>Cancel</button><button type="button" class="mf-host-admin-btn is-primary" id="mf-host-views-save">Use selected form on this page</button></div></div></div></div>
+    <div class="mf-host-head"><div class="mf-host-title"><i class="fas fa-clone"></i> Module View</div><button type="button" class="mf-host-close" data-mf-close><i class="fas fa-times"></i> Close</button></div>
+    <div class="mf-host-body"><div class="mf-host-views"><div class="mf-host-views-card"><div style="font:600 18px/1.2 'Inter',system-ui,sans-serif;color:#0f172a;">Form shown by this module on this page</div><div style="margin-top:6px;color:#64748b;font:500 13px/1.5 'Inter',system-ui,sans-serif;">Choose which form this module instance renders on this page.</div><div id="mf-host-views-grid" class="mf-host-views-grid"></div><div class="mf-host-views-actions"><button type="button" class="mf-host-admin-btn" data-mf-close>Cancel</button><button type="button" class="mf-host-admin-btn is-primary" id="mf-host-views-save">Use selected form on this page</button></div></div></div></div>
 </div>
 <div id="mf-host-builder-overlay" class="mf-host-overlay" aria-hidden="true">
     <div class="mf-host-head"><div class="mf-host-title"><i class="fas fa-pen-ruler"></i> Form Builder</div><button type="button" class="mf-host-close" data-mf-close><i class="fas fa-times"></i> Close</button></div>
@@ -476,9 +476,36 @@ body.mf-admin-shell-route .mf-form-wrapper {
 </script>
 <% } %>
 
-<% } else if (ViewModel != null && ViewModel.IsAdminDashboardMode) { %>
-    <%-- Admin Dashboard mode: this page should act as a dashboard shell only.
-         Do not render an empty form body underneath the dashboard overlay. --%>
+<% } else if (ViewModel != null && ViewModel.IsMyInboxMode && !ViewModel.IsAdmin && RequestedFormId == 0) { %>
+    <%-- [DnnInboxMode v20260714-01] My Inbox module, non-admin member. Admins get the inbox as
+         an overlay surface (the dock shell above auto-opens #mf-myinbox); an approver who is not
+         an admin has no shell, so the inbox mounts INLINE here — the module IS the inbox.
+         megaform-my-inbox.js self-mounts on #mf-myinbox-root. --%>
+    <% if (ViewModel.IsAuthenticated) { %>
+    <div id="mf-myinbox-root"
+         data-platform="dnn"
+         data-instance-id="<%= ModuleId %>"
+         data-module-id="<%= ModuleId %>"
+         data-tab-id="<%= TabId %>"
+         data-portal-id="<%= PortalId %>"
+         data-api-base="<%= ViewModel.ApiBaseUrl %>"
+         data-submissions-api-base="<%= ViewModel.ApiBaseUrl %>"
+         data-assets-base="/DesktopModules/MegaForm/Assets/"
+         data-shell-mode="page"
+         style="min-height:72vh;">
+        <div class="mf-host-boot">Loading inbox…</div>
+    </div>
+    <% } else { %>
+    <div class="mf-auth-required alert alert-warning">
+        <i class="fa fa-lock"></i> You must be logged in to see your inbox.
+    </div>
+    <% } %>
+<% } else if (ViewModel != null && (ViewModel.IsAdminDashboardMode || ViewModel.IsMyInboxMode) && ViewModel.FormId == 0) { %>
+    <%-- Admin Dashboard / My Inbox mode: this page is a surface shell. Render no empty form body
+         underneath the overlay. [FormPreview v20260714-01] The `FormId == 0` guard is what makes
+         the admin's "View live form" link work: with ?formid=N the form RESOLVES, so we fall
+         through to the render branch below and the admin actually sees the form instead of a
+         surface overlay on a blank page. --%>
 <% } else if (SuppressInlineAdminEmptyState && (ViewModel == null || ViewModel.FormId == 0)) { %>
     <%-- Transient add/drop state:
          render nothing at all so DNN can drag/drop cleanly.
@@ -490,22 +517,15 @@ body.mf-admin-shell-route .mf-form-wrapper {
          page is unconfigured, UNLESS they followed a bad ?formid=N link — in
          which case a public-safe "requested form is not available" is shown.
     --%>
-    <% if (IsCurrentRendererHostPage && RequestedFormId > 0) { %>
-    <%-- Public-safe: user followed a specific form link that no longer exists here. --%>
+    <% if (RequestedFormId > 0) { %>
+    <%-- Public-safe: user followed a specific form link that no longer resolves here. --%>
     <div class="mf-no-form">
-        <p class="text-muted"><em>The requested form is not available on this Renderer Host page.</em></p>
+        <p class="text-muted"><em>The requested form is not available on this page.</em></p>
     </div>
     <% } else if (ViewModel != null && ViewModel.IsAdmin) { %>
     <%-- Admin-only: internal configuration hints. Hidden from public visitors. --%>
     <div class="mf-no-form">
-        <% if (IsCurrentRendererHostPage || string.Equals(ViewModel.ModuleMode, "renderer_host", System.StringComparison.OrdinalIgnoreCase)) { %>
-        <div class="mf-renderer-host-notice">
-            <strong>This page is the public Renderer Host.</strong>
-            Public View and Embed links route here. Open a public form with <code>?formid=&lt;id&gt;</code>, or use the dashboard and module dock to manage forms on this page.
-        </div>
-        <% } else { %>
         <p class="text-muted"><em>No form has been configured for this module.</em></p>
-        <% } %>
     </div>
     <% } %>
     <%-- Anonymous user + no specific form requested: render nothing (clean page). --%>

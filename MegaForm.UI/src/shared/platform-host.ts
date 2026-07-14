@@ -179,7 +179,33 @@ function getCurrentBasePath(platform: string): string {
     // away from /Dashboard URL would produce /Dashboard/builder (concatenated, broken).
     return pathname.replace(/\/(builder|submissions|settings|dashboard)\/?$/i, '') || '/';
   }
+  if (platform === 'dnn') {
+    // [DnnPreviewBase v20260714-01] window.location.pathname on DNN can carry routing
+    // segments — /ctl/ManageModule/mid/385, /ctl/Edit, /formId/24 — because DNN encodes
+    // control params as path pairs. Using it verbatim as the base for the "View live form"
+    // link produced /TestPinPage456/ctl/ManageModule/mid/385?formid=37: DNN routes on the
+    // ctl segment, so the admin landed on module settings instead of the form.
+    // returnUrl is the server-rendered clean tab path (BuildReturnUrl → NavigateURL(TabId)),
+    // which is what the hash routes already use. Prefer it; fall back to a scrubbed pathname.
+    const cfg = getPlatformHostConfig();
+    const returnUrl = String(cfg.returnUrl || '').split('?')[0].split('#')[0].trim();
+    if (returnUrl) return returnUrl;
+    return stripDnnControlSegments(pathname);
+  }
   return pathname;
+}
+
+/** Drop DNN control/param path pairs (/ctl/X, /mid/N, /formId/N, …) from a tab path. */
+function stripDnnControlSegments(pathname: string): string {
+  const parts = String(pathname || '/').split('/');
+  const keys = ['ctl', 'mid', 'moduleid', 'formid', 'mfformid', 'portalid', 'tabid', 'language', 'skinsrc', 'containersrc', 'dnnprintmode'];
+  const out: string[] = [];
+  for (let i = 0; i < parts.length; i++) {
+    if (keys.indexOf(String(parts[i]).toLowerCase()) >= 0) { i++; continue; } // skip key AND its value
+    out.push(parts[i]);
+  }
+  const cleaned = out.join('/').replace(/\/{2,}/g, '/');
+  return cleaned || '/';
 }
 
 function buildDnnHashRoute(basePath: string, mode: string, formId?: number, forceNew = false): string {
@@ -228,6 +254,13 @@ export function normalizeRendererHostUrl(urlLike?: string | null): string {
     const url = new URL(raw, window.location.origin);
     ['formId', 'formid', 'mfFormId', 'embed', 'configure', 'new'].forEach((key) => url.searchParams.delete(key));
     if ((url.hash || '').toLowerCase().startsWith('#mf-')) url.hash = '';
+    // [DnnPreviewBase v20260714-01] Self-heal a base that already carries DNN control
+    // segments. The per-form viewUrl (MF_Forms.SettingsJson, set from the dashboard) OUTRANKS
+    // the computed base, so a value captured while the admin sat on /ctl/ManageModule/mid/N
+    // would keep sending every View/Embed link to the module-settings page. Scrub on read.
+    if (String(getPlatformHostConfig().platform || '').toLowerCase() === 'dnn') {
+      url.pathname = stripDnnControlSegments(url.pathname);
+    }
     return toRelativeOrAbsolute(url);
   } catch (_error) {
     return window.location.pathname || '/';
@@ -255,7 +288,12 @@ export function buildHostedFormUrl(baseUrl: string, formId: number, embed = fals
 export function getStoredRendererHostUrl(): string {
   const cfg = getPlatformHostConfig();
   const platform = String(cfg.platform || 'aspcore').toLowerCase();
-  if (platform !== 'dnn' && platform !== 'oqtane') return '';
+  // [RendererHostRetired v20260714-01] DNN no longer has a Renderer Host — the concept is
+  // gone from the module (Oqtane dropped it first). Returning a stale value here is not
+  // harmless: a leftover localStorage entry (mf:dnn:<origin>:<portal>:renderer-host) keeps
+  // hijacking every View/Embed/QR link long after the server setting is gone. Oqtane still
+  // reads its site setting, so keep that branch untouched.
+  if (platform !== 'oqtane') return '';
   const configured = String(cfg.rendererHostUrl || '').trim();
   if (configured) return normalizeRendererHostUrl(configured);
   try {

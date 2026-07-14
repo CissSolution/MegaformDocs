@@ -1,4 +1,4 @@
-import { clearStoredRendererHostUrl, getPlatformRoute, getStoredRendererHostUrl, normalizeRendererHostUrl, setStoredRendererHostUrl } from '@shared/platform-host';
+import { clearStoredRendererHostUrl, getPlatformRoute } from '@shared/platform-host';
 
 declare global {
   interface Window {
@@ -8,8 +8,6 @@ declare global {
 }
 
 const DNN_HOST_ROUTE_BADGE = 'DNN Host Route v20260412-02';
-const DNN_RENDERER_HOST_BADGE = 'DNN RendererHost v20260406-04';
-const DNN_RENDERER_HOST_UI_BADGE = 'DNN RendererHost UI v20260409-06';
 const DNN_LANG_ROUTE_BADGE = 'DNN LanguagesRoute v20260407-01';
 const DNN_UPLOAD_SECURITY_BADGE = 'DNNUploadSecurity v20260419-11';
 const DNN_MODULE_MODE_BADGE = 'DnnModuleMode v20260419-16';
@@ -232,13 +230,6 @@ interface HostElements {
   viewsSave: HTMLButtonElement;
 }
 
-interface RendererHostSnapshot {
-  configured: boolean;
-  rendererHostUrl: string;
-  rendererHostTabId?: number;
-  rendererHostModuleId?: number;
-}
-
 function dnnHeaders(moduleId: number): Record<string, string> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   try {
@@ -364,19 +355,7 @@ function buildPopupDisplayConfigForSave(existingRaw: any, nextCfg: PopupDisplayC
   return JSON.stringify(base);
 }
 
-function currentRendererHostBase(): string {
-  return normalizeRendererHostUrl(window.location.pathname + (window.location.search || ''));
-}
 
-function readRendererHostSnapshotFromDom(host: HTMLElement): RendererHostSnapshot {
-  const rendererHostUrl = String(host.dataset.rendererHostUrl || getStoredRendererHostUrl() || '').trim();
-  return {
-    configured: !!rendererHostUrl,
-    rendererHostUrl,
-    rendererHostTabId: Number.parseInt(host.dataset.rendererHostTabId || '0', 10) || undefined,
-    rendererHostModuleId: Number.parseInt(host.dataset.rendererHostModuleId || '0', 10) || undefined,
-  };
-}
 
 function isTrialModeActive(): boolean {
   const platform = (window.__MF_PLATFORM__ || {}) as Record<string, unknown>;
@@ -391,99 +370,47 @@ function applyTrialDockPill(host: HTMLElement): void {
   if (isTrialModeActive()) {
     pill.innerHTML = '<i class="fas fa-flask"></i> Trial Mode';
     pill.setAttribute('title', String(((window.__MF_PLATFORM__ || {}) as any).trialFooterText || 'https://dnndefender.com  Megaform Trial Mode'));
-    pill.setAttribute('data-badge', DNN_RENDERER_HOST_UI_BADGE);
+    pill.setAttribute('data-badge', DNN_MODULE_MODE_BADGE);
   } else {
     pill.innerHTML = '<i class="fas fa-eye"></i> Render';
     pill.setAttribute('title', 'Render');
-    pill.setAttribute('data-badge', DNN_RENDERER_HOST_UI_BADGE);
+    pill.setAttribute('data-badge', DNN_MODULE_MODE_BADGE);
   }
 }
 
-function applyRendererHostSnapshot(host: HTMLElement, snapshot: RendererHostSnapshot): RendererHostSnapshot {
-  const normalized = snapshot?.rendererHostUrl ? setStoredRendererHostUrl(snapshot.rendererHostUrl) : '';
-  if (!normalized) clearStoredRendererHostUrl();
-  if (normalized) host.dataset.rendererHostUrl = normalized;
-  else delete host.dataset.rendererHostUrl;
-  if (snapshot?.rendererHostTabId) host.dataset.rendererHostTabId = String(snapshot.rendererHostTabId);
-  else delete host.dataset.rendererHostTabId;
-  if (snapshot?.rendererHostModuleId) host.dataset.rendererHostModuleId = String(snapshot.rendererHostModuleId);
-  else delete host.dataset.rendererHostModuleId;
-  return {
-    configured: !!normalized,
-    rendererHostUrl: normalized,
-    rendererHostTabId: snapshot?.rendererHostTabId,
-    rendererHostModuleId: snapshot?.rendererHostModuleId,
-  };
-}
 
 
-function ensureViewsUx(host: HTMLElement, els: HostElements, snapshot: RendererHostSnapshot): void {
-  const dock = host.querySelector<HTMLElement>('.mf-host-admin-dock');
+// [RendererHostRetired v20260714-01] The Renderer Host dock button + callout are gone.
+// What survives is the Views panel labelling: pick the form this module renders on this page
+// and how it displays (fixed / popup). Any leftover renderer-host chrome from an older
+// deployed ASCX is removed here so a stale page cannot resurrect the dead concept.
+function ensureViewsUx(host: HTMLElement, els: HostElements): void {
   applyTrialDockPill(host);
   window.setTimeout(() => applyTrialDockPill(host), 0);
   window.setTimeout(() => applyTrialDockPill(host), 300);
   window.setTimeout(() => applyTrialDockPill(host), 1200);
+
+  host.querySelectorAll<HTMLElement>('[data-mf-renderer-host-status]').forEach((el) => el.remove());
+
   const viewsBtn = host.querySelector<HTMLElement>('[data-mf-open="views"]');
   if (viewsBtn) {
-    viewsBtn.innerHTML = '<i class="fas fa-clone"></i> Renderer Host &amp; Views';
-    viewsBtn.setAttribute('title', 'Choose the public Renderer Host and the form rendered on this page');
-  }
-  if (dock) {
-    let statusBtn = dock.querySelector<HTMLButtonElement>('[data-mf-renderer-host-status]');
-    if (!statusBtn) {
-      statusBtn = document.createElement('button');
-      statusBtn.type = 'button';
-      statusBtn.className = 'mf-host-admin-btn';
-      statusBtn.setAttribute('data-mf-renderer-host-status', '1');
-      statusBtn.setAttribute('data-badge', DNN_RENDERER_HOST_UI_BADGE);
-      statusBtn.addEventListener('click', () => {
-        try {
-          const open = host.querySelector<HTMLElement>('[data-mf-open="views"]');
-          open?.click();
-        } catch {}
-      });
-      const dashboardBtn = host.querySelector<HTMLElement>('[data-mf-open="dashboard"]');
-      if (dashboardBtn) dock.insertBefore(statusBtn, dashboardBtn);
-      else dock.appendChild(statusBtn);
-    }
-    const saved = String(snapshot?.rendererHostUrl || '').trim();
-    const current = currentRendererHostBase();
-    if (!saved) {
-      statusBtn.innerHTML = '<i class="fas fa-triangle-exclamation"></i> Renderer Host not set';
-      statusBtn.style.borderColor = '#fde68a';
-      statusBtn.style.background = '#fff7ed';
-      statusBtn.style.color = '#9a3412';
-      statusBtn.disabled = false;
-      statusBtn.title = 'Choose a portal page to act as the public Renderer Host for View and Embed links.';
-    } else if (saved === current) {
-      statusBtn.innerHTML = '<i class="fas fa-circle-check"></i> This page is Renderer Host';
-      statusBtn.style.borderColor = '#bbf7d0';
-      statusBtn.style.background = '#f0fdf4';
-      statusBtn.style.color = '#166534';
-      statusBtn.disabled = true;
-      statusBtn.title = 'This page is currently the public Renderer Host for this portal.';
-    } else {
-      statusBtn.innerHTML = '<i class="fas fa-arrow-up-right-from-square"></i> Renderer Host is another page';
-      statusBtn.style.borderColor = '#dbeafe';
-      statusBtn.style.background = '#eff6ff';
-      statusBtn.style.color = '#1d4ed8';
-      statusBtn.disabled = false;
-      statusBtn.title = saved;
-    }
+    viewsBtn.innerHTML = '<i class="fas fa-clone"></i> Module View';
+    viewsBtn.setAttribute('title', 'Choose the form this module renders on this page');
   }
 
   const viewsHeadTitle = els.views.querySelector<HTMLElement>('.mf-host-title');
-  if (viewsHeadTitle) viewsHeadTitle.innerHTML = '<i class="fas fa-clone"></i> Renderer Host &amp; Module View';
+  if (viewsHeadTitle) viewsHeadTitle.innerHTML = '<i class="fas fa-clone"></i> Module View';
 
   const card = els.viewsGrid.parentElement;
   if (!card) return;
+  card.querySelectorAll<HTMLElement>('[data-mf-renderer-host-callout]').forEach((el) => el.remove());
   const topBlocks = Array.from(card.children).filter((node): node is HTMLElement => node instanceof HTMLElement);
   if (topBlocks[0]) {
-    topBlocks[0].textContent = 'Renderer Host & form for this page';
-    topBlocks[0].setAttribute('data-badge', DNN_RENDERER_HOST_UI_BADGE);
+    topBlocks[0].textContent = 'Form shown by this module on this page';
+    topBlocks[0].setAttribute('data-badge', DNN_MODULE_MODE_BADGE);
   }
   if (topBlocks[1]) {
-    topBlocks[1].textContent = 'Step 1: choose one portal page as the public Renderer Host for View and Embed links. Step 2: choose the form in the compact dropdown. Step 3: choose Fixed form or Popup form display.';
+    topBlocks[1].textContent = 'Step 1: choose the form in the compact dropdown. Step 2: choose Fixed form or Popup form display.';
   }
   let formLabel = card.querySelector<HTMLElement>('[data-mf-form-selection-label]');
   if (!formLabel) {
@@ -496,46 +423,7 @@ function ensureViewsUx(host: HTMLElement, els: HostElements, snapshot: RendererH
   els.viewsSave.textContent = 'Use selected form on this page';
 }
 
-async function loadRendererHostSnapshot(host: HTMLElement): Promise<RendererHostSnapshot> {
-  const moduleId = Number.parseInt(host.dataset.moduleId || '0', 10) || 0;
-  const apiBase = (host.dataset.apiBase || '/DesktopModules/MegaForm/API/').replace(/\/?$/, '/');
-  const fallback = readRendererHostSnapshotFromDom(host);
-  if (!moduleId) return fallback;
-  try {
-    const res = await fetch(dnnHostUrlWithPortalId(apiBase + `ModuleConfig/RendererHost?moduleId=${moduleId}`), { headers: dnnHeaders(moduleId) });
-    if (!res.ok) throw new Error(await res.text());
-    const data = await res.json().catch(() => ({}));
-    return applyRendererHostSnapshot(host, {
-      configured: !!(data?.configured || data?.Configured),
-      rendererHostUrl: String(data?.rendererHostUrl || data?.RendererHostUrl || ''),
-      rendererHostTabId: Number.parseInt(String(data?.rendererHostTabId || data?.RendererHostTabId || '0'), 10) || undefined,
-      rendererHostModuleId: Number.parseInt(String(data?.rendererHostModuleId || data?.RendererHostModuleId || '0'), 10) || undefined,
-    });
-  } catch (error) {
-    console.warn('[MegaForm.DNN.Host] renderer host snapshot fallback', error);
-    return fallback;
-  }
-}
 
-async function saveRendererHostSnapshot(host: HTMLElement, urlLike: string): Promise<RendererHostSnapshot> {
-  const moduleId = Number.parseInt(host.dataset.moduleId || '0', 10) || 0;
-  const tabId = Number.parseInt(host.dataset.tabId || '0', 10) || 0;
-  const apiBase = (host.dataset.apiBase || '/DesktopModules/MegaForm/API/').replace(/\/?$/, '/');
-  const normalized = normalizeRendererHostUrl(urlLike);
-  const res = await fetch(dnnHostUrlWithPortalId(apiBase + 'ModuleConfig/RendererHost'), {
-    method: 'POST',
-    headers: dnnHeaders(moduleId),
-    body: JSON.stringify({ moduleId, tabId, url: normalized })
-  });
-  if (!res.ok) throw new Error(await res.text());
-  const data = await res.json().catch(() => ({}));
-  return applyRendererHostSnapshot(host, {
-    configured: !!(data?.configured || data?.Configured),
-    rendererHostUrl: String(data?.rendererHostUrl || data?.RendererHostUrl || normalized || ''),
-    rendererHostTabId: Number.parseInt(String(data?.rendererHostTabId || data?.RendererHostTabId || tabId || '0'), 10) || undefined,
-    rendererHostModuleId: Number.parseInt(String(data?.rendererHostModuleId || data?.RendererHostModuleId || moduleId || '0'), 10) || undefined,
-  });
-}
 
 async function loadModuleConfigSnapshot(host: HTMLElement): Promise<{ forms: Array<{ formId: number; title: string; status?: string }>; config: any }> {
   const moduleId = Number.parseInt(host.dataset.moduleId || '0', 10) || 0;
@@ -555,88 +443,6 @@ async function loadModuleConfigSnapshot(host: HTMLElement): Promise<{ forms: Arr
   }
 }
 
-function ensureRendererHostCallout(host: HTMLElement, els: HostElements, snapshot: RendererHostSnapshot): void {
-  const card = els.viewsGrid.parentElement;
-  if (!card) return;
-  let callout = card.querySelector<HTMLElement>('[data-mf-renderer-host-callout]');
-  if (!callout) {
-    callout = document.createElement('div');
-    callout.setAttribute('data-mf-renderer-host-callout', '1');
-    callout.style.cssText = 'margin:12px 0 14px;padding:14px 16px;border:1px solid #dbe4ff;border-radius:16px;background:linear-gradient(180deg,#f8faff 0%,#ffffff 100%);color:#1e293b;font:500 13px/1.6 Inter,system-ui,sans-serif;';
-    card.insertBefore(callout, els.viewsGrid);
-  }
-  const saved = String(snapshot?.rendererHostUrl || getStoredRendererHostUrl() || '').trim();
-  const current = currentRendererHostBase();
-  const sameAsCurrent = !!saved && saved === current;
-  callout.innerHTML = '';
-
-  const eyebrow = document.createElement('div');
-  eyebrow.style.cssText = 'font:700 12px/1.2 Inter,system-ui,sans-serif;letter-spacing:.03em;text-transform:uppercase;color:#4338ca;margin:0 0 8px;';
-  eyebrow.textContent = 'Public Renderer Host';
-
-  const title = document.createElement('div');
-  title.style.cssText = 'font:700 16px/1.3 Inter,system-ui,sans-serif;color:#0f172a;margin:0 0 6px;';
-  title.textContent = sameAsCurrent
-    ? 'This page is the current Renderer Host for View / Embed links.'
-    : saved
-      ? 'Another page is currently the Renderer Host for View / Embed links.'
-      : 'Choose a Renderer Host page for public View / Embed links.';
-
-  const meta = document.createElement('div');
-  meta.style.cssText = 'color:#475569;';
-  meta.textContent = saved
-    ? `Saved renderer host: ${saved}`
-    : 'Pick one page in this portal to handle public form rendering. Dashboard View and Embed actions will point there.';
-
-  const currentLine = document.createElement('div');
-  currentLine.style.cssText = 'margin-top:8px;color:#64748b;font:500 12px/1.55 Inter,system-ui,sans-serif;word-break:break-all;';
-  currentLine.textContent = `This page: ${current}`;
-
-  const help = document.createElement('div');
-  help.style.cssText = 'margin-top:10px;padding:10px 12px;border-radius:12px;background:#ffffff;border:1px solid #e2e8f0;color:#475569;';
-  help.textContent = 'The Renderer Host is portal-wide. The form picker below only changes which form this module instance renders on this page.';
-
-  const actions = document.createElement('div');
-  actions.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;';
-
-  const useBtn = document.createElement('button');
-  useBtn.type = 'button';
-  useBtn.className = 'mf-host-admin-btn is-primary';
-  useBtn.textContent = sameAsCurrent ? 'This page is already the Renderer Host' : 'Use this page as the Renderer Host';
-  useBtn.disabled = sameAsCurrent;
-  useBtn.setAttribute('data-badge', DNN_RENDERER_HOST_BADGE);
-  useBtn.onclick = async () => {
-    useBtn.disabled = true;
-    const previous = useBtn.textContent || 'Use this page as the Renderer Host';
-    useBtn.textContent = 'Saving…';
-    try {
-      const savedNow = await saveRendererHostSnapshot(host, current);
-      ensureViewsUx(host, els, savedNow);
-      ensureRendererHostCallout(host, els, savedNow);
-    } catch (error) {
-      console.error('[MegaForm.DNN.Host] save renderer host failed', error);
-      window.alert('Could not save the renderer host portal setting. See console for details.');
-      useBtn.disabled = false;
-      useBtn.textContent = previous;
-    }
-  };
-  actions.appendChild(useBtn);
-
-  if (saved && !sameAsCurrent) {
-    const openBtn = document.createElement('a');
-    openBtn.className = 'mf-host-admin-btn';
-    openBtn.href = saved;
-    openBtn.textContent = 'Open current Renderer Host page';
-    actions.appendChild(openBtn);
-  }
-
-  callout.appendChild(eyebrow);
-  callout.appendChild(title);
-  callout.appendChild(meta);
-  callout.appendChild(currentLine);
-  callout.appendChild(help);
-  callout.appendChild(actions);
-}
 
 function currentModeFromHash(): HostMode | null {
   const hash = String(window.location.hash || '').toLowerCase();
@@ -857,9 +663,7 @@ async function renderViews(host: HTMLElement, els: HostElements): Promise<void> 
   let selectedFormId = currentFormId > 0 ? currentFormId : ((forms[0]?.formId as number) || 0);
   let displayCfg = normalizePopupDisplayConfig(moduleConfig?.ViewConfigJson || moduleConfig?.viewConfigJson || '{}');
 
-  const rendererHost = await loadRendererHostSnapshot(host);
-  ensureViewsUx(host, els, rendererHost);
-  ensureRendererHostCallout(host, els, rendererHost);
+  ensureViewsUx(host, els);
   els.viewsGrid.innerHTML = '';
   if (!forms.length) {
     const empty = document.createElement('div');
@@ -1429,12 +1233,12 @@ function init(): void {
     }
   }
 
-  loadRendererHostSnapshot(host).then((snapshot) => {
-    ensureViewsUx(host, els, snapshot);
-  }).catch((error) => {
-    console.warn('[MegaForm.DNN.Host] initial renderer host ui fallback', error);
-    ensureViewsUx(host, els, readRendererHostSnapshotFromDom(host));
-  });
+  // [RendererHostRetired v20260714-01] Drop the localStorage ghost
+  // (mf:dnn:<origin>:<portalId>:renderer-host). Without this, an admin whose browser still
+  // holds the old value keeps getting View/Embed/QR links pointing at the dead host page,
+  // and the removal looks like it did not work.
+  try { clearStoredRendererHostUrl(); } catch { /* no storage */ }
+  ensureViewsUx(host, els);
 
   host.querySelectorAll<HTMLElement>('[data-mf-open]').forEach((button) => {
     button.addEventListener('click', () => open(String(button.dataset.mfOpen || 'dashboard') as HostMode));
@@ -1502,12 +1306,23 @@ function init(): void {
     logoutUrl: dnnBase,
   };
 
+  // [FormPreview v20260714-01] ?formid=N is the admin's "View live form" link. When it is
+  // present the admin came here to SEE the form, so a pinned surface (Admin Dashboard /
+  // My Inbox) must NOT auto-open its overlay on top of it. The server makes the same call
+  // (it renders the form body instead of the surface), so the two must agree.
+  const hasLiveFormRequest = (): boolean => {
+    try { return (Number.parseInt(new URL(window.location.href).searchParams.get('formid') || new URL(window.location.href).searchParams.get('formId') || '0', 10) || 0) > 0; }
+    catch { return false; }
+  };
+
   const initial = currentModeFromHash();
   if (initial) open(initial, initial === 'builder' && isBuilderNewFromHash());
-  else if (String(host.dataset.adminDashboardMode || '').toLowerCase() === 'true') {
-    // [Revert inline 2026-06-11] admin_dashboard mode auto-opens the full-screen
-    // dashboard overlay.
-    open('dashboard');
+  else if (!hasLiveFormRequest()) {
+    // A module pinned to a surface opens that surface on load. [Revert inline 2026-06-11]
+    // admin_dashboard was the first; myinbox joins it ([DnnInboxMode v20260714-01]).
+    const pinned = String(host.dataset.moduleMode || '').toLowerCase();
+    if (String(host.dataset.adminDashboardMode || '').toLowerCase() === 'true' || pinned === 'admin_dashboard') open('dashboard');
+    else if (pinned === 'myinbox') open('myinbox');
   }
 }
 

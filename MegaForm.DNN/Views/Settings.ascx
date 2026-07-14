@@ -29,18 +29,6 @@
                        HelpText="Select a specific custom view configured in the form builder." />
             <asp:DropDownList ID="ddlCustomView" runat="server" CssClass="form-control" />
         </div>
-        <div class="dnnFormItem">
-            <dnn:Label ID="lblRendererHost" runat="server"
-                       ControlName="chkUseThisPageAsRendererHost"
-                       Text="Renderer Host"
-                       HelpText="Choose one portal page as the public Renderer Host for View and Embed links. Enable this on the page that should render public MegaForm links." />
-            <div>
-                <asp:CheckBox ID="chkUseThisPageAsRendererHost" runat="server" Text="Choose this page as Render Host" />
-                <div style="margin-top:6px;color:#64748b;font:500 12px/1.6 'Inter',system-ui,sans-serif;">
-                    <asp:Literal ID="litRendererHostStatus" runat="server" />
-                </div>
-            </div>
-        </div>
     </fieldset>
 
     <fieldset style="display:none;">

@@ -23,9 +23,6 @@ namespace MegaForm.DNN.Components
         private const string SettingKeyAutoQrCode = "MegaForm_EnableAutoQrCode";
         private const string SettingKeyModuleMode = "MegaForm_ModuleMode";
 
-        private string RendererHostUrl { get; set; }
-        private int RendererHostTabId { get; set; }
-        private int RendererHostModuleId { get; set; }
 
         private sealed class PopupDisplayConfig
         {
@@ -50,15 +47,10 @@ namespace MegaForm.DNN.Components
                     BindViews();
                     LoadCurrentConfiguration();
                 }
-                else
-                {
-                    LoadRendererHostSettings();
-                }
 
                 txtTriggerSample.Text = BuildClickTriggerSample(txtClickSelector.Text);
                 BindDashboardButtons();
                 ApplyConditionalUi();
-                RefreshRendererHostStatus();
             }
             catch (Exception ex)
             {
@@ -69,10 +61,8 @@ namespace MegaForm.DNN.Components
         protected void ConfigurationSelectionChanged(object sender, EventArgs e)
         {
             txtTriggerSample.Text = BuildClickTriggerSample(txtClickSelector.Text);
-            LoadRendererHostSettings();
             BindDashboardButtons();
             ApplyConditionalUi();
-            RefreshRendererHostStatus();
         }
 
         protected void btnUpdate_Click(object sender, EventArgs e)
@@ -109,7 +99,6 @@ namespace MegaForm.DNN.Components
         private bool SaveModuleState(bool requireSelectedFormWhenFormsExist)
         {
             var moduleMode = GetSelectedModuleMode();
-            PersistRendererHostSelection(moduleMode);
 
             var hasForms = HasAvailableForms();
             var selectedFormId = ParsePositiveInt(ddlForms.SelectedValue);
@@ -149,7 +138,6 @@ namespace MegaForm.DNN.Components
             {
                 lblMessage.Text = "Please choose a form first.";
                 ApplyConditionalUi();
-                RefreshRendererHostStatus();
                 return false;
             }
 
@@ -206,20 +194,22 @@ namespace MegaForm.DNN.Components
         private void BindViews()
         {
             ddlDefaultView.Items.Clear();
+            // [RendererHostRetired v20260714-01] "Renderer Host" is gone - Oqtane dropped the
+            // concept and DNN View/Embed links now use the module's own page.
+            // [DnnInboxMode v20260714-01] "My Inbox" mirrors Oqtane's ModuleRole=myinbox.
             ddlDefaultView.Items.Add(new ListItem("Form Renderer", "render"));
-            ddlDefaultView.Items.Add(new ListItem("Renderer Host", "renderer_host"));
             ddlDefaultView.Items.Add(new ListItem("Admin Dashboard", "admin_dashboard"));
+            ddlDefaultView.Items.Add(new ListItem("My Inbox", "myinbox"));
         }
 
         private void LoadCurrentConfiguration()
         {
-            LoadRendererHostSettings();
 
             var moduleConfig = FormRepository.GetModuleViewConfig(ModuleId);
             var selectedFormId = moduleConfig != null && moduleConfig.FormId > 0
                 ? moduleConfig.FormId
                 : ParsePositiveInt(GetSetting(SettingKeyFormId, "0"));
-            var selectedViewType = NormalizeModuleMode(GetSetting(SettingKeyModuleMode, IsCurrentPageRendererHost(BuildCurrentPageRendererHostUrl()) ? "renderer_host" : "render"));
+            var selectedViewType = NormalizeModuleMode(GetSetting(SettingKeyModuleMode, "render"));
 
             var popupConfig = ParsePopupDisplayConfig(moduleConfig != null ? moduleConfig.ViewConfigJson : null);
 
@@ -247,7 +237,7 @@ namespace MegaForm.DNN.Components
             var hasForms = HasAvailableForms();
             var moduleMode = GetSelectedModuleMode();
             var isRenderMode = string.Equals(moduleMode, "render", StringComparison.OrdinalIgnoreCase);
-            var isRendererHostMode = string.Equals(moduleMode, "renderer_host", StringComparison.OrdinalIgnoreCase);
+            var isMyInboxMode = string.Equals(moduleMode, "myinbox", StringComparison.OrdinalIgnoreCase);
             var isAdminDashboardMode = string.Equals(moduleMode, "admin_dashboard", StringComparison.OrdinalIgnoreCase);
             var viewType = "submit";
             var isSubmitView = true;
@@ -257,7 +247,7 @@ namespace MegaForm.DNN.Components
             if (lblDefaultView != null)
             {
                 lblDefaultView.Text = "Module mode";
-                lblDefaultView.HelpText = "Choose one clear role for this module instance on this page: render one selected form, act as the portal Renderer Host for public links, or open the Admin Dashboard for administrators.";
+                lblDefaultView.HelpText = "Choose one clear role for this module instance on this page: render one selected form, open the Admin Dashboard for administrators, or be the My Inbox workboard for signed-in users.";
             }
 
             if (lblFormSelect != null)
@@ -270,22 +260,15 @@ namespace MegaForm.DNN.Components
             {
                 pnlDisplayModeNotApplicable.Controls.Clear();
                 pnlDisplayModeNotApplicable.Visible = true;
-                var modeHtml = isRendererHostMode
-                    ? "<strong>Renderer Host mode:</strong> this page becomes the public host for View, Embed, and <code>?formid=</code> links across the portal. The fixed form selector is hidden here because the requested form is chosen by the incoming public URL."
+                var modeHtml = isMyInboxMode
+                    ? "<strong>My Inbox mode:</strong> this module is the personal approval workboard. Every signed-in user sees their OWN tasks here (admins open it as a full surface from the dock). It binds no form."
                     : (isAdminDashboardMode
                         ? "<strong>Admin Dashboard mode:</strong> administrators land directly in MegaForm Dashboard on this page. When they close the dashboard, the dock stays available for quick access on the same page."
                         : "<strong>Form Renderer mode:</strong> choose one form below, then use Display mode settings to decide whether this page shows it directly or as a popup experience.");
                 pnlDisplayModeNotApplicable.Controls.Add(new System.Web.UI.LiteralControl(modeHtml));
             }
 
-            if (chkUseThisPageAsRendererHost != null)
-            {
-                chkUseThisPageAsRendererHost.Checked = isRendererHostMode;
-                chkUseThisPageAsRendererHost.Visible = false;
-                chkUseThisPageAsRendererHost.Enabled = false;
-            }
-
-            pnlNoFormsInfo.Visible = !hasForms && !isAdminDashboardMode;
+            pnlNoFormsInfo.Visible = !hasForms && !isAdminDashboardMode && !isMyInboxMode;
             litNoFormsInfo.Text = !hasForms
                 ? "No forms exist yet in this portal. You can go to Form Dashboard now to create one, or click Close to mark this module as configured and return to the page."
                 : string.Empty;
@@ -296,20 +279,20 @@ namespace MegaForm.DNN.Components
             pnlFormSelectRow.Visible = hasForms && isRenderMode;
             pnlDefaultViewRow.Visible = true;
 
-            pnlDisplaySettings.Visible = hasForms && isRenderMode && isSubmitView && !isAdminDashboardMode;
+            pnlDisplaySettings.Visible = hasForms && isRenderMode && isSubmitView && !isAdminDashboardMode && !isMyInboxMode;
             pnlPopupSettings.Visible = isPopupMode;
             pnlPopupTriggerRow.Visible = isPopupMode;
             pnlStartAtRow.Visible = isPopupMode;
             pnlEndAtRow.Visible = isPopupMode;
             pnlPopupFlagsRow.Visible = isPopupMode;
-            pnlAutoQrCodeRow.Visible = hasForms && isRenderMode && isSubmitView && !isAdminDashboardMode;
+            pnlAutoQrCodeRow.Visible = hasForms && isRenderMode && isSubmitView && !isAdminDashboardMode && !isMyInboxMode;
 
             pnlDelaySecondsRow.Visible = isPopupMode && string.Equals(triggerType, "time_delay", StringComparison.OrdinalIgnoreCase);
             pnlScrollPercentRow.Visible = isPopupMode && string.Equals(triggerType, "scroll_depth", StringComparison.OrdinalIgnoreCase);
             pnlClickSelectorRow.Visible = isPopupMode && string.Equals(triggerType, "click_trigger", StringComparison.OrdinalIgnoreCase);
             pnlTriggerSampleRow.Visible = isPopupMode && string.Equals(triggerType, "click_trigger", StringComparison.OrdinalIgnoreCase);
 
-            btnUpdate.Text = (hasForms || isAdminDashboardMode || isRendererHostMode) ? "Update" : "Close";
+            btnUpdate.Text = (hasForms || isAdminDashboardMode || isMyInboxMode) ? "Update" : "Close";
             btnCancel.Text = hasForms ? "Cancel" : "Back";
             if (btnGoToDashboard != null)
                 btnGoToDashboard.Text = "Go To Dashboard";
@@ -327,11 +310,13 @@ namespace MegaForm.DNN.Components
 
         private static string NormalizeModuleMode(string raw)
         {
+            // Keep in step with the twin in FormView.ascx.cs - a mode known to only one of the two
+            // silently degrades to "render" on the other side.
             var value = (raw ?? string.Empty).Trim();
-            if (value.Equals("renderer_host", StringComparison.OrdinalIgnoreCase) || value.Equals("renderer-host", StringComparison.OrdinalIgnoreCase) || value.Equals("rendererhost", StringComparison.OrdinalIgnoreCase))
-                return "renderer_host";
             if (value.Equals("admin_dashboard", StringComparison.OrdinalIgnoreCase) || value.Equals("admin-dashboard", StringComparison.OrdinalIgnoreCase) || value.Equals("admindashboard", StringComparison.OrdinalIgnoreCase))
                 return "admin_dashboard";
+            if (value.Equals("myinbox", StringComparison.OrdinalIgnoreCase) || value.Equals("my_inbox", StringComparison.OrdinalIgnoreCase) || value.Equals("my-inbox", StringComparison.OrdinalIgnoreCase) || value.Equals("inbox", StringComparison.OrdinalIgnoreCase))
+                return "myinbox";
             return "render";
         }
 
@@ -438,77 +423,6 @@ namespace MegaForm.DNN.Components
             }
         }
 
-        private void LoadRendererHostSettings()
-        {
-            RendererHostUrl = NormalizeRendererHostUrl(ReadPortalSetting("RendererHostUrl", string.Empty));
-            RendererHostTabId = ParsePositiveInt(ReadPortalSetting("RendererHostTabId", "0"));
-            RendererHostModuleId = ParsePositiveInt(ReadPortalSetting("RendererHostModuleId", "0"));
-
-            var currentUrl = BuildCurrentPageRendererHostUrl();
-            if (!IsPostBack)
-                chkUseThisPageAsRendererHost.Checked = IsCurrentPageRendererHost(currentUrl);
-        }
-
-        private void RefreshRendererHostStatus()
-        {
-            var currentUrl = BuildCurrentPageRendererHostUrl();
-            var isCurrentPage = IsCurrentPageRendererHost(currentUrl);
-            var wantsCurrentPage = string.Equals(GetSelectedModuleMode(), "renderer_host", StringComparison.OrdinalIgnoreCase);
-
-            if (litRendererHostStatus == null) return;
-
-            if (wantsCurrentPage && !isCurrentPage)
-            {
-                litRendererHostStatus.Text = "After you click Update or Go To Dashboard, this page will become the portal's public Renderer Host for View, Embed, and <code>?formid=</code> links.";
-                return;
-            }
-
-            if (!wantsCurrentPage && isCurrentPage)
-            {
-                litRendererHostStatus.Text = "This page is currently the portal Renderer Host. Switch Module mode and click Update if you want to move public MegaForm links back to another page or unset this host.";
-                return;
-            }
-
-            if (isCurrentPage)
-                litRendererHostStatus.Text = "This page is currently the portal Renderer Host for public View and Embed links.";
-            else if (!string.IsNullOrWhiteSpace(RendererHostUrl))
-                litRendererHostStatus.Text = "Renderer Host is already set on another page: " + Server.HtmlEncode(RendererHostUrl);
-            else
-                litRendererHostStatus.Text = "Renderer Host is not set yet. Choose the page that should handle public MegaForm links for this portal.";
-        }
-
-        private void PersistRendererHostSelection(string moduleMode)
-        {
-            var currentUrl = BuildCurrentPageRendererHostUrl();
-            var isCurrentPage = IsCurrentPageRendererHost(currentUrl);
-            var wantsCurrentPage = string.Equals(NormalizeModuleMode(moduleMode), "renderer_host", StringComparison.OrdinalIgnoreCase);
-
-            if (wantsCurrentPage)
-            {
-                SetPortalSetting("RendererHostUrl", currentUrl);
-                SetPortalSetting("RendererHostTabId", TabId > 0 ? TabId.ToString() : string.Empty);
-                SetPortalSetting("RendererHostModuleId", ModuleId > 0 ? ModuleId.ToString() : string.Empty);
-            }
-            else if (isCurrentPage)
-            {
-                SetPortalSetting("RendererHostUrl", string.Empty);
-                SetPortalSetting("RendererHostTabId", string.Empty);
-                SetPortalSetting("RendererHostModuleId", string.Empty);
-            }
-        }
-
-        private bool IsCurrentPageRendererHost(string currentUrl)
-        {
-            if (!string.IsNullOrWhiteSpace(RendererHostUrl) && string.Equals(RendererHostUrl, currentUrl, StringComparison.OrdinalIgnoreCase))
-                return true;
-            return RendererHostTabId > 0 && RendererHostTabId == TabId;
-        }
-
-        private string BuildCurrentPageRendererHostUrl()
-        {
-            return NormalizeRendererHostUrl(Globals.NavigateURL(TabId));
-        }
-
         private void RedirectToModuleView()
         {
             var url = Globals.NavigateURL(TabId);
@@ -550,38 +464,6 @@ namespace MegaForm.DNN.Components
         private string GetSetting(string key, string defaultValue)
         {
             return Settings.Contains(key) ? Convert.ToString(Settings[key]) : defaultValue;
-        }
-
-        private static string NormalizeRendererHostUrl(string urlLike)
-        {
-            var raw = (urlLike ?? string.Empty).Trim();
-            if (string.IsNullOrWhiteSpace(raw)) return string.Empty;
-            try
-            {
-                Uri absolute;
-                var hasAbsolute = Uri.TryCreate(raw, UriKind.Absolute, out absolute);
-                var uri = hasAbsolute ? absolute : new Uri(new Uri("http://localhost"), raw);
-                var query = HttpUtility.ParseQueryString(uri.Query ?? string.Empty);
-                query.Remove("formId");
-                query.Remove("formid");
-                query.Remove("FormId");
-                query.Remove("embed");
-                query.Remove("configure");
-                query.Remove("new");
-                var path = uri.AbsolutePath;
-                var nextQuery = query.ToString();
-                var hash = string.Empty;
-                if (!string.IsNullOrWhiteSpace(uri.Fragment) && !uri.Fragment.StartsWith("#mf-", StringComparison.OrdinalIgnoreCase))
-                    hash = uri.Fragment;
-                var result = path + (string.IsNullOrWhiteSpace(nextQuery) ? string.Empty : "?" + nextQuery) + hash;
-                if (hasAbsolute && !string.Equals(uri.Host, "localhost", StringComparison.OrdinalIgnoreCase))
-                    result = uri.GetLeftPart(UriPartial.Authority) + result;
-                return result;
-            }
-            catch
-            {
-                return raw;
-            }
         }
 
         private static string NormalizeViewType(string value)

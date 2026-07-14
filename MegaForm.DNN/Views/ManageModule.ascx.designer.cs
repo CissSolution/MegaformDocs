@@ -17,9 +17,6 @@ namespace MegaForm.DNN.Components
         protected System.Web.UI.WebControls.Panel pnlDefaultViewRow;
         protected DotNetNuke.UI.UserControls.LabelControl lblDefaultView;
         protected System.Web.UI.WebControls.DropDownList ddlDefaultView;
-        protected DotNetNuke.UI.UserControls.LabelControl lblRendererHost;
-        protected System.Web.UI.WebControls.CheckBox chkUseThisPageAsRendererHost;
-        protected System.Web.UI.WebControls.Literal litRendererHostStatus;
         protected System.Web.UI.WebControls.Panel pnlDisplayModeNotApplicable;
         protected System.Web.UI.WebControls.Panel pnlDisplaySettings;
         protected System.Web.UI.WebControls.Panel pnlDisplayModeRow;

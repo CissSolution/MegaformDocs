@@ -15,9 +15,6 @@ namespace MegaForm.DNN.Components
         protected DotNetNuke.UI.UserControls.LabelControl lblCustomView;
         protected System.Web.UI.WebControls.DropDownList ddlCustomView;
         protected System.Web.UI.HtmlControls.HtmlGenericControl divCustomViews;
-        protected DotNetNuke.UI.UserControls.LabelControl lblRendererHost;
-        protected System.Web.UI.WebControls.CheckBox chkUseThisPageAsRendererHost;
-        protected System.Web.UI.WebControls.Literal litRendererHostStatus;
         protected DotNetNuke.UI.UserControls.LabelControl lblAppScope;
         protected System.Web.UI.WebControls.DropDownList ddlAppScope;
         protected System.Web.UI.WebControls.TextBox txtNewScope;

@@ -118,8 +118,12 @@ namespace MegaForm.DNN.ViewModels
         public int TabId { get; set; }                    // DNN tab ID
         public string FormsJson { get; set; }             // available forms for dropdown
         public string ModuleConfigJson { get; set; }      // current module view config
-        public string ModuleMode { get; set; }            // render | renderer_host | admin_dashboard
+        public string ModuleMode { get; set; }            // render | admin_dashboard | myinbox
         public bool IsAdminDashboardMode { get; set; }    // DNN admin dashboard mode keeps dock/dashboard alive for admins outside Edit mode
+        // [DnnInboxMode v20260714-01] Module pinned to the My Inbox surface (Oqtane's ModuleRole=myinbox).
+        // Unlike the dashboard, an inbox is useful to EVERY authenticated user (approvers, not just admins),
+        // so the non-admin path renders the inbox inline in the module pane.
+        public bool IsMyInboxMode { get; set; }
 
         // Builder support (used when ShowConfigPanel = true → full-screen builder)
         public string SchemaJson { get; set; }            // raw schema JSON for data-schema-json attribute

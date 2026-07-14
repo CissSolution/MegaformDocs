@@ -400,9 +400,18 @@ import dbStrings from './db-tables-strings.json';
   function getHostPublicFormUrl(fid: number, embed?: boolean): string {
     var path = (window.location.pathname || '/').replace(/\/(builder|submissions|settings)\/?$/i, '') || '/';
     if (platform === 'dnn' || platform === 'oqtane') {
-      var storageKey = 'mf:' + platform + ':' + window.location.origin + ':' + String(portalId || 0) + ':renderer-host';
+      // [RendererHostRetired v20260714-01] On DNN the Renderer Host is gone: never read the
+      // (possibly stale) rendererHostUrl / localStorage ghost — it would keep pointing every
+      // "View live" link at a dead page. Base the link on the clean tab path the server gave us
+      // (__MF_PLATFORM__.returnUrl), never on window.location.pathname, which on DNN can carry
+      // /ctl/ManageModule/mid/N routing segments. Oqtane keeps its existing behaviour.
       var baseUrl = '';
-      try { baseUrl = String(((window as any).__MF_PLATFORM__ && (window as any).__MF_PLATFORM__.rendererHostUrl) || (root && root.dataset && root.dataset.rendererHostUrl) || window.localStorage.getItem(storageKey) || ''); } catch (_e) { }
+      if (platform === 'dnn') {
+        try { baseUrl = String(((window as any).__MF_PLATFORM__ && (window as any).__MF_PLATFORM__.returnUrl) || ''); } catch (_e0) { }
+      } else {
+        var storageKey = 'mf:' + platform + ':' + window.location.origin + ':' + String(portalId || 0) + ':renderer-host';
+        try { baseUrl = String(((window as any).__MF_PLATFORM__ && (window as any).__MF_PLATFORM__.rendererHostUrl) || (root && root.dataset && root.dataset.rendererHostUrl) || window.localStorage.getItem(storageKey) || ''); } catch (_e) { }
+      }
       var rawBase = sanitizeRendererHostBase(baseUrl, path);
       var u = new URL(rawBase, window.location.origin);
       ['formId','formid','embed','configure','new','embedSource','theme'].forEach(function(key){ u.searchParams.delete(key); });
