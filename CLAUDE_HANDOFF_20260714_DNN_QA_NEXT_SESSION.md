@@ -48,6 +48,25 @@ Hoá ra **3 lỗi**, không phải 1 dòng:
   ⚠️ **Đừng "bật lại" bằng `display:block`** — wrapper canvas thật ra là `flex`, ép block sẽ vỡ layout.
 - Verify: public wrapper `display:none`, canvas wrapper `display:flex` (2369px), 19 field row hiện.
 
+### 1.1c ✅ XONG (commit `9b707af`) — **AI nối form vào bảng có sẵn; bảng KHÔNG có PK đã chạy**
+- Nút **Capability** báo `Could not probe this table (HTTP 404)`: **`ExternalTableController` chỉ có ở Oqtane**,
+  nên trên DNN cả capability probe LẪN AI-on-rails (`Envelope → blueprint → ApplyBlueprint`) không có chỗ gọi.
+- Đã port sang DNN dạng **shell mỏng** + `DnnExternalBindingStore`. Mọi quyết định vẫn ở Core.
+- ⭐⭐**Bảng không PK CHƯA BAO GIỜ là "unsupported"**: `CapabilityDecisionEngine` vote `insertonly`
+  (`NO_TRUSTED_KEY`) — vẫn ghi được, chỉ tắt View detail/Edit/Delete. Nó chỉ **thiếu endpoint để nói ra** trên DNN.
+- ⭐⭐**2 bẫy cho MỌI lần port controller Oqtane→DNN sau này:**
+  1. **CASING**: Oqtane (STJ) camelCase mặc định, DNN (Newtonsoft) **PascalCase** → client đọc `p.capabilities.mode`
+     ra `undefined` mà **không hề lỗi** (card trắng nhưng vẫn coi bảng là supported). Phải ép
+     `CamelCasePropertyNamesContractResolver`.
+  2. **BẢNG THIẾU**: `MF_ExternalBindings` không có trên site DNN (SqlDataProvider chỉ tới 01.06.32) → store
+     phải `EnsureSchema` (CREATE TABLE IF NOT EXISTS). ⚠️Khi repack nhớ bổ sung script SqlDataProvider.
+- **2 luồng AI khác nhau** (đừng nhầm khi QA): nút "🤖 Build fields with AI" đáy panel DB = **AI chat**;
+  **on-rails có validator** = nút **"✨ Design with AI" nằm TRONG Capability card**.
+- **Verify live:** `MFDemo_Country` (có PK) → `readwrite`, 4 action. `MFDemo_NoPkLead` (**không PK**, tôi tạo để QA)
+  → card "**Read + Submit only**", Submit new/Sort/Search/Export bật, View detail/Edit/Delete tắt, kèm cách sửa.
+  Design with AI trên bảng không PK → Probe/Envelope/ApplyBlueprint **200**, "machine-validated after 1 attempt",
+  **form #44** bind `dbo.MFDemo_NoPkLead`. `Bind` deterministic → 200. Key ngoài whitelist → 400.
+
 ### 1.2 🔴 Gap quá cao giữa module và admin dock (ảnh owner gửi)
 - Dock (`.mf-host-admin-dock`) nằm trong `#mf-dnn-host`, dưới nó là khoảng trắng lớn trước card form.
 - Nghi can (chưa xác minh): `#mf-dnn-host` không có `min-height` nhưng skin DNN đặt padding cho
