@@ -130,6 +130,34 @@ namespace MegaForm.WebApi
                 defaults: new { controller = "ModuleConfig", action = "EmailSettingsTest" },
                 namespaces: new[] { "MegaForm.WebApi" }
             );
+            // [DnnMyInbox v20260714-01] My Inbox reads that had no DNN route at all.
+            // The Workflow/Inbox + Workflow/Tasks/* routes further down already existed — they
+            // are re-pointed at WorkflowInboxController below (they used to name actions on
+            // WorkflowController that were never implemented, so every one of them 404'd).
+            // Route names must be UNIQUE in the DNN route collection: reusing an existing name
+            // throws inside RegisterRoutes and every route after it — including the default
+            // {controller}/{action} — silently fails to register (that is what 404'd i18n/list).
+            mapRouteManager.MapHttpRoute(
+                moduleFolderName: "MegaForm",
+                routeName: "MegaFormWorkflowMyInbox",
+                url: "Workflow/MyInbox",
+                defaults: new { controller = "WorkflowInbox", action = "MyInbox" },
+                namespaces: new[] { "MegaForm.WebApi" }
+            );
+            mapRouteManager.MapHttpRoute(
+                moduleFolderName: "MegaForm",
+                routeName: "MegaFormWorkflowDirectory",
+                url: "Workflow/Directory",
+                defaults: new { controller = "WorkflowInbox", action = "Directory" },
+                namespaces: new[] { "MegaForm.WebApi" }
+            );
+            mapRouteManager.MapHttpRoute(
+                moduleFolderName: "MegaForm",
+                routeName: "MegaFormWorkflowTasksComment",
+                url: "Workflow/Tasks/Comment",
+                defaults: new { controller = "WorkflowInbox", action = "Comment" },
+                namespaces: new[] { "MegaForm.WebApi" }
+            );
             // BUG FIX v20260405-16: Workflow Database sub-routes.
             // Default route {controller}/{action}/{id} resolves Workflow/Database/Connections as
             // controller=Workflow, action=Database, id=Connections — no such action exists → 404.
@@ -187,14 +215,14 @@ namespace MegaForm.WebApi
                 moduleFolderName: "MegaForm",
                 routeName: "MegaFormWorkflowInbox",
                 url: "Workflow/Inbox",
-                defaults: new { controller = "Workflow", action = "Inbox" },
+                defaults: new { controller = "WorkflowInbox", action = "Inbox" },
                 namespaces: new[] { "MegaForm.WebApi" }
             );
             mapRouteManager.MapHttpRoute(
                 moduleFolderName: "MegaForm",
                 routeName: "MegaFormWorkflowTasksGet",
                 url: "Workflow/Tasks/Get",
-                defaults: new { controller = "Workflow", action = "TasksGet" },
+                defaults: new { controller = "WorkflowInbox", action = "Get" },
                 namespaces: new[] { "MegaForm.WebApi" }
             );
             // Public ListView runtime uses the Oqtane-style /Submissions endpoint.
@@ -220,28 +248,28 @@ namespace MegaForm.WebApi
                 moduleFolderName: "MegaForm",
                 routeName: "MegaFormWorkflowTasksClaim",
                 url: "Workflow/Tasks/Claim",
-                defaults: new { controller = "Workflow", action = "TasksClaim" },
+                defaults: new { controller = "WorkflowInbox", action = "Claim" },
                 namespaces: new[] { "MegaForm.WebApi" }
             );
             mapRouteManager.MapHttpRoute(
                 moduleFolderName: "MegaForm",
                 routeName: "MegaFormWorkflowTasksApprove",
                 url: "Workflow/Tasks/Approve",
-                defaults: new { controller = "Workflow", action = "TasksApprove" },
+                defaults: new { controller = "WorkflowInbox", action = "Approve" },
                 namespaces: new[] { "MegaForm.WebApi" }
             );
             mapRouteManager.MapHttpRoute(
                 moduleFolderName: "MegaForm",
                 routeName: "MegaFormWorkflowTasksReject",
                 url: "Workflow/Tasks/Reject",
-                defaults: new { controller = "Workflow", action = "TasksReject" },
+                defaults: new { controller = "WorkflowInbox", action = "Reject" },
                 namespaces: new[] { "MegaForm.WebApi" }
             );
             mapRouteManager.MapHttpRoute(
                 moduleFolderName: "MegaForm",
                 routeName: "MegaFormWorkflowTasksForward",
                 url: "Workflow/Tasks/Forward",
-                defaults: new { controller = "Workflow", action = "TasksForward" },
+                defaults: new { controller = "WorkflowInbox", action = "Forward" },
                 namespaces: new[] { "MegaForm.WebApi" }
             );
             mapRouteManager.MapHttpRoute(

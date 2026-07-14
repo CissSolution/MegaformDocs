@@ -32,6 +32,7 @@
   }
   var isOverlayShell = hash.indexOf('#mf-dashboard') === 0 ||
                        hash.indexOf('#mf-submissions') === 0 ||
+                       hash.indexOf('#mf-myinbox') === 0 ||
                        hash.indexOf('#mf-views') === 0 ||
                        hash.indexOf('#mf-builder') === 0 ||
                        hash.indexOf('#mf-languages') === 0;
@@ -119,6 +120,47 @@
 .mf-host-admin-btn.is-primary{background:#0f172a;color:#fff;border-color:#0f172a;}
 .mf-host-overlay{display:none;position:fixed;inset:0;z-index:100000;background:#f8fafc;}
 .mf-host-overlay.is-open{display:block;overflow-y:auto;}/* BUG FIX v20260405-18: overlay needs overflow-y:auto so dashboard/submissions content can scroll */
+/* [DnnSurfaceMode v20260714-02] WINDOWED = the surface renders as a normal DNN MODULE:
+   static position, in the page flow inside the module pane, with the DNN skin (header,
+   menu, footer) above and below it. NOT a floating popup — no fixed positioning, no
+   inset, no page-covering z-index. Fullscreen (no .is-windowed) keeps the old overlay. */
+.mf-host-overlay.is-windowed{position:static;inset:auto;z-index:auto;display:block;overflow:visible;
+  background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;box-shadow:0 6px 20px rgba(15,23,42,.06);
+  margin:12px 0;}
+.mf-host-overlay.is-windowed .mf-host-head{border-radius:16px 16px 0 0;position:sticky;top:0;z-index:2;}
+/* Surfaces whose roots are absolutely positioned inside the fullscreen overlay must fall
+   back to normal flow when the surface is a module; give them a workable viewport height. */
+.mf-host-overlay.is-windowed .mf-host-body{min-height:0;height:auto;}
+.mf-host-overlay.is-windowed #mf-builder-root,
+.mf-host-overlay.is-windowed #mf-submissions-root,
+.mf-host-overlay.is-windowed #mf-myinbox-root,
+.mf-host-overlay.is-windowed #mf-host-dashboard-root{position:relative !important;inset:auto !important;
+  z-index:auto !important;width:100% !important;min-height:72vh;overflow:hidden;border-radius:0 0 16px 16px;}
+#mf-host-theme-overlay.is-windowed .mf-host-body,
+#mf-host-theme-overlay.is-windowed .td-root{height:auto;min-height:72vh;}
+/* Inner apps that assume a full-viewport host must be re-anchored to the module box, or
+   their viewport-fixed chrome floats over the DNN skin. Same neutralisation Oqtane does
+   for .mf-oq-surface.is-inline (megaform-builder-shell.css) — here scoped to the DNN
+   windowed surface, so nothing on the Oqtane side changes.
+     .w-topbar  — builder toolbar, position:fixed top:0  → absolute inside the builder box
+     .tpl-bar   — template-gallery action bar, fixed bottom:0 → sticky inside the box */
+.mf-host-overlay.is-windowed #mf-builder-root .w-topbar{position:absolute;left:0;right:0;width:auto;}
+.mf-host-overlay.is-windowed #mf-builder-root .tpl-bar{position:absolute;bottom:0;left:0;right:0;width:auto;}
+/* Height-bounded panes so the 3-column inbox / languages shells lay out in a module box. */
+.mf-host-overlay.is-windowed .mf-mi3-shell{height:auto;}
+.mf-host-overlay.is-windowed .mf-mi3-panes{height:78vh !important;min-height:520px;}
+.mf-host-overlay.is-windowed .mf-loc-shell{min-height:0 !important;}
+.mf-host-overlay.is-windowed .mf-hd{flex-wrap:wrap;height:auto;row-gap:6px;}
+/* The DNN page keeps its own scrollbar in windowed mode — never lock the body. */
+body.mf-dnn-windowed{overflow:visible !important;}
+/* Windowed⇄Fullscreen toggle — body-level so it survives surface re-renders and is
+   never clipped by the overlay's own stacking context. Mirrors the Oqtane control. */
+.mf-dnn-fs-toggle{position:fixed;right:18px;bottom:18px;z-index:100020;display:none;align-items:center;gap:8px;border:1px solid #dbe4f0;background:#fff;color:#0f172a;border-radius:999px;padding:9px 14px;font:600 13px/1 'Inter',system-ui,sans-serif;box-shadow:0 10px 26px rgba(15,23,42,.18);cursor:pointer;}
+.mf-dnn-fs-toggle:hover{background:#f8fafc;}
+/* MegaForm popovers are appended to <body> (so no ancestor can clip them). They must
+   paint ABOVE the overlay — at z-index 10010 the language picker opened *behind* the
+   opaque Languages overlay, which read as "the dropdown does not work". */
+body > .mf-langpick-panel{z-index:100030;}
 .mf-host-head{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid rgba(148,163,184,.24);background:#fff;}
 .mf-host-title{font:600 16px/1.2 'Inter',system-ui,sans-serif;color:#0f172a;display:flex;align-items:center;gap:10px;}
 .mf-host-close{border:1px solid #dbe4f0;background:#fff;color:#0f172a;border-radius:999px;padding:10px 14px;font:600 13px/1 'Inter',system-ui,sans-serif;cursor:pointer;}
@@ -219,6 +261,22 @@
 <div id="mf-host-submissions-overlay" class="mf-host-overlay" aria-hidden="true">
     <div class="mf-host-head"><div class="mf-host-title"><i class="fas fa-inbox"></i> Submissions</div><button type="button" class="mf-host-close" data-mf-close><i class="fas fa-times"></i> Close</button></div>
     <div class="mf-host-body"><div id="mf-submissions-root" data-platform="dnn" data-instance-id="<%= ModuleId %>" data-module-id="<%= ModuleId %>" data-form-id="<%= RequestedFormId > 0 ? RequestedFormId : 0 %>" data-api-base="<%= ViewModel.ApiBaseUrl %>" data-assets-base="/DesktopModules/MegaForm/Assets/" data-forms='<%= Server.HtmlEncode(ViewModel.FormsJson ?? "[]") %>'><div class="mf-host-boot">Loading submissions…</div></div></div>
+</div>
+<%-- [DnnMyInbox v20260714-01] My Inbox surface. The dashboard sidebar routes to
+     #mf-myinbox; without this overlay dnn-host had nothing to open, so the click
+     closed the dashboard and dropped the admin back on the DNN page.
+     megaform-my-inbox.js self-mounts into #mf-myinbox-root (window.MegaForm.initMyInbox). --%>
+<div id="mf-host-myinbox-overlay" class="mf-host-overlay" aria-hidden="true">
+    <div class="mf-host-head"><div class="mf-host-title"><i class="fas fa-inbox"></i> My Inbox</div><div style="display:flex;gap:8px;align-items:center;"><a class="mf-host-close" href="<%= Server.HtmlEncode(homeUrl) %>" title="Back to home page"><i class="fas fa-house"></i> Home</a><button type="button" class="mf-host-close" data-mf-close><i class="fas fa-times"></i> Close</button></div></div>
+    <div class="mf-host-body"><div id="mf-myinbox-root"
+         data-platform="dnn"
+         data-instance-id="<%= ModuleId %>"
+         data-module-id="<%= ModuleId %>"
+         data-tab-id="<%= TabId %>"
+         data-portal-id="<%= PortalId %>"
+         data-api-base="<%= ViewModel.ApiBaseUrl %>"
+         data-submissions-api-base="<%= ViewModel.ApiBaseUrl %>"
+         data-assets-base="/DesktopModules/MegaForm/Assets/"><div class="mf-host-boot">Loading inbox…</div></div></div>
 </div>
 <div id="mf-host-languages-overlay" class="mf-host-overlay" aria-hidden="true">
     <div class="mf-host-head"><div class="mf-host-title"><i class="fas fa-language"></i> Languages</div><button type="button" class="mf-host-close" data-mf-close><i class="fas fa-times"></i> Close</button></div>
@@ -403,6 +461,7 @@ body.mf-admin-shell-route .mf-form-wrapper {
     // public form chrome during the redirect handshake performed earlier.
     var adminHash = hash.indexOf('#mf-builder') === 0 ||
                     hash.indexOf('#mf-submissions') === 0 ||
+                    hash.indexOf('#mf-myinbox') === 0 ||
                     hash.indexOf('#mf-theme') === 0 ||
                     hash.indexOf('#mf-dashboard') === 0 ||
                     hash.indexOf('#mf-views') === 0 ||

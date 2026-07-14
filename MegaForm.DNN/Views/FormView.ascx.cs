@@ -534,10 +534,15 @@ namespace MegaForm.DNN.Components
                         // shell needs it too because the modal opens from the
                         // dashboard inbox.
                         ClientResourceManager.RegisterStyleSheet(Page, ASSETS + "css/megaform-submissions-ts.css" + V, 210);
+                        // [DnnMyInbox v20260714-01] My Inbox surface (#mf-host-myinbox-overlay).
+                        // The dashboard sidebar has always linked to it; the bundle+stylesheet
+                        // were never registered on DNN, so the surface could not boot.
+                        ClientResourceManager.RegisterStyleSheet(Page, ASSETS + "css/megaform-my-inbox-ts.css" + V, 211);
 
                         ClientResourceManager.RegisterScript(Page, ASSETS + "js/Sortable.min.js", 116);
                         ClientResourceManager.RegisterScript(Page, ASSETS + "js/megaform-dashboard.js" + V, 118);
                         ClientResourceManager.RegisterScript(Page, ASSETS + "js/megaform-submissions.js" + V, 119);
+                        ClientResourceManager.RegisterScript(Page, ASSETS + "js/megaform-my-inbox.js" + V, 121);
                         // The canonical SubmissionsShell is provided by megaform-submissions.js.
                         // The retired Gmail-style submission-inbox bundle is intentionally not
                         // registered: it is no longer built and caused a 404 on every admin page.

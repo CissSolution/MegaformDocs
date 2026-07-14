@@ -720,6 +720,16 @@ function setHash(mode: HostMode | null, forceNew = false): void {
   window.history.replaceState({}, document.title, url.pathname + (url.search || '') + (url.hash || ''));
 }
 
+// [DnnBodyPortals v20260714-01] MegaForm popovers/toasts that live as direct <body>
+// children (they are body-appended on purpose so no ancestor overflow can clip them).
+// The chrome hider must NOT display:none them — hiding the language picker panel is
+// what made "Display language" look dead inside the Languages overlay.
+const MF_BODY_PORTAL_SELECTOR = '.mf-langpick-panel, .mf-dnn-fs-toggle, .mf-loc-toast, [data-mf-portal], [data-mf-overlay]';
+
+function isMegaFormBodyPortal(el: HTMLElement): boolean {
+  try { return typeof el.matches === 'function' && el.matches(MF_BODY_PORTAL_SELECTOR); } catch { return false; }
+}
+
 function createChromeHider() {
   let hidden: Array<{ el: HTMLElement; display: string }> = [];
   let originalBodyOverflow = '';
@@ -737,6 +747,7 @@ function createChromeHider() {
       Array.from(document.body.children).forEach((node) => {
         const el = node as HTMLElement;
         if (el === keep || el.contains(keep)) return;
+        if (isMegaFormBodyPortal(el)) return;
         hidden.push({ el, display: el.style.display || '' });
         el.style.display = 'none';
       });
@@ -1259,21 +1270,109 @@ function init(): void {
   Object.values(overlays).forEach((overlay) => { if (overlay && overlay.parentElement !== document.body) document.body.appendChild(overlay); });
   const chrome = createChromeHider();
 
+  // ── [DnnSurfaceMode v20260714-02] Windowed ⇄ Fullscreen ────────────────────
+  // Oqtane admin surfaces (.mf-oq-surface) ship a Windowed/Fullscreen toggle via
+  // platform-host.installFullscreenToggle(). DNN has no .mf-oq-surface — its admin
+  // surfaces are the #mf-host-*-overlay elements — so that toggle never mounted and
+  // every DNN surface was hard-locked to fullscreen.
+  //
+  // v02: "windowed" means the surface renders as a NORMAL DNN MODULE — moved back
+  // into the module pane (#mf-dnn-host's container), in page flow, with the DNN skin
+  // (header, menu, footer) around it. Not a floating popup. Fullscreen re-parents it
+  // to <body> as the position:fixed overlay it has always been. Persisted per browser,
+  // like Oqtane's.
+  const SURFACE_MODE_KEY = 'mf-dnn-surface-windowed';
+  // The DNN module pane this module instance lives in — captured BEFORE the overlays
+  // are hoisted to <body>, because that is where a windowed surface has to go back to.
+  const moduleContainer: HTMLElement = (host.closest('.DnnModule') as HTMLElement) || (host.parentElement as HTMLElement) || document.body;
+  let windowed = (() => { try { return localStorage.getItem(SURFACE_MODE_KEY) === '1'; } catch { return false; } })();
+  let fsToggleBtn: HTMLButtonElement | null = null;
+
+  const FS_MAX_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
+  const FS_MIN_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>';
+
+  function openOverlayEl(): HTMLElement | null {
+    return Object.values(overlays).find((o) => !!o && o.classList.contains('is-open')) || null;
+  }
+
+  function syncFsToggle(): void {
+    if (!fsToggleBtn) return;
+    const anyOpen = !!openOverlayEl();
+    fsToggleBtn.style.display = anyOpen ? 'inline-flex' : 'none';
+    fsToggleBtn.innerHTML = (windowed ? FS_MAX_SVG : FS_MIN_SVG)
+      + '<span class="mf-fs-lbl">' + (windowed ? 'Fullscreen' : 'Windowed') + '</span>';
+    fsToggleBtn.title = windowed ? 'Expand this panel to full screen' : 'Shrink this panel to a window (the DNN page stays visible)';
+  }
+
+  // Apply the current surface mode to an overlay.
+  //   windowed   → the surface IS a DNN module: parented back into the module pane, in
+  //                page flow, DNN chrome untouched (no display:none on the skin).
+  //   fullscreen → hoisted to <body> as the position:fixed overlay, DNN chrome hidden.
+  function applySurfaceMode(overlay: HTMLElement): void {
+    overlay.classList.toggle('is-windowed', windowed);
+    if (windowed) {
+      chrome.restore();
+      if (overlay.parentElement !== moduleContainer) moduleContainer.appendChild(overlay);
+      document.body.classList.add('mf-dnn-windowed');
+    } else {
+      document.body.classList.remove('mf-dnn-windowed');
+      if (overlay.parentElement !== document.body) document.body.appendChild(overlay);
+      chrome.hide(overlay);
+    }
+    syncFsToggle();
+    try { window.dispatchEvent(new Event('resize')); } catch {}
+  }
+
+  function ensureFsToggle(): void {
+    if (fsToggleBtn && document.body.contains(fsToggleBtn)) { syncFsToggle(); return; }
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'mf-dnn-fs-toggle';
+    btn.style.display = 'none';
+    btn.addEventListener('click', () => {
+      windowed = !windowed;
+      try { localStorage.setItem(SURFACE_MODE_KEY, windowed ? '1' : '0'); } catch { /* no storage */ }
+      const overlay = openOverlayEl();
+      if (overlay) applySurfaceMode(overlay);
+      else syncFsToggle();
+    });
+    document.body.appendChild(btn);
+    fsToggleBtn = btn;
+    syncFsToggle();
+  }
+
   function closeAll(): void {
-    Object.values(overlays).forEach((overlay) => { if (overlay) overlay.classList.remove('is-open'); });
+    Object.values(overlays).forEach((overlay) => {
+      if (!overlay) return;
+      overlay.classList.remove('is-open');
+      overlay.classList.remove('is-windowed');
+      // Park every surface back on <body> so a closed windowed surface leaves no
+      // collapsed placeholder inside the DNN module pane.
+      if (overlay.parentElement !== document.body) document.body.appendChild(overlay);
+    });
+    document.body.classList.remove('mf-dnn-windowed');
     chrome.restore();
     setLiveEditorTriggerVisible(true);
     setHash(null);
+    syncFsToggle();
   }
 
   function open(mode: HostMode, forceNew = false): void {
     cleanupStaleWorkflowChrome();
+    // Resolve the overlay BEFORE tearing the current one down. Closing first and only
+    // then discovering the target overlay is missing (e.g. an older deployed ASCX with
+    // no My Inbox overlay) dumped the admin out of the dashboard back to the DNN page —
+    // that "clicking My Inbox kicks me out" bug. Bail out with the current surface intact.
+    const overlay = overlays[mode];
+    if (!overlay) {
+      console.warn('[MegaForm.DNN.Host] no overlay for mode', mode);
+      return;
+    }
     closeAll();
     setLiveEditorTriggerVisible(false);
-    const overlay = overlays[mode];
-    if (!overlay) { console.warn('[MegaForm.DNN.Host] no overlay for mode', mode); return; }
     overlay.classList.add('is-open');
-    chrome.hide(overlay);
+    ensureFsToggle();
+    applySurfaceMode(overlay);
     setHash(mode, forceNew);
     if (mode === 'dashboard') bootDashboard(document.getElementById('mf-host-dashboard-root') as HTMLElement);
     if (mode === 'submissions') bootSubmissions(document.getElementById('mf-submissions-root') as HTMLElement);
