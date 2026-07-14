@@ -158,11 +158,15 @@ body.mf-dnn-windowed{overflow:visible !important;}
 html.mf-admin-shell-route .mf-no-form,
 html.mf-admin-shell-route .mf-auth-required,
 html.mf-admin-shell-route .mf-view-container,
-html.mf-admin-shell-route .mf-form-wrapper,
 body.mf-admin-shell-route .mf-no-form,
 body.mf-admin-shell-route .mf-auth-required,
-body.mf-admin-shell-route .mf-view-container,
-body.mf-admin-shell-route .mf-form-wrapper{display:none !important;}
+body.mf-admin-shell-route .mf-view-container{display:none !important;}
+/* [OneSurfaceAtATime v20260714-02] .mf-form-wrapper is NOT public-form-only: the builder
+   canvas, the submission detail and My Inbox all render a form into that same class. Hiding
+   it unqualified blanked the Build canvas (the fields were in the DOM, inside a display:none
+   ancestor). Hide the PAGE's form — never the copy an admin surface renders inside itself. */
+html.mf-admin-shell-route .mf-form-wrapper:not(.mf-host-overlay .mf-form-wrapper),
+body.mf-admin-shell-route .mf-form-wrapper:not(.mf-host-overlay .mf-form-wrapper){display:none !important;}
 /* Windowed⇄Fullscreen toggle — body-level so it survives surface re-renders and is
    never clipped by the overlay's own stacking context. Mirrors the Oqtane control. */
 .mf-dnn-fs-toggle{position:fixed;right:18px;bottom:18px;z-index:100020;display:none;align-items:center;gap:8px;border:1px solid #dbe4f0;background:#fff;color:#0f172a;border-radius:999px;padding:9px 14px;font:600 13px/1 'Inter',system-ui,sans-serif;box-shadow:0 10px 26px rgba(15,23,42,.18);cursor:pointer;}
