@@ -6,6 +6,7 @@
 import { MegaFormBuilder } from './core';
 import { ensureFieldSettingsBadge, getActiveField, hasActiveFieldSelection } from './field-settings';
 import { openIconPalette, ensureIconPaletteStyles } from './icon-palette';
+import { wireDbInsertPicker } from './db-insert-picker';
 (function () {
     'use strict';
     var B = MegaFormBuilder;
@@ -2483,8 +2484,10 @@ import { openIconPalette, ensureIconPaletteStyles } from './icon-palette';
             resultEl.style.display = ''; resultEl.style.color = '#94a3b8'; resultEl.textContent = 'Running test…';
             var c = _ensureDbInsert();
             var keys = _flatFieldKeys();
-            var sampleData: Record<string, any> = {};
-            keys.forEach(function(k){ sampleData[k] = '__test_' + k; });
+            // Prefer column-typed sample values from the picker (fits char(2) etc.); fall back to the
+            // generic long placeholder only when no table columns are loaded.
+            var sampleData: Record<string, any> = ((window as any).MFDbInsertSampleData && (window as any).MFDbInsertSampleData()) || {};
+            if (!Object.keys(sampleData).length) keys.forEach(function(k){ sampleData[k] = '__test_' + k; });
             try {
                 var platform = String(((window as any).__MF_PLATFORM__ || {}).platform || '').toLowerCase();
                 var url = platform === 'dnn' ? '/DesktopModules/MegaForm/API/Submit/TestInsert' : '/api/MegaForm/Field/TestInsert';
@@ -2515,6 +2518,19 @@ import { openIconPalette, ensureIconPaletteStyles } from './icon-palette';
                 resultEl.textContent = 'Error: ' + (e && e.message ? e.message : String(e));
             }
         });
+
+        // ── Connection dropdown + table picker + real-column INSERT generator ──
+        // Turns the free-text connection box into a server-allowed dropdown and,
+        // once a table is picked, loads its real columns so "Generate INSERT" emits
+        // column-matched SQL (no more "Invalid column name"). Fail-soft; the legacy
+        // free-text/naive-generate handlers above stay as the fallback path.
+        try {
+            wireDbInsertPicker({
+                getConfig: function () { return _ensureDbInsert(); },
+                getFieldKeys: function () { return _flatFieldKeys(); },
+                markDirty: function () { B.state.isDirty = true; }
+            });
+        } catch (_e) { /* older template / no DOM — panel remains usable as free-text */ }
 
         // ── Test SQL Options (preview) ─────────────────────────
         var optsTest = document.getElementById('mf-prop-options-test');

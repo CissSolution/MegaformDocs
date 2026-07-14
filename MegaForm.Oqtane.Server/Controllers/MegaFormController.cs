@@ -1409,9 +1409,16 @@ namespace MegaForm.Oqtane.Server.Controllers
 
         [HttpPost("Field/TestInsert")]
         [Authorize(Policy = "EditModule")]
-        public IActionResult TestFieldInsert([FromBody] Newtonsoft.Json.Linq.JObject body)
+        public IActionResult TestFieldInsert([FromBody] System.Text.Json.JsonElement bodyElement)
         {
-            if (body == null) return BadRequest(new { error = "body required" });
+            // Oqtane does NOT call AddNewtonsoftJson(), so [FromBody] JObject binds as null → the Test
+            // button always got "body required". Bind the STJ element and re-parse into JObject so the
+            // field reads below stay unchanged. Same fix as SaveForm and the payment endpoints.
+            if (bodyElement.ValueKind != System.Text.Json.JsonValueKind.Object)
+                return BadRequest(new { error = "body required" });
+            Newtonsoft.Json.Linq.JObject body;
+            try { body = Newtonsoft.Json.Linq.JObject.Parse(bodyElement.GetRawText()); }
+            catch { return BadRequest(new { error = "body required" }); }
             try
             {
                 var settings = new MegaForm.Core.Models.FormSettings

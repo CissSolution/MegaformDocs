@@ -1256,13 +1256,17 @@ import dbStrings from './db-tables-strings.json';
               '</select>' +
             '</div>' +
           '</div>' +
-          '<div class="mf-prop-group" data-mf-dbi-badge="FormDatabaseInsertUi v20260430-04"><h6><i class="fas fa-database"></i> Database (save submission to custom DB)</h6>' +
+          '<div class="mf-prop-group" data-mf-dbi-badge="FormDatabaseInsertUi v20260714-05"><h6><i class="fas fa-database"></i> Database (save submission to custom DB)</h6>' +
             '<p style="font-size:11px;color:#64748b;margin:0 0 8px">Optional. After default submission saves, also INSERT one row into a custom database. Use <code>:fieldKey</code> placeholders in the SQL — they auto-bind to form field values via parameterized binding.</p>' +
             propCheck('mf-setting-db-insert-enabled', 'Enable database INSERT on submit') +
             '<div id="mf-setting-db-insert-body" style="display:none">' +
-              '<div class="form-group mt-2"><label for="mf-setting-db-insert-conn">Connection name</label>' +
-                '<input type="text" id="mf-setting-db-insert-conn" class="form-control form-control-sm" placeholder="DashboardDatabase"/>' +
-                '<small class="text-muted d-block mt-1">Server-side connection key (resolved from app config). Clients cannot supply connection strings.</small></div>' +
+              '<div class="form-group mt-2"><label for="mf-setting-db-insert-conn">Connection</label>' +
+                '<select id="mf-setting-db-insert-conn" class="form-control form-control-sm"><option value="">Loading connections…</option></select>' +
+                '<small class="text-muted d-block mt-1">Server-side connection key from app config. Clients cannot supply connection strings.</small></div>' +
+              '<div class="form-group mt-2"><label for="mf-setting-db-insert-table">Target table <span style="color:#94a3b8;font-weight:400">(loads real columns)</span></label>' +
+                '<select id="mf-setting-db-insert-table" class="form-control form-control-sm" disabled><option value="">Pick a connection first…</option></select>' +
+                '<div id="mf-setting-db-insert-cols" style="display:none;margin-top:6px;font-size:11px;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:6px 8px;max-height:120px;overflow:auto"></div>' +
+                '<small class="text-muted d-block mt-1">Picking a table loads its real columns so <em>Generate INSERT</em> matches them exactly (no more “Invalid column name”).</small></div>' +
               '<div class="form-group mt-2"><label for="mf-setting-db-insert-dbtype">Database type</label>' +
                 '<select id="mf-setting-db-insert-dbtype" class="form-control form-control-sm">' +
                   '<option value="">Auto-detect</option>' +
@@ -1273,7 +1277,7 @@ import dbStrings from './db-tables-strings.json';
                 '</select></div>' +
               '<div class="form-group mt-2">' +
                 '<label style="display:flex;justify-content:space-between;align-items:center"><span>Available form fields <span style="color:#94a3b8;font-weight:400">(click to insert :token)</span></span>' +
-                  '<button type="button" id="mf-setting-db-insert-sample" class="btn btn-link btn-sm p-0" style="font-size:11px">Generate sample SQL</button>' +
+                  '<button type="button" id="mf-setting-db-insert-sample" class="btn btn-link btn-sm p-0" style="font-size:11px">Generate INSERT</button>' +
                 '</label>' +
                 '<div id="mf-setting-db-insert-fields" style="display:flex;flex-wrap:wrap;gap:4px;padding:6px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;min-height:32px;font-size:11px"></div>' +
               '</div>' +

@@ -787,6 +787,9 @@ function showToast(message, type) {
         if (dbiSql) dbiSql.value = String(dbi.insertSql || '');
         // Render field chips once after hydration (chip list reads B.state.schema.fields)
         try { var fn = (window as any).MFRenderDbInsertChips; if (typeof fn === 'function') fn(); } catch (_e) {}
+        // Repopulate the connection dropdown + preselect the saved connection/table now that
+        // databaseInsert config is hydrated (the picker reads connectionKey/insertSql from state).
+        try { var rp = (window as any).MFReloadDbInsertPicker; if (typeof rp === 'function') rp(); } catch (_e) {}
     }
 
     // Load schema from template (called by template gallery)

@@ -26,6 +26,6 @@
     /// </summary>
     public static class MegaFormAssetVersion
     {
-        public static readonly string Current = "20260712-B396";
+        public static readonly string Current = "20260714-B398";
     }
 }
