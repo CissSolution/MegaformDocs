@@ -625,7 +625,33 @@ export function insertAtCursor(textarea: HTMLTextAreaElement, value: string): vo
 function getApiBase(): string {
   const w = window as any;
   if (typeof w.__MF_API_BASE__ === 'string' && w.__MF_API_BASE__) return w.__MF_API_BASE__;
+  // [DockParity v20260714-01] The DNN dock now opens this same popup, and DNN's API does not
+  // live at /api/MegaForm — it is /DesktopModules/MegaForm/API/. The host publishes it on
+  // __MF_PLATFORM__.apiBase; honour that before falling back. Oqtane/Web publish the same field
+  // with their own base, so this is a no-op for them.
+  const fromPlatform = String((getPlatform() || {}).apiBase || '').trim();
+  if (fromPlatform) return fromPlatform.replace(/\/+$/, '');
   return '/api/MegaForm';
+}
+
+function isDnn(): boolean {
+  return String((getPlatform() || {}).platform || '').trim().toLowerCase() === 'dnn';
+}
+
+/**
+ * DNN's WebAPI is action-based ({controller}/{action}), not REST — ModuleConfig/Get?moduleId=N
+ * and ModuleConfig/Save. Its Save already speaks this popup's payload (it reads `viewMode`);
+ * only the URL shape and the antiforgery token were missing.
+ */
+function dnnAntiforgeryHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {};
+  try {
+    const w = window as any;
+    const moduleId = (getPlatform() || {}).moduleId || (getPlatform() || {}).instanceId || 0;
+    const sf = w.jQuery?.ServicesFramework?.(moduleId);
+    if (sf) headers.RequestVerificationToken = sf.getAntiForgeryValue();
+  } catch { /* ServicesFramework absent — the server will reject and we surface the error */ }
+  return headers;
 }
 
 function getPlatform(): any {
@@ -950,7 +976,10 @@ export async function getModuleConfig(moduleId: number, siteId?: number): Promis
   const isOqtane = String(platform.platform || '').toLowerCase() === 'oqtane';
   try {
     const qs = siteId && siteId > 0 ? `?siteId=${siteId}` : '';
-    const r = await fetch(withPlatformAuth(`${getApiBase()}/ModuleConfig/${moduleId}${qs}`), { credentials: 'same-origin', headers: getPlatformHeaders() });
+    const url = isDnn()
+      ? `${getApiBase()}/ModuleConfig/Get?moduleId=${moduleId}`
+      : `${getApiBase()}/ModuleConfig/${moduleId}${qs}`;
+    const r = await fetch(withPlatformAuth(url), { credentials: 'same-origin', headers: getPlatformHeaders() });
     const text = await r.text().catch(() => '');
     if (r.ok) {
       const parsed = parseJson<any>(text);
@@ -974,10 +1003,12 @@ export async function saveModuleConfig(cfg: ModuleConfig, siteId?: number): Prom
   try {
     if (siteId && siteId > 0) cfg.siteId = siteId;       // body fallback
     const qs = siteId && siteId > 0 ? `?siteId=${siteId}` : '';
-    const r = await fetch(withPlatformAuth(`${getApiBase()}/ModuleConfig${qs}`), {
+    const dnn = isDnn();
+    const url = dnn ? `${getApiBase()}/ModuleConfig/Save` : `${getApiBase()}/ModuleConfig${qs}`;
+    const r = await fetch(withPlatformAuth(url), {
       method: 'POST',
       credentials: 'same-origin',
-      headers: getPlatformHeaders({ 'Content-Type': 'application/json' }),
+      headers: getPlatformHeaders({ 'Content-Type': 'application/json', ...(dnn ? dnnAntiforgeryHeaders() : {}) }),
       body: JSON.stringify(cfg),
     });
     let body: string | undefined;
@@ -1023,7 +1054,11 @@ export async function getFormThemeLayout(formId: number): Promise<FormThemeLayou
   const empty = (status: number): FormThemeLayoutState => ({ ok: false, status, theme: 'default', overrides: {} });
   if (!formId || formId <= 0) return empty(0);
   try {
-    const r = await fetch(withPlatformAuth(`${getApiBase()}/Form/${encodeURIComponent(String(formId))}`), {
+    // DNN's WebAPI is action-based: Form/Get?formId=N (the REST shape 404s there).
+    const formUrl = isDnn()
+      ? `${getApiBase()}/Form/Get?formId=${encodeURIComponent(String(formId))}`
+      : `${getApiBase()}/Form/${encodeURIComponent(String(formId))}`;
+    const r = await fetch(withPlatformAuth(formUrl), {
       credentials: 'same-origin',
       headers: getPlatformHeaders(),
     });

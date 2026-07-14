@@ -200,14 +200,44 @@ body > .mf-langpick-panel{z-index:100030;}
      data-embed-mode='<%= ViewModel.EmbedMode.ToString().ToLower() %>'
      data-admin-dashboard-mode='<%= ViewModel.IsAdminDashboardMode.ToString().ToLower() %>'
      data-module-mode='<%= ViewModel.ModuleMode ?? "render" %>'>
+    <%-- [DockParity v20260714-01] Same dock as Oqtane: Settings · Form Builder · Form Dashboard.
+         "Settings" opens MegaForm's own settings popup (window.MFSettings, megaform-settings-popup.js
+         — the SAME bundle Oqtane's dock uses; it is platform-aware and posts to ModuleConfig/Save)
+         instead of DNN's WebForms ManageModule page. The old Home link + "Render" state pill are
+         gone: Oqtane has neither, every surface already carries its own Home/Close, and they were
+         what collided with DNN's own in-context module toolbar. The Trial pill still appears, but
+         only on a trial licence (applyTrialDockPill). --%>
     <div class="mf-host-admin-dock">
-        <a class="mf-host-admin-btn" href="<%= Server.HtmlEncode(homeUrl) %>" title="Back to home page"><i class="fas fa-house"></i> Home</a>
-        <span class="mf-host-admin-pill"><i class="fas fa-eye"></i> Render</span>
+        <span class="mf-host-admin-pill" data-mf-trial-pill="1" style="display:none;"><i class="fas fa-flask"></i> Trial Mode</span>
         <button type="button" class="mf-host-admin-btn" data-mf-open="views"><i class="fas fa-clone"></i> Module View</button>
+        <button type="button" class="mf-host-admin-btn" id="mf-host-settings-open" title="Module settings — form, display, database"><i class="fas fa-cog"></i> Settings</button>
+        <button type="button" class="mf-host-admin-btn" data-mf-open="builder"><i class="fas fa-pen-ruler"></i> Form Builder</button>
         <button type="button" class="mf-host-admin-btn" id="mf-host-theme-preset-save" style="display:none;"><i class="fas fa-palette"></i> Update Theme</button>
         <button type="button" class="mf-host-admin-btn is-primary" data-mf-open="dashboard"><i class="fas fa-table-columns"></i> Form Dashboard</button>
     </div>
 </div>
+<script type="text/javascript" id="mf-dnn-settings-dock-boot">
+(function () {
+    var btn = document.getElementById('mf-host-settings-open');
+    if (!btn) return;
+    var opts = {
+        moduleId: <%= ModuleId %>,
+        currentPageId: <%= TabId %>,
+        currentPageUrl: '<%= System.Web.HttpUtility.JavaScriptStringEncode(ReturnUrl ?? "/") %>'
+    };
+    // Lazy-load exactly like Oqtane's BuildSettingsInlineOpenScript: the popup bundle is only
+    // fetched when an admin actually opens Settings.
+    function open() {
+        if (window.MFSettings && typeof window.MFSettings.open === 'function') { window.MFSettings.open(opts); return; }
+        var s = document.createElement('script');
+        s.src = '/DesktopModules/MegaForm/Assets/js/megaform-settings-popup.js?popupboot=' + Date.now();
+        s.onload = open;
+        s.onerror = function () { console.error('[MegaForm.DNN] failed to load megaform-settings-popup.js'); };
+        document.body.appendChild(s);
+    }
+    btn.addEventListener('click', open);
+})();
+</script>
 <div id="mf-host-dashboard-overlay" class="mf-host-overlay" aria-hidden="true">
     <div class="mf-host-head"><div class="mf-host-title"><i class="fas fa-table-columns"></i> MegaForm Dashboard</div><div style="display:flex;gap:8px;align-items:center;"><a class="mf-host-close" href="<%= Server.HtmlEncode(homeUrl) %>" title="Back to home page"><i class="fas fa-house"></i> Home</a><button type="button" class="mf-host-close" data-mf-close><i class="fas fa-times"></i> Close</button></div></div>
     <div id="mf-host-dashboard-root" class="mf-host-body"

@@ -364,17 +364,19 @@ function isTrialModeActive(): boolean {
   return String(raw).toLowerCase() !== 'true';
 }
 
+// [DockParity v20260714-01] The pill is now a TRIAL badge only. It used to double as a "Render"
+// state chip, which Oqtane's dock does not have — and which made the DNN dock a button wider than
+// the Oqtane one for no information. On a licensed site the pill stays hidden.
 function applyTrialDockPill(host: HTMLElement): void {
   const pill = host.querySelector<HTMLElement>('.mf-host-admin-pill');
   if (!pill) return;
   if (isTrialModeActive()) {
+    pill.style.display = '';
     pill.innerHTML = '<i class="fas fa-flask"></i> Trial Mode';
     pill.setAttribute('title', String(((window.__MF_PLATFORM__ || {}) as any).trialFooterText || 'https://dnndefender.com  Megaform Trial Mode'));
     pill.setAttribute('data-badge', DNN_MODULE_MODE_BADGE);
   } else {
-    pill.innerHTML = '<i class="fas fa-eye"></i> Render';
-    pill.setAttribute('title', 'Render');
-    pill.setAttribute('data-badge', DNN_MODULE_MODE_BADGE);
+    pill.style.display = 'none';
   }
 }
 
