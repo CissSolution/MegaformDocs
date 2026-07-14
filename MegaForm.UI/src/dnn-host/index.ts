@@ -1145,7 +1145,7 @@ function init(): void {
     syncFsToggle();
   }
 
-  function closeAll(): void {
+  function closeAll(writeHash = true): void {
     Object.values(overlays).forEach((overlay) => {
       if (!overlay) return;
       overlay.classList.remove('is-open');
@@ -1157,11 +1157,19 @@ function init(): void {
     document.body.classList.remove('mf-dnn-windowed');
     chrome.restore();
     setLiveEditorTriggerVisible(true);
-    setHash(null);
+    // A pinned-surface open must not touch the URL at all — not even to clear it (that would
+    // strip query params the page was loaded with). Only an explicit close/navigation does.
+    if (writeHash) setHash(null);
     syncFsToggle();
   }
 
-  function open(mode: HostMode, forceNew = false): void {
+  // [PinnedSurfaceNoHash v20260714-01] `writeHash` is false when the surface opens because the
+  // MODULE IS PINNED to it (Module mode = Admin Dashboard / My Inbox). The module setting already
+  // says what this page shows, so rewriting the URL to /Page#mf-dashboard is redundant state — and
+  // wrong: it makes a pinned page look like an ad-hoc overlay route and leaves a hash the admin
+  // never asked for. Hash routing stays for EXPLICIT navigation (dock buttons, dashboard nav,
+  // deep links), which is what it is for.
+  function open(mode: HostMode, forceNew = false, writeHash = true): void {
     cleanupStaleWorkflowChrome();
     // Resolve the overlay BEFORE tearing the current one down. Closing first and only
     // then discovering the target overlay is missing (e.g. an older deployed ASCX with
@@ -1172,12 +1180,12 @@ function init(): void {
       console.warn('[MegaForm.DNN.Host] no overlay for mode', mode);
       return;
     }
-    closeAll();
+    closeAll(writeHash);
     setLiveEditorTriggerVisible(false);
     overlay.classList.add('is-open');
     ensureFsToggle();
     applySurfaceMode(overlay);
-    setHash(mode, forceNew);
+    if (writeHash) setHash(mode, forceNew);
     if (mode === 'dashboard') bootDashboard(document.getElementById('mf-host-dashboard-root') as HTMLElement);
     if (mode === 'submissions') bootSubmissions(document.getElementById('mf-submissions-root') as HTMLElement);
     if (mode === 'myinbox') bootMyInbox(document.getElementById('mf-myinbox-root') as HTMLElement);
@@ -1318,11 +1326,13 @@ function init(): void {
   const initial = currentModeFromHash();
   if (initial) open(initial, initial === 'builder' && isBuilderNewFromHash());
   else if (!hasLiveFormRequest()) {
-    // A module pinned to a surface opens that surface on load. [Revert inline 2026-06-11]
+    // A module pinned to a surface opens that surface on load — WITHOUT writing a hash. The
+    // module setting is the source of truth for what this page shows; appending #mf-dashboard /
+    // #mf-myinbox to a clean page URL is redundant and misleading. [Revert inline 2026-06-11]
     // admin_dashboard was the first; myinbox joins it ([DnnInboxMode v20260714-01]).
     const pinned = String(host.dataset.moduleMode || '').toLowerCase();
-    if (String(host.dataset.adminDashboardMode || '').toLowerCase() === 'true' || pinned === 'admin_dashboard') open('dashboard');
-    else if (pinned === 'myinbox') open('myinbox');
+    if (String(host.dataset.adminDashboardMode || '').toLowerCase() === 'true' || pinned === 'admin_dashboard') open('dashboard', false, false);
+    else if (pinned === 'myinbox') open('myinbox', false, false);
   }
 }
 
