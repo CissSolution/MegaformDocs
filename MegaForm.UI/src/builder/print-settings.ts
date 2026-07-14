@@ -79,6 +79,19 @@
     return Object.assign({}, DEFAULTS, settings);
   }
 
+  /**
+   * Where this host serves the blank-form print document.
+   *
+   * `/f/{id}/print` is a MegaForm.Web route — it was opened on every platform, so on DNN the
+   * Preview button landed on the site's 404 page (the Print tab could be configured but never
+   * seen). One place decides the URL now; a host that gains its own print route only changes here.
+   */
+  function printPreviewUrl(formId) {
+    var platform = String(((window as any).__MF_PLATFORM__ || {}).platform || (window as any).PLATFORM || '').toLowerCase();
+    if (platform === 'dnn') return '/DesktopModules/MegaForm/API/Print/Form?formId=' + formId;
+    return '/f/' + formId + '/print';
+  }
+
   function saveSettings(state) {
     try {
       var builder = window.MegaFormBuilder;
@@ -124,7 +137,8 @@
       // Toggle
       + section('Print Layout',
         toggle('mf-print-enabled', 'Enable Print-Ready Layout', s.enabled)
-        + '<p style="font-size:11px;color:#64748b;margin-top:4px">Renders an A4/Letter printable version at <code>/f/{id}/print</code></p>'
+        // The URL differs per host — printing the Web one on DNN sent admins hunting a 404.
+        + '<p style="font-size:11px;color:#64748b;margin-top:4px">Renders an A4/Letter printable version at <code>' + printPreviewUrl('{id}') + '</code></p>'
       )
 
       // Page
@@ -275,7 +289,7 @@
       collectState(state);
       saveSettings(state);
       setTimeout(function () {
-        window.open('/f/' + formId + '/print', '_blank');
+        window.open(printPreviewUrl(formId), '_blank');
       }, 600);
     };
 

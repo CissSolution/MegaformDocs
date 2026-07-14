@@ -1021,7 +1021,7 @@ function setLiveEditorTriggerVisible(visible: boolean): void {
 // below tolerates the bundle not being ready yet, so no extra wiring is required.
 // Bump whenever the builder bundle's CONTENT changes: the URL is the cache key, so a stale
 // stamp serves yesterday's bundle from the browser cache and the fix "does not work".
-const BUILDER_LAZY_VERSION = '20260714-B234';
+const BUILDER_LAZY_VERSION = '20260714-B236';
 let _builderBundleRequested = false;
 function ensureBuilderBundleLazyLoaded(assetsBase: string): void {
   if (_builderBundleRequested) return;
