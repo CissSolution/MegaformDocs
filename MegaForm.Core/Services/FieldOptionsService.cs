@@ -88,7 +88,14 @@ namespace MegaForm.Core.Services
             _registry = registry;
             _formRepo = formRepo;
             _submissionRepo = submissionRepo;
-            _defaultConnectionKey = defaultConnectionKey;
+            // [DefaultConnFallback2 2026-07-14] Oqtane + Web construct this service via the
+            // 2-arg overload, so defaultConnectionKey arrived null and EVERY sql-sourced field
+            // without an explicit optionsConnectionKey returned [] — a dropdown that renders
+            // empty with no error (AI-generated forms hit this constantly). "DashboardDatabase"
+            // is the canonical site-database key across all platforms; use it as the floor.
+            _defaultConnectionKey = string.IsNullOrWhiteSpace(defaultConnectionKey)
+                ? "DashboardDatabase"
+                : defaultConnectionKey;
         }
 
         // Backward-compatible overload — old callers without parameters keep working.

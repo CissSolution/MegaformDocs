@@ -279,5 +279,6 @@
   "wiz.import_ok": "Imported \"{title}\" — {n} fields loaded",
   "wiz.import_invalid": "That file is not valid JSON.",
   "wiz.import_nofields": "No form fields found in that JSON — export a form/template from MegaForm.",
-  "wiz.import_read_err": "Could not read that file."
+  "wiz.import_read_err": "Could not read that file.",
+  "ai.insert_table_missing": "This form saves submissions into the table \"{0}\", but that table does not exist yet. Ask the AI to create it first (e.g. \"create the {0} table, then wire the insert\")."
 }

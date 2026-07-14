@@ -1874,5 +1874,6 @@
   "ai.plan_apply": "Áp dụng — dựng ngay",
   "ai.plan_cancel": "Huỷ",
   "ai.plan_waiting": "Kế hoạch sẵn sàng — chờ bấm Apply",
-  "ai.plan_cancelled": "Đã huỷ kế hoạch — chỉnh lại prompt rồi gửi lần nữa."
+  "ai.plan_cancelled": "Đã huỷ kế hoạch — chỉnh lại prompt rồi gửi lần nữa.",
+  "ai.insert_table_missing": "Form này ghi dữ liệu vào bảng \"{0}\", nhưng bảng đó chưa tồn tại. Hãy yêu cầu AI tạo bảng trước (ví dụ: \"tạo bảng {0} rồi nối insert\")."
 }

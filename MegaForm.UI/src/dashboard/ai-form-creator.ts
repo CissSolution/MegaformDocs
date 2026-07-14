@@ -82,6 +82,7 @@ const AI_SYSTEM_PROMPT = [
   '     – NULL-able FK + ownership weak (e.g. Student.ClassId) → `ON DELETE SET NULL`',
   '     – Strong ownership (e.g. OrderItem.OrderId, Comment.PostId) → `ON DELETE CASCADE`',
   '     – Reference data (e.g. Order.ProductId) → `ON DELETE NO ACTION` (RESTRICT) so accidental delete throws',
+  '  • 🛑 FK TYPE-MATCH RULE: a FOREIGN KEY column MUST be declared with the EXACT type of the parent key column as listed in the COLUMNS context (char(2) parent → `[CountryCode] CHAR(2)`, char(3) → `CHAR(3)`, int → `INT`). SQL Server REJECTS the whole CREATE TABLE on any length/type mismatch ("not the same length or scale as referencing column"). If the parent column type is unknown, omit the FOREIGN KEY constraint and keep the plain column.',
   '  • Each form has `tableName` (auto-wires settings.databaseInsert with INSERT INTO that table) and uses snake_case field keys matching the table column names.',
   '  • FK-bound Select fields can be omitted from the form schema — the dispatcher auto-upgrades any field whose key matches a parsed FK column to `properties.optionsSource:"sql"` pointing at the parent table. You may also emit them explicitly with optionsSql for full control.',
   '',
@@ -170,6 +171,7 @@ const AI_SYSTEM_PROMPT = [
   '  • `insertSql` must use `:fieldKey` placeholders matching the field keys above.',
   '  • Example: for fields with keys `full_name`, `email`, emit `insertSql`: "INSERT INTO [dbo].[Registrations]([FullName],[Email]) VALUES (:full_name, :email)".',
   '  • Only emit this when the prompt explicitly requests custom-table persistence. Do NOT invent a table name if the user did not ask for one.',
+  '  • 🛑 TABLE-MUST-EXIST RULE: `databaseInsert` does NOT create anything. If the INSERT target is not listed in the attached tables / COLUMNS context, the table may not exist — then you MUST emit shape (B) app_batch instead: one `tables[].ddl` CREATE TABLE entry for it, PLUS the form in `forms[]` with `tableName` set. Phrases like "create the table if missing", "INSERT into a Vendors table (create if needed)" ALWAYS mean app_batch, never a lone single-form schema. A single form whose databaseInsert points at a non-existent table fails on every submit.',
   '',
   'FORM FROM ATTACHED TABLE — DATA-ENTRY MODE (IMPORTANT):',
   '  • When the user asks to create a form FROM / FOR the attached table(s) ("create a form from the selected tables", "form for table X", "data entry form", "nhập liệu"), build a FULL data-entry form per requested table:',
@@ -1390,18 +1392,28 @@ function enableActions(modal: HTMLElement, on: boolean): void {
 // and guarantee the optionsSource:'sql' ↔ optionsSql pairing the renderer and
 // FieldOptionsService both require. Called on every AI-returned schema before
 // preview/apply/save so a missing optionsSource can never ship again.
-function normalizeSqlOptionPairing(schema: any): any {
+function normalizeSqlOptionFields(fields: any[]): any[] {
   try {
     const walk = (arr: any[]) => {
       for (const f of arr || []) {
         if (!f || typeof f !== 'object') continue;
         if (f.type === 'Row' && Array.isArray(f.columns)) { for (const c of f.columns) walk((c && c.fields) || []); continue; }
         const p = f.properties;
-        if (p && p.optionsSql && !p.optionsSource) p.optionsSource = 'sql';
+        if (!p || !p.optionsSql) continue;
+        if (!p.optionsSource) p.optionsSource = 'sql';
+        if (!p.optionsType) p.optionsType = 'sql';
+        // FieldOptionsService falls back to a host default that is unset on Oqtane/Web —
+        // a field without an explicit key silently returns []. Stamp the canonical key.
+        if (!p.optionsConnectionKey) p.optionsConnectionKey = 'DashboardDatabase';
       }
     };
-    walk((schema && (schema.fields || schema.Fields)) || []);
-  } catch { /* schema stays as-is */ }
+    walk(fields || []);
+  } catch { /* fields stay as-is */ }
+  return fields;
+}
+
+function normalizeSqlOptionPairing(schema: any): any {
+  if (schema) normalizeSqlOptionFields((schema.fields || schema.Fields) || []);
   return schema;
 }
 
@@ -1990,7 +2002,15 @@ async function runAppBatchFromDashboard(modal: HTMLElement, state: any, appBatch
   // (which already handles Oqtane MegaFormPopup alias path + DNN default).
   const apiBaseUrl = apiBase();
   const aiBaseUrl = aiBase(); // [P1-3] AiTools/ExecuteDdl lives under the AI base, not MegaFormPopup
-  const summary = { tablesOk: 0, tablesExisted: 0, tablesFailed: 0, forms: [] as Array<{ title: string; formId?: number; ok: boolean; error?: string }> };
+  const summary = { tablesOk: 0, tablesExisted: 0, tablesFailed: 0, formsSkipped: 0, forms: [] as Array<{ title: string; formId?: number; ok: boolean; error?: string }> };
+  // [FailedTableGuard 2026-07-14] A form bound to a table whose CREATE failed would be
+  // saved anyway and then fail on EVERY submit (owner-visible symptom: "form exists,
+  // data never lands"). Track the failed table names and skip those forms instead.
+  const failedTables = new Set<string>();
+  const tableNameOf = (ddl: string): string => {
+    const m = String(ddl || '').match(/(?:CREATE\s+TABLE|INSERT\s+INTO)\s+(?:\[?\w+\]?\s*\.\s*)?\[?(\w+)\]?/i);
+    return m ? m[1].toLowerCase() : '';
+  };
 
   // ── Run DDL ─────────────────────────────────────────────────
   for (let i = 0; i < tables.length; i++) {
@@ -2006,6 +2026,7 @@ async function runAppBatchFromDashboard(modal: HTMLElement, state: any, appBatch
       else { summary.tablesOk++; pushStatus('• ' + kind + ' ' + (i + 1) + '/' + tables.length + ': <span style="color:#16a34a">' + (isSeed ? (typeof r.affected === 'number' ? r.affected + ' rows inserted' : 'rows inserted') : 'created') + '</span>'); }
     } catch (err: any) {
       summary.tablesFailed++;
+      if (!isSeed) failedTables.add(tableNameOf(t.ddl));
       pushStatus('• ' + kind + ' ' + (i + 1) + '/' + tables.length + ': <span style="color:#dc2626">failed</span> — ' + escapeHtml(err?.payload?.error || err.message || ''));
     }
   }
@@ -2120,7 +2141,19 @@ async function runAppBatchFromDashboard(modal: HTMLElement, state: any, appBatch
   let fkWiredTotal = 0;
   for (let i = 0; i < forms.length; i++) {
     const f = forms[i];
+    // [FailedTableGuard 2026-07-14] Its table never got created — saving the form
+    // would produce a shell that errors on every submit. Skip it and say why.
+    if (f.tableName && failedTables.has(String(f.tableName).toLowerCase())) {
+      summary.formsSkipped++;
+      summary.forms.push({ title: f.title, ok: false, error: 'table ' + f.tableName + ' failed to create' });
+      pushStatus('• Form ' + (i + 1) + '/' + forms.length + ': <span style="color:#dc2626">skipped</span> — ' + escapeHtml(String(f.title)) + ' (its table <b>' + escapeHtml(String(f.tableName)) + '</b> failed to create; fix the SQL error above and retry)');
+      continue;
+    }
     if (Array.isArray(f.fields)) fkWiredTotal += autoWire(f.fields);
+    // [OptionsSourceNormalize 2026-07-14] autoWire only touches fields whose key matches a
+    // table created in THIS batch — a dropdown reading a PRE-EXISTING attached table (the
+    // common ERP case) keeps whatever the AI emitted. Normalise it here too.
+    if (Array.isArray(f.fields)) normalizeSqlOptionFields(f.fields);
     const schemaObj: any = { version: '1.0', fields: f.fields || [], settings: f.settings || {} };
     const settingsObj: any = (f.settings && JSON.parse(JSON.stringify(f.settings))) || {};
     if (f.tableName) {
@@ -2391,9 +2424,36 @@ async function ensureSingleFormDatabaseInsert(schema: any, userText: string, pro
 }
 
 // ─── Save + navigate ──────────────────────────────────────────────────────
+/**
+ * [MissingInsertTable 2026-07-14] `databaseInsert` never creates its target — a form
+ * whose insertSql points at a table that does not exist fails on EVERY submit, and the
+ * failure is invisible at save time. Resolve the table name from the insertSql and
+ * confirm it exists (AiTools/SqlColumns returns columns only for real tables).
+ * Returns the missing table name, or null when the wiring is safe / unverifiable.
+ */
+async function findMissingInsertTable(schema: any): Promise<string | null> {
+  try {
+    const di: any = (schema && schema.settings && (schema.settings.databaseInsert || schema.settings.DatabaseInsert)) || null;
+    if (!di || di.enabled === false) return null;
+    const sql = String(di.insertSql || di.InsertSql || '');
+    const m = sql.match(/INSERT\s+INTO\s+(?:\[?\w+\]?\s*\.\s*)?\[?(\w+)\]?/i);
+    if (!m) return null;
+    const table = m[1];
+    const cols = await loadColumns(table, di.connectionKey && di.connectionKey !== 'DashboardDatabase' ? String(di.connectionKey) : undefined);
+    return (cols && cols.length) ? null : table;
+  } catch { return null; }
+}
+
 async function saveAndRedirect(schema: any, mode: 'view' | 'builder', modal: HTMLElement): Promise<void> {
   updateStatus(modal, '💾 ' + T('ai.saving', 'Saving…'));
   enableActions(modal, false);
+  const missingTable = await findMissingInsertTable(schema);
+  if (missingTable) {
+    const msg = T('ai.insert_table_missing', 'This form saves submissions into the table "{0}", but that table does not exist yet. Ask the AI to create it first (e.g. "create the {0} table, then wire the insert").').replace(/\{0\}/g, missingTable);
+    updateStatus(modal, '⚠ ' + msg);
+    enableActions(modal, true);
+    return;
+  }
   try {
     const cfg = platformCfg();
     const title = String(schema.title || 'AI form ' + new Date().toLocaleString());

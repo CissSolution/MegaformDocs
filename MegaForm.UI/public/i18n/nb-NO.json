@@ -1874,5 +1874,6 @@
   "ai.plan_apply": "Apply — build now",
   "ai.plan_cancel": "Cancel",
   "ai.plan_waiting": "Plan ready — waiting for Apply",
-  "ai.plan_cancelled": "Plan cancelled — refine your prompt and send again."
+  "ai.plan_cancelled": "Plan cancelled — refine your prompt and send again.",
+  "ai.insert_table_missing": "This form saves submissions into the table \"{0}\", but that table does not exist yet. Ask the AI to create it first (e.g. \"create the {0} table, then wire the insert\")."
 }
