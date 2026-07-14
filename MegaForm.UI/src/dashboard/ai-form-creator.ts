@@ -171,6 +171,24 @@ const AI_SYSTEM_PROMPT = [
   '  • Example: for fields with keys `full_name`, `email`, emit `insertSql`: "INSERT INTO [dbo].[Registrations]([FullName],[Email]) VALUES (:full_name, :email)".',
   '  • Only emit this when the prompt explicitly requests custom-table persistence. Do NOT invent a table name if the user did not ask for one.',
   '',
+  'FORM FROM ATTACHED TABLE — DATA-ENTRY MODE (IMPORTANT):',
+  '  • When the user asks to create a form FROM / FOR the attached table(s) ("create a form from the selected tables", "form for table X", "data entry form", "nhập liệu"), build a FULL data-entry form per requested table:',
+  '     – one input field per REAL column from the COLUMNS context below — NEVER guess column names,',
+  '     – skip identity/auto-increment PKs, rowversion/timestamp, and audit columns (CreatedOnUtc, ModifiedOn, …),',
+  '     – map SQL type → field type: nvarchar/varchar ≤255 → Text (column named *email* → Email, *phone* → CompositePhone), longer/ntext → Textarea; int/bigint/decimal/money/float → Number; bit → Checkbox; date/datetime/datetime2 → Date; char(2)/char(3) code columns or *Id FK columns → Select loaded from the parent table when that table is also attached (optionsSql with AS value / AS label aliases),',
+  '     – required = NOT NULL columns without a default,',
+  '     – wire settings.databaseInsert (single form) or tableName (app_batch form) so submissions INSERT into that table.',
+  '  • A one-field form for a table with several columns is ALWAYS WRONG in this mode. If unsure which columns matter, include them all — the user can delete extras in the Builder.',
+  '  • Produce a single-dropdown "picker" form ONLY when the user explicitly asks for a lookup/reference/selector, not for "create a form from this table".',
+  '  • SQL-backed choice fields MUST carry BOTH `properties.optionsSource:"sql"` AND `properties.optionsSql` — optionsSql alone renders an empty dropdown.',
+  '',
+  'SEED / SAMPLE DATA (INSERT):',
+  '  • The SQL pipeline accepts INSERT statements — allow-list: CREATE TABLE / CREATE INDEX / ALTER TABLE ADD / INSERT, EXACTLY ONE statement per tables[] entry; a single multi-row `INSERT INTO T (…) VALUES (…),(…),(…)` is one statement and is the preferred shape.',
+  '  • When the user asks to insert/seed/populate sample rows into EXISTING tables → emit shape (B) with ONLY seed entries: { "ops": [{ "op": "app_batch", "tables": [{"ddl": "INSERT INTO [dbo].[X](…) VALUES (…),(…);"}, …], "forms": [] }], "explain": "…" } — forms MUST be an empty array; do NOT re-create the tables and do NOT create any form.',
+  '  • Use the exact column names from the COLUMNS context; include values for every NOT NULL column without a default.',
+  '  • ALWAYS write string literals with the N prefix (N\'…\') in INSERT VALUES — plain \'…\' silently corrupts non-Latin characters (Ƶ, ắ, 漢, …) to "?" on SQL Server.',
+  '  • When creating a NEW app and the user also wants sample data, append the INSERT entries AFTER the CREATE TABLE entries inside the same tables[] array.',
+  '',
   'Keep the schema TIGHT — 5 to 12 fields is the sweet spot for AI-generated forms. The user can always extend in the Builder afterwards.',
 ].join('\n');
 
@@ -514,13 +532,21 @@ export function openAiFormCreator(host?: StudioHost): void {
     attachments: Array<{ type: 'image' | 'text'; name: string; dataUrl?: string; content?: string; mediaType?: string; size?: number }>;
     allTables: string[];      // [v20260530-34] table names fetched from /Subform/Tables
     selectedTables: string[]; // user-toggled subset injected into AI context
+    // [AiDbPicker v20260713] Settings-declared connections the DB tab may browse
+    // ('' = current/site database). Loaded from AiTools/SqlConnections — absent on
+    // older servers/DNN, in which case the picker stays hidden (today's behavior).
+    connections: string[];
+    activeConnection: string;
+    dbLoaded: boolean;
     dbError: string;
-  } = { bubbles: [], schema: null, explain: '', loading: false, history: [], attachments: [], allTables: [], selectedTables: [], dbError: '' };
+  } = { bubbles: [], schema: null, explain: '', loading: false, history: [], attachments: [], allTables: [], selectedTables: [], connections: [], activeConnection: '', dbLoaded: false, dbError: '' };
 
   wireShell(overlay, modal, state, host || { mode: 'dashboard' });
   renderBubbles(modal, state);
   // Fire-and-forget tables fetch — strip stays hidden until tables arrive.
   loadTablesStrip(modal, state);
+  // [AiDbPicker v20260713] Data-source picker (current DB ⇄ Settings connections).
+  loadConnectionsPicker(modal, state);
 }
 
 // [v20260530-34] Fetch DashboardDatabase tables once and render a toggle
@@ -532,9 +558,14 @@ export function openAiFormCreator(host?: StudioHost): void {
 // MegaFormPopup/Subform path resolves SiteId=0 → 404. SqlTables is also
 // provider-aware (SQLite/PG/MySQL/MSSQL) and falls back to the site DB.
 async function loadTablesStrip(modal: HTMLElement, state: any): Promise<void> {
+  // [AiDbPicker v20260713] Guard against slow responses landing after the user
+  // already switched the data source: only the CURRENT connection's reply wins.
+  const requestedConn = String(state.activeConnection || '');
   try {
-    const url = aiBase() + 'AiTools/SqlTables?top=500';
+    const url = aiBase() + 'AiTools/SqlTables?top=500'
+      + (requestedConn ? '&connectionKey=' + encodeURIComponent(requestedConn) : '');
     const r = await fetch(url, { credentials: 'same-origin', headers: buildFetchHeaders() });
+    if (requestedConn !== String(state.activeConnection || '')) return; // stale reply
     if (!r.ok) {
       // [v20260530-41] Surface the error to the DB pane so user sees what's
       // wrong (most common: DashboardDatabase connection not configured on
@@ -552,11 +583,13 @@ async function loadTablesStrip(modal: HTMLElement, state: any): Promise<void> {
       return;
     }
     const j = await r.json().catch(() => ({} as any));
+    if (requestedConn !== String(state.activeConnection || '')) return; // stale reply
     const tables = Array.isArray(j.tables) ? j.tables.map((t: any) => String(t.name || t.Name || t)) : [];
     state.allTables = tables.filter((t: string) => t && !/^(sys|MS_|MF_AI_|MegaForm_Sample_)/i.test(t)).sort();
-    if (!state.allTables.length) return;
+    state.dbLoaded = true;
     renderTablesStrip(modal, state);
   } catch (e: any) {
+    if (requestedConn !== String(state.activeConnection || '')) return;
     state.dbError = 'Network error: ' + (e?.message || String(e));
     renderDbList(modal, state, '');
   }
@@ -568,7 +601,53 @@ function renderTablesStrip(modal: HTMLElement, state: any): void {
   renderDbSelectedStrip(modal, state);
   updateDbTabBadge(modal, state);
   const status = modal.querySelector<HTMLElement>('[data-mfd-ai-db-status]');
-  if (status) status.textContent = state.allTables.length + ' tables';
+  if (status) status.textContent = state.allTables.length + ' tables' + (state.activeConnection ? ' · ' + state.activeConnection : '');
+}
+
+// [AiDbPicker v20260713] Fetch the Settings-declared connection keys and show the
+// data-source <select> when the server offers any. Silent no-op on 404/older
+// servers (DNN) — the tab keeps its current-database-only behavior there.
+async function loadConnectionsPicker(modal: HTMLElement, state: any): Promise<void> {
+  try {
+    const r = await fetch(aiBase() + 'AiTools/SqlConnections', { credentials: 'same-origin', headers: buildFetchHeaders() });
+    if (!r.ok) return;
+    const j = await r.json().catch(() => ({} as any));
+    const list = (Array.isArray(j.connections) ? j.connections : [])
+      .map((c: any) => String(c || '').trim()).filter(Boolean);
+    if (!list.length) return;
+    state.connections = list;
+    const wrap = modal.querySelector<HTMLElement>('[data-mfd-ai-db-connwrap]');
+    const sel = modal.querySelector<HTMLSelectElement>('[data-mfd-ai-db-conn]');
+    if (!wrap || !sel) return;
+    sel.innerHTML = '';
+    const cur = document.createElement('option');
+    cur.value = '';
+    cur.textContent = '🗄 ' + T('ai.db_current', 'Current database (this site)');
+    sel.appendChild(cur);
+    list.forEach((k: string) => {
+      const o = document.createElement('option');
+      o.value = k;
+      o.textContent = '🔌 ' + k + ' · ' + T('ai.db_from_settings', 'from Settings');
+      sel.appendChild(o);
+    });
+    wrap.style.display = 'block';
+    sel.addEventListener('change', () => {
+      state.activeConnection = sel.value || '';
+      // A different database ⇒ the old selection/list/columns no longer apply.
+      state.selectedTables = [];
+      state.allTables = [];
+      state.dbLoaded = false;
+      state.dbError = '';
+      renderDbSelectedStrip(modal, state);
+      updateDbTabBadge(modal, state);
+      renderDbList(modal, state, '');
+      const search = modal.querySelector<HTMLInputElement>('[data-mfd-ai-db-search]');
+      if (search) search.value = '';
+      const status = modal.querySelector<HTMLElement>('[data-mfd-ai-db-status]');
+      if (status) status.textContent = 'Loading…';
+      void loadTablesStrip(modal, state);
+    });
+  } catch { /* picker is optional */ }
 }
 
 // [v20260530-35] Tab switcher
@@ -601,10 +680,18 @@ function renderDbList(modal: HTMLElement, state: any, filter: string): void {
   list.innerHTML = '';
   if (!state.allTables.length) {
     if (state.dbError) {
-      list.innerHTML = '<div style="color:#fca5a5;font-size:12px;padding:20px;line-height:1.6;">⚠ <strong>Database tables unavailable</strong><br><span style="color:#cbd5e1;">' + escapeHtml(state.dbError) + '</span><br><br><span style="font-size:11px;color:#94a3b8;">Fix: configure the <code style="background:#1e293b;padding:1px 5px;border-radius:3px;">DashboardDatabase</code> connection in Site Settings → MegaForm → Database (Oqtane) or add it to <code style="background:#1e293b;padding:1px 5px;border-radius:3px;">appsettings.json</code> ConnectionStrings (Web). You can still use the <strong>Chat tab</strong> to create forms without database tables.</span></div>';
+      list.innerHTML = '<div style="color:#fca5a5;font-size:12px;padding:20px;line-height:1.6;">⚠ <strong>Database tables unavailable</strong><br><span style="color:#cbd5e1;">' + escapeHtml(state.dbError) + '</span><br><br><span style="font-size:11px;color:#94a3b8;">Fix: configure the <code style="background:#1e293b;padding:1px 5px;border-radius:3px;">' + escapeHtml(state.activeConnection || 'DashboardDatabase') + '</code> connection in Site Settings → MegaForm → Database (Oqtane) or add it to <code style="background:#1e293b;padding:1px 5px;border-radius:3px;">appsettings.json</code> ConnectionStrings (Web). You can still use the <strong>Chat tab</strong> to create forms without database tables.</span></div>';
       return;
     }
-    list.innerHTML = '<div style="color:#94a3b8;font-size:12px;padding:24px;text-align:center;font-style:italic;">⏳ ' + T('ai.loading_tables', 'Loading tables from DashboardDatabase…') + '</div>';
+    // [AiDbPicker v20260713] Loaded fine but the database is simply empty —
+    // say so instead of spinning "Loading…" forever.
+    if (state.dbLoaded) {
+      list.innerHTML = '<div style="color:#64748b;font-size:12px;padding:24px;text-align:center;">' + T('ai.db_no_tables', 'No tables in this database.') + '</div>';
+      return;
+    }
+    list.innerHTML = '<div style="color:#94a3b8;font-size:12px;padding:24px;text-align:center;font-style:italic;">⏳ ' + (state.activeConnection
+      ? T('ai.loading_tables_conn', 'Loading tables from {conn}…').replace('{conn}', escapeHtml(state.activeConnection))
+      : T('ai.loading_tables', 'Loading tables from DashboardDatabase…')) + '</div>';
     return;
   }
   const f = (filter || '').trim().toLowerCase();
@@ -655,7 +742,7 @@ function renderDbList(modal: HTMLElement, state: any, filter: string): void {
       if (arrow) arrow.textContent = expanded ? '▶' : '▼';
       if (!expanded && !body.dataset['loaded']) {
         body.innerHTML = '<div style="padding:8px 0;font-style:italic;">Loading schema…</div>';
-        loadColumns(name).then((cols) => {
+        loadColumns(name, state.activeConnection || undefined).then((cols) => {
           if (!cols.length) {
             body.innerHTML = '<div style="padding:8px 0;color:#dc2626;">Failed to load schema (auth or table-not-found)</div>';
             return;
@@ -704,12 +791,16 @@ function updateDbTabBadge(modal: HTMLElement, state: any): void {
 
 // [v20260530-35] Fetch + cache column schema for a table.
 const __columnsCache: Record<string, Array<{ name: string; type: string; nullable: boolean }>> = {};
-async function loadColumns(tableName: string): Promise<Array<{ name: string; type: string; nullable: boolean }>> {
-  if (__columnsCache[tableName]) return __columnsCache[tableName];
+async function loadColumns(tableName: string, connectionKey?: string): Promise<Array<{ name: string; type: string; nullable: boolean }>> {
+  // [AiDbPicker v20260713] Cache per data source — the same table name can exist
+  // in both the site DB and an external connection with different columns.
+  const cacheKey = (connectionKey || '') + '::' + tableName;
+  if (__columnsCache[cacheKey]) return __columnsCache[cacheKey];
   try {
     // [P0-2] AiTools/SqlColumns (auth-context SiteId, provider-aware) — same
     // reason as loadTablesStrip: Subform/Columns 404s on the dashboard (no alias).
-    const url = aiBase() + 'AiTools/SqlColumns?table=' + encodeURIComponent(tableName);
+    const url = aiBase() + 'AiTools/SqlColumns?table=' + encodeURIComponent(tableName)
+      + (connectionKey ? '&connectionKey=' + encodeURIComponent(connectionKey) : '');
     const r = await fetch(url, { credentials: 'same-origin', headers: buildFetchHeaders() });
     if (!r.ok) return [];
     const j = await r.json().catch(() => ({} as any));
@@ -718,7 +809,7 @@ async function loadColumns(tableName: string): Promise<Array<{ name: string; typ
       type: String(c.type || c.Type || c.dataType || c.DataType || ''),
       nullable: !!(c.nullable || c.Nullable || c.isNullable || c.IsNullable),
     })).filter((c: any) => c.name);
-    __columnsCache[tableName] = cols;
+    __columnsCache[cacheKey] = cols;
     return cols;
   } catch { return []; }
 }
@@ -783,6 +874,12 @@ function renderShellHtml(isBuilder?: boolean): string {
     // ─── Database pane ───
     '    <div data-mfd-ai-pane="db" style="flex:1;display:none;flex-direction:column;min-height:0;background:#0b1224;">',
     '      <div style="padding:12px 14px 0;">',
+    // [AiDbPicker v20260713] Data-source picker: current site DB ⇄ connections
+    // declared in Settings (MegaForm:ExternalTables:AllowedConnections). Hidden
+    // until AiTools/SqlConnections returns at least one key.
+    '        <div data-mfd-ai-db-connwrap style="display:none;margin-bottom:6px;">',
+    '          <select data-mfd-ai-db-conn title="' + T('ai.db_source', 'Data source').replace(/"/g, '&quot;') + '" style="width:100%;background:#1e293b;border:1px solid #334155;color:#f1f5f9;border-radius:7px;padding:7px 10px;font-size:12px;outline:none;box-sizing:border-box;cursor:pointer;"></select>',
+    '        </div>',
     '        <input data-mfd-ai-db-search type="search" placeholder="' + T('ai.db_search_ph', 'Search tables by name… (e.g. GG_, User, Order)').replace(/"/g, '&quot;') + '" style="width:100%;background:#1e293b;border:1px solid #334155;color:#f1f5f9;border-radius:7px;padding:8px 12px;font-size:13px;outline:none;box-sizing:border-box;">',
     '        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;font-size:11px;color:#64748b;">',
     '          <span><span data-mfd-ai-db-status>Loading…</span> · click table row to expand schema</span>',
@@ -900,10 +997,10 @@ function wireShell(overlay: HTMLElement, modal: HTMLElement, state: any, host?: 
           }
         } catch { /* no canvas yet */ }
       }
-      const result = await callAI(text, state.history, sentAttachments, state.selectedTables.slice(), builderForm);
+      const result = await callAI(text, state.history, sentAttachments, state.selectedTables.slice(), builderForm, state.activeConnection || undefined);
       state.history.push({ role: 'user', content: text });
       if (result.schema) {
-        state.schema = result.schema;
+        state.schema = normalizeSqlOptionPairing(result.schema);
         state.explain = result.explain || '';
         if (isBuilderHost) {
           // [AiDesignerBuilder] The CANVAS is the preview — auto-apply each result
@@ -924,11 +1021,13 @@ function wireShell(overlay: HTMLElement, modal: HTMLElement, state: any, host?: 
         state.history.push({ role: 'assistant', content: JSON.stringify({ schema: result.schema, explain: result.explain || '' }) });
       } else if (result.appBatch) {
         // [v20260531-AppBatchDashboard] Multi-form app_batch path.
-        // Dispatch via MFAI_Ops; render preview area with "Running…"
-        // until the orchestrator finishes, then show created-form links.
-        state.bubbles.push({ role: 'ai', text: result.explain || 'Building app — running app_batch …' });
+        // [ConfirmGate 2026-07-14] Owner report: "AI tạo và apply luôn không hỏi ý
+        // kiến". app_batch used to dispatch the moment the AI replied — DDL + forms
+        // landed before the user could react. Now we render the PLAN (tables/seeds/
+        // forms) with Apply/Cancel and only dispatch on an explicit Apply click.
+        state.bubbles.push({ role: 'ai', text: result.explain || T('ai.app_plan_ready', 'App plan ready — review it in the preview, then click Apply.') });
         state.history.push({ role: 'assistant', content: JSON.stringify({ ops: [result.appBatch], explain: result.explain || '' }) });
-        await runAppBatchFromDashboard(modal, state, result.appBatch);
+        renderAppBatchPlan(modal, state, result.appBatch);
       } else {
         state.bubbles.push({ role: 'ai', text: result.rawText || '(no schema returned — try a more specific prompt)' });
       }
@@ -1004,7 +1103,7 @@ function wireShell(overlay: HTMLElement, modal: HTMLElement, state: any, host?: 
     callAI('Regenerate the form — vary layout, add nicer fields, maybe try a different theme. Keep the same general purpose.', state.history)
       .then((r) => {
         if (r.schema) {
-          state.schema = r.schema; state.explain = r.explain || '';
+          state.schema = normalizeSqlOptionPairing(r.schema); state.explain = r.explain || '';
           state.bubbles.push({ role: 'ai', text: r.explain || T('ai.regenerated', 'Regenerated.') });
           renderPreview(modal, state.schema);
           state.history.push({ role: 'assistant', content: JSON.stringify({ schema: r.schema, explain: r.explain || '' }) });
@@ -1287,6 +1386,25 @@ function enableActions(modal: HTMLElement, on: boolean): void {
 // validation / properties); the builder then does `field.columns.map` /
 // `field.options.map` on undefined and the whole form fails to load. Backfill the
 // arrays/objects the renderer + builder iterate.
+// [OptionsSourceNormalize 2026-07-14] Walk the whole schema (incl. Row columns)
+// and guarantee the optionsSource:'sql' ↔ optionsSql pairing the renderer and
+// FieldOptionsService both require. Called on every AI-returned schema before
+// preview/apply/save so a missing optionsSource can never ship again.
+function normalizeSqlOptionPairing(schema: any): any {
+  try {
+    const walk = (arr: any[]) => {
+      for (const f of arr || []) {
+        if (!f || typeof f !== 'object') continue;
+        if (f.type === 'Row' && Array.isArray(f.columns)) { for (const c of f.columns) walk((c && c.fields) || []); continue; }
+        const p = f.properties;
+        if (p && p.optionsSql && !p.optionsSource) p.optionsSource = 'sql';
+      }
+    };
+    walk((schema && (schema.fields || schema.Fields)) || []);
+  } catch { /* schema stays as-is */ }
+  return schema;
+}
+
 function ensureBuilderSafeField(f: any): any {
   if (!f || typeof f !== 'object') return f;
   if (f.type === 'Row') {
@@ -1297,6 +1415,11 @@ function ensureBuilderSafeField(f: any): any {
   if (f.validation == null || typeof f.validation !== 'object') f.validation = {};
   if (f.properties == null || typeof f.properties !== 'object') f.properties = {};
   if (f.widgetProps == null || typeof f.widgetProps !== 'object') f.widgetProps = {};
+  // [OptionsSourceNormalize 2026-07-14] Renderer (hydrateSqlOptions) AND server
+  // (FieldOptionsService) both gate on optionsSource === 'sql' — an AI schema
+  // carrying optionsSql WITHOUT optionsSource renders a silently-empty dropdown.
+  // Normalise here so the pairing is guaranteed at creation time.
+  if (f.properties.optionsSql && !f.properties.optionsSource) f.properties.optionsSource = 'sql';
   return f;
 }
 
@@ -1333,7 +1456,7 @@ function mergeKeepStyleFields(existing: any[], aiFields: any[]): any[] {
 }
 
 // ─── AI call ──────────────────────────────────────────────────────────────
-async function callAI(userText: string, history: any[], attachments?: any[], selectedTables?: string[], builderForm?: any): Promise<{ schema?: any; explain?: string; rawText?: string }> {
+async function callAI(userText: string, history: any[], attachments?: any[], selectedTables?: string[], builderForm?: any, dbConnectionKey?: string): Promise<{ schema?: any; explain?: string; rawText?: string }> {
   // [B88-fix] Inject the AI provider bundle on demand + apply the shared
   // server AI Settings, so Create-with-AI works without first opening a builder.
   let api: any;
@@ -1396,9 +1519,38 @@ async function callAI(userText: string, history: any[], attachments?: any[], sel
       + 'SHELL TEXTS (exact current strings you may rebrand): ' + JSON.stringify(shellTexts);
   }
   if (selectedTables && selectedTables.length) {
-    system += '\n\nTABLES THE USER PRE-ATTACHED FROM THE DATABASE (DashboardDatabase):\n' +
+    // [AiDbPicker v20260713] Name the REAL data source: the picker may point at a
+    // Settings-declared external connection instead of the dashboard database —
+    // then every SQL-backed field must carry that connectionKey or it will
+    // silently query the wrong database at render time.
+    const _dbLabel = dbConnectionKey
+      ? 'THE EXTERNAL DATABASE CONNECTION "' + dbConnectionKey + '" (declared in Settings)'
+      : 'THE DATABASE (DashboardDatabase)';
+    system += '\n\nTABLES THE USER PRE-ATTACHED FROM ' + _dbLabel + ':\n' +
       selectedTables.map((t) => '- ' + t).join('\n') +
       '\nFor SQL-backed Select / Radio / Checkbox / DataGrid / DataRepeater / DynamicLabel fields, use these table names with a `properties.optionsSql` like `SELECT Id AS value, Name AS label FROM <Table>` or a `widgetProps.masterQuery`. The user has signalled these are the relevant tables for this form. Do NOT invent table names not in this list.';
+    // [KB-Columns 2026-07-14] Feed the REAL column schema of every attached table.
+    // Without this the AI only knows table NAMES → it guesses Id/Name (0 options on
+    // real tables) and cannot build a data-entry form (owner report: "form từ bảng
+    // chỉ có 1 trường"). Cached per table via loadColumns; failures fall back to
+    // name-only so the prompt never blocks on a schema fetch.
+    try {
+      const _colLines: string[] = [];
+      for (const t of selectedTables.slice(0, 10)) {
+        const cols = await loadColumns(t, dbConnectionKey);
+        if (cols && cols.length) {
+          _colLines.push('- ' + t + ': ' + cols.slice(0, 40)
+            .map(c => c.name + ' (' + c.type + (c.nullable ? '' : ', NOT NULL') + ')')
+            .join(', '));
+        }
+      }
+      if (_colLines.length) {
+        system += '\n\nCOLUMNS (real schema — use these EXACT column names in fields, optionsSql, INSERT and masterQuery; never invent columns):\n' + _colLines.join('\n');
+      }
+    } catch { /* name-only context is still usable */ }
+    if (dbConnectionKey) {
+      system += '\n⚠ EXTERNAL CONNECTION RULES: every field that reads these tables MUST set `properties.optionsConnectionKey:"' + dbConnectionKey + '"` (Select/Radio/Checkbox optionsSql) and `widgetProps.connectionKey:"' + dbConnectionKey + '"` (DataGrid/DataRepeater masterQuery). If the user asks to SAVE submissions into one of these tables, set `settings.databaseInsert.connectionKey:"' + dbConnectionKey + '"`. NEVER emit `app_batch` DDL (CREATE TABLE) against this external connection — new tables always go to the default dashboard database.';
+    }
     if (selectedTables.length >= 2) {
       system += '\n\n🧠 SMART MULTI-TABLE ANALYSIS — when the user attaches 2+ tables, ANALYZE relationships before emitting fields:' +
         '\n  1. If table A has a column matching `<TableB>Id` / `<TableB>ID` / `B_id` → that is a FOREIGN KEY pointing to B. The cascade chain is B → A (parent B drives child A).' +
@@ -1732,6 +1884,56 @@ function extractAppBatchOp(obj: any): any | null {
 }
 
 /**
+ * [ConfirmGate 2026-07-14] Render the app_batch PLAN into the preview pane and
+ * wait for an explicit Apply. Nothing touches the database or MF_Forms until
+ * the user clicks Apply; Cancel discards the plan so the user can refine the
+ * prompt. This is the consent step the auto-dispatch flow was missing.
+ */
+function renderAppBatchPlan(modal: HTMLElement, state: any, appBatch: any): void {
+  const preview = modal.querySelector<HTMLElement>('[data-mfd-ai-preview]');
+  const statusEl = modal.querySelector<HTMLElement>('[data-mfd-ai-status]');
+  if (!preview) return;
+  const tables = Array.isArray(appBatch.tables) ? appBatch.tables : [];
+  const forms  = Array.isArray(appBatch.forms)  ? appBatch.forms  : [];
+  const planLines: string[] = [];
+  for (const t of tables) {
+    const ddl = String(t.ddl || '');
+    const mCreate = ddl.match(/CREATE\s+TABLE\s+\[?\w+\]?\.?\[?(\w+)?\]?/i);
+    const mInsert = ddl.match(/INSERT\s+INTO\s+\[?\w+\]?\.?\[?(\w+)?\]?/i);
+    if (mInsert && !mCreate) {
+      const rows = (ddl.match(/\)\s*,\s*\(/g) || []).length + 1;
+      planLines.push('🌱 ' + T('ai.plan_seed', 'Seed rows') + ' → <b>' + escapeHtml(mInsert[1] || mInsert[0]) + '</b> (' + rows + ' ' + T('ai.plan_rows', 'rows') + ')');
+    } else if (mCreate) {
+      planLines.push('🗄 ' + T('ai.plan_table', 'Create table') + ' → <b>' + escapeHtml(mCreate[1] || mCreate[0]) + '</b>');
+    } else {
+      planLines.push('⚙ SQL: ' + escapeHtml(ddl.split(/\s+/).slice(0, 6).join(' ')) + '…');
+    }
+  }
+  for (const f of forms) planLines.push('📋 ' + T('ai.plan_form', 'Create form') + ' → <b>' + escapeHtml(String(f.title || '(untitled)')) + '</b>' + (f.tableName ? ' ↦ ' + escapeHtml(String(f.tableName)) : ''));
+  preview.innerHTML = [
+    '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px 18px;color:#0f172a;font-family:-apple-system,sans-serif;">',
+    '  <div style="font-weight:700;font-size:14px;margin-bottom:10px;">📝 ' + T('ai.plan_title', 'Review plan — nothing is applied yet') + '</div>',
+    '  <div style="font-size:13px;line-height:2;">' + (planLines.join('<br>') || T('ai.plan_empty', '(empty plan)')) + '</div>',
+    '  <div style="display:flex;gap:10px;margin-top:14px;">',
+    '    <button type="button" data-mfd-ai-batch-apply style="background:#16a34a;color:#fff;border:0;padding:9px 22px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;">✓ ' + T('ai.plan_apply', 'Apply — build now') + '</button>',
+    '    <button type="button" data-mfd-ai-batch-cancel style="background:#fff;color:#334155;border:1px solid #cbd5e1;padding:9px 18px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;">✕ ' + T('ai.plan_cancel', 'Cancel') + '</button>',
+    '  </div>',
+    '</div>',
+  ].join('');
+  if (statusEl) statusEl.textContent = '📝 ' + T('ai.plan_waiting', 'Plan ready — waiting for Apply');
+  preview.querySelector<HTMLButtonElement>('[data-mfd-ai-batch-apply]')?.addEventListener('click', () => {
+    runAppBatchFromDashboard(modal, state, appBatch)
+      .catch((e: any) => { state.bubbles.push({ role: 'system', text: 'Apply error: ' + (e?.message || String(e)) }); renderBubbles(modal, state); });
+  });
+  preview.querySelector<HTMLButtonElement>('[data-mfd-ai-batch-cancel]')?.addEventListener('click', () => {
+    preview.innerHTML = '';
+    if (statusEl) statusEl.textContent = T('ai.plan_cancelled', 'Plan cancelled — refine your prompt and send again.');
+    state.bubbles.push({ role: 'system', text: T('ai.plan_cancelled', 'Plan cancelled — refine your prompt and send again.') });
+    renderBubbles(modal, state);
+  });
+}
+
+/**
  * [v20260531-AppBatchDashboard] Dispatch an app_batch op from the
  * dashboard "Create form with AI" modal. The Builder chat normally owns
  * MFAI_Ops, but it isn't loaded on the dashboard surface — so we
@@ -1793,13 +1995,18 @@ async function runAppBatchFromDashboard(modal: HTMLElement, state: any, appBatch
   // ── Run DDL ─────────────────────────────────────────────────
   for (let i = 0; i < tables.length; i++) {
     const t = tables[i];
+    // [SeedData 2026-07-14] tables[].ddl may now carry INSERT seed statements
+    // (SqlDdlGuard allow-list) — label them "Seed … rows inserted" instead of
+    // the misleading "Table … created".
+    const isSeed = /^\s*INSERT\b/i.test(String(t.ddl || ''));
+    const kind = isSeed ? 'Seed' : 'Table';
     try {
       const r = await postJson(aiBaseUrl + 'AiTools/ExecuteDdl', { sql: t.ddl, connectionKey: t.connectionKey || 'DashboardDatabase' });
-      if (r.alreadyExists) { summary.tablesExisted++; pushStatus('• Table ' + (i + 1) + '/' + tables.length + ': <span style="color:#a16207">already exists (kept)</span>'); }
-      else { summary.tablesOk++; pushStatus('• Table ' + (i + 1) + '/' + tables.length + ': <span style="color:#16a34a">created</span>'); }
+      if (r.alreadyExists) { summary.tablesExisted++; pushStatus('• ' + kind + ' ' + (i + 1) + '/' + tables.length + ': <span style="color:#a16207">already exists (kept)</span>'); }
+      else { summary.tablesOk++; pushStatus('• ' + kind + ' ' + (i + 1) + '/' + tables.length + ': <span style="color:#16a34a">' + (isSeed ? (typeof r.affected === 'number' ? r.affected + ' rows inserted' : 'rows inserted') : 'created') + '</span>'); }
     } catch (err: any) {
       summary.tablesFailed++;
-      pushStatus('• Table ' + (i + 1) + '/' + tables.length + ': <span style="color:#dc2626">failed</span> — ' + escapeHtml(err?.payload?.error || err.message || ''));
+      pushStatus('• ' + kind + ' ' + (i + 1) + '/' + tables.length + ': <span style="color:#dc2626">failed</span> — ' + escapeHtml(err?.payload?.error || err.message || ''));
     }
   }
 
