@@ -1157,6 +1157,9 @@ function init(): void {
       if (overlay.parentElement !== document.body) document.body.appendChild(overlay);
     });
     document.body.classList.remove('mf-dnn-windowed');
+    // [OneSurfaceAtATime v20260714-01] Give the public form back — see open().
+    document.documentElement.classList.remove('mf-admin-shell-route');
+    document.body.classList.remove('mf-admin-shell-route');
     chrome.restore();
     setLiveEditorTriggerVisible(true);
     // A pinned-surface open must not touch the URL at all — not even to clear it (that would
@@ -1184,6 +1187,14 @@ function init(): void {
     }
     closeAll(writeHash);
     setLiveEditorTriggerVisible(false);
+    // [OneSurfaceAtATime v20260714-01] A page shows EITHER the form OR a surface, never both.
+    // The mf-admin-shell-route class (which hides .mf-form-wrapper / .mf-view-container, CSS in
+    // FormView.ascx) was only ever set by the inline script AT PAGE LOAD, from the hash. Opening
+    // a surface from the dock does not reload the page, so on a form-view module the dashboard
+    // rendered UNDERNEATH the still-visible form — the stacked page the owner reported. Set the
+    // class whenever a surface opens; closeAll() takes it back off.
+    document.documentElement.classList.add('mf-admin-shell-route');
+    document.body.classList.add('mf-admin-shell-route');
     overlay.classList.add('is-open');
     ensureFsToggle();
     applySurfaceMode(overlay);

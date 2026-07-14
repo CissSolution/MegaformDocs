@@ -130,6 +130,24 @@ namespace MegaForm.WebApi
                 defaults: new { controller = "ModuleConfig", action = "EmailSettingsTest" },
                 namespaces: new[] { "MegaForm.WebApi" }
             );
+            // [ModuleStyleDnn v20260714-01] Per-module CSS snapshot (ModuleStyleController) — the
+            // Settings popup's "Theme & Layout" tab. Same URLs as the Oqtane twin so the shared
+            // popup needs no DNN special-case. Route NAMES must be unique: a duplicate throws inside
+            // RegisterRoutes and every route after it silently fails to register.
+            mapRouteManager.MapHttpRoute(
+                moduleFolderName: "MegaForm",
+                routeName: "MegaFormModuleStyleGet",
+                url: "ModuleConfig/ModuleStyle",
+                defaults: new { controller = "ModuleStyle", action = "Get" },
+                namespaces: new[] { "MegaForm.WebApi" }
+            );
+            mapRouteManager.MapHttpRoute(
+                moduleFolderName: "MegaForm",
+                routeName: "MegaFormModuleStyleSave",
+                url: "ModuleConfig/SaveModuleStyle",
+                defaults: new { controller = "ModuleStyle", action = "Save" },
+                namespaces: new[] { "MegaForm.WebApi" }
+            );
             // [DnnMyInbox v20260714-01] My Inbox reads that had no DNN route at all.
             // The Workflow/Inbox + Workflow/Tasks/* routes further down already existed — they
             // are re-pointed at WorkflowInboxController below (they used to name actions on
@@ -4104,7 +4122,7 @@ VALUES
 
             if (string.IsNullOrWhiteSpace(provider))
                 provider = InferDatabaseType(connectionString);
-            if (string.IsNullOrWhiteSpace(provider)) provider = "Sqlite";
+            if (string.IsNullOrWhiteSpace(provider)) provider = "SqlServer";
 
             var dbMeta = new DatabaseWorkflowMetadataService(new DnnConnectionRegistry(GetPortalSetting));
             return Request.CreateResponse(HttpStatusCode.OK, new
@@ -4507,14 +4525,35 @@ VALUES
             if (!string.IsNullOrWhiteSpace(connectionString))
                 return CreateConnection(databaseType, connectionString);
 
-            // Named lookup: read stored connstr from portal settings
+            // Named lookup: read stored connstr from portal settings.
+            // In DNN, DashboardDatabase without explicit settings should still
+            // mean the site's normal SiteSqlServer connection.
             var storedAlias = _getSetting("Database_ConnectionAlias", "DashboardDatabase");
-            if (string.Equals(connectionName, storedAlias, StringComparison.OrdinalIgnoreCase)
-                || string.Equals(connectionName, "DashboardDatabase", StringComparison.OrdinalIgnoreCase)
-                || string.IsNullOrWhiteSpace(connectionName))
+            var requestedName = (connectionName ?? string.Empty).Trim();
+            if (string.Equals(requestedName, storedAlias, StringComparison.OrdinalIgnoreCase)
+                || IsDnnDefaultConnectionName(requestedName))
             {
                 var storedProvider = _getSetting("Database_Provider", "SqlServer");
                 var storedConnStr  = _getSetting("Database_ConnectionString", "");
+                if (string.IsNullOrWhiteSpace(storedConnStr))
+                {
+                    // [DashboardDbFallback-DNN v20260714-01] Fall back to the DNN site's own
+                    // database — the same fallback Oqtane has had since [DashboardDbFallback
+                    // v20260625] (Startup.cs: an absent "DashboardDatabase" resolves to
+                    // DefaultConnection). Without it, a DB-connected form / AI-built table on a
+                    // stock DNN install died with "Dashboard database connection is not
+                    // configured" even though MegaForm is already talking to that very database.
+                    // An explicit Database Settings entry still wins — it is read first, above.
+                    try { storedConnStr = DotNetNuke.Data.DataProvider.Instance().ConnectionString; }
+                    catch { storedConnStr = null; }
+                    if (string.IsNullOrWhiteSpace(storedConnStr))
+                    {
+                        try { storedConnStr = DotNetNuke.Common.Utilities.Config.GetConnectionString(); }
+                        catch { storedConnStr = null; }
+                    }
+                    // DNN itself only runs on SQL Server, so the fallback provider is unambiguous.
+                    storedProvider = "SqlServer";
+                }
                 if (string.IsNullOrWhiteSpace(storedConnStr))
                     throw new InvalidOperationException(
                         "MegaForm: Dashboard database connection is not configured. " +
@@ -4527,6 +4566,15 @@ VALUES
             throw new InvalidOperationException(
                 "MegaForm DnnConnectionRegistry: unknown connection name '" + connectionName + "'. " +
                 "Only the portal-stored dashboard connection is supported in DNN.");
+        }
+
+        private static bool IsDnnDefaultConnectionName(string connectionName)
+        {
+            if (string.IsNullOrWhiteSpace(connectionName)) return true;
+            return string.Equals(connectionName, "DashboardDatabase", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(connectionName, "DefaultConnection", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(connectionName, "SiteSqlServer", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(connectionName, "DnnDefault", StringComparison.OrdinalIgnoreCase);
         }
 
         private static System.Data.Common.DbConnection CreateConnection(string databaseType, string connStr)

@@ -1198,7 +1198,8 @@ export async function saveModuleStyle(
     const r = await fetch(withPlatformAuth(`${getApiBase()}/ModuleConfig/SaveModuleStyle`), {
       method: 'POST',
       credentials: 'same-origin',
-      headers: getPlatformHeaders({ 'Content-Type': 'application/json' }),
+      // DNN rejects a POST without its antiforgery token (the endpoint is [ValidateAntiForgeryToken]).
+      headers: getPlatformHeaders({ 'Content-Type': 'application/json', ...(isDnn() ? dnnAntiforgeryHeaders() : {}) }),
       body: JSON.stringify(payload),
     });
     let body: string | undefined;

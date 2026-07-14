@@ -802,6 +802,11 @@ namespace MegaForm.DNN.Components
             vm.SelectedThemePresetKey = Settings.Contains("MegaForm_SelectedThemePresetKey") ? Settings["MegaForm_SelectedThemePresetKey"].ToString() : (Settings.Contains("SelectedThemePresetKey") ? Settings["SelectedThemePresetKey"].ToString() : "");
             vm.ThemeJson = form.ThemeJson;
             vm.SettingsJson = resolvedRenderModel?.SettingsJson ?? RenderModelResolver.Resolve(form.SchemaJson, form.SettingsJson, form.SubmitButtonText, form.SuccessMessage, form.RedirectUrl).SettingsJson;
+            // [ModuleStyleDnn v20260714-01] Module-owned style wins over the form's own (the twin of
+            // Oqtane's OverlayModuleStyle, Index.razor:3201). Two modules can then render the SAME
+            // form with different themes. No-op when this module never saved a style, or saved it
+            // for a DIFFERENT form — binding a new form falls back to that form's CSS until reseeded.
+            vm.SettingsJson = OverlayModuleStyle(vm.SettingsJson, form.FormId);
             vm.InitialInlineCss = ThemePresetInlineCssService.Build(vm.SettingsJson, vm.SelectedThemePresetKey, "#mf-form-wrapper-" + form.FormId);
             vm.AutoQrCodeEnabled = ResolveAutoQrCodeEnabled(vm);
             if (vm.AutoQrCodeEnabled)
@@ -1007,6 +1012,42 @@ namespace MegaForm.DNN.Components
         }
 
 
+
+        /// <summary>
+        /// [ModuleStyleDnn v20260714-01] Overlay this module's saved style (MegaForm_ModuleStyleJson,
+        /// guarded by MegaForm_ModuleStyleFormId) onto the form's resolved settings JSON.
+        /// customCss is deliberately NOT overlaid: an old snapshot carries a stale copy of the form's
+        /// customCss and would hide every builder CSS/image edit on the public page (the bug Oqtane
+        /// closed in [ModuleStyleCustomCss v20260707]).
+        /// </summary>
+        private string OverlayModuleStyle(string settingsJson, int formId)
+        {
+            try
+            {
+                if (formId <= 0 || string.IsNullOrWhiteSpace(settingsJson)) return settingsJson;
+                if (!Settings.Contains("MegaForm_ModuleStyleFormId") || !Settings.Contains("MegaForm_ModuleStyleJson")) return settingsJson;
+
+                int styleFormId;
+                if (!int.TryParse(Convert.ToString(Settings["MegaForm_ModuleStyleFormId"]), out styleFormId) || styleFormId != formId)
+                    return settingsJson;
+
+                var styleRaw = Convert.ToString(Settings["MegaForm_ModuleStyleJson"]);
+                if (string.IsNullOrWhiteSpace(styleRaw)) return settingsJson;
+
+                var style = JObject.Parse(styleRaw);
+                var settings = JObject.Parse(settingsJson);
+                foreach (var key in new[] { "theme", "themeCssOverrides", "cssOverrides" })
+                {
+                    var token = style[key] ?? style[char.ToUpperInvariant(key[0]) + key.Substring(1)];
+                    if (token != null && token.Type != JTokenType.Null) settings[key] = token;
+                }
+                return settings.ToString(Formatting.None);
+            }
+            catch
+            {
+                return settingsJson;   // non-fatal: fall back to the form's own settings
+            }
+        }
 
         private int ResolveRequestedFormId()
         {

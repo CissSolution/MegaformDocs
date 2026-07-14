@@ -152,6 +152,17 @@
 .mf-host-overlay.is-windowed .mf-hd{flex-wrap:wrap;height:auto;row-gap:6px;}
 /* The DNN page keeps its own scrollbar in windowed mode — never lock the body. */
 body.mf-dnn-windowed{overflow:visible !important;}
+/* [OneSurfaceAtATime v20260714-01] A page shows EITHER the public form OR an admin surface, never
+   both. dnn-host adds this class whenever a surface opens (and the inline script below adds it at
+   parse time on an admin-hash load, so the form never flashes). */
+html.mf-admin-shell-route .mf-no-form,
+html.mf-admin-shell-route .mf-auth-required,
+html.mf-admin-shell-route .mf-view-container,
+html.mf-admin-shell-route .mf-form-wrapper,
+body.mf-admin-shell-route .mf-no-form,
+body.mf-admin-shell-route .mf-auth-required,
+body.mf-admin-shell-route .mf-view-container,
+body.mf-admin-shell-route .mf-form-wrapper{display:none !important;}
 /* Windowed⇄Fullscreen toggle — body-level so it survives surface re-renders and is
    never clipped by the overlay's own stacking context. Mirrors the Oqtane control. */
 .mf-dnn-fs-toggle{position:fixed;right:18px;bottom:18px;z-index:100020;display:none;align-items:center;gap:8px;border:1px solid #dbe4f0;background:#fff;color:#0f172a;border-radius:999px;padding:9px 14px;font:600 13px/1 'Inter',system-ui,sans-serif;box-shadow:0 10px 26px rgba(15,23,42,.18);cursor:pointer;}
@@ -216,6 +227,27 @@ body > .mf-langpick-panel{z-index:100030;}
         <button type="button" class="mf-host-admin-btn is-primary" data-mf-open="dashboard"><i class="fas fa-table-columns"></i> Form Dashboard</button>
     </div>
 </div>
+<script type="text/javascript" id="mf-dnn-admin-shell-route">
+(function () {
+    // Anti-FOUC twin of dnn-host's open(): when the page LOADS on an admin hash, hide the public
+    // form at parse time instead of waiting for the bundle (otherwise the form paints, then the
+    // surface drops on top of it).
+    var hash = String(window.location.hash || '').toLowerCase();
+    var adminHash = hash.indexOf('#mf-builder') === 0 ||
+                    hash.indexOf('#mf-submissions') === 0 ||
+                    hash.indexOf('#mf-myinbox') === 0 ||
+                    hash.indexOf('#mf-theme') === 0 ||
+                    hash.indexOf('#mf-dashboard') === 0 ||
+                    hash.indexOf('#mf-views') === 0 ||
+                    hash.indexOf('#mf-languages') === 0;
+    if (!adminHash) return;
+    document.documentElement.classList.add('mf-admin-shell-route');
+    if (document.body) document.body.classList.add('mf-admin-shell-route');
+    else document.addEventListener('DOMContentLoaded', function () {
+        document.body.classList.add('mf-admin-shell-route');
+    }, { once: true });
+})();
+</script>
 <script type="text/javascript" id="mf-dnn-settings-dock-boot">
 (function () {
     var btn = document.getElementById('mf-host-settings-open');
@@ -470,41 +502,11 @@ body > .mf-langpick-panel{z-index:100030;}
 </script>
 
 
-<% if (showAdminShell && !ViewModel.ShowConfigPanel) { %>
-<style>
-html.mf-admin-shell-route .mf-no-form,
-html.mf-admin-shell-route .mf-auth-required,
-html.mf-admin-shell-route .mf-view-container,
-html.mf-admin-shell-route .mf-form-wrapper,
-body.mf-admin-shell-route .mf-no-form,
-body.mf-admin-shell-route .mf-auth-required,
-body.mf-admin-shell-route .mf-view-container,
-body.mf-admin-shell-route .mf-form-wrapper {
-    display: none !important;
-}
-</style>
-<script>
-(function () {
-    var hash = String(window.location.hash || '').toLowerCase();
-    // [B48 2026-06-02] #mf-theme route retired — treat it as the Builder
-    // admin-shell route so the html.mf-admin-shell-route gate still hides the
-    // public form chrome during the redirect handshake performed earlier.
-    var adminHash = hash.indexOf('#mf-builder') === 0 ||
-                    hash.indexOf('#mf-submissions') === 0 ||
-                    hash.indexOf('#mf-myinbox') === 0 ||
-                    hash.indexOf('#mf-theme') === 0 ||
-                    hash.indexOf('#mf-dashboard') === 0 ||
-                    hash.indexOf('#mf-views') === 0 ||
-                    hash.indexOf('#mf-languages') === 0;
-    if (!adminHash) return;
-    document.documentElement.classList.add('mf-admin-shell-route');
-    if (document.body) document.body.classList.add('mf-admin-shell-route');
-    else document.addEventListener('DOMContentLoaded', function () {
-        document.body.classList.add('mf-admin-shell-route');
-    }, { once: true });
-})();
-</script>
-<% } %>
+<%-- [OneSurfaceAtATime v20260714-01] The mf-admin-shell-route CSS + its early class-setter used to
+     live HERE, nested inside `if (ViewModel.ShowConfigPanel)`. ShowConfigPanel is hard-wired false
+     (FormView.ascx.cs), so this branch never rendered and the rules were NEVER emitted — which is
+     why opening the Dashboard on a form-view module drew the dashboard UNDERNEATH the still-visible
+     form. Both now live in the admin-shell block above, which really does render. --%>
 
 <% } else if (ViewModel != null && ViewModel.IsMyInboxMode && !ViewModel.IsAdmin && RequestedFormId == 0) { %>
     <%-- [DnnInboxMode v20260714-01] My Inbox module, non-admin member. Admins get the inbox as
