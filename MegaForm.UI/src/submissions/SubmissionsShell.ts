@@ -298,10 +298,16 @@ function syncActiveColumns(state: ReturnType<typeof getSubsState>): void {
     ? Array.isArray(sch) && sch.length > 0
     : (state.submissions || []).length > 0;
 
+  // [SourcePicker v20260715] In SQL-table mode the fixed data columns (Submitted By / Date / Status)
+  // don't exist on a raw table row — they'd render "—". The default layout is therefore the table's
+  // own columns, and the JSON-only data columns are suppressed.
+  const isSql = state.source === 'sql';
+
   // Form context changed → load this form's own persisted layout (or its default set).
   if (_columnsFormKey !== bucket) {
     const stored = getStoredColumns(bucket);
-    _columnDefs = stored ? stored.slice() : DATA_COLUMNS.filter((c) => DEFAULT_VISIBLE_KEYS.includes(c.key));
+    _columnDefs = stored ? stored.slice()
+      : (isSql ? [] : DATA_COLUMNS.filter((c) => DEFAULT_VISIBLE_KEYS.includes(c.key)));
     _columnsFormKey = bucket;
     _seededRespForBucket = !!stored;       // a saved layout counts as already-seeded
   }
@@ -323,18 +329,25 @@ function syncActiveColumns(state: ReturnType<typeof getSubsState>): void {
       return !libReady;                           // unknown f:* → keep only until lib is known
     });
 
-  // First visit to a single form with no saved layout → show a few of its real fields so data shows.
+  // First visit with no saved layout → seed real fields so data shows immediately. SQL mode seeds
+  // MORE columns (the table's own columns are the whole point of the view) than a JSON form does.
   if (libReady && !_seededRespForBucket && state.config.formId > 0 && respLib.length
       && !_columnDefs.some((c) => c.key.startsWith('f:'))) {
-    _columnDefs = [..._columnDefs, ...respLib.slice(0, 5)];
+    _columnDefs = [..._columnDefs, ...respLib.slice(0, isSql ? 10 : 5)];
     _seededRespForBucket = true;
     setStoredColumns(_columnDefs);
   }
 
-  if (!_columnDefs.length) _columnDefs = DATA_COLUMNS.filter((c) => DEFAULT_VISIBLE_KEYS.includes(c.key));
-  DATA_COLUMNS.filter((c) => !c.removable).forEach((c) => {
-    if (!_columnDefs.some((a) => a.key === c.key)) _columnDefs.unshift(c);
-  });
+  if (!_columnDefs.length) {
+    _columnDefs = isSql ? respLib.slice(0, 10) : DATA_COLUMNS.filter((c) => DEFAULT_VISIBLE_KEYS.includes(c.key));
+  }
+  // Force the protected data columns (Status) present — but NOT in SQL mode, where the JSON data
+  // columns (Submitted By / Date / Status) carry no value for a raw table row.
+  if (!isSql) {
+    DATA_COLUMNS.filter((c) => !c.removable).forEach((c) => {
+      if (!_columnDefs.some((a) => a.key === c.key)) _columnDefs.unshift(c);
+    });
+  }
 }
 function availableColumns(state: ReturnType<typeof getSubsState>): ColumnDef[] {
   const active = new Set(_columnDefs.map((c) => c.key));
@@ -374,6 +387,27 @@ function setStoredColumns(cols: ColumnDef[]): void {
   } catch { /* ignore */ }
 }
 
+// [SourcePicker v20260715] Remember the data-source choice PER FORM so reopening a form (or the
+// dashboard) restores the last source the admin picked for it — while never carrying a SQL choice
+// onto a different form that may have no bound table.
+const SOURCE_STORE_KEY = 'mf-subs-source-v1';
+function getStoredSource(formId: number): SubsSource {
+  try {
+    const raw = localStorage.getItem(SOURCE_STORE_KEY);
+    const m = raw ? JSON.parse(raw) : null;
+    const v = m && typeof m === 'object' ? m['f' + formId] : null;
+    return v === 'sql' ? 'sql' : 'submissions';
+  } catch { return 'submissions'; }
+}
+function setStoredSource(formId: number, src: SubsSource): void {
+  try {
+    const raw = localStorage.getItem(SOURCE_STORE_KEY);
+    const m = (raw ? JSON.parse(raw) : null) || {};
+    m['f' + formId] = src;
+    localStorage.setItem(SOURCE_STORE_KEY, JSON.stringify(m));
+  } catch { /* ignore */ }
+}
+
 // ── Entry ─────────────────────────────────────────────────────
 export function renderSubmissions(container: HTMLElement, adapter: PlatformAdapter, rootEl?: HTMLElement): void {
   _adapter = adapter;
@@ -387,7 +421,10 @@ export function renderSubmissions(container: HTMLElement, adapter: PlatformAdapt
   _seededRespForBucket = false;
   _columnDefs = [];
   // [B162] Land on the forms-overview unless a specific form is locked in via host config.
-  _viewMode = (getSubsState().config?.formId && getSubsState().config.formId > 0) ? 'list' : 'overview';
+  const _initFormId = getSubsState().config?.formId || 0;
+  _viewMode = _initFormId > 0 ? 'list' : 'overview';
+  // [SourcePicker] Restore this form's remembered data source on (re)open.
+  if (_initFormId > 0 && getStoredSource(_initFormId) === 'sql') setSource('sql');
   render();
   Promise.resolve()
     .then(() => ensureFormsLoaded())
@@ -1437,7 +1474,12 @@ function buildSourceSelect(state: ReturnType<typeof getSubsState>): HTMLSelectEl
     if (o.v === state.source) opt.selected = true;
     sel.appendChild(opt);
   });
-  sel.addEventListener('change', () => { setSource(sel.value as SubsSource); loadSubmissions(); });
+  sel.addEventListener('change', () => {
+    const src = sel.value as SubsSource;
+    setSource(src);
+    setStoredSource(state.config.formId, src);   // remember per form
+    loadSubmissions();
+  });
   return sel;
 }
 
@@ -1812,9 +1854,10 @@ async function ensureFormsLoaded(): Promise<void> {
 
 async function switchForm(formId: number, preferred?: SubmissionFormOption, rerender = true): Promise<void> {
   const state = getSubsState();
-  // [SourcePicker] A SQL-table selection must never carry over to a different form (which may have
-  // no bound table). Always land on the default JSON source when switching forms.
+  // [SourcePicker] Don't carry one form's SQL selection onto another — reset, then RESTORE this
+  // form's own remembered source (per-form, persisted). All-Forms is always the JSON store.
   resetSource();
+  if (formId > 0 && getStoredSource(formId) === 'sql') setSource('sql');
   if (formId <= 0) {
     setCurrentForm(0, undefined, 'All Submissions');
     setSubmissions([], 0);
