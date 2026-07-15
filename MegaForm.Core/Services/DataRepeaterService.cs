@@ -41,6 +41,15 @@ namespace MegaForm.Core.Services
 
         private const int ABSOLUTE_MAX_ROWS = 5000;
 
+        // [Bounded-read 2026-07-15] Hard ceiling for the option-serving reader loops
+        // (filter dropdowns, grid column options). These endpoints are anonymous on public
+        // forms and read designer-authored SQL, so an uncapped `while (reader.Read())` over a
+        // large lookup table would materialise millions of option objects in server memory —
+        // an anonymous OOM/DoS. A dropdown has no legitimate reason to exceed a few hundred
+        // rows; the loop hard-stops here regardless of SQL shape (works for stored procs too,
+        // where the SQL text cannot be rewritten with TOP/LIMIT). See Docs/SECURITY_CODING_RULES §11.
+        private const int MAX_OPTION_ROWS = 500;
+
         public DataRepeaterService(IConnectionRegistry registry, IFormRepository formRepo, ISubmissionRepository subs = null)
         {
             _registry = registry;
@@ -472,7 +481,8 @@ namespace MegaForm.Core.Services
 
                         using (var reader = cmd.ExecuteReader())
                         {
-                            while (reader.Read())
+                            // [Bounded-read] hard-stop at MAX_OPTION_ROWS — anonymous endpoint over designer SQL.
+                            while (options.Count < MAX_OPTION_ROWS && reader.Read())
                             {
                                 var val = reader.GetValue(0);
                                 var label = reader.FieldCount > 1 ? reader.GetValue(1) : val;
@@ -877,7 +887,8 @@ namespace MegaForm.Core.Services
 
                     using (var reader = cmd.ExecuteReader())
                     {
-                        while (reader.Read())
+                        // [Bounded-read] hard-stop at MAX_OPTION_ROWS — anonymous endpoint over designer SQL.
+                        while (options.Count < MAX_OPTION_ROWS && reader.Read())
                         {
                             var val = reader.GetValue(0);
                             var label = reader.FieldCount > 1 ? reader.GetValue(1) : val;

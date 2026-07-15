@@ -63,6 +63,14 @@ namespace MegaForm.Core.Services
 
         private static readonly Regex _tokenParam = new Regex(@":(\w+)", RegexOptions.Compiled);
 
+        // [Bounded-read 2026-07-15] Hard ceiling on option rows. GetSqlOptions/GetFormLookupOptions
+        // feed a public form's <select>/<datalist>, reached ANONYMOUSLY (the render endpoint is
+        // AllowAnonymous). A designer's optionsSql = "SELECT id, name FROM Customers" over a 500k-row
+        // table would otherwise materialise 500k FieldOption objects per request — an anonymous
+        // OOM/DoS. Cap the reader loop; a choice field has no legitimate need for more. The form-lookup
+        // branch already pages at 500. See Docs/SECURITY_CODING_RULES §11.
+        private const int MAX_OPTION_ROWS = 500;
+
         private readonly IConnectionRegistry _registry;
         private readonly IFormRepository _formRepo;
         // [FormLookup v20260519-03] Optional — only the form-lookup branch uses it.
@@ -284,7 +292,8 @@ namespace MegaForm.Core.Services
 
                         using (var reader = cmd.ExecuteReader())
                         {
-                            while (reader.Read())
+                            // [Bounded-read] hard-stop at MAX_OPTION_ROWS — anonymous endpoint over designer SQL.
+                            while (options.Count < MAX_OPTION_ROWS && reader.Read())
                             {
                                 if (reader.FieldCount == 0) continue;
                                 var val   = reader.GetValue(0);
