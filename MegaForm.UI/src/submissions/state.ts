@@ -37,6 +37,12 @@ export interface SubsConfig {
   hideHostChrome?: boolean;
 }
 
+// [SourcePicker v20260715] Where the grid reads a single form's records from:
+//   'submissions' = MegaForm's own store (MF_Submissions DataJson — the default), vs
+//   'sql'         = the live rows of the SQL table the form mirrors via settings.databaseInsert
+//                   (read-only, via GET /api/AiTools/CustomTableRows). See handoff ERP_DEMO.
+export type SubsSource = 'submissions' | 'sql';
+
 export interface SubsState {
   config: SubsConfig;
   submissions: Submission[];
@@ -46,6 +52,9 @@ export interface SubsState {
   selected: Set<number>;
   filters: { search: string; status: string; dateFrom: string; dateTo: string };
   forms: SubmissionFormOption[];
+  source: SubsSource;
+  // Name of the bound SQL table when source==='sql' (for the grid header sub-label). '' until known.
+  sqlTableName: string;
 }
 
 let _state: SubsState;
@@ -61,6 +70,8 @@ export function initSubsState(config: SubsConfig): void {
     selected: new Set(),
     filters: { search: '', status: '', dateFrom: '', dateTo: '' },
     forms: config.forms || [],
+    source: 'submissions',
+    sqlTableName: '',
   };
 }
 
@@ -107,6 +118,28 @@ export function setFilters(f: Partial<SubsState['filters']>): void {
   Object.assign(_state.filters, f);
   _state.pageIndex = 0;
   notify();
+}
+
+// [SourcePicker v20260715] Switch the grid's data source. Resets paging + selection since the
+// two sources have unrelated row identities (a SQL row's synthetic id ≠ a submissionId).
+export function setSource(src: SubsSource): void {
+  if (_state.source === src) return;
+  _state.source = src;
+  _state.pageIndex = 0;
+  _state.selected.clear();
+  if (src === 'submissions') _state.sqlTableName = '';
+  notify();
+}
+
+export function setSqlTableName(name: string): void {
+  _state.sqlTableName = name || '';
+}
+
+// Reset to the default source (called when the active form changes — a SQL selection must never
+// persist onto a different form, which may have no bound table).
+export function resetSource(): void {
+  _state.source = 'submissions';
+  _state.sqlTableName = '';
 }
 
 export function toggleSelect(id: number): void {

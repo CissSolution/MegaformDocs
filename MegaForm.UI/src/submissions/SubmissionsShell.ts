@@ -17,7 +17,8 @@ function T(key: string, fallback: string, params?: Record<string, string | numbe
 import {
   getSubsState, setSubmissions, setPage, setPageSize, setFilters, setAvailableForms, setCurrentForm,
   toggleSelect, selectAll, clearSelection, flattenFields,
-  type Submission, type SubmissionFormOption,
+  setSource, setSqlTableName, resetSource,
+  type Submission, type SubmissionFormOption, type SubsSource,
 } from './state';
 import { renderFormsOverview } from './forms-overview';
 import {
@@ -26,6 +27,7 @@ import {
   type AdvFilterField, type AdvFieldType, type AdvDeps,
 } from './submission-advanced-filter';
 import { showSubmissionModal } from './SubmissionModal';
+import { isStructuredSubmissionFileValue, renderSubmissionFileLinks, collectSubmissionFiles } from './file-links';
 import { exportClientCsv } from './export';
 import { openLiveDbRowsModal } from './submission-livedb-modal';
 import type { PlatformAdapter } from '@core/platform';
@@ -638,6 +640,10 @@ function render(): void {
   statusSel.addEventListener('change', () => { setFilters({ status: statusSel.value }); loadSubmissions(); });
   const formSel = buildFormSelect(state);
   mk(selWrap, statusSel, formSel);
+  // [SourcePicker v20260715] Data-source toggle: read a single form's records from MegaForm's own
+  // store (Submissions/JSON) or from the live SQL table it mirrors. Only for a single form.
+  const srcSel = buildSourceSelect(state);
+  if (srcSel) mk(selWrap, srcSel);
 
   mk(filtersRow, searchWrap, selWrap);
   mk(cardHdTop, cardTitle, filtersRow);
@@ -1235,6 +1241,16 @@ function renderCell(sub: Submission, data: Record<string, unknown>, key: string,
       // Context-aware response-field column: read the REAL submission value.
       if (key.indexOf('f:') === 0) {
         const raw = (data as Record<string, unknown>)[key.slice(2)];
+        // [FileCellFix v20260713] File fields now store the upload metadata JSON
+        // (that is what records MF_Files server-side) — render it as paperclip
+        // download links like the detail views do, never as raw JSON text.
+        if (isStructuredSubmissionFileValue(raw)) {
+          const el = span('mf-td-muted mf-td-field mf-td-files');
+          el.addEventListener('click', (e) => e.stopPropagation());
+          el.appendChild(renderSubmissionFileLinks(raw, { itemClass: 'mf-td-file-link' }));
+          el.title = collectSubmissionFiles(raw).map((f) => f.fileName).join(', ');
+          return el;
+        }
         const txt = (raw == null || raw === '') ? '—' : String(unwrapValue(raw));
         const el = span('mf-td-muted mf-td-field');
         el.textContent = txt.length > 80 ? txt.slice(0, 80) + '…' : txt;
@@ -1392,6 +1408,28 @@ function buildStatusSelect(current: string): HTMLSelectElement {
     if (o.v === current) opt.selected = true;
     sel.appendChild(opt);
   });
+  return sel;
+}
+
+// [SourcePicker v20260715] Data-source toggle. Only for a single form (All-Forms has no single
+// SQL table). "Submissions" reads MF_Submissions (JSON); "SQL table" reads the live rows of the
+// table the form mirrors via settings.databaseInsert (read-only). Mirrors buildStatusSelect's shape.
+function buildSourceSelect(state: ReturnType<typeof getSubsState>): HTMLSelectElement | null {
+  if ((state.config.formId || 0) <= 0) return null;
+  const sel = document.createElement('select') as HTMLSelectElement;
+  sel.className = 'mf-input mf-subs-sel mf-subs-source-sel';
+  sel.title = T('subs.source_help', 'Read records from MegaForm submissions, or live from the bound SQL table');
+  const opts: Array<{ v: SubsSource; l: string }> = [
+    { v: 'submissions', l: T('subs.source_json', 'Source: Submissions') },
+    { v: 'sql', l: T('subs.source_sql', 'Source: SQL table') },
+  ];
+  opts.forEach(o => {
+    const opt = document.createElement('option') as HTMLOptionElement;
+    opt.value = o.v; opt.textContent = o.l;
+    if (o.v === state.source) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', () => { setSource(sel.value as SubsSource); loadSubmissions(); });
   return sel;
 }
 
@@ -1766,6 +1804,9 @@ async function ensureFormsLoaded(): Promise<void> {
 
 async function switchForm(formId: number, preferred?: SubmissionFormOption, rerender = true): Promise<void> {
   const state = getSubsState();
+  // [SourcePicker] A SQL-table selection must never carry over to a different form (which may have
+  // no bound table). Always land on the default JSON source when switching forms.
+  resetSource();
   if (formId <= 0) {
     setCurrentForm(0, undefined, 'All Submissions');
     setSubmissions([], 0);
@@ -1788,12 +1829,59 @@ async function switchForm(formId: number, preferred?: SubmissionFormOption, rere
   await loadSubmissions();
 }
 
+// [SourcePicker v20260715] Base URL of the AiTools controller (where CustomTableRows lives).
+// On Oqtane it is /api/AiTools (NOT under the module's /api/MegaForm base — that 404s); on DNN it
+// is the DesktopModules API root. Mirrors dashboard/ai-form-creator.ts::aiBase().
+function aiToolsBase(): string {
+  const w = window as any;
+  const pf = String((w.__MF_PLATFORM__ || {}).platform || '').toLowerCase();
+  if (pf === 'dnn') return '/DesktopModules/MegaForm/API/';
+  if (pf === 'oqtane' || w.Oqtane || document.querySelector('[data-mf-platform="oqtane"]')) return '/api/';
+  return '/api/';
+}
+
+// [SourcePicker v20260715] Read a page of the SQL table the form mirrors via settings.databaseInsert,
+// and normalise each SQL row into the grid's Submission shape (a `dataJson` string keyed by column
+// name — the grid derives columns from those keys, so no grid change is needed). Row identity is a
+// synthetic NEGATIVE id so it never collides with a real submissionId and row-level actions can tell
+// "this is a SQL row, not a submission". Server is bounded (pageSize≤200, whitelisted connection).
+async function fetchSqlRows(formId: number, pageIndex: number, pageSize: number):
+  Promise<{ items: Submission[]; total: number; tableName: string }> {
+  const url = aiToolsBase() + 'AiTools/CustomTableRows?formId=' + formId
+    + '&page=' + (pageIndex + 1) + '&pageSize=' + pageSize;
+  const resp = await fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
+  if (!resp.ok) {
+    if (resp.status === 404) throw new Error('This form is not bound to a SQL table (no Save-to-database is configured).');
+    if (resp.status === 401 || resp.status === 403) throw new Error('You do not have permission to read the SQL table.');
+    throw new Error('Could not read the SQL table.');
+  }
+  const data: any = await resp.json();
+  const cols: string[] = (data.columns || []).map((c: any) => c && (c.name || c.Name) ? (c.name || c.Name) : String(c));
+  const rows: any[][] = data.rows || [];
+  const items: Submission[] = rows.map((row, i) => {
+    const obj: Record<string, any> = {};
+    cols.forEach((c, ci) => { obj[c] = row[ci]; });
+    return {
+      submissionId: -(pageIndex * pageSize + i + 1),   // synthetic (negative) — not a real submission
+      formId, status: '', submittedOnUtc: '',
+      dataJson: JSON.stringify(obj),
+    } as Submission;
+  });
+  const tableName = (data.schemaName ? data.schemaName + '.' : '') + (data.tableName || '');
+  return { items, total: typeof data.total === 'number' ? data.total : items.length, tableName };
+}
+
 async function loadSubmissions(): Promise<void> {
   const state = getSubsState();
   _loading = true; _loadError = ''; render();
   try {
     const fid = state.config.formId || 0;
-    if (fid > 0) {
+    if (fid > 0 && state.source === 'sql') {
+      // Read the live SQL table the form mirrors (read-only), not MF_Submissions.
+      const res = await fetchSqlRows(fid, state.pageIndex, state.pageSize);
+      setSqlTableName(res.tableName);
+      setSubmissions(res.items, res.total);
+    } else if (fid > 0) {
       const result = await _adapter.api.getSubmissions(fid, {
         search: state.filters.search || undefined,
         status: state.filters.status || undefined,
@@ -2015,7 +2103,10 @@ async function openSendToInboxModal(submissionIds: number[]): Promise<void> {
         });
         if (res.ok) ok++;
       }
-      toast(T('subs.sent_to_inbox', 'Sent {n} to {u}’s inbox.', { n: String(ok), u: targetUser }), ok > 0 ? 'success' : 'error');
+      // [SendToInbox toast 2026-07-13] Say WHERE the task lands — it is assigned
+      // directly, so it shows under "Assigned to Me" in the recipient's My Inbox,
+      // not in the claimable "Inbox" queue (the owner looked there and saw nothing).
+      toast(T('subs.sent_to_inbox', 'Sent {n} to {u} — shows under “Assigned to Me” in their My Inbox.', { n: String(ok), u: targetUser }), ok > 0 ? 'success' : 'error');
       overlay.remove();
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Send failed', 'error');
