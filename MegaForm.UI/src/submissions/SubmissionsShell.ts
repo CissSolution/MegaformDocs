@@ -253,7 +253,10 @@ function getResponseFieldDefs(state: ReturnType<typeof getSubsState>): ColumnDef
     out.push({ key: 'f:' + k, label: label || prettifyKey(k), group: 'response', sortable: true, removable: true });
   };
   const sch = state.config.schema && state.config.schema.fields;
-  if (state.config.formId > 0 && Array.isArray(sch) && sch.length) {
+  // [SourcePicker v20260715] In SQL-table mode the rows are keyed by DB COLUMN names, not the
+  // form's field keys — so derive columns from the actual row data (union branch), never the form
+  // schema, or every cell mismatches its column and renders "—".
+  if (state.source !== 'sql' && state.config.formId > 0 && Array.isArray(sch) && sch.length) {
     // Single form → real field keys + LABELS from the form schema.
     flattenFields(sch).forEach((f: any) => {
       const type = f && (f.type || f.Type);
@@ -262,7 +265,7 @@ function getResponseFieldDefs(state: ReturnType<typeof getSubsState>): ColumnDef
       add(String(key), String((f.label || f.Label || prettifyKey(String(key)))));
     });
   } else {
-    // All-forms / no schema → union of REAL submission dataJson keys.
+    // All-forms / no schema / SQL-table → union of REAL row dataJson keys.
     (state.submissions || []).forEach((s) => {
       Object.keys(rowData(s)).forEach((k) => add(k));
     });
@@ -281,7 +284,12 @@ function buildColumnLibrary(state: ReturnType<typeof getSubsState>): ColumnDef[]
 //    first time (no saved layout yet), SEED a few of its real fields so the submitted data is
 //    visible immediately instead of an empty grid. Protected columns are always present.
 function syncActiveColumns(state: ReturnType<typeof getSubsState>): void {
-  const bucket = state.config.formId > 0 ? ('f' + state.config.formId) : 'all';
+  // [SourcePicker v20260715] Separate column bucket per source: SQL-table columns (DB column names)
+  // must not pollute — nor be polluted by — the JSON-mode layout (form field keys). Toggling source
+  // therefore reloads the right layout and, on first visit, seeds from that source's real columns.
+  const bucket = state.config.formId > 0
+    ? ('f' + state.config.formId + (state.source === 'sql' ? ':sql' : ''))
+    : 'all';
   const lib = buildColumnLibrary(state);
   const byKey = new Map(lib.map((c) => [c.key, c]));
   const respLib = lib.filter((c) => c.group === 'response');
