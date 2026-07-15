@@ -21,6 +21,7 @@
 10. **KHÔNG hardcode secret/password; KHÔNG fallback secret về config trong non-Development.** Dùng env/user-secrets; fail-closed nếu thiếu.
 11. **Mọi outbound URL do người dùng cấu hình (webhook/app-endpoint) phải qua `SsrfGuard`.** Chặn private/loopback/metadata IP.
 12. **File upload nguy hiểm (SVG, HTML) phải sanitize hoặc serve `Content-Disposition: attachment` + `X-Content-Type-Options: nosniff`.**
+13. **BOUNDED-READ — mọi đường đọc SQL/repository do user/designer cấu hình phải bị chặn số dòng ở SERVER, cap đẩy VÀO SQL, phân trang/AJAX.** Cấm nạp hàng chục nghìn dòng vào bộ nhớ; cấm "in-memory pagination" (đọc hết rồi `Skip/Take`). Xem §Bounded-read.
 
 ---
 
@@ -147,6 +148,7 @@ private bool IsAllowedTemplatePath(string rel) {
 - [ ] Nếu `[AllowAnonymous]`: đã ghi rõ lý do an toàn chưa?
 - [ ] Đổi backend contract → đã cập nhật client JS tương ứng (antiforgery token, formId/fieldKey)?
 - [ ] Public form submit + builder flow vẫn chạy sau thay đổi?
+- [ ] Đọc SQL/repository do designer cấu hình? → có cap dòng ĐẨY VÀO SQL (TOP/OFFSET-FETCH/LIMIT) + KHÔNG in-memory pagination? (§11)
 
 ---
 
@@ -158,6 +160,68 @@ private bool IsAllowedTemplatePath(string rel) {
 4. **Đổi API contract phải đồng bộ client JS** (`MegaForm.UI/src`, `wwwroot/js`). Deploy lệch pha backend/frontend = vỡ flow.
 5. **Sau khi fix, cập nhật** `Docs/MYTHOS_SECURITY_AUDIT_REAUDIT_2026-07-04.md` (đánh dấu finding đã đóng) và build clean tất cả target trước khi coi là xong.
 6. **Fail-closed khi nghi ngờ**: nếu không chắc một giá trị có an toàn, coi như không.
+
+---
+
+## 11. Bounded-read — đọc SQL do designer cấu hình (audit 2026-07-15)
+
+> **Lớp lỗ hổng:** designer nhập một SELECT (optionsSql / cascade / DataRepeater masterQuery / filter+column options /
+> DataGrid-SQL / Subform / Razor / PreviewSql / ExternalTable / export). Server thực thi rồi **đọc reader tới cạn**
+> hoặc **materialize hết rồi mới `Skip/Take`**. Trên bảng khách 500k–5M dòng → tràn bộ nhớ. Nhiều đường là
+> **`[AllowAnonymous]`** (public form cần) → biến thành **DoS primitive** (1 request OOM, hoặc slow-drip lặp lại).
+> Audit tìm 13 finding CONFIRMED; nặng nhất: `FieldOptionsService.cs:285`, `DataRepeaterService.cs` (`ExecuteSql:718`
+> in-memory pagination, `ExecuteFilterQuery:473`/`ExecuteOptionsQuery:880` no-cap), Reports `Backfill`/`FormsOverview`.
+
+### DON'T
+```csharp
+// ❌ 1. Đọc reader tới cạn — không cap, không TOP. optionsSql = "SELECT id,name FROM Customers" → 500k object.
+using (var reader = cmd.ExecuteReader())
+    while (reader.Read())                      // no counter, no ceiling
+        options.Add(new FieldOption { ... });
+
+// ❌ 2. "In-memory pagination" — DB vẫn ship TOÀN BỘ, C# mới cắt trang.
+var all = new List<object[]>();
+while (reader.Read() && n < ABSOLUTE_MAX_ROWS) all.Add(row);   // 5000 vẫn là full scan mỗi page-click
+result.Rows = all.GetRange(offset, limit);     // Skip/Take SAU khi materialize
+result.TotalRows = all.Count;                  // ❌ đếm bằng materialize
+```
+
+### DO
+```csharp
+// ✅ Đẩy cap VÀO SQL (provider-aware), bind tham số thật, KHÔNG string-concat số.
+string paged = WrapPaged(designerSql, config.DatabaseType, offset, limit);
+//  SqlServer/Postgres: SELECT * FROM (<sql>) mf ORDER BY (SELECT NULL) OFFSET @__off ROWS FETCH NEXT @__lim ROWS ONLY
+//  Sqlite/MySql:       SELECT * FROM (<sql>) mf LIMIT @__lim OFFSET @__off
+cmd.CommandText = _tokenParam.Replace(paged, "@$1");
+cmd.Parameters.AddWithValue("@__off", offset);
+cmd.Parameters.AddWithValue("@__lim", Math.Min(pageSize, MAX_ROWS));   // pageSize từ client ĐÃ clamp
+// Defense-in-depth cho nhánh stored-proc (không rewrite được SQL): hard-stop reader.
+int n = 0; while (reader.Read() && n++ < MAX_ROWS) { ... }
+// Count: query COUNT(*) riêng, KHÔNG materialize.
+long total = (long)await countCmd.ExecuteScalarAsync();   // SELECT COUNT(*) FROM (<sql>) mf_c
+```
+
+### Nguyên tắc bắt buộc
+1. **Cap đẩy vào SQL**, không phải cắt trong C#. `Skip/Take` trên list đã materialize = vi phạm.
+2. **Client page size không tin** → clamp server. Đường **anonymous** = cap nghiêm nhất (**vài trăm dòng**, ví dụ
+   `MAX_OPTION_ROWS = 500`), tuyệt đối không để designer/attacker nâng trần. Option-list không có lý do vượt vài trăm.
+3. **Count = `COUNT(*)` riêng**, không đọc-hết-rồi-`.Count`.
+4. **Bảng XL → filter-before-list.** Tái dùng `CapabilityDecisionEngine.RequiresFilterBeforeList`
+   (`CapabilityDecisionEngine.cs:189`, bucket XL) — enforce ở SERVER, không chỉ gợi ý UI.
+5. **Helper dùng chung ở Core.** Trích bộ paging provider-aware từ `DataRepeaterService.ExecuteSql` thành
+   `WrapPaged(sql, dbType, offset, limit)`; `FieldOptionsService` + cả 3 `Execute*Query` (Filter/Options/Grid) đi qua nó.
+   Fix Core 1 lần → 3 twin (Oqtane/Web/DNN) hưởng. Rà cả Umbraco (phần lớn chưa port các path này).
+6. **Ship server-cap KÈM client typeahead.** Client hiện xin cả tập (`renderer/index.ts:3096` `hydrateSqlOptions`
+   không `page`/`q`). Thêm cap mà không thêm `&q=`/`&page=` = **regression "mất dữ liệu im lặng"** (list bị cắt, không có
+   "showing 500 of N", không có đường tới phần còn lại). Hai thứ phải ship cùng commit.
+7. **Export/print** phải stream + trần cứng, không `ToList()` toàn bảng (Reports `Backfill` = keyset-paged loop + cursor).
+8. **Đừng nuốt lỗi.** Nhiều path `catch { return []; }` → OOM-adjacent trả dropdown rỗng im lặng; đặt cờ truncation
+   để designer biết bảng quá lớn, chuyển sang text-filter/typeahead.
+
+### Điểm đã có sẵn để tái dùng / tham chiếu
+- `DataRepeaterService.ExecuteSql` đã biết `config.DatabaseType` + `_registry.GetConnection(...)` → trích `WrapPaged` từ đây.
+- `SubmissionQueryService` (`PageSize` clamp ≤250) + `CapabilityDecisionEngine.RequiresFilterBeforeList` = khuôn mẫu đúng.
+- Oqtane `MegaFormController.Reports.cs:119` đã fix FormsOverview bằng `GROUP BY` — port sang Web/Umbraco/DNN.
 
 ---
 

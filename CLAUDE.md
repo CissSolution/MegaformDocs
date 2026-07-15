@@ -18,6 +18,7 @@ Codebase này đã qua nhiều đợt audit và **các lớp lỗ hổng dưới
 8. **File path client** → whitelist extension + `Path.GetFullPath` + chặn `..`/`:`/`~`. SVG/HTML upload → sanitize hoặc serve attachment + `nosniff`.
 9. **URL ngoài do user cấu hình** (webhook/app-endpoint) → `SsrfGuard`.
 10. **KHÔNG trả `ex.Message`/`ex.StackTrace` cho client.** KHÔNG hardcode secret; KHÔNG fallback secret về config ngoài Development.
+11. **BOUNDED-READ: MỌI đường đọc SQL do user/designer cấu hình phải cap server-side ĐẨY VÀO SQL** (TOP / OFFSET..FETCH / LIMIT theo provider) — **cấm** đọc hết vào List rồi `Skip/Take` (in-memory pagination). Client page size KHÔNG tin → clamp; count = `COUNT(*)` riêng, không materialize-rồi-đếm. Đường **anonymous** (public form: optionsSql/cascade, DataRepeater `FilterOptions`/`ColumnOptions`/`Query`) = cap NGHIÊM NHẤT (vài trăm dòng). Bảng **XL** phải filter-before-list (tái dùng `CapabilityDecisionEngine.RequiresFilterBeforeList`). Thêm server-cap phải ship KÈM client typeahead (`&q=`/`&page=`) nếu không = regression "mất dữ liệu im lặng". Chi tiết + checklist: `Docs/SECURITY_CODING_RULES.md §Bounded-read`.
 
 ### Trước khi commit code động tới security surface, chạy checklist ở §9 của `Docs/SECURITY_CODING_RULES.md`.
 
