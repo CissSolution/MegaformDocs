@@ -1037,7 +1037,7 @@ import dbStrings from './db-tables-strings.json';
                 '<option value="static">Static (manual list below)</option>' +
                 '<option value="sql">From SQL query (dynamic)</option>' +
               '</select>' +
-              '<small class="text-muted d-block mt-1">Available for <strong>Select</strong>, <strong>Radio</strong>, and <strong>Checkbox</strong>. Switch to <strong>SQL</strong> to load choices from a database query at render time.</small>' +
+              '<small class="text-muted d-block mt-1">Available for every <strong>choice field</strong> — Dropdown, MultiSelect, Single Choice, Multiple Choice, Chips, and Choice Cards. Switch to <strong>SQL</strong> to load choices from a database query at render time.</small>' +
             '</div>' +
             '<div id="mf-prop-options-static-wrap">' +
               '<div id="mf-prop-option-style-wrap" class="form-group mt-2" style="display:none">' +
