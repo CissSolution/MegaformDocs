@@ -241,3 +241,385 @@ MegaForm.Sdk.FieldOptionInfo.Value.get -> string?
 MegaForm.Sdk.FieldOptionInfo.Value.set -> void
 MegaForm.Sdk.FieldOptionInfo.Selected.get -> bool
 MegaForm.Sdk.FieldOptionInfo.Selected.set -> void
+MegaForm.Sdk.DashboardQuery
+MegaForm.Sdk.DashboardQuery.DashboardQuery() -> void
+MegaForm.Sdk.DashboardQuery.Status.get -> string?
+MegaForm.Sdk.DashboardQuery.Status.set -> void
+MegaForm.Sdk.DashboardQuery.Search.get -> string?
+MegaForm.Sdk.DashboardQuery.Search.set -> void
+MegaForm.Sdk.DashboardQuery.Days.get -> int
+MegaForm.Sdk.DashboardQuery.Days.set -> void
+MegaForm.Sdk.DashboardQuery.MaxForms.get -> int
+MegaForm.Sdk.DashboardQuery.MaxForms.set -> void
+MegaForm.Sdk.DashboardOverviewDto
+MegaForm.Sdk.DashboardOverviewDto.DashboardOverviewDto() -> void
+MegaForm.Sdk.DashboardOverviewDto.PortalId.get -> int
+MegaForm.Sdk.DashboardOverviewDto.PortalId.set -> void
+MegaForm.Sdk.DashboardOverviewDto.Days.get -> int
+MegaForm.Sdk.DashboardOverviewDto.Days.set -> void
+MegaForm.Sdk.DashboardOverviewDto.GeneratedAtUtc.get -> System.DateTime
+MegaForm.Sdk.DashboardOverviewDto.GeneratedAtUtc.set -> void
+MegaForm.Sdk.DashboardOverviewDto.TotalForms.get -> int
+MegaForm.Sdk.DashboardOverviewDto.TotalForms.set -> void
+MegaForm.Sdk.DashboardOverviewDto.TotalSubmissions.get -> int
+MegaForm.Sdk.DashboardOverviewDto.TotalSubmissions.set -> void
+MegaForm.Sdk.DashboardOverviewDto.RecentSubmissions.get -> int
+MegaForm.Sdk.DashboardOverviewDto.RecentSubmissions.set -> void
+MegaForm.Sdk.DashboardOverviewDto.Forms.get -> System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.DashboardFormSummaryDto!>!
+MegaForm.Sdk.DashboardOverviewDto.Forms.set -> void
+MegaForm.Sdk.DashboardFormSummaryDto
+MegaForm.Sdk.DashboardFormSummaryDto.DashboardFormSummaryDto() -> void
+MegaForm.Sdk.DashboardFormSummaryDto.FormId.get -> int
+MegaForm.Sdk.DashboardFormSummaryDto.FormId.set -> void
+MegaForm.Sdk.DashboardFormSummaryDto.Title.get -> string?
+MegaForm.Sdk.DashboardFormSummaryDto.Title.set -> void
+MegaForm.Sdk.DashboardFormSummaryDto.Status.get -> string?
+MegaForm.Sdk.DashboardFormSummaryDto.Status.set -> void
+MegaForm.Sdk.DashboardFormSummaryDto.CreatedOnUtc.get -> System.DateTime?
+MegaForm.Sdk.DashboardFormSummaryDto.CreatedOnUtc.set -> void
+MegaForm.Sdk.DashboardFormSummaryDto.SubmissionCount.get -> int
+MegaForm.Sdk.DashboardFormSummaryDto.SubmissionCount.set -> void
+MegaForm.Sdk.DashboardFormSummaryDto.RecentSubmissionCount.get -> int
+MegaForm.Sdk.DashboardFormSummaryDto.RecentSubmissionCount.set -> void
+MegaForm.Sdk.SubmissionSearchQuery
+MegaForm.Sdk.SubmissionSearchQuery.SubmissionSearchQuery() -> void
+MegaForm.Sdk.SubmissionSearchQuery.FormId.get -> int
+MegaForm.Sdk.SubmissionSearchQuery.FormId.set -> void
+MegaForm.Sdk.SubmissionSearchQuery.Status.get -> string?
+MegaForm.Sdk.SubmissionSearchQuery.Status.set -> void
+MegaForm.Sdk.SubmissionSearchQuery.Search.get -> string?
+MegaForm.Sdk.SubmissionSearchQuery.Search.set -> void
+MegaForm.Sdk.SubmissionSearchQuery.DateFrom.get -> System.DateTime?
+MegaForm.Sdk.SubmissionSearchQuery.DateFrom.set -> void
+MegaForm.Sdk.SubmissionSearchQuery.DateTo.get -> System.DateTime?
+MegaForm.Sdk.SubmissionSearchQuery.DateTo.set -> void
+MegaForm.Sdk.SubmissionSearchQuery.Page.get -> int
+MegaForm.Sdk.SubmissionSearchQuery.Page.set -> void
+MegaForm.Sdk.SubmissionSearchQuery.PageSize.get -> int
+MegaForm.Sdk.SubmissionSearchQuery.PageSize.set -> void
+MegaForm.Sdk.SubmissionListItemDto
+MegaForm.Sdk.SubmissionListItemDto.SubmissionListItemDto() -> void
+MegaForm.Sdk.SubmissionListItemDto.SubmissionId.get -> int
+MegaForm.Sdk.SubmissionListItemDto.SubmissionId.set -> void
+MegaForm.Sdk.SubmissionListItemDto.FormId.get -> int
+MegaForm.Sdk.SubmissionListItemDto.FormId.set -> void
+MegaForm.Sdk.SubmissionListItemDto.FormTitle.get -> string?
+MegaForm.Sdk.SubmissionListItemDto.FormTitle.set -> void
+MegaForm.Sdk.SubmissionListItemDto.Status.get -> string?
+MegaForm.Sdk.SubmissionListItemDto.Status.set -> void
+MegaForm.Sdk.SubmissionListItemDto.IsSpam.get -> bool
+MegaForm.Sdk.SubmissionListItemDto.IsSpam.set -> void
+MegaForm.Sdk.SubmissionListItemDto.SpamScore.get -> decimal?
+MegaForm.Sdk.SubmissionListItemDto.SpamScore.set -> void
+MegaForm.Sdk.SubmissionListItemDto.SubmittedOnUtc.get -> System.DateTime
+MegaForm.Sdk.SubmissionListItemDto.SubmittedOnUtc.set -> void
+MegaForm.Sdk.SubmissionListItemDto.ReadOnUtc.get -> System.DateTime?
+MegaForm.Sdk.SubmissionListItemDto.ReadOnUtc.set -> void
+MegaForm.Sdk.SubmissionListItemDto.UserId.get -> int?
+MegaForm.Sdk.SubmissionListItemDto.UserId.set -> void
+MegaForm.Sdk.SubmissionListItemDto.IpAddress.get -> string?
+MegaForm.Sdk.SubmissionListItemDto.IpAddress.set -> void
+MegaForm.Sdk.SubmissionListItemDto.SummaryText.get -> string?
+MegaForm.Sdk.SubmissionListItemDto.SummaryText.set -> void
+MegaForm.Sdk.SubmissionListItemDto.DataJson.get -> string?
+MegaForm.Sdk.SubmissionListItemDto.DataJson.set -> void
+MegaForm.Sdk.SubmissionDetailDto
+MegaForm.Sdk.SubmissionDetailDto.SubmissionDetailDto() -> void
+MegaForm.Sdk.SubmissionDetailDto.Submission.get -> MegaForm.Sdk.SubmissionDto?
+MegaForm.Sdk.SubmissionDetailDto.Submission.set -> void
+MegaForm.Sdk.SubmissionDetailDto.Form.get -> MegaForm.Sdk.FormDto?
+MegaForm.Sdk.SubmissionDetailDto.Form.set -> void
+MegaForm.Sdk.SubmissionDetailDto.Schema.get -> MegaForm.Sdk.FormSchemaInfo!
+MegaForm.Sdk.SubmissionDetailDto.Schema.set -> void
+MegaForm.Sdk.SubmissionDetailDto.Files.get -> System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.FileDto!>!
+MegaForm.Sdk.SubmissionDetailDto.Files.set -> void
+MegaForm.Sdk.SubmissionDetailDto.Values.get -> System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.SubmissionValueDto!>!
+MegaForm.Sdk.SubmissionDetailDto.Values.set -> void
+MegaForm.Sdk.SubmissionDetailDto.FieldSnapshots.get -> System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.SubmissionFieldSnapshotDto!>!
+MegaForm.Sdk.SubmissionDetailDto.FieldSnapshots.set -> void
+MegaForm.Sdk.SubmissionDetailDto.HasSnapshot.get -> bool
+MegaForm.Sdk.SubmissionDetailDto.HasSnapshot.set -> void
+MegaForm.Sdk.SubmissionDetailDto.Workflow.get -> MegaForm.Sdk.SubmissionWorkflowSummaryDto!
+MegaForm.Sdk.SubmissionDetailDto.Workflow.set -> void
+MegaForm.Sdk.SubmissionValueDto
+MegaForm.Sdk.SubmissionValueDto.SubmissionValueDto() -> void
+MegaForm.Sdk.SubmissionValueDto.Key.get -> string?
+MegaForm.Sdk.SubmissionValueDto.Key.set -> void
+MegaForm.Sdk.SubmissionValueDto.Value.get -> string?
+MegaForm.Sdk.SubmissionValueDto.Value.set -> void
+MegaForm.Sdk.SubmissionFieldSnapshotDto
+MegaForm.Sdk.SubmissionFieldSnapshotDto.SubmissionFieldSnapshotDto() -> void
+MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey.get -> string?
+MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey.set -> void
+MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel.get -> string?
+MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel.set -> void
+MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType.get -> string?
+MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType.set -> void
+MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue.get -> string?
+MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue.set -> void
+MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue.get -> string?
+MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue.set -> void
+MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder.get -> int
+MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder.set -> void
+MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback.get -> bool
+MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback.set -> void
+MegaForm.Sdk.SubmissionWorkflowSummaryDto
+MegaForm.Sdk.SubmissionWorkflowSummaryDto.SubmissionWorkflowSummaryDto() -> void
+MegaForm.Sdk.SubmissionWorkflowSummaryDto.HasWorkflow.get -> bool
+MegaForm.Sdk.SubmissionWorkflowSummaryDto.HasWorkflow.set -> void
+MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveTaskId.get -> string?
+MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveTaskId.set -> void
+MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveNodeLabel.get -> string?
+MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveNodeLabel.set -> void
+MegaForm.Sdk.SubmissionWorkflowSummaryDto.CaseStatus.get -> string?
+MegaForm.Sdk.SubmissionWorkflowSummaryDto.CaseStatus.set -> void
+MegaForm.Sdk.SubmissionWorkflowSummaryDto.ExecutionStatus.get -> string?
+MegaForm.Sdk.SubmissionWorkflowSummaryDto.ExecutionStatus.set -> void
+MegaForm.Sdk.SubmissionWorkflowSummaryDto.TaskCount.get -> int
+MegaForm.Sdk.SubmissionWorkflowSummaryDto.TaskCount.set -> void
+MegaForm.Sdk.SubmissionWorkflowSummaryDto.OpenTaskCount.get -> int
+MegaForm.Sdk.SubmissionWorkflowSummaryDto.OpenTaskCount.set -> void
+MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActionCount.get -> int
+MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActionCount.set -> void
+MegaForm.Sdk.SubmissionWorkflowSummaryDto.Tasks.get -> System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.InboxTaskDto!>!
+MegaForm.Sdk.SubmissionWorkflowSummaryDto.Tasks.set -> void
+MegaForm.Sdk.SubmissionWorkflowSummaryDto.Actions.get -> System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.InboxTaskActionDto!>!
+MegaForm.Sdk.SubmissionWorkflowSummaryDto.Actions.set -> void
+MegaForm.Sdk.InboxQuery
+MegaForm.Sdk.InboxQuery.InboxQuery() -> void
+MegaForm.Sdk.InboxQuery.RecentCompleted.get -> int
+MegaForm.Sdk.InboxQuery.RecentCompleted.set -> void
+MegaForm.Sdk.InboxBoardDto
+MegaForm.Sdk.InboxBoardDto.InboxBoardDto() -> void
+MegaForm.Sdk.InboxBoardDto.User.get -> MegaForm.Sdk.InboxUserDto!
+MegaForm.Sdk.InboxBoardDto.User.set -> void
+MegaForm.Sdk.InboxBoardDto.Kpis.get -> MegaForm.Sdk.InboxKpiDto!
+MegaForm.Sdk.InboxBoardDto.Kpis.set -> void
+MegaForm.Sdk.InboxBoardDto.Incoming.get -> System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.InboxTaskDto!>!
+MegaForm.Sdk.InboxBoardDto.Incoming.set -> void
+MegaForm.Sdk.InboxBoardDto.InProgress.get -> System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.InboxTaskDto!>!
+MegaForm.Sdk.InboxBoardDto.InProgress.set -> void
+MegaForm.Sdk.InboxBoardDto.Completed.get -> System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.InboxTaskDto!>!
+MegaForm.Sdk.InboxBoardDto.Completed.set -> void
+MegaForm.Sdk.InboxBoardDto.GeneratedAtUtc.get -> System.DateTime
+MegaForm.Sdk.InboxBoardDto.GeneratedAtUtc.set -> void
+MegaForm.Sdk.InboxUserDto
+MegaForm.Sdk.InboxUserDto.InboxUserDto() -> void
+MegaForm.Sdk.InboxUserDto.UserId.get -> int
+MegaForm.Sdk.InboxUserDto.UserId.set -> void
+MegaForm.Sdk.InboxUserDto.UserName.get -> string?
+MegaForm.Sdk.InboxUserDto.UserName.set -> void
+MegaForm.Sdk.InboxUserDto.DisplayName.get -> string?
+MegaForm.Sdk.InboxUserDto.DisplayName.set -> void
+MegaForm.Sdk.InboxUserDto.IsAdmin.get -> bool
+MegaForm.Sdk.InboxUserDto.IsAdmin.set -> void
+MegaForm.Sdk.InboxKpiDto
+MegaForm.Sdk.InboxKpiDto.InboxKpiDto() -> void
+MegaForm.Sdk.InboxKpiDto.Incoming.get -> int
+MegaForm.Sdk.InboxKpiDto.Incoming.set -> void
+MegaForm.Sdk.InboxKpiDto.InProgress.get -> int
+MegaForm.Sdk.InboxKpiDto.InProgress.set -> void
+MegaForm.Sdk.InboxKpiDto.Completed.get -> int
+MegaForm.Sdk.InboxKpiDto.Completed.set -> void
+MegaForm.Sdk.InboxKpiDto.Overdue.get -> int
+MegaForm.Sdk.InboxKpiDto.Overdue.set -> void
+MegaForm.Sdk.InboxTaskDto
+MegaForm.Sdk.InboxTaskDto.InboxTaskDto() -> void
+MegaForm.Sdk.InboxTaskDto.TaskId.get -> string?
+MegaForm.Sdk.InboxTaskDto.TaskId.set -> void
+MegaForm.Sdk.InboxTaskDto.CaseId.get -> string?
+MegaForm.Sdk.InboxTaskDto.CaseId.set -> void
+MegaForm.Sdk.InboxTaskDto.ExecutionId.get -> string?
+MegaForm.Sdk.InboxTaskDto.ExecutionId.set -> void
+MegaForm.Sdk.InboxTaskDto.FormId.get -> int
+MegaForm.Sdk.InboxTaskDto.FormId.set -> void
+MegaForm.Sdk.InboxTaskDto.SubmissionId.get -> int
+MegaForm.Sdk.InboxTaskDto.SubmissionId.set -> void
+MegaForm.Sdk.InboxTaskDto.NodeId.get -> string?
+MegaForm.Sdk.InboxTaskDto.NodeId.set -> void
+MegaForm.Sdk.InboxTaskDto.NodeLabel.get -> string?
+MegaForm.Sdk.InboxTaskDto.NodeLabel.set -> void
+MegaForm.Sdk.InboxTaskDto.Status.get -> string?
+MegaForm.Sdk.InboxTaskDto.Status.set -> void
+MegaForm.Sdk.InboxTaskDto.CandidateRoles.get -> System.Collections.Generic.IReadOnlyList<string!>!
+MegaForm.Sdk.InboxTaskDto.CandidateRoles.set -> void
+MegaForm.Sdk.InboxTaskDto.CandidateUsers.get -> System.Collections.Generic.IReadOnlyList<string!>!
+MegaForm.Sdk.InboxTaskDto.CandidateUsers.set -> void
+MegaForm.Sdk.InboxTaskDto.AssignedUserId.get -> int?
+MegaForm.Sdk.InboxTaskDto.AssignedUserId.set -> void
+MegaForm.Sdk.InboxTaskDto.AssignedUserName.get -> string?
+MegaForm.Sdk.InboxTaskDto.AssignedUserName.set -> void
+MegaForm.Sdk.InboxTaskDto.AssignedDisplayName.get -> string?
+MegaForm.Sdk.InboxTaskDto.AssignedDisplayName.set -> void
+MegaForm.Sdk.InboxTaskDto.AllowClaim.get -> bool
+MegaForm.Sdk.InboxTaskDto.AllowClaim.set -> void
+MegaForm.Sdk.InboxTaskDto.AllowForward.get -> bool
+MegaForm.Sdk.InboxTaskDto.AllowForward.set -> void
+MegaForm.Sdk.InboxTaskDto.AllowReassign.get -> bool
+MegaForm.Sdk.InboxTaskDto.AllowReassign.set -> void
+MegaForm.Sdk.InboxTaskDto.Outcome.get -> string?
+MegaForm.Sdk.InboxTaskDto.Outcome.set -> void
+MegaForm.Sdk.InboxTaskDto.Comment.get -> string?
+MegaForm.Sdk.InboxTaskDto.Comment.set -> void
+MegaForm.Sdk.InboxTaskDto.CreatedAtUtc.get -> System.DateTime
+MegaForm.Sdk.InboxTaskDto.CreatedAtUtc.set -> void
+MegaForm.Sdk.InboxTaskDto.ClaimedAtUtc.get -> System.DateTime?
+MegaForm.Sdk.InboxTaskDto.ClaimedAtUtc.set -> void
+MegaForm.Sdk.InboxTaskDto.DueAtUtc.get -> System.DateTime?
+MegaForm.Sdk.InboxTaskDto.DueAtUtc.set -> void
+MegaForm.Sdk.InboxTaskDto.CompletedAtUtc.get -> System.DateTime?
+MegaForm.Sdk.InboxTaskDto.CompletedAtUtc.set -> void
+MegaForm.Sdk.InboxTaskActionRequest
+MegaForm.Sdk.InboxTaskActionRequest.InboxTaskActionRequest() -> void
+MegaForm.Sdk.InboxTaskActionRequest.TaskId.get -> string!
+MegaForm.Sdk.InboxTaskActionRequest.TaskId.set -> void
+MegaForm.Sdk.InboxTaskActionRequest.Comment.get -> string?
+MegaForm.Sdk.InboxTaskActionRequest.Comment.set -> void
+MegaForm.Sdk.InboxTaskActionRequest.TargetUser.get -> string?
+MegaForm.Sdk.InboxTaskActionRequest.TargetUser.set -> void
+MegaForm.Sdk.InboxTaskActionRequest.Data.get -> System.Collections.Generic.Dictionary<string!, object!>?
+MegaForm.Sdk.InboxTaskActionRequest.Data.set -> void
+MegaForm.Sdk.InboxFileAttachmentRequest
+MegaForm.Sdk.InboxFileAttachmentRequest.InboxFileAttachmentRequest() -> void
+MegaForm.Sdk.InboxFileAttachmentRequest.TaskId.get -> string!
+MegaForm.Sdk.InboxFileAttachmentRequest.TaskId.set -> void
+MegaForm.Sdk.InboxFileAttachmentRequest.FieldKey.get -> string!
+MegaForm.Sdk.InboxFileAttachmentRequest.FieldKey.set -> void
+MegaForm.Sdk.InboxFileAttachmentRequest.FileName.get -> string!
+MegaForm.Sdk.InboxFileAttachmentRequest.FileName.set -> void
+MegaForm.Sdk.InboxFileAttachmentRequest.ContentType.get -> string!
+MegaForm.Sdk.InboxFileAttachmentRequest.ContentType.set -> void
+MegaForm.Sdk.InboxFileAttachmentRequest.Content.get -> System.IO.Stream!
+MegaForm.Sdk.InboxFileAttachmentRequest.Content.set -> void
+MegaForm.Sdk.InboxFileAttachmentRequest.SizeBytes.get -> long?
+MegaForm.Sdk.InboxFileAttachmentRequest.SizeBytes.set -> void
+MegaForm.Sdk.SendSubmissionToInboxRequest
+MegaForm.Sdk.SendSubmissionToInboxRequest.SendSubmissionToInboxRequest() -> void
+MegaForm.Sdk.SendSubmissionToInboxRequest.FormId.get -> int
+MegaForm.Sdk.SendSubmissionToInboxRequest.FormId.set -> void
+MegaForm.Sdk.SendSubmissionToInboxRequest.SubmissionId.get -> int
+MegaForm.Sdk.SendSubmissionToInboxRequest.SubmissionId.set -> void
+MegaForm.Sdk.SendSubmissionToInboxRequest.TargetUser.get -> string!
+MegaForm.Sdk.SendSubmissionToInboxRequest.TargetUser.set -> void
+MegaForm.Sdk.SendSubmissionToInboxRequest.Title.get -> string?
+MegaForm.Sdk.SendSubmissionToInboxRequest.Title.set -> void
+MegaForm.Sdk.SendSubmissionToInboxRequest.Comment.get -> string?
+MegaForm.Sdk.SendSubmissionToInboxRequest.Comment.set -> void
+MegaForm.Sdk.InboxTaskResultDto
+MegaForm.Sdk.InboxTaskResultDto.InboxTaskResultDto() -> void
+MegaForm.Sdk.InboxTaskResultDto.Success.get -> bool
+MegaForm.Sdk.InboxTaskResultDto.Success.set -> void
+MegaForm.Sdk.InboxTaskResultDto.Error.get -> string?
+MegaForm.Sdk.InboxTaskResultDto.Error.set -> void
+MegaForm.Sdk.InboxTaskResultDto.Task.get -> MegaForm.Sdk.InboxTaskDto?
+MegaForm.Sdk.InboxTaskResultDto.Task.set -> void
+MegaForm.Sdk.InboxTaskResultDto.Submission.get -> MegaForm.Sdk.SubmissionDto?
+MegaForm.Sdk.InboxTaskResultDto.Submission.set -> void
+MegaForm.Sdk.InboxTaskResultDto.Files.get -> System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.FileDto!>!
+MegaForm.Sdk.InboxTaskResultDto.Files.set -> void
+MegaForm.Sdk.InboxTaskResultDto.Actions.get -> System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.InboxTaskActionDto!>!
+MegaForm.Sdk.InboxTaskResultDto.Actions.set -> void
+MegaForm.Sdk.InboxFileAttachmentResultDto
+MegaForm.Sdk.InboxFileAttachmentResultDto.InboxFileAttachmentResultDto() -> void
+MegaForm.Sdk.InboxFileAttachmentResultDto.Success.get -> bool
+MegaForm.Sdk.InboxFileAttachmentResultDto.Success.set -> void
+MegaForm.Sdk.InboxFileAttachmentResultDto.Error.get -> string?
+MegaForm.Sdk.InboxFileAttachmentResultDto.Error.set -> void
+MegaForm.Sdk.InboxFileAttachmentResultDto.File.get -> MegaForm.Sdk.FileDto?
+MegaForm.Sdk.InboxFileAttachmentResultDto.File.set -> void
+MegaForm.Sdk.InboxFileAttachmentResultDto.Task.get -> MegaForm.Sdk.InboxTaskResultDto?
+MegaForm.Sdk.InboxFileAttachmentResultDto.Task.set -> void
+MegaForm.Sdk.InboxSendSubmissionResultDto
+MegaForm.Sdk.InboxSendSubmissionResultDto.InboxSendSubmissionResultDto() -> void
+MegaForm.Sdk.InboxSendSubmissionResultDto.Success.get -> bool
+MegaForm.Sdk.InboxSendSubmissionResultDto.Success.set -> void
+MegaForm.Sdk.InboxSendSubmissionResultDto.TaskId.get -> string?
+MegaForm.Sdk.InboxSendSubmissionResultDto.TaskId.set -> void
+MegaForm.Sdk.InboxSendSubmissionResultDto.AssignedTo.get -> string?
+MegaForm.Sdk.InboxSendSubmissionResultDto.AssignedTo.set -> void
+MegaForm.Sdk.InboxSendSubmissionResultDto.FormId.get -> int
+MegaForm.Sdk.InboxSendSubmissionResultDto.FormId.set -> void
+MegaForm.Sdk.InboxSendSubmissionResultDto.SubmissionId.get -> int
+MegaForm.Sdk.InboxSendSubmissionResultDto.SubmissionId.set -> void
+MegaForm.Sdk.InboxTaskActionDto
+MegaForm.Sdk.InboxTaskActionDto.InboxTaskActionDto() -> void
+MegaForm.Sdk.InboxTaskActionDto.ActionId.get -> string?
+MegaForm.Sdk.InboxTaskActionDto.ActionId.set -> void
+MegaForm.Sdk.InboxTaskActionDto.TaskId.get -> string?
+MegaForm.Sdk.InboxTaskActionDto.TaskId.set -> void
+MegaForm.Sdk.InboxTaskActionDto.CaseId.get -> string?
+MegaForm.Sdk.InboxTaskActionDto.CaseId.set -> void
+MegaForm.Sdk.InboxTaskActionDto.ExecutionId.get -> string?
+MegaForm.Sdk.InboxTaskActionDto.ExecutionId.set -> void
+MegaForm.Sdk.InboxTaskActionDto.FormId.get -> int
+MegaForm.Sdk.InboxTaskActionDto.FormId.set -> void
+MegaForm.Sdk.InboxTaskActionDto.SubmissionId.get -> int
+MegaForm.Sdk.InboxTaskActionDto.SubmissionId.set -> void
+MegaForm.Sdk.InboxTaskActionDto.ActionType.get -> string?
+MegaForm.Sdk.InboxTaskActionDto.ActionType.set -> void
+MegaForm.Sdk.InboxTaskActionDto.ActorUserId.get -> int?
+MegaForm.Sdk.InboxTaskActionDto.ActorUserId.set -> void
+MegaForm.Sdk.InboxTaskActionDto.ActorUserName.get -> string?
+MegaForm.Sdk.InboxTaskActionDto.ActorUserName.set -> void
+MegaForm.Sdk.InboxTaskActionDto.ActorDisplayName.get -> string?
+MegaForm.Sdk.InboxTaskActionDto.ActorDisplayName.set -> void
+MegaForm.Sdk.InboxTaskActionDto.TargetUser.get -> string?
+MegaForm.Sdk.InboxTaskActionDto.TargetUser.set -> void
+MegaForm.Sdk.InboxTaskActionDto.Outcome.get -> string?
+MegaForm.Sdk.InboxTaskActionDto.Outcome.set -> void
+MegaForm.Sdk.InboxTaskActionDto.Comment.get -> string?
+MegaForm.Sdk.InboxTaskActionDto.Comment.set -> void
+MegaForm.Sdk.InboxTaskActionDto.CreatedAtUtc.get -> System.DateTime
+MegaForm.Sdk.InboxTaskActionDto.CreatedAtUtc.set -> void
+MegaForm.Sdk.MegaFormScope.UserName.get -> string?
+MegaForm.Sdk.MegaFormScope.UserName.set -> void
+MegaForm.Sdk.MegaFormScope.DisplayName.get -> string?
+MegaForm.Sdk.MegaFormScope.DisplayName.set -> void
+MegaForm.Sdk.MegaFormScope.UserEmail.get -> string?
+MegaForm.Sdk.MegaFormScope.UserEmail.set -> void
+MegaForm.Sdk.MegaFormScope.IsAuthenticated.get -> bool?
+MegaForm.Sdk.MegaFormScope.IsAuthenticated.set -> void
+MegaForm.Sdk.MegaFormScope.IsAdmin.get -> bool?
+MegaForm.Sdk.MegaFormScope.IsAdmin.set -> void
+MegaForm.Sdk.MegaFormScope.IsSuperUser.get -> bool?
+MegaForm.Sdk.MegaFormScope.IsSuperUser.set -> void
+MegaForm.Sdk.MegaFormScope.Roles.get -> System.Collections.Generic.List<string!>!
+MegaForm.Sdk.MegaFormScope.Roles.set -> void
+MegaForm.Sdk.MegaFormScope.IpAddress.get -> string?
+MegaForm.Sdk.MegaFormScope.IpAddress.set -> void
+MegaForm.Sdk.IMegaFormClient.Dashboard.get -> MegaForm.Sdk.IDashboardApi!
+MegaForm.Sdk.IMegaFormClient.SubmissionDashboard.get -> MegaForm.Sdk.ISubmissionDashboardApi!
+MegaForm.Sdk.IMegaFormClient.Inbox.get -> MegaForm.Sdk.IInboxApi!
+MegaForm.Sdk.IDashboardApi
+MegaForm.Sdk.IDashboardApi.GetOverviewAsync(MegaForm.Sdk.DashboardQuery? query = null, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.DashboardOverviewDto!>!
+MegaForm.Sdk.ISubmissionDashboardApi
+MegaForm.Sdk.ISubmissionDashboardApi.SearchAsync(MegaForm.Sdk.SubmissionSearchQuery! query, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.PagedResult<MegaForm.Sdk.SubmissionListItemDto!>!>!
+MegaForm.Sdk.ISubmissionDashboardApi.GetDetailAsync(int submissionId, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.SubmissionDetailDto?>!
+MegaForm.Sdk.ISubmissionDashboardApi.UpdateStatusAsync(int submissionId, string! status, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+MegaForm.Sdk.IInboxApi
+MegaForm.Sdk.MegaFormClient.MegaFormClient(MegaForm.Core.Interfaces.IFormRepository! forms, MegaForm.Core.Interfaces.ISubmissionRepository! submissions, MegaForm.Core.Interfaces.IPlatformContext? platform, MegaForm.Core.Interfaces.IFileRepository? files, MegaForm.Core.Interfaces.IStorageService? storage, MegaForm.Core.Services.SubmissionProcessor? submissionProcessor, MegaForm.Core.Services.WorkflowTaskService? workflowTasks, MegaForm.Core.Interfaces.IWorkflowRepository? workflowRepository) -> void
+MegaForm.Sdk.MegaFormClient.Dashboard.get -> MegaForm.Sdk.IDashboardApi!
+MegaForm.Sdk.MegaFormClient.SubmissionDashboard.get -> MegaForm.Sdk.ISubmissionDashboardApi!
+MegaForm.Sdk.MegaFormClient.Inbox.get -> MegaForm.Sdk.IInboxApi!
+MegaForm.Sdk.MegaFormClient.GetOverviewAsync(MegaForm.Sdk.DashboardQuery? query = null, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.DashboardOverviewDto!>!
+MegaForm.Sdk.MegaFormClient.SearchAsync(MegaForm.Sdk.SubmissionSearchQuery! query, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.PagedResult<MegaForm.Sdk.SubmissionListItemDto!>!>!
+MegaForm.Sdk.MegaFormClient.GetDetailAsync(int submissionId, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.SubmissionDetailDto?>!
+MegaForm.Sdk.MegaFormClient.UpdateStatusAsync(int submissionId, string! status, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+MegaForm.Sdk.IInboxApi.GetMyInboxAsync(MegaForm.Sdk.InboxQuery? query = null, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.InboxBoardDto!>!
+MegaForm.Sdk.MegaFormClient.GetMyInboxAsync(MegaForm.Sdk.InboxQuery? query = null, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.InboxBoardDto!>!
+MegaForm.Sdk.IInboxApi.GetTaskAsync(string! taskId, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.InboxTaskResultDto!>!
+MegaForm.Sdk.MegaFormClient.GetTaskAsync(string! taskId, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.InboxTaskResultDto!>!
+MegaForm.Sdk.IInboxApi.ClaimAsync(MegaForm.Sdk.InboxTaskActionRequest! request, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.InboxTaskResultDto!>!
+MegaForm.Sdk.MegaFormClient.ClaimAsync(MegaForm.Sdk.InboxTaskActionRequest! request, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.InboxTaskResultDto!>!
+MegaForm.Sdk.IInboxApi.ApproveAsync(MegaForm.Sdk.InboxTaskActionRequest! request, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.InboxTaskResultDto!>!
+MegaForm.Sdk.MegaFormClient.ApproveAsync(MegaForm.Sdk.InboxTaskActionRequest! request, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.InboxTaskResultDto!>!
+MegaForm.Sdk.IInboxApi.RejectAsync(MegaForm.Sdk.InboxTaskActionRequest! request, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.InboxTaskResultDto!>!
+MegaForm.Sdk.MegaFormClient.RejectAsync(MegaForm.Sdk.InboxTaskActionRequest! request, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.InboxTaskResultDto!>!
+MegaForm.Sdk.IInboxApi.ForwardAsync(MegaForm.Sdk.InboxTaskActionRequest! request, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.InboxTaskResultDto!>!
+MegaForm.Sdk.MegaFormClient.ForwardAsync(MegaForm.Sdk.InboxTaskActionRequest! request, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.InboxTaskResultDto!>!
+MegaForm.Sdk.IInboxApi.CommentAsync(MegaForm.Sdk.InboxTaskActionRequest! request, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.InboxTaskResultDto!>!
+MegaForm.Sdk.MegaFormClient.CommentAsync(MegaForm.Sdk.InboxTaskActionRequest! request, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.InboxTaskResultDto!>!
+MegaForm.Sdk.IInboxApi.AttachFileAsync(MegaForm.Sdk.InboxFileAttachmentRequest! request, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.InboxFileAttachmentResultDto!>!
+MegaForm.Sdk.MegaFormClient.AttachFileAsync(MegaForm.Sdk.InboxFileAttachmentRequest! request, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.InboxFileAttachmentResultDto!>!
+MegaForm.Sdk.IInboxApi.SendSubmissionAsync(MegaForm.Sdk.SendSubmissionToInboxRequest! request, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.InboxSendSubmissionResultDto!>!
+MegaForm.Sdk.MegaFormClient.SendSubmissionAsync(MegaForm.Sdk.SendSubmissionToInboxRequest! request, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.InboxSendSubmissionResultDto!>!

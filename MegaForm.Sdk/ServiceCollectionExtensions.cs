@@ -24,7 +24,9 @@ namespace MegaForm.Sdk
                 sp.GetService<IPlatformContext>(),
                 sp.GetService<IFileRepository>(),
                 sp.GetService<IStorageService>(),
-                sp.GetService<SubmissionProcessor>()));
+                sp.GetService<SubmissionProcessor>(),
+                sp.GetService<WorkflowTaskService>(),
+                sp.GetService<IWorkflowRepository>()));
             return services;
         }
     }

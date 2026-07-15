@@ -17,6 +17,15 @@ namespace MegaForm.Sdk
         /// <summary>Submission querying (FindData).</summary>
         ISubmissionApi Submissions { get; }
 
+        /// <summary>Dashboard summaries for customers building an in-host dashboard.</summary>
+        IDashboardApi Dashboard { get; }
+
+        /// <summary>Submission dashboard search, detail, and status operations.</summary>
+        ISubmissionDashboardApi SubmissionDashboard { get; }
+
+        /// <summary>Human-task inbox operations backed by the host workflow task service.</summary>
+        IInboxApi Inbox { get; }
+
         /// <summary>Uploaded-file listing + download.</summary>
         IFileApi Files { get; }
 
@@ -94,5 +103,56 @@ namespace MegaForm.Sdk
 
         /// <summary>Permanently delete a submission. No-op if the submission is not in this portal.</summary>
         Task DeleteAsync(int submissionId, MegaFormScope? scope = null, CancellationToken cancellationToken = default);
+    }
+
+    /// <summary>Read-only dashboard summaries for forms and submissions in the current host.</summary>
+    public interface IDashboardApi
+    {
+        /// <summary>Return per-form counts and recent-submission totals for the current portal.</summary>
+        Task<DashboardOverviewDto> GetOverviewAsync(DashboardQuery? query = null, MegaFormScope? scope = null, CancellationToken cancellationToken = default);
+    }
+
+    /// <summary>Submission-dashboard operations richer than the legacy <see cref="ISubmissionApi.FindAsync"/> surface.</summary>
+    public interface ISubmissionDashboardApi
+    {
+        /// <summary>Search submissions with status/search/date filters and dashboard-friendly list rows.</summary>
+        Task<PagedResult<SubmissionListItemDto>> SearchAsync(SubmissionSearchQuery query, MegaFormScope? scope = null, CancellationToken cancellationToken = default);
+
+        /// <summary>Load a submission detail payload with schema-derived values, files, and workflow summary when available.</summary>
+        Task<SubmissionDetailDto?> GetDetailAsync(int submissionId, MegaFormScope? scope = null, CancellationToken cancellationToken = default);
+
+        /// <summary>Update a submission status after checking that the submission belongs to the current portal.</summary>
+        Task UpdateStatusAsync(int submissionId, string status, MegaFormScope? scope = null, CancellationToken cancellationToken = default);
+    }
+
+    /// <summary>Human-task inbox facade for same-host dashboard integrations.</summary>
+    public interface IInboxApi
+    {
+        /// <summary>Return the current actor's workboard: incoming, in-progress, completed, and KPI counts.</summary>
+        Task<InboxBoardDto> GetMyInboxAsync(InboxQuery? query = null, MegaFormScope? scope = null, CancellationToken cancellationToken = default);
+
+        /// <summary>Load one visible task with action history and linked submission summary.</summary>
+        Task<InboxTaskResultDto> GetTaskAsync(string taskId, MegaFormScope? scope = null, CancellationToken cancellationToken = default);
+
+        /// <summary>Claim an open task for the current actor.</summary>
+        Task<InboxTaskResultDto> ClaimAsync(InboxTaskActionRequest request, MegaFormScope? scope = null, CancellationToken cancellationToken = default);
+
+        /// <summary>Approve an open task and resume the workflow.</summary>
+        Task<InboxTaskResultDto> ApproveAsync(InboxTaskActionRequest request, MegaFormScope? scope = null, CancellationToken cancellationToken = default);
+
+        /// <summary>Reject an open task and resume the workflow.</summary>
+        Task<InboxTaskResultDto> RejectAsync(InboxTaskActionRequest request, MegaFormScope? scope = null, CancellationToken cancellationToken = default);
+
+        /// <summary>Forward an open task to another user or role target.</summary>
+        Task<InboxTaskResultDto> ForwardAsync(InboxTaskActionRequest request, MegaFormScope? scope = null, CancellationToken cancellationToken = default);
+
+        /// <summary>Add a comment to an open task without changing its state.</summary>
+        Task<InboxTaskResultDto> CommentAsync(InboxTaskActionRequest request, MegaFormScope? scope = null, CancellationToken cancellationToken = default);
+
+        /// <summary>Attach a file to the task's linked submission, then return the stored file metadata.</summary>
+        Task<InboxFileAttachmentResultDto> AttachFileAsync(InboxFileAttachmentRequest request, MegaFormScope? scope = null, CancellationToken cancellationToken = default);
+
+        /// <summary>Create a one-step review task for a submission without requiring a preconfigured workflow.</summary>
+        Task<InboxSendSubmissionResultDto> SendSubmissionAsync(SendSubmissionToInboxRequest request, MegaFormScope? scope = null, CancellationToken cancellationToken = default);
     }
 }

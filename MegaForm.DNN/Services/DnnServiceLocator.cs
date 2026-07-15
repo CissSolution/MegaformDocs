@@ -210,7 +210,19 @@ namespace MegaForm.DNN.Services
 
             // Wire the public MegaForm.Sdk facade so external Razor/Blazor apps
             // can call IMegaFormClient through MegaFormSdk.RunAsync.
-            var sdkClient = new MegaFormClient(FormRepo, SubmissionRepo, null, null, null, SubmissionProcessor);
+            //
+            // Use the 8-arg constructor so ALL seven SDK surfaces work on DNN, not four:
+            //  - files + storage (DnnFileRepository / DnnDiskStorageService, both already built for
+            //    this) back IMegaFormClient.Files — without them OpenAsync always returns null and the
+            //    Razor-host download sample 404s;
+            //  - WorkflowTasks + WorkflowRepo back IMegaFormClient.Inbox and the workflow summary in
+            //    SubmissionDashboard.GetDetailAsync — without them every Inbox call throws.
+            // These are the same repositories the rest of DNN already uses, so this only exposes the
+            // existing behavior through the SDK; it does not change how files or tasks are stored.
+            var sdkClient = new MegaFormClient(
+                FormRepo, SubmissionRepo, null,
+                new DnnFileRepository(), new DnnDiskStorageService(),
+                SubmissionProcessor, WorkflowTasks, WorkflowRepo);
             MegaFormSdk.Initialize(new SingleClientServiceProvider(sdkClient));
         }
 

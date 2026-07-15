@@ -16,6 +16,30 @@ namespace MegaForm.Sdk
 
         /// <summary>Acting user id (0 = anonymous/system).</summary>
         public int UserId { get; set; }
+
+        /// <summary>Acting username, used by workflow inbox matching when available.</summary>
+        public string? UserName { get; set; }
+
+        /// <summary>Display name for audit/inbox operations when available.</summary>
+        public string? DisplayName { get; set; }
+
+        /// <summary>Acting user's email address when available.</summary>
+        public string? UserEmail { get; set; }
+
+        /// <summary>Whether the actor is authenticated. Defaults from <see cref="UserId"/> when unset.</summary>
+        public bool? IsAuthenticated { get; set; }
+
+        /// <summary>Whether the actor should be treated as a site administrator.</summary>
+        public bool? IsAdmin { get; set; }
+
+        /// <summary>Whether the actor should be treated as a host/super user.</summary>
+        public bool? IsSuperUser { get; set; }
+
+        /// <summary>Role names used by workflow role-queue matching.</summary>
+        public List<string> Roles { get; set; } = new List<string>();
+
+        /// <summary>Optional client IP for audit-oriented operations.</summary>
+        public string? IpAddress { get; set; }
     }
 
     /// <summary>A form, as exposed to SDK consumers. Decoupled from internal storage models.</summary>
@@ -229,6 +253,260 @@ namespace MegaForm.Sdk
 
         /// <summary>Number of items per page.</summary>
         public int PageSize { get; set; }
+    }
+
+    /// <summary>Filter options for an in-host dashboard overview.</summary>
+    public sealed class DashboardQuery
+    {
+        /// <summary>Optional form status filter.</summary>
+        public string? Status { get; set; }
+
+        /// <summary>Optional form title/description search term.</summary>
+        public string? Search { get; set; }
+
+        /// <summary>Recent-submission window in days.</summary>
+        public int Days { get; set; } = 30;
+
+        /// <summary>Maximum number of forms to include.</summary>
+        public int MaxForms { get; set; } = 250;
+    }
+
+    /// <summary>Dashboard-level totals and per-form summaries.</summary>
+    public sealed class DashboardOverviewDto
+    {
+        public int PortalId { get; set; }
+        public int Days { get; set; }
+        public DateTime GeneratedAtUtc { get; set; }
+        public int TotalForms { get; set; }
+        public int TotalSubmissions { get; set; }
+        public int RecentSubmissions { get; set; }
+        public IReadOnlyList<DashboardFormSummaryDto> Forms { get; set; } = Array.Empty<DashboardFormSummaryDto>();
+    }
+
+    /// <summary>One form row for dashboard overview UIs.</summary>
+    public sealed class DashboardFormSummaryDto
+    {
+        public int FormId { get; set; }
+        public string? Title { get; set; }
+        public string? Status { get; set; }
+        public DateTime? CreatedOnUtc { get; set; }
+        public int SubmissionCount { get; set; }
+        public int RecentSubmissionCount { get; set; }
+    }
+
+    /// <summary>Richer query contract for submission dashboard screens.</summary>
+    public sealed class SubmissionSearchQuery
+    {
+        public int FormId { get; set; }
+        public string? Status { get; set; }
+        public string? Search { get; set; }
+        public DateTime? DateFrom { get; set; }
+        public DateTime? DateTo { get; set; }
+        public int Page { get; set; } = 1;
+        public int PageSize { get; set; } = 50;
+    }
+
+    /// <summary>Dashboard-friendly submission list row.</summary>
+    public sealed class SubmissionListItemDto
+    {
+        public int SubmissionId { get; set; }
+        public int FormId { get; set; }
+        public string? FormTitle { get; set; }
+        public string? Status { get; set; }
+        public bool IsSpam { get; set; }
+        public decimal? SpamScore { get; set; }
+        public DateTime SubmittedOnUtc { get; set; }
+        public DateTime? ReadOnUtc { get; set; }
+        public int? UserId { get; set; }
+        public string? IpAddress { get; set; }
+        public string? SummaryText { get; set; }
+        public string? DataJson { get; set; }
+    }
+
+    /// <summary>Full submission detail payload for custom dashboards.</summary>
+    public sealed class SubmissionDetailDto
+    {
+        public SubmissionDto? Submission { get; set; }
+        public FormDto? Form { get; set; }
+        public FormSchemaInfo Schema { get; set; } = new FormSchemaInfo();
+        public IReadOnlyList<FileDto> Files { get; set; } = Array.Empty<FileDto>();
+        public IReadOnlyList<SubmissionValueDto> Values { get; set; } = Array.Empty<SubmissionValueDto>();
+        public IReadOnlyList<SubmissionFieldSnapshotDto> FieldSnapshots { get; set; } = Array.Empty<SubmissionFieldSnapshotDto>();
+        public bool HasSnapshot { get; set; }
+        public SubmissionWorkflowSummaryDto Workflow { get; set; } = new SubmissionWorkflowSummaryDto();
+    }
+
+    /// <summary>A display value produced by flattening a submission against its schema.</summary>
+    public sealed class SubmissionValueDto
+    {
+        public string? Key { get; set; }
+        public string? Value { get; set; }
+    }
+
+    /// <summary>Stored field snapshot captured at submit time.</summary>
+    public sealed class SubmissionFieldSnapshotDto
+    {
+        public string? FieldKey { get; set; }
+        public string? FieldLabel { get; set; }
+        public string? FieldType { get; set; }
+        public string? RawValue { get; set; }
+        public string? DisplayValue { get; set; }
+        public int SortOrder { get; set; }
+        public bool IsLegacyFallback { get; set; }
+    }
+
+    /// <summary>Workflow summary attached to a submission detail.</summary>
+    public sealed class SubmissionWorkflowSummaryDto
+    {
+        public bool HasWorkflow { get; set; }
+        public string? ActiveTaskId { get; set; }
+        public string? ActiveNodeLabel { get; set; }
+        public string? CaseStatus { get; set; }
+        public string? ExecutionStatus { get; set; }
+        public int TaskCount { get; set; }
+        public int OpenTaskCount { get; set; }
+        public int ActionCount { get; set; }
+        public IReadOnlyList<InboxTaskDto> Tasks { get; set; } = Array.Empty<InboxTaskDto>();
+        public IReadOnlyList<InboxTaskActionDto> Actions { get; set; } = Array.Empty<InboxTaskActionDto>();
+    }
+
+    /// <summary>Options for the current actor's inbox board.</summary>
+    public sealed class InboxQuery
+    {
+        public int RecentCompleted { get; set; } = 25;
+    }
+
+    /// <summary>Inbox board split into incoming, in-progress, and completed lanes.</summary>
+    public sealed class InboxBoardDto
+    {
+        public InboxUserDto User { get; set; } = new InboxUserDto();
+        public InboxKpiDto Kpis { get; set; } = new InboxKpiDto();
+        public IReadOnlyList<InboxTaskDto> Incoming { get; set; } = Array.Empty<InboxTaskDto>();
+        public IReadOnlyList<InboxTaskDto> InProgress { get; set; } = Array.Empty<InboxTaskDto>();
+        public IReadOnlyList<InboxTaskDto> Completed { get; set; } = Array.Empty<InboxTaskDto>();
+        public DateTime GeneratedAtUtc { get; set; }
+    }
+
+    public sealed class InboxUserDto
+    {
+        public int UserId { get; set; }
+        public string? UserName { get; set; }
+        public string? DisplayName { get; set; }
+        public bool IsAdmin { get; set; }
+    }
+
+    public sealed class InboxKpiDto
+    {
+        public int Incoming { get; set; }
+        public int InProgress { get; set; }
+        public int Completed { get; set; }
+        public int Overdue { get; set; }
+    }
+
+    /// <summary>One human workflow task row.</summary>
+    public sealed class InboxTaskDto
+    {
+        public string? TaskId { get; set; }
+        public string? CaseId { get; set; }
+        public string? ExecutionId { get; set; }
+        public int FormId { get; set; }
+        public int SubmissionId { get; set; }
+        public string? NodeId { get; set; }
+        public string? NodeLabel { get; set; }
+        public string? Status { get; set; }
+        public IReadOnlyList<string> CandidateRoles { get; set; } = Array.Empty<string>();
+        public IReadOnlyList<string> CandidateUsers { get; set; } = Array.Empty<string>();
+        public int? AssignedUserId { get; set; }
+        public string? AssignedUserName { get; set; }
+        public string? AssignedDisplayName { get; set; }
+        public bool AllowClaim { get; set; }
+        public bool AllowForward { get; set; }
+        public bool AllowReassign { get; set; }
+        public string? Outcome { get; set; }
+        public string? Comment { get; set; }
+        public DateTime CreatedAtUtc { get; set; }
+        public DateTime? ClaimedAtUtc { get; set; }
+        public DateTime? DueAtUtc { get; set; }
+        public DateTime? CompletedAtUtc { get; set; }
+    }
+
+    /// <summary>Action request used by claim/approve/reject/forward/comment.</summary>
+    public sealed class InboxTaskActionRequest
+    {
+        public string TaskId { get; set; } = string.Empty;
+        public string? Comment { get; set; }
+        public string? TargetUser { get; set; }
+        public Dictionary<string, object>? Data { get; set; }
+    }
+
+    /// <summary>File attachment request for a workflow inbox task.</summary>
+    public sealed class InboxFileAttachmentRequest
+    {
+        public string TaskId { get; set; } = string.Empty;
+        public string FieldKey { get; set; } = "inbox_attachment";
+        public string FileName { get; set; } = "attachment";
+        public string ContentType { get; set; } = "application/octet-stream";
+        public System.IO.Stream Content { get; set; } = System.IO.Stream.Null;
+        public long? SizeBytes { get; set; }
+    }
+
+    /// <summary>Request to route a submission into a user's inbox without a prebuilt workflow.</summary>
+    public sealed class SendSubmissionToInboxRequest
+    {
+        public int FormId { get; set; }
+        public int SubmissionId { get; set; }
+        public string TargetUser { get; set; } = string.Empty;
+        public string? Title { get; set; }
+        public string? Comment { get; set; }
+    }
+
+    /// <summary>Result of a workflow task operation.</summary>
+    public sealed class InboxTaskResultDto
+    {
+        public bool Success { get; set; }
+        public string? Error { get; set; }
+        public InboxTaskDto? Task { get; set; }
+        public SubmissionDto? Submission { get; set; }
+        public IReadOnlyList<FileDto> Files { get; set; } = Array.Empty<FileDto>();
+        public IReadOnlyList<InboxTaskActionDto> Actions { get; set; } = Array.Empty<InboxTaskActionDto>();
+    }
+
+    /// <summary>Result of attaching a file through the inbox facade.</summary>
+    public sealed class InboxFileAttachmentResultDto
+    {
+        public bool Success { get; set; }
+        public string? Error { get; set; }
+        public FileDto? File { get; set; }
+        public InboxTaskResultDto? Task { get; set; }
+    }
+
+    /// <summary>Result of sending a submission to an inbox.</summary>
+    public sealed class InboxSendSubmissionResultDto
+    {
+        public bool Success { get; set; }
+        public string? TaskId { get; set; }
+        public string? AssignedTo { get; set; }
+        public int FormId { get; set; }
+        public int SubmissionId { get; set; }
+    }
+
+    /// <summary>One workflow task action/audit entry.</summary>
+    public sealed class InboxTaskActionDto
+    {
+        public string? ActionId { get; set; }
+        public string? TaskId { get; set; }
+        public string? CaseId { get; set; }
+        public string? ExecutionId { get; set; }
+        public int FormId { get; set; }
+        public int SubmissionId { get; set; }
+        public string? ActionType { get; set; }
+        public int? ActorUserId { get; set; }
+        public string? ActorUserName { get; set; }
+        public string? ActorDisplayName { get; set; }
+        public string? TargetUser { get; set; }
+        public string? Outcome { get; set; }
+        public string? Comment { get; set; }
+        public DateTime CreatedAtUtc { get; set; }
     }
 
     /// <summary>

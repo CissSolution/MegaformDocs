@@ -1,6 +1,11 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using MegaForm.Core.Models;
+using MegaForm.Core.Services;
+using MegaForm.Core.Workflow;
 using Xunit;
 
 namespace MegaForm.Sdk.Tests
@@ -79,6 +84,68 @@ namespace MegaForm.Sdk.Tests
             Assert.Equal(2, page.Items.Count);   // page size honored
             Assert.Equal(5, page.TotalCount);    // real total from the repository
             Assert.Equal(1, page.Page);
+        }
+
+        [Fact]
+        public async Task Dashboard_overview_counts_forms_and_recent_submissions()
+        {
+            var (client, _, subs) = NewClient();
+            var a = await client.Forms.CreateFormAsync(new CreateFormRequest { Title = "A", Status = "published" }, Scope);
+            var b = await client.Forms.CreateFormAsync(new CreateFormRequest { Title = "B", Status = "published" }, Scope);
+
+            subs.Insert(new SubmissionInfo { FormId = a.FormId, Status = "new", DataJson = "{}", SubmittedOnUtc = DateTime.UtcNow.AddDays(-1) });
+            subs.Insert(new SubmissionInfo { FormId = a.FormId, Status = "new", DataJson = "{}", SubmittedOnUtc = DateTime.UtcNow.AddDays(-40) });
+            subs.Insert(new SubmissionInfo { FormId = b.FormId, Status = "new", DataJson = "{}", SubmittedOnUtc = DateTime.UtcNow });
+
+            var overview = await client.Dashboard.GetOverviewAsync(new DashboardQuery { Days = 30 }, Scope);
+
+            Assert.Equal(2, overview.TotalForms);
+            Assert.Equal(3, overview.TotalSubmissions);
+            Assert.Equal(2, overview.RecentSubmissions);
+            Assert.Contains(overview.Forms, f => f.FormId == a.FormId && f.SubmissionCount == 2);
+        }
+
+        [Fact]
+        public async Task SubmissionDashboard_search_detail_and_status_roundtrip()
+        {
+            var forms = new InMemoryFormRepository();
+            var subs = new InMemorySubmissionRepository();
+            var files = new InMemoryFileRepository();
+            var client = new MegaFormClient(forms, subs, null, files);
+            var form = await client.Forms.CreateFormAsync(
+                new CreateFormRequest { Title = "Leads", Status = "published", SchemaJson = OneRequiredTextSchema },
+                Scope);
+            var subId = subs.Insert(new SubmissionInfo
+            {
+                FormId = form.FormId,
+                Status = "new",
+                DataJson = "{\"name\":\"Alice\"}",
+                SubmittedOnUtc = DateTime.UtcNow
+            });
+            files.InsertFile(new MegaForm.Core.Models.FileInfo
+            {
+                SubmissionId = subId,
+                FieldKey = "resume",
+                OriginalName = "resume.pdf",
+                StoredPath = "uploads/resume.pdf",
+                ContentType = "application/pdf",
+                FileSizeBytes = 12
+            });
+
+            var page = await client.SubmissionDashboard.SearchAsync(
+                new SubmissionSearchQuery { FormId = form.FormId, Search = "Alice", Page = 1, PageSize = 10 },
+                Scope);
+            Assert.Single(page.Items);
+            Assert.Contains("Alice", page.Items[0].SummaryText);
+
+            var detail = await client.SubmissionDashboard.GetDetailAsync(subId, Scope);
+            Assert.NotNull(detail);
+            Assert.Equal("Leads", detail!.Form!.Title);
+            Assert.Single(detail.Files);
+            Assert.Contains(detail.Values, v => (v.Value ?? "").Contains("Alice", StringComparison.OrdinalIgnoreCase));
+
+            await client.SubmissionDashboard.UpdateStatusAsync(subId, "approved", Scope);
+            Assert.Equal("approved", subs.Get(subId)!.Status);
         }
 
         [Fact]
@@ -272,6 +339,116 @@ namespace MegaForm.Sdk.Tests
 
             await client.Submissions.DeleteAsync(subId, Scope);
             Assert.Null(subs.Get(subId));       // owner can delete
+        }
+
+        [Fact]
+        public async Task Inbox_workboard_claim_and_attach_file_roundtrip()
+        {
+            var forms = new InMemoryFormRepository();
+            var subs = new InMemorySubmissionRepository();
+            var files = new InMemoryFileRepository();
+            var storage = new InMemoryStorage();
+            var workflowRepo = new InMemoryWorkflowRepository();
+            var workflowTasks = new WorkflowTaskService(workflowRepo, new FakeWorkflowEngine(), subs);
+            var client = new MegaFormClient(forms, subs, null, files, storage, null, workflowTasks, workflowRepo);
+            var scope = new MegaFormScope
+            {
+                PortalId = 7,
+                UserId = 42,
+                UserName = "manager",
+                DisplayName = "Manager",
+                IsAuthenticated = true,
+                Roles = new List<string> { "Manager" }
+            };
+            var form = await client.Forms.CreateFormAsync(new CreateFormRequest { Title = "Approvals", Status = "published" }, scope);
+            var subId = subs.Insert(new SubmissionInfo { FormId = form.FormId, Status = "pending_approval", DataJson = "{}" });
+            var task = SaveTask(workflowRepo, form.FormId, subId, WorkflowTaskStatus.Pending, candidateRole: "Manager");
+
+            var board = await client.Inbox.GetMyInboxAsync(new InboxQuery(), scope);
+            Assert.Single(board.Incoming);
+
+            var claimed = await client.Inbox.ClaimAsync(new InboxTaskActionRequest { TaskId = task.TaskId, Comment = "Taking it" }, scope);
+            Assert.True(claimed.Success);
+            Assert.Equal("Claimed", claimed.Task!.Status);
+
+            var attachment = await client.Inbox.AttachFileAsync(new InboxFileAttachmentRequest
+            {
+                TaskId = task.TaskId,
+                FieldKey = "approval_file",
+                FileName = "decision.pdf",
+                ContentType = "application/pdf",
+                Content = new MemoryStream(System.Text.Encoding.ASCII.GetBytes("%PDF-1.4\nbody"))
+            }, scope);
+
+            Assert.True(attachment.Success);
+            Assert.Equal("decision.pdf", attachment.File!.FileName);
+            Assert.Single(attachment.Task!.Files);
+            Assert.Equal("decision.pdf", attachment.Task.Files[0].FileName);
+        }
+
+        [Fact]
+        public async Task Inbox_forward_and_approve_use_core_workflow_service()
+        {
+            var forms = new InMemoryFormRepository();
+            var subs = new InMemorySubmissionRepository();
+            var workflowRepo = new InMemoryWorkflowRepository();
+            var workflowTasks = new WorkflowTaskService(workflowRepo, new FakeWorkflowEngine(), subs);
+            var client = new MegaFormClient(forms, subs, null, null, null, null, workflowTasks, workflowRepo);
+            var scope = new MegaFormScope { PortalId = 7, UserId = 42, UserName = "manager", DisplayName = "Manager", IsAuthenticated = true };
+            var form = await client.Forms.CreateFormAsync(new CreateFormRequest { Title = "Workflow", Status = "published" }, scope);
+
+            var forwardSubId = subs.Insert(new SubmissionInfo { FormId = form.FormId, Status = "pending_approval", DataJson = "{}" });
+            var forwardTask = SaveTask(workflowRepo, form.FormId, forwardSubId, WorkflowTaskStatus.Claimed, assignedUserId: 42, assignedUserName: "manager");
+            var forwarded = await client.Inbox.ForwardAsync(new InboxTaskActionRequest { TaskId = forwardTask.TaskId, TargetUser = "auditor", Comment = "Please review" }, scope);
+            Assert.True(forwarded.Success);
+            Assert.Equal("auditor", forwarded.Task!.AssignedUserName);
+            Assert.Contains(forwarded.Actions, a => a.ActionType == "Forwarded");
+
+            var approveSubId = subs.Insert(new SubmissionInfo { FormId = form.FormId, Status = "pending_approval", DataJson = "{}" });
+            var approveTask = SaveTask(workflowRepo, form.FormId, approveSubId, WorkflowTaskStatus.Claimed, assignedUserId: 42, assignedUserName: "manager");
+            var approved = await client.Inbox.ApproveAsync(new InboxTaskActionRequest { TaskId = approveTask.TaskId, Comment = "Looks good" }, scope);
+            Assert.True(approved.Success);
+            Assert.Equal("Completed", approved.Task!.Status);
+            Assert.Equal("approved", subs.Get(approveSubId)!.Status);
+        }
+
+        private static WorkflowTaskInstance SaveTask(
+            InMemoryWorkflowRepository repo,
+            int formId,
+            int submissionId,
+            WorkflowTaskStatus status,
+            string candidateRole = null,
+            int? assignedUserId = null,
+            string assignedUserName = null)
+        {
+            var task = new WorkflowTaskInstance
+            {
+                CaseId = Guid.NewGuid().ToString("N"),
+                ExecutionId = Guid.NewGuid().ToString("N"),
+                FormId = formId,
+                SubmissionId = submissionId,
+                NodeId = "review",
+                NodeLabel = "Review",
+                Status = status,
+                AssignedUserId = assignedUserId,
+                AssignedUserName = assignedUserName ?? string.Empty,
+                AssignedDisplayName = assignedUserName ?? string.Empty,
+                CandidateRoles = string.IsNullOrWhiteSpace(candidateRole) ? new List<string>() : new List<string> { candidateRole },
+                AllowClaim = true,
+                AllowForward = true,
+                AllowReassign = true
+            };
+            repo.SaveCase(new WorkflowCaseInstance
+            {
+                CaseId = task.CaseId,
+                ExecutionId = task.ExecutionId,
+                FormId = formId,
+                SubmissionId = submissionId,
+                ActiveTaskId = task.TaskId,
+                Status = WorkflowCaseStatus.Waiting
+            });
+            repo.SaveTask(task);
+            return task;
         }
 
         [Fact]
