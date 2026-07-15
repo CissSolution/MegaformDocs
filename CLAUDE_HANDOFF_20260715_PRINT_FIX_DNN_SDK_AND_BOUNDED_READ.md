@@ -58,7 +58,17 @@ site `bin` → touch `web.config` recycle → warm 200. **Giờ Files + Inbox + 
 **Kéo theo — doc phải mô tả DNN full parity** (KHÔNG còn "Inbox throws / Files empty" như draft workflow ban đầu
 viết trước khi tôi fix). CÒN THIẾU: verify runtime Files.OpenAsync trả file thật (cần razor host page + submission có file).
 
-## 3) Bounded-read audit — 13 finding CONFIRMED (adversarial verify), RULE cần viết tay
+## 3) Bounded-read audit — 13 finding CONFIRMED; RULE viết xong, fixes tier 1+2 SHIPPED
+
+> **CẬP NHẬT 07-15:** RULE đã viết (CLAUDE.md #11 + SECURITY §11, commit `7aeb10d`).
+> **Tier 1 (critical anonymous OOM) — DONE + deploy + commit `458fffd`:** cap `MAX_OPTION_ROWS=500`
+> tại `FieldOptionsService.GetSqlOptions`, `DataRepeaterService.ExecuteFilterQuery` + `ExecuteOptionsQuery`
+> (Core → 4 platform). **Tier 2 (perf timeout) — DONE + commit `edfcb9a`:** Reports FormsOverview GROUP BY
+> per-(form,day) port sang Web/Umbraco/DNN (Oqtane có sẵn). Build cả 4 platform 0-error, deploy DNN site.
+> **CÒN follow-up (thấp hơn):** (a) `DataRepeaterService.ExecuteSql:718` in-memory pagination — ĐÃ bounded
+> ở 5000, refactor real OFFSET/FETCH rủi ro (ORDER BY/provider) → cần QA kỹ; (b) Reports `Backfill:258`
+> (admin, keyset-paged loop); (c) FormsOverview `ListForms(pageSize:0)` nạp mọi form blob (admin).
+
 
 Workflow `bounded-read-audit` (wf_f2ce09d5-427): 60 candidate → **13 confirmed** / 47 refuted. Output đầy đủ:
 `…/tasks/w044rfmch.output` (3323 dòng JSON, `.result.confirmed[]`). Các finding load-bearing:
