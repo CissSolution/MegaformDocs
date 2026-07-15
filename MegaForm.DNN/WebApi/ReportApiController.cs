@@ -135,10 +135,14 @@ namespace MegaForm.WebApi
                         allTime[r.GetInt32(0)] = r.GetInt32(1);
                 }
 
-                // Window rows → per-day series bucket.
+                // [Bounded-read 2026-07-15] Per-(form, day) count IN SQL — was streaming one row per
+                // submission in the window just to bucket a sparkline (times out on a busy site). The
+                // result set is now at most forms × days rows. (idList is a server-built list of the
+                // admin's own form ids, not client SQL.) Mirrors the Oqtane/Web/Umbraco twins.
                 using (var cmd = new SqlCommand(
-                    "SELECT FormId, SubmittedOnUtc FROM MF_Submissions " +
-                    "WHERE IsSpam = 0 AND SubmittedOnUtc >= @Since AND FormId IN (" + idList + ")", conn))
+                    "SELECT FormId, CAST(SubmittedOnUtc AS date) AS D, COUNT(*) FROM MF_Submissions " +
+                    "WHERE IsSpam = 0 AND SubmittedOnUtc >= @Since AND FormId IN (" + idList + ") " +
+                    "GROUP BY FormId, CAST(SubmittedOnUtc AS date)", conn))
                 {
                     cmd.Parameters.AddWithValue("@Since", since);
                     using (var r = cmd.ExecuteReader())
@@ -147,9 +151,10 @@ namespace MegaForm.WebApi
                         {
                             int fid = r.GetInt32(0);
                             var dt = r.GetDateTime(1);
+                            int cnt = r.GetInt32(2);
                             int idx = (int)(dt.Date - since).TotalDays;
                             if (idx >= 0 && idx < days && seriesByForm.TryGetValue(fid, out var arr))
-                                arr[idx]++;
+                                arr[idx] += cnt;
                         }
                     }
                 }

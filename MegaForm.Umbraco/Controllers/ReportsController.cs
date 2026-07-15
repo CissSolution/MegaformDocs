@@ -1,26 +1,25 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Linq;
 using MegaForm.Core.Interfaces;
 using MegaForm.Core.Models;
 using MegaForm.Core.Services;
 using MegaForm.Core.Utilities;
-using MegaForm.Web.Data;
+using MegaForm.Umbraco.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using Umbraco.Cms.Web.Common.Authorization;
 
-namespace MegaForm.Web.Controllers
+namespace MegaForm.Umbraco.Controllers
 {
     /// <summary>
-    /// MegaForm Reporting API for ASP.NET Core hosts.
-    /// Mirrors Oqtane/DNN: List / Get / Save / Delete / SubmissionData / Backfill.
+    /// MegaForm Reporting API for Umbraco.
+    /// Mirrors Web/Oqtane: List / Get / Save / Delete / SubmissionData / Backfill.
     /// </summary>
-    [Route("api/MegaForm/Reports")]
-    [IgnoreAntiforgeryToken]
-    [Authorize(Roles = "Administrator")]
+    [Route("/umbraco/MegaForm/MegaFormApi/[controller]")]
+    [Authorize(Policy = "MegaFormBackOffice")]
     public class ReportsController : ControllerBase
     {
         private readonly MegaFormDbContext _db;
@@ -68,10 +67,6 @@ namespace MegaForm.Web.Controllers
             });
         }
 
-        // ── FormsOverview ─────────────────────────────────────────────────────
-        // WPForms-style entries overview: per-form created date, all-time submission
-        // count, last-N-days count and a daily series for a sparkline.
-        //   GET /api/MegaForm/Reports/FormsOverview?days=30&siteId=1
         [HttpGet("FormsOverview")]
         public IActionResult FormsOverview(int days = 30, int siteId = 0)
         {
@@ -94,10 +89,9 @@ namespace MegaForm.Web.Controllers
                 .ToList()
                 .ToDictionary(x => x.FormId, x => x.Count);
 
-            // [Bounded-read 2026-07-15] Count per (form, day) IN SQL — this used to project every
-            // submission in the window into memory just to draw a sparkline (a million rows on a busy
-            // site → ~30s and a timed-out Submissions landing page). Ported from the Oqtane twin
-            // (MegaFormController.Reports.cs). The result set is now at most forms × days rows.
+            // [Bounded-read 2026-07-15] Count per (form, day) IN SQL — was materialising every
+            // submission in the window just for a sparkline (times out on a busy site). Ported from
+            // the Oqtane twin. Result set is at most forms × days rows.
             var dayCounts = _db.Submissions.AsNoTracking()
                 .Where(s => !s.IsSpam && s.SubmittedOnUtc >= since && formIds.Contains(s.FormId))
                 .GroupBy(s => new { s.FormId, Day = s.SubmittedOnUtc.Date })
