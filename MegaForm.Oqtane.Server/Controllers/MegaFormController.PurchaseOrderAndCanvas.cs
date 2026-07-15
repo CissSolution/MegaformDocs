@@ -62,6 +62,11 @@ namespace MegaForm.Oqtane.Server.Controllers
         //    pendingSubmissions: [{ submissionId, nodeId, status, assignedUserName, createdAt }]
         //  }
         // ════════════════════════════════════════════════════════════════════
+        // [SecFix 20260715] Was ANONYMOUS (class has no [Authorize]; auth is per-action here and this
+        // action had none) — it returned workflow task counts + pending submissions (submissionId,
+        // assignee, dueAt) to any caller. It is an admin/builder view, so gate it EditModule like the
+        // other management reads (SECURITY_CODING_RULES §1/§7 — never expose submission data un-authed).
+        [Authorize(Policy = "EditModule")]
         [HttpGet("Workflow/CanvasView")]
         public IActionResult GetWorkflowCanvasView([FromQuery] int formId)
         {
