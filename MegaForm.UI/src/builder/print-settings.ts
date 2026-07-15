@@ -67,14 +67,29 @@
   };
 
   // ── Get/Set settings from Builder ────────────────────────────────────────
+  //
+  // The builder keeps ONE canonical settings object at state.schema.settings; the form's Save
+  // serializes it as-is (normalizeSettingsShape clones and never strips unknown keys). The Theme
+  // tab writes there directly and persists — this tab did not.
+  //
+  // It called MegaFormBuilder.getSettings()/updateSettings(), and core.ts exports NEITHER (see the
+  // public surface at the bottom of core.ts). Both calls were undefined, so reading fell back to
+  // DEFAULTS and writing fell through to a POST to Form/SavePrintSettings — a route no platform
+  // serves — whose 404 was swallowed by an empty .catch(). printSettings was therefore never
+  // persisted on ANY platform: every exported form carries "printSettings": null.
+  function builderSettings() {
+    var builder = window.MegaFormBuilder;
+    if (!builder || !builder.state) return null;
+    if (!builder.state.schema) builder.state.schema = { fields: [], settings: {} };
+    if (!builder.state.schema.settings) builder.state.schema.settings = {};
+    return builder.state.schema.settings;
+  }
+
   function getSettings() {
     var settings = {};
     try {
-      var builder = window.MegaFormBuilder;
-      if (builder && builder.getSettings) {
-        var raw = builder.getSettings();
-        settings = (raw && raw.printSettings) || {};
-      }
+      var s = builderSettings();
+      settings = (s && (s.printSettings || s.PrintSettings)) || {};
     } catch (e) {}
     return Object.assign({}, DEFAULTS, settings);
   }
@@ -92,41 +107,18 @@
     return '/f/' + formId + '/print';
   }
 
+  // Write into the canonical schema and let the form's own Save carry it — the Theme tab's model.
+  // Both casings, because SettingsJson is overlaid onto SchemaJson per-key on the render path
+  // (RenderModelResolver.OverlaySavedSettings) and the server binds FormSettings.PrintSettings.
+  // There is no print-specific endpoint to call: a separate POST is what made this look saved
+  // while the form's Save quietly wrote printSettings: null over it.
   function saveSettings(state) {
     try {
-      var builder = window.MegaFormBuilder;
-      if (builder && builder.updateSettings) {
-        builder.updateSettings({ printSettings: state });
-        return;
-      }
-      // Fallback: save directly via API
-      // BUG FIX 1: apiBase already IS the DNN API base (/DesktopModules/MegaForm/API/).
-      // Prepending '/api/MegaForm/' duplicated the prefix → wrong URL on DNN.
-      // BUG FIX 2: no DNN auth headers → 401 on [DnnAuthorize] endpoints.
-      var formId = parseInt((document.getElementById('mf-builder-form-id') || {}).value) || 0;
-      var apiBase = (document.getElementById('mf-builder-api-url') || {}).value || '';
-      if (!formId || !apiBase) return;
-      var _psfHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
-      try {
-        var _pplt = (window as any).__MF_PLATFORM__?.platform || (window as any).PLATFORM || 'aspcore';
-        var _pmid = (window as any).__MF_PLATFORM__?.moduleId || (window as any).MODULE_ID || 0;
-        if (String(_pplt).toLowerCase() === 'dnn' && _pmid > 0) {
-          var _pjq = (window as any).jQuery || (window as any).$;
-          var _psf = _pjq && _pjq.ServicesFramework && _pjq.ServicesFramework(_pmid);
-          if (_psf && _psf.getAntiForgeryValue()) {
-            _psfHeaders['RequestVerificationToken'] = _psf.getAntiForgeryValue();
-            _psfHeaders['TabId']    = String(_psf.getTabId ? _psf.getTabId() : 0);
-            _psfHeaders['ModuleId'] = String(_psf.getModuleId ? _psf.getModuleId() : _pmid);
-          }
-        }
-      } catch (_) {}
-      // Use apiBase directly (already points to the correct platform API root)
-      var cleanApi = apiBase.replace(/\/?$/, '/');
-      fetch(cleanApi + 'Form/SavePrintSettings', {
-        method: 'POST',
-        headers: _psfHeaders,
-        body: JSON.stringify({ formId: formId, printSettings: state }),
-      }).catch(function() {});
+      var s = builderSettings();
+      if (!s) return;
+      s.printSettings = state;
+      s.PrintSettings = state;
+      try { window.MegaFormBuilder.state.isDirty = true; } catch (_e) {}
     } catch (e) {}
   }
 
