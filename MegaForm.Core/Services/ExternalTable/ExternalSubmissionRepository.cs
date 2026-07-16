@@ -26,17 +26,20 @@ namespace MegaForm.Core.Services.ExternalTable
         private readonly IExternalBindingStore _bindings;
         private readonly IExternalRowMapStore _rowMap;
         private readonly ExternalTableQueryService _query;
+        private readonly DatabaseInsertBindingResolver _databaseInsert;
 
         public ExternalSubmissionRepository(
             ISubmissionRepository inner,
             IExternalBindingStore bindings,
             IExternalRowMapStore rowMap,
-            ExternalTableQueryService query)
+            ExternalTableQueryService query,
+            DatabaseInsertBindingResolver databaseInsert = null)
         {
             _inner = inner;
             _bindings = bindings;
             _rowMap = rowMap;
             _query = query;
+            _databaseInsert = databaseInsert;
         }
 
         // ------------------------------------------------------------------ read
@@ -44,14 +47,22 @@ namespace MegaForm.Core.Services.ExternalTable
         public (List<SubmissionInfo> Items, int TotalCount) List(int formId, string status = null, string search = null,
             DateTime? dateFrom = null, DateTime? dateTo = null, int pageIndex = 0, int pageSize = 50)
         {
-            var binding = formId > 0 ? _bindings.GetByForm(formId) : null;
-            if (binding == null)
+            // [SourcePicker v20260715] The ambient scope routes this call: json forces MF_Submissions,
+            // sql forces the external table (ATBE binding first, else databaseInsert mirror), auto
+            // keeps the pre-existing behavior. The scope also carries the outcome back so the
+            // controller can echo which source ACTUALLY answered (never claim sql while serving json).
+            var scope = ExternalSourceContext.Current;
+            var source = ExternalSourceContext.Source;
+
+            var binding = formId > 0 && source != ExternalSourceScope.Json ? _bindings.GetByForm(formId) : null;
+
+            if (binding == null && source != ExternalSourceScope.Sql)
+            {
+                if (scope != null) scope.AppliedSource = ExternalSourceScope.Json;
                 return _inner.List(formId, status, search, dateFrom, dateTo, pageIndex, pageSize);
+            }
 
-            var profile = Profile(binding);
-            if (profile == null) return (new List<SubmissionInfo>(), 0);
-
-            var page = _query.List(binding, profile, new ExternalTableQueryService.Query
+            var externalQuery = new ExternalTableQueryService.Query
             {
                 Status = status,
                 Search = search,
@@ -59,21 +70,60 @@ namespace MegaForm.Core.Services.ExternalTable
                 DateTo = dateTo,
                 PageIndex = pageIndex,
                 PageSize = pageSize,
-            });
+            };
 
-            if (page.Rows.Count == 0) return (new List<SubmissionInfo>(), Math.Max(0, page.TotalCount));
-
-            // One round trip for the whole page: minting anchors row by row would be N+1 against our
-            // own database on every page of a 500k-row table.
-            var anchorIds = _rowMap.GetOrCreateAnchors(formId, page.Rows.Select(r => r.RowKeyJson).ToList());
-
-            var items = new List<SubmissionInfo>(page.Rows.Count);
-            for (int i = 0; i < page.Rows.Count && i < anchorIds.Count; i++)
+            if (binding != null)
             {
-                var r = page.Rows[i];
-                items.Add(new SubmissionInfo
+                var profile = Profile(binding);
+                if (profile == null) return (new List<SubmissionInfo>(), 0);
+
+                var page = _query.List(binding, profile, externalQuery);
+                MarkScope(scope, binding, page);
+
+                if (page.Rows.Count == 0) return (new List<SubmissionInfo>(), Math.Max(0, page.TotalCount));
+
+                // One round trip for the whole page: minting anchors row by row would be N+1 against our
+                // own database on every page of a 500k-row table.
+                var anchorIds = _rowMap.GetOrCreateAnchors(formId, page.Rows.Select(r => r.RowKeyJson).ToList());
+
+                var items = new List<SubmissionInfo>(page.Rows.Count);
+                for (int i = 0; i < page.Rows.Count && i < anchorIds.Count; i++)
                 {
-                    SubmissionId = anchorIds[i],
+                    var r = page.Rows[i];
+                    items.Add(new SubmissionInfo
+                    {
+                        SubmissionId = anchorIds[i],
+                        FormId = formId,
+                        DataJson = r.DataJson,
+                        Status = r.Status,
+                        SubmittedOnUtc = r.SubmittedOnUtc,
+                    });
+                }
+
+                return (items, Math.Max(0, page.TotalCount));
+            }
+
+            // source == "sql" with no ATBE binding: read the databaseInsert mirror table. Fail-CLOSED
+            // on any resolution failure — an empty page with AppliedSource unset is an honest "no SQL
+            // source here", where falling back to _inner would silently serve JSON labeled as SQL.
+            var resolved = _databaseInsert != null ? _databaseInsert.Resolve(formId) : null;
+            if (resolved == null || resolved.Profile == null)
+                return (new List<SubmissionInfo>(), 0);
+
+            var sqlPage = _query.List(resolved.Binding, resolved.Profile, externalQuery);
+            MarkScope(scope, resolved.Binding, sqlPage);
+
+            // Synthetic NEGATIVE ids, no anchors: this form's MF_Submissions rows are REAL submissions
+            // (the table is a mirror written post-submit) — minting anchor rows would inject phantom
+            // records into the form's own JSON view. Negative ids also tell the client these rows are
+            // read-only (no row-open / status / delete).
+            var sqlItems = new List<SubmissionInfo>(sqlPage.Rows.Count);
+            for (int i = 0; i < sqlPage.Rows.Count; i++)
+            {
+                var r = sqlPage.Rows[i];
+                sqlItems.Add(new SubmissionInfo
+                {
+                    SubmissionId = -(Math.Max(0, pageIndex) * Math.Max(1, pageSize) + i + 1),
                     FormId = formId,
                     DataJson = r.DataJson,
                     Status = r.Status,
@@ -81,7 +131,16 @@ namespace MegaForm.Core.Services.ExternalTable
                 });
             }
 
-            return (items, Math.Max(0, page.TotalCount));
+            return (sqlItems, Math.Max(0, sqlPage.TotalCount));
+        }
+
+        private static void MarkScope(ExternalSourceScope scope, ExternalBinding binding, ExternalTableQueryService.Page page)
+        {
+            if (scope == null) return;
+            scope.AppliedSource = ExternalSourceScope.Sql;
+            scope.TotalIsBounded = page.TotalIsBounded;
+            scope.Table = binding.Table ?? string.Empty;
+            scope.SchemaName = binding.Schema ?? string.Empty;
         }
 
         public SubmissionInfo Get(int submissionId)

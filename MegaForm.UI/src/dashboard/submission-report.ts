@@ -314,17 +314,29 @@ async function loadFieldSchema(formId: number): Promise<{ title: string; fields:
   } catch { return { title: '', fields: [] }; }
 }
 
-async function loadSubmissions(formId: number): Promise<Submission[]> {
-  const r = await fetch(apiBase() + 'Submissions?formId=' + formId + '&pageSize=2000', { credentials: 'same-origin', headers: csrfHeaders(), cache: 'no-store' });
+// [SourcePicker v20260716] source='sql' reads the live SQL table the form mirrors (same unified
+// Submissions endpoint as the dashboard — the server routes and echoes what actually answered).
+// The echo fields drive the report's own source toggle; trust only them, never the request.
+async function loadSubmissions(formId: number, source?: string): Promise<{
+  subs: Submission[]; sqlCapable: boolean; appliedSource: string; sqlTable: string;
+}> {
+  const src = source === 'sql' ? '&source=sql' : '';
+  const r = await fetch(apiBase() + 'Submissions?formId=' + formId + '&pageSize=2000' + src, { credentials: 'same-origin', headers: csrfHeaders(), cache: 'no-store' });
   if (!r.ok) throw new Error('HTTP ' + r.status);
   const j: any = await r.json();
   const items = j.items || j.Items || [];
-  return items.map((it: any) => {
+  const subs = items.map((it: any) => {
     let data: Record<string, any> = {};
     const raw = it.dataJson || it.DataJson;
     try { data = raw ? JSON.parse(raw) : {}; } catch { data = {}; }
     return { id: it.submissionId || it.SubmissionId, submittedOnUtc: it.submittedOnUtc || it.SubmittedOnUtc, status: it.status || it.Status || '', data };
   });
+  return {
+    subs,
+    sqlCapable: (j.sqlCapable ?? j.SqlCapable) === true,
+    appliedSource: j.source ?? j.Source ?? '',
+    sqlTable: j.sqlTable ?? j.SqlTable ?? '',
+  };
 }
 
 // ── CSV ──────────────────────────────────────────────────────────────────
@@ -345,13 +357,24 @@ export async function openSubmissionReport(formId: number, formName: string): Pr
 
   let schema: { title: string; fields: FieldRow[] };
   let allSubs: Submission[];
+  let sqlCapable = false;
   try {
-    [schema, allSubs] = await Promise.all([loadFieldSchema(formId), loadSubmissions(formId)]);
+    const [sch, first] = await Promise.all([loadFieldSchema(formId), loadSubmissions(formId)]);
+    schema = sch; allSubs = first.subs; sqlCapable = first.sqlCapable;
   } catch (e: any) {
     body.innerHTML = '<div style="color:#dc2626;font-size:13px;padding:30px;text-align:center">Failed to load: ' + esc(e?.message || 'error') + '</div>';
     return;
   }
-  const fields = schema.fields;
+  // [SourcePicker v20260716] In SQL mode the row keys are the table's COLUMN NAMES, not the form's
+  // field keys — the analysed fields are derived from the data itself so the cards aren't empty.
+  const schemaFields = schema.fields;
+  let fields = schemaFields;
+  let source: 'submissions' | 'sql' = 'submissions';
+  function deriveSqlFields(subs: Submission[]): FieldRow[] {
+    const keys = new Set<string>();
+    subs.forEach(s => Object.keys(s.data || {}).forEach(k => keys.add(k)));
+    return Array.from(keys).slice(0, 24).map(k => ({ key: k, label: k, type: 'Text', options: [], required: false }));
+  }
   body.innerHTML = '';
 
   // ── Controls bar ──
@@ -361,6 +384,30 @@ export async function openSubmissionReport(formId: number, formName: string): Pr
   const fromInp = mkDate('From'), toInp = mkDate('To');
   const lbl = (t: string, el: HTMLElement) => { const w = dom('div'); w.style.cssText = 'display:flex;flex-direction:column;gap:3px'; const l = dom('label'); l.textContent = t; l.style.cssText = 'font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em'; w.appendChild(l); w.appendChild(el); return w; };
   bar.appendChild(lbl('From', fromInp)); bar.appendChild(lbl('To', toInp));
+  // [SourcePicker v20260716] Source toggle — only when the server said this form HAS a SQL source.
+  if (sqlCapable) {
+    const srcSel = dom<HTMLSelectElement>('select');
+    srcSel.style.cssText = 'padding:6px 8px;border:1px solid #cbd5e1;border-radius:7px;font-size:13px;background:#fff';
+    srcSel.innerHTML = '<option value="submissions">Submissions</option><option value="sql">SQL table</option>';
+    srcSel.addEventListener('change', async () => {
+      const want = srcSel.value === 'sql' ? 'sql' : 'submissions';
+      content.innerHTML = '<div style="color:#64748b;font-size:13px;padding:40px;text-align:center">Loading…</div>';
+      try {
+        const r = await loadSubmissions(formId, want === 'sql' ? 'sql' : undefined);
+        if (want === 'sql' && r.appliedSource !== 'sql') throw new Error('SQL source unavailable');
+        source = want;
+        allSubs = r.subs;
+        fields = source === 'sql' ? deriveSqlFields(allSubs) : schemaFields;
+      } catch {
+        // Honest fallback — never render JSON rows under a "SQL table" label.
+        source = 'submissions'; srcSel.value = 'submissions';
+        try { const r2 = await loadSubmissions(formId); allSubs = r2.subs; } catch { allSubs = []; }
+        fields = schemaFields;
+      }
+      rerender();
+    });
+    bar.appendChild(lbl('Source', srcSel));
+  }
   const spacer = dom('div'); spacer.style.cssText = 'flex:1'; bar.appendChild(spacer);
   const toggle = dom<HTMLDivElement>('div'); toggle.style.cssText = 'display:inline-flex;border:1px solid #cbd5e1;border-radius:8px;overflow:hidden';
   const tabSummary = dom<HTMLButtonElement>('button'); tabSummary.textContent = 'Summary'; tabSummary.type = 'button';

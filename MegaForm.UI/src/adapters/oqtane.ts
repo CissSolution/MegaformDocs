@@ -78,7 +78,7 @@ class OqtaneApiClient implements ApiClient {
   duplicateForm = (formId: number) => this.request<{ formId: number }>(`Form/${formId}/Duplicate`, { method: 'POST' });
   saveWorkflow = (formId: number, workflow: any) => this.request<void>('Form/Workflow/Save', { method: 'POST', body: JSON.stringify({ formId, workflow }) });
 
-  getSubmissions = async (formId: number, opts?: { status?: string; search?: string; pageIndex?: number; pageSize?: number; dateFrom?: string; dateTo?: string; }): Promise<PagedResult<SubmissionInfo>> => {
+  getSubmissions = async (formId: number, opts?: { status?: string; search?: string; pageIndex?: number; pageSize?: number; dateFrom?: string; dateTo?: string; source?: string; }): Promise<PagedResult<SubmissionInfo>> => {
     const p = new URLSearchParams();
     if (formId > 0) p.set('formId', String(formId));
     if (opts?.status) p.set('status', opts.status);
@@ -87,6 +87,9 @@ class OqtaneApiClient implements ApiClient {
     if (opts?.pageSize != null) p.set('pageSize', String(opts.pageSize));
     if (opts?.dateFrom) p.set('dateFrom', opts.dateFrom);
     if (opts?.dateTo) p.set('dateTo', opts.dateTo);
+    // [SourcePicker v20260716] auto|json|sql — routes the READ server-side (sql = the live table
+    // the form mirrors). The response echoes what actually answered; trust only that echo.
+    if (opts?.source) p.set('source', opts.source);
     // The Submissions endpoint serialises PascalCase (Items/TotalCount/...) while
     // other endpoints use camelCase — accept BOTH so the list isn't silently empty.
     const raw = await this.request<any>(`Submissions?${p}`);
@@ -96,6 +99,10 @@ class OqtaneApiClient implements ApiClient {
       totalCount: raw.totalCount ?? raw.TotalCount ?? raw.total ?? 0,
       pageIndex: raw.pageIndex ?? raw.PageIndex ?? raw.page ?? 0,
       pageSize: raw.pageSize ?? raw.PageSize ?? opts?.pageSize ?? 25,
+      source: raw.source ?? raw.Source,
+      sqlCapable: raw.sqlCapable ?? raw.SqlCapable,
+      sqlTable: raw.sqlTable ?? raw.SqlTable ?? '',
+      totalIsBounded: raw.totalIsBounded ?? raw.TotalIsBounded ?? false,
     };
   };
 

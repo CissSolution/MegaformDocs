@@ -17,7 +17,7 @@ function T(key: string, fallback: string, params?: Record<string, string | numbe
 import {
   getSubsState, setSubmissions, setPage, setPageSize, setFilters, setAvailableForms, setCurrentForm,
   toggleSelect, selectAll, clearSelection, flattenFields,
-  setSource, setSqlTableName, resetSource,
+  setSource, setSqlTableName, resetSource, setSqlCapable,
   type Submission, type SubmissionFormOption, type SubsSource,
 } from './state';
 import { renderFormsOverview } from './forms-overview';
@@ -1071,7 +1071,8 @@ function buildTable(state: ReturnType<typeof getSubsState>): HTMLElement {
   chkAll.type = 'checkbox'; chkAll.className = 'mf-checkbox';
   chkAll.checked = subs.length > 0 && state.selected.size === subs.length;
   chkAll.addEventListener('change', () => {
-    if (chkAll.checked) selectAll(subs.map(s => s.submissionId));
+    // [SourcePicker v20260716] Negative ids = read-only SQL rows — never bulk-selectable.
+    if (chkAll.checked) selectAll(subs.map(s => s.submissionId).filter(id => id > 0));
     else clearSelection();
     syncSelectionUi(getSubsState());   // [Perf #9] incremental, not full render
   });
@@ -1202,6 +1203,9 @@ function buildRow(sub: Submission, isAllForms: boolean): HTMLTableRowElement {
   const data = rowData(sub);   // [Perf #9] parsed once + cached on the row
   const state = getSubsState();
   const isSelected = state.selected.has(sub.submissionId);
+  // [SourcePicker v20260716] A negative id is a live SQL-table row, not a submission: read-only.
+  // No select (bulk status/delete would 404), no detail sheet (nothing to GET), no delete.
+  const isSqlRow = sub.submissionId < 0;
 
   const tr = document.createElement('tr');
   tr.className = `mf-tr${sub.status === 'Submitted' ? ' mf-tr-unread' : ''}${isSelected ? ' mf-tr-selected' : ''}`;
@@ -1211,10 +1215,13 @@ function buildRow(sub: Submission, isAllForms: boolean): HTMLTableRowElement {
   // Checkbox — .mf-td-check mirrors the header .mf-th-check width/padding so the
   // row checkboxes sit directly under the select-all checkbox (no column drift).
   const tdCheck = document.createElement('td'); tdCheck.className = 'mf-td-check';
-  const chk = document.createElement('input') as HTMLInputElement;
-  chk.type = 'checkbox'; chk.className = 'mf-checkbox'; chk.checked = isSelected;
-  chk.addEventListener('change', () => { toggleSelect(sub.submissionId); syncSelectionUi(getSubsState()); });  // [Perf #9] incremental, not full render
-  tdCheck.appendChild(chk); tr.appendChild(tdCheck);
+  if (!isSqlRow) {
+    const chk = document.createElement('input') as HTMLInputElement;
+    chk.type = 'checkbox'; chk.className = 'mf-checkbox'; chk.checked = isSelected;
+    chk.addEventListener('change', () => { toggleSelect(sub.submissionId); syncSelectionUi(getSubsState()); });  // [Perf #9] incremental, not full render
+    tdCheck.appendChild(chk);
+  }
+  tr.appendChild(tdCheck);
 
   // Dynamic cells
   _columnDefs.forEach((col) => {
@@ -1231,24 +1238,27 @@ function buildRow(sub: Submission, isAllForms: boolean): HTMLTableRowElement {
   const actBar = div('mf-subs-act-bar');
   actBar.style.cssText = 'display:inline-flex;gap:4px;align-items:center';
 
-  const viewBtn = btn('mf-ic-btn', ic('eye', 14), (e) => { e.stopPropagation(); openDetailSheet(sub); });
-  viewBtn.title = 'View details';
-  const delBtn = btn('mf-ic-btn mf-ic-btn-danger', ic('trash', 14), (e) => {
-    e.stopPropagation();
-    if (confirm('Delete this submission? This cannot be undone.')) deleteSubmission(sub.submissionId);
-  });
-  delBtn.title = 'Delete';
-  delBtn.style.cssText = (delBtn.style.cssText || '') + ';color:#dc2626';
-
-  mk(actBar, viewBtn, delBtn);
+  if (!isSqlRow) {
+    const viewBtn = btn('mf-ic-btn', ic('eye', 14), (e) => { e.stopPropagation(); openDetailSheet(sub); });
+    viewBtn.title = 'View details';
+    const delBtn = btn('mf-ic-btn mf-ic-btn-danger', ic('trash', 14), (e) => {
+      e.stopPropagation();
+      if (confirm('Delete this submission? This cannot be undone.')) deleteSubmission(sub.submissionId);
+    });
+    delBtn.title = 'Delete';
+    delBtn.style.cssText = (delBtn.style.cssText || '') + ';color:#dc2626';
+    mk(actBar, viewBtn, delBtn);
+  }
   tdAct.appendChild(actBar); tr.appendChild(tdAct);
 
-  tr.style.cursor = 'pointer';
-  tr.addEventListener('click', (e) => {
-    const target = e.target as HTMLElement;
-    if (target.closest('input,button,a,.mf-subs-act-bar,.mf-td-act')) return;
-    openDetailSheet(sub);
-  });
+  if (!isSqlRow) {
+    tr.style.cursor = 'pointer';
+    tr.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('input,button,a,.mf-subs-act-bar,.mf-td-act')) return;
+      openDetailSheet(sub);
+    });
+  }
 
   return tr;
 }
@@ -1399,7 +1409,9 @@ function buildPagination(state: ReturnType<typeof getSubsState>): HTMLElement {
   const totalPages = Math.max(1, Math.ceil(state.totalCount / state.pageSize));
   const start = state.totalCount === 0 ? 0 : (state.pageIndex * state.pageSize) + 1;
   const end = state.totalCount === 0 ? 0 : Math.min(state.totalCount, start + state.submissions.length - 1);
-  const info = span('mf-subs-pag-info', T('subs.pag_info', 'Showing {start}-{end} of {total} submissions', { start: String(start), end: String(end), total: String(state.totalCount) }));
+  // [SourcePicker v20260716] Bounded totals (external COUNT capped/timed out) display as "N+".
+  const totalLabel = String(state.totalCount) + (state.totalIsBounded ? '+' : '');
+  const info = span('mf-subs-pag-info', T('subs.pag_info', 'Showing {start}-{end} of {total} submissions', { start: String(start), end: String(end), total: totalLabel }));
   wrap.appendChild(info);
 
   const nav = div('mf-subs-pag-nav');
@@ -1461,6 +1473,10 @@ function buildStatusSelect(current: string): HTMLSelectElement {
 // table the form mirrors via settings.databaseInsert (read-only). Mirrors buildStatusSelect's shape.
 function buildSourceSelect(state: ReturnType<typeof getSubsState>): HTMLSelectElement | null {
   if ((state.config.formId || 0) <= 0) return null;
+  // [SourcePicker v20260716] Render only when the SERVER said this form has a SQL source
+  // (sqlCapable echo) — or while sql is active, so the user can always switch back. On a
+  // platform/form without SQL support the toggle simply never appears.
+  if (!state.sqlCapable && state.source !== 'sql') return null;
   const sel = document.createElement('select') as HTMLSelectElement;
   sel.className = 'mf-input mf-subs-sel mf-subs-source-sel';
   sel.title = T('subs.source_help', 'Read records from MegaForm submissions, or live from the bound SQL table');
@@ -1880,66 +1896,36 @@ async function switchForm(formId: number, preferred?: SubmissionFormOption, rere
   await loadSubmissions();
 }
 
-// [SourcePicker v20260715] Base URL of the AiTools controller (where CustomTableRows lives).
-// On Oqtane it is /api/AiTools (NOT under the module's /api/MegaForm base — that 404s); on DNN it
-// is the DesktopModules API root. Mirrors dashboard/ai-form-creator.ts::aiBase().
-function aiToolsBase(): string {
-  const w = window as any;
-  const pf = String((w.__MF_PLATFORM__ || {}).platform || '').toLowerCase();
-  if (pf === 'dnn') return '/DesktopModules/MegaForm/API/';
-  if (pf === 'oqtane' || w.Oqtane || document.querySelector('[data-mf-platform="oqtane"]')) return '/api/';
-  return '/api/';
-}
-
-// [SourcePicker v20260715] Read a page of the SQL table the form mirrors via settings.databaseInsert,
-// and normalise each SQL row into the grid's Submission shape (a `dataJson` string keyed by column
-// name — the grid derives columns from those keys, so no grid change is needed). Row identity is a
-// synthetic NEGATIVE id so it never collides with a real submissionId and row-level actions can tell
-// "this is a SQL row, not a submission". Server is bounded (pageSize≤200, whitelisted connection).
-async function fetchSqlRows(formId: number, pageIndex: number, pageSize: number):
-  Promise<{ items: Submission[]; total: number; tableName: string }> {
-  const url = aiToolsBase() + 'AiTools/CustomTableRows?formId=' + formId
-    + '&page=' + (pageIndex + 1) + '&pageSize=' + pageSize;
-  const resp = await fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
-  if (!resp.ok) {
-    if (resp.status === 404) throw new Error('This form is not bound to a SQL table (no Save-to-database is configured).');
-    if (resp.status === 401 || resp.status === 403) throw new Error('You do not have permission to read the SQL table.');
-    throw new Error('Could not read the SQL table.');
-  }
-  const data: any = await resp.json();
-  const cols: string[] = (data.columns || []).map((c: any) => c && (c.name || c.Name) ? (c.name || c.Name) : String(c));
-  const rows: any[][] = data.rows || [];
-  const items: Submission[] = rows.map((row, i) => {
-    const obj: Record<string, any> = {};
-    cols.forEach((c, ci) => { obj[c] = row[ci]; });
-    return {
-      submissionId: -(pageIndex * pageSize + i + 1),   // synthetic (negative) — not a real submission
-      formId, status: '', submittedOnUtc: '',
-      dataJson: JSON.stringify(obj),
-    } as Submission;
-  });
-  const tableName = (data.schemaName ? data.schemaName + '.' : '') + (data.tableName || '');
-  return { items, total: typeof data.total === 'number' ? data.total : items.length, tableName };
-}
-
 async function loadSubmissions(): Promise<void> {
   const state = getSubsState();
   _loading = true; _loadError = ''; render();
   try {
     const fid = state.config.formId || 0;
-    if (fid > 0 && state.source === 'sql') {
-      // Read the live SQL table the form mirrors (read-only), not MF_Submissions.
-      const res = await fetchSqlRows(fid, state.pageIndex, state.pageSize);
-      setSqlTableName(res.tableName);
-      setSubmissions(res.items, res.total);
-    } else if (fid > 0) {
+    if (fid > 0) {
+      // [SourcePicker v20260716] ONE endpoint for both sources: Submissions?...&source=sql routes
+      // the read server-side through the external-table query path (SQL-side filter/sort/page/
+      // count — replaces the ad-hoc AiTools/CustomTableRows fetch). Filters and paging carry over
+      // untouched when the source switches, which is what makes the toggle seamless.
+      const wantSql = state.source === 'sql';
       const result = await _adapter.api.getSubmissions(fid, {
         search: state.filters.search || undefined,
         status: state.filters.status || undefined,
         pageIndex: state.pageIndex,
         pageSize: state.pageSize,
+        source: wantSql ? 'sql' : undefined,
       });
-      setSubmissions(result.items || (result as any).data || [], result.totalCount || 0);
+      // Trust ONLY the server echo. A platform whose server predates the source param returns no
+      // echo — the toggle stays hidden and a forced sql request falls back loudly, never silently.
+      setSqlCapable(result.sqlCapable === true);
+      if (wantSql && result.source !== 'sql') {
+        resetSource();
+        setStoredSource(fid, 'submissions');
+        toast(T('subs.source_sql_unavailable', 'SQL table source is not available here — showing Submissions instead.'), 'info');
+        await loadSubmissions();
+        return;
+      }
+      setSqlTableName(wantSql ? (result.sqlTable || '') : '');
+      setSubmissions(result.items || (result as any).data || [], result.totalCount || 0, result.totalIsBounded === true);
     } else {
       // [AllFormsAggregate v20260609-B103] "All Forms" view: the Oqtane API
       // requires a formId (getSubmissions(0) → 400 "formId is required"), so we
@@ -1967,7 +1953,20 @@ async function loadSubmissions(): Promise<void> {
       }
     }
     _loading = false; updateHostChrome(); render();
-  } catch (err) { handleLoadError(err, 'Failed to load submissions'); }
+  } catch (err) {
+    const st = getSubsState();
+    if ((st.config.formId || 0) > 0 && st.source === 'sql') {
+      // [SourcePicker v20260716] A forced-SQL read that errored (no source on this form, not an
+      // admin, table unreachable) must not wedge the dashboard behind a sticky localStorage
+      // choice: fall back to the JSON store LOUDLY and forget the remembered source.
+      resetSource();
+      setStoredSource(st.config.formId, 'submissions');
+      toast(err instanceof Error && err.message ? err.message : 'SQL table source failed — showing Submissions instead.', 'error');
+      await loadSubmissions();
+      return;
+    }
+    handleLoadError(err, 'Failed to load submissions');
+  }
 }
 
 async function deleteSubmission(id: number): Promise<void> {

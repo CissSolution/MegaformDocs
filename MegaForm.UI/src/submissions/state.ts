@@ -55,6 +55,12 @@ export interface SubsState {
   source: SubsSource;
   // Name of the bound SQL table when source==='sql' (for the grid header sub-label). '' until known.
   sqlTableName: string;
+  // [SourcePicker v20260716] Server echo: this form HAS a SQL source (databaseInsert or ATBE
+  // binding) — drives the toggle's visibility. False until the server says otherwise, so the
+  // toggle never renders on a platform/form without real SQL support.
+  sqlCapable: boolean;
+  // Server echo: totalCount is a floor, not a fact (external COUNT was capped/timed out) → pager shows "N+".
+  totalIsBounded: boolean;
 }
 
 let _state: SubsState;
@@ -72,6 +78,8 @@ export function initSubsState(config: SubsConfig): void {
     forms: config.forms || [],
     source: 'submissions',
     sqlTableName: '',
+    sqlCapable: false,
+    totalIsBounded: false,
   };
 }
 
@@ -81,11 +89,17 @@ export function tryGetSubsState(): SubsState | null {
   return typeof _state === 'undefined' || !_state ? null : _state;
 }
 
-export function setSubmissions(subs: Submission[], total: number): void {
+export function setSubmissions(subs: Submission[], total: number, totalIsBounded = false): void {
   _state.submissions = subs;
   _state.totalCount = total;
+  _state.totalIsBounded = totalIsBounded;
   _state.selected.clear();
   notify();
+}
+
+// [SourcePicker v20260716] Server-echoed capability (no notify — always followed by a render).
+export function setSqlCapable(v: boolean): void {
+  _state.sqlCapable = !!v;
 }
 
 export function setAvailableForms(forms: SubmissionFormOption[]): void {
@@ -99,6 +113,7 @@ export function setCurrentForm(formId: number, schema?: { fields: FormField[] },
   _state.config.formTitle = formTitle || _state.config.formTitle;
   _state.pageIndex = 0;
   _state.selected.clear();
+  _state.sqlCapable = false;   // per-form fact — re-learned from the next list response's echo
   notify();
 }
 

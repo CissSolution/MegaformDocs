@@ -266,4 +266,15 @@ export interface FieldMeta {
 export interface PagedResult<T> {
   items: T[];
   totalCount: number;
+  pageIndex?: number;
+  pageSize?: number;
+  // [SourcePicker v20260716] Server-truth echo from the Submissions endpoint. `source` is which
+  // store ACTUALLY answered ("json" | "sql" | "" when a forced sql read fail-closed; undefined on
+  // platforms whose server predates the source param). The client must trust ONLY this echo —
+  // never its own requested source — so a platform without SQL support can never show JSON rows
+  // labeled as a SQL table (twin-gap guard).
+  source?: string;
+  sqlCapable?: boolean;
+  sqlTable?: string;
+  totalIsBounded?: boolean;
 }

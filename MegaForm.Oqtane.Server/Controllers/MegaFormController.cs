@@ -2064,7 +2064,8 @@ namespace MegaForm.Oqtane.Server.Controllers
         [HttpGet("Submissions")]
         [AllowAnonymous]
         public IActionResult ListSubmissions(int formId, string status = null, string search = null,
-            DateTime? dateFrom = null, DateTime? dateTo = null, int pageIndex = 0, int page = -1, int pageSize = 25, string queryKey = null)
+            DateTime? dateFrom = null, DateTime? dateTo = null, int pageIndex = 0, int page = -1, int pageSize = 25, string queryKey = null,
+            string source = null)
         {
             if (page >= 0 && pageIndex == 0) pageIndex = page;
             if (formId <= 0) return BadRequest(new { error = "formId is required" });
@@ -2079,6 +2080,36 @@ namespace MegaForm.Oqtane.Server.Controllers
             if (!IsSubmissionAdmin(actor) && (pageSize <= 0 || pageSize > 100))
                 pageSize = 100;
 
+            // [SourcePicker v20260715] source = auto|json|sql routes the READ through
+            // ExternalSourceContext (see Core). sql reads the customer table directly, so it is
+            // ADMIN-ONLY (parity with the AiTools.CustomTableRows gate this replaces) and never
+            // reachable through the public-list-view bypass above. Capability is echoed to the
+            // client so the toggle only renders where a SQL source actually exists — on a platform
+            // or form without one, the client sees sqlCapable=false instead of silently reading
+            // JSON labeled as SQL (the twin-gap trap).
+            var requestedSource = MegaForm.Core.Services.ExternalTable.ExternalSourceContext.Normalize(source);
+            bool sqlCapable = false;
+            try
+            {
+                sqlCapable = MegaForm.Core.Services.ExternalTable.DatabaseInsertBindingResolver.TryParseTarget(form.SettingsJson, out _);
+                if (!sqlCapable)
+                {
+                    var bindingStore = HttpContext?.RequestServices?.GetService(typeof(MegaForm.Core.Models.ExternalTable.IExternalBindingStore))
+                        as MegaForm.Core.Models.ExternalTable.IExternalBindingStore;
+                    sqlCapable = bindingStore != null && bindingStore.GetByForm(formId) != null;
+                }
+            }
+            catch { /* capability echo only — never blocks the default JSON list */ }
+
+            if (requestedSource == MegaForm.Core.Services.ExternalTable.ExternalSourceScope.Sql)
+            {
+                if (!IsSubmissionAdmin(actor))
+                    return StatusCode(403, new { error = "The SQL table source requires administrator permission." });
+                if (!sqlCapable)
+                    return BadRequest(new { error = "This form has no SQL table source (no databaseInsert and no external binding)." });
+                queryKey = null;   // bound-query presets are JSON-store concepts; they do not apply to table rows
+            }
+
             var query = new SubmissionListQuery
             {
                 FormId = formId,
@@ -2089,7 +2120,18 @@ namespace MegaForm.Oqtane.Server.Controllers
                 PageIndex = pageIndex,
                 PageSize = pageSize
             };
-            var result = ListSubmissionsWithBinding(query, queryKey, actor);
+            var sourceScope = new MegaForm.Core.Services.ExternalTable.ExternalSourceScope { Source = requestedSource };
+            var prevScope = MegaForm.Core.Services.ExternalTable.ExternalSourceContext.Current;
+            SubmissionPagedResult<SubmissionListItem> result;
+            MegaForm.Core.Services.ExternalTable.ExternalSourceContext.Current = sourceScope;
+            try
+            {
+                result = ListSubmissionsWithBinding(query, queryKey, actor);
+            }
+            finally
+            {
+                MegaForm.Core.Services.ExternalTable.ExternalSourceContext.Current = prevScope;
+            }
             var resultItems = result.Items ?? new List<SubmissionListItem>();
 
             // [Fix #7 v20260619] Decide the blanket view decision ONCE, before the loop — instead of
@@ -2118,7 +2160,7 @@ namespace MegaForm.Oqtane.Server.Controllers
                 }, actor, permissions)).ToList()
                 : resultItems.ToList();
             var openTasksBySubmission = BuildOpenWorkflowTaskLookup(formId, visibleItems.Select(item => item.SubmissionId));
-            return JsonOk(new SubmissionPagedResult<SubmissionDto>
+            return JsonOk(new
             {
                 Items = visibleItems.Select(x => ToSubmissionDto(
                     x,
@@ -2145,7 +2187,18 @@ namespace MegaForm.Oqtane.Server.Controllers
                 // count (acceptable for the RLS case — the true total is intentionally not exposed).
                 TotalCount = applyPerRowFilter ? visibleItems.Count : result.TotalCount,
                 PageIndex = result.PageIndex,
-                PageSize = result.PageSize
+                PageSize = result.PageSize,
+                // [SourcePicker v20260715] Server-truth echo: which store ACTUALLY answered ("json" |
+                // "sql" | "" when a forced sql read fail-closed), whether this form has a SQL source
+                // at all (drives the client toggle's visibility), the table label, and whether
+                // TotalCount is a floor rather than a fact (external count guard). The client must
+                // trust ONLY these fields — never its own requested source.
+                source = sourceScope.AppliedSource,
+                sqlCapable,
+                sqlTable = string.IsNullOrEmpty(sourceScope.Table)
+                    ? string.Empty
+                    : (string.IsNullOrEmpty(sourceScope.SchemaName) ? sourceScope.Table : sourceScope.SchemaName + "." + sourceScope.Table),
+                totalIsBounded = sourceScope.TotalIsBounded
             });
         }
 

@@ -42,6 +42,8 @@ export interface ApiClient {
   getSubmissions(formId: number, opts?: {
     status?: string; search?: string;
     pageIndex?: number; pageSize?: number;
+    /** [SourcePicker v20260716] auto|json|sql — server-side source routing; trust only the response echo. */
+    source?: string;
   }): Promise<PagedResult<SubmissionInfo>>;
   getSubmission(submissionId: number): Promise<SubmissionInfo>;
   updateSubmissionStatus(submissionId: number, status: string): Promise<void>;

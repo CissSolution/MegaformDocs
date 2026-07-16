@@ -82,11 +82,30 @@ namespace MegaForm.Oqtane.Server.Services
             services.AddScoped<MegaForm.Core.Models.ExternalTable.IExternalBindingStore, OqtaneExternalBindingStore>();
             services.AddScoped<MegaForm.Core.Models.ExternalTable.IExternalRowMapStore, OqtaneExternalRowMapStore>();
             services.AddScoped<MegaForm.Core.Services.ExternalTable.ExternalTableQueryService>();
+            // [SourcePicker v20260715] Lets the submissions dashboard read a databaseInsert form's
+            // mirror table through the SAME external query path (source=sql). The connection
+            // allow-list mirrors AiTools.OpenAiConnection: DashboardDatabase plus the operator's
+            // MegaForm:ExternalTables:AllowedConnections — a key not listed can never be opened,
+            // whatever the form settings say (SECURITY rule 1).
+            services.AddScoped<MegaForm.Core.Services.ExternalTable.DatabaseInsertBindingResolver>(sp =>
+            {
+                var cfg = sp.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
+                var configured = Microsoft.Extensions.Configuration.ConfigurationBinder
+                    .Get<string[]>(cfg.GetSection("MegaForm:ExternalTables:AllowedConnections")) ?? new string[0];
+                var allowed = new System.Collections.Generic.HashSet<string>(System.StringComparer.OrdinalIgnoreCase) { "DashboardDatabase" };
+                foreach (var k in configured)
+                    if (!string.IsNullOrWhiteSpace(k)) allowed.Add(k.Trim());
+                return new MegaForm.Core.Services.ExternalTable.DatabaseInsertBindingResolver(
+                    sp.GetRequiredService<MegaForm.Core.Interfaces.IConnectionRegistry>(),
+                    sp.GetRequiredService<IFormRepository>(),
+                    key => allowed.Contains((key ?? string.Empty).Trim()));
+            });
             services.AddScoped<ISubmissionRepository>(sp => new MegaForm.Core.Services.ExternalTable.ExternalSubmissionRepository(
                 sp.GetRequiredService<EfSubmissionRepository>(),
                 sp.GetRequiredService<MegaForm.Core.Models.ExternalTable.IExternalBindingStore>(),
                 sp.GetRequiredService<MegaForm.Core.Models.ExternalTable.IExternalRowMapStore>(),
-                sp.GetRequiredService<MegaForm.Core.Services.ExternalTable.ExternalTableQueryService>()));
+                sp.GetRequiredService<MegaForm.Core.Services.ExternalTable.ExternalTableQueryService>(),
+                sp.GetRequiredService<MegaForm.Core.Services.ExternalTable.DatabaseInsertBindingResolver>()));
             // [SDK Files A v20260616] MF_Files repository — powers IMegaFormClient.Files
             // (GetBySubmission / OpenAsync). Rows are created post-submit by the controller
             // (PersistSubmissionFilesFailSoft). Without this, SDK file listings stay empty.

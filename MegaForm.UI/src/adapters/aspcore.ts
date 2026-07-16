@@ -116,7 +116,7 @@ class AspCoreApiClient implements ApiClient {
 
   // ── Submissions ──
   getSubmissions = async (formId: number, opts?: {
-    status?: string; search?: string; pageIndex?: number; pageSize?: number; dateFrom?: string; dateTo?: string;
+    status?: string; search?: string; pageIndex?: number; pageSize?: number; dateFrom?: string; dateTo?: string; source?: string;
   }): Promise<PagedResult<SubmissionInfo>> => {
     const p = new URLSearchParams();
     if (formId > 0) p.set('formId', String(formId));
@@ -126,15 +126,19 @@ class AspCoreApiClient implements ApiClient {
     if (opts?.pageSize  != null) p.set('pageSize',  String(opts.pageSize));
     if (opts?.dateFrom) p.set('dateFrom', opts.dateFrom);
     if (opts?.dateTo) p.set('dateTo', opts.dateTo);
-    const raw = await this.request<{
-      items: Record<string, unknown>[]; totalCount: number;
-      pageIndex: number; pageSize: number;
-    }>(`Submissions/List?${p}`);
+    // [SourcePicker v20260716] Forward-compat: the Web server ignores this until its twin ships;
+    // absent echo fields below keep the client toggle hidden here (twin-gap guard).
+    if (opts?.source) p.set('source', opts.source);
+    const raw = await this.request<any>(`Submissions/List?${p}`);
     return {
-      items: (raw.items || []).map((s) => normalizeSubmissionInfo(s)),
+      items: (raw.items || []).map((s: Record<string, unknown>) => normalizeSubmissionInfo(s)),
       totalCount: raw.totalCount,
       pageIndex:  raw.pageIndex,
       pageSize:   raw.pageSize,
+      source: raw.source,
+      sqlCapable: raw.sqlCapable,
+      sqlTable: raw.sqlTable ?? '',
+      totalIsBounded: raw.totalIsBounded ?? false,
     };
   };
 
