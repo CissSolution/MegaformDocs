@@ -58,6 +58,20 @@
       href: dnn-widgets.md
     - name: Drag & Drop Layout
       href: dnn-drag-drop-layout.md
+    - name: Module Settings & Theme
+      href: dnn-settings-theme.md
+    - name: After Submission
+      href: dnn-after-submission.md
+    - name: Submissions & My Inbox
+      href: dnn-submissions-inbox.md
+    - name: Submissions Grid — Filters at Scale
+      href: dnn-submissions-grid.md
+    - name: Workflow
+      href: dnn-workflow.md
+    - name: Approval Workflows & Inbox
+      href: dnn-workflow-approvals.md
+    - name: Workflow Library
+      href: dnn-workflow-library.md
 - name: Programming
   items:
     - name: Overview
