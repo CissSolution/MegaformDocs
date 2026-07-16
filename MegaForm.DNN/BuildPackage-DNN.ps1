@@ -21,7 +21,7 @@ $ErrorActionPreference = 'Stop'
 $MODULE_NAME  = 'MegaForm'
 # [DNN sync 2026-06-22] Bumped from stale 01.05.00 → 01.06.32 to match the manifest + latest
 # SqlDataProvider scripts. Keep this in lockstep with MegaForm.dnn <package version="...">.
-$VERSION      = '01.07.99'
+$VERSION      = '01.07.106'
 $PROJECT_DIR  = Split-Path -Parent $MyInvocation.MyCommand.Path
 $SOLUTION_DIR = Split-Path -Parent $PROJECT_DIR
 $STAGING      = Join-Path $PROJECT_DIR '_package'
@@ -165,6 +165,7 @@ if (Test-Path $STAGING) { Remove-Item $STAGING -Recurse -Force }
     "$RESOURCES\Assets\js\bundles",
     "$RESOURCES\Assets\js\plugins", "$RESOURCES\Assets\js\locales",
     "$RESOURCES\Assets\Images", "$RESOURCES\Samples",
+    "$RESOURCES\Images",
     $OUTPUT_DIR
 ) | ForEach-Object {
     if (-not (Test-Path $_)) { New-Item -ItemType Directory -Path $_ -Force | Out-Null }
@@ -206,6 +207,17 @@ $iconSrc = @("$PROJECT_DIR\Images\icon.gif", "$PROJECT_DIR\Install\icon.gif", "$
 if ($iconSrc) {
     Copy-Item $iconSrc "$STAGING\icon.gif" -Force
     Write-Host '  + icon.gif'
+}
+
+# [ModuleIcon v20260716-01] The manifest's <iconFile> points at
+# ~/DesktopModules/MegaForm/Images/module-icon.png, and the DB Packages.IconFile row matches —
+# but the Images folder was never shipped in Resources.zip, so installed sites 404 the icon and
+# the Add-Module list shows MegaForm without one (owner report). Ship the module Images folder.
+foreach ($img in @("$PROJECT_DIR\Images\module-icon.png", "$PROJECT_DIR\Images\icon.gif")) {
+    if (Test-Path $img) {
+        Copy-Item $img "$RESOURCES\Images\" -Force
+        Write-Host ('  + Images\' + (Split-Path $img -Leaf))
+    }
 }
 
 if (Test-Path "$PROJECT_DIR\License.txt") {
