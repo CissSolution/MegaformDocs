@@ -38,6 +38,7 @@ namespace MegaForm.DNN.Components
         public bool SuppressInlineAdminEmptyState { get; private set; }
         public bool SuppressInlineAdminShell { get; private set; }
         public bool IsUnconfiguredAdminModuleState { get; private set; }
+        public bool ShowDropSafeAdminDock { get; private set; }
 
         public bool HasDevLock { get; private set; }
         public bool HasDemoLock { get; private set; }
@@ -189,18 +190,34 @@ namespace MegaForm.DNN.Components
 
         private bool ShouldSuppressInlineAdminShell(FormRenderViewModel vm)
         {
-            // [DockOnDrop v20260716-01] Owner request: the admin dock must appear IMMEDIATELY
-            // after the module is dropped on a page — no Manage-module round-trip first.
-            //
-            // History: this used to return IsUnconfiguredAdminModuleState ("render nothing during
-            // transient add/drop"). The bug that motivated the old gate was a MARKUP/ASSETS
-            // MISMATCH — dock buttons rendered while shouldLoadAdminShellAssets skipped the shell
-            // CSS/JS, so the buttons were dead. Both sides now key off this same flag, so showing
-            // the shell here also loads its assets and that failure mode cannot recur. The
-            // transient-drop layout concern is still covered: ShouldSuppressInlineAdminEmptyState
-            // (below the dock) KEEPS suppressing the placeholder/empty-state box while dropping.
-            //
-            // ROLLBACK (owner pre-approved if this misbehaves): return IsUnconfiguredAdminModuleState;
+            // Suppress only during DNN's ajax add/drop partial. The full shell loads heavy
+            // dashboard/builder assets and can disturb the follow-up MoveModule request there.
+            // On a normal page render, even an unconfigured module should show admin buttons
+            // immediately so the user does not need Manage Module -> Save just to begin.
+            return IsUnconfiguredAdminModuleState;
+        }
+
+        private bool IsDnnAjaxPartialRender()
+        {
+            try
+            {
+                var req = Request;
+                if (req == null) return false;
+
+                var xrw = req.Headers["X-Requested-With"];
+                if (string.Equals(xrw, "XMLHttpRequest", StringComparison.OrdinalIgnoreCase))
+                    return true;
+
+                var microsoftAjax = req.Headers["X-MicrosoftAjax"];
+                if (!string.IsNullOrWhiteSpace(microsoftAjax))
+                    return true;
+
+                var asyncPost = req.Form["__ASYNCPOST"] ?? req.QueryString["__ASYNCPOST"];
+                if (string.Equals(asyncPost, "true", StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            catch { }
+
             return false;
         }
 
@@ -347,6 +364,7 @@ namespace MegaForm.DNN.Components
                 // dock/admin shell. A transient selected ViewModel.FormId is NOT enough.
                 var hasStableModuleState = ViewModel != null
                     && HasStableModuleSelectionSettings(ViewModel);
+                var isDnnAjaxPartialRender = IsDnnAjaxPartialRender();
 
                 // [AdminDashAlwaysShow v20260506-01] Drop the IsInEditMode/IsAdminDashboardMode
                 // requirement — admin should see the dock + Dashboard button on every visit
@@ -365,6 +383,16 @@ namespace MegaForm.DNN.Components
                     && !ViewModel.IsAdminDashboardMode
                     // A My Inbox module has no bound form BY DESIGN — without this it would be
                     // read as a half-dropped module and the whole shell suppressed (blank page).
+                    && !ViewModel.IsMyInboxMode
+                    && !ViewModel.ShowConfigPanel
+                    && !ViewModel.LiveRenderMode
+                    && !hasStableModuleState
+                    && isDnnAjaxPartialRender;
+
+                ShowDropSafeAdminDock = ViewModel != null
+                    && ViewModel.IsAdmin
+                    && ViewModel.IsInEditMode
+                    && !ViewModel.IsAdminDashboardMode
                     && !ViewModel.IsMyInboxMode
                     && !ViewModel.ShowConfigPanel
                     && !ViewModel.LiveRenderMode
@@ -636,6 +664,8 @@ namespace MegaForm.DNN.Components
                 qs.Remove("mfFormId");
                 qs.Remove("new");
                 qs.Remove("embed");
+                qs.Remove("mfDropReady");
+                qs.Remove("mfOpenSettings");
 
                 var query = qs.ToString();
                 var path = uri.AbsolutePath;
