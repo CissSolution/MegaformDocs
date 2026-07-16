@@ -40,10 +40,6 @@
       href: ai-configuration.md
     - name: AI Prompts for Form Design
       href: ai-prompts-form-design.md
-- name: Using MegaForm on DNN
-  items:
-    - name: "End-to-End Demo: ERP Flow on DNN"
-      href: dnn-erp-demo.md
 - name: Programming
   items:
     - name: Overview
