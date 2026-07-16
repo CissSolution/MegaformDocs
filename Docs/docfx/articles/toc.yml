@@ -72,6 +72,18 @@
       href: dnn-workflow-approvals.md
     - name: Workflow Library
       href: dnn-workflow-library.md
+    - name: "End-to-End Demo: ERP Flow"
+      href: dnn-erp-demo.md
+    - name: Storage & Integrations
+      href: dnn-storage-options.md
+    - name: Multi-language
+      href: dnn-multi-language.md
+    - name: AI Form Designer
+      href: dnn-ai-form-designer.md
+    - name: Configuring the AI Assistant
+      href: dnn-ai-configuration.md
+    - name: AI Prompts for Form Design
+      href: dnn-ai-prompts.md
 - name: Programming
   items:
     - name: Overview
