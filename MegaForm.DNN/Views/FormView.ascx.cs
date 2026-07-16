@@ -189,9 +189,19 @@ namespace MegaForm.DNN.Components
 
         private bool ShouldSuppressInlineAdminShell(FormRenderViewModel vm)
         {
-            // When a module has just been dropped and has no stable configuration yet,
-            // suppress the full MegaForm admin shell/dock UI.
-            return IsUnconfiguredAdminModuleState;
+            // [DockOnDrop v20260716-01] Owner request: the admin dock must appear IMMEDIATELY
+            // after the module is dropped on a page — no Manage-module round-trip first.
+            //
+            // History: this used to return IsUnconfiguredAdminModuleState ("render nothing during
+            // transient add/drop"). The bug that motivated the old gate was a MARKUP/ASSETS
+            // MISMATCH — dock buttons rendered while shouldLoadAdminShellAssets skipped the shell
+            // CSS/JS, so the buttons were dead. Both sides now key off this same flag, so showing
+            // the shell here also loads its assets and that failure mode cannot recur. The
+            // transient-drop layout concern is still covered: ShouldSuppressInlineAdminEmptyState
+            // (below the dock) KEEPS suppressing the placeholder/empty-state box while dropping.
+            //
+            // ROLLBACK (owner pre-approved if this misbehaves): return IsUnconfiguredAdminModuleState;
+            return false;
         }
 
         private bool HasStableModuleSelectionSettings(FormRenderViewModel vm)
