@@ -1,5 +1,26 @@
 # HANDOFF 2026-07-16 (phần 3) — 2 YÊU CẦU CHỈNH SỬA DOCS DNN cho phiên sau
 
+## ✅ BỔ SUNG CUỐI PHIÊN — 2 FIX CODE DNN SHIPPED + QA (commit `e03feea` + `0643a6e`)
+1. **Icon MegaForm trên DNN** (`e03feea`): manifest + DB `Packages.IconFile` vốn đúng
+   (`~/DesktopModules/MegaForm/Images/module-icon.png`) nhưng **BuildPackage-DNN.ps1 chưa ship Images/**
+   → site 404 icon. Vá pack script (ship `Images\module-icon.png`+`icon.gif` vào Resources) + copy tay
+   lên site live. ✅ QA pixel: Add Module panel hiện **MegaForm icon MF xanh** (module duy nhất có icon
+   màu), img loaded. (Kèm bump pack version 01.07.106 sẵn cho lần repack.)
+2. **Dock hiện NGAY sau drop** (`0643a6e`, badge `[DockOnDrop v20260716-01]`):
+   `ShouldSuppressInlineAdminShell` → `return false`. **Lỗi cũ đã hiểu rõ** = markup/assets mismatch
+   (dock render nhưng shell CSS/JS bị skip → nút chết) — giờ cả 2 gate cùng đọc `SuppressInlineAdminShell`
+   nên không thể lệch; `ShouldSuppressInlineAdminEmptyState` GIỮ NGUYÊN (placeholder vẫn ẩn khi drop —
+   kéo thả sạch). ✅ QA pixel: mod385 unconfigured + edit-mode → dock Settings/Form Builder/Form Dashboard
+   hiện trong pane trống (trước = render nothing); non-edit + configured không regress.
+   **ROLLBACK**: revert `0643a6e` HOẶC `return IsUnconfiguredAdminModuleState;` HOẶC swap lại
+   `bin\MegaForm.DNN.dll.bak-preDockOnDrop` trên site + recycle.
+   ⭐Deploy note: DLL đã hot-swap site (backup .bak-preDockOnDrop) — bản pack tới sẽ mang cả 2 fix.
+3. ⭐Bẫy QA mới: **DNN edit-mode PERSIST per-user** (giống Oqtane) — script phải CHECK
+   `.addModuleHandler` tồn tại trước khi toggle `#Edit`, không blind-click. **DNN 10 add-module =
+   CLICK `.addModuleHandler` trên pane** (không cần kéo-thả!) → GIF bài 1 phiên sau DỄ: click Add
+   Module trên pane trống → panel card → click MegaForm card (bước "chọn module" có thể là click card
+   — verify hành vi click card lúc quay). Edit-mode hiện đã TẮT, site nguyên trạng (form 37, dock 3 nút).
+
 Nối tiếp `CLAUDE_HANDOFF_20260716_DNN_DOCS_SERIES_20_ARTICLES.md` (series 20 bài + 21 GIF ĐÃ LIVE,
 master `d246839`, Actions xanh, 9/9 URL 200). Owner review xong, giao 2 chỉnh sửa — phiên này mới
 EXPLORE dở, CHƯA quay/sửa gì. Không có thay đổi nào chưa-commit trên docs.
