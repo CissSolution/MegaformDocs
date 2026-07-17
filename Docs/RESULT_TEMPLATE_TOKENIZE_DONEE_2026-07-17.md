@@ -37,6 +37,11 @@ Kế hoạch nền: `Docs/PLAN_TEMPLATE_THEME_UNIFICATION_2026-07-17.md`. Phươ
 | `_qa_live_5125_20260717/borrow/11-home-quartz-outback-borrowON.png` | **borrow ON** = card→tím Quartz, tiêu đề→trắng, nút→hồng `--bs-primary`, bước→hồng; **ảnh outback (immutable) giữ nguyên** |
 | `scratchpad/cal-verify.png` | Datepicker nền tối: chữ ngày **trắng rõ** (trước = đen-trên-đen vô hình) |
 
+## 2b. Đóng gói + cài :5126 (Fresh1805, để owner test)
+- **`MegaForm.Oqtane.1.7.107.nupkg`** (79MB): bump `ModuleInfo.Version` + nuspec 1.7.106→**1.7.107**, AssetVersion B404→**B405**. Build Client+Server Release (net9+net10 → Shared+Core), `nuget.exe pack`. Gói chứa 17 template (14 tokenized) + `megaform.css` (CalDarkHost) + Core DLL policy-gate — verified bằng unzip.
+- Cài `:5126` (`Oqtane.MegaForm.Fresh1805`, DB `Oqtane_MegaForm_Fresh1805`, Sandstone): copy nupkg→`Packages/` → start → Oqtane auto-install (nupkg→.log). ⭐**BẪY UPGRADE**: `SeedTemplatesIfEmpty` chỉ copy wwwroot→App_Data khi App_Data RỖNG → bản upgrade KHÔNG nhận template mới. Phải copy tay DONEE→`App_Data/MegaForm/Templates` (backup `Templates_bak_pre1707_*`).
+- QA :5126: gallery 17 tokenized OK (`Docs/_qa_live_5126_20260717/04-gallery.png`); form 1 (home tabbed) nạp tokenized + borrow ON → accent theo **navy Sandstone** (`07-home-sandstone-tabbed-borrowON.png` vs `06` borrow OFF indigo). Đổi page theme sang Darkly/Quartz/Vapor để thấy rõ.
+
 ## 3. CÒN LẠI (phiên sau)
 - **Formalize Oqtane pack**: `wwwroot/Modules/MegaForm/Templates` bị gitignore; hiện sync tay từ DONEE. Nên thêm bước pack copy DONEE→wwwroot (giống `BuildPackage-DNN.ps1` đã làm) để 1 nguồn.
 - **P4 client twin**: Web/Umbraco/builder-preview chưa có borrow (SSR-only) — switch From-page vẫn no-op ở đó.
