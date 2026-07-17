@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MegaForm.Core.Interfaces;
 using MegaForm.Core.Models;
+using MegaForm.Core.Services.TypedSubmission;
 using MegaForm.Core.Utilities;
 using Newtonsoft.Json;
 
@@ -17,15 +18,26 @@ namespace MegaForm.Core.Services
         private readonly ISubmissionRepository _submissions;
         private readonly IFormRepository _forms;
         private readonly IFileRepository _files;
+        private readonly ISubmissionDataStore _typedStore;
 
         public SubmissionQueryService(
             ISubmissionRepository submissions,
             IFormRepository forms,
             IFileRepository files = null)
+            : this(submissions, forms, files, null)
+        {
+        }
+
+        public SubmissionQueryService(
+            ISubmissionRepository submissions,
+            IFormRepository forms,
+            IFileRepository files,
+            ISubmissionDataStore typedStore)
         {
             _submissions = submissions;
             _forms = forms;
             _files = files;
+            _typedStore = typedStore;
         }
 
         /// <summary>[QueryKey250Fix v20260717-01] Ceiling for a server-trusted fetch (bound-query
@@ -130,6 +142,63 @@ namespace MegaForm.Core.Services
                 FieldSnapshots = fieldSnapshots,
                 HasSnapshot = hasSnapshot
             };
+        }
+
+        /// <summary>
+        /// Preview method for typed submission storage. Reconstructs the detail from
+        /// MF_SubmissionFields + typed value rows when a typed store is registered.
+        /// Falls back to the legacy JSON path when typed rows are unavailable.
+        /// </summary>
+        public SubmissionDetailResult GetDetailTyped(int submissionId)
+        {
+            var submission = _submissions.Get(submissionId);
+            if (submission == null) return null;
+
+            var form = _forms.GetForm(submission.FormId);
+            var schema = TryParseSchema(form != null ? form.SchemaJson : null);
+
+            if (_typedStore != null && _typedStore.HasFields(submissionId))
+            {
+                var document = _typedStore.GetData(submissionId);
+                var reconstructor = new SubmissionDataReconstructor();
+                var data = reconstructor.Reconstruct(document) ?? new Dictionary<string, object>();
+
+                var snapshots = _typedStore.GetFields(submissionId)
+                    .Select(f => new SubmissionFieldSnapshot
+                    {
+                        FieldKey = f.FieldKey,
+                        FieldLabel = f.LabelSnapshot,
+                        FieldType = f.FieldType,
+                        RawValue = data.TryGetValue(f.FieldKey, out var raw) ? raw?.ToString() : null,
+                        DisplayValue = f.DisplayValue,
+                        SortOrder = f.FieldOrder ?? 0
+                    })
+                    .ToList();
+
+                return new SubmissionDetailResult
+                {
+                    Submission = submission,
+                    Form = form,
+                    Schema = schema,
+                    Files = _files != null ? (_files.GetBySubmission(submissionId) ?? new List<FileInfo>()) : new List<FileInfo>(),
+                    FlattenedValues = BuildFallbackFlatValuesFromDictionary(data),
+                    FieldSnapshots = snapshots,
+                    HasSnapshot = snapshots.Count > 0
+                };
+            }
+
+            return GetDetail(submissionId);
+        }
+
+        private static List<KeyValuePair<string, string>> BuildFallbackFlatValuesFromDictionary(Dictionary<string, object> data)
+        {
+            var list = new List<KeyValuePair<string, string>>();
+            if (data == null) return list;
+            foreach (var kv in data)
+            {
+                list.Add(new KeyValuePair<string, string>(kv.Key ?? string.Empty, kv.Value?.ToString() ?? string.Empty));
+            }
+            return list;
         }
 
         public SubmissionListItem ToListItem(SubmissionInfo submission, string formTitle = null, FormSchema schema = null)
