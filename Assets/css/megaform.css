@@ -2613,7 +2613,10 @@ body > div[style*="display:none"]:has(.megaform-module) {
     --mf-skin-defense-badge: 'DnnSkinDefense v20260421-01';
 }
 /* MegaForm control variants v20260602-B42: Calendar picker, tag multiselect, multi-column combo */
-.mf-cal,.mf-ms,.mf-mccb{position:relative;width:100%;--mfv-bg:var(--mf-input-bg,#fff);--mfv-fg:var(--mf-text,#0f172a);--mfv-border:var(--mf-border,#cbd5e1);--mfv-muted:#f1f5f9;--mfv-muted-fg:#64748b;--mfv-primary:var(--mf-primary,#2563eb);--mfv-danger:#ef4444;--mfv-radius:8px}
+/* [CalDarkHost v20260717] Popover widgets on dark/colored hosts: every literal below is
+   the EXACT previous value as var() fallback — default render is pixel-identical; only the
+   From-page borrow (which injects --mf-text-muted / --mf-cal-muted / --mf-border) recolors. */
+.mf-cal,.mf-ms,.mf-mccb{position:relative;width:100%;--mfv-bg:var(--mf-input-bg,#fff);--mfv-fg:var(--mf-text,#0f172a);--mfv-border:var(--mf-border,#cbd5e1);--mfv-line:var(--mf-border,#e2e8f0);--mfv-muted:var(--mf-cal-muted,#f1f5f9);--mfv-soft:var(--mf-cal-muted,#f8fafc);--mfv-muted-fg:var(--mf-text-muted,#64748b);--mfv-primary:var(--mf-primary,#2563eb);--mfv-danger:#ef4444;--mfv-radius:8px}
 .mf-cal-trigger,.mf-ms-trigger,.mf-mccb-trigger{position:relative;display:flex;align-items:center;gap:.5rem;width:100%;min-height:2.5rem;border:1px solid var(--mfv-border);border-radius:var(--mfv-radius);background:var(--mfv-bg);color:var(--mfv-fg);font:inherit;font-size:.875rem;cursor:pointer;transition:border-color .18s ease,box-shadow .18s ease,background-color .18s ease}
 .mf-cal-trigger{justify-content:space-between;padding:0 .75rem}
 .mf-ms-trigger{padding:.375rem .75rem;align-content:flex-start}
@@ -2647,29 +2650,29 @@ body > div[style*="display:none"]:has(.megaform-module) {
    the panel to the whole field (regression: date picker spanned ~700px). Multiselect
    /multi-column SHOULD track the trigger width, so scope the cap to the calendar only. */
 .mf-cal-panel{right:auto;width:320px;min-width:320px}
-.mf-cal-header{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:1rem;border-bottom:1px solid #e2e8f0}
-.mf-cal-title{font-weight:700;text-align:center;flex:1;color:#0f172a}
-.mf-cal-nav{width:2rem;height:2rem;display:inline-flex;align-items:center;justify-content:center;border:1px solid #e2e8f0;border-radius:6px;background:#fff;color:#0f172a;font-size:22px;line-height:1;cursor:pointer}
-.mf-cal-nav:hover{background:#f1f5f9}
+.mf-cal-header{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:1rem;border-bottom:1px solid var(--mfv-line,#e2e8f0)}
+.mf-cal-title{font-weight:700;text-align:center;flex:1;color:var(--mfv-fg,#0f172a)}
+.mf-cal-nav{width:2rem;height:2rem;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--mfv-line,#e2e8f0);border-radius:6px;background:var(--mfv-bg,#fff);color:var(--mfv-fg,#0f172a);font-size:22px;line-height:1;cursor:pointer}
+.mf-cal-nav:hover{background:var(--mfv-muted,#f1f5f9)}
 .mf-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.5rem}
-.mf-cal-weekdays{padding:1rem 1rem 0;color:#64748b;font-size:.75rem;font-weight:700;text-align:center}
+.mf-cal-weekdays{padding:1rem 1rem 0;color:var(--mfv-muted-fg,#64748b);font-size:.75rem;font-weight:700;text-align:center}
 .mf-cal-days{padding: .5rem 1rem 1rem}
-.mf-cal-day{aspect-ratio:1;border:1px solid transparent;border-radius:6px;background:transparent;color:#0f172a;font:inherit;font-size:.875rem;font-weight:600;cursor:pointer}
-.mf-cal-day:not(.is-empty):hover{background:#f1f5f9;border-color:#dbe3ee}
+.mf-cal-day{aspect-ratio:1;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--mfv-fg,#0f172a);font:inherit;font-size:.875rem;font-weight:600;cursor:pointer}
+.mf-cal-day:not(.is-empty):hover{background:var(--mfv-muted,#f1f5f9);border-color:var(--mfv-line,#dbe3ee)}
 .mf-cal-day.is-empty{pointer-events:none}
 .mf-cal-day.is-today{border-color:var(--mfv-primary);color:var(--mfv-primary)}
 .mf-cal-day.is-selected{background:var(--mfv-primary);border-color:var(--mfv-primary);color:#fff}
 .mf-cal-month-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;padding:1rem}
-.mf-cal-month{min-height:2.5rem;border:1px solid transparent;border-radius:6px;background:transparent;color:#0f172a;font:inherit;font-size:.875rem;font-weight:700;cursor:pointer}
-.mf-cal-month:hover{background:#f1f5f9;border-color:#dbe3ee}
+.mf-cal-month{min-height:2.5rem;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--mfv-fg,#0f172a);font:inherit;font-size:.875rem;font-weight:700;cursor:pointer}
+.mf-cal-month:hover{background:var(--mfv-muted,#f1f5f9);border-color:var(--mfv-line,#dbe3ee)}
 .mf-cal-month.is-today{border-color:var(--mfv-primary);color:var(--mfv-primary)}
 .mf-cal-month.is-selected{background:var(--mfv-primary);border-color:var(--mfv-primary);color:#fff}
-.mf-cal-time{display:flex;align-items:center;gap:.5rem;padding:.75rem 1rem;border-top:1px solid #e2e8f0;background:#f8fafc}
+.mf-cal-time{display:flex;align-items:center;gap:.5rem;padding:.75rem 1rem;border-top:1px solid var(--mfv-line,#e2e8f0);background:var(--mfv-soft,#f8fafc)}
 .mf-cal-time label{font-weight:700;margin:0}
-.mf-cal-time input{width:3.5rem;padding:.375rem .5rem;border:1px solid #cbd5e1;border-radius:6px;text-align:center}
-.mf-cal-actions{display:flex;justify-content:flex-end;gap:.5rem;padding:1rem;border-top:1px solid #e2e8f0}
-.mf-cal-action{border:1px solid #cbd5e1;border-radius:7px;background:#fff;padding:.5rem 1rem;font-weight:700;cursor:pointer}
-.mf-cal-action:hover{background:#f1f5f9}
+.mf-cal-time input{width:3.5rem;padding:.375rem .5rem;border:1px solid var(--mfv-border,#cbd5e1);border-radius:6px;text-align:center;background:var(--mfv-bg,#fff);color:var(--mfv-fg,#0f172a)}
+.mf-cal-actions{display:flex;justify-content:flex-end;gap:.5rem;padding:1rem;border-top:1px solid var(--mfv-line,#e2e8f0)}
+.mf-cal-action{border:1px solid var(--mfv-border,#cbd5e1);border-radius:7px;background:var(--mfv-bg,#fff);color:var(--mfv-fg,#0f172a);padding:.5rem 1rem;font-weight:700;cursor:pointer}
+.mf-cal-action:hover{background:var(--mfv-muted,#f1f5f9)}
 .mf-cal-apply{background:var(--mfv-primary);border-color:var(--mfv-primary);color:#fff}
 .mf-ms-tags{display:flex;align-items:center;gap:.375rem;flex:1;flex-wrap:wrap;min-height:1.75rem;min-width:0}
 .mf-ms-tag{display:inline-flex;align-items:center;gap:.375rem;padding:.25rem .5rem;border-radius:5px;background:#0a5dbb;color:#fff;font-size:.8125rem;font-weight:700;white-space:nowrap}

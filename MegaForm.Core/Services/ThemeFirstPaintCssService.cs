@@ -120,7 +120,16 @@ namespace MegaForm.Core.Services
             var customCss = Str(First(settings, "customCss", "CustomCss"));
             var customHtml = Str(First(settings, "customHtml", "CustomHtml"));
             var templateText = customCss + "\n" + customHtml;
-            var preservePremiumPalette = HasAuthoredPremiumPalette(templateText);
+            // [TemplatePolicyGate v20260717-02] Manifest-v2 templates declare their intent in
+            // settings.themeCompatibility.policy: 'locked' keeps the authored palette even when
+            // the user flips "From page"; 'tokenized'/'hybrid' opt INTO borrowing even though
+            // their CSS declares premium palette vars (their token defs chain to --mf-*, so the
+            // borrow recolours the whole shell coherently). Forms without a manifest keep the
+            // authored-palette regex heuristic.
+            var policyAllowsBorrow = ReadTemplatePolicyAllowsBorrow(settings);
+            var preservePremiumPalette = policyAllowsBorrow.HasValue
+                ? !policyAllowsBorrow.Value
+                : HasAuthoredPremiumPalette(templateText);
 
             // Page-theme "borrow colours" (inline embeds only): the form blends into the host skin
             // — transparent OUTER panel + the host's primary accent (Bootstrap --bs-primary on
@@ -166,6 +175,28 @@ namespace MegaForm.Core.Services
                 overrides["--mf-input-disabled-bg"] = HostDisabledBgVar;
                 overrides["--mf-input-focus-border"] = HostFocusBorderVar;
                 overrides["--mf-input-focus-ring"] = HostFocusRingVar;
+
+                // [TemplatePolicyGate v20260717-02] Page CHANNEL for tokenized premium shells.
+                // A shell that (re)defines a custom property on its OWN root (.mfp/.tab-*/…)
+                // shadows any wrapper-level value for that property — !important on the wrapper
+                // cannot reach the subtree, so overwriting --mf-primary above is invisible to
+                // template token layers. Tokenized templates therefore chain their layer vars as
+                //   var(--mf-page-<role>, var(--mf-preset-<role>, <authored>))
+                // and these page-channel vars exist ONLY while borrowing (never declared in
+                // megaform.css — the authored fallback is pixel-identical when off).
+                overrides["--mf-page-primary"] = HostPrimaryVar;
+                overrides["--mf-page-surface"] = HostBodyBgVar;
+                overrides["--mf-page-wash"] = "transparent";
+                overrides["--mf-page-text"] = HostBodyColorVar;
+                overrides["--mf-page-heading"] = HostHeadingVar;
+                overrides["--mf-page-muted"] = HostMutedVar;
+                overrides["--mf-page-border"] = HostBorderVar;
+                overrides["--mf-page-input-bg"] = HostInputBgVar;
+                overrides["--mf-page-focus-soft"] = "var(--bs-focus-ring-color, rgba(37, 99, 235, 0.12))";
+                // [CalDarkHost v20260717] Popover widgets (.mf-cal/.mf-ms/.mf-mccb) hover/soft
+                // washes — literal #f1f5f9/#f8fafc fallbacks live in megaform.css; this key only
+                // exists while borrowing so the default palette is untouched.
+                overrides["--mf-cal-muted"] = HostDisabledBgVar;
             }
 
             if (overrides.Count == 0) return string.Empty;
@@ -188,6 +219,20 @@ namespace MegaForm.Core.Services
         // ─────────────────────────────────────────────────────────────────────────────
         // collectThemeCssOverrides
         // ─────────────────────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Manifest-v2 policy: true = borrow allowed, false = locked palette, null = no manifest
+        /// (caller falls back to the HasAuthoredPremiumPalette heuristic).
+        /// </summary>
+        private static bool? ReadTemplatePolicyAllowsBorrow(JObject settings)
+        {
+            var tc = First(settings, "themeCompatibility", "ThemeCompatibility") as JObject;
+            if (tc == null) return null;
+            var policy = Str(tc["policy"]).Trim().ToLowerInvariant();
+            if (policy == "locked") return false;
+            if (policy == "tokenized" || policy == "hybrid") return true;
+            return null;
+        }
 
         private static bool HasAuthoredPremiumPalette(string templateText)
         {
