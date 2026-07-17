@@ -1,0 +1,19 @@
+{
+  "v0-contact-map-left-corporate": { "policy": "tokenized", "supportsPageColors": true, "supportsPageTypography": true, "supportsDarkHost": true, "prefixes": [], "immutable": [] },
+  "v0-contact-map-left-minimal": { "policy": "tokenized", "supportsPageColors": true, "supportsPageTypography": true, "supportsDarkHost": true, "prefixes": [], "immutable": [] },
+  "v0-contact-map-right-modern": { "policy": "tokenized", "supportsPageColors": true, "supportsPageTypography": true, "supportsDarkHost": true, "prefixes": [], "immutable": [] },
+  "event-registration-rsvp": { "policy": "tokenized", "supportsPageColors": true, "supportsPageTypography": true, "supportsDarkHost": true, "prefixes": [], "immutable": ["--mf-error semantic red #ef4444"] },
+  "project-intake-onboarding": { "policy": "tokenized", "supportsPageColors": true, "supportsPageTypography": true, "supportsDarkHost": true, "prefixes": [], "immutable": [] },
+  "wellness-patient-intake": { "policy": "tokenized", "supportsPageColors": true, "supportsPageTypography": true, "supportsDarkHost": true, "prefixes": [], "immutable": [] },
+  "pure-grid-template": { "policy": "hybrid", "supportsPageColors": true, "supportsPageTypography": true, "supportsDarkHost": true, "prefixes": ["mfp"], "immutable": [] },
+  "vendor-application": { "policy": "hybrid", "supportsPageColors": true, "supportsPageTypography": true, "supportsDarkHost": true, "prefixes": ["fl"], "immutable": [] },
+  "member-login": { "policy": "hybrid", "supportsPageColors": true, "supportsPageTypography": true, "supportsDarkHost": true, "prefixes": ["mfl"], "immutable": ["Facebook brand button #1877F2 / hover #0f6ae0"] },
+  "tabbed-account-setup": { "policy": "hybrid", "supportsPageColors": true, "supportsPageTypography": true, "supportsDarkHost": true, "prefixes": ["tab"], "immutable": [] },
+  "down-under-australia": { "policy": "hybrid", "supportsPageColors": true, "supportsPageTypography": true, "supportsDarkHost": true, "prefixes": ["au"], "immutable": ["reef gradient hero identity"] },
+  "euro-youth-application": { "policy": "hybrid", "supportsPageColors": true, "supportsPageTypography": true, "supportsDarkHost": true, "prefixes": ["nola", "aur"], "immutable": [] },
+  "classic-americana-registration": { "policy": "hybrid", "supportsPageColors": true, "supportsPageTypography": true, "supportsDarkHost": true, "prefixes": [], "immutable": ["vintage-americana-header.png photo header"] },
+  "classic-australiana-booking": { "policy": "hybrid", "supportsPageColors": true, "supportsPageTypography": true, "supportsDarkHost": true, "prefixes": [], "immutable": ["outback-station-side.png photo panel", "earthy gradient overlays"] },
+  "festa-italiana": { "policy": "locked", "supportsPageColors": false, "supportsPageTypography": true, "supportsDarkHost": false, "prefixes": ["fi"], "immutable": ["Italian tricolor palette", "festa-italiana-hero.png", "festa-italiana-texture.png", "serif display fonts"] },
+  "americana-journey": { "policy": "locked", "supportsPageColors": false, "supportsPageTypography": true, "supportsDarkHost": false, "prefixes": ["am"], "immutable": ["americana-hero.png", "DM Serif Display / Libre Franklin identity"] },
+  "bulgaria-discovery-programme": { "policy": "locked", "supportsPageColors": false, "supportsPageTypography": true, "supportsDarkHost": false, "prefixes": ["bg"], "immutable": ["Bulgarian folk palette", "parchment textures", "NOTE: local --bg-* prefix collides with global premium prefix 'bg' — do not fan-out"] }
+}
