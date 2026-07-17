@@ -26,6 +26,8 @@
     /// </summary>
     public static class MegaFormAssetVersion
     {
-        public static readonly string Current = "20260716-B403";
+        // [B404 NamedConnections v20260717-01] Database Settings popup gained the SQL Connections
+        // catalog (list + add/edit/delete named connections) in megaform-dashboard.js.
+        public static readonly string Current = "20260717-B405";
     }
 }
