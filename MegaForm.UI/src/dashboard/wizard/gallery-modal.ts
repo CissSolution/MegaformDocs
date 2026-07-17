@@ -8,7 +8,7 @@
 // cross-bundle coupling with builder/gallery.ts.
 import { openImportJsonDialog } from './import-json-modal';
 import { h, icon, wt, wizardToast } from './ui';
-import { isTrialMode, showTrialUpgrade, trialLockBadge } from '@shared/trial';
+import { isTrialMode, showTrialUpgrade } from '@shared/trial';
 import { WizardTemplate, templatesState, loadTemplates, wizardTemplateFromJson } from './templates';
 import { buildTemplateThumbnail, openTemplatePreview, ensurePreviewCss } from './gallery-preview';
 
@@ -47,20 +47,17 @@ function ensureGalleryCss(): void {
   .mfwg-cat{padding:5px 13px;font-size:12px;font-weight:600;border:1px solid #e2e8f0;border-radius:999px;background:#fff;color:#64748b;cursor:pointer}
   .mfwg-cat.on{background:#0f172a;border-color:#0f172a;color:#fff}
   .mfwg-body{flex:1;overflow-y:auto;padding:16px 20px}
-  .mfwg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
-  .mfwg-card{text-align:left;border:1px solid #e5e7eb;border-radius:14px;background:#fff;padding:0;cursor:pointer;overflow:hidden;transition:all .15s;display:flex;flex-direction:column}
+  .mfwg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+  .mfwg-card{text-align:left;border:1px solid #e5e7eb;border-radius:14px;background:#fff;padding:0;cursor:pointer;overflow:hidden;transition:all .15s;display:block;position:relative}
   .mfwg-card:hover{border-color:#c7d2fe;box-shadow:0 12px 26px rgba(15,23,42,.1);transform:translateY(-2px)}
   .mfwg-card:focus-visible{outline:2px solid #818cf8;outline-offset:2px}
-  .mfwg-thumb{height:158px;background:linear-gradient(135deg,#eef2ff,#faf5ff);display:flex;align-items:center;justify-content:center;color:#6366f1;font-size:30px;position:relative;overflow:hidden}
-  .mfwg-thumb .mfwg-badge{position:absolute;top:8px;right:8px;z-index:3;font-size:10px;font-weight:800;padding:3px 8px;border-radius:999px;background:#7c3aed;color:#fff}
+  .mfwg-thumb{height:220px;background:linear-gradient(135deg,#eef2ff,#faf5ff);display:flex;align-items:center;justify-content:center;color:#6366f1;font-size:30px;position:relative;overflow:hidden}
+  .mfwg-lock{position:absolute;top:9px;right:9px;z-index:3;width:28px;height:28px;border-radius:999px;background:rgba(15,23,42,.72);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px}
   .mfwg-thumb-ov{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(15,23,42,.04) 0%,rgba(15,23,42,.34) 100%);opacity:0;transition:opacity .16s}
   .mfwg-card:hover .mfwg-thumb-ov,.mfwg-card:focus-within .mfwg-thumb-ov{opacity:1}
-  .mfwg-peek{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 16px;border:0;border-radius:999px;cursor:pointer;color:#0f172a;background:rgba(255,255,255,.96);font-weight:700;font-size:12.5px;box-shadow:0 10px 26px rgba(15,23,42,.22);transform:translateY(6px);transition:transform .16s}
+  .mfwg-peek{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;padding:0;border:0;border-radius:999px;cursor:pointer;color:#0f172a;background:rgba(255,255,255,.96);font-weight:700;font-size:13px;box-shadow:0 10px 26px rgba(15,23,42,.22);transform:translateY(6px);transition:transform .16s}
   .mfwg-card:hover .mfwg-peek,.mfwg-card:focus-within .mfwg-peek{transform:translateY(0)}
   .mfwg-peek:hover{background:#fff}
-  .mfwg-meta{padding:11px 13px}
-  .mfwg-meta b{display:block;font-size:13.5px;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .mfwg-meta small{display:block;font-size:11.5px;color:#94a3b8;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .mfwg-empty{color:#94a3b8;font-size:13px;text-align:center;padding:48px 0}
   .mfwg-ft{flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:12px 20px;border-top:1px solid #f1f5f9;background:#fafbff}
   .mfwg-import{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 16px;border:1px dashed #c7d2fe;border-radius:10px;background:#fff;color:#4338ca;font-weight:700;font-size:13px;cursor:pointer}
@@ -148,19 +145,15 @@ export function openWizardGallery(onPick: (t: WizardTemplate) => void, onImport:
         // (compass / globe-2 / flower-2) aren't FA classes → show a neutral glyph, not raw text.
         thumb.appendChild(t.icon && t.icon.indexOf('fa-') === 0 ? icon(t.icon) : icon(t.isPremium ? 'fa-wand-magic-sparkles' : 'fa-file-lines'));
       }
-      if (t.isPremium) thumb.appendChild(h('span', { class: 'mfwg-badge' }, locked ? '\u{1F512} ' + trialLockBadge() : 'Premium'));
+      if (locked) thumb.appendChild(h('span', { class: 'mfwg-lock', 'aria-hidden': 'true' }, [icon('fa-lock')]));
       thumb.appendChild(h('div', { class: 'mfwg-thumb-ov' }, [
-        h('button', { type: 'button', class: 'mfwg-peek', title: previewLabel, onclick: (e: any) => { e.stopPropagation(); if (locked) { pick(); } else { openTemplatePreview(t, pick); } } }, [icon(locked ? 'fa-lock' : 'fa-eye'), document.createTextNode(' ' + (locked ? trialLockBadge() : previewLabel))]),
+        h('button', { type: 'button', class: 'mfwg-peek', title: previewLabel, 'aria-label': previewLabel, onclick: (e: any) => { e.stopPropagation(); if (locked) { pick(); } else { openTemplatePreview(t, pick); } } }, [icon(locked ? 'fa-lock' : 'fa-eye')]),
       ]));
       grid.appendChild(h('div', {
         class: 'mfwg-card' + (locked ? ' mfwg-locked' : ''), role: 'button', tabindex: '0', onclick: pick,
         onkeydown: (e: any) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } },
       }, [
         thumb,
-        h('div', { class: 'mfwg-meta' }, [
-          h('b', null, t.title),
-          h('small', null, catLabel(t.category) + (t.fieldCount ? ' · ' + t.fieldCount + ' fields' : '')),
-        ]),
       ]));
     });
   }

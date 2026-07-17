@@ -7,7 +7,8 @@ import { h, icon, wt, wizardToast } from './ui';
 import { loadTemplates, templatesState, hydrateStandardFields, WizardTemplate } from './templates';
 import { premiumStepDetailsFor } from './premium-steps';
 import { openWizardGallery, openImportJson, openImportJsonPaste } from './gallery-modal';
-import { isTrialMode, showTrialUpgrade, trialLockBadge } from '@shared/trial';
+import { buildTemplateThumbnail, ensurePreviewCss } from './gallery-preview';
+import { isTrialMode, showTrialUpgrade } from '@shared/trial';
 
 let counter = 1000;
 const fid = () => 'wf-' + (++counter);
@@ -52,6 +53,45 @@ function templateCard(label: string, desc: string, iconName: string, selected: b
   ]);
 }
 
+const PREVIEW_GRADIENTS: Record<string, string> = {
+  general: 'linear-gradient(135deg,#5b8def,#7c3aed)',
+  hr: 'linear-gradient(135deg,#0ea5e9,#6366f1)',
+  healthcare: 'linear-gradient(135deg,#10b981,#0ea5e9)',
+  events: 'linear-gradient(135deg,#8b5cf6,#ec4899)',
+  survey: 'linear-gradient(135deg,#f59e0b,#ef4444)',
+  finance: 'linear-gradient(135deg,#14b8a6,#3b82f6)',
+  education: 'linear-gradient(135deg,#f97316,#ec4899)',
+};
+
+function previewGradient(cat: string): string {
+  return PREVIEW_GRADIENTS[(cat || 'general').toLowerCase()] || PREVIEW_GRADIENTS.general;
+}
+
+function templatePreviewCard(t: WizardTemplate, selected: boolean, onClick: () => void, locked?: boolean): HTMLElement {
+  ensurePreviewCss();
+  const thumbHtml = buildTemplateThumbnail(t);
+  const thumb = h('span', {
+    style: 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;background:' + previewGradient(t.category) + (locked ? ';filter:grayscale(.45);opacity:.72' : ''),
+  });
+  if (thumbHtml) thumb.innerHTML = thumbHtml;
+  else thumb.appendChild(icon(t.icon && t.icon.indexOf('fa-') === 0 ? t.icon : (t.isPremium ? 'fa-wand-magic-sparkles' : 'fa-file-lines')));
+
+  const card = h('button', {
+    type: 'button',
+    class: 'mfw-pick' + (selected ? ' sel' : '') + (locked ? ' mfw-locked' : ''),
+    style: 'position:relative;display:block;width:100%;height:190px;padding:0;overflow:hidden',
+    'aria-label': wt('wiz.setup.use_template_preview', 'Use template preview'),
+    onclick: onClick,
+  }, [thumb]);
+  if (locked) {
+    card.appendChild(h('span', {
+      style: 'position:absolute;top:9px;right:9px;width:28px;height:28px;border-radius:999px;background:rgba(15,23,42,.72);color:#fff;display:flex;align-items:center;justify-content:center;z-index:3',
+      'aria-hidden': 'true',
+    }, [icon('fa-lock')]));
+  }
+  return card;
+}
+
 export function renderSetup(data: WizardData, set: SetFn): HTMLElement {
   const tpls = templatesState();
   if (tpls.status === 'idle' || tpls.status === 'loading') loadTemplates(() => set({}, { rerender: true }));
@@ -66,16 +106,12 @@ export function renderSetup(data: WizardData, set: SetFn): HTMLElement {
     h('div', { class: 'mfw-grid', style: 'grid-template-columns:repeat(2,1fr)' },
       tpls.list.map(t => {
         const locked = isTrialMode() && t.isPremium;
-        return templateCard(
-          t.title,
-          (t.category || 'general') + (t.fieldCount ? ' · ' + t.fieldCount + ' fields' : ''),
-          t.icon || 'fa-file-lines',
+        return templatePreviewCard(
+          t,
           data.template === t.id,
           locked
             ? () => showTrialUpgrade({ title: wt('trial.premium_title', 'Premium template'), message: wt('trial.premium_msg', 'Premium templates need a paid license. Upgrade to use this template.') })
             : () => applyRealTemplate(t, set),
-          t.isPremium ? (locked ? trialLockBadge() : 'Premium') : undefined,
-          t.isPremium ? '#7c3aed' : undefined,
           locked,
         );
       }));
@@ -86,12 +122,12 @@ export function renderSetup(data: WizardData, set: SetFn): HTMLElement {
   // the name / pick a Quick start below.
   const applyPicked = (t: WizardTemplate): void => {
     applyRealTemplate(t, set);
-    if (!String(data.formName || '').trim() && t.title) set({ formName: t.title });
   };
   // Import path also shows a toast — imports were silent before, so a valid file that
   // only changed the (off-screen) name field felt like "nothing happened".
   const importPicked = (t: WizardTemplate): void => {
     applyPicked(t);
+    if (!String(data.formName || '').trim() && t.title) set({ formName: t.title });
     const n = t.fieldCount || (t.fields && t.fields.length) || 0;
     wizardToast(wt('wiz.import_ok', 'Imported "{title}" — {n} fields loaded', { title: t.title || 'form', n }));
   };

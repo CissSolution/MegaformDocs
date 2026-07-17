@@ -232,9 +232,13 @@ function buildCustomPreview(tpl: AnyObj): string {
 
 // ── live card thumbnail ─────────────────────────────────────────────────────────
 function buildCustomThumbnailMarkup(tpl: AnyObj): string {
-  const html = buildResolvedCustomTemplateHtml(tpl, true);
+  const thumbnailTpl = Object.assign({}, tpl, { title: '', description: '' });
+  const html = buildResolvedCustomTemplateHtml(thumbnailTpl, true);
   const css = customCssOf(tpl);
   if (!html) return '';
+  const titleScrubCss =
+    '.tpl-thumb-doc :is(h1,h2,h3,[class*="title" i],[class*="headline" i],[data-role*="title" i]){color:transparent!important;text-shadow:none!important;}'
+    + '.tpl-thumb-doc :is(h1,h2,h3,[class*="title" i],[class*="headline" i],[data-role*="title" i]) *{color:transparent!important;text-shadow:none!important;}';
   const srcdoc = '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=760, initial-scale=1"><style>'
     + 'html,body{margin:0;padding:0;background:#ffffff;color:#0f172a;font-family:Inter,Segoe UI,Arial,sans-serif;}'
     + 'body{width:760px;min-height:520px;overflow:hidden;}'
@@ -251,6 +255,7 @@ function buildCustomThumbnailMarkup(tpl: AnyObj): string {
     + '.tpl-token-submit-label{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 16px;border-radius:999px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#ffffff;font-weight:800;font-size:12px;}'
     + '.tpl-token-field-missing .tpl-token-input{border-style:dashed;color:#cbd5e1;}'
     + css
+    + titleScrubCss
     + '</style></head><body><div class="tpl-thumb-doc">' + html + '</div></body></html>';
   return '<div class="tpl-thumb-live tpl-thumb-live-custom">'
     + '<div class="tpl-thumb-frame-shell">'
