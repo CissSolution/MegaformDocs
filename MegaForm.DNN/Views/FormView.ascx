@@ -272,6 +272,55 @@ body > .mf-langpick-panel{z-index:100030;}
         document.body.appendChild(s);
     }
     btn.addEventListener('click', open);
+    try {
+        // [DropSafeDockUrl v20260717-03] The drop-safe dock hands its action over via
+        // sessionStorage — NOTHING rides on the URL (owner: internal flags in the URL are not
+        // DNN-standard). Each MegaForm module on the page runs its own copy of this script, so
+        // the first copy moves the key onto a window global before removing it (otherwise the
+        // copy that matches the target module might never see it), and a done-flag keeps a
+        // multi-module page from acting twice. Legacy URLs that still carry
+        // mfOpenSettings/mfDropReady (old links, bookmarks) are honored once and scrubbed clean.
+        var action = String(window.__mfDropAction || '');
+        if (!action) {
+            try {
+                action = sessionStorage.getItem('mfDropAction') || '';
+                if (action) { window.__mfDropAction = action; sessionStorage.removeItem('mfDropAction'); }
+            } catch (_) { }
+        }
+        var qs = new URLSearchParams(window.location.search || '');
+        var path = String(window.location.pathname || '');
+        var segMatch = path.match(/\/mfopensettings\/(\d+)(?:\/|$)/i);
+        var legacyTarget = qs.get('mfOpenSettings') || (segMatch ? segMatch[1] : '');
+        var hadDropReady = qs.has('mfDropReady') || /\/mfdropready\/\d+(?:\/|$)/i.test(path);
+        if (!action && legacyTarget) { action = 'settings:' + legacyTarget; window.__mfDropAction = action; }
+        if (legacyTarget || hadDropReady) {
+            qs.delete('mfOpenSettings');
+            qs.delete('mfDropReady');
+            var cleanPath = path
+                .replace(/\/mfdropready\/\d+(?=\/|$)/ig, '')
+                .replace(/\/mfopensettings\/\d+(?=\/|$)/ig, '');
+            if (!cleanPath) cleanPath = '/';
+            window.history.replaceState({}, document.title,
+                cleanPath + (qs.toString() ? '?' + qs.toString() : '') + (window.location.hash || ''));
+        }
+        if (action && !window.__mfDropActionDone) {
+            if (action.indexOf('settings:') === 0) {
+                var targetId = action.slice(9);
+                if (targetId === String(opts.moduleId) || targetId === '1') {
+                    window.__mfDropActionDone = true;
+                    window.setTimeout(open, 80);
+                }
+            } else if (action === 'builder' || action === 'dashboard') {
+                // Hash routes are the established admin navigation — dnn-host reads the hash at
+                // boot. Add the anti-FOUC class now (its parse-time twin ran before we set the
+                // hash) so the public form does not flash under the surface.
+                window.__mfDropActionDone = true;
+                document.documentElement.classList.add('mf-admin-shell-route');
+                if (document.body) document.body.classList.add('mf-admin-shell-route');
+                window.location.hash = '#mf-' + action;
+            }
+        }
+    } catch (_) { }
 })();
 </script>
 <div id="mf-host-dashboard-overlay" class="mf-host-overlay" aria-hidden="true">
@@ -544,8 +593,34 @@ body > .mf-langpick-panel{z-index:100030;}
          surface overlay on a blank page. --%>
 <% } else if (SuppressInlineAdminEmptyState && (ViewModel == null || ViewModel.FormId == 0)) { %>
     <%-- Transient add/drop state:
-         render nothing at all so DNN can drag/drop cleanly.
-         No MegaForm placeholder, no overlay, no dock buttons. --%>
+         keep the heavy admin shell suppressed so DNN's ajax MoveModule flow stays clean,
+         but show a tiny dock whose links force a full page render into the real shell. --%>
+    <% if (ShowDropSafeAdminDock) {
+        // [DropSafeDockUrl v20260717-03] The URL stays 100% CLEAN — href is the page's own URL,
+        // nothing else. Earlier cuts carried mfDropReady/mfOpenSettings in the querystring (DNN's
+        // friendly-URL provider 301'd them into ugly /key/value segments) or emitted the segments
+        // directly — owner rejected both: internal flags do not belong in a DNN URL. The action is
+        // handed over via sessionStorage in an inline onclick (inline handlers run even though this
+        // markup arrives inside DNN's ajax add/drop fragment where injected <script> blocks may
+        // not), and a same-path link click still forces the FULL page load the transient module
+        // state needs. The boot script (mf-dnn-settings-dock-boot) consumes the key on next load.
+        var mfDropBase = ReturnUrl ?? "/";
+    %>
+    <style>
+    .mf-drop-safe-dock{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin:0 0 10px;flex-wrap:wrap;font-family:'Inter',system-ui,sans-serif;}
+    .mf-drop-safe-btn{border:1px solid #dbe4f0;background:#fff;color:#0f172a;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;line-height:1;text-decoration:none;display:inline-flex;align-items:center;gap:8px;box-shadow:0 8px 20px rgba(15,23,42,.06);cursor:pointer;}
+    .mf-drop-safe-btn:hover{text-decoration:none;background:#f8fafc;color:#0f172a;}
+    .mf-drop-safe-btn.is-primary{background:#0f172a;color:#fff;border-color:#0f172a;}
+    </style>
+    <div class="mf-drop-safe-dock" data-mf-drop-safe-dock="1">
+        <a class="mf-drop-safe-btn" href="<%= Server.HtmlEncode(mfDropBase) %>"
+           onclick="try{sessionStorage.setItem('mfDropAction','settings:<%= ModuleId %>');}catch(e){}"><i class="fas fa-cog"></i> Settings</a>
+        <a class="mf-drop-safe-btn" href="<%= Server.HtmlEncode(mfDropBase) %>"
+           onclick="try{sessionStorage.setItem('mfDropAction','builder');}catch(e){}"><i class="fas fa-pen-ruler"></i> Form Builder</a>
+        <a class="mf-drop-safe-btn is-primary" href="<%= Server.HtmlEncode(mfDropBase) %>"
+           onclick="try{sessionStorage.setItem('mfDropAction','dashboard');}catch(e){}"><i class="fas fa-table-columns"></i> Form Dashboard</a>
+    </div>
+    <% } %>
 <% } else if (!SuppressInlineAdminEmptyState && (ViewModel == null || ViewModel.FormId == 0)) { %>
     <%-- [PublicEmptyStateHide v20260421-01]
          Split the empty-state block so admin-only config hints do not leak to
