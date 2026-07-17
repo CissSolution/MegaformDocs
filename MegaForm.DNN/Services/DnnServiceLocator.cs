@@ -35,6 +35,16 @@ namespace MegaForm.DNN.Services
         public IDraftRepository DraftRepo { get; }
         public IPhase2Repository Phase2Repo { get; }
 
+        // [SourcePickerDNN v20260717-01] External-table read stack — the DNN twin of Oqtane's
+        // Startup.cs:81-108 registration block. SubmissionRepo above IS the decorator
+        // (ExternalSubmissionRepository) wrapping the raw adapter, so an ATBE-bound form reads its
+        // records live and a databaseInsert form can serve its mirror table via ?source=sql.
+        // These are exposed so the Submissions controller can echo sqlCapable without re-probing.
+        public MegaForm.Core.Models.ExternalTable.IExternalBindingStore ExternalBindings { get; }
+        public MegaForm.Core.Models.ExternalTable.IExternalRowMapStore ExternalRowMap { get; }
+        public MegaForm.Core.Services.ExternalTable.ExternalTableQueryService ExternalQuery { get; }
+        public MegaForm.Core.Services.ExternalTable.DatabaseInsertBindingResolver DatabaseInsertResolver { get; }
+
         // Core services
         public EmailNotificationService EmailNotification { get; }
         public WebhookService Webhook { get; }
@@ -93,9 +103,25 @@ namespace MegaForm.DNN.Services
 
             // 2. Repository adapters (wrap existing DNN static repositories)
             FormRepo = new DnnFormRepositoryAdapter();
-            SubmissionRepo = new DnnSubmissionRepositoryAdapter();
+            var rawSubmissions = new DnnSubmissionRepositoryAdapter();
             DraftRepo = new DnnDraftRepositoryAdapter();
             Phase2Repo = new DnnPhase2RepositoryAdapter();
+
+            // [SourcePickerDNN v20260717-01] Wrap the raw submission repository in the external-table
+            // decorator (same shape as Oqtane Startup.cs:103-108). Routing is per form: an unbound
+            // form never notices the decorator exists; the anchor store writes through rawSubmissions
+            // so anchor creation cannot recurse. The connection allow-list mirrors what
+            // DnnConnectionRegistry itself accepts — DNN only ever resolves the portal-stored
+            // dashboard connection (SECURITY rule 1: the key comes from server-stored form settings,
+            // and an unlisted key can never be opened).
+            var connectionRegistry = new DnnConnectionRegistry(ReadPortalSetting);
+            ExternalBindings = new DnnExternalBindingStore();
+            ExternalRowMap = new DnnExternalRowMapStore(rawSubmissions);
+            ExternalQuery = new MegaForm.Core.Services.ExternalTable.ExternalTableQueryService(connectionRegistry);
+            DatabaseInsertResolver = new MegaForm.Core.Services.ExternalTable.DatabaseInsertBindingResolver(
+                connectionRegistry, FormRepo, IsAllowedExternalConnection);
+            SubmissionRepo = new MegaForm.Core.Services.ExternalTable.ExternalSubmissionRepository(
+                rawSubmissions, ExternalBindings, ExternalRowMap, ExternalQuery, DatabaseInsertResolver);
 
             // 3. Wire AntiSpam rate limiter to DNN data layer
             MegaForm.Core.Services.AntiSpamService.RateLimitChecker = (formId, ip, windowMin, maxPer) =>
@@ -112,7 +138,6 @@ namespace MegaForm.DNN.Services
             WorkflowPrincipals = new DnnWorkflowPrincipalResolver();
             WorkflowIdentityProvisioning = new DnnWorkflowIdentityProvisioningService(ResolveCurrentPortalId());
 
-            var connectionRegistry = new DnnConnectionRegistry(ReadPortalSetting);
             var executors = new List<INodeExecutor>
             {
                 new FormFieldNodeExecutor(),
@@ -224,6 +249,25 @@ namespace MegaForm.DNN.Services
                 new DnnFileRepository(), new DnnDiskStorageService(),
                 SubmissionProcessor, WorkflowTasks, WorkflowRepo);
             MegaFormSdk.Initialize(new SingleClientServiceProvider(sdkClient));
+        }
+
+        /// <summary>
+        /// [SourcePickerDNN v20260717-01] Connection keys the databaseInsert resolver may open.
+        /// Mirrors DnnConnectionRegistry's own acceptance rules (the registry throws for anything
+        /// else anyway — this gate just fails closed BEFORE a probe is attempted, parity with the
+        /// Oqtane allow-list "DashboardDatabase + MegaForm:ExternalTables:AllowedConnections").
+        /// </summary>
+        private static bool IsAllowedExternalConnection(string key)
+        {
+            var k = (key ?? string.Empty).Trim();
+            if (k.Length == 0
+                || k.Equals("DashboardDatabase", StringComparison.OrdinalIgnoreCase)
+                || k.Equals("DefaultConnection", StringComparison.OrdinalIgnoreCase)
+                || k.Equals("SiteSqlServer", StringComparison.OrdinalIgnoreCase)
+                || k.Equals("DnnDefault", StringComparison.OrdinalIgnoreCase))
+                return true;
+            var storedAlias = ReadPortalSetting("Database_ConnectionAlias", "DashboardDatabase");
+            return k.Equals((storedAlias ?? string.Empty).Trim(), StringComparison.OrdinalIgnoreCase);
         }
 
         private static int ResolveCurrentPortalId()

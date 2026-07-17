@@ -2041,7 +2041,8 @@ VALUES
         [HttpGet]
         [AllowAnonymous]
         public HttpResponseMessage List(int formId = 0, string status = null, string search = null,
-            string dateFrom = null, string dateTo = null, int pageIndex = 0, int pageSize = 50, string queryKey = null)
+            string dateFrom = null, string dateTo = null, int pageIndex = 0, int pageSize = 50, string queryKey = null,
+            string source = null)
         {
             var actor = CurrentSubmissionUser;
             var isAdmin = IsAdminUser(actor);
@@ -2077,22 +2078,68 @@ VALUES
                     pageSize = 100;
             }
 
+            // [SourcePickerDNN v20260717-01] source = auto|json|sql routes the READ through
+            // ExternalSourceContext (Core decorator, interposed in DnnServiceLocator) — twin of the
+            // Oqtane block in MegaFormController.ListSubmissions:2083. sql reads the customer table
+            // directly, so it is ADMIN-ONLY (SECURITY rule 1/3; parity with the AiTools
+            // CustomTableRows gate) and never reachable through the public-list-view bypass above.
+            // Capability is echoed so the client toggle only renders where a SQL source actually
+            // exists — the client must trust ONLY the echo, never its own requested source.
+            var requestedSource = MegaForm.Core.Services.ExternalTable.ExternalSourceContext.Normalize(source);
+            bool sqlCapable = false;
+            try
+            {
+                sqlCapable = requestedForm != null
+                    && MegaForm.Core.Services.ExternalTable.DatabaseInsertBindingResolver.TryParseTarget(requestedForm.SettingsJson, out _);
+                if (!sqlCapable && formId > 0)
+                    sqlCapable = DnnServiceLocator.Instance.ExternalBindings.GetByForm(formId) != null;
+            }
+            catch { /* capability echo only — never blocks the default JSON list */ }
+
+            if (requestedSource == MegaForm.Core.Services.ExternalTable.ExternalSourceScope.Sql)
+            {
+                if (!isAdmin)
+                    return Request.CreateResponse(HttpStatusCode.Forbidden, new { error = "The SQL table source requires administrator permission." });
+                if (!sqlCapable)
+                    return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "This form has no SQL table source (no databaseInsert and no external binding)." });
+                queryKey = null;   // bound-query presets are JSON-store concepts; they do not apply to table rows
+            }
+
             DateTime? from = string.IsNullOrEmpty(dateFrom) ? (DateTime?)null : DateTime.Parse(dateFrom);
             DateTime? to = string.IsNullOrEmpty(dateTo) ? (DateTime?)null : DateTime.Parse(dateTo);
 
             var formsRepo = new DnnFormRepository();
-            var service = new SubmissionQueryService(new DnnSubmissionRepository(), formsRepo, new DnnFileRepository());
+            // The locator repo is the ExternalSubmissionRepository decorator — required for the
+            // source routing above. For an ordinary form with source=auto it is a pure passthrough.
+            var service = new SubmissionQueryService(DnnServiceLocator.Instance.SubmissionRepo, formsRepo, new DnnFileRepository());
             var hasBoundQuery = !string.IsNullOrWhiteSpace(queryKey);
-            var result = service.List(new SubmissionListQuery
+            var sourceScope = new MegaForm.Core.Services.ExternalTable.ExternalSourceScope { Source = requestedSource };
+            var prevScope = MegaForm.Core.Services.ExternalTable.ExternalSourceContext.Current;
+            SubmissionPagedResult<SubmissionListItem> result;
+            MegaForm.Core.Services.ExternalTable.ExternalSourceContext.Current = sourceScope;
+            try
             {
-                FormId = formId,
-                Status = status,
-                Search = search,
-                DateFrom = from,
-                DateTo = to,
-                PageIndex = hasBoundQuery ? 0 : pageIndex,
-                PageSize = hasBoundQuery ? Math.Max(pageSize, 1000) : pageSize
-            });
+                result = service.List(new SubmissionListQuery
+                {
+                    FormId = formId,
+                    Status = status,
+                    Search = search,
+                    DateFrom = from,
+                    DateTo = to,
+                    PageIndex = hasBoundQuery ? 0 : pageIndex,
+                    // [QueryKey250Fix v20260717-01] Bound-query pre-fetch asked for 1000 but the
+                    // facade clamped to 250 — listview filters silently ran over the newest 250 rows
+                    // only. 5000 matches Oqtane. TrustedFetch is ADMIN-only (server-set, never
+                    // client-controlled): the anonymous public-queryKey path keeps the strict 250
+                    // cap per bounded-read rule 11 (anonymous = strictest cap).
+                    PageSize = hasBoundQuery ? Math.Max(pageSize, 5000) : pageSize,
+                    TrustedFetch = isAdmin
+                });
+            }
+            finally
+            {
+                MegaForm.Core.Services.ExternalTable.ExternalSourceContext.Current = prevScope;
+            }
             result = ApplyDnnListViewQuery(result, queryKey, pageIndex, pageSize);
 
             if (!isAdmin && !isPublicListView && result.Items != null)
@@ -2147,7 +2194,23 @@ VALUES
                 }
             }
 
-            return Request.CreateResponse(HttpStatusCode.OK, new { items = result.Items, totalCount = result.TotalCount, pageIndex = result.PageIndex, pageSize = result.PageSize });
+            // [SourcePickerDNN v20260717-01] Server-truth echo (same 4 fields as Oqtane): which store
+            // ACTUALLY answered ("json" | "sql" | "" when a forced sql read fail-closed), whether this
+            // form has a SQL source at all (drives the client toggle's visibility), the table label,
+            // and whether TotalCount is a floor rather than a fact (bounded count guard).
+            return Request.CreateResponse(HttpStatusCode.OK, new
+            {
+                items = result.Items,
+                totalCount = result.TotalCount,
+                pageIndex = result.PageIndex,
+                pageSize = result.PageSize,
+                source = sourceScope.AppliedSource,
+                sqlCapable,
+                sqlTable = string.IsNullOrEmpty(sourceScope.Table)
+                    ? string.Empty
+                    : (string.IsNullOrEmpty(sourceScope.SchemaName) ? sourceScope.Table : sourceScope.SchemaName + "." + sourceScope.Table),
+                totalIsBounded = sourceScope.TotalIsBounded
+            });
         }
 
         private static SubmissionPagedResult<SubmissionListItem> ApplyDnnListViewQuery(
@@ -2363,7 +2426,9 @@ VALUES
         [AllowAnonymous]
         public HttpResponseMessage Get(int submissionId)
         {
-            var service = new SubmissionQueryService(new DnnSubmissionRepository(), new DnnFormRepository(), new DnnFileRepository());
+            // [SourcePickerDNN v20260717-01] Locator repo = ExternalSubmissionRepository decorator:
+            // an ATBE anchor id resolves to the LIVE customer row; ordinary ids pass straight through.
+            var service = new SubmissionQueryService(DnnServiceLocator.Instance.SubmissionRepo, new DnnFormRepository(), new DnnFileRepository());
             var detail = service.GetDetail(submissionId);
             if (detail == null) return Request.CreateResponse(HttpStatusCode.NotFound);
             var actor = CurrentSubmissionUser;
@@ -2410,7 +2475,8 @@ VALUES
         [AllowAnonymous] // real gate below — mirrors Get(submissionId)
         public HttpResponseMessage Print(int submissionId)
         {
-            var service = new SubmissionQueryService(new DnnSubmissionRepository(), new DnnFormRepository(), new DnnFileRepository());
+            // [SourcePickerDNN v20260717-01] Same decorator as Get — anchors print live data.
+            var service = new SubmissionQueryService(DnnServiceLocator.Instance.SubmissionRepo, new DnnFormRepository(), new DnnFileRepository());
             var detail = service.GetDetail(submissionId);
             if (detail == null) return Request.CreateResponse(HttpStatusCode.NotFound);
             var actor = CurrentSubmissionUser;
@@ -3740,7 +3806,29 @@ VALUES
                     configured = false,
                     moduleId,
                     forms = forms.Select(f => new { formId = f.FormId, title = f.Title, status = f.Status, fieldCount = 0 }),
-                    config = (object)null
+                    // [DnnFirstTimeConfig v20260717-01] config was null here and the client's
+                    // normalizeModuleConfigResponse returns null on a missing config object — the
+                    // settings popup hard-failed with "Could not load module configuration
+                    // (module #N)" on EVERY freshly dropped module (owner repro module #510).
+                    // Oqtane has a client-side fallback; DNN never did. Minimal defaults let the
+                    // popup render its first-time "Module form" tab; configured:false is preserved
+                    // for existing consumers. moduleRole still echoes a pinned surface so a
+                    // formless dashboard/inbox module shows its true display mode.
+                    config = new
+                    {
+                        moduleId,
+                        formId = 0,
+                        viewType = "submit",
+                        viewConfig = "{}",
+                        selectedViewKey = string.Empty,
+                        cssClass = string.Empty,
+                        cacheMinutes = 0,
+                        moduleConfigured = false,
+                        displayMode = "fixed",
+                        viewMode = "form",
+                        listViewSettingsJson = "{}",
+                        moduleRole = ReadModuleRole(moduleId)
+                    }
                 });
             }
 
@@ -3794,10 +3882,45 @@ VALUES
                     closeOnOverlay = popupConfig.CloseOnOverlay,
                     startAt = popupConfig.StartAt,
                     endAt = popupConfig.EndAt,
-                    formTitle = form?.Title
+                    formTitle = form?.Title,
+                    // [DnnModuleRole v20260717-01] Echo the pinned surface so the settings popup's
+                    // "Display mode" dropdown shows the TRUE current state. Without this the popup
+                    // always displayed "Fixed form" while the page kept rendering the dashboard.
+                    moduleRole = ReadModuleRole(moduleId)
                 },
                 fields = flatFields
             });
+        }
+
+        /// <summary>[DnnModuleRole v20260717-01] MegaForm_ModuleMode (render | admin_dashboard |
+        /// myinbox — what FormView.ascx.cs actually renders) → the popup's moduleRole vocabulary.
+        /// Reads via ModuleInfo.ModuleSettings — ModuleController.GetModuleSettings(int) was REMOVED
+        /// in DNN 10 (MissingMethodException at runtime on 10.3, verified live 2026-07-17).</summary>
+        private static string ReadModuleRole(int moduleId)
+        {
+            try
+            {
+                var module = DotNetNuke.Entities.Modules.ModuleController.Instance.GetModule(
+                    moduleId, DotNetNuke.Common.Utilities.Null.NullInteger, true);
+                var settings = module != null ? module.ModuleSettings : null;
+                if (settings == null || !settings.ContainsKey("MegaForm_ModuleMode")) return string.Empty;
+                var mode = (Convert.ToString(settings["MegaForm_ModuleMode"]) ?? string.Empty).Trim().ToLowerInvariant();
+                if (mode == "admin_dashboard" || mode == "admin-dashboard" || mode == "admindashboard") return "dashboard";
+                if (mode == "myinbox") return "myinbox";
+            }
+            catch { }
+            return string.Empty;
+        }
+
+        /// <summary>[DnnModuleRole v20260717-01] Popup moduleRole → MegaForm_ModuleMode. Whitelisted,
+        /// not trusted (SECURITY rule 1): anything unknown means "render" — an ordinary form module,
+        /// never an admin surface.</summary>
+        private static string MapModuleRoleToDnnMode(string moduleRole)
+        {
+            var role = (moduleRole ?? string.Empty).Trim().ToLowerInvariant();
+            if (role == "dashboard" || role == "admin_dashboard") return "admin_dashboard";
+            if (role == "myinbox" || role == "inbox") return "myinbox";
+            return "render";
         }
 
         /// <summary>POST api/ModuleConfig/Save</summary>
@@ -3851,6 +3974,28 @@ VALUES
             string cssOverride = body.Value<string>("cssOverride");
             string extraClass  = body.Value<string>("extraClass");
 
+            // [DnnModuleRole v20260717-01] Twin of Oqtane SaveModuleConfig ([ModuleRole 2026-07-11]):
+            // the settings popup's "Display mode" dropdown pins/unpins a module to an admin surface
+            // via moduleRole ('' | 'dashboard' | 'myinbox'). DNN's render path reads
+            // MegaForm_ModuleMode (FormView.ascx.cs BuildRenderViewModel), but this Save never wrote
+            // it — so a module pinned to Dashboard could NEVER be switched back to a fixed form from
+            // the popup (owner bug 2026-07-17). Only acted on when the key is PRESENT in the body:
+            // legacy callers that never send moduleRole must not unpin a surface as a side effect.
+            // ADMIN-ONLY: pinning an admin surface is a page-layout decision, not something the
+            // class-level [DnnAuthorize] (any authenticated user) should reach (SECURITY rule 3).
+            bool hasModuleRole = body["moduleRole"] != null
+                && UserInfo != null && (UserInfo.IsSuperUser || UserInfo.IsInRole("Administrators"));
+            string requestedModuleMode = hasModuleRole ? MapModuleRoleToDnnMode(body.Value<string>("moduleRole")) : null;
+
+            if (moduleId > 0 && formId <= 0 && hasModuleRole)
+            {
+                // Role-only save: a module pinned to a surface (dashboard/inbox) may have no form
+                // selected yet — unpinning it back to "render" must still be possible.
+                new DotNetNuke.Entities.Modules.ModuleController()
+                    .UpdateModuleSetting(moduleId, "MegaForm_ModuleMode", requestedModuleMode);
+                return Request.CreateResponse(HttpStatusCode.OK, new { success = true });
+            }
+
             if (moduleId <= 0 || formId <= 0)
                 return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "moduleId and formId required" });
 
@@ -3895,6 +4040,12 @@ VALUES
                 };
                 if (!allowedSurfaces.Contains(pageSurface)) pageSurface = string.Empty;
                 mc.UpdateModuleSetting(moduleId, "MegaForm_PageSurface", pageSurface);
+
+                // [DnnModuleRole v20260717-01] Persist the pinned surface (see gate above). "render"
+                // is the explicit unpin — choosing "Fixed form" in the popup must actually switch the
+                // module back from dashboard/inbox.
+                if (hasModuleRole)
+                    mc.UpdateModuleSetting(moduleId, "MegaForm_ModuleMode", requestedModuleMode);
             }
 
             // Save Live Style Editor overrides if provided

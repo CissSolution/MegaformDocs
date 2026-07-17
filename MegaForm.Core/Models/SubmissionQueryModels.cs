@@ -16,6 +16,15 @@ namespace MegaForm.Core.Models
         public DateTime? DateTo { get; set; }
         public int PageIndex { get; set; }
         public int PageSize { get; set; } = 50;
+        /// <summary>
+        /// [QueryKey250Fix v20260717-01] Server-set ONLY (never bound from a request): lets a
+        /// trusted internal fetch (bound-query queryKey pre-filter, admin report export) page up to
+        /// SubmissionQueryService.TrustedMaxPageSize instead of the public 250 clamp. The 250 clamp
+        /// silently truncated every queryKey listview and report on forms with more than 250
+        /// submissions — filters ran over the first 250 rows only (data loss). The larger fetch is
+        /// still ONE bounded SQL page (OFFSET/FETCH pushed down), per CLAUDE.md bounded-read rule 11.
+        /// </summary>
+        public bool TrustedFetch { get; set; }
     }
 
     public class SubmissionListItem

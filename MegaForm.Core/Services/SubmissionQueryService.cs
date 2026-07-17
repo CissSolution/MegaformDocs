@@ -28,11 +28,16 @@ namespace MegaForm.Core.Services
             _files = files;
         }
 
+        /// <summary>[QueryKey250Fix v20260717-01] Ceiling for a server-trusted fetch (bound-query
+        /// pre-filter, admin report). Still a bounded SQL page — never "read the whole table".</summary>
+        public const int TrustedMaxPageSize = 5000;
+
         public SubmissionPagedResult<SubmissionListItem> List(SubmissionListQuery query)
         {
             if (query == null) query = new SubmissionListQuery();
             if (query.PageSize <= 0) query.PageSize = 50;
-            if (query.PageSize > 250) query.PageSize = 250;
+            var maxPageSize = query.TrustedFetch ? TrustedMaxPageSize : 250;
+            if (query.PageSize > maxPageSize) query.PageSize = maxPageSize;
             if (query.PageIndex < 0) query.PageIndex = 0;
 
             var tuple = _submissions.List(

@@ -2118,7 +2118,12 @@ namespace MegaForm.Oqtane.Server.Controllers
                 DateFrom = dateFrom,
                 DateTo = dateTo,
                 PageIndex = pageIndex,
-                PageSize = pageSize
+                PageSize = pageSize,
+                // [QueryKey250Fix v20260717-01] An ADMIN may page past the public 250 clamp (the
+                // report modal asks for 2000 and silently got 250 back — analysis ran over a quarter
+                // of the data). Non-admin callers were already clamped to 100 above, so TrustedFetch
+                // never applies to them. Facade still caps at TrustedMaxPageSize (bounded read).
+                TrustedFetch = IsSubmissionAdmin(actor)
             };
             var sourceScope = new MegaForm.Core.Services.ExternalTable.ExternalSourceScope { Source = requestedSource };
             var prevScope = MegaForm.Core.Services.ExternalTable.ExternalSourceContext.Current;
@@ -2239,7 +2244,13 @@ namespace MegaForm.Oqtane.Server.Controllers
                 DateFrom = query.DateFrom,
                 DateTo = query.DateTo,
                 PageIndex = 0,
-                PageSize = 5000
+                PageSize = 5000,
+                // [QueryKey250Fix v20260717-01] This asked for 5000 but the facade clamped to 250 —
+                // every bound-query listview on a form with >250 submissions silently filtered only
+                // the newest 250 rows. TrustedFetch is ADMIN-only (server-set, never
+                // client-controlled): the anonymous public-queryKey path keeps the strict 250 cap
+                // per bounded-read rule 11 (anonymous = strictest cap).
+                TrustedFetch = IsSubmissionAdmin(actor)
             };
 
             var loaded = _submissionQueries.List(fetchQuery);
@@ -2634,7 +2645,10 @@ namespace MegaForm.Oqtane.Server.Controllers
         [Authorize(Policy = "ViewModule")]
         public IActionResult ExportSubmissions(int formId, string format = "json")
         {
-            var result = _submissionQueries.List(new SubmissionListQuery { FormId = formId, PageIndex = 0, PageSize = 10000 });
+            // [QueryKey250Fix v20260717-01] Export asked for 10000 but the facade clamped to 250 —
+            // the downloaded "full" CSV/JSON silently held only the newest 250 rows. TrustedFetch
+            // lifts this authorized export to the facade's TrustedMaxPageSize (5000, bounded read).
+            var result = _submissionQueries.List(new SubmissionListQuery { FormId = formId, PageIndex = 0, PageSize = 10000, TrustedFetch = true });
             if (string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase))
             {
                 var lines = new List<string> { "SubmissionId,SubmittedOnUtc,Status,IpAddress,Summary" };

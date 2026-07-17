@@ -140,7 +140,20 @@ namespace MegaForm.Oqtane.Server.Data
             if (dateFrom.HasValue) q = q.Where(s => s.SubmittedOnUtc >= dateFrom.Value);
             if (dateTo.HasValue) q = q.Where(s => s.SubmittedOnUtc <= dateTo.Value);
             if (!string.IsNullOrEmpty(search)) q = q.Where(s => s.DataJson.Contains(search));
-            int total = q.Count();
+            // [BoundedCount v20260717-01] COUNT(*) over the full predicate ran on EVERY page request;
+            // on a very large form (or with the non-sargable DataJson LIKE search) the count IS the
+            // slow part. Cap the counted scan — SELECT COUNT(*) FROM (SELECT TOP (10001) …) — so
+            // ≤10 000 stays exact and beyond that we report the 10 000 floor and flag
+            // TotalIsBounded through the ambient source scope; the pager already renders "N+"
+            // when the controller echoes totalIsBounded (same contract as the external SQL path).
+            const int countCap = 10001;
+            int total = q.Take(countCap).Count();
+            if (total >= countCap)
+            {
+                total = countCap - 1;
+                var scope = MegaForm.Core.Services.ExternalTable.ExternalSourceContext.Current;
+                if (scope != null) scope.TotalIsBounded = true;
+            }
             var items = q.OrderByDescending(s => s.SubmittedOnUtc).Skip(pageIndex * pageSize).Take(pageSize).ToList();
             return (items, total);
         }

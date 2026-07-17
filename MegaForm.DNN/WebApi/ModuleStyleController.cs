@@ -46,7 +46,11 @@ namespace MegaForm.WebApi
             if (moduleId <= 0 || formId <= 0)
                 return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "moduleId and formId required" });
 
-            var settings = new ModuleController().GetModuleSettings(moduleId);
+            // [Dnn10Settings v20260717-01] GetModuleSettings(int) was REMOVED in DNN 10 —
+            // MissingMethodException at runtime on 10.3 made this endpoint 500 and broke the
+            // MegaForm Settings popup's Theme tab seeding. Read via ModuleInfo.ModuleSettings.
+            var module = ModuleController.Instance.GetModule(moduleId, DotNetNuke.Common.Utilities.Null.NullInteger, true);
+            var settings = module != null ? module.ModuleSettings : new System.Collections.Hashtable();
             var storedFormId = ReadSetting(settings, SettingKeyStyleFormId);
             var storedJson = ReadSetting(settings, SettingKeyStyleJson);
 

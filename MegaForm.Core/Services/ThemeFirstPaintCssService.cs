@@ -97,6 +97,22 @@ namespace MegaForm.Core.Services
         /// </summary>
         private const string HostPrimaryVar = "var(--bs-primary, var(--primary, var(--theme-primary, #2563eb)))";
 
+        // [BootswatchBorrow v20260717-01] Host-skin vars for "Color source: From page". Bootstrap 5.3
+        // CSS vars first (every Bootswatch theme exposes them; Oqtane + DNN 10 default themes are
+        // BS5), then the LAST fallback is ALWAYS the exact default megaform.css declares today — a
+        // skin exposing no vars renders pixel-identical to before this feature (no regression on
+        // plain skins). Dark themes are the point: --bs-body-bg/-color flip together, so card,
+        // input background and input text recolour as one readable set.
+        private const string HostBodyBgVar      = "var(--bs-body-bg, var(--body-bg, #ffffff))";
+        private const string HostBodyColorVar   = "var(--bs-body-color, var(--body-color, #333333))";
+        private const string HostHeadingVar     = "var(--bs-heading-color, var(--bs-body-color, #1a1a2e))";
+        private const string HostInputBgVar     = "var(--bs-form-control-bg, var(--bs-body-bg, #ffffff))";
+        private const string HostBorderVar      = "var(--bs-border-color, #e2e8f0)";
+        private const string HostMutedVar       = "var(--bs-secondary-color, #888888)";
+        private const string HostDisabledBgVar  = "var(--bs-secondary-bg, #f5f5f5)";
+        private const string HostFocusBorderVar = "var(--bs-primary, var(--primary, #4a90d9))";
+        private const string HostFocusRingVar   = "0 0 0 3px var(--bs-focus-ring-color, rgba(37, 99, 235, 0.1))";
+
         public static string BuildScopedThemeVarsCss(int formId, JObject settings)
         {
             if (settings == null) return string.Empty;
@@ -113,14 +129,43 @@ namespace MegaForm.Core.Services
             var borrowColors = ReadBool(First(settings, "inheritPageColors", "InheritPageColors"));
             if (borrowColors && !preservePremiumPalette)
             {
-                // Inject the host primary into the override map BEFORE alias expansion so
-                // BuildPremiumThemeAliasVars propagates it to EVERY primary-family alias
-                // (--mfp-primary / --au-primary / --primary / --ring / button + per-template
-                // prefixes). Without this, .mfp / AI pure-grid shells that read --mfp-* would not
-                // recolour. Body text colour is left untouched (readability); the card keeps its
-                // own bg (only the outer wrapper goes transparent, applied after aliases below).
+                // Inject the host palette into the override map BEFORE alias expansion so
+                // BuildPremiumThemeAliasVars propagates it to EVERY alias family
+                // (--mfp-* / --au-* / --card / --ring / per-template prefixes). Without this,
+                // .mfp / AI pure-grid shells that read --mfp-* would not recolour.
                 overrides["--mf-primary"] = HostPrimaryVar;
                 overrides["--mf-btn-bg"] = HostPrimaryVar;
+
+                // [BootswatchBorrow v20260717-01] The first ship of "From page" borrowed ONLY the
+                // primary accent and kept card/input/text on MegaForm's own light palette "for
+                // readability" — on any coloured or dark Bootswatch page the form stayed a WHITE
+                // card with white inputs (owner screenshots 2026-07-17). "From page" now means the
+                // whole surface: card bg, body/label/heading text, input bg/fg/border, focus,
+                // muted and disabled states all follow the host's Bootstrap 5.3 vars, and every
+                // value falls back to the exact previous default when the skin exposes no vars.
+                overrides["--mf-form-bg"] = HostBodyBgVar;
+                // Templates read the card surface via --mf-card-bg / --mf-text-muted with inline
+                // literal fallbacks (e.g. pure-grid: var(--mf-card-bg,#ffffff)) — neither is
+                // declared in megaform.css nor emitted by the alias builder, so they must be
+                // injected here or a premium card stays white on a dark page.
+                overrides["--mf-card-bg"] = HostBodyBgVar;
+                overrides["--mf-text-muted"] = HostMutedVar;
+                overrides["--mf-color-text"] = HostBodyColorVar;
+                overrides["--mf-text"] = HostBodyColorVar;
+                overrides["--mf-title-color"] = HostHeadingVar;
+                overrides["--mf-label-color"] = HostBodyColorVar;
+                overrides["--mf-help-color"] = HostMutedVar;
+                overrides["--mf-input-bg"] = HostInputBgVar;
+                overrides["--mf-input-color"] = HostBodyColorVar;
+                overrides["--mf-input-fg"] = HostBodyColorVar;
+                overrides["--mf-input-text"] = HostBodyColorVar;
+                overrides["--mf-input-border-color"] = HostBorderVar;
+                overrides["--mf-input-border"] = "1px solid " + HostBorderVar;
+                overrides["--mf-border"] = HostBorderVar;
+                overrides["--mf-input-muted-fg"] = HostMutedVar;
+                overrides["--mf-input-disabled-bg"] = HostDisabledBgVar;
+                overrides["--mf-input-focus-border"] = HostFocusBorderVar;
+                overrides["--mf-input-focus-ring"] = HostFocusRingVar;
             }
 
             if (overrides.Count == 0) return string.Empty;
