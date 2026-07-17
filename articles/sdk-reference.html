@@ -16,7 +16,7 @@
       <meta name="docfx:rel" content="../">
       
       
-      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/main/articles/sdk-reference.md/#L1">
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/Docs/docfx/articles/sdk-reference.md/#L1">
       <meta name="loc:inThisArticle" content="In this article">
       <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
       <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
@@ -113,8 +113,10 @@ public class MyService
 }
 </code></pre>
 <p><code>AddMegaFormSdk()</code> registers <code>IMegaFormClient</code> as a scoped service over whatever
-<code>IFormRepository</code>, <code>ISubmissionRepository</code>, <code>IFileRepository</code>, <code>IStorageService</code>, and
-<code>SubmissionProcessor</code> are already in the container.</p>
+<code>IFormRepository</code>, <code>ISubmissionRepository</code>, <code>IFileRepository</code>, <code>IStorageService</code>,
+<code>SubmissionProcessor</code>, <code>WorkflowTaskService</code>, and <code>IWorkflowRepository</code> are already in the
+container. The dashboard, submission-dashboard, and inbox surfaces light up automatically when
+the host registers the corresponding Core workflow services.</p>
 <h3 id="2-ambient-accessor-dnn-razor-host-ddr-legacy-ascx">2. Ambient accessor (DNN Razor Host, DDR, legacy <code>.ascx</code>)</h3>
 <pre><code class="lang-csharp">MegaFormSdk.Initialize(serviceProvider);
 
@@ -128,10 +130,13 @@ scope. In DNN, <code>DnnServiceLocator</code> wires this automatically using
 <code>SingleClientServiceProvider</code>.</p>
 <h2 id="the-client-surface">The client surface</h2>
 <pre><code>IMegaFormClient
- ├─ Forms       : IFormApi        create, read, list, update, delete forms
- ├─ Submissions : ISubmissionApi  query, submit, update, delete submissions
- ├─ Files       : IFileApi        list and download uploaded files
- └─ Schema      : ISchemaApi      parse form schema JSON into typed metadata
+ ├─ Forms              : IFormApi               create, read, list, update, delete forms
+ ├─ Submissions        : ISubmissionApi         query, submit, update, delete submissions
+ ├─ Dashboard          : IDashboardApi          per-form counts and recent-submission totals
+ ├─ SubmissionDashboard: ISubmissionDashboardApi rich search, detail, and status operations
+ ├─ Inbox              : IInboxApi              human-task inbox (claim, approve, reject, forward)
+ ├─ Files              : IFileApi               list and download uploaded files
+ └─ Schema             : ISchemaApi             parse form schema JSON into typed metadata
 </code></pre>
 <p>Every call accepts an optional <a href="../api/MegaForm.Sdk.MegaFormScope.html"><code>MegaFormScope</code></a>. When
 omitted, the SDK uses the host's ambient <code>IPlatformContext</code> (current request portal/user). Pass an
@@ -326,6 +331,196 @@ await client.Submissions.UpdateAsync(123, newData, scope);
 <pre><code class="lang-csharp">await client.Submissions.DeleteAsync(123, scope);
 </code></pre>
 <p>No-op if the submission does not exist or belongs to another portal.</p>
+<h2 id="dashboard-api--idashboardapi">Dashboard API — <code>IDashboardApi</code></h2>
+<p>Source reference: <a href="../api/MegaForm.Sdk.IDashboardApi.html"><code>IDashboardApi</code></a></p>
+<p>The dashboard surface is for hosts that want to build a <strong>custom summary screen</strong> without writing
+raw SQL. It returns per-form totals plus a recent-submission window.</p>
+<pre><code class="lang-csharp">var overview = await client.Dashboard.GetOverviewAsync(new DashboardQuery
+{
+    Days     = 30,     // recent-submission window
+    MaxForms = 250,    // cap the number of form rows
+    Status   = null,   // optional &quot;published&quot;/&quot;draft&quot; filter
+    Search   = null    // optional title/description search
+}, scope);
+
+Console.WriteLine($&quot;Portal {overview.PortalId}: {overview.TotalForms} forms,&quot; +
+                  $&quot; {overview.TotalSubmissions} total submissions,&quot; +
+                  $&quot; {overview.RecentSubmissions} in the last {overview.Days} days&quot;);
+
+foreach (var row in overview.Forms)
+{
+    Console.WriteLine($&quot;#{row.FormId} {row.Title}: &quot; +
+                      $&quot;{row.SubmissionCount} total, {row.RecentSubmissionCount} recent&quot;);
+}
+</code></pre>
+<p>Behavior:</p>
+<ul>
+<li><code>Days</code> defaults to <code>30</code> and is clamped to a maximum of <code>365</code>.</li>
+<li><code>MaxForms</code> defaults to <code>250</code> and is clamped to a maximum of <code>1000</code>.</li>
+<li><code>RecentSubmissionCount</code> counts submissions with <code>SubmittedOnUtc &gt;= UtcNow.Date - (Days - 1)</code>.</li>
+<li>Results are scoped to the resolved portal; cross-portal forms are excluded.</li>
+</ul>
+<p>Use this API for <strong>high-level KPI widgets</strong> (form count, submission count, recent activity). For
+searchable grids or per-submission detail, use <code>ISubmissionDashboardApi</code> instead.</p>
+<h2 id="submission-dashboard-api--isubmissiondashboardapi">Submission Dashboard API — <code>ISubmissionDashboardApi</code></h2>
+<p>Source reference: <a href="../api/MegaForm.Sdk.ISubmissionDashboardApi.html"><code>ISubmissionDashboardApi</code></a></p>
+<p>This is the richer, dashboard-oriented alternative to the legacy <code>ISubmissionApi.FindAsync</code>.
+It returns dashboard-friendly list rows, full detail payloads, and exposes a status update
+operation.</p>
+<h3 id="search-submissions">Search submissions</h3>
+<pre><code class="lang-csharp">var page = await client.SubmissionDashboard.SearchAsync(new SubmissionSearchQuery
+{
+    FormId   = 42,
+    Status   = &quot;new&quot;,
+    Search   = &quot;jane&quot;,           // searches summary text / data
+    DateFrom = DateTime.UtcNow.AddDays(-30),
+    DateTo   = null,
+    Page     = 1,
+    PageSize = 50                // clamped to 250
+}, scope);
+
+foreach (var item in page.Items)
+{
+    Console.WriteLine($&quot;#{item.SubmissionId} {item.FormTitle} — {item.Status} — {item.SummaryText}&quot;);
+}
+</code></pre>
+<p>Notes:</p>
+<ul>
+<li>If <code>FormId</code> is <code>0</code>, results are filtered to forms owned by the resolved portal.</li>
+<li><code>TotalCount</code> is accurate for a specific <code>FormId</code>; when listing across all portal forms it equals
+the number of returned items on the current page.</li>
+<li><code>SpamScore</code> is returned as a nullable decimal.</li>
+</ul>
+<h3 id="load-submission-detail">Load submission detail</h3>
+<pre><code class="lang-csharp">SubmissionDetailDto? detail = await client.SubmissionDashboard.GetDetailAsync(123, scope);
+if (detail is null) return;
+
+Console.WriteLine($&quot;Form: {detail.Form?.Title}&quot;);
+Console.WriteLine($&quot;Submitted: {detail.Submission?.SubmittedOnUtc}&quot;);
+
+foreach (var value in detail.Values)
+    Console.WriteLine($&quot;  {value.Key}: {value.Value}&quot;);
+
+if (detail.Workflow.HasWorkflow)
+{
+    Console.WriteLine($&quot;Workflow active task: {detail.Workflow.ActiveNodeLabel}&quot;);
+    Console.WriteLine($&quot;Open tasks: {detail.Workflow.OpenTaskCount}/{detail.Workflow.TaskCount}&quot;);
+}
+</code></pre>
+<p><code>SubmissionDetailDto</code> includes:</p>
+<ul>
+<li><code>Submission</code> and <code>Form</code> metadata.</li>
+<li><code>Schema</code> parsed from the form.</li>
+<li><code>Values</code> — flattened key/value pairs ready for display.</li>
+<li><code>FieldSnapshots</code> — values captured at submit time (preserves labels even when the schema later
+changes).</li>
+<li><code>Files</code> — uploaded files metadata.</li>
+<li><code>Workflow</code> — workflow summary when a workflow service is registered.</li>
+</ul>
+<h3 id="update-submission-status">Update submission status</h3>
+<pre><code class="lang-csharp">await client.SubmissionDashboard.UpdateStatusAsync(123, &quot;reviewed&quot;, scope);
+</code></pre>
+<p>Throws <code>ArgumentException</code> when <code>status</code> is empty. No-op if the submission does not exist or
+belongs to another portal.</p>
+<h2 id="inbox-api--iinboxapi">Inbox API — <code>IInboxApi</code></h2>
+<p>Source reference: <a href="../api/MegaForm.Sdk.IInboxApi.html"><code>IInboxApi</code></a></p>
+<p>The inbox surface lets you build a <strong>custom My Inbox UI</strong> or server-side workflow integration. It
+operates on human tasks created by the MegaForm workflow engine or by ad-hoc review requests.</p>
+<div class="IMPORTANT">
+<h5>Important</h5>
+<p><code>IInboxApi</code> requires <code>WorkflowTaskService</code> to be registered in the host. If it is missing, every
+call throws <code>InvalidOperationException</code>.</p>
+</div>
+<h3 id="my-workboard">My workboard</h3>
+<pre><code class="lang-csharp">var board = await client.Inbox.GetMyInboxAsync(new InboxQuery { RecentCompleted = 25 }, scope);
+
+Console.WriteLine($&quot;Actor: {board.User.DisplayName} (admin={board.User.IsAdmin})&quot;);
+Console.WriteLine($&quot;Incoming: {board.Kpis.Incoming}, In progress: {board.Kpis.InProgress}, &quot; +
+                  $&quot;Completed: {board.Kpis.Completed}, Overdue: {board.Kpis.Overdue}&quot;);
+
+foreach (var task in board.Incoming)
+    Console.WriteLine($&quot;[INCOMING] {task.TaskId} {task.NodeLabel} — {task.Status}&quot;);
+</code></pre>
+<p>The actor is resolved from the <code>MegaFormScope</code> / <code>IPlatformContext</code>. Make sure <code>UserName</code> and
+<code>Roles</code> are populated when the task is routed by role queue.</p>
+<h3 id="load-one-task">Load one task</h3>
+<pre><code class="lang-csharp">InboxTaskResultDto result = await client.Inbox.GetTaskAsync(&quot;TASK-123&quot;, scope);
+Console.WriteLine($&quot;Task: {result.Task?.NodeLabel}, Status: {result.Task?.Status}&quot;);
+foreach (var action in result.Actions)
+    Console.WriteLine($&quot;  {action.ActionType} by {action.ActorDisplayName} at {action.CreatedAtUtc}&quot;);
+</code></pre>
+<h3 id="task-actions">Task actions</h3>
+<pre><code class="lang-csharp">// Claim an open task
+var claimed = await client.Inbox.ClaimAsync(new InboxTaskActionRequest
+{
+    TaskId  = &quot;TASK-123&quot;,
+    Comment = &quot;I'll handle this one&quot;
+}, scope);
+
+// Approve / reject
+var approved = await client.Inbox.ApproveAsync(new InboxTaskActionRequest
+{
+    TaskId  = &quot;TASK-123&quot;,
+    Comment = &quot;Approved after verification&quot;
+}, scope);
+
+var rejected = await client.Inbox.RejectAsync(new InboxTaskActionRequest
+{
+    TaskId  = &quot;TASK-123&quot;,
+    Comment = &quot;Missing required documents&quot;
+}, scope);
+
+// Forward to another user
+var forwarded = await client.Inbox.ForwardAsync(new InboxTaskActionRequest
+{
+    TaskId     = &quot;TASK-123&quot;,
+    TargetUser = &quot;manager&quot;,
+    Comment    = &quot;Please review the budget line&quot;
+}, scope);
+
+// Comment without changing state
+var commented = await client.Inbox.CommentAsync(new InboxTaskActionRequest
+{
+    TaskId  = &quot;TASK-123&quot;,
+    Comment = &quot;Reached out to the customer&quot;
+}, scope);
+</code></pre>
+<p><code>ApproveAsync</code> and <code>RejectAsync</code> accept optional <code>Data</code> for workflow variables:</p>
+<pre><code class="lang-csharp">var approved = await client.Inbox.ApproveAsync(new InboxTaskActionRequest
+{
+    TaskId  = &quot;TASK-123&quot;,
+    Comment = &quot;Approved&quot;,
+    Data    = new Dictionary&lt;string, object&gt; { [&quot;approvedAmount&quot;] = 1500 }
+}, scope);
+</code></pre>
+<h3 id="attach-a-file-to-a-task">Attach a file to a task</h3>
+<pre><code class="lang-csharp">using var stream = System.IO.File.OpenRead(&quot;approval.pdf&quot;);
+var attach = await client.Inbox.AttachFileAsync(new InboxFileAttachmentRequest
+{
+    TaskId      = &quot;TASK-123&quot;,
+    FieldKey    = &quot;approval_document&quot;,
+    FileName    = &quot;approval.pdf&quot;,
+    ContentType = &quot;application/pdf&quot;,
+    Content     = stream,
+    SizeBytes   = stream.Length
+}, scope);
+
+if (attach.Success)
+    Console.WriteLine($&quot;Attached #{attach.File?.FileId}&quot;);
+</code></pre>
+<p>The file is saved against the task's linked submission. The host must register both
+<code>IFileRepository</code> and <code>IStorageService</code>.</p>
+<h3 id="ad-hoc-review-task">Ad-hoc review task</h3>
+<p>Send an existing submission to a user's inbox without a prebuilt workflow:</p>
+<pre><code class="lang-csharp">var sent = await client.Inbox.SendSubmissionAsync(new SendSubmissionToInboxRequest
+{
+    FormId       = 42,
+    SubmissionId = 123,
+    TargetUser   = &quot;manager&quot;,
+    Title        = &quot;Please review this expense&quot;,
+    Comment      = &quot;Urgent approval needed&quot;
+}, scope);
+</code></pre>
 <h2 id="files-api--ifileapi">Files API — <code>IFileApi</code></h2>
 <p>Source reference: <a href="../api/MegaForm.Sdk.IFileApi.html"><code>IFileApi</code></a></p>
 <h3 id="list-uploaded-files">List uploaded files</h3>
@@ -419,7 +614,8 @@ schema-driven renderer.</p>
 </code></pre>
 <p>See <a href="dnn-razor-host.html">DNN Razor Host</a> for the full setup and walkthrough.</p>
 <h2 id="paging-pattern">Paging pattern</h2>
-<p>Both <code>ListFormsAsync</code> and <code>FindAsync</code> return <a href="../api/MegaForm.Sdk.PagedResult-1.html"><code>PagedResult&lt;T&gt;</code></a>:</p>
+<p><code>ListFormsAsync</code>, <code>FindAsync</code>, and <code>SubmissionDashboard.SearchAsync</code> return
+<a href="../api/MegaForm.Sdk.PagedResult-1.html"><code>PagedResult&lt;T&gt;</code></a>:</p>
 <table>
 <thead>
 <tr>
@@ -505,6 +701,10 @@ while (true)
 <td><code>UpdateFormAsync</code> null request</td>
 <td>Throws <code>ArgumentNullException</code></td>
 </tr>
+<tr>
+<td>Inbox API not wired</td>
+<td>Throws <code>InvalidOperationException</code></td>
+</tr>
 </tbody>
 </table>
 <h2 id="complete-minimal-example">Complete minimal example</h2>
@@ -538,6 +738,196 @@ public async Task Demo(IMegaFormClient client)
         Console.WriteLine($&quot;Field: {f.Key} ({f.Type})&quot;);
 }
 </code></pre>
+<h2 id="sample-read-the-country-form-submissions">Sample: read the &quot;Country&quot; form submissions</h2>
+<p>This sample finds a form by title, reads its submissions using both the legacy and the new
+dashboard search surface, and prints each row's country value.</p>
+<pre><code class="lang-csharp">public async Task ReadCountryFormAsync(IMegaFormClient client)
+{
+    var scope = new MegaFormScope { PortalId = 1 };
+
+    // 1. Find the &quot;Country&quot; form.
+    var forms = await client.Forms.ListFormsAsync(
+        new FormQuery { Search = &quot;Country&quot;, PageSize = 10 }, scope);
+
+    var countryForm = forms.Items.FirstOrDefault(f =&gt;
+        string.Equals(f.Title, &quot;Country&quot;, StringComparison.OrdinalIgnoreCase));
+
+    if (countryForm is null)
+    {
+        Console.WriteLine(&quot;Country form not found.&quot;);
+        return;
+    }
+
+    Console.WriteLine($&quot;Form: #{countryForm.FormId} {countryForm.Title}&quot;);
+
+    // 2. Legacy query surface ( SubmissionApi.FindAsync ).
+    var legacyPage = await client.Submissions.FindAsync(new SubmissionQuery
+    {
+        FormId   = countryForm.FormId,
+        Page     = 1,
+        PageSize = 100
+    }, scope);
+
+    foreach (var sub in legacyPage.Items)
+    {
+        using var doc = System.Text.Json.JsonDocument.Parse(sub.DataJson ?? &quot;{}&quot;);
+        var country = doc.RootElement.TryGetProperty(&quot;country&quot;, out var c)
+            ? c.GetString()
+            : null;
+        Console.WriteLine($&quot;  #{sub.SubmissionId}: country={country}, status={sub.Status}&quot;);
+    }
+
+    // 3. New dashboard search surface with richer filtering.
+    var searchPage = await client.SubmissionDashboard.SearchAsync(new SubmissionSearchQuery
+    {
+        FormId   = countryForm.FormId,
+        Status   = null,
+        Search   = null,
+        DateFrom = DateTime.UtcNow.AddDays(-30),
+        Page     = 1,
+        PageSize = 100
+    }, scope);
+
+    foreach (var item in searchPage.Items)
+    {
+        Console.WriteLine($&quot;  [dashboard] #{item.SubmissionId}: {item.SummaryText}&quot;);
+    }
+}
+</code></pre>
+<h2 id="sample-a-simple-inbox-for-one-user">Sample: a simple inbox for one user</h2>
+<p>This sample shows how to render a minimal &quot;My Inbox&quot; for a known user. The actor is resolved from
+the explicit <code>MegaFormScope</code>, so it works from a console job, a scheduler, or an ASP.NET Core
+controller.</p>
+<pre><code class="lang-csharp">public async Task SimpleInboxForUserAsync(IMegaFormClient client, string userName)
+{
+    var scope = new MegaFormScope
+    {
+        PortalId        = 1,
+        UserId          = 42,
+        UserName        = userName,
+        DisplayName     = &quot;Jane Manager&quot;,
+        IsAuthenticated = true,
+        Roles           = new List&lt;string&gt; { &quot;Managers&quot;, &quot;Finance&quot; }
+    };
+
+    // 1. Load the workboard.
+    var board = await client.Inbox.GetMyInboxAsync(
+        new InboxQuery { RecentCompleted = 10 }, scope);
+
+    Console.WriteLine($&quot;Inbox for {board.User.DisplayName}&quot;);
+    Console.WriteLine($&quot;Incoming: {board.Kpis.Incoming}, &quot; +
+                      $&quot;In progress: {board.Kpis.InProgress}, &quot; +
+                      $&quot;Completed: {board.Kpis.Completed}&quot;);
+
+    // 2. Claim the first available incoming task.
+    var firstOpen = board.Incoming.FirstOrDefault(t =&gt; t.AllowClaim);
+    if (firstOpen is not null)
+    {
+        var claimed = await client.Inbox.ClaimAsync(new InboxTaskActionRequest
+        {
+            TaskId  = firstOpen.TaskId!,
+            Comment = &quot;Starting review&quot;
+        }, scope);
+
+        if (claimed.Success)
+            Console.WriteLine($&quot;Claimed {claimed.Task?.TaskId}&quot;);
+    }
+
+    // 3. Approve a claimed task.
+    var myTask = board.InProgress.FirstOrDefault(t =&gt;
+        t.AssignedUserName == userName &amp;&amp; t.Status == &quot;Claimed&quot;);
+
+    if (myTask is not null)
+    {
+        var approved = await client.Inbox.ApproveAsync(new InboxTaskActionRequest
+        {
+            TaskId  = myTask.TaskId!,
+            Comment = &quot;Approved from the simple inbox sample&quot;
+        }, scope);
+
+        Console.WriteLine($&quot;Approve result: {approved.Success}&quot;);
+    }
+}
+</code></pre>
+<h2 id="sample-custom-dashboard-developed-by-the-host">Sample: custom dashboard developed by the host</h2>
+<p>This sample builds a small custom dashboard controller/page. It combines <code>Dashboard.GetOverviewAsync</code>
+for KPIs and <code>SubmissionDashboard.SearchAsync</code> for a searchable recent-submissions grid. Host
+developers can adapt this to Razor Pages, Blazor, MVC, or a DNN Razor Host script.</p>
+<pre><code class="lang-csharp">using MegaForm.Sdk;
+
+public class MyCustomDashboard
+{
+    private readonly IMegaFormClient _client;
+    public MyCustomDashboard(IMegaFormClient client) =&gt; _client = client;
+
+    public async Task&lt;DashboardViewModel&gt; BuildAsync(int portalId, int? formId = null)
+    {
+        var scope = new MegaFormScope { PortalId = portalId };
+
+        // 1. KPIs and per-form summary from the dashboard API.
+        var overview = await _client.Dashboard.GetOverviewAsync(
+            new DashboardQuery { Days = 30, MaxForms = 50 }, scope);
+
+        // 2. Recent submissions grid from the submission dashboard API.
+        var recent = await _client.SubmissionDashboard.SearchAsync(
+            new SubmissionSearchQuery
+            {
+                FormId   = formId ?? 0,
+                DateFrom = DateTime.UtcNow.AddDays(-7),
+                Page     = 1,
+                PageSize = 20
+            }, scope);
+
+        // 3. Load details for the first row to show a preview.
+        SubmissionDetailDto? preview = null;
+        if (recent.Items.FirstOrDefault() is { } first)
+            preview = await _client.SubmissionDashboard.GetDetailAsync(
+                first.SubmissionId, scope);
+
+        return new DashboardViewModel
+        {
+            PortalId            = overview.PortalId,
+            TotalForms          = overview.TotalForms,
+            TotalSubmissions    = overview.TotalSubmissions,
+            RecentSubmissions   = overview.RecentSubmissions,
+            FormSummaries       = overview.Forms,
+            RecentSubmissionsGrid = recent.Items,
+            PreviewSubmission   = preview
+        };
+    }
+}
+
+public class DashboardViewModel
+{
+    public int PortalId { get; set; }
+    public int TotalForms { get; set; }
+    public int TotalSubmissions { get; set; }
+    public int RecentSubmissions { get; set; }
+    public IReadOnlyList&lt;DashboardFormSummaryDto&gt; FormSummaries { get; set; }
+        = Array.Empty&lt;DashboardFormSummaryDto&gt;();
+    public IReadOnlyList&lt;SubmissionListItemDto&gt; RecentSubmissionsGrid { get; set; }
+        = Array.Empty&lt;SubmissionListItemDto&gt;();
+    public SubmissionDetailDto? PreviewSubmission { get; set; }
+}
+</code></pre>
+<p>A minimal ASP.NET Core MVC controller that renders the view:</p>
+<pre><code class="lang-csharp">public class DashboardController : Controller
+{
+    private readonly IMegaFormClient _client;
+    public DashboardController(IMegaFormClient client) =&gt; _client = client;
+
+    public async Task&lt;IActionResult&gt; Index(int? formId)
+    {
+        // In production, resolve the portal from the current site context.
+        var dashboard = new MyCustomDashboard(_client);
+        var model = await dashboard.BuildAsync(portalId: 1, formId);
+        return View(model);
+    }
+}
+</code></pre>
+<p>The same pattern works in Oqtane (inject <code>IMegaFormClient</code> into a Razor component), DNN (use
+<code>MegaFormSdk.RunAsync</code>), or Umbraco (inject <code>IMegaFormClient</code> into a SurfaceController or view
+component).</p>
 <h2 id="see-also">See also</h2>
 <ul>
 <li><a href="overview.html">Overview</a> — architecture and object model</li>

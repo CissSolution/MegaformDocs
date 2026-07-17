@@ -100,6 +100,21 @@ Classes
 </dd>
     </dl>
     <dl class="jumplist">
+      <dt><a class="xref" href="MegaForm.Sdk.DashboardFormSummaryDto.html">DashboardFormSummaryDto</a></dt>
+      <dd><p>One form row for dashboard overview UIs.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MegaForm.Sdk.DashboardOverviewDto.html">DashboardOverviewDto</a></dt>
+      <dd><p>Dashboard-level totals and per-form summaries.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MegaForm.Sdk.DashboardQuery.html">DashboardQuery</a></dt>
+      <dd><p>Filter options for an in-host dashboard overview.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
       <dt><a class="xref" href="MegaForm.Sdk.FieldOptionInfo.html">FieldOptionInfo</a></dt>
       <dd><p>A choice option for Select/Radio/Checkbox fields.</p>
 </dd>
@@ -136,6 +151,59 @@ internal storage models). Returned by <code>ISchemaApi.Parse</code>. Row/column 
 flattened so <a class="xref" href="MegaForm.Sdk.FormSchemaInfo.html#MegaForm_Sdk_FormSchemaInfo_Fields">Fields</a> is the same ordered, input-field list the server
 validates against.</p>
 </dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MegaForm.Sdk.InboxBoardDto.html">InboxBoardDto</a></dt>
+      <dd><p>Inbox board split into incoming, in-progress, and completed lanes.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MegaForm.Sdk.InboxFileAttachmentRequest.html">InboxFileAttachmentRequest</a></dt>
+      <dd><p>File attachment request for a workflow inbox task.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MegaForm.Sdk.InboxFileAttachmentResultDto.html">InboxFileAttachmentResultDto</a></dt>
+      <dd><p>Result of attaching a file through the inbox facade.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MegaForm.Sdk.InboxKpiDto.html">InboxKpiDto</a></dt>
+      <dd></dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MegaForm.Sdk.InboxQuery.html">InboxQuery</a></dt>
+      <dd><p>Options for the current actor's inbox board.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MegaForm.Sdk.InboxSendSubmissionResultDto.html">InboxSendSubmissionResultDto</a></dt>
+      <dd><p>Result of sending a submission to an inbox.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MegaForm.Sdk.InboxTaskActionDto.html">InboxTaskActionDto</a></dt>
+      <dd><p>One workflow task action/audit entry.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MegaForm.Sdk.InboxTaskActionRequest.html">InboxTaskActionRequest</a></dt>
+      <dd><p>Action request used by claim/approve/reject/forward/comment.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MegaForm.Sdk.InboxTaskDto.html">InboxTaskDto</a></dt>
+      <dd><p>One human workflow task row.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MegaForm.Sdk.InboxTaskResultDto.html">InboxTaskResultDto</a></dt>
+      <dd><p>Result of a workflow task operation.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MegaForm.Sdk.InboxUserDto.html">InboxUserDto</a></dt>
+      <dd></dd>
     </dl>
     <dl class="jumplist">
       <dt><a class="xref" href="MegaForm.Sdk.MegaFormClient.html">MegaFormClient</a></dt>
@@ -182,13 +250,48 @@ var forms = await MegaFormSdk.RunAsync(c =&gt; c.Forms.ListFormsAsync(
 </dd>
     </dl>
     <dl class="jumplist">
+      <dt><a class="xref" href="MegaForm.Sdk.SendSubmissionToInboxRequest.html">SendSubmissionToInboxRequest</a></dt>
+      <dd><p>Request to route a submission into a user's inbox without a prebuilt workflow.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MegaForm.Sdk.SubmissionDetailDto.html">SubmissionDetailDto</a></dt>
+      <dd><p>Full submission detail payload for custom dashboards.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
       <dt><a class="xref" href="MegaForm.Sdk.SubmissionDto.html">SubmissionDto</a></dt>
       <dd><p>A submission, as exposed to SDK consumers.</p>
 </dd>
     </dl>
     <dl class="jumplist">
+      <dt><a class="xref" href="MegaForm.Sdk.SubmissionFieldSnapshotDto.html">SubmissionFieldSnapshotDto</a></dt>
+      <dd><p>Stored field snapshot captured at submit time.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MegaForm.Sdk.SubmissionListItemDto.html">SubmissionListItemDto</a></dt>
+      <dd><p>Dashboard-friendly submission list row.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
       <dt><a class="xref" href="MegaForm.Sdk.SubmissionQuery.html">SubmissionQuery</a></dt>
       <dd><p>Filter/paging options for querying submissions (FindData).</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MegaForm.Sdk.SubmissionSearchQuery.html">SubmissionSearchQuery</a></dt>
+      <dd><p>Richer query contract for submission dashboard screens.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MegaForm.Sdk.SubmissionValueDto.html">SubmissionValueDto</a></dt>
+      <dd><p>A display value produced by flattening a submission against its schema.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MegaForm.Sdk.SubmissionWorkflowSummaryDto.html">SubmissionWorkflowSummaryDto</a></dt>
+      <dd><p>Workflow summary attached to a submission detail.</p>
 </dd>
     </dl>
     <dl class="jumplist">
@@ -208,6 +311,11 @@ can change a single property (e.g. just the title) without re-sending the whole 
 Interfaces
 </h3>
     <dl class="jumplist">
+      <dt><a class="xref" href="MegaForm.Sdk.IDashboardApi.html">IDashboardApi</a></dt>
+      <dd><p>Read-only dashboard summaries for forms and submissions in the current host.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
       <dt><a class="xref" href="MegaForm.Sdk.IFileApi.html">IFileApi</a></dt>
       <dd><p>List and download files attached to submissions.</p>
 </dd>
@@ -215,6 +323,11 @@ Interfaces
     <dl class="jumplist">
       <dt><a class="xref" href="MegaForm.Sdk.IFormApi.html">IFormApi</a></dt>
       <dd><p>Create, read, list and delete forms.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MegaForm.Sdk.IInboxApi.html">IInboxApi</a></dt>
+      <dd><p>Human-task inbox facade for same-host dashboard integrations.</p>
 </dd>
     </dl>
     <dl class="jumplist">
@@ -232,6 +345,11 @@ via the ambient <span class="xref">MegaForm</span> accessor.</p>
     <dl class="jumplist">
       <dt><a class="xref" href="MegaForm.Sdk.ISubmissionApi.html">ISubmissionApi</a></dt>
       <dd><p>Query, submit, update and delete submissions.</p>
+</dd>
+    </dl>
+    <dl class="jumplist">
+      <dt><a class="xref" href="MegaForm.Sdk.ISubmissionDashboardApi.html">ISubmissionDashboardApi</a></dt>
+      <dd><p>Submission-dashboard operations richer than the legacy <a class="xref" href="MegaForm.Sdk.ISubmissionApi.html#MegaForm_Sdk_ISubmissionApi_FindAsync_MegaForm_Sdk_SubmissionQuery_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_">FindAsync(SubmissionQuery, MegaFormScope?, CancellationToken)</a> surface.</p>
 </dd>
     </dl>
 

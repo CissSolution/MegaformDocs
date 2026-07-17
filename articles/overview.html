@@ -16,7 +16,7 @@
       <meta name="docfx:rel" content="../">
       
       
-      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/main/articles/overview.md/#L1">
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/Docs/docfx/articles/overview.md/#L1">
       <meta name="loc:inThisArticle" content="In this article">
       <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
       <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
@@ -87,6 +87,21 @@
         <article data-uid="">
 <h1 id="overview">Overview</h1>
 
+<p>MegaForm is a form platform for <strong>Oqtane</strong>, <strong>DNN</strong>, and standalone <strong>ASP.NET Core / Razor</strong>
+hosts: a visual Form Builder, submissions and reporting, workflows, file handling — plus two
+built-in capabilities worth calling out:</p>
+<ul>
+<li><strong><a href="ai-form-designer.html">AI Form Designer</a></strong> — describe a form in plain English and the
+built-in assistant creates or modifies it, including forms bound to your <strong>SQL database</strong>
+(lookups, cascading selects, data-driven views, and drafting new tables). Stable and in
+production use.</li>
+<li><strong><a href="multi-language.md">Multi-language, built-in</a></strong> — forms carry per-language translations
+with an on-page language switcher, and the admin UI itself ships in 19 languages. No add-on
+required.</li>
+</ul>
+<p>The rest of this page introduces the <strong>MegaForm SDK</strong> for developers reading and writing
+MegaForm data from code.</p>
+<h2 id="the-sdk">The SDK</h2>
 <p>The MegaForm SDK (<code>MegaForm.Sdk</code>) is a <strong>thin facade</strong> that exposes a stable, host-agnostic
 API over the MegaForm engine. Consumers depend only on a handful of interfaces and DTOs — never
 on MegaForm's internal storage models, repositories, or rendering pipeline.</p>
@@ -176,6 +191,39 @@ call <a href="../api/MegaForm.Sdk.MegaFormSdk.html"><code>MegaFormSdk.RunAsync(.
 <h2 id="target-frameworks">Target frameworks</h2>
 <p><code>MegaForm.Sdk</code> multi-targets <strong>net472</strong>, <strong>net8.0</strong>, <strong>net9.0</strong>, and <strong>net10.0</strong>, so the same
 package works on classic DNN (net472) and modern Oqtane (net10.0).</p>
+<h2 id="product-capability-walkthroughs">Product capability walkthroughs</h2>
+<p>Evaluating MegaForm rather than coding against it? Each of these pages answers one recurring
+evaluation question, with a screen recording of the real product:</p>
+<table>
+<thead>
+<tr>
+<th>Question</th>
+<th>Walkthrough</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Can fields or sections be hidden / locked per role or user?</td>
+<td><a href="field-permissions.html">Field Permissions</a></td>
+</tr>
+<tr>
+<td>Can one workflow be reused across many forms? Can complex flows be designed visually?</td>
+<td><a href="workflow-library.html">Workflow Library</a></td>
+</tr>
+<tr>
+<td>Do approval tasks reach the right person's inbox automatically?</td>
+<td><a href="workflow-approvals.html">Approval Workflows &amp; Inbox</a></td>
+</tr>
+<tr>
+<td>Can the data grid be searched and filtered, at scale?</td>
+<td><a href="submissions-grid.html">Submissions Grid</a></td>
+</tr>
+<tr>
+<td>Is there a tabbed (free-navigation) form template?</td>
+<td><a href="form-templates.html">Form Templates</a></td>
+</tr>
+</tbody>
+</table>
 
 </article>
 

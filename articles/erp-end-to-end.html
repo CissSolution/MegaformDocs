@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>End-to-end demo — master data, stores, vendors, transactions, invoices, reports | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="End-to-end demo — master data, stores, vendors, transactions, invoices, reports | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/Docs/docfx/articles/erp-end-to-end.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="end-to-end-demo--master-data-stores-vendors-transactions-invoices-reports">End-to-end demo — master data, stores, vendors, transactions, invoices, reports</h1>
+
+<p>This walkthrough builds a small ERP-style flow with <strong>no custom code</strong> — only SQL tables, forms,
+and configuration. Every step below was built and verified on a live site before being written up:</p>
+<blockquote>
+<p><strong>Master data → Store → Vendor → Transaction (with receipt) → Invoice on approval → Dashboard &amp; reports</strong></p>
+</blockquote>
+<p><img src="../images/14-erp-demo.gif" alt="The full loop: master-data dropdowns on the Store form, a transaction referencing store/vendor/country/currency, Finance approving it in the inbox, and the report showing invoiced vs pending"></p>
+<h2 id="1-master-data--plain-sql-tables-no-ui">1. Master data — plain SQL tables, no UI</h2>
+<p>Country and Currency live as ordinary tables in <strong>your</strong> database (here: a <code>LegacyErp_Demo</code>
+SQL Server database). MegaForm reads them; nobody has to build an admin UI for them:</p>
+<pre><code class="lang-sql">CREATE TABLE dbo.Country  (CountryCode CHAR(2) PRIMARY KEY, CountryName NVARCHAR(80), Region NVARCHAR(40));
+CREATE TABLE dbo.Currency (CurrencyCode CHAR(3) PRIMARY KEY, CurrencyName NVARCHAR(60), Symbol NVARCHAR(5), DecimalPlaces TINYINT);
+-- seeded with 8 countries and 7 currencies for the demo
+</code></pre>
+<p>The site knows this database by a <strong>named connection</strong> — either a connection string in
+<code>appsettings.json</code> (<code>ConnectionStrings:CustomerErp</code>) or a reusable connection saved under
+<strong>Settings → Database Settings</strong> (see <a href="storage-options.md">Storage &amp; Integrations</a>).</p>
+<h2 id="2-store-form--dropdowns-driven-by-the-master-tables">2. Store form — dropdowns driven by the master tables</h2>
+<p>The <em>Store</em> form has <code>store_code</code>, <code>store_name</code>, <code>city</code> — and two <strong>data-source-driven
+dropdowns</strong>. A dropdown becomes SQL-driven through its field properties:</p>
+<pre><code class="lang-json">&quot;properties&quot;: {
+  &quot;optionsSource&quot;: &quot;sql&quot;,
+  &quot;optionsConnectionKey&quot;: &quot;CustomerErp&quot;,
+  &quot;optionsSql&quot;: &quot;SELECT CountryCode, CountryName FROM dbo.Country ORDER BY CountryName&quot;
+}
+</code></pre>
+<p>The first selected column is the stored value, the second is the label (the Currency dropdown
+uses <code>CurrencyName + ' (' + Symbol + ')'</code> for labels like <em>Zephyrian Crown (Ƶ)</em> — the demo data
+uses the fictional country of Zephyria and its currency). Options are fetched live per render —
+add a row to <code>dbo.Country</code> and it appears on the next load. Queries are SELECT-only, run
+server-side on the named connection, and support <code>:field</code> tokens for
+<a href="form-builder.html">cascading dropdowns</a>.</p>
+<p>The Store form also <strong>writes back to the ERP database</strong>: a per-form database insert
+(<em>Settings → Database</em>) mirrors every submission into <code>dbo.Stores</code> the moment it arrives:</p>
+<pre><code class="lang-json">&quot;databaseInsert&quot;: {
+  &quot;enabled&quot;: true,
+  &quot;connectionKey&quot;: &quot;CustomerErp&quot;,
+  &quot;insertSql&quot;: &quot;INSERT INTO dbo.Stores (StoreCode, StoreName, City, CountryCode, CurrencyCode)
+                VALUES (:store_code, :store_name, :city, :country, :currency)&quot;
+}
+</code></pre>
+<p>Registering three stores through the form produced exactly three rows in <code>dbo.Stores</code> — the
+insert is parameterized (<code>:token</code> → field key), INSERT-only, and fail-soft (a database problem
+never loses the submission).</p>
+<h2 id="3-vendor-form">3. Vendor form</h2>
+<p>Same pattern: <code>vendor_name</code>, <code>contact_name</code>, <code>email</code>, <code>phone</code>, <code>tax_id</code>, plus the same SQL-driven
+<em>Country</em> dropdown, mirrored into <code>dbo.Vendors</code>. Three vendors were registered for the demo.</p>
+<h2 id="4-transaction-form--reference-fields--receipt">4. Transaction form — reference fields + receipt</h2>
+<p>The <em>Transaction</em> form is where everything meets. Its reference dropdowns all read the ERP
+database live:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Options come from</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Store</strong></td>
+<td><code>dbo.Stores</code> — the table the Store form maintains (label <em>Riverside Flagship — ST-001</em>)</td>
+</tr>
+<tr>
+<td><strong>Vendor</strong></td>
+<td><code>dbo.Vendors</code> — maintained by the Vendor form</td>
+</tr>
+<tr>
+<td><strong>Country</strong></td>
+<td><code>dbo.Country</code> master table</td>
+</tr>
+<tr>
+<td><strong>Currency</strong></td>
+<td><code>dbo.Currency</code> master table</td>
+</tr>
+</tbody>
+</table>
+<p>plus <code>amount</code> (Number), <code>transaction_date</code> (Date), <code>description</code>, and a <strong>Vendor receipt</strong> File
+field (PDF/JPG/PNG, 10 MB limit). In the recording the receipt is attached right on the form —
+the dropzone uploads it as soon as it is picked (⏳ → ✓) — and after submit the file shows up as
+a <strong>paperclip download link</strong> on the transaction's row in the submissions grid and in the detail
+panel's <em>Attachments</em> section. Receipts are held in private storage — never under the public web
+root — recorded against their transaction, and streamed back through an authenticated download
+URL (see <a href="file-download.html">File download</a>).</p>
+<blockquote>
+<p>One dropdown gotcha worth knowing: give the label column an <strong>alias</strong> when it is derived
+(<code>VendorName + ' (' + CountryCode + ')' AS VendorLabel</code>) — a result set that repeats the same
+column name twice returns no options.</p>
+</blockquote>
+<h2 id="5-invoice-on-approval">5. Invoice on approval</h2>
+<p>The Transaction form carries a small BPMN workflow:
+<em>Transaction submitted → <strong>Finance review — issue invoice</strong> (Approval, candidate role <code>Finance</code>) → Done.</em></p>
+<p>The approval node's outcome statuses do the invoicing bookkeeping:</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pending status</td>
+<td><code>pending_approval</code></td>
+</tr>
+<tr>
+<td><strong>Approved status</strong></td>
+<td><strong><code>invoiced</code></strong></td>
+</tr>
+<tr>
+<td>Rejected status</td>
+<td><code>rejected</code></td>
+</tr>
+</tbody>
+</table>
+<p>So the moment a transaction is submitted it goes to the Finance role's
+<a href="workflow-approvals.html">My Inbox</a>; when Finance approves (with an optional note), the submission
+is stamped <strong><code>invoiced</code></strong> — no one updates a status by hand. In the recording, the transaction
+submitted at the start is approved by the finance user and lands in the report as <em>invoiced</em>
+seconds later. On a host with SMTP configured, a <em>Send Task</em> node after the approval can also
+email the invoice details automatically (see <a href="workflow.html">Workflow</a>).</p>
+<h2 id="6-dashboard--reports">6. Dashboard &amp; reports</h2>
+<p><img src="../images/oq-erp-dashboard.png" alt="All-forms dashboard: total submissions, activity, submission-volume chart, and a per-form table with counts, completion and trend"></p>
+<p>The <strong>Submissions</strong> dashboard covers all entities at once — totals, recent activity, a
+submission-volume chart, and a per-form table (stores, vendors, transactions each with their
+counts, completion rate and 14-day trend).</p>
+<p>Each form also has a one-click <strong>Reports</strong> view:</p>
+<p><img src="../images/oq-erp-report.png" alt="The Transaction report: stat tiles, submissions over time, a status donut splitting invoiced vs pending, and per-field completion rates"></p>
+<ul>
+<li><strong>Status Breakdown</strong> is the <em>transaction summary with invoice status</em>: the donut splits
+<code>invoiced</code> vs <code>pending_approval</code> straight from the workflow's outcome statuses.</li>
+<li><strong>Field Completion Rates</strong> shows data quality per field — only the transactions that actually
+carried a receipt count toward the <em>Vendor receipt</em> bar, so it doubles as a &quot;receipts missing&quot;
+indicator.</li>
+<li><strong>Country-wise and currency-wise views</strong> come from the grid itself: add a filter chip
+(<em>Country is VN</em>, <em>Currency is USD</em>), save it as a preset, and <strong>Export</strong> the slice — see
+<a href="submissions-grid.html">Submissions Grid</a>.</li>
+</ul>
+<h2 id="what-this-demo-proves">What this demo proves</h2>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>How it is met</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Master data without UI</td>
+<td>Plain SQL tables (<code>Country</code>, <code>Currency</code>) read live by dropdowns</td>
+</tr>
+<tr>
+<td>Store / Vendor entry</td>
+<td>Forms with SQL-driven reference dropdowns, mirrored into ERP tables</td>
+</tr>
+<tr>
+<td>Transaction with references</td>
+<td>Store, Vendor, Country, Currency dropdowns all resolved from the ERP database</td>
+</tr>
+<tr>
+<td>Receipt upload</td>
+<td>File field with type/size validation; receipts stored privately, downloadable from the grid and the detail panel</td>
+</tr>
+<tr>
+<td>Invoice generation</td>
+<td>Approval workflow stamps <code>invoiced</code> automatically on completion</td>
+</tr>
+<tr>
+<td>Dashboard &amp; reports</td>
+<td>All-forms dashboard + per-form report with invoice-status breakdown + filterable, exportable grid</td>
+</tr>
+</tbody>
+</table>
+<p>Everything above is configuration: two master tables, three forms, one workflow — about an hour
+of setup, no compiled code.</p>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

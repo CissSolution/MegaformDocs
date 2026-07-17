@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>AI Prompts for MegaForm Template Design | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="AI Prompts for MegaForm Template Design | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/Docs/docfx/articles/ai-prompts-form-design.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="ai-prompts-for-megaform-template-design">AI Prompts for MegaForm Template Design</h1>
+
+<p>MegaForm templates can be edited by AI assistants, but <strong>the visual design (HTML/CSS) must be preserved</strong> unless the user explicitly asks for a redesign. These prompts help you get predictable, safe edits: the AI changes fields, validation, options, labels, and rules — while keeping the original custom shell, styling, and scripts intact.</p>
+<blockquote>
+<p><strong>Golden rule</strong>: AI must treat <code>customHtml</code>, <code>customCss</code>, and the structure of <code>customScripts</code> as read-only. Only the data layer (<code>fields</code>, <code>options</code>, <code>validation</code>, <code>rules</code>, <code>workflow</code>, <code>settings.customContent</code>) is editable.</p>
+</blockquote>
+<hr>
+<h2 id="1-the-preservation-contract">1. The preservation contract</h2>
+<p>When asking an AI to modify a MegaForm template, include this contract in your prompt:</p>
+<pre><code class="lang-text">You are editing a MegaForm JSON template. Follow these rules strictly:
+
+1. DO NOT change customHtml, customCss, or the outer structure of customScripts.
+2. DO NOT change theme classes (e.g. mfp-euro-youth), layout, or visual design.
+3. DO NOT add full-bleed CSS such as width:100vw, height:100vh, position:fixed, or z-index:2147483000.
+4. You MAY change: fields, labels, placeholders, options, required flags, validation, default values, rules, workflow, successMessage, submitButtonText, and settings.customContent strings.
+5. You MAY change the internal logic of a named script (e.g. validation, summary update, step navigation) but you MUST keep the IIFE wrapper, host selector, and __bound guard unchanged.
+6. Keep root-level properties and settings.* properties in sync when both exist.
+7. Output the complete updated JSON, valid and minified where appropriate.
+8. Explain every change in bullet points.
+</code></pre>
+<hr>
+<h2 id="2-prompt-catalogue">2. Prompt catalogue</h2>
+<h3 id="21-add-a-new-field">2.1 Add a new field</h3>
+<pre><code class="lang-text">Template: euro-youth-application.json
+Task: Add a new required &quot;National ID&quot; text field after the &quot;country&quot; field.
+
+Rules:
+- Key must be &quot;national_id&quot;.
+- Label: &quot;National ID&quot;.
+- Placeholder: &quot;e.g. DE123456789&quot;.
+- Required: true.
+- Width: 100%.
+- Do not change the custom HTML/CSS/Scripts or the visual design.
+- If the wizard script validates step 0, update canProceed() so the user cannot continue without national_id.
+
+Return the full updated JSON and a summary of changes.
+</code></pre>
+<h3 id="22-change-field-options">2.2 Change field options</h3>
+<pre><code class="lang-text">Template: euro-youth-application.json
+Task: Replace the programme options with the following three options:
+- &quot;Summer School&quot; (value: summer_school, icon: &amp;#127979;, cities: Berlin · Paris)
+- &quot;Internship&quot; (value: internship, icon: &amp;#128188;, cities: Milan · Barcelona)
+- &quot;Volunteering&quot; (value: volunteering, icon: &amp;#10024;, cities: Amsterdam · Lisbon)
+
+Rules:
+- Keep optionDisplay as cards.
+- Update the wizard script's programmeLabel() map so the review step shows the correct labels.
+- Do not touch customHtml, customCss, or layout.
+</code></pre>
+<h3 id="23-update-validation-rules">2.3 Update validation rules</h3>
+<pre><code class="lang-text">Template: euro-youth-application.json
+Task: Enforce that the &quot;email&quot; field must end with .eu, .edu, or .ac.
+
+Rules:
+- Update the field's validation object if present; otherwise add it.
+- Update the wizard script's emailOk() function to match the same rule.
+- Keep the existing UI and styling unchanged.
+</code></pre>
+<h3 id="24-localise-labels">2.4 Localise labels</h3>
+<pre><code class="lang-text">Template: euro-youth-application.json
+Task: Localise all field labels, placeholders, and button text to German.
+
+Rules:
+- Only translate labels, placeholders, options.label, submitButtonText, successMessage, and customContent strings.
+- Do not translate keys, option values, CSS class names, script variable names, or HTML structure.
+- Keep the design and layout identical.
+</code></pre>
+<h3 id="25-clone-a-template-for-a-new-event">2.5 Clone a template for a new event</h3>
+<pre><code class="lang-text">Template: euro-youth-application.json
+Task: Clone this template for &quot;AsiaYouth 2027&quot;.
+
+Rules:
+- Change slug to &quot;asia-youth-2027&quot;.
+- Change title to &quot;AsiaYouth 2027 Application&quot;.
+- Update description and successMessage to match Asia.
+- Replace country options with Asian countries.
+- Replace programme cities with Asian cities.
+- Update hero image path in settings.customContent to /Modules/MegaForm/img/asia-youth/hero.png.
+- Keep the same visual shell, CSS theme class (rename only if necessary), and wizard logic.
+- If you rename the theme class, update it consistently in customHtml, customCss, customScripts, and settings.
+</code></pre>
+<h3 id="26-add-a-workflow-notification">2.6 Add a workflow notification</h3>
+<pre><code class="lang-text">Template: euro-youth-application.json
+Task: After submission, send a notification email to the address entered in the &quot;email&quot; field.
+
+Rules:
+- Add a notification entry under workflow.notifications.
+- Use token {{form.email}} for the recipient and {{form.first_name}} in the body.
+- Keep all fields and design unchanged.
+</code></pre>
+<h3 id="27-make-the-form-windowed-not-full-bleed">2.7 Make the form windowed (not full-bleed)</h3>
+<pre><code class="lang-text">Template: euro-youth-application.json
+Task: Convert this template from full-bleed to a windowed container layout.
+
+Rules:
+- Remove all width:100vw, height:100vh, position:fixed, inset, and z-index overrides.
+- Set max-width to 1152px and centre the form with margin:0 auto.
+- Add a high-specificity rule to override MegaForm's default .mf-form-wrapper &gt; .mf-form-inner .mfp rule.
+- Replace fitHost() body with a no-op comment, keeping the function and its calls for compatibility.
+- Remove any injected navbar-hiding stylesheet.
+- Preserve the wizard step navigation and validation logic.
+</code></pre>
+<hr>
+<h2 id="3-ai-self-check-checklist">3. AI self-check checklist</h2>
+<p>Before returning an edited template, the AI should verify:</p>
+<ul>
+<li>[ ] <code>customHtml</code> is unchanged unless explicitly requested.</li>
+<li>[ ] <code>customCss</code> still scopes styles under the original theme class.</li>
+<li>[ ] No new <code>width:100vw</code>, <code>height:100vh</code>, <code>position:fixed</code>, or extreme <code>z-index</code> values were added.</li>
+<li>[ ] <code>customScripts</code> still wrap logic in the original IIFE and guard against double binding.</li>
+<li>[ ] Every changed field still has a unique <code>key</code>.</li>
+<li>[ ] <code>required</code>, <code>type</code>, and <code>options</code> remain consistent.</li>
+<li>[ ] Root-level <code>customCss</code>/<code>customHtml</code>/<code>customScripts</code> match <code>settings.customCss</code>/<code>settings.customHtml</code>/<code>settings.customScripts</code>.</li>
+<li>[ ] JSON is valid (no trailing commas, all quotes balanced).</li>
+<li>[ ] The user received a concise change summary.</li>
+</ul>
+<hr>
+<h2 id="4-example-safe-ai-edit-trace">4. Example: safe AI edit trace</h2>
+<p><strong>User request</strong>: <em>Add a &quot;Preferred language&quot; select field to the Euro Youth template.</em></p>
+<p><strong>AI response outline</strong>:</p>
+<ol>
+<li>Inserted a new field after <code>country</code>:
+<pre><code class="lang-json">{
+  &quot;key&quot;: &quot;preferred_language&quot;,
+  &quot;type&quot;: &quot;Select&quot;,
+  &quot;label&quot;: &quot;Preferred language&quot;,
+  &quot;required&quot;: true,
+  &quot;placeholder&quot;: &quot;Select language&quot;,
+  &quot;options&quot;: [
+    { &quot;label&quot;: &quot;English&quot;, &quot;value&quot;: &quot;en&quot; },
+    { &quot;label&quot;: &quot;German&quot;, &quot;value&quot;: &quot;de&quot; },
+    { &quot;label&quot;: &quot;French&quot;, &quot;value&quot;: &quot;fr&quot; },
+    { &quot;label&quot;: &quot;Spanish&quot;, &quot;value&quot;: &quot;es&quot; }
+  ]
+}
+</code></pre>
+</li>
+<li>Updated <code>canProceed()</code> in <code>euro_youth_wizard</code> to require <code>value('preferred_language')</code> on step 0.</li>
+<li>Updated the review-step summary to display the selected language.</li>
+<li>Left <code>customHtml</code>, <code>customCss</code>, theme class, and shell layout unchanged.</li>
+<li>Synced the change into both root <code>fields</code> and <code>settings</code>-level copies.</li>
+</ol>
+<hr>
+<h2 id="5-anti-patterns-to-avoid">5. Anti-patterns to avoid</h2>
+<table>
+<thead>
+<tr>
+<th>Anti-pattern</th>
+<th>Why it is dangerous</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rewriting <code>customHtml</code> to change layout</td>
+<td>Breaks the designer's visual intent and may drop field injection points.</td>
+</tr>
+<tr>
+<td>Injecting <code>position:fixed</code> via script</td>
+<td>Traps the form in a modal-like overlay, breaking page scroll and navigation.</td>
+</tr>
+<tr>
+<td>Hiding the host navbar from a script</td>
+<td>Affects the whole site, not just the form.</td>
+</tr>
+<tr>
+<td>Changing option <code>value</code>s without updating script maps</td>
+<td>Wizard summary and validation will show stale or broken labels.</td>
+</tr>
+<tr>
+<td>Forgetting to sync root and <code>settings.*</code></td>
+<td>The imported form may use the old design.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="6-related-documentation">6. Related documentation</h2>
+<ul>
+<li><a href="form-template-json.html">MegaForm Template JSON Reference</a> — full schema.</li>
+<li><a href="form-builder.html">Form Builder</a> — visual editing.</li>
+<li><a href="ai-form-designer.html">AI Form Designer</a> — built-in AI assistant.</li>
+</ul>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

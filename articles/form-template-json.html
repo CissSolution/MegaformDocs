@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>MegaForm Template JSON Reference | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="MegaForm Template JSON Reference | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/Docs/docfx/articles/form-template-json.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="megaform-template-json-reference">MegaForm Template JSON Reference</h1>
+
+<p>A MegaForm template is a single JSON file that describes everything a form needs: its fields, layout, styling, validation rules, workflow, and runtime behaviour. Templates are portable across MegaForm hosts (Oqtane, DNN, Umbraco, ASP.NET Core) and can be imported into the Form Builder or stored directly in the <code>MF_Forms</code> / <code>MF_Templates</code> tables.</p>
+<p>This document describes the full schema, using the <code>euro-youth-application.json</code> template as the running example.</p>
+<blockquote>
+<p><strong>Scope of this guide</strong>: the <em>template file</em> format. For the runtime database schema, see the SDK and data-layer documentation.</p>
+</blockquote>
+<hr>
+<h2 id="1-top-level-structure">1. Top-level structure</h2>
+<pre><code class="lang-json">{
+  &quot;version&quot;: &quot;1.0&quot;,
+  &quot;slug&quot;: &quot;euro-youth-application&quot;,
+  &quot;title&quot;: &quot;EuroYouth 2026 Application&quot;,
+  &quot;description&quot;: &quot;Apply for European youth mobility programmes...&quot;,
+  &quot;category&quot;: &quot;event-registration&quot;,
+  &quot;categories&quot;: [&quot;event-registration&quot;, &quot;premium&quot;, &quot;youth-programme&quot;],
+  &quot;icon&quot;: &quot;globe-2&quot;,
+  &quot;submitButtonText&quot;: &quot;Submit application&quot;,
+  &quot;successMessage&quot;: &quot;Application received. We will email you within 5 working days.&quot;,
+  &quot;fields&quot;: [ /* ... */ ],
+  &quot;customHtml&quot;: &quot;&lt;div class='mfp mfp-euro-youth'&gt;...&lt;/div&gt;&quot;,
+  &quot;customCss&quot;: &quot;.mfp.mfp-euro-youth { ... }&quot;,
+  &quot;settings&quot;: { /* ... */ },
+  &quot;customScripts&quot;: { &quot;euro_youth_wizard&quot;: &quot;(function(root){...})&quot; },
+  &quot;rules&quot;: [],
+  &quot;workflow&quot;: { &quot;notifications&quot;: [] },
+  &quot;themeSelector&quot;: { &quot;enabled&quot;: false }
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>version</code></td>
+<td>string</td>
+<td>yes</td>
+<td>Template format version. Current value: <code>&quot;1.0&quot;</code>.</td>
+</tr>
+<tr>
+<td><code>slug</code></td>
+<td>string</td>
+<td>yes</td>
+<td>URL-friendly, unique identifier. Used as file name and internal key.</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td>string</td>
+<td>yes</td>
+<td>Human-readable form title.</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>string</td>
+<td>no</td>
+<td>Short description shown in the template gallery.</td>
+</tr>
+<tr>
+<td><code>category</code></td>
+<td>string</td>
+<td>no</td>
+<td>Primary category for filtering.</td>
+</tr>
+<tr>
+<td><code>categories</code></td>
+<td>string[]</td>
+<td>no</td>
+<td>Additional tags.</td>
+</tr>
+<tr>
+<td><code>icon</code></td>
+<td>string</td>
+<td>no</td>
+<td>Icon name used by the template card.</td>
+</tr>
+<tr>
+<td><code>submitButtonText</code></td>
+<td>string</td>
+<td>no</td>
+<td>Label of the submit button.</td>
+</tr>
+<tr>
+<td><code>successMessage</code></td>
+<td>string</td>
+<td>no</td>
+<td>Message shown after a successful submission.</td>
+</tr>
+<tr>
+<td><code>fields</code></td>
+<td>Field[]</td>
+<td>yes</td>
+<td>The editable questions/controls of the form.</td>
+</tr>
+<tr>
+<td><code>customHtml</code></td>
+<td>string</td>
+<td>no</td>
+<td>Complete replacement HTML for the form shell. Supports <code>{{script:name}}</code> tokens.</td>
+</tr>
+<tr>
+<td><code>customCss</code></td>
+<td>string</td>
+<td>no</td>
+<td>Styles injected into the page when the form renders.</td>
+</tr>
+<tr>
+<td><code>settings</code></td>
+<td>object</td>
+<td>no</td>
+<td>Theme, multi-page, custom content, scripts, and rules scoped to the design.</td>
+</tr>
+<tr>
+<td><code>customScripts</code></td>
+<td>object</td>
+<td>no</td>
+<td>Named scripts referenced by <code>{{script:name}}</code> tokens.</td>
+</tr>
+<tr>
+<td><code>rules</code></td>
+<td>Rule[]</td>
+<td>no</td>
+<td>Runtime validation / visibility rules.</td>
+</tr>
+<tr>
+<td><code>workflow</code></td>
+<td>object</td>
+<td>no</td>
+<td>Notifications and workflow configuration.</td>
+</tr>
+<tr>
+<td><code>themeSelector</code></td>
+<td>object</td>
+<td>no</td>
+<td>Whether the end-user can switch themes.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="2-field-schema">2. Field schema</h2>
+<p>Each item in <code>fields</code> describes one user input. The most common shape is:</p>
+<pre><code class="lang-json">{
+  &quot;key&quot;: &quot;first_name&quot;,
+  &quot;type&quot;: &quot;Text&quot;,
+  &quot;label&quot;: &quot;First name&quot;,
+  &quot;required&quot;: true,
+  &quot;placeholder&quot;: &quot;Anna&quot;,
+  &quot;defaultValue&quot;: &quot;&quot;,
+  &quot;cssClass&quot;: &quot;&quot;,
+  &quot;width&quot;: &quot;100%&quot;,
+  &quot;readOnly&quot;: false,
+  &quot;properties&quot;: {},
+  &quot;options&quot;: []
+}
+</code></pre>
+<h3 id="21-common-field-properties">2.1 Common field properties</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>key</code></td>
+<td>string</td>
+<td>Unique field name, used as the submission key and <code>name</code> attribute.</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td>string</td>
+<td>Control type. See table below.</td>
+</tr>
+<tr>
+<td><code>label</code></td>
+<td>string</td>
+<td>Visible label.</td>
+</tr>
+<tr>
+<td><code>required</code></td>
+<td>bool</td>
+<td>Whether the field must be filled.</td>
+</tr>
+<tr>
+<td><code>placeholder</code></td>
+<td>string</td>
+<td>Placeholder text.</td>
+</tr>
+<tr>
+<td><code>defaultValue</code></td>
+<td>any</td>
+<td>Pre-selected value.</td>
+</tr>
+<tr>
+<td><code>cssClass</code></td>
+<td>string</td>
+<td>Extra CSS class appended to the field wrapper.</td>
+</tr>
+<tr>
+<td><code>width</code></td>
+<td>string</td>
+<td>Visual width token, e.g. <code>&quot;100%&quot;</code>, <code>&quot;50%&quot;</code>.</td>
+</tr>
+<tr>
+<td><code>readOnly</code></td>
+<td>bool</td>
+<td>Render as disabled/read-only.</td>
+</tr>
+<tr>
+<td><code>helpText</code></td>
+<td>string</td>
+<td>Helper text shown under the label.</td>
+</tr>
+<tr>
+<td><code>properties</code></td>
+<td>object</td>
+<td>Type-specific options (rows, maxLength, etc.).</td>
+</tr>
+<tr>
+<td><code>options</code></td>
+<td>Option[]</td>
+<td>Choices for Select / Radio / Checkbox.</td>
+</tr>
+<tr>
+<td><code>validation</code></td>
+<td>object</td>
+<td>Per-field validation rules.</td>
+</tr>
+<tr>
+<td><code>showIf</code></td>
+<td>object</td>
+<td>Conditional visibility rule.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="22-supported-field-types">2.2 Supported field types</h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Purpose</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Text</code></td>
+<td>Single-line text input</td>
+<td>Most common.</td>
+</tr>
+<tr>
+<td><code>Email</code></td>
+<td>Email input with validation</td>
+<td>Adds <code>type=&quot;email&quot;</code>.</td>
+</tr>
+<tr>
+<td><code>Phone</code></td>
+<td>Phone input</td>
+<td>May include country selector.</td>
+</tr>
+<tr>
+<td><code>Number</code></td>
+<td>Numeric input</td>
+<td>Use <code>properties.min</code>, <code>properties.max</code>.</td>
+</tr>
+<tr>
+<td><code>Date</code></td>
+<td>Date picker</td>
+<td></td>
+</tr>
+<tr>
+<td><code>Textarea</code></td>
+<td>Multi-line text</td>
+<td><code>properties.rows</code>, <code>properties.maxLength</code>.</td>
+</tr>
+<tr>
+<td><code>Select</code></td>
+<td>Dropdown</td>
+<td><code>options</code> required.</td>
+</tr>
+<tr>
+<td><code>Radio</code></td>
+<td>Single choice</td>
+<td><code>options</code> required; <code>optionDisplay</code> controls rendering.</td>
+</tr>
+<tr>
+<td><code>Checkbox</code></td>
+<td>Multiple choices / single consent</td>
+<td><code>options</code> required; <code>optionDisplay</code>: <code>default</code>, <code>chips</code>, <code>cards</code>.</td>
+</tr>
+<tr>
+<td><code>File</code></td>
+<td>File upload</td>
+<td><code>fileSettings</code> object.</td>
+</tr>
+<tr>
+<td><code>Html</code></td>
+<td>Static HTML block</td>
+<td><code>htmlContent</code> property.</td>
+</tr>
+<tr>
+<td><code>Hidden</code></td>
+<td>Hidden input</td>
+<td>Used for pre-fill or tracking.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="23-options">2.3 Options</h3>
+<pre><code class="lang-json">{
+  &quot;label&quot;: &quot;Germany&quot;,
+  &quot;value&quot;: &quot;Germany&quot;,
+  &quot;description&quot;: &quot;Study in Germany&quot;,
+  &quot;icon&quot;: &quot;&amp;#127465;&amp;#127466;&quot;,
+  &quot;meta&quot;: &quot;Berlin · Munich&quot;
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>label</code></td>
+<td>Display text.</td>
+</tr>
+<tr>
+<td><code>value</code></td>
+<td>Stored submission value.</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>Subtitle shown under the label.</td>
+</tr>
+<tr>
+<td><code>icon</code></td>
+<td>Optional icon or emoji.</td>
+</tr>
+<tr>
+<td><code>meta</code></td>
+<td>Optional extra line, e.g. city list.</td>
+</tr>
+</tbody>
+</table>
+<p><code>optionDisplay</code> values:</p>
+<ul>
+<li><code>default</code> — native control rendering.</li>
+<li><code>cards</code> — card-style selectable blocks.</li>
+<li><code>chips</code> — pill-style toggle chips.</li>
+</ul>
+<h3 id="24-properties-examples">2.4 Properties examples</h3>
+<pre><code class="lang-json">// Textarea
+&quot;properties&quot;: { &quot;rows&quot;: 4, &quot;maxLength&quot;: 500 }
+
+// Number
+&quot;properties&quot;: { &quot;min&quot;: 18, &quot;max&quot;: 99 }
+
+// Date
+&quot;properties&quot;: { &quot;min&quot;: &quot;2026-01-01&quot;, &quot;max&quot;: &quot;2026-12-31&quot; }
+</code></pre>
+<hr>
+<h2 id="3-custom-html-css-and-scripts">3. Custom HTML, CSS, and Scripts</h2>
+<p>Premium templates usually replace the default MegaForm renderer with a completely custom shell.</p>
+<h3 id="31-customhtml">3.1 <code>customHtml</code></h3>
+<p>A full HTML fragment that becomes the form body. It can contain <code>{{script:name}}</code> placeholders that the renderer expands at runtime.</p>
+<pre><code class="lang-html">&lt;div class='mfp mfp-euro-youth' data-ey-wizard='1'&gt;
+  {{script:euro_youth_wizard}}
+  &lt;div class='ey-shell'&gt;
+    &lt;aside class='ey-hero'&gt;...&lt;/aside&gt;
+    &lt;section class='ey-panel'&gt;...&lt;/section&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+<p>Rules:</p>
+<ul>
+<li>The outer element should carry both <code>mfp</code> and a theme class (<code>mfp-euro-youth</code>).</li>
+<li>Field inputs are rendered where MegaForm injects them; custom HTML normally wraps <code>{{field:key}}</code> markers or relies on the renderer placing fields inside matching containers.</li>
+<li>Scripts referenced by <code>{{script:name}}</code> are taken from <code>customScripts</code>.</li>
+</ul>
+<h3 id="32-customcss">3.2 <code>customCss</code></h3>
+<p>Injected as a <code>&lt;style&gt;</code> block when the form renders. It can:</p>
+<ul>
+<li>Style the custom shell (hero, stepper, cards).</li>
+<li>Hide default MegaForm chrome: <code>.mf-form-title, .mf-form-description, .mf-form-actions { display:none !important; }</code>.</li>
+<li>Override host container CSS.</li>
+</ul>
+<blockquote>
+<p><strong>Important</strong>: MegaForm injects its own default CSS with selectors such as <code>.mf-form-wrapper &gt; .mf-form-inner .mfp { max-width:none !important; ... }</code>. If you want a contained layout, your custom CSS must be <strong>more specific</strong> than the default rule, e.g.</p>
+<pre><code class="lang-css">.mf-form-wrapper &gt; .mf-form-inner .mfp.mfp-euro-youth {
+  width: 100% !important;
+  max-width: 1152px !important;
+  margin: 0 auto !important;
+  padding: 16px !important;
+}
+</code></pre>
+</blockquote>
+<h3 id="33-customscripts">3.3 <code>customScripts</code></h3>
+<p>A dictionary of named scripts. Each value is a minified IIFE.</p>
+<pre><code class="lang-json">&quot;customScripts&quot;: {
+  &quot;euro_youth_wizard&quot;: &quot;(function(root){ ... })(window.__mfCurrentScriptRoot || document);&quot;
+}
+</code></pre>
+<p>Best practices:</p>
+<ul>
+<li>Bind once per host (<code>host.__eyWizardBound</code>).</li>
+<li>Avoid overriding <code>width</code>, <code>max-width</code>, <code>margin</code>, <code>padding</code>, <code>position</code>, <code>inset</code>, <code>z-index</code>, <code>height</code> to full-viewport values unless you truly intend a full-bleed layout.</li>
+<li>Use CSS classes for styling; reserve scripts for behaviour (step navigation, validation helpers, summary updates).</li>
+</ul>
+<hr>
+<h2 id="4-settings-object">4. <code>settings</code> object</h2>
+<p>The <code>settings</code> object is a duplicate/override layer. MegaForm reads both top-level properties and <code>settings.*</code> properties; the exact precedence depends on the host version, so <strong>keep them in sync</strong>.</p>
+<pre><code class="lang-json">&quot;settings&quot;: {
+  &quot;theme&quot;: &quot;euro-youth-premium&quot;,
+  &quot;multiPage&quot;: false,
+  &quot;customContent&quot;: {
+    &quot;hero_image&quot;: &quot;/Modules/MegaForm/img/euro-youth/euro-youth-hero.png&quot;
+  },
+  &quot;customHtml&quot;: &quot;&lt;div class='mfp mfp-euro-youth'&gt;...&lt;/div&gt;&quot;,
+  &quot;customCss&quot;: &quot;.mfp.mfp-euro-youth { ... }&quot;,
+  &quot;customScripts&quot;: { &quot;euro_youth_wizard&quot;: &quot;...&quot; },
+  &quot;themeSelector&quot;: { &quot;enabled&quot;: false },
+  &quot;rules&quot;: [],
+  &quot;workflowTemplate&quot;: { ... }
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>theme</code></td>
+<td>Theme key used by the renderer to pick base CSS.</td>
+</tr>
+<tr>
+<td><code>multiPage</code></td>
+<td>Whether the form is split into pages/tabs.</td>
+</tr>
+<tr>
+<td><code>customContent</code></td>
+<td>Key/value pairs referenced by custom HTML (images, strings, URLs).</td>
+</tr>
+<tr>
+<td><code>customHtml</code></td>
+<td>Duplicate of top-level <code>customHtml</code>.</td>
+</tr>
+<tr>
+<td><code>customCss</code></td>
+<td>Duplicate of top-level <code>customCss</code>.</td>
+</tr>
+<tr>
+<td><code>customScripts</code></td>
+<td>Duplicate of top-level <code>customScripts</code>.</td>
+</tr>
+<tr>
+<td><code>themeSelector</code></td>
+<td><code>{ &quot;enabled&quot;: true/false }</code> allowing end-users to switch themes.</td>
+</tr>
+<tr>
+<td><code>rules</code></td>
+<td>Runtime rules, also duplicated at root.</td>
+</tr>
+<tr>
+<td><code>workflowTemplate</code></td>
+<td>Workflow configuration, also duplicated at root <code>workflow</code>.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="5-rules-and-workflow">5. Rules and workflow</h2>
+<h3 id="51-rules">5.1 Rules</h3>
+<p>Rules control field visibility, validation, and calculated values.</p>
+<pre><code class="lang-json">&quot;rules&quot;: [
+  {
+    &quot;name&quot;: &quot;hide-motivation-for-volunteer&quot;,
+    &quot;condition&quot;: { &quot;field&quot;: &quot;programme&quot;, &quot;operator&quot;: &quot;neq&quot;, &quot;value&quot;: &quot;volunteer&quot; },
+    &quot;action&quot;: { &quot;type&quot;: &quot;hide&quot;, &quot;field&quot;: &quot;motivation&quot; }
+  }
+]
+</code></pre>
+<p>Common operators: <code>eq</code>, <code>neq</code>, <code>contains</code>, <code>gt</code>, <code>lt</code>, <code>empty</code>, <code>notEmpty</code>.
+Common actions: <code>show</code>, <code>hide</code>, <code>require</code>, <code>optional</code>, <code>setValue</code>, <code>addError</code>.</p>
+<h3 id="52-workflow">5.2 Workflow</h3>
+<pre><code class="lang-json">&quot;workflow&quot;: {
+  &quot;notifications&quot;: [
+    {
+      &quot;to&quot;: &quot;{{form.email}}&quot;,
+      &quot;subject&quot;: &quot;Application received&quot;,
+      &quot;body&quot;: &quot;Hi {{form.first_name}}, ...&quot;
+    }
+  ]
+}
+</code></pre>
+<hr>
+<h2 id="6-case-study-euro-youth-applicationjson">6. Case study: <code>euro-youth-application.json</code></h2>
+<p>The Euro Youth template is a premium, wizard-style form. Its original design intentionally spanned the full viewport (full-bleed). The snippet below shows the containerized version, safe for embedding inside a normal page.</p>
+<h3 id="61-containerized-custom-css-excerpt">6.1 Containerized custom CSS (excerpt)</h3>
+<pre><code class="lang-css">.mfp.mfp-euro-youth {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color: #1c1917;
+  background: #f5f5f4;
+  width: 100% !important;
+  max-width: 1152px !important;
+  margin: 0 auto !important;
+  padding: 16px !important;
+  box-sizing: border-box;
+  overflow: visible !important;
+}
+
+.mfp-euro-youth .ey-shell {
+  display: grid;
+  min-height: auto;
+  max-width: 1152px;
+  margin: 0 auto;
+  background: #f5f5f4;
+}
+
+/* Override MegaForm default full-bleed rule */
+.mf-form-wrapper &gt; .mf-form-inner .mfp.mfp-euro-youth {
+  width: 100% !important;
+  max-width: 1152px !important;
+  margin: 0 auto !important;
+  padding: 16px !important;
+  background: #f5f5f4 !important;
+  box-sizing: border-box !important;
+}
+</code></pre>
+<h3 id="62-wizard-script-behaviour-only">6.2 Wizard script (behaviour only)</h3>
+<pre><code class="lang-js">(function(root){
+  var host = (root &amp;&amp; root.closest &amp;&amp; root.closest('.mfp-euro-youth'))
+          || (root &amp;&amp; root.querySelector &amp;&amp; root.querySelector('.mfp-euro-youth'))
+          || document.querySelector('.mfp-euro-youth');
+  if (!host || host.__eyWizardBound) return;
+  host.__eyWizardBound = true;
+
+  function fitHost() {
+    /* windowed layout: no full-bleed overrides */
+  }
+  fitHost();
+
+  var current = 0;
+  var pages = [].slice.call(host.querySelectorAll('.ey-page'));
+  // ... step navigation, validation, summary logic ...
+  show(0);
+})(window.__mfCurrentScriptRoot || document);
+</code></pre>
+<p>Key change: <code>fitHost()</code> no longer sets <code>width:100vw</code>, <code>height:100vh</code>, <code>position:fixed</code>, or injects a navbar-hiding stylesheet.</p>
+<hr>
+<h2 id="7-best-practices">7. Best practices</h2>
+<ol>
+<li><strong>Keep <code>customHtml</code>, <code>customCss</code>, and <code>customScripts</code> in sync between root and <code>settings</code>.</strong></li>
+<li><strong>Do not mix full-bleed and containerized CSS.</strong> Pick one layout strategy and apply it consistently.</li>
+<li><strong>Use high-specificity selectors</strong> when you need to override MegaForm defaults.</li>
+<li><strong>Scope all custom CSS under the theme class</strong> (<code>.mfp-euro-youth</code>) to avoid leaking into other forms on the same page.</li>
+<li><strong>Minify scripts</strong> before saving to reduce JSON size, but keep an un-minified copy in source control for maintenance.</li>
+<li><strong>Version your templates.</strong> Bump <code>version</code> when the schema changes significantly.</li>
+<li><strong>Validate JSON</strong> before importing; a trailing comma or unescaped quote in <code>customHtml</code> will break the renderer.</li>
+</ol>
+<hr>
+<h2 id="8-related-documentation">8. Related documentation</h2>
+<ul>
+<li><a href="form-builder.html">Form Builder</a> — visual design mode.</li>
+<li><a href="ai-form-designer.html">AI Form Designer</a> — designing forms with the AI assistant.</li>
+<li><a href="ai-prompts-form-design.html">AI Prompts for Form Design</a> — prompts that preserve the original design while changing fields and logic.</li>
+<li><a href="sdk-reference.html">SDK Reference</a> — programmatic access to forms and submissions.</li>
+</ul>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Field permissions — hide or lock fields by role | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Field permissions — hide or lock fields by role | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/Docs/docfx/articles/field-permissions.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="field-permissions--hide-or-lock-fields-by-role">Field permissions — hide or lock fields by role</h1>
+
+<p>A form does not have to look the same for everyone. MegaForm lets you decide, per field, <strong>who can
+see it</strong> and <strong>who can see it but not edit it</strong> — using the roles your site already has. The rules
+are applied on the server when the form is delivered, not just hidden with CSS in the browser.</p>
+<p><img src="../images/08-field-permissions.gif" alt="Configuring field visibility by role in the builder, then the same form rendering differently for a Manager and a Finance user"></p>
+<p><strong>Steps shown</strong></p>
+<ol>
+<li>In the builder, select a field and open the <strong>Access</strong> tab on the right.</li>
+<li>Scroll to <strong>Field visibility by role</strong>. Every field has two role lists:
+<ul>
+<li><strong>Visible to</strong> — tick the roles that may see the field. Untick everything and the field is
+visible to everyone (the default).</li>
+<li><strong>Read-only for</strong> — tick roles that may <em>see</em> the field but not change it.</li>
+</ul>
+</li>
+<li>In the recording, <em>Phone</em> is made visible <strong>only to Finance</strong>, and <em>Work email</em> is made
+<strong>read-only for Manager</strong>. Click <strong>Save</strong> — the rules apply when the form is saved.</li>
+<li>The same form is then opened by two real users:
+<ul>
+<li><strong>mgr.nam</strong> (role <em>Manager</em>): <em>Phone</em> is simply <strong>not there</strong>, and <em>Work email</em> renders
+locked — typing into it does nothing.</li>
+<li><strong>fin.lan</strong> (role <em>Finance</em>): <em>Phone</em> is present and editable.</li>
+</ul>
+</li>
+</ol>
+<h2 id="where-the-rules-are-enforced">Where the rules are enforced</h2>
+<p>The role rules are stored in the form schema (<code>showIf</code> / <code>readOnlyIf</code> conditions with a <code>Role</code>
+source) and applied <strong>on the server</strong> when the schema is served to the browser: the schema each
+user downloads is <em>projected</em> for that user first. A field the caller may not see is removed
+before the JSON leaves the server — checking the network response for the Finance-only field as a
+Manager returns nothing to hide in the first place. An unresolvable or anonymous caller gets the
+most-restricted projection, never the least.</p>
+<h2 id="the-access-tab-also-holds-the-permission-matrix">The Access tab also holds the permission matrix</h2>
+<p>Above the per-field rules, the <strong>Access</strong> tab shows the form's <strong>permission matrix</strong> — one grid of
+role/user rows against form-level actions (submitting, reading records, inbox access, approvals).
+The matrix is shared canonical data across the Web, DNN and Oqtane hosts, so granting a role on one
+platform means the same thing on the others. Use <strong>Expand</strong> to see every column; <strong>Save Access
+Rules</strong> saves the matrix.</p>
+<blockquote>
+<p><strong>Roles are the host's roles.</strong> Like everywhere else in MegaForm, <code>Manager</code> and <code>Finance</code> here
+are ordinary Oqtane/DNN site roles. Create the role and assign users in the platform's own user
+management first; then it appears in these pickers automatically — including named individual
+users, which can be ticked just like roles.</p>
+</blockquote>
+<h2 id="sections-and-steps">Sections and steps</h2>
+<p>Visibility rules are not limited to single inputs. <strong>Sections</strong> appear in the same <em>Field
+visibility by role</em> table with the same two role lists, so a whole block of a form can be
+role-gated the same way an individual field is.</p>
+<h2 id="next-steps">Next steps</h2>
+<ul>
+<li><a href="workflow-approvals.html">Approval Workflows &amp; Inbox</a> — the same roles route approval tasks.</li>
+<li><a href="form-builder.html">Form Builder</a> — everything else in the right-hand panel.</li>
+</ul>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

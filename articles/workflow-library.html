@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Workflow library — one workflow, many forms | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Workflow library — one workflow, many forms | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/Docs/docfx/articles/workflow-library.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="workflow-library--one-workflow-many-forms">Workflow library — one workflow, many forms</h1>
+
+<p>Approval flows tend to repeat: <em>manager approves, then finance</em> is the same shape whether the form
+is an account request or a purchase order. MegaForm lets you save a workflow to a site-wide
+<strong>library</strong> and apply it to as many forms as you like — with versioning, so a form in production
+does not change behind your back.</p>
+<h2 id="design-the-workflow-visually">Design the workflow visually</h2>
+<p>Every form has a <strong>BPMN</strong> tab in the builder: a visual editor with a node palette on the left, the
+diagram on a zoomable canvas (with a minimap), and the selected node's settings on the right.</p>
+<p><img src="../images/13-bpmn-complex.gif" alt="The BPMN editor: a two-step approval diagram, selecting a node to edit its settings, dragging a node, and validating the flow"></p>
+<p><strong>Steps shown</strong></p>
+<ol>
+<li>Open a form in the builder and click the <strong>BPMN</strong> tab. The recording opens a real two-step
+flow: <em>Form submitted → Step 1 — Manager → Step 2 — Finance → Done</em>, with a <em>rejected</em> branch
+that emails the submitter.</li>
+<li>Click a node — its settings open on the right: label, swim-lane zone, candidate roles/users,
+due time, the submission status to write on each outcome, and per-node variables.</li>
+<li>Nodes drag freely on the canvas; edges carry the <em>Approved</em> / <em>Rejected</em> outcome labels.</li>
+<li><strong>Validate BPMN</strong> checks the diagram before you apply it.</li>
+</ol>
+<p>The palette covers more than approvals: exclusive gateways for branching, business-rule and script
+tasks, user tasks, send (email) tasks, service tasks that call an API, a database, or a Google
+Sheet, and end events. <strong>Test</strong> runs the flow against a sample submission, and <strong>Apply BPMN</strong>
+makes the drawn flow the one that really executes — until then you are editing a draft.</p>
+<h2 id="reuse-it-across-forms">Reuse it across forms</h2>
+<p>The <strong>Library</strong> button in the BPMN toolbar opens the site's workflow library.</p>
+<p><img src="../images/09-workflow-library-multi-form.gif" alt="Opening the workflow library on one form, then applying the same library workflow to a second form"></p>
+<p><strong>Steps shown</strong></p>
+<ol>
+<li>On the first form, the header already reads <em>Library: Unified approval workflow v1.0.0 ·
+pinned</em> — this form runs a library workflow. <strong>Library</strong> opens the dialog: the template list
+shows <em>Unified approval workflow</em> and how many forms use it.</li>
+<li>On the second form (a plain per-form workflow until now), open <strong>BPMN → Library</strong>, select the
+template and click <strong>Apply</strong>.</li>
+<li>The banner switches to <em>This form runs Unified approval workflow v1.0.0 — pinned to this
+version</em>, and the template row now counts <strong>2 forms</strong>. Both forms now execute the same flow.</li>
+</ol>
+<h2 id="versions-and-pinning">Versions and pinning</h2>
+<p>Applying a library workflow <strong>pins the form to the version you applied</strong>. Editing the template
+later does <em>not</em> silently change a form that is already in production — the form keeps running its
+pinned version until you re-apply. If you prefer the opposite behaviour, each form has an
+<em>auto-update when the template changes</em> option in the same dialog. <strong>Unbind</strong> returns the form to
+its own per-form workflow.</p>
+<p>The library dialog is also where a workflow gets <em>into</em> the library: save the currently open
+diagram as a new template (name, category, description), or push it as a <strong>new version</strong> of an
+existing template.</p>
+<h2 id="next-steps">Next steps</h2>
+<ul>
+<li><a href="workflow-approvals.html">Approval Workflows &amp; Inbox</a> — what approvers see when this flow runs.</li>
+<li><a href="workflow.html">Workflow</a> — node reference and post-submit actions.</li>
+</ul>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Creating Forms — Visual Walkthrough | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Creating Forms — Visual Walkthrough | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/Docs/docfx/articles/creating-forms.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="creating-forms--visual-walkthrough">Creating Forms — Visual Walkthrough</h1>
+
+<p>MegaForm gives you four ways to build a form, from a guided wizard to a plain-English AI
+assistant. This page walks through each one end to end, with a short recording of the real
+builder for every flow. In each case the result is a live, working form on your Oqtane page.</p>
+<p>All four flows are reached from the module's <strong>Form Dashboard</strong> (the ⚙ / <em>Form Dashboard</em>
+button on a MegaForm module, or <code>?mfpanel=dashboard</code>).</p>
+<table>
+<thead>
+<tr>
+<th>Flow</th>
+<th>Best for</th>
+<th>Jump to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Wizard</td>
+<td>A quick standard form, step by step</td>
+<td><a href="#wizard--a-simple-form">Wizard</a></td>
+</tr>
+<tr>
+<td>Multi-step</td>
+<td>Splitting a long form across pages</td>
+<td><a href="#multi-step-form">Multi-step form</a></td>
+</tr>
+<tr>
+<td>Create with AI</td>
+<td>Describing a form in plain English</td>
+<td><a href="#create-a-form-with-ai">Create with AI</a></td>
+</tr>
+<tr>
+<td>AI Designer</td>
+<td>Changing an existing form by chat</td>
+<td><a href="#modify-a-form-with-ai">Modify with AI</a></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="wizard--a-simple-form">Wizard — a simple form</h2>
+<p>Click <strong>New Form</strong> to open the five-step <strong>Form Wizard</strong> (Setup → Fields → Workflow → Design →
+Publish). Name the form, add fields from the field-type gallery — the live preview builds up as
+you go — then publish. The form is immediately available on its Oqtane page, ready to fill in.</p>
+<p><img src="../images/01-wizard-simple-form.gif" alt="Using the wizard to build a simple contact form, ending with the published form live on an Oqtane page"></p>
+<p><strong>Steps shown</strong></p>
+<ol>
+<li><strong>New Form</strong> → the wizard opens on the <em>Setup</em> step.</li>
+<li>Enter a <strong>Form Name</strong> (e.g. <em>Customer Contact Form</em>).</li>
+<li>On <strong>Fields</strong>, click field types to add them — <em>Full Name</em>, <em>Email</em>, <em>Long Text</em> — and watch
+the live preview populate.</li>
+<li>Step through <em>Workflow</em> → <em>Design</em> → <em>Publish</em> and click <strong>Create Form</strong>.</li>
+<li>The published form renders on the Oqtane page and accepts input.</li>
+</ol>
+<blockquote>
+<p>The wizard produces a standard form. You can keep editing it later in the <a href="form-builder.html">Form Builder</a>.</p>
+</blockquote>
+<hr>
+<h2 id="multi-step-form">Multi-step form</h2>
+<p>A long form reads better split across pages. In the wizard's <strong>Fields</strong> step, turn on the
+<strong>Multi-step form</strong> toggle and use <strong>+ Add Step</strong> to create pages, then assign fields to each
+step. The published form shows a progress bar and <em>Previous / Next</em> navigation.</p>
+<p><img src="../images/02-multistep-form.gif" alt="Building a multi-step Event Registration form and stepping through its pages live on an Oqtane page"></p>
+<p><strong>Steps shown</strong></p>
+<ol>
+<li>Name the form (<em>Event Registration</em>) and open the <strong>Fields</strong> step.</li>
+<li>Add the first page's fields (<em>Full Name</em>, <em>Email</em>, <em>Phone</em>).</li>
+<li>Flip the <strong>Multi-step form</strong> toggle, then <strong>+ Add Step</strong> to create <em>Step 2</em>.</li>
+<li>Add the second page's fields (<em>Date</em>, <em>Dropdown</em>, <em>Long Text</em>).</li>
+<li>On the live Oqtane page, fill in <em>Step 1</em>, click <strong>Next</strong>, and <em>Step 2</em> appears with its own
+fields — the stepper marks <em>Step 1</em> complete.</li>
+</ol>
+<blockquote>
+<p>Multi-step also works from the builder using <strong>Page Break</strong> layout blocks — see
+<a href="form-builder.html">Form Builder</a>.</p>
+</blockquote>
+<hr>
+<h2 id="create-a-form-with-ai">Create a form with AI</h2>
+<p>Don't want to place fields by hand? Click <strong>✨ Create with AI</strong>, describe the form in one
+sentence, and the assistant generates a complete, structured form in the live preview — correct
+field types, labels, and validation included. Review it, then <strong>Save &amp; Use Now</strong>.</p>
+<p><img src="../images/03-ai-create-form.gif" alt="Describing a job application form in plain English and having the AI generate the full form"></p>
+<p><strong>Steps shown</strong></p>
+<ol>
+<li><strong>✨ Create with AI</strong> opens the assistant with a chat panel and a live preview.</li>
+<li>Type a description, e.g. <em>&quot;a job application form with name, email, phone, position, years of
+experience, expected salary, start date and cover letter.&quot;</em></li>
+<li>Click <strong>Send</strong> — the AI (OpenAI GPT-4o in this recording) returns a full form: composite name,
+email, phone with country code, dropdowns, dates, and a message field.</li>
+<li>Keep it with <strong>Save &amp; Use Now</strong>, or open it in the builder to fine-tune.</li>
+</ol>
+<blockquote>
+<p>The AI is a licensed feature and is configured under <strong>⚙ Settings → AI</strong> (provider + model +
+API key). It is disabled on trial installs. See <a href="ai-form-designer.html">AI Form Designer</a>.</p>
+</blockquote>
+<hr>
+<h2 id="modify-a-form-with-ai">Modify a form with AI</h2>
+<p>The same assistant lives inside the builder as the <strong>AI Designer</strong>. Open any form, ask for a
+change in plain English, and the AI applies it live to the form on the canvas.</p>
+<p><img src="../images/04-ai-modify-form.gif" alt="Asking the AI Designer to add fields and make one required, applied live to the form"></p>
+<p><strong>Steps shown</strong></p>
+<ol>
+<li>Open a form in the builder and click <strong>AI Designer</strong>.</li>
+<li>Ask for a change, e.g. <em>&quot;Add a phone number field and a preferred appointment date, and make
+the email field required.&quot;</em></li>
+<li>The AI applies the edit to the canvas and confirms what it changed.</li>
+</ol>
+<blockquote>
+<p>Under the hood the AI emits reviewable structured operations (<code>add_field</code>, <code>set_required</code>, …)
+rather than free-form code. See <a href="ai-form-designer.html">AI Form Designer</a> for the tool-use model
+and <a href="ai-prompts-form-design.html">AI Prompts for Form Design</a> for prompt patterns.</p>
+</blockquote>
+<hr>
+<h2 id="next-steps">Next steps</h2>
+<ul>
+<li><a href="form-builder.html">Form Builder</a> — the full visual designer (fields, validation, logic, styling).</li>
+<li><a href="ai-form-designer.html">AI Form Designer</a> — how the AI assistant plans and applies changes.</li>
+<li><a href="form-template-json.html">Template JSON Reference</a> — the schema behind every form.</li>
+<li><a href="workflow.html">Workflow</a> — approvals and automation once submissions arrive.</li>
+</ul>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

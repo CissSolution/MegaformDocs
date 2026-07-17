@@ -16,7 +16,7 @@
       <meta name="docfx:rel" content="../">
       
       
-      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/main/api/index.md/#L1">
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/Docs/docfx/api/index.md/#L1">
       <meta name="loc:inThisArticle" content="In this article">
       <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
       <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
@@ -93,7 +93,7 @@ stable contract (see <a href="../articles/api-stability.html">API Stability</a>)
 <h2 id="entry-points">Entry points</h2>
 <ul>
 <li><a href="MegaForm.Sdk.IMegaFormClient.html"><code>IMegaFormClient</code></a> — the root facade. Exposes
-<code>Forms</code>, <code>Submissions</code>, and <code>Files</code>.</li>
+<code>Forms</code>, <code>Submissions</code>, <code>Dashboard</code>, <code>SubmissionDashboard</code>, <code>Inbox</code>, <code>Files</code>, and <code>Schema</code>.</li>
 <li><a href="MegaForm.Sdk.MegaFormSdk.html"><code>MegaFormSdk</code></a> — ambient accessor for hosts without DI
 (DNN Razor Host, DDR, legacy <code>.ascx</code>).</li>
 <li><a href="MegaForm.Sdk.MegaFormScope.html"><code>MegaFormScope</code></a> — the portal/user context passed to
@@ -103,6 +103,9 @@ every call.</li>
 <ul>
 <li><a href="MegaForm.Sdk.IFormApi.html"><code>IFormApi</code></a> — create, read, list, update &amp; delete forms.</li>
 <li><a href="MegaForm.Sdk.ISubmissionApi.html"><code>ISubmissionApi</code></a> — query, submit, update &amp; delete submissions.</li>
+<li><a href="MegaForm.Sdk.IDashboardApi.html"><code>IDashboardApi</code></a> — per-form counts and recent-submission totals.</li>
+<li><a href="MegaForm.Sdk.ISubmissionDashboardApi.html"><code>ISubmissionDashboardApi</code></a> — rich search, detail, and status operations for dashboards.</li>
+<li><a href="MegaForm.Sdk.IInboxApi.html"><code>IInboxApi</code></a> — human-task inbox (claim, approve, reject, forward, comment, attach, ad-hoc tasks).</li>
 <li><a href="MegaForm.Sdk.IFileApi.html"><code>IFileApi</code></a> — list &amp; open uploaded files.</li>
 <li><a href="MegaForm.Sdk.ISchemaApi.html"><code>ISchemaApi</code></a> — parse form schema JSON into typed field metadata.</li>
 </ul>

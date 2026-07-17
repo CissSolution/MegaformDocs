@@ -1,5 +1,5 @@
 {
-  "source_base_path": "/home/runner/work/MegaformDocs/MegaformDocs",
+  "source_base_path": "E:/DNNDEFENDER AND AI DESIGNES/AI DESIGNES/MegaFormSolution_280_Oqtane_um/Docs/docfx",
   "xrefmap": "xrefmap.yml",
   "files": [
     {
@@ -33,6 +33,48 @@
       "IsMRef": true,
       "Title": "MegaForm.Sdk.CreateFormRequest",
       "Summary": "<p sourcefile=\"api/MegaForm.Sdk.CreateFormRequest.yml\" sourcestartlinenumber=\"1\">Request to create a new form.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.DashboardFormSummaryDto.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.DashboardFormSummaryDto.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.DashboardFormSummaryDto",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.DashboardFormSummaryDto.yml\" sourcestartlinenumber=\"1\">One form row for dashboard overview UIs.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.DashboardOverviewDto.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.DashboardOverviewDto.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.DashboardOverviewDto",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.DashboardOverviewDto.yml\" sourcestartlinenumber=\"1\">Dashboard-level totals and per-form summaries.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.DashboardQuery.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.DashboardQuery.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.DashboardQuery",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.DashboardQuery.yml\" sourcestartlinenumber=\"1\">Filter options for an in-host dashboard overview.</p>\n"
     },
     {
       "type": "ManagedReference",
@@ -134,6 +176,20 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.IDashboardApi.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.IDashboardApi.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.IDashboardApi",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.IDashboardApi.yml\" sourcestartlinenumber=\"1\">Read-only dashboard summaries for forms and submissions in the current host.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/MegaForm.Sdk.IFileApi.yml",
       "output": {
         ".html": {
@@ -159,6 +215,20 @@
       "IsMRef": true,
       "Title": "MegaForm.Sdk.IFormApi",
       "Summary": "<p sourcefile=\"api/MegaForm.Sdk.IFormApi.yml\" sourcestartlinenumber=\"1\">Create, read, list and delete forms.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.IInboxApi.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.IInboxApi.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.IInboxApi",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.IInboxApi.yml\" sourcestartlinenumber=\"1\">Human-task inbox facade for same-host dashboard integrations.</p>\n"
     },
     {
       "type": "ManagedReference",
@@ -201,6 +271,174 @@
       "IsMRef": true,
       "Title": "MegaForm.Sdk.ISubmissionApi",
       "Summary": "<p sourcefile=\"api/MegaForm.Sdk.ISubmissionApi.yml\" sourcestartlinenumber=\"1\">Query, submit, update and delete submissions.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.ISubmissionDashboardApi.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.ISubmissionDashboardApi.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.ISubmissionDashboardApi",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.ISubmissionDashboardApi.yml\" sourcestartlinenumber=\"1\">Submission-dashboard operations richer than the legacy <xref href=\"MegaForm.Sdk.ISubmissionApi.FindAsync(MegaForm.Sdk.SubmissionQuery%2cMegaForm.Sdk.MegaFormScope%2cSystem.Threading.CancellationToken)\" data-throw-if-not-resolved=\"false\"></xref> surface.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.InboxBoardDto.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.InboxBoardDto.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.InboxBoardDto",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.InboxBoardDto.yml\" sourcestartlinenumber=\"1\">Inbox board split into incoming, in-progress, and completed lanes.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.InboxFileAttachmentRequest.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.InboxFileAttachmentRequest.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.InboxFileAttachmentRequest",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.InboxFileAttachmentRequest.yml\" sourcestartlinenumber=\"1\">File attachment request for a workflow inbox task.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.InboxFileAttachmentResultDto.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.InboxFileAttachmentResultDto.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.InboxFileAttachmentResultDto",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.InboxFileAttachmentResultDto.yml\" sourcestartlinenumber=\"1\">Result of attaching a file through the inbox facade.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.InboxKpiDto.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.InboxKpiDto.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.InboxKpiDto",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.InboxQuery.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.InboxQuery.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.InboxQuery",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.InboxQuery.yml\" sourcestartlinenumber=\"1\">Options for the current actor's inbox board.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.InboxSendSubmissionResultDto.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.InboxSendSubmissionResultDto.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.InboxSendSubmissionResultDto",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.InboxSendSubmissionResultDto.yml\" sourcestartlinenumber=\"1\">Result of sending a submission to an inbox.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.InboxTaskActionDto.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.InboxTaskActionDto.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.InboxTaskActionDto",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.InboxTaskActionDto.yml\" sourcestartlinenumber=\"1\">One workflow task action/audit entry.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.InboxTaskActionRequest.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.InboxTaskActionRequest.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.InboxTaskActionRequest",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.InboxTaskActionRequest.yml\" sourcestartlinenumber=\"1\">Action request used by claim/approve/reject/forward/comment.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.InboxTaskDto.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.InboxTaskDto.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.InboxTaskDto",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.InboxTaskDto.yml\" sourcestartlinenumber=\"1\">One human workflow task row.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.InboxTaskResultDto.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.InboxTaskResultDto.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.InboxTaskResultDto",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.InboxTaskResultDto.yml\" sourcestartlinenumber=\"1\">Result of a workflow task operation.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.InboxUserDto.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.InboxUserDto.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.InboxUserDto",
+      "Summary": null
     },
     {
       "type": "ManagedReference",
@@ -288,6 +526,34 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.SendSubmissionToInboxRequest.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.SendSubmissionToInboxRequest.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.SendSubmissionToInboxRequest",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.SendSubmissionToInboxRequest.yml\" sourcestartlinenumber=\"1\">Request to route a submission into a user's inbox without a prebuilt workflow.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.SubmissionDetailDto.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.SubmissionDetailDto.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.SubmissionDetailDto",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.SubmissionDetailDto.yml\" sourcestartlinenumber=\"1\">Full submission detail payload for custom dashboards.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/MegaForm.Sdk.SubmissionDto.yml",
       "output": {
         ".html": {
@@ -302,6 +568,34 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.SubmissionFieldSnapshotDto.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.SubmissionFieldSnapshotDto.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.SubmissionFieldSnapshotDto",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.SubmissionFieldSnapshotDto.yml\" sourcestartlinenumber=\"1\">Stored field snapshot captured at submit time.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.SubmissionListItemDto.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.SubmissionListItemDto.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.SubmissionListItemDto",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.SubmissionListItemDto.yml\" sourcestartlinenumber=\"1\">Dashboard-friendly submission list row.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/MegaForm.Sdk.SubmissionQuery.yml",
       "output": {
         ".html": {
@@ -313,6 +607,48 @@
       "IsMRef": true,
       "Title": "MegaForm.Sdk.SubmissionQuery",
       "Summary": "<p sourcefile=\"api/MegaForm.Sdk.SubmissionQuery.yml\" sourcestartlinenumber=\"1\">Filter/paging options for querying submissions (FindData).</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.SubmissionSearchQuery.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.SubmissionSearchQuery.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.SubmissionSearchQuery",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.SubmissionSearchQuery.yml\" sourcestartlinenumber=\"1\">Richer query contract for submission dashboard screens.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.SubmissionValueDto.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.SubmissionValueDto.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.SubmissionValueDto",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.SubmissionValueDto.yml\" sourcestartlinenumber=\"1\">A display value produced by flattening a submission against its schema.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/MegaForm.Sdk.SubmissionWorkflowSummaryDto.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/MegaForm.Sdk.SubmissionWorkflowSummaryDto.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "MegaForm.Sdk.SubmissionWorkflowSummaryDto",
+      "Summary": "<p sourcefile=\"api/MegaForm.Sdk.SubmissionWorkflowSummaryDto.yml\" sourcestartlinenumber=\"1\">Workflow summary attached to a submission detail.</p>\n"
     },
     {
       "type": "ManagedReference",
@@ -391,6 +727,16 @@
     },
     {
       "type": "Conceptual",
+      "source_relative_path": "articles/ai-prompts-form-design.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/ai-prompts-form-design.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
       "source_relative_path": "articles/api-stability.md",
       "output": {
         ".html": {
@@ -401,10 +747,40 @@
     },
     {
       "type": "Conceptual",
+      "source_relative_path": "articles/creating-forms.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/creating-forms.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
       "source_relative_path": "articles/dnn-razor-host.md",
       "output": {
         ".html": {
           "relative_path": "articles/dnn-razor-host.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/erp-end-to-end.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/erp-end-to-end.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/field-permissions.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/field-permissions.html"
         }
       },
       "version": ""
@@ -425,6 +801,26 @@
       "output": {
         ".html": {
           "relative_path": "articles/form-builder.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/form-template-json.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/form-template-json.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/form-templates.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/form-templates.html"
         }
       },
       "version": ""
@@ -510,6 +906,16 @@
       "version": ""
     },
     {
+      "type": "Conceptual",
+      "source_relative_path": "articles/submissions-grid.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/submissions-grid.html"
+        }
+      },
+      "version": ""
+    },
+    {
       "type": "Toc",
       "source_relative_path": "articles/toc.yml",
       "output": {
@@ -524,10 +930,160 @@
     },
     {
       "type": "Conceptual",
+      "source_relative_path": "articles/workflow-approvals.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/workflow-approvals.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/workflow-library.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/workflow-library.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
       "source_relative_path": "articles/workflow.md",
       "output": {
         ".html": {
           "relative_path": "articles/workflow.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/01-wizard-simple-form.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/01-wizard-simple-form.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/02-multistep-form.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/02-multistep-form.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/03-ai-create-form.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/03-ai-create-form.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/04-ai-modify-form.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/04-ai-modify-form.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/08-field-permissions.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/08-field-permissions.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/09-workflow-library-multi-form.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/09-workflow-library-multi-form.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/10-inbox-approval.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/10-inbox-approval.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/11-advanced-filter.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/11-advanced-filter.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/12-tabbed-template.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/12-tabbed-template.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/13-bpmn-complex.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/13-bpmn-complex.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/14-erp-demo.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/14-erp-demo.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-erp-dashboard.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-erp-dashboard.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-erp-report.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-erp-report.png"
         }
       },
       "version": ""

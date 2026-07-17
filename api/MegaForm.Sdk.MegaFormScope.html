@@ -16,7 +16,7 @@
       <meta name="docfx:rel" content="../">
       
       
-      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/new/feat/theme-designer-picker-wizard-gallery-1.7.45/apiSpec/new?filename=MegaForm_Sdk_MegaFormScope.md&amp;value=---%0Auid%3A%20MegaForm.Sdk.MegaFormScope%0Asummary%3A%20&#39;*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax&#39;%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">
       <meta name="loc:inThisArticle" content="In this article">
       <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
       <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
@@ -89,7 +89,7 @@
 
 
   <h1 id="MegaForm_Sdk_MegaFormScope" data-uid="MegaForm.Sdk.MegaFormScope" class="text-break">
-Class MegaFormScope  
+Class MegaFormScope  <a class="header-action link-secondary" title="View source" href="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/MegaForm.Sdk/Dtos.cs/#L12"><i class="bi bi-code-slash"></i></a>
   </h1>
 
   <div class="facts text-secondary">
@@ -153,11 +153,171 @@ omitted, the ambient platform context is used.</p>
 </h2>
 
 
+  <a id="MegaForm_Sdk_MegaFormScope_DisplayName_" data-uid="MegaForm.Sdk.MegaFormScope.DisplayName*"></a>
+
+  <h3 id="MegaForm_Sdk_MegaFormScope_DisplayName" data-uid="MegaForm.Sdk.MegaFormScope.DisplayName">
+  DisplayName
+  <a class="header-action link-secondary" title="View source" href="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/MegaForm.Sdk/Dtos.cs/#L24"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Display name for audit/inbox operations when available.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string? DisplayName { get; set; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_MegaFormScope_IpAddress_" data-uid="MegaForm.Sdk.MegaFormScope.IpAddress*"></a>
+
+  <h3 id="MegaForm_Sdk_MegaFormScope_IpAddress" data-uid="MegaForm.Sdk.MegaFormScope.IpAddress">
+  IpAddress
+  <a class="header-action link-secondary" title="View source" href="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/MegaForm.Sdk/Dtos.cs/#L42"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Optional client IP for audit-oriented operations.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string? IpAddress { get; set; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_MegaFormScope_IsAdmin_" data-uid="MegaForm.Sdk.MegaFormScope.IsAdmin*"></a>
+
+  <h3 id="MegaForm_Sdk_MegaFormScope_IsAdmin" data-uid="MegaForm.Sdk.MegaFormScope.IsAdmin">
+  IsAdmin
+  <a class="header-action link-secondary" title="View source" href="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/MegaForm.Sdk/Dtos.cs/#L33"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Whether the actor should be treated as a site administrator.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool? IsAdmin { get; set; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a>?</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_MegaFormScope_IsAuthenticated_" data-uid="MegaForm.Sdk.MegaFormScope.IsAuthenticated*"></a>
+
+  <h3 id="MegaForm_Sdk_MegaFormScope_IsAuthenticated" data-uid="MegaForm.Sdk.MegaFormScope.IsAuthenticated">
+  IsAuthenticated
+  <a class="header-action link-secondary" title="View source" href="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/MegaForm.Sdk/Dtos.cs/#L30"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Whether the actor is authenticated. Defaults from <a class="xref" href="MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_UserId">UserId</a> when unset.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool? IsAuthenticated { get; set; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a>?</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_MegaFormScope_IsSuperUser_" data-uid="MegaForm.Sdk.MegaFormScope.IsSuperUser*"></a>
+
+  <h3 id="MegaForm_Sdk_MegaFormScope_IsSuperUser" data-uid="MegaForm.Sdk.MegaFormScope.IsSuperUser">
+  IsSuperUser
+  <a class="header-action link-secondary" title="View source" href="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/MegaForm.Sdk/Dtos.cs/#L36"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Whether the actor should be treated as a host/super user.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool? IsSuperUser { get; set; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a>?</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
   <a id="MegaForm_Sdk_MegaFormScope_PortalId_" data-uid="MegaForm.Sdk.MegaFormScope.PortalId*"></a>
 
   <h3 id="MegaForm_Sdk_MegaFormScope_PortalId" data-uid="MegaForm.Sdk.MegaFormScope.PortalId">
   PortalId
-  
+  <a class="header-action link-secondary" title="View source" href="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/MegaForm.Sdk/Dtos.cs/#L15"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Portal / site id the operation runs against.</p>
@@ -185,11 +345,75 @@ omitted, the ambient platform context is used.</p>
 
 
 
+  <a id="MegaForm_Sdk_MegaFormScope_Roles_" data-uid="MegaForm.Sdk.MegaFormScope.Roles*"></a>
+
+  <h3 id="MegaForm_Sdk_MegaFormScope_Roles" data-uid="MegaForm.Sdk.MegaFormScope.Roles">
+  Roles
+  <a class="header-action link-secondary" title="View source" href="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/MegaForm.Sdk/Dtos.cs/#L39"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Role names used by workflow role-queue matching.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public List&lt;string&gt; Roles { get; set; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1">List</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_MegaFormScope_UserEmail_" data-uid="MegaForm.Sdk.MegaFormScope.UserEmail*"></a>
+
+  <h3 id="MegaForm_Sdk_MegaFormScope_UserEmail" data-uid="MegaForm.Sdk.MegaFormScope.UserEmail">
+  UserEmail
+  <a class="header-action link-secondary" title="View source" href="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/MegaForm.Sdk/Dtos.cs/#L27"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Acting user's email address when available.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string? UserEmail { get; set; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
   <a id="MegaForm_Sdk_MegaFormScope_UserId_" data-uid="MegaForm.Sdk.MegaFormScope.UserId*"></a>
 
   <h3 id="MegaForm_Sdk_MegaFormScope_UserId" data-uid="MegaForm.Sdk.MegaFormScope.UserId">
   UserId
-  
+  <a class="header-action link-secondary" title="View source" href="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/MegaForm.Sdk/Dtos.cs/#L18"><i class="bi bi-code-slash"></i></a>
   </h3>
 
   <div class="markdown level1 summary"><p>Acting user id (0 = anonymous/system).</p>
@@ -207,6 +431,38 @@ omitted, the ambient platform context is used.</p>
   <h4 class="section">Property Value</h4>
   <dl class="parameters">
     <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_MegaFormScope_UserName_" data-uid="MegaForm.Sdk.MegaFormScope.UserName*"></a>
+
+  <h3 id="MegaForm_Sdk_MegaFormScope_UserName" data-uid="MegaForm.Sdk.MegaFormScope.UserName">
+  UserName
+  <a class="header-action link-secondary" title="View source" href="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/MegaForm.Sdk/Dtos.cs/#L21"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Acting username, used by workflow inbox matching when available.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string? UserName { get; set; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
     <dd></dd>
   </dl>
 

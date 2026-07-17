@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Interface IInboxApi | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Interface IInboxApi | MegaForm Documentation ">
+      
+      <meta name="description" content="Human-task inbox facade for same-host dashboard integrations.">
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/new/feat/theme-designer-picker-wizard-gallery-1.7.45/apiSpec/new?filename=MegaForm_Sdk_IInboxApi.md&amp;value=---%0Auid%3A%20MegaForm.Sdk.IInboxApi%0Asummary%3A%20&#39;*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax&#39;%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="MegaForm.Sdk.IInboxApi">
+
+
+
+  <h1 id="MegaForm_Sdk_IInboxApi" data-uid="MegaForm.Sdk.IInboxApi" class="text-break">
+Interface IInboxApi  <a class="header-action link-secondary" title="View source" href="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/MegaForm.Sdk/IMegaFormClient.cs/#L129"><i class="bi bi-code-slash"></i></a>
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="MegaForm.html">MegaForm</a>.<a class="xref" href="MegaForm.Sdk.html">Sdk</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>MegaForm.Sdk.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"><p>Human-task inbox facade for same-host dashboard integrations.</p>
+</div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IInboxApi</code></pre>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="methods">Methods
+</h2>
+
+
+  <a id="MegaForm_Sdk_IInboxApi_ApproveAsync_" data-uid="MegaForm.Sdk.IInboxApi.ApproveAsync*"></a>
+
+  <h3 id="MegaForm_Sdk_IInboxApi_ApproveAsync_MegaForm_Sdk_InboxTaskActionRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_" data-uid="MegaForm.Sdk.IInboxApi.ApproveAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)">
+  ApproveAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/MegaForm.Sdk/IMegaFormClient.cs/#L141"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Approve an open task and resume the workflow.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Task&lt;InboxTaskResultDto&gt; ApproveAsync(InboxTaskActionRequest request, MegaFormScope? scope = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>request</code> <a class="xref" href="MegaForm.Sdk.InboxTaskActionRequest.html">InboxTaskActionRequest</a></dt>
+    <dd></dd>
+    <dt><code>scope</code> <a class="xref" href="MegaForm.Sdk.MegaFormScope.html">MegaFormScope</a></dt>
+    <dd></dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="MegaForm.Sdk.InboxTaskResultDto.html">InboxTaskResultDto</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_IInboxApi_AttachFileAsync_" data-uid="MegaForm.Sdk.IInboxApi.AttachFileAsync*"></a>
+
+  <h3 id="MegaForm_Sdk_IInboxApi_AttachFileAsync_MegaForm_Sdk_InboxFileAttachmentRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_" data-uid="MegaForm.Sdk.IInboxApi.AttachFileAsync(MegaForm.Sdk.InboxFileAttachmentRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)">
+  AttachFileAsync(InboxFileAttachmentRequest, MegaFormScope?, CancellationToken)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/MegaForm.Sdk/IMegaFormClient.cs/#L153"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Attach a file to the task's linked submission, then return the stored file metadata.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Task&lt;InboxFileAttachmentResultDto&gt; AttachFileAsync(InboxFileAttachmentRequest request, MegaFormScope? scope = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>request</code> <a class="xref" href="MegaForm.Sdk.InboxFileAttachmentRequest.html">InboxFileAttachmentRequest</a></dt>
+    <dd></dd>
+    <dt><code>scope</code> <a class="xref" href="MegaForm.Sdk.MegaFormScope.html">MegaFormScope</a></dt>
+    <dd></dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="MegaForm.Sdk.InboxFileAttachmentResultDto.html">InboxFileAttachmentResultDto</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_IInboxApi_ClaimAsync_" data-uid="MegaForm.Sdk.IInboxApi.ClaimAsync*"></a>
+
+  <h3 id="MegaForm_Sdk_IInboxApi_ClaimAsync_MegaForm_Sdk_InboxTaskActionRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_" data-uid="MegaForm.Sdk.IInboxApi.ClaimAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)">
+  ClaimAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/MegaForm.Sdk/IMegaFormClient.cs/#L138"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Claim an open task for the current actor.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Task&lt;InboxTaskResultDto&gt; ClaimAsync(InboxTaskActionRequest request, MegaFormScope? scope = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>request</code> <a class="xref" href="MegaForm.Sdk.InboxTaskActionRequest.html">InboxTaskActionRequest</a></dt>
+    <dd></dd>
+    <dt><code>scope</code> <a class="xref" href="MegaForm.Sdk.MegaFormScope.html">MegaFormScope</a></dt>
+    <dd></dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="MegaForm.Sdk.InboxTaskResultDto.html">InboxTaskResultDto</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_IInboxApi_CommentAsync_" data-uid="MegaForm.Sdk.IInboxApi.CommentAsync*"></a>
+
+  <h3 id="MegaForm_Sdk_IInboxApi_CommentAsync_MegaForm_Sdk_InboxTaskActionRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_" data-uid="MegaForm.Sdk.IInboxApi.CommentAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)">
+  CommentAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/MegaForm.Sdk/IMegaFormClient.cs/#L150"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Add a comment to an open task without changing its state.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Task&lt;InboxTaskResultDto&gt; CommentAsync(InboxTaskActionRequest request, MegaFormScope? scope = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>request</code> <a class="xref" href="MegaForm.Sdk.InboxTaskActionRequest.html">InboxTaskActionRequest</a></dt>
+    <dd></dd>
+    <dt><code>scope</code> <a class="xref" href="MegaForm.Sdk.MegaFormScope.html">MegaFormScope</a></dt>
+    <dd></dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="MegaForm.Sdk.InboxTaskResultDto.html">InboxTaskResultDto</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_IInboxApi_ForwardAsync_" data-uid="MegaForm.Sdk.IInboxApi.ForwardAsync*"></a>
+
+  <h3 id="MegaForm_Sdk_IInboxApi_ForwardAsync_MegaForm_Sdk_InboxTaskActionRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_" data-uid="MegaForm.Sdk.IInboxApi.ForwardAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)">
+  ForwardAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/MegaForm.Sdk/IMegaFormClient.cs/#L147"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Forward an open task to another user or role target.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Task&lt;InboxTaskResultDto&gt; ForwardAsync(InboxTaskActionRequest request, MegaFormScope? scope = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>request</code> <a class="xref" href="MegaForm.Sdk.InboxTaskActionRequest.html">InboxTaskActionRequest</a></dt>
+    <dd></dd>
+    <dt><code>scope</code> <a class="xref" href="MegaForm.Sdk.MegaFormScope.html">MegaFormScope</a></dt>
+    <dd></dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="MegaForm.Sdk.InboxTaskResultDto.html">InboxTaskResultDto</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_IInboxApi_GetMyInboxAsync_" data-uid="MegaForm.Sdk.IInboxApi.GetMyInboxAsync*"></a>
+
+  <h3 id="MegaForm_Sdk_IInboxApi_GetMyInboxAsync_MegaForm_Sdk_InboxQuery_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_" data-uid="MegaForm.Sdk.IInboxApi.GetMyInboxAsync(MegaForm.Sdk.InboxQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)">
+  GetMyInboxAsync(InboxQuery?, MegaFormScope?, CancellationToken)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/MegaForm.Sdk/IMegaFormClient.cs/#L132"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Return the current actor's workboard: incoming, in-progress, completed, and KPI counts.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Task&lt;InboxBoardDto&gt; GetMyInboxAsync(InboxQuery? query = null, MegaFormScope? scope = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>query</code> <a class="xref" href="MegaForm.Sdk.InboxQuery.html">InboxQuery</a></dt>
+    <dd></dd>
+    <dt><code>scope</code> <a class="xref" href="MegaForm.Sdk.MegaFormScope.html">MegaFormScope</a></dt>
+    <dd></dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="MegaForm.Sdk.InboxBoardDto.html">InboxBoardDto</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_IInboxApi_GetTaskAsync_" data-uid="MegaForm.Sdk.IInboxApi.GetTaskAsync*"></a>
+
+  <h3 id="MegaForm_Sdk_IInboxApi_GetTaskAsync_System_String_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_" data-uid="MegaForm.Sdk.IInboxApi.GetTaskAsync(System.String,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)">
+  GetTaskAsync(string, MegaFormScope?, CancellationToken)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/MegaForm.Sdk/IMegaFormClient.cs/#L135"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Load one visible task with action history and linked submission summary.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Task&lt;InboxTaskResultDto&gt; GetTaskAsync(string taskId, MegaFormScope? scope = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>taskId</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+    <dt><code>scope</code> <a class="xref" href="MegaForm.Sdk.MegaFormScope.html">MegaFormScope</a></dt>
+    <dd></dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="MegaForm.Sdk.InboxTaskResultDto.html">InboxTaskResultDto</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_IInboxApi_RejectAsync_" data-uid="MegaForm.Sdk.IInboxApi.RejectAsync*"></a>
+
+  <h3 id="MegaForm_Sdk_IInboxApi_RejectAsync_MegaForm_Sdk_InboxTaskActionRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_" data-uid="MegaForm.Sdk.IInboxApi.RejectAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)">
+  RejectAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/MegaForm.Sdk/IMegaFormClient.cs/#L144"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reject an open task and resume the workflow.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Task&lt;InboxTaskResultDto&gt; RejectAsync(InboxTaskActionRequest request, MegaFormScope? scope = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>request</code> <a class="xref" href="MegaForm.Sdk.InboxTaskActionRequest.html">InboxTaskActionRequest</a></dt>
+    <dd></dd>
+    <dt><code>scope</code> <a class="xref" href="MegaForm.Sdk.MegaFormScope.html">MegaFormScope</a></dt>
+    <dd></dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="MegaForm.Sdk.InboxTaskResultDto.html">InboxTaskResultDto</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="MegaForm_Sdk_IInboxApi_SendSubmissionAsync_" data-uid="MegaForm.Sdk.IInboxApi.SendSubmissionAsync*"></a>
+
+  <h3 id="MegaForm_Sdk_IInboxApi_SendSubmissionAsync_MegaForm_Sdk_SendSubmissionToInboxRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_" data-uid="MegaForm.Sdk.IInboxApi.SendSubmissionAsync(MegaForm.Sdk.SendSubmissionToInboxRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)">
+  SendSubmissionAsync(SendSubmissionToInboxRequest, MegaFormScope?, CancellationToken)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/MegaForm.Sdk/IMegaFormClient.cs/#L156"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Create a one-step review task for a submission without requiring a preconfigured workflow.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Task&lt;InboxSendSubmissionResultDto&gt; SendSubmissionAsync(SendSubmissionToInboxRequest request, MegaFormScope? scope = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>request</code> <a class="xref" href="MegaForm.Sdk.SendSubmissionToInboxRequest.html">SendSubmissionToInboxRequest</a></dt>
+    <dd></dd>
+    <dt><code>scope</code> <a class="xref" href="MegaForm.Sdk.MegaFormScope.html">MegaFormScope</a></dt>
+    <dd></dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="MegaForm.Sdk.InboxSendSubmissionResultDto.html">InboxSendSubmissionResultDto</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

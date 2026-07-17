@@ -78,6 +78,245 @@ references:
   isSpec: "True"
   fullName: MegaForm.Sdk.CreateFormRequest.Title
   nameWithType: CreateFormRequest.Title
+- uid: MegaForm.Sdk.DashboardFormSummaryDto
+  name: DashboardFormSummaryDto
+  href: api/MegaForm.Sdk.DashboardFormSummaryDto.html
+  commentId: T:MegaForm.Sdk.DashboardFormSummaryDto
+  fullName: MegaForm.Sdk.DashboardFormSummaryDto
+  nameWithType: DashboardFormSummaryDto
+- uid: MegaForm.Sdk.DashboardFormSummaryDto.CreatedOnUtc
+  name: CreatedOnUtc
+  href: api/MegaForm.Sdk.DashboardFormSummaryDto.html#MegaForm_Sdk_DashboardFormSummaryDto_CreatedOnUtc
+  commentId: P:MegaForm.Sdk.DashboardFormSummaryDto.CreatedOnUtc
+  fullName: MegaForm.Sdk.DashboardFormSummaryDto.CreatedOnUtc
+  nameWithType: DashboardFormSummaryDto.CreatedOnUtc
+- uid: MegaForm.Sdk.DashboardFormSummaryDto.CreatedOnUtc*
+  name: CreatedOnUtc
+  href: api/MegaForm.Sdk.DashboardFormSummaryDto.html#MegaForm_Sdk_DashboardFormSummaryDto_CreatedOnUtc_
+  commentId: Overload:MegaForm.Sdk.DashboardFormSummaryDto.CreatedOnUtc
+  isSpec: "True"
+  fullName: MegaForm.Sdk.DashboardFormSummaryDto.CreatedOnUtc
+  nameWithType: DashboardFormSummaryDto.CreatedOnUtc
+- uid: MegaForm.Sdk.DashboardFormSummaryDto.FormId
+  name: FormId
+  href: api/MegaForm.Sdk.DashboardFormSummaryDto.html#MegaForm_Sdk_DashboardFormSummaryDto_FormId
+  commentId: P:MegaForm.Sdk.DashboardFormSummaryDto.FormId
+  fullName: MegaForm.Sdk.DashboardFormSummaryDto.FormId
+  nameWithType: DashboardFormSummaryDto.FormId
+- uid: MegaForm.Sdk.DashboardFormSummaryDto.FormId*
+  name: FormId
+  href: api/MegaForm.Sdk.DashboardFormSummaryDto.html#MegaForm_Sdk_DashboardFormSummaryDto_FormId_
+  commentId: Overload:MegaForm.Sdk.DashboardFormSummaryDto.FormId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.DashboardFormSummaryDto.FormId
+  nameWithType: DashboardFormSummaryDto.FormId
+- uid: MegaForm.Sdk.DashboardFormSummaryDto.RecentSubmissionCount
+  name: RecentSubmissionCount
+  href: api/MegaForm.Sdk.DashboardFormSummaryDto.html#MegaForm_Sdk_DashboardFormSummaryDto_RecentSubmissionCount
+  commentId: P:MegaForm.Sdk.DashboardFormSummaryDto.RecentSubmissionCount
+  fullName: MegaForm.Sdk.DashboardFormSummaryDto.RecentSubmissionCount
+  nameWithType: DashboardFormSummaryDto.RecentSubmissionCount
+- uid: MegaForm.Sdk.DashboardFormSummaryDto.RecentSubmissionCount*
+  name: RecentSubmissionCount
+  href: api/MegaForm.Sdk.DashboardFormSummaryDto.html#MegaForm_Sdk_DashboardFormSummaryDto_RecentSubmissionCount_
+  commentId: Overload:MegaForm.Sdk.DashboardFormSummaryDto.RecentSubmissionCount
+  isSpec: "True"
+  fullName: MegaForm.Sdk.DashboardFormSummaryDto.RecentSubmissionCount
+  nameWithType: DashboardFormSummaryDto.RecentSubmissionCount
+- uid: MegaForm.Sdk.DashboardFormSummaryDto.Status
+  name: Status
+  href: api/MegaForm.Sdk.DashboardFormSummaryDto.html#MegaForm_Sdk_DashboardFormSummaryDto_Status
+  commentId: P:MegaForm.Sdk.DashboardFormSummaryDto.Status
+  fullName: MegaForm.Sdk.DashboardFormSummaryDto.Status
+  nameWithType: DashboardFormSummaryDto.Status
+- uid: MegaForm.Sdk.DashboardFormSummaryDto.Status*
+  name: Status
+  href: api/MegaForm.Sdk.DashboardFormSummaryDto.html#MegaForm_Sdk_DashboardFormSummaryDto_Status_
+  commentId: Overload:MegaForm.Sdk.DashboardFormSummaryDto.Status
+  isSpec: "True"
+  fullName: MegaForm.Sdk.DashboardFormSummaryDto.Status
+  nameWithType: DashboardFormSummaryDto.Status
+- uid: MegaForm.Sdk.DashboardFormSummaryDto.SubmissionCount
+  name: SubmissionCount
+  href: api/MegaForm.Sdk.DashboardFormSummaryDto.html#MegaForm_Sdk_DashboardFormSummaryDto_SubmissionCount
+  commentId: P:MegaForm.Sdk.DashboardFormSummaryDto.SubmissionCount
+  fullName: MegaForm.Sdk.DashboardFormSummaryDto.SubmissionCount
+  nameWithType: DashboardFormSummaryDto.SubmissionCount
+- uid: MegaForm.Sdk.DashboardFormSummaryDto.SubmissionCount*
+  name: SubmissionCount
+  href: api/MegaForm.Sdk.DashboardFormSummaryDto.html#MegaForm_Sdk_DashboardFormSummaryDto_SubmissionCount_
+  commentId: Overload:MegaForm.Sdk.DashboardFormSummaryDto.SubmissionCount
+  isSpec: "True"
+  fullName: MegaForm.Sdk.DashboardFormSummaryDto.SubmissionCount
+  nameWithType: DashboardFormSummaryDto.SubmissionCount
+- uid: MegaForm.Sdk.DashboardFormSummaryDto.Title
+  name: Title
+  href: api/MegaForm.Sdk.DashboardFormSummaryDto.html#MegaForm_Sdk_DashboardFormSummaryDto_Title
+  commentId: P:MegaForm.Sdk.DashboardFormSummaryDto.Title
+  fullName: MegaForm.Sdk.DashboardFormSummaryDto.Title
+  nameWithType: DashboardFormSummaryDto.Title
+- uid: MegaForm.Sdk.DashboardFormSummaryDto.Title*
+  name: Title
+  href: api/MegaForm.Sdk.DashboardFormSummaryDto.html#MegaForm_Sdk_DashboardFormSummaryDto_Title_
+  commentId: Overload:MegaForm.Sdk.DashboardFormSummaryDto.Title
+  isSpec: "True"
+  fullName: MegaForm.Sdk.DashboardFormSummaryDto.Title
+  nameWithType: DashboardFormSummaryDto.Title
+- uid: MegaForm.Sdk.DashboardOverviewDto
+  name: DashboardOverviewDto
+  href: api/MegaForm.Sdk.DashboardOverviewDto.html
+  commentId: T:MegaForm.Sdk.DashboardOverviewDto
+  fullName: MegaForm.Sdk.DashboardOverviewDto
+  nameWithType: DashboardOverviewDto
+- uid: MegaForm.Sdk.DashboardOverviewDto.Days
+  name: Days
+  href: api/MegaForm.Sdk.DashboardOverviewDto.html#MegaForm_Sdk_DashboardOverviewDto_Days
+  commentId: P:MegaForm.Sdk.DashboardOverviewDto.Days
+  fullName: MegaForm.Sdk.DashboardOverviewDto.Days
+  nameWithType: DashboardOverviewDto.Days
+- uid: MegaForm.Sdk.DashboardOverviewDto.Days*
+  name: Days
+  href: api/MegaForm.Sdk.DashboardOverviewDto.html#MegaForm_Sdk_DashboardOverviewDto_Days_
+  commentId: Overload:MegaForm.Sdk.DashboardOverviewDto.Days
+  isSpec: "True"
+  fullName: MegaForm.Sdk.DashboardOverviewDto.Days
+  nameWithType: DashboardOverviewDto.Days
+- uid: MegaForm.Sdk.DashboardOverviewDto.Forms
+  name: Forms
+  href: api/MegaForm.Sdk.DashboardOverviewDto.html#MegaForm_Sdk_DashboardOverviewDto_Forms
+  commentId: P:MegaForm.Sdk.DashboardOverviewDto.Forms
+  fullName: MegaForm.Sdk.DashboardOverviewDto.Forms
+  nameWithType: DashboardOverviewDto.Forms
+- uid: MegaForm.Sdk.DashboardOverviewDto.Forms*
+  name: Forms
+  href: api/MegaForm.Sdk.DashboardOverviewDto.html#MegaForm_Sdk_DashboardOverviewDto_Forms_
+  commentId: Overload:MegaForm.Sdk.DashboardOverviewDto.Forms
+  isSpec: "True"
+  fullName: MegaForm.Sdk.DashboardOverviewDto.Forms
+  nameWithType: DashboardOverviewDto.Forms
+- uid: MegaForm.Sdk.DashboardOverviewDto.GeneratedAtUtc
+  name: GeneratedAtUtc
+  href: api/MegaForm.Sdk.DashboardOverviewDto.html#MegaForm_Sdk_DashboardOverviewDto_GeneratedAtUtc
+  commentId: P:MegaForm.Sdk.DashboardOverviewDto.GeneratedAtUtc
+  fullName: MegaForm.Sdk.DashboardOverviewDto.GeneratedAtUtc
+  nameWithType: DashboardOverviewDto.GeneratedAtUtc
+- uid: MegaForm.Sdk.DashboardOverviewDto.GeneratedAtUtc*
+  name: GeneratedAtUtc
+  href: api/MegaForm.Sdk.DashboardOverviewDto.html#MegaForm_Sdk_DashboardOverviewDto_GeneratedAtUtc_
+  commentId: Overload:MegaForm.Sdk.DashboardOverviewDto.GeneratedAtUtc
+  isSpec: "True"
+  fullName: MegaForm.Sdk.DashboardOverviewDto.GeneratedAtUtc
+  nameWithType: DashboardOverviewDto.GeneratedAtUtc
+- uid: MegaForm.Sdk.DashboardOverviewDto.PortalId
+  name: PortalId
+  href: api/MegaForm.Sdk.DashboardOverviewDto.html#MegaForm_Sdk_DashboardOverviewDto_PortalId
+  commentId: P:MegaForm.Sdk.DashboardOverviewDto.PortalId
+  fullName: MegaForm.Sdk.DashboardOverviewDto.PortalId
+  nameWithType: DashboardOverviewDto.PortalId
+- uid: MegaForm.Sdk.DashboardOverviewDto.PortalId*
+  name: PortalId
+  href: api/MegaForm.Sdk.DashboardOverviewDto.html#MegaForm_Sdk_DashboardOverviewDto_PortalId_
+  commentId: Overload:MegaForm.Sdk.DashboardOverviewDto.PortalId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.DashboardOverviewDto.PortalId
+  nameWithType: DashboardOverviewDto.PortalId
+- uid: MegaForm.Sdk.DashboardOverviewDto.RecentSubmissions
+  name: RecentSubmissions
+  href: api/MegaForm.Sdk.DashboardOverviewDto.html#MegaForm_Sdk_DashboardOverviewDto_RecentSubmissions
+  commentId: P:MegaForm.Sdk.DashboardOverviewDto.RecentSubmissions
+  fullName: MegaForm.Sdk.DashboardOverviewDto.RecentSubmissions
+  nameWithType: DashboardOverviewDto.RecentSubmissions
+- uid: MegaForm.Sdk.DashboardOverviewDto.RecentSubmissions*
+  name: RecentSubmissions
+  href: api/MegaForm.Sdk.DashboardOverviewDto.html#MegaForm_Sdk_DashboardOverviewDto_RecentSubmissions_
+  commentId: Overload:MegaForm.Sdk.DashboardOverviewDto.RecentSubmissions
+  isSpec: "True"
+  fullName: MegaForm.Sdk.DashboardOverviewDto.RecentSubmissions
+  nameWithType: DashboardOverviewDto.RecentSubmissions
+- uid: MegaForm.Sdk.DashboardOverviewDto.TotalForms
+  name: TotalForms
+  href: api/MegaForm.Sdk.DashboardOverviewDto.html#MegaForm_Sdk_DashboardOverviewDto_TotalForms
+  commentId: P:MegaForm.Sdk.DashboardOverviewDto.TotalForms
+  fullName: MegaForm.Sdk.DashboardOverviewDto.TotalForms
+  nameWithType: DashboardOverviewDto.TotalForms
+- uid: MegaForm.Sdk.DashboardOverviewDto.TotalForms*
+  name: TotalForms
+  href: api/MegaForm.Sdk.DashboardOverviewDto.html#MegaForm_Sdk_DashboardOverviewDto_TotalForms_
+  commentId: Overload:MegaForm.Sdk.DashboardOverviewDto.TotalForms
+  isSpec: "True"
+  fullName: MegaForm.Sdk.DashboardOverviewDto.TotalForms
+  nameWithType: DashboardOverviewDto.TotalForms
+- uid: MegaForm.Sdk.DashboardOverviewDto.TotalSubmissions
+  name: TotalSubmissions
+  href: api/MegaForm.Sdk.DashboardOverviewDto.html#MegaForm_Sdk_DashboardOverviewDto_TotalSubmissions
+  commentId: P:MegaForm.Sdk.DashboardOverviewDto.TotalSubmissions
+  fullName: MegaForm.Sdk.DashboardOverviewDto.TotalSubmissions
+  nameWithType: DashboardOverviewDto.TotalSubmissions
+- uid: MegaForm.Sdk.DashboardOverviewDto.TotalSubmissions*
+  name: TotalSubmissions
+  href: api/MegaForm.Sdk.DashboardOverviewDto.html#MegaForm_Sdk_DashboardOverviewDto_TotalSubmissions_
+  commentId: Overload:MegaForm.Sdk.DashboardOverviewDto.TotalSubmissions
+  isSpec: "True"
+  fullName: MegaForm.Sdk.DashboardOverviewDto.TotalSubmissions
+  nameWithType: DashboardOverviewDto.TotalSubmissions
+- uid: MegaForm.Sdk.DashboardQuery
+  name: DashboardQuery
+  href: api/MegaForm.Sdk.DashboardQuery.html
+  commentId: T:MegaForm.Sdk.DashboardQuery
+  fullName: MegaForm.Sdk.DashboardQuery
+  nameWithType: DashboardQuery
+- uid: MegaForm.Sdk.DashboardQuery.Days
+  name: Days
+  href: api/MegaForm.Sdk.DashboardQuery.html#MegaForm_Sdk_DashboardQuery_Days
+  commentId: P:MegaForm.Sdk.DashboardQuery.Days
+  fullName: MegaForm.Sdk.DashboardQuery.Days
+  nameWithType: DashboardQuery.Days
+- uid: MegaForm.Sdk.DashboardQuery.Days*
+  name: Days
+  href: api/MegaForm.Sdk.DashboardQuery.html#MegaForm_Sdk_DashboardQuery_Days_
+  commentId: Overload:MegaForm.Sdk.DashboardQuery.Days
+  isSpec: "True"
+  fullName: MegaForm.Sdk.DashboardQuery.Days
+  nameWithType: DashboardQuery.Days
+- uid: MegaForm.Sdk.DashboardQuery.MaxForms
+  name: MaxForms
+  href: api/MegaForm.Sdk.DashboardQuery.html#MegaForm_Sdk_DashboardQuery_MaxForms
+  commentId: P:MegaForm.Sdk.DashboardQuery.MaxForms
+  fullName: MegaForm.Sdk.DashboardQuery.MaxForms
+  nameWithType: DashboardQuery.MaxForms
+- uid: MegaForm.Sdk.DashboardQuery.MaxForms*
+  name: MaxForms
+  href: api/MegaForm.Sdk.DashboardQuery.html#MegaForm_Sdk_DashboardQuery_MaxForms_
+  commentId: Overload:MegaForm.Sdk.DashboardQuery.MaxForms
+  isSpec: "True"
+  fullName: MegaForm.Sdk.DashboardQuery.MaxForms
+  nameWithType: DashboardQuery.MaxForms
+- uid: MegaForm.Sdk.DashboardQuery.Search
+  name: Search
+  href: api/MegaForm.Sdk.DashboardQuery.html#MegaForm_Sdk_DashboardQuery_Search
+  commentId: P:MegaForm.Sdk.DashboardQuery.Search
+  fullName: MegaForm.Sdk.DashboardQuery.Search
+  nameWithType: DashboardQuery.Search
+- uid: MegaForm.Sdk.DashboardQuery.Search*
+  name: Search
+  href: api/MegaForm.Sdk.DashboardQuery.html#MegaForm_Sdk_DashboardQuery_Search_
+  commentId: Overload:MegaForm.Sdk.DashboardQuery.Search
+  isSpec: "True"
+  fullName: MegaForm.Sdk.DashboardQuery.Search
+  nameWithType: DashboardQuery.Search
+- uid: MegaForm.Sdk.DashboardQuery.Status
+  name: Status
+  href: api/MegaForm.Sdk.DashboardQuery.html#MegaForm_Sdk_DashboardQuery_Status
+  commentId: P:MegaForm.Sdk.DashboardQuery.Status
+  fullName: MegaForm.Sdk.DashboardQuery.Status
+  nameWithType: DashboardQuery.Status
+- uid: MegaForm.Sdk.DashboardQuery.Status*
+  name: Status
+  href: api/MegaForm.Sdk.DashboardQuery.html#MegaForm_Sdk_DashboardQuery_Status_
+  commentId: Overload:MegaForm.Sdk.DashboardQuery.Status
+  isSpec: "True"
+  fullName: MegaForm.Sdk.DashboardQuery.Status
+  nameWithType: DashboardQuery.Status
 - uid: MegaForm.Sdk.FieldOptionInfo
   name: FieldOptionInfo
   href: api/MegaForm.Sdk.FieldOptionInfo.html
@@ -679,6 +918,28 @@ references:
   isSpec: "True"
   fullName: MegaForm.Sdk.FormSchemaInfo.Fields
   nameWithType: FormSchemaInfo.Fields
+- uid: MegaForm.Sdk.IDashboardApi
+  name: IDashboardApi
+  href: api/MegaForm.Sdk.IDashboardApi.html
+  commentId: T:MegaForm.Sdk.IDashboardApi
+  fullName: MegaForm.Sdk.IDashboardApi
+  nameWithType: IDashboardApi
+- uid: MegaForm.Sdk.IDashboardApi.GetOverviewAsync(MegaForm.Sdk.DashboardQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name: GetOverviewAsync(DashboardQuery?, MegaFormScope?, CancellationToken)
+  href: api/MegaForm.Sdk.IDashboardApi.html#MegaForm_Sdk_IDashboardApi_GetOverviewAsync_MegaForm_Sdk_DashboardQuery_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  commentId: M:MegaForm.Sdk.IDashboardApi.GetOverviewAsync(MegaForm.Sdk.DashboardQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name.vb: GetOverviewAsync(DashboardQuery, MegaFormScope, CancellationToken)
+  fullName: MegaForm.Sdk.IDashboardApi.GetOverviewAsync(MegaForm.Sdk.DashboardQuery?, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  fullName.vb: MegaForm.Sdk.IDashboardApi.GetOverviewAsync(MegaForm.Sdk.DashboardQuery, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  nameWithType: IDashboardApi.GetOverviewAsync(DashboardQuery?, MegaFormScope?, CancellationToken)
+  nameWithType.vb: IDashboardApi.GetOverviewAsync(DashboardQuery, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.IDashboardApi.GetOverviewAsync*
+  name: GetOverviewAsync
+  href: api/MegaForm.Sdk.IDashboardApi.html#MegaForm_Sdk_IDashboardApi_GetOverviewAsync_
+  commentId: Overload:MegaForm.Sdk.IDashboardApi.GetOverviewAsync
+  isSpec: "True"
+  fullName: MegaForm.Sdk.IDashboardApi.GetOverviewAsync
+  nameWithType: IDashboardApi.GetOverviewAsync
 - uid: MegaForm.Sdk.IFileApi
   name: IFileApi
   href: api/MegaForm.Sdk.IFileApi.html
@@ -803,12 +1064,175 @@ references:
   isSpec: "True"
   fullName: MegaForm.Sdk.IFormApi.UpdateFormAsync
   nameWithType: IFormApi.UpdateFormAsync
+- uid: MegaForm.Sdk.IInboxApi
+  name: IInboxApi
+  href: api/MegaForm.Sdk.IInboxApi.html
+  commentId: T:MegaForm.Sdk.IInboxApi
+  fullName: MegaForm.Sdk.IInboxApi
+  nameWithType: IInboxApi
+- uid: MegaForm.Sdk.IInboxApi.ApproveAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name: ApproveAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  href: api/MegaForm.Sdk.IInboxApi.html#MegaForm_Sdk_IInboxApi_ApproveAsync_MegaForm_Sdk_InboxTaskActionRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  commentId: M:MegaForm.Sdk.IInboxApi.ApproveAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name.vb: ApproveAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+  fullName: MegaForm.Sdk.IInboxApi.ApproveAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  fullName.vb: MegaForm.Sdk.IInboxApi.ApproveAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  nameWithType: IInboxApi.ApproveAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  nameWithType.vb: IInboxApi.ApproveAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.IInboxApi.ApproveAsync*
+  name: ApproveAsync
+  href: api/MegaForm.Sdk.IInboxApi.html#MegaForm_Sdk_IInboxApi_ApproveAsync_
+  commentId: Overload:MegaForm.Sdk.IInboxApi.ApproveAsync
+  isSpec: "True"
+  fullName: MegaForm.Sdk.IInboxApi.ApproveAsync
+  nameWithType: IInboxApi.ApproveAsync
+- uid: MegaForm.Sdk.IInboxApi.AttachFileAsync(MegaForm.Sdk.InboxFileAttachmentRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name: AttachFileAsync(InboxFileAttachmentRequest, MegaFormScope?, CancellationToken)
+  href: api/MegaForm.Sdk.IInboxApi.html#MegaForm_Sdk_IInboxApi_AttachFileAsync_MegaForm_Sdk_InboxFileAttachmentRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  commentId: M:MegaForm.Sdk.IInboxApi.AttachFileAsync(MegaForm.Sdk.InboxFileAttachmentRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name.vb: AttachFileAsync(InboxFileAttachmentRequest, MegaFormScope, CancellationToken)
+  fullName: MegaForm.Sdk.IInboxApi.AttachFileAsync(MegaForm.Sdk.InboxFileAttachmentRequest, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  fullName.vb: MegaForm.Sdk.IInboxApi.AttachFileAsync(MegaForm.Sdk.InboxFileAttachmentRequest, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  nameWithType: IInboxApi.AttachFileAsync(InboxFileAttachmentRequest, MegaFormScope?, CancellationToken)
+  nameWithType.vb: IInboxApi.AttachFileAsync(InboxFileAttachmentRequest, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.IInboxApi.AttachFileAsync*
+  name: AttachFileAsync
+  href: api/MegaForm.Sdk.IInboxApi.html#MegaForm_Sdk_IInboxApi_AttachFileAsync_
+  commentId: Overload:MegaForm.Sdk.IInboxApi.AttachFileAsync
+  isSpec: "True"
+  fullName: MegaForm.Sdk.IInboxApi.AttachFileAsync
+  nameWithType: IInboxApi.AttachFileAsync
+- uid: MegaForm.Sdk.IInboxApi.ClaimAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name: ClaimAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  href: api/MegaForm.Sdk.IInboxApi.html#MegaForm_Sdk_IInboxApi_ClaimAsync_MegaForm_Sdk_InboxTaskActionRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  commentId: M:MegaForm.Sdk.IInboxApi.ClaimAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name.vb: ClaimAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+  fullName: MegaForm.Sdk.IInboxApi.ClaimAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  fullName.vb: MegaForm.Sdk.IInboxApi.ClaimAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  nameWithType: IInboxApi.ClaimAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  nameWithType.vb: IInboxApi.ClaimAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.IInboxApi.ClaimAsync*
+  name: ClaimAsync
+  href: api/MegaForm.Sdk.IInboxApi.html#MegaForm_Sdk_IInboxApi_ClaimAsync_
+  commentId: Overload:MegaForm.Sdk.IInboxApi.ClaimAsync
+  isSpec: "True"
+  fullName: MegaForm.Sdk.IInboxApi.ClaimAsync
+  nameWithType: IInboxApi.ClaimAsync
+- uid: MegaForm.Sdk.IInboxApi.CommentAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name: CommentAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  href: api/MegaForm.Sdk.IInboxApi.html#MegaForm_Sdk_IInboxApi_CommentAsync_MegaForm_Sdk_InboxTaskActionRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  commentId: M:MegaForm.Sdk.IInboxApi.CommentAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name.vb: CommentAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+  fullName: MegaForm.Sdk.IInboxApi.CommentAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  fullName.vb: MegaForm.Sdk.IInboxApi.CommentAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  nameWithType: IInboxApi.CommentAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  nameWithType.vb: IInboxApi.CommentAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.IInboxApi.CommentAsync*
+  name: CommentAsync
+  href: api/MegaForm.Sdk.IInboxApi.html#MegaForm_Sdk_IInboxApi_CommentAsync_
+  commentId: Overload:MegaForm.Sdk.IInboxApi.CommentAsync
+  isSpec: "True"
+  fullName: MegaForm.Sdk.IInboxApi.CommentAsync
+  nameWithType: IInboxApi.CommentAsync
+- uid: MegaForm.Sdk.IInboxApi.ForwardAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name: ForwardAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  href: api/MegaForm.Sdk.IInboxApi.html#MegaForm_Sdk_IInboxApi_ForwardAsync_MegaForm_Sdk_InboxTaskActionRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  commentId: M:MegaForm.Sdk.IInboxApi.ForwardAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name.vb: ForwardAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+  fullName: MegaForm.Sdk.IInboxApi.ForwardAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  fullName.vb: MegaForm.Sdk.IInboxApi.ForwardAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  nameWithType: IInboxApi.ForwardAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  nameWithType.vb: IInboxApi.ForwardAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.IInboxApi.ForwardAsync*
+  name: ForwardAsync
+  href: api/MegaForm.Sdk.IInboxApi.html#MegaForm_Sdk_IInboxApi_ForwardAsync_
+  commentId: Overload:MegaForm.Sdk.IInboxApi.ForwardAsync
+  isSpec: "True"
+  fullName: MegaForm.Sdk.IInboxApi.ForwardAsync
+  nameWithType: IInboxApi.ForwardAsync
+- uid: MegaForm.Sdk.IInboxApi.GetMyInboxAsync(MegaForm.Sdk.InboxQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name: GetMyInboxAsync(InboxQuery?, MegaFormScope?, CancellationToken)
+  href: api/MegaForm.Sdk.IInboxApi.html#MegaForm_Sdk_IInboxApi_GetMyInboxAsync_MegaForm_Sdk_InboxQuery_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  commentId: M:MegaForm.Sdk.IInboxApi.GetMyInboxAsync(MegaForm.Sdk.InboxQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name.vb: GetMyInboxAsync(InboxQuery, MegaFormScope, CancellationToken)
+  fullName: MegaForm.Sdk.IInboxApi.GetMyInboxAsync(MegaForm.Sdk.InboxQuery?, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  fullName.vb: MegaForm.Sdk.IInboxApi.GetMyInboxAsync(MegaForm.Sdk.InboxQuery, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  nameWithType: IInboxApi.GetMyInboxAsync(InboxQuery?, MegaFormScope?, CancellationToken)
+  nameWithType.vb: IInboxApi.GetMyInboxAsync(InboxQuery, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.IInboxApi.GetMyInboxAsync*
+  name: GetMyInboxAsync
+  href: api/MegaForm.Sdk.IInboxApi.html#MegaForm_Sdk_IInboxApi_GetMyInboxAsync_
+  commentId: Overload:MegaForm.Sdk.IInboxApi.GetMyInboxAsync
+  isSpec: "True"
+  fullName: MegaForm.Sdk.IInboxApi.GetMyInboxAsync
+  nameWithType: IInboxApi.GetMyInboxAsync
+- uid: MegaForm.Sdk.IInboxApi.GetTaskAsync(System.String,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name: GetTaskAsync(string, MegaFormScope?, CancellationToken)
+  href: api/MegaForm.Sdk.IInboxApi.html#MegaForm_Sdk_IInboxApi_GetTaskAsync_System_String_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  commentId: M:MegaForm.Sdk.IInboxApi.GetTaskAsync(System.String,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name.vb: GetTaskAsync(String, MegaFormScope, CancellationToken)
+  fullName: MegaForm.Sdk.IInboxApi.GetTaskAsync(string, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  fullName.vb: MegaForm.Sdk.IInboxApi.GetTaskAsync(String, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  nameWithType: IInboxApi.GetTaskAsync(string, MegaFormScope?, CancellationToken)
+  nameWithType.vb: IInboxApi.GetTaskAsync(String, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.IInboxApi.GetTaskAsync*
+  name: GetTaskAsync
+  href: api/MegaForm.Sdk.IInboxApi.html#MegaForm_Sdk_IInboxApi_GetTaskAsync_
+  commentId: Overload:MegaForm.Sdk.IInboxApi.GetTaskAsync
+  isSpec: "True"
+  fullName: MegaForm.Sdk.IInboxApi.GetTaskAsync
+  nameWithType: IInboxApi.GetTaskAsync
+- uid: MegaForm.Sdk.IInboxApi.RejectAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name: RejectAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  href: api/MegaForm.Sdk.IInboxApi.html#MegaForm_Sdk_IInboxApi_RejectAsync_MegaForm_Sdk_InboxTaskActionRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  commentId: M:MegaForm.Sdk.IInboxApi.RejectAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name.vb: RejectAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+  fullName: MegaForm.Sdk.IInboxApi.RejectAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  fullName.vb: MegaForm.Sdk.IInboxApi.RejectAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  nameWithType: IInboxApi.RejectAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  nameWithType.vb: IInboxApi.RejectAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.IInboxApi.RejectAsync*
+  name: RejectAsync
+  href: api/MegaForm.Sdk.IInboxApi.html#MegaForm_Sdk_IInboxApi_RejectAsync_
+  commentId: Overload:MegaForm.Sdk.IInboxApi.RejectAsync
+  isSpec: "True"
+  fullName: MegaForm.Sdk.IInboxApi.RejectAsync
+  nameWithType: IInboxApi.RejectAsync
+- uid: MegaForm.Sdk.IInboxApi.SendSubmissionAsync(MegaForm.Sdk.SendSubmissionToInboxRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name: SendSubmissionAsync(SendSubmissionToInboxRequest, MegaFormScope?, CancellationToken)
+  href: api/MegaForm.Sdk.IInboxApi.html#MegaForm_Sdk_IInboxApi_SendSubmissionAsync_MegaForm_Sdk_SendSubmissionToInboxRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  commentId: M:MegaForm.Sdk.IInboxApi.SendSubmissionAsync(MegaForm.Sdk.SendSubmissionToInboxRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name.vb: SendSubmissionAsync(SendSubmissionToInboxRequest, MegaFormScope, CancellationToken)
+  fullName: MegaForm.Sdk.IInboxApi.SendSubmissionAsync(MegaForm.Sdk.SendSubmissionToInboxRequest, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  fullName.vb: MegaForm.Sdk.IInboxApi.SendSubmissionAsync(MegaForm.Sdk.SendSubmissionToInboxRequest, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  nameWithType: IInboxApi.SendSubmissionAsync(SendSubmissionToInboxRequest, MegaFormScope?, CancellationToken)
+  nameWithType.vb: IInboxApi.SendSubmissionAsync(SendSubmissionToInboxRequest, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.IInboxApi.SendSubmissionAsync*
+  name: SendSubmissionAsync
+  href: api/MegaForm.Sdk.IInboxApi.html#MegaForm_Sdk_IInboxApi_SendSubmissionAsync_
+  commentId: Overload:MegaForm.Sdk.IInboxApi.SendSubmissionAsync
+  isSpec: "True"
+  fullName: MegaForm.Sdk.IInboxApi.SendSubmissionAsync
+  nameWithType: IInboxApi.SendSubmissionAsync
 - uid: MegaForm.Sdk.IMegaFormClient
   name: IMegaFormClient
   href: api/MegaForm.Sdk.IMegaFormClient.html
   commentId: T:MegaForm.Sdk.IMegaFormClient
   fullName: MegaForm.Sdk.IMegaFormClient
   nameWithType: IMegaFormClient
+- uid: MegaForm.Sdk.IMegaFormClient.Dashboard
+  name: Dashboard
+  href: api/MegaForm.Sdk.IMegaFormClient.html#MegaForm_Sdk_IMegaFormClient_Dashboard
+  commentId: P:MegaForm.Sdk.IMegaFormClient.Dashboard
+  fullName: MegaForm.Sdk.IMegaFormClient.Dashboard
+  nameWithType: IMegaFormClient.Dashboard
+- uid: MegaForm.Sdk.IMegaFormClient.Dashboard*
+  name: Dashboard
+  href: api/MegaForm.Sdk.IMegaFormClient.html#MegaForm_Sdk_IMegaFormClient_Dashboard_
+  commentId: Overload:MegaForm.Sdk.IMegaFormClient.Dashboard
+  isSpec: "True"
+  fullName: MegaForm.Sdk.IMegaFormClient.Dashboard
+  nameWithType: IMegaFormClient.Dashboard
 - uid: MegaForm.Sdk.IMegaFormClient.Files
   name: Files
   href: api/MegaForm.Sdk.IMegaFormClient.html#MegaForm_Sdk_IMegaFormClient_Files
@@ -835,6 +1259,19 @@ references:
   isSpec: "True"
   fullName: MegaForm.Sdk.IMegaFormClient.Forms
   nameWithType: IMegaFormClient.Forms
+- uid: MegaForm.Sdk.IMegaFormClient.Inbox
+  name: Inbox
+  href: api/MegaForm.Sdk.IMegaFormClient.html#MegaForm_Sdk_IMegaFormClient_Inbox
+  commentId: P:MegaForm.Sdk.IMegaFormClient.Inbox
+  fullName: MegaForm.Sdk.IMegaFormClient.Inbox
+  nameWithType: IMegaFormClient.Inbox
+- uid: MegaForm.Sdk.IMegaFormClient.Inbox*
+  name: Inbox
+  href: api/MegaForm.Sdk.IMegaFormClient.html#MegaForm_Sdk_IMegaFormClient_Inbox_
+  commentId: Overload:MegaForm.Sdk.IMegaFormClient.Inbox
+  isSpec: "True"
+  fullName: MegaForm.Sdk.IMegaFormClient.Inbox
+  nameWithType: IMegaFormClient.Inbox
 - uid: MegaForm.Sdk.IMegaFormClient.Schema
   name: Schema
   href: api/MegaForm.Sdk.IMegaFormClient.html#MegaForm_Sdk_IMegaFormClient_Schema
@@ -848,6 +1285,19 @@ references:
   isSpec: "True"
   fullName: MegaForm.Sdk.IMegaFormClient.Schema
   nameWithType: IMegaFormClient.Schema
+- uid: MegaForm.Sdk.IMegaFormClient.SubmissionDashboard
+  name: SubmissionDashboard
+  href: api/MegaForm.Sdk.IMegaFormClient.html#MegaForm_Sdk_IMegaFormClient_SubmissionDashboard
+  commentId: P:MegaForm.Sdk.IMegaFormClient.SubmissionDashboard
+  fullName: MegaForm.Sdk.IMegaFormClient.SubmissionDashboard
+  nameWithType: IMegaFormClient.SubmissionDashboard
+- uid: MegaForm.Sdk.IMegaFormClient.SubmissionDashboard*
+  name: SubmissionDashboard
+  href: api/MegaForm.Sdk.IMegaFormClient.html#MegaForm_Sdk_IMegaFormClient_SubmissionDashboard_
+  commentId: Overload:MegaForm.Sdk.IMegaFormClient.SubmissionDashboard
+  isSpec: "True"
+  fullName: MegaForm.Sdk.IMegaFormClient.SubmissionDashboard
+  nameWithType: IMegaFormClient.SubmissionDashboard
 - uid: MegaForm.Sdk.IMegaFormClient.Submissions
   name: Submissions
   href: api/MegaForm.Sdk.IMegaFormClient.html#MegaForm_Sdk_IMegaFormClient_Submissions
@@ -982,6 +1432,1114 @@ references:
   isSpec: "True"
   fullName: MegaForm.Sdk.ISubmissionApi.UpdateAsync
   nameWithType: ISubmissionApi.UpdateAsync
+- uid: MegaForm.Sdk.ISubmissionDashboardApi
+  name: ISubmissionDashboardApi
+  href: api/MegaForm.Sdk.ISubmissionDashboardApi.html
+  commentId: T:MegaForm.Sdk.ISubmissionDashboardApi
+  fullName: MegaForm.Sdk.ISubmissionDashboardApi
+  nameWithType: ISubmissionDashboardApi
+- uid: MegaForm.Sdk.ISubmissionDashboardApi.GetDetailAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name: GetDetailAsync(int, MegaFormScope?, CancellationToken)
+  href: api/MegaForm.Sdk.ISubmissionDashboardApi.html#MegaForm_Sdk_ISubmissionDashboardApi_GetDetailAsync_System_Int32_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  commentId: M:MegaForm.Sdk.ISubmissionDashboardApi.GetDetailAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name.vb: GetDetailAsync(Integer, MegaFormScope, CancellationToken)
+  fullName: MegaForm.Sdk.ISubmissionDashboardApi.GetDetailAsync(int, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  fullName.vb: MegaForm.Sdk.ISubmissionDashboardApi.GetDetailAsync(Integer, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  nameWithType: ISubmissionDashboardApi.GetDetailAsync(int, MegaFormScope?, CancellationToken)
+  nameWithType.vb: ISubmissionDashboardApi.GetDetailAsync(Integer, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.ISubmissionDashboardApi.GetDetailAsync*
+  name: GetDetailAsync
+  href: api/MegaForm.Sdk.ISubmissionDashboardApi.html#MegaForm_Sdk_ISubmissionDashboardApi_GetDetailAsync_
+  commentId: Overload:MegaForm.Sdk.ISubmissionDashboardApi.GetDetailAsync
+  isSpec: "True"
+  fullName: MegaForm.Sdk.ISubmissionDashboardApi.GetDetailAsync
+  nameWithType: ISubmissionDashboardApi.GetDetailAsync
+- uid: MegaForm.Sdk.ISubmissionDashboardApi.SearchAsync(MegaForm.Sdk.SubmissionSearchQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name: SearchAsync(SubmissionSearchQuery, MegaFormScope?, CancellationToken)
+  href: api/MegaForm.Sdk.ISubmissionDashboardApi.html#MegaForm_Sdk_ISubmissionDashboardApi_SearchAsync_MegaForm_Sdk_SubmissionSearchQuery_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  commentId: M:MegaForm.Sdk.ISubmissionDashboardApi.SearchAsync(MegaForm.Sdk.SubmissionSearchQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name.vb: SearchAsync(SubmissionSearchQuery, MegaFormScope, CancellationToken)
+  fullName: MegaForm.Sdk.ISubmissionDashboardApi.SearchAsync(MegaForm.Sdk.SubmissionSearchQuery, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  fullName.vb: MegaForm.Sdk.ISubmissionDashboardApi.SearchAsync(MegaForm.Sdk.SubmissionSearchQuery, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  nameWithType: ISubmissionDashboardApi.SearchAsync(SubmissionSearchQuery, MegaFormScope?, CancellationToken)
+  nameWithType.vb: ISubmissionDashboardApi.SearchAsync(SubmissionSearchQuery, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.ISubmissionDashboardApi.SearchAsync*
+  name: SearchAsync
+  href: api/MegaForm.Sdk.ISubmissionDashboardApi.html#MegaForm_Sdk_ISubmissionDashboardApi_SearchAsync_
+  commentId: Overload:MegaForm.Sdk.ISubmissionDashboardApi.SearchAsync
+  isSpec: "True"
+  fullName: MegaForm.Sdk.ISubmissionDashboardApi.SearchAsync
+  nameWithType: ISubmissionDashboardApi.SearchAsync
+- uid: MegaForm.Sdk.ISubmissionDashboardApi.UpdateStatusAsync(System.Int32,System.String,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name: UpdateStatusAsync(int, string, MegaFormScope?, CancellationToken)
+  href: api/MegaForm.Sdk.ISubmissionDashboardApi.html#MegaForm_Sdk_ISubmissionDashboardApi_UpdateStatusAsync_System_Int32_System_String_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  commentId: M:MegaForm.Sdk.ISubmissionDashboardApi.UpdateStatusAsync(System.Int32,System.String,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name.vb: UpdateStatusAsync(Integer, String, MegaFormScope, CancellationToken)
+  fullName: MegaForm.Sdk.ISubmissionDashboardApi.UpdateStatusAsync(int, string, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  fullName.vb: MegaForm.Sdk.ISubmissionDashboardApi.UpdateStatusAsync(Integer, String, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  nameWithType: ISubmissionDashboardApi.UpdateStatusAsync(int, string, MegaFormScope?, CancellationToken)
+  nameWithType.vb: ISubmissionDashboardApi.UpdateStatusAsync(Integer, String, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.ISubmissionDashboardApi.UpdateStatusAsync*
+  name: UpdateStatusAsync
+  href: api/MegaForm.Sdk.ISubmissionDashboardApi.html#MegaForm_Sdk_ISubmissionDashboardApi_UpdateStatusAsync_
+  commentId: Overload:MegaForm.Sdk.ISubmissionDashboardApi.UpdateStatusAsync
+  isSpec: "True"
+  fullName: MegaForm.Sdk.ISubmissionDashboardApi.UpdateStatusAsync
+  nameWithType: ISubmissionDashboardApi.UpdateStatusAsync
+- uid: MegaForm.Sdk.InboxBoardDto
+  name: InboxBoardDto
+  href: api/MegaForm.Sdk.InboxBoardDto.html
+  commentId: T:MegaForm.Sdk.InboxBoardDto
+  fullName: MegaForm.Sdk.InboxBoardDto
+  nameWithType: InboxBoardDto
+- uid: MegaForm.Sdk.InboxBoardDto.Completed
+  name: Completed
+  href: api/MegaForm.Sdk.InboxBoardDto.html#MegaForm_Sdk_InboxBoardDto_Completed
+  commentId: P:MegaForm.Sdk.InboxBoardDto.Completed
+  fullName: MegaForm.Sdk.InboxBoardDto.Completed
+  nameWithType: InboxBoardDto.Completed
+- uid: MegaForm.Sdk.InboxBoardDto.Completed*
+  name: Completed
+  href: api/MegaForm.Sdk.InboxBoardDto.html#MegaForm_Sdk_InboxBoardDto_Completed_
+  commentId: Overload:MegaForm.Sdk.InboxBoardDto.Completed
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxBoardDto.Completed
+  nameWithType: InboxBoardDto.Completed
+- uid: MegaForm.Sdk.InboxBoardDto.GeneratedAtUtc
+  name: GeneratedAtUtc
+  href: api/MegaForm.Sdk.InboxBoardDto.html#MegaForm_Sdk_InboxBoardDto_GeneratedAtUtc
+  commentId: P:MegaForm.Sdk.InboxBoardDto.GeneratedAtUtc
+  fullName: MegaForm.Sdk.InboxBoardDto.GeneratedAtUtc
+  nameWithType: InboxBoardDto.GeneratedAtUtc
+- uid: MegaForm.Sdk.InboxBoardDto.GeneratedAtUtc*
+  name: GeneratedAtUtc
+  href: api/MegaForm.Sdk.InboxBoardDto.html#MegaForm_Sdk_InboxBoardDto_GeneratedAtUtc_
+  commentId: Overload:MegaForm.Sdk.InboxBoardDto.GeneratedAtUtc
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxBoardDto.GeneratedAtUtc
+  nameWithType: InboxBoardDto.GeneratedAtUtc
+- uid: MegaForm.Sdk.InboxBoardDto.InProgress
+  name: InProgress
+  href: api/MegaForm.Sdk.InboxBoardDto.html#MegaForm_Sdk_InboxBoardDto_InProgress
+  commentId: P:MegaForm.Sdk.InboxBoardDto.InProgress
+  fullName: MegaForm.Sdk.InboxBoardDto.InProgress
+  nameWithType: InboxBoardDto.InProgress
+- uid: MegaForm.Sdk.InboxBoardDto.InProgress*
+  name: InProgress
+  href: api/MegaForm.Sdk.InboxBoardDto.html#MegaForm_Sdk_InboxBoardDto_InProgress_
+  commentId: Overload:MegaForm.Sdk.InboxBoardDto.InProgress
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxBoardDto.InProgress
+  nameWithType: InboxBoardDto.InProgress
+- uid: MegaForm.Sdk.InboxBoardDto.Incoming
+  name: Incoming
+  href: api/MegaForm.Sdk.InboxBoardDto.html#MegaForm_Sdk_InboxBoardDto_Incoming
+  commentId: P:MegaForm.Sdk.InboxBoardDto.Incoming
+  fullName: MegaForm.Sdk.InboxBoardDto.Incoming
+  nameWithType: InboxBoardDto.Incoming
+- uid: MegaForm.Sdk.InboxBoardDto.Incoming*
+  name: Incoming
+  href: api/MegaForm.Sdk.InboxBoardDto.html#MegaForm_Sdk_InboxBoardDto_Incoming_
+  commentId: Overload:MegaForm.Sdk.InboxBoardDto.Incoming
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxBoardDto.Incoming
+  nameWithType: InboxBoardDto.Incoming
+- uid: MegaForm.Sdk.InboxBoardDto.Kpis
+  name: Kpis
+  href: api/MegaForm.Sdk.InboxBoardDto.html#MegaForm_Sdk_InboxBoardDto_Kpis
+  commentId: P:MegaForm.Sdk.InboxBoardDto.Kpis
+  fullName: MegaForm.Sdk.InboxBoardDto.Kpis
+  nameWithType: InboxBoardDto.Kpis
+- uid: MegaForm.Sdk.InboxBoardDto.Kpis*
+  name: Kpis
+  href: api/MegaForm.Sdk.InboxBoardDto.html#MegaForm_Sdk_InboxBoardDto_Kpis_
+  commentId: Overload:MegaForm.Sdk.InboxBoardDto.Kpis
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxBoardDto.Kpis
+  nameWithType: InboxBoardDto.Kpis
+- uid: MegaForm.Sdk.InboxBoardDto.User
+  name: User
+  href: api/MegaForm.Sdk.InboxBoardDto.html#MegaForm_Sdk_InboxBoardDto_User
+  commentId: P:MegaForm.Sdk.InboxBoardDto.User
+  fullName: MegaForm.Sdk.InboxBoardDto.User
+  nameWithType: InboxBoardDto.User
+- uid: MegaForm.Sdk.InboxBoardDto.User*
+  name: User
+  href: api/MegaForm.Sdk.InboxBoardDto.html#MegaForm_Sdk_InboxBoardDto_User_
+  commentId: Overload:MegaForm.Sdk.InboxBoardDto.User
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxBoardDto.User
+  nameWithType: InboxBoardDto.User
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest
+  name: InboxFileAttachmentRequest
+  href: api/MegaForm.Sdk.InboxFileAttachmentRequest.html
+  commentId: T:MegaForm.Sdk.InboxFileAttachmentRequest
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest
+  nameWithType: InboxFileAttachmentRequest
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest.Content
+  name: Content
+  href: api/MegaForm.Sdk.InboxFileAttachmentRequest.html#MegaForm_Sdk_InboxFileAttachmentRequest_Content
+  commentId: P:MegaForm.Sdk.InboxFileAttachmentRequest.Content
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest.Content
+  nameWithType: InboxFileAttachmentRequest.Content
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest.Content*
+  name: Content
+  href: api/MegaForm.Sdk.InboxFileAttachmentRequest.html#MegaForm_Sdk_InboxFileAttachmentRequest_Content_
+  commentId: Overload:MegaForm.Sdk.InboxFileAttachmentRequest.Content
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest.Content
+  nameWithType: InboxFileAttachmentRequest.Content
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest.ContentType
+  name: ContentType
+  href: api/MegaForm.Sdk.InboxFileAttachmentRequest.html#MegaForm_Sdk_InboxFileAttachmentRequest_ContentType
+  commentId: P:MegaForm.Sdk.InboxFileAttachmentRequest.ContentType
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest.ContentType
+  nameWithType: InboxFileAttachmentRequest.ContentType
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest.ContentType*
+  name: ContentType
+  href: api/MegaForm.Sdk.InboxFileAttachmentRequest.html#MegaForm_Sdk_InboxFileAttachmentRequest_ContentType_
+  commentId: Overload:MegaForm.Sdk.InboxFileAttachmentRequest.ContentType
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest.ContentType
+  nameWithType: InboxFileAttachmentRequest.ContentType
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest.FieldKey
+  name: FieldKey
+  href: api/MegaForm.Sdk.InboxFileAttachmentRequest.html#MegaForm_Sdk_InboxFileAttachmentRequest_FieldKey
+  commentId: P:MegaForm.Sdk.InboxFileAttachmentRequest.FieldKey
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest.FieldKey
+  nameWithType: InboxFileAttachmentRequest.FieldKey
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest.FieldKey*
+  name: FieldKey
+  href: api/MegaForm.Sdk.InboxFileAttachmentRequest.html#MegaForm_Sdk_InboxFileAttachmentRequest_FieldKey_
+  commentId: Overload:MegaForm.Sdk.InboxFileAttachmentRequest.FieldKey
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest.FieldKey
+  nameWithType: InboxFileAttachmentRequest.FieldKey
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest.FileName
+  name: FileName
+  href: api/MegaForm.Sdk.InboxFileAttachmentRequest.html#MegaForm_Sdk_InboxFileAttachmentRequest_FileName
+  commentId: P:MegaForm.Sdk.InboxFileAttachmentRequest.FileName
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest.FileName
+  nameWithType: InboxFileAttachmentRequest.FileName
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest.FileName*
+  name: FileName
+  href: api/MegaForm.Sdk.InboxFileAttachmentRequest.html#MegaForm_Sdk_InboxFileAttachmentRequest_FileName_
+  commentId: Overload:MegaForm.Sdk.InboxFileAttachmentRequest.FileName
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest.FileName
+  nameWithType: InboxFileAttachmentRequest.FileName
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest.SizeBytes
+  name: SizeBytes
+  href: api/MegaForm.Sdk.InboxFileAttachmentRequest.html#MegaForm_Sdk_InboxFileAttachmentRequest_SizeBytes
+  commentId: P:MegaForm.Sdk.InboxFileAttachmentRequest.SizeBytes
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest.SizeBytes
+  nameWithType: InboxFileAttachmentRequest.SizeBytes
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest.SizeBytes*
+  name: SizeBytes
+  href: api/MegaForm.Sdk.InboxFileAttachmentRequest.html#MegaForm_Sdk_InboxFileAttachmentRequest_SizeBytes_
+  commentId: Overload:MegaForm.Sdk.InboxFileAttachmentRequest.SizeBytes
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest.SizeBytes
+  nameWithType: InboxFileAttachmentRequest.SizeBytes
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest.TaskId
+  name: TaskId
+  href: api/MegaForm.Sdk.InboxFileAttachmentRequest.html#MegaForm_Sdk_InboxFileAttachmentRequest_TaskId
+  commentId: P:MegaForm.Sdk.InboxFileAttachmentRequest.TaskId
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest.TaskId
+  nameWithType: InboxFileAttachmentRequest.TaskId
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest.TaskId*
+  name: TaskId
+  href: api/MegaForm.Sdk.InboxFileAttachmentRequest.html#MegaForm_Sdk_InboxFileAttachmentRequest_TaskId_
+  commentId: Overload:MegaForm.Sdk.InboxFileAttachmentRequest.TaskId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest.TaskId
+  nameWithType: InboxFileAttachmentRequest.TaskId
+- uid: MegaForm.Sdk.InboxFileAttachmentResultDto
+  name: InboxFileAttachmentResultDto
+  href: api/MegaForm.Sdk.InboxFileAttachmentResultDto.html
+  commentId: T:MegaForm.Sdk.InboxFileAttachmentResultDto
+  fullName: MegaForm.Sdk.InboxFileAttachmentResultDto
+  nameWithType: InboxFileAttachmentResultDto
+- uid: MegaForm.Sdk.InboxFileAttachmentResultDto.Error
+  name: Error
+  href: api/MegaForm.Sdk.InboxFileAttachmentResultDto.html#MegaForm_Sdk_InboxFileAttachmentResultDto_Error
+  commentId: P:MegaForm.Sdk.InboxFileAttachmentResultDto.Error
+  fullName: MegaForm.Sdk.InboxFileAttachmentResultDto.Error
+  nameWithType: InboxFileAttachmentResultDto.Error
+- uid: MegaForm.Sdk.InboxFileAttachmentResultDto.Error*
+  name: Error
+  href: api/MegaForm.Sdk.InboxFileAttachmentResultDto.html#MegaForm_Sdk_InboxFileAttachmentResultDto_Error_
+  commentId: Overload:MegaForm.Sdk.InboxFileAttachmentResultDto.Error
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxFileAttachmentResultDto.Error
+  nameWithType: InboxFileAttachmentResultDto.Error
+- uid: MegaForm.Sdk.InboxFileAttachmentResultDto.File
+  name: File
+  href: api/MegaForm.Sdk.InboxFileAttachmentResultDto.html#MegaForm_Sdk_InboxFileAttachmentResultDto_File
+  commentId: P:MegaForm.Sdk.InboxFileAttachmentResultDto.File
+  fullName: MegaForm.Sdk.InboxFileAttachmentResultDto.File
+  nameWithType: InboxFileAttachmentResultDto.File
+- uid: MegaForm.Sdk.InboxFileAttachmentResultDto.File*
+  name: File
+  href: api/MegaForm.Sdk.InboxFileAttachmentResultDto.html#MegaForm_Sdk_InboxFileAttachmentResultDto_File_
+  commentId: Overload:MegaForm.Sdk.InboxFileAttachmentResultDto.File
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxFileAttachmentResultDto.File
+  nameWithType: InboxFileAttachmentResultDto.File
+- uid: MegaForm.Sdk.InboxFileAttachmentResultDto.Success
+  name: Success
+  href: api/MegaForm.Sdk.InboxFileAttachmentResultDto.html#MegaForm_Sdk_InboxFileAttachmentResultDto_Success
+  commentId: P:MegaForm.Sdk.InboxFileAttachmentResultDto.Success
+  fullName: MegaForm.Sdk.InboxFileAttachmentResultDto.Success
+  nameWithType: InboxFileAttachmentResultDto.Success
+- uid: MegaForm.Sdk.InboxFileAttachmentResultDto.Success*
+  name: Success
+  href: api/MegaForm.Sdk.InboxFileAttachmentResultDto.html#MegaForm_Sdk_InboxFileAttachmentResultDto_Success_
+  commentId: Overload:MegaForm.Sdk.InboxFileAttachmentResultDto.Success
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxFileAttachmentResultDto.Success
+  nameWithType: InboxFileAttachmentResultDto.Success
+- uid: MegaForm.Sdk.InboxFileAttachmentResultDto.Task
+  name: Task
+  href: api/MegaForm.Sdk.InboxFileAttachmentResultDto.html#MegaForm_Sdk_InboxFileAttachmentResultDto_Task
+  commentId: P:MegaForm.Sdk.InboxFileAttachmentResultDto.Task
+  fullName: MegaForm.Sdk.InboxFileAttachmentResultDto.Task
+  nameWithType: InboxFileAttachmentResultDto.Task
+- uid: MegaForm.Sdk.InboxFileAttachmentResultDto.Task*
+  name: Task
+  href: api/MegaForm.Sdk.InboxFileAttachmentResultDto.html#MegaForm_Sdk_InboxFileAttachmentResultDto_Task_
+  commentId: Overload:MegaForm.Sdk.InboxFileAttachmentResultDto.Task
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxFileAttachmentResultDto.Task
+  nameWithType: InboxFileAttachmentResultDto.Task
+- uid: MegaForm.Sdk.InboxKpiDto
+  name: InboxKpiDto
+  href: api/MegaForm.Sdk.InboxKpiDto.html
+  commentId: T:MegaForm.Sdk.InboxKpiDto
+  fullName: MegaForm.Sdk.InboxKpiDto
+  nameWithType: InboxKpiDto
+- uid: MegaForm.Sdk.InboxKpiDto.Completed
+  name: Completed
+  href: api/MegaForm.Sdk.InboxKpiDto.html#MegaForm_Sdk_InboxKpiDto_Completed
+  commentId: P:MegaForm.Sdk.InboxKpiDto.Completed
+  fullName: MegaForm.Sdk.InboxKpiDto.Completed
+  nameWithType: InboxKpiDto.Completed
+- uid: MegaForm.Sdk.InboxKpiDto.Completed*
+  name: Completed
+  href: api/MegaForm.Sdk.InboxKpiDto.html#MegaForm_Sdk_InboxKpiDto_Completed_
+  commentId: Overload:MegaForm.Sdk.InboxKpiDto.Completed
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxKpiDto.Completed
+  nameWithType: InboxKpiDto.Completed
+- uid: MegaForm.Sdk.InboxKpiDto.InProgress
+  name: InProgress
+  href: api/MegaForm.Sdk.InboxKpiDto.html#MegaForm_Sdk_InboxKpiDto_InProgress
+  commentId: P:MegaForm.Sdk.InboxKpiDto.InProgress
+  fullName: MegaForm.Sdk.InboxKpiDto.InProgress
+  nameWithType: InboxKpiDto.InProgress
+- uid: MegaForm.Sdk.InboxKpiDto.InProgress*
+  name: InProgress
+  href: api/MegaForm.Sdk.InboxKpiDto.html#MegaForm_Sdk_InboxKpiDto_InProgress_
+  commentId: Overload:MegaForm.Sdk.InboxKpiDto.InProgress
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxKpiDto.InProgress
+  nameWithType: InboxKpiDto.InProgress
+- uid: MegaForm.Sdk.InboxKpiDto.Incoming
+  name: Incoming
+  href: api/MegaForm.Sdk.InboxKpiDto.html#MegaForm_Sdk_InboxKpiDto_Incoming
+  commentId: P:MegaForm.Sdk.InboxKpiDto.Incoming
+  fullName: MegaForm.Sdk.InboxKpiDto.Incoming
+  nameWithType: InboxKpiDto.Incoming
+- uid: MegaForm.Sdk.InboxKpiDto.Incoming*
+  name: Incoming
+  href: api/MegaForm.Sdk.InboxKpiDto.html#MegaForm_Sdk_InboxKpiDto_Incoming_
+  commentId: Overload:MegaForm.Sdk.InboxKpiDto.Incoming
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxKpiDto.Incoming
+  nameWithType: InboxKpiDto.Incoming
+- uid: MegaForm.Sdk.InboxKpiDto.Overdue
+  name: Overdue
+  href: api/MegaForm.Sdk.InboxKpiDto.html#MegaForm_Sdk_InboxKpiDto_Overdue
+  commentId: P:MegaForm.Sdk.InboxKpiDto.Overdue
+  fullName: MegaForm.Sdk.InboxKpiDto.Overdue
+  nameWithType: InboxKpiDto.Overdue
+- uid: MegaForm.Sdk.InboxKpiDto.Overdue*
+  name: Overdue
+  href: api/MegaForm.Sdk.InboxKpiDto.html#MegaForm_Sdk_InboxKpiDto_Overdue_
+  commentId: Overload:MegaForm.Sdk.InboxKpiDto.Overdue
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxKpiDto.Overdue
+  nameWithType: InboxKpiDto.Overdue
+- uid: MegaForm.Sdk.InboxQuery
+  name: InboxQuery
+  href: api/MegaForm.Sdk.InboxQuery.html
+  commentId: T:MegaForm.Sdk.InboxQuery
+  fullName: MegaForm.Sdk.InboxQuery
+  nameWithType: InboxQuery
+- uid: MegaForm.Sdk.InboxQuery.RecentCompleted
+  name: RecentCompleted
+  href: api/MegaForm.Sdk.InboxQuery.html#MegaForm_Sdk_InboxQuery_RecentCompleted
+  commentId: P:MegaForm.Sdk.InboxQuery.RecentCompleted
+  fullName: MegaForm.Sdk.InboxQuery.RecentCompleted
+  nameWithType: InboxQuery.RecentCompleted
+- uid: MegaForm.Sdk.InboxQuery.RecentCompleted*
+  name: RecentCompleted
+  href: api/MegaForm.Sdk.InboxQuery.html#MegaForm_Sdk_InboxQuery_RecentCompleted_
+  commentId: Overload:MegaForm.Sdk.InboxQuery.RecentCompleted
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxQuery.RecentCompleted
+  nameWithType: InboxQuery.RecentCompleted
+- uid: MegaForm.Sdk.InboxSendSubmissionResultDto
+  name: InboxSendSubmissionResultDto
+  href: api/MegaForm.Sdk.InboxSendSubmissionResultDto.html
+  commentId: T:MegaForm.Sdk.InboxSendSubmissionResultDto
+  fullName: MegaForm.Sdk.InboxSendSubmissionResultDto
+  nameWithType: InboxSendSubmissionResultDto
+- uid: MegaForm.Sdk.InboxSendSubmissionResultDto.AssignedTo
+  name: AssignedTo
+  href: api/MegaForm.Sdk.InboxSendSubmissionResultDto.html#MegaForm_Sdk_InboxSendSubmissionResultDto_AssignedTo
+  commentId: P:MegaForm.Sdk.InboxSendSubmissionResultDto.AssignedTo
+  fullName: MegaForm.Sdk.InboxSendSubmissionResultDto.AssignedTo
+  nameWithType: InboxSendSubmissionResultDto.AssignedTo
+- uid: MegaForm.Sdk.InboxSendSubmissionResultDto.AssignedTo*
+  name: AssignedTo
+  href: api/MegaForm.Sdk.InboxSendSubmissionResultDto.html#MegaForm_Sdk_InboxSendSubmissionResultDto_AssignedTo_
+  commentId: Overload:MegaForm.Sdk.InboxSendSubmissionResultDto.AssignedTo
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxSendSubmissionResultDto.AssignedTo
+  nameWithType: InboxSendSubmissionResultDto.AssignedTo
+- uid: MegaForm.Sdk.InboxSendSubmissionResultDto.FormId
+  name: FormId
+  href: api/MegaForm.Sdk.InboxSendSubmissionResultDto.html#MegaForm_Sdk_InboxSendSubmissionResultDto_FormId
+  commentId: P:MegaForm.Sdk.InboxSendSubmissionResultDto.FormId
+  fullName: MegaForm.Sdk.InboxSendSubmissionResultDto.FormId
+  nameWithType: InboxSendSubmissionResultDto.FormId
+- uid: MegaForm.Sdk.InboxSendSubmissionResultDto.FormId*
+  name: FormId
+  href: api/MegaForm.Sdk.InboxSendSubmissionResultDto.html#MegaForm_Sdk_InboxSendSubmissionResultDto_FormId_
+  commentId: Overload:MegaForm.Sdk.InboxSendSubmissionResultDto.FormId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxSendSubmissionResultDto.FormId
+  nameWithType: InboxSendSubmissionResultDto.FormId
+- uid: MegaForm.Sdk.InboxSendSubmissionResultDto.SubmissionId
+  name: SubmissionId
+  href: api/MegaForm.Sdk.InboxSendSubmissionResultDto.html#MegaForm_Sdk_InboxSendSubmissionResultDto_SubmissionId
+  commentId: P:MegaForm.Sdk.InboxSendSubmissionResultDto.SubmissionId
+  fullName: MegaForm.Sdk.InboxSendSubmissionResultDto.SubmissionId
+  nameWithType: InboxSendSubmissionResultDto.SubmissionId
+- uid: MegaForm.Sdk.InboxSendSubmissionResultDto.SubmissionId*
+  name: SubmissionId
+  href: api/MegaForm.Sdk.InboxSendSubmissionResultDto.html#MegaForm_Sdk_InboxSendSubmissionResultDto_SubmissionId_
+  commentId: Overload:MegaForm.Sdk.InboxSendSubmissionResultDto.SubmissionId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxSendSubmissionResultDto.SubmissionId
+  nameWithType: InboxSendSubmissionResultDto.SubmissionId
+- uid: MegaForm.Sdk.InboxSendSubmissionResultDto.Success
+  name: Success
+  href: api/MegaForm.Sdk.InboxSendSubmissionResultDto.html#MegaForm_Sdk_InboxSendSubmissionResultDto_Success
+  commentId: P:MegaForm.Sdk.InboxSendSubmissionResultDto.Success
+  fullName: MegaForm.Sdk.InboxSendSubmissionResultDto.Success
+  nameWithType: InboxSendSubmissionResultDto.Success
+- uid: MegaForm.Sdk.InboxSendSubmissionResultDto.Success*
+  name: Success
+  href: api/MegaForm.Sdk.InboxSendSubmissionResultDto.html#MegaForm_Sdk_InboxSendSubmissionResultDto_Success_
+  commentId: Overload:MegaForm.Sdk.InboxSendSubmissionResultDto.Success
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxSendSubmissionResultDto.Success
+  nameWithType: InboxSendSubmissionResultDto.Success
+- uid: MegaForm.Sdk.InboxSendSubmissionResultDto.TaskId
+  name: TaskId
+  href: api/MegaForm.Sdk.InboxSendSubmissionResultDto.html#MegaForm_Sdk_InboxSendSubmissionResultDto_TaskId
+  commentId: P:MegaForm.Sdk.InboxSendSubmissionResultDto.TaskId
+  fullName: MegaForm.Sdk.InboxSendSubmissionResultDto.TaskId
+  nameWithType: InboxSendSubmissionResultDto.TaskId
+- uid: MegaForm.Sdk.InboxSendSubmissionResultDto.TaskId*
+  name: TaskId
+  href: api/MegaForm.Sdk.InboxSendSubmissionResultDto.html#MegaForm_Sdk_InboxSendSubmissionResultDto_TaskId_
+  commentId: Overload:MegaForm.Sdk.InboxSendSubmissionResultDto.TaskId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxSendSubmissionResultDto.TaskId
+  nameWithType: InboxSendSubmissionResultDto.TaskId
+- uid: MegaForm.Sdk.InboxTaskActionDto
+  name: InboxTaskActionDto
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html
+  commentId: T:MegaForm.Sdk.InboxTaskActionDto
+  fullName: MegaForm.Sdk.InboxTaskActionDto
+  nameWithType: InboxTaskActionDto
+- uid: MegaForm.Sdk.InboxTaskActionDto.ActionId
+  name: ActionId
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_ActionId
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.ActionId
+  fullName: MegaForm.Sdk.InboxTaskActionDto.ActionId
+  nameWithType: InboxTaskActionDto.ActionId
+- uid: MegaForm.Sdk.InboxTaskActionDto.ActionId*
+  name: ActionId
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_ActionId_
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.ActionId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskActionDto.ActionId
+  nameWithType: InboxTaskActionDto.ActionId
+- uid: MegaForm.Sdk.InboxTaskActionDto.ActionType
+  name: ActionType
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_ActionType
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.ActionType
+  fullName: MegaForm.Sdk.InboxTaskActionDto.ActionType
+  nameWithType: InboxTaskActionDto.ActionType
+- uid: MegaForm.Sdk.InboxTaskActionDto.ActionType*
+  name: ActionType
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_ActionType_
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.ActionType
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskActionDto.ActionType
+  nameWithType: InboxTaskActionDto.ActionType
+- uid: MegaForm.Sdk.InboxTaskActionDto.ActorDisplayName
+  name: ActorDisplayName
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_ActorDisplayName
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.ActorDisplayName
+  fullName: MegaForm.Sdk.InboxTaskActionDto.ActorDisplayName
+  nameWithType: InboxTaskActionDto.ActorDisplayName
+- uid: MegaForm.Sdk.InboxTaskActionDto.ActorDisplayName*
+  name: ActorDisplayName
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_ActorDisplayName_
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.ActorDisplayName
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskActionDto.ActorDisplayName
+  nameWithType: InboxTaskActionDto.ActorDisplayName
+- uid: MegaForm.Sdk.InboxTaskActionDto.ActorUserId
+  name: ActorUserId
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_ActorUserId
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.ActorUserId
+  fullName: MegaForm.Sdk.InboxTaskActionDto.ActorUserId
+  nameWithType: InboxTaskActionDto.ActorUserId
+- uid: MegaForm.Sdk.InboxTaskActionDto.ActorUserId*
+  name: ActorUserId
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_ActorUserId_
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.ActorUserId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskActionDto.ActorUserId
+  nameWithType: InboxTaskActionDto.ActorUserId
+- uid: MegaForm.Sdk.InboxTaskActionDto.ActorUserName
+  name: ActorUserName
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_ActorUserName
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.ActorUserName
+  fullName: MegaForm.Sdk.InboxTaskActionDto.ActorUserName
+  nameWithType: InboxTaskActionDto.ActorUserName
+- uid: MegaForm.Sdk.InboxTaskActionDto.ActorUserName*
+  name: ActorUserName
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_ActorUserName_
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.ActorUserName
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskActionDto.ActorUserName
+  nameWithType: InboxTaskActionDto.ActorUserName
+- uid: MegaForm.Sdk.InboxTaskActionDto.CaseId
+  name: CaseId
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_CaseId
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.CaseId
+  fullName: MegaForm.Sdk.InboxTaskActionDto.CaseId
+  nameWithType: InboxTaskActionDto.CaseId
+- uid: MegaForm.Sdk.InboxTaskActionDto.CaseId*
+  name: CaseId
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_CaseId_
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.CaseId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskActionDto.CaseId
+  nameWithType: InboxTaskActionDto.CaseId
+- uid: MegaForm.Sdk.InboxTaskActionDto.Comment
+  name: Comment
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_Comment
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.Comment
+  fullName: MegaForm.Sdk.InboxTaskActionDto.Comment
+  nameWithType: InboxTaskActionDto.Comment
+- uid: MegaForm.Sdk.InboxTaskActionDto.Comment*
+  name: Comment
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_Comment_
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.Comment
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskActionDto.Comment
+  nameWithType: InboxTaskActionDto.Comment
+- uid: MegaForm.Sdk.InboxTaskActionDto.CreatedAtUtc
+  name: CreatedAtUtc
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_CreatedAtUtc
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.CreatedAtUtc
+  fullName: MegaForm.Sdk.InboxTaskActionDto.CreatedAtUtc
+  nameWithType: InboxTaskActionDto.CreatedAtUtc
+- uid: MegaForm.Sdk.InboxTaskActionDto.CreatedAtUtc*
+  name: CreatedAtUtc
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_CreatedAtUtc_
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.CreatedAtUtc
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskActionDto.CreatedAtUtc
+  nameWithType: InboxTaskActionDto.CreatedAtUtc
+- uid: MegaForm.Sdk.InboxTaskActionDto.ExecutionId
+  name: ExecutionId
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_ExecutionId
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.ExecutionId
+  fullName: MegaForm.Sdk.InboxTaskActionDto.ExecutionId
+  nameWithType: InboxTaskActionDto.ExecutionId
+- uid: MegaForm.Sdk.InboxTaskActionDto.ExecutionId*
+  name: ExecutionId
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_ExecutionId_
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.ExecutionId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskActionDto.ExecutionId
+  nameWithType: InboxTaskActionDto.ExecutionId
+- uid: MegaForm.Sdk.InboxTaskActionDto.FormId
+  name: FormId
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_FormId
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.FormId
+  fullName: MegaForm.Sdk.InboxTaskActionDto.FormId
+  nameWithType: InboxTaskActionDto.FormId
+- uid: MegaForm.Sdk.InboxTaskActionDto.FormId*
+  name: FormId
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_FormId_
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.FormId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskActionDto.FormId
+  nameWithType: InboxTaskActionDto.FormId
+- uid: MegaForm.Sdk.InboxTaskActionDto.Outcome
+  name: Outcome
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_Outcome
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.Outcome
+  fullName: MegaForm.Sdk.InboxTaskActionDto.Outcome
+  nameWithType: InboxTaskActionDto.Outcome
+- uid: MegaForm.Sdk.InboxTaskActionDto.Outcome*
+  name: Outcome
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_Outcome_
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.Outcome
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskActionDto.Outcome
+  nameWithType: InboxTaskActionDto.Outcome
+- uid: MegaForm.Sdk.InboxTaskActionDto.SubmissionId
+  name: SubmissionId
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_SubmissionId
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.SubmissionId
+  fullName: MegaForm.Sdk.InboxTaskActionDto.SubmissionId
+  nameWithType: InboxTaskActionDto.SubmissionId
+- uid: MegaForm.Sdk.InboxTaskActionDto.SubmissionId*
+  name: SubmissionId
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_SubmissionId_
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.SubmissionId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskActionDto.SubmissionId
+  nameWithType: InboxTaskActionDto.SubmissionId
+- uid: MegaForm.Sdk.InboxTaskActionDto.TargetUser
+  name: TargetUser
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_TargetUser
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.TargetUser
+  fullName: MegaForm.Sdk.InboxTaskActionDto.TargetUser
+  nameWithType: InboxTaskActionDto.TargetUser
+- uid: MegaForm.Sdk.InboxTaskActionDto.TargetUser*
+  name: TargetUser
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_TargetUser_
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.TargetUser
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskActionDto.TargetUser
+  nameWithType: InboxTaskActionDto.TargetUser
+- uid: MegaForm.Sdk.InboxTaskActionDto.TaskId
+  name: TaskId
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_TaskId
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.TaskId
+  fullName: MegaForm.Sdk.InboxTaskActionDto.TaskId
+  nameWithType: InboxTaskActionDto.TaskId
+- uid: MegaForm.Sdk.InboxTaskActionDto.TaskId*
+  name: TaskId
+  href: api/MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_TaskId_
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.TaskId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskActionDto.TaskId
+  nameWithType: InboxTaskActionDto.TaskId
+- uid: MegaForm.Sdk.InboxTaskActionRequest
+  name: InboxTaskActionRequest
+  href: api/MegaForm.Sdk.InboxTaskActionRequest.html
+  commentId: T:MegaForm.Sdk.InboxTaskActionRequest
+  fullName: MegaForm.Sdk.InboxTaskActionRequest
+  nameWithType: InboxTaskActionRequest
+- uid: MegaForm.Sdk.InboxTaskActionRequest.Comment
+  name: Comment
+  href: api/MegaForm.Sdk.InboxTaskActionRequest.html#MegaForm_Sdk_InboxTaskActionRequest_Comment
+  commentId: P:MegaForm.Sdk.InboxTaskActionRequest.Comment
+  fullName: MegaForm.Sdk.InboxTaskActionRequest.Comment
+  nameWithType: InboxTaskActionRequest.Comment
+- uid: MegaForm.Sdk.InboxTaskActionRequest.Comment*
+  name: Comment
+  href: api/MegaForm.Sdk.InboxTaskActionRequest.html#MegaForm_Sdk_InboxTaskActionRequest_Comment_
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionRequest.Comment
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskActionRequest.Comment
+  nameWithType: InboxTaskActionRequest.Comment
+- uid: MegaForm.Sdk.InboxTaskActionRequest.Data
+  name: Data
+  href: api/MegaForm.Sdk.InboxTaskActionRequest.html#MegaForm_Sdk_InboxTaskActionRequest_Data
+  commentId: P:MegaForm.Sdk.InboxTaskActionRequest.Data
+  fullName: MegaForm.Sdk.InboxTaskActionRequest.Data
+  nameWithType: InboxTaskActionRequest.Data
+- uid: MegaForm.Sdk.InboxTaskActionRequest.Data*
+  name: Data
+  href: api/MegaForm.Sdk.InboxTaskActionRequest.html#MegaForm_Sdk_InboxTaskActionRequest_Data_
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionRequest.Data
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskActionRequest.Data
+  nameWithType: InboxTaskActionRequest.Data
+- uid: MegaForm.Sdk.InboxTaskActionRequest.TargetUser
+  name: TargetUser
+  href: api/MegaForm.Sdk.InboxTaskActionRequest.html#MegaForm_Sdk_InboxTaskActionRequest_TargetUser
+  commentId: P:MegaForm.Sdk.InboxTaskActionRequest.TargetUser
+  fullName: MegaForm.Sdk.InboxTaskActionRequest.TargetUser
+  nameWithType: InboxTaskActionRequest.TargetUser
+- uid: MegaForm.Sdk.InboxTaskActionRequest.TargetUser*
+  name: TargetUser
+  href: api/MegaForm.Sdk.InboxTaskActionRequest.html#MegaForm_Sdk_InboxTaskActionRequest_TargetUser_
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionRequest.TargetUser
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskActionRequest.TargetUser
+  nameWithType: InboxTaskActionRequest.TargetUser
+- uid: MegaForm.Sdk.InboxTaskActionRequest.TaskId
+  name: TaskId
+  href: api/MegaForm.Sdk.InboxTaskActionRequest.html#MegaForm_Sdk_InboxTaskActionRequest_TaskId
+  commentId: P:MegaForm.Sdk.InboxTaskActionRequest.TaskId
+  fullName: MegaForm.Sdk.InboxTaskActionRequest.TaskId
+  nameWithType: InboxTaskActionRequest.TaskId
+- uid: MegaForm.Sdk.InboxTaskActionRequest.TaskId*
+  name: TaskId
+  href: api/MegaForm.Sdk.InboxTaskActionRequest.html#MegaForm_Sdk_InboxTaskActionRequest_TaskId_
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionRequest.TaskId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskActionRequest.TaskId
+  nameWithType: InboxTaskActionRequest.TaskId
+- uid: MegaForm.Sdk.InboxTaskDto
+  name: InboxTaskDto
+  href: api/MegaForm.Sdk.InboxTaskDto.html
+  commentId: T:MegaForm.Sdk.InboxTaskDto
+  fullName: MegaForm.Sdk.InboxTaskDto
+  nameWithType: InboxTaskDto
+- uid: MegaForm.Sdk.InboxTaskDto.AllowClaim
+  name: AllowClaim
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_AllowClaim
+  commentId: P:MegaForm.Sdk.InboxTaskDto.AllowClaim
+  fullName: MegaForm.Sdk.InboxTaskDto.AllowClaim
+  nameWithType: InboxTaskDto.AllowClaim
+- uid: MegaForm.Sdk.InboxTaskDto.AllowClaim*
+  name: AllowClaim
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_AllowClaim_
+  commentId: Overload:MegaForm.Sdk.InboxTaskDto.AllowClaim
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskDto.AllowClaim
+  nameWithType: InboxTaskDto.AllowClaim
+- uid: MegaForm.Sdk.InboxTaskDto.AllowForward
+  name: AllowForward
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_AllowForward
+  commentId: P:MegaForm.Sdk.InboxTaskDto.AllowForward
+  fullName: MegaForm.Sdk.InboxTaskDto.AllowForward
+  nameWithType: InboxTaskDto.AllowForward
+- uid: MegaForm.Sdk.InboxTaskDto.AllowForward*
+  name: AllowForward
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_AllowForward_
+  commentId: Overload:MegaForm.Sdk.InboxTaskDto.AllowForward
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskDto.AllowForward
+  nameWithType: InboxTaskDto.AllowForward
+- uid: MegaForm.Sdk.InboxTaskDto.AllowReassign
+  name: AllowReassign
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_AllowReassign
+  commentId: P:MegaForm.Sdk.InboxTaskDto.AllowReassign
+  fullName: MegaForm.Sdk.InboxTaskDto.AllowReassign
+  nameWithType: InboxTaskDto.AllowReassign
+- uid: MegaForm.Sdk.InboxTaskDto.AllowReassign*
+  name: AllowReassign
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_AllowReassign_
+  commentId: Overload:MegaForm.Sdk.InboxTaskDto.AllowReassign
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskDto.AllowReassign
+  nameWithType: InboxTaskDto.AllowReassign
+- uid: MegaForm.Sdk.InboxTaskDto.AssignedDisplayName
+  name: AssignedDisplayName
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_AssignedDisplayName
+  commentId: P:MegaForm.Sdk.InboxTaskDto.AssignedDisplayName
+  fullName: MegaForm.Sdk.InboxTaskDto.AssignedDisplayName
+  nameWithType: InboxTaskDto.AssignedDisplayName
+- uid: MegaForm.Sdk.InboxTaskDto.AssignedDisplayName*
+  name: AssignedDisplayName
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_AssignedDisplayName_
+  commentId: Overload:MegaForm.Sdk.InboxTaskDto.AssignedDisplayName
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskDto.AssignedDisplayName
+  nameWithType: InboxTaskDto.AssignedDisplayName
+- uid: MegaForm.Sdk.InboxTaskDto.AssignedUserId
+  name: AssignedUserId
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_AssignedUserId
+  commentId: P:MegaForm.Sdk.InboxTaskDto.AssignedUserId
+  fullName: MegaForm.Sdk.InboxTaskDto.AssignedUserId
+  nameWithType: InboxTaskDto.AssignedUserId
+- uid: MegaForm.Sdk.InboxTaskDto.AssignedUserId*
+  name: AssignedUserId
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_AssignedUserId_
+  commentId: Overload:MegaForm.Sdk.InboxTaskDto.AssignedUserId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskDto.AssignedUserId
+  nameWithType: InboxTaskDto.AssignedUserId
+- uid: MegaForm.Sdk.InboxTaskDto.AssignedUserName
+  name: AssignedUserName
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_AssignedUserName
+  commentId: P:MegaForm.Sdk.InboxTaskDto.AssignedUserName
+  fullName: MegaForm.Sdk.InboxTaskDto.AssignedUserName
+  nameWithType: InboxTaskDto.AssignedUserName
+- uid: MegaForm.Sdk.InboxTaskDto.AssignedUserName*
+  name: AssignedUserName
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_AssignedUserName_
+  commentId: Overload:MegaForm.Sdk.InboxTaskDto.AssignedUserName
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskDto.AssignedUserName
+  nameWithType: InboxTaskDto.AssignedUserName
+- uid: MegaForm.Sdk.InboxTaskDto.CandidateRoles
+  name: CandidateRoles
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_CandidateRoles
+  commentId: P:MegaForm.Sdk.InboxTaskDto.CandidateRoles
+  fullName: MegaForm.Sdk.InboxTaskDto.CandidateRoles
+  nameWithType: InboxTaskDto.CandidateRoles
+- uid: MegaForm.Sdk.InboxTaskDto.CandidateRoles*
+  name: CandidateRoles
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_CandidateRoles_
+  commentId: Overload:MegaForm.Sdk.InboxTaskDto.CandidateRoles
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskDto.CandidateRoles
+  nameWithType: InboxTaskDto.CandidateRoles
+- uid: MegaForm.Sdk.InboxTaskDto.CandidateUsers
+  name: CandidateUsers
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_CandidateUsers
+  commentId: P:MegaForm.Sdk.InboxTaskDto.CandidateUsers
+  fullName: MegaForm.Sdk.InboxTaskDto.CandidateUsers
+  nameWithType: InboxTaskDto.CandidateUsers
+- uid: MegaForm.Sdk.InboxTaskDto.CandidateUsers*
+  name: CandidateUsers
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_CandidateUsers_
+  commentId: Overload:MegaForm.Sdk.InboxTaskDto.CandidateUsers
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskDto.CandidateUsers
+  nameWithType: InboxTaskDto.CandidateUsers
+- uid: MegaForm.Sdk.InboxTaskDto.CaseId
+  name: CaseId
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_CaseId
+  commentId: P:MegaForm.Sdk.InboxTaskDto.CaseId
+  fullName: MegaForm.Sdk.InboxTaskDto.CaseId
+  nameWithType: InboxTaskDto.CaseId
+- uid: MegaForm.Sdk.InboxTaskDto.CaseId*
+  name: CaseId
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_CaseId_
+  commentId: Overload:MegaForm.Sdk.InboxTaskDto.CaseId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskDto.CaseId
+  nameWithType: InboxTaskDto.CaseId
+- uid: MegaForm.Sdk.InboxTaskDto.ClaimedAtUtc
+  name: ClaimedAtUtc
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_ClaimedAtUtc
+  commentId: P:MegaForm.Sdk.InboxTaskDto.ClaimedAtUtc
+  fullName: MegaForm.Sdk.InboxTaskDto.ClaimedAtUtc
+  nameWithType: InboxTaskDto.ClaimedAtUtc
+- uid: MegaForm.Sdk.InboxTaskDto.ClaimedAtUtc*
+  name: ClaimedAtUtc
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_ClaimedAtUtc_
+  commentId: Overload:MegaForm.Sdk.InboxTaskDto.ClaimedAtUtc
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskDto.ClaimedAtUtc
+  nameWithType: InboxTaskDto.ClaimedAtUtc
+- uid: MegaForm.Sdk.InboxTaskDto.Comment
+  name: Comment
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_Comment
+  commentId: P:MegaForm.Sdk.InboxTaskDto.Comment
+  fullName: MegaForm.Sdk.InboxTaskDto.Comment
+  nameWithType: InboxTaskDto.Comment
+- uid: MegaForm.Sdk.InboxTaskDto.Comment*
+  name: Comment
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_Comment_
+  commentId: Overload:MegaForm.Sdk.InboxTaskDto.Comment
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskDto.Comment
+  nameWithType: InboxTaskDto.Comment
+- uid: MegaForm.Sdk.InboxTaskDto.CompletedAtUtc
+  name: CompletedAtUtc
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_CompletedAtUtc
+  commentId: P:MegaForm.Sdk.InboxTaskDto.CompletedAtUtc
+  fullName: MegaForm.Sdk.InboxTaskDto.CompletedAtUtc
+  nameWithType: InboxTaskDto.CompletedAtUtc
+- uid: MegaForm.Sdk.InboxTaskDto.CompletedAtUtc*
+  name: CompletedAtUtc
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_CompletedAtUtc_
+  commentId: Overload:MegaForm.Sdk.InboxTaskDto.CompletedAtUtc
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskDto.CompletedAtUtc
+  nameWithType: InboxTaskDto.CompletedAtUtc
+- uid: MegaForm.Sdk.InboxTaskDto.CreatedAtUtc
+  name: CreatedAtUtc
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_CreatedAtUtc
+  commentId: P:MegaForm.Sdk.InboxTaskDto.CreatedAtUtc
+  fullName: MegaForm.Sdk.InboxTaskDto.CreatedAtUtc
+  nameWithType: InboxTaskDto.CreatedAtUtc
+- uid: MegaForm.Sdk.InboxTaskDto.CreatedAtUtc*
+  name: CreatedAtUtc
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_CreatedAtUtc_
+  commentId: Overload:MegaForm.Sdk.InboxTaskDto.CreatedAtUtc
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskDto.CreatedAtUtc
+  nameWithType: InboxTaskDto.CreatedAtUtc
+- uid: MegaForm.Sdk.InboxTaskDto.DueAtUtc
+  name: DueAtUtc
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_DueAtUtc
+  commentId: P:MegaForm.Sdk.InboxTaskDto.DueAtUtc
+  fullName: MegaForm.Sdk.InboxTaskDto.DueAtUtc
+  nameWithType: InboxTaskDto.DueAtUtc
+- uid: MegaForm.Sdk.InboxTaskDto.DueAtUtc*
+  name: DueAtUtc
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_DueAtUtc_
+  commentId: Overload:MegaForm.Sdk.InboxTaskDto.DueAtUtc
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskDto.DueAtUtc
+  nameWithType: InboxTaskDto.DueAtUtc
+- uid: MegaForm.Sdk.InboxTaskDto.ExecutionId
+  name: ExecutionId
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_ExecutionId
+  commentId: P:MegaForm.Sdk.InboxTaskDto.ExecutionId
+  fullName: MegaForm.Sdk.InboxTaskDto.ExecutionId
+  nameWithType: InboxTaskDto.ExecutionId
+- uid: MegaForm.Sdk.InboxTaskDto.ExecutionId*
+  name: ExecutionId
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_ExecutionId_
+  commentId: Overload:MegaForm.Sdk.InboxTaskDto.ExecutionId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskDto.ExecutionId
+  nameWithType: InboxTaskDto.ExecutionId
+- uid: MegaForm.Sdk.InboxTaskDto.FormId
+  name: FormId
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_FormId
+  commentId: P:MegaForm.Sdk.InboxTaskDto.FormId
+  fullName: MegaForm.Sdk.InboxTaskDto.FormId
+  nameWithType: InboxTaskDto.FormId
+- uid: MegaForm.Sdk.InboxTaskDto.FormId*
+  name: FormId
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_FormId_
+  commentId: Overload:MegaForm.Sdk.InboxTaskDto.FormId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskDto.FormId
+  nameWithType: InboxTaskDto.FormId
+- uid: MegaForm.Sdk.InboxTaskDto.NodeId
+  name: NodeId
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_NodeId
+  commentId: P:MegaForm.Sdk.InboxTaskDto.NodeId
+  fullName: MegaForm.Sdk.InboxTaskDto.NodeId
+  nameWithType: InboxTaskDto.NodeId
+- uid: MegaForm.Sdk.InboxTaskDto.NodeId*
+  name: NodeId
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_NodeId_
+  commentId: Overload:MegaForm.Sdk.InboxTaskDto.NodeId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskDto.NodeId
+  nameWithType: InboxTaskDto.NodeId
+- uid: MegaForm.Sdk.InboxTaskDto.NodeLabel
+  name: NodeLabel
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_NodeLabel
+  commentId: P:MegaForm.Sdk.InboxTaskDto.NodeLabel
+  fullName: MegaForm.Sdk.InboxTaskDto.NodeLabel
+  nameWithType: InboxTaskDto.NodeLabel
+- uid: MegaForm.Sdk.InboxTaskDto.NodeLabel*
+  name: NodeLabel
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_NodeLabel_
+  commentId: Overload:MegaForm.Sdk.InboxTaskDto.NodeLabel
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskDto.NodeLabel
+  nameWithType: InboxTaskDto.NodeLabel
+- uid: MegaForm.Sdk.InboxTaskDto.Outcome
+  name: Outcome
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_Outcome
+  commentId: P:MegaForm.Sdk.InboxTaskDto.Outcome
+  fullName: MegaForm.Sdk.InboxTaskDto.Outcome
+  nameWithType: InboxTaskDto.Outcome
+- uid: MegaForm.Sdk.InboxTaskDto.Outcome*
+  name: Outcome
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_Outcome_
+  commentId: Overload:MegaForm.Sdk.InboxTaskDto.Outcome
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskDto.Outcome
+  nameWithType: InboxTaskDto.Outcome
+- uid: MegaForm.Sdk.InboxTaskDto.Status
+  name: Status
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_Status
+  commentId: P:MegaForm.Sdk.InboxTaskDto.Status
+  fullName: MegaForm.Sdk.InboxTaskDto.Status
+  nameWithType: InboxTaskDto.Status
+- uid: MegaForm.Sdk.InboxTaskDto.Status*
+  name: Status
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_Status_
+  commentId: Overload:MegaForm.Sdk.InboxTaskDto.Status
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskDto.Status
+  nameWithType: InboxTaskDto.Status
+- uid: MegaForm.Sdk.InboxTaskDto.SubmissionId
+  name: SubmissionId
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_SubmissionId
+  commentId: P:MegaForm.Sdk.InboxTaskDto.SubmissionId
+  fullName: MegaForm.Sdk.InboxTaskDto.SubmissionId
+  nameWithType: InboxTaskDto.SubmissionId
+- uid: MegaForm.Sdk.InboxTaskDto.SubmissionId*
+  name: SubmissionId
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_SubmissionId_
+  commentId: Overload:MegaForm.Sdk.InboxTaskDto.SubmissionId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskDto.SubmissionId
+  nameWithType: InboxTaskDto.SubmissionId
+- uid: MegaForm.Sdk.InboxTaskDto.TaskId
+  name: TaskId
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_TaskId
+  commentId: P:MegaForm.Sdk.InboxTaskDto.TaskId
+  fullName: MegaForm.Sdk.InboxTaskDto.TaskId
+  nameWithType: InboxTaskDto.TaskId
+- uid: MegaForm.Sdk.InboxTaskDto.TaskId*
+  name: TaskId
+  href: api/MegaForm.Sdk.InboxTaskDto.html#MegaForm_Sdk_InboxTaskDto_TaskId_
+  commentId: Overload:MegaForm.Sdk.InboxTaskDto.TaskId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskDto.TaskId
+  nameWithType: InboxTaskDto.TaskId
+- uid: MegaForm.Sdk.InboxTaskResultDto
+  name: InboxTaskResultDto
+  href: api/MegaForm.Sdk.InboxTaskResultDto.html
+  commentId: T:MegaForm.Sdk.InboxTaskResultDto
+  fullName: MegaForm.Sdk.InboxTaskResultDto
+  nameWithType: InboxTaskResultDto
+- uid: MegaForm.Sdk.InboxTaskResultDto.Actions
+  name: Actions
+  href: api/MegaForm.Sdk.InboxTaskResultDto.html#MegaForm_Sdk_InboxTaskResultDto_Actions
+  commentId: P:MegaForm.Sdk.InboxTaskResultDto.Actions
+  fullName: MegaForm.Sdk.InboxTaskResultDto.Actions
+  nameWithType: InboxTaskResultDto.Actions
+- uid: MegaForm.Sdk.InboxTaskResultDto.Actions*
+  name: Actions
+  href: api/MegaForm.Sdk.InboxTaskResultDto.html#MegaForm_Sdk_InboxTaskResultDto_Actions_
+  commentId: Overload:MegaForm.Sdk.InboxTaskResultDto.Actions
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskResultDto.Actions
+  nameWithType: InboxTaskResultDto.Actions
+- uid: MegaForm.Sdk.InboxTaskResultDto.Error
+  name: Error
+  href: api/MegaForm.Sdk.InboxTaskResultDto.html#MegaForm_Sdk_InboxTaskResultDto_Error
+  commentId: P:MegaForm.Sdk.InboxTaskResultDto.Error
+  fullName: MegaForm.Sdk.InboxTaskResultDto.Error
+  nameWithType: InboxTaskResultDto.Error
+- uid: MegaForm.Sdk.InboxTaskResultDto.Error*
+  name: Error
+  href: api/MegaForm.Sdk.InboxTaskResultDto.html#MegaForm_Sdk_InboxTaskResultDto_Error_
+  commentId: Overload:MegaForm.Sdk.InboxTaskResultDto.Error
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskResultDto.Error
+  nameWithType: InboxTaskResultDto.Error
+- uid: MegaForm.Sdk.InboxTaskResultDto.Files
+  name: Files
+  href: api/MegaForm.Sdk.InboxTaskResultDto.html#MegaForm_Sdk_InboxTaskResultDto_Files
+  commentId: P:MegaForm.Sdk.InboxTaskResultDto.Files
+  fullName: MegaForm.Sdk.InboxTaskResultDto.Files
+  nameWithType: InboxTaskResultDto.Files
+- uid: MegaForm.Sdk.InboxTaskResultDto.Files*
+  name: Files
+  href: api/MegaForm.Sdk.InboxTaskResultDto.html#MegaForm_Sdk_InboxTaskResultDto_Files_
+  commentId: Overload:MegaForm.Sdk.InboxTaskResultDto.Files
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskResultDto.Files
+  nameWithType: InboxTaskResultDto.Files
+- uid: MegaForm.Sdk.InboxTaskResultDto.Submission
+  name: Submission
+  href: api/MegaForm.Sdk.InboxTaskResultDto.html#MegaForm_Sdk_InboxTaskResultDto_Submission
+  commentId: P:MegaForm.Sdk.InboxTaskResultDto.Submission
+  fullName: MegaForm.Sdk.InboxTaskResultDto.Submission
+  nameWithType: InboxTaskResultDto.Submission
+- uid: MegaForm.Sdk.InboxTaskResultDto.Submission*
+  name: Submission
+  href: api/MegaForm.Sdk.InboxTaskResultDto.html#MegaForm_Sdk_InboxTaskResultDto_Submission_
+  commentId: Overload:MegaForm.Sdk.InboxTaskResultDto.Submission
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskResultDto.Submission
+  nameWithType: InboxTaskResultDto.Submission
+- uid: MegaForm.Sdk.InboxTaskResultDto.Success
+  name: Success
+  href: api/MegaForm.Sdk.InboxTaskResultDto.html#MegaForm_Sdk_InboxTaskResultDto_Success
+  commentId: P:MegaForm.Sdk.InboxTaskResultDto.Success
+  fullName: MegaForm.Sdk.InboxTaskResultDto.Success
+  nameWithType: InboxTaskResultDto.Success
+- uid: MegaForm.Sdk.InboxTaskResultDto.Success*
+  name: Success
+  href: api/MegaForm.Sdk.InboxTaskResultDto.html#MegaForm_Sdk_InboxTaskResultDto_Success_
+  commentId: Overload:MegaForm.Sdk.InboxTaskResultDto.Success
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskResultDto.Success
+  nameWithType: InboxTaskResultDto.Success
+- uid: MegaForm.Sdk.InboxTaskResultDto.Task
+  name: Task
+  href: api/MegaForm.Sdk.InboxTaskResultDto.html#MegaForm_Sdk_InboxTaskResultDto_Task
+  commentId: P:MegaForm.Sdk.InboxTaskResultDto.Task
+  fullName: MegaForm.Sdk.InboxTaskResultDto.Task
+  nameWithType: InboxTaskResultDto.Task
+- uid: MegaForm.Sdk.InboxTaskResultDto.Task*
+  name: Task
+  href: api/MegaForm.Sdk.InboxTaskResultDto.html#MegaForm_Sdk_InboxTaskResultDto_Task_
+  commentId: Overload:MegaForm.Sdk.InboxTaskResultDto.Task
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxTaskResultDto.Task
+  nameWithType: InboxTaskResultDto.Task
+- uid: MegaForm.Sdk.InboxUserDto
+  name: InboxUserDto
+  href: api/MegaForm.Sdk.InboxUserDto.html
+  commentId: T:MegaForm.Sdk.InboxUserDto
+  fullName: MegaForm.Sdk.InboxUserDto
+  nameWithType: InboxUserDto
+- uid: MegaForm.Sdk.InboxUserDto.DisplayName
+  name: DisplayName
+  href: api/MegaForm.Sdk.InboxUserDto.html#MegaForm_Sdk_InboxUserDto_DisplayName
+  commentId: P:MegaForm.Sdk.InboxUserDto.DisplayName
+  fullName: MegaForm.Sdk.InboxUserDto.DisplayName
+  nameWithType: InboxUserDto.DisplayName
+- uid: MegaForm.Sdk.InboxUserDto.DisplayName*
+  name: DisplayName
+  href: api/MegaForm.Sdk.InboxUserDto.html#MegaForm_Sdk_InboxUserDto_DisplayName_
+  commentId: Overload:MegaForm.Sdk.InboxUserDto.DisplayName
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxUserDto.DisplayName
+  nameWithType: InboxUserDto.DisplayName
+- uid: MegaForm.Sdk.InboxUserDto.IsAdmin
+  name: IsAdmin
+  href: api/MegaForm.Sdk.InboxUserDto.html#MegaForm_Sdk_InboxUserDto_IsAdmin
+  commentId: P:MegaForm.Sdk.InboxUserDto.IsAdmin
+  fullName: MegaForm.Sdk.InboxUserDto.IsAdmin
+  nameWithType: InboxUserDto.IsAdmin
+- uid: MegaForm.Sdk.InboxUserDto.IsAdmin*
+  name: IsAdmin
+  href: api/MegaForm.Sdk.InboxUserDto.html#MegaForm_Sdk_InboxUserDto_IsAdmin_
+  commentId: Overload:MegaForm.Sdk.InboxUserDto.IsAdmin
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxUserDto.IsAdmin
+  nameWithType: InboxUserDto.IsAdmin
+- uid: MegaForm.Sdk.InboxUserDto.UserId
+  name: UserId
+  href: api/MegaForm.Sdk.InboxUserDto.html#MegaForm_Sdk_InboxUserDto_UserId
+  commentId: P:MegaForm.Sdk.InboxUserDto.UserId
+  fullName: MegaForm.Sdk.InboxUserDto.UserId
+  nameWithType: InboxUserDto.UserId
+- uid: MegaForm.Sdk.InboxUserDto.UserId*
+  name: UserId
+  href: api/MegaForm.Sdk.InboxUserDto.html#MegaForm_Sdk_InboxUserDto_UserId_
+  commentId: Overload:MegaForm.Sdk.InboxUserDto.UserId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxUserDto.UserId
+  nameWithType: InboxUserDto.UserId
+- uid: MegaForm.Sdk.InboxUserDto.UserName
+  name: UserName
+  href: api/MegaForm.Sdk.InboxUserDto.html#MegaForm_Sdk_InboxUserDto_UserName
+  commentId: P:MegaForm.Sdk.InboxUserDto.UserName
+  fullName: MegaForm.Sdk.InboxUserDto.UserName
+  nameWithType: InboxUserDto.UserName
+- uid: MegaForm.Sdk.InboxUserDto.UserName*
+  name: UserName
+  href: api/MegaForm.Sdk.InboxUserDto.html#MegaForm_Sdk_InboxUserDto_UserName_
+  commentId: Overload:MegaForm.Sdk.InboxUserDto.UserName
+  isSpec: "True"
+  fullName: MegaForm.Sdk.InboxUserDto.UserName
+  nameWithType: InboxUserDto.UserName
 - uid: MegaForm.Sdk.MegaFormClient
   name: MegaFormClient
   href: api/MegaForm.Sdk.MegaFormClient.html
@@ -997,6 +2555,15 @@ references:
   fullName.vb: MegaForm.Sdk.MegaFormClient.New(MegaForm.Core.Interfaces.IFormRepository, MegaForm.Core.Interfaces.ISubmissionRepository, MegaForm.Core.Interfaces.IPlatformContext, MegaForm.Core.Interfaces.IFileRepository, MegaForm.Core.Interfaces.IStorageService, MegaForm.Core.Services.SubmissionProcessor)
   nameWithType: MegaFormClient.MegaFormClient(IFormRepository, ISubmissionRepository, IPlatformContext?, IFileRepository?, IStorageService?, SubmissionProcessor?)
   nameWithType.vb: MegaFormClient.New(IFormRepository, ISubmissionRepository, IPlatformContext, IFileRepository, IStorageService, SubmissionProcessor)
+- uid: MegaForm.Sdk.MegaFormClient.#ctor(MegaForm.Core.Interfaces.IFormRepository,MegaForm.Core.Interfaces.ISubmissionRepository,MegaForm.Core.Interfaces.IPlatformContext,MegaForm.Core.Interfaces.IFileRepository,MegaForm.Core.Interfaces.IStorageService,MegaForm.Core.Services.SubmissionProcessor,MegaForm.Core.Services.WorkflowTaskService,MegaForm.Core.Interfaces.IWorkflowRepository)
+  name: MegaFormClient(IFormRepository, ISubmissionRepository, IPlatformContext?, IFileRepository?, IStorageService?, SubmissionProcessor?, WorkflowTaskService?, IWorkflowRepository?)
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient__ctor_MegaForm_Core_Interfaces_IFormRepository_MegaForm_Core_Interfaces_ISubmissionRepository_MegaForm_Core_Interfaces_IPlatformContext_MegaForm_Core_Interfaces_IFileRepository_MegaForm_Core_Interfaces_IStorageService_MegaForm_Core_Services_SubmissionProcessor_MegaForm_Core_Services_WorkflowTaskService_MegaForm_Core_Interfaces_IWorkflowRepository_
+  commentId: M:MegaForm.Sdk.MegaFormClient.#ctor(MegaForm.Core.Interfaces.IFormRepository,MegaForm.Core.Interfaces.ISubmissionRepository,MegaForm.Core.Interfaces.IPlatformContext,MegaForm.Core.Interfaces.IFileRepository,MegaForm.Core.Interfaces.IStorageService,MegaForm.Core.Services.SubmissionProcessor,MegaForm.Core.Services.WorkflowTaskService,MegaForm.Core.Interfaces.IWorkflowRepository)
+  name.vb: New(IFormRepository, ISubmissionRepository, IPlatformContext, IFileRepository, IStorageService, SubmissionProcessor, WorkflowTaskService, IWorkflowRepository)
+  fullName: MegaForm.Sdk.MegaFormClient.MegaFormClient(MegaForm.Core.Interfaces.IFormRepository, MegaForm.Core.Interfaces.ISubmissionRepository, MegaForm.Core.Interfaces.IPlatformContext?, MegaForm.Core.Interfaces.IFileRepository?, MegaForm.Core.Interfaces.IStorageService?, MegaForm.Core.Services.SubmissionProcessor?, MegaForm.Core.Services.WorkflowTaskService?, MegaForm.Core.Interfaces.IWorkflowRepository?)
+  fullName.vb: MegaForm.Sdk.MegaFormClient.New(MegaForm.Core.Interfaces.IFormRepository, MegaForm.Core.Interfaces.ISubmissionRepository, MegaForm.Core.Interfaces.IPlatformContext, MegaForm.Core.Interfaces.IFileRepository, MegaForm.Core.Interfaces.IStorageService, MegaForm.Core.Services.SubmissionProcessor, MegaForm.Core.Services.WorkflowTaskService, MegaForm.Core.Interfaces.IWorkflowRepository)
+  nameWithType: MegaFormClient.MegaFormClient(IFormRepository, ISubmissionRepository, IPlatformContext?, IFileRepository?, IStorageService?, SubmissionProcessor?, WorkflowTaskService?, IWorkflowRepository?)
+  nameWithType.vb: MegaFormClient.New(IFormRepository, ISubmissionRepository, IPlatformContext, IFileRepository, IStorageService, SubmissionProcessor, WorkflowTaskService, IWorkflowRepository)
 - uid: MegaForm.Sdk.MegaFormClient.#ctor*
   name: MegaFormClient
   href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient__ctor_
@@ -1007,6 +2574,70 @@ references:
   fullName.vb: MegaForm.Sdk.MegaFormClient.New
   nameWithType: MegaFormClient.MegaFormClient
   nameWithType.vb: MegaFormClient.New
+- uid: MegaForm.Sdk.MegaFormClient.ApproveAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name: ApproveAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_ApproveAsync_MegaForm_Sdk_InboxTaskActionRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  commentId: M:MegaForm.Sdk.MegaFormClient.ApproveAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name.vb: ApproveAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+  fullName: MegaForm.Sdk.MegaFormClient.ApproveAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  fullName.vb: MegaForm.Sdk.MegaFormClient.ApproveAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  nameWithType: MegaFormClient.ApproveAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  nameWithType.vb: MegaFormClient.ApproveAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.MegaFormClient.ApproveAsync*
+  name: ApproveAsync
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_ApproveAsync_
+  commentId: Overload:MegaForm.Sdk.MegaFormClient.ApproveAsync
+  isSpec: "True"
+  fullName: MegaForm.Sdk.MegaFormClient.ApproveAsync
+  nameWithType: MegaFormClient.ApproveAsync
+- uid: MegaForm.Sdk.MegaFormClient.AttachFileAsync(MegaForm.Sdk.InboxFileAttachmentRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name: AttachFileAsync(InboxFileAttachmentRequest, MegaFormScope?, CancellationToken)
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_AttachFileAsync_MegaForm_Sdk_InboxFileAttachmentRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  commentId: M:MegaForm.Sdk.MegaFormClient.AttachFileAsync(MegaForm.Sdk.InboxFileAttachmentRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name.vb: AttachFileAsync(InboxFileAttachmentRequest, MegaFormScope, CancellationToken)
+  fullName: MegaForm.Sdk.MegaFormClient.AttachFileAsync(MegaForm.Sdk.InboxFileAttachmentRequest, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  fullName.vb: MegaForm.Sdk.MegaFormClient.AttachFileAsync(MegaForm.Sdk.InboxFileAttachmentRequest, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  nameWithType: MegaFormClient.AttachFileAsync(InboxFileAttachmentRequest, MegaFormScope?, CancellationToken)
+  nameWithType.vb: MegaFormClient.AttachFileAsync(InboxFileAttachmentRequest, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.MegaFormClient.AttachFileAsync*
+  name: AttachFileAsync
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_AttachFileAsync_
+  commentId: Overload:MegaForm.Sdk.MegaFormClient.AttachFileAsync
+  isSpec: "True"
+  fullName: MegaForm.Sdk.MegaFormClient.AttachFileAsync
+  nameWithType: MegaFormClient.AttachFileAsync
+- uid: MegaForm.Sdk.MegaFormClient.ClaimAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name: ClaimAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_ClaimAsync_MegaForm_Sdk_InboxTaskActionRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  commentId: M:MegaForm.Sdk.MegaFormClient.ClaimAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name.vb: ClaimAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+  fullName: MegaForm.Sdk.MegaFormClient.ClaimAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  fullName.vb: MegaForm.Sdk.MegaFormClient.ClaimAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  nameWithType: MegaFormClient.ClaimAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  nameWithType.vb: MegaFormClient.ClaimAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.MegaFormClient.ClaimAsync*
+  name: ClaimAsync
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_ClaimAsync_
+  commentId: Overload:MegaForm.Sdk.MegaFormClient.ClaimAsync
+  isSpec: "True"
+  fullName: MegaForm.Sdk.MegaFormClient.ClaimAsync
+  nameWithType: MegaFormClient.ClaimAsync
+- uid: MegaForm.Sdk.MegaFormClient.CommentAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name: CommentAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_CommentAsync_MegaForm_Sdk_InboxTaskActionRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  commentId: M:MegaForm.Sdk.MegaFormClient.CommentAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name.vb: CommentAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+  fullName: MegaForm.Sdk.MegaFormClient.CommentAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  fullName.vb: MegaForm.Sdk.MegaFormClient.CommentAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  nameWithType: MegaFormClient.CommentAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  nameWithType.vb: MegaFormClient.CommentAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.MegaFormClient.CommentAsync*
+  name: CommentAsync
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_CommentAsync_
+  commentId: Overload:MegaForm.Sdk.MegaFormClient.CommentAsync
+  isSpec: "True"
+  fullName: MegaForm.Sdk.MegaFormClient.CommentAsync
+  nameWithType: MegaFormClient.CommentAsync
 - uid: MegaForm.Sdk.MegaFormClient.CreateFormAsync(MegaForm.Sdk.CreateFormRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
   name: CreateFormAsync(CreateFormRequest, MegaFormScope?, CancellationToken)
   href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_CreateFormAsync_MegaForm_Sdk_CreateFormRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
@@ -1023,6 +2654,19 @@ references:
   isSpec: "True"
   fullName: MegaForm.Sdk.MegaFormClient.CreateFormAsync
   nameWithType: MegaFormClient.CreateFormAsync
+- uid: MegaForm.Sdk.MegaFormClient.Dashboard
+  name: Dashboard
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_Dashboard
+  commentId: P:MegaForm.Sdk.MegaFormClient.Dashboard
+  fullName: MegaForm.Sdk.MegaFormClient.Dashboard
+  nameWithType: MegaFormClient.Dashboard
+- uid: MegaForm.Sdk.MegaFormClient.Dashboard*
+  name: Dashboard
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_Dashboard_
+  commentId: Overload:MegaForm.Sdk.MegaFormClient.Dashboard
+  isSpec: "True"
+  fullName: MegaForm.Sdk.MegaFormClient.Dashboard
+  nameWithType: MegaFormClient.Dashboard
 - uid: MegaForm.Sdk.MegaFormClient.DeleteAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
   name: DeleteAsync(int, MegaFormScope?, CancellationToken)
   href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_DeleteAsync_System_Int32_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
@@ -1097,6 +2741,22 @@ references:
   isSpec: "True"
   fullName: MegaForm.Sdk.MegaFormClient.Forms
   nameWithType: MegaFormClient.Forms
+- uid: MegaForm.Sdk.MegaFormClient.ForwardAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name: ForwardAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_ForwardAsync_MegaForm_Sdk_InboxTaskActionRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  commentId: M:MegaForm.Sdk.MegaFormClient.ForwardAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name.vb: ForwardAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+  fullName: MegaForm.Sdk.MegaFormClient.ForwardAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  fullName.vb: MegaForm.Sdk.MegaFormClient.ForwardAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  nameWithType: MegaFormClient.ForwardAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  nameWithType.vb: MegaFormClient.ForwardAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.MegaFormClient.ForwardAsync*
+  name: ForwardAsync
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_ForwardAsync_
+  commentId: Overload:MegaForm.Sdk.MegaFormClient.ForwardAsync
+  isSpec: "True"
+  fullName: MegaForm.Sdk.MegaFormClient.ForwardAsync
+  nameWithType: MegaFormClient.ForwardAsync
 - uid: MegaForm.Sdk.MegaFormClient.GetAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
   name: GetAsync(int, MegaFormScope?, CancellationToken)
   href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_GetAsync_System_Int32_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
@@ -1113,6 +2773,22 @@ references:
   isSpec: "True"
   fullName: MegaForm.Sdk.MegaFormClient.GetAsync
   nameWithType: MegaFormClient.GetAsync
+- uid: MegaForm.Sdk.MegaFormClient.GetDetailAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name: GetDetailAsync(int, MegaFormScope?, CancellationToken)
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_GetDetailAsync_System_Int32_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  commentId: M:MegaForm.Sdk.MegaFormClient.GetDetailAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name.vb: GetDetailAsync(Integer, MegaFormScope, CancellationToken)
+  fullName: MegaForm.Sdk.MegaFormClient.GetDetailAsync(int, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  fullName.vb: MegaForm.Sdk.MegaFormClient.GetDetailAsync(Integer, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  nameWithType: MegaFormClient.GetDetailAsync(int, MegaFormScope?, CancellationToken)
+  nameWithType.vb: MegaFormClient.GetDetailAsync(Integer, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.MegaFormClient.GetDetailAsync*
+  name: GetDetailAsync
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_GetDetailAsync_
+  commentId: Overload:MegaForm.Sdk.MegaFormClient.GetDetailAsync
+  isSpec: "True"
+  fullName: MegaForm.Sdk.MegaFormClient.GetDetailAsync
+  nameWithType: MegaFormClient.GetDetailAsync
 - uid: MegaForm.Sdk.MegaFormClient.GetFormAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
   name: GetFormAsync(int, MegaFormScope?, CancellationToken)
   href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_GetFormAsync_System_Int32_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
@@ -1129,6 +2805,67 @@ references:
   isSpec: "True"
   fullName: MegaForm.Sdk.MegaFormClient.GetFormAsync
   nameWithType: MegaFormClient.GetFormAsync
+- uid: MegaForm.Sdk.MegaFormClient.GetMyInboxAsync(MegaForm.Sdk.InboxQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name: GetMyInboxAsync(InboxQuery?, MegaFormScope?, CancellationToken)
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_GetMyInboxAsync_MegaForm_Sdk_InboxQuery_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  commentId: M:MegaForm.Sdk.MegaFormClient.GetMyInboxAsync(MegaForm.Sdk.InboxQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name.vb: GetMyInboxAsync(InboxQuery, MegaFormScope, CancellationToken)
+  fullName: MegaForm.Sdk.MegaFormClient.GetMyInboxAsync(MegaForm.Sdk.InboxQuery?, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  fullName.vb: MegaForm.Sdk.MegaFormClient.GetMyInboxAsync(MegaForm.Sdk.InboxQuery, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  nameWithType: MegaFormClient.GetMyInboxAsync(InboxQuery?, MegaFormScope?, CancellationToken)
+  nameWithType.vb: MegaFormClient.GetMyInboxAsync(InboxQuery, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.MegaFormClient.GetMyInboxAsync*
+  name: GetMyInboxAsync
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_GetMyInboxAsync_
+  commentId: Overload:MegaForm.Sdk.MegaFormClient.GetMyInboxAsync
+  isSpec: "True"
+  fullName: MegaForm.Sdk.MegaFormClient.GetMyInboxAsync
+  nameWithType: MegaFormClient.GetMyInboxAsync
+- uid: MegaForm.Sdk.MegaFormClient.GetOverviewAsync(MegaForm.Sdk.DashboardQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name: GetOverviewAsync(DashboardQuery?, MegaFormScope?, CancellationToken)
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_GetOverviewAsync_MegaForm_Sdk_DashboardQuery_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  commentId: M:MegaForm.Sdk.MegaFormClient.GetOverviewAsync(MegaForm.Sdk.DashboardQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name.vb: GetOverviewAsync(DashboardQuery, MegaFormScope, CancellationToken)
+  fullName: MegaForm.Sdk.MegaFormClient.GetOverviewAsync(MegaForm.Sdk.DashboardQuery?, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  fullName.vb: MegaForm.Sdk.MegaFormClient.GetOverviewAsync(MegaForm.Sdk.DashboardQuery, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  nameWithType: MegaFormClient.GetOverviewAsync(DashboardQuery?, MegaFormScope?, CancellationToken)
+  nameWithType.vb: MegaFormClient.GetOverviewAsync(DashboardQuery, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.MegaFormClient.GetOverviewAsync*
+  name: GetOverviewAsync
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_GetOverviewAsync_
+  commentId: Overload:MegaForm.Sdk.MegaFormClient.GetOverviewAsync
+  isSpec: "True"
+  fullName: MegaForm.Sdk.MegaFormClient.GetOverviewAsync
+  nameWithType: MegaFormClient.GetOverviewAsync
+- uid: MegaForm.Sdk.MegaFormClient.GetTaskAsync(System.String,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name: GetTaskAsync(string, MegaFormScope?, CancellationToken)
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_GetTaskAsync_System_String_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  commentId: M:MegaForm.Sdk.MegaFormClient.GetTaskAsync(System.String,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name.vb: GetTaskAsync(String, MegaFormScope, CancellationToken)
+  fullName: MegaForm.Sdk.MegaFormClient.GetTaskAsync(string, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  fullName.vb: MegaForm.Sdk.MegaFormClient.GetTaskAsync(String, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  nameWithType: MegaFormClient.GetTaskAsync(string, MegaFormScope?, CancellationToken)
+  nameWithType.vb: MegaFormClient.GetTaskAsync(String, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.MegaFormClient.GetTaskAsync*
+  name: GetTaskAsync
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_GetTaskAsync_
+  commentId: Overload:MegaForm.Sdk.MegaFormClient.GetTaskAsync
+  isSpec: "True"
+  fullName: MegaForm.Sdk.MegaFormClient.GetTaskAsync
+  nameWithType: MegaFormClient.GetTaskAsync
+- uid: MegaForm.Sdk.MegaFormClient.Inbox
+  name: Inbox
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_Inbox
+  commentId: P:MegaForm.Sdk.MegaFormClient.Inbox
+  fullName: MegaForm.Sdk.MegaFormClient.Inbox
+  nameWithType: MegaFormClient.Inbox
+- uid: MegaForm.Sdk.MegaFormClient.Inbox*
+  name: Inbox
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_Inbox_
+  commentId: Overload:MegaForm.Sdk.MegaFormClient.Inbox
+  isSpec: "True"
+  fullName: MegaForm.Sdk.MegaFormClient.Inbox
+  nameWithType: MegaFormClient.Inbox
 - uid: MegaForm.Sdk.MegaFormClient.ListForSubmissionAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
   name: ListForSubmissionAsync(int, MegaFormScope?, CancellationToken)
   href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_ListForSubmissionAsync_System_Int32_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
@@ -1206,6 +2943,22 @@ references:
   isSpec: "True"
   fullName: MegaForm.Sdk.MegaFormClient.ParseForm
   nameWithType: MegaFormClient.ParseForm
+- uid: MegaForm.Sdk.MegaFormClient.RejectAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name: RejectAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_RejectAsync_MegaForm_Sdk_InboxTaskActionRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  commentId: M:MegaForm.Sdk.MegaFormClient.RejectAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name.vb: RejectAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+  fullName: MegaForm.Sdk.MegaFormClient.RejectAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  fullName.vb: MegaForm.Sdk.MegaFormClient.RejectAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  nameWithType: MegaFormClient.RejectAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  nameWithType.vb: MegaFormClient.RejectAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.MegaFormClient.RejectAsync*
+  name: RejectAsync
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_RejectAsync_
+  commentId: Overload:MegaForm.Sdk.MegaFormClient.RejectAsync
+  isSpec: "True"
+  fullName: MegaForm.Sdk.MegaFormClient.RejectAsync
+  nameWithType: MegaFormClient.RejectAsync
 - uid: MegaForm.Sdk.MegaFormClient.Schema
   name: Schema
   href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_Schema
@@ -1219,6 +2972,51 @@ references:
   isSpec: "True"
   fullName: MegaForm.Sdk.MegaFormClient.Schema
   nameWithType: MegaFormClient.Schema
+- uid: MegaForm.Sdk.MegaFormClient.SearchAsync(MegaForm.Sdk.SubmissionSearchQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name: SearchAsync(SubmissionSearchQuery, MegaFormScope?, CancellationToken)
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_SearchAsync_MegaForm_Sdk_SubmissionSearchQuery_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  commentId: M:MegaForm.Sdk.MegaFormClient.SearchAsync(MegaForm.Sdk.SubmissionSearchQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name.vb: SearchAsync(SubmissionSearchQuery, MegaFormScope, CancellationToken)
+  fullName: MegaForm.Sdk.MegaFormClient.SearchAsync(MegaForm.Sdk.SubmissionSearchQuery, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  fullName.vb: MegaForm.Sdk.MegaFormClient.SearchAsync(MegaForm.Sdk.SubmissionSearchQuery, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  nameWithType: MegaFormClient.SearchAsync(SubmissionSearchQuery, MegaFormScope?, CancellationToken)
+  nameWithType.vb: MegaFormClient.SearchAsync(SubmissionSearchQuery, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.MegaFormClient.SearchAsync*
+  name: SearchAsync
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_SearchAsync_
+  commentId: Overload:MegaForm.Sdk.MegaFormClient.SearchAsync
+  isSpec: "True"
+  fullName: MegaForm.Sdk.MegaFormClient.SearchAsync
+  nameWithType: MegaFormClient.SearchAsync
+- uid: MegaForm.Sdk.MegaFormClient.SendSubmissionAsync(MegaForm.Sdk.SendSubmissionToInboxRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name: SendSubmissionAsync(SendSubmissionToInboxRequest, MegaFormScope?, CancellationToken)
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_SendSubmissionAsync_MegaForm_Sdk_SendSubmissionToInboxRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  commentId: M:MegaForm.Sdk.MegaFormClient.SendSubmissionAsync(MegaForm.Sdk.SendSubmissionToInboxRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name.vb: SendSubmissionAsync(SendSubmissionToInboxRequest, MegaFormScope, CancellationToken)
+  fullName: MegaForm.Sdk.MegaFormClient.SendSubmissionAsync(MegaForm.Sdk.SendSubmissionToInboxRequest, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  fullName.vb: MegaForm.Sdk.MegaFormClient.SendSubmissionAsync(MegaForm.Sdk.SendSubmissionToInboxRequest, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  nameWithType: MegaFormClient.SendSubmissionAsync(SendSubmissionToInboxRequest, MegaFormScope?, CancellationToken)
+  nameWithType.vb: MegaFormClient.SendSubmissionAsync(SendSubmissionToInboxRequest, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.MegaFormClient.SendSubmissionAsync*
+  name: SendSubmissionAsync
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_SendSubmissionAsync_
+  commentId: Overload:MegaForm.Sdk.MegaFormClient.SendSubmissionAsync
+  isSpec: "True"
+  fullName: MegaForm.Sdk.MegaFormClient.SendSubmissionAsync
+  nameWithType: MegaFormClient.SendSubmissionAsync
+- uid: MegaForm.Sdk.MegaFormClient.SubmissionDashboard
+  name: SubmissionDashboard
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_SubmissionDashboard
+  commentId: P:MegaForm.Sdk.MegaFormClient.SubmissionDashboard
+  fullName: MegaForm.Sdk.MegaFormClient.SubmissionDashboard
+  nameWithType: MegaFormClient.SubmissionDashboard
+- uid: MegaForm.Sdk.MegaFormClient.SubmissionDashboard*
+  name: SubmissionDashboard
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_SubmissionDashboard_
+  commentId: Overload:MegaForm.Sdk.MegaFormClient.SubmissionDashboard
+  isSpec: "True"
+  fullName: MegaForm.Sdk.MegaFormClient.SubmissionDashboard
+  nameWithType: MegaFormClient.SubmissionDashboard
 - uid: MegaForm.Sdk.MegaFormClient.Submissions
   name: Submissions
   href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_Submissions
@@ -1280,6 +3078,22 @@ references:
   isSpec: "True"
   fullName: MegaForm.Sdk.MegaFormClient.UpdateFormAsync
   nameWithType: MegaFormClient.UpdateFormAsync
+- uid: MegaForm.Sdk.MegaFormClient.UpdateStatusAsync(System.Int32,System.String,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name: UpdateStatusAsync(int, string, MegaFormScope?, CancellationToken)
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_UpdateStatusAsync_System_Int32_System_String_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  commentId: M:MegaForm.Sdk.MegaFormClient.UpdateStatusAsync(System.Int32,System.String,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  name.vb: UpdateStatusAsync(Integer, String, MegaFormScope, CancellationToken)
+  fullName: MegaForm.Sdk.MegaFormClient.UpdateStatusAsync(int, string, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  fullName.vb: MegaForm.Sdk.MegaFormClient.UpdateStatusAsync(Integer, String, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  nameWithType: MegaFormClient.UpdateStatusAsync(int, string, MegaFormScope?, CancellationToken)
+  nameWithType.vb: MegaFormClient.UpdateStatusAsync(Integer, String, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.MegaFormClient.UpdateStatusAsync*
+  name: UpdateStatusAsync
+  href: api/MegaForm.Sdk.MegaFormClient.html#MegaForm_Sdk_MegaFormClient_UpdateStatusAsync_
+  commentId: Overload:MegaForm.Sdk.MegaFormClient.UpdateStatusAsync
+  isSpec: "True"
+  fullName: MegaForm.Sdk.MegaFormClient.UpdateStatusAsync
+  nameWithType: MegaFormClient.UpdateStatusAsync
 - uid: MegaForm.Sdk.MegaFormFileContent
   name: MegaFormFileContent
   href: api/MegaForm.Sdk.MegaFormFileContent.html
@@ -1331,6 +3145,71 @@ references:
   commentId: T:MegaForm.Sdk.MegaFormScope
   fullName: MegaForm.Sdk.MegaFormScope
   nameWithType: MegaFormScope
+- uid: MegaForm.Sdk.MegaFormScope.DisplayName
+  name: DisplayName
+  href: api/MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_DisplayName
+  commentId: P:MegaForm.Sdk.MegaFormScope.DisplayName
+  fullName: MegaForm.Sdk.MegaFormScope.DisplayName
+  nameWithType: MegaFormScope.DisplayName
+- uid: MegaForm.Sdk.MegaFormScope.DisplayName*
+  name: DisplayName
+  href: api/MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_DisplayName_
+  commentId: Overload:MegaForm.Sdk.MegaFormScope.DisplayName
+  isSpec: "True"
+  fullName: MegaForm.Sdk.MegaFormScope.DisplayName
+  nameWithType: MegaFormScope.DisplayName
+- uid: MegaForm.Sdk.MegaFormScope.IpAddress
+  name: IpAddress
+  href: api/MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_IpAddress
+  commentId: P:MegaForm.Sdk.MegaFormScope.IpAddress
+  fullName: MegaForm.Sdk.MegaFormScope.IpAddress
+  nameWithType: MegaFormScope.IpAddress
+- uid: MegaForm.Sdk.MegaFormScope.IpAddress*
+  name: IpAddress
+  href: api/MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_IpAddress_
+  commentId: Overload:MegaForm.Sdk.MegaFormScope.IpAddress
+  isSpec: "True"
+  fullName: MegaForm.Sdk.MegaFormScope.IpAddress
+  nameWithType: MegaFormScope.IpAddress
+- uid: MegaForm.Sdk.MegaFormScope.IsAdmin
+  name: IsAdmin
+  href: api/MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_IsAdmin
+  commentId: P:MegaForm.Sdk.MegaFormScope.IsAdmin
+  fullName: MegaForm.Sdk.MegaFormScope.IsAdmin
+  nameWithType: MegaFormScope.IsAdmin
+- uid: MegaForm.Sdk.MegaFormScope.IsAdmin*
+  name: IsAdmin
+  href: api/MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_IsAdmin_
+  commentId: Overload:MegaForm.Sdk.MegaFormScope.IsAdmin
+  isSpec: "True"
+  fullName: MegaForm.Sdk.MegaFormScope.IsAdmin
+  nameWithType: MegaFormScope.IsAdmin
+- uid: MegaForm.Sdk.MegaFormScope.IsAuthenticated
+  name: IsAuthenticated
+  href: api/MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_IsAuthenticated
+  commentId: P:MegaForm.Sdk.MegaFormScope.IsAuthenticated
+  fullName: MegaForm.Sdk.MegaFormScope.IsAuthenticated
+  nameWithType: MegaFormScope.IsAuthenticated
+- uid: MegaForm.Sdk.MegaFormScope.IsAuthenticated*
+  name: IsAuthenticated
+  href: api/MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_IsAuthenticated_
+  commentId: Overload:MegaForm.Sdk.MegaFormScope.IsAuthenticated
+  isSpec: "True"
+  fullName: MegaForm.Sdk.MegaFormScope.IsAuthenticated
+  nameWithType: MegaFormScope.IsAuthenticated
+- uid: MegaForm.Sdk.MegaFormScope.IsSuperUser
+  name: IsSuperUser
+  href: api/MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_IsSuperUser
+  commentId: P:MegaForm.Sdk.MegaFormScope.IsSuperUser
+  fullName: MegaForm.Sdk.MegaFormScope.IsSuperUser
+  nameWithType: MegaFormScope.IsSuperUser
+- uid: MegaForm.Sdk.MegaFormScope.IsSuperUser*
+  name: IsSuperUser
+  href: api/MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_IsSuperUser_
+  commentId: Overload:MegaForm.Sdk.MegaFormScope.IsSuperUser
+  isSpec: "True"
+  fullName: MegaForm.Sdk.MegaFormScope.IsSuperUser
+  nameWithType: MegaFormScope.IsSuperUser
 - uid: MegaForm.Sdk.MegaFormScope.PortalId
   name: PortalId
   href: api/MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_PortalId
@@ -1344,6 +3223,32 @@ references:
   isSpec: "True"
   fullName: MegaForm.Sdk.MegaFormScope.PortalId
   nameWithType: MegaFormScope.PortalId
+- uid: MegaForm.Sdk.MegaFormScope.Roles
+  name: Roles
+  href: api/MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_Roles
+  commentId: P:MegaForm.Sdk.MegaFormScope.Roles
+  fullName: MegaForm.Sdk.MegaFormScope.Roles
+  nameWithType: MegaFormScope.Roles
+- uid: MegaForm.Sdk.MegaFormScope.Roles*
+  name: Roles
+  href: api/MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_Roles_
+  commentId: Overload:MegaForm.Sdk.MegaFormScope.Roles
+  isSpec: "True"
+  fullName: MegaForm.Sdk.MegaFormScope.Roles
+  nameWithType: MegaFormScope.Roles
+- uid: MegaForm.Sdk.MegaFormScope.UserEmail
+  name: UserEmail
+  href: api/MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_UserEmail
+  commentId: P:MegaForm.Sdk.MegaFormScope.UserEmail
+  fullName: MegaForm.Sdk.MegaFormScope.UserEmail
+  nameWithType: MegaFormScope.UserEmail
+- uid: MegaForm.Sdk.MegaFormScope.UserEmail*
+  name: UserEmail
+  href: api/MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_UserEmail_
+  commentId: Overload:MegaForm.Sdk.MegaFormScope.UserEmail
+  isSpec: "True"
+  fullName: MegaForm.Sdk.MegaFormScope.UserEmail
+  nameWithType: MegaFormScope.UserEmail
 - uid: MegaForm.Sdk.MegaFormScope.UserId
   name: UserId
   href: api/MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_UserId
@@ -1357,6 +3262,19 @@ references:
   isSpec: "True"
   fullName: MegaForm.Sdk.MegaFormScope.UserId
   nameWithType: MegaFormScope.UserId
+- uid: MegaForm.Sdk.MegaFormScope.UserName
+  name: UserName
+  href: api/MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_UserName
+  commentId: P:MegaForm.Sdk.MegaFormScope.UserName
+  fullName: MegaForm.Sdk.MegaFormScope.UserName
+  nameWithType: MegaFormScope.UserName
+- uid: MegaForm.Sdk.MegaFormScope.UserName*
+  name: UserName
+  href: api/MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_UserName_
+  commentId: Overload:MegaForm.Sdk.MegaFormScope.UserName
+  isSpec: "True"
+  fullName: MegaForm.Sdk.MegaFormScope.UserName
+  nameWithType: MegaFormScope.UserName
 - uid: MegaForm.Sdk.MegaFormSdk
   name: MegaFormSdk
   href: api/MegaForm.Sdk.MegaFormSdk.html
@@ -1510,6 +3428,187 @@ references:
   fullName.vb: MegaForm.Sdk.PagedResult(Of T).TotalCount
   nameWithType: PagedResult<T>.TotalCount
   nameWithType.vb: PagedResult(Of T).TotalCount
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest
+  name: SendSubmissionToInboxRequest
+  href: api/MegaForm.Sdk.SendSubmissionToInboxRequest.html
+  commentId: T:MegaForm.Sdk.SendSubmissionToInboxRequest
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest
+  nameWithType: SendSubmissionToInboxRequest
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.Comment
+  name: Comment
+  href: api/MegaForm.Sdk.SendSubmissionToInboxRequest.html#MegaForm_Sdk_SendSubmissionToInboxRequest_Comment
+  commentId: P:MegaForm.Sdk.SendSubmissionToInboxRequest.Comment
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.Comment
+  nameWithType: SendSubmissionToInboxRequest.Comment
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.Comment*
+  name: Comment
+  href: api/MegaForm.Sdk.SendSubmissionToInboxRequest.html#MegaForm_Sdk_SendSubmissionToInboxRequest_Comment_
+  commentId: Overload:MegaForm.Sdk.SendSubmissionToInboxRequest.Comment
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.Comment
+  nameWithType: SendSubmissionToInboxRequest.Comment
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.FormId
+  name: FormId
+  href: api/MegaForm.Sdk.SendSubmissionToInboxRequest.html#MegaForm_Sdk_SendSubmissionToInboxRequest_FormId
+  commentId: P:MegaForm.Sdk.SendSubmissionToInboxRequest.FormId
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.FormId
+  nameWithType: SendSubmissionToInboxRequest.FormId
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.FormId*
+  name: FormId
+  href: api/MegaForm.Sdk.SendSubmissionToInboxRequest.html#MegaForm_Sdk_SendSubmissionToInboxRequest_FormId_
+  commentId: Overload:MegaForm.Sdk.SendSubmissionToInboxRequest.FormId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.FormId
+  nameWithType: SendSubmissionToInboxRequest.FormId
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.SubmissionId
+  name: SubmissionId
+  href: api/MegaForm.Sdk.SendSubmissionToInboxRequest.html#MegaForm_Sdk_SendSubmissionToInboxRequest_SubmissionId
+  commentId: P:MegaForm.Sdk.SendSubmissionToInboxRequest.SubmissionId
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.SubmissionId
+  nameWithType: SendSubmissionToInboxRequest.SubmissionId
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.SubmissionId*
+  name: SubmissionId
+  href: api/MegaForm.Sdk.SendSubmissionToInboxRequest.html#MegaForm_Sdk_SendSubmissionToInboxRequest_SubmissionId_
+  commentId: Overload:MegaForm.Sdk.SendSubmissionToInboxRequest.SubmissionId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.SubmissionId
+  nameWithType: SendSubmissionToInboxRequest.SubmissionId
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.TargetUser
+  name: TargetUser
+  href: api/MegaForm.Sdk.SendSubmissionToInboxRequest.html#MegaForm_Sdk_SendSubmissionToInboxRequest_TargetUser
+  commentId: P:MegaForm.Sdk.SendSubmissionToInboxRequest.TargetUser
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.TargetUser
+  nameWithType: SendSubmissionToInboxRequest.TargetUser
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.TargetUser*
+  name: TargetUser
+  href: api/MegaForm.Sdk.SendSubmissionToInboxRequest.html#MegaForm_Sdk_SendSubmissionToInboxRequest_TargetUser_
+  commentId: Overload:MegaForm.Sdk.SendSubmissionToInboxRequest.TargetUser
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.TargetUser
+  nameWithType: SendSubmissionToInboxRequest.TargetUser
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.Title
+  name: Title
+  href: api/MegaForm.Sdk.SendSubmissionToInboxRequest.html#MegaForm_Sdk_SendSubmissionToInboxRequest_Title
+  commentId: P:MegaForm.Sdk.SendSubmissionToInboxRequest.Title
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.Title
+  nameWithType: SendSubmissionToInboxRequest.Title
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.Title*
+  name: Title
+  href: api/MegaForm.Sdk.SendSubmissionToInboxRequest.html#MegaForm_Sdk_SendSubmissionToInboxRequest_Title_
+  commentId: Overload:MegaForm.Sdk.SendSubmissionToInboxRequest.Title
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.Title
+  nameWithType: SendSubmissionToInboxRequest.Title
+- uid: MegaForm.Sdk.SubmissionDetailDto
+  name: SubmissionDetailDto
+  href: api/MegaForm.Sdk.SubmissionDetailDto.html
+  commentId: T:MegaForm.Sdk.SubmissionDetailDto
+  fullName: MegaForm.Sdk.SubmissionDetailDto
+  nameWithType: SubmissionDetailDto
+- uid: MegaForm.Sdk.SubmissionDetailDto.FieldSnapshots
+  name: FieldSnapshots
+  href: api/MegaForm.Sdk.SubmissionDetailDto.html#MegaForm_Sdk_SubmissionDetailDto_FieldSnapshots
+  commentId: P:MegaForm.Sdk.SubmissionDetailDto.FieldSnapshots
+  fullName: MegaForm.Sdk.SubmissionDetailDto.FieldSnapshots
+  nameWithType: SubmissionDetailDto.FieldSnapshots
+- uid: MegaForm.Sdk.SubmissionDetailDto.FieldSnapshots*
+  name: FieldSnapshots
+  href: api/MegaForm.Sdk.SubmissionDetailDto.html#MegaForm_Sdk_SubmissionDetailDto_FieldSnapshots_
+  commentId: Overload:MegaForm.Sdk.SubmissionDetailDto.FieldSnapshots
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionDetailDto.FieldSnapshots
+  nameWithType: SubmissionDetailDto.FieldSnapshots
+- uid: MegaForm.Sdk.SubmissionDetailDto.Files
+  name: Files
+  href: api/MegaForm.Sdk.SubmissionDetailDto.html#MegaForm_Sdk_SubmissionDetailDto_Files
+  commentId: P:MegaForm.Sdk.SubmissionDetailDto.Files
+  fullName: MegaForm.Sdk.SubmissionDetailDto.Files
+  nameWithType: SubmissionDetailDto.Files
+- uid: MegaForm.Sdk.SubmissionDetailDto.Files*
+  name: Files
+  href: api/MegaForm.Sdk.SubmissionDetailDto.html#MegaForm_Sdk_SubmissionDetailDto_Files_
+  commentId: Overload:MegaForm.Sdk.SubmissionDetailDto.Files
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionDetailDto.Files
+  nameWithType: SubmissionDetailDto.Files
+- uid: MegaForm.Sdk.SubmissionDetailDto.Form
+  name: Form
+  href: api/MegaForm.Sdk.SubmissionDetailDto.html#MegaForm_Sdk_SubmissionDetailDto_Form
+  commentId: P:MegaForm.Sdk.SubmissionDetailDto.Form
+  fullName: MegaForm.Sdk.SubmissionDetailDto.Form
+  nameWithType: SubmissionDetailDto.Form
+- uid: MegaForm.Sdk.SubmissionDetailDto.Form*
+  name: Form
+  href: api/MegaForm.Sdk.SubmissionDetailDto.html#MegaForm_Sdk_SubmissionDetailDto_Form_
+  commentId: Overload:MegaForm.Sdk.SubmissionDetailDto.Form
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionDetailDto.Form
+  nameWithType: SubmissionDetailDto.Form
+- uid: MegaForm.Sdk.SubmissionDetailDto.HasSnapshot
+  name: HasSnapshot
+  href: api/MegaForm.Sdk.SubmissionDetailDto.html#MegaForm_Sdk_SubmissionDetailDto_HasSnapshot
+  commentId: P:MegaForm.Sdk.SubmissionDetailDto.HasSnapshot
+  fullName: MegaForm.Sdk.SubmissionDetailDto.HasSnapshot
+  nameWithType: SubmissionDetailDto.HasSnapshot
+- uid: MegaForm.Sdk.SubmissionDetailDto.HasSnapshot*
+  name: HasSnapshot
+  href: api/MegaForm.Sdk.SubmissionDetailDto.html#MegaForm_Sdk_SubmissionDetailDto_HasSnapshot_
+  commentId: Overload:MegaForm.Sdk.SubmissionDetailDto.HasSnapshot
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionDetailDto.HasSnapshot
+  nameWithType: SubmissionDetailDto.HasSnapshot
+- uid: MegaForm.Sdk.SubmissionDetailDto.Schema
+  name: Schema
+  href: api/MegaForm.Sdk.SubmissionDetailDto.html#MegaForm_Sdk_SubmissionDetailDto_Schema
+  commentId: P:MegaForm.Sdk.SubmissionDetailDto.Schema
+  fullName: MegaForm.Sdk.SubmissionDetailDto.Schema
+  nameWithType: SubmissionDetailDto.Schema
+- uid: MegaForm.Sdk.SubmissionDetailDto.Schema*
+  name: Schema
+  href: api/MegaForm.Sdk.SubmissionDetailDto.html#MegaForm_Sdk_SubmissionDetailDto_Schema_
+  commentId: Overload:MegaForm.Sdk.SubmissionDetailDto.Schema
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionDetailDto.Schema
+  nameWithType: SubmissionDetailDto.Schema
+- uid: MegaForm.Sdk.SubmissionDetailDto.Submission
+  name: Submission
+  href: api/MegaForm.Sdk.SubmissionDetailDto.html#MegaForm_Sdk_SubmissionDetailDto_Submission
+  commentId: P:MegaForm.Sdk.SubmissionDetailDto.Submission
+  fullName: MegaForm.Sdk.SubmissionDetailDto.Submission
+  nameWithType: SubmissionDetailDto.Submission
+- uid: MegaForm.Sdk.SubmissionDetailDto.Submission*
+  name: Submission
+  href: api/MegaForm.Sdk.SubmissionDetailDto.html#MegaForm_Sdk_SubmissionDetailDto_Submission_
+  commentId: Overload:MegaForm.Sdk.SubmissionDetailDto.Submission
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionDetailDto.Submission
+  nameWithType: SubmissionDetailDto.Submission
+- uid: MegaForm.Sdk.SubmissionDetailDto.Values
+  name: Values
+  href: api/MegaForm.Sdk.SubmissionDetailDto.html#MegaForm_Sdk_SubmissionDetailDto_Values
+  commentId: P:MegaForm.Sdk.SubmissionDetailDto.Values
+  fullName: MegaForm.Sdk.SubmissionDetailDto.Values
+  nameWithType: SubmissionDetailDto.Values
+- uid: MegaForm.Sdk.SubmissionDetailDto.Values*
+  name: Values
+  href: api/MegaForm.Sdk.SubmissionDetailDto.html#MegaForm_Sdk_SubmissionDetailDto_Values_
+  commentId: Overload:MegaForm.Sdk.SubmissionDetailDto.Values
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionDetailDto.Values
+  nameWithType: SubmissionDetailDto.Values
+- uid: MegaForm.Sdk.SubmissionDetailDto.Workflow
+  name: Workflow
+  href: api/MegaForm.Sdk.SubmissionDetailDto.html#MegaForm_Sdk_SubmissionDetailDto_Workflow
+  commentId: P:MegaForm.Sdk.SubmissionDetailDto.Workflow
+  fullName: MegaForm.Sdk.SubmissionDetailDto.Workflow
+  nameWithType: SubmissionDetailDto.Workflow
+- uid: MegaForm.Sdk.SubmissionDetailDto.Workflow*
+  name: Workflow
+  href: api/MegaForm.Sdk.SubmissionDetailDto.html#MegaForm_Sdk_SubmissionDetailDto_Workflow_
+  commentId: Overload:MegaForm.Sdk.SubmissionDetailDto.Workflow
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionDetailDto.Workflow
+  nameWithType: SubmissionDetailDto.Workflow
 - uid: MegaForm.Sdk.SubmissionDto
   name: SubmissionDto
   href: api/MegaForm.Sdk.SubmissionDto.html
@@ -1607,6 +3706,265 @@ references:
   isSpec: "True"
   fullName: MegaForm.Sdk.SubmissionDto.UserId
   nameWithType: SubmissionDto.UserId
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto
+  name: SubmissionFieldSnapshotDto
+  href: api/MegaForm.Sdk.SubmissionFieldSnapshotDto.html
+  commentId: T:MegaForm.Sdk.SubmissionFieldSnapshotDto
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto
+  nameWithType: SubmissionFieldSnapshotDto
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue
+  name: DisplayValue
+  href: api/MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_DisplayValue
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue
+  nameWithType: SubmissionFieldSnapshotDto.DisplayValue
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue*
+  name: DisplayValue
+  href: api/MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_DisplayValue_
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue
+  nameWithType: SubmissionFieldSnapshotDto.DisplayValue
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey
+  name: FieldKey
+  href: api/MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_FieldKey
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey
+  nameWithType: SubmissionFieldSnapshotDto.FieldKey
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey*
+  name: FieldKey
+  href: api/MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_FieldKey_
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey
+  nameWithType: SubmissionFieldSnapshotDto.FieldKey
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel
+  name: FieldLabel
+  href: api/MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_FieldLabel
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel
+  nameWithType: SubmissionFieldSnapshotDto.FieldLabel
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel*
+  name: FieldLabel
+  href: api/MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_FieldLabel_
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel
+  nameWithType: SubmissionFieldSnapshotDto.FieldLabel
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType
+  name: FieldType
+  href: api/MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_FieldType
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType
+  nameWithType: SubmissionFieldSnapshotDto.FieldType
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType*
+  name: FieldType
+  href: api/MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_FieldType_
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType
+  nameWithType: SubmissionFieldSnapshotDto.FieldType
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback
+  name: IsLegacyFallback
+  href: api/MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_IsLegacyFallback
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback
+  nameWithType: SubmissionFieldSnapshotDto.IsLegacyFallback
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback*
+  name: IsLegacyFallback
+  href: api/MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_IsLegacyFallback_
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback
+  nameWithType: SubmissionFieldSnapshotDto.IsLegacyFallback
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue
+  name: RawValue
+  href: api/MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_RawValue
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue
+  nameWithType: SubmissionFieldSnapshotDto.RawValue
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue*
+  name: RawValue
+  href: api/MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_RawValue_
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue
+  nameWithType: SubmissionFieldSnapshotDto.RawValue
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder
+  name: SortOrder
+  href: api/MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_SortOrder
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder
+  nameWithType: SubmissionFieldSnapshotDto.SortOrder
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder*
+  name: SortOrder
+  href: api/MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_SortOrder_
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder
+  nameWithType: SubmissionFieldSnapshotDto.SortOrder
+- uid: MegaForm.Sdk.SubmissionListItemDto
+  name: SubmissionListItemDto
+  href: api/MegaForm.Sdk.SubmissionListItemDto.html
+  commentId: T:MegaForm.Sdk.SubmissionListItemDto
+  fullName: MegaForm.Sdk.SubmissionListItemDto
+  nameWithType: SubmissionListItemDto
+- uid: MegaForm.Sdk.SubmissionListItemDto.DataJson
+  name: DataJson
+  href: api/MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_DataJson
+  commentId: P:MegaForm.Sdk.SubmissionListItemDto.DataJson
+  fullName: MegaForm.Sdk.SubmissionListItemDto.DataJson
+  nameWithType: SubmissionListItemDto.DataJson
+- uid: MegaForm.Sdk.SubmissionListItemDto.DataJson*
+  name: DataJson
+  href: api/MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_DataJson_
+  commentId: Overload:MegaForm.Sdk.SubmissionListItemDto.DataJson
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionListItemDto.DataJson
+  nameWithType: SubmissionListItemDto.DataJson
+- uid: MegaForm.Sdk.SubmissionListItemDto.FormId
+  name: FormId
+  href: api/MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_FormId
+  commentId: P:MegaForm.Sdk.SubmissionListItemDto.FormId
+  fullName: MegaForm.Sdk.SubmissionListItemDto.FormId
+  nameWithType: SubmissionListItemDto.FormId
+- uid: MegaForm.Sdk.SubmissionListItemDto.FormId*
+  name: FormId
+  href: api/MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_FormId_
+  commentId: Overload:MegaForm.Sdk.SubmissionListItemDto.FormId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionListItemDto.FormId
+  nameWithType: SubmissionListItemDto.FormId
+- uid: MegaForm.Sdk.SubmissionListItemDto.FormTitle
+  name: FormTitle
+  href: api/MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_FormTitle
+  commentId: P:MegaForm.Sdk.SubmissionListItemDto.FormTitle
+  fullName: MegaForm.Sdk.SubmissionListItemDto.FormTitle
+  nameWithType: SubmissionListItemDto.FormTitle
+- uid: MegaForm.Sdk.SubmissionListItemDto.FormTitle*
+  name: FormTitle
+  href: api/MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_FormTitle_
+  commentId: Overload:MegaForm.Sdk.SubmissionListItemDto.FormTitle
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionListItemDto.FormTitle
+  nameWithType: SubmissionListItemDto.FormTitle
+- uid: MegaForm.Sdk.SubmissionListItemDto.IpAddress
+  name: IpAddress
+  href: api/MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_IpAddress
+  commentId: P:MegaForm.Sdk.SubmissionListItemDto.IpAddress
+  fullName: MegaForm.Sdk.SubmissionListItemDto.IpAddress
+  nameWithType: SubmissionListItemDto.IpAddress
+- uid: MegaForm.Sdk.SubmissionListItemDto.IpAddress*
+  name: IpAddress
+  href: api/MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_IpAddress_
+  commentId: Overload:MegaForm.Sdk.SubmissionListItemDto.IpAddress
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionListItemDto.IpAddress
+  nameWithType: SubmissionListItemDto.IpAddress
+- uid: MegaForm.Sdk.SubmissionListItemDto.IsSpam
+  name: IsSpam
+  href: api/MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_IsSpam
+  commentId: P:MegaForm.Sdk.SubmissionListItemDto.IsSpam
+  fullName: MegaForm.Sdk.SubmissionListItemDto.IsSpam
+  nameWithType: SubmissionListItemDto.IsSpam
+- uid: MegaForm.Sdk.SubmissionListItemDto.IsSpam*
+  name: IsSpam
+  href: api/MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_IsSpam_
+  commentId: Overload:MegaForm.Sdk.SubmissionListItemDto.IsSpam
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionListItemDto.IsSpam
+  nameWithType: SubmissionListItemDto.IsSpam
+- uid: MegaForm.Sdk.SubmissionListItemDto.ReadOnUtc
+  name: ReadOnUtc
+  href: api/MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_ReadOnUtc
+  commentId: P:MegaForm.Sdk.SubmissionListItemDto.ReadOnUtc
+  fullName: MegaForm.Sdk.SubmissionListItemDto.ReadOnUtc
+  nameWithType: SubmissionListItemDto.ReadOnUtc
+- uid: MegaForm.Sdk.SubmissionListItemDto.ReadOnUtc*
+  name: ReadOnUtc
+  href: api/MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_ReadOnUtc_
+  commentId: Overload:MegaForm.Sdk.SubmissionListItemDto.ReadOnUtc
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionListItemDto.ReadOnUtc
+  nameWithType: SubmissionListItemDto.ReadOnUtc
+- uid: MegaForm.Sdk.SubmissionListItemDto.SpamScore
+  name: SpamScore
+  href: api/MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_SpamScore
+  commentId: P:MegaForm.Sdk.SubmissionListItemDto.SpamScore
+  fullName: MegaForm.Sdk.SubmissionListItemDto.SpamScore
+  nameWithType: SubmissionListItemDto.SpamScore
+- uid: MegaForm.Sdk.SubmissionListItemDto.SpamScore*
+  name: SpamScore
+  href: api/MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_SpamScore_
+  commentId: Overload:MegaForm.Sdk.SubmissionListItemDto.SpamScore
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionListItemDto.SpamScore
+  nameWithType: SubmissionListItemDto.SpamScore
+- uid: MegaForm.Sdk.SubmissionListItemDto.Status
+  name: Status
+  href: api/MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_Status
+  commentId: P:MegaForm.Sdk.SubmissionListItemDto.Status
+  fullName: MegaForm.Sdk.SubmissionListItemDto.Status
+  nameWithType: SubmissionListItemDto.Status
+- uid: MegaForm.Sdk.SubmissionListItemDto.Status*
+  name: Status
+  href: api/MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_Status_
+  commentId: Overload:MegaForm.Sdk.SubmissionListItemDto.Status
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionListItemDto.Status
+  nameWithType: SubmissionListItemDto.Status
+- uid: MegaForm.Sdk.SubmissionListItemDto.SubmissionId
+  name: SubmissionId
+  href: api/MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_SubmissionId
+  commentId: P:MegaForm.Sdk.SubmissionListItemDto.SubmissionId
+  fullName: MegaForm.Sdk.SubmissionListItemDto.SubmissionId
+  nameWithType: SubmissionListItemDto.SubmissionId
+- uid: MegaForm.Sdk.SubmissionListItemDto.SubmissionId*
+  name: SubmissionId
+  href: api/MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_SubmissionId_
+  commentId: Overload:MegaForm.Sdk.SubmissionListItemDto.SubmissionId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionListItemDto.SubmissionId
+  nameWithType: SubmissionListItemDto.SubmissionId
+- uid: MegaForm.Sdk.SubmissionListItemDto.SubmittedOnUtc
+  name: SubmittedOnUtc
+  href: api/MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_SubmittedOnUtc
+  commentId: P:MegaForm.Sdk.SubmissionListItemDto.SubmittedOnUtc
+  fullName: MegaForm.Sdk.SubmissionListItemDto.SubmittedOnUtc
+  nameWithType: SubmissionListItemDto.SubmittedOnUtc
+- uid: MegaForm.Sdk.SubmissionListItemDto.SubmittedOnUtc*
+  name: SubmittedOnUtc
+  href: api/MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_SubmittedOnUtc_
+  commentId: Overload:MegaForm.Sdk.SubmissionListItemDto.SubmittedOnUtc
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionListItemDto.SubmittedOnUtc
+  nameWithType: SubmissionListItemDto.SubmittedOnUtc
+- uid: MegaForm.Sdk.SubmissionListItemDto.SummaryText
+  name: SummaryText
+  href: api/MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_SummaryText
+  commentId: P:MegaForm.Sdk.SubmissionListItemDto.SummaryText
+  fullName: MegaForm.Sdk.SubmissionListItemDto.SummaryText
+  nameWithType: SubmissionListItemDto.SummaryText
+- uid: MegaForm.Sdk.SubmissionListItemDto.SummaryText*
+  name: SummaryText
+  href: api/MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_SummaryText_
+  commentId: Overload:MegaForm.Sdk.SubmissionListItemDto.SummaryText
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionListItemDto.SummaryText
+  nameWithType: SubmissionListItemDto.SummaryText
+- uid: MegaForm.Sdk.SubmissionListItemDto.UserId
+  name: UserId
+  href: api/MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_UserId
+  commentId: P:MegaForm.Sdk.SubmissionListItemDto.UserId
+  fullName: MegaForm.Sdk.SubmissionListItemDto.UserId
+  nameWithType: SubmissionListItemDto.UserId
+- uid: MegaForm.Sdk.SubmissionListItemDto.UserId*
+  name: UserId
+  href: api/MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_UserId_
+  commentId: Overload:MegaForm.Sdk.SubmissionListItemDto.UserId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionListItemDto.UserId
+  nameWithType: SubmissionListItemDto.UserId
 - uid: MegaForm.Sdk.SubmissionQuery
   name: SubmissionQuery
   href: api/MegaForm.Sdk.SubmissionQuery.html
@@ -1665,6 +4023,271 @@ references:
   isSpec: "True"
   fullName: MegaForm.Sdk.SubmissionQuery.Status
   nameWithType: SubmissionQuery.Status
+- uid: MegaForm.Sdk.SubmissionSearchQuery
+  name: SubmissionSearchQuery
+  href: api/MegaForm.Sdk.SubmissionSearchQuery.html
+  commentId: T:MegaForm.Sdk.SubmissionSearchQuery
+  fullName: MegaForm.Sdk.SubmissionSearchQuery
+  nameWithType: SubmissionSearchQuery
+- uid: MegaForm.Sdk.SubmissionSearchQuery.DateFrom
+  name: DateFrom
+  href: api/MegaForm.Sdk.SubmissionSearchQuery.html#MegaForm_Sdk_SubmissionSearchQuery_DateFrom
+  commentId: P:MegaForm.Sdk.SubmissionSearchQuery.DateFrom
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.DateFrom
+  nameWithType: SubmissionSearchQuery.DateFrom
+- uid: MegaForm.Sdk.SubmissionSearchQuery.DateFrom*
+  name: DateFrom
+  href: api/MegaForm.Sdk.SubmissionSearchQuery.html#MegaForm_Sdk_SubmissionSearchQuery_DateFrom_
+  commentId: Overload:MegaForm.Sdk.SubmissionSearchQuery.DateFrom
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.DateFrom
+  nameWithType: SubmissionSearchQuery.DateFrom
+- uid: MegaForm.Sdk.SubmissionSearchQuery.DateTo
+  name: DateTo
+  href: api/MegaForm.Sdk.SubmissionSearchQuery.html#MegaForm_Sdk_SubmissionSearchQuery_DateTo
+  commentId: P:MegaForm.Sdk.SubmissionSearchQuery.DateTo
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.DateTo
+  nameWithType: SubmissionSearchQuery.DateTo
+- uid: MegaForm.Sdk.SubmissionSearchQuery.DateTo*
+  name: DateTo
+  href: api/MegaForm.Sdk.SubmissionSearchQuery.html#MegaForm_Sdk_SubmissionSearchQuery_DateTo_
+  commentId: Overload:MegaForm.Sdk.SubmissionSearchQuery.DateTo
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.DateTo
+  nameWithType: SubmissionSearchQuery.DateTo
+- uid: MegaForm.Sdk.SubmissionSearchQuery.FormId
+  name: FormId
+  href: api/MegaForm.Sdk.SubmissionSearchQuery.html#MegaForm_Sdk_SubmissionSearchQuery_FormId
+  commentId: P:MegaForm.Sdk.SubmissionSearchQuery.FormId
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.FormId
+  nameWithType: SubmissionSearchQuery.FormId
+- uid: MegaForm.Sdk.SubmissionSearchQuery.FormId*
+  name: FormId
+  href: api/MegaForm.Sdk.SubmissionSearchQuery.html#MegaForm_Sdk_SubmissionSearchQuery_FormId_
+  commentId: Overload:MegaForm.Sdk.SubmissionSearchQuery.FormId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.FormId
+  nameWithType: SubmissionSearchQuery.FormId
+- uid: MegaForm.Sdk.SubmissionSearchQuery.Page
+  name: Page
+  href: api/MegaForm.Sdk.SubmissionSearchQuery.html#MegaForm_Sdk_SubmissionSearchQuery_Page
+  commentId: P:MegaForm.Sdk.SubmissionSearchQuery.Page
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.Page
+  nameWithType: SubmissionSearchQuery.Page
+- uid: MegaForm.Sdk.SubmissionSearchQuery.Page*
+  name: Page
+  href: api/MegaForm.Sdk.SubmissionSearchQuery.html#MegaForm_Sdk_SubmissionSearchQuery_Page_
+  commentId: Overload:MegaForm.Sdk.SubmissionSearchQuery.Page
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.Page
+  nameWithType: SubmissionSearchQuery.Page
+- uid: MegaForm.Sdk.SubmissionSearchQuery.PageSize
+  name: PageSize
+  href: api/MegaForm.Sdk.SubmissionSearchQuery.html#MegaForm_Sdk_SubmissionSearchQuery_PageSize
+  commentId: P:MegaForm.Sdk.SubmissionSearchQuery.PageSize
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.PageSize
+  nameWithType: SubmissionSearchQuery.PageSize
+- uid: MegaForm.Sdk.SubmissionSearchQuery.PageSize*
+  name: PageSize
+  href: api/MegaForm.Sdk.SubmissionSearchQuery.html#MegaForm_Sdk_SubmissionSearchQuery_PageSize_
+  commentId: Overload:MegaForm.Sdk.SubmissionSearchQuery.PageSize
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.PageSize
+  nameWithType: SubmissionSearchQuery.PageSize
+- uid: MegaForm.Sdk.SubmissionSearchQuery.Search
+  name: Search
+  href: api/MegaForm.Sdk.SubmissionSearchQuery.html#MegaForm_Sdk_SubmissionSearchQuery_Search
+  commentId: P:MegaForm.Sdk.SubmissionSearchQuery.Search
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.Search
+  nameWithType: SubmissionSearchQuery.Search
+- uid: MegaForm.Sdk.SubmissionSearchQuery.Search*
+  name: Search
+  href: api/MegaForm.Sdk.SubmissionSearchQuery.html#MegaForm_Sdk_SubmissionSearchQuery_Search_
+  commentId: Overload:MegaForm.Sdk.SubmissionSearchQuery.Search
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.Search
+  nameWithType: SubmissionSearchQuery.Search
+- uid: MegaForm.Sdk.SubmissionSearchQuery.Status
+  name: Status
+  href: api/MegaForm.Sdk.SubmissionSearchQuery.html#MegaForm_Sdk_SubmissionSearchQuery_Status
+  commentId: P:MegaForm.Sdk.SubmissionSearchQuery.Status
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.Status
+  nameWithType: SubmissionSearchQuery.Status
+- uid: MegaForm.Sdk.SubmissionSearchQuery.Status*
+  name: Status
+  href: api/MegaForm.Sdk.SubmissionSearchQuery.html#MegaForm_Sdk_SubmissionSearchQuery_Status_
+  commentId: Overload:MegaForm.Sdk.SubmissionSearchQuery.Status
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.Status
+  nameWithType: SubmissionSearchQuery.Status
+- uid: MegaForm.Sdk.SubmissionValueDto
+  name: SubmissionValueDto
+  href: api/MegaForm.Sdk.SubmissionValueDto.html
+  commentId: T:MegaForm.Sdk.SubmissionValueDto
+  fullName: MegaForm.Sdk.SubmissionValueDto
+  nameWithType: SubmissionValueDto
+- uid: MegaForm.Sdk.SubmissionValueDto.Key
+  name: Key
+  href: api/MegaForm.Sdk.SubmissionValueDto.html#MegaForm_Sdk_SubmissionValueDto_Key
+  commentId: P:MegaForm.Sdk.SubmissionValueDto.Key
+  fullName: MegaForm.Sdk.SubmissionValueDto.Key
+  nameWithType: SubmissionValueDto.Key
+- uid: MegaForm.Sdk.SubmissionValueDto.Key*
+  name: Key
+  href: api/MegaForm.Sdk.SubmissionValueDto.html#MegaForm_Sdk_SubmissionValueDto_Key_
+  commentId: Overload:MegaForm.Sdk.SubmissionValueDto.Key
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionValueDto.Key
+  nameWithType: SubmissionValueDto.Key
+- uid: MegaForm.Sdk.SubmissionValueDto.Value
+  name: Value
+  href: api/MegaForm.Sdk.SubmissionValueDto.html#MegaForm_Sdk_SubmissionValueDto_Value
+  commentId: P:MegaForm.Sdk.SubmissionValueDto.Value
+  fullName: MegaForm.Sdk.SubmissionValueDto.Value
+  nameWithType: SubmissionValueDto.Value
+- uid: MegaForm.Sdk.SubmissionValueDto.Value*
+  name: Value
+  href: api/MegaForm.Sdk.SubmissionValueDto.html#MegaForm_Sdk_SubmissionValueDto_Value_
+  commentId: Overload:MegaForm.Sdk.SubmissionValueDto.Value
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionValueDto.Value
+  nameWithType: SubmissionValueDto.Value
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto
+  name: SubmissionWorkflowSummaryDto
+  href: api/MegaForm.Sdk.SubmissionWorkflowSummaryDto.html
+  commentId: T:MegaForm.Sdk.SubmissionWorkflowSummaryDto
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto
+  nameWithType: SubmissionWorkflowSummaryDto
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActionCount
+  name: ActionCount
+  href: api/MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_ActionCount
+  commentId: P:MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActionCount
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActionCount
+  nameWithType: SubmissionWorkflowSummaryDto.ActionCount
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActionCount*
+  name: ActionCount
+  href: api/MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_ActionCount_
+  commentId: Overload:MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActionCount
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActionCount
+  nameWithType: SubmissionWorkflowSummaryDto.ActionCount
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.Actions
+  name: Actions
+  href: api/MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_Actions
+  commentId: P:MegaForm.Sdk.SubmissionWorkflowSummaryDto.Actions
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.Actions
+  nameWithType: SubmissionWorkflowSummaryDto.Actions
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.Actions*
+  name: Actions
+  href: api/MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_Actions_
+  commentId: Overload:MegaForm.Sdk.SubmissionWorkflowSummaryDto.Actions
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.Actions
+  nameWithType: SubmissionWorkflowSummaryDto.Actions
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveNodeLabel
+  name: ActiveNodeLabel
+  href: api/MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_ActiveNodeLabel
+  commentId: P:MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveNodeLabel
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveNodeLabel
+  nameWithType: SubmissionWorkflowSummaryDto.ActiveNodeLabel
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveNodeLabel*
+  name: ActiveNodeLabel
+  href: api/MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_ActiveNodeLabel_
+  commentId: Overload:MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveNodeLabel
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveNodeLabel
+  nameWithType: SubmissionWorkflowSummaryDto.ActiveNodeLabel
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveTaskId
+  name: ActiveTaskId
+  href: api/MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_ActiveTaskId
+  commentId: P:MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveTaskId
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveTaskId
+  nameWithType: SubmissionWorkflowSummaryDto.ActiveTaskId
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveTaskId*
+  name: ActiveTaskId
+  href: api/MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_ActiveTaskId_
+  commentId: Overload:MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveTaskId
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveTaskId
+  nameWithType: SubmissionWorkflowSummaryDto.ActiveTaskId
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.CaseStatus
+  name: CaseStatus
+  href: api/MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_CaseStatus
+  commentId: P:MegaForm.Sdk.SubmissionWorkflowSummaryDto.CaseStatus
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.CaseStatus
+  nameWithType: SubmissionWorkflowSummaryDto.CaseStatus
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.CaseStatus*
+  name: CaseStatus
+  href: api/MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_CaseStatus_
+  commentId: Overload:MegaForm.Sdk.SubmissionWorkflowSummaryDto.CaseStatus
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.CaseStatus
+  nameWithType: SubmissionWorkflowSummaryDto.CaseStatus
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ExecutionStatus
+  name: ExecutionStatus
+  href: api/MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_ExecutionStatus
+  commentId: P:MegaForm.Sdk.SubmissionWorkflowSummaryDto.ExecutionStatus
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ExecutionStatus
+  nameWithType: SubmissionWorkflowSummaryDto.ExecutionStatus
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ExecutionStatus*
+  name: ExecutionStatus
+  href: api/MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_ExecutionStatus_
+  commentId: Overload:MegaForm.Sdk.SubmissionWorkflowSummaryDto.ExecutionStatus
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ExecutionStatus
+  nameWithType: SubmissionWorkflowSummaryDto.ExecutionStatus
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.HasWorkflow
+  name: HasWorkflow
+  href: api/MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_HasWorkflow
+  commentId: P:MegaForm.Sdk.SubmissionWorkflowSummaryDto.HasWorkflow
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.HasWorkflow
+  nameWithType: SubmissionWorkflowSummaryDto.HasWorkflow
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.HasWorkflow*
+  name: HasWorkflow
+  href: api/MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_HasWorkflow_
+  commentId: Overload:MegaForm.Sdk.SubmissionWorkflowSummaryDto.HasWorkflow
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.HasWorkflow
+  nameWithType: SubmissionWorkflowSummaryDto.HasWorkflow
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.OpenTaskCount
+  name: OpenTaskCount
+  href: api/MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_OpenTaskCount
+  commentId: P:MegaForm.Sdk.SubmissionWorkflowSummaryDto.OpenTaskCount
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.OpenTaskCount
+  nameWithType: SubmissionWorkflowSummaryDto.OpenTaskCount
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.OpenTaskCount*
+  name: OpenTaskCount
+  href: api/MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_OpenTaskCount_
+  commentId: Overload:MegaForm.Sdk.SubmissionWorkflowSummaryDto.OpenTaskCount
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.OpenTaskCount
+  nameWithType: SubmissionWorkflowSummaryDto.OpenTaskCount
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.TaskCount
+  name: TaskCount
+  href: api/MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_TaskCount
+  commentId: P:MegaForm.Sdk.SubmissionWorkflowSummaryDto.TaskCount
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.TaskCount
+  nameWithType: SubmissionWorkflowSummaryDto.TaskCount
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.TaskCount*
+  name: TaskCount
+  href: api/MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_TaskCount_
+  commentId: Overload:MegaForm.Sdk.SubmissionWorkflowSummaryDto.TaskCount
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.TaskCount
+  nameWithType: SubmissionWorkflowSummaryDto.TaskCount
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.Tasks
+  name: Tasks
+  href: api/MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_Tasks
+  commentId: P:MegaForm.Sdk.SubmissionWorkflowSummaryDto.Tasks
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.Tasks
+  nameWithType: SubmissionWorkflowSummaryDto.Tasks
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.Tasks*
+  name: Tasks
+  href: api/MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_Tasks_
+  commentId: Overload:MegaForm.Sdk.SubmissionWorkflowSummaryDto.Tasks
+  isSpec: "True"
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.Tasks
+  nameWithType: SubmissionWorkflowSummaryDto.Tasks
 - uid: MegaForm.Sdk.SubmitResult
   name: SubmitResult
   href: api/MegaForm.Sdk.SubmitResult.html

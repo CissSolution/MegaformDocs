@@ -2,9 +2,9 @@
 <html>
   <head>
     <meta charset="utf-8">
-      <title>MegaForm Documentation | MegaForm Documentation </title>
+      <title>MegaForm SDK — DocFX documentation site | MegaForm Documentation </title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta name="title" content="MegaForm Documentation | MegaForm Documentation ">
+      <meta name="title" content="MegaForm SDK — DocFX documentation site | MegaForm Documentation ">
       
       
       <link rel="icon" href="favicon.ico">
@@ -16,7 +16,7 @@
       <meta name="docfx:rel" content="">
       
       
-      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/main/README.md/#L1">
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/Docs/docfx/README.md/#L1">
       <meta name="loc:inThisArticle" content="In this article">
       <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
       <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
@@ -71,58 +71,46 @@
         </div>
 
         <article data-uid="">
-<h1 id="megaform-documentation">MegaForm Documentation</h1>
+<h1 id="megaform-sdk--docfx-documentation-site">MegaForm SDK — DocFX documentation site</h1>
 
-<p>This repository hosts the <strong>MegaForm SDK</strong> documentation site built with
-<a href="https://dotnet.github.io/docfx/">DocFX</a>.</p>
-<h2 id="live-site">Live site</h2>
-<p>The built site is published to GitHub Pages from the <code>gh-pages</code> branch:</p>
-<p><strong><a href="https://cisssolution.github.io/MegaformDocs/">https://cisssolution.github.io/MegaformDocs/</a></strong></p>
-<h2 id="branches">Branches</h2>
-<table>
-<thead>
-<tr>
-<th>Branch</th>
-<th>Purpose</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>main</code></td>
-<td>DocFX source files (Markdown guides, API <code>.yml</code>, images, config)</td>
-</tr>
-<tr>
-<td><code>gh-pages</code></td>
-<td>Generated static HTML site served by GitHub Pages</td>
-</tr>
-</tbody>
-</table>
-<h2 id="updating-the-documentation">Updating the documentation</h2>
-<p>The easiest way: push your Markdown edits to the <code>main</code> branch. GitHub Actions will
-automatically build the site with DocFX and update the <code>gh-pages</code> branch.</p>
-<h3 id="manual-update">Manual update</h3>
-<ol>
-<li>Edit the Markdown sources in <code>articles/</code> or the landing pages (<code>index.md</code>, <code>api/index.md</code>).</li>
-<li>To refresh the API reference from the <code>MegaForm.Sdk</code> source code, run <code>docfx metadata</code>
-against the main MegaForm solution and copy the generated <code>api/*.yml</code> files into this repo.</li>
-<li>Build locally:
-<pre><code class="lang-powershell">docfx docfx.json
-</code></pre>
-</li>
-<li>Copy the contents of <code>_site/</code> to the <code>gh-pages</code> branch and push.</li>
-</ol>
+<p>This folder is a self-contained <a href="https://dotnet.github.io/docfx/">DocFX</a> project that builds the
+<strong>MegaForm SDK</strong> documentation: English conceptual guides, screenshots, and an API reference
+generated from the <code>MegaForm.Sdk</code> XML doc comments.</p>
 <h2 id="layout">Layout</h2>
-<pre><code>.
-  docfx.json          DocFX build config (no metadata — uses checked-in api/*.yml)
-  index.md            Landing page
-  toc.yml             Top navigation
-  articles/           English conceptual guides
-  api/                Generated API reference YAML
-  images/             Screenshots used by the guides
-  _site/              Build output (not committed to main)
+<pre><code>Docs/docfx/
+  docfx.json          DocFX config (metadata + build)
+  index.md            landing page
+  toc.yml             top navigation (Home / Guides / API Reference)
+  articles/           the 8 English guides (overview, installation, quickstart, …)
+  api/                generated *.yml API metadata + api/index.md
+  images/             screenshots used by the guides
+  _site/              build output (open _site/index.html)
 </code></pre>
-<h2 id="license">License</h2>
-<p>© 2026 MegaForm. All rights reserved.</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<pre><code class="lang-powershell">dotnet tool install -g docfx     # one time (installs docfx 2.78+)
+</code></pre>
+<h2 id="build">Build</h2>
+<pre><code class="lang-powershell"># from the repo root
+docfx &quot;Docs/docfx/docfx.json&quot;            # metadata + build in one step
+# or step by step:
+docfx metadata &quot;Docs/docfx/docfx.json&quot;   # regenerate api/*.yml from MegaForm.Sdk
+docfx build    &quot;Docs/docfx/docfx.json&quot;   # build the static site into _site/
+</code></pre>
+<h2 id="preview-locally">Preview locally</h2>
+<pre><code class="lang-powershell">docfx serve &quot;Docs/docfx/_site&quot; -p 8089
+# then open http://localhost:8089
+</code></pre>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>The API reference is generated from <code>MegaForm.Sdk</code> (single TFM <code>net10.0</code>, set in
+<code>docfx.json</code> → <code>metadata.properties.TargetFramework</code>). Re-run <code>docfx metadata</code> after changing
+any public SDK type or its XML comments.</li>
+<li>Conceptual guides live in <code>articles/</code> as plain Markdown. Add a new guide by creating the <code>.md</code>
+file and adding it to <code>articles/toc.yml</code>.</li>
+<li>Images are referenced as <code>images/…</code> from the root pages and <code>../images/…</code> from <code>articles/</code>.</li>
+<li>To publish to GitHub Pages, push the contents of <code>_site/</code> to a <code>gh-pages</code> branch (or use a
+GitHub Action that runs <code>docfx</code> and deploys <code>_site</code>).</li>
+</ul>
 
 </article>
 
