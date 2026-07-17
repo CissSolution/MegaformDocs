@@ -21,9 +21,13 @@ items:
   fullName: MegaForm.Sdk.SubmitResult
   type: Class
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: SubmitResult
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 167
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 191
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -58,9 +62,13 @@ items:
   fullName: MegaForm.Sdk.SubmitResult.Success
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: Success
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 170
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 194
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -85,9 +93,13 @@ items:
   fullName: MegaForm.Sdk.SubmitResult.SubmissionId
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: SubmissionId
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 173
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 197
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -112,9 +124,13 @@ items:
   fullName: MegaForm.Sdk.SubmitResult.ErrorMessage
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: ErrorMessage
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 176
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 200
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -139,9 +155,13 @@ items:
   fullName: MegaForm.Sdk.SubmitResult.SuccessMessage
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: SuccessMessage
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 179
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 203
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -166,9 +186,13 @@ items:
   fullName: MegaForm.Sdk.SubmitResult.RedirectUrl
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: RedirectUrl
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 182
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 206
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -193,9 +217,13 @@ items:
   fullName: MegaForm.Sdk.SubmitResult.IsSpam
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: IsSpam
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 185
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 209
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -220,9 +248,13 @@ items:
   fullName: MegaForm.Sdk.SubmitResult.SpamScore
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: SpamScore
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 188
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 212
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -247,9 +279,13 @@ items:
   fullName: MegaForm.Sdk.SubmitResult.ValidationErrors
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: ValidationErrors
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 191
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 215
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk

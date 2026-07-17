@@ -1,36 +1,34 @@
 ### YamlMime:ManagedReference
 items:
-- uid: MegaForm.Sdk.MegaFormFileContent
-  commentId: T:MegaForm.Sdk.MegaFormFileContent
-  id: MegaFormFileContent
+- uid: MegaForm.Sdk.InboxQuery
+  commentId: T:MegaForm.Sdk.InboxQuery
+  id: InboxQuery
   parent: MegaForm.Sdk
   children:
-  - MegaForm.Sdk.MegaFormFileContent.Content
-  - MegaForm.Sdk.MegaFormFileContent.ContentType
-  - MegaForm.Sdk.MegaFormFileContent.FileName
+  - MegaForm.Sdk.InboxQuery.RecentCompleted
   langs:
   - csharp
   - vb
-  name: MegaFormFileContent
-  nameWithType: MegaFormFileContent
-  fullName: MegaForm.Sdk.MegaFormFileContent
+  name: InboxQuery
+  nameWithType: InboxQuery
+  fullName: MegaForm.Sdk.InboxQuery
   type: Class
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: MegaFormFileContent
+    id: InboxQuery
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 174
+    startLine: 373
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: The bytes + metadata of a file, ready to stream to a download response.
+  summary: Options for the current actor's inbox board.
   example: []
   syntax:
-    content: public sealed class MegaFormFileContent
-    content.vb: Public NotInheritable Class MegaFormFileContent
+    content: public sealed class InboxQuery
+    content.vb: Public NotInheritable Class InboxQuery
   inheritance:
   - System.Object
   inheritedMembers:
@@ -40,99 +38,35 @@ items:
   - System.Object.GetType
   - System.Object.ReferenceEquals(System.Object,System.Object)
   - System.Object.ToString
-- uid: MegaForm.Sdk.MegaFormFileContent.FileName
-  commentId: P:MegaForm.Sdk.MegaFormFileContent.FileName
-  id: FileName
-  parent: MegaForm.Sdk.MegaFormFileContent
+- uid: MegaForm.Sdk.InboxQuery.RecentCompleted
+  commentId: P:MegaForm.Sdk.InboxQuery.RecentCompleted
+  id: RecentCompleted
+  parent: MegaForm.Sdk.InboxQuery
   langs:
   - csharp
   - vb
-  name: FileName
-  nameWithType: MegaFormFileContent.FileName
-  fullName: MegaForm.Sdk.MegaFormFileContent.FileName
+  name: RecentCompleted
+  nameWithType: InboxQuery.RecentCompleted
+  fullName: MegaForm.Sdk.InboxQuery.RecentCompleted
   type: Property
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: FileName
+    id: RecentCompleted
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 177
+    startLine: 375
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Original file name to present to the downloader.
-  example: []
   syntax:
-    content: public string FileName { get; set; }
+    content: public int RecentCompleted { get; set; }
     parameters: []
     return:
-      type: System.String
-    content.vb: Public Property FileName As String
-  overload: MegaForm.Sdk.MegaFormFileContent.FileName*
-- uid: MegaForm.Sdk.MegaFormFileContent.ContentType
-  commentId: P:MegaForm.Sdk.MegaFormFileContent.ContentType
-  id: ContentType
-  parent: MegaForm.Sdk.MegaFormFileContent
-  langs:
-  - csharp
-  - vb
-  name: ContentType
-  nameWithType: MegaFormFileContent.ContentType
-  fullName: MegaForm.Sdk.MegaFormFileContent.ContentType
-  type: Property
-  source:
-    remote:
-      path: MegaForm.Sdk/Dtos.cs
-      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
-      repo: https://github.com/CissSolution/MegaformDocs.git
-    id: ContentType
-    path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 180
-  assemblies:
-  - MegaForm.Sdk
-  namespace: MegaForm.Sdk
-  summary: MIME content type of the file.
-  example: []
-  syntax:
-    content: public string ContentType { get; set; }
-    parameters: []
-    return:
-      type: System.String
-    content.vb: Public Property ContentType As String
-  overload: MegaForm.Sdk.MegaFormFileContent.ContentType*
-- uid: MegaForm.Sdk.MegaFormFileContent.Content
-  commentId: P:MegaForm.Sdk.MegaFormFileContent.Content
-  id: Content
-  parent: MegaForm.Sdk.MegaFormFileContent
-  langs:
-  - csharp
-  - vb
-  name: Content
-  nameWithType: MegaFormFileContent.Content
-  fullName: MegaForm.Sdk.MegaFormFileContent.Content
-  type: Property
-  source:
-    remote:
-      path: MegaForm.Sdk/Dtos.cs
-      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
-      repo: https://github.com/CissSolution/MegaformDocs.git
-    id: Content
-    path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 183
-  assemblies:
-  - MegaForm.Sdk
-  namespace: MegaForm.Sdk
-  summary: Raw file bytes.
-  example: []
-  syntax:
-    content: public byte[] Content { get; set; }
-    parameters: []
-    return:
-      type: System.Byte[]
-    content.vb: Public Property Content As Byte()
-  overload: MegaForm.Sdk.MegaFormFileContent.Content*
+      type: System.Int32
+    content.vb: Public Property RecentCompleted As Integer
+  overload: MegaForm.Sdk.InboxQuery.RecentCompleted*
 references:
 - uid: MegaForm.Sdk
   commentId: N:MegaForm.Sdk
@@ -369,55 +303,20 @@ references:
   name: System
   nameWithType: System
   fullName: System
-- uid: MegaForm.Sdk.MegaFormFileContent.FileName*
-  commentId: Overload:MegaForm.Sdk.MegaFormFileContent.FileName
-  href: MegaForm.Sdk.MegaFormFileContent.html#MegaForm_Sdk_MegaFormFileContent_FileName
-  name: FileName
-  nameWithType: MegaFormFileContent.FileName
-  fullName: MegaForm.Sdk.MegaFormFileContent.FileName
-- uid: System.String
-  commentId: T:System.String
+- uid: MegaForm.Sdk.InboxQuery.RecentCompleted*
+  commentId: Overload:MegaForm.Sdk.InboxQuery.RecentCompleted
+  href: MegaForm.Sdk.InboxQuery.html#MegaForm_Sdk_InboxQuery_RecentCompleted
+  name: RecentCompleted
+  nameWithType: InboxQuery.RecentCompleted
+  fullName: MegaForm.Sdk.InboxQuery.RecentCompleted
+- uid: System.Int32
+  commentId: T:System.Int32
   parent: System
   isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.string
-  name: string
-  nameWithType: string
-  fullName: string
-  nameWithType.vb: String
-  fullName.vb: String
-  name.vb: String
-- uid: MegaForm.Sdk.MegaFormFileContent.ContentType*
-  commentId: Overload:MegaForm.Sdk.MegaFormFileContent.ContentType
-  href: MegaForm.Sdk.MegaFormFileContent.html#MegaForm_Sdk_MegaFormFileContent_ContentType
-  name: ContentType
-  nameWithType: MegaFormFileContent.ContentType
-  fullName: MegaForm.Sdk.MegaFormFileContent.ContentType
-- uid: MegaForm.Sdk.MegaFormFileContent.Content*
-  commentId: Overload:MegaForm.Sdk.MegaFormFileContent.Content
-  href: MegaForm.Sdk.MegaFormFileContent.html#MegaForm_Sdk_MegaFormFileContent_Content
-  name: Content
-  nameWithType: MegaFormFileContent.Content
-  fullName: MegaForm.Sdk.MegaFormFileContent.Content
-- uid: System.Byte[]
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.byte
-  name: byte[]
-  nameWithType: byte[]
-  fullName: byte[]
-  nameWithType.vb: Byte()
-  fullName.vb: Byte()
-  name.vb: Byte()
-  spec.csharp:
-  - uid: System.Byte
-    name: byte
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.byte
-  - name: '['
-  - name: ']'
-  spec.vb:
-  - uid: System.Byte
-    name: Byte
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.byte
-  - name: (
-  - name: )
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer

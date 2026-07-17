@@ -20,9 +20,13 @@ items:
   fullName: MegaForm.Sdk.FieldValidationInfo
   type: Class
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: FieldValidationInfo
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 289
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 567
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -52,9 +56,13 @@ items:
   fullName: MegaForm.Sdk.FieldValidationInfo.MinLength
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: MinLength
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 292
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 570
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -79,9 +87,13 @@ items:
   fullName: MegaForm.Sdk.FieldValidationInfo.MaxLength
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: MaxLength
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 295
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 573
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -106,9 +118,13 @@ items:
   fullName: MegaForm.Sdk.FieldValidationInfo.Min
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: Min
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 298
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 576
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -133,9 +149,13 @@ items:
   fullName: MegaForm.Sdk.FieldValidationInfo.Max
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: Max
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 301
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 579
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -160,9 +180,13 @@ items:
   fullName: MegaForm.Sdk.FieldValidationInfo.Pattern
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: Pattern
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 304
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 582
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -187,9 +211,13 @@ items:
   fullName: MegaForm.Sdk.FieldValidationInfo.PatternMessage
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: PatternMessage
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 307
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 585
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -214,9 +242,13 @@ items:
   fullName: MegaForm.Sdk.FieldValidationInfo.CustomMessage
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: CustomMessage
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 310
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 588
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk

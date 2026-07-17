@@ -17,9 +17,13 @@ items:
   fullName: MegaForm.Sdk.SubmissionQuery
   type: Class
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: SubmissionQuery
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 109
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 133
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -49,9 +53,13 @@ items:
   fullName: MegaForm.Sdk.SubmissionQuery.FormId
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: FormId
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 112
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 136
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -76,9 +84,13 @@ items:
   fullName: MegaForm.Sdk.SubmissionQuery.Status
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: Status
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 115
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 139
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -103,9 +115,13 @@ items:
   fullName: MegaForm.Sdk.SubmissionQuery.Page
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: Page
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 118
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 142
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -130,9 +146,13 @@ items:
   fullName: MegaForm.Sdk.SubmissionQuery.PageSize
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: PageSize
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 121
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 145
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk

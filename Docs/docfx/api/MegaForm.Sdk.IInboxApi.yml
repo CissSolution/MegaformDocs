@@ -1,0 +1,763 @@
+### YamlMime:ManagedReference
+items:
+- uid: MegaForm.Sdk.IInboxApi
+  commentId: T:MegaForm.Sdk.IInboxApi
+  id: IInboxApi
+  parent: MegaForm.Sdk
+  children:
+  - MegaForm.Sdk.IInboxApi.ApproveAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  - MegaForm.Sdk.IInboxApi.AttachFileAsync(MegaForm.Sdk.InboxFileAttachmentRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  - MegaForm.Sdk.IInboxApi.ClaimAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  - MegaForm.Sdk.IInboxApi.CommentAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  - MegaForm.Sdk.IInboxApi.ForwardAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  - MegaForm.Sdk.IInboxApi.GetMyInboxAsync(MegaForm.Sdk.InboxQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  - MegaForm.Sdk.IInboxApi.GetTaskAsync(System.String,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  - MegaForm.Sdk.IInboxApi.RejectAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  - MegaForm.Sdk.IInboxApi.SendSubmissionAsync(MegaForm.Sdk.SendSubmissionToInboxRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  langs:
+  - csharp
+  - vb
+  name: IInboxApi
+  nameWithType: IInboxApi
+  fullName: MegaForm.Sdk.IInboxApi
+  type: Interface
+  source:
+    remote:
+      path: MegaForm.Sdk/IMegaFormClient.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: IInboxApi
+    path: ../../MegaForm.Sdk/IMegaFormClient.cs
+    startLine: 128
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Human-task inbox facade for same-host dashboard integrations.
+  example: []
+  syntax:
+    content: public interface IInboxApi
+    content.vb: Public Interface IInboxApi
+  derivedClasses:
+  - MegaForm.Sdk.MegaFormClient
+- uid: MegaForm.Sdk.IInboxApi.GetMyInboxAsync(MegaForm.Sdk.InboxQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  commentId: M:MegaForm.Sdk.IInboxApi.GetMyInboxAsync(MegaForm.Sdk.InboxQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  id: GetMyInboxAsync(MegaForm.Sdk.InboxQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  parent: MegaForm.Sdk.IInboxApi
+  langs:
+  - csharp
+  - vb
+  name: GetMyInboxAsync(InboxQuery?, MegaFormScope?, CancellationToken)
+  nameWithType: IInboxApi.GetMyInboxAsync(InboxQuery?, MegaFormScope?, CancellationToken)
+  fullName: MegaForm.Sdk.IInboxApi.GetMyInboxAsync(MegaForm.Sdk.InboxQuery?, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  type: Method
+  source:
+    remote:
+      path: MegaForm.Sdk/IMegaFormClient.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: GetMyInboxAsync
+    path: ../../MegaForm.Sdk/IMegaFormClient.cs
+    startLine: 131
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: "Return the current actor's workboard: incoming, in-progress, completed, and KPI counts."
+  example: []
+  syntax:
+    content: Task<InboxBoardDto> GetMyInboxAsync(InboxQuery? query = null, MegaFormScope? scope = null, CancellationToken cancellationToken = default)
+    parameters:
+    - id: query
+      type: MegaForm.Sdk.InboxQuery
+    - id: scope
+      type: MegaForm.Sdk.MegaFormScope
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task{MegaForm.Sdk.InboxBoardDto}
+    content.vb: Function GetMyInboxAsync(query As InboxQuery = Nothing, scope As MegaFormScope = Nothing, cancellationToken As CancellationToken = Nothing) As Task(Of InboxBoardDto)
+  overload: MegaForm.Sdk.IInboxApi.GetMyInboxAsync*
+  nameWithType.vb: IInboxApi.GetMyInboxAsync(InboxQuery, MegaFormScope, CancellationToken)
+  fullName.vb: MegaForm.Sdk.IInboxApi.GetMyInboxAsync(MegaForm.Sdk.InboxQuery, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  name.vb: GetMyInboxAsync(InboxQuery, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.IInboxApi.GetTaskAsync(System.String,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  commentId: M:MegaForm.Sdk.IInboxApi.GetTaskAsync(System.String,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  id: GetTaskAsync(System.String,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  parent: MegaForm.Sdk.IInboxApi
+  langs:
+  - csharp
+  - vb
+  name: GetTaskAsync(string, MegaFormScope?, CancellationToken)
+  nameWithType: IInboxApi.GetTaskAsync(string, MegaFormScope?, CancellationToken)
+  fullName: MegaForm.Sdk.IInboxApi.GetTaskAsync(string, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  type: Method
+  source:
+    remote:
+      path: MegaForm.Sdk/IMegaFormClient.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: GetTaskAsync
+    path: ../../MegaForm.Sdk/IMegaFormClient.cs
+    startLine: 134
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Load one visible task with action history and linked submission summary.
+  example: []
+  syntax:
+    content: Task<InboxTaskResultDto> GetTaskAsync(string taskId, MegaFormScope? scope = null, CancellationToken cancellationToken = default)
+    parameters:
+    - id: taskId
+      type: System.String
+    - id: scope
+      type: MegaForm.Sdk.MegaFormScope
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task{MegaForm.Sdk.InboxTaskResultDto}
+    content.vb: Function GetTaskAsync(taskId As String, scope As MegaFormScope = Nothing, cancellationToken As CancellationToken = Nothing) As Task(Of InboxTaskResultDto)
+  overload: MegaForm.Sdk.IInboxApi.GetTaskAsync*
+  nameWithType.vb: IInboxApi.GetTaskAsync(String, MegaFormScope, CancellationToken)
+  fullName.vb: MegaForm.Sdk.IInboxApi.GetTaskAsync(String, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  name.vb: GetTaskAsync(String, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.IInboxApi.ClaimAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  commentId: M:MegaForm.Sdk.IInboxApi.ClaimAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  id: ClaimAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  parent: MegaForm.Sdk.IInboxApi
+  langs:
+  - csharp
+  - vb
+  name: ClaimAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  nameWithType: IInboxApi.ClaimAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  fullName: MegaForm.Sdk.IInboxApi.ClaimAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  type: Method
+  source:
+    remote:
+      path: MegaForm.Sdk/IMegaFormClient.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: ClaimAsync
+    path: ../../MegaForm.Sdk/IMegaFormClient.cs
+    startLine: 137
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Claim an open task for the current actor.
+  example: []
+  syntax:
+    content: Task<InboxTaskResultDto> ClaimAsync(InboxTaskActionRequest request, MegaFormScope? scope = null, CancellationToken cancellationToken = default)
+    parameters:
+    - id: request
+      type: MegaForm.Sdk.InboxTaskActionRequest
+    - id: scope
+      type: MegaForm.Sdk.MegaFormScope
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task{MegaForm.Sdk.InboxTaskResultDto}
+    content.vb: Function ClaimAsync(request As InboxTaskActionRequest, scope As MegaFormScope = Nothing, cancellationToken As CancellationToken = Nothing) As Task(Of InboxTaskResultDto)
+  overload: MegaForm.Sdk.IInboxApi.ClaimAsync*
+  nameWithType.vb: IInboxApi.ClaimAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+  fullName.vb: MegaForm.Sdk.IInboxApi.ClaimAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  name.vb: ClaimAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.IInboxApi.ApproveAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  commentId: M:MegaForm.Sdk.IInboxApi.ApproveAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  id: ApproveAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  parent: MegaForm.Sdk.IInboxApi
+  langs:
+  - csharp
+  - vb
+  name: ApproveAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  nameWithType: IInboxApi.ApproveAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  fullName: MegaForm.Sdk.IInboxApi.ApproveAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  type: Method
+  source:
+    remote:
+      path: MegaForm.Sdk/IMegaFormClient.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: ApproveAsync
+    path: ../../MegaForm.Sdk/IMegaFormClient.cs
+    startLine: 140
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Approve an open task and resume the workflow.
+  example: []
+  syntax:
+    content: Task<InboxTaskResultDto> ApproveAsync(InboxTaskActionRequest request, MegaFormScope? scope = null, CancellationToken cancellationToken = default)
+    parameters:
+    - id: request
+      type: MegaForm.Sdk.InboxTaskActionRequest
+    - id: scope
+      type: MegaForm.Sdk.MegaFormScope
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task{MegaForm.Sdk.InboxTaskResultDto}
+    content.vb: Function ApproveAsync(request As InboxTaskActionRequest, scope As MegaFormScope = Nothing, cancellationToken As CancellationToken = Nothing) As Task(Of InboxTaskResultDto)
+  overload: MegaForm.Sdk.IInboxApi.ApproveAsync*
+  nameWithType.vb: IInboxApi.ApproveAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+  fullName.vb: MegaForm.Sdk.IInboxApi.ApproveAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  name.vb: ApproveAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.IInboxApi.RejectAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  commentId: M:MegaForm.Sdk.IInboxApi.RejectAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  id: RejectAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  parent: MegaForm.Sdk.IInboxApi
+  langs:
+  - csharp
+  - vb
+  name: RejectAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  nameWithType: IInboxApi.RejectAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  fullName: MegaForm.Sdk.IInboxApi.RejectAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  type: Method
+  source:
+    remote:
+      path: MegaForm.Sdk/IMegaFormClient.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: RejectAsync
+    path: ../../MegaForm.Sdk/IMegaFormClient.cs
+    startLine: 143
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Reject an open task and resume the workflow.
+  example: []
+  syntax:
+    content: Task<InboxTaskResultDto> RejectAsync(InboxTaskActionRequest request, MegaFormScope? scope = null, CancellationToken cancellationToken = default)
+    parameters:
+    - id: request
+      type: MegaForm.Sdk.InboxTaskActionRequest
+    - id: scope
+      type: MegaForm.Sdk.MegaFormScope
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task{MegaForm.Sdk.InboxTaskResultDto}
+    content.vb: Function RejectAsync(request As InboxTaskActionRequest, scope As MegaFormScope = Nothing, cancellationToken As CancellationToken = Nothing) As Task(Of InboxTaskResultDto)
+  overload: MegaForm.Sdk.IInboxApi.RejectAsync*
+  nameWithType.vb: IInboxApi.RejectAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+  fullName.vb: MegaForm.Sdk.IInboxApi.RejectAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  name.vb: RejectAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.IInboxApi.ForwardAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  commentId: M:MegaForm.Sdk.IInboxApi.ForwardAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  id: ForwardAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  parent: MegaForm.Sdk.IInboxApi
+  langs:
+  - csharp
+  - vb
+  name: ForwardAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  nameWithType: IInboxApi.ForwardAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  fullName: MegaForm.Sdk.IInboxApi.ForwardAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  type: Method
+  source:
+    remote:
+      path: MegaForm.Sdk/IMegaFormClient.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: ForwardAsync
+    path: ../../MegaForm.Sdk/IMegaFormClient.cs
+    startLine: 146
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Forward an open task to another user or role target.
+  example: []
+  syntax:
+    content: Task<InboxTaskResultDto> ForwardAsync(InboxTaskActionRequest request, MegaFormScope? scope = null, CancellationToken cancellationToken = default)
+    parameters:
+    - id: request
+      type: MegaForm.Sdk.InboxTaskActionRequest
+    - id: scope
+      type: MegaForm.Sdk.MegaFormScope
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task{MegaForm.Sdk.InboxTaskResultDto}
+    content.vb: Function ForwardAsync(request As InboxTaskActionRequest, scope As MegaFormScope = Nothing, cancellationToken As CancellationToken = Nothing) As Task(Of InboxTaskResultDto)
+  overload: MegaForm.Sdk.IInboxApi.ForwardAsync*
+  nameWithType.vb: IInboxApi.ForwardAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+  fullName.vb: MegaForm.Sdk.IInboxApi.ForwardAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  name.vb: ForwardAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.IInboxApi.CommentAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  commentId: M:MegaForm.Sdk.IInboxApi.CommentAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  id: CommentAsync(MegaForm.Sdk.InboxTaskActionRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  parent: MegaForm.Sdk.IInboxApi
+  langs:
+  - csharp
+  - vb
+  name: CommentAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  nameWithType: IInboxApi.CommentAsync(InboxTaskActionRequest, MegaFormScope?, CancellationToken)
+  fullName: MegaForm.Sdk.IInboxApi.CommentAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  type: Method
+  source:
+    remote:
+      path: MegaForm.Sdk/IMegaFormClient.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: CommentAsync
+    path: ../../MegaForm.Sdk/IMegaFormClient.cs
+    startLine: 149
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Add a comment to an open task without changing its state.
+  example: []
+  syntax:
+    content: Task<InboxTaskResultDto> CommentAsync(InboxTaskActionRequest request, MegaFormScope? scope = null, CancellationToken cancellationToken = default)
+    parameters:
+    - id: request
+      type: MegaForm.Sdk.InboxTaskActionRequest
+    - id: scope
+      type: MegaForm.Sdk.MegaFormScope
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task{MegaForm.Sdk.InboxTaskResultDto}
+    content.vb: Function CommentAsync(request As InboxTaskActionRequest, scope As MegaFormScope = Nothing, cancellationToken As CancellationToken = Nothing) As Task(Of InboxTaskResultDto)
+  overload: MegaForm.Sdk.IInboxApi.CommentAsync*
+  nameWithType.vb: IInboxApi.CommentAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+  fullName.vb: MegaForm.Sdk.IInboxApi.CommentAsync(MegaForm.Sdk.InboxTaskActionRequest, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  name.vb: CommentAsync(InboxTaskActionRequest, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.IInboxApi.AttachFileAsync(MegaForm.Sdk.InboxFileAttachmentRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  commentId: M:MegaForm.Sdk.IInboxApi.AttachFileAsync(MegaForm.Sdk.InboxFileAttachmentRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  id: AttachFileAsync(MegaForm.Sdk.InboxFileAttachmentRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  parent: MegaForm.Sdk.IInboxApi
+  langs:
+  - csharp
+  - vb
+  name: AttachFileAsync(InboxFileAttachmentRequest, MegaFormScope?, CancellationToken)
+  nameWithType: IInboxApi.AttachFileAsync(InboxFileAttachmentRequest, MegaFormScope?, CancellationToken)
+  fullName: MegaForm.Sdk.IInboxApi.AttachFileAsync(MegaForm.Sdk.InboxFileAttachmentRequest, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  type: Method
+  source:
+    remote:
+      path: MegaForm.Sdk/IMegaFormClient.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: AttachFileAsync
+    path: ../../MegaForm.Sdk/IMegaFormClient.cs
+    startLine: 152
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Attach a file to the task's linked submission, then return the stored file metadata.
+  example: []
+  syntax:
+    content: Task<InboxFileAttachmentResultDto> AttachFileAsync(InboxFileAttachmentRequest request, MegaFormScope? scope = null, CancellationToken cancellationToken = default)
+    parameters:
+    - id: request
+      type: MegaForm.Sdk.InboxFileAttachmentRequest
+    - id: scope
+      type: MegaForm.Sdk.MegaFormScope
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task{MegaForm.Sdk.InboxFileAttachmentResultDto}
+    content.vb: Function AttachFileAsync(request As InboxFileAttachmentRequest, scope As MegaFormScope = Nothing, cancellationToken As CancellationToken = Nothing) As Task(Of InboxFileAttachmentResultDto)
+  overload: MegaForm.Sdk.IInboxApi.AttachFileAsync*
+  nameWithType.vb: IInboxApi.AttachFileAsync(InboxFileAttachmentRequest, MegaFormScope, CancellationToken)
+  fullName.vb: MegaForm.Sdk.IInboxApi.AttachFileAsync(MegaForm.Sdk.InboxFileAttachmentRequest, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  name.vb: AttachFileAsync(InboxFileAttachmentRequest, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.IInboxApi.SendSubmissionAsync(MegaForm.Sdk.SendSubmissionToInboxRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  commentId: M:MegaForm.Sdk.IInboxApi.SendSubmissionAsync(MegaForm.Sdk.SendSubmissionToInboxRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  id: SendSubmissionAsync(MegaForm.Sdk.SendSubmissionToInboxRequest,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  parent: MegaForm.Sdk.IInboxApi
+  langs:
+  - csharp
+  - vb
+  name: SendSubmissionAsync(SendSubmissionToInboxRequest, MegaFormScope?, CancellationToken)
+  nameWithType: IInboxApi.SendSubmissionAsync(SendSubmissionToInboxRequest, MegaFormScope?, CancellationToken)
+  fullName: MegaForm.Sdk.IInboxApi.SendSubmissionAsync(MegaForm.Sdk.SendSubmissionToInboxRequest, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  type: Method
+  source:
+    remote:
+      path: MegaForm.Sdk/IMegaFormClient.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: SendSubmissionAsync
+    path: ../../MegaForm.Sdk/IMegaFormClient.cs
+    startLine: 155
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Create a one-step review task for a submission without requiring a preconfigured workflow.
+  example: []
+  syntax:
+    content: Task<InboxSendSubmissionResultDto> SendSubmissionAsync(SendSubmissionToInboxRequest request, MegaFormScope? scope = null, CancellationToken cancellationToken = default)
+    parameters:
+    - id: request
+      type: MegaForm.Sdk.SendSubmissionToInboxRequest
+    - id: scope
+      type: MegaForm.Sdk.MegaFormScope
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task{MegaForm.Sdk.InboxSendSubmissionResultDto}
+    content.vb: Function SendSubmissionAsync(request As SendSubmissionToInboxRequest, scope As MegaFormScope = Nothing, cancellationToken As CancellationToken = Nothing) As Task(Of InboxSendSubmissionResultDto)
+  overload: MegaForm.Sdk.IInboxApi.SendSubmissionAsync*
+  nameWithType.vb: IInboxApi.SendSubmissionAsync(SendSubmissionToInboxRequest, MegaFormScope, CancellationToken)
+  fullName.vb: MegaForm.Sdk.IInboxApi.SendSubmissionAsync(MegaForm.Sdk.SendSubmissionToInboxRequest, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  name.vb: SendSubmissionAsync(SendSubmissionToInboxRequest, MegaFormScope, CancellationToken)
+references:
+- uid: MegaForm.Sdk
+  commentId: N:MegaForm.Sdk
+  href: MegaForm.html
+  name: MegaForm.Sdk
+  nameWithType: MegaForm.Sdk
+  fullName: MegaForm.Sdk
+  spec.csharp:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+  spec.vb:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+- uid: MegaForm.Sdk.IInboxApi.GetMyInboxAsync*
+  commentId: Overload:MegaForm.Sdk.IInboxApi.GetMyInboxAsync
+  href: MegaForm.Sdk.IInboxApi.html#MegaForm_Sdk_IInboxApi_GetMyInboxAsync_MegaForm_Sdk_InboxQuery_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  name: GetMyInboxAsync
+  nameWithType: IInboxApi.GetMyInboxAsync
+  fullName: MegaForm.Sdk.IInboxApi.GetMyInboxAsync
+- uid: MegaForm.Sdk.InboxQuery
+  commentId: T:MegaForm.Sdk.InboxQuery
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.InboxQuery.html
+  name: InboxQuery
+  nameWithType: InboxQuery
+  fullName: MegaForm.Sdk.InboxQuery
+- uid: MegaForm.Sdk.MegaFormScope
+  commentId: T:MegaForm.Sdk.MegaFormScope
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.MegaFormScope.html
+  name: MegaFormScope
+  nameWithType: MegaFormScope
+  fullName: MegaForm.Sdk.MegaFormScope
+- uid: System.Threading.CancellationToken
+  commentId: T:System.Threading.CancellationToken
+  parent: System.Threading
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken
+  name: CancellationToken
+  nameWithType: CancellationToken
+  fullName: System.Threading.CancellationToken
+- uid: System.Threading.Tasks.Task{MegaForm.Sdk.InboxBoardDto}
+  commentId: T:System.Threading.Tasks.Task{MegaForm.Sdk.InboxBoardDto}
+  parent: System.Threading.Tasks
+  definition: System.Threading.Tasks.Task`1
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  name: Task<InboxBoardDto>
+  nameWithType: Task<InboxBoardDto>
+  fullName: System.Threading.Tasks.Task<MegaForm.Sdk.InboxBoardDto>
+  nameWithType.vb: Task(Of InboxBoardDto)
+  fullName.vb: System.Threading.Tasks.Task(Of MegaForm.Sdk.InboxBoardDto)
+  name.vb: Task(Of InboxBoardDto)
+  spec.csharp:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: <
+  - uid: MegaForm.Sdk.InboxBoardDto
+    name: InboxBoardDto
+    href: MegaForm.Sdk.InboxBoardDto.html
+  - name: '>'
+  spec.vb:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: MegaForm.Sdk.InboxBoardDto
+    name: InboxBoardDto
+    href: MegaForm.Sdk.InboxBoardDto.html
+  - name: )
+- uid: System.Threading
+  commentId: N:System.Threading
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Threading
+  nameWithType: System.Threading
+  fullName: System.Threading
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+- uid: System.Threading.Tasks.Task`1
+  commentId: T:System.Threading.Tasks.Task`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  name: Task<TResult>
+  nameWithType: Task<TResult>
+  fullName: System.Threading.Tasks.Task<TResult>
+  nameWithType.vb: Task(Of TResult)
+  fullName.vb: System.Threading.Tasks.Task(Of TResult)
+  name.vb: Task(Of TResult)
+  spec.csharp:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: <
+  - name: TResult
+  - name: '>'
+  spec.vb:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: TResult
+  - name: )
+- uid: System.Threading.Tasks
+  commentId: N:System.Threading.Tasks
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Threading.Tasks
+  nameWithType: System.Threading.Tasks
+  fullName: System.Threading.Tasks
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+  - name: .
+  - uid: System.Threading.Tasks
+    name: Tasks
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+  - name: .
+  - uid: System.Threading.Tasks
+    name: Tasks
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks
+- uid: MegaForm.Sdk.IInboxApi.GetTaskAsync*
+  commentId: Overload:MegaForm.Sdk.IInboxApi.GetTaskAsync
+  href: MegaForm.Sdk.IInboxApi.html#MegaForm_Sdk_IInboxApi_GetTaskAsync_System_String_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  name: GetTaskAsync
+  nameWithType: IInboxApi.GetTaskAsync
+  fullName: MegaForm.Sdk.IInboxApi.GetTaskAsync
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: System.Threading.Tasks.Task{MegaForm.Sdk.InboxTaskResultDto}
+  commentId: T:System.Threading.Tasks.Task{MegaForm.Sdk.InboxTaskResultDto}
+  parent: System.Threading.Tasks
+  definition: System.Threading.Tasks.Task`1
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  name: Task<InboxTaskResultDto>
+  nameWithType: Task<InboxTaskResultDto>
+  fullName: System.Threading.Tasks.Task<MegaForm.Sdk.InboxTaskResultDto>
+  nameWithType.vb: Task(Of InboxTaskResultDto)
+  fullName.vb: System.Threading.Tasks.Task(Of MegaForm.Sdk.InboxTaskResultDto)
+  name.vb: Task(Of InboxTaskResultDto)
+  spec.csharp:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: <
+  - uid: MegaForm.Sdk.InboxTaskResultDto
+    name: InboxTaskResultDto
+    href: MegaForm.Sdk.InboxTaskResultDto.html
+  - name: '>'
+  spec.vb:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: MegaForm.Sdk.InboxTaskResultDto
+    name: InboxTaskResultDto
+    href: MegaForm.Sdk.InboxTaskResultDto.html
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: MegaForm.Sdk.IInboxApi.ClaimAsync*
+  commentId: Overload:MegaForm.Sdk.IInboxApi.ClaimAsync
+  href: MegaForm.Sdk.IInboxApi.html#MegaForm_Sdk_IInboxApi_ClaimAsync_MegaForm_Sdk_InboxTaskActionRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  name: ClaimAsync
+  nameWithType: IInboxApi.ClaimAsync
+  fullName: MegaForm.Sdk.IInboxApi.ClaimAsync
+- uid: MegaForm.Sdk.InboxTaskActionRequest
+  commentId: T:MegaForm.Sdk.InboxTaskActionRequest
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.InboxTaskActionRequest.html
+  name: InboxTaskActionRequest
+  nameWithType: InboxTaskActionRequest
+  fullName: MegaForm.Sdk.InboxTaskActionRequest
+- uid: MegaForm.Sdk.IInboxApi.ApproveAsync*
+  commentId: Overload:MegaForm.Sdk.IInboxApi.ApproveAsync
+  href: MegaForm.Sdk.IInboxApi.html#MegaForm_Sdk_IInboxApi_ApproveAsync_MegaForm_Sdk_InboxTaskActionRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  name: ApproveAsync
+  nameWithType: IInboxApi.ApproveAsync
+  fullName: MegaForm.Sdk.IInboxApi.ApproveAsync
+- uid: MegaForm.Sdk.IInboxApi.RejectAsync*
+  commentId: Overload:MegaForm.Sdk.IInboxApi.RejectAsync
+  href: MegaForm.Sdk.IInboxApi.html#MegaForm_Sdk_IInboxApi_RejectAsync_MegaForm_Sdk_InboxTaskActionRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  name: RejectAsync
+  nameWithType: IInboxApi.RejectAsync
+  fullName: MegaForm.Sdk.IInboxApi.RejectAsync
+- uid: MegaForm.Sdk.IInboxApi.ForwardAsync*
+  commentId: Overload:MegaForm.Sdk.IInboxApi.ForwardAsync
+  href: MegaForm.Sdk.IInboxApi.html#MegaForm_Sdk_IInboxApi_ForwardAsync_MegaForm_Sdk_InboxTaskActionRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  name: ForwardAsync
+  nameWithType: IInboxApi.ForwardAsync
+  fullName: MegaForm.Sdk.IInboxApi.ForwardAsync
+- uid: MegaForm.Sdk.IInboxApi.CommentAsync*
+  commentId: Overload:MegaForm.Sdk.IInboxApi.CommentAsync
+  href: MegaForm.Sdk.IInboxApi.html#MegaForm_Sdk_IInboxApi_CommentAsync_MegaForm_Sdk_InboxTaskActionRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  name: CommentAsync
+  nameWithType: IInboxApi.CommentAsync
+  fullName: MegaForm.Sdk.IInboxApi.CommentAsync
+- uid: MegaForm.Sdk.IInboxApi.AttachFileAsync*
+  commentId: Overload:MegaForm.Sdk.IInboxApi.AttachFileAsync
+  href: MegaForm.Sdk.IInboxApi.html#MegaForm_Sdk_IInboxApi_AttachFileAsync_MegaForm_Sdk_InboxFileAttachmentRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  name: AttachFileAsync
+  nameWithType: IInboxApi.AttachFileAsync
+  fullName: MegaForm.Sdk.IInboxApi.AttachFileAsync
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest
+  commentId: T:MegaForm.Sdk.InboxFileAttachmentRequest
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.InboxFileAttachmentRequest.html
+  name: InboxFileAttachmentRequest
+  nameWithType: InboxFileAttachmentRequest
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest
+- uid: System.Threading.Tasks.Task{MegaForm.Sdk.InboxFileAttachmentResultDto}
+  commentId: T:System.Threading.Tasks.Task{MegaForm.Sdk.InboxFileAttachmentResultDto}
+  parent: System.Threading.Tasks
+  definition: System.Threading.Tasks.Task`1
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  name: Task<InboxFileAttachmentResultDto>
+  nameWithType: Task<InboxFileAttachmentResultDto>
+  fullName: System.Threading.Tasks.Task<MegaForm.Sdk.InboxFileAttachmentResultDto>
+  nameWithType.vb: Task(Of InboxFileAttachmentResultDto)
+  fullName.vb: System.Threading.Tasks.Task(Of MegaForm.Sdk.InboxFileAttachmentResultDto)
+  name.vb: Task(Of InboxFileAttachmentResultDto)
+  spec.csharp:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: <
+  - uid: MegaForm.Sdk.InboxFileAttachmentResultDto
+    name: InboxFileAttachmentResultDto
+    href: MegaForm.Sdk.InboxFileAttachmentResultDto.html
+  - name: '>'
+  spec.vb:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: MegaForm.Sdk.InboxFileAttachmentResultDto
+    name: InboxFileAttachmentResultDto
+    href: MegaForm.Sdk.InboxFileAttachmentResultDto.html
+  - name: )
+- uid: MegaForm.Sdk.IInboxApi.SendSubmissionAsync*
+  commentId: Overload:MegaForm.Sdk.IInboxApi.SendSubmissionAsync
+  href: MegaForm.Sdk.IInboxApi.html#MegaForm_Sdk_IInboxApi_SendSubmissionAsync_MegaForm_Sdk_SendSubmissionToInboxRequest_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  name: SendSubmissionAsync
+  nameWithType: IInboxApi.SendSubmissionAsync
+  fullName: MegaForm.Sdk.IInboxApi.SendSubmissionAsync
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest
+  commentId: T:MegaForm.Sdk.SendSubmissionToInboxRequest
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.SendSubmissionToInboxRequest.html
+  name: SendSubmissionToInboxRequest
+  nameWithType: SendSubmissionToInboxRequest
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest
+- uid: System.Threading.Tasks.Task{MegaForm.Sdk.InboxSendSubmissionResultDto}
+  commentId: T:System.Threading.Tasks.Task{MegaForm.Sdk.InboxSendSubmissionResultDto}
+  parent: System.Threading.Tasks
+  definition: System.Threading.Tasks.Task`1
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  name: Task<InboxSendSubmissionResultDto>
+  nameWithType: Task<InboxSendSubmissionResultDto>
+  fullName: System.Threading.Tasks.Task<MegaForm.Sdk.InboxSendSubmissionResultDto>
+  nameWithType.vb: Task(Of InboxSendSubmissionResultDto)
+  fullName.vb: System.Threading.Tasks.Task(Of MegaForm.Sdk.InboxSendSubmissionResultDto)
+  name.vb: Task(Of InboxSendSubmissionResultDto)
+  spec.csharp:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: <
+  - uid: MegaForm.Sdk.InboxSendSubmissionResultDto
+    name: InboxSendSubmissionResultDto
+    href: MegaForm.Sdk.InboxSendSubmissionResultDto.html
+  - name: '>'
+  spec.vb:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: MegaForm.Sdk.InboxSendSubmissionResultDto
+    name: InboxSendSubmissionResultDto
+    href: MegaForm.Sdk.InboxSendSubmissionResultDto.html
+  - name: )

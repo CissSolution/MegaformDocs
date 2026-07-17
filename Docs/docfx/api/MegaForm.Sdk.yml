@@ -5,6 +5,9 @@ items:
   id: MegaForm.Sdk
   children:
   - MegaForm.Sdk.CreateFormRequest
+  - MegaForm.Sdk.DashboardFormSummaryDto
+  - MegaForm.Sdk.DashboardOverviewDto
+  - MegaForm.Sdk.DashboardQuery
   - MegaForm.Sdk.FieldOptionInfo
   - MegaForm.Sdk.FieldValidationInfo
   - MegaForm.Sdk.FileDto
@@ -12,19 +15,40 @@ items:
   - MegaForm.Sdk.FormFieldInfo
   - MegaForm.Sdk.FormQuery
   - MegaForm.Sdk.FormSchemaInfo
+  - MegaForm.Sdk.IDashboardApi
   - MegaForm.Sdk.IFileApi
   - MegaForm.Sdk.IFormApi
+  - MegaForm.Sdk.IInboxApi
   - MegaForm.Sdk.IMegaFormClient
   - MegaForm.Sdk.ISchemaApi
   - MegaForm.Sdk.ISubmissionApi
+  - MegaForm.Sdk.ISubmissionDashboardApi
+  - MegaForm.Sdk.InboxBoardDto
+  - MegaForm.Sdk.InboxFileAttachmentRequest
+  - MegaForm.Sdk.InboxFileAttachmentResultDto
+  - MegaForm.Sdk.InboxKpiDto
+  - MegaForm.Sdk.InboxQuery
+  - MegaForm.Sdk.InboxSendSubmissionResultDto
+  - MegaForm.Sdk.InboxTaskActionDto
+  - MegaForm.Sdk.InboxTaskActionRequest
+  - MegaForm.Sdk.InboxTaskDto
+  - MegaForm.Sdk.InboxTaskResultDto
+  - MegaForm.Sdk.InboxUserDto
   - MegaForm.Sdk.MegaFormClient
   - MegaForm.Sdk.MegaFormFileContent
   - MegaForm.Sdk.MegaFormScope
   - MegaForm.Sdk.MegaFormSdk
   - MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions
   - MegaForm.Sdk.PagedResult`1
+  - MegaForm.Sdk.SendSubmissionToInboxRequest
+  - MegaForm.Sdk.SubmissionDetailDto
   - MegaForm.Sdk.SubmissionDto
+  - MegaForm.Sdk.SubmissionFieldSnapshotDto
+  - MegaForm.Sdk.SubmissionListItemDto
   - MegaForm.Sdk.SubmissionQuery
+  - MegaForm.Sdk.SubmissionSearchQuery
+  - MegaForm.Sdk.SubmissionValueDto
+  - MegaForm.Sdk.SubmissionWorkflowSummaryDto
   - MegaForm.Sdk.SubmitResult
   - MegaForm.Sdk.UpdateFormRequest
   langs:
@@ -67,6 +91,7 @@ references:
   fullName: MegaForm.Sdk.FormQuery
 - uid: MegaForm.Sdk.SubmissionDto
   commentId: T:MegaForm.Sdk.SubmissionDto
+  parent: MegaForm.Sdk
   href: MegaForm.Sdk.SubmissionDto.html
   name: SubmissionDto
   nameWithType: SubmissionDto
@@ -80,6 +105,7 @@ references:
   fullName: MegaForm.Sdk.SubmissionQuery
 - uid: MegaForm.Sdk.FileDto
   commentId: T:MegaForm.Sdk.FileDto
+  parent: MegaForm.Sdk
   href: MegaForm.Sdk.FileDto.html
   name: FileDto
   nameWithType: FileDto
@@ -128,6 +154,143 @@ references:
   - name: " "
   - name: T
   - name: )
+- uid: MegaForm.Sdk.DashboardQuery
+  commentId: T:MegaForm.Sdk.DashboardQuery
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.DashboardQuery.html
+  name: DashboardQuery
+  nameWithType: DashboardQuery
+  fullName: MegaForm.Sdk.DashboardQuery
+- uid: MegaForm.Sdk.DashboardOverviewDto
+  commentId: T:MegaForm.Sdk.DashboardOverviewDto
+  href: MegaForm.Sdk.DashboardOverviewDto.html
+  name: DashboardOverviewDto
+  nameWithType: DashboardOverviewDto
+  fullName: MegaForm.Sdk.DashboardOverviewDto
+- uid: MegaForm.Sdk.DashboardFormSummaryDto
+  commentId: T:MegaForm.Sdk.DashboardFormSummaryDto
+  href: MegaForm.Sdk.DashboardFormSummaryDto.html
+  name: DashboardFormSummaryDto
+  nameWithType: DashboardFormSummaryDto
+  fullName: MegaForm.Sdk.DashboardFormSummaryDto
+- uid: MegaForm.Sdk.SubmissionSearchQuery
+  commentId: T:MegaForm.Sdk.SubmissionSearchQuery
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.SubmissionSearchQuery.html
+  name: SubmissionSearchQuery
+  nameWithType: SubmissionSearchQuery
+  fullName: MegaForm.Sdk.SubmissionSearchQuery
+- uid: MegaForm.Sdk.SubmissionListItemDto
+  commentId: T:MegaForm.Sdk.SubmissionListItemDto
+  href: MegaForm.Sdk.SubmissionListItemDto.html
+  name: SubmissionListItemDto
+  nameWithType: SubmissionListItemDto
+  fullName: MegaForm.Sdk.SubmissionListItemDto
+- uid: MegaForm.Sdk.SubmissionDetailDto
+  commentId: T:MegaForm.Sdk.SubmissionDetailDto
+  href: MegaForm.Sdk.SubmissionDetailDto.html
+  name: SubmissionDetailDto
+  nameWithType: SubmissionDetailDto
+  fullName: MegaForm.Sdk.SubmissionDetailDto
+- uid: MegaForm.Sdk.SubmissionValueDto
+  commentId: T:MegaForm.Sdk.SubmissionValueDto
+  href: MegaForm.Sdk.SubmissionValueDto.html
+  name: SubmissionValueDto
+  nameWithType: SubmissionValueDto
+  fullName: MegaForm.Sdk.SubmissionValueDto
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto
+  commentId: T:MegaForm.Sdk.SubmissionFieldSnapshotDto
+  href: MegaForm.Sdk.SubmissionFieldSnapshotDto.html
+  name: SubmissionFieldSnapshotDto
+  nameWithType: SubmissionFieldSnapshotDto
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto
+  commentId: T:MegaForm.Sdk.SubmissionWorkflowSummaryDto
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.SubmissionWorkflowSummaryDto.html
+  name: SubmissionWorkflowSummaryDto
+  nameWithType: SubmissionWorkflowSummaryDto
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto
+- uid: MegaForm.Sdk.InboxQuery
+  commentId: T:MegaForm.Sdk.InboxQuery
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.InboxQuery.html
+  name: InboxQuery
+  nameWithType: InboxQuery
+  fullName: MegaForm.Sdk.InboxQuery
+- uid: MegaForm.Sdk.InboxBoardDto
+  commentId: T:MegaForm.Sdk.InboxBoardDto
+  href: MegaForm.Sdk.InboxBoardDto.html
+  name: InboxBoardDto
+  nameWithType: InboxBoardDto
+  fullName: MegaForm.Sdk.InboxBoardDto
+- uid: MegaForm.Sdk.InboxUserDto
+  commentId: T:MegaForm.Sdk.InboxUserDto
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.InboxUserDto.html
+  name: InboxUserDto
+  nameWithType: InboxUserDto
+  fullName: MegaForm.Sdk.InboxUserDto
+- uid: MegaForm.Sdk.InboxKpiDto
+  commentId: T:MegaForm.Sdk.InboxKpiDto
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.InboxKpiDto.html
+  name: InboxKpiDto
+  nameWithType: InboxKpiDto
+  fullName: MegaForm.Sdk.InboxKpiDto
+- uid: MegaForm.Sdk.InboxTaskDto
+  commentId: T:MegaForm.Sdk.InboxTaskDto
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.InboxTaskDto.html
+  name: InboxTaskDto
+  nameWithType: InboxTaskDto
+  fullName: MegaForm.Sdk.InboxTaskDto
+- uid: MegaForm.Sdk.InboxTaskActionRequest
+  commentId: T:MegaForm.Sdk.InboxTaskActionRequest
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.InboxTaskActionRequest.html
+  name: InboxTaskActionRequest
+  nameWithType: InboxTaskActionRequest
+  fullName: MegaForm.Sdk.InboxTaskActionRequest
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest
+  commentId: T:MegaForm.Sdk.InboxFileAttachmentRequest
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.InboxFileAttachmentRequest.html
+  name: InboxFileAttachmentRequest
+  nameWithType: InboxFileAttachmentRequest
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest
+  commentId: T:MegaForm.Sdk.SendSubmissionToInboxRequest
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.SendSubmissionToInboxRequest.html
+  name: SendSubmissionToInboxRequest
+  nameWithType: SendSubmissionToInboxRequest
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest
+- uid: MegaForm.Sdk.InboxTaskResultDto
+  commentId: T:MegaForm.Sdk.InboxTaskResultDto
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.InboxTaskResultDto.html
+  name: InboxTaskResultDto
+  nameWithType: InboxTaskResultDto
+  fullName: MegaForm.Sdk.InboxTaskResultDto
+- uid: MegaForm.Sdk.InboxFileAttachmentResultDto
+  commentId: T:MegaForm.Sdk.InboxFileAttachmentResultDto
+  href: MegaForm.Sdk.InboxFileAttachmentResultDto.html
+  name: InboxFileAttachmentResultDto
+  nameWithType: InboxFileAttachmentResultDto
+  fullName: MegaForm.Sdk.InboxFileAttachmentResultDto
+- uid: MegaForm.Sdk.InboxSendSubmissionResultDto
+  commentId: T:MegaForm.Sdk.InboxSendSubmissionResultDto
+  href: MegaForm.Sdk.InboxSendSubmissionResultDto.html
+  name: InboxSendSubmissionResultDto
+  nameWithType: InboxSendSubmissionResultDto
+  fullName: MegaForm.Sdk.InboxSendSubmissionResultDto
+- uid: MegaForm.Sdk.InboxTaskActionDto
+  commentId: T:MegaForm.Sdk.InboxTaskActionDto
+  href: MegaForm.Sdk.InboxTaskActionDto.html
+  name: InboxTaskActionDto
+  nameWithType: InboxTaskActionDto
+  fullName: MegaForm.Sdk.InboxTaskActionDto
 - uid: MegaForm.Sdk.FormSchemaInfo
   commentId: T:MegaForm.Sdk.FormSchemaInfo
   parent: MegaForm.Sdk
@@ -189,6 +352,27 @@ references:
   name: ISubmissionApi
   nameWithType: ISubmissionApi
   fullName: MegaForm.Sdk.ISubmissionApi
+- uid: MegaForm.Sdk.IDashboardApi
+  commentId: T:MegaForm.Sdk.IDashboardApi
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.IDashboardApi.html
+  name: IDashboardApi
+  nameWithType: IDashboardApi
+  fullName: MegaForm.Sdk.IDashboardApi
+- uid: MegaForm.Sdk.ISubmissionDashboardApi
+  commentId: T:MegaForm.Sdk.ISubmissionDashboardApi
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.ISubmissionDashboardApi.html
+  name: ISubmissionDashboardApi
+  nameWithType: ISubmissionDashboardApi
+  fullName: MegaForm.Sdk.ISubmissionDashboardApi
+- uid: MegaForm.Sdk.IInboxApi
+  commentId: T:MegaForm.Sdk.IInboxApi
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.IInboxApi.html
+  name: IInboxApi
+  nameWithType: IInboxApi
+  fullName: MegaForm.Sdk.IInboxApi
 - uid: MegaForm.Sdk.MegaFormClient
   commentId: T:MegaForm.Sdk.MegaFormClient
   href: MegaForm.Sdk.MegaFormClient.html

@@ -1,40 +1,40 @@
 ### YamlMime:ManagedReference
 items:
-- uid: MegaForm.Sdk.SubmissionDto
-  commentId: T:MegaForm.Sdk.SubmissionDto
-  id: SubmissionDto
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto
+  commentId: T:MegaForm.Sdk.SubmissionFieldSnapshotDto
+  id: SubmissionFieldSnapshotDto
   parent: MegaForm.Sdk
   children:
-  - MegaForm.Sdk.SubmissionDto.DataJson
-  - MegaForm.Sdk.SubmissionDto.FormId
-  - MegaForm.Sdk.SubmissionDto.IsSpam
-  - MegaForm.Sdk.SubmissionDto.Status
-  - MegaForm.Sdk.SubmissionDto.SubmissionId
-  - MegaForm.Sdk.SubmissionDto.SubmittedOnUtc
-  - MegaForm.Sdk.SubmissionDto.UserId
+  - MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue
+  - MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey
+  - MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel
+  - MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType
+  - MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback
+  - MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue
+  - MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder
   langs:
   - csharp
   - vb
-  name: SubmissionDto
-  nameWithType: SubmissionDto
-  fullName: MegaForm.Sdk.SubmissionDto
+  name: SubmissionFieldSnapshotDto
+  nameWithType: SubmissionFieldSnapshotDto
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto
   type: Class
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: SubmissionDto
+    id: SubmissionFieldSnapshotDto
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 108
+    startLine: 346
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: A submission, as exposed to SDK consumers.
+  summary: Stored field snapshot captured at submit time.
   example: []
   syntax:
-    content: public sealed class SubmissionDto
-    content.vb: Public NotInheritable Class SubmissionDto
+    content: public sealed class SubmissionFieldSnapshotDto
+    content.vb: Public NotInheritable Class SubmissionFieldSnapshotDto
   inheritance:
   - System.Object
   inheritedMembers:
@@ -44,223 +44,209 @@ items:
   - System.Object.GetType
   - System.Object.ReferenceEquals(System.Object,System.Object)
   - System.Object.ToString
-- uid: MegaForm.Sdk.SubmissionDto.SubmissionId
-  commentId: P:MegaForm.Sdk.SubmissionDto.SubmissionId
-  id: SubmissionId
-  parent: MegaForm.Sdk.SubmissionDto
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey
+  id: FieldKey
+  parent: MegaForm.Sdk.SubmissionFieldSnapshotDto
   langs:
   - csharp
   - vb
-  name: SubmissionId
-  nameWithType: SubmissionDto.SubmissionId
-  fullName: MegaForm.Sdk.SubmissionDto.SubmissionId
+  name: FieldKey
+  nameWithType: SubmissionFieldSnapshotDto.FieldKey
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey
   type: Property
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: SubmissionId
+    id: FieldKey
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 111
+    startLine: 348
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Unique submission id.
-  example: []
   syntax:
-    content: public int SubmissionId { get; set; }
-    parameters: []
-    return:
-      type: System.Int32
-    content.vb: Public Property SubmissionId As Integer
-  overload: MegaForm.Sdk.SubmissionDto.SubmissionId*
-- uid: MegaForm.Sdk.SubmissionDto.FormId
-  commentId: P:MegaForm.Sdk.SubmissionDto.FormId
-  id: FormId
-  parent: MegaForm.Sdk.SubmissionDto
-  langs:
-  - csharp
-  - vb
-  name: FormId
-  nameWithType: SubmissionDto.FormId
-  fullName: MegaForm.Sdk.SubmissionDto.FormId
-  type: Property
-  source:
-    remote:
-      path: MegaForm.Sdk/Dtos.cs
-      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
-      repo: https://github.com/CissSolution/MegaformDocs.git
-    id: FormId
-    path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 114
-  assemblies:
-  - MegaForm.Sdk
-  namespace: MegaForm.Sdk
-  summary: Id of the form this submission belongs to.
-  example: []
-  syntax:
-    content: public int FormId { get; set; }
-    parameters: []
-    return:
-      type: System.Int32
-    content.vb: Public Property FormId As Integer
-  overload: MegaForm.Sdk.SubmissionDto.FormId*
-- uid: MegaForm.Sdk.SubmissionDto.DataJson
-  commentId: P:MegaForm.Sdk.SubmissionDto.DataJson
-  id: DataJson
-  parent: MegaForm.Sdk.SubmissionDto
-  langs:
-  - csharp
-  - vb
-  name: DataJson
-  nameWithType: SubmissionDto.DataJson
-  fullName: MegaForm.Sdk.SubmissionDto.DataJson
-  type: Property
-  source:
-    remote:
-      path: MegaForm.Sdk/Dtos.cs
-      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
-      repo: https://github.com/CissSolution/MegaformDocs.git
-    id: DataJson
-    path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 117
-  assemblies:
-  - MegaForm.Sdk
-  namespace: MegaForm.Sdk
-  summary: Submitted field values as a JSON string.
-  example: []
-  syntax:
-    content: public string? DataJson { get; set; }
+    content: public string? FieldKey { get; set; }
     parameters: []
     return:
       type: System.String
-    content.vb: Public Property DataJson As String
-  overload: MegaForm.Sdk.SubmissionDto.DataJson*
-- uid: MegaForm.Sdk.SubmissionDto.Status
-  commentId: P:MegaForm.Sdk.SubmissionDto.Status
-  id: Status
-  parent: MegaForm.Sdk.SubmissionDto
+    content.vb: Public Property FieldKey As String
+  overload: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey*
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel
+  id: FieldLabel
+  parent: MegaForm.Sdk.SubmissionFieldSnapshotDto
   langs:
   - csharp
   - vb
-  name: Status
-  nameWithType: SubmissionDto.Status
-  fullName: MegaForm.Sdk.SubmissionDto.Status
+  name: FieldLabel
+  nameWithType: SubmissionFieldSnapshotDto.FieldLabel
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel
   type: Property
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: Status
+    id: FieldLabel
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 120
+    startLine: 349
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Submission status, e.g. "new", "approved", "rejected".
-  example: []
   syntax:
-    content: public string? Status { get; set; }
+    content: public string? FieldLabel { get; set; }
     parameters: []
     return:
       type: System.String
-    content.vb: Public Property Status As String
-  overload: MegaForm.Sdk.SubmissionDto.Status*
-- uid: MegaForm.Sdk.SubmissionDto.IsSpam
-  commentId: P:MegaForm.Sdk.SubmissionDto.IsSpam
-  id: IsSpam
-  parent: MegaForm.Sdk.SubmissionDto
+    content.vb: Public Property FieldLabel As String
+  overload: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel*
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType
+  id: FieldType
+  parent: MegaForm.Sdk.SubmissionFieldSnapshotDto
   langs:
   - csharp
   - vb
-  name: IsSpam
-  nameWithType: SubmissionDto.IsSpam
-  fullName: MegaForm.Sdk.SubmissionDto.IsSpam
+  name: FieldType
+  nameWithType: SubmissionFieldSnapshotDto.FieldType
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType
   type: Property
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: IsSpam
+    id: FieldType
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 123
+    startLine: 350
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Whether the submission was flagged as spam.
-  example: []
   syntax:
-    content: public bool IsSpam { get; set; }
+    content: public string? FieldType { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property FieldType As String
+  overload: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType*
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue
+  id: RawValue
+  parent: MegaForm.Sdk.SubmissionFieldSnapshotDto
+  langs:
+  - csharp
+  - vb
+  name: RawValue
+  nameWithType: SubmissionFieldSnapshotDto.RawValue
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: RawValue
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 351
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? RawValue { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property RawValue As String
+  overload: MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue*
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue
+  id: DisplayValue
+  parent: MegaForm.Sdk.SubmissionFieldSnapshotDto
+  langs:
+  - csharp
+  - vb
+  name: DisplayValue
+  nameWithType: SubmissionFieldSnapshotDto.DisplayValue
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: DisplayValue
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 352
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? DisplayValue { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property DisplayValue As String
+  overload: MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue*
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder
+  id: SortOrder
+  parent: MegaForm.Sdk.SubmissionFieldSnapshotDto
+  langs:
+  - csharp
+  - vb
+  name: SortOrder
+  nameWithType: SubmissionFieldSnapshotDto.SortOrder
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: SortOrder
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 353
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public int SortOrder { get; set; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property SortOrder As Integer
+  overload: MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder*
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback
+  id: IsLegacyFallback
+  parent: MegaForm.Sdk.SubmissionFieldSnapshotDto
+  langs:
+  - csharp
+  - vb
+  name: IsLegacyFallback
+  nameWithType: SubmissionFieldSnapshotDto.IsLegacyFallback
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: IsLegacyFallback
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 354
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public bool IsLegacyFallback { get; set; }
     parameters: []
     return:
       type: System.Boolean
-    content.vb: Public Property IsSpam As Boolean
-  overload: MegaForm.Sdk.SubmissionDto.IsSpam*
-- uid: MegaForm.Sdk.SubmissionDto.UserId
-  commentId: P:MegaForm.Sdk.SubmissionDto.UserId
-  id: UserId
-  parent: MegaForm.Sdk.SubmissionDto
-  langs:
-  - csharp
-  - vb
-  name: UserId
-  nameWithType: SubmissionDto.UserId
-  fullName: MegaForm.Sdk.SubmissionDto.UserId
-  type: Property
-  source:
-    remote:
-      path: MegaForm.Sdk/Dtos.cs
-      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
-      repo: https://github.com/CissSolution/MegaformDocs.git
-    id: UserId
-    path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 126
-  assemblies:
-  - MegaForm.Sdk
-  namespace: MegaForm.Sdk
-  summary: Id of the user who submitted the record, if known.
-  example: []
-  syntax:
-    content: public int? UserId { get; set; }
-    parameters: []
-    return:
-      type: System.Nullable{System.Int32}
-    content.vb: Public Property UserId As Integer?
-  overload: MegaForm.Sdk.SubmissionDto.UserId*
-- uid: MegaForm.Sdk.SubmissionDto.SubmittedOnUtc
-  commentId: P:MegaForm.Sdk.SubmissionDto.SubmittedOnUtc
-  id: SubmittedOnUtc
-  parent: MegaForm.Sdk.SubmissionDto
-  langs:
-  - csharp
-  - vb
-  name: SubmittedOnUtc
-  nameWithType: SubmissionDto.SubmittedOnUtc
-  fullName: MegaForm.Sdk.SubmissionDto.SubmittedOnUtc
-  type: Property
-  source:
-    remote:
-      path: MegaForm.Sdk/Dtos.cs
-      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
-      repo: https://github.com/CissSolution/MegaformDocs.git
-    id: SubmittedOnUtc
-    path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 129
-  assemblies:
-  - MegaForm.Sdk
-  namespace: MegaForm.Sdk
-  summary: UTC timestamp when the submission was created.
-  example: []
-  syntax:
-    content: public DateTime SubmittedOnUtc { get; set; }
-    parameters: []
-    return:
-      type: System.DateTime
-    content.vb: Public Property SubmittedOnUtc As Date
-  overload: MegaForm.Sdk.SubmissionDto.SubmittedOnUtc*
+    content.vb: Public Property IsLegacyFallback As Boolean
+  overload: MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback*
 references:
 - uid: MegaForm.Sdk
   commentId: N:MegaForm.Sdk
@@ -497,35 +483,12 @@ references:
   name: System
   nameWithType: System
   fullName: System
-- uid: MegaForm.Sdk.SubmissionDto.SubmissionId*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.SubmissionId
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_SubmissionId
-  name: SubmissionId
-  nameWithType: SubmissionDto.SubmissionId
-  fullName: MegaForm.Sdk.SubmissionDto.SubmissionId
-- uid: System.Int32
-  commentId: T:System.Int32
-  parent: System
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.int32
-  name: int
-  nameWithType: int
-  fullName: int
-  nameWithType.vb: Integer
-  fullName.vb: Integer
-  name.vb: Integer
-- uid: MegaForm.Sdk.SubmissionDto.FormId*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.FormId
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_FormId
-  name: FormId
-  nameWithType: SubmissionDto.FormId
-  fullName: MegaForm.Sdk.SubmissionDto.FormId
-- uid: MegaForm.Sdk.SubmissionDto.DataJson*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.DataJson
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_DataJson
-  name: DataJson
-  nameWithType: SubmissionDto.DataJson
-  fullName: MegaForm.Sdk.SubmissionDto.DataJson
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey*
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey
+  href: MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_FieldKey
+  name: FieldKey
+  nameWithType: SubmissionFieldSnapshotDto.FieldKey
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey
 - uid: System.String
   commentId: T:System.String
   parent: System
@@ -537,18 +500,53 @@ references:
   nameWithType.vb: String
   fullName.vb: String
   name.vb: String
-- uid: MegaForm.Sdk.SubmissionDto.Status*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.Status
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_Status
-  name: Status
-  nameWithType: SubmissionDto.Status
-  fullName: MegaForm.Sdk.SubmissionDto.Status
-- uid: MegaForm.Sdk.SubmissionDto.IsSpam*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.IsSpam
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_IsSpam
-  name: IsSpam
-  nameWithType: SubmissionDto.IsSpam
-  fullName: MegaForm.Sdk.SubmissionDto.IsSpam
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel*
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel
+  href: MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_FieldLabel
+  name: FieldLabel
+  nameWithType: SubmissionFieldSnapshotDto.FieldLabel
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType*
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType
+  href: MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_FieldType
+  name: FieldType
+  nameWithType: SubmissionFieldSnapshotDto.FieldType
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue*
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue
+  href: MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_RawValue
+  name: RawValue
+  nameWithType: SubmissionFieldSnapshotDto.RawValue
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue*
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue
+  href: MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_DisplayValue
+  name: DisplayValue
+  nameWithType: SubmissionFieldSnapshotDto.DisplayValue
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder*
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder
+  href: MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_SortOrder
+  name: SortOrder
+  nameWithType: SubmissionFieldSnapshotDto.SortOrder
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback*
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback
+  href: MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_IsLegacyFallback
+  name: IsLegacyFallback
+  nameWithType: SubmissionFieldSnapshotDto.IsLegacyFallback
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback
 - uid: System.Boolean
   commentId: T:System.Boolean
   parent: System
@@ -560,77 +558,3 @@ references:
   nameWithType.vb: Boolean
   fullName.vb: Boolean
   name.vb: Boolean
-- uid: MegaForm.Sdk.SubmissionDto.UserId*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.UserId
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_UserId
-  name: UserId
-  nameWithType: SubmissionDto.UserId
-  fullName: MegaForm.Sdk.SubmissionDto.UserId
-- uid: System.Nullable{System.Int32}
-  commentId: T:System.Nullable{System.Int32}
-  parent: System
-  definition: System.Nullable`1
-  href: https://learn.microsoft.com/dotnet/api/system.int32
-  name: int?
-  nameWithType: int?
-  fullName: int?
-  nameWithType.vb: Integer?
-  fullName.vb: Integer?
-  name.vb: Integer?
-  spec.csharp:
-  - uid: System.Int32
-    name: int
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.int32
-  - name: '?'
-  spec.vb:
-  - uid: System.Int32
-    name: Integer
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.int32
-  - name: '?'
-- uid: System.Nullable`1
-  commentId: T:System.Nullable`1
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.nullable-1
-  name: Nullable<T>
-  nameWithType: Nullable<T>
-  fullName: System.Nullable<T>
-  nameWithType.vb: Nullable(Of T)
-  fullName.vb: System.Nullable(Of T)
-  name.vb: Nullable(Of T)
-  spec.csharp:
-  - uid: System.Nullable`1
-    name: Nullable
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
-  - name: <
-  - name: T
-  - name: '>'
-  spec.vb:
-  - uid: System.Nullable`1
-    name: Nullable
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
-  - name: (
-  - name: Of
-  - name: " "
-  - name: T
-  - name: )
-- uid: MegaForm.Sdk.SubmissionDto.SubmittedOnUtc*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.SubmittedOnUtc
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_SubmittedOnUtc
-  name: SubmittedOnUtc
-  nameWithType: SubmissionDto.SubmittedOnUtc
-  fullName: MegaForm.Sdk.SubmissionDto.SubmittedOnUtc
-- uid: System.DateTime
-  commentId: T:System.DateTime
-  parent: System
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.datetime
-  name: DateTime
-  nameWithType: DateTime
-  fullName: System.DateTime
-  nameWithType.vb: Date
-  fullName.vb: Date
-  name.vb: Date

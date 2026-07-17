@@ -1,40 +1,40 @@
 ### YamlMime:ManagedReference
 items:
-- uid: MegaForm.Sdk.SubmissionDto
-  commentId: T:MegaForm.Sdk.SubmissionDto
-  id: SubmissionDto
+- uid: MegaForm.Sdk.SubmissionSearchQuery
+  commentId: T:MegaForm.Sdk.SubmissionSearchQuery
+  id: SubmissionSearchQuery
   parent: MegaForm.Sdk
   children:
-  - MegaForm.Sdk.SubmissionDto.DataJson
-  - MegaForm.Sdk.SubmissionDto.FormId
-  - MegaForm.Sdk.SubmissionDto.IsSpam
-  - MegaForm.Sdk.SubmissionDto.Status
-  - MegaForm.Sdk.SubmissionDto.SubmissionId
-  - MegaForm.Sdk.SubmissionDto.SubmittedOnUtc
-  - MegaForm.Sdk.SubmissionDto.UserId
+  - MegaForm.Sdk.SubmissionSearchQuery.DateFrom
+  - MegaForm.Sdk.SubmissionSearchQuery.DateTo
+  - MegaForm.Sdk.SubmissionSearchQuery.FormId
+  - MegaForm.Sdk.SubmissionSearchQuery.Page
+  - MegaForm.Sdk.SubmissionSearchQuery.PageSize
+  - MegaForm.Sdk.SubmissionSearchQuery.Search
+  - MegaForm.Sdk.SubmissionSearchQuery.Status
   langs:
   - csharp
   - vb
-  name: SubmissionDto
-  nameWithType: SubmissionDto
-  fullName: MegaForm.Sdk.SubmissionDto
+  name: SubmissionSearchQuery
+  nameWithType: SubmissionSearchQuery
+  fullName: MegaForm.Sdk.SubmissionSearchQuery
   type: Class
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: SubmissionDto
+    id: SubmissionSearchQuery
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 108
+    startLine: 297
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: A submission, as exposed to SDK consumers.
+  summary: Richer query contract for submission dashboard screens.
   example: []
   syntax:
-    content: public sealed class SubmissionDto
-    content.vb: Public NotInheritable Class SubmissionDto
+    content: public sealed class SubmissionSearchQuery
+    content.vb: Public NotInheritable Class SubmissionSearchQuery
   inheritance:
   - System.Object
   inheritedMembers:
@@ -44,47 +44,16 @@ items:
   - System.Object.GetType
   - System.Object.ReferenceEquals(System.Object,System.Object)
   - System.Object.ToString
-- uid: MegaForm.Sdk.SubmissionDto.SubmissionId
-  commentId: P:MegaForm.Sdk.SubmissionDto.SubmissionId
-  id: SubmissionId
-  parent: MegaForm.Sdk.SubmissionDto
-  langs:
-  - csharp
-  - vb
-  name: SubmissionId
-  nameWithType: SubmissionDto.SubmissionId
-  fullName: MegaForm.Sdk.SubmissionDto.SubmissionId
-  type: Property
-  source:
-    remote:
-      path: MegaForm.Sdk/Dtos.cs
-      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
-      repo: https://github.com/CissSolution/MegaformDocs.git
-    id: SubmissionId
-    path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 111
-  assemblies:
-  - MegaForm.Sdk
-  namespace: MegaForm.Sdk
-  summary: Unique submission id.
-  example: []
-  syntax:
-    content: public int SubmissionId { get; set; }
-    parameters: []
-    return:
-      type: System.Int32
-    content.vb: Public Property SubmissionId As Integer
-  overload: MegaForm.Sdk.SubmissionDto.SubmissionId*
-- uid: MegaForm.Sdk.SubmissionDto.FormId
-  commentId: P:MegaForm.Sdk.SubmissionDto.FormId
+- uid: MegaForm.Sdk.SubmissionSearchQuery.FormId
+  commentId: P:MegaForm.Sdk.SubmissionSearchQuery.FormId
   id: FormId
-  parent: MegaForm.Sdk.SubmissionDto
+  parent: MegaForm.Sdk.SubmissionSearchQuery
   langs:
   - csharp
   - vb
   name: FormId
-  nameWithType: SubmissionDto.FormId
-  fullName: MegaForm.Sdk.SubmissionDto.FormId
+  nameWithType: SubmissionSearchQuery.FormId
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.FormId
   type: Property
   source:
     remote:
@@ -93,60 +62,27 @@ items:
       repo: https://github.com/CissSolution/MegaformDocs.git
     id: FormId
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 114
+    startLine: 299
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Id of the form this submission belongs to.
-  example: []
   syntax:
     content: public int FormId { get; set; }
     parameters: []
     return:
       type: System.Int32
     content.vb: Public Property FormId As Integer
-  overload: MegaForm.Sdk.SubmissionDto.FormId*
-- uid: MegaForm.Sdk.SubmissionDto.DataJson
-  commentId: P:MegaForm.Sdk.SubmissionDto.DataJson
-  id: DataJson
-  parent: MegaForm.Sdk.SubmissionDto
-  langs:
-  - csharp
-  - vb
-  name: DataJson
-  nameWithType: SubmissionDto.DataJson
-  fullName: MegaForm.Sdk.SubmissionDto.DataJson
-  type: Property
-  source:
-    remote:
-      path: MegaForm.Sdk/Dtos.cs
-      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
-      repo: https://github.com/CissSolution/MegaformDocs.git
-    id: DataJson
-    path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 117
-  assemblies:
-  - MegaForm.Sdk
-  namespace: MegaForm.Sdk
-  summary: Submitted field values as a JSON string.
-  example: []
-  syntax:
-    content: public string? DataJson { get; set; }
-    parameters: []
-    return:
-      type: System.String
-    content.vb: Public Property DataJson As String
-  overload: MegaForm.Sdk.SubmissionDto.DataJson*
-- uid: MegaForm.Sdk.SubmissionDto.Status
-  commentId: P:MegaForm.Sdk.SubmissionDto.Status
+  overload: MegaForm.Sdk.SubmissionSearchQuery.FormId*
+- uid: MegaForm.Sdk.SubmissionSearchQuery.Status
+  commentId: P:MegaForm.Sdk.SubmissionSearchQuery.Status
   id: Status
-  parent: MegaForm.Sdk.SubmissionDto
+  parent: MegaForm.Sdk.SubmissionSearchQuery
   langs:
   - csharp
   - vb
   name: Status
-  nameWithType: SubmissionDto.Status
-  fullName: MegaForm.Sdk.SubmissionDto.Status
+  nameWithType: SubmissionSearchQuery.Status
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.Status
   type: Property
   source:
     remote:
@@ -155,112 +91,162 @@ items:
       repo: https://github.com/CissSolution/MegaformDocs.git
     id: Status
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 120
+    startLine: 300
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Submission status, e.g. "new", "approved", "rejected".
-  example: []
   syntax:
     content: public string? Status { get; set; }
     parameters: []
     return:
       type: System.String
     content.vb: Public Property Status As String
-  overload: MegaForm.Sdk.SubmissionDto.Status*
-- uid: MegaForm.Sdk.SubmissionDto.IsSpam
-  commentId: P:MegaForm.Sdk.SubmissionDto.IsSpam
-  id: IsSpam
-  parent: MegaForm.Sdk.SubmissionDto
+  overload: MegaForm.Sdk.SubmissionSearchQuery.Status*
+- uid: MegaForm.Sdk.SubmissionSearchQuery.Search
+  commentId: P:MegaForm.Sdk.SubmissionSearchQuery.Search
+  id: Search
+  parent: MegaForm.Sdk.SubmissionSearchQuery
   langs:
   - csharp
   - vb
-  name: IsSpam
-  nameWithType: SubmissionDto.IsSpam
-  fullName: MegaForm.Sdk.SubmissionDto.IsSpam
+  name: Search
+  nameWithType: SubmissionSearchQuery.Search
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.Search
   type: Property
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: IsSpam
+    id: Search
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 123
+    startLine: 301
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Whether the submission was flagged as spam.
-  example: []
   syntax:
-    content: public bool IsSpam { get; set; }
+    content: public string? Search { get; set; }
     parameters: []
     return:
-      type: System.Boolean
-    content.vb: Public Property IsSpam As Boolean
-  overload: MegaForm.Sdk.SubmissionDto.IsSpam*
-- uid: MegaForm.Sdk.SubmissionDto.UserId
-  commentId: P:MegaForm.Sdk.SubmissionDto.UserId
-  id: UserId
-  parent: MegaForm.Sdk.SubmissionDto
+      type: System.String
+    content.vb: Public Property Search As String
+  overload: MegaForm.Sdk.SubmissionSearchQuery.Search*
+- uid: MegaForm.Sdk.SubmissionSearchQuery.DateFrom
+  commentId: P:MegaForm.Sdk.SubmissionSearchQuery.DateFrom
+  id: DateFrom
+  parent: MegaForm.Sdk.SubmissionSearchQuery
   langs:
   - csharp
   - vb
-  name: UserId
-  nameWithType: SubmissionDto.UserId
-  fullName: MegaForm.Sdk.SubmissionDto.UserId
+  name: DateFrom
+  nameWithType: SubmissionSearchQuery.DateFrom
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.DateFrom
   type: Property
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: UserId
+    id: DateFrom
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 126
+    startLine: 302
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Id of the user who submitted the record, if known.
-  example: []
   syntax:
-    content: public int? UserId { get; set; }
+    content: public DateTime? DateFrom { get; set; }
     parameters: []
     return:
-      type: System.Nullable{System.Int32}
-    content.vb: Public Property UserId As Integer?
-  overload: MegaForm.Sdk.SubmissionDto.UserId*
-- uid: MegaForm.Sdk.SubmissionDto.SubmittedOnUtc
-  commentId: P:MegaForm.Sdk.SubmissionDto.SubmittedOnUtc
-  id: SubmittedOnUtc
-  parent: MegaForm.Sdk.SubmissionDto
+      type: System.Nullable{System.DateTime}
+    content.vb: Public Property DateFrom As Date?
+  overload: MegaForm.Sdk.SubmissionSearchQuery.DateFrom*
+- uid: MegaForm.Sdk.SubmissionSearchQuery.DateTo
+  commentId: P:MegaForm.Sdk.SubmissionSearchQuery.DateTo
+  id: DateTo
+  parent: MegaForm.Sdk.SubmissionSearchQuery
   langs:
   - csharp
   - vb
-  name: SubmittedOnUtc
-  nameWithType: SubmissionDto.SubmittedOnUtc
-  fullName: MegaForm.Sdk.SubmissionDto.SubmittedOnUtc
+  name: DateTo
+  nameWithType: SubmissionSearchQuery.DateTo
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.DateTo
   type: Property
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: SubmittedOnUtc
+    id: DateTo
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 129
+    startLine: 303
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: UTC timestamp when the submission was created.
-  example: []
   syntax:
-    content: public DateTime SubmittedOnUtc { get; set; }
+    content: public DateTime? DateTo { get; set; }
     parameters: []
     return:
-      type: System.DateTime
-    content.vb: Public Property SubmittedOnUtc As Date
-  overload: MegaForm.Sdk.SubmissionDto.SubmittedOnUtc*
+      type: System.Nullable{System.DateTime}
+    content.vb: Public Property DateTo As Date?
+  overload: MegaForm.Sdk.SubmissionSearchQuery.DateTo*
+- uid: MegaForm.Sdk.SubmissionSearchQuery.Page
+  commentId: P:MegaForm.Sdk.SubmissionSearchQuery.Page
+  id: Page
+  parent: MegaForm.Sdk.SubmissionSearchQuery
+  langs:
+  - csharp
+  - vb
+  name: Page
+  nameWithType: SubmissionSearchQuery.Page
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.Page
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: Page
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 304
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public int Page { get; set; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property Page As Integer
+  overload: MegaForm.Sdk.SubmissionSearchQuery.Page*
+- uid: MegaForm.Sdk.SubmissionSearchQuery.PageSize
+  commentId: P:MegaForm.Sdk.SubmissionSearchQuery.PageSize
+  id: PageSize
+  parent: MegaForm.Sdk.SubmissionSearchQuery
+  langs:
+  - csharp
+  - vb
+  name: PageSize
+  nameWithType: SubmissionSearchQuery.PageSize
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.PageSize
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: PageSize
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 305
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public int PageSize { get; set; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property PageSize As Integer
+  overload: MegaForm.Sdk.SubmissionSearchQuery.PageSize*
 references:
 - uid: MegaForm.Sdk
   commentId: N:MegaForm.Sdk
@@ -497,12 +483,12 @@ references:
   name: System
   nameWithType: System
   fullName: System
-- uid: MegaForm.Sdk.SubmissionDto.SubmissionId*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.SubmissionId
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_SubmissionId
-  name: SubmissionId
-  nameWithType: SubmissionDto.SubmissionId
-  fullName: MegaForm.Sdk.SubmissionDto.SubmissionId
+- uid: MegaForm.Sdk.SubmissionSearchQuery.FormId*
+  commentId: Overload:MegaForm.Sdk.SubmissionSearchQuery.FormId
+  href: MegaForm.Sdk.SubmissionSearchQuery.html#MegaForm_Sdk_SubmissionSearchQuery_FormId
+  name: FormId
+  nameWithType: SubmissionSearchQuery.FormId
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.FormId
 - uid: System.Int32
   commentId: T:System.Int32
   parent: System
@@ -514,18 +500,12 @@ references:
   nameWithType.vb: Integer
   fullName.vb: Integer
   name.vb: Integer
-- uid: MegaForm.Sdk.SubmissionDto.FormId*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.FormId
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_FormId
-  name: FormId
-  nameWithType: SubmissionDto.FormId
-  fullName: MegaForm.Sdk.SubmissionDto.FormId
-- uid: MegaForm.Sdk.SubmissionDto.DataJson*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.DataJson
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_DataJson
-  name: DataJson
-  nameWithType: SubmissionDto.DataJson
-  fullName: MegaForm.Sdk.SubmissionDto.DataJson
+- uid: MegaForm.Sdk.SubmissionSearchQuery.Status*
+  commentId: Overload:MegaForm.Sdk.SubmissionSearchQuery.Status
+  href: MegaForm.Sdk.SubmissionSearchQuery.html#MegaForm_Sdk_SubmissionSearchQuery_Status
+  name: Status
+  nameWithType: SubmissionSearchQuery.Status
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.Status
 - uid: System.String
   commentId: T:System.String
   parent: System
@@ -537,57 +517,40 @@ references:
   nameWithType.vb: String
   fullName.vb: String
   name.vb: String
-- uid: MegaForm.Sdk.SubmissionDto.Status*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.Status
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_Status
-  name: Status
-  nameWithType: SubmissionDto.Status
-  fullName: MegaForm.Sdk.SubmissionDto.Status
-- uid: MegaForm.Sdk.SubmissionDto.IsSpam*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.IsSpam
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_IsSpam
-  name: IsSpam
-  nameWithType: SubmissionDto.IsSpam
-  fullName: MegaForm.Sdk.SubmissionDto.IsSpam
-- uid: System.Boolean
-  commentId: T:System.Boolean
-  parent: System
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.boolean
-  name: bool
-  nameWithType: bool
-  fullName: bool
-  nameWithType.vb: Boolean
-  fullName.vb: Boolean
-  name.vb: Boolean
-- uid: MegaForm.Sdk.SubmissionDto.UserId*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.UserId
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_UserId
-  name: UserId
-  nameWithType: SubmissionDto.UserId
-  fullName: MegaForm.Sdk.SubmissionDto.UserId
-- uid: System.Nullable{System.Int32}
-  commentId: T:System.Nullable{System.Int32}
+- uid: MegaForm.Sdk.SubmissionSearchQuery.Search*
+  commentId: Overload:MegaForm.Sdk.SubmissionSearchQuery.Search
+  href: MegaForm.Sdk.SubmissionSearchQuery.html#MegaForm_Sdk_SubmissionSearchQuery_Search
+  name: Search
+  nameWithType: SubmissionSearchQuery.Search
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.Search
+- uid: MegaForm.Sdk.SubmissionSearchQuery.DateFrom*
+  commentId: Overload:MegaForm.Sdk.SubmissionSearchQuery.DateFrom
+  href: MegaForm.Sdk.SubmissionSearchQuery.html#MegaForm_Sdk_SubmissionSearchQuery_DateFrom
+  name: DateFrom
+  nameWithType: SubmissionSearchQuery.DateFrom
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.DateFrom
+- uid: System.Nullable{System.DateTime}
+  commentId: T:System.Nullable{System.DateTime}
   parent: System
   definition: System.Nullable`1
-  href: https://learn.microsoft.com/dotnet/api/system.int32
-  name: int?
-  nameWithType: int?
-  fullName: int?
-  nameWithType.vb: Integer?
-  fullName.vb: Integer?
-  name.vb: Integer?
+  href: https://learn.microsoft.com/dotnet/api/system.datetime
+  name: DateTime?
+  nameWithType: DateTime?
+  fullName: System.DateTime?
+  nameWithType.vb: Date?
+  fullName.vb: Date?
+  name.vb: Date?
   spec.csharp:
-  - uid: System.Int32
-    name: int
+  - uid: System.DateTime
+    name: DateTime
     isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.int32
+    href: https://learn.microsoft.com/dotnet/api/system.datetime
   - name: '?'
   spec.vb:
-  - uid: System.Int32
-    name: Integer
+  - uid: System.DateTime
+    name: Date
     isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.int32
+    href: https://learn.microsoft.com/dotnet/api/system.datetime
   - name: '?'
 - uid: System.Nullable`1
   commentId: T:System.Nullable`1
@@ -617,20 +580,21 @@ references:
   - name: " "
   - name: T
   - name: )
-- uid: MegaForm.Sdk.SubmissionDto.SubmittedOnUtc*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.SubmittedOnUtc
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_SubmittedOnUtc
-  name: SubmittedOnUtc
-  nameWithType: SubmissionDto.SubmittedOnUtc
-  fullName: MegaForm.Sdk.SubmissionDto.SubmittedOnUtc
-- uid: System.DateTime
-  commentId: T:System.DateTime
-  parent: System
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.datetime
-  name: DateTime
-  nameWithType: DateTime
-  fullName: System.DateTime
-  nameWithType.vb: Date
-  fullName.vb: Date
-  name.vb: Date
+- uid: MegaForm.Sdk.SubmissionSearchQuery.DateTo*
+  commentId: Overload:MegaForm.Sdk.SubmissionSearchQuery.DateTo
+  href: MegaForm.Sdk.SubmissionSearchQuery.html#MegaForm_Sdk_SubmissionSearchQuery_DateTo
+  name: DateTo
+  nameWithType: SubmissionSearchQuery.DateTo
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.DateTo
+- uid: MegaForm.Sdk.SubmissionSearchQuery.Page*
+  commentId: Overload:MegaForm.Sdk.SubmissionSearchQuery.Page
+  href: MegaForm.Sdk.SubmissionSearchQuery.html#MegaForm_Sdk_SubmissionSearchQuery_Page
+  name: Page
+  nameWithType: SubmissionSearchQuery.Page
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.Page
+- uid: MegaForm.Sdk.SubmissionSearchQuery.PageSize*
+  commentId: Overload:MegaForm.Sdk.SubmissionSearchQuery.PageSize
+  href: MegaForm.Sdk.SubmissionSearchQuery.html#MegaForm_Sdk_SubmissionSearchQuery_PageSize
+  name: PageSize
+  nameWithType: SubmissionSearchQuery.PageSize
+  fullName: MegaForm.Sdk.SubmissionSearchQuery.PageSize

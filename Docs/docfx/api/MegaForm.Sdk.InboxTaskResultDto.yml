@@ -1,40 +1,39 @@
 ### YamlMime:ManagedReference
 items:
-- uid: MegaForm.Sdk.PagedResult`1
-  commentId: T:MegaForm.Sdk.PagedResult`1
-  id: PagedResult`1
+- uid: MegaForm.Sdk.InboxTaskResultDto
+  commentId: T:MegaForm.Sdk.InboxTaskResultDto
+  id: InboxTaskResultDto
   parent: MegaForm.Sdk
   children:
-  - MegaForm.Sdk.PagedResult`1.Items
-  - MegaForm.Sdk.PagedResult`1.Page
-  - MegaForm.Sdk.PagedResult`1.PageSize
-  - MegaForm.Sdk.PagedResult`1.TotalCount
+  - MegaForm.Sdk.InboxTaskResultDto.Actions
+  - MegaForm.Sdk.InboxTaskResultDto.Error
+  - MegaForm.Sdk.InboxTaskResultDto.Files
+  - MegaForm.Sdk.InboxTaskResultDto.Submission
+  - MegaForm.Sdk.InboxTaskResultDto.Success
+  - MegaForm.Sdk.InboxTaskResultDto.Task
   langs:
   - csharp
   - vb
-  name: PagedResult<T>
-  nameWithType: PagedResult<T>
-  fullName: MegaForm.Sdk.PagedResult<T>
+  name: InboxTaskResultDto
+  nameWithType: InboxTaskResultDto
+  fullName: MegaForm.Sdk.InboxTaskResultDto
   type: Class
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: PagedResult
+    id: InboxTaskResultDto
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 242
+    startLine: 463
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: A page of results plus the total count for the query.
+  summary: Result of a workflow task operation.
   example: []
   syntax:
-    content: public sealed class PagedResult<T>
-    typeParameters:
-    - id: T
-      description: Item type.
-    content.vb: Public NotInheritable Class PagedResult(Of T)
+    content: public sealed class InboxTaskResultDto
+    content.vb: Public NotInheritable Class InboxTaskResultDto
   inheritance:
   - System.Object
   inheritedMembers:
@@ -44,141 +43,180 @@ items:
   - System.Object.GetType
   - System.Object.ReferenceEquals(System.Object,System.Object)
   - System.Object.ToString
-  nameWithType.vb: PagedResult(Of T)
-  fullName.vb: MegaForm.Sdk.PagedResult(Of T)
-  name.vb: PagedResult(Of T)
-- uid: MegaForm.Sdk.PagedResult`1.Items
-  commentId: P:MegaForm.Sdk.PagedResult`1.Items
-  id: Items
-  parent: MegaForm.Sdk.PagedResult`1
+- uid: MegaForm.Sdk.InboxTaskResultDto.Success
+  commentId: P:MegaForm.Sdk.InboxTaskResultDto.Success
+  id: Success
+  parent: MegaForm.Sdk.InboxTaskResultDto
   langs:
   - csharp
   - vb
-  name: Items
-  nameWithType: PagedResult<T>.Items
-  fullName: MegaForm.Sdk.PagedResult<T>.Items
+  name: Success
+  nameWithType: InboxTaskResultDto.Success
+  fullName: MegaForm.Sdk.InboxTaskResultDto.Success
   type: Property
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: Items
+    id: Success
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 245
+    startLine: 465
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Items on the current page.
-  example: []
   syntax:
-    content: public IReadOnlyList<T> Items { get; set; }
+    content: public bool Success { get; set; }
     parameters: []
     return:
-      type: System.Collections.Generic.IReadOnlyList{{T}}
-    content.vb: Public Property Items As IReadOnlyList(Of T)
-  overload: MegaForm.Sdk.PagedResult`1.Items*
-  nameWithType.vb: PagedResult(Of T).Items
-  fullName.vb: MegaForm.Sdk.PagedResult(Of T).Items
-- uid: MegaForm.Sdk.PagedResult`1.TotalCount
-  commentId: P:MegaForm.Sdk.PagedResult`1.TotalCount
-  id: TotalCount
-  parent: MegaForm.Sdk.PagedResult`1
+      type: System.Boolean
+    content.vb: Public Property Success As Boolean
+  overload: MegaForm.Sdk.InboxTaskResultDto.Success*
+- uid: MegaForm.Sdk.InboxTaskResultDto.Error
+  commentId: P:MegaForm.Sdk.InboxTaskResultDto.Error
+  id: Error
+  parent: MegaForm.Sdk.InboxTaskResultDto
   langs:
   - csharp
   - vb
-  name: TotalCount
-  nameWithType: PagedResult<T>.TotalCount
-  fullName: MegaForm.Sdk.PagedResult<T>.TotalCount
+  name: Error
+  nameWithType: InboxTaskResultDto.Error
+  fullName: MegaForm.Sdk.InboxTaskResultDto.Error
   type: Property
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: TotalCount
+    id: Error
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 248
+    startLine: 466
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Total number of items matching the query across all pages.
-  example: []
   syntax:
-    content: public int TotalCount { get; set; }
+    content: public string? Error { get; set; }
     parameters: []
     return:
-      type: System.Int32
-    content.vb: Public Property TotalCount As Integer
-  overload: MegaForm.Sdk.PagedResult`1.TotalCount*
-  nameWithType.vb: PagedResult(Of T).TotalCount
-  fullName.vb: MegaForm.Sdk.PagedResult(Of T).TotalCount
-- uid: MegaForm.Sdk.PagedResult`1.Page
-  commentId: P:MegaForm.Sdk.PagedResult`1.Page
-  id: Page
-  parent: MegaForm.Sdk.PagedResult`1
+      type: System.String
+    content.vb: Public Property [Error] As String
+  overload: MegaForm.Sdk.InboxTaskResultDto.Error*
+- uid: MegaForm.Sdk.InboxTaskResultDto.Task
+  commentId: P:MegaForm.Sdk.InboxTaskResultDto.Task
+  id: Task
+  parent: MegaForm.Sdk.InboxTaskResultDto
   langs:
   - csharp
   - vb
-  name: Page
-  nameWithType: PagedResult<T>.Page
-  fullName: MegaForm.Sdk.PagedResult<T>.Page
+  name: Task
+  nameWithType: InboxTaskResultDto.Task
+  fullName: MegaForm.Sdk.InboxTaskResultDto.Task
   type: Property
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: Page
+    id: Task
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 251
+    startLine: 467
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Current page number (1-based).
-  example: []
   syntax:
-    content: public int Page { get; set; }
+    content: public InboxTaskDto? Task { get; set; }
     parameters: []
     return:
-      type: System.Int32
-    content.vb: Public Property Page As Integer
-  overload: MegaForm.Sdk.PagedResult`1.Page*
-  nameWithType.vb: PagedResult(Of T).Page
-  fullName.vb: MegaForm.Sdk.PagedResult(Of T).Page
-- uid: MegaForm.Sdk.PagedResult`1.PageSize
-  commentId: P:MegaForm.Sdk.PagedResult`1.PageSize
-  id: PageSize
-  parent: MegaForm.Sdk.PagedResult`1
+      type: MegaForm.Sdk.InboxTaskDto
+    content.vb: Public Property Task As InboxTaskDto
+  overload: MegaForm.Sdk.InboxTaskResultDto.Task*
+- uid: MegaForm.Sdk.InboxTaskResultDto.Submission
+  commentId: P:MegaForm.Sdk.InboxTaskResultDto.Submission
+  id: Submission
+  parent: MegaForm.Sdk.InboxTaskResultDto
   langs:
   - csharp
   - vb
-  name: PageSize
-  nameWithType: PagedResult<T>.PageSize
-  fullName: MegaForm.Sdk.PagedResult<T>.PageSize
+  name: Submission
+  nameWithType: InboxTaskResultDto.Submission
+  fullName: MegaForm.Sdk.InboxTaskResultDto.Submission
   type: Property
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: PageSize
+    id: Submission
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 254
+    startLine: 468
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Number of items per page.
-  example: []
   syntax:
-    content: public int PageSize { get; set; }
+    content: public SubmissionDto? Submission { get; set; }
     parameters: []
     return:
-      type: System.Int32
-    content.vb: Public Property PageSize As Integer
-  overload: MegaForm.Sdk.PagedResult`1.PageSize*
-  nameWithType.vb: PagedResult(Of T).PageSize
-  fullName.vb: MegaForm.Sdk.PagedResult(Of T).PageSize
+      type: MegaForm.Sdk.SubmissionDto
+    content.vb: Public Property Submission As SubmissionDto
+  overload: MegaForm.Sdk.InboxTaskResultDto.Submission*
+- uid: MegaForm.Sdk.InboxTaskResultDto.Files
+  commentId: P:MegaForm.Sdk.InboxTaskResultDto.Files
+  id: Files
+  parent: MegaForm.Sdk.InboxTaskResultDto
+  langs:
+  - csharp
+  - vb
+  name: Files
+  nameWithType: InboxTaskResultDto.Files
+  fullName: MegaForm.Sdk.InboxTaskResultDto.Files
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: Files
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 469
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public IReadOnlyList<FileDto> Files { get; set; }
+    parameters: []
+    return:
+      type: System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.FileDto}
+    content.vb: Public Property Files As IReadOnlyList(Of FileDto)
+  overload: MegaForm.Sdk.InboxTaskResultDto.Files*
+- uid: MegaForm.Sdk.InboxTaskResultDto.Actions
+  commentId: P:MegaForm.Sdk.InboxTaskResultDto.Actions
+  id: Actions
+  parent: MegaForm.Sdk.InboxTaskResultDto
+  langs:
+  - csharp
+  - vb
+  name: Actions
+  nameWithType: InboxTaskResultDto.Actions
+  fullName: MegaForm.Sdk.InboxTaskResultDto.Actions
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: Actions
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 470
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public IReadOnlyList<InboxTaskActionDto> Actions { get; set; }
+    parameters: []
+    return:
+      type: System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.InboxTaskActionDto}
+    content.vb: Public Property Actions As IReadOnlyList(Of InboxTaskActionDto)
+  overload: MegaForm.Sdk.InboxTaskResultDto.Actions*
 references:
 - uid: MegaForm.Sdk
   commentId: N:MegaForm.Sdk
@@ -415,32 +453,92 @@ references:
   name: System
   nameWithType: System
   fullName: System
-- uid: MegaForm.Sdk.PagedResult`1.Items*
-  commentId: Overload:MegaForm.Sdk.PagedResult`1.Items
-  href: MegaForm.Sdk.PagedResult-1.html#MegaForm_Sdk_PagedResult_1_Items
-  name: Items
-  nameWithType: PagedResult<T>.Items
-  fullName: MegaForm.Sdk.PagedResult<T>.Items
-  nameWithType.vb: PagedResult(Of T).Items
-  fullName.vb: MegaForm.Sdk.PagedResult(Of T).Items
-- uid: System.Collections.Generic.IReadOnlyList{{T}}
-  commentId: T:System.Collections.Generic.IReadOnlyList{`0}
+- uid: MegaForm.Sdk.InboxTaskResultDto.Success*
+  commentId: Overload:MegaForm.Sdk.InboxTaskResultDto.Success
+  href: MegaForm.Sdk.InboxTaskResultDto.html#MegaForm_Sdk_InboxTaskResultDto_Success
+  name: Success
+  nameWithType: InboxTaskResultDto.Success
+  fullName: MegaForm.Sdk.InboxTaskResultDto.Success
+- uid: System.Boolean
+  commentId: T:System.Boolean
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.boolean
+  name: bool
+  nameWithType: bool
+  fullName: bool
+  nameWithType.vb: Boolean
+  fullName.vb: Boolean
+  name.vb: Boolean
+- uid: MegaForm.Sdk.InboxTaskResultDto.Error*
+  commentId: Overload:MegaForm.Sdk.InboxTaskResultDto.Error
+  href: MegaForm.Sdk.InboxTaskResultDto.html#MegaForm_Sdk_InboxTaskResultDto_Error
+  name: Error
+  nameWithType: InboxTaskResultDto.Error
+  fullName: MegaForm.Sdk.InboxTaskResultDto.Error
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: MegaForm.Sdk.InboxTaskResultDto.Task*
+  commentId: Overload:MegaForm.Sdk.InboxTaskResultDto.Task
+  href: MegaForm.Sdk.InboxTaskResultDto.html#MegaForm_Sdk_InboxTaskResultDto_Task
+  name: Task
+  nameWithType: InboxTaskResultDto.Task
+  fullName: MegaForm.Sdk.InboxTaskResultDto.Task
+- uid: MegaForm.Sdk.InboxTaskDto
+  commentId: T:MegaForm.Sdk.InboxTaskDto
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.InboxTaskDto.html
+  name: InboxTaskDto
+  nameWithType: InboxTaskDto
+  fullName: MegaForm.Sdk.InboxTaskDto
+- uid: MegaForm.Sdk.InboxTaskResultDto.Submission*
+  commentId: Overload:MegaForm.Sdk.InboxTaskResultDto.Submission
+  href: MegaForm.Sdk.InboxTaskResultDto.html#MegaForm_Sdk_InboxTaskResultDto_Submission
+  name: Submission
+  nameWithType: InboxTaskResultDto.Submission
+  fullName: MegaForm.Sdk.InboxTaskResultDto.Submission
+- uid: MegaForm.Sdk.SubmissionDto
+  commentId: T:MegaForm.Sdk.SubmissionDto
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.SubmissionDto.html
+  name: SubmissionDto
+  nameWithType: SubmissionDto
+  fullName: MegaForm.Sdk.SubmissionDto
+- uid: MegaForm.Sdk.InboxTaskResultDto.Files*
+  commentId: Overload:MegaForm.Sdk.InboxTaskResultDto.Files
+  href: MegaForm.Sdk.InboxTaskResultDto.html#MegaForm_Sdk_InboxTaskResultDto_Files
+  name: Files
+  nameWithType: InboxTaskResultDto.Files
+  fullName: MegaForm.Sdk.InboxTaskResultDto.Files
+- uid: System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.FileDto}
+  commentId: T:System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.FileDto}
   parent: System.Collections.Generic
   definition: System.Collections.Generic.IReadOnlyList`1
   href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1
-  name: IReadOnlyList<T>
-  nameWithType: IReadOnlyList<T>
-  fullName: System.Collections.Generic.IReadOnlyList<T>
-  nameWithType.vb: IReadOnlyList(Of T)
-  fullName.vb: System.Collections.Generic.IReadOnlyList(Of T)
-  name.vb: IReadOnlyList(Of T)
+  name: IReadOnlyList<FileDto>
+  nameWithType: IReadOnlyList<FileDto>
+  fullName: System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.FileDto>
+  nameWithType.vb: IReadOnlyList(Of FileDto)
+  fullName.vb: System.Collections.Generic.IReadOnlyList(Of MegaForm.Sdk.FileDto)
+  name.vb: IReadOnlyList(Of FileDto)
   spec.csharp:
   - uid: System.Collections.Generic.IReadOnlyList`1
     name: IReadOnlyList
     isExternal: true
     href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1
   - name: <
-  - name: T
+  - uid: MegaForm.Sdk.FileDto
+    name: FileDto
+    href: MegaForm.Sdk.FileDto.html
   - name: '>'
   spec.vb:
   - uid: System.Collections.Generic.IReadOnlyList`1
@@ -450,7 +548,9 @@ references:
   - name: (
   - name: Of
   - name: " "
-  - name: T
+  - uid: MegaForm.Sdk.FileDto
+    name: FileDto
+    href: MegaForm.Sdk.FileDto.html
   - name: )
 - uid: System.Collections.Generic.IReadOnlyList`1
   commentId: T:System.Collections.Generic.IReadOnlyList`1
@@ -517,38 +617,42 @@ references:
     name: Generic
     isExternal: true
     href: https://learn.microsoft.com/dotnet/api/system.collections.generic
-- uid: MegaForm.Sdk.PagedResult`1.TotalCount*
-  commentId: Overload:MegaForm.Sdk.PagedResult`1.TotalCount
-  href: MegaForm.Sdk.PagedResult-1.html#MegaForm_Sdk_PagedResult_1_TotalCount
-  name: TotalCount
-  nameWithType: PagedResult<T>.TotalCount
-  fullName: MegaForm.Sdk.PagedResult<T>.TotalCount
-  nameWithType.vb: PagedResult(Of T).TotalCount
-  fullName.vb: MegaForm.Sdk.PagedResult(Of T).TotalCount
-- uid: System.Int32
-  commentId: T:System.Int32
-  parent: System
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.int32
-  name: int
-  nameWithType: int
-  fullName: int
-  nameWithType.vb: Integer
-  fullName.vb: Integer
-  name.vb: Integer
-- uid: MegaForm.Sdk.PagedResult`1.Page*
-  commentId: Overload:MegaForm.Sdk.PagedResult`1.Page
-  href: MegaForm.Sdk.PagedResult-1.html#MegaForm_Sdk_PagedResult_1_Page
-  name: Page
-  nameWithType: PagedResult<T>.Page
-  fullName: MegaForm.Sdk.PagedResult<T>.Page
-  nameWithType.vb: PagedResult(Of T).Page
-  fullName.vb: MegaForm.Sdk.PagedResult(Of T).Page
-- uid: MegaForm.Sdk.PagedResult`1.PageSize*
-  commentId: Overload:MegaForm.Sdk.PagedResult`1.PageSize
-  href: MegaForm.Sdk.PagedResult-1.html#MegaForm_Sdk_PagedResult_1_PageSize
-  name: PageSize
-  nameWithType: PagedResult<T>.PageSize
-  fullName: MegaForm.Sdk.PagedResult<T>.PageSize
-  nameWithType.vb: PagedResult(Of T).PageSize
-  fullName.vb: MegaForm.Sdk.PagedResult(Of T).PageSize
+- uid: MegaForm.Sdk.InboxTaskResultDto.Actions*
+  commentId: Overload:MegaForm.Sdk.InboxTaskResultDto.Actions
+  href: MegaForm.Sdk.InboxTaskResultDto.html#MegaForm_Sdk_InboxTaskResultDto_Actions
+  name: Actions
+  nameWithType: InboxTaskResultDto.Actions
+  fullName: MegaForm.Sdk.InboxTaskResultDto.Actions
+- uid: System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.InboxTaskActionDto}
+  commentId: T:System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.InboxTaskActionDto}
+  parent: System.Collections.Generic
+  definition: System.Collections.Generic.IReadOnlyList`1
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1
+  name: IReadOnlyList<InboxTaskActionDto>
+  nameWithType: IReadOnlyList<InboxTaskActionDto>
+  fullName: System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.InboxTaskActionDto>
+  nameWithType.vb: IReadOnlyList(Of InboxTaskActionDto)
+  fullName.vb: System.Collections.Generic.IReadOnlyList(Of MegaForm.Sdk.InboxTaskActionDto)
+  name.vb: IReadOnlyList(Of InboxTaskActionDto)
+  spec.csharp:
+  - uid: System.Collections.Generic.IReadOnlyList`1
+    name: IReadOnlyList
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1
+  - name: <
+  - uid: MegaForm.Sdk.InboxTaskActionDto
+    name: InboxTaskActionDto
+    href: MegaForm.Sdk.InboxTaskActionDto.html
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.IReadOnlyList`1
+    name: IReadOnlyList
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: MegaForm.Sdk.InboxTaskActionDto
+    name: InboxTaskActionDto
+    href: MegaForm.Sdk.InboxTaskActionDto.html
+  - name: )

@@ -1,40 +1,37 @@
 ### YamlMime:ManagedReference
 items:
-- uid: MegaForm.Sdk.SubmissionDto
-  commentId: T:MegaForm.Sdk.SubmissionDto
-  id: SubmissionDto
+- uid: MegaForm.Sdk.InboxFileAttachmentResultDto
+  commentId: T:MegaForm.Sdk.InboxFileAttachmentResultDto
+  id: InboxFileAttachmentResultDto
   parent: MegaForm.Sdk
   children:
-  - MegaForm.Sdk.SubmissionDto.DataJson
-  - MegaForm.Sdk.SubmissionDto.FormId
-  - MegaForm.Sdk.SubmissionDto.IsSpam
-  - MegaForm.Sdk.SubmissionDto.Status
-  - MegaForm.Sdk.SubmissionDto.SubmissionId
-  - MegaForm.Sdk.SubmissionDto.SubmittedOnUtc
-  - MegaForm.Sdk.SubmissionDto.UserId
+  - MegaForm.Sdk.InboxFileAttachmentResultDto.Error
+  - MegaForm.Sdk.InboxFileAttachmentResultDto.File
+  - MegaForm.Sdk.InboxFileAttachmentResultDto.Success
+  - MegaForm.Sdk.InboxFileAttachmentResultDto.Task
   langs:
   - csharp
   - vb
-  name: SubmissionDto
-  nameWithType: SubmissionDto
-  fullName: MegaForm.Sdk.SubmissionDto
+  name: InboxFileAttachmentResultDto
+  nameWithType: InboxFileAttachmentResultDto
+  fullName: MegaForm.Sdk.InboxFileAttachmentResultDto
   type: Class
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: SubmissionDto
+    id: InboxFileAttachmentResultDto
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 108
+    startLine: 474
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: A submission, as exposed to SDK consumers.
+  summary: Result of attaching a file through the inbox facade.
   example: []
   syntax:
-    content: public sealed class SubmissionDto
-    content.vb: Public NotInheritable Class SubmissionDto
+    content: public sealed class InboxFileAttachmentResultDto
+    content.vb: Public NotInheritable Class InboxFileAttachmentResultDto
   inheritance:
   - System.Object
   inheritedMembers:
@@ -44,223 +41,122 @@ items:
   - System.Object.GetType
   - System.Object.ReferenceEquals(System.Object,System.Object)
   - System.Object.ToString
-- uid: MegaForm.Sdk.SubmissionDto.SubmissionId
-  commentId: P:MegaForm.Sdk.SubmissionDto.SubmissionId
-  id: SubmissionId
-  parent: MegaForm.Sdk.SubmissionDto
+- uid: MegaForm.Sdk.InboxFileAttachmentResultDto.Success
+  commentId: P:MegaForm.Sdk.InboxFileAttachmentResultDto.Success
+  id: Success
+  parent: MegaForm.Sdk.InboxFileAttachmentResultDto
   langs:
   - csharp
   - vb
-  name: SubmissionId
-  nameWithType: SubmissionDto.SubmissionId
-  fullName: MegaForm.Sdk.SubmissionDto.SubmissionId
+  name: Success
+  nameWithType: InboxFileAttachmentResultDto.Success
+  fullName: MegaForm.Sdk.InboxFileAttachmentResultDto.Success
   type: Property
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: SubmissionId
+    id: Success
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 111
+    startLine: 476
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Unique submission id.
-  example: []
   syntax:
-    content: public int SubmissionId { get; set; }
-    parameters: []
-    return:
-      type: System.Int32
-    content.vb: Public Property SubmissionId As Integer
-  overload: MegaForm.Sdk.SubmissionDto.SubmissionId*
-- uid: MegaForm.Sdk.SubmissionDto.FormId
-  commentId: P:MegaForm.Sdk.SubmissionDto.FormId
-  id: FormId
-  parent: MegaForm.Sdk.SubmissionDto
-  langs:
-  - csharp
-  - vb
-  name: FormId
-  nameWithType: SubmissionDto.FormId
-  fullName: MegaForm.Sdk.SubmissionDto.FormId
-  type: Property
-  source:
-    remote:
-      path: MegaForm.Sdk/Dtos.cs
-      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
-      repo: https://github.com/CissSolution/MegaformDocs.git
-    id: FormId
-    path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 114
-  assemblies:
-  - MegaForm.Sdk
-  namespace: MegaForm.Sdk
-  summary: Id of the form this submission belongs to.
-  example: []
-  syntax:
-    content: public int FormId { get; set; }
-    parameters: []
-    return:
-      type: System.Int32
-    content.vb: Public Property FormId As Integer
-  overload: MegaForm.Sdk.SubmissionDto.FormId*
-- uid: MegaForm.Sdk.SubmissionDto.DataJson
-  commentId: P:MegaForm.Sdk.SubmissionDto.DataJson
-  id: DataJson
-  parent: MegaForm.Sdk.SubmissionDto
-  langs:
-  - csharp
-  - vb
-  name: DataJson
-  nameWithType: SubmissionDto.DataJson
-  fullName: MegaForm.Sdk.SubmissionDto.DataJson
-  type: Property
-  source:
-    remote:
-      path: MegaForm.Sdk/Dtos.cs
-      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
-      repo: https://github.com/CissSolution/MegaformDocs.git
-    id: DataJson
-    path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 117
-  assemblies:
-  - MegaForm.Sdk
-  namespace: MegaForm.Sdk
-  summary: Submitted field values as a JSON string.
-  example: []
-  syntax:
-    content: public string? DataJson { get; set; }
-    parameters: []
-    return:
-      type: System.String
-    content.vb: Public Property DataJson As String
-  overload: MegaForm.Sdk.SubmissionDto.DataJson*
-- uid: MegaForm.Sdk.SubmissionDto.Status
-  commentId: P:MegaForm.Sdk.SubmissionDto.Status
-  id: Status
-  parent: MegaForm.Sdk.SubmissionDto
-  langs:
-  - csharp
-  - vb
-  name: Status
-  nameWithType: SubmissionDto.Status
-  fullName: MegaForm.Sdk.SubmissionDto.Status
-  type: Property
-  source:
-    remote:
-      path: MegaForm.Sdk/Dtos.cs
-      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
-      repo: https://github.com/CissSolution/MegaformDocs.git
-    id: Status
-    path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 120
-  assemblies:
-  - MegaForm.Sdk
-  namespace: MegaForm.Sdk
-  summary: Submission status, e.g. "new", "approved", "rejected".
-  example: []
-  syntax:
-    content: public string? Status { get; set; }
-    parameters: []
-    return:
-      type: System.String
-    content.vb: Public Property Status As String
-  overload: MegaForm.Sdk.SubmissionDto.Status*
-- uid: MegaForm.Sdk.SubmissionDto.IsSpam
-  commentId: P:MegaForm.Sdk.SubmissionDto.IsSpam
-  id: IsSpam
-  parent: MegaForm.Sdk.SubmissionDto
-  langs:
-  - csharp
-  - vb
-  name: IsSpam
-  nameWithType: SubmissionDto.IsSpam
-  fullName: MegaForm.Sdk.SubmissionDto.IsSpam
-  type: Property
-  source:
-    remote:
-      path: MegaForm.Sdk/Dtos.cs
-      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
-      repo: https://github.com/CissSolution/MegaformDocs.git
-    id: IsSpam
-    path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 123
-  assemblies:
-  - MegaForm.Sdk
-  namespace: MegaForm.Sdk
-  summary: Whether the submission was flagged as spam.
-  example: []
-  syntax:
-    content: public bool IsSpam { get; set; }
+    content: public bool Success { get; set; }
     parameters: []
     return:
       type: System.Boolean
-    content.vb: Public Property IsSpam As Boolean
-  overload: MegaForm.Sdk.SubmissionDto.IsSpam*
-- uid: MegaForm.Sdk.SubmissionDto.UserId
-  commentId: P:MegaForm.Sdk.SubmissionDto.UserId
-  id: UserId
-  parent: MegaForm.Sdk.SubmissionDto
+    content.vb: Public Property Success As Boolean
+  overload: MegaForm.Sdk.InboxFileAttachmentResultDto.Success*
+- uid: MegaForm.Sdk.InboxFileAttachmentResultDto.Error
+  commentId: P:MegaForm.Sdk.InboxFileAttachmentResultDto.Error
+  id: Error
+  parent: MegaForm.Sdk.InboxFileAttachmentResultDto
   langs:
   - csharp
   - vb
-  name: UserId
-  nameWithType: SubmissionDto.UserId
-  fullName: MegaForm.Sdk.SubmissionDto.UserId
+  name: Error
+  nameWithType: InboxFileAttachmentResultDto.Error
+  fullName: MegaForm.Sdk.InboxFileAttachmentResultDto.Error
   type: Property
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: UserId
+    id: Error
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 126
+    startLine: 477
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Id of the user who submitted the record, if known.
-  example: []
   syntax:
-    content: public int? UserId { get; set; }
+    content: public string? Error { get; set; }
     parameters: []
     return:
-      type: System.Nullable{System.Int32}
-    content.vb: Public Property UserId As Integer?
-  overload: MegaForm.Sdk.SubmissionDto.UserId*
-- uid: MegaForm.Sdk.SubmissionDto.SubmittedOnUtc
-  commentId: P:MegaForm.Sdk.SubmissionDto.SubmittedOnUtc
-  id: SubmittedOnUtc
-  parent: MegaForm.Sdk.SubmissionDto
+      type: System.String
+    content.vb: Public Property [Error] As String
+  overload: MegaForm.Sdk.InboxFileAttachmentResultDto.Error*
+- uid: MegaForm.Sdk.InboxFileAttachmentResultDto.File
+  commentId: P:MegaForm.Sdk.InboxFileAttachmentResultDto.File
+  id: File
+  parent: MegaForm.Sdk.InboxFileAttachmentResultDto
   langs:
   - csharp
   - vb
-  name: SubmittedOnUtc
-  nameWithType: SubmissionDto.SubmittedOnUtc
-  fullName: MegaForm.Sdk.SubmissionDto.SubmittedOnUtc
+  name: File
+  nameWithType: InboxFileAttachmentResultDto.File
+  fullName: MegaForm.Sdk.InboxFileAttachmentResultDto.File
   type: Property
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: SubmittedOnUtc
+    id: File
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 129
+    startLine: 478
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: UTC timestamp when the submission was created.
-  example: []
   syntax:
-    content: public DateTime SubmittedOnUtc { get; set; }
+    content: public FileDto? File { get; set; }
     parameters: []
     return:
-      type: System.DateTime
-    content.vb: Public Property SubmittedOnUtc As Date
-  overload: MegaForm.Sdk.SubmissionDto.SubmittedOnUtc*
+      type: MegaForm.Sdk.FileDto
+    content.vb: Public Property File As FileDto
+  overload: MegaForm.Sdk.InboxFileAttachmentResultDto.File*
+- uid: MegaForm.Sdk.InboxFileAttachmentResultDto.Task
+  commentId: P:MegaForm.Sdk.InboxFileAttachmentResultDto.Task
+  id: Task
+  parent: MegaForm.Sdk.InboxFileAttachmentResultDto
+  langs:
+  - csharp
+  - vb
+  name: Task
+  nameWithType: InboxFileAttachmentResultDto.Task
+  fullName: MegaForm.Sdk.InboxFileAttachmentResultDto.Task
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: Task
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 479
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public InboxTaskResultDto? Task { get; set; }
+    parameters: []
+    return:
+      type: MegaForm.Sdk.InboxTaskResultDto
+    content.vb: Public Property Task As InboxTaskResultDto
+  overload: MegaForm.Sdk.InboxFileAttachmentResultDto.Task*
 references:
 - uid: MegaForm.Sdk
   commentId: N:MegaForm.Sdk
@@ -497,58 +393,12 @@ references:
   name: System
   nameWithType: System
   fullName: System
-- uid: MegaForm.Sdk.SubmissionDto.SubmissionId*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.SubmissionId
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_SubmissionId
-  name: SubmissionId
-  nameWithType: SubmissionDto.SubmissionId
-  fullName: MegaForm.Sdk.SubmissionDto.SubmissionId
-- uid: System.Int32
-  commentId: T:System.Int32
-  parent: System
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.int32
-  name: int
-  nameWithType: int
-  fullName: int
-  nameWithType.vb: Integer
-  fullName.vb: Integer
-  name.vb: Integer
-- uid: MegaForm.Sdk.SubmissionDto.FormId*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.FormId
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_FormId
-  name: FormId
-  nameWithType: SubmissionDto.FormId
-  fullName: MegaForm.Sdk.SubmissionDto.FormId
-- uid: MegaForm.Sdk.SubmissionDto.DataJson*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.DataJson
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_DataJson
-  name: DataJson
-  nameWithType: SubmissionDto.DataJson
-  fullName: MegaForm.Sdk.SubmissionDto.DataJson
-- uid: System.String
-  commentId: T:System.String
-  parent: System
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.string
-  name: string
-  nameWithType: string
-  fullName: string
-  nameWithType.vb: String
-  fullName.vb: String
-  name.vb: String
-- uid: MegaForm.Sdk.SubmissionDto.Status*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.Status
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_Status
-  name: Status
-  nameWithType: SubmissionDto.Status
-  fullName: MegaForm.Sdk.SubmissionDto.Status
-- uid: MegaForm.Sdk.SubmissionDto.IsSpam*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.IsSpam
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_IsSpam
-  name: IsSpam
-  nameWithType: SubmissionDto.IsSpam
-  fullName: MegaForm.Sdk.SubmissionDto.IsSpam
+- uid: MegaForm.Sdk.InboxFileAttachmentResultDto.Success*
+  commentId: Overload:MegaForm.Sdk.InboxFileAttachmentResultDto.Success
+  href: MegaForm.Sdk.InboxFileAttachmentResultDto.html#MegaForm_Sdk_InboxFileAttachmentResultDto_Success
+  name: Success
+  nameWithType: InboxFileAttachmentResultDto.Success
+  fullName: MegaForm.Sdk.InboxFileAttachmentResultDto.Success
 - uid: System.Boolean
   commentId: T:System.Boolean
   parent: System
@@ -560,77 +410,46 @@ references:
   nameWithType.vb: Boolean
   fullName.vb: Boolean
   name.vb: Boolean
-- uid: MegaForm.Sdk.SubmissionDto.UserId*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.UserId
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_UserId
-  name: UserId
-  nameWithType: SubmissionDto.UserId
-  fullName: MegaForm.Sdk.SubmissionDto.UserId
-- uid: System.Nullable{System.Int32}
-  commentId: T:System.Nullable{System.Int32}
-  parent: System
-  definition: System.Nullable`1
-  href: https://learn.microsoft.com/dotnet/api/system.int32
-  name: int?
-  nameWithType: int?
-  fullName: int?
-  nameWithType.vb: Integer?
-  fullName.vb: Integer?
-  name.vb: Integer?
-  spec.csharp:
-  - uid: System.Int32
-    name: int
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.int32
-  - name: '?'
-  spec.vb:
-  - uid: System.Int32
-    name: Integer
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.int32
-  - name: '?'
-- uid: System.Nullable`1
-  commentId: T:System.Nullable`1
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.nullable-1
-  name: Nullable<T>
-  nameWithType: Nullable<T>
-  fullName: System.Nullable<T>
-  nameWithType.vb: Nullable(Of T)
-  fullName.vb: System.Nullable(Of T)
-  name.vb: Nullable(Of T)
-  spec.csharp:
-  - uid: System.Nullable`1
-    name: Nullable
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
-  - name: <
-  - name: T
-  - name: '>'
-  spec.vb:
-  - uid: System.Nullable`1
-    name: Nullable
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
-  - name: (
-  - name: Of
-  - name: " "
-  - name: T
-  - name: )
-- uid: MegaForm.Sdk.SubmissionDto.SubmittedOnUtc*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.SubmittedOnUtc
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_SubmittedOnUtc
-  name: SubmittedOnUtc
-  nameWithType: SubmissionDto.SubmittedOnUtc
-  fullName: MegaForm.Sdk.SubmissionDto.SubmittedOnUtc
-- uid: System.DateTime
-  commentId: T:System.DateTime
+- uid: MegaForm.Sdk.InboxFileAttachmentResultDto.Error*
+  commentId: Overload:MegaForm.Sdk.InboxFileAttachmentResultDto.Error
+  href: MegaForm.Sdk.InboxFileAttachmentResultDto.html#MegaForm_Sdk_InboxFileAttachmentResultDto_Error
+  name: Error
+  nameWithType: InboxFileAttachmentResultDto.Error
+  fullName: MegaForm.Sdk.InboxFileAttachmentResultDto.Error
+- uid: System.String
+  commentId: T:System.String
   parent: System
   isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.datetime
-  name: DateTime
-  nameWithType: DateTime
-  fullName: System.DateTime
-  nameWithType.vb: Date
-  fullName.vb: Date
-  name.vb: Date
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: MegaForm.Sdk.InboxFileAttachmentResultDto.File*
+  commentId: Overload:MegaForm.Sdk.InboxFileAttachmentResultDto.File
+  href: MegaForm.Sdk.InboxFileAttachmentResultDto.html#MegaForm_Sdk_InboxFileAttachmentResultDto_File
+  name: File
+  nameWithType: InboxFileAttachmentResultDto.File
+  fullName: MegaForm.Sdk.InboxFileAttachmentResultDto.File
+- uid: MegaForm.Sdk.FileDto
+  commentId: T:MegaForm.Sdk.FileDto
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.FileDto.html
+  name: FileDto
+  nameWithType: FileDto
+  fullName: MegaForm.Sdk.FileDto
+- uid: MegaForm.Sdk.InboxFileAttachmentResultDto.Task*
+  commentId: Overload:MegaForm.Sdk.InboxFileAttachmentResultDto.Task
+  href: MegaForm.Sdk.InboxFileAttachmentResultDto.html#MegaForm_Sdk_InboxFileAttachmentResultDto_Task
+  name: Task
+  nameWithType: InboxFileAttachmentResultDto.Task
+  fullName: MegaForm.Sdk.InboxFileAttachmentResultDto.Task
+- uid: MegaForm.Sdk.InboxTaskResultDto
+  commentId: T:MegaForm.Sdk.InboxTaskResultDto
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.InboxTaskResultDto.html
+  name: InboxTaskResultDto
+  nameWithType: InboxTaskResultDto
+  fullName: MegaForm.Sdk.InboxTaskResultDto

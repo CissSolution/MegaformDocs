@@ -1,46 +1,43 @@
 ### YamlMime:ManagedReference
 items:
-- uid: MegaForm.Sdk.FormFieldInfo
-  commentId: T:MegaForm.Sdk.FormFieldInfo
-  id: FormFieldInfo
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto
+  commentId: T:MegaForm.Sdk.SubmissionWorkflowSummaryDto
+  id: SubmissionWorkflowSummaryDto
   parent: MegaForm.Sdk
   children:
-  - MegaForm.Sdk.FormFieldInfo.HelpText
-  - MegaForm.Sdk.FormFieldInfo.Hidden
-  - MegaForm.Sdk.FormFieldInfo.IsInputField
-  - MegaForm.Sdk.FormFieldInfo.Key
-  - MegaForm.Sdk.FormFieldInfo.Label
-  - MegaForm.Sdk.FormFieldInfo.Options
-  - MegaForm.Sdk.FormFieldInfo.Order
-  - MegaForm.Sdk.FormFieldInfo.Placeholder
-  - MegaForm.Sdk.FormFieldInfo.ReadOnly
-  - MegaForm.Sdk.FormFieldInfo.Required
-  - MegaForm.Sdk.FormFieldInfo.Type
-  - MegaForm.Sdk.FormFieldInfo.Validation
-  - MegaForm.Sdk.FormFieldInfo.Width
+  - MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActionCount
+  - MegaForm.Sdk.SubmissionWorkflowSummaryDto.Actions
+  - MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveNodeLabel
+  - MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveTaskId
+  - MegaForm.Sdk.SubmissionWorkflowSummaryDto.CaseStatus
+  - MegaForm.Sdk.SubmissionWorkflowSummaryDto.ExecutionStatus
+  - MegaForm.Sdk.SubmissionWorkflowSummaryDto.HasWorkflow
+  - MegaForm.Sdk.SubmissionWorkflowSummaryDto.OpenTaskCount
+  - MegaForm.Sdk.SubmissionWorkflowSummaryDto.TaskCount
+  - MegaForm.Sdk.SubmissionWorkflowSummaryDto.Tasks
   langs:
   - csharp
   - vb
-  name: FormFieldInfo
-  nameWithType: FormFieldInfo
-  fullName: MegaForm.Sdk.FormFieldInfo
+  name: SubmissionWorkflowSummaryDto
+  nameWithType: SubmissionWorkflowSummaryDto
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto
   type: Class
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: FormFieldInfo
+    id: SubmissionWorkflowSummaryDto
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 524
+    startLine: 358
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: A single field's metadata, as exposed to SDK consumers (e.g. a custom renderer).
+  summary: Workflow summary attached to a submission detail.
   example: []
   syntax:
-    content: public sealed class FormFieldInfo
-    content.vb: Public NotInheritable Class FormFieldInfo
+    content: public sealed class SubmissionWorkflowSummaryDto
+    content.vb: Public NotInheritable Class SubmissionWorkflowSummaryDto
   inheritance:
   - System.Object
   inheritedMembers:
@@ -50,409 +47,296 @@ items:
   - System.Object.GetType
   - System.Object.ReferenceEquals(System.Object,System.Object)
   - System.Object.ToString
-- uid: MegaForm.Sdk.FormFieldInfo.Key
-  commentId: P:MegaForm.Sdk.FormFieldInfo.Key
-  id: Key
-  parent: MegaForm.Sdk.FormFieldInfo
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.HasWorkflow
+  commentId: P:MegaForm.Sdk.SubmissionWorkflowSummaryDto.HasWorkflow
+  id: HasWorkflow
+  parent: MegaForm.Sdk.SubmissionWorkflowSummaryDto
   langs:
   - csharp
   - vb
-  name: Key
-  nameWithType: FormFieldInfo.Key
-  fullName: MegaForm.Sdk.FormFieldInfo.Key
+  name: HasWorkflow
+  nameWithType: SubmissionWorkflowSummaryDto.HasWorkflow
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.HasWorkflow
   type: Property
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: Key
+    id: HasWorkflow
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 527
+    startLine: 360
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Unique machine key, e.g. "first_name".
-  example: []
   syntax:
-    content: public string? Key { get; set; }
-    parameters: []
-    return:
-      type: System.String
-    content.vb: Public Property Key As String
-  overload: MegaForm.Sdk.FormFieldInfo.Key*
-- uid: MegaForm.Sdk.FormFieldInfo.Type
-  commentId: P:MegaForm.Sdk.FormFieldInfo.Type
-  id: Type
-  parent: MegaForm.Sdk.FormFieldInfo
-  langs:
-  - csharp
-  - vb
-  name: Type
-  nameWithType: FormFieldInfo.Type
-  fullName: MegaForm.Sdk.FormFieldInfo.Type
-  type: Property
-  source:
-    remote:
-      path: MegaForm.Sdk/Dtos.cs
-      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
-      repo: https://github.com/CissSolution/MegaformDocs.git
-    id: Type
-    path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 530
-  assemblies:
-  - MegaForm.Sdk
-  namespace: MegaForm.Sdk
-  summary: Field type as a string, e.g. "Text", "Email", "Composite" (kept as a string so plugin types survive).
-  example: []
-  syntax:
-    content: public string? Type { get; set; }
-    parameters: []
-    return:
-      type: System.String
-    content.vb: Public Property Type As String
-  overload: MegaForm.Sdk.FormFieldInfo.Type*
-- uid: MegaForm.Sdk.FormFieldInfo.Label
-  commentId: P:MegaForm.Sdk.FormFieldInfo.Label
-  id: Label
-  parent: MegaForm.Sdk.FormFieldInfo
-  langs:
-  - csharp
-  - vb
-  name: Label
-  nameWithType: FormFieldInfo.Label
-  fullName: MegaForm.Sdk.FormFieldInfo.Label
-  type: Property
-  source:
-    remote:
-      path: MegaForm.Sdk/Dtos.cs
-      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
-      repo: https://github.com/CissSolution/MegaformDocs.git
-    id: Label
-    path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 533
-  assemblies:
-  - MegaForm.Sdk
-  namespace: MegaForm.Sdk
-  summary: Display label.
-  example: []
-  syntax:
-    content: public string? Label { get; set; }
-    parameters: []
-    return:
-      type: System.String
-    content.vb: Public Property Label As String
-  overload: MegaForm.Sdk.FormFieldInfo.Label*
-- uid: MegaForm.Sdk.FormFieldInfo.Placeholder
-  commentId: P:MegaForm.Sdk.FormFieldInfo.Placeholder
-  id: Placeholder
-  parent: MegaForm.Sdk.FormFieldInfo
-  langs:
-  - csharp
-  - vb
-  name: Placeholder
-  nameWithType: FormFieldInfo.Placeholder
-  fullName: MegaForm.Sdk.FormFieldInfo.Placeholder
-  type: Property
-  source:
-    remote:
-      path: MegaForm.Sdk/Dtos.cs
-      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
-      repo: https://github.com/CissSolution/MegaformDocs.git
-    id: Placeholder
-    path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 536
-  assemblies:
-  - MegaForm.Sdk
-  namespace: MegaForm.Sdk
-  summary: Placeholder text.
-  example: []
-  syntax:
-    content: public string? Placeholder { get; set; }
-    parameters: []
-    return:
-      type: System.String
-    content.vb: Public Property Placeholder As String
-  overload: MegaForm.Sdk.FormFieldInfo.Placeholder*
-- uid: MegaForm.Sdk.FormFieldInfo.HelpText
-  commentId: P:MegaForm.Sdk.FormFieldInfo.HelpText
-  id: HelpText
-  parent: MegaForm.Sdk.FormFieldInfo
-  langs:
-  - csharp
-  - vb
-  name: HelpText
-  nameWithType: FormFieldInfo.HelpText
-  fullName: MegaForm.Sdk.FormFieldInfo.HelpText
-  type: Property
-  source:
-    remote:
-      path: MegaForm.Sdk/Dtos.cs
-      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
-      repo: https://github.com/CissSolution/MegaformDocs.git
-    id: HelpText
-    path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 539
-  assemblies:
-  - MegaForm.Sdk
-  namespace: MegaForm.Sdk
-  summary: Help/hint text.
-  example: []
-  syntax:
-    content: public string? HelpText { get; set; }
-    parameters: []
-    return:
-      type: System.String
-    content.vb: Public Property HelpText As String
-  overload: MegaForm.Sdk.FormFieldInfo.HelpText*
-- uid: MegaForm.Sdk.FormFieldInfo.Required
-  commentId: P:MegaForm.Sdk.FormFieldInfo.Required
-  id: Required
-  parent: MegaForm.Sdk.FormFieldInfo
-  langs:
-  - csharp
-  - vb
-  name: Required
-  nameWithType: FormFieldInfo.Required
-  fullName: MegaForm.Sdk.FormFieldInfo.Required
-  type: Property
-  source:
-    remote:
-      path: MegaForm.Sdk/Dtos.cs
-      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
-      repo: https://github.com/CissSolution/MegaformDocs.git
-    id: Required
-    path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 542
-  assemblies:
-  - MegaForm.Sdk
-  namespace: MegaForm.Sdk
-  summary: Whether the field is required.
-  example: []
-  syntax:
-    content: public bool Required { get; set; }
+    content: public bool HasWorkflow { get; set; }
     parameters: []
     return:
       type: System.Boolean
-    content.vb: Public Property Required As Boolean
-  overload: MegaForm.Sdk.FormFieldInfo.Required*
-- uid: MegaForm.Sdk.FormFieldInfo.ReadOnly
-  commentId: P:MegaForm.Sdk.FormFieldInfo.ReadOnly
-  id: ReadOnly
-  parent: MegaForm.Sdk.FormFieldInfo
+    content.vb: Public Property HasWorkflow As Boolean
+  overload: MegaForm.Sdk.SubmissionWorkflowSummaryDto.HasWorkflow*
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveTaskId
+  commentId: P:MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveTaskId
+  id: ActiveTaskId
+  parent: MegaForm.Sdk.SubmissionWorkflowSummaryDto
   langs:
   - csharp
   - vb
-  name: ReadOnly
-  nameWithType: FormFieldInfo.ReadOnly
-  fullName: MegaForm.Sdk.FormFieldInfo.ReadOnly
+  name: ActiveTaskId
+  nameWithType: SubmissionWorkflowSummaryDto.ActiveTaskId
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveTaskId
   type: Property
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: ReadOnly
+    id: ActiveTaskId
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 545
+    startLine: 361
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Whether the field is read-only.
-  example: []
   syntax:
-    content: public bool ReadOnly { get; set; }
-    parameters: []
-    return:
-      type: System.Boolean
-    content.vb: Public Property [ReadOnly] As Boolean
-  overload: MegaForm.Sdk.FormFieldInfo.ReadOnly*
-- uid: MegaForm.Sdk.FormFieldInfo.Hidden
-  commentId: P:MegaForm.Sdk.FormFieldInfo.Hidden
-  id: Hidden
-  parent: MegaForm.Sdk.FormFieldInfo
-  langs:
-  - csharp
-  - vb
-  name: Hidden
-  nameWithType: FormFieldInfo.Hidden
-  fullName: MegaForm.Sdk.FormFieldInfo.Hidden
-  type: Property
-  source:
-    remote:
-      path: MegaForm.Sdk/Dtos.cs
-      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
-      repo: https://github.com/CissSolution/MegaformDocs.git
-    id: Hidden
-    path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 548
-  assemblies:
-  - MegaForm.Sdk
-  namespace: MegaForm.Sdk
-  summary: Whether the field is hidden.
-  example: []
-  syntax:
-    content: public bool Hidden { get; set; }
-    parameters: []
-    return:
-      type: System.Boolean
-    content.vb: Public Property Hidden As Boolean
-  overload: MegaForm.Sdk.FormFieldInfo.Hidden*
-- uid: MegaForm.Sdk.FormFieldInfo.Width
-  commentId: P:MegaForm.Sdk.FormFieldInfo.Width
-  id: Width
-  parent: MegaForm.Sdk.FormFieldInfo
-  langs:
-  - csharp
-  - vb
-  name: Width
-  nameWithType: FormFieldInfo.Width
-  fullName: MegaForm.Sdk.FormFieldInfo.Width
-  type: Property
-  source:
-    remote:
-      path: MegaForm.Sdk/Dtos.cs
-      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
-      repo: https://github.com/CissSolution/MegaformDocs.git
-    id: Width
-    path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 551
-  assemblies:
-  - MegaForm.Sdk
-  namespace: MegaForm.Sdk
-  summary: Layout width hint, e.g. "50%".
-  example: []
-  syntax:
-    content: public string? Width { get; set; }
+    content: public string? ActiveTaskId { get; set; }
     parameters: []
     return:
       type: System.String
-    content.vb: Public Property Width As String
-  overload: MegaForm.Sdk.FormFieldInfo.Width*
-- uid: MegaForm.Sdk.FormFieldInfo.Order
-  commentId: P:MegaForm.Sdk.FormFieldInfo.Order
-  id: Order
-  parent: MegaForm.Sdk.FormFieldInfo
+    content.vb: Public Property ActiveTaskId As String
+  overload: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveTaskId*
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveNodeLabel
+  commentId: P:MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveNodeLabel
+  id: ActiveNodeLabel
+  parent: MegaForm.Sdk.SubmissionWorkflowSummaryDto
   langs:
   - csharp
   - vb
-  name: Order
-  nameWithType: FormFieldInfo.Order
-  fullName: MegaForm.Sdk.FormFieldInfo.Order
+  name: ActiveNodeLabel
+  nameWithType: SubmissionWorkflowSummaryDto.ActiveNodeLabel
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveNodeLabel
   type: Property
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: Order
+    id: ActiveNodeLabel
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 554
+    startLine: 362
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Sort order within the form.
-  example: []
   syntax:
-    content: public int Order { get; set; }
+    content: public string? ActiveNodeLabel { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property ActiveNodeLabel As String
+  overload: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveNodeLabel*
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.CaseStatus
+  commentId: P:MegaForm.Sdk.SubmissionWorkflowSummaryDto.CaseStatus
+  id: CaseStatus
+  parent: MegaForm.Sdk.SubmissionWorkflowSummaryDto
+  langs:
+  - csharp
+  - vb
+  name: CaseStatus
+  nameWithType: SubmissionWorkflowSummaryDto.CaseStatus
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.CaseStatus
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: CaseStatus
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 363
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? CaseStatus { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property CaseStatus As String
+  overload: MegaForm.Sdk.SubmissionWorkflowSummaryDto.CaseStatus*
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ExecutionStatus
+  commentId: P:MegaForm.Sdk.SubmissionWorkflowSummaryDto.ExecutionStatus
+  id: ExecutionStatus
+  parent: MegaForm.Sdk.SubmissionWorkflowSummaryDto
+  langs:
+  - csharp
+  - vb
+  name: ExecutionStatus
+  nameWithType: SubmissionWorkflowSummaryDto.ExecutionStatus
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ExecutionStatus
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: ExecutionStatus
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 364
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? ExecutionStatus { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property ExecutionStatus As String
+  overload: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ExecutionStatus*
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.TaskCount
+  commentId: P:MegaForm.Sdk.SubmissionWorkflowSummaryDto.TaskCount
+  id: TaskCount
+  parent: MegaForm.Sdk.SubmissionWorkflowSummaryDto
+  langs:
+  - csharp
+  - vb
+  name: TaskCount
+  nameWithType: SubmissionWorkflowSummaryDto.TaskCount
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.TaskCount
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: TaskCount
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 365
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public int TaskCount { get; set; }
     parameters: []
     return:
       type: System.Int32
-    content.vb: Public Property Order As Integer
-  overload: MegaForm.Sdk.FormFieldInfo.Order*
-- uid: MegaForm.Sdk.FormFieldInfo.IsInputField
-  commentId: P:MegaForm.Sdk.FormFieldInfo.IsInputField
-  id: IsInputField
-  parent: MegaForm.Sdk.FormFieldInfo
+    content.vb: Public Property TaskCount As Integer
+  overload: MegaForm.Sdk.SubmissionWorkflowSummaryDto.TaskCount*
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.OpenTaskCount
+  commentId: P:MegaForm.Sdk.SubmissionWorkflowSummaryDto.OpenTaskCount
+  id: OpenTaskCount
+  parent: MegaForm.Sdk.SubmissionWorkflowSummaryDto
   langs:
   - csharp
   - vb
-  name: IsInputField
-  nameWithType: FormFieldInfo.IsInputField
-  fullName: MegaForm.Sdk.FormFieldInfo.IsInputField
+  name: OpenTaskCount
+  nameWithType: SubmissionWorkflowSummaryDto.OpenTaskCount
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.OpenTaskCount
   type: Property
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: IsInputField
+    id: OpenTaskCount
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 557
+    startLine: 366
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: True for value-bearing inputs; false for layout/display types (Html, Section, Row, UniqueId).
-  example: []
   syntax:
-    content: public bool IsInputField { get; set; }
+    content: public int OpenTaskCount { get; set; }
     parameters: []
     return:
-      type: System.Boolean
-    content.vb: Public Property IsInputField As Boolean
-  overload: MegaForm.Sdk.FormFieldInfo.IsInputField*
-- uid: MegaForm.Sdk.FormFieldInfo.Options
-  commentId: P:MegaForm.Sdk.FormFieldInfo.Options
-  id: Options
-  parent: MegaForm.Sdk.FormFieldInfo
+      type: System.Int32
+    content.vb: Public Property OpenTaskCount As Integer
+  overload: MegaForm.Sdk.SubmissionWorkflowSummaryDto.OpenTaskCount*
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActionCount
+  commentId: P:MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActionCount
+  id: ActionCount
+  parent: MegaForm.Sdk.SubmissionWorkflowSummaryDto
   langs:
   - csharp
   - vb
-  name: Options
-  nameWithType: FormFieldInfo.Options
-  fullName: MegaForm.Sdk.FormFieldInfo.Options
+  name: ActionCount
+  nameWithType: SubmissionWorkflowSummaryDto.ActionCount
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActionCount
   type: Property
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: Options
+    id: ActionCount
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 560
+    startLine: 367
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Choice options (for Select/Radio/Checkbox), or empty.
-  example: []
   syntax:
-    content: public IReadOnlyList<FieldOptionInfo> Options { get; set; }
+    content: public int ActionCount { get; set; }
     parameters: []
     return:
-      type: System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.FieldOptionInfo}
-    content.vb: Public Property Options As IReadOnlyList(Of FieldOptionInfo)
-  overload: MegaForm.Sdk.FormFieldInfo.Options*
-- uid: MegaForm.Sdk.FormFieldInfo.Validation
-  commentId: P:MegaForm.Sdk.FormFieldInfo.Validation
-  id: Validation
-  parent: MegaForm.Sdk.FormFieldInfo
+      type: System.Int32
+    content.vb: Public Property ActionCount As Integer
+  overload: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActionCount*
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.Tasks
+  commentId: P:MegaForm.Sdk.SubmissionWorkflowSummaryDto.Tasks
+  id: Tasks
+  parent: MegaForm.Sdk.SubmissionWorkflowSummaryDto
   langs:
   - csharp
   - vb
-  name: Validation
-  nameWithType: FormFieldInfo.Validation
-  fullName: MegaForm.Sdk.FormFieldInfo.Validation
+  name: Tasks
+  nameWithType: SubmissionWorkflowSummaryDto.Tasks
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.Tasks
   type: Property
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: Validation
+    id: Tasks
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 563
+    startLine: 368
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Validation rules, or null when the field has none.
-  example: []
   syntax:
-    content: public FieldValidationInfo? Validation { get; set; }
+    content: public IReadOnlyList<InboxTaskDto> Tasks { get; set; }
     parameters: []
     return:
-      type: MegaForm.Sdk.FieldValidationInfo
-    content.vb: Public Property Validation As FieldValidationInfo
-  overload: MegaForm.Sdk.FormFieldInfo.Validation*
+      type: System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.InboxTaskDto}
+    content.vb: Public Property Tasks As IReadOnlyList(Of InboxTaskDto)
+  overload: MegaForm.Sdk.SubmissionWorkflowSummaryDto.Tasks*
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.Actions
+  commentId: P:MegaForm.Sdk.SubmissionWorkflowSummaryDto.Actions
+  id: Actions
+  parent: MegaForm.Sdk.SubmissionWorkflowSummaryDto
+  langs:
+  - csharp
+  - vb
+  name: Actions
+  nameWithType: SubmissionWorkflowSummaryDto.Actions
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.Actions
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: Actions
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 369
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public IReadOnlyList<InboxTaskActionDto> Actions { get; set; }
+    parameters: []
+    return:
+      type: System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.InboxTaskActionDto}
+    content.vb: Public Property Actions As IReadOnlyList(Of InboxTaskActionDto)
+  overload: MegaForm.Sdk.SubmissionWorkflowSummaryDto.Actions*
 references:
 - uid: MegaForm.Sdk
   commentId: N:MegaForm.Sdk
@@ -689,53 +573,12 @@ references:
   name: System
   nameWithType: System
   fullName: System
-- uid: MegaForm.Sdk.FormFieldInfo.Key*
-  commentId: Overload:MegaForm.Sdk.FormFieldInfo.Key
-  href: MegaForm.Sdk.FormFieldInfo.html#MegaForm_Sdk_FormFieldInfo_Key
-  name: Key
-  nameWithType: FormFieldInfo.Key
-  fullName: MegaForm.Sdk.FormFieldInfo.Key
-- uid: System.String
-  commentId: T:System.String
-  parent: System
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.string
-  name: string
-  nameWithType: string
-  fullName: string
-  nameWithType.vb: String
-  fullName.vb: String
-  name.vb: String
-- uid: MegaForm.Sdk.FormFieldInfo.Type*
-  commentId: Overload:MegaForm.Sdk.FormFieldInfo.Type
-  href: MegaForm.Sdk.FormFieldInfo.html#MegaForm_Sdk_FormFieldInfo_Type
-  name: Type
-  nameWithType: FormFieldInfo.Type
-  fullName: MegaForm.Sdk.FormFieldInfo.Type
-- uid: MegaForm.Sdk.FormFieldInfo.Label*
-  commentId: Overload:MegaForm.Sdk.FormFieldInfo.Label
-  href: MegaForm.Sdk.FormFieldInfo.html#MegaForm_Sdk_FormFieldInfo_Label
-  name: Label
-  nameWithType: FormFieldInfo.Label
-  fullName: MegaForm.Sdk.FormFieldInfo.Label
-- uid: MegaForm.Sdk.FormFieldInfo.Placeholder*
-  commentId: Overload:MegaForm.Sdk.FormFieldInfo.Placeholder
-  href: MegaForm.Sdk.FormFieldInfo.html#MegaForm_Sdk_FormFieldInfo_Placeholder
-  name: Placeholder
-  nameWithType: FormFieldInfo.Placeholder
-  fullName: MegaForm.Sdk.FormFieldInfo.Placeholder
-- uid: MegaForm.Sdk.FormFieldInfo.HelpText*
-  commentId: Overload:MegaForm.Sdk.FormFieldInfo.HelpText
-  href: MegaForm.Sdk.FormFieldInfo.html#MegaForm_Sdk_FormFieldInfo_HelpText
-  name: HelpText
-  nameWithType: FormFieldInfo.HelpText
-  fullName: MegaForm.Sdk.FormFieldInfo.HelpText
-- uid: MegaForm.Sdk.FormFieldInfo.Required*
-  commentId: Overload:MegaForm.Sdk.FormFieldInfo.Required
-  href: MegaForm.Sdk.FormFieldInfo.html#MegaForm_Sdk_FormFieldInfo_Required
-  name: Required
-  nameWithType: FormFieldInfo.Required
-  fullName: MegaForm.Sdk.FormFieldInfo.Required
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.HasWorkflow*
+  commentId: Overload:MegaForm.Sdk.SubmissionWorkflowSummaryDto.HasWorkflow
+  href: MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_HasWorkflow
+  name: HasWorkflow
+  nameWithType: SubmissionWorkflowSummaryDto.HasWorkflow
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.HasWorkflow
 - uid: System.Boolean
   commentId: T:System.Boolean
   parent: System
@@ -747,30 +590,47 @@ references:
   nameWithType.vb: Boolean
   fullName.vb: Boolean
   name.vb: Boolean
-- uid: MegaForm.Sdk.FormFieldInfo.ReadOnly*
-  commentId: Overload:MegaForm.Sdk.FormFieldInfo.ReadOnly
-  href: MegaForm.Sdk.FormFieldInfo.html#MegaForm_Sdk_FormFieldInfo_ReadOnly
-  name: ReadOnly
-  nameWithType: FormFieldInfo.ReadOnly
-  fullName: MegaForm.Sdk.FormFieldInfo.ReadOnly
-- uid: MegaForm.Sdk.FormFieldInfo.Hidden*
-  commentId: Overload:MegaForm.Sdk.FormFieldInfo.Hidden
-  href: MegaForm.Sdk.FormFieldInfo.html#MegaForm_Sdk_FormFieldInfo_Hidden
-  name: Hidden
-  nameWithType: FormFieldInfo.Hidden
-  fullName: MegaForm.Sdk.FormFieldInfo.Hidden
-- uid: MegaForm.Sdk.FormFieldInfo.Width*
-  commentId: Overload:MegaForm.Sdk.FormFieldInfo.Width
-  href: MegaForm.Sdk.FormFieldInfo.html#MegaForm_Sdk_FormFieldInfo_Width
-  name: Width
-  nameWithType: FormFieldInfo.Width
-  fullName: MegaForm.Sdk.FormFieldInfo.Width
-- uid: MegaForm.Sdk.FormFieldInfo.Order*
-  commentId: Overload:MegaForm.Sdk.FormFieldInfo.Order
-  href: MegaForm.Sdk.FormFieldInfo.html#MegaForm_Sdk_FormFieldInfo_Order
-  name: Order
-  nameWithType: FormFieldInfo.Order
-  fullName: MegaForm.Sdk.FormFieldInfo.Order
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveTaskId*
+  commentId: Overload:MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveTaskId
+  href: MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_ActiveTaskId
+  name: ActiveTaskId
+  nameWithType: SubmissionWorkflowSummaryDto.ActiveTaskId
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveTaskId
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveNodeLabel*
+  commentId: Overload:MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveNodeLabel
+  href: MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_ActiveNodeLabel
+  name: ActiveNodeLabel
+  nameWithType: SubmissionWorkflowSummaryDto.ActiveNodeLabel
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActiveNodeLabel
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.CaseStatus*
+  commentId: Overload:MegaForm.Sdk.SubmissionWorkflowSummaryDto.CaseStatus
+  href: MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_CaseStatus
+  name: CaseStatus
+  nameWithType: SubmissionWorkflowSummaryDto.CaseStatus
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.CaseStatus
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ExecutionStatus*
+  commentId: Overload:MegaForm.Sdk.SubmissionWorkflowSummaryDto.ExecutionStatus
+  href: MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_ExecutionStatus
+  name: ExecutionStatus
+  nameWithType: SubmissionWorkflowSummaryDto.ExecutionStatus
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ExecutionStatus
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.TaskCount*
+  commentId: Overload:MegaForm.Sdk.SubmissionWorkflowSummaryDto.TaskCount
+  href: MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_TaskCount
+  name: TaskCount
+  nameWithType: SubmissionWorkflowSummaryDto.TaskCount
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.TaskCount
 - uid: System.Int32
   commentId: T:System.Int32
   parent: System
@@ -782,38 +642,44 @@ references:
   nameWithType.vb: Integer
   fullName.vb: Integer
   name.vb: Integer
-- uid: MegaForm.Sdk.FormFieldInfo.IsInputField*
-  commentId: Overload:MegaForm.Sdk.FormFieldInfo.IsInputField
-  href: MegaForm.Sdk.FormFieldInfo.html#MegaForm_Sdk_FormFieldInfo_IsInputField
-  name: IsInputField
-  nameWithType: FormFieldInfo.IsInputField
-  fullName: MegaForm.Sdk.FormFieldInfo.IsInputField
-- uid: MegaForm.Sdk.FormFieldInfo.Options*
-  commentId: Overload:MegaForm.Sdk.FormFieldInfo.Options
-  href: MegaForm.Sdk.FormFieldInfo.html#MegaForm_Sdk_FormFieldInfo_Options
-  name: Options
-  nameWithType: FormFieldInfo.Options
-  fullName: MegaForm.Sdk.FormFieldInfo.Options
-- uid: System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.FieldOptionInfo}
-  commentId: T:System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.FieldOptionInfo}
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.OpenTaskCount*
+  commentId: Overload:MegaForm.Sdk.SubmissionWorkflowSummaryDto.OpenTaskCount
+  href: MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_OpenTaskCount
+  name: OpenTaskCount
+  nameWithType: SubmissionWorkflowSummaryDto.OpenTaskCount
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.OpenTaskCount
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActionCount*
+  commentId: Overload:MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActionCount
+  href: MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_ActionCount
+  name: ActionCount
+  nameWithType: SubmissionWorkflowSummaryDto.ActionCount
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.ActionCount
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.Tasks*
+  commentId: Overload:MegaForm.Sdk.SubmissionWorkflowSummaryDto.Tasks
+  href: MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_Tasks
+  name: Tasks
+  nameWithType: SubmissionWorkflowSummaryDto.Tasks
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.Tasks
+- uid: System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.InboxTaskDto}
+  commentId: T:System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.InboxTaskDto}
   parent: System.Collections.Generic
   definition: System.Collections.Generic.IReadOnlyList`1
   href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1
-  name: IReadOnlyList<FieldOptionInfo>
-  nameWithType: IReadOnlyList<FieldOptionInfo>
-  fullName: System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.FieldOptionInfo>
-  nameWithType.vb: IReadOnlyList(Of FieldOptionInfo)
-  fullName.vb: System.Collections.Generic.IReadOnlyList(Of MegaForm.Sdk.FieldOptionInfo)
-  name.vb: IReadOnlyList(Of FieldOptionInfo)
+  name: IReadOnlyList<InboxTaskDto>
+  nameWithType: IReadOnlyList<InboxTaskDto>
+  fullName: System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.InboxTaskDto>
+  nameWithType.vb: IReadOnlyList(Of InboxTaskDto)
+  fullName.vb: System.Collections.Generic.IReadOnlyList(Of MegaForm.Sdk.InboxTaskDto)
+  name.vb: IReadOnlyList(Of InboxTaskDto)
   spec.csharp:
   - uid: System.Collections.Generic.IReadOnlyList`1
     name: IReadOnlyList
     isExternal: true
     href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1
   - name: <
-  - uid: MegaForm.Sdk.FieldOptionInfo
-    name: FieldOptionInfo
-    href: MegaForm.Sdk.FieldOptionInfo.html
+  - uid: MegaForm.Sdk.InboxTaskDto
+    name: InboxTaskDto
+    href: MegaForm.Sdk.InboxTaskDto.html
   - name: '>'
   spec.vb:
   - uid: System.Collections.Generic.IReadOnlyList`1
@@ -823,9 +689,9 @@ references:
   - name: (
   - name: Of
   - name: " "
-  - uid: MegaForm.Sdk.FieldOptionInfo
-    name: FieldOptionInfo
-    href: MegaForm.Sdk.FieldOptionInfo.html
+  - uid: MegaForm.Sdk.InboxTaskDto
+    name: InboxTaskDto
+    href: MegaForm.Sdk.InboxTaskDto.html
   - name: )
 - uid: System.Collections.Generic.IReadOnlyList`1
   commentId: T:System.Collections.Generic.IReadOnlyList`1
@@ -892,16 +758,42 @@ references:
     name: Generic
     isExternal: true
     href: https://learn.microsoft.com/dotnet/api/system.collections.generic
-- uid: MegaForm.Sdk.FormFieldInfo.Validation*
-  commentId: Overload:MegaForm.Sdk.FormFieldInfo.Validation
-  href: MegaForm.Sdk.FormFieldInfo.html#MegaForm_Sdk_FormFieldInfo_Validation
-  name: Validation
-  nameWithType: FormFieldInfo.Validation
-  fullName: MegaForm.Sdk.FormFieldInfo.Validation
-- uid: MegaForm.Sdk.FieldValidationInfo
-  commentId: T:MegaForm.Sdk.FieldValidationInfo
-  parent: MegaForm.Sdk
-  href: MegaForm.Sdk.FieldValidationInfo.html
-  name: FieldValidationInfo
-  nameWithType: FieldValidationInfo
-  fullName: MegaForm.Sdk.FieldValidationInfo
+- uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto.Actions*
+  commentId: Overload:MegaForm.Sdk.SubmissionWorkflowSummaryDto.Actions
+  href: MegaForm.Sdk.SubmissionWorkflowSummaryDto.html#MegaForm_Sdk_SubmissionWorkflowSummaryDto_Actions
+  name: Actions
+  nameWithType: SubmissionWorkflowSummaryDto.Actions
+  fullName: MegaForm.Sdk.SubmissionWorkflowSummaryDto.Actions
+- uid: System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.InboxTaskActionDto}
+  commentId: T:System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.InboxTaskActionDto}
+  parent: System.Collections.Generic
+  definition: System.Collections.Generic.IReadOnlyList`1
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1
+  name: IReadOnlyList<InboxTaskActionDto>
+  nameWithType: IReadOnlyList<InboxTaskActionDto>
+  fullName: System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.InboxTaskActionDto>
+  nameWithType.vb: IReadOnlyList(Of InboxTaskActionDto)
+  fullName.vb: System.Collections.Generic.IReadOnlyList(Of MegaForm.Sdk.InboxTaskActionDto)
+  name.vb: IReadOnlyList(Of InboxTaskActionDto)
+  spec.csharp:
+  - uid: System.Collections.Generic.IReadOnlyList`1
+    name: IReadOnlyList
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1
+  - name: <
+  - uid: MegaForm.Sdk.InboxTaskActionDto
+    name: InboxTaskActionDto
+    href: MegaForm.Sdk.InboxTaskActionDto.html
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.IReadOnlyList`1
+    name: IReadOnlyList
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: MegaForm.Sdk.InboxTaskActionDto
+    name: InboxTaskActionDto
+    href: MegaForm.Sdk.InboxTaskActionDto.html
+  - name: )

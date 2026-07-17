@@ -1,40 +1,37 @@
 ### YamlMime:ManagedReference
 items:
-- uid: MegaForm.Sdk.SubmissionDto
-  commentId: T:MegaForm.Sdk.SubmissionDto
-  id: SubmissionDto
+- uid: MegaForm.Sdk.DashboardQuery
+  commentId: T:MegaForm.Sdk.DashboardQuery
+  id: DashboardQuery
   parent: MegaForm.Sdk
   children:
-  - MegaForm.Sdk.SubmissionDto.DataJson
-  - MegaForm.Sdk.SubmissionDto.FormId
-  - MegaForm.Sdk.SubmissionDto.IsSpam
-  - MegaForm.Sdk.SubmissionDto.Status
-  - MegaForm.Sdk.SubmissionDto.SubmissionId
-  - MegaForm.Sdk.SubmissionDto.SubmittedOnUtc
-  - MegaForm.Sdk.SubmissionDto.UserId
+  - MegaForm.Sdk.DashboardQuery.Days
+  - MegaForm.Sdk.DashboardQuery.MaxForms
+  - MegaForm.Sdk.DashboardQuery.Search
+  - MegaForm.Sdk.DashboardQuery.Status
   langs:
   - csharp
   - vb
-  name: SubmissionDto
-  nameWithType: SubmissionDto
-  fullName: MegaForm.Sdk.SubmissionDto
+  name: DashboardQuery
+  nameWithType: DashboardQuery
+  fullName: MegaForm.Sdk.DashboardQuery
   type: Class
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: SubmissionDto
+    id: DashboardQuery
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 108
+    startLine: 258
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: A submission, as exposed to SDK consumers.
+  summary: Filter options for an in-host dashboard overview.
   example: []
   syntax:
-    content: public sealed class SubmissionDto
-    content.vb: Public NotInheritable Class SubmissionDto
+    content: public sealed class DashboardQuery
+    content.vb: Public NotInheritable Class DashboardQuery
   inheritance:
   - System.Object
   inheritedMembers:
@@ -44,109 +41,16 @@ items:
   - System.Object.GetType
   - System.Object.ReferenceEquals(System.Object,System.Object)
   - System.Object.ToString
-- uid: MegaForm.Sdk.SubmissionDto.SubmissionId
-  commentId: P:MegaForm.Sdk.SubmissionDto.SubmissionId
-  id: SubmissionId
-  parent: MegaForm.Sdk.SubmissionDto
-  langs:
-  - csharp
-  - vb
-  name: SubmissionId
-  nameWithType: SubmissionDto.SubmissionId
-  fullName: MegaForm.Sdk.SubmissionDto.SubmissionId
-  type: Property
-  source:
-    remote:
-      path: MegaForm.Sdk/Dtos.cs
-      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
-      repo: https://github.com/CissSolution/MegaformDocs.git
-    id: SubmissionId
-    path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 111
-  assemblies:
-  - MegaForm.Sdk
-  namespace: MegaForm.Sdk
-  summary: Unique submission id.
-  example: []
-  syntax:
-    content: public int SubmissionId { get; set; }
-    parameters: []
-    return:
-      type: System.Int32
-    content.vb: Public Property SubmissionId As Integer
-  overload: MegaForm.Sdk.SubmissionDto.SubmissionId*
-- uid: MegaForm.Sdk.SubmissionDto.FormId
-  commentId: P:MegaForm.Sdk.SubmissionDto.FormId
-  id: FormId
-  parent: MegaForm.Sdk.SubmissionDto
-  langs:
-  - csharp
-  - vb
-  name: FormId
-  nameWithType: SubmissionDto.FormId
-  fullName: MegaForm.Sdk.SubmissionDto.FormId
-  type: Property
-  source:
-    remote:
-      path: MegaForm.Sdk/Dtos.cs
-      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
-      repo: https://github.com/CissSolution/MegaformDocs.git
-    id: FormId
-    path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 114
-  assemblies:
-  - MegaForm.Sdk
-  namespace: MegaForm.Sdk
-  summary: Id of the form this submission belongs to.
-  example: []
-  syntax:
-    content: public int FormId { get; set; }
-    parameters: []
-    return:
-      type: System.Int32
-    content.vb: Public Property FormId As Integer
-  overload: MegaForm.Sdk.SubmissionDto.FormId*
-- uid: MegaForm.Sdk.SubmissionDto.DataJson
-  commentId: P:MegaForm.Sdk.SubmissionDto.DataJson
-  id: DataJson
-  parent: MegaForm.Sdk.SubmissionDto
-  langs:
-  - csharp
-  - vb
-  name: DataJson
-  nameWithType: SubmissionDto.DataJson
-  fullName: MegaForm.Sdk.SubmissionDto.DataJson
-  type: Property
-  source:
-    remote:
-      path: MegaForm.Sdk/Dtos.cs
-      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
-      repo: https://github.com/CissSolution/MegaformDocs.git
-    id: DataJson
-    path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 117
-  assemblies:
-  - MegaForm.Sdk
-  namespace: MegaForm.Sdk
-  summary: Submitted field values as a JSON string.
-  example: []
-  syntax:
-    content: public string? DataJson { get; set; }
-    parameters: []
-    return:
-      type: System.String
-    content.vb: Public Property DataJson As String
-  overload: MegaForm.Sdk.SubmissionDto.DataJson*
-- uid: MegaForm.Sdk.SubmissionDto.Status
-  commentId: P:MegaForm.Sdk.SubmissionDto.Status
+- uid: MegaForm.Sdk.DashboardQuery.Status
+  commentId: P:MegaForm.Sdk.DashboardQuery.Status
   id: Status
-  parent: MegaForm.Sdk.SubmissionDto
+  parent: MegaForm.Sdk.DashboardQuery
   langs:
   - csharp
   - vb
   name: Status
-  nameWithType: SubmissionDto.Status
-  fullName: MegaForm.Sdk.SubmissionDto.Status
+  nameWithType: DashboardQuery.Status
+  fullName: MegaForm.Sdk.DashboardQuery.Status
   type: Property
   source:
     remote:
@@ -155,11 +59,11 @@ items:
       repo: https://github.com/CissSolution/MegaformDocs.git
     id: Status
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 120
+    startLine: 261
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Submission status, e.g. "new", "approved", "rejected".
+  summary: Optional form status filter.
   example: []
   syntax:
     content: public string? Status { get; set; }
@@ -167,100 +71,100 @@ items:
     return:
       type: System.String
     content.vb: Public Property Status As String
-  overload: MegaForm.Sdk.SubmissionDto.Status*
-- uid: MegaForm.Sdk.SubmissionDto.IsSpam
-  commentId: P:MegaForm.Sdk.SubmissionDto.IsSpam
-  id: IsSpam
-  parent: MegaForm.Sdk.SubmissionDto
+  overload: MegaForm.Sdk.DashboardQuery.Status*
+- uid: MegaForm.Sdk.DashboardQuery.Search
+  commentId: P:MegaForm.Sdk.DashboardQuery.Search
+  id: Search
+  parent: MegaForm.Sdk.DashboardQuery
   langs:
   - csharp
   - vb
-  name: IsSpam
-  nameWithType: SubmissionDto.IsSpam
-  fullName: MegaForm.Sdk.SubmissionDto.IsSpam
+  name: Search
+  nameWithType: DashboardQuery.Search
+  fullName: MegaForm.Sdk.DashboardQuery.Search
   type: Property
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: IsSpam
+    id: Search
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 123
+    startLine: 264
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Whether the submission was flagged as spam.
+  summary: Optional form title/description search term.
   example: []
   syntax:
-    content: public bool IsSpam { get; set; }
+    content: public string? Search { get; set; }
     parameters: []
     return:
-      type: System.Boolean
-    content.vb: Public Property IsSpam As Boolean
-  overload: MegaForm.Sdk.SubmissionDto.IsSpam*
-- uid: MegaForm.Sdk.SubmissionDto.UserId
-  commentId: P:MegaForm.Sdk.SubmissionDto.UserId
-  id: UserId
-  parent: MegaForm.Sdk.SubmissionDto
+      type: System.String
+    content.vb: Public Property Search As String
+  overload: MegaForm.Sdk.DashboardQuery.Search*
+- uid: MegaForm.Sdk.DashboardQuery.Days
+  commentId: P:MegaForm.Sdk.DashboardQuery.Days
+  id: Days
+  parent: MegaForm.Sdk.DashboardQuery
   langs:
   - csharp
   - vb
-  name: UserId
-  nameWithType: SubmissionDto.UserId
-  fullName: MegaForm.Sdk.SubmissionDto.UserId
+  name: Days
+  nameWithType: DashboardQuery.Days
+  fullName: MegaForm.Sdk.DashboardQuery.Days
   type: Property
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: UserId
+    id: Days
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 126
+    startLine: 267
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Id of the user who submitted the record, if known.
+  summary: Recent-submission window in days.
   example: []
   syntax:
-    content: public int? UserId { get; set; }
+    content: public int Days { get; set; }
     parameters: []
     return:
-      type: System.Nullable{System.Int32}
-    content.vb: Public Property UserId As Integer?
-  overload: MegaForm.Sdk.SubmissionDto.UserId*
-- uid: MegaForm.Sdk.SubmissionDto.SubmittedOnUtc
-  commentId: P:MegaForm.Sdk.SubmissionDto.SubmittedOnUtc
-  id: SubmittedOnUtc
-  parent: MegaForm.Sdk.SubmissionDto
+      type: System.Int32
+    content.vb: Public Property Days As Integer
+  overload: MegaForm.Sdk.DashboardQuery.Days*
+- uid: MegaForm.Sdk.DashboardQuery.MaxForms
+  commentId: P:MegaForm.Sdk.DashboardQuery.MaxForms
+  id: MaxForms
+  parent: MegaForm.Sdk.DashboardQuery
   langs:
   - csharp
   - vb
-  name: SubmittedOnUtc
-  nameWithType: SubmissionDto.SubmittedOnUtc
-  fullName: MegaForm.Sdk.SubmissionDto.SubmittedOnUtc
+  name: MaxForms
+  nameWithType: DashboardQuery.MaxForms
+  fullName: MegaForm.Sdk.DashboardQuery.MaxForms
   type: Property
   source:
     remote:
       path: MegaForm.Sdk/Dtos.cs
       branch: feat/theme-designer-picker-wizard-gallery-1.7.45
       repo: https://github.com/CissSolution/MegaformDocs.git
-    id: SubmittedOnUtc
+    id: MaxForms
     path: ../../MegaForm.Sdk/Dtos.cs
-    startLine: 129
+    startLine: 270
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: UTC timestamp when the submission was created.
+  summary: Maximum number of forms to include.
   example: []
   syntax:
-    content: public DateTime SubmittedOnUtc { get; set; }
+    content: public int MaxForms { get; set; }
     parameters: []
     return:
-      type: System.DateTime
-    content.vb: Public Property SubmittedOnUtc As Date
-  overload: MegaForm.Sdk.SubmissionDto.SubmittedOnUtc*
+      type: System.Int32
+    content.vb: Public Property MaxForms As Integer
+  overload: MegaForm.Sdk.DashboardQuery.MaxForms*
 references:
 - uid: MegaForm.Sdk
   commentId: N:MegaForm.Sdk
@@ -497,35 +401,12 @@ references:
   name: System
   nameWithType: System
   fullName: System
-- uid: MegaForm.Sdk.SubmissionDto.SubmissionId*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.SubmissionId
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_SubmissionId
-  name: SubmissionId
-  nameWithType: SubmissionDto.SubmissionId
-  fullName: MegaForm.Sdk.SubmissionDto.SubmissionId
-- uid: System.Int32
-  commentId: T:System.Int32
-  parent: System
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.int32
-  name: int
-  nameWithType: int
-  fullName: int
-  nameWithType.vb: Integer
-  fullName.vb: Integer
-  name.vb: Integer
-- uid: MegaForm.Sdk.SubmissionDto.FormId*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.FormId
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_FormId
-  name: FormId
-  nameWithType: SubmissionDto.FormId
-  fullName: MegaForm.Sdk.SubmissionDto.FormId
-- uid: MegaForm.Sdk.SubmissionDto.DataJson*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.DataJson
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_DataJson
-  name: DataJson
-  nameWithType: SubmissionDto.DataJson
-  fullName: MegaForm.Sdk.SubmissionDto.DataJson
+- uid: MegaForm.Sdk.DashboardQuery.Status*
+  commentId: Overload:MegaForm.Sdk.DashboardQuery.Status
+  href: MegaForm.Sdk.DashboardQuery.html#MegaForm_Sdk_DashboardQuery_Status
+  name: Status
+  nameWithType: DashboardQuery.Status
+  fullName: MegaForm.Sdk.DashboardQuery.Status
 - uid: System.String
   commentId: T:System.String
   parent: System
@@ -537,100 +418,32 @@ references:
   nameWithType.vb: String
   fullName.vb: String
   name.vb: String
-- uid: MegaForm.Sdk.SubmissionDto.Status*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.Status
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_Status
-  name: Status
-  nameWithType: SubmissionDto.Status
-  fullName: MegaForm.Sdk.SubmissionDto.Status
-- uid: MegaForm.Sdk.SubmissionDto.IsSpam*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.IsSpam
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_IsSpam
-  name: IsSpam
-  nameWithType: SubmissionDto.IsSpam
-  fullName: MegaForm.Sdk.SubmissionDto.IsSpam
-- uid: System.Boolean
-  commentId: T:System.Boolean
+- uid: MegaForm.Sdk.DashboardQuery.Search*
+  commentId: Overload:MegaForm.Sdk.DashboardQuery.Search
+  href: MegaForm.Sdk.DashboardQuery.html#MegaForm_Sdk_DashboardQuery_Search
+  name: Search
+  nameWithType: DashboardQuery.Search
+  fullName: MegaForm.Sdk.DashboardQuery.Search
+- uid: MegaForm.Sdk.DashboardQuery.Days*
+  commentId: Overload:MegaForm.Sdk.DashboardQuery.Days
+  href: MegaForm.Sdk.DashboardQuery.html#MegaForm_Sdk_DashboardQuery_Days
+  name: Days
+  nameWithType: DashboardQuery.Days
+  fullName: MegaForm.Sdk.DashboardQuery.Days
+- uid: System.Int32
+  commentId: T:System.Int32
   parent: System
   isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.boolean
-  name: bool
-  nameWithType: bool
-  fullName: bool
-  nameWithType.vb: Boolean
-  fullName.vb: Boolean
-  name.vb: Boolean
-- uid: MegaForm.Sdk.SubmissionDto.UserId*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.UserId
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_UserId
-  name: UserId
-  nameWithType: SubmissionDto.UserId
-  fullName: MegaForm.Sdk.SubmissionDto.UserId
-- uid: System.Nullable{System.Int32}
-  commentId: T:System.Nullable{System.Int32}
-  parent: System
-  definition: System.Nullable`1
   href: https://learn.microsoft.com/dotnet/api/system.int32
-  name: int?
-  nameWithType: int?
-  fullName: int?
-  nameWithType.vb: Integer?
-  fullName.vb: Integer?
-  name.vb: Integer?
-  spec.csharp:
-  - uid: System.Int32
-    name: int
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.int32
-  - name: '?'
-  spec.vb:
-  - uid: System.Int32
-    name: Integer
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.int32
-  - name: '?'
-- uid: System.Nullable`1
-  commentId: T:System.Nullable`1
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.nullable-1
-  name: Nullable<T>
-  nameWithType: Nullable<T>
-  fullName: System.Nullable<T>
-  nameWithType.vb: Nullable(Of T)
-  fullName.vb: System.Nullable(Of T)
-  name.vb: Nullable(Of T)
-  spec.csharp:
-  - uid: System.Nullable`1
-    name: Nullable
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
-  - name: <
-  - name: T
-  - name: '>'
-  spec.vb:
-  - uid: System.Nullable`1
-    name: Nullable
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
-  - name: (
-  - name: Of
-  - name: " "
-  - name: T
-  - name: )
-- uid: MegaForm.Sdk.SubmissionDto.SubmittedOnUtc*
-  commentId: Overload:MegaForm.Sdk.SubmissionDto.SubmittedOnUtc
-  href: MegaForm.Sdk.SubmissionDto.html#MegaForm_Sdk_SubmissionDto_SubmittedOnUtc
-  name: SubmittedOnUtc
-  nameWithType: SubmissionDto.SubmittedOnUtc
-  fullName: MegaForm.Sdk.SubmissionDto.SubmittedOnUtc
-- uid: System.DateTime
-  commentId: T:System.DateTime
-  parent: System
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.datetime
-  name: DateTime
-  nameWithType: DateTime
-  fullName: System.DateTime
-  nameWithType.vb: Date
-  fullName.vb: Date
-  name.vb: Date
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: MegaForm.Sdk.DashboardQuery.MaxForms*
+  commentId: Overload:MegaForm.Sdk.DashboardQuery.MaxForms
+  href: MegaForm.Sdk.DashboardQuery.html#MegaForm_Sdk_DashboardQuery_MaxForms
+  name: MaxForms
+  nameWithType: DashboardQuery.MaxForms
+  fullName: MegaForm.Sdk.DashboardQuery.MaxForms

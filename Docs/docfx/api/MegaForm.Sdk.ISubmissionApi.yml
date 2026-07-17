@@ -18,9 +18,13 @@ items:
   fullName: MegaForm.Sdk.ISubmissionApi
   type: Interface
   source:
+    remote:
+      path: MegaForm.Sdk/IMegaFormClient.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: ISubmissionApi
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
-    startLine: 74
+    path: ../../MegaForm.Sdk/IMegaFormClient.cs
+    startLine: 83
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -43,9 +47,13 @@ items:
   fullName: MegaForm.Sdk.ISubmissionApi.FindAsync(MegaForm.Sdk.SubmissionQuery, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
   type: Method
   source:
+    remote:
+      path: MegaForm.Sdk/IMegaFormClient.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: FindAsync
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
-    startLine: 77
+    path: ../../MegaForm.Sdk/IMegaFormClient.cs
+    startLine: 86
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -79,9 +87,13 @@ items:
   fullName: MegaForm.Sdk.ISubmissionApi.GetAsync(int, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
   type: Method
   source:
+    remote:
+      path: MegaForm.Sdk/IMegaFormClient.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: GetAsync
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
-    startLine: 80
+    path: ../../MegaForm.Sdk/IMegaFormClient.cs
+    startLine: 89
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -115,9 +127,13 @@ items:
   fullName: MegaForm.Sdk.ISubmissionApi.SubmitAsync(int, System.Collections.Generic.Dictionary<string, object>, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
   type: Method
   source:
+    remote:
+      path: MegaForm.Sdk/IMegaFormClient.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: SubmitAsync
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
-    startLine: 89
+    path: ../../MegaForm.Sdk/IMegaFormClient.cs
+    startLine: 98
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -162,9 +178,13 @@ items:
   fullName: MegaForm.Sdk.ISubmissionApi.UpdateAsync(int, System.Collections.Generic.Dictionary<string, object>, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
   type: Method
   source:
+    remote:
+      path: MegaForm.Sdk/IMegaFormClient.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: UpdateAsync
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
-    startLine: 92
+    path: ../../MegaForm.Sdk/IMegaFormClient.cs
+    startLine: 101
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -200,9 +220,13 @@ items:
   fullName: MegaForm.Sdk.ISubmissionApi.DeleteAsync(int, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
   type: Method
   source:
+    remote:
+      path: MegaForm.Sdk/IMegaFormClient.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: DeleteAsync
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
-    startLine: 95
+    path: ../../MegaForm.Sdk/IMegaFormClient.cs
+    startLine: 104
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
