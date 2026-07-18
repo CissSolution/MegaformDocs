@@ -1,0 +1,171 @@
+-- MegaForm 01.06.39 — Umbraco Forms-style typed submission storage (2026-07-17)
+--
+-- Creates the record-field table + six typed value tables, written in PARALLEL with
+-- MF_Submissions.DataJson by DnnSubmissionDataStore (DNN keeps DataJson as the runtime
+-- source of truth; typed rows are additive until DNN readers are switched).
+--
+-- FK cascade from MF_Submissions -> MF_SubmissionFields -> MF_SubmissionValue* means a
+-- submission delete removes all typed rows at the DB level.
+--
+-- Idempotent (IF OBJECT_ID / IF NOT EXISTS) so re-running the install is safe.
+-- Oqtane parity: MegaForm.Oqtane.Server\Migrations\01060039_AddTypedSubmissionStorage.cs
+-- (Oqtane builds its schema from the EF model, so the FK/cascade there is enforced in the
+--  repository; on DNN it is a real DB-level FK created here).
+
+-- ===== MF_SubmissionFields ==============================================
+IF OBJECT_ID('{databaseOwner}{objectQualifier}MF_SubmissionFields', 'U') IS NULL
+BEGIN
+    CREATE TABLE {databaseOwner}{objectQualifier}MF_SubmissionFields (
+        SubmissionFieldId BIGINT IDENTITY(1,1) NOT NULL,
+        SubmissionId      INT             NOT NULL,
+        FormId            INT             NOT NULL,
+        FormFieldId       BIGINT          NULL,
+        FieldKey          NVARCHAR(256)   NULL,
+        FieldId           NVARCHAR(256)   NULL,
+        FieldAlias        NVARCHAR(256)   NULL,
+        FieldType         NVARCHAR(128)   NULL,
+        DataType          NVARCHAR(64)    NULL,
+        LabelSnapshot     NVARCHAR(512)   NULL,
+        PageIndex         INT             NULL,
+        FieldOrder        INT             NULL,
+        DisplayValue      NVARCHAR(MAX)   NULL,
+        HasValue          BIT             NOT NULL CONSTRAINT DF_MF_SubmissionFields_HasValue DEFAULT 0,
+        IsSensitive       BIT             NOT NULL CONSTRAINT DF_MF_SubmissionFields_IsSensitive DEFAULT 0,
+        CreatedOnUtc      DATETIME2       NOT NULL CONSTRAINT DF_MF_SubmissionFields_CreatedOn DEFAULT SYSUTCDATETIME(),
+        UpdatedOnUtc      DATETIME2       NULL,
+        CONSTRAINT PK_MF_SubmissionFields PRIMARY KEY CLUSTERED (SubmissionFieldId),
+        CONSTRAINT FK_MF_SubmissionFields_MF_Submissions FOREIGN KEY (SubmissionId)
+            REFERENCES {databaseOwner}{objectQualifier}MF_Submissions(SubmissionId) ON DELETE CASCADE
+    );
+    CREATE INDEX IX_MF_SubmissionFields_Submission_FieldKey ON {databaseOwner}{objectQualifier}MF_SubmissionFields (SubmissionId, FieldKey);
+    CREATE INDEX IX_MF_SubmissionFields_Form_FieldKey       ON {databaseOwner}{objectQualifier}MF_SubmissionFields (FormId, FieldKey);
+    CREATE INDEX IX_MF_SubmissionFields_SubmissionId        ON {databaseOwner}{objectQualifier}MF_SubmissionFields (SubmissionId);
+    CREATE INDEX IX_MF_SubmissionFields_Form_DataType       ON {databaseOwner}{objectQualifier}MF_SubmissionFields (FormId, DataType);
+END
+GO
+
+-- ===== MF_SubmissionValueString =========================================
+IF OBJECT_ID('{databaseOwner}{objectQualifier}MF_SubmissionValueString', 'U') IS NULL
+BEGIN
+    CREATE TABLE {databaseOwner}{objectQualifier}MF_SubmissionValueString (
+        Id                BIGINT IDENTITY(1,1) NOT NULL,
+        SubmissionFieldId BIGINT          NOT NULL,
+        SubmissionId      INT             NOT NULL,
+        FormId            INT             NOT NULL,
+        FieldKey          NVARCHAR(256)   NULL,
+        Ordinal           INT             NOT NULL CONSTRAINT DF_MF_SVString_Ordinal DEFAULT 0,
+        Value             NVARCHAR(1024)  NULL,
+        CONSTRAINT PK_MF_SubmissionValueString PRIMARY KEY CLUSTERED (Id),
+        CONSTRAINT FK_MF_SVString_Fields FOREIGN KEY (SubmissionFieldId)
+            REFERENCES {databaseOwner}{objectQualifier}MF_SubmissionFields(SubmissionFieldId) ON DELETE CASCADE
+    );
+    CREATE INDEX IX_MF_SVString_FieldId      ON {databaseOwner}{objectQualifier}MF_SubmissionValueString (SubmissionFieldId);
+    CREATE INDEX IX_MF_SVString_SubmissionId ON {databaseOwner}{objectQualifier}MF_SubmissionValueString (SubmissionId);
+    CREATE INDEX IX_MF_SVString_Form_Field   ON {databaseOwner}{objectQualifier}MF_SubmissionValueString (FormId, FieldKey);
+END
+GO
+
+-- ===== MF_SubmissionValueLongText =======================================
+IF OBJECT_ID('{databaseOwner}{objectQualifier}MF_SubmissionValueLongText', 'U') IS NULL
+BEGIN
+    CREATE TABLE {databaseOwner}{objectQualifier}MF_SubmissionValueLongText (
+        Id                BIGINT IDENTITY(1,1) NOT NULL,
+        SubmissionFieldId BIGINT          NOT NULL,
+        SubmissionId      INT             NOT NULL,
+        FormId            INT             NOT NULL,
+        FieldKey          NVARCHAR(256)   NULL,
+        Ordinal           INT             NOT NULL CONSTRAINT DF_MF_SVLongText_Ordinal DEFAULT 0,
+        Value             NVARCHAR(MAX)   NULL,
+        CONSTRAINT PK_MF_SubmissionValueLongText PRIMARY KEY CLUSTERED (Id),
+        CONSTRAINT FK_MF_SVLongText_Fields FOREIGN KEY (SubmissionFieldId)
+            REFERENCES {databaseOwner}{objectQualifier}MF_SubmissionFields(SubmissionFieldId) ON DELETE CASCADE
+    );
+    CREATE INDEX IX_MF_SVLongText_FieldId      ON {databaseOwner}{objectQualifier}MF_SubmissionValueLongText (SubmissionFieldId);
+    CREATE INDEX IX_MF_SVLongText_SubmissionId ON {databaseOwner}{objectQualifier}MF_SubmissionValueLongText (SubmissionId);
+    CREATE INDEX IX_MF_SVLongText_Form_Field   ON {databaseOwner}{objectQualifier}MF_SubmissionValueLongText (FormId, FieldKey);
+END
+GO
+
+-- ===== MF_SubmissionValueNumber =========================================
+IF OBJECT_ID('{databaseOwner}{objectQualifier}MF_SubmissionValueNumber', 'U') IS NULL
+BEGIN
+    CREATE TABLE {databaseOwner}{objectQualifier}MF_SubmissionValueNumber (
+        Id                BIGINT IDENTITY(1,1) NOT NULL,
+        SubmissionFieldId BIGINT          NOT NULL,
+        SubmissionId      INT             NOT NULL,
+        FormId            INT             NOT NULL,
+        FieldKey          NVARCHAR(256)   NULL,
+        Ordinal           INT             NOT NULL CONSTRAINT DF_MF_SVNumber_Ordinal DEFAULT 0,
+        Value             DECIMAL(18,6)   NULL,
+        CONSTRAINT PK_MF_SubmissionValueNumber PRIMARY KEY CLUSTERED (Id),
+        CONSTRAINT FK_MF_SVNumber_Fields FOREIGN KEY (SubmissionFieldId)
+            REFERENCES {databaseOwner}{objectQualifier}MF_SubmissionFields(SubmissionFieldId) ON DELETE CASCADE
+    );
+    CREATE INDEX IX_MF_SVNumber_FieldId      ON {databaseOwner}{objectQualifier}MF_SubmissionValueNumber (SubmissionFieldId);
+    CREATE INDEX IX_MF_SVNumber_SubmissionId ON {databaseOwner}{objectQualifier}MF_SubmissionValueNumber (SubmissionId);
+    CREATE INDEX IX_MF_SVNumber_Form_Field_Value ON {databaseOwner}{objectQualifier}MF_SubmissionValueNumber (FormId, FieldKey, Value);
+END
+GO
+
+-- ===== MF_SubmissionValueDate ===========================================
+IF OBJECT_ID('{databaseOwner}{objectQualifier}MF_SubmissionValueDate', 'U') IS NULL
+BEGIN
+    CREATE TABLE {databaseOwner}{objectQualifier}MF_SubmissionValueDate (
+        Id                BIGINT IDENTITY(1,1) NOT NULL,
+        SubmissionFieldId BIGINT          NOT NULL,
+        SubmissionId      INT             NOT NULL,
+        FormId            INT             NOT NULL,
+        FieldKey          NVARCHAR(256)   NULL,
+        Ordinal           INT             NOT NULL CONSTRAINT DF_MF_SVDate_Ordinal DEFAULT 0,
+        Value             DATETIME2       NULL,
+        CONSTRAINT PK_MF_SubmissionValueDate PRIMARY KEY CLUSTERED (Id),
+        CONSTRAINT FK_MF_SVDate_Fields FOREIGN KEY (SubmissionFieldId)
+            REFERENCES {databaseOwner}{objectQualifier}MF_SubmissionFields(SubmissionFieldId) ON DELETE CASCADE
+    );
+    CREATE INDEX IX_MF_SVDate_FieldId      ON {databaseOwner}{objectQualifier}MF_SubmissionValueDate (SubmissionFieldId);
+    CREATE INDEX IX_MF_SVDate_SubmissionId ON {databaseOwner}{objectQualifier}MF_SubmissionValueDate (SubmissionId);
+    CREATE INDEX IX_MF_SVDate_Form_Field_Value ON {databaseOwner}{objectQualifier}MF_SubmissionValueDate (FormId, FieldKey, Value);
+END
+GO
+
+-- ===== MF_SubmissionValueBoolean ========================================
+IF OBJECT_ID('{databaseOwner}{objectQualifier}MF_SubmissionValueBoolean', 'U') IS NULL
+BEGIN
+    CREATE TABLE {databaseOwner}{objectQualifier}MF_SubmissionValueBoolean (
+        Id                BIGINT IDENTITY(1,1) NOT NULL,
+        SubmissionFieldId BIGINT          NOT NULL,
+        SubmissionId      INT             NOT NULL,
+        FormId            INT             NOT NULL,
+        FieldKey          NVARCHAR(256)   NULL,
+        Ordinal           INT             NOT NULL CONSTRAINT DF_MF_SVBoolean_Ordinal DEFAULT 0,
+        Value             BIT             NOT NULL CONSTRAINT DF_MF_SVBoolean_Value DEFAULT 0,
+        CONSTRAINT PK_MF_SubmissionValueBoolean PRIMARY KEY CLUSTERED (Id),
+        CONSTRAINT FK_MF_SVBoolean_Fields FOREIGN KEY (SubmissionFieldId)
+            REFERENCES {databaseOwner}{objectQualifier}MF_SubmissionFields(SubmissionFieldId) ON DELETE CASCADE
+    );
+    CREATE INDEX IX_MF_SVBoolean_FieldId      ON {databaseOwner}{objectQualifier}MF_SubmissionValueBoolean (SubmissionFieldId);
+    CREATE INDEX IX_MF_SVBoolean_SubmissionId ON {databaseOwner}{objectQualifier}MF_SubmissionValueBoolean (SubmissionId);
+    CREATE INDEX IX_MF_SVBoolean_Form_Field_Value ON {databaseOwner}{objectQualifier}MF_SubmissionValueBoolean (FormId, FieldKey, Value);
+END
+GO
+
+-- ===== MF_SubmissionValueJson ===========================================
+IF OBJECT_ID('{databaseOwner}{objectQualifier}MF_SubmissionValueJson', 'U') IS NULL
+BEGIN
+    CREATE TABLE {databaseOwner}{objectQualifier}MF_SubmissionValueJson (
+        Id                BIGINT IDENTITY(1,1) NOT NULL,
+        SubmissionFieldId BIGINT          NOT NULL,
+        SubmissionId      INT             NOT NULL,
+        FormId            INT             NOT NULL,
+        FieldKey          NVARCHAR(256)   NULL,
+        Ordinal           INT             NOT NULL CONSTRAINT DF_MF_SVJson_Ordinal DEFAULT 0,
+        Value             NVARCHAR(MAX)   NULL,
+        CONSTRAINT PK_MF_SubmissionValueJson PRIMARY KEY CLUSTERED (Id),
+        CONSTRAINT FK_MF_SVJson_Fields FOREIGN KEY (SubmissionFieldId)
+            REFERENCES {databaseOwner}{objectQualifier}MF_SubmissionFields(SubmissionFieldId) ON DELETE CASCADE
+    );
+    CREATE INDEX IX_MF_SVJson_FieldId      ON {databaseOwner}{objectQualifier}MF_SubmissionValueJson (SubmissionFieldId);
+    CREATE INDEX IX_MF_SVJson_SubmissionId ON {databaseOwner}{objectQualifier}MF_SubmissionValueJson (SubmissionId);
+    CREATE INDEX IX_MF_SVJson_Form_Field   ON {databaseOwner}{objectQualifier}MF_SubmissionValueJson (FormId, FieldKey);
+END
+GO

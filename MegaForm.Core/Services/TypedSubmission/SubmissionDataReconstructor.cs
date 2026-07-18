@@ -47,10 +47,12 @@ namespace MegaForm.Core.Services.TypedSubmission
                     return Collapse(values.LongTextValues);
 
                 case SubmissionDataType.Number:
-                    return Collapse(values.NumberValues);
+                    // Prefer the typed rows; fall back to the lossless string rows written by the
+                    // normalizer when a value could not be parsed as a number.
+                    return Collapse(values.NumberValues) ?? Collapse(values.StringValues);
 
                 case SubmissionDataType.Date:
-                    return Collapse(values.DateValues);
+                    return Collapse(values.DateValues) ?? Collapse(values.StringValues);
 
                 case SubmissionDataType.Boolean:
                     return Collapse(values.BooleanValues);

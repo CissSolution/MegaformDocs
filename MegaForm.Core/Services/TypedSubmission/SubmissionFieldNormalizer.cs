@@ -66,6 +66,15 @@ namespace MegaForm.Core.Services.TypedSubmission
                     return SubmissionDataType.Date;
 
                 case "checkbox":
+                    // A "Checkbox" WITH options is a multi-select checkbox GROUP — its value is
+                    // an array of selected option values (e.g. ["analytics","security"]), which must
+                    // be stored as (multi-value) strings, NOT coerced through ToBoolean (that would
+                    // turn every selected value into `false` and lose the data). A "Checkbox" with no
+                    // options is a single boolean toggle → Boolean.
+                    return (field.Options != null && field.Options.Count > 0)
+                        ? SubmissionDataType.String
+                        : SubmissionDataType.Boolean;
+
                 case "switch":
                 case "terms":
                     return SubmissionDataType.Boolean;
@@ -161,6 +170,10 @@ namespace MegaForm.Core.Services.TypedSubmission
                     {
                         if (decimal.TryParse(p, NumberStyles.Any, CultureInfo.InvariantCulture, out var d))
                             values.NumberValues.Add(d);
+                        else if (!string.IsNullOrWhiteSpace(p))
+                            // Lossless fallback: an unparseable numeric value must NEVER be dropped,
+                            // otherwise the reconstructed dictionary loses it once DataJson is off.
+                            values.StringValues.Add(p);
                     }
                     break;
 
@@ -170,6 +183,9 @@ namespace MegaForm.Core.Services.TypedSubmission
                         if (DateTime.TryParse(p, CultureInfo.InvariantCulture,
                             DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var dt))
                             values.DateValues.Add(dt);
+                        else if (!string.IsNullOrWhiteSpace(p))
+                            // Lossless fallback (see Number above).
+                            values.StringValues.Add(p);
                     }
                     break;
 

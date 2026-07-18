@@ -4,6 +4,8 @@ using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using MegaForm.Core.Interfaces;
 using MegaForm.Core.Models;
+using MegaForm.Core.Services.TypedSubmission;
+using Newtonsoft.Json;
 
 namespace MegaForm.Oqtane.Server.Data
 {
@@ -104,7 +106,41 @@ namespace MegaForm.Oqtane.Server.Data
     public class EfSubmissionRepository : ISubmissionRepository
     {
         private readonly IDbContextFactory<MegaFormDbContext> _dbContextFactory;
-        public EfSubmissionRepository(IDbContextFactory<MegaFormDbContext> dbContextFactory) { _dbContextFactory = dbContextFactory; }
+        // [TypedStorage 2026-07-17] When typed storage is primary, MF_Submissions.DataJson is
+        // collapsed to "{}" on submit. This store reconstructs the data dictionary from the typed
+        // rows so every legacy reader that consumes submission.DataJson keeps working unchanged.
+        // Optional (null) → repository behaves exactly as before (DataJson is the source of truth).
+        private readonly MegaForm.Core.Interfaces.ISubmissionDataStore _typedStore;
+        // [TypedStorage 2026-07-18] Needed to re-derive typed rows when a caller writes a real DataJson
+        // (workflow mutation / admin edit) on a typed-primary host — keeps typed rows + search in sync.
+        private readonly IFormRepository _formRepo;
+        private readonly SubmissionFieldNormalizer _fieldNormalizer = new SubmissionFieldNormalizer();
+
+        public EfSubmissionRepository(
+            IDbContextFactory<MegaFormDbContext> dbContextFactory,
+            MegaForm.Core.Interfaces.ISubmissionDataStore typedStore = null,
+            IFormRepository formRepo = null)
+        {
+            _dbContextFactory = dbContextFactory;
+            _typedStore = typedStore;
+            _formRepo = formRepo;
+        }
+
+        // Rehydrate DataJson from typed rows when the stored payload was collapsed ("{}"/empty).
+        private void HydrateDataJson(SubmissionInfo sub)
+        {
+            if (sub == null || _typedStore == null) return;
+            var dj = sub.DataJson;
+            var isCollapsed = string.IsNullOrWhiteSpace(dj) || dj.Trim() == "{}";
+            if (!isCollapsed) return;
+            try
+            {
+                var doc = _typedStore.GetData(sub.SubmissionId);
+                if (doc?.Data != null && doc.Data.Count > 0)
+                    sub.DataJson = Newtonsoft.Json.JsonConvert.SerializeObject(doc.Data);
+            }
+            catch { /* fail-soft: leave the collapsed payload rather than break the read */ }
+        }
 
         public int Insert(SubmissionInfo sub)
         {
@@ -122,7 +158,9 @@ namespace MegaForm.Oqtane.Server.Data
         public SubmissionInfo Get(int submissionId)
         {
             using var db = _dbContextFactory.CreateDbContext();
-            return db.Submissions.FirstOrDefault(s => s.SubmissionId == submissionId);
+            var sub = db.Submissions.FirstOrDefault(s => s.SubmissionId == submissionId);
+            HydrateDataJson(sub);
+            return sub;
         }
 
         public List<SubmissionValueInfo> GetValues(int submissionId)
@@ -139,7 +177,20 @@ namespace MegaForm.Oqtane.Server.Data
             if (!string.IsNullOrEmpty(status)) q = q.Where(s => s.Status == status);
             if (dateFrom.HasValue) q = q.Where(s => s.SubmittedOnUtc >= dateFrom.Value);
             if (dateTo.HasValue) q = q.Where(s => s.SubmittedOnUtc <= dateTo.Value);
-            if (!string.IsNullOrEmpty(search)) q = q.Where(s => s.DataJson.Contains(search));
+            if (!string.IsNullOrEmpty(search))
+            {
+                // [TypedStorage 2026-07-17] New Oqtane submissions collapse DataJson to "{}", so a
+                // DataJson LIKE would never match a field value. Search the typed field DisplayValue
+                // as well (EXISTS subquery → sargable-ish, indexed by SubmissionId). Hybrid OR keeps
+                // legacy full-DataJson rows searchable during migration.
+                var term = search;
+                if (_typedStore != null)
+                    q = q.Where(s => s.DataJson.Contains(term)
+                        || db.SubmissionFields.Any(f => f.SubmissionId == s.SubmissionId
+                            && f.DisplayValue != null && f.DisplayValue.Contains(term)));
+                else
+                    q = q.Where(s => s.DataJson.Contains(term));
+            }
             // [BoundedCount v20260717-01] COUNT(*) over the full predicate ran on EVERY page request;
             // on a very large form (or with the non-sargable DataJson LIKE search) the count IS the
             // slow part. Cap the counted scan — SELECT COUNT(*) FROM (SELECT TOP (10001) …) — so
@@ -155,6 +206,12 @@ namespace MegaForm.Oqtane.Server.Data
                 if (scope != null) scope.TotalIsBounded = true;
             }
             var items = q.OrderByDescending(s => s.SubmittedOnUtc).Skip(pageIndex * pageSize).Take(pageSize).ToList();
+            // [TypedStorage 2026-07-17] Rehydrate the collapsed DataJson for the page rows so the
+            // dashboard summary column (ToListItem) reflects typed storage. Only the current page is
+            // hydrated (≤ pageSize rows). NOTE: the `DataJson.Contains(search)` predicate above still
+            // targets the collapsed column — free-text search is a Phase-4 follow-up (switch to a
+            // typed-value join) and is not covered while typed storage is primary.
+            foreach (var it in items) HydrateDataJson(it);
             return (items, total);
         }
 
@@ -171,12 +228,40 @@ namespace MegaForm.Oqtane.Server.Data
 
         public void UpdateData(int submissionId, string dataJson)
         {
-            using var db = _dbContextFactory.CreateDbContext();
-            var sub = db.Submissions.Find(submissionId);
-            if (sub != null)
+            int formId = 0;
+            bool found = false;
+            using (var db = _dbContextFactory.CreateDbContext())
             {
-                sub.DataJson = dataJson;
-                db.SaveChanges();
+                var sub = db.Submissions.Find(submissionId);
+                if (sub != null)
+                {
+                    sub.DataJson = dataJson;
+                    formId = sub.FormId;
+                    found = true;
+                    db.SaveChanges();
+                }
+            }
+
+            // [TypedStorage 2026-07-18] When a caller writes a REAL DataJson (workflow field mutation,
+            // admin edit) on a typed-primary host, the typed rows — and the search DisplayValue that the
+            // dashboard now relies on — would go stale. Re-derive them from the new payload so typed
+            // storage stays consistent. Skipped for the collapse call the submit pipeline itself makes
+            // (UpdateData(id,"{}")). Fail-soft: on any error the full DataJson we just wrote is still a
+            // correct source for hydration-based readers.
+            if (found && _typedStore != null && _typedStore.SupportsDataJsonCollapse && _formRepo != null
+                && !string.IsNullOrWhiteSpace(dataJson) && dataJson.Trim() != "{}")
+            {
+                try
+                {
+                    var form = _formRepo.GetForm(formId);
+                    FormSchema schema = null;
+                    if (form != null && !string.IsNullOrWhiteSpace(form.SchemaJson))
+                        schema = JsonConvert.DeserializeObject<FormSchema>(form.SchemaJson);
+                    var data = JsonConvert.DeserializeObject<Dictionary<string, object>>(dataJson);
+                    var writes = _fieldNormalizer.Normalize(formId, schema, data);
+                    _typedStore.ReplaceFields(submissionId, formId, writes);
+                }
+                catch { /* fail-soft — leave the full DataJson as the source for hydration-based readers */ }
             }
         }
 
@@ -189,6 +274,12 @@ namespace MegaForm.Oqtane.Server.Data
                 db.Submissions.Remove(sub);
                 db.SaveChanges();
             }
+            // [TypedStorage 2026-07-17] The typed tables carry NO DB-level FK/cascade on Oqtane
+            // (the schema is built from the EF model, which declares no fluent relationships), so
+            // deleting the master row would orphan MF_SubmissionFields + typed value rows. Clean
+            // them up explicitly. Fail-soft: a cleanup error must not fail the delete.
+            try { _typedStore?.DeleteFields(submissionId); }
+            catch (Exception ex) { System.Console.WriteLine("[MegaForm typed-cleanup] Delete failed for submission " + submissionId + ": " + ex.Message); }
         }
 
         public void BulkDelete(int formId, int[] submissionIds)
@@ -197,6 +288,13 @@ namespace MegaForm.Oqtane.Server.Data
             var subs = db.Submissions.Where(s => s.FormId == formId && submissionIds.Contains(s.SubmissionId));
             db.Submissions.RemoveRange(subs);
             db.SaveChanges();
+            // [TypedStorage 2026-07-17] Explicit typed-row cleanup — see Delete() above.
+            if (_typedStore != null && submissionIds != null)
+                foreach (var id in submissionIds)
+                {
+                    try { _typedStore.DeleteFields(id); }
+                    catch (Exception ex) { System.Console.WriteLine("[MegaForm typed-cleanup] BulkDelete failed for submission " + id + ": " + ex.Message); }
+                }
         }
 
         public void InsertValues(int submissionId, List<SubmissionValueInfo> values)

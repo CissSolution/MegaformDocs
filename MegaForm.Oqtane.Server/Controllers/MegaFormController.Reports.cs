@@ -412,17 +412,17 @@ namespace MegaForm.Oqtane.Server.Controllers
             int processed = 0;
             using (var db = _dbContextFactory.CreateDbContext())
             {
+                // [TypedStorage 2026-07-18] On typed-primary hosts DataJson is "{}" — reconstruct the
+                // data dictionary from typed rows so the reindex reflects the real values, not an empty blob.
+                var store = ResolveTypedStore();
                 var subs = db.Submissions.AsNoTracking()
                     .Where(s => s.FormId == formId)
                     .Select(s => new { s.SubmissionId, s.DataJson })
                     .ToList();
                 foreach (var sub in subs)
                 {
-                    if (string.IsNullOrWhiteSpace(sub.DataJson)) continue;
-                    Dictionary<string, object> data;
-                    try { data = JsonConvert.DeserializeObject<Dictionary<string, object>>(sub.DataJson); }
-                    catch { continue; }
-                    if (data == null) continue;
+                    var data = ResolveSubmissionData(store, sub.SubmissionId, sub.DataJson);
+                    if (data == null || data.Count == 0) continue;
                     try
                     {
                         indexer.IndexSubmission(sub.SubmissionId, formId, data, fields);
@@ -458,6 +458,30 @@ namespace MegaForm.Oqtane.Server.Controllers
         // cheap: cap to the 50 most-recent submissions (a stable, representative sample
         // for an average) and project ONLY DataJson. The completion % is a sampled
         // average, not an all-time exact figure — acceptable for an overview sparkline KPI.
+        // [TypedStorage 2026-07-18] On typed-primary hosts (Oqtane) a new submission's DataJson is
+        // collapsed to "{}", so report/completion paths that read the raw MF_Submissions.DataJson column
+        // (they bypass EfSubmissionRepository.HydrateDataJson) must reconstruct the data from typed rows.
+        // Store is resolved lazily from DI (registered as ISubmissionDataStore); null on hosts without one.
+        private MegaForm.Core.Interfaces.ISubmissionDataStore ResolveTypedStore()
+            => HttpContext?.RequestServices?.GetService(
+                typeof(MegaForm.Core.Interfaces.ISubmissionDataStore)) as MegaForm.Core.Interfaces.ISubmissionDataStore;
+
+        private static bool IsCollapsedDataJson(string dataJson)
+            => string.IsNullOrWhiteSpace(dataJson) || dataJson.Trim() == "{}";
+
+        private Dictionary<string, object> ResolveSubmissionData(
+            MegaForm.Core.Interfaces.ISubmissionDataStore store, int submissionId, string dataJson)
+        {
+            if (!IsCollapsedDataJson(dataJson))
+            {
+                try { return JsonConvert.DeserializeObject<Dictionary<string, object>>(dataJson); }
+                catch { return null; }
+            }
+            if (store == null) return null;
+            try { return store.GetData(submissionId)?.Data; }
+            catch { return null; }
+        }
+
         private const int CompletionSampleCap = 50;
         private int? ComputeFormCompletion(MegaFormDbContext db, int formId)
         {
@@ -476,21 +500,21 @@ namespace MegaForm.Oqtane.Server.Controllers
                     .ToList();
                 if (fieldKeys == null || fieldKeys.Count == 0) return null;
 
-                var dataJsons = db.Submissions.AsNoTracking()
+                // [TypedStorage 2026-07-18] Project SubmissionId too so collapsed DataJson ("{}") can be
+                // reconstructed from typed rows; otherwise typed-primary submissions would count as 0% filled.
+                var store = ResolveTypedStore();
+                var rows = db.Submissions.AsNoTracking()
                     .Where(s => s.FormId == formId && !s.IsSpam)
                     .OrderByDescending(s => s.SubmittedOnUtc)
-                    .Take(CompletionSampleCap) // [fix #3] sample the 50 most-recent only; project DataJson alone
-                    .Select(s => s.DataJson)
+                    .Take(CompletionSampleCap) // [fix #3] sample the 50 most-recent only
+                    .Select(s => new { s.SubmissionId, s.DataJson })
                     .ToList();
-                if (dataJsons.Count == 0) return null;
+                if (rows.Count == 0) return null;
 
                 double ratioSum = 0; int counted = 0;
-                foreach (var dj in dataJsons)
+                foreach (var row in rows)
                 {
-                    if (string.IsNullOrWhiteSpace(dj)) continue;
-                    Dictionary<string, object> data;
-                    try { data = JsonConvert.DeserializeObject<Dictionary<string, object>>(dj); }
-                    catch { continue; }
+                    var data = ResolveSubmissionData(store, row.SubmissionId, row.DataJson);
                     if (data == null) continue;
                     var ci = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
                     foreach (var kv in data) ci[kv.Key] = kv.Value;

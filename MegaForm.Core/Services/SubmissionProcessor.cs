@@ -8,6 +8,7 @@ using MegaForm.Core.i18n;
 using MegaForm.Core.Models;
 using MegaForm.Core.Payments;
 using MegaForm.Core.Rendering;
+using MegaForm.Core.Services.TypedSubmission;
 using MegaForm.Core.Utilities;
 using MegaForm.Core.Workflow;
 using Newtonsoft.Json;
@@ -44,6 +45,14 @@ namespace MegaForm.Core.Services
         // the alternative is the original bypass (client-claimed "paid" saved
         // verbatim). All four platforms register/construct one.
         private readonly PaymentSubmissionVerifier _paymentVerifier;
+        // [TypedStorage 2026-07-17] Optional parallel writer for the Umbraco Forms-style
+        // typed submission tables (MF_SubmissionFields + six typed value tables). Null when
+        // the host has not registered an ISubmissionDataStore — only Oqtane does so far —
+        // in which case only DataJson + the legacy snapshot/index are written. Fail-soft at
+        // runtime: a typed-store error must never break the user submission, because DataJson
+        // remains the runtime source of truth during migration (Phase 1 = write-only).
+        private readonly ISubmissionDataStore _typedStore;
+        private readonly SubmissionFieldNormalizer _typedFieldNormalizer = new SubmissionFieldNormalizer();
 
         public SubmissionProcessor(
             IFormRepository formRepo,
@@ -58,7 +67,8 @@ namespace MegaForm.Core.Services
             ILocalizationProvider loc = null,
             DocumentRevisionService documentRevisionService = null,
             SubmissionIndexerService reportingIndexer = null,
-            PaymentSubmissionVerifier paymentVerifier = null)
+            PaymentSubmissionVerifier paymentVerifier = null,
+            ISubmissionDataStore typedStore = null)
         {
             _formRepo = formRepo ?? throw new ArgumentNullException(nameof(formRepo));
             _subRepo = subRepo ?? throw new ArgumentNullException(nameof(subRepo));
@@ -73,6 +83,7 @@ namespace MegaForm.Core.Services
             _documentRevisionService = documentRevisionService;
             _reportingIndexer = reportingIndexer;
             _paymentVerifier = paymentVerifier;
+            _typedStore = typedStore;
         }
 
         public SubmissionProcessor(
@@ -369,6 +380,37 @@ namespace MegaForm.Core.Services
                 {
                     _log?.LogWarning(nameof(SubmissionProcessor),
                         "Reporting indexer failed for submission " + submissionId + ": " + ex.Message);
+                }
+            }
+
+            // [TypedStorage 2026-07-17] Parallel typed-row write — MF_SubmissionFields + the
+            // six typed value tables, Umbraco Forms-style. Runs after the reporting indexer so
+            // a failure here cannot roll back the submission insert. Only active when a host has
+            // registered an ISubmissionDataStore (Oqtane today). DataJson remains the runtime
+            // source of truth during migration; this is additive (Phase 1 = write-only).
+            if (_typedStore != null)
+            {
+                try
+                {
+                    var typedFields = _typedFieldNormalizer.Normalize(formId, schema, formData);
+                    _typedStore.ReplaceFields(submissionId, formId, typedFields);
+
+                    // [TypedStorage 2026-07-17] Collapse the legacy DataJson payload ONLY on hosts that
+                    // reconstruct it from typed rows on read (SupportsDataJsonCollapse). On those hosts
+                    // (Oqtane) typed rows become the source of truth and readers reconstruct on demand.
+                    // Hosts that still read DataJson directly (DNN today) write typed rows in PARALLEL
+                    // and keep the full DataJson — flipping the collapse there would break every reader.
+                    // CRITICAL ORDERING: this runs ONLY after ReplaceFields succeeds, so if the typed
+                    // write throws, the real DataJson stays intact as a fail-soft safety net (no data
+                    // loss window). "{}" (not null) keeps the NOT NULL column valid and reads as "empty
+                    // → reconstruct".
+                    if (_typedStore.SupportsDataJsonCollapse)
+                        _subRepo.UpdateData(submissionId, "{}");
+                }
+                catch (Exception ex)
+                {
+                    _log?.LogWarning(nameof(SubmissionProcessor),
+                        "Typed submission storage write failed for submission " + submissionId + ": " + ex.Message);
                 }
             }
 

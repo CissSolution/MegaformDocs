@@ -72,6 +72,9 @@ namespace MegaForm.DNN.Services
         public MegaForm.Core.Payments.PaymentGatewayClient PaymentGateway { get; }
         public MegaForm.Core.Payments.IPaymentGatewayStore PaymentStore { get; }
         public MegaForm.Core.Payments.PaymentSubmissionVerifier PaymentVerifier { get; }
+        // [TypedStorage 2026-07-17] Umbraco Forms-style typed submission store (parallel-write on
+        // DNN — DataJson stays the runtime source of truth; SupportsDataJsonCollapse == false).
+        public MegaForm.DNN.Data.DnnSubmissionDataStore TypedStore { get; }
         public SubmissionProcessor SubmissionProcessor { get; }
 
         // [DnnStarterApps v20260518-01] App Builder primitives. DNN now exposes
@@ -183,12 +186,23 @@ namespace MegaForm.DNN.Services
             PaymentVerifier = new MegaForm.Core.Payments.PaymentSubmissionVerifier(
                 PaymentStore, SubmissionRepo, PaymentGateway, LogService);
 
+            // [TypedStorage 2026-07-17] Same connection factory as the reporting indexer — the typed
+            // tables live in the DNN host DB alongside MF_Submissions.
+            TypedStore = new MegaForm.DNN.Data.DnnSubmissionDataStore(() =>
+            {
+                var cn = new System.Data.SqlClient.SqlConnection(
+                    DotNetNuke.Data.DataProvider.Instance().ConnectionString);
+                cn.Open();
+                return cn;
+            });
+
             SubmissionProcessor = new SubmissionProcessor(
                 FormRepo, SubmissionRepo, DraftRepo, Phase2Repo,
                 EmailNotification, Webhook, UniqueId, LogService, WorkflowRuntime,
                 loc: null, documentRevisionService: null,
                 reportingIndexer: ReportingIndexer,
-                paymentVerifier: PaymentVerifier);
+                paymentVerifier: PaymentVerifier,
+                typedStore: TypedStore);
 
             // [DnnStarterApps v20260518-01] Construct the App Builder graph
             // and the Leave Request starter wired to the DNN platform

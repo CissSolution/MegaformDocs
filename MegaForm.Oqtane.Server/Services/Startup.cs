@@ -113,6 +113,12 @@ namespace MegaForm.Oqtane.Server.Services
             // file manager) — the unqualified name is ambiguous in this file.
             services.AddScoped<MegaForm.Core.Interfaces.IFileRepository, EfFileRepository>();
 
+            // [TypedStorage 2026-07-17] Umbraco Forms-style typed submission storage.
+            // SubmissionProcessor picks this up (optional ctor param) and writes
+            // MF_SubmissionFields + typed value rows in parallel with DataJson. Phase 1 is
+            // write-only — readers still use DataJson, so the write is fail-soft.
+            services.AddScoped<MegaForm.Core.Interfaces.ISubmissionDataStore, EfSubmissionDataStore>();
+
             // [OQ-difix20260418-04] CRITICAL: Without IPhase2Repository registered,
             // SubmissionProcessor / PermissionService / UniqueIdService / WebhookService /
             // WorkflowEngineV2 all fail DI construction. The DI failure propagates into

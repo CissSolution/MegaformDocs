@@ -53,6 +53,19 @@ namespace MegaForm.Oqtane.Server.Data
         public virtual DbSet<ExternalBindingRow> ExternalBindings { get; set; }
         public virtual DbSet<ExternalRowMapRow> ExternalRowMap { get; set; }
 
+        // [TypedStorage 2026-07-17] Umbraco Forms-style typed submission storage.
+        // Record-field rows + six typed value tables, written in parallel with the
+        // legacy MF_Submissions.DataJson payload by EfSubmissionDataStore. Phase 1
+        // is write-only: DataJson remains the runtime source of truth. See
+        // Docs/HANDOUT_NEXT_SESSION_TYPED_SUBMISSION_STORAGE_NO_DATAJSON_2026-07-17.md.
+        public virtual DbSet<SubmissionFieldRecord>         SubmissionFields        { get; set; }
+        public virtual DbSet<SubmissionValueStringRecord>   SubmissionValueString   { get; set; }
+        public virtual DbSet<SubmissionValueLongTextRecord> SubmissionValueLongText { get; set; }
+        public virtual DbSet<SubmissionValueNumberRecord>   SubmissionValueNumber   { get; set; }
+        public virtual DbSet<SubmissionValueDateRecord>     SubmissionValueDate     { get; set; }
+        public virtual DbSet<SubmissionValueBooleanRecord>  SubmissionValueBoolean  { get; set; }
+        public virtual DbSet<SubmissionValueJsonRecord>     SubmissionValueJson     { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -130,6 +143,93 @@ namespace MegaForm.Oqtane.Server.Data
             {
                 e.ToTable("MF_SubmissionValues");
                 e.HasKey(x => x.ValueId);
+            });
+
+            // [TypedStorage 2026-07-17] Umbraco Forms-style typed submission storage.
+            // IMPORTANT: Oqtane builds the schema from THIS EF model (GenerateCreateScript
+            // in MegaFormManager.InstallSchemaFromModel) — not from migration Up() bodies —
+            // so these mappings, including HasMaxLength/HasIndex, are what actually create
+            // the MF_SubmissionFields + MF_SubmissionValue* tables and their indexes on a
+            // fresh install / version-bump upgrade. The 01060039 migration mirrors this for
+            // DNN/EF completeness only. The (SubmissionId, FieldKey) index is intentionally
+            // NON-unique in Phase 1 so a form with a quirky duplicate key can never silently
+            // fail the fail-soft parallel write.
+            modelBuilder.Entity<SubmissionFieldRecord>(e =>
+            {
+                e.ToTable("MF_SubmissionFields");
+                e.HasKey(x => x.SubmissionFieldId);
+                e.Property(x => x.FieldKey).HasMaxLength(256);
+                e.Property(x => x.FieldId).HasMaxLength(256);
+                e.Property(x => x.FieldAlias).HasMaxLength(256);
+                e.Property(x => x.FieldType).HasMaxLength(128);
+                e.Property(x => x.DataType).HasMaxLength(64);
+                e.Property(x => x.LabelSnapshot).HasMaxLength(512);
+                e.HasIndex(x => new { x.SubmissionId, x.FieldKey }).HasDatabaseName("IX_MF_SubmissionFields_Submission_FieldKey");
+                e.HasIndex(x => new { x.FormId, x.FieldKey }).HasDatabaseName("IX_MF_SubmissionFields_Form_FieldKey");
+                e.HasIndex(x => x.SubmissionId).HasDatabaseName("IX_MF_SubmissionFields_SubmissionId");
+                e.HasIndex(x => new { x.FormId, x.DataType }).HasDatabaseName("IX_MF_SubmissionFields_Form_DataType");
+            });
+
+            modelBuilder.Entity<SubmissionValueStringRecord>(e =>
+            {
+                e.ToTable("MF_SubmissionValueString");
+                e.HasKey(x => x.Id);
+                e.Property(x => x.FieldKey).HasMaxLength(256);
+                e.Property(x => x.Value).HasMaxLength(1024);
+                e.HasIndex(x => x.SubmissionFieldId).HasDatabaseName("IX_MF_SubmissionValueString_FieldId");
+                e.HasIndex(x => x.SubmissionId).HasDatabaseName("IX_MF_SubmissionValueString_SubmissionId");
+                e.HasIndex(x => new { x.FormId, x.FieldKey }).HasDatabaseName("IX_MF_SubmissionValueString_Form_Field");
+            });
+
+            modelBuilder.Entity<SubmissionValueLongTextRecord>(e =>
+            {
+                e.ToTable("MF_SubmissionValueLongText");
+                e.HasKey(x => x.Id);
+                e.Property(x => x.FieldKey).HasMaxLength(256);
+                e.HasIndex(x => x.SubmissionFieldId).HasDatabaseName("IX_MF_SubmissionValueLongText_FieldId");
+                e.HasIndex(x => x.SubmissionId).HasDatabaseName("IX_MF_SubmissionValueLongText_SubmissionId");
+                e.HasIndex(x => new { x.FormId, x.FieldKey }).HasDatabaseName("IX_MF_SubmissionValueLongText_Form_Field");
+            });
+
+            modelBuilder.Entity<SubmissionValueNumberRecord>(e =>
+            {
+                e.ToTable("MF_SubmissionValueNumber");
+                e.HasKey(x => x.Id);
+                e.Property(x => x.FieldKey).HasMaxLength(256);
+                e.Property(x => x.Value).HasPrecision(18, 6);
+                e.HasIndex(x => x.SubmissionFieldId).HasDatabaseName("IX_MF_SubmissionValueNumber_FieldId");
+                e.HasIndex(x => x.SubmissionId).HasDatabaseName("IX_MF_SubmissionValueNumber_SubmissionId");
+                e.HasIndex(x => new { x.FormId, x.FieldKey, x.Value }).HasDatabaseName("IX_MF_SubmissionValueNumber_Form_Field_Value");
+            });
+
+            modelBuilder.Entity<SubmissionValueDateRecord>(e =>
+            {
+                e.ToTable("MF_SubmissionValueDate");
+                e.HasKey(x => x.Id);
+                e.Property(x => x.FieldKey).HasMaxLength(256);
+                e.HasIndex(x => x.SubmissionFieldId).HasDatabaseName("IX_MF_SubmissionValueDate_FieldId");
+                e.HasIndex(x => x.SubmissionId).HasDatabaseName("IX_MF_SubmissionValueDate_SubmissionId");
+                e.HasIndex(x => new { x.FormId, x.FieldKey, x.Value }).HasDatabaseName("IX_MF_SubmissionValueDate_Form_Field_Value");
+            });
+
+            modelBuilder.Entity<SubmissionValueBooleanRecord>(e =>
+            {
+                e.ToTable("MF_SubmissionValueBoolean");
+                e.HasKey(x => x.Id);
+                e.Property(x => x.FieldKey).HasMaxLength(256);
+                e.HasIndex(x => x.SubmissionFieldId).HasDatabaseName("IX_MF_SubmissionValueBoolean_FieldId");
+                e.HasIndex(x => x.SubmissionId).HasDatabaseName("IX_MF_SubmissionValueBoolean_SubmissionId");
+                e.HasIndex(x => new { x.FormId, x.FieldKey, x.Value }).HasDatabaseName("IX_MF_SubmissionValueBoolean_Form_Field_Value");
+            });
+
+            modelBuilder.Entity<SubmissionValueJsonRecord>(e =>
+            {
+                e.ToTable("MF_SubmissionValueJson");
+                e.HasKey(x => x.Id);
+                e.Property(x => x.FieldKey).HasMaxLength(256);
+                e.HasIndex(x => x.SubmissionFieldId).HasDatabaseName("IX_MF_SubmissionValueJson_FieldId");
+                e.HasIndex(x => x.SubmissionId).HasDatabaseName("IX_MF_SubmissionValueJson_SubmissionId");
+                e.HasIndex(x => new { x.FormId, x.FieldKey }).HasDatabaseName("IX_MF_SubmissionValueJson_Form_Field");
             });
 
             modelBuilder.Entity<Core.Models.FileInfo>(e =>

@@ -51,6 +51,14 @@ IF OBJECT_ID('dbo.MF_SavedDrafts') IS NOT NULL DROP TABLE dbo.MF_SavedDrafts;
 IF OBJECT_ID('dbo.MF_RateLimitLog') IS NOT NULL DROP TABLE dbo.MF_RateLimitLog;
 IF OBJECT_ID('dbo.MF_WebhookLog') IS NOT NULL DROP TABLE dbo.MF_WebhookLog;
 IF OBJECT_ID('dbo.MF_Files') IS NOT NULL DROP TABLE dbo.MF_Files;
+-- Typed submission storage (value tables -> fields -> submissions, FK cascade order)
+IF OBJECT_ID('dbo.MF_SubmissionValueString') IS NOT NULL DROP TABLE dbo.MF_SubmissionValueString;
+IF OBJECT_ID('dbo.MF_SubmissionValueLongText') IS NOT NULL DROP TABLE dbo.MF_SubmissionValueLongText;
+IF OBJECT_ID('dbo.MF_SubmissionValueNumber') IS NOT NULL DROP TABLE dbo.MF_SubmissionValueNumber;
+IF OBJECT_ID('dbo.MF_SubmissionValueDate') IS NOT NULL DROP TABLE dbo.MF_SubmissionValueDate;
+IF OBJECT_ID('dbo.MF_SubmissionValueBoolean') IS NOT NULL DROP TABLE dbo.MF_SubmissionValueBoolean;
+IF OBJECT_ID('dbo.MF_SubmissionValueJson') IS NOT NULL DROP TABLE dbo.MF_SubmissionValueJson;
+IF OBJECT_ID('dbo.MF_SubmissionFields') IS NOT NULL DROP TABLE dbo.MF_SubmissionFields;
 IF OBJECT_ID('dbo.MF_SubmissionValues') IS NOT NULL DROP TABLE dbo.MF_SubmissionValues;
 IF OBJECT_ID('dbo.MF_Submissions') IS NOT NULL DROP TABLE dbo.MF_Submissions;
 IF OBJECT_ID('dbo.MF_Forms') IS NOT NULL DROP TABLE dbo.MF_Forms;

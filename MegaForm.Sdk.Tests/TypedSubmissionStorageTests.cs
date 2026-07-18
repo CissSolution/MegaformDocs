@@ -51,6 +51,59 @@ namespace MegaForm.Sdk.Tests
         }
 
         [Fact]
+        public void ResolveDataType_CheckboxGroupWithOptions_IsString()
+        {
+            // A multi-select checkbox group submits an array of option values — it must NOT be
+            // coerced through ToBoolean (which would turn each selection into `false`).
+            var field = new FormField
+            {
+                Key = "interests",
+                Type = "Checkbox",
+                Options = new List<FieldOption>
+                {
+                    new FieldOption { Value = "analytics", Label = "Analytics" },
+                    new FieldOption { Value = "security", Label = "Security" }
+                }
+            };
+            Assert.Equal(SubmissionDataType.String, _normalizer.ResolveDataType(field));
+        }
+
+        [Fact]
+        public void ResolveDataType_SingleCheckboxNoOptions_IsBoolean()
+        {
+            var field = new FormField { Key = "agree", Type = "Checkbox" };
+            Assert.Equal(SubmissionDataType.Boolean, _normalizer.ResolveDataType(field));
+        }
+
+        [Fact]
+        public void Normalize_CheckboxGroup_KeepsSelectedValuesAsStrings()
+        {
+            var schema = new FormSchema
+            {
+                Fields = new List<FormField>
+                {
+                    new FormField
+                    {
+                        Key = "interests", Type = "Checkbox", Label = "Interests", Order = 1,
+                        Options = new List<FieldOption>
+                        {
+                            new FieldOption { Value = "analytics", Label = "Analytics" },
+                            new FieldOption { Value = "security", Label = "Security" }
+                        }
+                    }
+                }
+            };
+            var data = new Dictionary<string, object> { ["interests"] = new List<string> { "analytics", "security" } };
+
+            var write = _normalizer.Normalize(1, schema, data)[0];
+            var values = _normalizer.ExtractTypedValues(write);
+
+            Assert.Equal("string", write.DataType);
+            Assert.Equal(new[] { "analytics", "security" }, values.StringValues.ToArray());
+            Assert.Empty(values.BooleanValues);
+        }
+
+        [Fact]
         public void Normalize_TextField_CreatesStringWrite()
         {
             var schema = new FormSchema
@@ -314,6 +367,8 @@ namespace MegaForm.Sdk.Tests
             private readonly Dictionary<int, List<SubmissionFieldRecord>> _fieldsBySubmission = new();
             private readonly Dictionary<long, TypedFieldValues> _valuesByField = new();
             private long _fieldSeq = 0;
+
+            public bool SupportsDataJsonCollapse => false;
 
             public SubmissionDataDocument GetData(int submissionId)
             {
