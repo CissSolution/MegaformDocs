@@ -181,6 +181,14 @@ REM -- Step 4/4: Pack bang nuget.exe -------------------------------------------
 ECHO.
 ECHO [4/4] Tao .nupkg...
 
+REM -- single-source the package version from ModuleInfo.cs (the one truth) --
+REM  (the regex uses '.' for the quote chars to avoid escaped-quote hell inside cmd)
+powershell -NoProfile -Command "(Select-String -Path 'MegaForm.Oqtane.Client\ModuleInfo.cs' -Pattern 'Version = .([0-9.]+).').Matches[0].Groups[1].Value" > "%TEMP%\mfver.txt"
+SET /P VER=<"%TEMP%\mfver.txt"
+DEL "%TEMP%\mfver.txt" 2>NUL
+IF "%VER%"=="" ( ECHO [LOI] Khong doc duoc Version tu ModuleInfo.cs & EXIT /B 1 )
+ECHO [INFO] Version = %VER%
+
 CD MegaForm.Oqtane.Package
 DEL /Q "*.nupkg" 2>NUL
 
@@ -190,17 +198,21 @@ IF EXIST "%ProgramFiles%\NuGet\nuget.exe"                         SET NUGET_EXE=
 IF EXIST "C:\nuget\nuget.exe"                                     SET NUGET_EXE=C:\nuget\nuget.exe
 IF EXIST "..\..\..\oqtane.framework\oqtane.package\nuget.exe"    SET NUGET_EXE=..\..\..\oqtane.framework\oqtane.package\nuget.exe
 
-IF NOT "%NUGET_EXE%"=="" (
-    ECHO [INFO] Dung: %NUGET_EXE%
-    "%NUGET_EXE%" pack MegaForm.Oqtane.nuspec -NoPackageAnalysis
-    IF ERRORLEVEL 1 ( CD .. & ECHO [LOI] nuget pack that bai! & EXIT /B 1 )
-) ELSE (
+IF "%NUGET_EXE%"=="" (
     ECHO [LOI] Khong tim thay nuget.exe!
     ECHO [INFO] Tai tai: https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
     ECHO [INFO] Dat vao: %USERPROFILE%\.nuget\nuget.exe
     CD ..
     EXIT /B 1
 )
+
+ECHO [INFO] Dung: %NUGET_EXE%
+"%NUGET_EXE%" pack MegaForm.Oqtane.nuspec -Version %VER% -NoPackageAnalysis
+IF ERRORLEVEL 1 ( CD .. & ECHO [LOI] nuget pack that bai! & EXIT /B 1 )
+
+REM -- R3-J guard: fail the pack if the produced package is stale/mismatched/incomplete --
+powershell -NoProfile -ExecutionPolicy Bypass -File "..\tools\validate-pack.ps1" -Nupkg "MegaForm.Oqtane.%VER%.nupkg" -RepoRoot ".."
+IF ERRORLEVEL 1 ( DEL /Q "MegaForm.Oqtane.%VER%.nupkg" 2>NUL & CD .. & ECHO [LOI] PACK VALIDATION FAILED -- xem [PACK-INVALID] o tren. & EXIT /B 1 )
 
 CD ..
 
@@ -213,7 +225,7 @@ IF EXIST "..\oqtane.framework\Oqtane.Server\Packages\" (
 ECHO.
 ECHO ============================================================
 ECHO  PACK THANH CONG!
-ECHO  File: MegaForm.Oqtane.Package\MegaForm.Oqtane.1.5.0.nupkg
+ECHO  File: MegaForm.Oqtane.Package\MegaForm.Oqtane.%VER%.nupkg
 ECHO.
 ECHO  CACH CAI VAO OQTANE:
 ECHO  1. Admin - Module Management - Install Module - Upload

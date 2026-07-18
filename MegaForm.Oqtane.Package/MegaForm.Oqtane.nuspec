@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>MegaForm.Oqtane</id>
-    <version>1.7.107</version>
+    <version>$version$</version>
     <authors>MegaForm Team</authors>
     <owners>MegaForm</owners>
     <title>MegaForm - Dynamic Form Builder</title>
