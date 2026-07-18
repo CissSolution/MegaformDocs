@@ -61,5 +61,28 @@ Deployed the fix Core.dll lên :5126 (hot-swap, asm 1.5.0.0 unchanged → Server
 - **Task 5 R3-J** (`SOUND_WITH_CORRECTIONS`): clean-build pack + single-source version (5-way drift: nuspec 1.7.107 / ModuleInfo 1.7.108 / Server+Client 1.7.15 / Package 1.7.22 / Core 1.5.0) + post-pack nupkg validator (MetadataLoadContext) + runtime diagnostics endpoint. ⭐⭐**Correction C1 (QUAN TRỌNG — đừng tin narrative cũ):** cơ chế "new Server gọi member Core cũ thiếu → MissingMethodException nuốt" là SAI. Caller (SubmissionProcessor) + member (ISubmissionDataStore) CÙNG ở Core.dll → stale-Core = stale-SubmissionProcessor không có code collapse (không throw, DataJson giữ nguyên). Seam thật = Server's EfSubmissionDataStore implement Core interface → **new-Core+stale-Server = TypeLoadException lúc DI construct = 500 CỨNG, không nuốt**. Corrections khác: C4 diagnostics sketch có 2 lỗi compile (Server không ref Client; `doc.Values` không tồn tại → `doc.Data`), C5 auth nên theo `[Authorize(Policy)]+CanUseAdminPopup()` không phải Host-role.
 - Sau R3-J: R3-A→B→C→D→E (dependency-first; kéo B lên vì direct `_subRepo.Insert` bypass là lỗ correctness).
 
+## AUTONOMOUS SESSION PROGRESS (07-18, owner away 3h) — 3 commit
+
+Nhánh `feature/typed-submission-storage-core`. Commits (CHƯA push):
+- `a969c25` widget-semantics + browser/SQL acceptance (11 file).
+- `824b577` **B1 FileUpload→File canonicalize** (renderers + upload endpoints).
+- `e0bbe2a` **B3 diagnostics endpoint** (R3-J partial).
+
+### ✅ B1 DONE + LIVE-VERIFIED
+FileUpload alias giờ chạy END-TO-END. Canonicalize(FileUpload→File) tại: FormHtmlRenderer SSR (AnyHydrationWidget + render switch), 2 TS renderer (mới `renderer/field-type-semantics.ts` twin cho inputs.ts; inline `canonFieldType` trong megaform-renderer bundle), và **upload endpoint file-field check → `IsFileLike`** (Oqtane+Web committed). ⭐**Phát hiện khi verify:** upload endpoint có list `File||PdfForm` riêng (3-platform twin) → FileUpload bị 400 "Invalid file field" tới khi sửa. **LIVE :5126 sub 56** (Form 8 "ZZ FileUpload Alias"): FileUpload render dropzone, upload 200, **MF_Files row** (proposal_pack→proposal-pack.pdf), DataType=json, DataJson={}. Core+Oqtane Server+Web build clean. 119 test.
+⚠️**DNN twin IsFileLike ĐÃ apply trong working tree nhưng CHƯA commit** — file `MegaForm.DNN/WebApi/MegaFormApiController.cs` mang feature NamedConnections uncommitted (Codex) rất lớn; commit hunk DNN RIÊNG sau khi review NamedConnections. DNN chưa live-verify (site down).
+
+### ✅ B3 DIAGNOSTICS DONE + VERIFIED (endpoint gate)
+`GET /api/MegaForm/Diagnostics/TypedStorage[?smoke=true]` host/admin-only (`[Authorize]`+`CanUseAdminPopup`). Report: loaded Core/Server asm version+path, serverRefCore vs loaded Core, interfaceHasCollapseMember, storeType, supportsDataJsonCollapse; smoke=write/read/delete sentinel âm (no-FK), error TYPE-only (rule 10). **Detect DLL-mismatch trap**. :5126 trả **403 unauth** (registered+gated); authenticated admin → JSON. Corrections C4/C5 đã áp (không ref Client; doc.Data; auth convention sẵn có).
+
+### CÒN LẠI (defer có lý do — KHÔNG làm autonomous)
+- **B3 phần còn lại** (version single-source 5-way drift + clean-build pack + kill no-build release.cmd + PackValidator console): DEFER — đổi AssemblyVersion Core 1.5.0→1.7.108 sẽ destabilize :5126 đang chạy + không test full pack an toàn khi owner vắng. Plan chi tiết: `Docs/DESIGN_TYPED_STORAGE_PHASE3_PLANS_2026-07-18.json` key `r3j-packaging-guard`. Làm ở phiên có thể chạy+test pack.
+- **B2 drift fixes** (PhoneIntl 3-spelling→1; TermsPrivacy IsConsentLike): DEFER — judgment về value-shape (e164 scalar vs JSON object) + regression risk (đổi String↔Json cho form hiện có). Cần owner quyết hướng. Registry đã widen phần AN TOÀN (renderers + upload endpoints qua B1).
+- **B4 single-row IsCollection**: defer tới reader-switch milestone (đúng design; Option B đã pin test).
+- **B5 DNN smoke**: BLOCKED (`dnn10322_megaclean.ai` timeout, site down).
+- **B6 Round 3 R3-A→E**: lớn, đa phiên; sequence trong DESIGN JSON.
+
+Env restored: home :5126 → Form 1. Form 7/8 + sub 54/56 giữ làm evidence.
+
 ## Chưa commit — owner tự quyết
-Toàn bộ nhánh typed-storage uncommitted. Không commit khi chưa được yêu cầu. Nếu commit: NHỚ add 2 file untracked (`SubmissionFieldTypeSemantics.cs`, `SubmissionFieldTypeSemanticsTests.cs`) — `git diff --name-only` không hiện.
+Phần còn lại của working tree (NamedConnections DNN, my-inbox, dashboard, v.v.) là việc khác/Codex — KHÔNG commit kèm. Nếu commit thêm typed-storage: NHỚ add file untracked mới.
