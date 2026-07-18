@@ -1,0 +1,488 @@
+{
+  "summary": "Design deliverables for typed-storage Phase 3: widen semantics registry, single-row CLR-list decision, R3-J packaging guard — each adversarially verified against real code",
+  "agentCount": 6,
+  "logs": [],
+  "result": [
+    {
+      "key": "registry-widening",
+      "design": {
+        "title": "Widening SubmissionFieldTypeSemantics into the single typed-storage field-type registry",
+        "summary": "SubmissionFieldTypeSemantics today knows only 3 things (Canonicalize, IsDisplayOnly, IsFileLike) and is consulted by only 2 callers (SubmissionFieldNormalizer, SubmissionFileMetaExtractor). Meanwhile the same field-type classification is hard-coded in at least 8 other places: the C# SSR renderer whitelist+switch, the C# ResolveDataType map, the DNN AI DDL classifier, three TS AI skip-sets, and the two TS renderers. Each carries its own spelling assumptions, so aliases drift — most concretely, a field of Type \"FileUpload\" (emitted by ProposalStarterService) is never rendered as a dropzone by any of the 3 renderers because none canonicalize it before their type switch, which silently breaks upload + MF_Files linkage. The fix is to widen the class into the one registry (add IsDataCarrying, IsStructuredJson, IsConsentLike, IsExternalDataDisplay, CanonicalDataTypeFor + expanded seed sets), route every hard-coded list through it, and create a small TS twin (field-type-semantics.ts) so the two renderers and the TS skip-sets stay in parity with Core per the CLAUDE.md two-renderer rule. This also resolves a live classification drift where PhonePro/PhoneNumberPro map to String but PhoneIntl maps to Json for the same widget.",
+        "findings": [
+          {
+            "claim": "Full field-type universe the codebase PRODUCES or HANDLES. UI plugin registrations (canonical): Text, Textarea, Email, Number, Date, Phone, Composite, TermsPrivacy, Select, MultiSelect, Radio, Checkbox, Chips, Cards, File, Url, Rating, Signature, RichText, UniqueId, Captcha, MultiColumnCombo, Row, FlexGrid, Html, Section, Hidden, StripePayment, PayPalPayment.",
+            "evidence": "MegaForm.UI/src/builder/field-plugins/_index.ts:135,145,152,159,166,230,474,513,521,531,541,548,560,567,574,580,587,626,632,639,682,691,701,722,738,749,762,772,850"
+          },
+          {
+            "claim": "Composite preset TILE aliases also register as field types (rewritten by core.ts createFieldFromTemplate to {type:'Composite',preset}): CompositePhone/Name/NamePlus/Address/Ssn/Dob/Time/EmailConfirm/PasswordConfirm/DateRange/Money/Measurement/PriceRange/FullContact/Text/Textarea/Email/Number/Url. The scalar presets (text/textarea/email/number/url) map back to base type Text/Textarea/Email/Number/Url.",
+            "evidence": "MegaForm.UI/src/builder/field-plugins/_index.ts:499-507; MegaForm.UI/src/renderer/helpers.ts:498-525 (COMPOSITE_PRESET_META), 476-478 (SCALAR_PRESET_BASETYPE)"
+          },
+          {
+            "claim": "Extra type spellings the C# normalizer already handles that are NOT plugin types (alias/legacy/AI-emitted): phonenumberpro, phonepro, phoneintl, color, colorpicker, dynamiclabel, imagechoice, multicolumncombo, ranking, usertemplate, currency, slider, opinionscale, datetime, time, daterange, appointment, switch, terms, address, fullname, country, razor, paypal, stripe, square, paymentsummary, password.",
+            "evidence": "MegaForm.Core/Services/TypedSubmission/SubmissionFieldNormalizer.cs:31-95"
+          },
+          {
+            "claim": "Extra types the AI/DDL classifiers handle that no plugin registers: Column, Heading, Divider, HtmlBlock, Image, DataRepeater, GridRepeater, DataGrid, FileUpload, Razor, QRCode, PdfForm. FileUpload is a live alias emitted by a starter; File is emitted by another.",
+            "evidence": "MegaForm.DNN/WebApi/AiToolsController.cs:825-839; MegaForm.UI/src/ai-form-assistant/ops-app-batch.ts:334-336; MegaForm.Core/Services/Starters/ProposalStarterService.cs:920 (Type=\"FileUpload\"); MegaForm.Core/Services/Starters/LeaveRequestStarterService.cs:866 (Type=\"File\"); SubmissionFieldTypeSemantics.cs:37-42,47-53 (QRCode, PdfForm)"
+          },
+          {
+            "claim": "CLASSIFICATION — PhoneIntl: keep JSON but rely on DisplayValue for phone search; the widget stores either an e164 scalar or a JSON object per saveFormat, and ComputeDisplayValue already emits the combined string. CRITICAL DRIFT to fix: PhonePro/PhoneNumberPro currently classify as String while PhoneIntl classifies as Json for the SAME widget — canonicalize all three to PhoneIntl so they classify identically.",
+            "evidence": "MegaForm.UI/src/widgets/plugins/megaform-widget-phone-pro.ts:74 (saveFormat 'json'|'e164'),111 (e164); SubmissionFieldNormalizer.cs:35-36 (phonenumberpro/phonepro->String) vs :88 (phoneintl->Json); ComputeDisplayValue at :320-338"
+          },
+          {
+            "claim": "CLASSIFICATION — DataGrid + GridRepeater are DATA-CARRYING JSON, not display-only. GridRepeater persists JSON.stringify({rows}) in a hidden input named field.key. DataGrid persists a hidden {rows} state when editable (useSql=false); only its SQL-backed read-only mode carries no value. The DNN classifier's comment calling GridRepeater 'SQL display' is therefore wrong (the skip decision — not a scalar SQL column — is still correct).",
+            "evidence": "MegaForm.UI/src/widgets/megaform-widget-grid-repeater.ts:227,248; MegaForm.UI/src/widgets/plugins/megaform-widget-datagrid.ts:355-358; MegaForm.DNN/WebApi/AiToolsController.cs:836 (comment 'SQL display')"
+          },
+          {
+            "claim": "CLASSIFICATION — TermsPrivacy is consent (JSON audit trail + bool projection). The plugin stores consent JSON (bool + version + ISO timestamp + label). Current normalizer maps 'terms' to Boolean but 'TermsPrivacy' (the actual registered type) falls through to the JSON default — so the two spellings disagree. Recommend IsConsentLike={TermsPrivacy,Terms}: persist the full JSON for audit AND project the consent bool into a Boolean/DisplayValue for reporting.",
+            "evidence": "MegaForm.UI/src/builder/field-plugins/_index.ts:509-518 (consent JSON); SubmissionFieldNormalizer.cs:81 (case \"terms\"->Boolean) vs :97-99 (default->Json)"
+          },
+          {
+            "claim": "CLASSIFICATION — Signature is data-carrying LongText (sensitive), NOT JSON: it stores a canvas data-URL string; normalizer already routes it to LongText and flags IsSensitive. Composite/Address/FullName stay JSON (combined structured value). Country is arguably a scalar String but is currently Json — flagged, left as-is to avoid scope creep.",
+            "evidence": "SubmissionFieldNormalizer.cs:48-54 (signature->LongText),230-236 (Signature sensitive); :84-95 (address/fullname/country/composite->Json)"
+          },
+          {
+            "claim": "HARD-CODED LIST #1 (render, MUST route through registry): FormHtmlRenderer NativeTypes whitelist lacks 'FileUpload', so AnyHydrationWidget flags a FileUpload field as a hydration widget (form loses SSR-eligibility), and RenderInput's switch has no FileUpload case so it hits the default widget-host branch instead of case \"File\" — no .mf-file-dropzone is emitted. Needs Canonicalize(type) before both the NativeTypes lookup and the switch.",
+            "evidence": "MegaForm.Core/Services/FormHtmlRenderer.cs:48-52 (NativeTypes, no FileUpload),105 (AnyHydrationWidget),565 (switch),637 (case \"File\"),684-689 (default widget host)"
+          },
+          {
+            "claim": "HARD-CODED LIST #2 (storage, MUST route through registry): SubmissionFieldNormalizer.ResolveDataType is the master type->SubmissionDataType map and IsNonDataField/IsSensitiveField are private local lists. These ARE the typed-storage classifier and should delegate to CanonicalDataTypeFor / IsDataCarrying so they can never drift from the renderers/AI.",
+            "evidence": "MegaForm.Core/Services/TypedSubmission/SubmissionFieldNormalizer.cs:22-101 (ResolveDataType),220-228 (IsNonDataField),230-236 (IsSensitiveField)"
+          },
+          {
+            "claim": "HARD-CODED LIST #3 (DNN AI DDL, SHOULD route through registry): IsLayoutOrSkippableType lumps layout + display-only (DynamicLabel/DataRepeater/GridRepeater) + separate-table (DataGrid/FileUpload); MapFormTypeToSql is a parallel type->SQL map. Skippable = IsStructural || IsExternalDataDisplay || IsFileLike || IsStructuredJson; the SQL map can be derived from CanonicalDataTypeFor. It also does NOT canonicalize (e.g. no FileUpload case in MapFormTypeToSql — only saved because IsLayoutOrSkippableType removes it first).",
+            "evidence": "MegaForm.DNN/WebApi/AiToolsController.cs:825-839 (IsLayoutOrSkippableType),841-870 (MapFormTypeToSql)"
+          },
+          {
+            "claim": "HARD-CODED LIST #4 (TS AI skip-sets, 3 copies, SHOULD route through a TS twin): identical {Row,Section,Heading,Divider,HtmlBlock,Image,DynamicLabel,DataRepeater,DataGrid,GridRepeater,Razor,FileUpload,File,Signature} sets decide which fields become INSERT/DDL columns. These are the TS twins of the DNN IsLayoutOrSkippableType and drift independently.",
+            "evidence": "MegaForm.UI/src/ai-form-assistant/ops-app-batch.ts:334-336; MegaForm.UI/src/dashboard/ai-form-creator.ts:2123,2364 (latter adds 'Html')"
+          },
+          {
+            "claim": "HARD-CODED LIST #5 (TS renderers, MUST stay in parity per CLAUDE.md two-renderer rule): both inputs.ts and megaform-renderer.ts have their own renderInput type switch with a case 'File' but NO FileUpload canonicalization — the exact same alias gap as FormHtmlRenderer.cs. bindFileUploads binds by the .mf-file-dropzone DOM selector (not by type), so it works ONLY if the renderer emitted the dropzone; with a FileUpload alias no dropzone is emitted and upload silently breaks. There is NO TS twin of SubmissionFieldTypeSemantics today.",
+            "evidence": "MegaForm.UI/src/renderer/inputs.ts:490,590 (case 'File', no FileUpload); MegaForm.UI/src/renderer/megaform-renderer.ts:1908,1949; MegaForm.UI/src/renderer/interactive.ts:956-965 (bindFileUploads keyed on .mf-file-dropzone); grep found no Canonicalize/FileUpload->File anywhere under src/renderer"
+          },
+          {
+            "claim": "UNRELATED lists that should NOT route through the registry: FormHtmlRenderer AlwaysLabeledWidgets (self-labeled parity list) and InputTypeAttr (composite sub-part input type), and the AI prompt's allowed-types catalog + layout rules — these govern labels/HTML input attributes/prompt text, not typed-storage/file classification. (AlwaysLabeledWidgets could optionally Canonicalize for robustness but is out of scope.)",
+            "evidence": "FormHtmlRenderer.cs:43-44 (AlwaysLabeledWidgets),1196-1209 (InputTypeAttr); MegaForm.UI/src/dashboard/ai-form-creator.ts:98 (allowed types),108 (layout rules)"
+          },
+          {
+            "claim": "SubmissionDataType enum values available for CanonicalDataTypeFor's return type: String, LongText, Number, Date, Boolean, Json.",
+            "evidence": "MegaForm.Core/Models/TypedSubmissionEntities.cs:9-17"
+          }
+        ],
+        "recommendation": "Widen SubmissionFieldTypeSemantics into the ONE registry in three moves: (1) Add the 5 requested members + expanded seed sets and two new alias entries (PhoneNumberPro/PhonePro -> PhoneIntl) to resolve the live String-vs-Json drift. (2) Route every typed-storage/render/file classifier through it: SubmissionFieldNormalizer.ResolveDataType delegates to CanonicalDataTypeFor and IsNonDataField to !IsDataCarrying; FormHtmlRenderer canonicalizes before its NativeTypes lookup and RenderInput switch (fixes the FileUpload render bug); DNN IsLayoutOrSkippableType/MapFormTypeToSql reuse the registry. (3) Create a small TS twin renderer/field-type-semantics.ts (canonicalize/isFileLike/isDisplayOnly/isDataCarrying/isStructuredJson) mirroring the C# seeds, and wire it into inputs.ts + megaform-renderer.ts (canonicalize before switch) and the three TS skip-sets — this satisfies the CLAUDE.md requirement that the two renderers stay in parity. Ship all C# targets building clean and keep public submit + builder flow; add a unit test asserting a FileUpload-typed field renders a dropzone and produces an MF_Files row end-to-end.",
+        "concrete_changes": [
+          {
+            "file": "MegaForm.Core/Services/TypedSubmission/SubmissionFieldTypeSemantics.cs",
+            "change": "Extend Aliases (line 27-32) with [\"PhoneNumberPro\"]=\"PhoneIntl\", [\"PhonePro\"]=\"PhoneIntl\" so the phone widget classifies consistently. Add new seed sets + members:\n\n// Layout/structural + pure-presentational; never submit a value (backs IsNonDataField).\nprivate static readonly HashSet<string> Structural = new(OIC){\"Row\",\"Column\",\"FlexGrid\",\"Section\",\"Html\",\"HtmlBlock\",\"Heading\",\"Divider\",\"Image\",\"Captcha\"};\n// Widgets rendering SQL/API/other-field data; submit no user value (superset of DisplayOnly).\nprivate static readonly HashSet<string> ExternalDisplay = new(OIC){\"DataRepeater\",\"DynamicLabel\",\"QRCode\"};\n// Value persists as a JSON blob (combined/structured/collection).\nprivate static readonly HashSet<string> StructuredJson = new(OIC){\"Composite\",\"Address\",\"FullName\",\"Country\",\"PhoneIntl\",\"DataGrid\",\"GridRepeater\",\"File\",\"PdfForm\",\"Razor\",\"PayPal\",\"Stripe\",\"Square\",\"PaymentSummary\"};\n// Consent widgets: persist JSON audit trail AND project a bool.\nprivate static readonly HashSet<string> Consent = new(OIC){\"TermsPrivacy\",\"Terms\"};\n\npublic static bool IsStructural(string t)=>Structural.Contains(Canonicalize(t));\npublic static bool IsExternalDataDisplay(string t)=>ExternalDisplay.Contains(Canonicalize(t))||DisplayOnly.Contains(Canonicalize(t));\npublic static bool IsStructuredJson(string t)=>StructuredJson.Contains(Canonicalize(t));\npublic static bool IsConsentLike(string t)=>Consent.Contains(Canonicalize(t));\npublic static bool IsDataCarrying(string t){var c=Canonicalize(t);return !IsStructural(c)&&!IsExternalDataDisplay(c);}\npublic static SubmissionDataType CanonicalDataTypeFor(string type,bool hasOptions){/* body = ResolveDataType switch moved here, on Canonicalize(type).ToLowerInvariant(); checkbox branch uses hasOptions; returns String/LongText/Number/Date/Boolean/Json */}\n\nKeep IsDisplayOnly for back-compat (or make it forward to IsExternalDataDisplay). Merge DisplayOnly into ExternalDisplay to avoid two overlapping sets."
+          },
+          {
+            "file": "MegaForm.Core/Services/TypedSubmission/SubmissionFieldNormalizer.cs",
+            "change": "Replace the whole ResolveDataType body (22-101) with: return SubmissionFieldTypeSemantics.CanonicalDataTypeFor(field?.Type, field?.Options?.Count>0); (delete the local switch). Replace IsNonDataField (220-228) with: return field==null || !SubmissionFieldTypeSemantics.IsDataCarrying(field.Type); (this now also excludes Row/FlexGrid/Column/Image the old list missed). Leave the raw==null && IsDisplayOnly/IsExternalDataDisplay guard at :128 (unchanged behavior). Optionally move IsSensitiveField (230-236) onto the registry as IsSensitive={Password,Signature}."
+          },
+          {
+            "file": "MegaForm.Core/Services/FormHtmlRenderer.cs",
+            "change": "Canonicalize before every type decision. In AnyHydrationWidget (105) use NativeTypes.Contains(SubmissionFieldTypeSemantics.Canonicalize(type)). In RenderInput (563-565) set `var type = SubmissionFieldTypeSemantics.Canonicalize(field.Type ?? \"Text\");` so case \"File\" (637) matches a FileUpload field and emits the .mf-file-dropzone the JS binder needs. (Add `using MegaForm.Core.Services.TypedSubmission;`.) This is the concrete render-bug fix."
+          },
+          {
+            "file": "MegaForm.DNN/WebApi/AiToolsController.cs",
+            "change": "Rewrite IsLayoutOrSkippableType (825-839) as: var t=SubmissionFieldTypeSemantics.Canonicalize(type); return SubmissionFieldTypeSemantics.IsStructural(t)||SubmissionFieldTypeSemantics.IsExternalDataDisplay(t)||SubmissionFieldTypeSemantics.IsFileLike(t)||SubmissionFieldTypeSemantics.IsStructuredJson(t); (fixes the wrong 'GridRepeater=SQL display' comment while preserving the skip). In MapFormTypeToSql (841-870) canonicalize first and, where possible, derive from CanonicalDataTypeFor (Number->DECIMAL, Date->DATE/DATETIME2, Boolean->BIT, LongText->NVARCHAR(MAX), String->NVARCHAR)."
+          },
+          {
+            "file": "MegaForm.UI/src/renderer/field-type-semantics.ts",
+            "change": "NEW small file (per keep-TS-files-small rule) = the TS twin of the C# registry: export const ALIASES={FileUpload:'File',DateTimePicker:'Date',PhoneNumberPro:'PhoneIntl',PhonePro:'PhoneIntl'}; export function canonicalizeType(t){return ALIASES[(t||'').trim()]||(t||'').trim();} plus isFileLike/isDisplayOnly/isExternalDataDisplay/isDataCarrying/isStructuredJson mirroring the exact same seed sets. Single source both TS renderers + skip-sets import."
+          },
+          {
+            "file": "MegaForm.UI/src/renderer/inputs.ts",
+            "change": "At renderInput (464-490) compute `const t = canonicalizeType(field.type);` and `switch(t)` so case 'File' (590) handles FileUpload — parity with the FormHtmlRenderer.cs fix. Do the identical change in megaform-renderer.ts renderInput switch (1908). Keeps bindFileUploads (interactive.ts:956) working because the dropzone is now emitted."
+          },
+          {
+            "file": "MegaForm.UI/src/ai-form-assistant/ops-app-batch.ts",
+            "change": "Delete the inline skipTypes set (334-336); replace `skipTypes.has(f.type)` (343) with `!isDataCarrying(f.type) || isFileLike(f.type) || isStructuredJson(f.type)` imported from field-type-semantics.ts. Apply the same replacement to the two copies in dashboard/ai-form-creator.ts (2123, 2364) so all three TS skip-sets share the one twin."
+          }
+        ],
+        "risks": [
+          "CanonicalDataTypeFor needs the Options-count for the Checkbox group-vs-toggle branch; passing hasOptions keeps the signature pure, but any caller that has only a type string (AI DDL) must decide Checkbox=Boolean by default — verify the DNN MapFormTypeToSql Checkbox->BIT stays correct.",
+          "Widening IsNonDataField to !IsDataCarrying now also skips Row/FlexGrid/Column/Image which the old 4-item list did not explicitly skip; confirm FlattenFields already descends Row columns (it does) so no child fields are dropped, only the container rows.",
+          "Adding File to StructuredJson means File is now true for BOTH IsFileLike and IsStructuredJson; any consumer wanting 'json but not file' must combine the two predicates — document the intentional overlap.",
+          "Canonicalizing PhonePro/PhoneNumberPro->PhoneIntl changes their DataType from String to Json for existing forms; on typed-storage-collapse (Oqtane) that alters where the value lands — needs a reader-path/backfill check for any existing PhonePro submissions, or gate the alias behind a saveFormat check.",
+          "The two TS renderers must be rebuilt to all 4 wwwroot targets (npm run build) or the SSR (C#) and client (TS) canonicalization will be out of phase — a deploy-skew that reintroduces the exact drift being fixed.",
+          "No TS twin exists today; the new field-type-semantics.ts must be kept byte-for-byte in sync with the C# seeds — add a comment cross-reference in both files and ideally a parity test."
+        ],
+        "open_questions": [
+          "PhoneIntl: is DisplayValue-based phone search (already implemented per MEMORY typed-DisplayValue hybrid) sufficient, or should saveFormat='e164' fields be classified String for a true sargable phone column? CanonicalDataTypeFor can't see widgetProps.saveFormat from a type string alone — does the normalizer path have the field.WidgetProps available to branch on it?",
+          "Country is currently Json but semantically a scalar country code (String) — should CanonicalDataTypeFor reclassify it to String, and does anything read it back as a JSON object today?",
+          "DataGrid useSql=true (read-only, no hidden value) vs useSql=false (editable, hidden {rows} JSON) is a per-instance distinction the registry cannot make from the type alone — should the normalizer inspect widgetProps.useSql, or is it safe to always classify DataGrid as StructuredJson and rely on raw==null skipping the read-only case?",
+          "Should IsSensitiveField (Password/Signature) also move onto the registry as IsSensitive, or stay local to the normalizer?",
+          "Do the Oqtane and Web AiToolsController controllers have their own C# DDL classifier twin, or do those platforms run the app-batch DDL entirely client-side through ops-app-batch.ts? (Only the DNN controller currently carries IsLayoutOrSkippableType/MapFormTypeToSql.)"
+        ]
+      },
+      "verdict": {
+        "verdict": "SOUND_WITH_CORRECTIONS",
+        "corrections": [
+          "CONTRADICTION THAT BREAKS A TEST: the proposed IsNonDataField => !IsDataCarrying(field.Type) makes display-only widgets NON-data, because IsDataCarrying excludes IsExternalDataDisplay and ExternalDisplay is defined to contain DisplayOnly {DataRepeater,QRCode} plus DynamicLabel. So a DataRepeater/QRCode/DynamicLabel is now skipped UNCONDITIONALLY at SubmissionFieldNormalizer.cs:119, pre-empting the raw==null guard at :128 that the design explicitly promises to leave 'unchanged behavior'. Those two statements cannot both hold. Fix: IsNonDataField must exclude ONLY IsStructural (layout/presentational), NOT IsExternalDataDisplay, so the raw==null guard at :128 still preserves a display-only widget that DOES carry a value.",
+          "TS skip-set replacement is NOT behavior-preserving for Signature. All three current TS sets (ops-app-batch.ts:334-336, ai-form-creator.ts:2123 and :2364) explicitly include 'Signature', but the proposed predicate `!isDataCarrying || isFileLike || isStructuredJson` does NOT skip Signature (it is data-carrying LongText, not in FileLike/StructuredJson/Structural/ExternalDisplay) — so Signature (a base64 data-URL) would become an INSERT/DDL column. Either add Signature to the skip predicate or state and accept this as an intentional change; the claim that the three sets can all 'share the one twin' unchanged is false.",
+          "Phone reclassification has DNN-DDL consequences the design never traces (only the Oqtane-collapse storage-location risk is noted). Adding PhoneIntl to StructuredJson AND aliasing PhonePro/PhoneNumberPro->PhoneIntl makes the rewritten AiToolsController.IsLayoutOrSkippableType return TRUE for those fields (via IsStructuredJson), so phone fields are now SKIPPED entirely from AI-generated tables; today `phonepro` produces a real NVARCHAR(40) column (MapFormTypeToSql:852) and would be dropped, and that case becomes dead code. Also note the phone-pro widget is RETIRED (registers as 'PhoneNumberPro' at megaform-widget-phone-pro.ts:1046; JS/CSS removed from the build per loader/index.ts:94,516 and _index.ts:226), and 'PhoneIntl' is a C# FieldType enum value (FormSchema.cs:205), not the widget's registered spelling — so 'live classification drift for the SAME widget' overstates it.",
+          "ResolveDataType delegating to CanonicalDataTypeFor(field?.Type, field?.Options?.Count>0) drops the current field==null => SubmissionDataType.String early return (SubmissionFieldNormalizer.cs:24); a null field would canonicalize to '' and hit the switch default => Json. Preserve the null=>String guard.",
+          "Compile detail omitted: SubmissionFieldTypeSemantics.cs currently only `using System; using System.Collections.Generic;`. CanonicalDataTypeFor returning SubmissionDataType requires `using MegaForm.Core.Models;` (or fully-qualifying it).",
+          "Minor factual slips: (a) the old IsNonDataField (line 224-227) ALREADY skipped 'Row' — it 'missed' FlexGrid/Column/Image/Heading/Divider/HtmlBlock, not Row. (b) The three TS skip-sets are NOT identical to the DNN IsLayoutOrSkippableType: TS carries Section/Razor/File/Signature and lacks Column, while DNN carries Column and lacks Section/Razor/File/Signature — so routing all through one registry changes each surface's skip behavior, it does not merely dedupe identical lists."
+        ],
+        "missed_call_sites": [
+          "MegaForm.Core/Utilities/MegaFormUtils.cs:497-503 — DescribeSnapshotValue (inside BuildSubmissionSnapshots) is a fourth C# type-classifier the design never mentions: it hard-codes File/Image => DescribeFileValue and DataGrid/GridRepeater/DataRepeater => DescribeGridValue, with the SAME FileUpload alias gap (matches only 'File', not 'FileUpload'). It is a submission-value display classifier that should also route through the registry or it keeps drifting.",
+          "MegaForm.Core/Models/FormSchema.cs:198-210 — the canonical C# FieldType enum uses PhoneIntl / Terms / Country, i.e. the OTHER half of the spelling drift the design describes on the TS side (TS registers TermsPrivacy at _index.ts:513 and the PhoneNumberPro widget). The design cites the TS spellings only and never reconciles them with this enum, which is the authoritative C# vocabulary the normalizer switch is really keyed to.",
+          "MegaForm.DNN/Views/FormView.ascx.cs:1931-1938 — a per-type asset-loader switch (case 'datagrid' etc.) is another hard-coded type list; it governs which widget JS/CSS to load rather than typed storage, so it is lower priority, but the design's enumeration of type switches should acknowledge it exists."
+        ],
+        "test_impact": "Exactly one existing automated test breaks: MegaForm.Sdk.Tests/TypedSubmissionStorageTests.cs `Normalize_DisplayOnlyWidget_WithValue_IsNotDropped` (line 381-399) asserts a DataRepeater field carrying a value still yields one write; under the proposed IsNonDataField => !IsDataCarrying, DataRepeater is now skipped at :119 so writes is empty and Assert.Single fails. `Normalize_DisplayOnlyWidget_WithNoValue_IsSkipped` still passes. The ResolveDataType_MapsFieldTypes theory (lines 16-53) does NOT break: none of its 30 cases are PhonePro/PhoneNumberPro/PhoneIntl, and every tested type maps identically once the switch moves into CanonicalDataTypeFor (Signature=>longtext, File/FileUpload=>json, DateTimePicker=>date, etc.). SubmissionFieldTypeSemanticsTests and SubmissionFileMetaExtractorTests (incl. the existing FileUpload_alias test) are unaffected as long as IsDisplayOnly/IsFileLike are kept for back-compat and the FileLike set is unchanged. No C# test covers the TS DDL Signature/phone changes, so those regressions would ship silently."
+      }
+    },
+    {
+      "key": "single-row-clr-list",
+      "design": {
+        "title": "Single-row CLR-list JSON reconstruction limitation: fix design & A-vs-B decision",
+        "summary": "Confirmed: a grid/repeater arriving as a genuine CLR IEnumerable (List/array) with EXACTLY ONE complex row is flattened by SplitRawValue into one JSON row, and CollapseJson's count==1 branch parses that single row and returns a JObject instead of a JArray, silently losing array-ness. Multi-row CLR lists (count>1) and the browser happy path (client sends a stringified array as ONE JSON string, brackets intact) both reconstruct correctly as JArray. The critical blast-radius fact: on the real collapsed-Oqtane read path, TypedFieldValues is rebuilt entirely from DB value rows, so any transient in-memory flag on the write is lost — a correct fix must either be a PERSISTED column on MF_SubmissionFields or be inferred from the already-persisted FieldType, otherwise it only turns the unit test green while the live Oqtane bug remains. Today the bug is largely latent because DNN keeps DataJson and most consumers (reports/CSV/workflow) still read DataJson (reader-switch is backlog), and the browser never triggers it. Given the typed-storage phase is unfinished (Umbraco twin, reader-switch, backfill all pending), I recommend Option B now — ship the missing browser-1-row JArray proof test plus an executable pin-test of the limitation, and document it in the handoff/memory — and pre-design Option A (persisted IsCollection marker) to land together with the reader-switch, when the JObject/JArray distinction actually reaches consumers and the 3-platform migration is done once.",
+        "findings": [
+          {
+            "claim": "SplitRawValue flattens a genuine CLR collection (List/array that is not string/dict/JObject) into one string part PER ITEM, so a one-element list yields exactly one JSON row with no array brackets.",
+            "evidence": "MegaForm.Core/Services/TypedSubmission/SubmissionFieldNormalizer.cs:290-296 (IEnumerable branch: `foreach (var item in en) list.Add(StringifyItem(item))`); StringifyItem serializes each complex item as compact JSON at lines 305-318. A single Dictionary row -> [\"{\\\"sku\\\":\\\"A1\\\",\\\"qty\\\":2}\"], Count==1."
+          },
+          {
+            "claim": "ExtractTypedValues Json branch copies each part into JsonValues 1:1, so a single-row CLR list produces JsonValues.Count==1.",
+            "evidence": "MegaForm.Core/Services/TypedSubmission/SubmissionFieldNormalizer.cs:205-214 (`foreach (var p in parts.Where(x => x != null)) values.JsonValues.Add(p);`)."
+          },
+          {
+            "claim": "CollapseJson treats count==1 as a scalar: it parses the single row and returns whatever token it is (a JObject for one grid row), never wrapping into a JArray. Only count>1 forms a JArray.",
+            "evidence": "MegaForm.Core/Services/TypedSubmission/SubmissionDataReconstructor.cs:76-86 (count==1: `return JToken.Parse(single)` -> JObject) vs 88-95 (count>1: builds JArray). ConvertToObject routes json here at 60-62."
+          },
+          {
+            "claim": "Browser happy path is unaffected at ANY row count because the client submits a stringified array as ONE string; SplitRawValue skips the IEnumerable branch for strings and returns the whole '[...]' as one row, which CollapseJson parses to a JArray.",
+            "evidence": "SubmissionFieldNormalizer.cs:290 guard `!(raw is string)` skips arrays-as-strings; falls to 298-300 returning [\"[{...}]\"]. Reconstructor.cs:80-85 sees single.StartsWith(\"[\") -> JToken.Parse -> JArray. The existing multi-row CLR proof exists (TypedSubmissionStorageTests.cs:451-492) but NO test pins the browser single-row case."
+          },
+          {
+            "claim": "A write-time flag alone does NOT fix the live Oqtane bug: on read, TypedFieldValues is rebuilt purely from DB value rows, carrying no shape flag; the reconstructor only sees SubmissionFieldRecord + value lists. A correct marker must be persisted or inferred from persisted metadata.",
+            "evidence": "MegaForm.Oqtane.Server/Data/EfSubmissionDataStore.cs:80-92 rebuilds `new TypedFieldValues()` from six DB tables then calls Reconstruct; no transient flag survives. Same shape in MegaForm.DNN/Data/DnnSubmissionDataStore.cs:251."
+          },
+          {
+            "claim": "FieldType is ALREADY persisted on MF_SubmissionFields and available at reconstruction on both platforms, enabling a zero-migration fix variant.",
+            "evidence": "EfSubmissionDataStore.cs:185 writes `FieldType = w.FieldType`; GetData reads it via db.SubmissionFields (52-55). DNN writes/reads it: DnnSubmissionDataStore.cs:110 and 220. SubmissionFieldRecord.FieldType is a column (MegaForm.Core/Models/TypedSubmissionEntities.cs:32)."
+          },
+          {
+            "claim": "The limitation is currently documented ONLY in a code comment, which is exactly what the owner rejected; and the string/longtext path has the identical count==1 collection-loss but is out of the JSON scope.",
+            "evidence": "Comment-only doc at TypedSubmissionStorageTests.cs:456-458. String/LongText reconstruct via Collapse<T> where count==1 returns the scalar not a List: SubmissionDataReconstructor.cs:66-71 — a single-selection MultiSelect/Checkbox-group reconstructs as a scalar string, same bug class."
+          },
+          {
+            "claim": "Real-world exposure is narrow today, which lowers the urgency of a schema change: the trigger is Oqtane-collapse=true + a programmatic/SDK submission carrying a genuine CLR List with exactly one grid row; DNN keeps DataJson and most consumers still read DataJson.",
+            "evidence": "DnnSubmissionDataStore.cs:18,33 `SupportsDataJsonCollapse => false` (DNN readers consume DataJson); MEMORY backlog notes reports/CSV/workflow STILL read DataJson (reader-switch pending). Browser path proven unaffected above."
+          }
+        ],
+        "recommendation": "Choose Option B now, with a concrete deliverable that satisfies the owner's \"accept-with-browser-proof + documented (not comment-only)\" bar, and pre-design Option A to ship at the reader-switch milestone. Rationale tied to blast radius: (1) The only CORRECT form of Option A that fixes the live Oqtane path requires either a persisted IsCollection column on MF_SubmissionFields — threaded through the EF model, a new Oqtane migration, the DNN SqlDataProvider ALTER, all three host stores' insert/read, and the reconstructor — or a FieldType-classifier in the reconstructor. A flag added only to SubmissionFieldWrite/TypedFieldValues would pass the in-memory unit test while leaving the real bug intact (TypedFieldValues is rebuilt from DB rows on read). (2) The typed-storage phase is explicitly unfinished (Umbraco twin, reader-switch, backfill wiring all pending); adding a schema column mid-phase risks a half-wired column, and the same stores/migration will be reopened at reader-switch anyway — do the migration once, then. (3) Today the defect is latent: browser forms never trigger it, DNN keeps DataJson, and consumers still read DataJson, so no user-visible data is currently wrong. (4) Option B is near-zero blast radius and directly answers the owner: add the missing browser-stringified-array-single-row JArray round-trip test (positive proof the happy path is safe), add an executable pin-test asserting the current server-side-CLR-single-row JObject behavior (turns the limitation from a comment into a spec, and value is proven not lost — only shape), and record the limitation + its eventual fix in the handoff and MEMORY backlog. If the owner insists on a code fix immediately, the lowest-blast-radius correct option is Option A2 (reconstructor consults the already-persisted FieldType, one-file change, no migration) — accept its caveat that File single-object vs multi-file stays JObject-for-one and that it introduces a type-based notion of collection-ness distinct from the write-time truth. The robust Option A1 (persisted IsCollection) is the design to adopt at reader-switch.",
+        "concrete_changes": [
+          {
+            "file": "MegaForm.Sdk.Tests/TypedSubmissionStorageTests.cs",
+            "change": "OPTION B deliverable 1 — add browser single-row proof: `[Fact] public void ExtractTypedValues_JsonStringifiedArray_SingleRow_RoundTripsToJArray()`. data[\"lines\"] = \"[{\\\"sku\\\":\\\"A1\\\",\\\"qty\\\":2}]\" (a STRING). Assert values.JsonValues has exactly one row; build a SubmissionDataDocument with SubmissionFieldRecord{SubmissionFieldId=1,FieldKey=\"lines\",DataType=\"json\"} + FieldValues[1]=values; assert Assert.IsType<JArray>(reconstructor.Reconstruct(doc)[\"lines\"]), Assert.Single(arr), arr[0][\"sku\"]==\"A1\". This is the missing positive proof the happy path is safe at row count 1."
+          },
+          {
+            "file": "MegaForm.Sdk.Tests/TypedSubmissionStorageTests.cs",
+            "change": "OPTION B deliverable 2 — pin the limitation as an executable spec: `[Fact] public void ExtractTypedValues_JsonListOfObjects_SingleRow_KnownLimitation_ReconstructsAsJObject()`. data[\"lines\"] = new List<object>{ new Dictionary<string,object>{[\"sku\"]=\"A1\",[\"qty\"]=2} } (ONE CLR row). Assert.Single(values.JsonValues); reconstruct; Assert.IsType<JObject>(reconstructed) and assert (string)((JObject)reconstructed)[\"sku\"]==\"A1\" to prove the value survives and only the shape degrades. Add an XML-doc comment: flip this to JArray when the persisted IsCollection marker lands at reader-switch."
+          },
+          {
+            "file": "MegaForm.Sdk.Tests/TypedSubmissionStorageTests.cs",
+            "change": "Update the stale NOTE at lines 456-458 in ExtractTypedValues_JsonListOfObjects_RoundTripsToJArray to cross-reference the two new named tests instead of being the sole (comment-only) documentation of the limitation."
+          },
+          {
+            "file": "Docs/HANDOUT_NEXT_SESSION_TYPED_SUBMISSION_STORAGE_NO_DATAJSON_2026-07-17.md + MEMORY backlog",
+            "change": "OPTION B deliverable 3 — document the limitation out of code: add a 'Known limitation' entry: server-side CLR List with exactly one complex row reconstructs as JObject not JArray on collapse=true (Oqtane) hosts; trigger conditions (programmatic/SDK submit, not browser); planned fix = persisted MF_SubmissionFields.IsCollection marker, to ship with the typed-read reader-switch."
+          },
+          {
+            "file": "MegaForm.Core/Services/TypedSubmission/SubmissionFieldWrite.cs",
+            "change": "OPTION A1 (deferred, robust design) — add `public bool IsCollectionValue { get; set; }`. Populated by the normalizer to record that the raw value was a genuine multi-item collection."
+          },
+          {
+            "file": "MegaForm.Core/Services/TypedSubmission/SubmissionFieldNormalizer.cs",
+            "change": "OPTION A1 — in Normalize's write construction (around line 143) set `IsCollectionValue = IsCollectionRaw(raw)`; add helper `private static bool IsCollectionRaw(object raw){ if(raw==null) return false; if(raw is JArray) return true; if(raw is string || raw is JObject || raw is JValue) return false; if(raw is System.Collections.IDictionary) return false; var t=raw.GetType(); if(t.IsGenericType && t.GetGenericTypeDefinition()==typeof(Dictionary<,>)) return false; return raw is System.Collections.IEnumerable; }`. Mirrors SplitRawValue's IEnumerable branch so Address/Composite (dict) stays non-collection."
+          },
+          {
+            "file": "MegaForm.Core/Models/TypedSubmissionEntities.cs",
+            "change": "OPTION A1 — add `public bool IsCollection { get; set; }` to SubmissionFieldRecord (new persisted column MF_SubmissionFields.IsCollection)."
+          },
+          {
+            "file": "MegaForm.Core/Services/TypedSubmission/SubmissionDataReconstructor.cs",
+            "change": "OPTION A1 — thread the field into ConvertToObject and change CollapseJson to `CollapseJson(IReadOnlyList<string> jsonValues, bool isCollection)`: in the count==1 branch, after parsing to `tok`, if `isCollection && tok.Type != JTokenType.Array` return `new JArray(tok)`; otherwise return tok. Leave count>1 unchanged. Keep the fix JSON-only (do NOT extend Collapse<T> to wrap single string/longtext) to bound blast radius. ALTERNATIVE Option A2 (one-file, zero-migration): instead of a new column, have CollapseJson receive field.FieldType and wrap count==1 into a JArray when FieldType is a known collection type (DataGrid/DataRepeater/Repeater), reusing/extending SubmissionFieldTypeSemantics; FieldType is already persisted on both platforms."
+          },
+          {
+            "file": "MegaForm.Oqtane.Server/Data/EfSubmissionDataStore.cs + MegaForm.DNN/Data/DnnSubmissionDataStore.cs + new Oqtane EF migration + DNN SqlDataProvider",
+            "change": "OPTION A1 — persist IsCollection: Oqtane InsertFields (near line 178-185) set `IsCollection = w.IsCollectionValue`; add a migration file MegaForm.Oqtane.Server/Migrations/010600xx_AddSubmissionFieldIsCollection.cs adding a BIT NOT NULL DEFAULT 0 column (note: Oqtane runs schema from EF model, so also add to the entity config). DNN: add the column to the MF_SubmissionFields DDL in SqlDataProvider and to the INSERT (line ~100/110) and SELECT (line ~203/220) statements. Umbraco twin: pending (do at Umbraco phase). Also set IsCollection in the in-memory test store's InsertFields (TypedSubmissionStorageTests.cs:598-615)."
+          }
+        ],
+        "risks": [
+          "A1 requires a MF_SubmissionFields schema change threaded through EF model + Oqtane migration + DNN SqlDataProvider + Umbraco (pending) + all three stores + reconstructor; shipping it mid-phase risks a half-wired column, and existing collapsed submissions written before the column defaults to IsCollection=false (already-stored single-row grids stay JObject — a backfill would be needed to correct history).",
+          "A naive 'count==1 -> always JArray' fix would break scalar reconstruction: InMemoryStore_RoundTrip_ReconstructsData (text/number) and Normalize_CompositeField_StoresJson (Address single object must stay JObject) both rely on single values NOT being wrapped. The collection signal must be per-field (was-it-an-array), never blanket.",
+          "Option A2 (FieldType classifier) is fragile at the edges: File is JSON-typed and a single uploaded file legitimately reconstructs as a JObject; the static collection-type list must be curated, and it creates a second notion of collection-ness (type-based) that can disagree with the write-time truth.",
+          "If Option A is ever extended to string/longtext (same count==1 collection-loss), the blast radius jumps to every single-selection MultiSelect/Checkbox-group and every consumer (dashboards, CSV export, workflow, search DisplayValue) — those currently receive a scalar and would start receiving arrays. Keep any near-term fix JSON-only.",
+          "Option B leaves the latent bug in place; if the reader-switch lands before A1, a collapsed-Oqtane submission with a programmatic single-row grid will surface a JObject to newly-switched consumers. The pin-test makes this visible so it is not forgotten, but it must be scheduled with the reader-switch."
+        ],
+        "open_questions": [
+          "Does any real submission path actually hand the normalizer a genuine CLR List<Dictionary> (vs a stringified array)? The browser sends a string; confirm whether the SDK/programmatic submit and any host model-binder produce CLR lists — this determines whether the bug is reachable in production at all.",
+          "At reader-switch, do downstream consumers (reports/CSV/workflow/print) require a JArray for a single grid row, or do they tolerate a JObject? If they normalize shape themselves, A may be unnecessary even then.",
+          "For A1, is a history backfill of IsCollection acceptable/needed for already-collapsed Oqtane submissions, or is fixing only new submissions sufficient?",
+          "Should the eventual fix also cover the identical count==1 collection-loss for string/longtext (single-selection multiselect/checkbox-group returning scalar instead of array), or is scalar-for-one intentional there?"
+        ]
+      },
+      "verdict": {
+        "verdict": "SOUND_WITH_CORRECTIONS",
+        "corrections": [
+          "MATERIAL: The reader-switch does NOT gate this bug's exposure on Oqtane. Collapsed Oqtane DataJson is ALREADY reconstructed through SubmissionDataReconstructor on the live read path, so a JObject-instead-of-JArray reaches real consumers today, not 'at reader-switch.' EfSubmissionRepository.HydrateDataJson (EfRepositories.cs:130-143) serializes the reconstructed dict back into sub.DataJson and runs on Get (:162) and List (:214); MegaFormController.Reports.cs ResolveSubmissionData (:472-483, store.GetData at :481) reconstructs for report/completion paths that explicitly bypass HydrateDataJson; EfSubmissionRepository is DI-wired with the typed store (Startup.cs:81 + :143). Therefore recommendation rationale (3) ('consumers still read DataJson, so no user-visible data is currently wrong') and risk (5) ('if the reader-switch lands before A1... will surface a JObject to newly-switched consumers') overstate latency for Oqtane. The ONLY true gate is whether a genuine single-element CLR List reaches the normalizer (the design's own open_question #1) — DNN stays genuinely latent because it keeps real DataJson.",
+          "MINOR: Risk 2 mis-cites Normalize_CompositeField_StoresJson as a test that 'relies on single values NOT being wrapped' and would break under a naive fix. That test (TypedSubmissionStorageTests.cs:216-240) asserts only on values.JsonValues (the WRITE side) and never calls the reconstructor, so no reconstruction-side change can break it. The tests actually sensitive to a blanket 'count==1 -> JArray' change are the Collapse<T> scalar paths (InMemoryStore_RoundTrip_ReconstructsData string/number). Also state clearly: under the design's ACTUAL proposed JSON-only per-field fix (A1/A2), NO existing test breaks, because no current test reconstructs a count==1 JSON field.",
+          "MINOR: Only TWO real host stores exist (Oqtane EfSubmissionDataStore, DNN DnnSubmissionDataStore) plus the in-memory test store; MegaForm.Web has NO ISubmissionDataStore implementation and Umbraco is pending. The 'all three host stores' phrasing conflates the in-memory test store with a host. A1's plumbing list should be Oqtane + DNN (+ in-memory test store) now, Web/Umbraco later.",
+          "MINOR: The NOTE comment actually spans TypedSubmissionStorageTests.cs:455-458 (design says 456-458). For A1, the DNN typed-table DDL lives in a shipped versioned script (MegaForm.DNN/SqlScripts/01.06.39.SqlDataProvider) — a new IsCollection column needs a NEW versioned SqlDataProvider (ALTER TABLE), not an edit to 01.06.39. The Oqtane side needs both a new migration (existing one is 01060039_AddTypedSubmissionStorage.cs) AND the EF entity config in MegaFormDbContext.cs (SubmissionFieldRecord config confirmed at :157-170), exactly as the design anticipates."
+        ],
+        "missed_call_sites": [
+          "MegaForm.Oqtane.Server/Data/EfRepositories.cs:130 (HydrateDataJson; invoked at Get :162 and List :214) — reconstructs collapsed DataJson from typed rows and writes it back into sub.DataJson, feeding every legacy DataJson consumer on Oqtane; this is where the JObject/JArray shape already reaches consumers, contradicting the 'latent until reader-switch' framing.",
+          "MegaForm.Oqtane.Server/Controllers/MegaFormController.Reports.cs:481 (ResolveSubmissionData -> store.GetData(submissionId)?.Data) — report/completion path that reconstructs from typed rows for collapsed submissions that bypass HydrateDataJson.",
+          "MegaForm.Core/Services/SubmissionQueryService.cs:163 (GetDetailTyped -> new SubmissionDataReconstructor().Reconstruct(document)) — typed submission-detail read path already consuming reconstructor output. The design cited only the store-internal GetData (EfSubmissionDataStore.cs:80-92, DnnSubmissionDataStore.cs:251) and treated downstream exposure as a future reader-switch event."
+        ],
+        "test_impact": "Option B (the recommended deliverable) is purely additive and both new tests pass against current code: the browser stringified-array single row reconstructs as JArray, and the single genuine CLR-list row reconstructs as JObject (only the shape degrades; value 'A1' survives) — verified against SplitRawValue + CollapseJson. No existing test changes behavior. The deferred A1/A2 fix ALSO breaks no existing test: the only JSON-reconstruction tests use count>=2 (Reconstructor_MultiValueJson_ReturnsJArray at :330-357 and ExtractTypedValues_JsonListOfObjects_RoundTripsToJArray at :451-492), and the count==1 JSON branch is exercised by no current test; both are unaffected by a per-field, count==1-only change. The ONLY tests a hypothetical blanket 'count==1 -> always JArray' fix (explicitly NOT proposed) would break are InMemoryStore_RoundTrip_ReconstructsData (:242-263, string/number via Collapse<T>) and any single-value scalar path — NOT Normalize_CompositeField_StoresJson, which never reconstructs. If A1 adds a bool IsCollection to SubmissionFieldRecord, the in-memory store's InsertFields (:592-620) and all record-constructing tests still compile (default false); count>1 reconstruction tests build records without the flag and remain green."
+      }
+    },
+    {
+      "key": "r3j-packaging-guard",
+      "design": {
+        "title": "R3-J Deployment-Trap Remediation Plan: Clean-Build Pack, Single-Source Versioning, Post-Pack Guard, Runtime Health Endpoint",
+        "summary": "R3-J is confirmed as the highest release risk. Two independent gaps combine: (1) the lean pack path `MegaForm.Oqtane.Package/release.cmd` runs `nuget pack` with NO build at all, so it ships whatever stale DLLs already sit in `bin/Release`; and (2) the five artifacts that must agree on a version do not — nuspec 1.7.107, ModuleInfo 1.7.108, Server/Client csproj 1.7.15, Package csproj 1.7.22, Core csproj 1.5.0. The new Core contract member `ISubmissionDataStore.SupportsDataJsonCollapse` is called by `SubmissionProcessor` inside a fail-soft try/catch, so a stale Core.dll next to a new Server.dll throws `MissingMethodException` that is swallowed — typed write/collapse silently dies while the package looks installed. This trap already bit once (submission 52 kept full DataJson). The fix is a clean Release build of Core+Server+Client+Shared before pack (both net9.0 and net10.0 for Core), a single version source feeding nuspec + ModuleInfo, a post-pack nupkg validator that fails the build on stale/missing/mismatched DLLs, and an admin-only runtime diagnostics endpoint that proves loaded assembly versions, the resolved data store, collapse state, and a typed-write smoke.",
+        "findings": [
+          {
+            "claim": "The lean release script packs with no build — it is the actual R3-J trap. It only deletes old nupkgs and calls nuget pack, so it ships whatever DLLs already exist in bin/Release, no matter how stale.",
+            "evidence": "MegaForm.Oqtane.Package/release.cmd:3 (del *.nupkg) and :6-13 (nuget.exe pack MegaForm.Oqtane.nuspec) with zero dotnet build steps before it."
+          },
+          {
+            "claim": "Even the full root pack.cmd is incremental (never cleans) and builds Core only for net9.0, while the nuspec packs Core.dll for BOTH net9.0 and net10.0 from the Server output — the net10.0 Core.dll is only whatever an earlier incremental Server build left behind.",
+            "evidence": "pack.cmd:159 builds Core `-f net9.0` only; pack.cmd:165 builds Server (both TFMs via project ref); nuspec:61 packs net9.0 Core.dll and nuspec:82 packs net10.0 Core.dll from `MegaForm.Oqtane.Server\\bin\\Release\\net10.0`. No `dotnet clean`/rmdir anywhere in pack.cmd."
+          },
+          {
+            "claim": "Five version fields disagree, so no artifact can prove what is actually deployed. The nupkg version (drives NuGet) and ModuleInfo.Version (drives Oqtane's install/upgrade schema gate) differ by a patch, which mis-fires the deploy gate.",
+            "evidence": "nuspec:5 <version>1.7.107</version>; ModuleInfo.cs:12 Version=\"1.7.108\" (and ReleaseVersions tail :14 ends 1.7.108); Server csproj:6 <Version>1.7.15</Version>; Client csproj:5 <Version>1.7.15</Version>; Package csproj:12 <Version>1.7.22</Version>; Core csproj:11 <Version>1.5.0</Version>."
+          },
+          {
+            "claim": "The new Core interface member is invoked by SubmissionProcessor inside a fail-soft catch, so a Core/Server binary mismatch throws MissingMethodException/TypeLoadException that is swallowed with only a LogWarning — the package looks installed while typed write and DataJson collapse are silently dead.",
+            "evidence": "SubmissionProcessor.cs:396 calls _typedStore.ReplaceFields, :407 reads _typedStore.SupportsDataJsonCollapse, :408 collapses DataJson to '{}', all wrapped by try at :393 and catch at :410-414 (LogWarning only). Interface member declared ISubmissionDataStore.cs:20."
+          },
+          {
+            "claim": "The trap is documented as already having fired once, with the exact remediation being redeploy Core.dll + Server.dll together whenever a Core interface changes.",
+            "evidence": "CLAUDE_HANDOFF_20260718_...DNN_TWIN.md:20-25 (stale Core.dll + new Server.dll -> MissingMethodException swallowed -> collapse silently stopped, submission 52 kept full DataJson; 'ALWAYS redeploy Core.dll + Server.dll together...verify timestamps match')."
+          },
+          {
+            "claim": "The Oqtane data store is registered scoped and reports collapse=true, so a health endpoint can resolve it to prove the live wiring.",
+            "evidence": "Startup.cs:143 services.AddScoped<ISubmissionDataStore, EfSubmissionDataStore>(); EfSubmissionDataStore.cs:31 SupportsDataJsonCollapse => true."
+          },
+          {
+            "claim": "An admin-only diagnostics endpoint fits the existing Oqtane controller conventions (attribute-routed ModuleControllerBase, per-action Authorize, IgnoreAntiforgeryToken for JS-called GETs).",
+            "evidence": "MegaFormController.cs:46-48 [Route(ControllerRoutes.ApiRoute)] [IgnoreAntiforgeryToken] partial class MegaFormController : ModuleControllerBase; per-action [Authorize] pattern in MegaFormController.Reports.cs:50,82,193."
+          }
+        ],
+        "recommendation": "Do R3-J before any package install/push. Ship four things: (1) make release.cmd delegate to a hardened pack.cmd that does a CLEAN Release build of Shared+Core(net9.0 AND net10.0)+Client+Server before nuget pack; (2) put the version in one file (version.props + version.txt) that feeds csproj <Version>, the nuspec version via `nuget pack -Version`, and a pre-build assert that ModuleInfo.Version equals it (and is present in ReleaseVersions); (3) add a post-pack validator (a small net10 console using MetadataLoadContext) that unzips the nupkg and fails the build unless every lib\\netX contains all four MegaForm DLLs, Core.dll exposes ISubmissionDataStore.SupportsDataJsonCollapse, Server.Oqtane.dll's referenced MegaForm.Core version equals the packed Core.dll AssemblyVersion, the nupkg version equals ModuleInfo.Version, and all packed DLL mtimes are newer than the newest tracked .cs source; (4) add an admin/host-only GET diagnostics endpoint that returns loaded assembly versions+paths, whether ISubmissionDataStore resolved and its concrete type, SupportsDataJsonCollapse, a runtime reflection check that the loaded Core actually has the member, and an opt-in self-cleaning typed-write smoke. Then sequence the remaining P0s dependency-first: R3-J -> R3-A -> R3-B -> R3-C -> R3-D -> R3-E. R3-A (Umbraco/Web: add typed store or explicitly mark legacy-only with SupportsDataJsonCollapse=false) first because it makes the platform contract truthful and stops accidental collapse on hosts with no hydration. R3-B (Core reader facade + replace direct _subRepo.Insert bypasses in WorkflowEngine/ConfiguredAppStarter) next because those bypasses create master rows with no typed field rows, corrupting everything built on top. R3-C (typed SetField/UpdateFields + workflow sync across hosts) after B because it needs the unified typed-write command path B establishes. R3-D (SDK Data/Fields facade) after C because the public SDK surface should freeze only once the field-level mutation API exists. R3-E (backfill wiring + migrated marker + verification counts) last of the P0s because it operates on the whole existing corpus and can only be trusted once A/B/C provide correct typed write+read on every host. Note: the audit groups A/C/D/E together and puts B after; the dependency-first order above pulls B forward because its direct-writer bypasses are a correctness hole under A, C, D, and E.",
+        "concrete_changes": [
+          {
+            "file": "version.props (new, repo root)",
+            "change": "<Project><PropertyGroup><MegaFormVersion>1.7.108</MegaFormVersion><MegaFormAssemblyVersion>1.7.108.0</MegaFormAssemblyVersion></PropertyGroup></Project>. Then in each packed csproj replace the literal <Version>… with <Import Project=\"..\\version.props\"/> + <Version>$(MegaFormVersion)</Version><AssemblyVersion>$(MegaFormAssemblyVersion)</AssemblyVersion>. Targets: MegaForm.Core/MegaForm.Core.csproj:11, MegaForm.Oqtane.Server/MegaForm.Oqtane.Server.csproj:6, MegaForm.Oqtane.Client/MegaForm.Oqtane.Client.csproj:5, MegaForm.Oqtane.Package/MegaForm.Oqtane.Package.csproj:12. (Keep Core's assembly-identity change deliberate: bumping Core AssemblyVersion makes stale-Core mismatches hard-fail at load instead of silently binding.)"
+          },
+          {
+            "file": "MegaForm.Oqtane.Package/MegaForm.Oqtane.nuspec",
+            "change": "Line 5: replace <version>1.7.107</version> with <version>$version$</version> so the version is injected at pack time (`nuget pack -Version %VER%` or `-Properties version=%VER%`). This removes the second hand-maintained version and eliminates the 1.7.107-vs-1.7.108 drift."
+          },
+          {
+            "file": "tools/read-version.ps1 (new) + pack.cmd single-source wiring",
+            "change": "Add a version single-source: version.txt (content: 1.7.108) at repo root. In pack.cmd read it: FOR /F %%v IN (version.txt) DO SET VER=%%v. Assert ModuleInfo matches before building: powershell -Command \"$mi=Select-String -Path MegaForm.Oqtane.Client/ModuleInfo.cs -Pattern 'Version = \\\"(.*?)\\\"'; if($mi.Matches[0].Groups[1].Value -ne $env:VER){exit 1}\" — exit /b 1 on mismatch. Pass -Version %VER% to the nuget pack call at pack.cmd:195."
+          },
+          {
+            "file": "pack.cmd (clean build, both Core TFMs)",
+            "change": "Insert a clean step before Step 2 (after the completeness guard ~line 150): `FOR %%P IN (MegaForm.Core MegaForm.Oqtane.Shared MegaForm.Oqtane.Client MegaForm.Oqtane.Server MegaForm.Sdk) DO ( IF EXIST \"%%P\\bin\\Release\" RMDIR /S /Q \"%%P\\bin\\Release\" & IF EXIST \"%%P\\obj\\Release\" RMDIR /S /Q \"%%P\\obj\\Release\" )`. Then add the missing net10.0 Core build next to pack.cmd:159: `dotnet build MegaForm.Core\\MegaForm.Core.csproj -c %CONFIG% -f net10.0 -v q` (guard ERRORLEVEL). This guarantees the net10.0 Core.dll that nuspec:82 packs is freshly built, not incremental leftover."
+          },
+          {
+            "file": "MegaForm.Oqtane.Package/release.cmd (kill the no-build trap)",
+            "change": "Replace the body (currently release.cmd:3-19 = del + bare nuget pack) with a delegation + guard: `CALL ..\\pack.cmd` (which now cleans, version-checks, builds, packs, validates). If anyone must keep release.cmd standalone, add a staleness guard that refuses to pack: assert the newest DLL mtime under MegaForm.Oqtane.Server\\bin\\Release is newer than the newest *.cs under the four projects, else `ECHO [R3-J] Stale DLLs — run pack.cmd & EXIT /B 1`."
+          },
+          {
+            "file": "tools/PackValidator/PackValidator.csproj + Program.cs (new net10 console, called at end of pack.cmd Step 4)",
+            "change": "Console app referencing System.Reflection.MetadataLoadContext. Program: (1) unzip the produced *.nupkg to temp (System.IO.Compression.ZipFile). (2) For each of lib\\net9.0 and lib\\net10.0 assert presence of MegaForm.Core.dll, MegaForm.Oqtane.Server.Oqtane.dll, MegaForm.Oqtane.Client.Oqtane.dll, MegaForm.Oqtane.Shared.Oqtane.dll. (3) Using MetadataLoadContext over the packed folder: var core=mlc.LoadFromAssemblyPath(coreDll); var t=core.GetType(\"MegaForm.Core.Interfaces.ISubmissionDataStore\"); FAIL if t?.GetProperty(\"SupportsDataJsonCollapse\")==null. (4) var srvRef = mlc.LoadFromAssemblyPath(serverDll).GetReferencedAssemblies().First(a=>a.Name==\"MegaForm.Core\").Version; var coreVer = AssemblyName.GetAssemblyName(coreDll).Version; FAIL if srvRef!=coreVer. (5) FAIL if nupkg <version> (parse .nuspec inside zip) != ModuleInfo.Version read from source. (6) FAIL if any packed DLL LastWriteTimeUtc < newest *.cs LastWriteTimeUtc across the four projects (stale guard). Return non-zero on any failure. Wire into pack.cmd right after the nuget pack call: `dotnet run --project ..\\tools\\PackValidator -c Release -- MegaForm.Oqtane.%VER%.nupkg` with ERRORLEVEL abort."
+          },
+          {
+            "file": "MegaForm.Oqtane.Server/Controllers/MegaFormController.Diagnostics.cs (new partial)",
+            "change": "Host-only diagnostics GET. Sketch: `[Authorize(Roles = Oqtane.Shared.RoleNames.Host)] [HttpGet(\"diagnostics/typedstorage\")] public IActionResult TypedStorageHealth([FromQuery] bool smoke=false){ var store = HttpContext.RequestServices.GetService<MegaForm.Core.Interfaces.ISubmissionDataStore>(); var asms = new[]{typeof(MegaForm.Core.Interfaces.ISubmissionDataStore).Assembly, typeof(MegaFormController).Assembly, typeof(MegaForm.Client.ModuleInfo).Assembly, typeof(MegaForm.Oqtane.Shared.Models... ).Assembly}; var result = new { moduleVersion = new MegaForm.Client.ModuleInfo().ModuleDefinition.Version, assemblies = asms.Select(a=> new { a.GetName().Name, Version = a.GetName().Version?.ToString(), Path = a.Location }), interfaceHasCollapseMember = typeof(MegaForm.Core.Interfaces.ISubmissionDataStore).GetProperty(\"SupportsDataJsonCollapse\")!=null, storeResolved = store!=null, storeType = store?.GetType().FullName, supportsCollapse = store?.SupportsDataJsonCollapse, coreAsmVersion = typeof(MegaForm.Core.Interfaces.ISubmissionDataStore).Assembly.GetName().Version?.ToString(), serverRefCoreVersion = typeof(MegaFormController).Assembly.GetReferencedAssemblies().FirstOrDefault(a=>a.Name==\"MegaForm.Core\")?.Version?.ToString() }; ...`. If smoke && store!=null: pick a sentinel negative submissionId, InsertFields(sentinel, 0, oneSyntheticStringField); bool ok = store.HasFields(sentinel); var doc = store.GetData(sentinel); store.DeleteFields(sentinel); attach { smokeWrite = ok, smokeReadBack = doc.Values.Count } — wrap in try/catch and report the exception TYPE only (not message) per security rule 10. Return Ok(result). Mirror in DNN twin (MegaForm.DNN/WebApi) where SupportsDataJsonCollapse=false is expected."
+          }
+        ],
+        "risks": [
+          "Bumping MegaForm.Core AssemblyVersion (1.5.0.0 -> 1.7.108.0) is the deliberate safety mechanism (mismatched Core now hard-fails binding), but it changes assembly identity: verify no place uses a strong-name/binding-redirect assumption and that the net472 DNN consumer still binds (DNN uses its own build path). Ship Core+Server together as the trap requires.",
+          "MetadataLoadContext-based validator needs a resolver for BCL/dependency assemblies or LoadFromAssemblyPath of referenced types can throw; scope the validator to metadata-only checks (GetType/GetProperty/GetReferencedAssemblies) which do not force full type resolution, and add a PathAssemblyResolver over the packed folder + runtime dir.",
+          "The typed-write smoke, if not perfectly self-cleaning or if run against a live DB, could leave a sentinel row; gate it behind Host role + explicit ?smoke=true, use a clearly-negative sentinel submissionId, and always DeleteFields in a finally. Prefer a rolled-back transaction if the store exposed one (it does not today).",
+          "Consolidating release.cmd into pack.cmd changes the muscle-memory 'lean re-pack' workflow the team used; document that a clean pack is now mandatory and that lean re-packs are what caused stale-DLL ships.",
+          "Reading ModuleInfo.Version by regex from source is brittle if the line format changes; anchor the regex and fail-closed (mismatch => abort) so a parse failure blocks the pack rather than passing silently."
+        ],
+        "open_questions": [
+          "Which version is the intended truth for the next package — 1.7.108 (ModuleInfo, newest) or 1.7.107 (nuspec)? Plan assumes 1.7.108 and that the new version must be appended to ModuleInfo ReleaseVersions.",
+          "Should the csproj <Version> fields (currently 1.7.15 Server/Client, 1.7.22 Package, 1.5.0 Core) be unified to the module version too, or kept as independent assembly-lineage numbers? Recommend unifying to remove the 4-way drift, but confirm nothing keys off the old csproj numbers.",
+          "Is there a CI/GitHub Actions pipeline that should run the post-pack validator as a gate, or is packing purely local (pack.cmd/release.cmd) today? The .nojekyll/gh-pages context suggests docs CI exists but module packaging appears local-only.",
+          "Should the diagnostics endpoint also assert DNN-side expectations (SupportsDataJsonCollapse=false) and be added to the DNN/Web/Umbraco twins now, or Oqtane-only until those hosts get typed stores (R3-A)?",
+          "For the stale-DLL mtime guard, is the git working tree clean enough that 'newest *.cs' is a reliable freshness baseline, or should the validator instead hash sources and compare against an embedded build-stamp resource?"
+        ]
+      },
+      "verdict": {
+        "verdict": "SOUND_WITH_CORRECTIONS",
+        "corrections": [
+          "ALL file:line citations are real and accurate (verified every one): release.cmd:3/6-13 (no build), pack.cmd:159 Core -f net9.0 / :165 Server / no clean, nuspec:5=1.7.107 / :61 net9 Core / :82 net10 Core, ModuleInfo.cs:12=1.7.108 / :14 ReleaseVersions tail 1.7.108, Server csproj:6=1.7.15, Client csproj:5=1.7.15, Package csproj:12=1.7.22, Core csproj:11=1.5.0, SubmissionProcessor.cs try:393/ReplaceFields:396/SupportsDataJsonCollapse:407/UpdateData({}):408/catch:410-414, ISubmissionDataStore.cs:20, Startup.cs:143, EfSubmissionDataStore.cs:31, MegaFormController.cs:46-48, Reports.cs:50/82/193. The two headline gaps (no-build release.cmd; 5-way version drift) are genuine.",
+          "C1 (mechanism mis-located): The 'stale Core + new Server -> MissingMethodException on SupportsDataJsonCollapse -> swallowed' chain is technically incorrect. SubmissionProcessor (the caller, line 407) AND ISubmissionDataStore (the member, ISubmissionDataStore.cs:20) both live in MegaForm.Core.dll, compiled together - a stale Core carries a matching stale SubmissionProcessor that simply has no collapse code (no exception; DataJson kept). The only cross-assembly seam is Server's EfSubmissionDataStore IMPLEMENTING the Core interface. new-Core+stale-Server yields a TypeLoadException at DI resolution of ISubmissionDataStore, which fires at SubmissionProcessor CONSTRUCTION (constructor-injected, SubmissionProcessor.cs:71/86) OUTSIDE the try at :393 -> a hard 500 on submit, NOT silently swallowed. The design inherited this imprecise causal story verbatim from the handoff (:20-25), which itself says 'new Server calls an interface member old Core lacks' - wrong, the caller is in Core. The RISK (Core/Server binary skew) and the remediation (ship together / single-version / validator / diagnostics) are sound; only the narrative needs fixing.",
+          "C2 (net10 claim overstated): 'the net10.0 Core.dll is only whatever an earlier incremental Server build left behind' is inaccurate. Server csproj:4 multi-targets net9.0;net10.0 and Core csproj:8 includes net10.0, so pack.cmd:165 (Server build, no -f) compiles Core net10.0 as a transitive ProjectReference in the SAME pack run - it IS built, not merely leftover. The real narrower defects: (a) no dotnet clean anywhere, so it is incremental; (b) pack.cmd:171-172 explicitly copies net9.0 Core.dll into Server bin but has NO net10.0 equivalent. Since the live Oqtane runs net10.0 (per memory), the concern is actually more relevant to net10 than the design frames it.",
+          "C3 (deploy-gate claim speculative): 'nuspec-vs-ModuleInfo patch difference mis-fires the deploy gate' is unsubstantiated. In Oqtane the upgrade/schema gate is driven by ModuleDefinition.Version (ModuleInfo.cs:12=1.7.108) + ReleaseVersions (:14); the nuspec <version> (1.7.107) is the NuGet package version in Module Management. The two version systems are largely independent - the drift is a real smell worth fixing but does not demonstrably 'mis-fire the gate'.",
+          "C4 (diagnostics sketch has 2 concrete compile errors): (1) typeof(MegaForm.Client.ModuleInfo).Assembly and new MegaForm.Client.ModuleInfo().ModuleDefinition.Version cannot compile in a MegaForm.Oqtane.Server partial - Server csproj references only Shared/Core/Sdk, NOT Client; the only 'MegaForm.Oqtane.Client' token in the whole Server project is a SQL string literal (MegaFormController.cs:1213), not a type ref. Needs a new Client ProjectReference or another version source. (2) doc.Values.Count is invalid - SubmissionDataDocument (SubmissionDataDocument.cs:10-22) exposes Data, Fields, FieldValues but NO Values property; must be doc.Data.Count or doc.Fields.Count.",
+          "C5 (auth convention deviation): the sketch uses [Authorize(Roles=RoleNames.Host)] but the controller's established pattern is [Authorize(Policy=\"EditModule\"/\"ViewModule\")] + a CanUseAdminPopup() gate (MegaFormController.cs:44-45; Reports.cs:50/82/193 pair [Authorize] with CanUseAdminPopup()). Host-only is a defensible stricter choice for diagnostics, but the design should either follow the existing policy+CanUseAdminPopup convention or justify the deviation.",
+          "Type-name check: SubmissionFieldWrite (SubmissionFieldWrite.cs) and TypedFieldValues exist and match usage; SubmissionDataType IS a real enum (TypedSubmissionEntities.cs:9) but note SubmissionFieldWrite.DataType is a plain string ('string'|'number'|...), not that enum - a smoke test builds a SubmissionFieldWrite with DataType=\"string\". No 'FormField' class exists (schema uses FormSchema.Fields)."
+        ],
+        "missed_call_sites": [
+          "M1 - PackValidator DLL-presence list is narrower than the pack actually ships: the design checks only Core/Server/Client/Shared, but the nuspec also ships MegaForm.Sdk.dll (nuspec:70,84) plus Newtonsoft.Json / Microsoft.AspNetCore.Razor.Language / Microsoft.CodeAnalysis / Microsoft.CodeAnalysis.CSharp (nuspec:65,71-73,83,85-87). The nuspec's own comment (lines 66-69) records that MISSING Sdk/Razor/Roslyn is exactly what crashed clean-host installs (ReflectionTypeLoadException at Oqtane's assembly scan). A validator ignoring these would greenlight a package that reproduces that crash; the presence list must include MegaForm.Sdk.dll + the runtime deps per TFM.",
+          "M2 - MegaForm.Sdk is never explicitly built by pack.cmd (it is produced transitively via Server csproj:51 ProjectReference), yet the design's clean step RMDIRs MegaForm.Sdk\\bin\\Release. Wiping Sdk bin without an explicit `dotnet build MegaForm.Sdk` then relies on Server's incremental build to regenerate Sdk.dll - same staleness caveat as Core net10. Add an explicit Sdk (and Package) build after the clean, or note the reliance.",
+          "M3 - three-platform-twin gap (CLAUDE.md rule): the identical stale-DLL + version-drift bug class exists on the DNN pack path (BuildPackage-DNN.ps1; SupportsDataJsonCollapse=false there, and memory repeatedly notes 'repack goi DNN'). The design's diagnostics recommendation says 'mirror in DNN twin', but the packaging/version-single-source concrete_changes are Oqtane-only. open_question #4 gestures at it but concrete_changes do not touch DNN packaging or Umbraco/Web.",
+          "Minor: the clean-list FOR-loop omits MegaForm.Oqtane.Package itself (built at pack.cmd:177), so its obj/bin is not cleaned for consistency."
+        ],
+        "test_impact": "No existing test breaks. A grep of the test projects for 1.5.0 / 1.7.15 / 1.7.22 / 1.7.107 / 1.7.108 / AssemblyVersion / ModuleDefinition.Version returned nothing, so unifying <Version>, adding <AssemblyVersion>, and switching the nuspec to $version$ do not break the 91 passing tests. The typed-storage tests are InMemory-contract tests (EfSubmissionDataStore.cs:17 references MegaForm.Sdk.Tests/TypedSubmissionStorageTests.cs) and are untouched by packaging/version/diagnostics changes. Uncovered risk the plan itself flags (risks[0]): bumping Core AssemblyVersion 1.5.0.0 -> 1.7.108.0 changes assembly identity - the nuspec (comment lines 58-60) relies on the runtime auto-resolving the non-Oqtane-named MegaForm.Core.dll by name; this is safe ONLY if Core+Server+Client are all rebuilt together (which the clean build enforces), but the net472 DNN consumer and any binding-redirect assumptions have no automated guard and need the manual clean-build + install verification the plan prescribes.\""
+      }
+    }
+  ],
+  "workflowProgress": [
+    {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Design"
+    },
+    {
+      "type": "workflow_phase",
+      "index": 2,
+      "title": "Verify"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "design:registry-widening",
+      "phaseIndex": 1,
+      "phaseTitle": "Design",
+      "agentId": "a8e26c6b7ae327f6d",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1784343759643,
+      "queuedAt": 1784343756163,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Widening SubmissionFieldTypeSemantics into the single typed…",
+      "promptPreview": "You are analyzing repo at \"e:/DNNDEFENDER AND AI DESIGNES/AI DESIGNES/MegaFormSolution_280_Oqtane_um\". TASK: design how to WIDEN the shared field-type semantics class into the single registry for typed-storage classification.\n\nBaseline: MegaForm.Core/Services/TypedSubmission/SubmissionFieldTypeSemantics.cs already has Canonicalize (FileUpload->File, DateTimePicker->Date), IsDisplayOnly (DataRepeat…",
+      "lastProgressAt": 1784344259539,
+      "tokens": 134258,
+      "toolCalls": 41,
+      "durationMs": 499894,
+      "resultPreview": "{\"title\":\"Widening SubmissionFieldTypeSemantics into the single typed-storage field-type registry\",\"summary\":\"SubmissionFieldTypeSemantics today knows only 3 things (Canonicalize, IsDisplayOnly, IsFileLike) and is consulted by only 2 callers (SubmissionFieldNormalizer, SubmissionFileMetaExtractor). Meanwhile the same field-type classification is hard-coded in at least 8 other places: the C# SSR re…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "design:single-row-clr-list",
+      "phaseIndex": 1,
+      "phaseTitle": "Design",
+      "agentId": "a3c85a119c6a0718b",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1784343761934,
+      "queuedAt": 1784343756163,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Single-row CLR-list JSON reconstruction limitation: fix des…",
+      "promptPreview": "You are analyzing repo at \"e:/DNNDEFENDER AND AI DESIGNES/AI DESIGNES/MegaFormSolution_280_Oqtane_um\". TASK: decide and design the fix for the single-row CLR-list JSON limitation.\n\nContext: SubmissionFieldNormalizer.SplitRawValue now serializes complex CLR enumerable items as JSON (one JSON row per item). SubmissionDataReconstructor.CollapseJson (MegaForm.Core/Services/TypedSubmission/SubmissionDa…",
+      "lastProgressAt": 1784344184171,
+      "tokens": 80644,
+      "toolCalls": 24,
+      "durationMs": 422236,
+      "resultPreview": "{\"title\":\"Single-row CLR-list JSON reconstruction limitation: fix design & A-vs-B decision\",\"summary\":\"Confirmed: a grid/repeater arriving as a genuine CLR IEnumerable (List/array) with EXACTLY ONE complex row is flattened by SplitRawValue into one JSON row, and CollapseJson's count==1 branch parses that single row and returns a JObject instead of a JArray, silently losing array-ness. Multi-row CL…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "design:r3j-packaging-guard",
+      "phaseIndex": 1,
+      "phaseTitle": "Design",
+      "agentId": "aa6ae012e826f967b",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1784343760579,
+      "queuedAt": 1784343756164,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "R3-J Deployment-Trap Remediation Plan: Clean-Build Pack, Si…",
+      "promptPreview": "You are analyzing repo at \"e:/DNNDEFENDER AND AI DESIGNES/AI DESIGNES/MegaFormSolution_280_Oqtane_um\". TASK: produce a concrete implementation plan for R3-J (DLL/package mismatch deployment trap) — the highest release risk per Docs/AUDIT_CODEX_ROUND3_TYPED_STORAGE_REMAINING_2026-07-18.md.\n\nRead: MegaForm.Oqtane.Package/release.cmd, MegaForm.Oqtane.Package/MegaForm.Oqtane.nuspec, MegaForm.Oqtane.Cl…",
+      "lastProgressAt": 1784344046338,
+      "tokens": 78481,
+      "toolCalls": 23,
+      "durationMs": 285759,
+      "resultPreview": "{\"title\":\"R3-J Deployment-Trap Remediation Plan: Clean-Build Pack, Single-Source Versioning, Post-Pack Guard, Runtime Health Endpoint\",\"summary\":\"R3-J is confirmed as the highest release risk. Two independent gaps combine: (1) the lean pack path `MegaForm.Oqtane.Package/release.cmd` runs `nuget pack` with NO build at all, so it ships whatever stale DLLs already sit in `bin/Release`; and (2) the fi…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "verify:r3j-packaging-guard",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a8342220d94e68842",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1784344047962,
+      "queuedAt": 1784344046352,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "SOUND_WITH_CORRECTIONS",
+      "promptPreview": "Adversarially verify this design AGAINST THE REAL CODE at \"e:/DNNDEFENDER AND AI DESIGNES/AI DESIGNES/MegaFormSolution_280_Oqtane_um\". Read the actual files it cites; do not trust its claims. Task key: r3j-packaging-guard.\n\nDESIGN JSON:\n{\n  \"title\": \"R3-J Deployment-Trap Remediation Plan: Clean-Build Pack, Single-Source Versioning, Post-Pack Guard, Runtime Health Endpoint\",\n  \"summary\": \"R3-J is c…",
+      "lastProgressAt": 1784344526294,
+      "tokens": 100730,
+      "toolCalls": 40,
+      "durationMs": 478332,
+      "resultPreview": "{\"verdict\":\"SOUND_WITH_CORRECTIONS\",\"corrections\":[\"ALL file:line citations are real and accurate (verified every one): release.cmd:3/6-13 (no build), pack.cmd:159 Core -f net9.0 / :165 Server / no clean, nuspec:5=1.7.107 / :61 net9 Core / :82 net10 Core, ModuleInfo.cs:12=1.7.108 / :14 ReleaseVersions tail 1.7.108, Server csproj:6=1.7.15, Client csproj:5=1.7.15, Package csproj:12=1.7.22, Core cspr…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "verify:single-row-clr-list",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "a1ded6838ed5228c2",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1784344185705,
+      "queuedAt": 1784344184181,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "SOUND_WITH_CORRECTIONS",
+      "promptPreview": "Adversarially verify this design AGAINST THE REAL CODE at \"e:/DNNDEFENDER AND AI DESIGNES/AI DESIGNES/MegaFormSolution_280_Oqtane_um\". Read the actual files it cites; do not trust its claims. Task key: single-row-clr-list.\n\nDESIGN JSON:\n{\n  \"title\": \"Single-row CLR-list JSON reconstruction limitation: fix design & A-vs-B decision\",\n  \"summary\": \"Confirmed: a grid/repeater arriving as a genuine CLR…",
+      "lastProgressAt": 1784344602674,
+      "tokens": 107428,
+      "toolCalls": 30,
+      "durationMs": 416969,
+      "resultPreview": "{\"verdict\":\"SOUND_WITH_CORRECTIONS\",\"corrections\":[\"MATERIAL: The reader-switch does NOT gate this bug's exposure on Oqtane. Collapsed Oqtane DataJson is ALREADY reconstructed through SubmissionDataReconstructor on the live read path, so a JObject-instead-of-JArray reaches real consumers today, not 'at reader-switch.' EfSubmissionRepository.HydrateDataJson (EfRepositories.cs:130-143) serializes th…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "verify:registry-widening",
+      "phaseIndex": 2,
+      "phaseTitle": "Verify",
+      "agentId": "ab32982e514872e6f",
+      "model": "claude-opus-4-8[1m]",
+      "state": "done",
+      "startedAt": 1784344263486,
+      "queuedAt": 1784344259548,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "SOUND_WITH_CORRECTIONS",
+      "promptPreview": "Adversarially verify this design AGAINST THE REAL CODE at \"e:/DNNDEFENDER AND AI DESIGNES/AI DESIGNES/MegaFormSolution_280_Oqtane_um\". Read the actual files it cites; do not trust its claims. Task key: registry-widening.\n\nDESIGN JSON:\n{\n  \"title\": \"Widening SubmissionFieldTypeSemantics into the single typed-storage field-type registry\",\n  \"summary\": \"SubmissionFieldTypeSemantics today knows only 3…",
+      "lastProgressAt": 1784344792413,
+      "tokens": 125896,
+      "toolCalls": 33,
+      "durationMs": 528927,
+      "resultPreview": "{\"verdict\":\"SOUND_WITH_CORRECTIONS\",\"corrections\":[\"CONTRADICTION THAT BREAKS A TEST: the proposed IsNonDataField => !IsDataCarrying(field.Type) makes display-only widgets NON-data, because IsDataCarrying excludes IsExternalDataDisplay and ExternalDisplay is defined to contain DisplayOnly {DataRepeater,QRCode} plus DynamicLabel. So a DataRepeater/QRCode/DynamicLabel is now skipped UNCONDITIONALLY …"
+    }
+  ],
+  "totalTokens": 627437,
+  "totalToolCalls": 191
+}

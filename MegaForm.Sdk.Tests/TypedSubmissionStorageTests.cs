@@ -40,6 +40,8 @@ namespace MegaForm.Sdk.Tests
         [InlineData("Switch", "boolean")]
         [InlineData("Terms", "boolean")]
         [InlineData("File", "json")]
+        [InlineData("FileUpload", "json")]   // alias -> File -> json
+        [InlineData("DateTimePicker", "date")] // alias -> Date -> date (forward guard)
         [InlineData("Address", "json")]
         [InlineData("FullName", "json")]
         [InlineData("Composite", "json")]
@@ -352,6 +354,211 @@ namespace MegaForm.Sdk.Tests
 
             var arr = Assert.IsType<JArray>(data["files"]);
             Assert.Equal(2, arr.Count);
+        }
+
+        [Fact]
+        public void Normalize_DisplayOnlyWidget_WithNoValue_IsSkipped()
+        {
+            // DataRepeater / QRCode render output but submit nothing; they must not create
+            // empty typed field rows. A real data field alongside them is still written.
+            var schema = new FormSchema
+            {
+                Fields = new List<FormField>
+                {
+                    new FormField { Key = "name", Type = "Text", Label = "Name", Order = 1 },
+                    new FormField { Key = "leaderboard", Type = "DataRepeater", Label = "Top 10", Order = 2 },
+                    new FormField { Key = "ticket_qr", Type = "QRCode", Label = "QR", Order = 3 }
+                }
+            };
+            var data = new Dictionary<string, object> { ["name"] = "Alice" };
+
+            var writes = _normalizer.Normalize(1, schema, data);
+
+            Assert.Single(writes);
+            Assert.Equal("name", writes[0].FieldKey);
+        }
+
+        [Fact]
+        public void Normalize_DisplayOnlyWidget_WithValue_IsNotDropped()
+        {
+            // Safety net: if a display-only widget ever DOES carry a value, we keep it
+            // rather than silently dropping data.
+            var schema = new FormSchema
+            {
+                Fields = new List<FormField>
+                {
+                    new FormField { Key = "grid", Type = "DataRepeater", Label = "Grid", Order = 1 }
+                }
+            };
+            var data = new Dictionary<string, object> { ["grid"] = "[{\"a\":1}]" };
+
+            var writes = _normalizer.Normalize(1, schema, data);
+
+            Assert.Single(writes);
+            Assert.Equal("grid", writes[0].FieldKey);
+        }
+
+        [Fact]
+        public void ExtractTypedValues_EmptyJsonField_WritesNoNullRow()
+        {
+            // An empty JSON-typed field must produce NO value row (was: a literal "null"
+            // row that reconstructed to the string "null").
+            var schema = new FormSchema
+            {
+                Fields = new List<FormField>
+                {
+                    new FormField { Key = "attachment", Type = "File", Label = "File", Order = 1 }
+                }
+            };
+            var writes = _normalizer.Normalize(1, schema, new Dictionary<string, object>());
+
+            var values = _normalizer.ExtractTypedValues(writes[0]);
+            Assert.Empty(values.JsonValues);
+            Assert.False(values.HasAnyValue);
+        }
+
+        [Fact]
+        public void ExtractTypedValues_JsonListOfObjects_SerializesAsJson_NotToString()
+        {
+            // Repeater/grid rows arriving as a CLR List<Dictionary> (e.g. Submit deserialized
+            // a JSON array) must survive as JSON, not "System.Collections.Generic.Dictionary`2".
+            var schema = new FormSchema
+            {
+                Fields = new List<FormField>
+                {
+                    new FormField { Key = "lines", Type = "DataGrid", Label = "Lines", Order = 1 }
+                }
+            };
+            var data = new Dictionary<string, object>
+            {
+                ["lines"] = new List<object>
+                {
+                    new Dictionary<string, object> { ["sku"] = "A1", ["qty"] = 2 },
+                    new Dictionary<string, object> { ["sku"] = "B2", ["qty"] = 5 }
+                }
+            };
+
+            var values = _normalizer.ExtractTypedValues(_normalizer.Normalize(1, schema, data)[0]);
+
+            Assert.Equal(2, values.JsonValues.Count);
+            Assert.All(values.JsonValues, v => Assert.DoesNotContain("System.Collections", v));
+            Assert.Contains("A1", values.JsonValues[0]);
+            Assert.Contains("\"qty\":2", values.JsonValues[0]);
+            Assert.Contains("B2", values.JsonValues[1]);
+        }
+
+        [Fact]
+        public void ExtractTypedValues_JsonListOfObjects_RoundTripsToJArray()
+        {
+            // Full round-trip: multi-row grid data (arriving as a CLR list) reconstructs into
+            // a JArray of objects with the original shape preserved.
+            // NOTE (known limitation, pinned as executable spec): a SINGLE-row genuine CLR list
+            // collapses to a JObject on read (CollapseJson treats count==1 as scalar). See the two
+            // named tests below: ..._JsonStringifiedArray_SingleRow_RoundTripsToJArray (browser path,
+            // safe) and ..._JsonListOfObjects_SingleRow_KnownLimitation_ReconstructsAsJObject
+            // (server-side CLR path, value survives / shape degrades). Robust fix = persisted
+            // IsCollection marker at the reader-switch milestone.
+            var schema = new FormSchema
+            {
+                Fields = new List<FormField>
+                {
+                    new FormField { Key = "lines", Type = "DataGrid", Label = "Lines", Order = 1 }
+                }
+            };
+            var data = new Dictionary<string, object>
+            {
+                ["lines"] = new List<object>
+                {
+                    new Dictionary<string, object> { ["sku"] = "A1", ["qty"] = 2 },
+                    new Dictionary<string, object> { ["sku"] = "B2", ["qty"] = 5 }
+                }
+            };
+            var write = _normalizer.Normalize(1, schema, data)[0];
+            var values = _normalizer.ExtractTypedValues(write);
+
+            var reconstructor = new SubmissionDataReconstructor();
+            var doc = new SubmissionDataDocument
+            {
+                Fields = new List<SubmissionFieldRecord>
+                {
+                    new SubmissionFieldRecord { SubmissionFieldId = 1, FieldKey = "lines", DataType = "json" }
+                },
+                FieldValues = new Dictionary<long, TypedFieldValues> { [1] = values }
+            };
+
+            var reconstructed = reconstructor.Reconstruct(doc);
+            var arr = Assert.IsType<JArray>(reconstructed["lines"]);
+            Assert.Equal(2, arr.Count);
+            Assert.Equal("A1", (string)arr[0]["sku"]);
+            Assert.Equal("B2", (string)arr[1]["sku"]);
+        }
+
+        [Fact]
+        public void ExtractTypedValues_JsonStringifiedArray_SingleRow_RoundTripsToJArray()
+        {
+            // BROWSER HAPPY PATH (the real submit path): the client sends a grid/repeater value
+            // as a STRINGIFIED array — one JSON string, brackets intact — even for a single row.
+            // SplitRawValue keeps it as one row; CollapseJson parses "[...]" -> JArray. Proven live
+            // on Oqtane :5126 submission 54 (line_items round-tripped as a 2-row JArray). This pins
+            // the single-row case so the shape is guaranteed regardless of row count for browsers.
+            var schema = new FormSchema
+            {
+                Fields = new List<FormField>
+                {
+                    new FormField { Key = "lines", Type = "DataGrid", Label = "Lines", Order = 1 }
+                }
+            };
+            var data = new Dictionary<string, object> { ["lines"] = "[{\"sku\":\"A1\",\"qty\":2}]" };
+            var values = _normalizer.ExtractTypedValues(_normalizer.Normalize(1, schema, data)[0]);
+            Assert.Single(values.JsonValues);
+
+            var doc = new SubmissionDataDocument
+            {
+                Fields = new List<SubmissionFieldRecord>
+                {
+                    new SubmissionFieldRecord { SubmissionFieldId = 1, FieldKey = "lines", DataType = "json" }
+                },
+                FieldValues = new Dictionary<long, TypedFieldValues> { [1] = values }
+            };
+            var arr = Assert.IsType<JArray>(new SubmissionDataReconstructor().Reconstruct(doc)["lines"]);
+            Assert.Single(arr);
+            Assert.Equal("A1", (string)arr[0]["sku"]);
+        }
+
+        [Fact]
+        public void ExtractTypedValues_JsonListOfObjects_SingleRow_KnownLimitation_ReconstructsAsJObject()
+        {
+            // KNOWN LIMITATION (executable spec, not a comment): a genuine CLR List with EXACTLY ONE
+            // complex row (a server-side/SDK submit shape — NOT the browser, which stringifies) is
+            // flattened to a single JSON row, and SubmissionDataReconstructor.CollapseJson treats
+            // count==1 as scalar -> returns a JObject, not a JArray. The VALUE survives; only the
+            // array wrapper is lost. Robust fix = persisted MF_SubmissionFields.IsCollection marker,
+            // planned to land with the typed-read reader-switch (see handoff). Flip this to JArray then.
+            var schema = new FormSchema
+            {
+                Fields = new List<FormField>
+                {
+                    new FormField { Key = "lines", Type = "DataGrid", Label = "Lines", Order = 1 }
+                }
+            };
+            var data = new Dictionary<string, object>
+            {
+                ["lines"] = new List<object> { new Dictionary<string, object> { ["sku"] = "A1", ["qty"] = 2 } }
+            };
+            var values = _normalizer.ExtractTypedValues(_normalizer.Normalize(1, schema, data)[0]);
+            Assert.Single(values.JsonValues);
+
+            var doc = new SubmissionDataDocument
+            {
+                Fields = new List<SubmissionFieldRecord>
+                {
+                    new SubmissionFieldRecord { SubmissionFieldId = 1, FieldKey = "lines", DataType = "json" }
+                },
+                FieldValues = new Dictionary<long, TypedFieldValues> { [1] = values }
+            };
+            var reconstructed = new SubmissionDataReconstructor().Reconstruct(doc)["lines"];
+            var obj = Assert.IsType<JObject>(reconstructed); // limitation: JObject, not JArray
+            Assert.Equal("A1", (string)obj["sku"]);          // value survives, only shape degrades
         }
 
         private sealed class TestLogService : ILogService

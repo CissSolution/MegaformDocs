@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Generic;
 using MegaForm.Core.Models;
+using MegaForm.Core.Services.TypedSubmission;
 using Newtonsoft.Json.Linq;
 
 namespace MegaForm.Core.Services
 {
     /// <summary>
-    /// Pure, host-agnostic extractor that turns a submission's File/PdfForm field
-    /// values into <see cref="FileInfo"/> rows for the <c>MF_Files</c> table.
+    /// Pure, host-agnostic extractor that turns a submission's File/FileUpload/PdfForm
+    /// field values into <see cref="FileInfo"/> rows for the <c>MF_Files</c> table.
+    /// File-like types are resolved via <see cref="TypedSubmission.SubmissionFieldTypeSemantics"/>.
     ///
     /// WHY: the upload endpoint (Oqtane <c>UploadFile</c> / DNN <c>UploadFileController</c>)
     /// writes the file to disk and returns a metadata object, but the SUBMISSION itself
@@ -27,11 +29,6 @@ namespace MegaForm.Core.Services
     /// </summary>
     public static class SubmissionFileMetaExtractor
     {
-        // Field types whose value carries uploaded-file metadata. Mirrors the
-        // UploadFile field-type whitelist (File + PdfForm).
-        private static readonly HashSet<string> FileFieldTypes =
-            new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "File", "PdfForm" };
-
         private static readonly string[] NameKeys =
             { "fileName", "FileName", "originalName", "OriginalName", "name", "Name" };
         private static readonly string[] PathKeys =
@@ -59,10 +56,20 @@ namespace MegaForm.Core.Services
             var rows = new List<FileInfo>();
             if (flattenedFields == null || data == null) return rows;
 
+            // [FileRowDedup v20260713] Builder-saved schemas can carry every field twice
+            // (legacy `fields` + `Fields` casing duplication), so the same File field —
+            // and therefore the same metadata entry — comes through this loop twice and
+            // MF_Files got two identical rows per upload. One stored path is one file:
+            // dedup on the full identity (fieldKey + path + name + size). Two genuinely
+            // different uploads always differ in StoredPath (unique temp name).
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
             foreach (var field in flattenedFields)
             {
                 if (field == null || string.IsNullOrWhiteSpace(field.Key)) continue;
-                if (!FileFieldTypes.Contains(field.Type ?? string.Empty)) continue;
+                // File / FileUpload / PdfForm — resolved via the shared semantics so aliases
+                // (FileUpload) get MF_Files rows too, instead of silently falling through.
+                if (!SubmissionFieldTypeSemantics.IsFileLike(field.Type)) continue;
                 if (!data.TryGetValue(field.Key, out var raw) || raw == null) continue;
 
                 var token = ToToken(raw);
@@ -71,7 +78,10 @@ namespace MegaForm.Core.Services
                 foreach (var entry in Enumerate(token))
                 {
                     var row = ToFileInfo(entry, field.Key, submissionId);
-                    if (row != null) rows.Add(row);
+                    if (row == null) continue;
+                    var identity = row.FieldKey + "|" + row.StoredPath + "|" + row.OriginalName + "|" + row.FileSizeBytes;
+                    if (!seen.Add(identity)) continue;
+                    rows.Add(row);
                 }
             }
 

@@ -22,7 +22,9 @@ namespace MegaForm.Core.Services.TypedSubmission
         public SubmissionDataType ResolveDataType(FormField field)
         {
             if (field == null) return SubmissionDataType.String;
-            var t = (field.Type ?? string.Empty).Trim();
+            // Canonicalize aliases first (FileUpload -> File, DateTimePicker -> Date) so a
+            // field never falls through to the JSON default just because of its spelling.
+            var t = SubmissionFieldTypeSemantics.Canonicalize(field.Type);
 
             switch (t.ToLowerInvariant())
             {
@@ -119,6 +121,12 @@ namespace MegaForm.Core.Services.TypedSubmission
                 object raw = null;
                 data?.TryGetValue(field.Key ?? string.Empty, out raw);
 
+                // Display-only widgets (DataRepeater, QRCode) render output but submit no
+                // value. When they carry nothing, skip them so typed storage isn't polluted
+                // with empty field / "null" JSON rows. Guarded on raw == null so we never
+                // silently drop data if a widget's collect() contract ever changes.
+                if (raw == null && SubmissionFieldTypeSemantics.IsDisplayOnly(field.Type)) continue;
+
                 var dataType = ResolveDataType(field);
                 var displayValue = ComputeDisplayValue(field, raw);
 
@@ -198,8 +206,10 @@ namespace MegaForm.Core.Services.TypedSubmission
                 default:
                     // Store the raw canonical JSON for the field. For multi-value JSON
                     // controls we keep one row per top-level item if it was a collection.
-                    var jsonParts = parts.Count > 0 ? parts : new List<string> { "null" };
-                    foreach (var p in jsonParts)
+                    // An EMPTY value writes no row (symmetric with the scalar branches): a
+                    // literal "null" row would reconstruct to the string "null" and show as
+                    // garbage in dashboards.
+                    foreach (var p in parts.Where(x => x != null))
                         values.JsonValues.Add(p);
                     break;
             }
@@ -271,18 +281,40 @@ namespace MegaForm.Core.Services.TypedSubmission
                 catch { }
             }
 
-            // IEnumerable (but not string or dictionary)
+            // IEnumerable (but not string or dictionary): one part per item. Complex items
+            // (repeater/grid rows arriving as CLR List<Dictionary>/POCOs — e.g. when Submit
+            // deserializes a JSON array into CLR types) MUST be serialized as JSON, never
+            // item.ToString() — that yields "System.Collections.Generic.Dictionary`2..." and
+            // destroys the shape. Primitives keep their invariant string form (checkbox
+            // groups, multi-selects).
             if (raw is IEnumerable en && !(raw is string))
             {
                 var list = new List<string>();
                 foreach (var item in en)
-                    list.Add(item?.ToString());
+                    list.Add(StringifyItem(item));
                 return list.Where(x => x != null).ToList();
             }
 
             var str = raw.ToString();
             if (string.IsNullOrWhiteSpace(str)) return new List<string>();
             return new List<string> { str };
+        }
+
+        // Renders one enumerated value: primitives -> invariant string; complex objects ->
+        // compact JSON (so repeater/grid rows survive round-trip). See SplitRawValue.
+        private static string StringifyItem(object item)
+        {
+            if (item == null) return null;
+            if (item is string s) return s;
+            if (item is JToken jt) return jt.ToString(Formatting.None);
+
+            var type = item.GetType();
+            if (type.IsPrimitive || type.IsEnum
+                || item is decimal || item is DateTime || item is DateTimeOffset || item is Guid)
+                return Convert.ToString(item, CultureInfo.InvariantCulture);
+
+            try { return JsonConvert.SerializeObject(item, Formatting.None); }
+            catch { return item.ToString(); }
         }
 
         private static string ComputeDisplayValue(FormField field, object raw)

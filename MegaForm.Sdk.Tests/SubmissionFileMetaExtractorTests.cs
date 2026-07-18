@@ -165,6 +165,21 @@ namespace MegaForm.Sdk.Tests
         }
 
         [Fact]
+        public void FileUpload_alias_is_treated_as_file_field()
+        {
+            // ProposalStarterService + AI emit Type="FileUpload" (the plugin's canonical type
+            // is "File"). Before the shared semantics, this alias fell through and produced no
+            // MF_Files row, so the SDK Files API returned nothing for proposal-pack uploads.
+            var fields = new List<FormField> { FileField("proposal_docs", "FileUpload") };
+            var data = new Dictionary<string, object> { ["proposal_docs"] = ResumeMetaJson };
+
+            var row = Assert.Single(SubmissionFileMetaExtractor.Extract(fields, data, 7));
+            Assert.Equal("proposal_docs", row.FieldKey);
+            Assert.Equal("resume.pdf", row.OriginalName);
+            Assert.Equal("form-7/field-cv/abc.pdf", row.StoredPath);
+        }
+
+        [Fact]
         public void Null_inputs_return_empty_never_throw()
         {
             Assert.Empty(SubmissionFileMetaExtractor.Extract(null, new Dictionary<string, object>(), 1));
