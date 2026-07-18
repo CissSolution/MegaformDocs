@@ -67,16 +67,19 @@ Ke tiep: `Docs/REQUEST_CODEX_AUDIT_TYPED_STORAGE_WIDGET_ROUND4_2026-07-18.md` (R
 - **Ly do defer:** doi classification (String<->Json) cho type dang dung = regression risk + can judgment ve value-shape (phone e164 scalar vs JSON object). Registry da widen phan AN TOAN qua B1 (renderers + upload endpoints).
 - Plan: DESIGN JSON key `registry-widening`.
 
-### B3 con lai - Packaging guard (P0-release)
-- **CHUA lam:** version single-source (drift 5-way: nuspec 1.7.107 / ModuleInfo 1.7.108 / Server+Client csproj 1.7.15 / Package 1.7.22 / Core 1.5.0), clean-build pack, kill no-build `release.cmd`, PackValidator console (MetadataLoadContext).
-- **Ly do defer:** doi AssemblyVersion Core 1.5.0->1.7.108 se destabilize :5126 dang chay; khong test full pack an toan khi owner vang.
-- Plan: DESIGN JSON key `r3j-packaging-guard`. LUU Y correction C1: DLL-mismatch = TypeLoadException 500 luc DI construct (KHONG phai MissingMethodException nuot).
+### B3 con lai - Packaging guard (P0-release) - DA LAM + TESTED (commit 0fe5234)
+- `tools/validate-pack.ps1` (MOI): unpack nupkg, FAIL neu (a) thieu DLL bat ky lib\netX; (b) Core.dll thieu ISubmissionDataStore.SupportsDataJsonCollapse (byte-scan #Strings heap -> stale pre-typed Core rot); (c) nupkg version != ModuleInfo.Version; (d) built DLL cu hon source .cs cua project do (bin fs mtime, KHONG dung ZIP DOS-time). Runtime-independent (khong load assembly).
+- Version single-source: nuspec `<version>$version$</version>`; `release.cmd` + `pack.cmd` doc VER tu ModuleInfo -> `-Version %VER%` (het drift 5-way). Ca 2 script chay validator lam GATE -> xoa nupkg + abort neu fail.
+- **KHONG doi AssemblyVersion** (tranh destabilize) - validator + nuspec-align du chan trap.
+- **TEST:** validator FAIL 1.7.107 (thieu member + drift + stale); release.cmd end-to-end PASS pack 1.7.108 (`[PACK-OK]`). nupkg gitignored.
+- Codex review: (a) byte-scan 'SupportsDataJsonCollapse' co du tin cay khong (false neg neu member doi ten?); (b) staleness bin-mtime project-scoped co bo sot TFM net9 khong (chi check net10); (c) nen them check Server-referenced-Core-version == packed Core (design goc muon, minh bo vi PS5.1 khong reflection-load net10 duoc).
 
 ### B4 - Single-row IsCollection (P1-deferred)
 - Defer den reader-switch milestone (dung design). Option B da pin 2 test.
 
-### B5 - DNN smoke (BLOCKED)
-- `dnn10322_megaclean.ai` timeout, site khong chay. DNN = parallel-write twin dung chung Core normalizer/extractor (fix chay trong code) nhung chua live-verify.
+### B5 - DNN smoke (site UP + build-verified, runtime smoke CON LAI)
+- `dnn10322_megaclean.ai` THUC RA UP (IIS `DNN10322_MegaClean` Started; timeout truoc = cold-start ~2min). **MegaForm.DNN net472 BUILD-CLEAN voi B1** (3-platform twin compile OK). Deployed DNN Core.dll = 12:00AM (prior twin, CHUA co B1).
+- Runtime smoke CON LAI: deploy net472 Core+DNN DLL + renderer JS -> recycle -> seed DNN FileUpload form -> browser submit -> verify DNN parallel-write typed rows + MF_Files. Heavy + keo NamedConnections uncommitted + disrupt cold IIS -> defer. Logic = shared Core da proven tren Oqtane.
 
 ### B6 - Round 3 P0 R3-A..E (lon, da phien)
 - R3-A Umbraco/Web typed store, R3-B reader facade + direct-insert bypass, R3-C typed update API, R3-D SDK Data/Fields, R3-E backfill wiring. Sequence trong DESIGN JSON.
