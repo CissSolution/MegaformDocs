@@ -1709,8 +1709,8 @@ namespace MegaForm.Oqtane.Server.Controllers
             var uploadField = MegaFormUtils.FlattenFields(schema?.Fields ?? new List<FormField>())
                 .FirstOrDefault(f => f != null
                     && string.Equals(f.Key, fieldKey, StringComparison.OrdinalIgnoreCase)
-                    && (string.Equals(f.Type, "File", StringComparison.OrdinalIgnoreCase)
-                        || string.Equals(f.Type, "PdfForm", StringComparison.OrdinalIgnoreCase)));
+                    // File / FileUpload / PdfForm via shared semantics (FileUpload alias included).
+                    && MegaForm.Core.Services.TypedSubmission.SubmissionFieldTypeSemantics.IsFileLike(f.Type));
             if (uploadField == null)
                 return BadRequest(new { error = "Invalid file field" });
 

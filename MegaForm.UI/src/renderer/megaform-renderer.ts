@@ -16,6 +16,17 @@ function trTop(key: string, fallback?: string, params?: Record<string, any>): st
   return raw;
 }
 
+// Alias field type -> canonical spelling. Parity with Core SubmissionFieldTypeSemantics
+// and renderer/field-type-semantics.ts. This bundle is a standalone IIFE (no ES imports),
+// so the map is inlined; keep it in sync with those two.
+function canonFieldType(t: any): string {
+  var s = String(t == null ? '' : t).trim();
+  var l = s.toLowerCase();
+  if (l === 'fileupload') return 'File';
+  if (l === 'datetimepicker') return 'Date';
+  return s;
+}
+
 function firstDefinedValidationExtra(a?: any, b?: any, c?: any, d?: any, e?: any, f?: any): any {
   for (var i = 0; i < arguments.length; i++) {
     if (arguments[i] !== undefined && arguments[i] !== null) return arguments[i];
@@ -1905,7 +1916,7 @@ function renderStandardFields(container: HTMLElement): void {
     var ro   = field.readOnly ? ' readonly disabled' : '';
     var req  = field.required  ? ' required' : '';
 
-    switch (field.type) {
+    switch (canonFieldType(field.type)) {
       case 'Text': case 'Phone': case 'Url': {
         var inputType = field.type === 'Phone' ? 'tel' : field.type === 'Url' ? 'url' : 'text';
         return '<input type="' + inputType + '" class="mf-input" id="' + id + '" name="' + name + '" value="' + esc(val) + '" placeholder="' + esc(ph) + '"' + ro + req + '>';

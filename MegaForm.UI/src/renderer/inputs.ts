@@ -6,6 +6,7 @@ import type { FormField } from '@core/types';
 import { displayText, esc, compositePartsFor, compositePartLabel, compositeCellStyle, scalarPresetBaseType } from './helpers';
 import { renderCountryPickerControl } from './country-picker';
 import { evaluateCondition } from './conditional';
+import { canonicalizeFieldType } from './field-type-semantics';
 
 export const RENDERER_SIGNATURE_SIZING_BADGE = 'RendererSignatureSizing v20260423-02';
 
@@ -487,7 +488,7 @@ export function renderInput(field: FormField, formId: number, formData: Record<s
     return ` style="height:${esc(norm)};min-height:${esc(norm)};"`;
   })();
 
-  switch (field.type) {
+  switch (canonicalizeFieldType(field.type)) {
     case 'Text':
     case 'Phone':
     case 'Url': {

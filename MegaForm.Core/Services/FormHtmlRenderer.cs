@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using MegaForm.Core.Models;
+using MegaForm.Core.Services.TypedSubmission;
 // Disambiguate: a different FieldOption also exists in MegaForm.Core.Services,
 // and the namespace member shadows a file-level `FieldOption` alias — use a
 // uniquely-named alias so every reference binds to the Models type.
@@ -95,7 +96,9 @@ namespace MegaForm.Core.Services
             foreach (var f in fields)
             {
                 if (f == null) continue;
-                var type = f.Type ?? "Text";
+                // Canonicalize aliases (FileUpload->File, DateTimePicker->Date) so an alias
+                // is recognized as a NATIVE type and does not force the JS-rebuild path.
+                var type = SubmissionFieldTypeSemantics.Canonicalize(f.Type ?? "Text");
                 if (string.Equals(type, "Row", StringComparison.OrdinalIgnoreCase))
                 {
                     foreach (var col in GetRowColumns(f))
@@ -560,7 +563,9 @@ namespace MegaForm.Core.Services
             var ph = tr.Placeholder ?? string.Empty;
             var ro = field.ReadOnly ? " readonly disabled" : string.Empty;
             var req = field.Required ? " required" : string.Empty;
-            var type = field.Type ?? "Text";
+            // Canonicalize aliases so e.g. FileUpload renders via case "File" (dropzone),
+            // not the widget-host default. Type is a server-side schema value, not client input.
+            var type = SubmissionFieldTypeSemantics.Canonicalize(field.Type ?? "Text");
 
             switch (type)
             {
