@@ -19,11 +19,17 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $MODULE_NAME  = 'MegaForm'
-# [DNN sync 2026-06-22] Bumped from stale 01.05.00 → 01.06.32 to match the manifest + latest
-# SqlDataProvider scripts. Keep this in lockstep with MegaForm.dnn <package version="...">.
-$VERSION      = '01.07.106'
 $PROJECT_DIR  = Split-Path -Parent $MyInvocation.MyCommand.Path
 $SOLUTION_DIR = Split-Path -Parent $PROJECT_DIR
+
+# [DNN version single-source 2026-07-18] Derive the package version from the manifest so the
+# build script and MegaForm.dnn can NEVER drift. They HAD drifted: this script hard-coded
+# 01.07.106 while MegaForm.dnn declares 01.07.108, so the generated zip name lied about its
+# version and shipped an install artifact built before 01.06.39.SqlDataProvider existed.
+$MANIFEST     = Join-Path $PROJECT_DIR 'MegaForm.dnn'
+$verMatch     = Select-String -Path $MANIFEST -Pattern '<package name="MegaForm"[^>]*version="([0-9.]+)"'
+if (-not $verMatch) { throw "Khong doc duoc <package version> tu MegaForm.dnn" }
+$VERSION      = $verMatch.Matches[0].Groups[1].Value
 $STAGING      = Join-Path $PROJECT_DIR '_package'
 $RESOURCES    = Join-Path $STAGING '_resources'
 $OUTPUT_DIR   = Join-Path $PROJECT_DIR 'Install'
