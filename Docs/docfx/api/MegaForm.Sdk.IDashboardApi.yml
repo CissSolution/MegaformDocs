@@ -1,0 +1,241 @@
+### YamlMime:ManagedReference
+items:
+- uid: MegaForm.Sdk.IDashboardApi
+  commentId: T:MegaForm.Sdk.IDashboardApi
+  id: IDashboardApi
+  parent: MegaForm.Sdk
+  children:
+  - MegaForm.Sdk.IDashboardApi.GetOverviewAsync(MegaForm.Sdk.DashboardQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  langs:
+  - csharp
+  - vb
+  name: IDashboardApi
+  nameWithType: IDashboardApi
+  fullName: MegaForm.Sdk.IDashboardApi
+  type: Interface
+  source:
+    id: IDashboardApi
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 108
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Read-only dashboard summaries for forms and submissions in the current host.
+  example: []
+  syntax:
+    content: public interface IDashboardApi
+    content.vb: Public Interface IDashboardApi
+  derivedClasses:
+  - MegaForm.Sdk.MegaFormClient
+- uid: MegaForm.Sdk.IDashboardApi.GetOverviewAsync(MegaForm.Sdk.DashboardQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  commentId: M:MegaForm.Sdk.IDashboardApi.GetOverviewAsync(MegaForm.Sdk.DashboardQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  id: GetOverviewAsync(MegaForm.Sdk.DashboardQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  parent: MegaForm.Sdk.IDashboardApi
+  langs:
+  - csharp
+  - vb
+  name: GetOverviewAsync(DashboardQuery?, MegaFormScope?, CancellationToken)
+  nameWithType: IDashboardApi.GetOverviewAsync(DashboardQuery?, MegaFormScope?, CancellationToken)
+  fullName: MegaForm.Sdk.IDashboardApi.GetOverviewAsync(MegaForm.Sdk.DashboardQuery?, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  type: Method
+  source:
+    id: GetOverviewAsync
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 111
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Return per-form counts and recent-submission totals for the current portal.
+  example: []
+  syntax:
+    content: Task<DashboardOverviewDto> GetOverviewAsync(DashboardQuery? query = null, MegaFormScope? scope = null, CancellationToken cancellationToken = default)
+    parameters:
+    - id: query
+      type: MegaForm.Sdk.DashboardQuery
+    - id: scope
+      type: MegaForm.Sdk.MegaFormScope
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task{MegaForm.Sdk.DashboardOverviewDto}
+    content.vb: Function GetOverviewAsync(query As DashboardQuery = Nothing, scope As MegaFormScope = Nothing, cancellationToken As CancellationToken = Nothing) As Task(Of DashboardOverviewDto)
+  overload: MegaForm.Sdk.IDashboardApi.GetOverviewAsync*
+  nameWithType.vb: IDashboardApi.GetOverviewAsync(DashboardQuery, MegaFormScope, CancellationToken)
+  fullName.vb: MegaForm.Sdk.IDashboardApi.GetOverviewAsync(MegaForm.Sdk.DashboardQuery, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  name.vb: GetOverviewAsync(DashboardQuery, MegaFormScope, CancellationToken)
+references:
+- uid: MegaForm.Sdk
+  commentId: N:MegaForm.Sdk
+  href: MegaForm.html
+  name: MegaForm.Sdk
+  nameWithType: MegaForm.Sdk
+  fullName: MegaForm.Sdk
+  spec.csharp:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+  spec.vb:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+- uid: MegaForm.Sdk.IDashboardApi.GetOverviewAsync*
+  commentId: Overload:MegaForm.Sdk.IDashboardApi.GetOverviewAsync
+  href: MegaForm.Sdk.IDashboardApi.html#MegaForm_Sdk_IDashboardApi_GetOverviewAsync_MegaForm_Sdk_DashboardQuery_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  name: GetOverviewAsync
+  nameWithType: IDashboardApi.GetOverviewAsync
+  fullName: MegaForm.Sdk.IDashboardApi.GetOverviewAsync
+- uid: MegaForm.Sdk.DashboardQuery
+  commentId: T:MegaForm.Sdk.DashboardQuery
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.DashboardQuery.html
+  name: DashboardQuery
+  nameWithType: DashboardQuery
+  fullName: MegaForm.Sdk.DashboardQuery
+- uid: MegaForm.Sdk.MegaFormScope
+  commentId: T:MegaForm.Sdk.MegaFormScope
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.MegaFormScope.html
+  name: MegaFormScope
+  nameWithType: MegaFormScope
+  fullName: MegaForm.Sdk.MegaFormScope
+- uid: System.Threading.CancellationToken
+  commentId: T:System.Threading.CancellationToken
+  parent: System.Threading
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken
+  name: CancellationToken
+  nameWithType: CancellationToken
+  fullName: System.Threading.CancellationToken
+- uid: System.Threading.Tasks.Task{MegaForm.Sdk.DashboardOverviewDto}
+  commentId: T:System.Threading.Tasks.Task{MegaForm.Sdk.DashboardOverviewDto}
+  parent: System.Threading.Tasks
+  definition: System.Threading.Tasks.Task`1
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  name: Task<DashboardOverviewDto>
+  nameWithType: Task<DashboardOverviewDto>
+  fullName: System.Threading.Tasks.Task<MegaForm.Sdk.DashboardOverviewDto>
+  nameWithType.vb: Task(Of DashboardOverviewDto)
+  fullName.vb: System.Threading.Tasks.Task(Of MegaForm.Sdk.DashboardOverviewDto)
+  name.vb: Task(Of DashboardOverviewDto)
+  spec.csharp:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: <
+  - uid: MegaForm.Sdk.DashboardOverviewDto
+    name: DashboardOverviewDto
+    href: MegaForm.Sdk.DashboardOverviewDto.html
+  - name: '>'
+  spec.vb:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: MegaForm.Sdk.DashboardOverviewDto
+    name: DashboardOverviewDto
+    href: MegaForm.Sdk.DashboardOverviewDto.html
+  - name: )
+- uid: System.Threading
+  commentId: N:System.Threading
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Threading
+  nameWithType: System.Threading
+  fullName: System.Threading
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+- uid: System.Threading.Tasks.Task`1
+  commentId: T:System.Threading.Tasks.Task`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  name: Task<TResult>
+  nameWithType: Task<TResult>
+  fullName: System.Threading.Tasks.Task<TResult>
+  nameWithType.vb: Task(Of TResult)
+  fullName.vb: System.Threading.Tasks.Task(Of TResult)
+  name.vb: Task(Of TResult)
+  spec.csharp:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: <
+  - name: TResult
+  - name: '>'
+  spec.vb:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: TResult
+  - name: )
+- uid: System.Threading.Tasks
+  commentId: N:System.Threading.Tasks
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Threading.Tasks
+  nameWithType: System.Threading.Tasks
+  fullName: System.Threading.Tasks
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+  - name: .
+  - uid: System.Threading.Tasks
+    name: Tasks
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+  - name: .
+  - uid: System.Threading.Tasks
+    name: Tasks
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks

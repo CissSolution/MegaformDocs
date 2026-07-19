@@ -18,7 +18,7 @@ items:
   type: Class
   source:
     id: MegaFormSdk
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\MegaFormSdk.cs
+    path: E:\_sdkwt\MegaForm.Sdk\MegaFormSdk.cs
     startLine: 21
   assemblies:
   - MegaForm.Sdk
@@ -67,7 +67,7 @@ items:
   type: Property
   source:
     id: IsInitialized
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\MegaFormSdk.cs
+    path: E:\_sdkwt\MegaForm.Sdk\MegaFormSdk.cs
     startLine: 26
   assemblies:
   - MegaForm.Sdk
@@ -94,7 +94,7 @@ items:
   type: Method
   source:
     id: Initialize
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\MegaFormSdk.cs
+    path: E:\_sdkwt\MegaForm.Sdk\MegaFormSdk.cs
     startLine: 29
   assemblies:
   - MegaForm.Sdk
@@ -121,7 +121,7 @@ items:
   type: Method
   source:
     id: RunAsync
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\MegaFormSdk.cs
+    path: E:\_sdkwt\MegaForm.Sdk\MegaFormSdk.cs
     startLine: 35
   assemblies:
   - MegaForm.Sdk
@@ -155,7 +155,7 @@ items:
   type: Method
   source:
     id: RunAsync
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\MegaFormSdk.cs
+    path: E:\_sdkwt\MegaForm.Sdk\MegaFormSdk.cs
     startLine: 46
   assemblies:
   - MegaForm.Sdk

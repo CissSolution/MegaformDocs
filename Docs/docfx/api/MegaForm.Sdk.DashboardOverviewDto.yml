@@ -1,37 +1,36 @@
 ### YamlMime:ManagedReference
 items:
-- uid: MegaForm.Sdk.FormSchemaInfo
-  commentId: T:MegaForm.Sdk.FormSchemaInfo
-  id: FormSchemaInfo
+- uid: MegaForm.Sdk.DashboardOverviewDto
+  commentId: T:MegaForm.Sdk.DashboardOverviewDto
+  id: DashboardOverviewDto
   parent: MegaForm.Sdk
   children:
-  - MegaForm.Sdk.FormSchemaInfo.Fields
+  - MegaForm.Sdk.DashboardOverviewDto.Days
+  - MegaForm.Sdk.DashboardOverviewDto.Forms
+  - MegaForm.Sdk.DashboardOverviewDto.GeneratedAtUtc
+  - MegaForm.Sdk.DashboardOverviewDto.PortalId
+  - MegaForm.Sdk.DashboardOverviewDto.RecentSubmissions
+  - MegaForm.Sdk.DashboardOverviewDto.TotalForms
+  - MegaForm.Sdk.DashboardOverviewDto.TotalSubmissions
   langs:
   - csharp
   - vb
-  name: FormSchemaInfo
-  nameWithType: FormSchemaInfo
-  fullName: MegaForm.Sdk.FormSchemaInfo
+  name: DashboardOverviewDto
+  nameWithType: DashboardOverviewDto
+  fullName: MegaForm.Sdk.DashboardOverviewDto
   type: Class
   source:
-    id: FormSchemaInfo
+    id: DashboardOverviewDto
     path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
-    startLine: 517
+    startLine: 274
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: >-
-    A form's schema parsed into typed, read-only field metadata (decoupled from the
-
-    internal storage models). Returned by <code>ISchemaApi.Parse</code>. Row/column layout is
-
-    flattened so <xref href="MegaForm.Sdk.FormSchemaInfo.Fields" data-throw-if-not-resolved="false"></xref> is the same ordered, input-field list the server
-
-    validates against.
+  summary: Dashboard-level totals and per-form summaries.
   example: []
   syntax:
-    content: public sealed class FormSchemaInfo
-    content.vb: Public NotInheritable Class FormSchemaInfo
+    content: public sealed class DashboardOverviewDto
+    content.vb: Public NotInheritable Class DashboardOverviewDto
   inheritance:
   - System.Object
   inheritedMembers:
@@ -41,40 +40,182 @@ items:
   - System.Object.GetType
   - System.Object.ReferenceEquals(System.Object,System.Object)
   - System.Object.ToString
-- uid: MegaForm.Sdk.FormSchemaInfo.Fields
-  commentId: P:MegaForm.Sdk.FormSchemaInfo.Fields
-  id: Fields
-  parent: MegaForm.Sdk.FormSchemaInfo
+- uid: MegaForm.Sdk.DashboardOverviewDto.PortalId
+  commentId: P:MegaForm.Sdk.DashboardOverviewDto.PortalId
+  id: PortalId
+  parent: MegaForm.Sdk.DashboardOverviewDto
   langs:
   - csharp
   - vb
-  name: Fields
-  nameWithType: FormSchemaInfo.Fields
-  fullName: MegaForm.Sdk.FormSchemaInfo.Fields
+  name: PortalId
+  nameWithType: DashboardOverviewDto.PortalId
+  fullName: MegaForm.Sdk.DashboardOverviewDto.PortalId
   type: Property
   source:
-    id: Fields
+    id: PortalId
     path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
-    startLine: 520
+    startLine: 276
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: The form's fields, flattened (Row containers expanded into their children) and ordered.
-  example: []
   syntax:
-    content: public IReadOnlyList<FormFieldInfo> Fields { get; set; }
+    content: public int PortalId { get; set; }
     parameters: []
     return:
-      type: System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.FormFieldInfo}
-    content.vb: Public Property Fields As IReadOnlyList(Of FormFieldInfo)
-  overload: MegaForm.Sdk.FormSchemaInfo.Fields*
+      type: System.Int32
+    content.vb: Public Property PortalId As Integer
+  overload: MegaForm.Sdk.DashboardOverviewDto.PortalId*
+- uid: MegaForm.Sdk.DashboardOverviewDto.Days
+  commentId: P:MegaForm.Sdk.DashboardOverviewDto.Days
+  id: Days
+  parent: MegaForm.Sdk.DashboardOverviewDto
+  langs:
+  - csharp
+  - vb
+  name: Days
+  nameWithType: DashboardOverviewDto.Days
+  fullName: MegaForm.Sdk.DashboardOverviewDto.Days
+  type: Property
+  source:
+    id: Days
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 277
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public int Days { get; set; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property Days As Integer
+  overload: MegaForm.Sdk.DashboardOverviewDto.Days*
+- uid: MegaForm.Sdk.DashboardOverviewDto.GeneratedAtUtc
+  commentId: P:MegaForm.Sdk.DashboardOverviewDto.GeneratedAtUtc
+  id: GeneratedAtUtc
+  parent: MegaForm.Sdk.DashboardOverviewDto
+  langs:
+  - csharp
+  - vb
+  name: GeneratedAtUtc
+  nameWithType: DashboardOverviewDto.GeneratedAtUtc
+  fullName: MegaForm.Sdk.DashboardOverviewDto.GeneratedAtUtc
+  type: Property
+  source:
+    id: GeneratedAtUtc
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 278
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public DateTime GeneratedAtUtc { get; set; }
+    parameters: []
+    return:
+      type: System.DateTime
+    content.vb: Public Property GeneratedAtUtc As Date
+  overload: MegaForm.Sdk.DashboardOverviewDto.GeneratedAtUtc*
+- uid: MegaForm.Sdk.DashboardOverviewDto.TotalForms
+  commentId: P:MegaForm.Sdk.DashboardOverviewDto.TotalForms
+  id: TotalForms
+  parent: MegaForm.Sdk.DashboardOverviewDto
+  langs:
+  - csharp
+  - vb
+  name: TotalForms
+  nameWithType: DashboardOverviewDto.TotalForms
+  fullName: MegaForm.Sdk.DashboardOverviewDto.TotalForms
+  type: Property
+  source:
+    id: TotalForms
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 279
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public int TotalForms { get; set; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property TotalForms As Integer
+  overload: MegaForm.Sdk.DashboardOverviewDto.TotalForms*
+- uid: MegaForm.Sdk.DashboardOverviewDto.TotalSubmissions
+  commentId: P:MegaForm.Sdk.DashboardOverviewDto.TotalSubmissions
+  id: TotalSubmissions
+  parent: MegaForm.Sdk.DashboardOverviewDto
+  langs:
+  - csharp
+  - vb
+  name: TotalSubmissions
+  nameWithType: DashboardOverviewDto.TotalSubmissions
+  fullName: MegaForm.Sdk.DashboardOverviewDto.TotalSubmissions
+  type: Property
+  source:
+    id: TotalSubmissions
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 280
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public int TotalSubmissions { get; set; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property TotalSubmissions As Integer
+  overload: MegaForm.Sdk.DashboardOverviewDto.TotalSubmissions*
+- uid: MegaForm.Sdk.DashboardOverviewDto.RecentSubmissions
+  commentId: P:MegaForm.Sdk.DashboardOverviewDto.RecentSubmissions
+  id: RecentSubmissions
+  parent: MegaForm.Sdk.DashboardOverviewDto
+  langs:
+  - csharp
+  - vb
+  name: RecentSubmissions
+  nameWithType: DashboardOverviewDto.RecentSubmissions
+  fullName: MegaForm.Sdk.DashboardOverviewDto.RecentSubmissions
+  type: Property
+  source:
+    id: RecentSubmissions
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 281
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public int RecentSubmissions { get; set; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property RecentSubmissions As Integer
+  overload: MegaForm.Sdk.DashboardOverviewDto.RecentSubmissions*
+- uid: MegaForm.Sdk.DashboardOverviewDto.Forms
+  commentId: P:MegaForm.Sdk.DashboardOverviewDto.Forms
+  id: Forms
+  parent: MegaForm.Sdk.DashboardOverviewDto
+  langs:
+  - csharp
+  - vb
+  name: Forms
+  nameWithType: DashboardOverviewDto.Forms
+  fullName: MegaForm.Sdk.DashboardOverviewDto.Forms
+  type: Property
+  source:
+    id: Forms
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 282
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public IReadOnlyList<DashboardFormSummaryDto> Forms { get; set; }
+    parameters: []
+    return:
+      type: System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.DashboardFormSummaryDto}
+    content.vb: Public Property Forms As IReadOnlyList(Of DashboardFormSummaryDto)
+  overload: MegaForm.Sdk.DashboardOverviewDto.Forms*
 references:
-- uid: MegaForm.Sdk.FormSchemaInfo.Fields
-  commentId: P:MegaForm.Sdk.FormSchemaInfo.Fields
-  href: MegaForm.Sdk.FormSchemaInfo.html#MegaForm_Sdk_FormSchemaInfo_Fields
-  name: Fields
-  nameWithType: FormSchemaInfo.Fields
-  fullName: MegaForm.Sdk.FormSchemaInfo.Fields
 - uid: MegaForm.Sdk
   commentId: N:MegaForm.Sdk
   href: MegaForm.html
@@ -310,32 +451,90 @@ references:
   name: System
   nameWithType: System
   fullName: System
-- uid: MegaForm.Sdk.FormSchemaInfo.Fields*
-  commentId: Overload:MegaForm.Sdk.FormSchemaInfo.Fields
-  href: MegaForm.Sdk.FormSchemaInfo.html#MegaForm_Sdk_FormSchemaInfo_Fields
-  name: Fields
-  nameWithType: FormSchemaInfo.Fields
-  fullName: MegaForm.Sdk.FormSchemaInfo.Fields
-- uid: System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.FormFieldInfo}
-  commentId: T:System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.FormFieldInfo}
+- uid: MegaForm.Sdk.DashboardOverviewDto.PortalId*
+  commentId: Overload:MegaForm.Sdk.DashboardOverviewDto.PortalId
+  href: MegaForm.Sdk.DashboardOverviewDto.html#MegaForm_Sdk_DashboardOverviewDto_PortalId
+  name: PortalId
+  nameWithType: DashboardOverviewDto.PortalId
+  fullName: MegaForm.Sdk.DashboardOverviewDto.PortalId
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: MegaForm.Sdk.DashboardOverviewDto.Days*
+  commentId: Overload:MegaForm.Sdk.DashboardOverviewDto.Days
+  href: MegaForm.Sdk.DashboardOverviewDto.html#MegaForm_Sdk_DashboardOverviewDto_Days
+  name: Days
+  nameWithType: DashboardOverviewDto.Days
+  fullName: MegaForm.Sdk.DashboardOverviewDto.Days
+- uid: MegaForm.Sdk.DashboardOverviewDto.GeneratedAtUtc*
+  commentId: Overload:MegaForm.Sdk.DashboardOverviewDto.GeneratedAtUtc
+  href: MegaForm.Sdk.DashboardOverviewDto.html#MegaForm_Sdk_DashboardOverviewDto_GeneratedAtUtc
+  name: GeneratedAtUtc
+  nameWithType: DashboardOverviewDto.GeneratedAtUtc
+  fullName: MegaForm.Sdk.DashboardOverviewDto.GeneratedAtUtc
+- uid: System.DateTime
+  commentId: T:System.DateTime
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.datetime
+  name: DateTime
+  nameWithType: DateTime
+  fullName: System.DateTime
+  nameWithType.vb: Date
+  fullName.vb: Date
+  name.vb: Date
+- uid: MegaForm.Sdk.DashboardOverviewDto.TotalForms*
+  commentId: Overload:MegaForm.Sdk.DashboardOverviewDto.TotalForms
+  href: MegaForm.Sdk.DashboardOverviewDto.html#MegaForm_Sdk_DashboardOverviewDto_TotalForms
+  name: TotalForms
+  nameWithType: DashboardOverviewDto.TotalForms
+  fullName: MegaForm.Sdk.DashboardOverviewDto.TotalForms
+- uid: MegaForm.Sdk.DashboardOverviewDto.TotalSubmissions*
+  commentId: Overload:MegaForm.Sdk.DashboardOverviewDto.TotalSubmissions
+  href: MegaForm.Sdk.DashboardOverviewDto.html#MegaForm_Sdk_DashboardOverviewDto_TotalSubmissions
+  name: TotalSubmissions
+  nameWithType: DashboardOverviewDto.TotalSubmissions
+  fullName: MegaForm.Sdk.DashboardOverviewDto.TotalSubmissions
+- uid: MegaForm.Sdk.DashboardOverviewDto.RecentSubmissions*
+  commentId: Overload:MegaForm.Sdk.DashboardOverviewDto.RecentSubmissions
+  href: MegaForm.Sdk.DashboardOverviewDto.html#MegaForm_Sdk_DashboardOverviewDto_RecentSubmissions
+  name: RecentSubmissions
+  nameWithType: DashboardOverviewDto.RecentSubmissions
+  fullName: MegaForm.Sdk.DashboardOverviewDto.RecentSubmissions
+- uid: MegaForm.Sdk.DashboardOverviewDto.Forms*
+  commentId: Overload:MegaForm.Sdk.DashboardOverviewDto.Forms
+  href: MegaForm.Sdk.DashboardOverviewDto.html#MegaForm_Sdk_DashboardOverviewDto_Forms
+  name: Forms
+  nameWithType: DashboardOverviewDto.Forms
+  fullName: MegaForm.Sdk.DashboardOverviewDto.Forms
+- uid: System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.DashboardFormSummaryDto}
+  commentId: T:System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.DashboardFormSummaryDto}
   parent: System.Collections.Generic
   definition: System.Collections.Generic.IReadOnlyList`1
   href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1
-  name: IReadOnlyList<FormFieldInfo>
-  nameWithType: IReadOnlyList<FormFieldInfo>
-  fullName: System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.FormFieldInfo>
-  nameWithType.vb: IReadOnlyList(Of FormFieldInfo)
-  fullName.vb: System.Collections.Generic.IReadOnlyList(Of MegaForm.Sdk.FormFieldInfo)
-  name.vb: IReadOnlyList(Of FormFieldInfo)
+  name: IReadOnlyList<DashboardFormSummaryDto>
+  nameWithType: IReadOnlyList<DashboardFormSummaryDto>
+  fullName: System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.DashboardFormSummaryDto>
+  nameWithType.vb: IReadOnlyList(Of DashboardFormSummaryDto)
+  fullName.vb: System.Collections.Generic.IReadOnlyList(Of MegaForm.Sdk.DashboardFormSummaryDto)
+  name.vb: IReadOnlyList(Of DashboardFormSummaryDto)
   spec.csharp:
   - uid: System.Collections.Generic.IReadOnlyList`1
     name: IReadOnlyList
     isExternal: true
     href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1
   - name: <
-  - uid: MegaForm.Sdk.FormFieldInfo
-    name: FormFieldInfo
-    href: MegaForm.Sdk.FormFieldInfo.html
+  - uid: MegaForm.Sdk.DashboardFormSummaryDto
+    name: DashboardFormSummaryDto
+    href: MegaForm.Sdk.DashboardFormSummaryDto.html
   - name: '>'
   spec.vb:
   - uid: System.Collections.Generic.IReadOnlyList`1
@@ -345,9 +544,9 @@ references:
   - name: (
   - name: Of
   - name: " "
-  - uid: MegaForm.Sdk.FormFieldInfo
-    name: FormFieldInfo
-    href: MegaForm.Sdk.FormFieldInfo.html
+  - uid: MegaForm.Sdk.DashboardFormSummaryDto
+    name: DashboardFormSummaryDto
+    href: MegaForm.Sdk.DashboardFormSummaryDto.html
   - name: )
 - uid: System.Collections.Generic.IReadOnlyList`1
   commentId: T:System.Collections.Generic.IReadOnlyList`1

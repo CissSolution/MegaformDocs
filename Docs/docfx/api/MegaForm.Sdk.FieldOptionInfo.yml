@@ -17,8 +17,8 @@ items:
   type: Class
   source:
     id: FieldOptionInfo
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 314
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 592
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -49,8 +49,8 @@ items:
   type: Property
   source:
     id: Label
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 317
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 595
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -76,8 +76,8 @@ items:
   type: Property
   source:
     id: Value
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 320
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 598
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -103,8 +103,8 @@ items:
   type: Property
   source:
     id: Selected
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 323
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 601
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk

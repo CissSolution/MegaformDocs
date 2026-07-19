@@ -18,8 +18,8 @@ items:
   type: Class
   source:
     id: SubmissionQuery
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 109
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 133
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -50,8 +50,8 @@ items:
   type: Property
   source:
     id: FormId
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 112
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 136
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -77,8 +77,8 @@ items:
   type: Property
   source:
     id: Status
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 115
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 139
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -104,8 +104,8 @@ items:
   type: Property
   source:
     id: Page
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 118
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 142
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -131,8 +131,8 @@ items:
   type: Property
   source:
     id: PageSize
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 121
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 145
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk

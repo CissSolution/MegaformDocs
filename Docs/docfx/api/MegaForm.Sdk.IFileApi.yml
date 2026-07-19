@@ -16,8 +16,8 @@ items:
   type: Interface
   source:
     id: IFileApi
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
-    startLine: 41
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 50
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -41,8 +41,8 @@ items:
   type: Method
   source:
     id: ListForSubmissionAsync
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
-    startLine: 44
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 53
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -77,8 +77,8 @@ items:
   type: Method
   source:
     id: OpenAsync
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
-    startLine: 47
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 56
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk

@@ -21,8 +21,8 @@ items:
   type: Class
   source:
     id: FileDto
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 125
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 149
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -53,8 +53,8 @@ items:
   type: Property
   source:
     id: FileId
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 128
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 152
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -80,8 +80,8 @@ items:
   type: Property
   source:
     id: SubmissionId
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 131
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 155
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -107,8 +107,8 @@ items:
   type: Property
   source:
     id: FieldKey
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 134
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 158
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -134,8 +134,8 @@ items:
   type: Property
   source:
     id: FileName
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 137
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 161
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -161,8 +161,8 @@ items:
   type: Property
   source:
     id: ContentType
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 140
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 164
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -188,8 +188,8 @@ items:
   type: Property
   source:
     id: SizeBytes
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 143
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 167
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -215,8 +215,8 @@ items:
   type: Property
   source:
     id: UploadedOnUtc
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 146
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 170
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk

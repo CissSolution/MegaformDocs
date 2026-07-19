@@ -1,30 +1,34 @@
 ### YamlMime:ManagedReference
 items:
-- uid: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions
-  commentId: T:MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions
-  id: MegaFormSdkServiceCollectionExtensions
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest
+  commentId: T:MegaForm.Sdk.SendSubmissionToInboxRequest
+  id: SendSubmissionToInboxRequest
   parent: MegaForm.Sdk
   children:
-  - MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk(Microsoft.Extensions.DependencyInjection.IServiceCollection)
+  - MegaForm.Sdk.SendSubmissionToInboxRequest.Comment
+  - MegaForm.Sdk.SendSubmissionToInboxRequest.FormId
+  - MegaForm.Sdk.SendSubmissionToInboxRequest.SubmissionId
+  - MegaForm.Sdk.SendSubmissionToInboxRequest.TargetUser
+  - MegaForm.Sdk.SendSubmissionToInboxRequest.Title
   langs:
   - csharp
   - vb
-  name: MegaFormSdkServiceCollectionExtensions
-  nameWithType: MegaFormSdkServiceCollectionExtensions
-  fullName: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions
+  name: SendSubmissionToInboxRequest
+  nameWithType: SendSubmissionToInboxRequest
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest
   type: Class
   source:
-    id: MegaFormSdkServiceCollectionExtensions
-    path: E:\_sdkwt\MegaForm.Sdk\ServiceCollectionExtensions.cs
-    startLine: 9
+    id: SendSubmissionToInboxRequest
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 453
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: DI registration for the MegaForm SDK facade.
+  summary: Request to route a submission into a user's inbox without a prebuilt workflow.
   example: []
   syntax:
-    content: public static class MegaFormSdkServiceCollectionExtensions
-    content.vb: Public Module MegaFormSdkServiceCollectionExtensions
+    content: public sealed class SendSubmissionToInboxRequest
+    content.vb: Public NotInheritable Class SendSubmissionToInboxRequest
   inheritance:
   - System.Object
   inheritedMembers:
@@ -32,46 +36,133 @@ items:
   - System.Object.Equals(System.Object,System.Object)
   - System.Object.GetHashCode
   - System.Object.GetType
-  - System.Object.MemberwiseClone
   - System.Object.ReferenceEquals(System.Object,System.Object)
   - System.Object.ToString
-- uid: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk(Microsoft.Extensions.DependencyInjection.IServiceCollection)
-  commentId: M:MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk(Microsoft.Extensions.DependencyInjection.IServiceCollection)
-  id: AddMegaFormSdk(Microsoft.Extensions.DependencyInjection.IServiceCollection)
-  isExtensionMethod: true
-  parent: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.FormId
+  commentId: P:MegaForm.Sdk.SendSubmissionToInboxRequest.FormId
+  id: FormId
+  parent: MegaForm.Sdk.SendSubmissionToInboxRequest
   langs:
   - csharp
   - vb
-  name: AddMegaFormSdk(IServiceCollection)
-  nameWithType: MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk(IServiceCollection)
-  fullName: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk(Microsoft.Extensions.DependencyInjection.IServiceCollection)
-  type: Method
+  name: FormId
+  nameWithType: SendSubmissionToInboxRequest.FormId
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.FormId
+  type: Property
   source:
-    id: AddMegaFormSdk
-    path: E:\_sdkwt\MegaForm.Sdk\ServiceCollectionExtensions.cs
-    startLine: 17
+    id: FormId
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 455
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: >-
-    Register <xref href="MegaForm.Sdk.IMegaFormClient" data-throw-if-not-resolved="false"></xref>. The host must already have registered the
-
-    MegaForm.Core repositories (<code>IFormRepository</code>, <code>ISubmissionRepository</code>) —
-
-    every MegaForm host (Oqtane / Web / DNN) does this. <code>IPlatformContext</code> is used
-
-    when present for ambient tenant/user; otherwise callers pass a <xref href="MegaForm.Sdk.MegaFormScope" data-throw-if-not-resolved="false"></xref>.
-  example: []
   syntax:
-    content: public static IServiceCollection AddMegaFormSdk(this IServiceCollection services)
-    parameters:
-    - id: services
-      type: Microsoft.Extensions.DependencyInjection.IServiceCollection
+    content: public int FormId { get; set; }
+    parameters: []
     return:
-      type: Microsoft.Extensions.DependencyInjection.IServiceCollection
-    content.vb: Public Shared Function AddMegaFormSdk(services As IServiceCollection) As IServiceCollection
-  overload: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk*
+      type: System.Int32
+    content.vb: Public Property FormId As Integer
+  overload: MegaForm.Sdk.SendSubmissionToInboxRequest.FormId*
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.SubmissionId
+  commentId: P:MegaForm.Sdk.SendSubmissionToInboxRequest.SubmissionId
+  id: SubmissionId
+  parent: MegaForm.Sdk.SendSubmissionToInboxRequest
+  langs:
+  - csharp
+  - vb
+  name: SubmissionId
+  nameWithType: SendSubmissionToInboxRequest.SubmissionId
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.SubmissionId
+  type: Property
+  source:
+    id: SubmissionId
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 456
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public int SubmissionId { get; set; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property SubmissionId As Integer
+  overload: MegaForm.Sdk.SendSubmissionToInboxRequest.SubmissionId*
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.TargetUser
+  commentId: P:MegaForm.Sdk.SendSubmissionToInboxRequest.TargetUser
+  id: TargetUser
+  parent: MegaForm.Sdk.SendSubmissionToInboxRequest
+  langs:
+  - csharp
+  - vb
+  name: TargetUser
+  nameWithType: SendSubmissionToInboxRequest.TargetUser
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.TargetUser
+  type: Property
+  source:
+    id: TargetUser
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 457
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string TargetUser { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property TargetUser As String
+  overload: MegaForm.Sdk.SendSubmissionToInboxRequest.TargetUser*
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.Title
+  commentId: P:MegaForm.Sdk.SendSubmissionToInboxRequest.Title
+  id: Title
+  parent: MegaForm.Sdk.SendSubmissionToInboxRequest
+  langs:
+  - csharp
+  - vb
+  name: Title
+  nameWithType: SendSubmissionToInboxRequest.Title
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.Title
+  type: Property
+  source:
+    id: Title
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 458
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? Title { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Title As String
+  overload: MegaForm.Sdk.SendSubmissionToInboxRequest.Title*
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.Comment
+  commentId: P:MegaForm.Sdk.SendSubmissionToInboxRequest.Comment
+  id: Comment
+  parent: MegaForm.Sdk.SendSubmissionToInboxRequest
+  langs:
+  - csharp
+  - vb
+  name: Comment
+  nameWithType: SendSubmissionToInboxRequest.Comment
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.Comment
+  type: Property
+  source:
+    id: Comment
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 459
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? Comment { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Comment As String
+  overload: MegaForm.Sdk.SendSubmissionToInboxRequest.Comment*
 references:
 - uid: MegaForm.Sdk
   commentId: N:MegaForm.Sdk
@@ -232,30 +323,6 @@ references:
     href: https://learn.microsoft.com/dotnet/api/system.object.gettype
   - name: (
   - name: )
-- uid: System.Object.MemberwiseClone
-  commentId: M:System.Object.MemberwiseClone
-  parent: System.Object
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
-  name: MemberwiseClone()
-  nameWithType: object.MemberwiseClone()
-  fullName: object.MemberwiseClone()
-  nameWithType.vb: Object.MemberwiseClone()
-  fullName.vb: Object.MemberwiseClone()
-  spec.csharp:
-  - uid: System.Object.MemberwiseClone
-    name: MemberwiseClone
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
-  - name: (
-  - name: )
-  spec.vb:
-  - uid: System.Object.MemberwiseClone
-    name: MemberwiseClone
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
-  - name: (
-  - name: )
 - uid: System.Object.ReferenceEquals(System.Object,System.Object)
   commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
   parent: System.Object
@@ -332,68 +399,55 @@ references:
   name: System
   nameWithType: System
   fullName: System
-- uid: MegaForm.Sdk.IMegaFormClient
-  commentId: T:MegaForm.Sdk.IMegaFormClient
-  parent: MegaForm.Sdk
-  href: MegaForm.Sdk.IMegaFormClient.html
-  name: IMegaFormClient
-  nameWithType: IMegaFormClient
-  fullName: MegaForm.Sdk.IMegaFormClient
-- uid: MegaForm.Sdk.MegaFormScope
-  commentId: T:MegaForm.Sdk.MegaFormScope
-  parent: MegaForm.Sdk
-  href: MegaForm.Sdk.MegaFormScope.html
-  name: MegaFormScope
-  nameWithType: MegaFormScope
-  fullName: MegaForm.Sdk.MegaFormScope
-- uid: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk*
-  commentId: Overload:MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk
-  href: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.html#MegaForm_Sdk_MegaFormSdkServiceCollectionExtensions_AddMegaFormSdk_Microsoft_Extensions_DependencyInjection_IServiceCollection_
-  name: AddMegaFormSdk
-  nameWithType: MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk
-  fullName: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk
-- uid: Microsoft.Extensions.DependencyInjection.IServiceCollection
-  commentId: T:Microsoft.Extensions.DependencyInjection.IServiceCollection
-  parent: Microsoft.Extensions.DependencyInjection
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.FormId*
+  commentId: Overload:MegaForm.Sdk.SendSubmissionToInboxRequest.FormId
+  href: MegaForm.Sdk.SendSubmissionToInboxRequest.html#MegaForm_Sdk_SendSubmissionToInboxRequest_FormId
+  name: FormId
+  nameWithType: SendSubmissionToInboxRequest.FormId
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.FormId
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
   isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/microsoft.extensions.dependencyinjection.iservicecollection
-  name: IServiceCollection
-  nameWithType: IServiceCollection
-  fullName: Microsoft.Extensions.DependencyInjection.IServiceCollection
-- uid: Microsoft.Extensions.DependencyInjection
-  commentId: N:Microsoft.Extensions.DependencyInjection
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.SubmissionId*
+  commentId: Overload:MegaForm.Sdk.SendSubmissionToInboxRequest.SubmissionId
+  href: MegaForm.Sdk.SendSubmissionToInboxRequest.html#MegaForm_Sdk_SendSubmissionToInboxRequest_SubmissionId
+  name: SubmissionId
+  nameWithType: SendSubmissionToInboxRequest.SubmissionId
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.SubmissionId
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.TargetUser*
+  commentId: Overload:MegaForm.Sdk.SendSubmissionToInboxRequest.TargetUser
+  href: MegaForm.Sdk.SendSubmissionToInboxRequest.html#MegaForm_Sdk_SendSubmissionToInboxRequest_TargetUser
+  name: TargetUser
+  nameWithType: SendSubmissionToInboxRequest.TargetUser
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.TargetUser
+- uid: System.String
+  commentId: T:System.String
+  parent: System
   isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/microsoft
-  name: Microsoft.Extensions.DependencyInjection
-  nameWithType: Microsoft.Extensions.DependencyInjection
-  fullName: Microsoft.Extensions.DependencyInjection
-  spec.csharp:
-  - uid: Microsoft
-    name: Microsoft
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/microsoft
-  - name: .
-  - uid: Microsoft.Extensions
-    name: Extensions
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/microsoft.extensions
-  - name: .
-  - uid: Microsoft.Extensions.DependencyInjection
-    name: DependencyInjection
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/microsoft.extensions.dependencyinjection
-  spec.vb:
-  - uid: Microsoft
-    name: Microsoft
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/microsoft
-  - name: .
-  - uid: Microsoft.Extensions
-    name: Extensions
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/microsoft.extensions
-  - name: .
-  - uid: Microsoft.Extensions.DependencyInjection
-    name: DependencyInjection
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/microsoft.extensions.dependencyinjection
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.Title*
+  commentId: Overload:MegaForm.Sdk.SendSubmissionToInboxRequest.Title
+  href: MegaForm.Sdk.SendSubmissionToInboxRequest.html#MegaForm_Sdk_SendSubmissionToInboxRequest_Title
+  name: Title
+  nameWithType: SendSubmissionToInboxRequest.Title
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.Title
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.Comment*
+  commentId: Overload:MegaForm.Sdk.SendSubmissionToInboxRequest.Comment
+  href: MegaForm.Sdk.SendSubmissionToInboxRequest.html#MegaForm_Sdk_SendSubmissionToInboxRequest_Comment
+  name: Comment
+  nameWithType: SendSubmissionToInboxRequest.Comment
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.Comment

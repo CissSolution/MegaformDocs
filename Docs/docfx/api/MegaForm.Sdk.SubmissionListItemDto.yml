@@ -1,0 +1,796 @@
+### YamlMime:ManagedReference
+items:
+- uid: MegaForm.Sdk.SubmissionListItemDto
+  commentId: T:MegaForm.Sdk.SubmissionListItemDto
+  id: SubmissionListItemDto
+  parent: MegaForm.Sdk
+  children:
+  - MegaForm.Sdk.SubmissionListItemDto.DataJson
+  - MegaForm.Sdk.SubmissionListItemDto.FormId
+  - MegaForm.Sdk.SubmissionListItemDto.FormTitle
+  - MegaForm.Sdk.SubmissionListItemDto.IpAddress
+  - MegaForm.Sdk.SubmissionListItemDto.IsSpam
+  - MegaForm.Sdk.SubmissionListItemDto.ReadOnUtc
+  - MegaForm.Sdk.SubmissionListItemDto.SpamScore
+  - MegaForm.Sdk.SubmissionListItemDto.Status
+  - MegaForm.Sdk.SubmissionListItemDto.SubmissionId
+  - MegaForm.Sdk.SubmissionListItemDto.SubmittedOnUtc
+  - MegaForm.Sdk.SubmissionListItemDto.SummaryText
+  - MegaForm.Sdk.SubmissionListItemDto.UserId
+  langs:
+  - csharp
+  - vb
+  name: SubmissionListItemDto
+  nameWithType: SubmissionListItemDto
+  fullName: MegaForm.Sdk.SubmissionListItemDto
+  type: Class
+  source:
+    id: SubmissionListItemDto
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 309
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Dashboard-friendly submission list row.
+  example: []
+  syntax:
+    content: public sealed class SubmissionListItemDto
+    content.vb: Public NotInheritable Class SubmissionListItemDto
+  inheritance:
+  - System.Object
+  inheritedMembers:
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.ToString
+- uid: MegaForm.Sdk.SubmissionListItemDto.SubmissionId
+  commentId: P:MegaForm.Sdk.SubmissionListItemDto.SubmissionId
+  id: SubmissionId
+  parent: MegaForm.Sdk.SubmissionListItemDto
+  langs:
+  - csharp
+  - vb
+  name: SubmissionId
+  nameWithType: SubmissionListItemDto.SubmissionId
+  fullName: MegaForm.Sdk.SubmissionListItemDto.SubmissionId
+  type: Property
+  source:
+    id: SubmissionId
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 311
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public int SubmissionId { get; set; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property SubmissionId As Integer
+  overload: MegaForm.Sdk.SubmissionListItemDto.SubmissionId*
+- uid: MegaForm.Sdk.SubmissionListItemDto.FormId
+  commentId: P:MegaForm.Sdk.SubmissionListItemDto.FormId
+  id: FormId
+  parent: MegaForm.Sdk.SubmissionListItemDto
+  langs:
+  - csharp
+  - vb
+  name: FormId
+  nameWithType: SubmissionListItemDto.FormId
+  fullName: MegaForm.Sdk.SubmissionListItemDto.FormId
+  type: Property
+  source:
+    id: FormId
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 312
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public int FormId { get; set; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property FormId As Integer
+  overload: MegaForm.Sdk.SubmissionListItemDto.FormId*
+- uid: MegaForm.Sdk.SubmissionListItemDto.FormTitle
+  commentId: P:MegaForm.Sdk.SubmissionListItemDto.FormTitle
+  id: FormTitle
+  parent: MegaForm.Sdk.SubmissionListItemDto
+  langs:
+  - csharp
+  - vb
+  name: FormTitle
+  nameWithType: SubmissionListItemDto.FormTitle
+  fullName: MegaForm.Sdk.SubmissionListItemDto.FormTitle
+  type: Property
+  source:
+    id: FormTitle
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 313
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? FormTitle { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property FormTitle As String
+  overload: MegaForm.Sdk.SubmissionListItemDto.FormTitle*
+- uid: MegaForm.Sdk.SubmissionListItemDto.Status
+  commentId: P:MegaForm.Sdk.SubmissionListItemDto.Status
+  id: Status
+  parent: MegaForm.Sdk.SubmissionListItemDto
+  langs:
+  - csharp
+  - vb
+  name: Status
+  nameWithType: SubmissionListItemDto.Status
+  fullName: MegaForm.Sdk.SubmissionListItemDto.Status
+  type: Property
+  source:
+    id: Status
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 314
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? Status { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Status As String
+  overload: MegaForm.Sdk.SubmissionListItemDto.Status*
+- uid: MegaForm.Sdk.SubmissionListItemDto.IsSpam
+  commentId: P:MegaForm.Sdk.SubmissionListItemDto.IsSpam
+  id: IsSpam
+  parent: MegaForm.Sdk.SubmissionListItemDto
+  langs:
+  - csharp
+  - vb
+  name: IsSpam
+  nameWithType: SubmissionListItemDto.IsSpam
+  fullName: MegaForm.Sdk.SubmissionListItemDto.IsSpam
+  type: Property
+  source:
+    id: IsSpam
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 315
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public bool IsSpam { get; set; }
+    parameters: []
+    return:
+      type: System.Boolean
+    content.vb: Public Property IsSpam As Boolean
+  overload: MegaForm.Sdk.SubmissionListItemDto.IsSpam*
+- uid: MegaForm.Sdk.SubmissionListItemDto.SpamScore
+  commentId: P:MegaForm.Sdk.SubmissionListItemDto.SpamScore
+  id: SpamScore
+  parent: MegaForm.Sdk.SubmissionListItemDto
+  langs:
+  - csharp
+  - vb
+  name: SpamScore
+  nameWithType: SubmissionListItemDto.SpamScore
+  fullName: MegaForm.Sdk.SubmissionListItemDto.SpamScore
+  type: Property
+  source:
+    id: SpamScore
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 316
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public decimal? SpamScore { get; set; }
+    parameters: []
+    return:
+      type: System.Nullable{System.Decimal}
+    content.vb: Public Property SpamScore As Decimal?
+  overload: MegaForm.Sdk.SubmissionListItemDto.SpamScore*
+- uid: MegaForm.Sdk.SubmissionListItemDto.SubmittedOnUtc
+  commentId: P:MegaForm.Sdk.SubmissionListItemDto.SubmittedOnUtc
+  id: SubmittedOnUtc
+  parent: MegaForm.Sdk.SubmissionListItemDto
+  langs:
+  - csharp
+  - vb
+  name: SubmittedOnUtc
+  nameWithType: SubmissionListItemDto.SubmittedOnUtc
+  fullName: MegaForm.Sdk.SubmissionListItemDto.SubmittedOnUtc
+  type: Property
+  source:
+    id: SubmittedOnUtc
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 317
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public DateTime SubmittedOnUtc { get; set; }
+    parameters: []
+    return:
+      type: System.DateTime
+    content.vb: Public Property SubmittedOnUtc As Date
+  overload: MegaForm.Sdk.SubmissionListItemDto.SubmittedOnUtc*
+- uid: MegaForm.Sdk.SubmissionListItemDto.ReadOnUtc
+  commentId: P:MegaForm.Sdk.SubmissionListItemDto.ReadOnUtc
+  id: ReadOnUtc
+  parent: MegaForm.Sdk.SubmissionListItemDto
+  langs:
+  - csharp
+  - vb
+  name: ReadOnUtc
+  nameWithType: SubmissionListItemDto.ReadOnUtc
+  fullName: MegaForm.Sdk.SubmissionListItemDto.ReadOnUtc
+  type: Property
+  source:
+    id: ReadOnUtc
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 318
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public DateTime? ReadOnUtc { get; set; }
+    parameters: []
+    return:
+      type: System.Nullable{System.DateTime}
+    content.vb: Public Property ReadOnUtc As Date?
+  overload: MegaForm.Sdk.SubmissionListItemDto.ReadOnUtc*
+- uid: MegaForm.Sdk.SubmissionListItemDto.UserId
+  commentId: P:MegaForm.Sdk.SubmissionListItemDto.UserId
+  id: UserId
+  parent: MegaForm.Sdk.SubmissionListItemDto
+  langs:
+  - csharp
+  - vb
+  name: UserId
+  nameWithType: SubmissionListItemDto.UserId
+  fullName: MegaForm.Sdk.SubmissionListItemDto.UserId
+  type: Property
+  source:
+    id: UserId
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 319
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public int? UserId { get; set; }
+    parameters: []
+    return:
+      type: System.Nullable{System.Int32}
+    content.vb: Public Property UserId As Integer?
+  overload: MegaForm.Sdk.SubmissionListItemDto.UserId*
+- uid: MegaForm.Sdk.SubmissionListItemDto.IpAddress
+  commentId: P:MegaForm.Sdk.SubmissionListItemDto.IpAddress
+  id: IpAddress
+  parent: MegaForm.Sdk.SubmissionListItemDto
+  langs:
+  - csharp
+  - vb
+  name: IpAddress
+  nameWithType: SubmissionListItemDto.IpAddress
+  fullName: MegaForm.Sdk.SubmissionListItemDto.IpAddress
+  type: Property
+  source:
+    id: IpAddress
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 320
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? IpAddress { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property IpAddress As String
+  overload: MegaForm.Sdk.SubmissionListItemDto.IpAddress*
+- uid: MegaForm.Sdk.SubmissionListItemDto.SummaryText
+  commentId: P:MegaForm.Sdk.SubmissionListItemDto.SummaryText
+  id: SummaryText
+  parent: MegaForm.Sdk.SubmissionListItemDto
+  langs:
+  - csharp
+  - vb
+  name: SummaryText
+  nameWithType: SubmissionListItemDto.SummaryText
+  fullName: MegaForm.Sdk.SubmissionListItemDto.SummaryText
+  type: Property
+  source:
+    id: SummaryText
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 321
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? SummaryText { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property SummaryText As String
+  overload: MegaForm.Sdk.SubmissionListItemDto.SummaryText*
+- uid: MegaForm.Sdk.SubmissionListItemDto.DataJson
+  commentId: P:MegaForm.Sdk.SubmissionListItemDto.DataJson
+  id: DataJson
+  parent: MegaForm.Sdk.SubmissionListItemDto
+  langs:
+  - csharp
+  - vb
+  name: DataJson
+  nameWithType: SubmissionListItemDto.DataJson
+  fullName: MegaForm.Sdk.SubmissionListItemDto.DataJson
+  type: Property
+  source:
+    id: DataJson
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 322
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? DataJson { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property DataJson As String
+  overload: MegaForm.Sdk.SubmissionListItemDto.DataJson*
+references:
+- uid: MegaForm.Sdk
+  commentId: N:MegaForm.Sdk
+  href: MegaForm.html
+  name: MegaForm.Sdk
+  nameWithType: MegaForm.Sdk
+  fullName: MegaForm.Sdk
+  spec.csharp:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+  spec.vb:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: MegaForm.Sdk.SubmissionListItemDto.SubmissionId*
+  commentId: Overload:MegaForm.Sdk.SubmissionListItemDto.SubmissionId
+  href: MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_SubmissionId
+  name: SubmissionId
+  nameWithType: SubmissionListItemDto.SubmissionId
+  fullName: MegaForm.Sdk.SubmissionListItemDto.SubmissionId
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: MegaForm.Sdk.SubmissionListItemDto.FormId*
+  commentId: Overload:MegaForm.Sdk.SubmissionListItemDto.FormId
+  href: MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_FormId
+  name: FormId
+  nameWithType: SubmissionListItemDto.FormId
+  fullName: MegaForm.Sdk.SubmissionListItemDto.FormId
+- uid: MegaForm.Sdk.SubmissionListItemDto.FormTitle*
+  commentId: Overload:MegaForm.Sdk.SubmissionListItemDto.FormTitle
+  href: MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_FormTitle
+  name: FormTitle
+  nameWithType: SubmissionListItemDto.FormTitle
+  fullName: MegaForm.Sdk.SubmissionListItemDto.FormTitle
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: MegaForm.Sdk.SubmissionListItemDto.Status*
+  commentId: Overload:MegaForm.Sdk.SubmissionListItemDto.Status
+  href: MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_Status
+  name: Status
+  nameWithType: SubmissionListItemDto.Status
+  fullName: MegaForm.Sdk.SubmissionListItemDto.Status
+- uid: MegaForm.Sdk.SubmissionListItemDto.IsSpam*
+  commentId: Overload:MegaForm.Sdk.SubmissionListItemDto.IsSpam
+  href: MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_IsSpam
+  name: IsSpam
+  nameWithType: SubmissionListItemDto.IsSpam
+  fullName: MegaForm.Sdk.SubmissionListItemDto.IsSpam
+- uid: System.Boolean
+  commentId: T:System.Boolean
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.boolean
+  name: bool
+  nameWithType: bool
+  fullName: bool
+  nameWithType.vb: Boolean
+  fullName.vb: Boolean
+  name.vb: Boolean
+- uid: MegaForm.Sdk.SubmissionListItemDto.SpamScore*
+  commentId: Overload:MegaForm.Sdk.SubmissionListItemDto.SpamScore
+  href: MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_SpamScore
+  name: SpamScore
+  nameWithType: SubmissionListItemDto.SpamScore
+  fullName: MegaForm.Sdk.SubmissionListItemDto.SpamScore
+- uid: System.Nullable{System.Decimal}
+  commentId: T:System.Nullable{System.Decimal}
+  parent: System
+  definition: System.Nullable`1
+  href: https://learn.microsoft.com/dotnet/api/system.decimal
+  name: decimal?
+  nameWithType: decimal?
+  fullName: decimal?
+  nameWithType.vb: Decimal?
+  fullName.vb: Decimal?
+  name.vb: Decimal?
+  spec.csharp:
+  - uid: System.Decimal
+    name: decimal
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.decimal
+  - name: '?'
+  spec.vb:
+  - uid: System.Decimal
+    name: Decimal
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.decimal
+  - name: '?'
+- uid: System.Nullable`1
+  commentId: T:System.Nullable`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  name: Nullable<T>
+  nameWithType: Nullable<T>
+  fullName: System.Nullable<T>
+  nameWithType.vb: Nullable(Of T)
+  fullName.vb: System.Nullable(Of T)
+  name.vb: Nullable(Of T)
+  spec.csharp:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: MegaForm.Sdk.SubmissionListItemDto.SubmittedOnUtc*
+  commentId: Overload:MegaForm.Sdk.SubmissionListItemDto.SubmittedOnUtc
+  href: MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_SubmittedOnUtc
+  name: SubmittedOnUtc
+  nameWithType: SubmissionListItemDto.SubmittedOnUtc
+  fullName: MegaForm.Sdk.SubmissionListItemDto.SubmittedOnUtc
+- uid: System.DateTime
+  commentId: T:System.DateTime
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.datetime
+  name: DateTime
+  nameWithType: DateTime
+  fullName: System.DateTime
+  nameWithType.vb: Date
+  fullName.vb: Date
+  name.vb: Date
+- uid: MegaForm.Sdk.SubmissionListItemDto.ReadOnUtc*
+  commentId: Overload:MegaForm.Sdk.SubmissionListItemDto.ReadOnUtc
+  href: MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_ReadOnUtc
+  name: ReadOnUtc
+  nameWithType: SubmissionListItemDto.ReadOnUtc
+  fullName: MegaForm.Sdk.SubmissionListItemDto.ReadOnUtc
+- uid: System.Nullable{System.DateTime}
+  commentId: T:System.Nullable{System.DateTime}
+  parent: System
+  definition: System.Nullable`1
+  href: https://learn.microsoft.com/dotnet/api/system.datetime
+  name: DateTime?
+  nameWithType: DateTime?
+  fullName: System.DateTime?
+  nameWithType.vb: Date?
+  fullName.vb: Date?
+  name.vb: Date?
+  spec.csharp:
+  - uid: System.DateTime
+    name: DateTime
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.datetime
+  - name: '?'
+  spec.vb:
+  - uid: System.DateTime
+    name: Date
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.datetime
+  - name: '?'
+- uid: MegaForm.Sdk.SubmissionListItemDto.UserId*
+  commentId: Overload:MegaForm.Sdk.SubmissionListItemDto.UserId
+  href: MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_UserId
+  name: UserId
+  nameWithType: SubmissionListItemDto.UserId
+  fullName: MegaForm.Sdk.SubmissionListItemDto.UserId
+- uid: System.Nullable{System.Int32}
+  commentId: T:System.Nullable{System.Int32}
+  parent: System
+  definition: System.Nullable`1
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int?
+  nameWithType: int?
+  fullName: int?
+  nameWithType.vb: Integer?
+  fullName.vb: Integer?
+  name.vb: Integer?
+  spec.csharp:
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+  spec.vb:
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+- uid: MegaForm.Sdk.SubmissionListItemDto.IpAddress*
+  commentId: Overload:MegaForm.Sdk.SubmissionListItemDto.IpAddress
+  href: MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_IpAddress
+  name: IpAddress
+  nameWithType: SubmissionListItemDto.IpAddress
+  fullName: MegaForm.Sdk.SubmissionListItemDto.IpAddress
+- uid: MegaForm.Sdk.SubmissionListItemDto.SummaryText*
+  commentId: Overload:MegaForm.Sdk.SubmissionListItemDto.SummaryText
+  href: MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_SummaryText
+  name: SummaryText
+  nameWithType: SubmissionListItemDto.SummaryText
+  fullName: MegaForm.Sdk.SubmissionListItemDto.SummaryText
+- uid: MegaForm.Sdk.SubmissionListItemDto.DataJson*
+  commentId: Overload:MegaForm.Sdk.SubmissionListItemDto.DataJson
+  href: MegaForm.Sdk.SubmissionListItemDto.html#MegaForm_Sdk_SubmissionListItemDto_DataJson
+  name: DataJson
+  nameWithType: SubmissionListItemDto.DataJson
+  fullName: MegaForm.Sdk.SubmissionListItemDto.DataJson

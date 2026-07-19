@@ -19,8 +19,8 @@ items:
   type: Interface
   source:
     id: ISubmissionApi
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
-    startLine: 74
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 83
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -44,8 +44,8 @@ items:
   type: Method
   source:
     id: FindAsync
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
-    startLine: 77
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 86
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -80,8 +80,8 @@ items:
   type: Method
   source:
     id: GetAsync
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
-    startLine: 80
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 89
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -116,8 +116,8 @@ items:
   type: Method
   source:
     id: SubmitAsync
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
-    startLine: 89
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 98
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -163,8 +163,8 @@ items:
   type: Method
   source:
     id: UpdateAsync
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
-    startLine: 92
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 101
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -201,8 +201,8 @@ items:
   type: Method
   source:
     id: DeleteAsync
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
-    startLine: 95
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 104
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk

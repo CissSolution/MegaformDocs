@@ -1,0 +1,803 @@
+### YamlMime:ManagedReference
+items:
+- uid: MegaForm.Sdk.InboxTaskActionDto
+  commentId: T:MegaForm.Sdk.InboxTaskActionDto
+  id: InboxTaskActionDto
+  parent: MegaForm.Sdk
+  children:
+  - MegaForm.Sdk.InboxTaskActionDto.ActionId
+  - MegaForm.Sdk.InboxTaskActionDto.ActionType
+  - MegaForm.Sdk.InboxTaskActionDto.ActorDisplayName
+  - MegaForm.Sdk.InboxTaskActionDto.ActorUserId
+  - MegaForm.Sdk.InboxTaskActionDto.ActorUserName
+  - MegaForm.Sdk.InboxTaskActionDto.CaseId
+  - MegaForm.Sdk.InboxTaskActionDto.Comment
+  - MegaForm.Sdk.InboxTaskActionDto.CreatedAtUtc
+  - MegaForm.Sdk.InboxTaskActionDto.ExecutionId
+  - MegaForm.Sdk.InboxTaskActionDto.FormId
+  - MegaForm.Sdk.InboxTaskActionDto.Outcome
+  - MegaForm.Sdk.InboxTaskActionDto.SubmissionId
+  - MegaForm.Sdk.InboxTaskActionDto.TargetUser
+  - MegaForm.Sdk.InboxTaskActionDto.TaskId
+  langs:
+  - csharp
+  - vb
+  name: InboxTaskActionDto
+  nameWithType: InboxTaskActionDto
+  fullName: MegaForm.Sdk.InboxTaskActionDto
+  type: Class
+  source:
+    id: InboxTaskActionDto
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 493
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: One workflow task action/audit entry.
+  example: []
+  syntax:
+    content: public sealed class InboxTaskActionDto
+    content.vb: Public NotInheritable Class InboxTaskActionDto
+  inheritance:
+  - System.Object
+  inheritedMembers:
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.ToString
+- uid: MegaForm.Sdk.InboxTaskActionDto.ActionId
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.ActionId
+  id: ActionId
+  parent: MegaForm.Sdk.InboxTaskActionDto
+  langs:
+  - csharp
+  - vb
+  name: ActionId
+  nameWithType: InboxTaskActionDto.ActionId
+  fullName: MegaForm.Sdk.InboxTaskActionDto.ActionId
+  type: Property
+  source:
+    id: ActionId
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 495
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? ActionId { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property ActionId As String
+  overload: MegaForm.Sdk.InboxTaskActionDto.ActionId*
+- uid: MegaForm.Sdk.InboxTaskActionDto.TaskId
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.TaskId
+  id: TaskId
+  parent: MegaForm.Sdk.InboxTaskActionDto
+  langs:
+  - csharp
+  - vb
+  name: TaskId
+  nameWithType: InboxTaskActionDto.TaskId
+  fullName: MegaForm.Sdk.InboxTaskActionDto.TaskId
+  type: Property
+  source:
+    id: TaskId
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 496
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? TaskId { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property TaskId As String
+  overload: MegaForm.Sdk.InboxTaskActionDto.TaskId*
+- uid: MegaForm.Sdk.InboxTaskActionDto.CaseId
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.CaseId
+  id: CaseId
+  parent: MegaForm.Sdk.InboxTaskActionDto
+  langs:
+  - csharp
+  - vb
+  name: CaseId
+  nameWithType: InboxTaskActionDto.CaseId
+  fullName: MegaForm.Sdk.InboxTaskActionDto.CaseId
+  type: Property
+  source:
+    id: CaseId
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 497
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? CaseId { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property CaseId As String
+  overload: MegaForm.Sdk.InboxTaskActionDto.CaseId*
+- uid: MegaForm.Sdk.InboxTaskActionDto.ExecutionId
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.ExecutionId
+  id: ExecutionId
+  parent: MegaForm.Sdk.InboxTaskActionDto
+  langs:
+  - csharp
+  - vb
+  name: ExecutionId
+  nameWithType: InboxTaskActionDto.ExecutionId
+  fullName: MegaForm.Sdk.InboxTaskActionDto.ExecutionId
+  type: Property
+  source:
+    id: ExecutionId
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 498
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? ExecutionId { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property ExecutionId As String
+  overload: MegaForm.Sdk.InboxTaskActionDto.ExecutionId*
+- uid: MegaForm.Sdk.InboxTaskActionDto.FormId
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.FormId
+  id: FormId
+  parent: MegaForm.Sdk.InboxTaskActionDto
+  langs:
+  - csharp
+  - vb
+  name: FormId
+  nameWithType: InboxTaskActionDto.FormId
+  fullName: MegaForm.Sdk.InboxTaskActionDto.FormId
+  type: Property
+  source:
+    id: FormId
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 499
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public int FormId { get; set; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property FormId As Integer
+  overload: MegaForm.Sdk.InboxTaskActionDto.FormId*
+- uid: MegaForm.Sdk.InboxTaskActionDto.SubmissionId
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.SubmissionId
+  id: SubmissionId
+  parent: MegaForm.Sdk.InboxTaskActionDto
+  langs:
+  - csharp
+  - vb
+  name: SubmissionId
+  nameWithType: InboxTaskActionDto.SubmissionId
+  fullName: MegaForm.Sdk.InboxTaskActionDto.SubmissionId
+  type: Property
+  source:
+    id: SubmissionId
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 500
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public int SubmissionId { get; set; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property SubmissionId As Integer
+  overload: MegaForm.Sdk.InboxTaskActionDto.SubmissionId*
+- uid: MegaForm.Sdk.InboxTaskActionDto.ActionType
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.ActionType
+  id: ActionType
+  parent: MegaForm.Sdk.InboxTaskActionDto
+  langs:
+  - csharp
+  - vb
+  name: ActionType
+  nameWithType: InboxTaskActionDto.ActionType
+  fullName: MegaForm.Sdk.InboxTaskActionDto.ActionType
+  type: Property
+  source:
+    id: ActionType
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 501
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? ActionType { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property ActionType As String
+  overload: MegaForm.Sdk.InboxTaskActionDto.ActionType*
+- uid: MegaForm.Sdk.InboxTaskActionDto.ActorUserId
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.ActorUserId
+  id: ActorUserId
+  parent: MegaForm.Sdk.InboxTaskActionDto
+  langs:
+  - csharp
+  - vb
+  name: ActorUserId
+  nameWithType: InboxTaskActionDto.ActorUserId
+  fullName: MegaForm.Sdk.InboxTaskActionDto.ActorUserId
+  type: Property
+  source:
+    id: ActorUserId
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 502
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public int? ActorUserId { get; set; }
+    parameters: []
+    return:
+      type: System.Nullable{System.Int32}
+    content.vb: Public Property ActorUserId As Integer?
+  overload: MegaForm.Sdk.InboxTaskActionDto.ActorUserId*
+- uid: MegaForm.Sdk.InboxTaskActionDto.ActorUserName
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.ActorUserName
+  id: ActorUserName
+  parent: MegaForm.Sdk.InboxTaskActionDto
+  langs:
+  - csharp
+  - vb
+  name: ActorUserName
+  nameWithType: InboxTaskActionDto.ActorUserName
+  fullName: MegaForm.Sdk.InboxTaskActionDto.ActorUserName
+  type: Property
+  source:
+    id: ActorUserName
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 503
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? ActorUserName { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property ActorUserName As String
+  overload: MegaForm.Sdk.InboxTaskActionDto.ActorUserName*
+- uid: MegaForm.Sdk.InboxTaskActionDto.ActorDisplayName
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.ActorDisplayName
+  id: ActorDisplayName
+  parent: MegaForm.Sdk.InboxTaskActionDto
+  langs:
+  - csharp
+  - vb
+  name: ActorDisplayName
+  nameWithType: InboxTaskActionDto.ActorDisplayName
+  fullName: MegaForm.Sdk.InboxTaskActionDto.ActorDisplayName
+  type: Property
+  source:
+    id: ActorDisplayName
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 504
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? ActorDisplayName { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property ActorDisplayName As String
+  overload: MegaForm.Sdk.InboxTaskActionDto.ActorDisplayName*
+- uid: MegaForm.Sdk.InboxTaskActionDto.TargetUser
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.TargetUser
+  id: TargetUser
+  parent: MegaForm.Sdk.InboxTaskActionDto
+  langs:
+  - csharp
+  - vb
+  name: TargetUser
+  nameWithType: InboxTaskActionDto.TargetUser
+  fullName: MegaForm.Sdk.InboxTaskActionDto.TargetUser
+  type: Property
+  source:
+    id: TargetUser
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 505
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? TargetUser { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property TargetUser As String
+  overload: MegaForm.Sdk.InboxTaskActionDto.TargetUser*
+- uid: MegaForm.Sdk.InboxTaskActionDto.Outcome
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.Outcome
+  id: Outcome
+  parent: MegaForm.Sdk.InboxTaskActionDto
+  langs:
+  - csharp
+  - vb
+  name: Outcome
+  nameWithType: InboxTaskActionDto.Outcome
+  fullName: MegaForm.Sdk.InboxTaskActionDto.Outcome
+  type: Property
+  source:
+    id: Outcome
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 506
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? Outcome { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Outcome As String
+  overload: MegaForm.Sdk.InboxTaskActionDto.Outcome*
+- uid: MegaForm.Sdk.InboxTaskActionDto.Comment
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.Comment
+  id: Comment
+  parent: MegaForm.Sdk.InboxTaskActionDto
+  langs:
+  - csharp
+  - vb
+  name: Comment
+  nameWithType: InboxTaskActionDto.Comment
+  fullName: MegaForm.Sdk.InboxTaskActionDto.Comment
+  type: Property
+  source:
+    id: Comment
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 507
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? Comment { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Comment As String
+  overload: MegaForm.Sdk.InboxTaskActionDto.Comment*
+- uid: MegaForm.Sdk.InboxTaskActionDto.CreatedAtUtc
+  commentId: P:MegaForm.Sdk.InboxTaskActionDto.CreatedAtUtc
+  id: CreatedAtUtc
+  parent: MegaForm.Sdk.InboxTaskActionDto
+  langs:
+  - csharp
+  - vb
+  name: CreatedAtUtc
+  nameWithType: InboxTaskActionDto.CreatedAtUtc
+  fullName: MegaForm.Sdk.InboxTaskActionDto.CreatedAtUtc
+  type: Property
+  source:
+    id: CreatedAtUtc
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 508
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public DateTime CreatedAtUtc { get; set; }
+    parameters: []
+    return:
+      type: System.DateTime
+    content.vb: Public Property CreatedAtUtc As Date
+  overload: MegaForm.Sdk.InboxTaskActionDto.CreatedAtUtc*
+references:
+- uid: MegaForm.Sdk
+  commentId: N:MegaForm.Sdk
+  href: MegaForm.html
+  name: MegaForm.Sdk
+  nameWithType: MegaForm.Sdk
+  fullName: MegaForm.Sdk
+  spec.csharp:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+  spec.vb:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: MegaForm.Sdk.InboxTaskActionDto.ActionId*
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.ActionId
+  href: MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_ActionId
+  name: ActionId
+  nameWithType: InboxTaskActionDto.ActionId
+  fullName: MegaForm.Sdk.InboxTaskActionDto.ActionId
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: MegaForm.Sdk.InboxTaskActionDto.TaskId*
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.TaskId
+  href: MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_TaskId
+  name: TaskId
+  nameWithType: InboxTaskActionDto.TaskId
+  fullName: MegaForm.Sdk.InboxTaskActionDto.TaskId
+- uid: MegaForm.Sdk.InboxTaskActionDto.CaseId*
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.CaseId
+  href: MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_CaseId
+  name: CaseId
+  nameWithType: InboxTaskActionDto.CaseId
+  fullName: MegaForm.Sdk.InboxTaskActionDto.CaseId
+- uid: MegaForm.Sdk.InboxTaskActionDto.ExecutionId*
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.ExecutionId
+  href: MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_ExecutionId
+  name: ExecutionId
+  nameWithType: InboxTaskActionDto.ExecutionId
+  fullName: MegaForm.Sdk.InboxTaskActionDto.ExecutionId
+- uid: MegaForm.Sdk.InboxTaskActionDto.FormId*
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.FormId
+  href: MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_FormId
+  name: FormId
+  nameWithType: InboxTaskActionDto.FormId
+  fullName: MegaForm.Sdk.InboxTaskActionDto.FormId
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: MegaForm.Sdk.InboxTaskActionDto.SubmissionId*
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.SubmissionId
+  href: MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_SubmissionId
+  name: SubmissionId
+  nameWithType: InboxTaskActionDto.SubmissionId
+  fullName: MegaForm.Sdk.InboxTaskActionDto.SubmissionId
+- uid: MegaForm.Sdk.InboxTaskActionDto.ActionType*
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.ActionType
+  href: MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_ActionType
+  name: ActionType
+  nameWithType: InboxTaskActionDto.ActionType
+  fullName: MegaForm.Sdk.InboxTaskActionDto.ActionType
+- uid: MegaForm.Sdk.InboxTaskActionDto.ActorUserId*
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.ActorUserId
+  href: MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_ActorUserId
+  name: ActorUserId
+  nameWithType: InboxTaskActionDto.ActorUserId
+  fullName: MegaForm.Sdk.InboxTaskActionDto.ActorUserId
+- uid: System.Nullable{System.Int32}
+  commentId: T:System.Nullable{System.Int32}
+  parent: System
+  definition: System.Nullable`1
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int?
+  nameWithType: int?
+  fullName: int?
+  nameWithType.vb: Integer?
+  fullName.vb: Integer?
+  name.vb: Integer?
+  spec.csharp:
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+  spec.vb:
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+- uid: System.Nullable`1
+  commentId: T:System.Nullable`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  name: Nullable<T>
+  nameWithType: Nullable<T>
+  fullName: System.Nullable<T>
+  nameWithType.vb: Nullable(Of T)
+  fullName.vb: System.Nullable(Of T)
+  name.vb: Nullable(Of T)
+  spec.csharp:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: MegaForm.Sdk.InboxTaskActionDto.ActorUserName*
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.ActorUserName
+  href: MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_ActorUserName
+  name: ActorUserName
+  nameWithType: InboxTaskActionDto.ActorUserName
+  fullName: MegaForm.Sdk.InboxTaskActionDto.ActorUserName
+- uid: MegaForm.Sdk.InboxTaskActionDto.ActorDisplayName*
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.ActorDisplayName
+  href: MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_ActorDisplayName
+  name: ActorDisplayName
+  nameWithType: InboxTaskActionDto.ActorDisplayName
+  fullName: MegaForm.Sdk.InboxTaskActionDto.ActorDisplayName
+- uid: MegaForm.Sdk.InboxTaskActionDto.TargetUser*
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.TargetUser
+  href: MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_TargetUser
+  name: TargetUser
+  nameWithType: InboxTaskActionDto.TargetUser
+  fullName: MegaForm.Sdk.InboxTaskActionDto.TargetUser
+- uid: MegaForm.Sdk.InboxTaskActionDto.Outcome*
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.Outcome
+  href: MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_Outcome
+  name: Outcome
+  nameWithType: InboxTaskActionDto.Outcome
+  fullName: MegaForm.Sdk.InboxTaskActionDto.Outcome
+- uid: MegaForm.Sdk.InboxTaskActionDto.Comment*
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.Comment
+  href: MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_Comment
+  name: Comment
+  nameWithType: InboxTaskActionDto.Comment
+  fullName: MegaForm.Sdk.InboxTaskActionDto.Comment
+- uid: MegaForm.Sdk.InboxTaskActionDto.CreatedAtUtc*
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionDto.CreatedAtUtc
+  href: MegaForm.Sdk.InboxTaskActionDto.html#MegaForm_Sdk_InboxTaskActionDto_CreatedAtUtc
+  name: CreatedAtUtc
+  nameWithType: InboxTaskActionDto.CreatedAtUtc
+  fullName: MegaForm.Sdk.InboxTaskActionDto.CreatedAtUtc
+- uid: System.DateTime
+  commentId: T:System.DateTime
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.datetime
+  name: DateTime
+  nameWithType: DateTime
+  fullName: System.DateTime
+  nameWithType.vb: Date
+  fullName.vb: Date
+  name.vb: Date

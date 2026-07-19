@@ -17,8 +17,8 @@ items:
   type: Class
   source:
     id: MegaFormFileContent
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 150
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 174
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -49,8 +49,8 @@ items:
   type: Property
   source:
     id: FileName
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 153
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 177
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -76,8 +76,8 @@ items:
   type: Property
   source:
     id: ContentType
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 156
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 180
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -103,8 +103,8 @@ items:
   type: Property
   source:
     id: Content
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 159
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 183
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk

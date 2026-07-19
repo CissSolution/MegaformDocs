@@ -1,42 +1,33 @@
 ### YamlMime:ManagedReference
 items:
-- uid: MegaForm.Sdk.SubmitResult
-  commentId: T:MegaForm.Sdk.SubmitResult
-  id: SubmitResult
+- uid: MegaForm.Sdk.InboxTaskActionRequest
+  commentId: T:MegaForm.Sdk.InboxTaskActionRequest
+  id: InboxTaskActionRequest
   parent: MegaForm.Sdk
   children:
-  - MegaForm.Sdk.SubmitResult.ErrorMessage
-  - MegaForm.Sdk.SubmitResult.IsSpam
-  - MegaForm.Sdk.SubmitResult.RedirectUrl
-  - MegaForm.Sdk.SubmitResult.SpamScore
-  - MegaForm.Sdk.SubmitResult.SubmissionId
-  - MegaForm.Sdk.SubmitResult.Success
-  - MegaForm.Sdk.SubmitResult.SuccessMessage
-  - MegaForm.Sdk.SubmitResult.ValidationErrors
+  - MegaForm.Sdk.InboxTaskActionRequest.Comment
+  - MegaForm.Sdk.InboxTaskActionRequest.Data
+  - MegaForm.Sdk.InboxTaskActionRequest.TargetUser
+  - MegaForm.Sdk.InboxTaskActionRequest.TaskId
   langs:
   - csharp
   - vb
-  name: SubmitResult
-  nameWithType: SubmitResult
-  fullName: MegaForm.Sdk.SubmitResult
+  name: InboxTaskActionRequest
+  nameWithType: InboxTaskActionRequest
+  fullName: MegaForm.Sdk.InboxTaskActionRequest
   type: Class
   source:
-    id: SubmitResult
+    id: InboxTaskActionRequest
     path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
-    startLine: 191
+    startLine: 433
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: >-
-    Result of submitting form data through <code>ISubmissionApi.SubmitAsync</code>. Mirrors the
-
-    server submission pipeline's outcome. On a validation failure <xref href="MegaForm.Sdk.SubmitResult.Success" data-throw-if-not-resolved="false"></xref> is
-
-    false and <xref href="MegaForm.Sdk.SubmitResult.ValidationErrors" data-throw-if-not-resolved="false"></xref> carries the per-field messages (no row is saved).
+  summary: Action request used by claim/approve/reject/forward/comment.
   example: []
   syntax:
-    content: public sealed class SubmitResult
-    content.vb: Public NotInheritable Class SubmitResult
+    content: public sealed class InboxTaskActionRequest
+    content.vb: Public NotInheritable Class InboxTaskActionRequest
   inheritance:
   - System.Object
   inheritedMembers:
@@ -46,235 +37,107 @@ items:
   - System.Object.GetType
   - System.Object.ReferenceEquals(System.Object,System.Object)
   - System.Object.ToString
-- uid: MegaForm.Sdk.SubmitResult.Success
-  commentId: P:MegaForm.Sdk.SubmitResult.Success
-  id: Success
-  parent: MegaForm.Sdk.SubmitResult
+- uid: MegaForm.Sdk.InboxTaskActionRequest.TaskId
+  commentId: P:MegaForm.Sdk.InboxTaskActionRequest.TaskId
+  id: TaskId
+  parent: MegaForm.Sdk.InboxTaskActionRequest
   langs:
   - csharp
   - vb
-  name: Success
-  nameWithType: SubmitResult.Success
-  fullName: MegaForm.Sdk.SubmitResult.Success
+  name: TaskId
+  nameWithType: InboxTaskActionRequest.TaskId
+  fullName: MegaForm.Sdk.InboxTaskActionRequest.TaskId
   type: Property
   source:
-    id: Success
+    id: TaskId
     path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
-    startLine: 194
+    startLine: 435
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: True when the submission was accepted and persisted.
-  example: []
   syntax:
-    content: public bool Success { get; set; }
-    parameters: []
-    return:
-      type: System.Boolean
-    content.vb: Public Property Success As Boolean
-  overload: MegaForm.Sdk.SubmitResult.Success*
-- uid: MegaForm.Sdk.SubmitResult.SubmissionId
-  commentId: P:MegaForm.Sdk.SubmitResult.SubmissionId
-  id: SubmissionId
-  parent: MegaForm.Sdk.SubmitResult
-  langs:
-  - csharp
-  - vb
-  name: SubmissionId
-  nameWithType: SubmitResult.SubmissionId
-  fullName: MegaForm.Sdk.SubmitResult.SubmissionId
-  type: Property
-  source:
-    id: SubmissionId
-    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
-    startLine: 197
-  assemblies:
-  - MegaForm.Sdk
-  namespace: MegaForm.Sdk
-  summary: Id of the newly created submission (0 when the submit failed).
-  example: []
-  syntax:
-    content: public int SubmissionId { get; set; }
-    parameters: []
-    return:
-      type: System.Int32
-    content.vb: Public Property SubmissionId As Integer
-  overload: MegaForm.Sdk.SubmitResult.SubmissionId*
-- uid: MegaForm.Sdk.SubmitResult.ErrorMessage
-  commentId: P:MegaForm.Sdk.SubmitResult.ErrorMessage
-  id: ErrorMessage
-  parent: MegaForm.Sdk.SubmitResult
-  langs:
-  - csharp
-  - vb
-  name: ErrorMessage
-  nameWithType: SubmitResult.ErrorMessage
-  fullName: MegaForm.Sdk.SubmitResult.ErrorMessage
-  type: Property
-  source:
-    id: ErrorMessage
-    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
-    startLine: 200
-  assemblies:
-  - MegaForm.Sdk
-  namespace: MegaForm.Sdk
-  summary: Human-readable error message when <xref href="MegaForm.Sdk.SubmitResult.Success" data-throw-if-not-resolved="false"></xref> is false, otherwise null.
-  example: []
-  syntax:
-    content: public string? ErrorMessage { get; set; }
+    content: public string TaskId { get; set; }
     parameters: []
     return:
       type: System.String
-    content.vb: Public Property ErrorMessage As String
-  overload: MegaForm.Sdk.SubmitResult.ErrorMessage*
-- uid: MegaForm.Sdk.SubmitResult.SuccessMessage
-  commentId: P:MegaForm.Sdk.SubmitResult.SuccessMessage
-  id: SuccessMessage
-  parent: MegaForm.Sdk.SubmitResult
+    content.vb: Public Property TaskId As String
+  overload: MegaForm.Sdk.InboxTaskActionRequest.TaskId*
+- uid: MegaForm.Sdk.InboxTaskActionRequest.Comment
+  commentId: P:MegaForm.Sdk.InboxTaskActionRequest.Comment
+  id: Comment
+  parent: MegaForm.Sdk.InboxTaskActionRequest
   langs:
   - csharp
   - vb
-  name: SuccessMessage
-  nameWithType: SubmitResult.SuccessMessage
-  fullName: MegaForm.Sdk.SubmitResult.SuccessMessage
+  name: Comment
+  nameWithType: InboxTaskActionRequest.Comment
+  fullName: MegaForm.Sdk.InboxTaskActionRequest.Comment
   type: Property
   source:
-    id: SuccessMessage
+    id: Comment
     path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
-    startLine: 203
+    startLine: 436
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Optional success message configured on the form (post-submit experience).
-  example: []
   syntax:
-    content: public string? SuccessMessage { get; set; }
+    content: public string? Comment { get; set; }
     parameters: []
     return:
       type: System.String
-    content.vb: Public Property SuccessMessage As String
-  overload: MegaForm.Sdk.SubmitResult.SuccessMessage*
-- uid: MegaForm.Sdk.SubmitResult.RedirectUrl
-  commentId: P:MegaForm.Sdk.SubmitResult.RedirectUrl
-  id: RedirectUrl
-  parent: MegaForm.Sdk.SubmitResult
+    content.vb: Public Property Comment As String
+  overload: MegaForm.Sdk.InboxTaskActionRequest.Comment*
+- uid: MegaForm.Sdk.InboxTaskActionRequest.TargetUser
+  commentId: P:MegaForm.Sdk.InboxTaskActionRequest.TargetUser
+  id: TargetUser
+  parent: MegaForm.Sdk.InboxTaskActionRequest
   langs:
   - csharp
   - vb
-  name: RedirectUrl
-  nameWithType: SubmitResult.RedirectUrl
-  fullName: MegaForm.Sdk.SubmitResult.RedirectUrl
+  name: TargetUser
+  nameWithType: InboxTaskActionRequest.TargetUser
+  fullName: MegaForm.Sdk.InboxTaskActionRequest.TargetUser
   type: Property
   source:
-    id: RedirectUrl
+    id: TargetUser
     path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
-    startLine: 206
+    startLine: 437
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Optional redirect URL configured on the form for after a successful submit.
-  example: []
   syntax:
-    content: public string? RedirectUrl { get; set; }
+    content: public string? TargetUser { get; set; }
     parameters: []
     return:
       type: System.String
-    content.vb: Public Property RedirectUrl As String
-  overload: MegaForm.Sdk.SubmitResult.RedirectUrl*
-- uid: MegaForm.Sdk.SubmitResult.IsSpam
-  commentId: P:MegaForm.Sdk.SubmitResult.IsSpam
-  id: IsSpam
-  parent: MegaForm.Sdk.SubmitResult
+    content.vb: Public Property TargetUser As String
+  overload: MegaForm.Sdk.InboxTaskActionRequest.TargetUser*
+- uid: MegaForm.Sdk.InboxTaskActionRequest.Data
+  commentId: P:MegaForm.Sdk.InboxTaskActionRequest.Data
+  id: Data
+  parent: MegaForm.Sdk.InboxTaskActionRequest
   langs:
   - csharp
   - vb
-  name: IsSpam
-  nameWithType: SubmitResult.IsSpam
-  fullName: MegaForm.Sdk.SubmitResult.IsSpam
+  name: Data
+  nameWithType: InboxTaskActionRequest.Data
+  fullName: MegaForm.Sdk.InboxTaskActionRequest.Data
   type: Property
   source:
-    id: IsSpam
+    id: Data
     path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
-    startLine: 209
+    startLine: 438
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: True when the submission was flagged as spam by the anti-spam check.
-  example: []
   syntax:
-    content: public bool IsSpam { get; set; }
+    content: public Dictionary<string, object>? Data { get; set; }
     parameters: []
     return:
-      type: System.Boolean
-    content.vb: Public Property IsSpam As Boolean
-  overload: MegaForm.Sdk.SubmitResult.IsSpam*
-- uid: MegaForm.Sdk.SubmitResult.SpamScore
-  commentId: P:MegaForm.Sdk.SubmitResult.SpamScore
-  id: SpamScore
-  parent: MegaForm.Sdk.SubmitResult
-  langs:
-  - csharp
-  - vb
-  name: SpamScore
-  nameWithType: SubmitResult.SpamScore
-  fullName: MegaForm.Sdk.SubmitResult.SpamScore
-  type: Property
-  source:
-    id: SpamScore
-    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
-    startLine: 212
-  assemblies:
-  - MegaForm.Sdk
-  namespace: MegaForm.Sdk
-  summary: Spam score assigned by the anti-spam check (higher = more spammy).
-  example: []
-  syntax:
-    content: public double SpamScore { get; set; }
-    parameters: []
-    return:
-      type: System.Double
-    content.vb: Public Property SpamScore As Double
-  overload: MegaForm.Sdk.SubmitResult.SpamScore*
-- uid: MegaForm.Sdk.SubmitResult.ValidationErrors
-  commentId: P:MegaForm.Sdk.SubmitResult.ValidationErrors
-  id: ValidationErrors
-  parent: MegaForm.Sdk.SubmitResult
-  langs:
-  - csharp
-  - vb
-  name: ValidationErrors
-  nameWithType: SubmitResult.ValidationErrors
-  fullName: MegaForm.Sdk.SubmitResult.ValidationErrors
-  type: Property
-  source:
-    id: ValidationErrors
-    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
-    startLine: 215
-  assemblies:
-  - MegaForm.Sdk
-  namespace: MegaForm.Sdk
-  summary: Per-field validation errors (field key → message) when validation failed; null on success.
-  example: []
-  syntax:
-    content: public Dictionary<string, string>? ValidationErrors { get; set; }
-    parameters: []
-    return:
-      type: System.Collections.Generic.Dictionary{System.String,System.String}
-    content.vb: Public Property ValidationErrors As Dictionary(Of String, String)
-  overload: MegaForm.Sdk.SubmitResult.ValidationErrors*
+      type: System.Collections.Generic.Dictionary{System.String,System.Object}
+    content.vb: Public Property Data As Dictionary(Of String, Object)
+  overload: MegaForm.Sdk.InboxTaskActionRequest.Data*
 references:
-- uid: MegaForm.Sdk.SubmitResult.Success
-  commentId: P:MegaForm.Sdk.SubmitResult.Success
-  href: MegaForm.Sdk.SubmitResult.html#MegaForm_Sdk_SubmitResult_Success
-  name: Success
-  nameWithType: SubmitResult.Success
-  fullName: MegaForm.Sdk.SubmitResult.Success
-- uid: MegaForm.Sdk.SubmitResult.ValidationErrors
-  commentId: P:MegaForm.Sdk.SubmitResult.ValidationErrors
-  href: MegaForm.Sdk.SubmitResult.html#MegaForm_Sdk_SubmitResult_ValidationErrors
-  name: ValidationErrors
-  nameWithType: SubmitResult.ValidationErrors
-  fullName: MegaForm.Sdk.SubmitResult.ValidationErrors
 - uid: MegaForm.Sdk
   commentId: N:MegaForm.Sdk
   href: MegaForm.html
@@ -510,46 +373,12 @@ references:
   name: System
   nameWithType: System
   fullName: System
-- uid: MegaForm.Sdk.SubmitResult.Success*
-  commentId: Overload:MegaForm.Sdk.SubmitResult.Success
-  href: MegaForm.Sdk.SubmitResult.html#MegaForm_Sdk_SubmitResult_Success
-  name: Success
-  nameWithType: SubmitResult.Success
-  fullName: MegaForm.Sdk.SubmitResult.Success
-- uid: System.Boolean
-  commentId: T:System.Boolean
-  parent: System
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.boolean
-  name: bool
-  nameWithType: bool
-  fullName: bool
-  nameWithType.vb: Boolean
-  fullName.vb: Boolean
-  name.vb: Boolean
-- uid: MegaForm.Sdk.SubmitResult.SubmissionId*
-  commentId: Overload:MegaForm.Sdk.SubmitResult.SubmissionId
-  href: MegaForm.Sdk.SubmitResult.html#MegaForm_Sdk_SubmitResult_SubmissionId
-  name: SubmissionId
-  nameWithType: SubmitResult.SubmissionId
-  fullName: MegaForm.Sdk.SubmitResult.SubmissionId
-- uid: System.Int32
-  commentId: T:System.Int32
-  parent: System
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.int32
-  name: int
-  nameWithType: int
-  fullName: int
-  nameWithType.vb: Integer
-  fullName.vb: Integer
-  name.vb: Integer
-- uid: MegaForm.Sdk.SubmitResult.ErrorMessage*
-  commentId: Overload:MegaForm.Sdk.SubmitResult.ErrorMessage
-  href: MegaForm.Sdk.SubmitResult.html#MegaForm_Sdk_SubmitResult_ErrorMessage
-  name: ErrorMessage
-  nameWithType: SubmitResult.ErrorMessage
-  fullName: MegaForm.Sdk.SubmitResult.ErrorMessage
+- uid: MegaForm.Sdk.InboxTaskActionRequest.TaskId*
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionRequest.TaskId
+  href: MegaForm.Sdk.InboxTaskActionRequest.html#MegaForm_Sdk_InboxTaskActionRequest_TaskId
+  name: TaskId
+  nameWithType: InboxTaskActionRequest.TaskId
+  fullName: MegaForm.Sdk.InboxTaskActionRequest.TaskId
 - uid: System.String
   commentId: T:System.String
   parent: System
@@ -561,58 +390,35 @@ references:
   nameWithType.vb: String
   fullName.vb: String
   name.vb: String
-- uid: MegaForm.Sdk.SubmitResult.SuccessMessage*
-  commentId: Overload:MegaForm.Sdk.SubmitResult.SuccessMessage
-  href: MegaForm.Sdk.SubmitResult.html#MegaForm_Sdk_SubmitResult_SuccessMessage
-  name: SuccessMessage
-  nameWithType: SubmitResult.SuccessMessage
-  fullName: MegaForm.Sdk.SubmitResult.SuccessMessage
-- uid: MegaForm.Sdk.SubmitResult.RedirectUrl*
-  commentId: Overload:MegaForm.Sdk.SubmitResult.RedirectUrl
-  href: MegaForm.Sdk.SubmitResult.html#MegaForm_Sdk_SubmitResult_RedirectUrl
-  name: RedirectUrl
-  nameWithType: SubmitResult.RedirectUrl
-  fullName: MegaForm.Sdk.SubmitResult.RedirectUrl
-- uid: MegaForm.Sdk.SubmitResult.IsSpam*
-  commentId: Overload:MegaForm.Sdk.SubmitResult.IsSpam
-  href: MegaForm.Sdk.SubmitResult.html#MegaForm_Sdk_SubmitResult_IsSpam
-  name: IsSpam
-  nameWithType: SubmitResult.IsSpam
-  fullName: MegaForm.Sdk.SubmitResult.IsSpam
-- uid: MegaForm.Sdk.SubmitResult.SpamScore*
-  commentId: Overload:MegaForm.Sdk.SubmitResult.SpamScore
-  href: MegaForm.Sdk.SubmitResult.html#MegaForm_Sdk_SubmitResult_SpamScore
-  name: SpamScore
-  nameWithType: SubmitResult.SpamScore
-  fullName: MegaForm.Sdk.SubmitResult.SpamScore
-- uid: System.Double
-  commentId: T:System.Double
-  parent: System
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.double
-  name: double
-  nameWithType: double
-  fullName: double
-  nameWithType.vb: Double
-  fullName.vb: Double
-  name.vb: Double
-- uid: MegaForm.Sdk.SubmitResult.ValidationErrors*
-  commentId: Overload:MegaForm.Sdk.SubmitResult.ValidationErrors
-  href: MegaForm.Sdk.SubmitResult.html#MegaForm_Sdk_SubmitResult_ValidationErrors
-  name: ValidationErrors
-  nameWithType: SubmitResult.ValidationErrors
-  fullName: MegaForm.Sdk.SubmitResult.ValidationErrors
-- uid: System.Collections.Generic.Dictionary{System.String,System.String}
-  commentId: T:System.Collections.Generic.Dictionary{System.String,System.String}
+- uid: MegaForm.Sdk.InboxTaskActionRequest.Comment*
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionRequest.Comment
+  href: MegaForm.Sdk.InboxTaskActionRequest.html#MegaForm_Sdk_InboxTaskActionRequest_Comment
+  name: Comment
+  nameWithType: InboxTaskActionRequest.Comment
+  fullName: MegaForm.Sdk.InboxTaskActionRequest.Comment
+- uid: MegaForm.Sdk.InboxTaskActionRequest.TargetUser*
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionRequest.TargetUser
+  href: MegaForm.Sdk.InboxTaskActionRequest.html#MegaForm_Sdk_InboxTaskActionRequest_TargetUser
+  name: TargetUser
+  nameWithType: InboxTaskActionRequest.TargetUser
+  fullName: MegaForm.Sdk.InboxTaskActionRequest.TargetUser
+- uid: MegaForm.Sdk.InboxTaskActionRequest.Data*
+  commentId: Overload:MegaForm.Sdk.InboxTaskActionRequest.Data
+  href: MegaForm.Sdk.InboxTaskActionRequest.html#MegaForm_Sdk_InboxTaskActionRequest_Data
+  name: Data
+  nameWithType: InboxTaskActionRequest.Data
+  fullName: MegaForm.Sdk.InboxTaskActionRequest.Data
+- uid: System.Collections.Generic.Dictionary{System.String,System.Object}
+  commentId: T:System.Collections.Generic.Dictionary{System.String,System.Object}
   parent: System.Collections.Generic
   definition: System.Collections.Generic.Dictionary`2
   href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
-  name: Dictionary<string, string>
-  nameWithType: Dictionary<string, string>
-  fullName: System.Collections.Generic.Dictionary<string, string>
-  nameWithType.vb: Dictionary(Of String, String)
-  fullName.vb: System.Collections.Generic.Dictionary(Of String, String)
-  name.vb: Dictionary(Of String, String)
+  name: Dictionary<string, object>
+  nameWithType: Dictionary<string, object>
+  fullName: System.Collections.Generic.Dictionary<string, object>
+  nameWithType.vb: Dictionary(Of String, Object)
+  fullName.vb: System.Collections.Generic.Dictionary(Of String, Object)
+  name.vb: Dictionary(Of String, Object)
   spec.csharp:
   - uid: System.Collections.Generic.Dictionary`2
     name: Dictionary
@@ -625,10 +431,10 @@ references:
     href: https://learn.microsoft.com/dotnet/api/system.string
   - name: ','
   - name: " "
-  - uid: System.String
-    name: string
+  - uid: System.Object
+    name: object
     isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.string
+    href: https://learn.microsoft.com/dotnet/api/system.object
   - name: '>'
   spec.vb:
   - uid: System.Collections.Generic.Dictionary`2
@@ -644,10 +450,10 @@ references:
     href: https://learn.microsoft.com/dotnet/api/system.string
   - name: ','
   - name: " "
-  - uid: System.String
-    name: String
+  - uid: System.Object
+    name: Object
     isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.string
+    href: https://learn.microsoft.com/dotnet/api/system.object
   - name: )
 - uid: System.Collections.Generic.Dictionary`2
   commentId: T:System.Collections.Generic.Dictionary`2

@@ -1,30 +1,30 @@
 ### YamlMime:ManagedReference
 items:
-- uid: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions
-  commentId: T:MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions
-  id: MegaFormSdkServiceCollectionExtensions
+- uid: MegaForm.Sdk.InboxQuery
+  commentId: T:MegaForm.Sdk.InboxQuery
+  id: InboxQuery
   parent: MegaForm.Sdk
   children:
-  - MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk(Microsoft.Extensions.DependencyInjection.IServiceCollection)
+  - MegaForm.Sdk.InboxQuery.RecentCompleted
   langs:
   - csharp
   - vb
-  name: MegaFormSdkServiceCollectionExtensions
-  nameWithType: MegaFormSdkServiceCollectionExtensions
-  fullName: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions
+  name: InboxQuery
+  nameWithType: InboxQuery
+  fullName: MegaForm.Sdk.InboxQuery
   type: Class
   source:
-    id: MegaFormSdkServiceCollectionExtensions
-    path: E:\_sdkwt\MegaForm.Sdk\ServiceCollectionExtensions.cs
-    startLine: 9
+    id: InboxQuery
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 373
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: DI registration for the MegaForm SDK facade.
+  summary: Options for the current actor's inbox board.
   example: []
   syntax:
-    content: public static class MegaFormSdkServiceCollectionExtensions
-    content.vb: Public Module MegaFormSdkServiceCollectionExtensions
+    content: public sealed class InboxQuery
+    content.vb: Public NotInheritable Class InboxQuery
   inheritance:
   - System.Object
   inheritedMembers:
@@ -32,46 +32,33 @@ items:
   - System.Object.Equals(System.Object,System.Object)
   - System.Object.GetHashCode
   - System.Object.GetType
-  - System.Object.MemberwiseClone
   - System.Object.ReferenceEquals(System.Object,System.Object)
   - System.Object.ToString
-- uid: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk(Microsoft.Extensions.DependencyInjection.IServiceCollection)
-  commentId: M:MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk(Microsoft.Extensions.DependencyInjection.IServiceCollection)
-  id: AddMegaFormSdk(Microsoft.Extensions.DependencyInjection.IServiceCollection)
-  isExtensionMethod: true
-  parent: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions
+- uid: MegaForm.Sdk.InboxQuery.RecentCompleted
+  commentId: P:MegaForm.Sdk.InboxQuery.RecentCompleted
+  id: RecentCompleted
+  parent: MegaForm.Sdk.InboxQuery
   langs:
   - csharp
   - vb
-  name: AddMegaFormSdk(IServiceCollection)
-  nameWithType: MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk(IServiceCollection)
-  fullName: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk(Microsoft.Extensions.DependencyInjection.IServiceCollection)
-  type: Method
+  name: RecentCompleted
+  nameWithType: InboxQuery.RecentCompleted
+  fullName: MegaForm.Sdk.InboxQuery.RecentCompleted
+  type: Property
   source:
-    id: AddMegaFormSdk
-    path: E:\_sdkwt\MegaForm.Sdk\ServiceCollectionExtensions.cs
-    startLine: 17
+    id: RecentCompleted
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 375
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: >-
-    Register <xref href="MegaForm.Sdk.IMegaFormClient" data-throw-if-not-resolved="false"></xref>. The host must already have registered the
-
-    MegaForm.Core repositories (<code>IFormRepository</code>, <code>ISubmissionRepository</code>) —
-
-    every MegaForm host (Oqtane / Web / DNN) does this. <code>IPlatformContext</code> is used
-
-    when present for ambient tenant/user; otherwise callers pass a <xref href="MegaForm.Sdk.MegaFormScope" data-throw-if-not-resolved="false"></xref>.
-  example: []
   syntax:
-    content: public static IServiceCollection AddMegaFormSdk(this IServiceCollection services)
-    parameters:
-    - id: services
-      type: Microsoft.Extensions.DependencyInjection.IServiceCollection
+    content: public int RecentCompleted { get; set; }
+    parameters: []
     return:
-      type: Microsoft.Extensions.DependencyInjection.IServiceCollection
-    content.vb: Public Shared Function AddMegaFormSdk(services As IServiceCollection) As IServiceCollection
-  overload: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk*
+      type: System.Int32
+    content.vb: Public Property RecentCompleted As Integer
+  overload: MegaForm.Sdk.InboxQuery.RecentCompleted*
 references:
 - uid: MegaForm.Sdk
   commentId: N:MegaForm.Sdk
@@ -232,30 +219,6 @@ references:
     href: https://learn.microsoft.com/dotnet/api/system.object.gettype
   - name: (
   - name: )
-- uid: System.Object.MemberwiseClone
-  commentId: M:System.Object.MemberwiseClone
-  parent: System.Object
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
-  name: MemberwiseClone()
-  nameWithType: object.MemberwiseClone()
-  fullName: object.MemberwiseClone()
-  nameWithType.vb: Object.MemberwiseClone()
-  fullName.vb: Object.MemberwiseClone()
-  spec.csharp:
-  - uid: System.Object.MemberwiseClone
-    name: MemberwiseClone
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
-  - name: (
-  - name: )
-  spec.vb:
-  - uid: System.Object.MemberwiseClone
-    name: MemberwiseClone
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
-  - name: (
-  - name: )
 - uid: System.Object.ReferenceEquals(System.Object,System.Object)
   commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
   parent: System.Object
@@ -332,68 +295,20 @@ references:
   name: System
   nameWithType: System
   fullName: System
-- uid: MegaForm.Sdk.IMegaFormClient
-  commentId: T:MegaForm.Sdk.IMegaFormClient
-  parent: MegaForm.Sdk
-  href: MegaForm.Sdk.IMegaFormClient.html
-  name: IMegaFormClient
-  nameWithType: IMegaFormClient
-  fullName: MegaForm.Sdk.IMegaFormClient
-- uid: MegaForm.Sdk.MegaFormScope
-  commentId: T:MegaForm.Sdk.MegaFormScope
-  parent: MegaForm.Sdk
-  href: MegaForm.Sdk.MegaFormScope.html
-  name: MegaFormScope
-  nameWithType: MegaFormScope
-  fullName: MegaForm.Sdk.MegaFormScope
-- uid: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk*
-  commentId: Overload:MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk
-  href: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.html#MegaForm_Sdk_MegaFormSdkServiceCollectionExtensions_AddMegaFormSdk_Microsoft_Extensions_DependencyInjection_IServiceCollection_
-  name: AddMegaFormSdk
-  nameWithType: MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk
-  fullName: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk
-- uid: Microsoft.Extensions.DependencyInjection.IServiceCollection
-  commentId: T:Microsoft.Extensions.DependencyInjection.IServiceCollection
-  parent: Microsoft.Extensions.DependencyInjection
+- uid: MegaForm.Sdk.InboxQuery.RecentCompleted*
+  commentId: Overload:MegaForm.Sdk.InboxQuery.RecentCompleted
+  href: MegaForm.Sdk.InboxQuery.html#MegaForm_Sdk_InboxQuery_RecentCompleted
+  name: RecentCompleted
+  nameWithType: InboxQuery.RecentCompleted
+  fullName: MegaForm.Sdk.InboxQuery.RecentCompleted
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
   isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/microsoft.extensions.dependencyinjection.iservicecollection
-  name: IServiceCollection
-  nameWithType: IServiceCollection
-  fullName: Microsoft.Extensions.DependencyInjection.IServiceCollection
-- uid: Microsoft.Extensions.DependencyInjection
-  commentId: N:Microsoft.Extensions.DependencyInjection
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/microsoft
-  name: Microsoft.Extensions.DependencyInjection
-  nameWithType: Microsoft.Extensions.DependencyInjection
-  fullName: Microsoft.Extensions.DependencyInjection
-  spec.csharp:
-  - uid: Microsoft
-    name: Microsoft
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/microsoft
-  - name: .
-  - uid: Microsoft.Extensions
-    name: Extensions
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/microsoft.extensions
-  - name: .
-  - uid: Microsoft.Extensions.DependencyInjection
-    name: DependencyInjection
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/microsoft.extensions.dependencyinjection
-  spec.vb:
-  - uid: Microsoft
-    name: Microsoft
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/microsoft
-  - name: .
-  - uid: Microsoft.Extensions
-    name: Extensions
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/microsoft.extensions
-  - name: .
-  - uid: Microsoft.Extensions.DependencyInjection
-    name: DependencyInjection
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/microsoft.extensions.dependencyinjection
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer

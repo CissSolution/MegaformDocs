@@ -19,8 +19,8 @@ items:
   type: Interface
   source:
     id: IFormApi
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
-    startLine: 51
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 60
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -44,8 +44,8 @@ items:
   type: Method
   source:
     id: CreateFormAsync
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
-    startLine: 54
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 63
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -80,8 +80,8 @@ items:
   type: Method
   source:
     id: GetFormAsync
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
-    startLine: 57
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 66
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -116,8 +116,8 @@ items:
   type: Method
   source:
     id: ListFormsAsync
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
-    startLine: 60
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 69
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -152,8 +152,8 @@ items:
   type: Method
   source:
     id: DeleteFormAsync
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
-    startLine: 63
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 72
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -188,8 +188,8 @@ items:
   type: Method
   source:
     id: UpdateFormAsync
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
-    startLine: 70
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 79
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk

@@ -5,9 +5,12 @@ items:
   id: IMegaFormClient
   parent: MegaForm.Sdk
   children:
+  - MegaForm.Sdk.IMegaFormClient.Dashboard
   - MegaForm.Sdk.IMegaFormClient.Files
   - MegaForm.Sdk.IMegaFormClient.Forms
+  - MegaForm.Sdk.IMegaFormClient.Inbox
   - MegaForm.Sdk.IMegaFormClient.Schema
+  - MegaForm.Sdk.IMegaFormClient.SubmissionDashboard
   - MegaForm.Sdk.IMegaFormClient.Submissions
   langs:
   - csharp
@@ -18,7 +21,7 @@ items:
   type: Interface
   source:
     id: IMegaFormClient
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
     startLine: 11
   assemblies:
   - MegaForm.Sdk
@@ -48,7 +51,7 @@ items:
   type: Property
   source:
     id: Forms
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
     startLine: 14
   assemblies:
   - MegaForm.Sdk
@@ -75,7 +78,7 @@ items:
   type: Property
   source:
     id: Submissions
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
     startLine: 17
   assemblies:
   - MegaForm.Sdk
@@ -89,6 +92,87 @@ items:
       type: MegaForm.Sdk.ISubmissionApi
     content.vb: ReadOnly Property Submissions As ISubmissionApi
   overload: MegaForm.Sdk.IMegaFormClient.Submissions*
+- uid: MegaForm.Sdk.IMegaFormClient.Dashboard
+  commentId: P:MegaForm.Sdk.IMegaFormClient.Dashboard
+  id: Dashboard
+  parent: MegaForm.Sdk.IMegaFormClient
+  langs:
+  - csharp
+  - vb
+  name: Dashboard
+  nameWithType: IMegaFormClient.Dashboard
+  fullName: MegaForm.Sdk.IMegaFormClient.Dashboard
+  type: Property
+  source:
+    id: Dashboard
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 20
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Dashboard summaries for customers building an in-host dashboard.
+  example: []
+  syntax:
+    content: IDashboardApi Dashboard { get; }
+    parameters: []
+    return:
+      type: MegaForm.Sdk.IDashboardApi
+    content.vb: ReadOnly Property Dashboard As IDashboardApi
+  overload: MegaForm.Sdk.IMegaFormClient.Dashboard*
+- uid: MegaForm.Sdk.IMegaFormClient.SubmissionDashboard
+  commentId: P:MegaForm.Sdk.IMegaFormClient.SubmissionDashboard
+  id: SubmissionDashboard
+  parent: MegaForm.Sdk.IMegaFormClient
+  langs:
+  - csharp
+  - vb
+  name: SubmissionDashboard
+  nameWithType: IMegaFormClient.SubmissionDashboard
+  fullName: MegaForm.Sdk.IMegaFormClient.SubmissionDashboard
+  type: Property
+  source:
+    id: SubmissionDashboard
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 23
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Submission dashboard search, detail, and status operations.
+  example: []
+  syntax:
+    content: ISubmissionDashboardApi SubmissionDashboard { get; }
+    parameters: []
+    return:
+      type: MegaForm.Sdk.ISubmissionDashboardApi
+    content.vb: ReadOnly Property SubmissionDashboard As ISubmissionDashboardApi
+  overload: MegaForm.Sdk.IMegaFormClient.SubmissionDashboard*
+- uid: MegaForm.Sdk.IMegaFormClient.Inbox
+  commentId: P:MegaForm.Sdk.IMegaFormClient.Inbox
+  id: Inbox
+  parent: MegaForm.Sdk.IMegaFormClient
+  langs:
+  - csharp
+  - vb
+  name: Inbox
+  nameWithType: IMegaFormClient.Inbox
+  fullName: MegaForm.Sdk.IMegaFormClient.Inbox
+  type: Property
+  source:
+    id: Inbox
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 26
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Human-task inbox operations backed by the host workflow task service.
+  example: []
+  syntax:
+    content: IInboxApi Inbox { get; }
+    parameters: []
+    return:
+      type: MegaForm.Sdk.IInboxApi
+    content.vb: ReadOnly Property Inbox As IInboxApi
+  overload: MegaForm.Sdk.IMegaFormClient.Inbox*
 - uid: MegaForm.Sdk.IMegaFormClient.Files
   commentId: P:MegaForm.Sdk.IMegaFormClient.Files
   id: Files
@@ -102,8 +186,8 @@ items:
   type: Property
   source:
     id: Files
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
-    startLine: 20
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 29
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -129,8 +213,8 @@ items:
   type: Property
   source:
     id: Schema
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
-    startLine: 23
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 32
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -197,6 +281,45 @@ references:
   name: ISubmissionApi
   nameWithType: ISubmissionApi
   fullName: MegaForm.Sdk.ISubmissionApi
+- uid: MegaForm.Sdk.IMegaFormClient.Dashboard*
+  commentId: Overload:MegaForm.Sdk.IMegaFormClient.Dashboard
+  href: MegaForm.Sdk.IMegaFormClient.html#MegaForm_Sdk_IMegaFormClient_Dashboard
+  name: Dashboard
+  nameWithType: IMegaFormClient.Dashboard
+  fullName: MegaForm.Sdk.IMegaFormClient.Dashboard
+- uid: MegaForm.Sdk.IDashboardApi
+  commentId: T:MegaForm.Sdk.IDashboardApi
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.IDashboardApi.html
+  name: IDashboardApi
+  nameWithType: IDashboardApi
+  fullName: MegaForm.Sdk.IDashboardApi
+- uid: MegaForm.Sdk.IMegaFormClient.SubmissionDashboard*
+  commentId: Overload:MegaForm.Sdk.IMegaFormClient.SubmissionDashboard
+  href: MegaForm.Sdk.IMegaFormClient.html#MegaForm_Sdk_IMegaFormClient_SubmissionDashboard
+  name: SubmissionDashboard
+  nameWithType: IMegaFormClient.SubmissionDashboard
+  fullName: MegaForm.Sdk.IMegaFormClient.SubmissionDashboard
+- uid: MegaForm.Sdk.ISubmissionDashboardApi
+  commentId: T:MegaForm.Sdk.ISubmissionDashboardApi
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.ISubmissionDashboardApi.html
+  name: ISubmissionDashboardApi
+  nameWithType: ISubmissionDashboardApi
+  fullName: MegaForm.Sdk.ISubmissionDashboardApi
+- uid: MegaForm.Sdk.IMegaFormClient.Inbox*
+  commentId: Overload:MegaForm.Sdk.IMegaFormClient.Inbox
+  href: MegaForm.Sdk.IMegaFormClient.html#MegaForm_Sdk_IMegaFormClient_Inbox
+  name: Inbox
+  nameWithType: IMegaFormClient.Inbox
+  fullName: MegaForm.Sdk.IMegaFormClient.Inbox
+- uid: MegaForm.Sdk.IInboxApi
+  commentId: T:MegaForm.Sdk.IInboxApi
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.IInboxApi.html
+  name: IInboxApi
+  nameWithType: IInboxApi
+  fullName: MegaForm.Sdk.IInboxApi
 - uid: MegaForm.Sdk.IMegaFormClient.Files*
   commentId: Overload:MegaForm.Sdk.IMegaFormClient.Files
   href: MegaForm.Sdk.IMegaFormClient.html#MegaForm_Sdk_IMegaFormClient_Files

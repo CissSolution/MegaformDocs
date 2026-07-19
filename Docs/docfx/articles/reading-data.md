@@ -10,14 +10,18 @@ Every method accepts an optional [`MegaFormScope`](../api/MegaForm.Sdk.MegaFormS
 var scope = new MegaFormScope
 {
     PortalId = 1,   // the site/portal to read from
-    UserId   = 0    // acting user (0 = anonymous/system)
+    UserId   = 0,   // acting user (0 = anonymous/system)
+    UserName = "jane",
+    DisplayName = "Jane Doe",
+    Roles = new List<string> { "Managers" }
 };
 ```
 
 - **Inside a MegaForm request** you can usually omit it — the ambient platform context supplies
-  the current portal.
+  the current portal and user.
 - **Outside a request** (a scheduled job, a different module, a CLI) you **must** pass it, or the
   call cannot know which tenant to read.
+- **DNN** does not register an `IPlatformContext`, so always pass an explicit scope on DNN.
 
 ## Listing forms
 

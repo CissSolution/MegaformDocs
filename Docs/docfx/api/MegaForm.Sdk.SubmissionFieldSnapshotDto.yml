@@ -1,33 +1,36 @@
 ### YamlMime:ManagedReference
 items:
-- uid: MegaForm.Sdk.FormQuery
-  commentId: T:MegaForm.Sdk.FormQuery
-  id: FormQuery
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto
+  commentId: T:MegaForm.Sdk.SubmissionFieldSnapshotDto
+  id: SubmissionFieldSnapshotDto
   parent: MegaForm.Sdk
   children:
-  - MegaForm.Sdk.FormQuery.Page
-  - MegaForm.Sdk.FormQuery.PageSize
-  - MegaForm.Sdk.FormQuery.Search
-  - MegaForm.Sdk.FormQuery.Status
+  - MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue
+  - MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey
+  - MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel
+  - MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType
+  - MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback
+  - MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue
+  - MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder
   langs:
   - csharp
   - vb
-  name: FormQuery
-  nameWithType: FormQuery
-  fullName: MegaForm.Sdk.FormQuery
+  name: SubmissionFieldSnapshotDto
+  nameWithType: SubmissionFieldSnapshotDto
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto
   type: Class
   source:
-    id: FormQuery
+    id: SubmissionFieldSnapshotDto
     path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
-    startLine: 92
+    startLine: 346
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Filter/paging options for listing forms.
+  summary: Stored field snapshot captured at submit time.
   example: []
   syntax:
-    content: public sealed class FormQuery
-    content.vb: Public NotInheritable Class FormQuery
+    content: public sealed class SubmissionFieldSnapshotDto
+    content.vb: Public NotInheritable Class SubmissionFieldSnapshotDto
   inheritance:
   - System.Object
   inheritedMembers:
@@ -37,114 +40,181 @@ items:
   - System.Object.GetType
   - System.Object.ReferenceEquals(System.Object,System.Object)
   - System.Object.ToString
-- uid: MegaForm.Sdk.FormQuery.Status
-  commentId: P:MegaForm.Sdk.FormQuery.Status
-  id: Status
-  parent: MegaForm.Sdk.FormQuery
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey
+  id: FieldKey
+  parent: MegaForm.Sdk.SubmissionFieldSnapshotDto
   langs:
   - csharp
   - vb
-  name: Status
-  nameWithType: FormQuery.Status
-  fullName: MegaForm.Sdk.FormQuery.Status
+  name: FieldKey
+  nameWithType: SubmissionFieldSnapshotDto.FieldKey
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey
   type: Property
   source:
-    id: Status
+    id: FieldKey
     path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
-    startLine: 95
+    startLine: 348
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Optional status filter ("published"/"draft"). Null = all.
-  example: []
   syntax:
-    content: public string? Status { get; set; }
+    content: public string? FieldKey { get; set; }
     parameters: []
     return:
       type: System.String
-    content.vb: Public Property Status As String
-  overload: MegaForm.Sdk.FormQuery.Status*
-- uid: MegaForm.Sdk.FormQuery.Search
-  commentId: P:MegaForm.Sdk.FormQuery.Search
-  id: Search
-  parent: MegaForm.Sdk.FormQuery
+    content.vb: Public Property FieldKey As String
+  overload: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey*
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel
+  id: FieldLabel
+  parent: MegaForm.Sdk.SubmissionFieldSnapshotDto
   langs:
   - csharp
   - vb
-  name: Search
-  nameWithType: FormQuery.Search
-  fullName: MegaForm.Sdk.FormQuery.Search
+  name: FieldLabel
+  nameWithType: SubmissionFieldSnapshotDto.FieldLabel
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel
   type: Property
   source:
-    id: Search
+    id: FieldLabel
     path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
-    startLine: 98
+    startLine: 349
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Optional title/description search term.
-  example: []
   syntax:
-    content: public string? Search { get; set; }
+    content: public string? FieldLabel { get; set; }
     parameters: []
     return:
       type: System.String
-    content.vb: Public Property Search As String
-  overload: MegaForm.Sdk.FormQuery.Search*
-- uid: MegaForm.Sdk.FormQuery.Page
-  commentId: P:MegaForm.Sdk.FormQuery.Page
-  id: Page
-  parent: MegaForm.Sdk.FormQuery
+    content.vb: Public Property FieldLabel As String
+  overload: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel*
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType
+  id: FieldType
+  parent: MegaForm.Sdk.SubmissionFieldSnapshotDto
   langs:
   - csharp
   - vb
-  name: Page
-  nameWithType: FormQuery.Page
-  fullName: MegaForm.Sdk.FormQuery.Page
+  name: FieldType
+  nameWithType: SubmissionFieldSnapshotDto.FieldType
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType
   type: Property
   source:
-    id: Page
+    id: FieldType
     path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
-    startLine: 101
+    startLine: 350
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Page number (1-based).
-  example: []
   syntax:
-    content: public int Page { get; set; }
+    content: public string? FieldType { get; set; }
     parameters: []
     return:
-      type: System.Int32
-    content.vb: Public Property Page As Integer
-  overload: MegaForm.Sdk.FormQuery.Page*
-- uid: MegaForm.Sdk.FormQuery.PageSize
-  commentId: P:MegaForm.Sdk.FormQuery.PageSize
-  id: PageSize
-  parent: MegaForm.Sdk.FormQuery
+      type: System.String
+    content.vb: Public Property FieldType As String
+  overload: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType*
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue
+  id: RawValue
+  parent: MegaForm.Sdk.SubmissionFieldSnapshotDto
   langs:
   - csharp
   - vb
-  name: PageSize
-  nameWithType: FormQuery.PageSize
-  fullName: MegaForm.Sdk.FormQuery.PageSize
+  name: RawValue
+  nameWithType: SubmissionFieldSnapshotDto.RawValue
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue
   type: Property
   source:
-    id: PageSize
+    id: RawValue
     path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
-    startLine: 104
+    startLine: 351
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: Number of items per page.
-  example: []
   syntax:
-    content: public int PageSize { get; set; }
+    content: public string? RawValue { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property RawValue As String
+  overload: MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue*
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue
+  id: DisplayValue
+  parent: MegaForm.Sdk.SubmissionFieldSnapshotDto
+  langs:
+  - csharp
+  - vb
+  name: DisplayValue
+  nameWithType: SubmissionFieldSnapshotDto.DisplayValue
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue
+  type: Property
+  source:
+    id: DisplayValue
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 352
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? DisplayValue { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property DisplayValue As String
+  overload: MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue*
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder
+  id: SortOrder
+  parent: MegaForm.Sdk.SubmissionFieldSnapshotDto
+  langs:
+  - csharp
+  - vb
+  name: SortOrder
+  nameWithType: SubmissionFieldSnapshotDto.SortOrder
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder
+  type: Property
+  source:
+    id: SortOrder
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 353
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public int SortOrder { get; set; }
     parameters: []
     return:
       type: System.Int32
-    content.vb: Public Property PageSize As Integer
-  overload: MegaForm.Sdk.FormQuery.PageSize*
+    content.vb: Public Property SortOrder As Integer
+  overload: MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder*
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback
+  id: IsLegacyFallback
+  parent: MegaForm.Sdk.SubmissionFieldSnapshotDto
+  langs:
+  - csharp
+  - vb
+  name: IsLegacyFallback
+  nameWithType: SubmissionFieldSnapshotDto.IsLegacyFallback
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback
+  type: Property
+  source:
+    id: IsLegacyFallback
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 354
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public bool IsLegacyFallback { get; set; }
+    parameters: []
+    return:
+      type: System.Boolean
+    content.vb: Public Property IsLegacyFallback As Boolean
+  overload: MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback*
 references:
 - uid: MegaForm.Sdk
   commentId: N:MegaForm.Sdk
@@ -381,12 +451,12 @@ references:
   name: System
   nameWithType: System
   fullName: System
-- uid: MegaForm.Sdk.FormQuery.Status*
-  commentId: Overload:MegaForm.Sdk.FormQuery.Status
-  href: MegaForm.Sdk.FormQuery.html#MegaForm_Sdk_FormQuery_Status
-  name: Status
-  nameWithType: FormQuery.Status
-  fullName: MegaForm.Sdk.FormQuery.Status
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey*
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey
+  href: MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_FieldKey
+  name: FieldKey
+  nameWithType: SubmissionFieldSnapshotDto.FieldKey
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey
 - uid: System.String
   commentId: T:System.String
   parent: System
@@ -398,18 +468,36 @@ references:
   nameWithType.vb: String
   fullName.vb: String
   name.vb: String
-- uid: MegaForm.Sdk.FormQuery.Search*
-  commentId: Overload:MegaForm.Sdk.FormQuery.Search
-  href: MegaForm.Sdk.FormQuery.html#MegaForm_Sdk_FormQuery_Search
-  name: Search
-  nameWithType: FormQuery.Search
-  fullName: MegaForm.Sdk.FormQuery.Search
-- uid: MegaForm.Sdk.FormQuery.Page*
-  commentId: Overload:MegaForm.Sdk.FormQuery.Page
-  href: MegaForm.Sdk.FormQuery.html#MegaForm_Sdk_FormQuery_Page
-  name: Page
-  nameWithType: FormQuery.Page
-  fullName: MegaForm.Sdk.FormQuery.Page
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel*
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel
+  href: MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_FieldLabel
+  name: FieldLabel
+  nameWithType: SubmissionFieldSnapshotDto.FieldLabel
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType*
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType
+  href: MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_FieldType
+  name: FieldType
+  nameWithType: SubmissionFieldSnapshotDto.FieldType
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue*
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue
+  href: MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_RawValue
+  name: RawValue
+  nameWithType: SubmissionFieldSnapshotDto.RawValue
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue*
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue
+  href: MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_DisplayValue
+  name: DisplayValue
+  nameWithType: SubmissionFieldSnapshotDto.DisplayValue
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder*
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder
+  href: MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_SortOrder
+  name: SortOrder
+  nameWithType: SubmissionFieldSnapshotDto.SortOrder
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder
 - uid: System.Int32
   commentId: T:System.Int32
   parent: System
@@ -421,9 +509,20 @@ references:
   nameWithType.vb: Integer
   fullName.vb: Integer
   name.vb: Integer
-- uid: MegaForm.Sdk.FormQuery.PageSize*
-  commentId: Overload:MegaForm.Sdk.FormQuery.PageSize
-  href: MegaForm.Sdk.FormQuery.html#MegaForm_Sdk_FormQuery_PageSize
-  name: PageSize
-  nameWithType: FormQuery.PageSize
-  fullName: MegaForm.Sdk.FormQuery.PageSize
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback*
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback
+  href: MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_IsLegacyFallback
+  name: IsLegacyFallback
+  nameWithType: SubmissionFieldSnapshotDto.IsLegacyFallback
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback
+- uid: System.Boolean
+  commentId: T:System.Boolean
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.boolean
+  name: bool
+  nameWithType: bool
+  fullName: bool
+  nameWithType.vb: Boolean
+  fullName.vb: Boolean
+  name.vb: Boolean

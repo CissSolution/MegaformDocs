@@ -1,0 +1,466 @@
+### YamlMime:ManagedReference
+items:
+- uid: MegaForm.Sdk.ISubmissionDashboardApi
+  commentId: T:MegaForm.Sdk.ISubmissionDashboardApi
+  id: ISubmissionDashboardApi
+  parent: MegaForm.Sdk
+  children:
+  - MegaForm.Sdk.ISubmissionDashboardApi.GetDetailAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  - MegaForm.Sdk.ISubmissionDashboardApi.SearchAsync(MegaForm.Sdk.SubmissionSearchQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  - MegaForm.Sdk.ISubmissionDashboardApi.UpdateStatusAsync(System.Int32,System.String,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  langs:
+  - csharp
+  - vb
+  name: ISubmissionDashboardApi
+  nameWithType: ISubmissionDashboardApi
+  fullName: MegaForm.Sdk.ISubmissionDashboardApi
+  type: Interface
+  source:
+    id: ISubmissionDashboardApi
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 115
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Submission-dashboard operations richer than the legacy <xref href="MegaForm.Sdk.ISubmissionApi.FindAsync(MegaForm.Sdk.SubmissionQuery%2cMegaForm.Sdk.MegaFormScope%2cSystem.Threading.CancellationToken)" data-throw-if-not-resolved="false"></xref> surface.
+  example: []
+  syntax:
+    content: public interface ISubmissionDashboardApi
+    content.vb: Public Interface ISubmissionDashboardApi
+  derivedClasses:
+  - MegaForm.Sdk.MegaFormClient
+- uid: MegaForm.Sdk.ISubmissionDashboardApi.SearchAsync(MegaForm.Sdk.SubmissionSearchQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  commentId: M:MegaForm.Sdk.ISubmissionDashboardApi.SearchAsync(MegaForm.Sdk.SubmissionSearchQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  id: SearchAsync(MegaForm.Sdk.SubmissionSearchQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  parent: MegaForm.Sdk.ISubmissionDashboardApi
+  langs:
+  - csharp
+  - vb
+  name: SearchAsync(SubmissionSearchQuery, MegaFormScope?, CancellationToken)
+  nameWithType: ISubmissionDashboardApi.SearchAsync(SubmissionSearchQuery, MegaFormScope?, CancellationToken)
+  fullName: MegaForm.Sdk.ISubmissionDashboardApi.SearchAsync(MegaForm.Sdk.SubmissionSearchQuery, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  type: Method
+  source:
+    id: SearchAsync
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 118
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Search submissions with status/search/date filters and dashboard-friendly list rows.
+  example: []
+  syntax:
+    content: Task<PagedResult<SubmissionListItemDto>> SearchAsync(SubmissionSearchQuery query, MegaFormScope? scope = null, CancellationToken cancellationToken = default)
+    parameters:
+    - id: query
+      type: MegaForm.Sdk.SubmissionSearchQuery
+    - id: scope
+      type: MegaForm.Sdk.MegaFormScope
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task{MegaForm.Sdk.PagedResult{MegaForm.Sdk.SubmissionListItemDto}}
+    content.vb: Function SearchAsync(query As SubmissionSearchQuery, scope As MegaFormScope = Nothing, cancellationToken As CancellationToken = Nothing) As Task(Of PagedResult(Of SubmissionListItemDto))
+  overload: MegaForm.Sdk.ISubmissionDashboardApi.SearchAsync*
+  nameWithType.vb: ISubmissionDashboardApi.SearchAsync(SubmissionSearchQuery, MegaFormScope, CancellationToken)
+  fullName.vb: MegaForm.Sdk.ISubmissionDashboardApi.SearchAsync(MegaForm.Sdk.SubmissionSearchQuery, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  name.vb: SearchAsync(SubmissionSearchQuery, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.ISubmissionDashboardApi.GetDetailAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  commentId: M:MegaForm.Sdk.ISubmissionDashboardApi.GetDetailAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  id: GetDetailAsync(System.Int32,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  parent: MegaForm.Sdk.ISubmissionDashboardApi
+  langs:
+  - csharp
+  - vb
+  name: GetDetailAsync(int, MegaFormScope?, CancellationToken)
+  nameWithType: ISubmissionDashboardApi.GetDetailAsync(int, MegaFormScope?, CancellationToken)
+  fullName: MegaForm.Sdk.ISubmissionDashboardApi.GetDetailAsync(int, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  type: Method
+  source:
+    id: GetDetailAsync
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 121
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Load a submission detail payload with schema-derived values, files, and workflow summary when available.
+  example: []
+  syntax:
+    content: Task<SubmissionDetailDto?> GetDetailAsync(int submissionId, MegaFormScope? scope = null, CancellationToken cancellationToken = default)
+    parameters:
+    - id: submissionId
+      type: System.Int32
+    - id: scope
+      type: MegaForm.Sdk.MegaFormScope
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task{MegaForm.Sdk.SubmissionDetailDto}
+    content.vb: Function GetDetailAsync(submissionId As Integer, scope As MegaFormScope = Nothing, cancellationToken As CancellationToken = Nothing) As Task(Of SubmissionDetailDto)
+  overload: MegaForm.Sdk.ISubmissionDashboardApi.GetDetailAsync*
+  nameWithType.vb: ISubmissionDashboardApi.GetDetailAsync(Integer, MegaFormScope, CancellationToken)
+  fullName.vb: MegaForm.Sdk.ISubmissionDashboardApi.GetDetailAsync(Integer, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  name.vb: GetDetailAsync(Integer, MegaFormScope, CancellationToken)
+- uid: MegaForm.Sdk.ISubmissionDashboardApi.UpdateStatusAsync(System.Int32,System.String,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  commentId: M:MegaForm.Sdk.ISubmissionDashboardApi.UpdateStatusAsync(System.Int32,System.String,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  id: UpdateStatusAsync(System.Int32,System.String,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  parent: MegaForm.Sdk.ISubmissionDashboardApi
+  langs:
+  - csharp
+  - vb
+  name: UpdateStatusAsync(int, string, MegaFormScope?, CancellationToken)
+  nameWithType: ISubmissionDashboardApi.UpdateStatusAsync(int, string, MegaFormScope?, CancellationToken)
+  fullName: MegaForm.Sdk.ISubmissionDashboardApi.UpdateStatusAsync(int, string, MegaForm.Sdk.MegaFormScope?, System.Threading.CancellationToken)
+  type: Method
+  source:
+    id: UpdateStatusAsync
+    path: E:\_sdkwt\MegaForm.Sdk\IMegaFormClient.cs
+    startLine: 124
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Update a submission status after checking that the submission belongs to the current portal.
+  example: []
+  syntax:
+    content: Task UpdateStatusAsync(int submissionId, string status, MegaFormScope? scope = null, CancellationToken cancellationToken = default)
+    parameters:
+    - id: submissionId
+      type: System.Int32
+    - id: status
+      type: System.String
+    - id: scope
+      type: MegaForm.Sdk.MegaFormScope
+    - id: cancellationToken
+      type: System.Threading.CancellationToken
+    return:
+      type: System.Threading.Tasks.Task
+    content.vb: Function UpdateStatusAsync(submissionId As Integer, status As String, scope As MegaFormScope = Nothing, cancellationToken As CancellationToken = Nothing) As Task
+  overload: MegaForm.Sdk.ISubmissionDashboardApi.UpdateStatusAsync*
+  nameWithType.vb: ISubmissionDashboardApi.UpdateStatusAsync(Integer, String, MegaFormScope, CancellationToken)
+  fullName.vb: MegaForm.Sdk.ISubmissionDashboardApi.UpdateStatusAsync(Integer, String, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  name.vb: UpdateStatusAsync(Integer, String, MegaFormScope, CancellationToken)
+references:
+- uid: MegaForm.Sdk.ISubmissionApi.FindAsync(MegaForm.Sdk.SubmissionQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  commentId: M:MegaForm.Sdk.ISubmissionApi.FindAsync(MegaForm.Sdk.SubmissionQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+  parent: MegaForm.Sdk.ISubmissionApi
+  isExternal: true
+  href: MegaForm.Sdk.ISubmissionApi.html#MegaForm_Sdk_ISubmissionApi_FindAsync_MegaForm_Sdk_SubmissionQuery_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  name: FindAsync(SubmissionQuery, MegaFormScope, CancellationToken)
+  nameWithType: ISubmissionApi.FindAsync(SubmissionQuery, MegaFormScope, CancellationToken)
+  fullName: MegaForm.Sdk.ISubmissionApi.FindAsync(MegaForm.Sdk.SubmissionQuery, MegaForm.Sdk.MegaFormScope, System.Threading.CancellationToken)
+  spec.csharp:
+  - uid: MegaForm.Sdk.ISubmissionApi.FindAsync(MegaForm.Sdk.SubmissionQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+    name: FindAsync
+    href: MegaForm.Sdk.ISubmissionApi.html#MegaForm_Sdk_ISubmissionApi_FindAsync_MegaForm_Sdk_SubmissionQuery_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  - name: (
+  - uid: MegaForm.Sdk.SubmissionQuery
+    name: SubmissionQuery
+    href: MegaForm.Sdk.SubmissionQuery.html
+  - name: ','
+  - name: " "
+  - uid: MegaForm.Sdk.MegaFormScope
+    name: MegaFormScope
+    href: MegaForm.Sdk.MegaFormScope.html
+  - name: ','
+  - name: " "
+  - uid: System.Threading.CancellationToken
+    name: CancellationToken
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken
+  - name: )
+  spec.vb:
+  - uid: MegaForm.Sdk.ISubmissionApi.FindAsync(MegaForm.Sdk.SubmissionQuery,MegaForm.Sdk.MegaFormScope,System.Threading.CancellationToken)
+    name: FindAsync
+    href: MegaForm.Sdk.ISubmissionApi.html#MegaForm_Sdk_ISubmissionApi_FindAsync_MegaForm_Sdk_SubmissionQuery_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  - name: (
+  - uid: MegaForm.Sdk.SubmissionQuery
+    name: SubmissionQuery
+    href: MegaForm.Sdk.SubmissionQuery.html
+  - name: ','
+  - name: " "
+  - uid: MegaForm.Sdk.MegaFormScope
+    name: MegaFormScope
+    href: MegaForm.Sdk.MegaFormScope.html
+  - name: ','
+  - name: " "
+  - uid: System.Threading.CancellationToken
+    name: CancellationToken
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken
+  - name: )
+- uid: MegaForm.Sdk
+  commentId: N:MegaForm.Sdk
+  href: MegaForm.html
+  name: MegaForm.Sdk
+  nameWithType: MegaForm.Sdk
+  fullName: MegaForm.Sdk
+  spec.csharp:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+  spec.vb:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+- uid: MegaForm.Sdk.ISubmissionApi
+  commentId: T:MegaForm.Sdk.ISubmissionApi
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.ISubmissionApi.html
+  name: ISubmissionApi
+  nameWithType: ISubmissionApi
+  fullName: MegaForm.Sdk.ISubmissionApi
+- uid: MegaForm.Sdk.ISubmissionDashboardApi.SearchAsync*
+  commentId: Overload:MegaForm.Sdk.ISubmissionDashboardApi.SearchAsync
+  href: MegaForm.Sdk.ISubmissionDashboardApi.html#MegaForm_Sdk_ISubmissionDashboardApi_SearchAsync_MegaForm_Sdk_SubmissionSearchQuery_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  name: SearchAsync
+  nameWithType: ISubmissionDashboardApi.SearchAsync
+  fullName: MegaForm.Sdk.ISubmissionDashboardApi.SearchAsync
+- uid: MegaForm.Sdk.SubmissionSearchQuery
+  commentId: T:MegaForm.Sdk.SubmissionSearchQuery
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.SubmissionSearchQuery.html
+  name: SubmissionSearchQuery
+  nameWithType: SubmissionSearchQuery
+  fullName: MegaForm.Sdk.SubmissionSearchQuery
+- uid: MegaForm.Sdk.MegaFormScope
+  commentId: T:MegaForm.Sdk.MegaFormScope
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.MegaFormScope.html
+  name: MegaFormScope
+  nameWithType: MegaFormScope
+  fullName: MegaForm.Sdk.MegaFormScope
+- uid: System.Threading.CancellationToken
+  commentId: T:System.Threading.CancellationToken
+  parent: System.Threading
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken
+  name: CancellationToken
+  nameWithType: CancellationToken
+  fullName: System.Threading.CancellationToken
+- uid: System.Threading.Tasks.Task{MegaForm.Sdk.PagedResult{MegaForm.Sdk.SubmissionListItemDto}}
+  commentId: T:System.Threading.Tasks.Task{MegaForm.Sdk.PagedResult{MegaForm.Sdk.SubmissionListItemDto}}
+  parent: System.Threading.Tasks
+  definition: System.Threading.Tasks.Task`1
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  name: Task<PagedResult<SubmissionListItemDto>>
+  nameWithType: Task<PagedResult<SubmissionListItemDto>>
+  fullName: System.Threading.Tasks.Task<MegaForm.Sdk.PagedResult<MegaForm.Sdk.SubmissionListItemDto>>
+  nameWithType.vb: Task(Of PagedResult(Of SubmissionListItemDto))
+  fullName.vb: System.Threading.Tasks.Task(Of MegaForm.Sdk.PagedResult(Of MegaForm.Sdk.SubmissionListItemDto))
+  name.vb: Task(Of PagedResult(Of SubmissionListItemDto))
+  spec.csharp:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: <
+  - uid: MegaForm.Sdk.PagedResult`1
+    name: PagedResult
+    href: MegaForm.Sdk.PagedResult-1.html
+  - name: <
+  - uid: MegaForm.Sdk.SubmissionListItemDto
+    name: SubmissionListItemDto
+    href: MegaForm.Sdk.SubmissionListItemDto.html
+  - name: '>'
+  - name: '>'
+  spec.vb:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: MegaForm.Sdk.PagedResult`1
+    name: PagedResult
+    href: MegaForm.Sdk.PagedResult-1.html
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: MegaForm.Sdk.SubmissionListItemDto
+    name: SubmissionListItemDto
+    href: MegaForm.Sdk.SubmissionListItemDto.html
+  - name: )
+  - name: )
+- uid: System.Threading
+  commentId: N:System.Threading
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Threading
+  nameWithType: System.Threading
+  fullName: System.Threading
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+- uid: System.Threading.Tasks.Task`1
+  commentId: T:System.Threading.Tasks.Task`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  name: Task<TResult>
+  nameWithType: Task<TResult>
+  fullName: System.Threading.Tasks.Task<TResult>
+  nameWithType.vb: Task(Of TResult)
+  fullName.vb: System.Threading.Tasks.Task(Of TResult)
+  name.vb: Task(Of TResult)
+  spec.csharp:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: <
+  - name: TResult
+  - name: '>'
+  spec.vb:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: TResult
+  - name: )
+- uid: System.Threading.Tasks
+  commentId: N:System.Threading.Tasks
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Threading.Tasks
+  nameWithType: System.Threading.Tasks
+  fullName: System.Threading.Tasks
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+  - name: .
+  - uid: System.Threading.Tasks
+    name: Tasks
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Threading
+    name: Threading
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading
+  - name: .
+  - uid: System.Threading.Tasks
+    name: Tasks
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks
+- uid: MegaForm.Sdk.ISubmissionDashboardApi.GetDetailAsync*
+  commentId: Overload:MegaForm.Sdk.ISubmissionDashboardApi.GetDetailAsync
+  href: MegaForm.Sdk.ISubmissionDashboardApi.html#MegaForm_Sdk_ISubmissionDashboardApi_GetDetailAsync_System_Int32_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  name: GetDetailAsync
+  nameWithType: ISubmissionDashboardApi.GetDetailAsync
+  fullName: MegaForm.Sdk.ISubmissionDashboardApi.GetDetailAsync
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: System.Threading.Tasks.Task{MegaForm.Sdk.SubmissionDetailDto}
+  commentId: T:System.Threading.Tasks.Task{MegaForm.Sdk.SubmissionDetailDto}
+  parent: System.Threading.Tasks
+  definition: System.Threading.Tasks.Task`1
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  name: Task<SubmissionDetailDto>
+  nameWithType: Task<SubmissionDetailDto>
+  fullName: System.Threading.Tasks.Task<MegaForm.Sdk.SubmissionDetailDto>
+  nameWithType.vb: Task(Of SubmissionDetailDto)
+  fullName.vb: System.Threading.Tasks.Task(Of MegaForm.Sdk.SubmissionDetailDto)
+  name.vb: Task(Of SubmissionDetailDto)
+  spec.csharp:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: <
+  - uid: MegaForm.Sdk.SubmissionDetailDto
+    name: SubmissionDetailDto
+    href: MegaForm.Sdk.SubmissionDetailDto.html
+  - name: '>'
+  spec.vb:
+  - uid: System.Threading.Tasks.Task`1
+    name: Task
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: MegaForm.Sdk.SubmissionDetailDto
+    name: SubmissionDetailDto
+    href: MegaForm.Sdk.SubmissionDetailDto.html
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: MegaForm.Sdk.ISubmissionDashboardApi.UpdateStatusAsync*
+  commentId: Overload:MegaForm.Sdk.ISubmissionDashboardApi.UpdateStatusAsync
+  href: MegaForm.Sdk.ISubmissionDashboardApi.html#MegaForm_Sdk_ISubmissionDashboardApi_UpdateStatusAsync_System_Int32_System_String_MegaForm_Sdk_MegaFormScope_System_Threading_CancellationToken_
+  name: UpdateStatusAsync
+  nameWithType: ISubmissionDashboardApi.UpdateStatusAsync
+  fullName: MegaForm.Sdk.ISubmissionDashboardApi.UpdateStatusAsync
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: System.Threading.Tasks.Task
+  commentId: T:System.Threading.Tasks.Task
+  parent: System.Threading.Tasks
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.threading.tasks.task
+  name: Task
+  nameWithType: Task
+  fullName: System.Threading.Tasks.Task

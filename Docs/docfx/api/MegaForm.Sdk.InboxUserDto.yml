@@ -1,30 +1,31 @@
 ### YamlMime:ManagedReference
 items:
-- uid: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions
-  commentId: T:MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions
-  id: MegaFormSdkServiceCollectionExtensions
+- uid: MegaForm.Sdk.InboxUserDto
+  commentId: T:MegaForm.Sdk.InboxUserDto
+  id: InboxUserDto
   parent: MegaForm.Sdk
   children:
-  - MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk(Microsoft.Extensions.DependencyInjection.IServiceCollection)
+  - MegaForm.Sdk.InboxUserDto.DisplayName
+  - MegaForm.Sdk.InboxUserDto.IsAdmin
+  - MegaForm.Sdk.InboxUserDto.UserId
+  - MegaForm.Sdk.InboxUserDto.UserName
   langs:
   - csharp
   - vb
-  name: MegaFormSdkServiceCollectionExtensions
-  nameWithType: MegaFormSdkServiceCollectionExtensions
-  fullName: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions
+  name: InboxUserDto
+  nameWithType: InboxUserDto
+  fullName: MegaForm.Sdk.InboxUserDto
   type: Class
   source:
-    id: MegaFormSdkServiceCollectionExtensions
-    path: E:\_sdkwt\MegaForm.Sdk\ServiceCollectionExtensions.cs
-    startLine: 9
+    id: InboxUserDto
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 389
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: DI registration for the MegaForm SDK facade.
-  example: []
   syntax:
-    content: public static class MegaFormSdkServiceCollectionExtensions
-    content.vb: Public Module MegaFormSdkServiceCollectionExtensions
+    content: public sealed class InboxUserDto
+    content.vb: Public NotInheritable Class InboxUserDto
   inheritance:
   - System.Object
   inheritedMembers:
@@ -32,46 +33,108 @@ items:
   - System.Object.Equals(System.Object,System.Object)
   - System.Object.GetHashCode
   - System.Object.GetType
-  - System.Object.MemberwiseClone
   - System.Object.ReferenceEquals(System.Object,System.Object)
   - System.Object.ToString
-- uid: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk(Microsoft.Extensions.DependencyInjection.IServiceCollection)
-  commentId: M:MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk(Microsoft.Extensions.DependencyInjection.IServiceCollection)
-  id: AddMegaFormSdk(Microsoft.Extensions.DependencyInjection.IServiceCollection)
-  isExtensionMethod: true
-  parent: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions
+- uid: MegaForm.Sdk.InboxUserDto.UserId
+  commentId: P:MegaForm.Sdk.InboxUserDto.UserId
+  id: UserId
+  parent: MegaForm.Sdk.InboxUserDto
   langs:
   - csharp
   - vb
-  name: AddMegaFormSdk(IServiceCollection)
-  nameWithType: MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk(IServiceCollection)
-  fullName: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk(Microsoft.Extensions.DependencyInjection.IServiceCollection)
-  type: Method
+  name: UserId
+  nameWithType: InboxUserDto.UserId
+  fullName: MegaForm.Sdk.InboxUserDto.UserId
+  type: Property
   source:
-    id: AddMegaFormSdk
-    path: E:\_sdkwt\MegaForm.Sdk\ServiceCollectionExtensions.cs
-    startLine: 17
+    id: UserId
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 391
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
-  summary: >-
-    Register <xref href="MegaForm.Sdk.IMegaFormClient" data-throw-if-not-resolved="false"></xref>. The host must already have registered the
-
-    MegaForm.Core repositories (<code>IFormRepository</code>, <code>ISubmissionRepository</code>) —
-
-    every MegaForm host (Oqtane / Web / DNN) does this. <code>IPlatformContext</code> is used
-
-    when present for ambient tenant/user; otherwise callers pass a <xref href="MegaForm.Sdk.MegaFormScope" data-throw-if-not-resolved="false"></xref>.
-  example: []
   syntax:
-    content: public static IServiceCollection AddMegaFormSdk(this IServiceCollection services)
-    parameters:
-    - id: services
-      type: Microsoft.Extensions.DependencyInjection.IServiceCollection
+    content: public int UserId { get; set; }
+    parameters: []
     return:
-      type: Microsoft.Extensions.DependencyInjection.IServiceCollection
-    content.vb: Public Shared Function AddMegaFormSdk(services As IServiceCollection) As IServiceCollection
-  overload: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk*
+      type: System.Int32
+    content.vb: Public Property UserId As Integer
+  overload: MegaForm.Sdk.InboxUserDto.UserId*
+- uid: MegaForm.Sdk.InboxUserDto.UserName
+  commentId: P:MegaForm.Sdk.InboxUserDto.UserName
+  id: UserName
+  parent: MegaForm.Sdk.InboxUserDto
+  langs:
+  - csharp
+  - vb
+  name: UserName
+  nameWithType: InboxUserDto.UserName
+  fullName: MegaForm.Sdk.InboxUserDto.UserName
+  type: Property
+  source:
+    id: UserName
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 392
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? UserName { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property UserName As String
+  overload: MegaForm.Sdk.InboxUserDto.UserName*
+- uid: MegaForm.Sdk.InboxUserDto.DisplayName
+  commentId: P:MegaForm.Sdk.InboxUserDto.DisplayName
+  id: DisplayName
+  parent: MegaForm.Sdk.InboxUserDto
+  langs:
+  - csharp
+  - vb
+  name: DisplayName
+  nameWithType: InboxUserDto.DisplayName
+  fullName: MegaForm.Sdk.InboxUserDto.DisplayName
+  type: Property
+  source:
+    id: DisplayName
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 393
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? DisplayName { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property DisplayName As String
+  overload: MegaForm.Sdk.InboxUserDto.DisplayName*
+- uid: MegaForm.Sdk.InboxUserDto.IsAdmin
+  commentId: P:MegaForm.Sdk.InboxUserDto.IsAdmin
+  id: IsAdmin
+  parent: MegaForm.Sdk.InboxUserDto
+  langs:
+  - csharp
+  - vb
+  name: IsAdmin
+  nameWithType: InboxUserDto.IsAdmin
+  fullName: MegaForm.Sdk.InboxUserDto.IsAdmin
+  type: Property
+  source:
+    id: IsAdmin
+    path: E:\_sdkwt\MegaForm.Sdk\Dtos.cs
+    startLine: 394
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public bool IsAdmin { get; set; }
+    parameters: []
+    return:
+      type: System.Boolean
+    content.vb: Public Property IsAdmin As Boolean
+  overload: MegaForm.Sdk.InboxUserDto.IsAdmin*
 references:
 - uid: MegaForm.Sdk
   commentId: N:MegaForm.Sdk
@@ -232,30 +295,6 @@ references:
     href: https://learn.microsoft.com/dotnet/api/system.object.gettype
   - name: (
   - name: )
-- uid: System.Object.MemberwiseClone
-  commentId: M:System.Object.MemberwiseClone
-  parent: System.Object
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
-  name: MemberwiseClone()
-  nameWithType: object.MemberwiseClone()
-  fullName: object.MemberwiseClone()
-  nameWithType.vb: Object.MemberwiseClone()
-  fullName.vb: Object.MemberwiseClone()
-  spec.csharp:
-  - uid: System.Object.MemberwiseClone
-    name: MemberwiseClone
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
-  - name: (
-  - name: )
-  spec.vb:
-  - uid: System.Object.MemberwiseClone
-    name: MemberwiseClone
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
-  - name: (
-  - name: )
 - uid: System.Object.ReferenceEquals(System.Object,System.Object)
   commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
   parent: System.Object
@@ -332,68 +371,60 @@ references:
   name: System
   nameWithType: System
   fullName: System
-- uid: MegaForm.Sdk.IMegaFormClient
-  commentId: T:MegaForm.Sdk.IMegaFormClient
-  parent: MegaForm.Sdk
-  href: MegaForm.Sdk.IMegaFormClient.html
-  name: IMegaFormClient
-  nameWithType: IMegaFormClient
-  fullName: MegaForm.Sdk.IMegaFormClient
-- uid: MegaForm.Sdk.MegaFormScope
-  commentId: T:MegaForm.Sdk.MegaFormScope
-  parent: MegaForm.Sdk
-  href: MegaForm.Sdk.MegaFormScope.html
-  name: MegaFormScope
-  nameWithType: MegaFormScope
-  fullName: MegaForm.Sdk.MegaFormScope
-- uid: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk*
-  commentId: Overload:MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk
-  href: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.html#MegaForm_Sdk_MegaFormSdkServiceCollectionExtensions_AddMegaFormSdk_Microsoft_Extensions_DependencyInjection_IServiceCollection_
-  name: AddMegaFormSdk
-  nameWithType: MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk
-  fullName: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk
-- uid: Microsoft.Extensions.DependencyInjection.IServiceCollection
-  commentId: T:Microsoft.Extensions.DependencyInjection.IServiceCollection
-  parent: Microsoft.Extensions.DependencyInjection
+- uid: MegaForm.Sdk.InboxUserDto.UserId*
+  commentId: Overload:MegaForm.Sdk.InboxUserDto.UserId
+  href: MegaForm.Sdk.InboxUserDto.html#MegaForm_Sdk_InboxUserDto_UserId
+  name: UserId
+  nameWithType: InboxUserDto.UserId
+  fullName: MegaForm.Sdk.InboxUserDto.UserId
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
   isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/microsoft.extensions.dependencyinjection.iservicecollection
-  name: IServiceCollection
-  nameWithType: IServiceCollection
-  fullName: Microsoft.Extensions.DependencyInjection.IServiceCollection
-- uid: Microsoft.Extensions.DependencyInjection
-  commentId: N:Microsoft.Extensions.DependencyInjection
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: MegaForm.Sdk.InboxUserDto.UserName*
+  commentId: Overload:MegaForm.Sdk.InboxUserDto.UserName
+  href: MegaForm.Sdk.InboxUserDto.html#MegaForm_Sdk_InboxUserDto_UserName
+  name: UserName
+  nameWithType: InboxUserDto.UserName
+  fullName: MegaForm.Sdk.InboxUserDto.UserName
+- uid: System.String
+  commentId: T:System.String
+  parent: System
   isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/microsoft
-  name: Microsoft.Extensions.DependencyInjection
-  nameWithType: Microsoft.Extensions.DependencyInjection
-  fullName: Microsoft.Extensions.DependencyInjection
-  spec.csharp:
-  - uid: Microsoft
-    name: Microsoft
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/microsoft
-  - name: .
-  - uid: Microsoft.Extensions
-    name: Extensions
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/microsoft.extensions
-  - name: .
-  - uid: Microsoft.Extensions.DependencyInjection
-    name: DependencyInjection
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/microsoft.extensions.dependencyinjection
-  spec.vb:
-  - uid: Microsoft
-    name: Microsoft
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/microsoft
-  - name: .
-  - uid: Microsoft.Extensions
-    name: Extensions
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/microsoft.extensions
-  - name: .
-  - uid: Microsoft.Extensions.DependencyInjection
-    name: DependencyInjection
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/microsoft.extensions.dependencyinjection
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: MegaForm.Sdk.InboxUserDto.DisplayName*
+  commentId: Overload:MegaForm.Sdk.InboxUserDto.DisplayName
+  href: MegaForm.Sdk.InboxUserDto.html#MegaForm_Sdk_InboxUserDto_DisplayName
+  name: DisplayName
+  nameWithType: InboxUserDto.DisplayName
+  fullName: MegaForm.Sdk.InboxUserDto.DisplayName
+- uid: MegaForm.Sdk.InboxUserDto.IsAdmin*
+  commentId: Overload:MegaForm.Sdk.InboxUserDto.IsAdmin
+  href: MegaForm.Sdk.InboxUserDto.html#MegaForm_Sdk_InboxUserDto_IsAdmin
+  name: IsAdmin
+  nameWithType: InboxUserDto.IsAdmin
+  fullName: MegaForm.Sdk.InboxUserDto.IsAdmin
+- uid: System.Boolean
+  commentId: T:System.Boolean
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.boolean
+  name: bool
+  nameWithType: bool
+  fullName: bool
+  nameWithType.vb: Boolean
+  fullName.vb: Boolean
+  name.vb: Boolean
