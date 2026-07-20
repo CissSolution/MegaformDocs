@@ -2,49 +2,40 @@
 
 **MegaForm** is a complete form platform for **Oqtane** (and DNN / ASP.NET Core hosts): a visual
 builder, ready-made premium templates, an AI form designer, submissions with analytics, approval
-workflows, and built-in multi-language support — all inside your own site, on your own database.
+workflows, and built-in multi-language support - all inside your own site, on your own database.
 
-## Forms that don't look like "form builder" forms
+## Real Oqtane gallery screenshots
 
-Every template below ships in the box and renders exactly like this on an Oqtane page —
-multi-step navigation, hero imagery, and theming included.
+The screenshots below are captured from the live Oqtane gallery at `/form-gallery/`, including the
+Oqtane header, page shell, module title, module actions, and the rendered form. They are not cropped
+down to the form body, so you can see how the templates sit on a real Oqtane page.
 
-![Outback Station Stay — a premium multi-step booking template](images/oq-premium-outback.png)
+![Outback Station Stay Booking on an Oqtane gallery page](images/gallery-outback.png)
 
-![EuroYouth application — premium template with hero panel](images/oq-premium-euroyouth.png)
+![EuroYouth 2026 Application on an Oqtane gallery page](images/gallery-euroyouth.png)
 
-Prefer something simple? The wizard builds a clean standard form in under a minute
-(see [Creating Forms](articles/creating-forms.md)):
+![Get In Touch contact form on an Oqtane gallery page](images/gallery-get-in-touch.png)
 
-![A standard form created with the wizard](images/oq-standard-contact.png)
+## Premium templates
 
-## Right-to-left and multi-language, built in
+These templates show different layout styles from the same gallery: split hero panels, tabbed
+account setup, onboarding flows, health intake, travel programmes, and contact forms with maps.
 
-Forms carry per-language translations with an on-page language switcher, RTL scripts render
-correctly, and the admin UI itself ships in 19 languages —
-see [Multi-language](articles/multi-language.md).
+![Wellness and Patient Intake on an Oqtane gallery page](images/gallery-wellness.png)
 
-![An Arabic form rendering right-to-left](images/oq-rtl-arabic.png)
+![Tabbed Account Setup on an Oqtane gallery page](images/gallery-tabbed.png)
 
-## Widgets in action
+![Project Intake and Onboarding on an Oqtane gallery page](images/gallery-project-intake.png)
 
-Beyond standard inputs: multi-step wizards with progress, ratings, signatures, file uploads,
-composite fields — and a full **PDF form** widget that lets visitors fill a real PDF (with
-zoom, full screen, and a downloadable filled copy):
+![Bulgaria Discovery Programme on an Oqtane gallery page](images/gallery-bulgaria.png)
 
-![The PDF form widget — visitors fill a real PDF document](images/oq-widget-pdf.png)
+![Contact Us Map Left Corporate on an Oqtane gallery page](images/gallery-contact-map.png)
 
-![A multi-step patient-intake template with composite fields](images/oq-widgets-wellness.png)
+## Product areas
 
-## Manage everything from the Form Dashboard
-
-Submissions with volume analytics and per-form data grids, an approval **My Inbox**, a visual
-**BPMN workflow designer**, storage integrations (SQL database, Google Sheets), and per-module
-theme settings:
-
-![Submission analytics — volume chart and per-form counts](images/oq-submissions.png)
-
-![The BPMN 2.0 workflow canvas](images/oq-workflow-canvas.png)
+MegaForm also includes the dashboard, submissions analytics, an approval inbox, a visual BPMN
+workflow designer, storage integrations, widgets, multi-language forms, and AI assisted form
+creation. Start with the guides below for those workflows.
 
 ## Start here
 
@@ -52,7 +43,7 @@ theme settings:
 
 | Guide | What it covers |
 |-------|----------------|
-| [Creating Forms](articles/creating-forms.md) | Wizard, multi-step, and AI flows — with demo videos |
+| [Creating Forms](articles/creating-forms.md) | Wizard, multi-step, and AI flows - with demo videos |
 | [Form Builder](articles/form-builder.md) | The visual builder in depth |
 | [Module Settings & Theme](articles/settings-pane.md) | Choose the form a page shows; presets, colors, layout |
 | [Submissions & My Inbox](articles/submissions-inbox.md) | Analytics, data grids, statuses, the approval inbox |
@@ -70,7 +61,7 @@ theme settings:
 | [Standalone Host](articles/standalone-host.md) | Run MegaForm as an ASP.NET Core app via NuGet |
 | [Quick Start](articles/quickstart.md) | A working list view in ~20 lines |
 | [SDK Reference](articles/sdk-reference.md) | Complete English reference for every SDK API |
-| [Reading data](articles/reading-data.md) | Forms & submissions queries, paging, scope |
-| [File download](articles/file-download.md) | List & stream uploaded files safely |
+| [Reading data](articles/reading-data.md) | Forms and submissions queries, paging, scope |
+| [File download](articles/file-download.md) | List and stream uploaded files safely |
 
 Or browse the generated **[API Reference](api/index.md)**.
