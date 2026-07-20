@@ -6,12 +6,11 @@ workflows, and built-in multi-language support - all inside your own site, on yo
 
 ## A form module doesn't look like a form builder
 
-A MegaForm module should look like a designed page, not like the builder UI. Every template below
-ships in the box and is captured from the live Oqtane gallery at `/form-gallery/` - with the Oqtane
-header, page shell, module title, module actions, multi-step navigation, hero imagery, and theming
-included.
+A MegaForm module should look like a designed page, not like the builder UI. The templates below
+ship in the box and are captured from live Oqtane pages - with the Oqtane header, page shell, module
+actions, multi-step navigation, hero imagery, and theming included.
 
-![Outback Station Stay Booking on an Oqtane gallery page](images/gallery-outback.png)
+![Outback Station Stay Booking on an Oqtane themed page](images/gallery-oqtane-theme-outback.png)
 
 ![EuroYouth 2026 Application on an Oqtane gallery page](images/gallery-euroyouth.png)
 
@@ -25,7 +24,7 @@ maps.
 
 ![Wellness and Patient Intake on an Oqtane gallery page](images/gallery-wellness.png)
 
-![Tabbed Account Setup on an Oqtane gallery page](images/gallery-tabbed.png)
+![Tabbed Account Setup on an Oqtane themed page](images/gallery-oqtane-theme-tabbed.png)
 
 ![Project Intake and Onboarding on an Oqtane gallery page](images/gallery-project-intake.png)
 
@@ -48,6 +47,7 @@ creation. Start with the guides below for those workflows.
 | [Creating Forms](articles/creating-forms.md) | Wizard, multi-step, and AI flows - with demo videos |
 | [Form Builder](articles/form-builder.md) | The visual builder in depth |
 | [Module Settings & Theme](articles/settings-pane.md) | Choose the form a page shows; presets, colors, layout |
+| [Theme Compatibility](articles/theme-compatibility.md) | Keep MegaForm styling or inherit Oqtane / Bootswatch page themes |
 | [Submissions & My Inbox](articles/submissions-inbox.md) | Analytics, data grids, statuses, the approval inbox |
 | [Workflow](articles/workflow.md) | The BPMN designer and workflow engine |
 | [Storage & Integrations](articles/storage-options.md) | Your SQL database, Google Sheets |
