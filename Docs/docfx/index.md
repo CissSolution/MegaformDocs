@@ -4,11 +4,12 @@
 builder, ready-made premium templates, an AI form designer, submissions with analytics, approval
 workflows, and built-in multi-language support - all inside your own site, on your own database.
 
-## Real Oqtane gallery screenshots
+## A form module doesn't look like a form builder
 
-The screenshots below are captured from the live Oqtane gallery at `/form-gallery/`, including the
-Oqtane header, page shell, module title, module actions, and the rendered form. They are not cropped
-down to the form body, so you can see how the templates sit on a real Oqtane page.
+A MegaForm module should look like a designed page, not like the builder UI. Every template below
+ships in the box and is captured from the live Oqtane gallery at `/form-gallery/` - with the Oqtane
+header, page shell, module title, module actions, multi-step navigation, hero imagery, and theming
+included.
 
 ![Outback Station Stay Booking on an Oqtane gallery page](images/gallery-outback.png)
 
@@ -16,10 +17,11 @@ down to the form body, so you can see how the templates sit on a real Oqtane pag
 
 ![Get In Touch contact form on an Oqtane gallery page](images/gallery-get-in-touch.png)
 
-## Premium templates
+## More gallery templates
 
-These templates show different layout styles from the same gallery: split hero panels, tabbed
-account setup, onboarding flows, health intake, travel programmes, and contact forms with maps.
+These full-page screenshots show different layout styles from the same gallery: split hero panels,
+tabbed account setup, onboarding flows, health intake, travel programmes, and contact forms with
+maps.
 
 ![Wellness and Patient Intake on an Oqtane gallery page](images/gallery-wellness.png)
 
