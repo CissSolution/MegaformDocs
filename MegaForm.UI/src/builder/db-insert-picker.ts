@@ -70,6 +70,28 @@ async function getJson(path: string): Promise<any> {
   return r.json();
 }
 
+/**
+ * Load the admin-allowed SQL connection names (reusable across the DB-insert picker
+ * AND the builder DB-tab table browser). Fetches `AiTools/SqlConnections` via the
+ * correct `aiBase()` — NOT `buildUrl` — to avoid the `/api/MegaForm/AiTools` 404 trap
+ * on Oqtane (AiTools is mounted at `/api/AiTools`). Always force-includes
+ * `DashboardDatabase` (the site default) and, when supplied, the form's current key,
+ * so a legacy/removed connection stays selectable. The returned names are the same
+ * allow-list the server gates table reads against — no client trust is implied.
+ */
+export async function loadAllowedConnections(current?: string): Promise<string[]> {
+  let list: string[] = [];
+  try {
+    const j = await getJson('AiTools/SqlConnections');
+    list = (j && (j.connections || j.Connections)) || [];
+    if (!Array.isArray(list)) list = [];
+  } catch (_e) { list = []; }
+  if (list.indexOf('DashboardDatabase') < 0) list.push('DashboardDatabase');
+  const cur = String(current || '');
+  if (cur && list.indexOf(cur) < 0) list.unshift(cur);
+  return list;
+}
+
 // ── column ⇄ field matching ──────────────────────────────────────────────
 function norm(s: string): string { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
 
@@ -160,16 +182,7 @@ export function wireDbInsertPicker(deps: DbInsertPickerDeps): void {
 
   async function loadConnections(): Promise<void> {
     const current = String(deps.getConfig().connectionKey || '');
-    let list: string[] = [];
-    try {
-      const j = await getJson('AiTools/SqlConnections');
-      list = (j && (j.connections || j.Connections)) || [];
-      if (!Array.isArray(list)) list = [];
-    } catch (_e) { list = []; }
-    // Always offer the site DB; include whatever the form already had so a legacy
-    // connection stays selectable even if the server list doesn't return it.
-    if (list.indexOf('DashboardDatabase') < 0) list.push('DashboardDatabase');
-    if (current && list.indexOf(current) < 0) list.unshift(current);
+    const list = await loadAllowedConnections(current);
     setOptions(connSel!, list.map(c => ({ value: c, label: c })), '— select connection —');
     if (current) connSel!.value = current;
     if (connSel!.value) void loadTables(connSel!.value);

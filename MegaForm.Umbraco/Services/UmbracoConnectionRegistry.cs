@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.IO;
 using System.Linq;
 using MegaForm.Core.Interfaces;
 using Microsoft.Data.SqlClient;
@@ -65,6 +66,16 @@ namespace MegaForm.Umbraco.Services
                 return CreateConnection(dashboardConn, databaseType);
             }
 
+            // [NamedConnections v20260717-01] Admin-saved catalog connections (Database Settings popup →
+            // Saved connections, stored under NamedConnectionCatalog.SettingKey). Precedence mirrors the
+            // Oqtane/DNN twins: explicit → DashboardDatabase → named catalog → appsettings. Saving a
+            // catalog entry is admin-gated, so it carries appsettings-level trust.
+            var namedJson = _moduleSettings == null ? string.Empty
+                : _moduleSettings.GetSetting(0, MegaForm.Core.Services.NamedConnectionCatalog.SettingKey, "");
+            var named = MegaForm.Core.Services.NamedConnectionCatalog.Find(namedJson, connectionName);
+            if (named != null && !string.IsNullOrWhiteSpace(named.ConnectionString))
+                return CreateConnection(named.ConnectionString, string.IsNullOrWhiteSpace(databaseType) ? named.Provider : databaseType);
+
             var connStr = _config.GetConnectionString(connectionName);
             if (string.IsNullOrWhiteSpace(connStr))
                 throw new InvalidOperationException($"IConnectionRegistry: no connection string found for '{connectionName}'.");
@@ -76,6 +87,8 @@ namespace MegaForm.Umbraco.Services
         {
             if (string.IsNullOrWhiteSpace(connStr))
                 throw new InvalidOperationException("Connection string cannot be empty.");
+
+            connStr = ResolveDataDirectoryToken(connStr);
 
             var isSqlite = string.Equals(databaseType, "sqlite", StringComparison.OrdinalIgnoreCase)
                 || connStr.IndexOf("SQLite", StringComparison.OrdinalIgnoreCase) >= 0
@@ -92,6 +105,26 @@ namespace MegaForm.Umbraco.Services
             if (!sqlBuilder.ContainsKey("TrustServerCertificate")) sqlBuilder.TrustServerCertificate = true;
             if (!sqlBuilder.ContainsKey("MultipleActiveResultSets")) sqlBuilder.MultipleActiveResultSets = true;
             return new SqlConnection(sqlBuilder.ConnectionString);
+        }
+
+        private static string ResolveDataDirectoryToken(string connectionString)
+        {
+            if (string.IsNullOrWhiteSpace(connectionString) ||
+                connectionString.IndexOf("|DataDirectory|", StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                return connectionString;
+            }
+
+            var dataDirectory = AppDomain.CurrentDomain.GetData("DataDirectory") as string;
+            if (string.IsNullOrWhiteSpace(dataDirectory))
+            {
+                dataDirectory = Path.Combine(AppContext.BaseDirectory, "umbraco", "Data");
+            }
+
+            return connectionString.Replace(
+                "|DataDirectory|",
+                dataDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+                StringComparison.OrdinalIgnoreCase);
         }
     }
 }

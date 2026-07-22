@@ -656,9 +656,17 @@ namespace MegaForm.Web.Controllers
                 ["settings"] = new JObject(settings)
             };
 
+            // [F strip-.json 2026-07-22] Prefer the template's human title; never store the raw ".json" filename
+            // as the form Title. The devBulkSeed.sourceFile marker above KEEPS the filename for idempotent re-matching.
+            var cleanTitle = !string.IsNullOrWhiteSpace(template.Title)
+                ? template.Title.Trim()
+                : System.IO.Path.GetFileNameWithoutExtension(sourceFile);
+            if (string.IsNullOrWhiteSpace(cleanTitle)) cleanTitle = System.IO.Path.GetFileNameWithoutExtension(sourceFile);
+            if (string.IsNullOrWhiteSpace(cleanTitle)) cleanTitle = "Untitled Form";
+
             form.ModuleId = moduleId;
             form.PortalId = portalId;
-            form.Title = sourceFile;
+            form.Title = cleanTitle;
             form.Description = string.IsNullOrWhiteSpace(template.Description) ? ("DEV bulk form seeded from " + sourceFile) : template.Description;
             form.SchemaJson = schema.ToString(Formatting.None);
             form.SettingsJson = settings.ToString(Formatting.None);
@@ -1293,6 +1301,91 @@ namespace MegaForm.Web.Controllers
                 supportsStoredProcedures = result != null && result.SupportsStoredProcedures,
                 message = result == null ? "Connection test failed." : result.Message
             });
+        }
+
+        // ══════════════════════════════════════════════════════════════════
+        //  [NamedConnections v20260717-01] SQL Connections catalog (Web twin of the
+        //  Oqtane ModuleConfig/Connections* endpoints). Route names are FLAT so the
+        //  shared dashboard client uses the identical path on every platform.
+        //  SECURITY: admin-gated with the Administrator ROLE (a raw connection string is
+        //  accepted here — stronger than the [Authorize] on DatabaseSettings above);
+        //  every connection string echoed to the browser is MASKED (rule 10).
+        // ══════════════════════════════════════════════════════════════════
+
+        [HttpGet("ModuleConfig/ConnectionsList")]
+        [Authorize(Roles = "Administrator")]
+        public IActionResult ListNamedConnections()
+        {
+            var savedJson = _moduleSettings.GetSetting(0, MegaForm.Core.Services.NamedConnectionCatalog.SettingKey, "");
+            var saved = MegaForm.Core.Services.NamedConnectionCatalog.Parse(savedJson);
+            var savedNames = new System.Collections.Generic.HashSet<string>(
+                saved.Select(s => (s.Name ?? string.Empty).Trim()), System.StringComparer.OrdinalIgnoreCase);
+
+            var items = new System.Collections.Generic.List<object>();
+            foreach (var child in _cfg.GetSection("ConnectionStrings").GetChildren())
+            {
+                if (string.IsNullOrWhiteSpace(child.Key) || savedNames.Contains(child.Key.Trim())) continue;
+                items.Add(new
+                {
+                    name = child.Key.Trim(),
+                    provider = InferDatabaseType(child.Value),
+                    connectionString = MegaForm.Core.Services.NamedConnectionCatalog.MaskSecrets(child.Value),
+                    source = "config"
+                });
+            }
+            foreach (var s in saved)
+            {
+                items.Add(new
+                {
+                    name = (s.Name ?? string.Empty).Trim(),
+                    provider = string.IsNullOrWhiteSpace(s.Provider) ? InferDatabaseType(s.ConnectionString) : s.Provider,
+                    connectionString = MegaForm.Core.Services.NamedConnectionCatalog.MaskSecrets(s.ConnectionString),
+                    source = "saved"
+                });
+            }
+            return Ok(new { connections = items });
+        }
+
+        [HttpPost("ModuleConfig/ConnectionsSave")]
+        [Authorize(Roles = "Administrator")]
+        public IActionResult SaveNamedConnection([FromBody] JObject body)
+        {
+            if (HasDemoLock()) return DemoLockedResponse("SQL Connections");
+            if (body == null) return Ok(new { success = false, message = "Request body is required." });
+            var name = body.Value<string>("name");
+            var provider = body.Value<string>("provider");
+            var connectionString = body.Value<string>("connectionString");
+            var nameErr = MegaForm.Core.Services.NamedConnectionCatalog.ValidateName(name);
+            if (nameErr != null) return Ok(new { success = false, message = nameErr });
+            if (string.IsNullOrWhiteSpace(connectionString)) return Ok(new { success = false, message = "Connection string is required." });
+            try
+            {
+                var next = MegaForm.Core.Services.NamedConnectionCatalog.Upsert(
+                    _moduleSettings.GetSetting(0, MegaForm.Core.Services.NamedConnectionCatalog.SettingKey, ""),
+                    new MegaForm.Core.Services.NamedConnectionInfo { Name = name, Provider = provider, ConnectionString = connectionString });
+                _moduleSettings.SetSetting(0, MegaForm.Core.Services.NamedConnectionCatalog.SettingKey, next);
+                return Ok(new { success = true, message = "Connection '" + name.Trim() + "' saved." });
+            }
+            catch { return StatusCode(500, new { success = false, error = "Could not save the connection." }); }
+        }
+
+        [HttpPost("ModuleConfig/ConnectionsDelete")]
+        [Authorize(Roles = "Administrator")]
+        public IActionResult DeleteNamedConnection([FromBody] JObject body)
+        {
+            if (HasDemoLock()) return DemoLockedResponse("SQL Connections");
+            var name = body?.Value<string>("name") ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(name)) return Ok(new { success = false, message = "Connection name is required." });
+            try
+            {
+                var json = _moduleSettings.GetSetting(0, MegaForm.Core.Services.NamedConnectionCatalog.SettingKey, "");
+                if (!MegaForm.Core.Services.NamedConnectionCatalog.Contains(json, name))
+                    return Ok(new { success = false, message = "Only saved connections can be deleted (config entries live in appsettings.json)." });
+                _moduleSettings.SetSetting(0, MegaForm.Core.Services.NamedConnectionCatalog.SettingKey,
+                    MegaForm.Core.Services.NamedConnectionCatalog.Remove(json, name));
+                return Ok(new { success = true, message = "Connection '" + name.Trim() + "' deleted." });
+            }
+            catch { return StatusCode(500, new { success = false, error = "Could not delete the connection." }); }
         }
 
         private static string InferDatabaseType(string connStr)

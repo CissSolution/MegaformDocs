@@ -243,9 +243,16 @@ namespace MegaForm.WebApi
                 ["settings"] = new JObject(settings)
             };
 
+            // [F strip-.json 2026-07-22] Prefer the template's human title; never store the raw ".json" filename as the form Title.
+            var cleanTitle = !string.IsNullOrWhiteSpace(template.Title)
+                ? template.Title.Trim()
+                : Path.GetFileNameWithoutExtension(safeSourceFile);
+            if (string.IsNullOrWhiteSpace(cleanTitle)) cleanTitle = Path.GetFileNameWithoutExtension(safeSourceFile);
+            if (string.IsNullOrWhiteSpace(cleanTitle)) cleanTitle = "Untitled Form";
+
             form.ModuleId = moduleId;
             form.PortalId = portalId;
-            form.Title = safeSourceFile;
+            form.Title = cleanTitle;
             form.Description = string.IsNullOrWhiteSpace(template.Description) ? ("DEV bulk form seeded from " + safeSourceFile) : template.Description;
             form.SchemaJson = schema.ToString(Formatting.None);
             form.SettingsJson = settings.ToString(Formatting.None);

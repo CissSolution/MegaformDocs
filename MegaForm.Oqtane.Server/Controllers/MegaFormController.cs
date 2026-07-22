@@ -104,7 +104,8 @@ namespace MegaForm.Oqtane.Server.Controllers
             ITenantManager tenantManager,
             MegaForm.Core.Interfaces.IFileRepository fileRepo,
             ILogManager logger,
-            IHttpContextAccessor accessor) : base(logger, accessor)
+            IHttpContextAccessor accessor,
+            MegaForm.Core.Interfaces.ISubmissionDataStore typedStore = null) : base(logger, accessor)
         {
             _formRepo = formRepo;
             _subRepo = subRepo;
@@ -131,7 +132,8 @@ namespace MegaForm.Oqtane.Server.Controllers
             // GET Submissions/{id} always returned files:[] and the detail
             // drawer / inbox never showed uploaded attachments (MF_Files had
             // the rows all along). DNN already passes its repo — parity fix.
-            _submissionQueries = new SubmissionQueryService(_subRepo, _formRepo, fileRepo);
+            // [P1 typed-read] Pass typed store so GetDetail can reconstruct from rows.
+            _submissionQueries = new SubmissionQueryService(_subRepo, _formRepo, fileRepo, typedStore);
             _templateCatalog = new BuilderTemplateCatalogService(env);
         }
 
@@ -1086,6 +1088,14 @@ namespace MegaForm.Oqtane.Server.Controllers
                     var sf = System.IO.Path.GetFileName(string.IsNullOrWhiteSpace(t?.FileName) ? ((t?.Slug ?? "template") + ".json") : t.FileName);
                     if (string.IsNullOrWhiteSpace(sf)) sf = "template.json";
                     var sourceFile = sf;
+                    // [F strip-.json 2026-07-22] Prefer the template's human title; never store the raw ".json"
+                    // filename as the form Title. The devBulkSeed.sourceFile marker below KEEPS the filename, so
+                    // idempotent re-matching (IsDevSeedMatch) is unaffected and re-runs also clean legacy titles.
+                    var cleanTitle = !string.IsNullOrWhiteSpace(t.Title)
+                        ? t.Title.Trim()
+                        : System.IO.Path.GetFileNameWithoutExtension(sf);
+                    if (string.IsNullOrWhiteSpace(cleanTitle)) cleanTitle = System.IO.Path.GetFileNameWithoutExtension(sf);
+                    if (string.IsNullOrWhiteSpace(cleanTitle)) cleanTitle = "Untitled Form";
                     try
                     {
                         var settings = (t.Settings != null) ? (JObject)t.Settings.DeepClone() : new JObject();
@@ -1107,7 +1117,7 @@ namespace MegaForm.Oqtane.Server.Controllers
                         var schema = new JObject
                         {
                             ["version"] = "1.0",
-                            ["title"] = sf,
+                            ["title"] = cleanTitle,
                             ["description"] = t.Description ?? "",
                             ["fields"] = t.Fields ?? new JArray(),
                             ["settings"] = settings,
@@ -1121,7 +1131,7 @@ namespace MegaForm.Oqtane.Server.Controllers
                             FormId           = existingForm?.FormId ?? 0,
                             ModuleId         = seedModuleId,   // ORPHAN seed-bucket module (no page) — satisfies FK_MF_Forms_Module without hijacking a real module's binding
                             SiteId           = siteId,
-                            Title            = sf,
+                            Title            = cleanTitle,
                             Description      = string.IsNullOrWhiteSpace(t.Description) ? ("DEV bulk form seeded from " + sf) : t.Description,
                             Status           = "Published",
                             SubmitButtonText = string.IsNullOrWhiteSpace(t.SubmitButtonText) ? "Submit" : t.SubmitButtonText,
@@ -1136,7 +1146,7 @@ namespace MegaForm.Oqtane.Server.Controllers
                         entity.PortalId = siteId;
                         int fid = _formRepo.SaveForm(entity);
 
-                        if (isNew) { created++; existingForms.Add(new FormInfo { FormId = fid, Title = sf, SettingsJson = dto.SettingsJson }); }
+                        if (isNew) { created++; existingForms.Add(new FormInfo { FormId = fid, Title = cleanTitle, SettingsJson = dto.SettingsJson }); }
                         else { updated++; }
 
                         formIds.Add(fid);

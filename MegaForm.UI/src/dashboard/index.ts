@@ -36,6 +36,7 @@ if (typeof window !== 'undefined') (window as any).__MF_DASHBOARD_REPORTS_BADGE_
 import { getPlatformRoute, getPlatformHostConfig, getPublicFormUrl, getStoredRendererHostUrl, normalizeRendererHostUrl, getApiBase } from '@shared/platform-host';
 import { connectGoogleSheet } from '@shared/google-sheets-workflow';
 import { bindSkinSafeHashLink } from '@shared/hash-nav';
+import { stripJsonExt } from '@shared/utils';
 import { t as i18nT, tplural as i18nTplural, loadLocale, detectLocale, setDir, resolveI18nBase } from '@i18n';
 
 /** Translate with an English fallback baked in → never blanks (no UI break). */
@@ -1280,6 +1281,137 @@ async function openDatabaseSettings(targetBody?: HTMLElement) {
         }
       };
 
+      // ── [NamedConnections v20260717-01] SQL Connections — the full reusable catalog ──
+      // Before this the popup managed ONE connection while the builder's databaseInsert picker
+      // listed appsettings-only names (e.g. CustomerErp) the operator could see but never manage.
+      // Config entries are read-only (they live in the host config file); Saved entries are
+      // created right here and immediately join the builder picker / external-table allow-list.
+      c.appendChild(divider());
+      c.appendChild(sectionHead('db', 'SQL Connections', 'reusable list'));
+      c.appendChild(infoBox('Every named connection the builder can use (Database Insert, external tables, AI database tools). "Config" entries come from the host configuration file; "Saved" entries are managed here and usable immediately — no restart needed.'));
+
+      const connListWrap = div('mf-conn-list');
+      connListWrap.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin:0 0 14px 0;';
+      c.appendChild(connListWrap);
+
+      const renderConnList = async () => {
+        connListWrap.innerHTML = ic('spin',14) + ' Loading connections…';
+        try {
+          const r = await fetch(API + 'ModuleConfig/ConnectionsList', { headers: dnnAuthHeaders() });
+          const j: any = r.ok ? await r.json() : null;
+          const items: any[] = (j && (j.connections || j.Connections)) || [];
+          connListWrap.innerHTML = '';
+          if (!items.length) {
+            connListWrap.innerHTML = '<div style="font-size:12.5px;color:#64748b;">No named connections yet — add one below.</div>';
+            return;
+          }
+          items.forEach((it: any) => {
+            const src = String(it.source || it.Source || 'config');
+            const name = String(it.name || it.Name || '');
+            const prov = String(it.provider || it.Provider || '');
+            const cs = String(it.connectionString || it.ConnectionString || '');
+            const row = div('mf-conn-row');
+            row.style.cssText = 'display:flex;align-items:center;gap:10px;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;background:#fff;';
+            const badge = span('mf-conn-badge', src === 'saved' ? 'Saved' : 'Config');
+            badge.style.cssText = 'font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:999px;flex-shrink:0;'
+              + (src === 'saved' ? 'background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;' : 'background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;');
+            const nameEl = span('mf-conn-name'); nameEl.textContent = name;
+            nameEl.style.cssText = 'font-weight:700;font-size:13px;min-width:130px;flex-shrink:0;';
+            const provEl = span('mf-conn-prov'); provEl.textContent = prov;
+            provEl.style.cssText = 'font-size:11.5px;color:#64748b;min-width:70px;flex-shrink:0;';
+            const csEl = span('mf-conn-cs'); csEl.textContent = cs; csEl.title = cs;
+            csEl.style.cssText = 'font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#475569;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+            mk(row, badge, nameEl, provEl, csEl);
+            if (src === 'saved') {
+              const editBtn = el('button','mf-btn mf-btn-outline mf-btn-sm') as HTMLButtonElement; editBtn.type='button';
+              editBtn.innerHTML = ic('edit',12) + ' Edit';
+              editBtn.onclick = () => {
+                (document.getElementById('db-conn-name') as HTMLInputElement).value = name;
+                const provSel = document.getElementById('db-conn-provider') as HTMLSelectElement;
+                const opt = Array.from(provSel.options).find(o => o.value.toLowerCase() === prov.toLowerCase());
+                if (opt) provSel.value = opt.value;
+                (document.getElementById('db-conn-cs') as HTMLTextAreaElement).value = '';
+                (document.getElementById('db-conn-cs') as HTMLTextAreaElement).placeholder = 'Paste the full connection string again to update "' + name + '" (secrets are never echoed back).';
+                (document.getElementById('db-conn-cs') as HTMLTextAreaElement).focus();
+              };
+              const delBtn = el('button','mf-btn mf-btn-outline mf-btn-sm') as HTMLButtonElement; delBtn.type='button';
+              delBtn.innerHTML = ic('trash',12) + ' Delete';
+              delBtn.onclick = async () => {
+                if (!window.confirm('Delete connection "' + name + '"?')) return;
+                delBtn.disabled = true;
+                try {
+                  const dr = await fetch(API + 'ModuleConfig/ConnectionsDelete', { method:'POST', headers: dnnAuthHeaders(), body: JSON.stringify({ name }) });
+                  const dj: any = await dr.json().catch(() => ({}));
+                  if (dj && dj.success) { toast('Connection deleted','success'); renderConnList(); }
+                  else { toast((dj && dj.message) || 'Delete failed','error'); delBtn.disabled = false; }
+                } catch { toast('Network error','error'); delBtn.disabled = false; }
+              };
+              mk(row, editBtn, delBtn);
+            }
+            connListWrap.appendChild(row);
+          });
+        } catch {
+          connListWrap.innerHTML = '<div class="mf-modal-err">Could not load connections.</div>';
+        }
+      };
+      renderConnList();
+
+      const addName = input('text','db-conn-name','CustomerErp','');
+      const addProv = select('db-conn-provider', providerOpts, 'SqlServer');
+      const addCs = textarea('db-conn-cs', 'Server=(local);Database=MyErp;Integrated Security=True;TrustServerCertificate=True;Encrypt=False', '', 3);
+      addCs.style.fontFamily = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+      c.appendChild(row2(
+        field('Connection Name', addName, 'The name the builder shows in its connection dropdowns.'),
+        field('Provider', addProv, 'Database engine of this connection.')
+      ));
+      c.appendChild(field('Connection String', addCs, 'Stored server-side only; passwords are never shown back to the browser.'));
+
+      const addStatus = div('mf-test-result');
+      const addTestBtn = el('button','mf-btn mf-btn-outline mf-btn-sm') as HTMLButtonElement; addTestBtn.type='button';
+      addTestBtn.innerHTML = ic('zap',13) + ' Test';
+      addTestBtn.onclick = async () => {
+        addTestBtn.disabled = true; addStatus.className='mf-test-result'; addStatus.textContent='';
+        try {
+          const r = await fetch(API + 'ModuleConfig/DatabaseSettings/Test', {
+            method:'POST', headers: dnnAuthHeaders(),
+            body: JSON.stringify({ provider: addProv.value, connectionString: addCs.value })
+          });
+          const res: any = await r.json().catch(() => ({}));
+          addStatus.className = 'mf-test-result ' + (res.success ? 'is-success' : 'is-error');
+          addStatus.textContent = (res.success ? '✓ ' : '✗ ') + (res.message || (r.ok ? '' : 'HTTP ' + r.status));
+        } catch (e: any) {
+          addStatus.className='mf-test-result is-error';
+          addStatus.textContent = '✗ Network error';
+        } finally { addTestBtn.disabled = false; }
+      };
+      const addBtn = el('button','mf-btn mf-btn-primary mf-btn-sm') as HTMLButtonElement; addBtn.type='button';
+      addBtn.innerHTML = ic('ok',13) + ' Save Connection';
+      addBtn.onclick = async () => {
+        addBtn.disabled = true; addBtn.innerHTML = ic('spin',13) + ' Saving…';
+        try {
+          const r = await fetch(API + 'ModuleConfig/ConnectionsSave', {
+            method:'POST', headers: dnnAuthHeaders(),
+            body: JSON.stringify({ name: addName.value, provider: addProv.value, connectionString: addCs.value })
+          });
+          const res: any = await r.json().catch(() => ({}));
+          if (res && res.success) {
+            toast(res.message || 'Connection saved', 'success');
+            addName.value = ''; addCs.value = '';
+            addStatus.className='mf-test-result'; addStatus.textContent='';
+            renderConnList();
+          } else {
+            const m = (res && res.message) || (res && res.error) || ('HTTP ' + r.status);
+            addStatus.className='mf-test-result is-error'; addStatus.textContent = '✗ ' + m;
+            toast(String(m), 'error');
+          }
+        } catch { toast('Network error','error'); }
+        finally { addBtn.disabled = false; addBtn.innerHTML = ic('ok',13) + ' Save Connection'; }
+      };
+      const addRow = div('mf-conn-add-actions');
+      addRow.style.cssText = 'display:flex;gap:8px;align-items:center;margin-bottom:4px;';
+      mk(addRow, addTestBtn, addBtn, addStatus);
+      c.appendChild(addRow);
+
       const footer = div('mf-modal-footer');
       const cancelBtn = el('button','mf-btn mf-btn-outline mf-btn-sm','Cancel') as HTMLButtonElement; cancelBtn.type='button'; cancelBtn.onclick=()=>ov.remove();
       const saveBtn = el('button','mf-btn mf-btn-primary mf-btn-sm') as HTMLButtonElement; saveBtn.type='button'; saveBtn.innerHTML = ic('ok',14) + ' Save Database Settings';
@@ -2126,7 +2258,10 @@ const AI_PROVIDERS: Record<string, { label: string; baseUrl: string; defaultMode
   claude:     { label: 'Anthropic Claude',            baseUrl: 'https://api.anthropic.com/v1', defaultModel: 'claude-sonnet-4-5',  helpUrl: 'https://console.anthropic.com/settings/keys' },
   kimi:       { label: 'Kimi (Moonshot.ai)',          baseUrl: 'https://api.moonshot.ai/v1',   defaultModel: 'moonshot-v1-8k',     helpUrl: 'https://platform.moonshot.ai/console/api-keys' },
   openrouter: { label: 'OpenRouter (multi-model)',    baseUrl: 'https://openrouter.ai/api/v1', defaultModel: 'openai/gpt-4o',      helpUrl: 'https://openrouter.ai/keys' },
-  local:      { label: 'Local (Ollama / LM Studio)',  baseUrl: 'http://localhost:11434/v1',    defaultModel: 'llama3.1',           helpUrl: 'https://ollama.com/' },
+  qwen:       { label: 'Qwen (DashScope · Intl)',     baseUrl: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1', defaultModel: 'qwen-plus', helpUrl: 'https://bailian.console.alibabacloud.com/' },
+  'qwen-cn':  { label: 'Qwen (DashScope · China)',    baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',      defaultModel: 'qwen-plus', helpUrl: 'https://bailian.console.aliyun.com/' },
+  local:      { label: 'Ollama / LM Studio (Local · no key)', baseUrl: 'http://localhost:11434/v1', defaultModel: 'qwen2.5',       helpUrl: 'https://ollama.com/library' },
+  'ollama-proxy': { label: 'Ollama (via server · no CORS/HTTPS)', baseUrl: '', defaultModel: 'qwen2.5', helpUrl: 'https://ollama.com/library' },
   // [B88] Free local provider — shells out to the Claude Code CLI on the server.
   'claude-cli': { label: 'Claude Local CLI (free · no token)', baseUrl: '/api/AiAssistant/LocalCliChat', defaultModel: 'sonnet', helpUrl: 'https://docs.anthropic.com/en/docs/claude-code' },
   custom:     { label: 'Custom OpenAI-compatible',    baseUrl: '',                             defaultModel: '',                   helpUrl: '' },
@@ -3031,7 +3166,7 @@ async function renderAssignedForms(app: AppDefRow, host: HTMLElement): Promise<v
 
     (all || []).forEach((f: any) => {
       const formId = f.formId || f.FormId;
-      const title = f.title || f.Title;
+      const title = stripJsonExt(f.title || f.Title);
       const row = div();
       row.style.display = 'flex';
       row.style.alignItems = 'center';
@@ -4454,7 +4589,7 @@ async function fetchDashboardFormsClient(): Promise<DashboardData['recentForms']
     if (!Array.isArray(arr)) return [];
     return arr.map((f: any) => ({
       formId:   Number(f.formId ?? f.FormId ?? 0) || 0,
-      title:    String(f.title ?? f.Title ?? '') || ('Form #' + (f.formId ?? f.FormId ?? '')),
+      title:    stripJsonExt(String(f.title ?? f.Title ?? '')) || ('Form #' + (f.formId ?? f.FormId ?? '')),
       status:   String(f.status ?? f.Status ?? '') || 'Draft',
       modified: String(f.updatedOnUtc ?? f.UpdatedOnUtc ?? f.createdOnUtc ?? f.CreatedOnUtc ?? ''),
     })) as DashboardData['recentForms'];
@@ -4555,6 +4690,13 @@ function render(root: HTMLElement, data: DashboardData) {
     } catch { /* non-fatal */ }
     const raw = root.getAttribute('data-dashboard') || '{}';
     const data = parseJson<DashboardData>(raw,{stats:[],recentForms:[],recentSubmissions:[],quickActions:[],system:[],counts:{}});
+    // [F strip-.json 2026-07-22] Defensive: legacy seed forms stored the raw ".json" filename as Title.
+    // Normalize once at ingestion so every downstream use (cards, search, confirms, toasts) shows a clean name.
+    if (Array.isArray(data.recentForms)) {
+      for (const rf of data.recentForms as Array<{ title?: string }>) {
+        if (rf && rf.title != null) rf.title = stripJsonExt(rf.title);
+      }
+    }
     // [i18n] Load the page-locale catalog before first paint so wrapped chrome
     // translates (English fallback if it fails). ?mflocale → root culture → detect.
     void (async () => {

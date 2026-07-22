@@ -70,6 +70,16 @@ namespace MegaForm.Web.Services
                 return CreateExternalConnection(string.IsNullOrWhiteSpace(databaseType) ? dashboardProvider : databaseType, dashboardConn);
             }
 
+            // [NamedConnections v20260717-01] Admin-saved catalog connections (Database Settings popup →
+            // Saved connections, stored under NamedConnectionCatalog.SettingKey). Precedence mirrors the
+            // Oqtane/DNN twins: explicit → DashboardDatabase → named catalog → appsettings. Saving a
+            // catalog entry is admin-gated, so it carries appsettings-level trust.
+            var namedJson = _moduleSettings == null ? string.Empty
+                : _moduleSettings.GetSetting(0, MegaForm.Core.Services.NamedConnectionCatalog.SettingKey, "");
+            var named = MegaForm.Core.Services.NamedConnectionCatalog.Find(namedJson, connectionName);
+            if (named != null && !string.IsNullOrWhiteSpace(named.ConnectionString))
+                return CreateExternalConnection(string.IsNullOrWhiteSpace(databaseType) ? named.Provider : databaseType, named.ConnectionString);
+
             var connStr = _config.GetConnectionString(connectionName);
             if (string.IsNullOrWhiteSpace(connStr))
                 throw new InvalidOperationException(

@@ -11,18 +11,18 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
+using Umbraco.Cms.Web.Common.Authorization;
 
-namespace MegaForm.Web.Controllers
+namespace MegaForm.Umbraco.Controllers
 {
     /// <summary>
-    /// MegaForm AI tool surface for ASP.NET Core hosts.
-    /// Mirrors Oqtane/DNN: Kinds, Knowledge, Widgets, GetWidgetBundle, LogFeedback,
-    /// SQL schema tools (SqlTables/SqlColumns/PreviewSql/DryRunValidate/ExecuteDdl/DbProvider/ProposeTableSchema).
+    /// MegaForm AI tool surface for Umbraco.
+    /// Mirrors MegaForm.Web.Controllers.AiToolsController.
     /// </summary>
     [Route("api/[controller]")]
-    [Route("DesktopModules/MegaForm/API/[controller]")]
+    [Route("/umbraco/MegaForm/MegaFormApi/[controller]")]
     [IgnoreAntiforgeryToken]
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Policy = "MegaFormBackOffice")]
     public class AiToolsController : ControllerBase
     {
         private readonly IAiKnowledgeService _svc;
@@ -51,10 +51,9 @@ namespace MegaForm.Web.Controllers
             return conn;
         }
 
-        // [AiDbPicker v20260713] Twin of the Oqtane endpoints: the AI Database tab may
-        // browse allow-listed Settings connections (MegaForm:ExternalTables:AllowedConnections)
-        // besides the current/dashboard database. Key names only — a connection string is
-        // never accepted from the client and never echoed back (rules 1 + 10).
+        // [AiDbPicker v20260713] Twin of Web/Oqtane: allow-listed Settings connections
+        // (MegaForm:ExternalTables:AllowedConnections) for the AI Database tab. Key names
+        // only — connection strings are never accepted or echoed (rules 1 + 10).
         private List<string> AllowedExternalConnections()
         {
             var configured = Microsoft.Extensions.Configuration.ConfigurationBinder
@@ -64,7 +63,9 @@ namespace MegaForm.Web.Controllers
                             && !string.Equals(k, "DashboardDatabase", StringComparison.OrdinalIgnoreCase))
                 .Select(k => k.Trim())
                 .ToList();
-            // [NamedConnections v20260717-01] Admin-saved catalog names join the allow-list (admin-gated → trusted).
+            // [NamedConnections v20260717-01] Admin-saved catalog names (Database Settings popup) join the
+            // allow-list — saving one is admin-gated, so it carries appsettings-level trust. Excludes
+            // DashboardDatabase (the AI tab treats the site DB separately).
             try
             {
                 var json = _moduleSettings == null ? string.Empty
@@ -91,14 +92,19 @@ namespace MegaForm.Web.Controllers
             return conn;
         }
 
-        [HttpGet("SqlConnections")]
-        public IActionResult SqlConnections() => Ok(new { connections = AllowedExternalConnections() });
-
         private int SiteId => _platform?.PortalId > 0 ? _platform.PortalId : 0;
         private int CurrentUserId => _platform?.UserId > 0 ? _platform.UserId : -1;
 
+        // Real admin check (role claims + backoffice group resolution). Required
+        // for actions that execute arbitrary SQL or DDL — the controller-level
+        // MegaFormBackOffice policy only proves backoffice membership.
+        private bool IsAdmin => _platform?.IsAdmin == true;
+
         [HttpGet("Kinds")]
         public IActionResult Kinds() => Ok(new { kinds = _svc.ListKinds(SiteId) });
+
+        [HttpGet("SqlConnections")]
+        public IActionResult SqlConnections() => Ok(new { connections = AllowedExternalConnections() });
 
         [HttpGet("SqlTables")]
         public IActionResult SqlTables(string search = null, int top = 200, string connectionKey = null)
@@ -136,6 +142,7 @@ namespace MegaForm.Web.Controllers
         [HttpPost("PreviewSql")]
         public IActionResult PreviewSql([FromBody] System.Text.Json.JsonElement body)
         {
+            if (!IsAdmin) return Forbid();
             if (body.ValueKind != System.Text.Json.JsonValueKind.Object) return BadRequest(new { error = "body required" });
             var sql = JStr(body, "sql");
             if (string.IsNullOrWhiteSpace(sql)) return BadRequest(new { error = "sql required" });
@@ -291,11 +298,6 @@ namespace MegaForm.Web.Controllers
             });
         }
 
-        /// <summary>
-        /// GET /api/AiTools/GetTemplateGuide?slug=...
-        /// Convenience over GetKnowledge for the template_guide kind. Returns
-        /// the full design-contract markdown from wwwroot/Modules/MegaForm/Resources/TemplateGuides/.
-        /// </summary>
         [HttpGet("GetTemplateGuide")]
         public IActionResult GetTemplateGuide(string slug)
         {
@@ -315,11 +317,6 @@ namespace MegaForm.Web.Controllers
             });
         }
 
-        /// <summary>
-        /// Resolves file-linked KB bodies for prompt_recipe (recipe_file) and
-        /// template_guide (guide_file). Falls back to the raw body for inline
-        /// entries.
-        /// </summary>
         private (string body, string sourceFile) ResolveKnowledgeBody(string raw)
         {
             if (string.IsNullOrWhiteSpace(raw)) return (raw, null);
@@ -411,6 +408,7 @@ namespace MegaForm.Web.Controllers
         [HttpPost("ExecuteDdl")]
         public IActionResult ExecuteDdl([FromBody] System.Text.Json.JsonElement body)
         {
+            if (!IsAdmin) return Forbid();
             if (body.ValueKind != System.Text.Json.JsonValueKind.Object) return BadRequest(new { error = "body required" });
             var sql = JStr(body, "sql");
             var dryRun = JBool(body, "dryRun");

@@ -65,13 +65,81 @@ namespace MegaForm.Oqtane.Server.Controllers
             return conn;
         }
 
-        [HttpGet("Tables")]
-        public IActionResult ListTables()
+        // ── [DbTabConnPicker v20260722-01] Per-form connection picker support ──
+        // The builder DB tab may now read tables from a chosen named connection, not just
+        // DashboardDatabase. SECURITY (CLAUDE.md #1/#11): the client-sent connectionKey is
+        // NEVER trusted — it is gated against the SAME admin allow-list ExternalTableController
+        // uses (appsettings AllowedConnections ∪ admin-saved catalog names, always incl.
+        // DashboardDatabase). A key the operator never listed can never be opened.
+        private List<string> AllowedConnections()
         {
-            if (!IsAdmin) return Unauthorized();
+            var configured = _config?.GetSection("MegaForm:ExternalTables:AllowedConnections").Get<string[]>();
+            var list = configured != null && configured.Length > 0
+                ? configured.Where(k => !string.IsNullOrWhiteSpace(k)).ToList()
+                : new List<string> { "DashboardDatabase" };
+            if (!list.Any(k => string.Equals(k, "DashboardDatabase", StringComparison.OrdinalIgnoreCase)))
+                list.Add("DashboardDatabase");
+            foreach (var name in SavedConnectionNames())
+                if (!list.Any(k => string.Equals(k, name, StringComparison.OrdinalIgnoreCase)))
+                    list.Add(name);
+            return list;
+        }
+
+        private IEnumerable<string> SavedConnectionNames()
+        {
             try
             {
-                using var conn = OpenDashboardConnection();
+                if (_settings == null) return Enumerable.Empty<string>();
+                var siteId = SiteId;
+                if (siteId <= 0)
+                {
+                    // AuthEntityId(Site)=-1 trap: resolve via the tenant alias — the same seam the
+                    // runtime registry reads the catalog with, so reader and writer never disagree.
+                    var tenants = HttpContext?.RequestServices?.GetService(typeof(ITenantManager)) as ITenantManager;
+                    var alias = tenants?.GetAlias();
+                    if (alias != null && alias.SiteId > 0) siteId = alias.SiteId;
+                }
+                if (siteId <= 0) return Enumerable.Empty<string>();
+                var all = _settings.GetSettings(EntityNames.Site, siteId);
+                var json = all?.FirstOrDefault(s => string.Equals(s.SettingName,
+                    MegaForm.Core.Services.NamedConnectionCatalog.SettingKey, StringComparison.OrdinalIgnoreCase))?.SettingValue;
+                return MegaForm.Core.Services.NamedConnectionCatalog.Names(json).ToList();
+            }
+            catch { return Enumerable.Empty<string>(); }
+        }
+
+        private bool IsAllowed(string key)
+            => !string.IsNullOrWhiteSpace(key)
+               && AllowedConnections().Any(k => string.Equals(k, key, StringComparison.OrdinalIgnoreCase));
+
+        private string DbTypeFor(string key)
+        {
+            var cs = _config?["ConnectionStrings:" + key] ?? string.Empty;
+            return (cs.IndexOf(".db", StringComparison.OrdinalIgnoreCase) >= 0
+                    || cs.IndexOf("sqlite", StringComparison.OrdinalIgnoreCase) >= 0)
+                ? "sqlite" : null;
+        }
+
+        /// <summary>Open a GATED connection for the schema-browsing endpoints. null/empty defaults to
+        /// "DashboardDatabase" so unmodified clients behave exactly as before. Caller must have already
+        /// checked IsAllowed(connectionKey).</summary>
+        private DbConnection OpenSubformConnection(string connectionKey)
+        {
+            var key = string.IsNullOrWhiteSpace(connectionKey) ? "DashboardDatabase" : connectionKey.Trim();
+            var conn = _connectionRegistry.GetConnection(key, databaseType: DbTypeFor(key));
+            conn.Open();
+            return conn;
+        }
+
+        [HttpGet("Tables")]
+        public IActionResult ListTables([FromQuery] string connectionKey = null)
+        {
+            if (!IsAdmin) return Unauthorized();
+            var connKey = string.IsNullOrWhiteSpace(connectionKey) ? "DashboardDatabase" : connectionKey.Trim();
+            if (!IsAllowed(connKey)) return BadRequest(new { error = "connection not allowed" });
+            try
+            {
+                using var conn = OpenSubformConnection(connKey);
                 using var cmd = conn.CreateCommand();
                 if (IsSqlite(conn))
                 {
@@ -107,14 +175,16 @@ namespace MegaForm.Oqtane.Server.Controllers
         }
 
         [HttpGet("Columns")]
-        public IActionResult GetColumns([FromQuery] string tableName)
+        public IActionResult GetColumns([FromQuery] string tableName, [FromQuery] string connectionKey = null)
         {
             if (!IsAdmin) return Unauthorized();
             if (string.IsNullOrWhiteSpace(tableName)) return BadRequest(new { error = "tableName required" });
             if (tableName.IndexOfAny(new[] { ';', '\'', '"', '[', ']' }) >= 0) return BadRequest(new { error = "invalid tableName" });
+            var connKey = string.IsNullOrWhiteSpace(connectionKey) ? "DashboardDatabase" : connectionKey.Trim();
+            if (!IsAllowed(connKey)) return BadRequest(new { error = "connection not allowed" });
             try
             {
-                using var conn = OpenDashboardConnection();
+                using var conn = OpenSubformConnection(connKey);
                 using var cmd = conn.CreateCommand();
                 if (IsSqlite(conn))
                 {

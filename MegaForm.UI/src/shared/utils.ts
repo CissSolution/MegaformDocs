@@ -67,6 +67,16 @@ export function debounce<T extends (...args: unknown[]) => void>(fn: T, ms: numb
   }) as T;
 }
 
+/**
+ * Strip a trailing ".json" extension from a form title for display.
+ * Defensive: legacy seed forms (DevBulkCreateForms) stored the raw filename as Title
+ * (e.g. "tabbed-account-setup.json"). Only the extension is removed — real titles that
+ * merely contain a dot are left intact. Pair with the server-side creation fix.
+ */
+export function stripJsonExt(s: string | null | undefined): string {
+  return String(s ?? '').replace(/\.json$/i, '');
+}
+
 /** Parse JSON safely */
 export function parseJson<T>(json: string | null | undefined, fallback: T): T {
   if (!json) return fallback;

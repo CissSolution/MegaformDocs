@@ -22,8 +22,9 @@
  */
 
 import S from './db-tables-strings.json';
+import { loadAllowedConnections } from './db-insert-picker';
 
-const BADGE = 'BuilderDbTablesTab v20260530-01';
+const BADGE = 'BuilderDbTablesTab v20260722-01';
 
 interface DbTable { name: string; schema?: string; rowCount?: number; }
 interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimary?: boolean; isIdentity?: boolean; maxLength: number; uiType: string; }
@@ -84,6 +85,8 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
 #mf-db-tables-body .mf-bdb-search{padding:10px 12px 6px;border-bottom:1px solid #e2e8f0;background:#fff;position:sticky;top:0;z-index:2;display:flex;flex-direction:column;gap:6px}
 #mf-db-tables-body .mf-bdb-search input{width:100%;padding:7px 10px;border:1px solid #cbd5e1;border-radius:7px;font-size:13px;font-family:inherit}
 #mf-db-tables-body .mf-bdb-search input:focus{outline:2px solid #0ea5e9;outline-offset:-2px;border-color:#0ea5e9}
+#mf-db-tables-body .mf-bdb-search select.mf-bdb-conn{width:100%;padding:6px 9px;border:1px solid #cbd5e1;border-radius:7px;font-size:12px;font-family:inherit;background:#fff;color:#0f172a;cursor:pointer}
+#mf-db-tables-body .mf-bdb-search select.mf-bdb-conn:focus{outline:2px solid #0ea5e9;outline-offset:-2px;border-color:#0ea5e9}
 #mf-db-tables-body .mf-bdb-toggle{display:flex;align-items:center;gap:6px;font-size:11px;color:#64748b;cursor:pointer;user-select:none}
 #mf-db-tables-body .mf-bdb-toggle input{width:auto;margin:0}
 #mf-db-tables-body .mf-bdb-table-add-row{display:flex;gap:4px}
@@ -178,6 +181,11 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
   let mounted = false;
   let showSystem = false;
   let selectedTables: string[] = [];
+  // [DbTabConnPicker v20260722-01] Which named connection the DB tab reads tables from.
+  // Default = site DB. Server GATES every read against the admin allow-list, so this is a
+  // convenience selector, not a trust boundary. Threaded into Subform/Tables + Subform/Columns
+  // + the Capability probe; changing it MUST invalidate both caches (they are conn-agnostic).
+  let selectedConnKey = 'DashboardDatabase';
 
   // [v20260530-01] Persist the picked tables per form so the strip survives
   // reloads. Keyed by formId; loaded on mount, saved on every change.
@@ -291,18 +299,41 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
     injectStyles();
     host.innerHTML =
       '<div class="mf-bdb-search">' +
+        '<select class="mf-bdb-conn" data-conn aria-label="' + escapeAttr(S.connectionPrefix.replace(/[:：]\s*$/, '')) + '" title="' + escapeAttr(S.connectionPrefix.replace(/[:：]\s*$/, '')) + '">' +
+          '<option value="DashboardDatabase">DashboardDatabase</option>' +
+        '</select>' +
         '<input type="search" placeholder="' + S.filterPlaceholder + '" data-search />' +
         '<label class="mf-bdb-toggle"><input type="checkbox" data-show-system /> ' + S.showSystemLabel + '</label>' +
       '</div>' +
       '<div data-list><div class="mf-bdb-loading">' + S.loadingTables + '</div></div>';
     const search = host.querySelector('[data-search]') as HTMLInputElement;
     const toggle = host.querySelector('[data-show-system]') as HTMLInputElement;
+    const connSel = host.querySelector('[data-conn]') as HTMLSelectElement | null;
     search.addEventListener('input', () => renderList(host, search.value.trim().toLowerCase()));
     toggle.addEventListener('change', () => {
       showSystem = toggle.checked;
       tablesCache = null; // force refetch
       loadAndRender(host, search.value.trim().toLowerCase());
     });
+    // [DbTabConnPicker v20260722-01] Populate the connection list (admin allow-list) and,
+    // on change, reset BOTH caches — they are keyed by table name only, so a same-named
+    // table on another connection would otherwise render the previous connection's schema.
+    if (connSel) {
+      void (async () => {
+        try {
+          const conns = await loadAllowedConnections(selectedConnKey);
+          connSel.innerHTML = '';
+          conns.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; connSel.appendChild(o); });
+          connSel.value = selectedConnKey;
+        } catch { /* keep the single default option */ }
+      })();
+      connSel.addEventListener('change', () => {
+        selectedConnKey = connSel.value || 'DashboardDatabase';
+        tablesCache = null;
+        columnsCache = {};
+        loadAndRender(host, search.value.trim().toLowerCase());
+      });
+    }
     // [NoWorkingSetStrip v20260714] The "In use by this form" strip (+ its "Build fields with AI"
     // and "Clear" buttons) is gone: it was a SECOND, unvalidated AI path sitting next to the one in
     // the Capability card, and nothing explained which was which. Tables inserted with "+ DataGrid"
@@ -315,7 +346,7 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
   async function loadAndRender(host: HTMLElement, filter: string) {
     try {
       if (!tablesCache) {
-        const j = await fetchJson(buildUrl('Subform/Tables', showSystem ? { showAll: '1' } : {}));
+        const j = await fetchJson(buildUrl('Subform/Tables', { ...(showSystem ? { showAll: '1' } : {}), connectionKey: selectedConnKey }));
         tablesCache = (j.tables || []) as DbTable[];
         (window as any).__MF_DB_TABLES__ = tablesCache;
       }
@@ -365,7 +396,7 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
       const open = (window as any).__MF_OPEN_CAPABILITY_CARD__;
       if (typeof open !== 'function') return;
       const t = (tablesCache || []).find(x => x.name === tableName);
-      open('DashboardDatabase', (t && t.schema) || 'dbo', tableName);
+      open(selectedConnKey, (t && t.schema) || 'dbo', tableName);
     });
 
     head.addEventListener('click', async (e) => {
@@ -419,7 +450,7 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
 
   async function loadColumns(tableName: string): Promise<DbColumn[]> {
     if (columnsCache[tableName]) return columnsCache[tableName];
-    const j = await fetchJson(buildUrl('Subform/Columns', { tableName }));
+    const j = await fetchJson(buildUrl('Subform/Columns', { tableName, connectionKey: selectedConnKey }));
     columnsCache[tableName] = (j.columns || []) as DbColumn[];
     return columnsCache[tableName];
   }
@@ -494,7 +525,7 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
   (async () => {
     try {
       if (!tablesCache) {
-        const j = await fetchJson(buildUrl('Subform/Tables'));
+        const j = await fetchJson(buildUrl('Subform/Tables', { connectionKey: selectedConnKey }));
         tablesCache = (j.tables || []) as DbTable[];
         (window as any).__MF_DB_TABLES__ = tablesCache;
       }

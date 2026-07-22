@@ -72,6 +72,51 @@ namespace MegaForm.WebApi
             return conn;
         }
 
+        // ── [DbTabConnPicker v20260722-01] Per-form connection picker support (DNN twin) ──
+        // The builder DB tab may read tables from a chosen named connection. SECURITY
+        // (CLAUDE.md #1/#11): the client-sent connectionKey is NEVER trusted — it is gated
+        // against the SAME admin allow-list ExternalTableController/AiToolsController use
+        // (host setting MegaForm_ExternalTables_AllowedConnections ∪ admin-saved catalog names,
+        // always incl. DashboardDatabase). A key the operator never listed can never be opened.
+        private List<string> AllowedConnections()
+        {
+            var list = new List<string> { "DashboardDatabase" };
+            var raw = GetPortalSetting("ExternalTables_AllowedConnections") ?? string.Empty;
+            foreach (var key in raw.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var k = key.Trim();
+                if (k.Length > 0 && !list.Contains(k, StringComparer.OrdinalIgnoreCase)) list.Add(k);
+            }
+            // Admin-saved connections (Database Settings popup, portal setting MegaForm_NamedConnections)
+            // are allow-listed too — saving one is admin-gated, so it carries host-setting-level trust.
+            try
+            {
+                var json = DotNetNuke.Entities.Portals.PortalController.GetPortalSetting(
+                    MegaForm.Core.Services.NamedConnectionCatalog.SettingKey,
+                    PortalSettings != null ? PortalSettings.PortalId : -1, string.Empty);
+                foreach (var name in MegaForm.Core.Services.NamedConnectionCatalog.Names(json))
+                    if (!list.Contains(name, StringComparer.OrdinalIgnoreCase)) list.Add(name);
+            }
+            catch { /* fail-soft: host allow-list alone still applies */ }
+            return list;
+        }
+
+        private bool IsAllowed(string key)
+            => !string.IsNullOrWhiteSpace(key)
+               && AllowedConnections().Any(k => string.Equals(k, key, StringComparison.OrdinalIgnoreCase));
+
+        /// <summary>Open a GATED connection for schema browsing. null/empty defaults to
+        /// "DashboardDatabase" so unmodified clients behave exactly as before. Caller must have
+        /// already checked IsAllowed(connectionKey).</summary>
+        private DbConnection OpenConnection(string connectionKey)
+        {
+            var key = string.IsNullOrWhiteSpace(connectionKey) ? "DashboardDatabase" : connectionKey.Trim();
+            var registry = new DnnConnectionRegistry(GetPortalSetting);
+            var conn = registry.GetConnection(key);
+            conn.Open();
+            return conn;
+        }
+
         private static bool IsSqlite(DbConnection conn)
         {
             return conn.GetType().FullName?.IndexOf("Sqlite", StringComparison.OrdinalIgnoreCase) >= 0;
@@ -160,8 +205,10 @@ namespace MegaForm.WebApi
 
         [HttpGet]
         [ActionName("Tables")]
-        public HttpResponseMessage ListTables(int showAll = 0)
+        public HttpResponseMessage ListTables(int showAll = 0, string connectionKey = null)
         {
+            var connKey = string.IsNullOrWhiteSpace(connectionKey) ? "DashboardDatabase" : connectionKey.Trim();
+            if (!IsAllowed(connKey)) return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "connection not allowed" });
             // [v20260529-01] When showAll=0 (default), filter out DNN / ASP.NET
             // platform tables so the admin's table picker only shows their own
             // application data. The blacklist is conservative — DNN modules
@@ -170,7 +217,7 @@ namespace MegaForm.WebApi
             // datasources and clutter the picker. Pass ?showAll=1 to bypass.
             try
             {
-                using (var conn = OpenDashboardConnection())
+                using (var conn = OpenConnection(connKey))
                 using (var cmd = conn.CreateCommand())
                 {
                     var whereExtra = showAll == 1 ? string.Empty : @"
@@ -253,15 +300,17 @@ namespace MegaForm.WebApi
 
         [HttpGet]
         [ActionName("Columns")]
-        public HttpResponseMessage GetColumns(string tableName = null)
+        public HttpResponseMessage GetColumns(string tableName = null, string connectionKey = null)
         {
             if (string.IsNullOrWhiteSpace(tableName))
                 return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "tableName required" });
             if (tableName.IndexOfAny(new[] { ';', '\'', '"', '[', ']' }) >= 0)
                 return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "invalid tableName" });
+            var connKey = string.IsNullOrWhiteSpace(connectionKey) ? "DashboardDatabase" : connectionKey.Trim();
+            if (!IsAllowed(connKey)) return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "connection not allowed" });
             try
             {
-                using (var conn = OpenDashboardConnection())
+                using (var conn = OpenConnection(connKey))
                 using (var cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = @"
