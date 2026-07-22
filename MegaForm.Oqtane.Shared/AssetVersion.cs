@@ -26,8 +26,10 @@
     /// </summary>
     public static class MegaFormAssetVersion
     {
-        // [B404 NamedConnections v20260717-01] Database Settings popup gained the SQL Connections
-        // catalog (list + add/edit/delete named connections) in megaform-dashboard.js.
-        public static readonly string Current = "20260717-B405";
+        // [B408 SpacingFix v20260721] megaform.css restores the transparent 24/16 gutter on custom/premium
+        // shells (was padding:0 → card butted flush in a bare skin pane), field-gap 16→20, and adds the
+        // custom-shell single-page dup-submit suppressor. Bump busts the cached B407 CSS. Ships with the
+        // 14 new ChipCards-V3 premium templates. (B407 = dup-submit hide; B406 = ContentGapTrim + reflow.)
+        public static readonly string Current = "20260722-B408";
     }
 }
