@@ -72,7 +72,8 @@ namespace MegaForm.Web.Controllers
             BuilderTemplateCatalogService templateCatalog,
             PermissionCatalogService permissionCatalog,
             IConnectionRegistry    connectionRegistry,
-            IFileRepository        fileRepo)
+            IFileRepository        fileRepo,
+            MegaForm.Core.Interfaces.ISubmissionDataStore typedStore = null)
         {
             _formRepo       = formRepo;
             _subRepo        = subRepo;
@@ -82,7 +83,8 @@ namespace MegaForm.Web.Controllers
             // [SubmissionFilesFix v20260713] fileRepo was already injected but not
             // handed to the query service → GET Submissions/{id} returned files:[]
             // and attachments never showed in the detail views (DNN parity fix).
-            _submissionQueries = new SubmissionQueryService(subRepo, formRepo, fileRepo);
+            // [P1 typed-read] Pass typed store so GetDetail can reconstruct from rows.
+            _submissionQueries = new SubmissionQueryService(subRepo, formRepo, fileRepo, typedStore);
             _ctx            = ctx;
             _processor      = processor;
             _connectionRegistry = connectionRegistry;
@@ -248,6 +250,10 @@ namespace MegaForm.Web.Controllers
             var cssOverrides = body["CssOverrides"] as JObject;
             // [HideHeader v20260705] Optional form-header toggle (Settings popup). Partial patch: null = untouched.
             bool? hideHeader = (body["HideHeader"] is JToken hh && hh.Type == JTokenType.Boolean) ? hh.Value<bool>() : (bool?)null;
+            // [InheritSourceDnn v20260721] Typography/Color "source: From page" flags — parity with Oqtane/DNN twins
+            // (were dropped here too, so the Settings popup source pickers never persisted). Partial patch: null = untouched.
+            bool? inheritType = (body["InheritPageTypography"] is JToken it && it.Type == JTokenType.Boolean) ? it.Value<bool>() : (bool?)null;
+            bool? inheritColors = (body["InheritPageColors"] is JToken ic && ic.Type == JTokenType.Boolean) ? ic.Value<bool>() : (bool?)null;
             if (formId == 0) return BadRequest(new { error = "FormId required" });
 
             var form = _formRepo.GetForm(formId);
@@ -277,6 +283,8 @@ namespace MegaForm.Web.Controllers
                         schema["CustomCss"] = schemaCustomCss;
                     }
                     if (cssOverrides != null) settings["themeCssOverrides"] = cssOverrides;
+                    if (inheritType.HasValue) { settings["inheritPageTypography"] = inheritType.Value; settings["InheritPageTypography"] = inheritType.Value; }
+                    if (inheritColors.HasValue) { settings["inheritPageColors"] = inheritColors.Value; settings["InheritPageColors"] = inheritColors.Value; }
                     if (hideHeader.HasValue) { settings["hideHeader"] = hideHeader.Value; settings["HideHeader"] = hideHeader.Value; }
                     settingsForSave = settings;
                     form.SchemaJson = schema.ToString(Newtonsoft.Json.Formatting.None);
@@ -297,6 +305,8 @@ namespace MegaForm.Web.Controllers
                     settingsJson["CustomCss"] = schemaCustomCss;
                 }
                 if (cssOverrides != null) settingsJson["themeCssOverrides"] = cssOverrides;
+                if (inheritType.HasValue) { settingsJson["inheritPageTypography"] = inheritType.Value; settingsJson["InheritPageTypography"] = inheritType.Value; }
+                if (inheritColors.HasValue) { settingsJson["inheritPageColors"] = inheritColors.Value; settingsJson["InheritPageColors"] = inheritColors.Value; }
                 if (hideHeader.HasValue) { settingsJson["hideHeader"] = hideHeader.Value; settingsJson["HideHeader"] = hideHeader.Value; }
                 form.SettingsJson = settingsJson.ToString(Newtonsoft.Json.Formatting.None);
             }

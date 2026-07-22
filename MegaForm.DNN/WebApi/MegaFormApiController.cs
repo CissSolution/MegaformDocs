@@ -867,6 +867,12 @@ namespace MegaForm.WebApi
             var cssOverrides = body["CssOverrides"] as JObject;
             // [HideHeader v20260705] Optional form-header toggle (Settings popup). Partial patch: null = untouched.
             bool? hideHeader = (body["HideHeader"] is JToken hh && hh.Type == JTokenType.Boolean) ? hh.Value<bool>() : (bool?)null;
+            // [InheritSourceDnn v20260721] Typography/Color "source: From page" flags (Settings popup →
+            // saveFormInheritFlags → Form/SaveTheme). WERE SILENTLY DROPPED — this endpoint never read them, so the
+            // toggle returned saved:true but never persisted, and the render (ThemeFirstPaintCssService reads
+            // settings.inheritPageTypography / inheritPageColors) always saw the default → the source pickers were dead.
+            bool? inheritType = (body["InheritPageTypography"] is JToken itk && itk.Type == JTokenType.Boolean) ? itk.Value<bool>() : (bool?)null;
+            bool? inheritColors = (body["InheritPageColors"] is JToken ick && ick.Type == JTokenType.Boolean) ? ick.Value<bool>() : (bool?)null;
             if (formId == 0) return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "FormId required" });
 
             var form = FormRepository.GetForm(formId);
@@ -895,6 +901,8 @@ namespace MegaForm.WebApi
                         schema["CustomCss"] = schemaCustomCss;
                     }
                     if (cssOverrides != null) settings["themeCssOverrides"] = cssOverrides;
+                    if (inheritType.HasValue) { settings["inheritPageTypography"] = inheritType.Value; settings["InheritPageTypography"] = inheritType.Value; }
+                    if (inheritColors.HasValue) { settings["inheritPageColors"] = inheritColors.Value; settings["InheritPageColors"] = inheritColors.Value; }
                     if (hideHeader.HasValue) { settings["hideHeader"] = hideHeader.Value; settings["HideHeader"] = hideHeader.Value; }
                     form.SchemaJson = schema.ToString(Newtonsoft.Json.Formatting.None);
                 }
@@ -914,6 +922,8 @@ namespace MegaForm.WebApi
                     settingsJson["CustomCss"] = schemaCustomCss;
                 }
                 if (cssOverrides != null) settingsJson["themeCssOverrides"] = cssOverrides;
+                if (inheritType.HasValue) { settingsJson["inheritPageTypography"] = inheritType.Value; settingsJson["InheritPageTypography"] = inheritType.Value; }
+                if (inheritColors.HasValue) { settingsJson["inheritPageColors"] = inheritColors.Value; settingsJson["InheritPageColors"] = inheritColors.Value; }
                 if (hideHeader.HasValue) { settingsJson["hideHeader"] = hideHeader.Value; settingsJson["HideHeader"] = hideHeader.Value; }
                 form.SettingsJson = settingsJson.ToString(Newtonsoft.Json.Formatting.None);
             }

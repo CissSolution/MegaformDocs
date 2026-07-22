@@ -31,7 +31,67 @@ namespace MegaForm.Core.Services
         public static string Build(JObject settings, string selectedThemeKey, string scopeSelector)
         {
             if (settings == null || string.IsNullOrWhiteSpace(scopeSelector)) return string.Empty;
+            var selectors = NormalizeSelectors(scopeSelector);
+            if (selectors.Count == 0) return string.Empty;
+            var sel = string.Join(",", selectors.ToArray());
 
+            var css = new StringBuilder();
+            // (1) standardized theme-preset vars (only when the form's themeSelector resolves a preset).
+            css.Append(BuildPresetBlock(settings, selectedThemeKey, sel));
+            // (2) [ModuleStyleOverride v20260721] Emit the explicit CSS-var maps (themeCssOverrides / cssOverrides)
+            //     LAST so a per-module Settings-popup override wins over the preset. THIS is what makes the
+            //     "Theme & Layout" tab actually recolour PREMIUM / custom-shell forms: their themeSelector has no
+            //     matching preset (BuildPresetBlock returns empty), and their customCss reads the theme through a
+            //     var() fallback chain (e.g. `--mf-primary: var(--mf-page-primary, var(--mf-preset-primary, #0f9d76))`)
+            //     — so applying `--mf-preset-primary:#f97316` on the wrapper (an ancestor) recolours the card.
+            //     Before this, the saved override was written to module settings but NEVER rendered (dead panel).
+            css.Append(BuildOverrideBlock(settings, sel));
+            return css.ToString();
+        }
+
+        /// <summary>[ModuleStyleOverride v20260721] Emit settings.themeCssOverrides + settings.cssOverrides
+        /// (a {"--var":"value"} map) as a scoped var block. Names are validated (`--` + [a-z0-9-]) and values
+        /// sanitized, so an author-controlled map cannot inject arbitrary CSS.</summary>
+        private static string BuildOverrideBlock(JObject settings, string joinedSelector)
+        {
+            var vars = new StringBuilder();
+            AppendVarMap(vars, settings["themeCssOverrides"] as JObject ?? settings["ThemeCssOverrides"] as JObject);
+            AppendVarMap(vars, settings["cssOverrides"] as JObject ?? settings["CssOverrides"] as JObject);
+            if (vars.Length == 0) return string.Empty;
+            var css = new StringBuilder();
+            css.Append("/* ModuleStyleOverride v20260721 */");
+            css.Append(joinedSelector).Append('{').Append(vars).Append('}');
+            return css.ToString();
+        }
+
+        private static void AppendVarMap(StringBuilder css, JObject map)
+        {
+            if (map == null) return;
+            foreach (var prop in map.Properties())
+            {
+                var name = prop.Name == null ? string.Empty : prop.Name.Trim();
+                if (!IsSafeCssVarName(name)) continue;
+                var value = SanitizeCssValue(prop.Value == null ? string.Empty : prop.Value.ToString());
+                if (string.IsNullOrWhiteSpace(value)) continue;
+                css.Append(name).Append(':').Append(value).Append(';');
+            }
+        }
+
+        private static bool IsSafeCssVarName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name) || name.Length > 64 || !name.StartsWith("--")) return false;
+            for (var i = 2; i < name.Length; i++)
+            {
+                var ch = name[i];
+                if (!(char.IsLetterOrDigit(ch) || ch == '-')) return false;
+            }
+            return true;
+        }
+
+        /// <summary>The original preset-lookup emitter — unchanged behaviour, now returns its block (or "")
+        /// instead of being the whole method, so Build() can also append the override block.</summary>
+        private static string BuildPresetBlock(JObject settings, string selectedThemeKey, string joinedSelector)
+        {
             var selectorMeta = settings["themeSelector"] as JObject ?? settings["ThemeSelector"] as JObject;
             if (selectorMeta == null) return string.Empty;
 
@@ -79,12 +139,9 @@ namespace MegaForm.Core.Services
             if (string.IsNullOrWhiteSpace(background) && string.IsNullOrWhiteSpace(primary) && string.IsNullOrWhiteSpace(foreground))
                 return string.Empty;
 
-            var selectors = NormalizeSelectors(scopeSelector);
-            if (selectors.Count == 0) return string.Empty;
-
             var css = new StringBuilder();
             css.Append("/* ").Append(Badge).Append(" */");
-            css.Append(string.Join(",", selectors.ToArray()));
+            css.Append(joinedSelector);
             css.Append('{');
             AppendVar(css, "--background", background);
             AppendVar(css, "--foreground", foreground);

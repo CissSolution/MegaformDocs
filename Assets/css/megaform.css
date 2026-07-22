@@ -153,7 +153,7 @@ body > div[style*="display:none"]:has(.megaform-module) {
        ~47px apart (input→input) versus ~27px inside a composite: visually "too tall" and inconsistent.
        12px keeps fields distinct without doubling the label's separation, tightening top-level to
        ~39px and much closer to the composite density. (User-adjustable via ⚙ Settings → Field spacing.) */
-    --mf-field-gap:             16px;
+    --mf-field-gap:             20px;
 }
 
 /* ============================================================
@@ -182,7 +182,12 @@ body > div[style*="display:none"]:has(.megaform-module) {
 .mf-form-wrapper:has(.mf-steps) {
     background: transparent !important;
     background-image: none !important;
-    padding: 0 !important;
+    /* [SpacingFix v20260721] Was `padding: 0` — that dropped the gray page-bg FRAME (correct)
+       but ALSO removed all breathing room, so in a bare/no-padding host container (e.g. a skin
+       pane with no padding) the white card butted flush against the container edges + footer.
+       Keep the frame gone (transparent bg) but restore the standard 24px/16px padding so the
+       card always has top/right/bottom/left air regardless of the host container. */
+    padding: 24px 16px !important;
 }
 
 .mf-form-wrapper * { box-sizing: border-box; }
@@ -685,12 +690,22 @@ body > div[style*="display:none"]:has(.megaform-module) {
     margin: 0 auto !important;
 }
 
-/* Also lighten the page wrapper's own padding when a custom design takes
-   over the visual frame — the inner shell already breathes. */
+/* Drop the page wrapper's own BACKGROUND/FRAME when a custom design takes over the visual
+   frame (the inner shell owns the look), but keep OUTER PADDING so the card breathes.
+   [SpacingFix v20260721] Was `padding: 0` — with no padding the premium/custom card butted
+   flush against the host container edges (right/bottom/left) + footer whenever the container
+   itself had no padding (e.g. a skin pane). Restore a transparent 24px/16px gutter so every
+   form has consistent top/right/bottom/left air; the transparent bg means NO visible frame
+   returns (no "card thừa" regression). */
 .mf-form-wrapper.mf-theme-pure-grid-premium,
 .mf-form-wrapper[class*="mf-theme-"]:not(.mf-theme-default),
 .mf-form-wrapper[data-mf-has-custom-html] {
-    padding: 0;
+    /* [SpacingFix v20260721] `!important` is REQUIRED: the renderer stamps an INLINE
+       `style="padding:0;margin:0;background:none"` on premium/custom-shell wrappers to strip the
+       frame, and an inline declaration beats a normal stylesheet rule. A stylesheet !important
+       overrides the inline padding (restoring the gutter) while leaving the inline background:none
+       + margin:0 intact — so the card gets top/right/bottom/left air with NO visible frame. */
+    padding: 24px 16px !important;
     background: transparent;
 }
 
@@ -2055,6 +2070,13 @@ body > div[style*="display:none"]:has(.megaform-module) {
    wrongly hidden, so submit showed a thank-you with no button. Exclude those two so only the duplicate
    footer stays hidden. (Premium per-template customCss carries a copy of this rule — patched there too.) */
 .mf-premium-native-mode .mf-form-actions:not(.mf-postsubmit-actions):not(.mf-review-actions) { display: none !important; }
+/* [DupSubmitFix v20260720] Custom-shell SINGLE-PAGE templates (contact-map-*, pure-grid "Get In Touch",
+   etc.) render their OWN submit inside the shell (.mfp-submit / .mf-btn-submit inside .mf-fields-container)
+   but are .mf-custom-shell-mode — NOT .mf-premium-native-mode — so the rule above doesn't cover them and
+   the generic renderer's .mf-form-actions "Submit" shows as a DUPLICATE (seen in Oqtane edit-mode, where
+   the client-side hide doesn't run). Suppress the generic footer whenever the shell already provides its
+   own submit control. Only fires when such a control exists, so plain custom shells keep their footer. */
+.mf-form-wrapper.mf-custom-shell-mode:has(.mf-fields-container button[type="submit"], .mf-fields-container .mfp-submit, .mf-fields-container .mf-btn-submit) .mf-form-actions:not(.mf-postsubmit-actions):not(.mf-review-actions) { display: none !important; }
 .mf-btn-submit {
     background: var(--mf-btn-bg);
     color: var(--mf-btn-color);
