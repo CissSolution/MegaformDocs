@@ -1664,6 +1664,7 @@ import { wireDbInsertPicker } from './db-insert-picker';
         B.setVal('mf-prop-min',        v.min          || '');
         B.setVal('mf-prop-max',        v.max          || '');
         B.setVal('mf-prop-pattern',    v.pattern      || '');
+        B.setVal('mf-prop-mask',       v.mask         || '');
         B.setVal('mf-prop-custom-msg', v.customMessage || '');
         // ── Conditional logic ───────────────────────────────
         B.setChecked('mf-prop-has-condition', !!field.showIf);

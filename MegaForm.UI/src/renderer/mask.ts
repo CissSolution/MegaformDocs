@@ -2,12 +2,14 @@
 // Input Mask — lightweight caret-aware auto-format
 // ============================================================
 // [Composite v1.4 2026-06-15] Shared mask engine for Composite parts (SSN, EIN,
-// dates, cards, …). A part declares `mask` (e.g. '###-##-####') and the renderer
-// stamps it as `data-mf-mask`; bindMasks() then formats-as-you-type with caret
-// preservation. Mask grammar:
-//   #  = a digit          [0-9]
-//   A  = a letter         [A-Za-z]
-//   *  = alphanumeric     [0-9A-Za-z]
+// dates, cards, …) and [InputMask v20260723-01] plain text fields. A field/part
+// declares `mask` (e.g. '###-##-####') and the renderer stamps it as
+// `data-mf-mask`; bindMasks() then formats-as-you-type with caret preservation.
+// Mask grammar:
+//   #  = a digit                    [0-9]
+//   A  = a letter                   [A-Za-z]
+//   U  = a letter, auto-uppercased  [A-Za-z] → A-Z
+//   *  = alphanumeric               [0-9A-Za-z]
 //   anything else        = a literal that is auto-inserted (e.g. - / space)
 // The stored value IS the masked string (what bindComposites combines), so the
 // completeness check in validation.ts compares value length to mask length.
@@ -15,6 +17,7 @@
 function maskClass(mc: string): RegExp | null {
   if (mc === '#') return /[0-9]/;
   if (mc === 'A') return /[A-Za-z]/;
+  if (mc === 'U') return /[A-Za-z]/;
   if (mc === '*') return /[0-9A-Za-z]/;
   return null; // literal
 }
@@ -36,7 +39,7 @@ export function formatWithMask(raw: string, mask: string): string {
       let placed = false;
       while (ri < r.length) {
         const ch = r[ri++];
-        if (cls.test(ch)) { out += ch; placed = true; break; }
+        if (cls.test(ch)) { out += m[mi] === 'U' ? ch.toUpperCase() : ch; placed = true; break; }
       }
       if (!placed) break; // ran out of valid input for this slot
     } else {

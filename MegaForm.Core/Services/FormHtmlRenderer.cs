@@ -574,7 +574,17 @@ namespace MegaForm.Core.Services
                 case "Url":
                 {
                     var it = type == "Phone" ? "tel" : type == "Url" ? "url" : "text";
-                    return Input(it, id, name, val, ph, ro + req);
+                    // [InputMask v20260723-01] Field-level input mask → data-mf-mask (the shared
+                    // renderer bundle's bindMasks formats as you type). inputmode="numeric" only
+                    // when the mask cannot accept letters.
+                    var fMask = field.Validation?.Mask;
+                    if (string.IsNullOrEmpty(fMask) && field.Properties != null
+                        && field.Properties.TryGetValue("mask", out var pm) && pm != null)
+                        fMask = pm.ToString();
+                    var maskAttr = string.IsNullOrEmpty(fMask) ? string.Empty : " data-mf-mask=\"" + Esc(fMask) + "\"";
+                    var imAttr = !string.IsNullOrEmpty(fMask) && !System.Text.RegularExpressions.Regex.IsMatch(fMask, "[A-Za-z*]")
+                        ? " inputmode=\"numeric\"" : string.Empty;
+                    return Input(it, id, name, val, ph, maskAttr + imAttr + ro + req);
                 }
                 case "Password":
                     return Input("password", id, name, val, ph, ro + req);

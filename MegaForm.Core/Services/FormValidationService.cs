@@ -213,6 +213,12 @@ namespace MegaForm.Core.Services
                     if (field.Validation.MaxLength.HasValue && value.Length > field.Validation.MaxLength.Value)
                         result.Errors.Add(field.Key, field.Validation.CustomMessage ?? Loc(loc, "form.max_length", $"Maximum length is {field.Validation.MaxLength.Value} characters.", new { max = field.Validation.MaxLength.Value, n = field.Validation.MaxLength.Value }));
 
+                    // [InputMask v20260723-01] Field-level mask completeness: the stored value
+                    // IS the masked string (the renderer formats as you type), so a complete
+                    // value has exactly the mask length — same rule as composite parts (:390).
+                    if (!string.IsNullOrEmpty(field.Validation.Mask) && value.Length < field.Validation.Mask.Length)
+                        result.Errors.Add(field.Key, field.Validation.PatternMessage ?? field.Validation.CustomMessage ?? Loc(loc, "form.incomplete", "Incomplete — please fill the required format."));
+
                     if (!string.IsNullOrEmpty(field.Validation.Pattern))
                     {
                         try

@@ -119,6 +119,17 @@ Nối tính năng cloud file storage (scaffold từ 2026-06-14, xem `Docs/HANDOF
 - **Tests:** `MegaForm.Sdk.Tests/CloudStorageTests.cs` — 23 tests (catalog + uploader fail-soft). Tổng 142/142 pass.
 - **Chưa verify:** runtime browser (tạo connection → test → submit form có file → file lên cloud). Cần credentials thật (Google OAuth token / AWS keys / Azure connection string).
 
+### 2.9 Phase 9 — Field-level input mask + token `U` auto-uppercase, hoàn thành 2026-07-23
+
+Mở rộng mask engine (vốn chỉ cho Composite parts) lên **field Text/Phone/Url thường**:
+
+- **Core:** `FieldValidation.Mask` (`FormSchema.cs`) — `field.validation.mask`. Server validate completeness (value length == mask length) trong `FormValidationService` (trước Pattern, message ưu tiên PatternMessage/CustomMessage).
+- **Grammar mới:** token `U` = letter auto-uppercased (thêm vào `renderer/mask.ts` — `formatWithMask` uppercase ký tự đặt vào slot `U`). Grammar đầy đủ: `#` digit, `A` letter, `U` upper-letter, `*` alnum, ký tự khác = literal. Ví dụ: `UU-####-***`.
+- **Renderer:** `inputs.ts` (Text/Phone/Url) + SSR `FormHtmlRenderer.cs` stamp `data-mf-mask` (đọc `validation.mask`, fallback `properties.mask`); `inputmode="numeric"` chỉ khi mask không chứa chữ. Client validate completeness ở cả 3 path: `validation.ts`, `megaform-renderer.ts`, `validation-extra.ts`.
+- **Builder:** ô "Mask (# digit, A letter, U upper, * alnum)" trong Validation panel (`dom.ts` + `field-settings.ts` save + `properties.ts` load); hint composite designer cập nhật thêm `U` (en-US).
+- **Tests:** `MegaForm.Sdk.Tests/FormValidationMaskTests.cs` — 7 tests; tổng 149/149 pass. Bundle renderer + builder đã rebuild/sync 4 platform.
+- **Lưu ý:** giá trị lưu DB là chuỗi đã mask (vd `AB-1234-XYZ`); server không kiểm tra từng ký tự đúng loại (đó là việc của client mask engine + regex Pattern nếu cấu hình kèm). Chưa verify runtime browser.
+
 ## 3. Trạng thái hiện tại
 
 - `MegaForm.Umbraco` build thành công (0 error).

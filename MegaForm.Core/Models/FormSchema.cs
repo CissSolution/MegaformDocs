@@ -252,6 +252,16 @@ namespace MegaForm.Core.Models
         [JsonProperty("patternMessage")]
         public string PatternMessage { get; set; }
 
+        /// <summary>
+        /// [InputMask v20260723-01] Optional input mask for text-like fields — format-as-you-type
+        /// in the renderer (shared engine in renderer/mask.ts, data-mf-mask). Grammar:
+        /// # = digit, A = letter, U = letter auto-uppercased, * = alphanumeric, anything else =
+        /// auto-inserted literal. The stored value IS the masked string; completeness (value
+        /// length == mask length) is validated client-side and server-side. Null = no mask.
+        /// </summary>
+        [JsonProperty("mask")]
+        public string Mask { get; set; }
+
         [JsonProperty("customMessage")]
         public string CustomMessage { get; set; }
     }

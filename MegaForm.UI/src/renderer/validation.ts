@@ -95,6 +95,11 @@ export function validateForm(config: RendererConfig): boolean {
     if (v.maxLength && val && String(val).length > v.maxLength) {
       errors[field.key] = v.customMessage || vtr('form.max_length', 'Maximum {n} characters', { n: String(v.maxLength), max: String(v.maxLength) });
     }
+    // [InputMask v20260723-01] Field-level mask completeness: the stored value IS the masked
+    // string, so a complete value has exactly the mask length (same rule as composite parts).
+    if (v.mask && val && String(val).length < String(v.mask).length) {
+      errors[field.key] = v.customMessage || vtr('form.incomplete', 'Incomplete — please fill the required format');
+    }
     if (v.pattern && val) {
       try {
         if (!new RegExp(v.pattern).test(String(val))) {

@@ -516,7 +516,7 @@ import { wt } from './designer-i18n';
           '<div class="mf-comp-des-fld"><label>' + wt('des.comp.patternMessage', 'Pattern message') + '</label><input class="mf-comp-des-in" data-f="patternMsg" value="' + escA(p.patternMsg || '') + '" placeholder="' + escA(wt('des.comp.phLettersOnly', 'Letters only')) + '"></div>' +
         '</div>' +
         '<div class="mf-comp-des-grid">' +
-          '<div class="mf-comp-des-fld"><label>' + wt('des.comp.mask', 'Mask') + ' <span class="mf-comp-des-hint">' + wt('des.comp.maskHint', '(# digit, A letter, * alnum)') + '</span></label><input class="mf-comp-des-in" data-f="mask" value="' + escA(p.mask || '') + '" placeholder="###-##-####"></div>' +
+          '<div class="mf-comp-des-fld"><label>' + wt('des.comp.mask', 'Mask') + ' <span class="mf-comp-des-hint">' + wt('des.comp.maskHint', '(# digit, A letter, U upper-letter, * alnum)') + '</span></label><input class="mf-comp-des-in" data-f="mask" value="' + escA(p.mask || '') + '" placeholder="###-##-####"></div>' +
           '<div class="mf-comp-des-fld"><label>' + wt('des.comp.inputModeLabel', 'Input mode') + '</label><input class="mf-comp-des-in" data-f="inputMode" value="' + escA(p.inputMode || '') + '" placeholder="numeric / tel"></div>' +
           '<div class="mf-comp-des-fld"><label>' + wt('des.comp.minValue', 'Min value') + '</label><input class="mf-comp-des-in" type="number" data-f="min" value="' + (p.min != null ? p.min : '') + '" placeholder="—"></div>' +
           '<div class="mf-comp-des-fld"><label>' + wt('des.comp.maxValue', 'Max value') + '</label><input class="mf-comp-des-in" type="number" data-f="max" value="' + (p.max != null ? p.max : '') + '" placeholder="—"></div>' +

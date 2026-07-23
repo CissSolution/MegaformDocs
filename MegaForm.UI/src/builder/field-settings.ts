@@ -134,6 +134,7 @@ export function flushActiveFieldSettingsFromDom(currentField?: any) {
   validation.min = parseOptionalNumber(val('mf-prop-min'));
   validation.max = parseOptionalNumber(val('mf-prop-max'));
   validation.pattern = (val('mf-prop-pattern') || '').trim() || null;
+  validation.mask = (val('mf-prop-mask') || '').trim() || null;
   validation.customMessage = (val('mf-prop-custom-msg') || '').trim() || null;
 
   var hasValidation = Object.keys(validation).some(function (k) { return validation[k] !== null && validation[k] !== undefined && validation[k] !== ''; });

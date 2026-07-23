@@ -1579,7 +1579,7 @@
   "des.comp.patternMessage": "Pattern message",
   "des.comp.phLettersOnly": "Letters only",
   "des.comp.mask": "Mask",
-  "des.comp.maskHint": "(# digit, A letter, * alnum)",
+  "des.comp.maskHint": "(# digit, A letter, U upper-letter, * alnum)",
   "des.comp.inputModeLabel": "Input mode",
   "des.comp.minValue": "Min value",
   "des.comp.maxValue": "Max value",

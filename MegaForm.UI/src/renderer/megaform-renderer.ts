@@ -43,6 +43,7 @@ function getValidationConfigExtra(field: any): any {
     minLength: firstDefinedValidationExtra(validation.minLength, validation.MinLength, props.minLength, props.MinLength),
     maxLength: firstDefinedValidationExtra(validation.maxLength, validation.MaxLength, props.maxLength, props.MaxLength),
     pattern: firstDefinedValidationExtra(validation.pattern, validation.Pattern, props.pattern, props.Pattern),
+    mask: firstDefinedValidationExtra(validation.mask, validation.Mask, props.mask, props.Mask),
     customMessage: firstDefinedValidationExtra(validation.customMessage, validation.CustomMessage, props.customMessage, props.CustomMessage)
   };
 }
@@ -79,6 +80,11 @@ function validateFieldExtra(field: any, val: any): string | null {
 
   if (v.maxLength != null && String(val).length > Number(v.maxLength)) {
     return v.customMessage || trTop('form.max_length', 'Maximum {max} characters', { max: v.maxLength });
+  }
+
+  // [InputMask v20260723-01] Field-level mask completeness (stored value IS the masked string).
+  if (v.mask && String(val).length < String(v.mask).length) {
+    return v.customMessage || trTop('form.incomplete', 'Incomplete — please fill the required format');
   }
 
   if (v.pattern && val) {

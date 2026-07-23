@@ -1133,6 +1133,7 @@ import dbStrings from './db-tables-strings.json';
             propInput('number', 'mf-prop-min',         'Min Value') +
             propInput('number', 'mf-prop-max',         'Max Value') +
             propInput('text',   'mf-prop-pattern',     'Pattern (Regex)') +
+            propInput('text',   'mf-prop-mask',        'Mask (# digit, A letter, U upper, * alnum)') +
             propInput('text',   'mf-prop-custom-msg',  'Error Message') +
           '</div>' +
           '<div class="mf-prop-group" id="mf-prop-file-group" style="display:none"><h6><i class="fas fa-file"></i> File Settings</h6>' +

@@ -493,7 +493,13 @@ export function renderInput(field: FormField, formId: number, formData: Record<s
     case 'Phone':
     case 'Url': {
       const inputType = field.type === 'Phone' ? 'tel' : field.type === 'Url' ? 'url' : 'text';
-      return `<input type="${inputType}" class="mf-input" id="${id}" name="${name}" value="${esc(val)}" placeholder="${esc(ph)}"${ro}${req}${heightAttr}>`;
+      // [InputMask v20260723-01] Field-level input mask → data-mf-mask (bindMasks formats
+      // as you type). inputmode="numeric" only when the mask cannot accept letters.
+      const fv: any = field.validation || (field as any).Validation || {};
+      const fMask = String(fv.mask ?? fv.Mask ?? (field as any).properties?.mask ?? '') || '';
+      const maskAttr = fMask ? ` data-mf-mask="${esc(fMask)}"` : '';
+      const imAttr = fMask && !/[A-Za-z*]/.test(fMask) ? ' inputmode="numeric"' : '';
+      return `<input type="${inputType}" class="mf-input" id="${id}" name="${name}" value="${esc(val)}" placeholder="${esc(ph)}"${maskAttr}${imAttr}${ro}${req}${heightAttr}>`;
     }
     case 'Email':
       return `<input type="email" class="mf-input" id="${id}" name="${name}" value="${esc(val)}" placeholder="${esc(ph)}"${ro}${req}${heightAttr}>`;

@@ -15,6 +15,7 @@ namespace MegaFormRendererValidationExtra {
       minLength: firstDefined(validation.minLength, validation.MinLength, props.minLength, props.MinLength),
       maxLength: firstDefined(validation.maxLength, validation.MaxLength, props.maxLength, props.MaxLength),
       pattern: firstDefined(validation.pattern, validation.Pattern, props.pattern, props.Pattern),
+      mask: firstDefined(validation.mask, validation.Mask, props.mask, props.Mask),
       customMessage: firstDefined(validation.customMessage, validation.CustomMessage, props.customMessage, props.CustomMessage)
     };
   }
@@ -51,6 +52,11 @@ namespace MegaFormRendererValidationExtra {
 
     if (v.maxLength != null && String(val).length > Number(v.maxLength)) {
       return v.customMessage || ('Maximum ' + v.maxLength + ' characters');
+    }
+
+    // [InputMask v20260723-01] Field-level mask completeness (stored value IS the masked string).
+    if (v.mask && String(val).length < String(v.mask).length) {
+      return v.customMessage || 'Incomplete — please fill the required format';
     }
 
     if (v.pattern && val) {
