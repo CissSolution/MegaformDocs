@@ -275,6 +275,38 @@
               <name>MegaForm.Sdk.dll</name>
               <path>bin</path>
             </assembly>
+            <!-- [CloudStorage v20260723-01] Optional cloud file mirror (Google Drive / Amazon S3 /
+                 Azure Blob, Builder → Settings → Cloud Storage). DnnServiceLocator constructs these
+                 providers at startup, so the DLLs must ship in the package. Only the direct feature
+                 dependencies are bundled; Microsoft.Extensions.*/System.* are intentionally NOT
+                 (DNN 10 already carries them — overwriting risks assembly-version conflicts).
+                 Azure.Core 1.55+ requires Microsoft.Extensions.* 10.x at runtime: on older DNN
+                 installs add a bindingRedirect if the Azure provider fails to load (fail-soft —
+                 submissions are never blocked by cloud upload errors). -->
+            <assembly>
+              <name>MegaForm.Integrations.CloudStorage.dll</name>
+              <path>bin</path>
+            </assembly>
+            <assembly>
+              <name>AWSSDK.Core.dll</name>
+              <path>bin</path>
+            </assembly>
+            <assembly>
+              <name>AWSSDK.S3.dll</name>
+              <path>bin</path>
+            </assembly>
+            <assembly>
+              <name>Azure.Core.dll</name>
+              <path>bin</path>
+            </assembly>
+            <assembly>
+              <name>Azure.Storage.Blobs.dll</name>
+              <path>bin</path>
+            </assembly>
+            <assembly>
+              <name>Azure.Storage.Common.dll</name>
+              <path>bin</path>
+            </assembly>
           </assemblies>
         </component>
         <component type="ResourceFile">

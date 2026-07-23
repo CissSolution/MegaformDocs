@@ -26,12 +26,16 @@
   <ItemGroup>
     <ProjectReference Include="..\MegaForm.Core\MegaForm.Core.csproj" />
     <ProjectReference Include="..\MegaForm.Sdk\MegaForm.Sdk.csproj" />
+    <ProjectReference Include="..\MegaForm.Integrations.CloudStorage\MegaForm.Integrations.CloudStorage.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Dapper" Version="2.0.123" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
+    <!-- [CloudStorage v20260723-01] Raised 8.0.0 → 10.0.3: MegaForm.Integrations.CloudStorage →
+         Azure.Storage.Blobs 12.29.1 → Azure.Core 1.55.0 → Microsoft.Extensions.Hosting.Abstractions
+         10.0.3 demands DI.Abstractions >= 10.0.3 (NU1605 otherwise). Package still targets net462. -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.3" />
   </ItemGroup>
 
   <!--

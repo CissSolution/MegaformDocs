@@ -27,7 +27,11 @@
 //  or confirm the real value before clicking Test/Save.
 // ════════════════════════════════════════════════════════════════════════
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using MegaForm.Core.Integrations.Storage;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -213,6 +217,336 @@ namespace MegaForm.Oqtane.Server.Controllers
             {
                 return StatusCode(500, new { success = false, error = ex.Message });
             }
+        }
+
+        // ══════════════════════════════════════════════════════════════════
+        //  [NamedConnections v20260717-01] Multiple named SQL connections.
+        //  The popup previously managed ONE connection while the builder's
+        //  databaseInsert picker listed appsettings-only names (CustomerErp)
+        //  the operator could see but never manage. These endpoints expose the
+        //  full catalog (config entries read-only + admin-saved entries CRUD).
+        //  Route names are FLAT (ConnectionsList/Save/Delete) so the DNN
+        //  action-based twin uses the identical client path.
+        //  SECURITY: admin-gated (CanUseAdminPopup); connection strings echoed
+        //  to the browser are ALWAYS masked (rule: no secrets to the client).
+        // ══════════════════════════════════════════════════════════════════
+
+        public class MegaFormNamedConnectionRequest
+        {
+            public string Name { get; set; }
+            public string Provider { get; set; }
+            public string ConnectionString { get; set; }
+        }
+
+        [HttpGet("ModuleConfig/ConnectionsList")]
+        [Authorize]
+        public IActionResult ListNamedConnections()
+        {
+            if (!CanUseAdminPopup()) return Forbid();
+
+            var savedJson = ReadNamedConnectionsSetting();
+            var saved = MegaForm.Core.Services.NamedConnectionCatalog.Parse(savedJson);
+            var savedNames = new System.Collections.Generic.HashSet<string>(
+                saved.Select(s => s.Name.Trim()), StringComparer.OrdinalIgnoreCase);
+
+            var allowCfg = _configuration != null
+                ? (Microsoft.Extensions.Configuration.ConfigurationBinder
+                      .Get<string[]>(_configuration.GetSection("MegaForm:ExternalTables:AllowedConnections")) ?? new string[0])
+                : new string[0];
+            var allowSet = new System.Collections.Generic.HashSet<string>(
+                allowCfg.Where(k => !string.IsNullOrWhiteSpace(k)).Select(k => k.Trim()),
+                StringComparer.OrdinalIgnoreCase);
+            allowSet.Add("DashboardDatabase");
+
+            var items = new System.Collections.Generic.List<object>();
+            // Config entries (appsettings ConnectionStrings) — read-only in the UI. A saved entry
+            // with the same name SHADOWS the config one at runtime, so only the saved row is shown.
+            if (_configuration != null)
+            {
+                foreach (var child in _configuration.GetSection("ConnectionStrings").GetChildren())
+                {
+                    if (string.IsNullOrWhiteSpace(child.Key) || savedNames.Contains(child.Key.Trim())) continue;
+                    items.Add(new
+                    {
+                        name = child.Key.Trim(),
+                        provider = DetectDbProvider(child.Value),
+                        connectionString = MegaForm.Core.Services.NamedConnectionCatalog.MaskSecrets(child.Value),
+                        source = "config",
+                        allowListed = allowSet.Contains(child.Key.Trim())
+                    });
+                }
+            }
+            foreach (var s in saved)
+            {
+                items.Add(new
+                {
+                    name = s.Name.Trim(),
+                    provider = string.IsNullOrWhiteSpace(s.Provider) ? DetectDbProvider(s.ConnectionString) : s.Provider,
+                    connectionString = MegaForm.Core.Services.NamedConnectionCatalog.MaskSecrets(s.ConnectionString),
+                    source = "saved",
+                    allowListed = true   // saving is admin-gated → carries appsettings-level trust
+                });
+            }
+
+            return Ok(new { connections = items });
+        }
+
+        [HttpPost("ModuleConfig/ConnectionsSave")]
+        [Authorize]
+        public IActionResult SaveNamedConnection([FromBody] MegaFormNamedConnectionRequest req)
+        {
+            if (!CanUseAdminPopup()) return Forbid();
+            if (req == null) return Ok(new { success = false, message = "Request body is required." });
+
+            var nameErr = MegaForm.Core.Services.NamedConnectionCatalog.ValidateName(req.Name);
+            if (nameErr != null) return Ok(new { success = false, message = nameErr });
+            var shapeErr = ValidateConnectionStringShape(req.Provider, req.ConnectionString);
+            if (shapeErr != null) return Ok(new { success = false, message = shapeErr });
+
+            try
+            {
+                var siteId = ResolveSiteIdForConnectionCatalog();
+                if (siteId <= 0) return Ok(new { success = false, message = "Could not resolve the site for this request." });
+                var next = MegaForm.Core.Services.NamedConnectionCatalog.Upsert(
+                    ReadNamedConnectionsSetting(),
+                    new MegaForm.Core.Services.NamedConnectionInfo
+                    {
+                        Name = req.Name,
+                        Provider = req.Provider,
+                        ConnectionString = req.ConnectionString,
+                    });
+                UpsertSetting(EntityNames.Site, siteId, MegaForm.Core.Services.NamedConnectionCatalog.SettingKey, next, true);
+                return Ok(new { success = true, message = "Connection '" + req.Name.Trim() + "' saved." });
+            }
+            catch
+            {
+                // SECURITY rule 10: no ex.Message to the client.
+                return StatusCode(500, new { success = false, error = "Could not save the connection." });
+            }
+        }
+
+        [HttpPost("ModuleConfig/ConnectionsDelete")]
+        [Authorize]
+        public IActionResult DeleteNamedConnection([FromBody] MegaFormNamedConnectionRequest req)
+        {
+            if (!CanUseAdminPopup()) return Forbid();
+            var name = (req != null ? req.Name : null) ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(name)) return Ok(new { success = false, message = "Connection name is required." });
+
+            try
+            {
+                var json = ReadNamedConnectionsSetting();
+                if (!MegaForm.Core.Services.NamedConnectionCatalog.Contains(json, name))
+                    return Ok(new { success = false, message = "Only saved connections can be deleted (config entries live in appsettings.json)." });
+                var siteId = ResolveSiteIdForConnectionCatalog();
+                if (siteId <= 0) return Ok(new { success = false, message = "Could not resolve the site for this request." });
+                UpsertSetting(EntityNames.Site, siteId, MegaForm.Core.Services.NamedConnectionCatalog.SettingKey,
+                    MegaForm.Core.Services.NamedConnectionCatalog.Remove(json, name), true);
+                return Ok(new { success = true, message = "Connection '" + name.Trim() + "' deleted." });
+            }
+            catch
+            {
+                // SECURITY rule 10: no ex.Message to the client.
+                return StatusCode(500, new { success = false, error = "Could not delete the connection." });
+            }
+        }
+
+        private string ReadNamedConnectionsSetting()
+        {
+            try
+            {
+                var siteId = ResolveSiteIdForConnectionCatalog();
+                if (siteId <= 0) return string.Empty;
+                var s = ReadSettings(EntityNames.Site, siteId);
+                return ReadSetting(s, MegaForm.Core.Services.NamedConnectionCatalog.SettingKey, "");
+            }
+            catch { return string.Empty; }
+        }
+
+        // ══════════════════════════════════════════════════════════════════
+        //  [CloudStorage v20260723-01] Named CLOUD STORAGE connections catalog.
+        //  Mirror of the SQL named-connections endpoints above: same flat route
+        //  style, same admin gate (CanUseAdminPopup), same Site-settings store,
+        //  same masked-edit convention — a secret echoed to the browser is ALWAYS
+        //  "***" (CloudStorageConnectionCatalog.MaskSecrets) and a "***" coming
+        //  back on Save/Test keeps the stored value (SECURITY rule 10).
+        // ══════════════════════════════════════════════════════════════════
+
+        public class MegaFormCloudStorageConnectionRequest
+        {
+            public string Name { get; set; }
+            public string Provider { get; set; }
+            public string AccessToken { get; set; }
+            public string RefreshToken { get; set; }
+            public string ClientId { get; set; }
+            public string ClientSecret { get; set; }
+            public string BaseFolder { get; set; }
+            public string BaseUrl { get; set; }
+            public Dictionary<string, string> Extra { get; set; }
+        }
+
+        [HttpGet("ModuleConfig/CloudStorageConnectionsList")]
+        [Authorize]
+        public async Task<IActionResult> ListCloudStorageConnections()
+        {
+            if (!CanUseAdminPopup()) return Forbid();
+
+            var saved = CloudStorageConnectionCatalog.Parse(ReadCloudStorageConnectionsSetting());
+            var items = saved.Select(CloudStorageConnectionCatalog.MaskSecrets).ToList();
+            var providers = await GetRegisteredStorageProviderNamesAsync().ConfigureAwait(false);
+            return Ok(new { success = true, connections = items, providers });
+        }
+
+        [HttpPost("ModuleConfig/CloudStorageConnectionSave")]
+        [Authorize]
+        public async Task<IActionResult> SaveCloudStorageConnection([FromBody] MegaFormCloudStorageConnectionRequest req)
+        {
+            if (!CanUseAdminPopup()) return Forbid();
+            if (req == null) return Ok(new { success = false, message = "Request body is required." });
+
+            var nameErr = CloudStorageConnectionCatalog.ValidateName(req.Name);
+            if (nameErr != null) return Ok(new { success = false, message = nameErr });
+
+            var provider = (req.Provider ?? string.Empty).Trim();
+            var providers = await GetRegisteredStorageProviderNamesAsync().ConfigureAwait(false);
+            if (provider.Length == 0 || !providers.Any(p => string.Equals(p, provider, StringComparison.OrdinalIgnoreCase)))
+                return Ok(new { success = false, message = "Unknown storage provider '" + provider + "'." });
+
+            try
+            {
+                var siteId = ResolveSiteIdForConnectionCatalog();
+                if (siteId <= 0) return Ok(new { success = false, message = "Could not resolve the site for this request." });
+                var json = ReadCloudStorageConnectionsSetting();
+                var entry = BuildCloudStorageEntry(req, CloudStorageConnectionCatalog.Find(json, req.Name));
+                var next = CloudStorageConnectionCatalog.Upsert(json, entry);
+                UpsertSetting(EntityNames.Site, siteId, CloudStorageConnectionCatalog.SettingKey, next, true);
+                return Ok(new { success = true, message = "Connection '" + req.Name.Trim() + "' saved." });
+            }
+            catch
+            {
+                // SECURITY rule 10: no ex.Message to the client.
+                return StatusCode(500, new { success = false, error = "Could not save the connection." });
+            }
+        }
+
+        [HttpPost("ModuleConfig/CloudStorageConnectionDelete")]
+        [Authorize]
+        public IActionResult DeleteCloudStorageConnection([FromBody] MegaFormCloudStorageConnectionRequest req)
+        {
+            if (!CanUseAdminPopup()) return Forbid();
+            var name = (req != null ? req.Name : null) ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(name)) return Ok(new { success = false, message = "Connection name is required." });
+
+            try
+            {
+                var json = ReadCloudStorageConnectionsSetting();
+                if (!CloudStorageConnectionCatalog.Contains(json, name))
+                    return Ok(new { success = false, message = "Cloud storage connection '" + name.Trim() + "' was not found." });
+                var siteId = ResolveSiteIdForConnectionCatalog();
+                if (siteId <= 0) return Ok(new { success = false, message = "Could not resolve the site for this request." });
+                UpsertSetting(EntityNames.Site, siteId, CloudStorageConnectionCatalog.SettingKey,
+                    CloudStorageConnectionCatalog.Remove(json, name), true);
+                return Ok(new { success = true, message = "Connection '" + name.Trim() + "' deleted." });
+            }
+            catch
+            {
+                // SECURITY rule 10: no ex.Message to the client.
+                return StatusCode(500, new { success = false, error = "Could not delete the connection." });
+            }
+        }
+
+        [HttpPost("ModuleConfig/CloudStorageConnectionTest")]
+        [Authorize]
+        public async Task<IActionResult> TestCloudStorageConnection([FromBody] MegaFormCloudStorageConnectionRequest req)
+        {
+            if (!CanUseAdminPopup()) return Forbid();
+            if (req == null) return Ok(new { success = false, message = "Request body is required." });
+
+            var provider = (req.Provider ?? string.Empty).Trim();
+            if (provider.Length == 0) return Ok(new { success = false, message = "Storage provider is required." });
+
+            try
+            {
+                var svc = HttpContext?.RequestServices?.GetService(typeof(IStorageIntegrationService)) as IStorageIntegrationService;
+                if (svc == null) return Ok(new { success = false, message = "Storage integration service is not available." });
+                var entry = BuildCloudStorageEntry(req,
+                    CloudStorageConnectionCatalog.Find(ReadCloudStorageConnectionsSetting(), req.Name));
+                var result = await svc.TestConnectionAsync(provider, CloudStorageConnectionCatalog.ToConnectionSettings(entry)).ConfigureAwait(false);
+                return Ok(new { success = result != null && result.Healthy, message = result == null ? "Connection test failed." : result.Message });
+            }
+            catch (Exception ex)
+            {
+                // Diagnostic endpoint — mirror DatabaseSettings/Test which surfaces the real cause.
+                return Ok(new { success = false, message = ex.Message });
+            }
+        }
+
+        private string ReadCloudStorageConnectionsSetting()
+        {
+            try
+            {
+                var siteId = ResolveSiteIdForConnectionCatalog();
+                if (siteId <= 0) return string.Empty;
+                var s = ReadSettings(EntityNames.Site, siteId);
+                return ReadSetting(s, CloudStorageConnectionCatalog.SettingKey, "");
+            }
+            catch { return string.Empty; }
+        }
+
+        /// <summary>Maps the request DTO to a catalog entry, resolving "***" secrets against the stored entry.</summary>
+        private static CloudStorageConnectionInfo BuildCloudStorageEntry(MegaFormCloudStorageConnectionRequest req, CloudStorageConnectionInfo existing)
+        {
+            return new CloudStorageConnectionInfo
+            {
+                Name = req.Name,
+                Provider = (req.Provider ?? string.Empty).Trim(),
+                AccessToken = ResolveCloudSecret(req.AccessToken, existing != null ? existing.AccessToken : null),
+                RefreshToken = ResolveCloudSecret(req.RefreshToken, existing != null ? existing.RefreshToken : null),
+                ClientId = req.ClientId,
+                ClientSecret = ResolveCloudSecret(req.ClientSecret, existing != null ? existing.ClientSecret : null),
+                BaseFolder = req.BaseFolder,
+                BaseUrl = req.BaseUrl,
+                Extra = req.Extra ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            };
+        }
+
+        /// <summary>Masked-edit convention: "***" means "keep the stored value" (never persisted as-is).</summary>
+        private static string ResolveCloudSecret(string incoming, string stored)
+            => incoming == "***" ? (stored ?? string.Empty) : (incoming ?? string.Empty);
+
+        private async Task<IReadOnlyList<string>> GetRegisteredStorageProviderNamesAsync()
+        {
+            try
+            {
+                var svc = HttpContext?.RequestServices?.GetService(typeof(IStorageIntegrationService)) as IStorageIntegrationService;
+                if (svc == null) return new string[0];
+                return await svc.GetRegisteredProviderNamesAsync().ConfigureAwait(false);
+            }
+            catch { return new string[0]; }
+        }
+
+        /// <summary>
+        /// [NamedConnections v20260717-01] AuthEntityId(Site) is -1 for a dashboard-modal XHR that
+        /// carries no entity context (the classic "AuthEntityId(Site)=-1" trap — the first save
+        /// landed under EntityId -1 and the catalog was invisible everywhere). Fall back to the
+        /// siteid claim, then the tenant alias — the SAME seam the runtime registry resolves with,
+        /// so reader and writer can never disagree about which site owns the catalog.
+        /// </summary>
+        private int ResolveSiteIdForConnectionCatalog()
+        {
+            var id = AuthEntityId(EntityNames.Site);
+            if (id > 0) return id;
+            var claim = User?.FindFirst("siteid")?.Value ?? User?.FindFirst("SiteId")?.Value;
+            if (int.TryParse(claim, out var cid) && cid > 0) return cid;
+            try
+            {
+                var tenants = HttpContext?.RequestServices?.GetService(typeof(global::Oqtane.Infrastructure.ITenantManager))
+                    as global::Oqtane.Infrastructure.ITenantManager;
+                var alias = tenants?.GetAlias();
+                if (alias != null && alias.SiteId > 0) return alias.SiteId;
+            }
+            catch { }
+            return int.TryParse(Request?.Query["siteId"], out var qid) && qid > 0 ? qid : 0;
         }
 
         // ──────────────────────────────────────────────────────────────────

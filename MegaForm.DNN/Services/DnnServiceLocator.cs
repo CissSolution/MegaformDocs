@@ -2,10 +2,13 @@ using System;
 using System.Collections.Generic;
 using DotNetNuke.Entities.Portals;
 using MegaForm.Core.Interfaces;
+using MegaForm.Core.Integrations.Storage;
+using MegaForm.Core.Integrations.Storage.Providers;
 using MegaForm.Core.Services;
 using MegaForm.Core.Services.Starters;
 using MegaForm.Core.Services.Blog;
 using MegaForm.Core.Services.Workflow;
+using MegaForm.Core.Services.TypedSubmission;
 using MegaForm.Core.Workflow;
 using MegaForm.DNN.Data;
 using MegaForm.Sdk;
@@ -75,6 +78,15 @@ namespace MegaForm.DNN.Services
         // [TypedStorage 2026-07-17] Umbraco Forms-style typed submission store (parallel-write on
         // DNN — DataJson stays the runtime source of truth; SupportsDataJsonCollapse == false).
         public MegaForm.DNN.Data.DnnSubmissionDataStore TypedStore { get; }
+        public SubmissionDataResolver DataResolver { get; }
+        public TypedSubmissionResyncService TypedResync { get; }
+        // [CloudStorage 2026-07-23] Cloud storage stack (Google Drive / Amazon S3 / Azure Blob).
+        // Named connections live in PORTAL settings under CloudStorageConnectionCatalog.SettingKey
+        // (written by ModuleConfigController.CloudStorageConnection* endpoints); the uploader mirrors
+        // uploaded submission files fail-soft right after insert. StorageIntegration is exposed so
+        // the ModuleConfig TestConnection endpoint can reuse the same provider registry.
+        public IStorageIntegrationService StorageIntegration { get; }
+        public SubmissionCloudStorageUploader CloudStorageUploader { get; }
         public SubmissionProcessor SubmissionProcessor { get; }
 
         // [DnnStarterApps v20260518-01] App Builder primitives. DNN now exposes
@@ -130,11 +142,23 @@ namespace MegaForm.DNN.Services
             MegaForm.Core.Services.AntiSpamService.RateLimitChecker = (formId, ip, windowMin, maxPer) =>
                 FormRepository.CheckRateLimit(formId, ip, windowMin, maxPer);
 
+            // [TypedStorage 2026-07-18] Create the typed store + resolver early so every Core service
+            // that reads submission data can reconstruct from typed rows when available.
+            TypedStore = new MegaForm.DNN.Data.DnnSubmissionDataStore(() =>
+            {
+                var cn = new System.Data.SqlClient.SqlConnection(
+                    DotNetNuke.Data.DataProvider.Instance().ConnectionString);
+                cn.Open();
+                return cn;
+            });
+            DataResolver = new SubmissionDataResolver(TypedStore);
+            TypedResync = new TypedSubmissionResyncService(TypedStore, SubmissionRepo, FormRepo, LogService);
+
             // 4. Core services (wired with DNN implementations)
-            EmailNotification = new EmailNotificationService(EmailSender, LogService);
-            Webhook = new WebhookService(Phase2Repo, LogService);
+            EmailNotification = new EmailNotificationService(EmailSender, LogService, DataResolver);
+            Webhook = new WebhookService(Phase2Repo, LogService, DataResolver);
             UniqueId = new UniqueIdService(Phase2Repo);
-            Workflow = new WorkflowEngine(Phase2Repo, FormRepo, SubmissionRepo, EmailNotification, Webhook, LogService);
+            Workflow = new WorkflowEngine(Phase2Repo, FormRepo, SubmissionRepo, EmailNotification, Webhook, LogService, DataResolver, TypedResync);
             WorkflowRepo = new DnnWorkflowRepository();
             WorkflowEvaluator = new WorkflowEvaluator();
             WorkflowEmail = new DnnWorkflowEmailSender(EmailSender);
@@ -186,15 +210,22 @@ namespace MegaForm.DNN.Services
             PaymentVerifier = new MegaForm.Core.Payments.PaymentSubmissionVerifier(
                 PaymentStore, SubmissionRepo, PaymentGateway, LogService);
 
-            // [TypedStorage 2026-07-17] Same connection factory as the reporting indexer — the typed
-            // tables live in the DNN host DB alongside MF_Submissions.
-            TypedStore = new MegaForm.DNN.Data.DnnSubmissionDataStore(() =>
+            // [CloudStorage 2026-07-23] One process-wide HttpClient for the Google Drive
+            // provider (HttpClient is designed for reuse — a per-call instance would exhaust
+            // sockets). S3/Azure providers are stateless. The connection provider reads the
+            // same portal-settings blob the ModuleConfig admin endpoints write (full key — it
+            // already carries the MegaForm_ prefix, so ReadPortalSetting's prefixing must NOT
+            // be applied here).
+            var storageProviders = new IStorageProvider[]
             {
-                var cn = new System.Data.SqlClient.SqlConnection(
-                    DotNetNuke.Data.DataProvider.Instance().ConnectionString);
-                cn.Open();
-                return cn;
-            });
+                new GoogleDriveProvider(StorageHttpClient),
+                new MegaForm.Integrations.CloudStorage.AmazonS3StorageProvider(),
+                new MegaForm.Integrations.CloudStorage.AzureBlobStorageProvider()
+            };
+            StorageIntegration = new StorageIntegrationService(storageProviders);
+            var cloudConnections = new DelegateCloudStorageConnectionProvider(ReadCloudStorageConnectionsJson);
+            CloudStorageUploader = new SubmissionCloudStorageUploader(
+                StorageIntegration, cloudConnections, new DnnSubmissionFileBlobReader(), LogService);
 
             SubmissionProcessor = new SubmissionProcessor(
                 FormRepo, SubmissionRepo, DraftRepo, Phase2Repo,
@@ -202,7 +233,8 @@ namespace MegaForm.DNN.Services
                 loc: null, documentRevisionService: null,
                 reportingIndexer: ReportingIndexer,
                 paymentVerifier: PaymentVerifier,
-                typedStore: TypedStore);
+                typedStore: TypedStore,
+                cloudStorageUploader: CloudStorageUploader);
 
             // [DnnStarterApps v20260518-01] Construct the App Builder graph
             // and the Leave Request starter wired to the DNN platform
@@ -242,10 +274,10 @@ namespace MegaForm.DNN.Services
                 FormRepo, SubmissionRepo, Phase2Repo, WorkflowRepo,
                 WorkflowTasks, SubmissionProcessor,
                 AppDefinitions, AppQueries,
-                WorkflowIdentityProvisioning, StarterPlatform, LogService);
+                WorkflowIdentityProvisioning, StarterPlatform, LogService, DataResolver, TypedResync);
 
-            ScheduledPublish = new ScheduledPublishService(SubmissionRepo, Phase2Repo);
-            AnalyticsRollup = new BlogAnalyticsRollupService(SubmissionRepo, Phase2Repo);
+            ScheduledPublish = new ScheduledPublishService(SubmissionRepo, Phase2Repo, DataResolver);
+            AnalyticsRollup = new BlogAnalyticsRollupService(SubmissionRepo, Phase2Repo, DataResolver, TypedResync);
 
             // Wire the public MegaForm.Sdk facade so external Razor/Blazor apps
             // can call IMegaFormClient through MegaFormSdk.RunAsync.
@@ -281,7 +313,16 @@ namespace MegaForm.DNN.Services
                 || k.Equals("DnnDefault", StringComparison.OrdinalIgnoreCase))
                 return true;
             var storedAlias = ReadPortalSetting("Database_ConnectionAlias", "DashboardDatabase");
-            return k.Equals((storedAlias ?? string.Empty).Trim(), StringComparison.OrdinalIgnoreCase);
+            if (k.Equals((storedAlias ?? string.Empty).Trim(), StringComparison.OrdinalIgnoreCase)) return true;
+            // [NamedConnections v20260717-01] Admin-saved connections (Database Settings popup)
+            // are allow-listed for the databaseInsert read path too — saving one is admin-gated,
+            // so it carries the same trust as the portal-stored dashboard connection.
+            try
+            {
+                return MegaForm.Core.Services.NamedConnectionCatalog.Contains(
+                    MegaForm.WebApi.DnnConnectionRegistry.ReadNamedConnectionsJson(), k);
+            }
+            catch { return false; }
         }
 
         private static int ResolveCurrentPortalId()
@@ -297,6 +338,29 @@ namespace MegaForm.DNN.Services
             }
 
             return 0;
+        }
+
+        // [CloudStorage 2026-07-23] Process-wide HttpClient for the Google Drive storage
+        // provider (see the storage wiring in the ctor).
+        private static readonly System.Net.Http.HttpClient StorageHttpClient = new System.Net.Http.HttpClient();
+
+        /// <summary>
+        /// [CloudStorage 2026-07-23] Raw cloud-storage catalog blob from PORTAL settings (full
+        /// key, no MegaForm_ prefixing — the key already carries it, shared verbatim with the
+        /// other platforms). Portal resolution mirrors ReadPortalSetting: PortalSettings.Current
+        /// when a request context exists, else portal 0 (host default).
+        /// </summary>
+        private static string ReadCloudStorageConnectionsJson()
+        {
+            try
+            {
+                return PortalController.GetPortalSetting(
+                    CloudStorageConnectionCatalog.SettingKey, ResolveCurrentPortalId(), string.Empty) ?? string.Empty;
+            }
+            catch
+            {
+                return string.Empty;
+            }
         }
 
         private static string ReadPortalSetting(string key, string defaultValue)

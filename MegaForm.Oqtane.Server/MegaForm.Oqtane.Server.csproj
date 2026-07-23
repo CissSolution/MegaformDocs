@@ -49,6 +49,9 @@
          AddMegaFormSdk() in Startup. The server lacked this reference, so the SDK was
          unusable in-host (the audit's "biggest blocker"). -->
     <ProjectReference Include="..\MegaForm.Sdk\MegaForm.Sdk.csproj" />
+    <!-- [CloudStorage v20260723-01] AmazonS3/AzureBlob IStorageProvider implementations
+         (parameterless ctors, namespace MegaForm.Integrations.CloudStorage). -->
+    <ProjectReference Include="..\MegaForm.Integrations.CloudStorage\MegaForm.Integrations.CloudStorage.csproj" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">

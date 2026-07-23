@@ -509,6 +509,7 @@ function initFormLoader(): void {
                     if (B.syncFormActionEditorsFromSchema) B.syncFormActionEditorsFromSchema();
                     if (B.callModule) B.callModule('post-submit-settings', 'syncFromSchema');
                     if (B.callModule) B.callModule('integration-settings', 'syncFromSchema');
+                    if (B.callModule) B.callModule('cloud-storage-settings', 'syncFromSchema');
                 }
             } catch (_psErr) { /* noop */ }
 

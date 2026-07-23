@@ -95,10 +95,33 @@ namespace MegaForm.Oqtane.Server.Services
                 var allowed = new System.Collections.Generic.HashSet<string>(System.StringComparer.OrdinalIgnoreCase) { "DashboardDatabase" };
                 foreach (var k in configured)
                     if (!string.IsNullOrWhiteSpace(k)) allowed.Add(k.Trim());
+                // [NamedConnections v20260717-01] Admin-saved connections (Database Settings popup)
+                // are allow-listed too: saving one is itself an admin-gated act, so it carries the
+                // same trust as an appsettings entry. Checked lazily per call so a connection added
+                // mid-process is usable without a restart.
+                var settingsRepo = sp.GetService<global::Oqtane.Repository.ISettingRepository>();
+                var tenantMgr = sp.GetService<global::Oqtane.Infrastructure.ITenantManager>();
+                System.Func<string, bool> savedContains = key =>
+                {
+                    try
+                    {
+                        if (settingsRepo == null || tenantMgr == null) return false;
+                        var alias = tenantMgr.GetAlias();
+                        var siteId = alias != null ? alias.SiteId : 0;
+                        if (siteId <= 0) return false;
+                        var all = settingsRepo.GetSettings(global::Oqtane.Shared.EntityNames.Site, siteId);
+                        if (all == null) return false;
+                        foreach (var s in all)
+                            if (string.Equals(s.SettingName, MegaForm.Core.Services.NamedConnectionCatalog.SettingKey, StringComparison.OrdinalIgnoreCase))
+                                return MegaForm.Core.Services.NamedConnectionCatalog.Contains(s.SettingValue, key);
+                        return false;
+                    }
+                    catch { return false; }
+                };
                 return new MegaForm.Core.Services.ExternalTable.DatabaseInsertBindingResolver(
                     sp.GetRequiredService<MegaForm.Core.Interfaces.IConnectionRegistry>(),
                     sp.GetRequiredService<IFormRepository>(),
-                    key => allowed.Contains((key ?? string.Empty).Trim()));
+                    key => allowed.Contains((key ?? string.Empty).Trim()) || savedContains((key ?? string.Empty).Trim()));
             });
             services.AddScoped<ISubmissionRepository>(sp => new MegaForm.Core.Services.ExternalTable.ExternalSubmissionRepository(
                 sp.GetRequiredService<EfSubmissionRepository>(),
@@ -118,6 +141,7 @@ namespace MegaForm.Oqtane.Server.Services
             // MF_SubmissionFields + typed value rows in parallel with DataJson. Phase 1 is
             // write-only — readers still use DataJson, so the write is fail-soft.
             services.AddScoped<MegaForm.Core.Interfaces.ISubmissionDataStore, EfSubmissionDataStore>();
+            services.AddScoped<MegaForm.Core.Services.TypedSubmission.SubmissionDataResolver>();
 
             // [OQ-difix20260418-04] CRITICAL: Without IPhase2Repository registered,
             // SubmissionProcessor / PermissionService / UniqueIdService / WebhookService /
@@ -237,6 +261,44 @@ namespace MegaForm.Oqtane.Server.Services
             services.AddScoped<MegaForm.Core.Payments.PaymentEndpointService>();
             services.AddScoped<MegaForm.Core.Payments.PaymentSubmissionVerifier>();
             services.AddScoped<MegaForm.Core.Payments.PaymentWebhookService>();
+
+            // [CloudStorage v20260723-01] Cloud file storage stack (same shape as
+            // MegaForm.AspNetCore.Component RegisterIntegrationProviders, extended with the
+            // S3/Azure providers). GoogleDrive/Calendar ride on named HttpClients; AmazonS3/
+            // AzureBlob are SDK providers with parameterless ctors. SubmissionProcessor's
+            // optional cloudStorageUploader ctor param picks SubmissionCloudStorageUploader
+            // up, so with these registrations the post-submit cloud mirror runs fail-soft.
+            services.AddHttpClient<MegaForm.Core.Integrations.Storage.IStorageProvider, MegaForm.Core.Integrations.Storage.Providers.GoogleDriveProvider>("GoogleDrive");
+            services.AddHttpClient<MegaForm.Core.Integrations.Storage.ICalendarProvider, MegaForm.Core.Integrations.Storage.Providers.GoogleCalendarProvider>("GoogleCalendar");
+            services.AddSingleton<MegaForm.Core.Integrations.Storage.IStorageProvider, MegaForm.Integrations.CloudStorage.AmazonS3StorageProvider>();
+            services.AddSingleton<MegaForm.Core.Integrations.Storage.IStorageProvider, MegaForm.Integrations.CloudStorage.AzureBlobStorageProvider>();
+            services.AddSingleton<MegaForm.Core.Integrations.Storage.IStorageIntegrationService, MegaForm.Core.Integrations.Storage.StorageIntegrationService>();
+            // Named cloud connections live in the SAME Site-settings seam the SQL named
+            // connections use (see ReadNamedConnectionsJson below), under the cloud catalog key.
+            services.AddScoped<MegaForm.Core.Integrations.Storage.ICloudStorageConnectionProvider>(sp =>
+            {
+                var settingsRepo = sp.GetService<global::Oqtane.Repository.ISettingRepository>();
+                var tenantMgr = sp.GetService<global::Oqtane.Infrastructure.ITenantManager>();
+                return new MegaForm.Core.Integrations.Storage.DelegateCloudStorageConnectionProvider(() =>
+                {
+                    try
+                    {
+                        if (settingsRepo == null || tenantMgr == null) return string.Empty;
+                        var alias = tenantMgr.GetAlias();
+                        var siteId = alias != null ? alias.SiteId : 0;
+                        if (siteId <= 0) return string.Empty;
+                        var all = settingsRepo.GetSettings(global::Oqtane.Shared.EntityNames.Site, siteId);
+                        if (all == null) return string.Empty;
+                        foreach (var s in all)
+                            if (string.Equals(s.SettingName, MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.SettingKey, StringComparison.OrdinalIgnoreCase))
+                                return s.SettingValue ?? string.Empty;
+                    }
+                    catch { }
+                    return string.Empty;
+                });
+            });
+            services.AddScoped<MegaForm.Core.Integrations.Storage.ISubmissionFileBlobReader, OqtaneSubmissionFileBlobReader>();
+            services.AddScoped<MegaForm.Core.Integrations.Storage.SubmissionCloudStorageUploader>();
 
             services.AddScoped<SubmissionProcessor>();
 
@@ -422,6 +484,30 @@ namespace MegaForm.Oqtane.Server.Services
             _tenants = tenants;
         }
 
+        /// <summary>
+        /// [NamedConnections v20260717-01] Admin-saved named connections (Database Settings popup →
+        /// Saved connections). One JSON blob in SITE settings; a saved name resolves here BEFORE the
+        /// appsettings fallback so an operator without file access can add/replace "CustomerErp"-style
+        /// connections from the UI.
+        /// </summary>
+        private string ReadNamedConnectionsJson()
+        {
+            try
+            {
+                if (_settings == null || _tenants == null) return string.Empty;
+                var alias = _tenants.GetAlias();
+                var siteId = alias != null ? alias.SiteId : 0;
+                if (siteId <= 0) return string.Empty;
+                var all = _settings.GetSettings(global::Oqtane.Shared.EntityNames.Site, siteId);
+                if (all == null) return string.Empty;
+                foreach (var s in all)
+                    if (string.Equals(s.SettingName, MegaForm.Core.Services.NamedConnectionCatalog.SettingKey, StringComparison.OrdinalIgnoreCase))
+                        return s.SettingValue ?? string.Empty;
+            }
+            catch { }
+            return string.Empty;
+        }
+
         /// <summary>Site-level DashboardDatabase override saved by the Database Settings popup.</summary>
         private (string ConnectionString, string Provider, string Alias) ReadSavedSiteDb()
         {
@@ -456,11 +542,24 @@ namespace MegaForm.Oqtane.Server.Services
                 || string.Equals(connectionName, savedAlias, StringComparison.OrdinalIgnoreCase)
                 || string.Equals(connectionName, "DashboardDatabase", StringComparison.OrdinalIgnoreCase);
 
+            // [NamedConnections v20260717-01] An admin-saved named connection answers for its own
+            // name, shadowing an appsettings entry of the same name (the UI wins — same precedence
+            // rule [SavedDbSettings] established for the dashboard connection).
+            MegaForm.Core.Services.NamedConnectionInfo named = null;
+            if (string.IsNullOrWhiteSpace(connectionString)
+                && !(wantsSavedAlias && !string.IsNullOrWhiteSpace(saved.ConnectionString))
+                && !string.IsNullOrWhiteSpace(connectionName))
+            {
+                named = MegaForm.Core.Services.NamedConnectionCatalog.Find(ReadNamedConnectionsJson(), connectionName);
+            }
+
             var connStr = !string.IsNullOrWhiteSpace(connectionString)
                 ? connectionString
                 : (wantsSavedAlias && !string.IsNullOrWhiteSpace(saved.ConnectionString)
                     ? saved.ConnectionString
-                    : (_config?.GetConnectionString(connectionName) ?? string.Empty));
+                    : (named != null && !string.IsNullOrWhiteSpace(named.ConnectionString)
+                        ? named.ConnectionString
+                        : (_config?.GetConnectionString(connectionName) ?? string.Empty)));
 
             // An empty databaseType used to mean "SQL Server" — wrong on a SQLite/MySQL/Postgres
             // tenant, and the resulting failure was swallowed by the fail-soft submit hook. Take
@@ -469,7 +568,9 @@ namespace MegaForm.Oqtane.Server.Services
             {
                 databaseType = wantsSavedAlias && !string.IsNullOrWhiteSpace(saved.Provider)
                     ? saved.Provider
-                    : SniffProvider(connStr);
+                    : (named != null && !string.IsNullOrWhiteSpace(named.Provider)
+                        ? named.Provider
+                        : SniffProvider(connStr));
             }
             // [DashboardDbFallback v20260625] Stock Oqtane installs ship ONLY "DefaultConnection".
             // MegaForm's dashboard / DB-bound-form / AI-SQL tools resolve the app DB by the

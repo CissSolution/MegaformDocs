@@ -15,6 +15,7 @@ using System.Text;
 using System.Threading.RateLimiting;
 using MegaForm.Core.Interfaces;
 using MegaForm.Core.Services;
+using MegaForm.Core.Services.Blog;
 using MegaForm.Core.Services.Starters;
 using MegaForm.Core.Services.Workflow;
 using MegaForm.Sdk;
@@ -54,6 +55,9 @@ builder.Services.AddSingleton<IThemeDesignerHostRenderer, ThemeDesignerHostRende
 builder.Services.AddSingleton<BuilderTemplateCatalogService>();
 
 // ── Core Business Services ─────────────────────────────────────────────────
+builder.Services.AddScoped<MegaForm.Core.Services.TypedSubmission.SubmissionDataResolver>();
+builder.Services.AddScoped<MegaForm.Core.Services.TypedSubmission.TypedSubmissionResyncService>();
+builder.Services.AddScoped<MegaForm.Core.Interfaces.ISubmissionDataStore, MegaForm.Web.Data.EfSubmissionDataStore>();
 builder.Services.AddScoped<EmailNotificationService>();
 builder.Services.AddScoped<WebhookService>();
 builder.Services.AddScoped<UniqueIdService>();
@@ -94,6 +98,8 @@ builder.Services.AddScoped<DocumentExchangeStarterService>();
 builder.Services.AddScoped<PurchaseOrderStarterService>();
 builder.Services.AddScoped<RecruitmentStarterService>();
 builder.Services.AddScoped<ConfiguredAppStarterService>();
+builder.Services.AddScoped<IScheduledPublishService, ScheduledPublishService>();
+builder.Services.AddScoped<IAnalyticsRollupService, BlogAnalyticsRollupService>();
 
 // [PAY-2 v20260712] Minimal payment-verifier wiring. SubmissionProcessor now
 // fails CLOSED on payment fields when no verifier is registered — this keeps
@@ -106,6 +112,30 @@ builder.Services.AddScoped<MegaForm.Core.Payments.IPaymentGatewayStore>(sp =>
         sp.GetRequiredService<IModuleSettingsService>(),
         key => cfg[key]));
 builder.Services.AddScoped<MegaForm.Core.Payments.PaymentSubmissionVerifier>();
+
+// [CloudStorage v20260723-01] Cloud file storage stack (mirror of the Oqtane wiring).
+// GoogleDrive/Calendar ride on named HttpClients; AmazonS3/AzureBlob are SDK providers with
+// parameterless ctors. SubmissionProcessor's optional cloudStorageUploader ctor param picks
+// SubmissionCloudStorageUploader up, so the post-submit cloud mirror runs fail-soft.
+builder.Services.AddHttpClient<MegaForm.Core.Integrations.Storage.IStorageProvider, MegaForm.Core.Integrations.Storage.Providers.GoogleDriveProvider>("GoogleDrive");
+builder.Services.AddHttpClient<MegaForm.Core.Integrations.Storage.ICalendarProvider, MegaForm.Core.Integrations.Storage.Providers.GoogleCalendarProvider>("GoogleCalendar");
+builder.Services.AddSingleton<MegaForm.Core.Integrations.Storage.IStorageProvider, MegaForm.Integrations.CloudStorage.AmazonS3StorageProvider>();
+builder.Services.AddSingleton<MegaForm.Core.Integrations.Storage.IStorageProvider, MegaForm.Integrations.CloudStorage.AzureBlobStorageProvider>();
+builder.Services.AddSingleton<MegaForm.Core.Integrations.Storage.IStorageIntegrationService, MegaForm.Core.Integrations.Storage.StorageIntegrationService>();
+// Named cloud connections live in module settings (moduleId=0), same seam the SQL named
+// connections use (MegaFormController ListNamedConnections), under the cloud catalog key.
+builder.Services.AddScoped<MegaForm.Core.Integrations.Storage.ICloudStorageConnectionProvider>(sp =>
+    new MegaForm.Core.Integrations.Storage.DelegateCloudStorageConnectionProvider(() =>
+    {
+        try
+        {
+            return sp.GetRequiredService<IModuleSettingsService>()
+                .GetSetting(0, MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.SettingKey, "");
+        }
+        catch { return string.Empty; }
+    }));
+builder.Services.AddScoped<MegaForm.Core.Integrations.Storage.ISubmissionFileBlobReader, WebSubmissionFileBlobReader>();
+builder.Services.AddScoped<MegaForm.Core.Integrations.Storage.SubmissionCloudStorageUploader>();
 
 builder.Services.AddScoped<SubmissionProcessor>();
 builder.Services.AddScoped<PrintFormRenderer>();

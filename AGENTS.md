@@ -1,9 +1,11 @@
 # MegaForm — Ghi chép bàn giao (Umbraco)
 
-> Cập nhật lần cuối: 2026-07-17 bởi Kimi Code CLI.
-> Tập trung phiên hiện tại: xây dựng nền tảng **typed submission storage** trong `MegaForm.Core` để tất cả platform (DNN/Oqtane/Umbraco/Web) dùng chung abstractions/models/services; backup trên branch `feature/typed-submission-storage-core`.
-> Phiên tiếp theo: implement `ISubmissionDataStore` + migrations + repositories cho từng platform, bắt đầu với Umbraco hoặc Oqtane; viết typed rows song song với `DataJson` legacy; backfill legacy submissions.
+> Cập nhật lần cuối: 2026-07-23 bởi Kimi Code CLI.
+> Phiên này: hoàn thiện tính năng **cloud file storage** (Google Drive / Amazon S3 / Azure Blob) — nối vào submit pipeline (fail-soft sau insert), lưu connection server-side, UI cấu hình trong builder, DI đủ 4 host + AspNetCore.Component, assembly riêng `MegaForm.Integrations.CloudStorage`, packaging DNN/Oqtane. Xem mục 2.8.
+> Trước đó (2026-07-17): nền tảng **typed submission storage** trong `MegaForm.Core`; backup trên branch `feature/typed-submission-storage-core`.
+> Phiên tiếp theo: implement `ISubmissionDataStore` + migrations + repositories cho từng platform, bắt đầu với Umbraco hoặc Oqtane; viết typed rows song song với `DataJson` legacy; backfill legacy submissions. Ngoài ra: verify runtime cloud storage (browser test: tạo connection, test, submit form có file → file lên cloud).
 > Tài liệu audit: `Docs/HANDOUT_NEXT_SESSION_TYPED_SUBMISSION_STORAGE_NO_DATAJSON_2026-07-17.md`.
+> Audit security & performance (phương pháp Mythos, read-only): `Docs/AUDIT_SECURITY_PERFORMANCE_MYTHOS_2026-07-21.md` — 44 findings security (4 Critical) + 24 findings performance (2 Critical), kèm lộ trình khắc phục P0/P1/P2. **P0 đã fix xong 2026-07-21** (xem mục 8 Remediation log trong doc); còn lại P1/P2.
 
 ## 1. Nguyên tắc kiến trúc
 
@@ -99,6 +101,23 @@
 - **Query service preview:** `SubmissionQueryService.GetDetailTyped()` dùng typed store khi có, fallback về JSON legacy.
 - **Unit tests:** `MegaForm.Sdk.Tests/TypedSubmissionStorageTests.cs` — 39 tests pass.
 - **Build:** `MegaForm.Core` build OK trên `net472/net8.0/net9.0/net10.0` (0 error). Toàn bộ `MegaForm.Sdk.Tests` pass (88/88).
+
+### 2.8 Phase 8 — Cloud file storage (Google Drive / S3 / Azure Blob), hoàn thành 2026-07-23
+
+Nối tính năng cloud file storage (scaffold từ 2026-06-14, xem `Docs/HANDOFF_20260614_INTEGRATION_PROVIDERS_IMPLEMENTED.md`) vào runtime thật:
+
+- **Core:**
+  - `FormSettings.CloudStorage` (`settings.cloudStorage` = `{ enabled, mappings: [StorageIntegrationMapping] }`) trong `MegaForm.Core/Models/FormSchema.cs`; block này bị strip khỏi public schema (`FormSchemaSensitivePropertyStripper`).
+  - `CloudStorageConnectionCatalog` — named connections (credentials) lưu server-side per-platform dưới settings key `MegaForm_CloudStorageConnections` (mirror `NamedConnectionCatalog`); `MaskSecrets` → `***` khi echo ra browser.
+  - `SubmissionCloudStorageUploader` (fail-soft, log qua `ILogService`, không bao giờ chặn submit) đã nối vào `SubmissionProcessor` ngay sau insert (optional ctor param cuối `cloudStorageUploader`); bỏ qua submission spam. File được đọc lại từ disk qua `ISubmissionFileBlobReader` (per host) vì upload đi request riêng trước submit.
+  - Contracts: `ICloudStorageConnectionProvider` + `DelegateCloudStorageConnectionProvider`, `ISubmissionFileBlobReader` (`Integrations/Storage/ISubmissionStorageHostServices.cs`).
+- **Assembly mới `MegaForm.Integrations.CloudStorage`** (net472/net8/net9/net10, đã add vào `MegaForm.sln`, packable 1.0.0): `AmazonS3StorageProvider` (ClientId/ClientSecret=keys, BaseFolder=bucket, Extra["Region"], BaseUrl=S3-compatible endpoint) + `AzureBlobStorageProvider` (ClientSecret=connection string, BaseFolder=container). Stateless, parameterless ctor. Core KHÔNG reference AWSSDK/Azure SDK.
+- **DI 4 host + Component:** Oqtane `Startup.cs`, Web `Program.cs`, Umbraco `MegaFormComposer.cs` (scoped vì IModuleSettingsService scoped), DNN manual-wire trong `DnnServiceLocator` (static HttpClient); `MegaForm.AspNetCore.Component` `RegisterIntegrationProviders`. Mỗi host có blob reader riêng (`*SubmissionFileBlobReader.cs`) mirror đúng path layout + traversal guard của upload/download endpoint.
+- **API (4 host, admin-gated như named connections):** `ModuleConfig/CloudStorageConnectionsList` (masked) / `CloudStorageConnectionSave` (secret "***" = giữ cũ) / `CloudStorageConnectionDelete` / `CloudStorageConnectionTest`.
+- **Builder UI:** section "Cloud Storage" trong Settings tab (`dom.ts` + module mới `cloud-storage-settings.ts`, sync hook trong `panels.ts`): enable toggle, mappings (provider/connection/folder/upload-fields/organize-by-submission), modal quản lý connections (list/add/edit/delete/test, `extra` gửi dạng object). 44 i18n keys `builder.cloudStorage.*` trong en-US + 11 REQUIRED locales. Bundle đã rebuild + sync 4 platform.
+- **Packaging:** Oqtane 2 nuspec (+6 DLL cloud cho net9/net10); DNN `MegaForm.dnn` + `BuildPackage-DNN.ps1` (chỉ ship 6 DLL feature, CỐ Ý không ship `Microsoft.Extensions.*`/`System.*` — site DNN 10 đã có; site cũ nếu thiếu DI.Abstractions 10.x cần binding redirect, cloud upload fail-soft không ảnh hưởng submit).
+- **Tests:** `MegaForm.Sdk.Tests/CloudStorageTests.cs` — 23 tests (catalog + uploader fail-soft). Tổng 142/142 pass.
+- **Chưa verify:** runtime browser (tạo connection → test → submit form có file → file lên cloud). Cần credentials thật (Google OAuth token / AWS keys / Azure connection string).
 
 ## 3. Trạng thái hiện tại
 

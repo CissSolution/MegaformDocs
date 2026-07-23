@@ -22,6 +22,7 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="..\MegaForm.Core\MegaForm.Core.csproj" />
+    <ProjectReference Include="..\MegaForm.Integrations.CloudStorage\MegaForm.Integrations.CloudStorage.csproj" />
     <ProjectReference Include="..\MegaForm.Web\MegaForm.Web.csproj" />
   </ItemGroup>
   <ItemGroup>

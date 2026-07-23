@@ -18,6 +18,9 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="..\MegaForm.Core\MegaForm.Core.csproj" />
     <ProjectReference Include="..\MegaForm.Sdk\MegaForm.Sdk.csproj" />
+    <!-- [CloudStorage v20260723-01] AmazonS3/AzureBlob IStorageProvider implementations
+         (parameterless ctors, namespace MegaForm.Integrations.CloudStorage). -->
+    <ProjectReference Include="..\MegaForm.Integrations.CloudStorage\MegaForm.Integrations.CloudStorage.csproj" />
   </ItemGroup>
   <ItemGroup>
     <!-- EF Core — net8.0 compatible -->

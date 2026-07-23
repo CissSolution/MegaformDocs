@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+<Project Sdk="Microsoft.NET.Sdk.Razor">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>MegaForm.Umbraco</RootNamespace>
@@ -19,13 +19,13 @@
     <Description>MegaForm module for Umbraco CMS — form builder, multi-view, submissions, and workflow extensibility.</Description>
     <Copyright>© 2026 MegaForm. All rights reserved.</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/nicknguyen-oqtane/MegaForm</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/nicknguyen-oqtane/MegaForm.git</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/CissSolution/MegaformDocs</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/CissSolution/MegaformDocs.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageTags>umbraco;umbraco-marketplace;form-builder;forms;workflow;submissions</PackageTags>
-    <PackageReleaseNotes>Initial packable release for Umbraco 14+ (Bellissima). Static web assets are served under /App_Plugins/MegaForm/.</PackageReleaseNotes>
+    <PackageTags>umbraco;umbraco-marketplace;form-builder;forms;workflow;submissions;bellissima;umbraco14;umbraco15;umbraco16</PackageTags>
+    <PackageReleaseNotes>MegaForm 1.5 for Umbraco 14+ (Bellissima). Adds native Bellissima property editor and content-app integration, Marketplace-ready packaging, and backoffice section/tree permissions.</PackageReleaseNotes>
     <NoWarn>$(NoWarn);NU5104</NoWarn>
   </PropertyGroup>
 
@@ -36,6 +36,7 @@
   <ItemGroup>
     <ProjectReference Include="..\MegaForm.Core\MegaForm.Core.csproj" />
     <ProjectReference Include="..\MegaForm.Sdk\MegaForm.Sdk.csproj" />
+    <ProjectReference Include="..\MegaForm.Integrations.CloudStorage\MegaForm.Integrations.CloudStorage.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -56,6 +57,6 @@
     <None Include="umbraco-marketplace.json" Pack="true" PackagePath="\" />
     <Content Remove="umbraco-marketplace.json" />
     <!-- License file copied to build/publish output -->
-    <Content Include="license.lic" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="LICENSE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

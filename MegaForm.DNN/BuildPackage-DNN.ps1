@@ -1,4 +1,4 @@
-﻿# ============================================================
+# ============================================================
 #  MegaForm.DNN - DNN Install Package Creator
 #
 #  Tao file Install ZIP cai dat qua DNN Host > Extensions.
@@ -260,6 +260,28 @@ Write-Host '  + bin\MegaForm.Sdk.dll'
 if ($dapperDll -and (Test-Path $dapperDll)) {
     Copy-Item $dapperDll "$STAGING\bin\" -Force
     Write-Host '  + bin\Dapper.dll'
+}
+
+# [CloudStorage v20260723-01] Cloud storage provider DLLs (Google Drive / S3 / Azure Blob mirror).
+# Copied from the DNN build output (they flow there via the MegaForm.Integrations.CloudStorage
+# project reference). Only direct feature deps — Microsoft.Extensions.*/System.* stay out on
+# purpose (DNN 10 already ships them; overwriting risks assembly-version conflicts).
+$cloudDllNames = @(
+    'MegaForm.Integrations.CloudStorage.dll',
+    'AWSSDK.Core.dll',
+    'AWSSDK.S3.dll',
+    'Azure.Core.dll',
+    'Azure.Storage.Blobs.dll',
+    'Azure.Storage.Common.dll'
+)
+foreach ($name in $cloudDllNames) {
+    $src = Join-Path (Split-Path $dnnDll) $name
+    if (Test-Path $src) {
+        Copy-Item $src "$STAGING\bin\" -Force
+        Write-Host "  + bin\$name"
+    } else {
+        Write-Warning "Cloud storage DLL khong tim thay (bo qua): $name"
+    }
 }
 
 # [DNN sync 2026-06-22] DNN scripts are *.SqlDataProvider (not *.sql); the old `*.sql` glob copied

@@ -104,6 +104,9 @@ import './post-submit-settings';
 // ── 18a. Integration Settings — Custom URL + Google Analytics ───
 import './integration-settings';
 
+// ── 18a2. Cloud Storage Settings — per-form cloud upload mappings ──
+import './cloud-storage-settings';
+
 // ── 18b. Token Designer — modal popup for HTML tokens + image gallery
 import './token-designer';
 

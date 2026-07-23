@@ -1,6 +1,7 @@
 using System;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Notifications;
@@ -32,8 +33,10 @@ using MegaForm.Core.Addons.Quiz;
 using MegaForm.Sdk;
 using MegaForm.Umbraco.Data;
 using MegaForm.Umbraco.HostedServices;
+using MegaForm.Umbraco.Permissions;
 using MegaForm.Umbraco.Services;
 using MegaForm.Umbraco.StartupFilters;
+using Microsoft.AspNetCore.Authorization;
 
 namespace MegaForm.Umbraco.Composers
 {
@@ -83,6 +86,46 @@ namespace MegaForm.Umbraco.Composers
             // ── CORS for public MegaForm embed/script endpoints
             builder.Services.AddTransient<IStartupFilter, MegaFormCorsStartupFilter>();
 
+            // ── Authorization policy that accepts both the Umbraco backoffice cookie
+            // (used by shared TS UI hosted in iframes) and the OpenIddict Bearer token
+            // (used by the Umbraco 14+ backoffice SPA / management API).
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("MegaFormBackOffice", policy =>
+                {
+                    policy.AddAuthenticationSchemes(
+                        Constants.Security.BackOfficeAuthenticationType,
+                        "OpenIddict.Validation.AspNetCore");
+                    policy.RequireAuthenticatedUser();
+                });
+
+                // Named policy for controllers that want to require any MegaForm permission
+                // letter via IAuthorizationService / MegaFormAuthorizeAttribute.
+                options.AddPolicy("MegaFormPermission", policy =>
+                {
+                    policy.AddAuthenticationSchemes(
+                        Constants.Security.BackOfficeAuthenticationType,
+                        "OpenIddict.Validation.AspNetCore");
+                    policy.RequireAuthenticatedUser();
+                });
+
+                // API-only policy used by MegaFormAuthorizeAttribute. It uses the OpenIddict
+                // bearer scheme so that AJAX calls from the Bellissima SPA receive a 401
+                // challenge instead of a cookie redirect.
+                options.AddPolicy("MegaFormApi", policy =>
+                {
+                    policy.AddAuthenticationSchemes("OpenIddict.Validation.AspNetCore");
+                    policy.RequireAuthenticatedUser();
+                });
+            });
+
+            // ── MegaForm granular permission service and authorization handler
+            builder.Services.AddScoped<IAuthorizationHandler, MegaFormPermissionAuthorizationHandler>();
+            builder.Services.AddScoped<IMegaFormPermissionService, MegaFormPermissionService>();
+
+            // ── Member integration (public-facing members, not backoffice users)
+            builder.Services.AddScoped<IUmbracoMemberContext, UmbracoMemberContext>();
+
             // ── Platform services
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddScoped<IModuleSettingsService, UmbracoModuleSettingsService>();
@@ -103,6 +146,9 @@ namespace MegaForm.Umbraco.Composers
             builder.Services.AddScoped<IUmbracoModuleConfigService, UmbracoModuleConfigService>();
 
             // ── Core business services
+            builder.Services.AddScoped<MegaForm.Core.Services.TypedSubmission.SubmissionDataResolver>();
+            builder.Services.AddScoped<MegaForm.Core.Services.TypedSubmission.TypedSubmissionResyncService>();
+            builder.Services.AddScoped<MegaForm.Core.Interfaces.ISubmissionDataStore, MegaForm.Umbraco.Data.EfSubmissionDataStore>();
             builder.Services.AddScoped<EmailNotificationService>();
             builder.Services.AddScoped<WebhookService>();
             builder.Services.AddScoped<UniqueIdService>();
@@ -119,7 +165,12 @@ namespace MegaForm.Umbraco.Composers
             builder.Services.AddScoped<WorkflowTaskService>();
             builder.Services.AddScoped<WorkflowTransparencyService>();
             builder.Services.AddScoped<SubmissionWorkflowDetailService>();
-            builder.Services.AddScoped<SubmissionQueryService>();
+            builder.Services.AddScoped<SubmissionQueryService>(sp =>
+                new SubmissionQueryService(
+                    sp.GetRequiredService<ISubmissionRepository>(),
+                    sp.GetRequiredService<IFormRepository>(),
+                    sp.GetService<IFileRepository>(),
+                    sp.GetService<MegaForm.Core.Interfaces.ISubmissionDataStore>()));
             builder.Services.AddScoped<AdminRecordShellService>();
             builder.Services.AddScoped<SubmissionProcessor>();
             builder.Services.AddScoped<PrintFormRenderer>();
@@ -240,7 +291,19 @@ namespace MegaForm.Umbraco.Composers
             // Storage
             services.AddHttpClient<IStorageProvider, GoogleDriveProvider>("GoogleDrive");
             services.AddHttpClient<ICalendarProvider, GoogleCalendarProvider>("GoogleCalendar");
+            // [CloudStorage v20260723-01] S3 + Azure Blob providers (stateless → singleton-safe),
+            // the named cloud-storage connection catalog (scoped: IModuleSettingsService is scoped,
+            // so a singleton capturing the root provider would fail scope validation / serve stale
+            // settings), the per-host blob reader, and the fail-soft uploader SubmissionProcessor
+            // picks up via its optional ctor parameter.
+            services.AddSingleton<IStorageProvider, MegaForm.Integrations.CloudStorage.AmazonS3StorageProvider>();
+            services.AddSingleton<IStorageProvider, MegaForm.Integrations.CloudStorage.AzureBlobStorageProvider>();
             services.AddSingleton<IStorageIntegrationService, StorageIntegrationService>();
+            services.AddScoped<ICloudStorageConnectionProvider>(sp =>
+                new DelegateCloudStorageConnectionProvider(() =>
+                    sp.GetRequiredService<IModuleSettingsService>().GetSetting(0, CloudStorageConnectionCatalog.SettingKey, "")));
+            services.AddSingleton<ISubmissionFileBlobReader, UmbracoSubmissionFileBlobReader>();
+            services.AddScoped<SubmissionCloudStorageUploader>();
 
             // Spam Protection
             services.AddHttpClient<ICaptchaProvider, RecaptchaV2Provider>("RecaptchaV2");

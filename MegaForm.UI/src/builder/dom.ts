@@ -1520,6 +1520,18 @@ import dbStrings from './db-tables-strings.json';
             '<div class="form-group"><label>Event Value</label>' +
               '<input type="number" id="mf-setting-ga-value" class="form-control form-control-sm" placeholder="0" value="0"/></div>' +
           '</div>' +
+          // [CloudStorage] Per-form cloud file storage mappings. Static shell only —
+          // mapping rows + the Manage-connections modal are rendered by
+          // cloud-storage-settings.ts (reads/writes schema.settings.cloudStorage).
+          '<div class="mf-prop-group"><h6><i class="fas fa-cloud-upload-alt"></i> ' + bt('builder.cloudStorage.title','Cloud Storage') + '</h6>' +
+            '<p style="font-size:11px;color:#64748b;margin:0 0 10px">' + bt('builder.cloudStorage.desc','Copy submitted files to cloud storage after each submission.') + '</p>' +
+            '<div class="form-check mb-2" style="display:flex;align-items:center;gap:6px;padding:4px 0">' +
+              '<input type="checkbox" id="mf-setting-cloud-storage-enabled" class="form-check-input" style="margin:0;flex-shrink:0"/>' +
+              '<label class="form-check-label" for="mf-setting-cloud-storage-enabled" style="margin:0;white-space:nowrap">' + bt('builder.cloudStorage.enable','Enable Cloud Storage') + '</label>' +
+            '</div>' +
+            '<div id="mf-cloud-storage-mappings"></div>' +
+            '<button type="button" id="mf-cloud-storage-add-mapping" class="mf-builder-btn" style="width:100%;margin-top:4px"><i class="fas fa-plus"></i> ' + bt('builder.cloudStorage.add_mapping','Add mapping') + '</button>' +
+          '</div>' +
           // [B65o] Form Theme picker REMOVED from Form Settings tab —
           // user moved theme picking to the dedicated THEME right-rail tab.
           // Hidden mount points kept so properties.ts:populateSettingsTab()

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -1386,6 +1386,130 @@ namespace MegaForm.Web.Controllers
                 return Ok(new { success = true, message = "Connection '" + name.Trim() + "' deleted." });
             }
             catch { return StatusCode(500, new { success = false, error = "Could not delete the connection." }); }
+        }
+
+        // ══════════════════════════════════════════════════════════════════
+        //  [CloudStorage v20260723-01] Cloud storage connections catalog (Web twin of the
+        //  Oqtane ModuleConfig/CloudStorageConnection* endpoints). Flat routes, same admin
+        //  gate as the SQL connections (Administrator role), stored in module settings
+        //  (moduleId=0). Secrets are ALWAYS masked on the way out; "***" on the way in
+        //  keeps the stored value (masked-edit convention, SECURITY rule 10).
+        // ══════════════════════════════════════════════════════════════════
+
+        [HttpGet("ModuleConfig/CloudStorageConnectionsList")]
+        [Authorize(Roles = "Administrator")]
+        public async Task<IActionResult> ListCloudStorageConnections()
+        {
+            var savedJson = _moduleSettings.GetSetting(0, MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.SettingKey, "");
+            var items = MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.Parse(savedJson)
+                .Select(MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.MaskSecrets).ToList();
+            var providers = await GetRegisteredStorageProviderNamesAsync().ConfigureAwait(false);
+            return Ok(new { success = true, connections = items, providers });
+        }
+
+        [HttpPost("ModuleConfig/CloudStorageConnectionSave")]
+        [Authorize(Roles = "Administrator")]
+        public async Task<IActionResult> SaveCloudStorageConnection([FromBody] JObject body)
+        {
+            if (HasDemoLock()) return DemoLockedResponse("Cloud Storage Connections");
+            if (body == null) return Ok(new { success = false, message = "Request body is required." });
+            var name = body.Value<string>("name");
+            var provider = (body.Value<string>("provider") ?? string.Empty).Trim();
+            var nameErr = MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.ValidateName(name);
+            if (nameErr != null) return Ok(new { success = false, message = nameErr });
+            var providers = await GetRegisteredStorageProviderNamesAsync().ConfigureAwait(false);
+            if (provider.Length == 0 || !providers.Any(p => string.Equals(p, provider, System.StringComparison.OrdinalIgnoreCase)))
+                return Ok(new { success = false, message = "Unknown storage provider '" + provider + "'." });
+            try
+            {
+                var json = _moduleSettings.GetSetting(0, MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.SettingKey, "");
+                var entry = BuildCloudStorageEntry(body, MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.Find(json, name));
+                _moduleSettings.SetSetting(0, MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.SettingKey,
+                    MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.Upsert(json, entry));
+                return Ok(new { success = true, message = "Connection '" + name.Trim() + "' saved." });
+            }
+            catch { return StatusCode(500, new { success = false, error = "Could not save the connection." }); }
+        }
+
+        [HttpPost("ModuleConfig/CloudStorageConnectionDelete")]
+        [Authorize(Roles = "Administrator")]
+        public IActionResult DeleteCloudStorageConnection([FromBody] JObject body)
+        {
+            if (HasDemoLock()) return DemoLockedResponse("Cloud Storage Connections");
+            var name = body?.Value<string>("name") ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(name)) return Ok(new { success = false, message = "Connection name is required." });
+            try
+            {
+                var json = _moduleSettings.GetSetting(0, MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.SettingKey, "");
+                if (!MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.Contains(json, name))
+                    return Ok(new { success = false, message = "Cloud storage connection '" + name.Trim() + "' was not found." });
+                _moduleSettings.SetSetting(0, MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.SettingKey,
+                    MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.Remove(json, name));
+                return Ok(new { success = true, message = "Connection '" + name.Trim() + "' deleted." });
+            }
+            catch { return StatusCode(500, new { success = false, error = "Could not delete the connection." }); }
+        }
+
+        [HttpPost("ModuleConfig/CloudStorageConnectionTest")]
+        [Authorize(Roles = "Administrator")]
+        public async Task<IActionResult> TestCloudStorageConnection([FromBody] JObject body)
+        {
+            if (HasDemoLock()) return DemoLockedResponse("Cloud Storage Connections");
+            if (body == null) return Ok(new { success = false, message = "Request body is required." });
+            var provider = (body.Value<string>("provider") ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(provider)) return Ok(new { success = false, message = "Storage provider is required." });
+            try
+            {
+                var svc = HttpContext?.RequestServices?.GetService(typeof(MegaForm.Core.Integrations.Storage.IStorageIntegrationService))
+                    as MegaForm.Core.Integrations.Storage.IStorageIntegrationService;
+                if (svc == null) return Ok(new { success = false, message = "Storage integration service is not available." });
+                var json = _moduleSettings.GetSetting(0, MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.SettingKey, "");
+                var entry = BuildCloudStorageEntry(body, MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.Find(json, body.Value<string>("name")));
+                var result = await svc.TestConnectionAsync(provider,
+                    MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.ToConnectionSettings(entry)).ConfigureAwait(false);
+                return Ok(new { success = result != null && result.Healthy, message = result == null ? "Connection test failed." : result.Message });
+            }
+            catch (System.Exception ex)
+            {
+                // Diagnostic endpoint — mirror DatabaseSettings/Test which surfaces the real cause.
+                return Ok(new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>Maps the request body to a catalog entry, resolving "***" secrets against the stored entry.</summary>
+        private static MegaForm.Core.Integrations.Storage.CloudStorageConnectionInfo BuildCloudStorageEntry(
+            JObject body, MegaForm.Core.Integrations.Storage.CloudStorageConnectionInfo existing)
+        {
+            string Secret(string jsonKey, string stored)
+            {
+                var incoming = body.Value<string>(jsonKey);
+                return incoming == "***" ? (stored ?? string.Empty) : (incoming ?? string.Empty);
+            }
+            return new MegaForm.Core.Integrations.Storage.CloudStorageConnectionInfo
+            {
+                Name = body.Value<string>("name"),
+                Provider = (body.Value<string>("provider") ?? string.Empty).Trim(),
+                AccessToken = Secret("accessToken", existing?.AccessToken),
+                RefreshToken = Secret("refreshToken", existing?.RefreshToken),
+                ClientId = body.Value<string>("clientId"),
+                ClientSecret = Secret("clientSecret", existing?.ClientSecret),
+                BaseFolder = body.Value<string>("baseFolder"),
+                BaseUrl = body.Value<string>("baseUrl"),
+                Extra = body["extra"]?.ToObject<System.Collections.Generic.Dictionary<string, string>>()
+                    ?? new System.Collections.Generic.Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase)
+            };
+        }
+
+        private async Task<System.Collections.Generic.IReadOnlyList<string>> GetRegisteredStorageProviderNamesAsync()
+        {
+            try
+            {
+                var svc = HttpContext?.RequestServices?.GetService(typeof(MegaForm.Core.Integrations.Storage.IStorageIntegrationService))
+                    as MegaForm.Core.Integrations.Storage.IStorageIntegrationService;
+                if (svc == null) return new string[0];
+                return await svc.GetRegisteredProviderNamesAsync().ConfigureAwait(false);
+            }
+            catch { return new string[0]; }
         }
 
         private static string InferDatabaseType(string connStr)

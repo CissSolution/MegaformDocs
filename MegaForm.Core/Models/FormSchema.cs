@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using MegaForm.Core.Integrations.Storage;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -607,6 +608,36 @@ namespace MegaForm.Core.Models
         /// </summary>
         [JsonProperty("lifecycle")]
         public FormLifecycleSettings Lifecycle { get; set; }
+
+        /// <summary>
+        /// Optional: push uploaded files to cloud storage after submit (Google Drive / S3 / Azure Blob).
+        /// Configured in Builder Settings → Cloud Storage panel. Server-only block (stripped from
+        /// public schema payloads). Disabled by default → existing forms unaffected.
+        /// </summary>
+        [JsonProperty("cloudStorage")]
+        public FormCloudStorageSettings CloudStorage { get; set; }
+    }
+
+    /// <summary>
+    /// [CloudStorage v20260723-01] Optional: push a submission's uploaded files to cloud
+    /// storage providers (Google Drive, Amazon S3, Azure Blob) after the submission is saved.
+    /// Each mapping references a server-side named connection (CloudStorageConnectionCatalog,
+    /// stored per-platform under a settings key) — credentials never live in the schema.
+    /// The whole block is server-only: stripped from public schema responses by
+    /// FormSchemaSensitivePropertyStripper. Disabled/absent by default → existing forms unaffected.
+    /// Executed by SubmissionCloudStorageUploader inside SubmissionProcessor (fail-soft).
+    /// </summary>
+    public class FormCloudStorageSettings
+    {
+        [JsonProperty("enabled")]
+        public bool Enabled { get; set; }
+
+        /// <summary>
+        /// One mapping = push matching uploaded files to one provider + connection + folder.
+        /// UploadFieldKeys empty = all file-like fields of the form.
+        /// </summary>
+        [JsonProperty("mappings")]
+        public List<StorageIntegrationMapping> Mappings { get; set; } = new List<StorageIntegrationMapping>();
     }
 
     public class FormDatabaseInsertSettings

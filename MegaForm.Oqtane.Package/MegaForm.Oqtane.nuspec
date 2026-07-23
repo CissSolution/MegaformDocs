@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>MegaForm.Oqtane</id>
@@ -72,6 +72,16 @@
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Microsoft.CodeAnalysis.dll" target="lib\net9.0" />
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Microsoft.CodeAnalysis.CSharp.dll" target="lib\net9.0" />
 
+    <!-- [CloudStorage v20260723-01] Cloud storage providers (Google Drive / Amazon S3 / Azure
+         Blob) for the post-submit file mirror. AWSSDK + Azure.Storage are NOT provided by the
+         Oqtane host, so they must ship inside the package. -->
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\MegaForm.Integrations.CloudStorage.dll" target="lib\net9.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\AWSSDK.Core.dll" target="lib\net9.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\AWSSDK.S3.dll" target="lib\net9.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Azure.Core.dll" target="lib\net9.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Azure.Storage.Blobs.dll" target="lib\net9.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Azure.Storage.Common.dll" target="lib\net9.0" />
+
     <!-- net10.0 builds (Oqtane 10.x hosts, e.g. :5070 Oqtane.MSSQL3 + :5000 Oqtane.New10) -->
     <file src="..\MegaForm.Oqtane.Client\bin\Release\net10.0\MegaForm.Oqtane.Client.Oqtane.dll" target="lib\net10.0" />
     <file src="..\MegaForm.Oqtane.Client\bin\Release\net10.0\MegaForm.Oqtane.Client.Oqtane.pdb" target="lib\net10.0" />
@@ -85,6 +95,12 @@
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Microsoft.AspNetCore.Razor.Language.dll" target="lib\net10.0" />
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Microsoft.CodeAnalysis.dll" target="lib\net10.0" />
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Microsoft.CodeAnalysis.CSharp.dll" target="lib\net10.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\MegaForm.Integrations.CloudStorage.dll" target="lib\net10.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\AWSSDK.Core.dll" target="lib\net10.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\AWSSDK.S3.dll" target="lib\net10.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Azure.Core.dll" target="lib\net10.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Azure.Storage.Blobs.dll" target="lib\net10.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Azure.Storage.Common.dll" target="lib\net10.0" />
 
     <!-- FIX 3: wwwroot — path đúng: wwwroot/Modules/MegaForm/** → deploy vào {webroot}/Modules/MegaForm/ -->
     <!-- Oqtane extract: bỏ 1 segment "wwwroot" → còn Modules/MegaForm/... → vào wwwroot/Modules/MegaForm/ -->

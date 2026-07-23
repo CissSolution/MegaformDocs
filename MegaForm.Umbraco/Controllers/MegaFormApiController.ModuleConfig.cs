@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MegaForm.Core.Interfaces;
+using MegaForm.Core.Integrations.Storage;
 using MegaForm.Core.Services;
 using MegaForm.Umbraco.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -180,6 +181,151 @@ namespace MegaForm.Umbraco.Controllers
                 return Ok(new { success = true, message = "Connection '" + name.Trim() + "' deleted." });
             }
             catch { return StatusCode(500, new { success = false, error = "Could not delete the connection." }); }
+        }
+
+        // ── Cloud Storage Connections (CloudStorage v20260723-01) ──
+        // DNN/Web twin. One JSON blob in module settings under CloudStorageConnectionCatalog.SettingKey.
+        // Same gates as the SQL connections above: Browse to list, Edit to save/delete/test.
+        // Secrets never leave the server unmasked — MaskSecrets on read, "***" on save/test
+        // means "keep the stored value" (same convention as database connection passwords).
+
+        [HttpGet]
+        [Route("/umbraco/MegaForm/MegaFormApi/ModuleConfig/CloudStorageConnectionsList")]
+        [MegaFormAuthorize(MegaFormPermissionConstants.BrowseLetter)]
+        public async Task<IActionResult> ListCloudStorageConnections(
+            [FromServices] IModuleSettingsService moduleSettings,
+            [FromServices] IStorageIntegrationService storageIntegration)
+        {
+            var json = moduleSettings.GetSetting(0, CloudStorageConnectionCatalog.SettingKey, "");
+            var items = CloudStorageConnectionCatalog.Parse(json)
+                .Select(c => CloudStorageConnectionCatalog.MaskSecrets(c))
+                .ToList();
+            var providers = storageIntegration != null
+                ? await storageIntegration.GetRegisteredProviderNamesAsync()
+                : (IReadOnlyList<string>)new string[0];
+            return Ok(new { success = true, connections = items, providers });
+        }
+
+        [HttpPost]
+        [Route("/umbraco/MegaForm/MegaFormApi/ModuleConfig/CloudStorageConnectionSave")]
+        [MegaFormAuthorize(MegaFormPermissionConstants.EditLetter)]
+        public async Task<IActionResult> SaveCloudStorageConnection(
+            [FromBody] JObject body,
+            [FromServices] IModuleSettingsService moduleSettings,
+            [FromServices] IStorageIntegrationService storageIntegration)
+        {
+            if (body == null) return Ok(new { success = false, message = "Request body is required." });
+            var entry = ReadCloudStorageEntry(body);
+            var nameErr = CloudStorageConnectionCatalog.ValidateName(entry.Name);
+            if (nameErr != null) return Ok(new { success = false, message = nameErr });
+            entry.Provider = (entry.Provider ?? string.Empty).Trim();
+            if (entry.Provider.Length == 0)
+                return Ok(new { success = false, message = "Provider is required." });
+
+            var providers = storageIntegration != null ? await storageIntegration.GetRegisteredProviderNamesAsync() : null;
+            if (providers == null || !providers.Any(p => string.Equals(p, entry.Provider, StringComparison.OrdinalIgnoreCase)))
+                return Ok(new { success = false, message = "Storage provider '" + entry.Provider + "' is not registered on this server." });
+
+            try
+            {
+                var json = moduleSettings.GetSetting(0, CloudStorageConnectionCatalog.SettingKey, "");
+                var existing = CloudStorageConnectionCatalog.Find(json, entry.Name);
+                if (existing != null)
+                {
+                    if (entry.AccessToken == "***") entry.AccessToken = existing.AccessToken;
+                    if (entry.RefreshToken == "***") entry.RefreshToken = existing.RefreshToken;
+                    if (entry.ClientSecret == "***") entry.ClientSecret = existing.ClientSecret;
+                }
+                moduleSettings.SetSetting(0, CloudStorageConnectionCatalog.SettingKey,
+                    CloudStorageConnectionCatalog.Upsert(json, entry));
+                return Ok(new { success = true, message = "Connection '" + entry.Name.Trim() + "' saved." });
+            }
+            catch { return StatusCode(500, new { success = false, error = "Could not save the connection." }); }
+        }
+
+        [HttpPost]
+        [Route("/umbraco/MegaForm/MegaFormApi/ModuleConfig/CloudStorageConnectionDelete")]
+        [MegaFormAuthorize(MegaFormPermissionConstants.EditLetter)]
+        public IActionResult DeleteCloudStorageConnection(
+            [FromBody] JObject body,
+            [FromServices] IModuleSettingsService moduleSettings)
+        {
+            var name = body?.Value<string>("name") ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(name)) return Ok(new { success = false, message = "Connection name is required." });
+            try
+            {
+                var json = moduleSettings.GetSetting(0, CloudStorageConnectionCatalog.SettingKey, "");
+                if (!CloudStorageConnectionCatalog.Contains(json, name))
+                    return Ok(new { success = false, message = "Unknown connection '" + name.Trim() + "'." });
+                moduleSettings.SetSetting(0, CloudStorageConnectionCatalog.SettingKey,
+                    CloudStorageConnectionCatalog.Remove(json, name));
+                return Ok(new { success = true, message = "Connection '" + name.Trim() + "' deleted." });
+            }
+            catch { return StatusCode(500, new { success = false, error = "Could not delete the connection." }); }
+        }
+
+        [HttpPost]
+        [Route("/umbraco/MegaForm/MegaFormApi/ModuleConfig/CloudStorageConnectionTest")]
+        [MegaFormAuthorize(MegaFormPermissionConstants.EditLetter)]
+        public async Task<IActionResult> TestCloudStorageConnection(
+            [FromBody] JObject body,
+            [FromServices] IModuleSettingsService moduleSettings,
+            [FromServices] IStorageIntegrationService storageIntegration)
+        {
+            if (body == null) return Ok(new { success = false, message = "Request body is required." });
+            if (storageIntegration == null)
+                return Ok(new { success = false, message = "Storage integration is not available on this server." });
+            var entry = ReadCloudStorageEntry(body);
+            if (string.IsNullOrWhiteSpace(entry.Provider))
+                return Ok(new { success = false, message = "Provider is required." });
+
+            // Resolve masked secrets against the stored entry so Test works before Save.
+            var stored = CloudStorageConnectionCatalog.Find(
+                moduleSettings.GetSetting(0, CloudStorageConnectionCatalog.SettingKey, ""), entry.Name);
+            if (stored != null)
+            {
+                if (entry.AccessToken == "***") entry.AccessToken = stored.AccessToken;
+                if (entry.RefreshToken == "***") entry.RefreshToken = stored.RefreshToken;
+                if (entry.ClientSecret == "***") entry.ClientSecret = stored.ClientSecret;
+            }
+
+            try
+            {
+                var result = await storageIntegration.TestConnectionAsync(
+                    entry.Provider, CloudStorageConnectionCatalog.ToConnectionSettings(entry), CancellationToken.None);
+                return Ok(new
+                {
+                    success = result != null && result.Healthy,
+                    message = result == null ? "Connection test failed." : result.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, message = ex.Message });
+            }
+        }
+
+        private static CloudStorageConnectionInfo ReadCloudStorageEntry(JObject body)
+        {
+            var entry = new CloudStorageConnectionInfo
+            {
+                Name = body.Value<string>("name"),
+                Provider = body.Value<string>("provider"),
+                AccessToken = body.Value<string>("accessToken"),
+                RefreshToken = body.Value<string>("refreshToken"),
+                ClientId = body.Value<string>("clientId"),
+                ClientSecret = body.Value<string>("clientSecret"),
+                BaseFolder = body.Value<string>("baseFolder"),
+                BaseUrl = body.Value<string>("baseUrl")
+            };
+            if (body["extra"] is JObject extra)
+            {
+                foreach (var prop in extra.Properties())
+                    entry.Extra[prop.Name] = prop.Value == null || prop.Value.Type == JTokenType.Null
+                        ? string.Empty
+                        : prop.Value.ToString();
+            }
+            return entry;
         }
 
         // ── Payment Settings ──

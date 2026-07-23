@@ -437,7 +437,18 @@ namespace MegaForm.AspNetCore.Component
             // Storage
             services.AddHttpClient<IStorageProvider, GoogleDriveProvider>("GoogleDrive");
             services.AddHttpClient<ICalendarProvider, GoogleCalendarProvider>("GoogleCalendar");
+            services.AddSingleton<IStorageProvider, MegaForm.Integrations.CloudStorage.AmazonS3StorageProvider>();
+            services.AddSingleton<IStorageProvider, MegaForm.Integrations.CloudStorage.AzureBlobStorageProvider>();
             services.AddSingleton<IStorageIntegrationService, StorageIntegrationService>();
+
+            // [CloudStorage v20260723-01] Post-submit cloud file mirror. The uploader is an
+            // optional SubmissionProcessor ctor dependency — registering it here activates
+            // schema.settings.cloudStorage for hosts using this component.
+            services.AddSingleton<ICloudStorageConnectionProvider>(sp =>
+                new DelegateCloudStorageConnectionProvider(() =>
+                    sp.GetService<IModuleSettingsService>()?.GetSetting(0, CloudStorageConnectionCatalog.SettingKey, "") ?? ""));
+            services.AddScoped<ISubmissionFileBlobReader, WebSubmissionFileBlobReader>();
+            services.AddScoped<SubmissionCloudStorageUploader>();
 
             // Spam Protection
             services.AddHttpClient<ICaptchaProvider, RecaptchaV2Provider>("RecaptchaV2");

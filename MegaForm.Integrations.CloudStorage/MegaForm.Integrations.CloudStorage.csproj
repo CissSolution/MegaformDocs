@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    [CloudStorage v20260723-01] Optional cloud storage providers that carry heavy SDK
+    dependencies (AWSSDK.S3, Azure.Storage.Blobs) so MegaForm.Core stays dependency-light.
+    Providers implement MegaForm.Core.Integrations.Storage.IStorageProvider directly and are
+    stateless — SDK clients are created per operation from StorageConnectionSettings, which
+    keeps DI trivial on every host (singleton registration / manual new on DNN).
+
+    Credential mapping (StorageConnectionSettings):
+      AmazonS3   : ClientId = access key id, ClientSecret = secret access key,
+                   BaseFolder = bucket, Extra["Region"] (default us-east-1),
+                   BaseUrl = optional service URL for S3-compatible storage (MinIO, R2...).
+      AzureBlob  : ClientSecret = storage connection string, BaseFolder = container name.
+  -->
+  <PropertyGroup>
+    <TargetFrameworks>net472;net8.0;net9.0;net10.0</TargetFrameworks>
+    <AssemblyName>MegaForm.Integrations.CloudStorage</AssemblyName>
+    <RootNamespace>MegaForm.Integrations.CloudStorage</RootNamespace>
+    <Description>MegaForm cloud storage providers (Amazon S3, Azure Blob) — optional add-on for MegaForm.Core.</Description>
+    <IsPackable>true</IsPackable>
+    <PackageId>MegaForm.Integrations.CloudStorage</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>MegaForm Team</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>megaform;forms;storage;s3;azure-blob</PackageTags>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+
+  <!-- Match MegaForm.Core: net472 leg is locked to C# 7.3 -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net472'">
+    <LangVersion>7.3</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0' OR '$(TargetFramework)' == 'net9.0'">
+    <LangVersion>12</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <LangVersion>13</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MegaForm.Core\MegaForm.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.S3" Version="4.0.101.4" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.29.1" />
+  </ItemGroup>
+
+</Project>

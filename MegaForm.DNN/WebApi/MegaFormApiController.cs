@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -1484,7 +1484,7 @@ VALUES
                 // [DefaultConnFallback v20260519-04] Pass the platform's default connection
                 // alias so legacy fields with empty optionsConnectionKey still work.
                 var defaultConn = hostLookup("Database_ConnectionAlias", "DashboardDatabase");
-                var svc = new MegaForm.Core.Services.FieldOptionsService(registry, formRepo, submissionRepo, defaultConn);
+                var svc = new MegaForm.Core.Services.FieldOptionsService(registry, formRepo, submissionRepo, defaultConn, DnnServiceLocator.Instance.DataResolver);
                 var options = svc.GetOptions(formId, fieldKey, parameters);
                 return WithCors(Request.CreateResponse(HttpStatusCode.OK, options));
             }
@@ -2542,6 +2542,16 @@ VALUES
             if (data == null) return Request.CreateResponse(HttpStatusCode.BadRequest, "No data provided.");
             var dataJson = JsonConvert.SerializeObject(data);
             FormRepository.UpdateSubmissionData(submissionId, dataJson);
+
+            // Keep typed rows in sync with the updated DataJson.
+            try
+            {
+                var submission = DnnServiceLocator.Instance.SubmissionRepo.Get(submissionId);
+                if (submission != null)
+                    DnnServiceLocator.Instance.TypedResync.Resync(submissionId, submission.FormId, dataJson);
+            }
+            catch { /* fail-soft: DataJson is authoritative */ }
+
             return Request.CreateResponse(HttpStatusCode.OK, new { message = "Submission updated." });
         }
 
@@ -3230,8 +3240,8 @@ VALUES
                 var fileField = MegaForm.Core.Utilities.MegaFormUtils
                     .FlattenFields(schema?.Fields ?? new System.Collections.Generic.List<MegaForm.Core.Models.FormField>())
                     .FirstOrDefault(f => string.Equals(f.Key, fieldKey, StringComparison.OrdinalIgnoreCase)
-                                      && (string.Equals(f.Type, "File", StringComparison.OrdinalIgnoreCase)
-                                       || string.Equals(f.Type, "PdfForm", StringComparison.OrdinalIgnoreCase)));
+                                      // File / FileUpload / PdfForm via shared semantics (FileUpload alias included).
+                                      && MegaForm.Core.Services.TypedSubmission.SubmissionFieldTypeSemantics.IsFileLike(f.Type));
                 if (fileField == null)
                     return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "Invalid file field" });
                 var isPdfFormField = string.Equals(fileField.Type, "PdfForm", StringComparison.OrdinalIgnoreCase);
@@ -4066,6 +4076,311 @@ VALUES
             return Request.CreateResponse(HttpStatusCode.OK, new { success = true });
         }
 
+        // ══════════════════════════════════════════════════════════════════
+        //  [NamedConnections v20260717-01] Multiple named SQL connections —
+        //  DNN twin of Oqtane's ModuleConfig/ConnectionsList|Save|Delete
+        //  (identical client paths). Catalog = ONE JSON blob in PORTAL
+        //  settings (MegaForm_NamedConnections). ADMIN-only: the class-level
+        //  [DnnAuthorize] admits any authenticated user, and a connection
+        //  string is an infrastructure secret (SECURITY rule 3).
+        //  Strings echoed to the browser are ALWAYS masked (rule 10).
+        // ══════════════════════════════════════════════════════════════════
+
+        private bool IsPortalAdminUser()
+            => UserInfo != null && (UserInfo.IsSuperUser || UserInfo.IsInRole("Administrators"));
+
+        [HttpGet]
+        [ActionName("ConnectionsList")]
+        public HttpResponseMessage ConnectionsList()
+        {
+            if (!IsPortalAdminUser())
+                return Request.CreateResponse(HttpStatusCode.Forbidden, new { error = "Administrators only." });
+
+            var items = new List<object>();
+            // The site's own database — always present, managed via the Database Connection card.
+            string siteCs = string.Empty;
+            try { siteCs = DotNetNuke.Data.DataProvider.Instance().ConnectionString ?? string.Empty; } catch { }
+            items.Add(new
+            {
+                name = "DashboardDatabase",
+                provider = "SqlServer",
+                connectionString = MegaForm.Core.Services.NamedConnectionCatalog.MaskSecrets(siteCs),
+                source = "config",
+                allowListed = true
+            });
+            // Host-registered allow-list keys (MegaForm_ExternalTables_AllowedConnections).
+            try
+            {
+                var raw = DotNetNuke.Entities.Controllers.HostController.Instance
+                    .GetString("MegaForm_ExternalTables_AllowedConnections", string.Empty) ?? string.Empty;
+                foreach (var key in raw.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var k = key.Trim();
+                    if (k.Length == 0 || string.Equals(k, "DashboardDatabase", StringComparison.OrdinalIgnoreCase)) continue;
+                    items.Add(new { name = k, provider = "SqlServer", connectionString = "(configured on host)", source = "config", allowListed = true });
+                }
+            }
+            catch { }
+            // Admin-saved catalog entries.
+            var json = DnnConnectionRegistry.ReadNamedConnectionsJson();
+            foreach (var s in MegaForm.Core.Services.NamedConnectionCatalog.Parse(json))
+            {
+                items.Add(new
+                {
+                    name = s.Name.Trim(),
+                    provider = string.IsNullOrWhiteSpace(s.Provider) ? "SqlServer" : s.Provider,
+                    connectionString = MegaForm.Core.Services.NamedConnectionCatalog.MaskSecrets(s.ConnectionString),
+                    source = "saved",
+                    allowListed = true
+                });
+            }
+            return Request.CreateResponse(HttpStatusCode.OK, new { connections = items });
+        }
+
+        [HttpPost]
+        [ActionName("ConnectionsSave")]
+        [ValidateAntiForgeryToken]
+        public HttpResponseMessage ConnectionsSave([FromBody] JObject body)
+        {
+            if (!IsPortalAdminUser())
+                return Request.CreateResponse(HttpStatusCode.Forbidden, new { error = "Administrators only." });
+            var name = (body?.Value<string>("name") ?? string.Empty).Trim();
+            var provider = (body?.Value<string>("provider") ?? "SqlServer").Trim();
+            var cs = body?.Value<string>("connectionString") ?? string.Empty;
+
+            var nameErr = MegaForm.Core.Services.NamedConnectionCatalog.ValidateName(name);
+            if (nameErr != null) return Request.CreateResponse(HttpStatusCode.OK, new { success = false, message = nameErr });
+            if (string.IsNullOrWhiteSpace(cs))
+                return Request.CreateResponse(HttpStatusCode.OK, new { success = false, message = "Connection string is required." });
+            var lower = cs.ToLowerInvariant();
+            if (!lower.Contains("server=") && !lower.Contains("data source="))
+                return Request.CreateResponse(HttpStatusCode.OK, new { success = false, message = "Missing Server / Data Source in connection string." });
+
+            try
+            {
+                var next = MegaForm.Core.Services.NamedConnectionCatalog.Upsert(
+                    DnnConnectionRegistry.ReadNamedConnectionsJson(),
+                    new MegaForm.Core.Services.NamedConnectionInfo { Name = name, Provider = provider, ConnectionString = cs });
+                DotNetNuke.Entities.Portals.PortalController.UpdatePortalSetting(
+                    PortalSettings.PortalId, MegaForm.Core.Services.NamedConnectionCatalog.SettingKey, next, true);
+                return Request.CreateResponse(HttpStatusCode.OK, new { success = true, message = "Connection '" + name + "' saved." });
+            }
+            catch
+            {
+                // SECURITY rule 10: no ex.Message to the client.
+                return Request.CreateResponse(HttpStatusCode.InternalServerError, new { success = false, error = "Could not save the connection." });
+            }
+        }
+
+        [HttpPost]
+        [ActionName("ConnectionsDelete")]
+        [ValidateAntiForgeryToken]
+        public HttpResponseMessage ConnectionsDelete([FromBody] JObject body)
+        {
+            if (!IsPortalAdminUser())
+                return Request.CreateResponse(HttpStatusCode.Forbidden, new { error = "Administrators only." });
+            var name = (body?.Value<string>("name") ?? string.Empty).Trim();
+            if (name.Length == 0)
+                return Request.CreateResponse(HttpStatusCode.OK, new { success = false, message = "Connection name is required." });
+
+            try
+            {
+                var json = DnnConnectionRegistry.ReadNamedConnectionsJson();
+                if (!MegaForm.Core.Services.NamedConnectionCatalog.Contains(json, name))
+                    return Request.CreateResponse(HttpStatusCode.OK, new { success = false, message = "Only saved connections can be deleted." });
+                DotNetNuke.Entities.Portals.PortalController.UpdatePortalSetting(
+                    PortalSettings.PortalId, MegaForm.Core.Services.NamedConnectionCatalog.SettingKey,
+                    MegaForm.Core.Services.NamedConnectionCatalog.Remove(json, name), true);
+                return Request.CreateResponse(HttpStatusCode.OK, new { success = true, message = "Connection '" + name + "' deleted." });
+            }
+            catch
+            {
+                // SECURITY rule 10: no ex.Message to the client.
+                return Request.CreateResponse(HttpStatusCode.InternalServerError, new { success = false, error = "Could not delete the connection." });
+            }
+        }
+
+        // ══════════════════════════════════════════════════════════════════
+        //  [CloudStorage v20260723-01] Named cloud storage connections — DNN twin
+        //  of Umbraco/Web ModuleConfig/CloudStorageConnection*. Catalog = ONE JSON
+        //  blob in PORTAL settings (MegaForm_CloudStorageConnections). Same gates
+        //  as the named SQL connections above: ADMIN-only, secrets always masked
+        //  on the wire ("***" on save/test = keep the stored value).
+        // ══════════════════════════════════════════════════════════════════
+
+        private static string ReadCloudStorageConnectionsJson()
+        {
+            try
+            {
+                int portalId = 0;
+                try
+                {
+                    var current = PortalSettings.Current;
+                    if (current != null && current.PortalId > 0) portalId = current.PortalId;
+                }
+                catch { }
+                return PortalController.GetPortalSetting(
+                    MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.SettingKey, portalId, string.Empty) ?? string.Empty;
+            }
+            catch { return string.Empty; }
+        }
+
+        private static MegaForm.Core.Integrations.Storage.CloudStorageConnectionInfo ReadCloudStorageEntry(JObject body)
+        {
+            var entry = new MegaForm.Core.Integrations.Storage.CloudStorageConnectionInfo
+            {
+                Name = body.Value<string>("name"),
+                Provider = body.Value<string>("provider"),
+                AccessToken = body.Value<string>("accessToken"),
+                RefreshToken = body.Value<string>("refreshToken"),
+                ClientId = body.Value<string>("clientId"),
+                ClientSecret = body.Value<string>("clientSecret"),
+                BaseFolder = body.Value<string>("baseFolder"),
+                BaseUrl = body.Value<string>("baseUrl")
+            };
+            var extra = body["extra"] as JObject;
+            if (extra != null)
+            {
+                foreach (var prop in extra.Properties())
+                    entry.Extra[prop.Name] = prop.Value == null || prop.Value.Type == JTokenType.Null
+                        ? string.Empty
+                        : prop.Value.ToString();
+            }
+            return entry;
+        }
+
+        [HttpGet]
+        [ActionName("CloudStorageConnectionsList")]
+        public async Task<HttpResponseMessage> CloudStorageConnectionsList()
+        {
+            if (!IsPortalAdminUser())
+                return Request.CreateResponse(HttpStatusCode.Forbidden, new { error = "Administrators only." });
+
+            var items = MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog
+                .Parse(ReadCloudStorageConnectionsJson())
+                .Select(c => MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.MaskSecrets(c))
+                .ToList();
+            var storage = DnnServiceLocator.Instance.StorageIntegration;
+            var providers = storage != null
+                ? await storage.GetRegisteredProviderNamesAsync()
+                : (IReadOnlyList<string>)new string[0];
+            return Request.CreateResponse(HttpStatusCode.OK, new { success = true, connections = items, providers });
+        }
+
+        [HttpPost]
+        [ActionName("CloudStorageConnectionSave")]
+        [ValidateAntiForgeryToken]
+        public async Task<HttpResponseMessage> CloudStorageConnectionSave([FromBody] JObject body)
+        {
+            if (!IsPortalAdminUser())
+                return Request.CreateResponse(HttpStatusCode.Forbidden, new { error = "Administrators only." });
+            if (body == null)
+                return Request.CreateResponse(HttpStatusCode.OK, new { success = false, message = "Request body is required." });
+
+            var entry = ReadCloudStorageEntry(body);
+            var nameErr = MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.ValidateName(entry.Name);
+            if (nameErr != null) return Request.CreateResponse(HttpStatusCode.OK, new { success = false, message = nameErr });
+            entry.Provider = (entry.Provider ?? string.Empty).Trim();
+            if (entry.Provider.Length == 0)
+                return Request.CreateResponse(HttpStatusCode.OK, new { success = false, message = "Provider is required." });
+
+            var storage = DnnServiceLocator.Instance.StorageIntegration;
+            var providers = storage != null ? await storage.GetRegisteredProviderNamesAsync() : null;
+            if (providers == null || !providers.Any(p => string.Equals(p, entry.Provider, StringComparison.OrdinalIgnoreCase)))
+                return Request.CreateResponse(HttpStatusCode.OK, new { success = false, message = "Storage provider '" + entry.Provider + "' is not registered on this server." });
+
+            try
+            {
+                var json = ReadCloudStorageConnectionsJson();
+                var existing = MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.Find(json, entry.Name);
+                if (existing != null)
+                {
+                    if (entry.AccessToken == "***") entry.AccessToken = existing.AccessToken;
+                    if (entry.RefreshToken == "***") entry.RefreshToken = existing.RefreshToken;
+                    if (entry.ClientSecret == "***") entry.ClientSecret = existing.ClientSecret;
+                }
+                PortalController.UpdatePortalSetting(
+                    PortalSettings.PortalId, MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.SettingKey,
+                    MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.Upsert(json, entry), true);
+                return Request.CreateResponse(HttpStatusCode.OK, new { success = true, message = "Connection '" + entry.Name.Trim() + "' saved." });
+            }
+            catch
+            {
+                // SECURITY rule 10: no ex.Message to the client.
+                return Request.CreateResponse(HttpStatusCode.InternalServerError, new { success = false, error = "Could not save the connection." });
+            }
+        }
+
+        [HttpPost]
+        [ActionName("CloudStorageConnectionDelete")]
+        [ValidateAntiForgeryToken]
+        public HttpResponseMessage CloudStorageConnectionDelete([FromBody] JObject body)
+        {
+            if (!IsPortalAdminUser())
+                return Request.CreateResponse(HttpStatusCode.Forbidden, new { error = "Administrators only." });
+            var name = (body?.Value<string>("name") ?? string.Empty).Trim();
+            if (name.Length == 0)
+                return Request.CreateResponse(HttpStatusCode.OK, new { success = false, message = "Connection name is required." });
+
+            try
+            {
+                var json = ReadCloudStorageConnectionsJson();
+                if (!MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.Contains(json, name))
+                    return Request.CreateResponse(HttpStatusCode.OK, new { success = false, message = "Unknown connection '" + name + "'." });
+                PortalController.UpdatePortalSetting(
+                    PortalSettings.PortalId, MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.SettingKey,
+                    MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.Remove(json, name), true);
+                return Request.CreateResponse(HttpStatusCode.OK, new { success = true, message = "Connection '" + name + "' deleted." });
+            }
+            catch
+            {
+                // SECURITY rule 10: no ex.Message to the client.
+                return Request.CreateResponse(HttpStatusCode.InternalServerError, new { success = false, error = "Could not delete the connection." });
+            }
+        }
+
+        [HttpPost]
+        [ActionName("CloudStorageConnectionTest")]
+        [ValidateAntiForgeryToken]
+        public async Task<HttpResponseMessage> CloudStorageConnectionTest([FromBody] JObject body)
+        {
+            if (!IsPortalAdminUser())
+                return Request.CreateResponse(HttpStatusCode.Forbidden, new { error = "Administrators only." });
+            if (body == null)
+                return Request.CreateResponse(HttpStatusCode.OK, new { success = false, message = "Request body is required." });
+            var storage = DnnServiceLocator.Instance.StorageIntegration;
+            if (storage == null)
+                return Request.CreateResponse(HttpStatusCode.OK, new { success = false, message = "Storage integration is not available on this server." });
+
+            var entry = ReadCloudStorageEntry(body);
+            if (string.IsNullOrWhiteSpace(entry.Provider))
+                return Request.CreateResponse(HttpStatusCode.OK, new { success = false, message = "Provider is required." });
+
+            // Resolve masked secrets against the stored entry so Test works before Save.
+            var stored = MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.Find(ReadCloudStorageConnectionsJson(), entry.Name);
+            if (stored != null)
+            {
+                if (entry.AccessToken == "***") entry.AccessToken = stored.AccessToken;
+                if (entry.RefreshToken == "***") entry.RefreshToken = stored.RefreshToken;
+                if (entry.ClientSecret == "***") entry.ClientSecret = stored.ClientSecret;
+            }
+
+            try
+            {
+                var result = await storage.TestConnectionAsync(entry.Provider,
+                    MegaForm.Core.Integrations.Storage.CloudStorageConnectionCatalog.ToConnectionSettings(entry));
+                return Request.CreateResponse(HttpStatusCode.OK, new
+                {
+                    success = result != null && result.Healthy,
+                    message = result == null ? "Connection test failed." : result.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                return Request.CreateResponse(HttpStatusCode.OK, new { success = false, message = ex.Message });
+            }
+        }
+
         /// <summary>POST api/ModuleConfig/SaveStyle — Save Live Style Editor overrides</summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -4749,9 +5064,41 @@ VALUES
                     storedConnStr);
             }
 
+            // [NamedConnections v20260717-01] Admin-saved named connections (Database Settings
+            // popup → Saved connections). One JSON blob in PORTAL settings; resolved by NAME here
+            // so a UI-added "CustomerErp"-style connection works exactly like a host-configured
+            // one (SECURITY rule 1: only the key travels — the string never leaves the server).
+            var namedJson = ReadNamedConnectionsJson();
+            var named = MegaForm.Core.Services.NamedConnectionCatalog.Find(namedJson, requestedName);
+            if (named != null)
+            {
+                return CreateConnection(
+                    string.IsNullOrWhiteSpace(databaseType) ? named.Provider : databaseType,
+                    named.ConnectionString);
+            }
+
             throw new InvalidOperationException(
                 "MegaForm DnnConnectionRegistry: unknown connection name '" + connectionName + "'. " +
-                "Only the portal-stored dashboard connection is supported in DNN.");
+                "Only the portal-stored dashboard connection and admin-saved named connections are supported in DNN.");
+        }
+
+        /// <summary>[NamedConnections v20260717-01] Raw catalog blob from PORTAL settings (full key,
+        /// no MegaForm_ prefixing — the key already carries it, shared verbatim with Oqtane).</summary>
+        internal static string ReadNamedConnectionsJson()
+        {
+            try
+            {
+                int portalId = 0;
+                try
+                {
+                    var current = DotNetNuke.Entities.Portals.PortalSettings.Current;
+                    if (current != null && current.PortalId > 0) portalId = current.PortalId;
+                }
+                catch { }
+                return DotNetNuke.Entities.Portals.PortalController.GetPortalSetting(
+                    MegaForm.Core.Services.NamedConnectionCatalog.SettingKey, portalId, string.Empty) ?? string.Empty;
+            }
+            catch { return string.Empty; }
         }
 
         private static bool IsDnnDefaultConnectionName(string connectionName)

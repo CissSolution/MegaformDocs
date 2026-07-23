@@ -37,6 +37,13 @@
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\MegaForm.Core.dll" target="lib\net9.0" />
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\MegaForm.Sdk.dll" target="lib\net9.0" />
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Newtonsoft.Json.dll" target="lib\net9.0" />
+    <!-- [CloudStorage v20260723-01] Cloud storage providers + SDK deps not shipped by Oqtane host -->
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\MegaForm.Integrations.CloudStorage.dll" target="lib\net9.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\AWSSDK.Core.dll" target="lib\net9.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\AWSSDK.S3.dll" target="lib\net9.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Azure.Core.dll" target="lib\net9.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Azure.Storage.Blobs.dll" target="lib\net9.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Azure.Storage.Common.dll" target="lib\net9.0" />
 
     <!-- wwwroot assets → {webroot}/Modules/MegaForm/ (incl. AI Designer bundles + Beary png) -->
     <file src="..\MegaForm.Oqtane.Server\wwwroot\Modules\MegaForm\**\*.*" target="wwwroot\Modules\MegaForm" />

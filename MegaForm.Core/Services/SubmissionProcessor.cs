@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using MegaForm.Core.Interfaces;
 using MegaForm.Core.i18n;
+using MegaForm.Core.Integrations.Storage;
 using MegaForm.Core.Models;
 using MegaForm.Core.Payments;
 using MegaForm.Core.Rendering;
@@ -53,6 +54,10 @@ namespace MegaForm.Core.Services
         // remains the runtime source of truth during migration (Phase 1 = write-only).
         private readonly ISubmissionDataStore _typedStore;
         private readonly SubmissionFieldNormalizer _typedFieldNormalizer = new SubmissionFieldNormalizer();
+        // [CloudStorage 2026-07-23] Optional fail-soft mirror of uploaded files to cloud
+        // storage (Google Drive / S3 / Azure Blob) per schema.settings.cloudStorage. Null when
+        // the host has not registered the storage stack — submissions then stay local-only.
+        private readonly SubmissionCloudStorageUploader _cloudStorageUploader;
 
         public SubmissionProcessor(
             IFormRepository formRepo,
@@ -68,7 +73,8 @@ namespace MegaForm.Core.Services
             DocumentRevisionService documentRevisionService = null,
             SubmissionIndexerService reportingIndexer = null,
             PaymentSubmissionVerifier paymentVerifier = null,
-            ISubmissionDataStore typedStore = null)
+            ISubmissionDataStore typedStore = null,
+            SubmissionCloudStorageUploader cloudStorageUploader = null)
         {
             _formRepo = formRepo ?? throw new ArgumentNullException(nameof(formRepo));
             _subRepo = subRepo ?? throw new ArgumentNullException(nameof(subRepo));
@@ -84,6 +90,7 @@ namespace MegaForm.Core.Services
             _reportingIndexer = reportingIndexer;
             _paymentVerifier = paymentVerifier;
             _typedStore = typedStore;
+            _cloudStorageUploader = cloudStorageUploader;
         }
 
         public SubmissionProcessor(
@@ -411,6 +418,24 @@ namespace MegaForm.Core.Services
                 {
                     _log?.LogWarning(nameof(SubmissionProcessor),
                         "Typed submission storage write failed for submission " + submissionId + ": " + ex.Message);
+                }
+            }
+
+            // [CloudStorage 2026-07-23] Optional cloud file push — Google Drive / S3 / Azure Blob,
+            // configured per form in schema.settings.cloudStorage. Runs after the submission row
+            // exists because OrganizeBySubmission folders use the id. Fail-soft: the uploader
+            // swallows configuration/provider errors itself, and this guard is the belt to its
+            // braces — a cloud outage must never break the user submission.
+            if (_cloudStorageUploader != null && !spamCheck.IsSpam)
+            {
+                try
+                {
+                    await _cloudStorageUploader.UploadFailSoftAsync(formId, schema, formData, submissionId).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    _log?.LogWarning(nameof(SubmissionProcessor),
+                        "Cloud storage upload failed for submission " + submissionId + ": " + ex.Message);
                 }
             }
 
