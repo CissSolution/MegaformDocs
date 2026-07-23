@@ -113,11 +113,31 @@ export function installMegaFormAntiforgery(): void {
   try {
     const origOpen = XMLHttpRequest.prototype.open;
     const origSend = XMLHttpRequest.prototype.send;
+    const origSetHeader = XMLHttpRequest.prototype.setRequestHeader;
     XMLHttpRequest.prototype.open = function (method: string, url: string | URL, ...rest: unknown[]) {
       (this as any).__mfMethod = method;
       (this as any).__mfUrl = String(url);
+      (this as any).__mfHeaders = null; // reset the per-request header ledger
       // eslint-disable-next-line prefer-spread
       return (origOpen as any).apply(this, [method, url, ...rest]);
+    };
+    // Record header names the CALLER sets so we never add a SECOND copy of the
+    // antiforgery header. XHR.setRequestHeader APPENDS on a repeat call for the
+    // same name ("a, b" per spec) — and a comma-joined RequestVerificationToken
+    // fails DNN's ValidateAntiForgeryToken → a false 401. The builder's Save
+    // (toolbar.ts applySaveHeaders) sets its own token, so without this guard the
+    // header below duplicated it and every Save 401'd. This mirrors the fetch
+    // path's `!headers.has(...)` "add if absent" contract.
+    XMLHttpRequest.prototype.setRequestHeader = function (name: string, value: string) {
+      try {
+        const led = (this as any).__mfHeaders || ((this as any).__mfHeaders = {});
+        led[String(name).toLowerCase()] = true;
+      } catch { /* never break xhr */ }
+      return origSetHeader.call(this, name, value);
+    };
+    const alreadySet = (xhr: XMLHttpRequest, name: string): boolean => {
+      try { return !!((xhr as any).__mfHeaders && (xhr as any).__mfHeaders[name.toLowerCase()]); }
+      catch { return false; }
     };
     XMLHttpRequest.prototype.send = function (body?: Document | XMLHttpRequestBodyInit | null) {
       try {
@@ -125,12 +145,14 @@ export function installMegaFormAntiforgery(): void {
         const url = String((this as any).__mfUrl || '');
         if (UNSAFE.test(method) && isSameOrigin(url)) {
           const token = readToken();
-          if (token) {
+          if (token && !alreadySet(this, HEADER)) {
             try { this.setRequestHeader(HEADER, token); } catch { /* header phase passed */ }
           }
           if (isDnnHost()) {
             const dnn = dnnToken();
-            if (dnn) { try { this.setRequestHeader(DNN_TOKEN_HEADER, dnn); } catch { /* header phase passed */ } }
+            if (dnn && !alreadySet(this, DNN_TOKEN_HEADER)) {
+              try { this.setRequestHeader(DNN_TOKEN_HEADER, dnn); } catch { /* header phase passed */ }
+            }
           }
         }
       } catch {
