@@ -26,3 +26,43 @@ Patient Intake, Vendor Application, Tabbed Account Setup, Project Intake & Onboa
 
 Templates are starting points, not locks — after import the form is yours: rename it, add
 fields, restyle it, attach a different workflow.
+
+## Premium skins: one form, several different faces
+
+Several templates in the gallery are *premium skins* — a magazine-style layout wrapped around
+the form, with a photographic hero pane on the left and the wizard on the right. The EuroYouth
+application ships in four such skins that share **exactly the same 16 fields and the same four
+steps**, so you can change the look without changing the data you collect.
+
+### EuroYouth — Brochure
+
+Editorial crimson-and-black treatment: a diagonal photo collage, condensed display type and
+underlined inputs.
+
+![EuroYouth Brochure skin on DNN — crimson diagonal hero on the left, four-step wizard with underlined inputs on the right](../images/dnn-premium-brochure-youth.png)
+
+### EuroYouth — Floral
+
+Soft botanical variant: watercolour florals, an italic Cormorant Garamond headline and rounded
+blush cards.
+
+![EuroYouth Floral skin on DNN — botanical hero with the headline Bloom where you are planted, ivory panel and pink stepper](../images/dnn-premium-floral-youth.png)
+
+### EuroYouth — Teal Brochure
+
+Institutional teal layout that adds a mission statement and a programme-team block beneath the
+hero — useful when the form doubles as a landing page.
+
+![EuroYouth Teal Brochure skin on DNN — teal hero, mission and programme-team panel on the left, teal stepper and form on the right](../images/dnn-premium-teal-brochure.png)
+
+### Working with premium skins
+
+- **The hero is desktop-only.** The hero pane appears from **1024 px** upward. In the builder's
+  **Design** tab the live preview sits between the Presets and Theme Designer rails, so it can
+  drop below that width — in which case the hero is hidden by design. Collapse one rail, switch
+  the preview to **desktop**, or open **Fullscreen** to see (and edit) it.
+- **Swap the hero image and hero text in the builder.** With the hero visible, hover it in the
+  Design preview and use **Change image**; click a headline, kicker or stat to edit it inline.
+  Both are written back into the form.
+- **Keep the layout, change the words.** The skin's CSS lives in the template, so editing
+  content never rewrites it — a reworded form stays pixel-consistent with the original design.
