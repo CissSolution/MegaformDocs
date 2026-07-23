@@ -611,6 +611,21 @@ function ensureWizardPanelCount(src: string, pages: Array<{ label: string; keys:
 export function reflowWizardFieldTokensBySchemaPages(html: string, fields: any[]): string {
   let src = String(html || '');
   if (!src || !/\bdata-step\s*=/.test(src)) return src;
+  // [AuthoredGridShell 20260720-B406] Hand-authored premium shells nest their {{field:KEY}} tokens
+  // inside a deliberate grid: .mfp-step-body > .mfp-field-row > .mfp-field-col (e.g. first/last name
+  // side-by-side, then bare email/phone). The remove-then-flat-reinsert below yanks each field's
+  // wrapper OUT of that nesting and dumps them at the step-panel level → empty .mfp-field-row/
+  // .mfp-step-body, field-cols hoisted into the flex-ROW step panel (so each field stretches to the
+  // step height ~620px), rows lose the .mfp-step-body{gap} rhythm, and the Next/actions bar is pushed
+  // ~1000px off-view. This is the SAME hazard the flexgrid path is exempted from (see
+  // migratePremiumWizardSchemaToNative). These shells already place tokens per-step by design, so the
+  // reflow is unnecessary AND destructive — leave the authored nesting intact.
+  // [AuthoredGridShell 20260723] Also exempt the au/bg/ey/fi premium grid|stack shells (euro-youth
+  // .ey-grid/.ey-grid-2, aurora/australia .au-grid, bulgaria .bg-grid, festa .fi-grid, …) — same family
+  // cleanupEmptyFieldShells() recognizes. These place their {{field:KEY}} tokens inside an authored
+  // 2-col grid; the remove-then-flat-reinsert below strips that wrapper (then cleanup deletes the empty
+  // div) → fields collapse to a single column. Leave the authored nesting intact for these too.
+  if (/\bmfp-field-(?:row|col)\b/.test(src) || /\bmfp-step-body\b/.test(src) || /\b(?:au|bg|ey|fi)-(?:grid|stack)\b/.test(src)) return src;
   const pages = schemaPageGroups(fields);
   if (pages.length <= 1) return src;
 
