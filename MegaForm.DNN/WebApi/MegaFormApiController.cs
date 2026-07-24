@@ -736,6 +736,28 @@ namespace MegaForm.WebApi
             form.CreatedByUserId = UserInfo.UserID;
             form.UpdatedByUserId = UserInfo.UserID;
 
+            // [TrialTighten v20260724] DNN parity with Oqtane: trial (unlicensed) sites can hold at
+            // most MaxTrialForms forms. Block creating a NEW form beyond the cap (editing/saving an
+            // existing form is always allowed). Production (license.lic="production" OR a valid
+            // Marketplace key) is unlimited. 402 Payment Required + a structured body so the wizard
+            // can surface an "Upgrade" CTA (megaform-dashboard reads status 402 + error/limit).
+            if (form.FormId <= 0 && MegaForm.Core.Services.LicenseService.IsTrial())
+            {
+                int existingForms;
+                try { existingForms = (FormRepository.ListForms(form.PortalId, null, null, 0, MegaForm.Core.Services.LicenseService.MaxTrialForms + 5) ?? new List<FormInfo>()).Count; }
+                catch { existingForms = 0; }
+                if (existingForms >= MegaForm.Core.Services.LicenseService.MaxTrialForms)
+                {
+                    return Request.CreateResponse((HttpStatusCode)402, new
+                    {
+                        error = "trial_form_limit",
+                        message = "Trial mode is limited to " + MegaForm.Core.Services.LicenseService.MaxTrialForms + " forms. Upgrade to create more.",
+                        limit = MegaForm.Core.Services.LicenseService.MaxTrialForms,
+                        upgradeUrl = MegaForm.Core.Services.LicenseService.UpgradeUrl
+                    });
+                }
+            }
+
             if (string.IsNullOrWhiteSpace(form.RulesJson) || form.RulesJson == "[]")
             {
                 form.RulesJson = ExtractRulesJson(form.SchemaJson, form.SettingsJson);
@@ -1134,6 +1156,27 @@ namespace MegaForm.WebApi
 
             if (formId <= 0 || dataToken == null)
                 return WithCors(Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "formId and data are required." }));
+
+            // [TrialTighten v20260724] DNN parity with Oqtane: trial (unlicensed) caps submissions per
+            // form at MaxTrialSubmissionsPerForm. Reject beyond the cap. Production (license.lic OR a
+            // valid Marketplace key) is unlimited. The message to the public submitter is neutral (does
+            // not expose "trial"); the real reason is logged for the admin.
+            if (MegaForm.Core.Services.LicenseService.IsTrial())
+            {
+                int existingSubs;
+                try { existingSubs = FormRepository.GetFormStats(formId)?.TotalSubmissions ?? 0; }
+                catch { existingSubs = 0; }
+                if (existingSubs >= MegaForm.Core.Services.LicenseService.MaxTrialSubmissionsPerForm)
+                {
+                    DotNetNuke.Instrumentation.LoggerSource.Instance.GetLogger(typeof(SubmitController))
+                        .Warn($"MegaForm trial submission cap reached for form {formId} ({existingSubs}/{MegaForm.Core.Services.LicenseService.MaxTrialSubmissionsPerForm})");
+                    return WithCors(Request.CreateResponse((HttpStatusCode)402, new
+                    {
+                        success = false,
+                        error = "This form is not accepting new submissions right now."
+                    }));
+                }
+            }
 
             var formData = dataToken.ToObject<Dictionary<string, object>>() ?? new Dictionary<string, object>();
             var captchaCheck = await VerifyCaptchaSubmissionAsync(formId, formData);

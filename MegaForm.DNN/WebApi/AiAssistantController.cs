@@ -66,13 +66,20 @@ namespace MegaForm.WebApi
                 ? MegaForm.Core.Services.AiAssistant.AiFeatureGate.IsEnabled(
                     PortalSettings != null ? PortalSettings.HomeDirectoryMapPath : null)
                 : string.Equals(rawEnabled, "true", System.StringComparison.OrdinalIgnoreCase);
+            // [TrialTighten v20260724] DNN parity with Oqtane: AI is a licensed feature. On a trial
+            // (unlicensed) install we never hand out the API key and force enabled=false, so the
+            // assistant/form-creator cannot actually run even if a client were bypassed. The `trial`
+            // flag lets the builder show a locked "Upgrade" CTA. Production = license.lic OR a valid
+            // Marketplace key (LicenseService.IsProductionLicensed).
+            var trialLocked = MegaForm.Core.Services.LicenseService.IsTrial();
             return Request.CreateResponse(HttpStatusCode.OK, new
             {
                 provider = cfg.Provider,
                 baseUrl = cfg.BaseUrl,
                 model = cfg.Model,
-                apiKey = cfg.ApiKey,
-                enabled,
+                apiKey = trialLocked ? string.Empty : cfg.ApiKey,
+                enabled = enabled && !trialLocked,
+                trial = trialLocked,
             });
         }
 
