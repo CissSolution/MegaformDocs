@@ -26,6 +26,124 @@ namespace MegaForm.WebApi
             return Request.CreateResponse(HttpStatusCode.OK, Catalog.List());
         }
 
+        // ══════════════════════════════════════════════════════
+        //  REMOTE GALLERY (static HTTPS repo — GitHub Pages)
+        //  Parity with Oqtane MegaFormController RemoteGallery/*. Premium templates and
+        //  their artwork live outside the package; a licensed install downloads them on
+        //  demand. LICENSED feature → trial gets 402 (same contract as the form caps).
+        // ══════════════════════════════════════════════════════
+
+        /// <summary>Host setting "MegaForm_GalleryRepoUrl"; empty falls back to the built-in default.</summary>
+        private static MegaForm.Core.Services.GalleryRepo.GalleryInstallService BuildGalleryService()
+        {
+            string url = null;
+            try { url = DotNetNuke.Entities.Controllers.HostController.Instance.GetString("MegaForm_GalleryRepoUrl", string.Empty); }
+            catch { /* fall back to default */ }
+            return new MegaForm.Core.Services.GalleryRepo.GalleryInstallService(
+                new MegaForm.Core.Services.GalleryRepo.GalleryRepositoryService(url));
+        }
+
+        private HttpResponseMessage GalleryTrialGate()
+        {
+            if (!MegaForm.Core.Services.LicenseService.IsTrial()) return null;
+            return Request.CreateResponse((HttpStatusCode)402, new
+            {
+                error = "trial_remote_gallery",
+                message = "The online template gallery is available on a paid license.",
+                upgradeUrl = MegaForm.Core.Services.LicenseService.UpgradeUrl
+            });
+        }
+
+        /// <summary>Module image root — entries are stored as "img/&lt;rel&gt;", so extracting under
+        /// .../Assets yields .../Assets/img/&lt;rel&gt;, matching the DNN URLs baked into templates.</summary>
+        private static string ResolveImageRoot()
+        {
+            try { return System.Web.Hosting.HostingEnvironment.MapPath("~/DesktopModules/MegaForm/Assets"); }
+            catch { return null; }
+        }
+
+        [HttpGet]
+        [ActionName("RemoteGalleryList")]
+        public async System.Threading.Tasks.Task<HttpResponseMessage> RemoteGalleryList(bool refresh = false)
+        {
+            var gate = GalleryTrialGate();
+            if (gate != null) return gate;
+
+            var svc = BuildGalleryService();
+            var res = await svc.GetManifestAsync(refresh);
+            if (!res.Success || res.Value == null)
+                return Request.CreateResponse(HttpStatusCode.ServiceUnavailable,
+                    new { error = "gallery_unavailable", message = res.Message });
+
+            var installed = new System.Collections.Generic.HashSet<string>(
+                (Catalog.List() ?? (System.Collections.Generic.IReadOnlyList<BuilderTemplateRecord>)new System.Collections.Generic.List<BuilderTemplateRecord>())
+                    .Select(t => (t?.Slug ?? string.Empty).Trim()),
+                StringComparer.OrdinalIgnoreCase);
+
+            var items = (res.Value.Templates ?? new System.Collections.Generic.List<MegaForm.Core.Services.GalleryRepo.GalleryRepoTemplateInfo>())
+                .Where(t => t != null && !string.IsNullOrWhiteSpace(t.Slug))
+                .Select(t => new
+                {
+                    slug = t.Slug,
+                    title = t.Title,
+                    description = t.Description,
+                    category = t.Category,
+                    categories = t.Categories,
+                    icon = t.Icon,
+                    version = t.Version,
+                    sizeBytes = t.SizeBytes,
+                    assetsSizeBytes = t.AssetsSizeBytes,
+                    premium = t.Premium,
+                    installed = installed.Contains((t.Slug ?? string.Empty).Trim())
+                })
+                .ToList();
+
+            return Request.CreateResponse(HttpStatusCode.OK,
+                new { repoUrl = svc.RepoBaseUrl, offline = res.Offline, message = res.Message, templates = items });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [ActionName("RemoteGalleryInstall")]
+        public async System.Threading.Tasks.Task<HttpResponseMessage> RemoteGalleryInstall(JObject body)
+        {
+            var gate = GalleryTrialGate();
+            if (gate != null) return gate;
+
+            var slug = body != null ? (string)(body["slug"] ?? body["Slug"]) : null;
+            var svc = BuildGalleryService();
+
+            var fetch = await svc.FetchTemplateAsync(slug, false);
+            if (!fetch.Success)
+                return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "install_failed", message = fetch.Error });
+
+            try
+            {
+                var record = Catalog.SaveTemplateJson(fetch.FileName, fetch.Json);
+
+                // Artwork is best-effort: the template is already installed and usable, so a
+                // failed bundle must not fail the whole install — report it instead.
+                var assets = await svc.InstallAssetsAsync(fetch.Info, ResolveImageRoot());
+
+                return Request.CreateResponse(HttpStatusCode.OK, new
+                {
+                    success = true,
+                    slug = fetch.Slug,
+                    template = record,
+                    assetsInstalled = assets.FilesWritten,
+                    assetsError = assets.Success ? null : assets.Error
+                });
+            }
+            catch (Exception ex)
+            {
+                // Never surface ex.Message to the client (SECURITY_CODING_RULES §10).
+                DotNetNuke.Instrumentation.LoggerSource.Instance.GetLogger(typeof(BuilderTemplatesController))
+                    .Error("MegaForm gallery install failed for slug " + fetch.Slug, ex);
+                return Request.CreateResponse(HttpStatusCode.InternalServerError,
+                    new { error = "install_failed", message = "Could not save the downloaded template." });
+            }
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("UploadJson")]

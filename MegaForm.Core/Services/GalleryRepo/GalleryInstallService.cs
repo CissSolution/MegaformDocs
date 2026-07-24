@@ -94,6 +94,83 @@ namespace MegaForm.Core.Services.GalleryRepo
             };
         }
 
+        public sealed class AssetsInstallResult
+        {
+            public bool Success { get; set; }
+            public string Error { get; set; }
+            public int FilesWritten { get; set; }
+            public List<string> Written { get; set; } = new List<string>();
+        }
+
+        /// <summary>
+        /// Downloads a template's artwork bundle (sha256-verified) and extracts it under
+        /// <paramref name="imageRootDir"/> — the host's module image folder
+        /// (DNN: DesktopModules/MegaForm/Assets, Oqtane: wwwroot/Modules/MegaForm). Entries are
+        /// stored as "img/&lt;rel&gt;" so the absolute /.../img/&lt;rel&gt; URLs baked into the
+        /// template keep resolving on both platforms.
+        ///
+        /// ZIP-SLIP HARDENED: every entry name is sanitized AND the resolved destination must stay
+        /// under the root, so a crafted "../../web.config" entry cannot escape. Existing files are
+        /// left alone (a template never overwrites artwork already on the site).
+        /// </summary>
+        public async Task<AssetsInstallResult> InstallAssetsAsync(GalleryRepoTemplateInfo info, string imageRootDir)
+        {
+            var result = new AssetsInstallResult { Success = true };
+            if (info == null || string.IsNullOrWhiteSpace(info.Assets)) return result; // nothing to do
+            if (string.IsNullOrWhiteSpace(imageRootDir))
+                return new AssetsInstallResult { Success = false, Error = "No image folder configured." };
+
+            var download = await _repo.DownloadFileAsync(info.Assets, info.AssetsSha256, GalleryRepositoryService.MaxAssetsBytes)
+                                      .ConfigureAwait(false);
+            if (!download.Success)
+                return new AssetsInstallResult { Success = false, Error = download.Message ?? "Asset download failed." };
+
+            string rootFull;
+            try { rootFull = System.IO.Path.GetFullPath(imageRootDir); }
+            catch { return new AssetsInstallResult { Success = false, Error = "Invalid image folder." }; }
+            var rootPrefix = rootFull.TrimEnd(System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar)
+                             + System.IO.Path.DirectorySeparatorChar;
+
+            try
+            {
+                using (var ms = new System.IO.MemoryStream(download.Bytes))
+                using (var zip = new System.IO.Compression.ZipArchive(ms, System.IO.Compression.ZipArchiveMode.Read))
+                {
+                    foreach (var entry in zip.Entries)
+                    {
+                        if (string.IsNullOrEmpty(entry.Name)) continue; // directory entry
+                        var safeRel = GalleryRepositoryService.SanitizeRelativePath(entry.FullName);
+                        if (safeRel == null) continue;                  // rejected traversal/absolute
+
+                        var dest = System.IO.Path.GetFullPath(
+                            System.IO.Path.Combine(rootFull, safeRel.Replace('/', System.IO.Path.DirectorySeparatorChar)));
+                        // Second gate: the RESOLVED path must still be inside the root.
+                        if (!dest.StartsWith(rootPrefix, StringComparison.OrdinalIgnoreCase)) continue;
+
+                        if (System.IO.File.Exists(dest)) continue;      // never clobber existing artwork
+                        var destDir = System.IO.Path.GetDirectoryName(dest);
+                        if (!string.IsNullOrEmpty(destDir)) System.IO.Directory.CreateDirectory(destDir);
+                        // Manual copy rather than ZipFileExtensions.ExtractToFile: that extension
+                        // lives in the separate System.IO.Compression.ZipFile assembly, which is not
+                        // referenced on every TFM here (net472 included).
+                        using (var src = entry.Open())
+                        using (var dst = System.IO.File.Create(dest))
+                        {
+                            src.CopyTo(dst);
+                        }
+                        result.FilesWritten++;
+                        result.Written.Add(safeRel);
+                    }
+                }
+            }
+            catch
+            {
+                return new AssetsInstallResult { Success = false, Error = "Could not extract the artwork bundle." };
+            }
+
+            return result;
+        }
+
         private static byte[] StripBom(byte[] b)
         {
             if (b != null && b.Length >= 3 && b[0] == 0xEF && b[1] == 0xBB && b[2] == 0xBF)
