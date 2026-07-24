@@ -114,9 +114,19 @@ namespace MegaForm.WebApi
             var gate = GalleryTrialGate();
             if (gate != null) return gate;
 
-            var fetch = await BuildGalleryService().FetchTemplateAsync(slug, false);
+            var svc = BuildGalleryService();
+            var fetch = await svc.FetchTemplateAsync(slug, false);
             if (!fetch.Success)
                 return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "preview_failed", message = fetch.Error });
+
+            // Materialise the template's artwork before previewing. A premium template's hero is
+            // a background image referenced by absolute URL; until the bundle is extracted those
+            // URLs 404 and the preview (and the card thumbnail) show a large empty area instead of
+            // the design. Extraction is idempotent and never overwrites, and images are inert
+            // static files, so doing it on preview costs nothing and makes "look before you
+            // install" actually show the template.
+            try { await svc.InstallAssetsAsync(fetch.Info, ResolveImageRoot()); }
+            catch { /* preview must still work without artwork */ }
 
             // Hand back the raw template document; the client turns it into a WizardTemplate
             // with the same helper it uses for an uploaded .json.
