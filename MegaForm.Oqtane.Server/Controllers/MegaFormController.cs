@@ -990,6 +990,100 @@ namespace MegaForm.Oqtane.Server.Controllers
             return JsonOk(_templateCatalog.List());
         }
 
+        // ══════════════════════════════════════════════════════
+        //  REMOTE GALLERY (static HTTPS repo — GitHub Pages)
+        //  Browse + install premium templates published outside the package, so the
+        //  catalog can grow without shipping a new module build. LICENSED feature:
+        //  trial installs get 402 (same contract as the form/submission caps).
+        // ══════════════════════════════════════════════════════
+
+        private MegaForm.Core.Services.GalleryRepo.GalleryInstallService BuildGalleryService()
+        {
+            // Admin-configurable; empty falls back to GalleryRepositoryService.DefaultRepoBaseUrl.
+            // Every outbound call is SsrfGuard-checked inside the repository service.
+            var url = _configuration?["MegaForm:GalleryRepoUrl"];
+            return new MegaForm.Core.Services.GalleryRepo.GalleryInstallService(
+                new MegaForm.Core.Services.GalleryRepo.GalleryRepositoryService(url));
+        }
+
+        private IActionResult GalleryTrialGate()
+        {
+            if (!MegaForm.Core.Services.LicenseService.IsTrial()) return null;
+            return StatusCode(402, new
+            {
+                error = "trial_remote_gallery",
+                message = "The online template gallery is available on a paid license.",
+                upgradeUrl = MegaForm.Core.Services.LicenseService.UpgradeUrl
+            });
+        }
+
+        // Route mirrors the DNN action name (BuilderTemplates/RemoteGalleryList) so the shared
+        // dashboard client can build ONE url from cfg.apiBase for both platforms.
+        [HttpGet("BuilderTemplates/RemoteGalleryList")]
+        [Authorize(Policy = "EditModule")]
+        public async Task<IActionResult> RemoteGalleryList(bool refresh = false)
+        {
+            var gate = GalleryTrialGate();
+            if (gate != null) return gate;
+
+            var svc = BuildGalleryService();
+            var res = await svc.GetManifestAsync(refresh);
+            if (!res.Success || res.Value == null)
+                return StatusCode(503, new { error = "gallery_unavailable", message = res.Message });
+
+            var localTemplates = _templateCatalog.List()
+                ?? (IReadOnlyList<MegaForm.Core.Services.BuilderTemplateCatalogStore.BuilderTemplateRecord>)
+                   new List<MegaForm.Core.Services.BuilderTemplateCatalogStore.BuilderTemplateRecord>();
+            var installed = new HashSet<string>(
+                localTemplates.Select(t => (t?.Slug ?? string.Empty).Trim()),
+                StringComparer.OrdinalIgnoreCase);
+
+            var items = (res.Value.Templates ?? new List<MegaForm.Core.Services.GalleryRepo.GalleryRepoTemplateInfo>())
+                .Where(t => t != null && !string.IsNullOrWhiteSpace(t.Slug))
+                .Select(t => new
+                {
+                    slug = t.Slug,
+                    title = t.Title,
+                    description = t.Description,
+                    category = t.Category,
+                    categories = t.Categories,
+                    icon = t.Icon,
+                    version = t.Version,
+                    sizeBytes = t.SizeBytes,
+                    premium = t.Premium,
+                    installed = installed.Contains((t.Slug ?? string.Empty).Trim())
+                })
+                .ToList();
+
+            return JsonOk(new { repoUrl = svc.RepoBaseUrl, offline = res.Offline, message = res.Message, templates = items });
+        }
+
+        [HttpPost("BuilderTemplates/RemoteGalleryInstall")]
+        [Authorize(Policy = "EditModule")]
+        public async Task<IActionResult> RemoteGalleryInstall([FromBody] Newtonsoft.Json.Linq.JObject body)
+        {
+            var gate = GalleryTrialGate();
+            if (gate != null) return gate;
+
+            var slug = (string)(body?["slug"] ?? body?["Slug"]);
+            var svc = BuildGalleryService();
+            var fetch = await svc.FetchTemplateAsync(slug, forceRefresh: false);
+            if (!fetch.Success)
+                return BadRequest(new { error = "install_failed", message = fetch.Error });
+
+            try
+            {
+                var record = _templateCatalog.SaveTemplateJson(fetch.FileName, fetch.Json);
+                return JsonOk(new { success = true, slug = fetch.Slug, template = record });
+            }
+            catch (Exception ex)
+            {
+                // Never surface ex.Message to the client (SECURITY_CODING_RULES §10).
+                _logger.Log(LogLevel.Error, this, LogFunction.Other, ex, "MegaForm gallery install failed for slug {Slug}", fetch.Slug);
+                return StatusCode(500, new { error = "install_failed", message = "Could not save the downloaded template." });
+            }
+        }
+
         // [DevLockStatus v20260618] Oqtane's static-file server does NOT serve /dev.lock (.lock has
         // no MIME mapping → 404), so the builder gallery can't HEAD-probe it like Web does. Expose
         // the AiFeatureGate dev.lock state via this admin-only endpoint so the gallery can decide
