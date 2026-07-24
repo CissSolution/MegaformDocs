@@ -14,6 +14,12 @@ param(
     [switch]$BuildDotNet,
     [ValidateSet('Debug', 'Release')]
     [string]$Configuration = 'Release',
+    # [LicenseEdition 2026-07-24] -Trial builds the TRIAL edition: the license.lic marker is
+    # OMITTED from the package, so a fresh install runs unlicensed (form/submission caps + AI
+    # lock apply). Without -Trial the PRODUCTION edition ships license.lic="production" (unlimited).
+    # The two editions are otherwise byte-identical. Zip name gets a _Trial suffix so the artifacts
+    # never collide.
+    [switch]$Trial,
     [switch]$NoPause
 )
 
@@ -33,7 +39,9 @@ $VERSION      = $verMatch.Matches[0].Groups[1].Value
 $STAGING      = Join-Path $PROJECT_DIR '_package'
 $RESOURCES    = Join-Path $STAGING '_resources'
 $OUTPUT_DIR   = Join-Path $PROJECT_DIR 'Install'
-$OUTPUT_ZIP   = Join-Path $OUTPUT_DIR "${MODULE_NAME}_${VERSION}_Install.zip"
+$EDITION      = if ($Trial) { 'Trial' } else { 'Production' }
+$EDITION_TAG  = if ($Trial) { '_Trial' } else { '' }
+$OUTPUT_ZIP   = Join-Path $OUTPUT_DIR "${MODULE_NAME}_${VERSION}${EDITION_TAG}_Install.zip"
 $ROOT_BUILDTS_BAT = Join-Path $SOLUTION_DIR 'BuildTS.bat'
 $DNN_CSPROJ       = Join-Path $PROJECT_DIR 'MegaForm.DNN.csproj'
 
@@ -430,9 +438,12 @@ if (Test-Path $samplesDir) {
     Write-Host '  + Samples\*'
 }
 
-if (Test-Path "$PROJECT_DIR\license.lic") {
+if ($Trial) {
+    Write-Host '  - license.lic OMITTED (TRIAL edition: install runs unlicensed)' -ForegroundColor Yellow
+}
+elseif (Test-Path "$PROJECT_DIR\license.lic") {
     Copy-Item "$PROJECT_DIR\license.lic" "$RESOURCES\license.lic" -Force
-    Write-Host '  + license.lic'
+    Write-Host '  + license.lic (PRODUCTION edition)'
 }
 
 Write-Host ''
@@ -512,6 +523,7 @@ Write-Host '============================================================' -Foreg
 Write-Host '  HOAN THANH!' -ForegroundColor Green
 Write-Host '============================================================' -ForegroundColor Green
 Write-Host ''
+Write-Host "  Edition: $EDITION $(if ($Trial) { '(no license.lic -> trial caps apply)' } else { '(license.lic=production -> unlimited)' })" -ForegroundColor $(if ($Trial) { 'Yellow' } else { 'Green' })
 Write-Host "  File: $OUTPUT_ZIP" -ForegroundColor White
 Write-Host "  Size: ${zipSize} KB" -ForegroundColor White
 Write-Host ''
