@@ -95,6 +95,15 @@ namespace MegaForm.Core.Models
         [JsonProperty("width")]
         public string Width { get; set; }  // e.g. "50%", "col-6"
 
+        // Native input sizing authored by the TypeScript builder. These used to be
+        // silently discarded during server deserialization, which made the SSR
+        // Textarea/input markup differ from the client renderer on first paint.
+        [JsonProperty("rows")]
+        public int? Rows { get; set; }
+
+        [JsonProperty("height")]
+        public string Height { get; set; }
+
         // [PDF-grid / FlexGrid layout v20260629] Presentation-only 2-D grid placement for the
         // opt-in flexgrid layout mode (settings.layoutMode == "flexgrid"). Fields STAY FLAT in
         // schema.fields (so flattenFields/validation/submission/summary are untouched); this only

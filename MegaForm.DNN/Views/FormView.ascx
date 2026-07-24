@@ -840,7 +840,7 @@ body > .mf-langpick-panel{z-index:100030;}
     </div>
     <% } %>
 
-    <div id="mf-progress-<%= ViewModel.FormId %>" class="mf-progress-bar" style="display:none;"></div>
+    <div id="mf-progress-<%= ViewModel.FormId %>" class="mf-progress-bar"<%= ViewModel.SsrIsMultiStep ? "" : " style=\"display:none;\"" %>><%= ViewModel.SsrStepsHtml ?? "" %></div>
 
     <%-- DIV instead of FORM to avoid ASP.NET nested form conflict --%>
     <div id="mf-form-<%= ViewModel.FormId %>" class="mf-form">
@@ -849,7 +849,7 @@ body > .mf-langpick-panel{z-index:100030;}
         <%= ViewModel.AutoQrCodeHtml %>
         <% } %>
 
-        <div id="mf-fields-container-<%= ViewModel.FormId %>" class="mf-fields-container"></div>
+        <div id="mf-fields-container-<%= ViewModel.FormId %>" class="mf-fields-container"<%= ViewModel.SsrBodyRendered ? " data-mf-ssr=\"1\"" : "" %><%= ViewModel.SsrIsMultiStep ? " data-mf-ssr-multistep=\"1\"" : "" %>><%= ViewModel.SsrFieldsHtml ?? "" %></div>
 
         <div style="position:absolute;left:-9999px;top:-9999px;height:0;width:0;overflow:hidden;" aria-hidden="true" tabindex="-1">
             <input type="text" id="mf_hp_<%= ViewModel.FormId %>" name="<%= ViewModel.HoneypotFieldName %>" value="" autocomplete="off" tabindex="-1" />
@@ -860,7 +860,7 @@ body > .mf-langpick-panel{z-index:100030;}
 
         <div class="mf-form-actions">
             <button type="button" id="mf-btn-prev-<%= ViewModel.FormId %>" class="mf-btn mf-btn-prev" style="display:none;">
-                <i class="fa fa-arrow-left"></i> Previous
+                <i class="fa fa-arrow-left"></i> <%= Server.HtmlEncode(ViewModel.PreviousButtonText ?? "Previous") %>
             </button>
             <% if (ViewModel.EnableSaveResume) { %>
                 <button type="button" id="mf-btn-save-<%= ViewModel.FormId %>" class="mf-btn mf-btn-save">
@@ -868,7 +868,7 @@ body > .mf-langpick-panel{z-index:100030;}
                 </button>
             <% } %>
             <button type="button" id="mf-btn-next-<%= ViewModel.FormId %>" class="mf-btn mf-btn-next" style="display:none;">
-                Next <i class="fa fa-arrow-right"></i>
+                <%= Server.HtmlEncode(ViewModel.NextButtonText ?? "Next") %> <i class="fa fa-arrow-right"></i>
             </button>
             <button type="button" id="mf-btn-submit-<%= ViewModel.FormId %>" class="mf-btn mf-btn-submit">
                 <i class="fa fa-paper-plane"></i> <%= Server.HtmlEncode(ViewModel.SubmitButtonText ?? "Submit") %>

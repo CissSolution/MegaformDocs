@@ -42,14 +42,15 @@ namespace MegaForm.Core.Services
         /// <summary>Widget field types whose label is rendered by the widget itself (self-labeled),
         /// so the server wrapper must NOT add a &lt;label&gt; (matches the TS isWidgetSelfLabeled list).</summary>
         private static readonly HashSet<string> AlwaysLabeledWidgets = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        { "Rating", "Signature", "Appointment", "PhoneIntl" };
+        { "Rating", "Signature", "Appointment" };
 
         /// <summary>Field types the server renders fully (non-widget). Everything else is a widget
         /// → label + hydration placeholder.</summary>
         private static readonly HashSet<string> NativeTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "Text","Phone","Url","Email","Number","Date","Textarea","Select","Radio","Checkbox",
-            "File","Rating","Signature","Section","Html","Hidden","Row","Password","UniqueId","Composite"
+            "Text","Phone","Url","Email","Time","Number","Date","Textarea","Select","MultiSelect",
+            "Radio","Checkbox","Chips","Cards","File","Rating","Signature","Section","Html","Hidden",
+            "Row","Password","UniqueId","Composite"
         };
 
         /// <summary>
@@ -484,11 +485,23 @@ namespace MegaForm.Core.Services
         // ────────────────────────────────────────────────────────────────
         private static string RenderFieldGroup(FormField field, int formId, string locale)
         {
-            var type = field.Type ?? "Text";
+            var rawType = field.Type ?? "Text";
+            // Use the same canonical type for native/widget classification and input dispatch.
+            // Keeping rawType in data-type preserves the schema contract for client code.
+            var type = SubmissionFieldTypeSemantics.Canonicalize(rawType);
             var tr = ResolveFieldTranslation(field, locale);
             var showIfAttr = field.ShowIf != null
                 ? " data-show-if=\"" + Esc(SerializeShowIf(field.ShowIf)) + "\""
                 : string.Empty;
+
+            // Client parity: a UniqueId is server-generated on submit. Unless preview was
+            // explicitly requested it behaves exactly like Hidden — no visible group/label.
+            if (string.Equals(type, "UniqueId", StringComparison.OrdinalIgnoreCase)
+                && !WidgetBoolProp(field, "showPreview"))
+            {
+                return "<input type=\"hidden\" name=\"" + Esc(field.Key) + "\" id=\"mf-" + formId + "-"
+                    + Esc(field.Key) + "\" value=\"" + Esc(field.DefaultValue ?? string.Empty) + "\">";
+            }
 
             // Section
             if (string.Equals(type, "Section", StringComparison.OrdinalIgnoreCase))
@@ -517,7 +530,7 @@ namespace MegaForm.Core.Services
             var widthAttr = (!string.IsNullOrEmpty(field.Width) && field.Width != "100%")
                 ? " data-width=\"" + Esc(field.Width) + "\"" : string.Empty;
             sb.Append("<div class=\"mf-field-group\" data-key=\"").Append(Esc(field.Key))
-              .Append("\" data-type=\"").Append(Esc(type)).Append("\"").Append(widthAttr).Append(showIfAttr).Append(">");
+              .Append("\" data-type=\"").Append(Esc(rawType)).Append("\"").Append(widthAttr).Append(showIfAttr).Append(">");
             if (!selfLabeled)
             {
                 sb.Append("<label class=\"mf-field-label\" for=\"mf-").Append(formId).Append('-').Append(Esc(field.Key)).Append("\">")
@@ -563,6 +576,7 @@ namespace MegaForm.Core.Services
             var ph = tr.Placeholder ?? string.Empty;
             var ro = field.ReadOnly ? " readonly disabled" : string.Empty;
             var req = field.Required ? " required" : string.Empty;
+            var heightAttr = InputHeightAttr(field);
             // Canonicalize aliases so e.g. FileUpload renders via case "File" (dropzone),
             // not the widget-host default. Type is a server-side schema value, not client input.
             var type = SubmissionFieldTypeSemantics.Canonicalize(field.Type ?? "Text");
@@ -584,38 +598,54 @@ namespace MegaForm.Core.Services
                     var maskAttr = string.IsNullOrEmpty(fMask) ? string.Empty : " data-mf-mask=\"" + Esc(fMask) + "\"";
                     var imAttr = !string.IsNullOrEmpty(fMask) && !System.Text.RegularExpressions.Regex.IsMatch(fMask, "[A-Za-z*]")
                         ? " inputmode=\"numeric\"" : string.Empty;
-                    return Input(it, id, name, val, ph, maskAttr + imAttr + ro + req);
+                    return Input(it, id, name, val, ph, maskAttr + imAttr + ro + req + heightAttr);
                 }
                 case "Password":
-                    return Input("password", id, name, val, ph, ro + req);
+                    return Input("password", id, name, val, ph, ro + req + heightAttr);
                 case "Email":
-                    return Input("email", id, name, val, ph, ro + req);
+                    return Input("email", id, name, val, ph, ro + req + heightAttr);
                 case "Time":
                     // [TimeInput v20260707] ~25 sample templates use type:"Time"; without this
                     // case it fell through to the widget-plugin placeholder branch.
-                    return Input("time", id, name, val, ph, ro + req);
+                    return Input("time", id, name, val, ph, ro + req + heightAttr);
                 case "Number":
                 {
                     var v = field.Validation;
                     var minA = v?.Min != null ? " min=\"" + v.Min + "\"" : string.Empty;
                     var maxA = v?.Max != null ? " max=\"" + v.Max + "\"" : string.Empty;
                     return "<input type=\"number\" class=\"mf-input\" id=\"" + id + "\" name=\"" + name + "\" value=\"" + Esc(val)
-                        + "\" placeholder=\"" + Esc(ph) + "\"" + minA + maxA + ro + req + ">";
+                        + "\" placeholder=\"" + Esc(ph) + "\"" + minA + maxA + ro + req + heightAttr + ">";
                 }
                 case "Date":
                     return CalendarDatePicker(field, id, name, val, ph, ro);
                 case "Textarea":
-                    return "<textarea class=\"mf-textarea\" id=\"" + id + "\" name=\"" + name + "\" placeholder=\"" + Esc(ph) + "\"" + ro + req + ">" + Esc(val) + "</textarea>";
+                {
+                    var rows = field.Rows ?? CombinedIntProp(field, "rows", 0);
+                    var rowsAttr = rows > 0 ? " rows=\"" + rows.ToString(CultureInfo.InvariantCulture) + "\"" : string.Empty;
+                    return "<textarea class=\"mf-textarea\" id=\"" + id + "\" name=\"" + name + "\" placeholder=\"" + Esc(ph)
+                        + "\"" + ro + req + rowsAttr + heightAttr + ">" + Esc(val) + "</textarea>";
+                }
+                case "MultiSelect":
+                    return RenderMultiSelect(field, id, name, val, ph, ro, req, tr);
                 case "Select":
                 {
+                    var variant = SelectVariant(field);
+                    if (variant == "multi-select")
+                        return RenderMultiSelect(field, id, name, val, ph, ro, req, tr);
+                    if (variant == "multi-column")
+                        return RenderMultiColumnCombo(field, id, name, val, ph, ro, req, tr);
                     var sb = new StringBuilder();
-                    sb.Append("<select class=\"mf-select\" id=\"").Append(id).Append("\" name=\"").Append(name).Append("\"").Append(ro).Append(req).Append(">");
-                    sb.Append("<option value=\"\">").Append(Esc(string.IsNullOrEmpty(ph) ? "Select..." : ph)).Append("</option>");
+                    var selectPlaceholder = string.IsNullOrEmpty(ph)
+                        ? (CombinedStringProp(field, "placeholder") ?? "Select...")
+                        : ph;
+                    sb.Append("<div class=\"mf-select-wrap\"><select class=\"mf-select\" id=\"").Append(id)
+                      .Append("\" name=\"").Append(name).Append("\"").Append(ro).Append(req).Append(heightAttr).Append(">");
+                    sb.Append("<option value=\"\">").Append(Esc(selectPlaceholder)).Append("</option>");
                     foreach (var opt in SafeOptions(field))
                         sb.Append("<option value=\"").Append(Esc(opt.Value)).Append("\"")
                           .Append(val == opt.Value ? " selected" : "").Append(">")
                           .Append(Esc(tr.OptionLabel(opt))).Append("</option>");
-                    return sb.Append("</select>").ToString();
+                    return sb.Append("</select><span class=\"mf-select-chevron\" aria-hidden=\"true\"></span></div>").ToString();
                 }
                 case "Radio":
                 {
@@ -690,10 +720,37 @@ namespace MegaForm.Core.Services
                     return sb.Append("</div>").ToString();
                 }
                 case "Signature":
-                    return "<div class=\"mf-signature-field\" style=\"border:1px solid #d0d5dd;border-radius:6px;padding:8px;background:#fafafa;\">"
-                        + "<canvas id=\"" + id + "-canvas\" class=\"mf-signature-canvas\" width=\"400\" height=\"150\" style=\"width:100%;display:block;border:1px solid #e0e0e0;border-radius:4px;cursor:crosshair;\"></canvas>"
-                        + "<div class=\"mf-signature-actions\" style=\"margin-top:6px;text-align:right;\"><button type=\"button\" class=\"mf-sig-clear\" data-canvas=\"" + id + "-canvas\" style=\"font-size:12px;border:1px solid #ccc;background:#fff;padding:4px 12px;border-radius:4px;cursor:pointer;\">Clear</button></div>"
-                        + "<input type=\"hidden\" name=\"" + name + "\" id=\"" + id + "\"></div>";
+                {
+                    var sigHeight = Math.Max(80, Math.Min(240, CombinedIntProp(field, "height", 120)));
+                    var clearText = CombinedStringProp(field, "clearText") ?? "Clear";
+                    var undoText = CombinedStringProp(field, "undoText") ?? "Undo";
+                    var placeholderText = CombinedStringProp(field, "placeholderText") ?? "Sign here";
+                    return "<div class=\"mf-signature-field mf-signature-empty\" data-mf-signature-badge=\"RendererSignatureSizing v20260423-02\">"
+                        + "<div class=\"mf-signature-canvas-wrap\">"
+                        + "<canvas id=\"" + id + "-canvas\" class=\"mf-signature-canvas\" width=\"400\" height=\"" + sigHeight + "\"></canvas>"
+                        + "<div class=\"mf-signature-placeholder\" aria-hidden=\"true\">"
+                        + "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M15.7 21.3a1 1 0 0 1-1.4 0l-1.6-1.6a1 1 0 0 1 0-1.4l5.6-5.6a1 1 0 0 1 1.4 0l1.6 1.6a1 1 0 0 1 0 1.4z\"/><path d=\"m18 13-1.4-6.9a1 1 0 0 0-.7-.8L3.2 2a1 1 0 0 0-1.2 1.2l3.4 12.7a1 1 0 0 0 .8.7L13 18\"/><path d=\"m2.3 2.3 7.3 7.3\"/><circle cx=\"11\" cy=\"11\" r=\"2\"/></svg>"
+                        + "<span>" + Esc(placeholderText) + "</span></div></div>"
+                        + "<div class=\"mf-signature-actions\"><button type=\"button\" class=\"mf-sig-clear\" data-canvas=\"" + id
+                        + "-canvas\"><span aria-hidden=\"true\">&#9003;</span> " + Esc(clearText)
+                        + "</button><button type=\"button\" class=\"mf-sig-undo\" disabled><span aria-hidden=\"true\">&#8630;</span> "
+                        + Esc(undoText) + "</button></div><input type=\"hidden\" name=\"" + name + "\" id=\"" + id + "\"></div>";
+                }
+                case "UniqueId":
+                {
+                    var showPreview = WidgetBoolProp(field, "showPreview");
+                    if (!showPreview)
+                        return "<input type=\"hidden\" name=\"" + name + "\" id=\"" + id + "\" value=\"" + Esc(val) + "\">";
+                    if (!string.IsNullOrEmpty(val))
+                        return "<div class=\"mf-uid-display\" style=\"font-family:monospace;font-size:15px;font-weight:600;color:#6366f1;padding:8px 12px;background:#f5f3ff;border:1px solid #e0e7ff;border-radius:6px;\">"
+                            + Esc(val) + "</div><input type=\"hidden\" name=\"" + name + "\" id=\"" + id + "\" value=\"" + Esc(val) + "\">";
+                    var prefix = WidgetStringProp(field, "prefix") ?? string.Empty;
+                    var padding = Math.Max(1, WidgetIntProp(field, "padding", 5));
+                    var preview = prefix + new string('0', Math.Max(0, padding - 1)) + "1";
+                    return "<div class=\"mf-uid-preview\" style=\"font-family:monospace;font-size:13px;color:#94a3b8;padding:8px 12px;background:#f8fafc;border:1px dashed #d1d5db;border-radius:6px;\">"
+                        + "<i class=\"fas fa-fingerprint\" style=\"margin-right:6px;\"></i>Auto-generated on submit: <span style=\"color:#6366f1;\">"
+                        + Esc(preview) + "…</span></div><input type=\"hidden\" name=\"" + name + "\" id=\"" + id + "\" value=\"\">";
+                }
                 case "Composite":
                     return RenderCompositeInput(field, id, name, val, ph, ro, req);
                 default:
@@ -703,6 +760,186 @@ namespace MegaForm.Core.Services
                     return "<div class=\"mf-widget-host\" data-mf-widget-hydrate=\"" + Esc(type) + "\" data-field-key=\"" + Esc(name)
                         + "\" id=\"" + id + "-host\"><input type=\"hidden\" name=\"" + name + "\" id=\"" + id + "\" value=\"" + Esc(val) + "\"></div>";
             }
+        }
+
+        private static string InputHeightAttr(FormField field)
+        {
+            var raw = !string.IsNullOrWhiteSpace(field?.Height)
+                ? field.Height
+                : CombinedStringProp(field, "height");
+            if (string.IsNullOrWhiteSpace(raw)) return string.Empty;
+            raw = raw.Trim();
+            var normalized = Regex.IsMatch(raw, @"^\d+(\.\d+)?$")
+                ? raw + "px"
+                : raw;
+            return " style=\"height:" + Esc(normalized) + ";min-height:" + Esc(normalized) + ";\"";
+        }
+
+        private static string SelectVariant(FormField field)
+        {
+            var raw = (CombinedStringProp(field, "selectVariant")
+                       ?? CombinedStringProp(field, "variant")
+                       ?? string.Empty).Trim().ToLowerInvariant();
+            if (raw == "multiselect" || raw == "multi-select" || raw == "tags" || raw == "chips")
+                return "multi-select";
+            if (raw == "multicolumn" || raw == "multi-column" || raw == "combobox" || raw == "multi-column-combobox")
+                return "multi-column";
+            return "native";
+        }
+
+        private static List<string> CsvValues(string value)
+        {
+            var raw = (value ?? string.Empty).Trim();
+            if (string.IsNullOrEmpty(raw)) return new List<string>();
+            if (raw.StartsWith("[", StringComparison.Ordinal))
+            {
+                try
+                {
+                    var parsed = Newtonsoft.Json.JsonConvert.DeserializeObject<List<string>>(raw);
+                    if (parsed != null) return parsed.Where(v => !string.IsNullOrWhiteSpace(v)).Select(v => v.Trim()).ToList();
+                }
+                catch { }
+            }
+            return raw.Split(',').Select(v => v.Trim()).Where(v => !string.IsNullOrEmpty(v)).ToList();
+        }
+
+        private static string EncodedJson(object value)
+        {
+            var json = Newtonsoft.Json.JsonConvert.SerializeObject(value);
+            return Esc(Uri.EscapeDataString(json ?? "null"));
+        }
+
+        private static string RenderMultiSelect(FormField field, string id, string name, string val, string ph,
+            string ro, string req, ResolvedField tr)
+        {
+            var selected = CsvValues(val);
+            var maxTags = Math.Max(0, CombinedIntProp(field, "maxTags", CombinedIntProp(field, "maxSelections", 0)));
+            var placeholder = !string.IsNullOrEmpty(ph)
+                ? ph
+                : (CombinedStringProp(field, "placeholder") ?? "Select options...");
+            var options = SafeOptions(field).Select(opt => new
+            {
+                value = opt.Value ?? string.Empty,
+                label = tr.OptionLabel(opt) ?? opt.Value ?? string.Empty
+            }).ToList();
+            var readOnly = !string.IsNullOrEmpty(ro);
+            var searchable = CombinedBoolProp(field, "searchable", true);
+            var clearable = CombinedBoolProp(field, "clearable", true);
+            return "<div class=\"mf-ms\" id=\"" + id + "-ms\" data-mf-ms=\"1\" data-options=\"" + EncodedJson(options) + "\""
+                + " data-placeholder=\"" + Esc(placeholder) + "\" data-search-placeholder=\"" + Esc(CombinedStringProp(field, "searchPlaceholder") ?? "Search...") + "\""
+                + " data-no-options=\"" + Esc(CombinedStringProp(field, "noOptionsText") ?? "All options selected") + "\""
+                + " data-no-match=\"" + Esc(CombinedStringProp(field, "noMatchText") ?? "No options match") + "\""
+                + " data-max-tags=\"" + maxTags.ToString(CultureInfo.InvariantCulture) + "\""
+                + " data-searchable=\"" + (searchable ? "true" : "false") + "\" data-clearable=\"" + (clearable ? "true" : "false") + "\""
+                + " data-readonly=\"" + (readOnly ? "true" : "false") + "\" data-disabled=\"" + (readOnly ? "true" : "false") + "\">"
+                + "<input type=\"hidden\" class=\"mf-ms-hidden\" id=\"" + id + "\" name=\"" + Esc(name) + "\" value=\"" + Esc(string.Join(",", selected)) + "\"" + req + ">"
+                + "<button type=\"button\" class=\"mf-ms-trigger\" aria-haspopup=\"listbox\" aria-expanded=\"false\"" + (readOnly ? " disabled" : string.Empty) + ">"
+                + "<span class=\"mf-ms-tags\"></span><span class=\"mf-ms-actions\"><span class=\"mf-ms-clear\" aria-hidden=\"true\">&times;</span>"
+                + "<span class=\"mf-ms-chevron\" aria-hidden=\"true\"></span></span></button>"
+                + "<div class=\"mf-ms-panel\" role=\"listbox\" aria-label=\"" + Esc(field.Label ?? "Multi select") + "\"></div></div>";
+        }
+
+        private sealed class MultiColumnDefinition
+        {
+            [Newtonsoft.Json.JsonProperty("key")] public string Key { get; set; }
+            [Newtonsoft.Json.JsonProperty("label")] public string Label { get; set; }
+            [Newtonsoft.Json.JsonProperty("width", NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+            public string Width { get; set; }
+        }
+
+        private static List<MultiColumnDefinition> ParseMultiColumns(object raw)
+        {
+            if (raw != null)
+            {
+                try
+                {
+                    var json = raw is JsonElement el ? el.GetRawText() : Newtonsoft.Json.JsonConvert.SerializeObject(raw);
+                    var parsed = Newtonsoft.Json.JsonConvert.DeserializeObject<List<MultiColumnDefinition>>(json);
+                    if (parsed != null && parsed.Any(c => c != null && !string.IsNullOrWhiteSpace(c.Key)))
+                        return parsed.Where(c => c != null && !string.IsNullOrWhiteSpace(c.Key))
+                            .Select(c => new MultiColumnDefinition
+                            {
+                                Key = c.Key.Trim(),
+                                Label = string.IsNullOrWhiteSpace(c.Label) ? c.Key.Trim() : c.Label,
+                                Width = c.Width
+                            }).ToList();
+                }
+                catch { }
+
+                var text = ObjectString(raw);
+                if (!string.IsNullOrWhiteSpace(text))
+                {
+                    return text.Split(',').Select(part =>
+                    {
+                        var bits = part.Split(':').Select(s => s.Trim()).ToArray();
+                        return new MultiColumnDefinition
+                        {
+                            Key = bits.Length > 0 ? bits[0] : string.Empty,
+                            Label = bits.Length > 1 && !string.IsNullOrEmpty(bits[1]) ? bits[1] : (bits.Length > 0 ? bits[0] : string.Empty),
+                            Width = bits.Length > 2 ? bits[2] : null
+                        };
+                    }).Where(c => !string.IsNullOrEmpty(c.Key)).ToList();
+                }
+            }
+            return new List<MultiColumnDefinition>();
+        }
+
+        private static string OptionColumnValue(MfOption option, string key, ResolvedField tr)
+        {
+            if (option == null) return string.Empty;
+            if (string.Equals(key, "label", StringComparison.OrdinalIgnoreCase)) return tr.OptionLabel(option) ?? option.Value ?? string.Empty;
+            if (string.Equals(key, "value", StringComparison.OrdinalIgnoreCase) || string.Equals(key, "id", StringComparison.OrdinalIgnoreCase))
+                return option.Value ?? string.Empty;
+            try
+            {
+                var obj = Newtonsoft.Json.Linq.JObject.FromObject(option);
+                var prop = obj.Properties().FirstOrDefault(p => string.Equals(p.Name, key, StringComparison.OrdinalIgnoreCase));
+                return prop?.Value?.ToString() ?? string.Empty;
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+
+        private static string RenderMultiColumnCombo(FormField field, string id, string name, string val, string ph,
+            string ro, string req, ResolvedField tr)
+        {
+            var columns = ParseMultiColumns(CombinedProp(field, "columns") ?? CombinedProp(field, "multiColumnColumns"));
+            if (columns.Count == 0)
+            {
+                columns.Add(new MultiColumnDefinition { Key = "label", Label = "Name", Width = "50%" });
+                columns.Add(new MultiColumnDefinition { Key = "value", Label = "Value", Width = "50%" });
+            }
+            var options = SafeOptions(field).Select(opt =>
+            {
+                var row = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["id"] = opt.Value ?? string.Empty,
+                    ["value"] = opt.Value ?? string.Empty,
+                    ["label"] = tr.OptionLabel(opt) ?? opt.Value ?? string.Empty
+                };
+                foreach (var column in columns)
+                    row[column.Key] = OptionColumnValue(opt, column.Key, tr);
+                return row;
+            }).ToList();
+            var placeholder = !string.IsNullOrEmpty(ph)
+                ? ph
+                : (CombinedStringProp(field, "placeholder") ?? "Select an option...");
+            var displayKey = CombinedStringProp(field, "displayKey") ?? columns[0].Key ?? "label";
+            var readOnly = !string.IsNullOrEmpty(ro);
+            return "<div class=\"mf-mccb\" id=\"" + id + "-mccb\" data-mf-mccb=\"1\""
+                + " data-options=\"" + EncodedJson(options) + "\" data-columns=\"" + EncodedJson(columns) + "\""
+                + " data-placeholder=\"" + Esc(placeholder) + "\" data-search-placeholder=\"" + Esc(CombinedStringProp(field, "searchPlaceholder") ?? "Search...") + "\""
+                + " data-display-key=\"" + Esc(displayKey) + "\" data-no-options=\"" + Esc(CombinedStringProp(field, "noOptionsText") ?? "No options available") + "\""
+                + " data-no-match=\"" + Esc(CombinedStringProp(field, "noMatchText") ?? "No options match") + "\""
+                + " data-searchable=\"" + (CombinedBoolProp(field, "searchable", true) ? "true" : "false") + "\""
+                + " data-readonly=\"" + (readOnly ? "true" : "false") + "\" data-disabled=\"" + (readOnly ? "true" : "false") + "\">"
+                + "<input type=\"hidden\" class=\"mf-mccb-hidden\" id=\"" + id + "\" name=\"" + Esc(name) + "\" value=\"" + Esc(val) + "\"" + req + ">"
+                + "<button type=\"button\" class=\"mf-mccb-trigger\" aria-haspopup=\"listbox\" aria-expanded=\"false\"" + (readOnly ? " disabled" : string.Empty) + ">"
+                + "<span class=\"mf-mccb-value\">" + Esc(placeholder) + "</span><span class=\"mf-mccb-actions\">"
+                + "<span class=\"mf-mccb-clear\" aria-hidden=\"true\">&times;</span><span class=\"mf-mccb-chevron\" aria-hidden=\"true\"></span></span></button>"
+                + "<div class=\"mf-mccb-panel\" role=\"listbox\" aria-label=\"" + Esc(field.Label ?? "Multi column dropdown") + "\"></div></div>";
         }
 
         private sealed class CompositePart
@@ -1225,6 +1462,67 @@ namespace MegaForm.Core.Services
 
         private static string WidgetStringProp(FormField field, string key)
             => ObjectString(WidgetProp(field, key));
+
+        private static bool WidgetBoolProp(FormField field, string key, bool fallback = false)
+        {
+            var value = WidgetProp(field, key);
+            if (value == null) return fallback;
+            if (value is bool b) return b;
+            if (value is JsonElement el)
+            {
+                if (el.ValueKind == JsonValueKind.True) return true;
+                if (el.ValueKind == JsonValueKind.False) return false;
+            }
+            return bool.TryParse(ObjectString(value), out var parsed) ? parsed : fallback;
+        }
+
+        private static int WidgetIntProp(FormField field, string key, int fallback = 0)
+        {
+            var value = WidgetProp(field, key);
+            return int.TryParse(ObjectString(value), NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed)
+                ? parsed
+                : fallback;
+        }
+
+        /// <summary>
+        /// Mirrors the TS merge order `{ ...properties, ...widgetProps }`: widgetProps wins.
+        /// Both bags are read case-insensitively because legacy schemas used PascalCase.
+        /// </summary>
+        private static object CombinedProp(FormField field, string key)
+        {
+            var widget = WidgetProp(field, key);
+            if (widget != null) return widget;
+            if (field?.Properties == null) return null;
+            if (field.Properties.TryGetValue(key, out var exact)) return exact;
+            foreach (var kvp in field.Properties)
+                if (string.Equals(kvp.Key, key, StringComparison.OrdinalIgnoreCase))
+                    return kvp.Value;
+            return null;
+        }
+
+        private static string CombinedStringProp(FormField field, string key)
+            => ObjectString(CombinedProp(field, key));
+
+        private static int CombinedIntProp(FormField field, string key, int fallback = 0)
+        {
+            var value = CombinedProp(field, key);
+            return int.TryParse(ObjectString(value), NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed)
+                ? parsed
+                : fallback;
+        }
+
+        private static bool CombinedBoolProp(FormField field, string key, bool fallback = false)
+        {
+            var value = CombinedProp(field, key);
+            if (value == null) return fallback;
+            if (value is bool b) return b;
+            if (value is JsonElement el)
+            {
+                if (el.ValueKind == JsonValueKind.True) return true;
+                if (el.ValueKind == JsonValueKind.False) return false;
+            }
+            return bool.TryParse(ObjectString(value), out var parsed) ? parsed : fallback;
+        }
 
         private static T WidgetObjectProp<T>(FormField field, string key) where T : class
         {

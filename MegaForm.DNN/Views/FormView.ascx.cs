@@ -859,12 +859,29 @@ namespace MegaForm.DNN.Components
             // The builder branch uses the raw SchemaJson (vm.SchemaJson), which is untouched, and holders
             // of the manage permission are bypassed inside ProjectForActor, so an admin still sees all.
             vm.ResolvedSchemaJson = ProjectSchemaForCurrentVisitor(form.FormId, vm.ResolvedSchemaJson);
+            // [DNN body SSR 20260724] Render ONLY the projected schema. Reusing the `schema`
+            // variable deserialized above would re-introduce fields withheld for this visitor
+            // into view-source. Any error/oversize result leaves the body empty so the existing
+            // MegaFormRenderer.init path performs the proven client rebuild.
+            FormSchema projectedSchema = null;
+            try
+            {
+                projectedSchema = JsonConvert.DeserializeObject<FormSchema>(vm.ResolvedSchemaJson);
+                if (projectedSchema != null)
+                {
+                    schema = projectedSchema;
+                    vm.Schema = projectedSchema;
+                }
+            }
+            catch { projectedSchema = null; }
+
+            PopulateProjectedSsr(vm, projectedSchema);
             // [SingleSource v20260624-B260] Compose the form's FULL CSS into ONE block server-side
             // (preset + scoped theme vars + authored customCss + custom-shell compat + module
             // CssOverride last) — identical Core composer to the Oqtane host. DNN public JS then
-            // does NOTHING to theme CSS (the renderer early-returns on data-mf-ssr="1"); it still
-            // builds the field body into the empty container. Folds the former mf-inline-preset +
-            // mf-live-override blocks into this single block.
+            // does NOTHING to theme CSS (the renderer early-returns on data-mf-ssr="1") and binds
+            // the projected SSR body in place. Folds the former mf-inline-preset + mf-live-override
+            // blocks into this single block.
             try
             {
                 var __schemaObj = Newtonsoft.Json.Linq.JObject.Parse(vm.ResolvedSchemaJson);
@@ -1027,6 +1044,63 @@ namespace MegaForm.DNN.Components
                 vm.BusChannel = vm.AppScope;
 
             return vm;
+        }
+
+        private const int DnnSsrBodyMaxChars = 700 * 1024;
+
+        /// <summary>
+        /// Builds the DNN first-paint body from the already access-projected schema.
+        /// Fail-soft by design: empty output preserves the pre-existing client render path.
+        /// </summary>
+        private static void PopulateProjectedSsr(FormRenderViewModel vm, FormSchema projectedSchema)
+        {
+            if (vm == null) return;
+            vm.SsrFieldsHtml = string.Empty;
+            vm.SsrStepsHtml = string.Empty;
+            vm.SsrBodyRendered = false;
+            vm.SsrIsMultiStep = false;
+            vm.PreviousButtonText = "Previous";
+            vm.NextButtonText = "Next";
+            if (projectedSchema == null || vm.FormId <= 0) return;
+
+            try
+            {
+                var locale = System.Threading.Thread.CurrentThread.CurrentUICulture?.Name;
+                if (string.IsNullOrWhiteSpace(locale))
+                    locale = System.Threading.Thread.CurrentThread.CurrentCulture?.Name;
+
+                var settings = projectedSchema.Settings;
+                if (object.ReferenceEquals(settings, null)) settings = new MegaForm.Core.Models.FormSettings();
+                vm.PreviousButtonText = string.IsNullOrWhiteSpace(settings.PreviousButtonText)
+                    ? "Previous"
+                    : settings.PreviousButtonText;
+                vm.NextButtonText = string.IsNullOrWhiteSpace(settings.NextButtonText)
+                    ? "Next"
+                    : settings.NextButtonText;
+
+                var body = FormHtmlRenderer.RenderFieldsBody(
+                    projectedSchema,
+                    vm.FormId,
+                    locale,
+                    vm.Title,
+                    vm.Description,
+                    vm.SubmitButtonText);
+
+                if (string.IsNullOrWhiteSpace(body) || body.Length > DnnSsrBodyMaxChars) return;
+
+                vm.SsrFieldsHtml = body;
+                vm.SsrIsMultiStep = FormHtmlRenderer.IsStandardMultiStep(projectedSchema);
+                if (vm.SsrIsMultiStep)
+                    vm.SsrStepsHtml = FormHtmlRenderer.RenderStepIndicator(projectedSchema, locale);
+                vm.SsrBodyRendered = true;
+            }
+            catch
+            {
+                vm.SsrFieldsHtml = string.Empty;
+                vm.SsrStepsHtml = string.Empty;
+                vm.SsrBodyRendered = false;
+                vm.SsrIsMultiStep = false;
+            }
         }
 
         private static bool HasViewPermissionRules(string permissionsJson)

@@ -107,6 +107,12 @@ namespace MegaForm.DNN.ViewModels
         public string InitialInlineCss { get; set; }        // first-paint scoped preset CSS rendered server-side
         public string ModuleCss { get; set; }               // [SingleSource B260] full composed CSS (preset+scoped+customCss+compat+override) — the ONE server block
         public string WrapperRuntimeClasses { get; set; }   // [SingleSource B260] mf-theme-*/mf-style-*/mf-hide-header classes for the wrapper
+        public string SsrFieldsHtml { get; set; }            // projected, locale-aware body; empty means client fallback
+        public string SsrStepsHtml { get; set; }             // standard multi-step indicator
+        public bool SsrBodyRendered { get; set; }            // stamps the body SSR marker only on success
+        public bool SsrIsMultiStep { get; set; }
+        public string PreviousButtonText { get; set; }
+        public string NextButtonText { get; set; }
         public bool AutoQrCodeEnabled { get; set; }         // module setting: auto-inject QR corner on live/public render
         public string AutoQrCodeHtml { get; set; }          // prebuilt QR corner markup injected by host when AutoQrCodeEnabled=true
 
