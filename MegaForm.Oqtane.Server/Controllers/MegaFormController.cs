@@ -1058,6 +1058,24 @@ namespace MegaForm.Oqtane.Server.Controllers
             return JsonOk(new { repoUrl = svc.RepoBaseUrl, offline = res.Offline, message = res.Message, templates = items });
         }
 
+        /// <summary>
+        /// One gallery template's verified JSON WITHOUT installing it, so the gallery can render a
+        /// real thumbnail/preview instead of making the user install blind. Read-only.
+        /// </summary>
+        [HttpGet("BuilderTemplates/RemoteGalleryPreview")]
+        [Authorize(Policy = "EditModule")]
+        public async Task<IActionResult> RemoteGalleryPreview(string slug)
+        {
+            var gate = GalleryTrialGate();
+            if (gate != null) return gate;
+
+            var fetch = await BuildGalleryService().FetchTemplateAsync(slug, forceRefresh: false);
+            if (!fetch.Success)
+                return BadRequest(new { error = "preview_failed", message = fetch.Error });
+
+            return new ContentResult { Content = fetch.Json, ContentType = "application/json", StatusCode = 200 };
+        }
+
         [HttpPost("BuilderTemplates/RemoteGalleryInstall")]
         [Authorize(Policy = "EditModule")]
         public async Task<IActionResult> RemoteGalleryInstall([FromBody] Newtonsoft.Json.Linq.JObject body)
