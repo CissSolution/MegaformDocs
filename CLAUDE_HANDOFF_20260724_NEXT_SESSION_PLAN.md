@@ -135,3 +135,80 @@ Harness QA (login CLICK `[id$="_cmdLogin"]`, host/dnnhost): scratchpad `gifrec/`
 
 Docs DNN: worktree clone `E:\_dnndocswt` (remote `CissSolution/DNN_MegaformDocs`, branch `main`,
 layout `articles/` + `images/` ở root). Bản trong repo chính: worktree `E:\_docswt` branch `docs/dnn-series`.
+
+---
+
+## G. [07-24 user thêm] Docs cascade-sql-dropdowns: thay JSON thô bằng GIF setup builder
+Trang https://cisssolution.github.io/DNN_MegaformDocs/articles/cascade-sql-dropdowns.html — mục **"The child field carries the dependency"** hiện in JSON thô (`{key:state, optionsSource:sql, optionsConnectionKey, optionsSql, optionsDependsOn:[country], optionsReloadOnChange}`). User muốn **quay GIF cách người dùng SETUP dropdown cascade trong builder** (chọn field → Data/SQL tab → connection + SQL + depends-on), KHÔNG in JSON. File: `articles/cascade-sql-dropdowns.md` trong repo `DNN_MegaformDocs` (clone `E:\_dnndocswt` branch dnn-series, hoặc `E:\_dnndocswt`... thực ra DNN docs repo = `CissSolution/DNN_MegaformDocs`, clone `E:\_dnndocswt`? KHÔNG — đó là MegaformDocs. DNN docs clone tại chỗ chưa có; clone lại `DNN_MegaformDocs`). Harness quay GIF: `scratchpad/gifrec/rec-hero-edit.mjs` làm mẫu (recorder-lib fps5 + glide cursor + frameElXY cho iframe). Builder DB tab = `#mf-tab-link-db`.
+
+---
+
+## H. [07-24 khuya] Builder hero-edit trong Design — 2 fix DONE, GIF docs CÒN
+**DONE + committed:**
+- `a81d1c7` nút « hide/show rail Presets (search row Design tab) → thu rail → preview >1024px → hero hiện.
+- `95c3306` **rescan-on-resize**: hero premium `display:none` <1024px nên khi preview hẹp lúc init, `enableImageEdit` bỏ qua (0×0 fail size-gate) → thu rail hero hiện nhưng KHÔNG sửa được. Nay `initInlineEdit` re-run `enableImageEdit` on resize+ResizeObserver → verify VISIBLE iframe: sau collapse `.mf-ie-img-btn` 0→1 ✓.
+- Đã deploy renderer+builder bundle+shell.css lên megaxin (site test). ⚠️ CHƯA repack package / chưa deploy dnndefender (2 fix builder này chỉ ảnh hưởng builder edit, không ảnh hưởng render public).
+
+**CÒN (GIF):**
+- Quay lại GIF "đổi text/ảnh hero" — bản `rec-hero-steps.mjs` (13-frame slideshow, 1.46MB) dùng SAI iframe (grab iframe `.mfp-euro-youth` ĐẦU TIÊN = iframe ẩn background, hero 0×0). **PHẢI chọn iframe VISIBLE**: `for f of page.frames(): el=await f.frameElement(); box=await el.boundingBox(); nếu box.width>800 && hero.offsetWidth>0 → đó là preview thật`. (probe-frames.mjs đã có logic + verify changeBtn:1). Quay lại → append GIF `dnn-hero-edit.gif` vào CUỐI `articles/dnn-form-templates.md` (repo DNN_MegaformDocs clone `E:\_dnndocswt`, layout articles/+images/ ở root) → commit + push main → Pages.
+- ⚠️ GIF step-snapshot (fps 0.7, 13 frame, quality 14) là cách RELIABLE (continuous recorder loop bị hang khi locator iframe chờ 60s → GIF 79MB/647frame). Harness: `scratchpad/gifrec/rec-hero-steps.mjs` + `recorder-lib.mjs` (`__mfMove`/`shotsToGif`).
+  ✅ **ĐÃ XONG** — `rec-hero-steps2.mjs` (21 frame, 2.7MB, chọn iframe VISIBLE `boundingBox().width>800`), push `DNN_MegaformDocs@main e78cc16` → LIVE. ⭐Mẹo: seed 1 hero đẹp vào Image library (`Upload/Image`) + park tạm ảnh test xấu trước khi quay.
+
+---
+
+## I. [07-24] ONLINE TEMPLATE GALLERY (GitHub) + SLIM PACKAGE — phần lớn DONE, còn 3 việc
+
+### Đã xong (commit trên `feature/typed-submission-storage-core`)
+| Commit | Nội dung |
+|---|---|
+| `d974187` | Publisher `tools/gallery/build-gallery.mjs` + Core `GalleryRepo` (KIMI chỉ có Core, **thiếu SsrfGuard** → Claude vá) |
+| `2b1fce6` / `43a1fff` / `a55d2e3` | Endpoint DNN + Oqtane: `RemoteGalleryList` / `Install` / `Preview` |
+| `99f83bb` | **jsDelivr** thay GitHub Pages |
+| `12856bc` | **Slim package DNN 27.7 → 12.5 MB (−55%)** |
+| `d127da4` | UX: Online thành TAB trong Template Gallery (categories + card + preview) |
+| `18a9315` / `4267de5` | Cài artwork khi preview (hết 404 ảnh) + parity Oqtane |
+| `0358828` | **Sửa preview trắng** (3 nguyên nhân — xem §I.3) |
+
+- **Repo gallery**: `CissSolution/megaform-gallery` (public, `main`). Worktree local **`E:\_megaform_gallery_repo`**.
+  Republish: `node tools/gallery/build-gallery.mjs --out E:\_megaform_gallery_repo` → commit → push → **purge CDN**
+  `https://purge.jsdelivr.net/gh/CissSolution/megaform-gallery@main/manifest.json`.
+- 🔴 **GitHub Pages KHÔNG dùng được** cho org `CissSolution` — cả 3 repo 404 kể cả sau khi bật Pages + `.nojekyll` (poll 20 phút). Nghi chặn cấp org. Đang serve qua **jsDelivr CDN**.
+- ⭐ `.gitattributes` `* -text` trong repo gallery là **BẮT BUỘC**: mọi file ghim sha256, git đổi CRLF/LF = sai hash = hỏng toàn bộ install.
+- Package giữ **4 starter** (`BUNDLED_SLUGS` trong publisher): `v0-contact-map-left-corporate`, `vendor-application` (single) + `tabbed-account-setup`, `project-intake-onboarding` (multi). 32 template + 12 ảnh (14.58 MB) ra khỏi package. `gallery-exclude.json` do publisher SINH — build script đọc từ đó nên package/gallery không bao giờ lệch.
+
+### CÒN LẠI — 3 việc
+
+**I.1 🔴 BUG: install template online xong → trong tab "Installed" bị KHOÁ, không dùng được** *(user báo 07-24)*
+- Nghi thủ phạm: `MegaForm.UI/src/dashboard/wizard/gallery-modal.ts` — `const locked = isTrialMode() && (t as any).isPremium;`
+- Trên megaxin lúc kiểm tra: `productionMode: true`, **0 card locked** → **không tái hiện khi license hợp lệ** ⇒ gần như chắc chắn nhánh **trial** (hoặc `__MF_PLATFORM__.productionMode` bị stale/false lúc user test).
+- ⚠️⚠️ **Hệ quả nghiêm trọng cần quyết**: publisher đang **hardcode `premium: true` cho CẢ 35 template** (kể cả 4 starter bundled). Nếu `isPremium` của record local cũng thành true → trên site **trial** thì **ngay cả 4 starter mặc định cũng bị khoá** ⇒ trial mở gallery ra là **trắng tay**. Cần: (a) chỉ đánh `premium` cho template thật sự premium, (b) hoặc template đã cài từ gallery (licensed mới tải được) thì **không** khoá lại.
+- Việc: reproduce trên site trial (đổi tên `license.lic` → site trial) → xác nhận → sửa → VQA cả 2 tab.
+
+**I.2 🟡 Thumbnail bị cắt cụt (thừa mảng gradient dưới card)** *(user báo 07-24)*
+- **Đã đo**: card Installed và Online **GIỐNG HỆT** — `.mfwg-thumb` cao **220px** nhưng iframe `.tpl-thumb-frame` chỉ **239×164** ⇒ thừa ~56px gradient. ⇒ **lỗi có sẵn của component dùng chung**, KHÔNG do tab Online.
+- Nguồn: `gallery-preview.ts` → `buildCustomThumbnailMarkup()` dựng srcdoc **760×520** rồi scale vào `.tpl-thumb-frame`; CSS ở `Assets/css/megaform-builder-shell.css`.
+- Việc: chỉnh scale/kích thước để thumbnail **lấp đầy** card 220px (ảnh hưởng CẢ gallery nội bộ → phải VQA cả 2 tab, và cả builder gallery nếu dùng chung).
+
+**I.3 Còn lại của gallery**
+- Slim package **Oqtane** (nuspec exclude template + ảnh, đọc `gallery-exclude.json`) + deploy site Oqtane để user test. (DNN đã xong.)
+- **Kênh AI KB** lên GitHub + **thông báo tải lần đầu** trước khi dùng AI. KIMI đã có sẵn model `KbRepoManifest` / `kb/ai-knowledge-seed.json`. ⚠️KB hiện seed bằng **EF migration** (`01060032/35/36/37`) trên Oqtane và **SQL** (`01.06.28*-seed.sql`) trên DNN → chuyển lên GitHub = phải đổi cơ chế seed sang download-on-first-use.
+- Umbraco/Web chưa có endpoint gallery (rule 3-nền song sinh).
+
+### ⭐⭐ Gotcha ĐẮT GIÁ rút ra khi sửa preview trắng (§0358828) — dùng lại được
+1. **Admin-shell guard ẩn MỌI form render trên dashboard**:
+   `html.mf-admin-shell-route .mf-form-wrapper:not(.mf-host-overlay .mf-form-wrapper){display:none!important}` (inject inline, KHÔNG có trong megaform.css).
+   ⇒ Bất kỳ tính năng nào render form thật trên route admin **phải thêm class `mf-host-overlay`** cho overlay/modal.
+2. **`isPreview` mang 2 nghĩa xung đột**: renderer = "chỉ đọc"; nhưng `inline-edit.ts:2180` (`if(!cfg.isPreview) return;`) = "đây là Design surface → BẬT sửa". → đã thêm option **`readOnly`** cho renderer (`isPreview: !!config.isPreview && !config.readOnly`).
+3. **z-index**: `.tpl-preview-modal` bị `Assets/css/megaform-builder-shell.css` đè xuống **1400** trong khi gallery overlay là **2147483646** → preview mở phía SAU. Đã `!important` 2147483647.
+4. ⭐ **Kỹ thuật debug**: duyệt `document.styleSheets` + `el.matches(rule.selectorText)` ngay trong trang để **hỏi trình duyệt rule nào thắng** — nhanh hơn hẳn đoán mò (em đoán sai 3 lần trước khi làm vậy).
+
+---
+
+## J. [07-24] CODEX — QA SSR projected-schema trên DNN (đã xong, tham khảo)
+Nguồn: `qa-dnn-ssr-20260724/README.md`. Site: **`dnn10322_megaqa.ai`** (IIS app pool `DNN10322_MegaQA`).
+- Deploy **scoped**: chỉ `bin/MegaForm.Core.dll`, `bin/MegaForm.DNN.dll`, `DesktopModules/MegaForm/Views/FormView.ascx` (khớp SHA-256 bản Release). Backup trước deploy: `E:\DNN_SITES\DNN10322_MegaQA\Backups\MegaForm-ssr-20260724-183713`.
+- Test: **189 pass / 0 fail** (⚠️ nhiều hơn 178 của Claude — Codex có thêm test), renderer parity golden **11 pass**, Core+DNN Release net472 **0 warning 0 error**.
+- Ma trận runtime PASS: SSR chuẩn (`data-mf-ssr="1"`, 14 field group, không trùng ID), multistep (4 trang SSR, giữ giá trị khi Next), custom HTML (shell có trong response IIS thô + hydrate, 16 field), FlexGrid (`data-mf-flexgrid="locked"`, 390×844 không tràn ngang), widget rating (5 nút, chọn 3 sao → hidden = `3`), **access control** (field chỉ-đăng-nhập KHÔNG lộ trong HTML lẫn schema với khách ẩn danh), embed (`?embed=1`, `mf-hide-header`).
+- **Fallback cap SSR**: custom HTML 720,074 ký tự → server trả fields container rỗng/không đánh dấu, client schema + renderer bundle vẫn còn để render phía client, schema gốc khôi phục trong `finally`.
+- Ảnh: `baseline-two-col.png`, `after-custom-html-viewport.png`, `standard-multistep-step{1,2}.png`, `flexgrid-{custom-html,widget,mobile-390x844}.png`, `embed-mode.png`.
+- ⚠️ QA site cold-start rất chậm trước khi deploy; recycle app pool xong warm request còn 96–448 ms.
