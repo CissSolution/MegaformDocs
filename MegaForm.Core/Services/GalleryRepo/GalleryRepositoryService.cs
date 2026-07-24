@@ -29,8 +29,22 @@ namespace MegaForm.Core.Services.GalleryRepo
     /// </summary>
     public sealed class GalleryRepositoryService
     {
-        /// <summary>Official repository. Override via host config key "MegaForm:GalleryRepoUrl".</summary>
-        public const string DefaultRepoBaseUrl = "https://cissolution.github.io/megaform-gallery/";
+        /// <summary>
+        /// Official repository. Override via host config key "MegaForm:GalleryRepoUrl"
+        /// (DNN host setting "MegaForm_GalleryRepoUrl").
+        ///
+        /// Served through the jsDelivr CDN rather than GitHub Pages: the content lives in the
+        /// public repo CissSolution/megaform-gallery, and jsDelivr serves any public GitHub repo
+        /// directly with a proper application/json content-type, global caching and no per-repo
+        /// Pages configuration. GitHub Pages was not serving for this organisation, and a CDN is
+        /// the better distribution channel for many installs anyway (raw.githubusercontent is
+        /// rate-limited and not intended as one).
+        ///
+        /// NOTE for publishers: jsDelivr caches a branch ref, so after pushing new templates hit
+        /// https://purge.jsdelivr.net/gh/CissSolution/megaform-gallery@main/manifest.json
+        /// (and the changed files) to make the update visible immediately.
+        /// </summary>
+        public const string DefaultRepoBaseUrl = "https://cdn.jsdelivr.net/gh/CissSolution/megaform-gallery@main/";
 
         public const string TemplatesManifestPath = "manifest.json";
         public const string KbManifestPath = "kb/manifest.json";

@@ -89,7 +89,9 @@ namespace MegaForm.Sdk.Tests
         [Fact]
         public void BaseUrl_Normalization()
         {
-            Assert.Equal("https://cissolution.github.io/megaform-gallery/", GalleryRepositoryService.NormalizeBaseUrl(null));
+            // null/empty falls back to the shipped default (jsDelivr CDN over the public gallery repo).
+            Assert.Equal(GalleryRepositoryService.DefaultRepoBaseUrl, GalleryRepositoryService.NormalizeBaseUrl(null));
+            Assert.EndsWith("/", GalleryRepositoryService.DefaultRepoBaseUrl);
             Assert.Equal("https://example.com/repo/", GalleryRepositoryService.NormalizeBaseUrl("example.com/repo"));
             Assert.Equal("https://example.com/repo/", GalleryRepositoryService.NormalizeBaseUrl("https://example.com/repo/"));
         }
