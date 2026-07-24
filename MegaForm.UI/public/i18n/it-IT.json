@@ -324,6 +324,14 @@
   "inbox.toast_approved": "Attività approvata.",
   "inbox.toast_action_failed": "Azione non riuscita.",
   "subs.all_submissions": "Tutti gli invii",
+
+  "subs.source_help": "Leggi i record dagli invii MegaForm, oppure live dalla tabella SQL collegata",
+
+  "subs.source_json": "Origine: Invii",
+
+  "subs.source_sql": "Origine: Tabella SQL",
+
+  "subs.source_sql_unavailable": "Origine tabella SQL non disponibile qui — vengono mostrati gli Invii.",
   "subs.search_ph": "Cerca invii…",
   "subs.manage_columns": "Gestisci colonne",
   "subs.range_all": "Tutto il periodo",
@@ -402,6 +410,8 @@
   "dash.nav_captcha": "Impostazioni Captcha",
   "dash.nav_ai": "Impostazioni AI",
   "dash.nav_gsheets": "Google Sheets",
+
+  "dash.nav_cloudstorage": "Archiviazione cloud",
   "dash.nav_settings": "Impostazioni",
   "dash.nav_form_management": "Gestione moduli",
   "dash.settings_title": "Impostazioni",

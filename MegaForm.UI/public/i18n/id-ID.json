@@ -324,6 +324,14 @@
   "inbox.toast_approved": "Tugas disetujui.",
   "inbox.toast_action_failed": "Tindakan gagal.",
   "subs.all_submissions": "Semua Kiriman",
+
+  "subs.source_help": "Baca rekaman dari submission MegaForm, atau langsung dari tabel SQL terikat",
+
+  "subs.source_json": "Sumber: Submission",
+
+  "subs.source_sql": "Sumber: Tabel SQL",
+
+  "subs.source_sql_unavailable": "Sumber tabel SQL tidak tersedia di sini — menampilkan Submission sebagai gantinya.",
   "subs.search_ph": "Cari kiriman…",
   "subs.manage_columns": "Kelola Kolom",
   "subs.range_all": "Semua Waktu",
@@ -402,6 +410,8 @@
   "dash.nav_captcha": "Pengaturan Captcha",
   "dash.nav_ai": "Pengaturan AI",
   "dash.nav_gsheets": "Google Sheets",
+
+  "dash.nav_cloudstorage": "Penyimpanan Cloud",
   "dash.nav_settings": "Pengaturan",
   "dash.nav_form_management": "Manajemen Formulir",
   "dash.settings_title": "Pengaturan",

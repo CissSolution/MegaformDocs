@@ -404,6 +404,7 @@ const I: Record<string,string> = {
   checkSm: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>`,
   download: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>`,
   upload: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>`,
+  cloudUp: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19a4.5 4.5 0 0 0 .42-8.98 6.5 6.5 0 0 0-12.7 1.61A4 4 0 0 0 6 19h11.5Z"/><polyline points="16 16 12 12 8 16"/><line x1="12" x2="12" y1="12" y2="21"/></svg>`,
   sparkles: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>`,
   // [B86] Portal / row-level-access — "people" glyph for the per-form portal toggle.
   users: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
@@ -675,6 +676,215 @@ async function openGoogleSheetsSettings(targetBody?: HTMLElement): Promise<void>
     } catch (e) { setStatus('✕ ' + (e as Error).message, '#dc2626'); }
     finally { saveBtn.disabled = false; }
   });
+}
+
+// ── Cloud Storage: named connections (Google Drive / Amazon S3 / Azure Blob) ──
+// Global server-side catalog (settings key MegaForm_CloudStorageConnections),
+// same 4 ModuleConfig endpoints the builder's per-form "Cloud Storage" section
+// uses. This pane is the GLOBAL management surface (list/add/edit/delete/test);
+// the per-form mapping (which upload fields go to which connection/folder) stays
+// in Form Builder → Settings → Cloud Storage.
+const CS_PROVIDERS = ['GoogleDrive', 'AmazonS3', 'AzureBlob'];
+const CS_SECRET_MASK = '***';
+const CS_NAME_RE = /^[A-Za-z][A-Za-z0-9_-]{0,63}$/;
+
+function csParseExtra(raw: string): any {
+  const text = String(raw || '').trim();
+  if (!text) return {};
+  if (text.charAt(0) === '{') {
+    try { const p = JSON.parse(text); if (p && typeof p === 'object' && !Array.isArray(p)) return p; } catch { /* fall through */ }
+  }
+  const out: any = {};
+  text.split(/\r?\n/).forEach((line) => {
+    const idx = line.indexOf('=');
+    if (idx > 0) out[String(line.substring(0, idx)).trim()] = String(line.substring(idx + 1)).trim();
+  });
+  return out;
+}
+
+async function openCloudStorageSettings(targetBody?: HTMLElement): Promise<void> {
+  const content = div('mf-cs-settings'); content.style.cssText = 'font-size:13px';
+  const status = div('mf-cs-status'); status.style.cssText = 'font-size:12px;min-height:18px;margin-top:4px';
+  const setStatus = (msg: string, color = '#475569') => { status.textContent = msg; status.style.color = color; };
+
+  const note = div('mf-cs-note');
+  note.style.cssText = 'font-size:12px;line-height:1.55;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:9px 11px;margin-bottom:12px;color:#075985';
+  note.innerHTML = 'Connections are stored <b>server-side</b> and shared by all forms. To route a form’s uploads to the cloud, open that form in the <b>Form Builder → Settings → Cloud Storage</b> and add a mapping.';
+  content.appendChild(note);
+
+  const listHost = div('mf-cs-list'); listHost.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-bottom:12px';
+  content.appendChild(listHost);
+
+  // ── connection edit form (hidden until Add/Edit) ──
+  const formWrap = div('mf-cs-form'); formWrap.style.cssText = 'display:none;border:1px solid #e2e8f0;border-radius:8px;padding:12px;background:#f8fafc;margin-bottom:10px';
+  const nameInp = el('input', 'mf-input') as HTMLInputElement; nameInp.type = 'text'; nameInp.maxLength = 64; nameInp.style.cssText = GS_INPUT_CSS;
+  const provSel = el('select', 'mf-input') as HTMLSelectElement; provSel.style.cssText = GS_INPUT_CSS;
+  const accInp = el('input', 'mf-input') as HTMLInputElement; accInp.type = 'password'; accInp.autocomplete = 'new-password'; accInp.style.cssText = GS_INPUT_CSS;
+  const refInp = el('input', 'mf-input') as HTMLInputElement; refInp.type = 'text'; refInp.autocomplete = 'off'; refInp.style.cssText = GS_INPUT_CSS;
+  const cidInp = el('input', 'mf-input') as HTMLInputElement; cidInp.type = 'text'; cidInp.autocomplete = 'off'; cidInp.style.cssText = GS_INPUT_CSS;
+  const csecInp = el('input', 'mf-input') as HTMLInputElement; csecInp.type = 'password'; csecInp.autocomplete = 'new-password'; csecInp.style.cssText = GS_INPUT_CSS;
+  const folderInp = el('input', 'mf-input') as HTMLInputElement; folderInp.type = 'text'; folderInp.style.cssText = GS_INPUT_CSS;
+  const urlInp = el('input', 'mf-input') as HTMLInputElement; urlInp.type = 'text'; urlInp.placeholder = 'https://…'; urlInp.style.cssText = GS_INPUT_CSS;
+  const extraTa = el('textarea', 'mf-input') as HTMLTextAreaElement; extraTa.rows = 2; extraTa.style.cssText = GS_INPUT_CSS + ';resize:vertical;font-family:ui-monospace,monospace;font-size:12px';
+
+  formWrap.appendChild(gsBlock('Name *', nameInp, 'Letters, digits, "-" and "_" — referenced by form mappings.'));
+  formWrap.appendChild(gsBlock('Provider', provSel));
+  formWrap.appendChild(gsBlock('Access token', accInp));
+  formWrap.appendChild(gsBlock('Refresh token', refInp));
+  formWrap.appendChild(gsBlock('Client ID', cidInp, 'Amazon S3: access key ID.'));
+  formWrap.appendChild(gsBlock('Client secret', csecInp, 'Amazon S3: secret access key · Azure Blob: connection string.'));
+  formWrap.appendChild(gsBlock('Base folder / bucket / container', folderInp));
+  formWrap.appendChild(gsBlock('Base URL', urlInp, 'S3-compatible endpoint (leave blank for AWS).'));
+  formWrap.appendChild(gsBlock('Extra (JSON or key=value lines)', extraTa, 'e.g. Amazon S3: Region=ap-southeast-1'));
+  const secretHint = div('mf-cs-hint', '"***" keeps the stored secret; type a new value to replace it.');
+  secretHint.style.cssText = 'font-size:11px;color:#94a3b8;margin-bottom:8px';
+  formWrap.appendChild(secretHint);
+
+  const formFooter = div(); formFooter.style.cssText = 'display:flex;gap:8px;align-items:center';
+  const testBtn = el('button', 'mf-btn mf-btn-outline mf-btn-sm') as HTMLButtonElement; testBtn.type = 'button'; testBtn.textContent = 'Test';
+  const saveBtn = el('button', 'mf-btn mf-btn-primary mf-btn-sm') as HTMLButtonElement; saveBtn.type = 'button'; saveBtn.textContent = 'Save';
+  const cancelBtn = el('button', 'mf-btn mf-btn-outline mf-btn-sm') as HTMLButtonElement; cancelBtn.type = 'button'; cancelBtn.textContent = 'Cancel';
+  mk(formFooter, testBtn, saveBtn, cancelBtn);
+  formWrap.appendChild(formFooter);
+  content.appendChild(formWrap);
+
+  const addBtn = el('button', 'mf-btn mf-btn-outline mf-btn-sm') as HTMLButtonElement; addBtn.type = 'button'; addBtn.innerHTML = ic('plus', 13) + ' Add connection';
+  content.appendChild(addBtn);
+  content.appendChild(status);
+
+  if (targetBody) { targetBody.innerHTML = ''; targetBody.appendChild(content); }
+  else { modal('Cloud Storage', 'cloudUp', content, 640); }
+
+  let providers: string[] = CS_PROVIDERS.slice();
+  let editing = false;
+
+  function fillProviderOptions(selected?: string): void {
+    provSel.innerHTML = providers.map((p) => '<option value="' + p + '"' + (p === selected ? ' selected' : '') + '>' + p + '</option>').join('');
+  }
+
+  function readForm(): any {
+    return {
+      name: nameInp.value.trim(),
+      provider: provSel.value || CS_PROVIDERS[0],
+      accessToken: accInp.value || '',
+      refreshToken: refInp.value || '',
+      clientId: cidInp.value || '',
+      clientSecret: csecInp.value || '',
+      baseFolder: folderInp.value || '',
+      baseUrl: urlInp.value || '',
+      extra: csParseExtra(extraTa.value),
+    };
+  }
+
+  function showForm(c?: any): void {
+    editing = true;
+    fillProviderOptions(c ? String(c.provider || CS_PROVIDERS[0]) : CS_PROVIDERS[0]);
+    nameInp.value = c ? String(c.name || '') : '';
+    accInp.value = c ? String(c.accessToken || '') : '';
+    refInp.value = c ? String(c.refreshToken || '') : '';
+    cidInp.value = c ? String(c.clientId || '') : '';
+    csecInp.value = c ? String(c.clientSecret || '') : '';
+    folderInp.value = c ? String(c.baseFolder || '') : '';
+    urlInp.value = c ? String(c.baseUrl || '') : '';
+    extraTa.value = c ? (typeof c.extra === 'string' ? c.extra : (c.extra ? JSON.stringify(c.extra) : '')) : '';
+    formWrap.style.display = '';
+    setStatus('');
+    nameInp.focus();
+  }
+
+  function hideForm(): void { formWrap.style.display = 'none'; editing = false; }
+
+  async function loadList(): Promise<void> {
+    listHost.innerHTML = '<div style="font-size:12px;color:#94a3b8">' + ic('spin', 13) + ' Loading connections…</div>';
+    try {
+      const r = await fetch(gsApiBase() + 'ModuleConfig/CloudStorageConnectionsList', { credentials: 'same-origin', cache: 'no-store', headers: dnnAuthHeaders() });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const d = await r.json();
+      const items: any[] = (d && (d.connections || d.Connections)) || [];
+      const prov: string[] = (d && (d.providers || d.Providers)) || [];
+      if (Array.isArray(prov) && prov.length) providers = prov.map(String);
+      if (!items.length) {
+        listHost.innerHTML = '<div style="font-size:12.5px;color:#64748b;">No cloud storage connections yet — add one below.</div>';
+        return;
+      }
+      listHost.innerHTML = '';
+      items.forEach((c) => {
+        const name = String(c.name || c.Name || '');
+        const prov2 = String(c.provider || c.Provider || '');
+        const detail = String(c.baseFolder || c.baseUrl || '');
+        const row = div('mf-cs-row');
+        row.style.cssText = 'display:flex;align-items:center;gap:8px;border:1px solid #e2e8f0;border-radius:8px;padding:7px 10px;background:#fff';
+        row.innerHTML =
+          '<span style="font-weight:700;font-size:12.5px;min-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>' +
+          '<span style="font-size:11px;color:#64748b;flex-shrink:0"></span>' +
+          '<span style="font-size:11px;color:#94a3b8;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>';
+        (row.children[0] as HTMLElement).textContent = name;
+        (row.children[1] as HTMLElement).textContent = prov2;
+        (row.children[2] as HTMLElement).textContent = detail;
+        (row.children[2] as HTMLElement).title = detail;
+        const editBtn = el('button', 'mf-btn mf-btn-outline mf-btn-sm') as HTMLButtonElement; editBtn.type = 'button'; editBtn.textContent = 'Edit';
+        const delBtn = el('button', 'mf-btn mf-btn-outline mf-btn-sm') as HTMLButtonElement; delBtn.type = 'button'; delBtn.textContent = 'Delete'; delBtn.style.color = '#dc2626';
+        editBtn.addEventListener('click', () => showForm(c));
+        delBtn.addEventListener('click', async () => {
+          if (!window.confirm('Delete connection "' + name + '"? Forms mapped to it will stop uploading to the cloud.')) return;
+          try {
+            const r2 = await fetch(gsApiBase() + 'ModuleConfig/CloudStorageConnectionDelete', {
+              method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', ...dnnAuthHeaders() },
+              body: JSON.stringify({ name: name }),
+            });
+            const d2 = await r2.json().catch(() => null);
+            if (d2 && d2.success === false) { window.alert(d2.message || 'Delete failed'); return; }
+            setStatus('✓ Connection deleted.', '#16a34a');
+            void loadList();
+          } catch (e) { setStatus('✕ ' + (e as Error).message, '#dc2626'); }
+        });
+        row.appendChild(editBtn); row.appendChild(delBtn);
+        listHost.appendChild(row);
+      });
+    } catch (e) {
+      listHost.innerHTML = '<div class="mf-modal-err">Could not load connections (' + String((e as Error).message || 'error') + ').</div>';
+    }
+  }
+
+  addBtn.addEventListener('click', () => showForm(null));
+  cancelBtn.addEventListener('click', hideForm);
+
+  testBtn.addEventListener('click', async () => {
+    testBtn.disabled = true; setStatus('Testing…');
+    try {
+      const r = await fetch(gsApiBase() + 'ModuleConfig/CloudStorageConnectionTest', {
+        method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', ...dnnAuthHeaders() },
+        body: JSON.stringify(readForm()),
+      });
+      const d = await r.json().catch(() => null);
+      if (d && d.success) setStatus('✓ ' + (d.message || 'Connection OK'), '#16a34a');
+      else setStatus('✕ ' + ((d && d.message) || ('HTTP ' + r.status)), '#dc2626');
+    } catch (e) { setStatus('✕ ' + (e as Error).message, '#dc2626'); }
+    finally { testBtn.disabled = false; }
+  });
+
+  saveBtn.addEventListener('click', async () => {
+    const payload = readForm();
+    if (!CS_NAME_RE.test(payload.name)) {
+      setStatus('✕ Name must start with a letter; letters, digits, "-" and "_" only (max 64).', '#dc2626');
+      return;
+    }
+    saveBtn.disabled = true; setStatus('Saving…');
+    try {
+      const r = await fetch(gsApiBase() + 'ModuleConfig/CloudStorageConnectionSave', {
+        method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', ...dnnAuthHeaders() },
+        body: JSON.stringify(payload),
+      });
+      const d = await r.json().catch(() => null);
+      if (d && d.success === false) { setStatus('✕ ' + (d.message || 'Save failed'), '#dc2626'); return; }
+      setStatus('✓ ' + ((d && d.message) || 'Connection saved.'), '#16a34a');
+      hideForm();
+      void loadList();
+    } catch (e) { setStatus('✕ ' + (e as Error).message, '#dc2626'); }
+    finally { saveBtn.disabled = false; }
+  });
+
+  void loadList();
 }
 
 /** Per-form "Connect Google Sheet" — wires the form's workflow so each new
@@ -961,7 +1171,7 @@ function row2(a: HTMLElement, b: HTMLElement): HTMLElement {
 
 // ─────────────────────────────────────────────────────────────
 // UNIFIED SETTINGS PANE — one modal, tabs for every settings group
-// (Database / Payment / Email / Upload / Captcha / AI / Google Sheets).
+// (Database / Payment / Email / Upload / Captcha / AI / Google Sheets / Cloud Storage).
 // Languages stays a separate Configuration nav item (NOT a tab here).
 // Each open*Settings(targetBody?) renders into the shared tab body when a
 // targetBody is passed, else it still opens its own standalone modal (so
@@ -1012,6 +1222,7 @@ function openSettingsPane(initialTab?: string): void {
     { key: 'captcha',  labelKey: 'dash.nav_captcha',  labelFallback: 'Captcha Settings',  icon: 'shield',      render: (b) => openCaptchaSettings(b) },
     { key: 'ai',       labelKey: 'dash.nav_ai',       labelFallback: 'AI Settings',       icon: 'sparkles',    render: (b) => openAiSettings(b) },
     { key: 'gsheets',  labelKey: 'dash.nav_gsheets',  labelFallback: 'Google Sheets',     icon: 'googleSheet', render: (b) => openGoogleSheetsSettings(b) },
+    { key: 'cloudstorage', labelKey: 'dash.nav_cloudstorage', labelFallback: 'Cloud Storage', icon: 'cloudUp', render: (b) => openCloudStorageSettings(b) },
   ];
 
   // Left tab rail + right content host (race-safe: a fresh content div per select,

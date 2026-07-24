@@ -324,6 +324,14 @@
   "inbox.toast_approved": "कार्य अनुमोदित।",
   "inbox.toast_action_failed": "क्रिया विफल।",
   "subs.all_submissions": "सभी सबमिशन",
+
+  "subs.source_help": "MegaForm सबमिशन से रिकॉर्ड पढ़ें, या बाउंड SQL तालिका से सीधे",
+
+  "subs.source_json": "स्रोत: सबमिशन",
+
+  "subs.source_sql": "स्रोत: SQL तालिका",
+
+  "subs.source_sql_unavailable": "SQL तालिका स्रोत यहाँ उपलब्ध नहीं है — इसके बजाय सबमिशन दिखाए जा रहे हैं।",
   "subs.search_ph": "सबमिशन खोजें…",
   "subs.manage_columns": "कॉलम प्रबंधित करें",
   "subs.range_all": "सभी समय",
@@ -402,6 +410,8 @@
   "dash.nav_captcha": "Captcha सेटिंग",
   "dash.nav_ai": "AI सेटिंग",
   "dash.nav_gsheets": "Google Sheets",
+
+  "dash.nav_cloudstorage": "क्लाउड स्टोरेज",
   "dash.nav_settings": "सेटिंग्स",
   "dash.nav_form_management": "फ़ॉर्म प्रबंधन",
   "dash.settings_title": "सेटिंग्स",

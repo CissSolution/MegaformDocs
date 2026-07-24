@@ -324,6 +324,14 @@
   "inbox.toast_approved": "Aufgabe genehmigt.",
   "inbox.toast_action_failed": "Aktion fehlgeschlagen.",
   "subs.all_submissions": "Alle Einreichungen",
+
+  "subs.source_help": "Datensätze aus MegaForm-Übermittlungen oder live aus der gebundenen SQL-Tabelle lesen",
+
+  "subs.source_json": "Quelle: Übermittlungen",
+
+  "subs.source_sql": "Quelle: SQL-Tabelle",
+
+  "subs.source_sql_unavailable": "SQL-Tabellenquelle ist hier nicht verfügbar — stattdessen werden Übermittlungen angezeigt.",
   "subs.search_ph": "Einreichungen suchen…",
   "subs.manage_columns": "Spalten verwalten",
   "subs.range_all": "Gesamter Zeitraum",
@@ -402,6 +410,8 @@
   "dash.nav_captcha": "Captcha-Einstellungen",
   "dash.nav_ai": "KI-Einstellungen",
   "dash.nav_gsheets": "Google Sheets",
+
+  "dash.nav_cloudstorage": "Cloud-Speicher",
   "dash.nav_settings": "Einstellungen",
   "dash.nav_form_management": "Formularverwaltung",
   "dash.settings_title": "Einstellungen",

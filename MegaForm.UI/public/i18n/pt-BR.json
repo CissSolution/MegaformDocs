@@ -324,6 +324,14 @@
   "inbox.toast_approved": "Tarefa aprovada.",
   "inbox.toast_action_failed": "Falha na ação.",
   "subs.all_submissions": "Todos os envios",
+
+  "subs.source_help": "Ler registros dos envios do MegaForm, ou ao vivo da tabela SQL vinculada",
+
+  "subs.source_json": "Fonte: Envios",
+
+  "subs.source_sql": "Fonte: Tabela SQL",
+
+  "subs.source_sql_unavailable": "Fonte de tabela SQL não disponível aqui — mostrando Envios.",
   "subs.search_ph": "Buscar envios…",
   "subs.manage_columns": "Gerenciar colunas",
   "subs.range_all": "Todo o período",
@@ -402,6 +410,8 @@
   "dash.nav_captcha": "Configurações de Captcha",
   "dash.nav_ai": "Configurações de IA",
   "dash.nav_gsheets": "Google Sheets",
+
+  "dash.nav_cloudstorage": "Armazenamento em nuvem",
   "dash.nav_settings": "Configurações",
   "dash.nav_form_management": "Gerenciamento de formulários",
   "dash.settings_title": "Configurações",

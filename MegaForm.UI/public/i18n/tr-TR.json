@@ -324,6 +324,14 @@
   "inbox.toast_approved": "Görev onaylandı.",
   "inbox.toast_action_failed": "İşlem başarısız.",
   "subs.all_submissions": "Tüm Başvurular",
+
+  "subs.source_help": "Kayıtları MegaForm gönderimlerinden veya canlı olarak bağlı SQL tablosundan oku",
+
+  "subs.source_json": "Kaynak: Gönderimler",
+
+  "subs.source_sql": "Kaynak: SQL tablosu",
+
+  "subs.source_sql_unavailable": "SQL tablo kaynağı burada kullanılamıyor — bunun yerine Gönderimler gösteriliyor.",
   "subs.search_ph": "Başvuru ara…",
   "subs.manage_columns": "Sütunları Yönet",
   "subs.range_all": "Tüm Zamanlar",
@@ -402,6 +410,8 @@
   "dash.nav_captcha": "Captcha Ayarları",
   "dash.nav_ai": "AI Ayarları",
   "dash.nav_gsheets": "Google Sheets",
+
+  "dash.nav_cloudstorage": "Bulut Depolama",
   "dash.nav_settings": "Ayarlar",
   "dash.nav_form_management": "Form Yönetimi",
   "dash.settings_title": "Ayarlar",

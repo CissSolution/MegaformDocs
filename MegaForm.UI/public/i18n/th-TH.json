@@ -324,6 +324,14 @@
   "inbox.toast_approved": "อนุมัติงานแล้ว",
   "inbox.toast_action_failed": "การดำเนินการล้มเหลว",
   "subs.all_submissions": "การส่งแบบฟอร์มทั้งหมด",
+
+  "subs.source_help": "อ่านระเบียนจากการส่งของ MegaForm หรือสดจากตาราง SQL ที่ผูกไว้",
+
+  "subs.source_json": "แหล่งข้อมูล: การส่ง",
+
+  "subs.source_sql": "แหล่งข้อมูล: ตาราง SQL",
+
+  "subs.source_sql_unavailable": "แหล่งตาราง SQL ไม่พร้อมใช้งานที่นี่ — กำลังแสดงการส่งแทน",
   "subs.search_ph": "ค้นหาการส่งแบบฟอร์ม…",
   "subs.manage_columns": "จัดการคอลัมน์",
   "subs.range_all": "ทุกช่วงเวลา",
@@ -402,6 +410,8 @@
   "dash.nav_captcha": "การตั้งค่า Captcha",
   "dash.nav_ai": "การตั้งค่า AI",
   "dash.nav_gsheets": "Google Sheets",
+
+  "dash.nav_cloudstorage": "พื้นที่จัดเก็บคลาวด์",
   "dash.nav_settings": "การตั้งค่า",
   "dash.nav_form_management": "การจัดการฟอร์ม",
   "dash.settings_title": "การตั้งค่า",

@@ -324,6 +324,14 @@
   "inbox.toast_approved": "Đã phê duyệt nhiệm vụ.",
   "inbox.toast_action_failed": "Hành động thất bại.",
   "subs.all_submissions": "Tất cả bài gửi",
+
+  "subs.source_help": "Đọc bản ghi từ submission MegaForm, hoặc trực tiếp từ bảng SQL đã gắn",
+
+  "subs.source_json": "Nguồn: Submissions",
+
+  "subs.source_sql": "Nguồn: Bảng SQL",
+
+  "subs.source_sql_unavailable": "Nguồn bảng SQL không khả dụng ở đây — đang hiển thị Submissions.",
   "subs.search_ph": "Tìm bài gửi…",
   "subs.manage_columns": "Quản lý cột",
   "subs.range_all": "Mọi thời gian",
@@ -402,6 +410,8 @@
   "dash.nav_captcha": "Cài đặt Captcha",
   "dash.nav_ai": "Cài đặt AI",
   "dash.nav_gsheets": "Google Sheets",
+
+  "dash.nav_cloudstorage": "Lưu trữ đám mây",
   "dash.nav_settings": "Cài đặt",
   "dash.nav_form_management": "Quản lý biểu mẫu",
   "dash.settings_title": "Cài đặt",

@@ -406,6 +406,8 @@
   "dash.nav_captcha": "Captcha Settings",
   "dash.nav_ai": "AI Settings",
   "dash.nav_gsheets": "Google Sheets",
+
+  "dash.nav_cloudstorage": "Cloud Storage",
   "dash.nav_settings": "Settings",
   "dash.nav_form_management": "Form Management",
   "dash.settings_title": "Settings",

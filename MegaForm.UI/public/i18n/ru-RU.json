@@ -324,6 +324,14 @@
   "inbox.toast_approved": "Задача одобрена.",
   "inbox.toast_action_failed": "Действие не выполнено.",
   "subs.all_submissions": "Все отправки",
+
+  "subs.source_help": "Чтение записей из отправок MegaForm или напрямую из связанной таблицы SQL",
+
+  "subs.source_json": "Источник: Отправки",
+
+  "subs.source_sql": "Источник: Таблица SQL",
+
+  "subs.source_sql_unavailable": "Источник таблицы SQL здесь недоступен — вместо этого показаны Отправки.",
   "subs.search_ph": "Поиск отправок…",
   "subs.manage_columns": "Управление столбцами",
   "subs.range_all": "За всё время",
@@ -402,6 +410,8 @@
   "dash.nav_captcha": "Настройки Captcha",
   "dash.nav_ai": "Настройки AI",
   "dash.nav_gsheets": "Google Таблицы",
+
+  "dash.nav_cloudstorage": "Облачное хранилище",
   "dash.nav_settings": "Настройки",
   "dash.nav_form_management": "Управление формами",
   "dash.settings_title": "Настройки",

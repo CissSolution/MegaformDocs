@@ -324,6 +324,14 @@
   "inbox.toast_approved": "تمت الموافقة على المهمة.",
   "inbox.toast_action_failed": "فشل الإجراء.",
   "subs.all_submissions": "كل الإرساليات",
+
+  "subs.source_help": "قراءة السجلات من إرسالات MegaForm، أو مباشرة من جدول SQL المرتبط",
+
+  "subs.source_json": "المصدر: الإرسالات",
+
+  "subs.source_sql": "المصدر: جدول SQL",
+
+  "subs.source_sql_unavailable": "مصدر جدول SQL غير متاح هنا — سيتم عرض الإرسالات بدلاً منه.",
   "subs.search_ph": "بحث في الإرساليات…",
   "subs.manage_columns": "إدارة الأعمدة",
   "subs.range_all": "كل الأوقات",
@@ -402,6 +410,8 @@
   "dash.nav_captcha": "إعدادات كابتشا",
   "dash.nav_ai": "إعدادات الذكاء الاصطناعي",
   "dash.nav_gsheets": "جداول بيانات Google",
+
+  "dash.nav_cloudstorage": "التخزين السحابي",
   "dash.nav_settings": "الإعدادات",
   "dash.nav_form_management": "إدارة النماذج",
   "dash.settings_title": "الإعدادات",

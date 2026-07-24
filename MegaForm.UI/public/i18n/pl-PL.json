@@ -324,6 +324,14 @@
   "inbox.toast_approved": "Zadanie zatwierdzone.",
   "inbox.toast_action_failed": "Akcja nie powiodła się.",
   "subs.all_submissions": "Wszystkie zgłoszenia",
+
+  "subs.source_help": "Odczyt rekordów z zgłoszeń MegaForm lub na żywo z powiązanej tabeli SQL",
+
+  "subs.source_json": "Źródło: Zgłoszenia",
+
+  "subs.source_sql": "Źródło: Tabela SQL",
+
+  "subs.source_sql_unavailable": "Źródło tabeli SQL jest tu niedostępne — wyświetlane są Zgłoszenia.",
   "subs.search_ph": "Szukaj zgłoszeń…",
   "subs.manage_columns": "Zarządzaj kolumnami",
   "subs.range_all": "Cały czas",
@@ -402,6 +410,8 @@
   "dash.nav_captcha": "Ustawienia Captcha",
   "dash.nav_ai": "Ustawienia AI",
   "dash.nav_gsheets": "Arkusze Google",
+
+  "dash.nav_cloudstorage": "Magazyn w chmurze",
   "dash.nav_settings": "Ustawienia",
   "dash.nav_form_management": "Zarządzanie formularzami",
   "dash.settings_title": "Ustawienia",

@@ -324,6 +324,14 @@
   "inbox.toast_approved": "Taak goedgekeurd.",
   "inbox.toast_action_failed": "Actie mislukt.",
   "subs.all_submissions": "Alle inzendingen",
+
+  "subs.source_help": "Records lezen uit MegaForm-inzendingen, of live uit de gekoppelde SQL-tabel",
+
+  "subs.source_json": "Bron: Inzendingen",
+
+  "subs.source_sql": "Bron: SQL-tabel",
+
+  "subs.source_sql_unavailable": "SQL-tabelbron is hier niet beschikbaar — in plaats daarvan worden Inzendingen getoond.",
   "subs.search_ph": "Inzendingen zoeken…",
   "subs.manage_columns": "Kolommen beheren",
   "subs.range_all": "Alle tijd",
@@ -402,6 +410,8 @@
   "dash.nav_captcha": "Captcha-instellingen",
   "dash.nav_ai": "AI-instellingen",
   "dash.nav_gsheets": "Google Spreadsheets",
+
+  "dash.nav_cloudstorage": "Cloudopslag",
   "dash.nav_settings": "Instellingen",
   "dash.nav_form_management": "Formulierbeheer",
   "dash.settings_title": "Instellingen",
