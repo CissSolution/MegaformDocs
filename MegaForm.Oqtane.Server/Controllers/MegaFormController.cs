@@ -1006,6 +1006,20 @@ namespace MegaForm.Oqtane.Server.Controllers
                 new MegaForm.Core.Services.GalleryRepo.GalleryRepositoryService(url));
         }
 
+        /// <summary>Module image root. Bundle entries are "img/&lt;rel&gt;", so extracting under
+        /// {webroot}/Modules/MegaForm reproduces the /Modules/MegaForm/img/&lt;rel&gt; URLs that
+        /// Oqtane templates reference.</summary>
+        private string ResolveGalleryImageRoot()
+        {
+            try
+            {
+                var web = _env?.WebRootPath;
+                if (string.IsNullOrWhiteSpace(web)) return null;
+                return System.IO.Path.Combine(web, "Modules", "MegaForm");
+            }
+            catch { return null; }
+        }
+
         private IActionResult GalleryTrialGate()
         {
             if (!MegaForm.Core.Services.LicenseService.IsTrial()) return null;
@@ -1069,9 +1083,16 @@ namespace MegaForm.Oqtane.Server.Controllers
             var gate = GalleryTrialGate();
             if (gate != null) return gate;
 
-            var fetch = await BuildGalleryService().FetchTemplateAsync(slug, forceRefresh: false);
+            var svc = BuildGalleryService();
+            var fetch = await svc.FetchTemplateAsync(slug, forceRefresh: false);
             if (!fetch.Success)
                 return BadRequest(new { error = "preview_failed", message = fetch.Error });
+
+            // Materialise artwork first — a premium hero is a background image referenced by
+            // absolute URL, so without the bundle the preview shows a large empty area instead of
+            // the design. Idempotent, never overwrites, images are inert static files.
+            try { await svc.InstallAssetsAsync(fetch.Info, ResolveGalleryImageRoot()); }
+            catch { /* preview must still work without artwork */ }
 
             return new ContentResult { Content = fetch.Json, ContentType = "application/json", StatusCode = 200 };
         }
@@ -1092,7 +1113,19 @@ namespace MegaForm.Oqtane.Server.Controllers
             try
             {
                 var record = _templateCatalog.SaveTemplateJson(fetch.FileName, fetch.Json);
-                return JsonOk(new { success = true, slug = fetch.Slug, template = record });
+
+                // Artwork is best-effort: the template is already installed and usable, so a
+                // failed bundle is reported rather than failing the whole install (parity with DNN).
+                var assets = await svc.InstallAssetsAsync(fetch.Info, ResolveGalleryImageRoot());
+
+                return JsonOk(new
+                {
+                    success = true,
+                    slug = fetch.Slug,
+                    template = record,
+                    assetsInstalled = assets.FilesWritten,
+                    assetsError = assets.Success ? null : assets.Error
+                });
             }
             catch (Exception ex)
             {
