@@ -9,7 +9,8 @@
 import { openImportJsonDialog } from './import-json-modal';
 import { h, icon, wt, wizardToast } from './ui';
 import { isTrialMode, showTrialUpgrade } from '@shared/trial';
-import { WizardTemplate, templatesState, loadTemplates, wizardTemplateFromJson } from './templates';
+import { WizardTemplate, templatesState, loadTemplates, resetTemplates, wizardTemplateFromJson } from './templates';
+import { openRemoteGallery } from './remote-gallery';
 import { buildTemplateThumbnail, openTemplatePreview, ensurePreviewCss } from './gallery-preview';
 
 // Saturated card-thumbnail gradients per category (mirrors the builder gallery) — the
@@ -97,6 +98,15 @@ export function openWizardGallery(onPick: (t: WizardTemplate) => void, onImport:
       h('div', { class: 'mfwg-body' }, [grid]),
       h('div', { class: 'mfwg-ft' }, [
         h('button', { class: 'mfwg-import', onclick: () => openImportJson((t) => { close(); onImport(t); }) }, [icon('fa-file-arrow-up'), document.createTextNode(wt('wiz.gallery.import', 'Import JSON'))]),
+        // [GalleryRepo v20260724] Premium templates + artwork live in the online gallery
+        // (not in the package). Installing one drops it into the local catalog, so reload
+        // the wizard's catalog afterwards to make it appear in the grid above.
+        h('button', {
+          class: 'mfwg-import',
+          // resetTemplates() first: loadTemplates() short-circuits on a cached 'ok' state, so
+          // without clearing it a freshly installed template would not appear until reload.
+          onclick: () => openRemoteGallery(() => { resetTemplates(); loadTemplates(() => { renderCats(); renderGrid(); }); }),
+        }, [icon('fa-cloud-arrow-down'), document.createTextNode(wt('wiz.gallery.browse_online', 'Browse online'))]),
         h('span', { class: 'mfwg-hint' }, wt('wiz.gallery.import_hint', 'Upload a MegaForm export (.json) to start from it, or pick a template above.')),
       ]),
     ]),

@@ -406,7 +406,6 @@
   "dash.nav_captcha": "Captcha Settings",
   "dash.nav_ai": "AI Settings",
   "dash.nav_gsheets": "Google Sheets",
-
   "dash.nav_cloudstorage": "Cloud Storage",
   "dash.nav_settings": "Settings",
   "dash.nav_form_management": "Form Management",
@@ -1925,5 +1924,20 @@
   "ai.plan_cancel": "Cancel",
   "ai.plan_waiting": "Plan ready — waiting for Apply",
   "ai.plan_cancelled": "Plan cancelled — refine your prompt and send again.",
-  "ai.insert_table_missing": "This form saves submissions into the table \"{0}\", but that table does not exist yet. Ask the AI to create it first (e.g. \"create the {0} table, then wire the insert\")."
+  "ai.insert_table_missing": "This form saves submissions into the table \"{0}\", but that table does not exist yet. Ask the AI to create it first (e.g. \"create the {0} table, then wire the insert\").",
+  "wiz.gallery.browse_online": "Browse online",
+  "wiz.remote.title": "Online template gallery",
+  "wiz.remote.loading": "Contacting the gallery…",
+  "wiz.remote.trial_title": "Online gallery is a premium feature",
+  "wiz.remote.trial_msg": "Downloading templates from the online gallery needs a paid license. Upgrade to unlock it.",
+  "wiz.remote.unavailable": "The online gallery is unreachable right now. Check the gallery URL setting, or try again later.",
+  "wiz.remote.offline": "The gallery is unreachable — showing the last list fetched earlier.",
+  "wiz.remote.empty": "The gallery has no templates yet.",
+  "wiz.remote.install": "Install",
+  "wiz.remote.installed": "Installed",
+  "wiz.remote.installing": "Installing…",
+  "wiz.remote.done": "Template installed",
+  "wiz.remote.failed": "Install failed",
+  "wiz.remote.images": "images",
+  "wiz.remote.art_failed": "Template installed, but its images could not be downloaded."
 }
