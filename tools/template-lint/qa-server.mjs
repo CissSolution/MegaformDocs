@@ -22,7 +22,7 @@ const HARNESS = `<!DOCTYPE html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="stylesheet" href="/Modules/MegaForm/css/megaform.css">
 <link rel="stylesheet" href="/Modules/MegaForm/css/megaform-themes.css">
-<style>html,body{margin:0;padding:0;background:#eef2f7}#host{width:1000px;margin:0 auto;padding:24px 0}
+<style>html,body{margin:0;padding:0;background:#eef2f7}#host{width:min(1000px,calc(100% - 24px));margin:0 auto;padding:24px 0}
 /* deterministic comparator: external embeds (maps) paint nondeterministic tiles — hide paint, keep layout box */
 iframe[src*="google."],iframe[src*="maps"],.mf-map-iframe{visibility:hidden!important}
 /* preview-mode chrome (inline-edit hint toast, switch-to-grid, change-image pills) animates — not template content */

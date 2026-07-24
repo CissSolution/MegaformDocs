@@ -1,0 +1,422 @@
+{
+  "version": "1.0",
+  "slug": "kawaii-diary",
+  "title": "Kawaii Diary Application",
+  "description": "Playful notebook-style EuroYouth application with pastel sections and sticky diary navigation.",
+  "category": "application",
+  "categories": [
+    "application",
+    "education",
+    "premium"
+  ],
+  "icon": "sparkles",
+  "templateGuideSlug": "tpl-kawaii-diary",
+  "submitButtonText": "Submit!",
+  "successMessage": "Submitted! Your next adventure is one step closer.",
+  "fields": [
+    {
+      "key": "first_name",
+      "type": "Text",
+      "label": "First name",
+      "placeholder": "Anna",
+      "required": true
+    },
+    {
+      "key": "last_name",
+      "type": "Text",
+      "label": "Last name",
+      "placeholder": "Müller",
+      "required": true
+    },
+    {
+      "key": "email",
+      "type": "Email",
+      "label": "Email",
+      "placeholder": "anna@email.eu",
+      "required": true
+    },
+    {
+      "key": "phone",
+      "type": "Phone",
+      "label": "Phone",
+      "placeholder": "+49 170 123456"
+    },
+    {
+      "key": "birth_year",
+      "type": "Number",
+      "label": "Year of birth",
+      "placeholder": "2004",
+      "validation": {
+        "min": 1970,
+        "max": 2010
+      }
+    },
+    {
+      "key": "country",
+      "type": "Select",
+      "label": "Country of residence",
+      "placeholder": "Select country",
+      "required": true,
+      "options": [
+        {
+          "label": "Germany",
+          "value": "germany"
+        },
+        {
+          "label": "France",
+          "value": "france"
+        },
+        {
+          "label": "Spain",
+          "value": "spain"
+        },
+        {
+          "label": "Italy",
+          "value": "italy"
+        },
+        {
+          "label": "Portugal",
+          "value": "portugal"
+        },
+        {
+          "label": "Netherlands",
+          "value": "netherlands"
+        },
+        {
+          "label": "Austria",
+          "value": "austria"
+        },
+        {
+          "label": "Belgium",
+          "value": "belgium"
+        },
+        {
+          "label": "Greece",
+          "value": "greece"
+        },
+        {
+          "label": "Poland",
+          "value": "poland"
+        },
+        {
+          "label": "Sweden",
+          "value": "sweden"
+        },
+        {
+          "label": "Ireland",
+          "value": "ireland"
+        },
+        {
+          "label": "Other",
+          "value": "other"
+        }
+      ]
+    },
+    {
+      "key": "programme",
+      "type": "Select",
+      "label": "Programme",
+      "placeholder": "Select programme",
+      "required": true,
+      "options": [
+        {
+          "label": "Erasmus Exchange",
+          "value": "erasmus-exchange"
+        },
+        {
+          "label": "Language Immersion",
+          "value": "language-immersion"
+        },
+        {
+          "label": "Solidarity Corps",
+          "value": "solidarity-corps"
+        }
+      ]
+    },
+    {
+      "key": "duration",
+      "type": "Select",
+      "label": "Duration (months)",
+      "defaultValue": "3",
+      "options": [
+        {
+          "label": "1 month",
+          "value": "1"
+        },
+        {
+          "label": "2 months",
+          "value": "2"
+        },
+        {
+          "label": "3 months",
+          "value": "3"
+        },
+        {
+          "label": "6 months",
+          "value": "6"
+        },
+        {
+          "label": "9 months",
+          "value": "9"
+        },
+        {
+          "label": "12 months",
+          "value": "12"
+        }
+      ]
+    },
+    {
+      "key": "start_month",
+      "type": "Select",
+      "label": "Preferred start month",
+      "placeholder": "Select month",
+      "required": true,
+      "options": [
+        {
+          "label": "January",
+          "value": "january"
+        },
+        {
+          "label": "February",
+          "value": "february"
+        },
+        {
+          "label": "March",
+          "value": "march"
+        },
+        {
+          "label": "April",
+          "value": "april"
+        },
+        {
+          "label": "May",
+          "value": "may"
+        },
+        {
+          "label": "June",
+          "value": "june"
+        },
+        {
+          "label": "July",
+          "value": "july"
+        },
+        {
+          "label": "August",
+          "value": "august"
+        },
+        {
+          "label": "September",
+          "value": "september"
+        },
+        {
+          "label": "October",
+          "value": "october"
+        },
+        {
+          "label": "November",
+          "value": "november"
+        },
+        {
+          "label": "December",
+          "value": "december"
+        }
+      ]
+    },
+    {
+      "key": "language_level",
+      "type": "Select",
+      "label": "Language level",
+      "placeholder": "Select level",
+      "options": [
+        {
+          "label": "Beginner (A1–A2)",
+          "value": "beginner"
+        },
+        {
+          "label": "Intermediate (B1–B2)",
+          "value": "intermediate"
+        },
+        {
+          "label": "Advanced (C1–C2)",
+          "value": "advanced"
+        }
+      ]
+    },
+    {
+      "key": "interests",
+      "type": "Checkbox",
+      "label": "Interests",
+      "options": [
+        {
+          "label": "Art & Design",
+          "value": "art-design"
+        },
+        {
+          "label": "Technology",
+          "value": "technology"
+        },
+        {
+          "label": "Sustainability",
+          "value": "sustainability"
+        },
+        {
+          "label": "Music",
+          "value": "music"
+        },
+        {
+          "label": "Sports",
+          "value": "sports"
+        },
+        {
+          "label": "Cuisine",
+          "value": "cuisine"
+        },
+        {
+          "label": "History",
+          "value": "history"
+        },
+        {
+          "label": "Entrepreneurship",
+          "value": "entrepreneurship"
+        }
+      ],
+      "optionDisplay": "chips",
+      "choiceDisplay": "chips",
+      "optionVariant": "chips",
+      "optionColumns": 4,
+      "properties": {
+        "optionDisplay": "chips",
+        "optionColumns": 4
+      },
+      "widgetProps": {
+        "optionDisplay": "chips",
+        "optionColumns": 4
+      }
+    },
+    {
+      "key": "accommodation",
+      "type": "Radio",
+      "label": "Accommodation preference",
+      "required": true,
+      "options": [
+        {
+          "label": "Host Family",
+          "value": "host-family"
+        },
+        {
+          "label": "Student Dormitory",
+          "value": "student-dormitory"
+        },
+        {
+          "label": "Private Apartment",
+          "value": "private-apartment"
+        },
+        {
+          "label": "Not Needed",
+          "value": "not-needed"
+        }
+      ],
+      "optionDisplay": "chips",
+      "choiceDisplay": "chips",
+      "optionVariant": "chips",
+      "optionColumns": 4,
+      "properties": {
+        "optionDisplay": "chips",
+        "optionColumns": 4
+      },
+      "widgetProps": {
+        "optionDisplay": "chips",
+        "optionColumns": 4
+      }
+    },
+    {
+      "key": "scholarship",
+      "type": "Checkbox",
+      "label": "Mobility grant",
+      "options": [
+        {
+          "label": "I would like to apply for a mobility grant",
+          "value": "yes"
+        }
+      ]
+    },
+    {
+      "key": "motivation",
+      "type": "Textarea",
+      "label": "Motivation",
+      "placeholder": "Tell us why you want to join and what you hope to gain...",
+      "properties": {
+        "rows": 4
+      },
+      "validation": {
+        "maxLength": 1000
+      }
+    },
+    {
+      "key": "newsletter",
+      "type": "Checkbox",
+      "label": "Newsletter",
+      "options": [
+        {
+          "label": "Subscribe to EuroYouth newsletter",
+          "value": "yes"
+        }
+      ]
+    },
+    {
+      "key": "terms",
+      "type": "Checkbox",
+      "label": "Terms and conditions",
+      "required": true,
+      "options": [
+        {
+          "label": "I accept the EuroYouth terms and data processing policy",
+          "value": "accepted"
+        }
+      ]
+    },
+    {
+      "key": "utm_source",
+      "type": "Hidden",
+      "label": "UTM source"
+    },
+    {
+      "key": "utm_campaign",
+      "type": "Hidden",
+      "label": "UTM campaign"
+    }
+  ],
+  "settings": {
+    "theme": "system",
+    "multiPage": false,
+    "premiumGeneratedShell": true,
+    "premiumNativeMigrationBadge": "form-builder-controls-10/kawaii-diary",
+    "showProgressBar": false,
+    "themeSelector": {
+      "enabled": false
+    },
+    "customHtml": "<div class=\"mfp mfp-kawaii-diary mfp-native-generated\" data-mf-flexgrid=\"locked\"><div class=\"mfp-stage\"><article class=\"mfp-paper\"><header class=\"mfp-header\"><div class=\"mfp-stickers\" aria-hidden=\"true\">&#10047; &#9733; &#9728; &#9829;</div><div><h1>MY APPLICATION</h1><p>EuroYouth 2026 &#10024;</p></div></header>\n<nav class=\"mfp-scroll-nav\" aria-label=\"Form sections\"><a href=\"#kawaii-diary-profile\">Profile</a><a href=\"#kawaii-diary-programme\">Programme</a><a href=\"#kawaii-diary-dreams\">Dreams</a><a href=\"#kawaii-diary-finish\">Finish</a></nav>\n<div class=\"mfp-body\"><section class=\"mfp-section\" id=\"kawaii-diary-profile\"><div class=\"mfp-section-head\"><span class=\"mfp-section-icon\" aria-hidden=\"true\">&#9786;</span><h2>Profile</h2><span aria-hidden=\"true\"></span></div><div class=\"mfp-row\"><div>{{field:first_name}}</div><div>{{field:last_name}}</div><div>{{field:email}}</div><div>{{field:phone}}</div><div>{{field:birth_year}}</div><div>{{field:country}}</div></div></section>\n<section class=\"mfp-section\" id=\"kawaii-diary-programme\"><div class=\"mfp-section-head\"><span class=\"mfp-section-icon\" aria-hidden=\"true\">&#9733;</span><h2>Programme</h2><span aria-hidden=\"true\"></span></div><div class=\"mfp-row\"><div>{{field:programme}}</div><div>{{field:duration}}</div><div>{{field:start_month}}</div><div>{{field:language_level}}</div></div></section>\n<section class=\"mfp-section\" id=\"kawaii-diary-dreams\"><div class=\"mfp-section-head\"><span class=\"mfp-section-icon\" aria-hidden=\"true\">&#9829;</span><h2>My Dream Trip</h2><span aria-hidden=\"true\"></span></div><div class=\"mfp-chip\">{{field:interests}}</div><div class=\"mfp-chip mfp-wide\">{{field:accommodation}}</div><div class=\"mfp-check mfp-wide\">{{field:scholarship}}</div><div class=\"mfp-wide\">{{field:motivation}}</div></section>\n<section class=\"mfp-section\" id=\"kawaii-diary-finish\"><div class=\"mfp-section-head\"><span class=\"mfp-section-icon\" aria-hidden=\"true\">&#10024;</span><h2>One Last Thing</h2><span aria-hidden=\"true\"></span></div><div class=\"mfp-stack\"><div class=\"mfp-check\">{{field:newsletter}}</div><div class=\"mfp-check\">{{field:terms}}</div></div></section><div class=\"mfp-hidden\">{{field:utm_source}}{{field:utm_campaign}}</div><div class=\"mfp-actions\"><span aria-hidden=\"true\">&#8592; Back</span><button type=\"submit\" class=\"mfp-btn\" data-mf-native-submit>Submit! &#128640; &#8594;</button></div></div><footer class=\"mfp-foot\">Dream big · travel far · stay curious</footer></article></div></div>",
+    "customCss": "/* MegaForm Gen-3 scroll-aware single-page shell: kawaii-diary */\n.mfp.mfp-kawaii-diary{--kw-page:#fbf8ea;--kw-paper:#fffef6;--kw-ink:#555555;--kw-muted:#75b9d2;--kw-line:#d8eef5;--kw-input:#fff;--kw-primary:#68b9db;--kw-soft:#eaf8fd;--kw-error:#c0392b;--kw-font:\"Trebuchet MS\",Nunito,system-ui,sans-serif;--kw-display:\"Trebuchet MS\",Nunito,system-ui,sans-serif;--mf-btn-bg:var(--kw-primary);width:100%;max-width:666px;margin:0 auto;color:var(--kw-ink);font-family:var(--kw-font)}\n.mfp.mfp-kawaii-diary,.mfp.mfp-kawaii-diary *,.mfp.mfp-kawaii-diary *::before,.mfp.mfp-kawaii-diary *::after{box-sizing:border-box}\n.mfp-kawaii-diary .mfp-stage{width:100%;padding:36px 24px;border-radius:24px;background:var(--kw-page)}\n.mfp-kawaii-diary .mfp-paper{position:relative;width:min(100%,570px);margin:0 auto;background:var(--kw-paper);box-shadow:0 24px 70px rgba(40,31,20,.16)}\n.mfp-kawaii-diary .mfp-scroll-nav{position:sticky;z-index:18;top:12px;display:flex;gap:8px;overflow-x:auto;padding:10px 20px;border-bottom:1px solid var(--kw-line);background:color-mix(in srgb,var(--kw-paper) 92%,transparent);box-shadow:0 8px 18px rgba(30,25,20,.06);backdrop-filter:blur(12px);scrollbar-width:none}\n.mfp-kawaii-diary .mfp-scroll-nav::-webkit-scrollbar{display:none}.mfp-kawaii-diary .mfp-scroll-nav a{flex:0 0 auto;border:1px solid var(--kw-line);border-radius:999px;padding:7px 12px;background:var(--kw-input);color:var(--kw-muted);font-size:10px;font-weight:800;letter-spacing:.09em;text-decoration:none;text-transform:uppercase}\n.mfp-kawaii-diary .mfp-scroll-nav a:hover,.mfp-kawaii-diary .mfp-scroll-nav a:focus-visible{border-color:var(--kw-primary);background:var(--kw-soft);color:var(--kw-primary);outline:0}\n.mfp-kawaii-diary .mfp-body{position:relative;padding:12px 32px 36px}.mfp-kawaii-diary .mfp-section{scroll-margin-top:78px}\n.mfp-kawaii-diary .mfp-section-head{display:flex;align-items:center;gap:11px;margin:26px 0 16px}.mfp-kawaii-diary .mfp-section-head h2{margin:0;color:var(--kw-ink);font-size:12px;font-weight:900;letter-spacing:.14em;text-transform:uppercase}.mfp-kawaii-diary .mfp-section-head>span:last-child{height:1px;flex:1;background:var(--kw-line)}\n.mfp-kawaii-diary .mfp-section-icon{display:grid;width:30px;height:30px;flex:0 0 auto;place-items:center;border-radius:8px;background:var(--kw-soft);color:var(--kw-primary);font-size:14px;font-weight:900}\n.mfp-kawaii-diary .mfp-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 20px}.mfp-kawaii-diary .mfp-stack{display:grid;gap:16px}.mfp-kawaii-diary .mfp-wide{margin-top:16px}.mfp-kawaii-diary .mf-field-group{min-width:0;margin:0}\n.mfp-kawaii-diary .mf-field-label{display:block;margin:0 0 6px;color:var(--kw-muted);font-size:10px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.mfp-kawaii-diary .mf-required{color:var(--kw-error)}\n.mfp-kawaii-diary .mf-input,.mfp-kawaii-diary .mf-select,.mfp-kawaii-diary .mf-textarea,.mfp-kawaii-diary input:not([type='checkbox']):not([type='radio']),.mfp-kawaii-diary select,.mfp-kawaii-diary textarea{width:100%!important;min-height:43px!important;padding:9px 12px!important;border:1px solid var(--kw-line)!important;border-radius:8px!important;outline:0!important;background:var(--kw-input)!important;color:var(--kw-ink)!important;box-shadow:none!important;font:inherit!important;font-size:14px!important}\n.mfp-kawaii-diary .mf-textarea,.mfp-kawaii-diary textarea{min-height:112px!important;resize:vertical!important}.mfp-kawaii-diary .mf-input:focus,.mfp-kawaii-diary .mf-select:focus,.mfp-kawaii-diary .mf-textarea:focus,.mfp-kawaii-diary input:focus,.mfp-kawaii-diary select:focus,.mfp-kawaii-diary textarea:focus{border-color:var(--kw-primary)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--kw-primary) 14%,transparent)!important}\n.mfp-kawaii-diary input::placeholder,.mfp-kawaii-diary textarea::placeholder{color:color-mix(in srgb,var(--kw-muted) 58%,transparent)}.mfp-kawaii-diary .mf-field-error{margin-top:5px;color:var(--kw-error);font-size:11px}\n.mfp-kawaii-diary .mfp-chip .mf-option-group{display:flex!important;flex-wrap:wrap!important;gap:8px!important;grid-template-columns:none!important}.mfp-kawaii-diary .mfp-chip .mf-option-item{display:inline-flex!important;width:auto!important;margin:0!important;padding:0!important}.mfp-kawaii-diary .mfp-chip .mf-option-control{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;clip-path:inset(50%)!important}\n.mfp-kawaii-diary .mfp-chip .mf-option-ui{display:inline-flex!important;min-height:32px!important;align-items:center!important;padding:7px 12px!important;border:1px solid var(--kw-line)!important;border-radius:999px!important;background:var(--kw-input)!important;color:var(--kw-muted)!important;box-shadow:none!important}.mfp-kawaii-diary .mfp-chip .mf-option-label{color:inherit!important;font-size:12px!important;font-weight:700!important}.mfp-kawaii-diary .mfp-chip .mf-option-control:checked + .mf-option-ui{border-color:var(--kw-primary)!important;background:var(--kw-soft)!important;color:var(--kw-primary)!important}\n.mfp-kawaii-diary .mfp-check .mf-option-group{display:block!important}.mfp-kawaii-diary .mfp-check .mf-option-item{display:flex!important;align-items:flex-start!important;gap:9px!important;margin:0!important;padding:0!important}.mfp-kawaii-diary .mfp-check .mf-option-control{position:static!important;width:17px!important;height:17px!important;margin:3px 0 0!important;accent-color:var(--kw-primary)!important;opacity:1!important}.mfp-kawaii-diary .mfp-check .mf-option-ui{display:block!important;padding:0!important;border:0!important;background:transparent!important;color:var(--kw-muted)!important}.mfp-kawaii-diary .mfp-check .mf-option-label{color:inherit!important;font-size:13px!important;line-height:1.5!important}\n.mfp-kawaii-diary .mfp-actions{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:26px;padding-top:22px;border-top:1px solid var(--kw-line);color:var(--kw-muted);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.mfp-kawaii-diary .mfp-btn{display:inline-flex;min-height:44px;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:11px 22px;background:var(--kw-primary)!important;color:#fff!important;font:inherit;font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}\n.mfp-kawaii-diary .mfp-hidden{display:none!important}.mfp-kawaii-diary .mf-form-title,.mfp-kawaii-diary .mf-form-description,.mfp-kawaii-diary .mf-success-message,.mfp-kawaii-diary .mf-form-actions{display:none!important}.mf-form-wrapper:has(.mfp-kawaii-diary)>.mf-form-inner{width:100%!important;max-width:666px!important}.mf-form-wrapper:has(.mfp-kawaii-diary) .mf-form-actions{display:none!important}\n@media(max-width:700px){.mfp-kawaii-diary .mfp-stage{padding:12px;border-radius:18px}.mfp-kawaii-diary .mfp-body{padding:8px 20px 28px}.mfp-kawaii-diary .mfp-row{grid-template-columns:1fr;gap:15px}.mfp-kawaii-diary .mfp-scroll-nav{top:6px;padding:8px 14px}}\n@media(max-width:440px){.mfp-kawaii-diary .mfp-stage{padding:0;background:transparent}.mfp-kawaii-diary .mfp-body{padding:6px 16px 24px}.mfp-kawaii-diary .mfp-actions{align-items:stretch;flex-direction:column-reverse}.mfp-kawaii-diary .mfp-btn{width:100%}}\nbody:has(.aperture-header) .DnnModule .mfp-kawaii-diary .mfp-scroll-nav{top:168px}\n\n.mfp-kawaii-diary .mfp-stage{background-color:#fbf8ea;background-image:linear-gradient(rgba(130,130,100,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(130,130,100,.12) 1px,transparent 1px);background-size:28px 28px}.mfp-kawaii-diary .mfp-paper{overflow:hidden;border:2px dashed #a8d5cb;border-radius:28px}.mfp-kawaii-diary .mfp-header{padding:28px 36px 18px;text-align:center}.mfp-kawaii-diary .mfp-stickers{margin-bottom:9px;color:#f7c84b;font-size:22px;word-spacing:14px}.mfp-kawaii-diary .mfp-header>div:last-child{display:inline-block;border:2px dashed #89cfe2;border-radius:18px;padding:14px 28px 12px;background:rgba(255,255,255,.62)}.mfp-kawaii-diary .mfp-header h1{margin:0;color:#5ab2d2;font-size:27px;font-weight:500}.mfp-kawaii-diary .mfp-header p{margin:4px 0 0;color:#f9a875;font-size:12px;font-weight:800}\n.mfp-kawaii-diary .mfp-scroll-nav{border-block:1px dashed #c9e2df;box-shadow:none}.mfp-kawaii-diary .mfp-scroll-nav a{border-style:dashed}.mfp-kawaii-diary .mfp-body{padding-inline:38px}.mfp-kawaii-diary .mfp-section-icon{border-radius:999px;background:#68b9db;color:#fff}.mfp-kawaii-diary .mfp-section:nth-of-type(2) .mfp-section-icon{background:#f59a6f}.mfp-kawaii-diary .mfp-section:nth-of-type(3) .mfp-section-icon{background:#b79be7}.mfp-kawaii-diary .mfp-section:nth-of-type(4) .mfp-section-icon{background:#82c9ad}\n.mfp.mfp-kawaii-diary{--mf-btn-bg:linear-gradient(135deg,#68b9db,#b79be7)}.mfp-kawaii-diary .mf-input,.mfp-kawaii-diary .mf-select,.mfp-kawaii-diary .mf-textarea,.mfp-kawaii-diary input:not([type='checkbox']):not([type='radio']),.mfp-kawaii-diary select,.mfp-kawaii-diary textarea{border:2px solid var(--kw-line)!important;border-radius:15px!important}.mfp-kawaii-diary .mfp-btn{background:linear-gradient(135deg,#68b9db,#b79be7)!important;box-shadow:0 6px 18px rgba(104,185,219,.34)}.mfp-kawaii-diary .mfp-foot{padding:15px 20px 28px;text-align:center;color:#f59a6f;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}@media(max-width:540px){.mfp-kawaii-diary .mfp-header{padding-inline:18px}.mfp-kawaii-diary .mfp-body{padding-inline:20px}}\n",
+    "customScripts": {},
+    "themeCompatibility": {
+      "policy": "locked",
+      "supportsPageColors": false,
+      "supportsPageTypography": false,
+      "supportsDarkHost": true,
+      "prefixes": [
+        "kw"
+      ],
+      "immutable": [
+        "pastel kawaii palette",
+        "graph-paper background",
+        "sticker ornaments",
+        "semantic red #c0392b"
+      ]
+    }
+  },
+  "rules": [],
+  "workflow": {
+    "notifications": []
+  },
+  "manifestVersion": 2
+}

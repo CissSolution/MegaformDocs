@@ -1,0 +1,422 @@
+{
+  "version": "1.0",
+  "slug": "botanical-thankyou",
+  "title": "Botanical Thank You Application",
+  "description": "Botanical editorial application with underlined fields, sticky sections, and a warm paper finish.",
+  "category": "application",
+  "categories": [
+    "application",
+    "education",
+    "premium"
+  ],
+  "icon": "leaf",
+  "templateGuideSlug": "tpl-botanical-thankyou",
+  "submitButtonText": "Send Application",
+  "successMessage": "Thank you. Your EuroYouth application has been received.",
+  "fields": [
+    {
+      "key": "first_name",
+      "type": "Text",
+      "label": "First name",
+      "placeholder": "Anna",
+      "required": true
+    },
+    {
+      "key": "last_name",
+      "type": "Text",
+      "label": "Last name",
+      "placeholder": "Müller",
+      "required": true
+    },
+    {
+      "key": "email",
+      "type": "Email",
+      "label": "Email",
+      "placeholder": "anna@email.eu",
+      "required": true
+    },
+    {
+      "key": "phone",
+      "type": "Phone",
+      "label": "Phone",
+      "placeholder": "+49 170 123456"
+    },
+    {
+      "key": "birth_year",
+      "type": "Number",
+      "label": "Year of birth",
+      "placeholder": "2004",
+      "validation": {
+        "min": 1970,
+        "max": 2010
+      }
+    },
+    {
+      "key": "country",
+      "type": "Select",
+      "label": "Country of residence",
+      "placeholder": "Select country",
+      "required": true,
+      "options": [
+        {
+          "label": "Germany",
+          "value": "germany"
+        },
+        {
+          "label": "France",
+          "value": "france"
+        },
+        {
+          "label": "Spain",
+          "value": "spain"
+        },
+        {
+          "label": "Italy",
+          "value": "italy"
+        },
+        {
+          "label": "Portugal",
+          "value": "portugal"
+        },
+        {
+          "label": "Netherlands",
+          "value": "netherlands"
+        },
+        {
+          "label": "Austria",
+          "value": "austria"
+        },
+        {
+          "label": "Belgium",
+          "value": "belgium"
+        },
+        {
+          "label": "Greece",
+          "value": "greece"
+        },
+        {
+          "label": "Poland",
+          "value": "poland"
+        },
+        {
+          "label": "Sweden",
+          "value": "sweden"
+        },
+        {
+          "label": "Ireland",
+          "value": "ireland"
+        },
+        {
+          "label": "Other",
+          "value": "other"
+        }
+      ]
+    },
+    {
+      "key": "programme",
+      "type": "Select",
+      "label": "Programme",
+      "placeholder": "Select programme",
+      "required": true,
+      "options": [
+        {
+          "label": "Erasmus Exchange",
+          "value": "erasmus-exchange"
+        },
+        {
+          "label": "Language Immersion",
+          "value": "language-immersion"
+        },
+        {
+          "label": "Solidarity Corps",
+          "value": "solidarity-corps"
+        }
+      ]
+    },
+    {
+      "key": "duration",
+      "type": "Select",
+      "label": "Duration (months)",
+      "defaultValue": "3",
+      "options": [
+        {
+          "label": "1 month",
+          "value": "1"
+        },
+        {
+          "label": "2 months",
+          "value": "2"
+        },
+        {
+          "label": "3 months",
+          "value": "3"
+        },
+        {
+          "label": "6 months",
+          "value": "6"
+        },
+        {
+          "label": "9 months",
+          "value": "9"
+        },
+        {
+          "label": "12 months",
+          "value": "12"
+        }
+      ]
+    },
+    {
+      "key": "start_month",
+      "type": "Select",
+      "label": "Preferred start month",
+      "placeholder": "Select month",
+      "required": true,
+      "options": [
+        {
+          "label": "January",
+          "value": "january"
+        },
+        {
+          "label": "February",
+          "value": "february"
+        },
+        {
+          "label": "March",
+          "value": "march"
+        },
+        {
+          "label": "April",
+          "value": "april"
+        },
+        {
+          "label": "May",
+          "value": "may"
+        },
+        {
+          "label": "June",
+          "value": "june"
+        },
+        {
+          "label": "July",
+          "value": "july"
+        },
+        {
+          "label": "August",
+          "value": "august"
+        },
+        {
+          "label": "September",
+          "value": "september"
+        },
+        {
+          "label": "October",
+          "value": "october"
+        },
+        {
+          "label": "November",
+          "value": "november"
+        },
+        {
+          "label": "December",
+          "value": "december"
+        }
+      ]
+    },
+    {
+      "key": "language_level",
+      "type": "Select",
+      "label": "Language level",
+      "placeholder": "Select level",
+      "options": [
+        {
+          "label": "Beginner (A1–A2)",
+          "value": "beginner"
+        },
+        {
+          "label": "Intermediate (B1–B2)",
+          "value": "intermediate"
+        },
+        {
+          "label": "Advanced (C1–C2)",
+          "value": "advanced"
+        }
+      ]
+    },
+    {
+      "key": "interests",
+      "type": "Checkbox",
+      "label": "Interests",
+      "options": [
+        {
+          "label": "Art & Design",
+          "value": "art-design"
+        },
+        {
+          "label": "Technology",
+          "value": "technology"
+        },
+        {
+          "label": "Sustainability",
+          "value": "sustainability"
+        },
+        {
+          "label": "Music",
+          "value": "music"
+        },
+        {
+          "label": "Sports",
+          "value": "sports"
+        },
+        {
+          "label": "Cuisine",
+          "value": "cuisine"
+        },
+        {
+          "label": "History",
+          "value": "history"
+        },
+        {
+          "label": "Entrepreneurship",
+          "value": "entrepreneurship"
+        }
+      ],
+      "optionDisplay": "chips",
+      "choiceDisplay": "chips",
+      "optionVariant": "chips",
+      "optionColumns": 4,
+      "properties": {
+        "optionDisplay": "chips",
+        "optionColumns": 4
+      },
+      "widgetProps": {
+        "optionDisplay": "chips",
+        "optionColumns": 4
+      }
+    },
+    {
+      "key": "accommodation",
+      "type": "Radio",
+      "label": "Accommodation preference",
+      "required": true,
+      "options": [
+        {
+          "label": "Host Family",
+          "value": "host-family"
+        },
+        {
+          "label": "Student Dormitory",
+          "value": "student-dormitory"
+        },
+        {
+          "label": "Private Apartment",
+          "value": "private-apartment"
+        },
+        {
+          "label": "Not Needed",
+          "value": "not-needed"
+        }
+      ],
+      "optionDisplay": "chips",
+      "choiceDisplay": "chips",
+      "optionVariant": "chips",
+      "optionColumns": 4,
+      "properties": {
+        "optionDisplay": "chips",
+        "optionColumns": 4
+      },
+      "widgetProps": {
+        "optionDisplay": "chips",
+        "optionColumns": 4
+      }
+    },
+    {
+      "key": "scholarship",
+      "type": "Checkbox",
+      "label": "Mobility grant",
+      "options": [
+        {
+          "label": "I would like to apply for a mobility grant",
+          "value": "yes"
+        }
+      ]
+    },
+    {
+      "key": "motivation",
+      "type": "Textarea",
+      "label": "Motivation",
+      "placeholder": "Tell us why you want to join and what you hope to gain...",
+      "properties": {
+        "rows": 4
+      },
+      "validation": {
+        "maxLength": 1000
+      }
+    },
+    {
+      "key": "newsletter",
+      "type": "Checkbox",
+      "label": "Newsletter",
+      "options": [
+        {
+          "label": "Subscribe to EuroYouth newsletter",
+          "value": "yes"
+        }
+      ]
+    },
+    {
+      "key": "terms",
+      "type": "Checkbox",
+      "label": "Terms and conditions",
+      "required": true,
+      "options": [
+        {
+          "label": "I accept the EuroYouth terms and data processing policy",
+          "value": "accepted"
+        }
+      ]
+    },
+    {
+      "key": "utm_source",
+      "type": "Hidden",
+      "label": "UTM source"
+    },
+    {
+      "key": "utm_campaign",
+      "type": "Hidden",
+      "label": "UTM campaign"
+    }
+  ],
+  "settings": {
+    "theme": "system",
+    "multiPage": false,
+    "premiumGeneratedShell": true,
+    "premiumNativeMigrationBadge": "form-builder-controls-10/botanical-thankyou",
+    "showProgressBar": false,
+    "themeSelector": {
+      "enabled": false
+    },
+    "customHtml": "<div class=\"mfp mfp-botanical-thankyou mfp-native-generated\" data-mf-flexgrid=\"locked\"><div class=\"mfp-stage\"><article class=\"mfp-paper\"><header class=\"mfp-header\"><div class=\"mfp-leaves\" aria-hidden=\"true\">&#9752; &#9752; &#10047;</div><p>EuroYouth 2026</p><h1>Application Form</h1><p>Begin your European adventure. Fill in your details below — all fields marked * are required.</p></header>\n<nav class=\"mfp-scroll-nav\" aria-label=\"Form sections\"><a href=\"#botanical-thankyou-personal\">Personal</a><a href=\"#botanical-thankyou-programme\">Programme</a><a href=\"#botanical-thankyou-journey\">Journey</a><a href=\"#botanical-thankyou-declaration\">Declaration</a></nav>\n<div class=\"mfp-body\"><section class=\"mfp-section\" id=\"botanical-thankyou-personal\"><div class=\"mfp-section-head\"><span class=\"mfp-section-icon\" aria-hidden=\"true\">&#9752;</span><h2>Personal Details</h2><span aria-hidden=\"true\"></span></div><div class=\"mfp-row\"><div>{{field:first_name}}</div><div>{{field:last_name}}</div><div>{{field:email}}</div><div>{{field:phone}}</div><div>{{field:birth_year}}</div><div>{{field:country}}</div></div></section>\n<section class=\"mfp-section\" id=\"botanical-thankyou-programme\"><div class=\"mfp-section-head\"><span class=\"mfp-section-icon\" aria-hidden=\"true\">&#9752;</span><h2>Programme</h2><span aria-hidden=\"true\"></span></div><div class=\"mfp-row\"><div>{{field:programme}}</div><div>{{field:duration}}</div><div>{{field:start_month}}</div><div>{{field:language_level}}</div></div></section>\n<section class=\"mfp-section\" id=\"botanical-thankyou-journey\"><div class=\"mfp-section-head\"><span class=\"mfp-section-icon\" aria-hidden=\"true\">&#9752;</span><h2>Your Journey</h2><span aria-hidden=\"true\"></span></div><div class=\"mfp-chip\">{{field:interests}}</div><div class=\"mfp-chip mfp-wide\">{{field:accommodation}}</div><div class=\"mfp-check mfp-wide\">{{field:scholarship}}</div><div class=\"mfp-wide\">{{field:motivation}}</div></section>\n<section class=\"mfp-section\" id=\"botanical-thankyou-declaration\"><div class=\"mfp-section-head\"><span class=\"mfp-section-icon\" aria-hidden=\"true\">&#9752;</span><h2>Declaration</h2><span aria-hidden=\"true\"></span></div><div class=\"mfp-stack\"><div class=\"mfp-check\">{{field:newsletter}}</div><div class=\"mfp-check\">{{field:terms}}</div></div></section><div class=\"mfp-hidden\">{{field:utm_source}}{{field:utm_campaign}}</div><div class=\"mfp-actions\"><span aria-hidden=\"true\">&#8592; Back</span><button type=\"submit\" class=\"mfp-btn\" data-mf-native-submit>Send Application &#8594;</button></div></div><footer class=\"mfp-foot\">&#9752; Grow somewhere new. &#9752;</footer></article></div></div>",
+    "customCss": "/* MegaForm Gen-3 scroll-aware single-page shell: botanical-thankyou */\n.mfp.mfp-botanical-thankyou{--bot-page:#f4edd8;--bot-paper:#fffaf0;--bot-ink:#4b3626;--bot-muted:#8b7a61;--bot-line:#cdbd98;--bot-input:#fffaf0;--bot-primary:#6f8f4e;--bot-soft:#edf1df;--bot-error:#c0392b;--bot-font:Georgia,\"Times New Roman\",serif;--bot-display:\"Cormorant Garamond\",Georgia,\"Times New Roman\",serif;--mf-btn-bg:var(--bot-primary);width:100%;max-width:756px;margin:0 auto;color:var(--bot-ink);font-family:var(--bot-font)}\n.mfp.mfp-botanical-thankyou,.mfp.mfp-botanical-thankyou *,.mfp.mfp-botanical-thankyou *::before,.mfp.mfp-botanical-thankyou *::after{box-sizing:border-box}\n.mfp-botanical-thankyou .mfp-stage{width:100%;padding:36px 24px;border-radius:24px;background:var(--bot-page)}\n.mfp-botanical-thankyou .mfp-paper{position:relative;width:min(100%,660px);margin:0 auto;background:var(--bot-paper);box-shadow:0 24px 70px rgba(40,31,20,.16)}\n.mfp-botanical-thankyou .mfp-scroll-nav{position:sticky;z-index:18;top:12px;display:flex;gap:8px;overflow-x:auto;padding:10px 20px;border-bottom:1px solid var(--bot-line);background:color-mix(in srgb,var(--bot-paper) 92%,transparent);box-shadow:0 8px 18px rgba(30,25,20,.06);backdrop-filter:blur(12px);scrollbar-width:none}\n.mfp-botanical-thankyou .mfp-scroll-nav::-webkit-scrollbar{display:none}.mfp-botanical-thankyou .mfp-scroll-nav a{flex:0 0 auto;border:1px solid var(--bot-line);border-radius:999px;padding:7px 12px;background:var(--bot-input);color:var(--bot-muted);font-size:10px;font-weight:800;letter-spacing:.09em;text-decoration:none;text-transform:uppercase}\n.mfp-botanical-thankyou .mfp-scroll-nav a:hover,.mfp-botanical-thankyou .mfp-scroll-nav a:focus-visible{border-color:var(--bot-primary);background:var(--bot-soft);color:var(--bot-primary);outline:0}\n.mfp-botanical-thankyou .mfp-body{position:relative;padding:12px 32px 36px}.mfp-botanical-thankyou .mfp-section{scroll-margin-top:78px}\n.mfp-botanical-thankyou .mfp-section-head{display:flex;align-items:center;gap:11px;margin:26px 0 16px}.mfp-botanical-thankyou .mfp-section-head h2{margin:0;color:var(--bot-ink);font-size:12px;font-weight:900;letter-spacing:.14em;text-transform:uppercase}.mfp-botanical-thankyou .mfp-section-head>span:last-child{height:1px;flex:1;background:var(--bot-line)}\n.mfp-botanical-thankyou .mfp-section-icon{display:grid;width:30px;height:30px;flex:0 0 auto;place-items:center;border-radius:8px;background:var(--bot-soft);color:var(--bot-primary);font-size:14px;font-weight:900}\n.mfp-botanical-thankyou .mfp-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 20px}.mfp-botanical-thankyou .mfp-stack{display:grid;gap:16px}.mfp-botanical-thankyou .mfp-wide{margin-top:16px}.mfp-botanical-thankyou .mf-field-group{min-width:0;margin:0}\n.mfp-botanical-thankyou .mf-field-label{display:block;margin:0 0 6px;color:var(--bot-muted);font-size:10px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.mfp-botanical-thankyou .mf-required{color:var(--bot-error)}\n.mfp-botanical-thankyou .mf-input,.mfp-botanical-thankyou .mf-select,.mfp-botanical-thankyou .mf-textarea,.mfp-botanical-thankyou input:not([type='checkbox']):not([type='radio']),.mfp-botanical-thankyou select,.mfp-botanical-thankyou textarea{width:100%!important;min-height:43px!important;padding:9px 12px!important;border:1px solid var(--bot-line)!important;border-radius:8px!important;outline:0!important;background:var(--bot-input)!important;color:var(--bot-ink)!important;box-shadow:none!important;font:inherit!important;font-size:14px!important}\n.mfp-botanical-thankyou .mf-textarea,.mfp-botanical-thankyou textarea{min-height:112px!important;resize:vertical!important}.mfp-botanical-thankyou .mf-input:focus,.mfp-botanical-thankyou .mf-select:focus,.mfp-botanical-thankyou .mf-textarea:focus,.mfp-botanical-thankyou input:focus,.mfp-botanical-thankyou select:focus,.mfp-botanical-thankyou textarea:focus{border-color:var(--bot-primary)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--bot-primary) 14%,transparent)!important}\n.mfp-botanical-thankyou input::placeholder,.mfp-botanical-thankyou textarea::placeholder{color:color-mix(in srgb,var(--bot-muted) 58%,transparent)}.mfp-botanical-thankyou .mf-field-error{margin-top:5px;color:var(--bot-error);font-size:11px}\n.mfp-botanical-thankyou .mfp-chip .mf-option-group{display:flex!important;flex-wrap:wrap!important;gap:8px!important;grid-template-columns:none!important}.mfp-botanical-thankyou .mfp-chip .mf-option-item{display:inline-flex!important;width:auto!important;margin:0!important;padding:0!important}.mfp-botanical-thankyou .mfp-chip .mf-option-control{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;clip-path:inset(50%)!important}\n.mfp-botanical-thankyou .mfp-chip .mf-option-ui{display:inline-flex!important;min-height:32px!important;align-items:center!important;padding:7px 12px!important;border:1px solid var(--bot-line)!important;border-radius:999px!important;background:var(--bot-input)!important;color:var(--bot-muted)!important;box-shadow:none!important}.mfp-botanical-thankyou .mfp-chip .mf-option-label{color:inherit!important;font-size:12px!important;font-weight:700!important}.mfp-botanical-thankyou .mfp-chip .mf-option-control:checked + .mf-option-ui{border-color:var(--bot-primary)!important;background:var(--bot-soft)!important;color:var(--bot-primary)!important}\n.mfp-botanical-thankyou .mfp-check .mf-option-group{display:block!important}.mfp-botanical-thankyou .mfp-check .mf-option-item{display:flex!important;align-items:flex-start!important;gap:9px!important;margin:0!important;padding:0!important}.mfp-botanical-thankyou .mfp-check .mf-option-control{position:static!important;width:17px!important;height:17px!important;margin:3px 0 0!important;accent-color:var(--bot-primary)!important;opacity:1!important}.mfp-botanical-thankyou .mfp-check .mf-option-ui{display:block!important;padding:0!important;border:0!important;background:transparent!important;color:var(--bot-muted)!important}.mfp-botanical-thankyou .mfp-check .mf-option-label{color:inherit!important;font-size:13px!important;line-height:1.5!important}\n.mfp-botanical-thankyou .mfp-actions{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:26px;padding-top:22px;border-top:1px solid var(--bot-line);color:var(--bot-muted);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.mfp-botanical-thankyou .mfp-btn{display:inline-flex;min-height:44px;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:11px 22px;background:var(--bot-primary)!important;color:#fff!important;font:inherit;font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}\n.mfp-botanical-thankyou .mfp-hidden{display:none!important}.mfp-botanical-thankyou .mf-form-title,.mfp-botanical-thankyou .mf-form-description,.mfp-botanical-thankyou .mf-success-message,.mfp-botanical-thankyou .mf-form-actions{display:none!important}.mf-form-wrapper:has(.mfp-botanical-thankyou)>.mf-form-inner{width:100%!important;max-width:756px!important}.mf-form-wrapper:has(.mfp-botanical-thankyou) .mf-form-actions{display:none!important}\n@media(max-width:700px){.mfp-botanical-thankyou .mfp-stage{padding:12px;border-radius:18px}.mfp-botanical-thankyou .mfp-body{padding:8px 20px 28px}.mfp-botanical-thankyou .mfp-row{grid-template-columns:1fr;gap:15px}.mfp-botanical-thankyou .mfp-scroll-nav{top:6px;padding:8px 14px}}\n@media(max-width:440px){.mfp-botanical-thankyou .mfp-stage{padding:0;background:transparent}.mfp-botanical-thankyou .mfp-body{padding:6px 16px 24px}.mfp-botanical-thankyou .mfp-actions{align-items:stretch;flex-direction:column-reverse}.mfp-botanical-thankyou .mfp-btn{width:100%}}\nbody:has(.aperture-header) .DnnModule .mfp-botanical-thankyou .mfp-scroll-nav{top:168px}\n\n.mfp-botanical-thankyou .mfp-paper{overflow:hidden;border:1px solid #d8cba9;border-radius:30px}.mfp-botanical-thankyou .mfp-header{position:relative;padding:38px 44px 28px;text-align:center}.mfp-botanical-thankyou .mfp-header>p:first-of-type{margin:0 0 12px;color:#8b6e3a;font-size:10px;font-weight:800;letter-spacing:.28em;text-transform:uppercase}.mfp-botanical-thankyou .mfp-header h1{margin:0;font-family:var(--bot-display);font-size:48px;font-style:italic;line-height:1}.mfp-botanical-thankyou .mfp-header>p:last-child{max-width:520px;margin:22px auto 0;color:#6e5a45;font-size:13px}.mfp-botanical-thankyou .mfp-leaves{position:absolute;top:16px;left:18px;color:#91a66d;font-size:25px;transform:rotate(-20deg)}\n.mfp-botanical-thankyou .mfp-scroll-nav{box-shadow:none}.mfp-botanical-thankyou .mfp-scroll-nav a{border:0;background:transparent}.mfp-botanical-thankyou .mfp-body{padding-inline:46px}.mfp-botanical-thankyou .mfp-section-icon{width:auto;height:auto;background:transparent;font-size:18px}.mfp-botanical-thankyou .mfp-section-head h2{font-family:var(--bot-display);font-size:16px}\n.mfp-botanical-thankyou .mf-input,.mfp-botanical-thankyou .mf-select,.mfp-botanical-thankyou .mf-textarea,.mfp-botanical-thankyou input:not([type='checkbox']):not([type='radio']),.mfp-botanical-thankyou select,.mfp-botanical-thankyou textarea{padding:8px 2px!important;border:0!important;border-bottom:1.5px solid var(--bot-line)!important;border-radius:0!important;background:transparent!important}.mfp-botanical-thankyou .mf-input:focus,.mfp-botanical-thankyou .mf-select:focus,.mfp-botanical-thankyou .mf-textarea:focus{box-shadow:none!important}.mfp-botanical-thankyou .mfp-btn{border-radius:4px}.mfp-botanical-thankyou .mfp-foot{padding:15px 24px 26px;text-align:center;color:#8b6e3a;font-size:12px;font-style:italic}@media(max-width:540px){.mfp-botanical-thankyou .mfp-header{padding-inline:22px}.mfp-botanical-thankyou .mfp-header h1{font-size:39px}.mfp-botanical-thankyou .mfp-body{padding-inline:22px}}\n",
+    "customScripts": {},
+    "themeCompatibility": {
+      "policy": "locked",
+      "supportsPageColors": false,
+      "supportsPageTypography": false,
+      "supportsDarkHost": true,
+      "prefixes": [
+        "bot"
+      ],
+      "immutable": [
+        "botanical olive and parchment palette",
+        "italic editorial title",
+        "leaf ornament system",
+        "semantic red #c0392b"
+      ]
+    }
+  },
+  "rules": [],
+  "workflow": {
+    "notifications": []
+  },
+  "manifestVersion": 2
+}
