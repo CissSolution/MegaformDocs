@@ -1945,5 +1945,8 @@
   "wiz.gallery.online_count": "{n} mẫu có thể cài",
   "wiz.gallery.online_all": "Đã cài hết",
   "wiz.remote.already": "Đã cài rồi",
-  "wiz.remote.no_preview": "Không xem trước được mẫu này."
+  "wiz.remote.no_preview": "Không xem trước được mẫu này.",
+  "wiz.gallery.online_browse": "Chỉ xem trước — bản có phí mới cài được",
+  "wiz.gallery.n_fields": "{n} trường",
+  "wiz.gallery.untitled": "Mẫu chưa đặt tên"
 }

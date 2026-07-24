@@ -1020,13 +1020,21 @@ namespace MegaForm.Oqtane.Server.Controllers
             catch { return null; }
         }
 
-        private IActionResult GalleryTrialGate()
+        /// <summary>
+        /// [TrialBrowse 2026-07-24] Gates DOWNLOADING a gallery template, not looking at one.
+        ///
+        /// Trial installs may LIST and PREVIEW the online catalog — that is the shop window, and
+        /// hiding it sold nothing. Only the install writes a paid template into the site, so only
+        /// the install is gated. Nothing is given away by showing it either: the gallery repo is a
+        /// PUBLIC GitHub repo served over a CDN, so its contents are already world-readable.
+        /// </summary>
+        private IActionResult GalleryDownloadTrialGate()
         {
             if (!MegaForm.Core.Services.LicenseService.IsTrial()) return null;
             return StatusCode(402, new
             {
                 error = "trial_remote_gallery",
-                message = "The online template gallery is available on a paid license.",
+                message = "Installing templates from the online gallery is available on a paid license.",
                 upgradeUrl = MegaForm.Core.Services.LicenseService.UpgradeUrl
             });
         }
@@ -1037,9 +1045,8 @@ namespace MegaForm.Oqtane.Server.Controllers
         [Authorize(Policy = "EditModule")]
         public async Task<IActionResult> RemoteGalleryList(bool refresh = false)
         {
-            var gate = GalleryTrialGate();
-            if (gate != null) return gate;
-
+            // Browsing is open to trial (see GalleryDownloadTrialGate) — `trial` tells the client
+            // to show the catalog read-only, with an Upgrade CTA instead of an install action.
             var svc = BuildGalleryService();
             var res = await svc.GetManifestAsync(refresh);
             if (!res.Success || res.Value == null)
@@ -1065,11 +1072,21 @@ namespace MegaForm.Oqtane.Server.Controllers
                     version = t.Version,
                     sizeBytes = t.SizeBytes,
                     premium = t.Premium,
+                    fieldCount = t.FieldCount,
                     installed = installed.Contains((t.Slug ?? string.Empty).Trim())
                 })
                 .ToList();
 
-            return JsonOk(new { repoUrl = svc.RepoBaseUrl, offline = res.Offline, message = res.Message, templates = items });
+            return JsonOk(new
+            {
+                repoUrl = svc.RepoBaseUrl,
+                offline = res.Offline,
+                message = res.Message,
+                // Browse-only mode. The client still refuses the install action itself, and the
+                // install endpoint re-checks — this flag is UX, never the enforcement.
+                trial = MegaForm.Core.Services.LicenseService.IsTrial(),
+                templates = items
+            });
         }
 
         /// <summary>
@@ -1080,9 +1097,8 @@ namespace MegaForm.Oqtane.Server.Controllers
         [Authorize(Policy = "EditModule")]
         public async Task<IActionResult> RemoteGalleryPreview(string slug)
         {
-            var gate = GalleryTrialGate();
-            if (gate != null) return gate;
-
+            // Open to trial: this is the shop window. Read-only — nothing is written to the
+            // template catalog here, so a trial visitor can look but cannot keep.
             var svc = BuildGalleryService();
             var fetch = await svc.FetchTemplateAsync(slug, forceRefresh: false);
             if (!fetch.Success)
@@ -1101,7 +1117,9 @@ namespace MegaForm.Oqtane.Server.Controllers
         [Authorize(Policy = "EditModule")]
         public async Task<IActionResult> RemoteGalleryInstall([FromBody] Newtonsoft.Json.Linq.JObject body)
         {
-            var gate = GalleryTrialGate();
+            // THE gate. Listing and previewing are open; writing a paid template into this site
+            // is not. Enforced here, server-side — the client's read-only rendering is only UX.
+            var gate = GalleryDownloadTrialGate();
             if (gate != null) return gate;
 
             var slug = (string)(body?["slug"] ?? body?["Slug"]);
@@ -1496,6 +1514,10 @@ namespace MegaForm.Oqtane.Server.Controllers
             if (formId <= 0 || string.IsNullOrWhiteSpace(widgetKey))
                 return BadRequest(new { error = "formId and widgetKey are required." });
 
+            var service = new DataRepeaterService(_connectionRegistry, _formRepo);
+            var authGate = DataRepeaterAuthGate(service, formId, widgetKey);
+            if (authGate != null) return authGate;
+
             var request = new DataRepeaterQueryRequest
             {
                 FormId = formId,
@@ -1506,10 +1528,11 @@ namespace MegaForm.Oqtane.Server.Controllers
                 PageSize = Math.Min(Math.Max(1, pageSize), 500),
                 SortCol = sortCol,
                 SortDir = sortDir,
-                FilterJson = MergeRequestParameterJson(filterJson)
+                FilterJson = MergeRequestParameterJson(filterJson),
+                // [SecFix Phase0-3b] server-side identity params — override client __p__ spoofing.
+                ServerParameters = BuildDataRepeaterServerParameters()
             };
 
-            var service = new DataRepeaterService(_connectionRegistry, _formRepo);
             var result = service.ExecuteQuery(request);
             return Ok(result);
         }
@@ -1521,7 +1544,11 @@ namespace MegaForm.Oqtane.Server.Controllers
                 return BadRequest(new { error = "formId, widgetKey, and filterKey are required." });
 
             var service = new DataRepeaterService(_connectionRegistry, _formRepo);
-            var options = service.ExecuteFilterQuery(formId, widgetKey, filterKey, MergeRequestParameterJson(contextJson));
+            var authGate = DataRepeaterAuthGate(service, formId, widgetKey);
+            if (authGate != null) return authGate;
+
+            var options = service.ExecuteFilterQuery(formId, widgetKey, filterKey, MergeRequestParameterJson(contextJson),
+                BuildDataRepeaterServerParameters());
             return Ok(new { options });
         }
 
@@ -1532,7 +1559,11 @@ namespace MegaForm.Oqtane.Server.Controllers
                 return BadRequest(new { error = "formId, widgetKey, and columnKey are required." });
 
             var service = new DataRepeaterService(_connectionRegistry, _formRepo);
-            var options = service.ExecuteGridColumnOptionsQuery(formId, widgetKey, columnKey, MergeRequestParameterJson(contextJson));
+            var authGate = DataRepeaterAuthGate(service, formId, widgetKey);
+            if (authGate != null) return authGate;
+
+            var options = service.ExecuteGridColumnOptionsQuery(formId, widgetKey, columnKey, MergeRequestParameterJson(contextJson),
+                BuildDataRepeaterServerParameters());
             return Ok(options);
         }
 
@@ -1545,21 +1576,58 @@ namespace MegaForm.Oqtane.Server.Controllers
             if (!string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase))
                 return BadRequest(new { error = "PDF export is handled client-side." });
 
+            var service = new DataRepeaterService(_connectionRegistry, _formRepo);
+            var authGate = DataRepeaterAuthGate(service, formId, widgetKey);
+            if (authGate != null) return authGate;
+
             var request = new DataRepeaterQueryRequest
             {
                 FormId = formId,
                 WidgetKey = widgetKey,
                 Page = 1,
                 PageSize = 5000,
-                FilterJson = MergeRequestParameterJson(filterJson)
+                FilterJson = MergeRequestParameterJson(filterJson),
+                ServerParameters = BuildDataRepeaterServerParameters()
             };
 
-            var service = new DataRepeaterService(_connectionRegistry, _formRepo);
             var csv = service.ExportCsv(request);
             if (string.IsNullOrEmpty(csv))
                 return BadRequest(new { error = "Export failed." });
 
             return File(Encoding.UTF8.GetBytes(csv), "text/csv", "data-repeater-export.csv");
+        }
+
+        // [SecFix Phase0-3c v20260722] Opt-in gate: a widget whose widgetProps set
+        // "requireAuth": true rejects anonymous callers. Default false keeps every existing
+        // public widget working unchanged.
+        private IActionResult DataRepeaterAuthGate(DataRepeaterService service, int formId, string widgetKey)
+        {
+            if (service.WidgetRequiresAuth(formId, widgetKey) && !(User?.Identity?.IsAuthenticated ?? false))
+                return Unauthorized(new { error = "Authentication required for this data widget." });
+            return null;
+        }
+
+        // [SecFix Phase0-3b v20260722] Reserved SQL parameters filled from the authenticated
+        // identity. Widget SQL may reference :currentuserid / :currentusername /
+        // :currentuseremail; the service merges these LAST so a client can never override
+        // them via __p__currentuserid or filterJson. Anonymous callers get 0/empty values.
+        private Dictionary<string, object> BuildDataRepeaterServerParameters()
+        {
+            var dict = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            var actor = GetCurrentUserContext();
+            if (actor != null && actor.IsAuthenticated && actor.UserId > 0)
+            {
+                dict["currentuserid"] = actor.UserId;
+                dict["currentusername"] = actor.UserName ?? string.Empty;
+                dict["currentuseremail"] = actor.Email ?? string.Empty;
+            }
+            else
+            {
+                dict["currentuserid"] = 0;
+                dict["currentusername"] = string.Empty;
+                dict["currentuseremail"] = string.Empty;
+            }
+            return dict;
         }
 
         [HttpPost("Field/TestInsert")]
@@ -2133,6 +2201,18 @@ namespace MegaForm.Oqtane.Server.Controllers
             if (!fullPath.StartsWith(rootWithSep, StringComparison.OrdinalIgnoreCase) || !System.IO.File.Exists(fullPath))
                 return NotFound();
 
+            // [SecFix Phase0-2 v20260722] IDOR guard. Any authenticated user who learned (or
+            // guessed) another user's upload URL could download it. Authorize per file:
+            //   (a) submission staff of the owning form (same helper the submission list uses);
+            //   (b) the file is referenced by a submission the caller may view (owner via the
+            //       "own" scope, workflow task holders, view-rule holders — CanViewSubmissionRow);
+            //   (c) the file is referenced by NO submission yet (fresh upload, unsubmitted) —
+            //       keep the legacy capability-URL behavior (the GUID filename is the secret).
+            // Paths outside "form-{id}" (unparseable) keep the legacy behavior unchanged.
+            int fileFormId = TryParseUploadFormId(rel);
+            if (fileFormId > 0 && !CanDownloadPrivateUpload(fileFormId, fullPath))
+                return StatusCode(403, new { error = "You do not have permission to download this file." });
+
             var provider = new FileExtensionContentTypeProvider();
             if (!provider.TryGetContentType(fullPath, out var contentType))
                 contentType = "application/octet-stream";
@@ -2157,6 +2237,30 @@ namespace MegaForm.Oqtane.Server.Controllers
         private static bool IsSubmissionAdmin(UserContext actor)
         {
             return actor != null && (actor.IsAdmin || actor.IsSuperUser);
+        }
+
+        // [SecFix Phase0-1 v20260722] In-method equivalent of the EditModule policy (elsewhere
+        // only usable as an attribute). Mirrors Oqtane's PermissionHandler: resolve the module
+        // entity id from the authmoduleid/entityid query params and ask IUserPermissions for
+        // the Edit permission. Resolved via RequestServices to avoid changing the constructor
+        // signature. Fail-closed: any resolution problem means "not an editor" — the caller
+        // then falls back to the per-form permission check.
+        private bool IsModuleEditor()
+        {
+            try
+            {
+                var userPermissions = HttpContext?.RequestServices?.GetService(typeof(global::Oqtane.Security.IUserPermissions))
+                    as global::Oqtane.Security.IUserPermissions;
+                if (userPermissions == null) return false;
+                var alias = _tenantManager != null ? _tenantManager.GetAlias() : null;
+                int siteId = alias != null ? alias.SiteId : -1;
+                int moduleId = AuthEntityId(EntityNames.Module) > 0 ? AuthEntityId(EntityNames.Module) : _entityId;
+                return userPermissions.IsAuthorized(User, siteId, EntityNames.Module, moduleId, PermissionNames.Edit);
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private static bool IsPublicSubmissionQueryKey(string queryKey)
@@ -2208,8 +2312,52 @@ namespace MegaForm.Oqtane.Server.Controllers
             if (submission != null && _workflowTasks != null &&
                 _workflowTasks.HoldsTaskForSubmission(submission.SubmissionId, actor))
                 return true;
+            // [OwnerGrant v20260722-01] The OWNER of a submission (authenticated, both ids
+            // positive and equal — PermissionService.IsSubmissionOwner) may always READ their
+            // own record (detail + print both flow through here), even when the form carries
+            // no explicit view rule. Widens access for the owner only; anonymous callers still
+            // 403 above, and every other actor keeps the rule/task/admin gates unchanged.
+            if (PermissionService.IsSubmissionOwner(submission, actor))
+                return true;
             if (!HasExplicitSubmissionViewRule(formId)) return false;
             return permissions.CanView(formId, actor) && permissions.CanViewSubmission(formId, submission, actor);
+        }
+
+        // [OwnerRlsSql v20260722-01] True when the actor holds ANY workflow task on a submission
+        // of this form — same membership rules as WorkflowTaskService.HoldsTaskForSubmission
+        // (assignee at any point, or candidate while the task is still open), evaluated over one
+        // bounded form-wide task fetch instead of per submission. Used by GET Submissions to
+        // decide whether the workflow task-grant can widen the visible set beyond owned rows:
+        // only then must the legacy per-row RLS filter stay (SQL cannot express that union).
+        // Fail-safe: any error keeps the legacy per-row path (true), never widens silently.
+        private bool ActorHoldsAnyTaskInForm(int formId, UserContext actor)
+        {
+            if (formId <= 0 || actor == null || !actor.IsAuthenticated || _workflowRepo == null)
+                return false;
+            try
+            {
+                var tasks = _workflowRepo.ListTasks(new WorkflowTaskQuery
+                {
+                    FormId = formId,
+                    OpenOnly = false,
+                    PageIndex = 0,
+                    PageSize = 5000
+                }) ?? new List<WorkflowTaskInstance>();
+                foreach (var task in tasks)
+                {
+                    if (task == null) continue;
+                    if (IsTaskAssignedToActor(task, actor))
+                        return true;
+                    var isOpen = task.Status == WorkflowTaskStatus.Pending || task.Status == WorkflowTaskStatus.Claimed;
+                    if (isOpen && CanActorClaimTask(task, actor))
+                        return true;
+                }
+                return false;
+            }
+            catch
+            {
+                return true;
+            }
         }
 
         // ══════════════════════════════════════════════════════
@@ -2265,6 +2413,20 @@ namespace MegaForm.Oqtane.Server.Controllers
                 queryKey = null;   // bound-query presets are JSON-store concepts; they do not apply to table rows
             }
 
+            // [OwnerRlsSql v20260722-02] When the ONLY thing standing between this actor and the
+            // full list is an "own"-scoped view rule (not public list view, not admin, explicit
+            // rule exists, every matching view grant is scope "own") AND the workflow task-grant
+            // cannot widen their visible set (they hold no task in this form), the per-row RLS
+            // predicate is EXACTLY "submission.UserId == actor" — so push it down to SQL (exact
+            // TotalCount/paging) and skip the legacy post-pagination filter below. Any doubt
+            // (mixed scopes, task-grant check error) keeps the legacy in-memory path untouched.
+            bool isAdminActor = IsSubmissionAdmin(actor);
+            bool hasExplicitViewRule = HasExplicitSubmissionViewRule(formId);
+            bool ownerOnlySqlFilter = !isPublicListView && !isAdminActor && hasExplicitViewRule
+                && actor != null && actor.IsAuthenticated
+                && permissions.IsOwnOnlyViewScope(formId, actor)
+                && !ActorHoldsAnyTaskInForm(formId, actor);
+
             var query = new SubmissionListQuery
             {
                 FormId = formId,
@@ -2274,6 +2436,8 @@ namespace MegaForm.Oqtane.Server.Controllers
                 DateTo = dateTo,
                 PageIndex = pageIndex,
                 PageSize = pageSize,
+                // [OwnerRlsSql v20260722-02] Server-set only, never client-bound. See above.
+                UserId = ownerOnlySqlFilter ? actor.UserId : (int?)null,
                 // [QueryKey250Fix v20260717-01] An ADMIN may page past the public 250 clamp (the
                 // report modal asks for 2000 and silently got 250 back — analysis ran over a quarter
                 // of the data). Non-admin callers were already clamped to 100 above, so TrustedFetch
@@ -2299,8 +2463,10 @@ namespace MegaForm.Oqtane.Server.Controllers
             // every item AFTER pagination and then reporting TotalCount = visibleItems.Count (only the
             // current page → a wrong pager total). hasExplicitRule is computed a single time here and
             // mirrors HasExplicitSubmissionViewRule's own per-form rule load.
-            bool isAdmin = IsSubmissionAdmin(actor);
-            bool hasExplicitRule = HasExplicitSubmissionViewRule(formId);
+            // [OwnerRlsSql v20260722-02] Both flags were already resolved above (before the query
+            // ran) — reuse them so the owner-only SQL push-down and this block cannot disagree.
+            bool isAdmin = isAdminActor;
+            bool hasExplicitRule = hasExplicitViewRule;
 
             // Genuine per-row RLS is required ONLY for a non-admin, non-public actor on a form that
             // carries an explicit view/manage rule. Everyone else (public list view, admins, and the
@@ -2308,7 +2474,10 @@ namespace MegaForm.Oqtane.Server.Controllers
             // we keep the whole page AND report the true SQL TotalCount. Note: a non-admin/non-public
             // actor can only reach this point if it already passed CanUseSubmissionManagement above,
             // which itself requires hasExplicitRule — so the default stays "filter unless permitted".
-            bool applyPerRowFilter = !isPublicListView && !isAdmin && hasExplicitRule;
+            // [OwnerRlsSql v20260722-02] When the owner predicate already ran in SQL
+            // (ownerOnlySqlFilter), the per-row pass is redundant — skipping it keeps the exact
+            // SQL TotalCount for the pager instead of the current-page count.
+            bool applyPerRowFilter = !isPublicListView && !isAdmin && hasExplicitRule && !ownerOnlySqlFilter;
 
             var visibleItems = applyPerRowFilter
                 ? resultItems.Where(item => CanViewSubmissionRow(formId, new SubmissionInfo
@@ -2362,6 +2531,49 @@ namespace MegaForm.Oqtane.Server.Controllers
             });
         }
 
+        // [MySubmissions v20260722-02] Portal endpoint ("My Tickets"): an authenticated user lists
+        // ONLY their own submissions. The owner predicate is forced server-side (the client cannot
+        // override it) and runs in SQL via ISubmissionOwnerFilterableRepository, so TotalCount and
+        // paging are exact. No admin gate and no explicit-view-rule requirement: ownership alone
+        // grants read, mirroring the OwnerGrant in CanViewSubmissionRow for detail/print — a
+        // submitter must be able to follow their own ticket even on forms with no permission rules.
+        [HttpGet("Submissions/Mine")]
+        [Authorize]
+        public IActionResult ListMySubmissions(int formId, string status = null, string search = null,
+            DateTime? dateFrom = null, DateTime? dateTo = null, int pageIndex = 0, int pageSize = 25)
+        {
+            if (formId <= 0) return BadRequest(new { error = "formId is required" });
+            var actor = GetCurrentUserContextWithRoles();
+            if (actor == null || !actor.IsAuthenticated || actor.UserId <= 0)
+                return StatusCode(403, new { error = "You must be signed in to view your submissions." });
+            var form = _formRepo.GetForm(formId);
+            if (form == null) return NotFound();
+            if (pageSize <= 0 || pageSize > 100) pageSize = 100;
+
+            var query = new SubmissionListQuery
+            {
+                FormId = formId,
+                Status = status,
+                Search = search,
+                DateFrom = dateFrom,
+                DateTo = dateTo,
+                PageIndex = pageIndex,
+                PageSize = pageSize,
+                // Server-forced owner filter — the whole point of this endpoint.
+                UserId = actor.UserId
+            };
+            var result = _submissionQueries.List(query);
+            return JsonOk(new
+            {
+                Items = (result.Items ?? new List<SubmissionListItem>())
+                    .Select(x => ToSubmissionDto(x))
+                    .ToList(),
+                result.TotalCount,
+                result.PageIndex,
+                result.PageSize
+            });
+        }
+
         private SubmissionPagedResult<SubmissionListItem> ListSubmissionsWithBinding(SubmissionListQuery query, string queryKey, UserContext actor)
         {
             if (query == null)
@@ -2400,6 +2612,12 @@ namespace MegaForm.Oqtane.Server.Controllers
                 DateTo = query.DateTo,
                 PageIndex = 0,
                 PageSize = 5000,
+                // [OwnerRlsSql v20260722-02] Propagate the server-set owner predicate into the
+                // bound-query fetch as well — otherwise an "own"-scoped actor holding a queryKey
+                // would fetch UNFILTERED rows here while the per-row RLS filter is skipped
+                // (ownerOnlySqlFilter), silently widening their visible set. Null when no owner
+                // filter applies, so all other paths behave exactly as before.
+                UserId = query.UserId,
                 // [QueryKey250Fix v20260717-01] This asked for 5000 but the facade clamped to 250 —
                 // every bound-query listview on a form with >250 submissions silently filtered only
                 // the newest 250 rows. TrustedFetch is ADMIN-only (server-set, never
@@ -2798,12 +3016,37 @@ namespace MegaForm.Oqtane.Server.Controllers
 
         [HttpGet("Submissions/Export")]
         [Authorize(Policy = "ViewModule")]
-        public IActionResult ExportSubmissions(int formId, string format = "json")
+        public IActionResult ExportSubmissions(int formId, string format = "json",
+            string status = null, string search = null, DateTime? dateFrom = null, DateTime? dateTo = null)
         {
+            if (formId <= 0) return BadRequest(new { error = "formId is required" });
+
+            // [SecFix Phase0-1 v20260722] The ViewModule policy alone let ANY module viewer
+            // dump every submission. Require module Edit permission OR the per-form "export"
+            // permission (PermissionService.CanExport, previously never called). CanExport
+            // returns true when the form defines NO permission rules (open), so forms without
+            // rules keep the legacy behavior; only rule-bearing forms are tightened.
+            var actor = GetCurrentUserContextWithRoles();
+            var permissions = new PermissionService(_phase2Repo);
+            if (!IsModuleEditor() && !permissions.CanExport(formId, actor))
+                return StatusCode(403, new { error = "You do not have permission to export submissions for this form." });
+
             // [QueryKey250Fix v20260717-01] Export asked for 10000 but the facade clamped to 250 —
             // the downloaded "full" CSV/JSON silently held only the newest 250 rows. TrustedFetch
             // lifts this authorized export to the facade's TrustedMaxPageSize (5000, bounded read).
-            var result = _submissionQueries.List(new SubmissionListQuery { FormId = formId, PageIndex = 0, PageSize = 10000, TrustedFetch = true });
+            // status/search/dateFrom/dateTo are optional additive filters (same contract as
+            // GET Submissions); omitting them exports everything, as before.
+            var result = _submissionQueries.List(new SubmissionListQuery
+            {
+                FormId = formId,
+                Status = status,
+                Search = search,
+                DateFrom = dateFrom,
+                DateTo = dateTo,
+                PageIndex = 0,
+                PageSize = 10000,
+                TrustedFetch = true
+            });
             if (string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase))
             {
                 var lines = new List<string> { "SubmissionId,SubmittedOnUtc,Status,IpAddress,Summary" };

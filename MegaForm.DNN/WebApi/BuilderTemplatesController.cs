@@ -43,13 +43,22 @@ namespace MegaForm.WebApi
                 new MegaForm.Core.Services.GalleryRepo.GalleryRepositoryService(url));
         }
 
-        private HttpResponseMessage GalleryTrialGate()
+        /// <summary>
+        /// [TrialBrowse 2026-07-24] Gates DOWNLOADING a gallery template, not looking at one.
+        ///
+        /// Trial installs may LIST and PREVIEW the online catalog — that is the shop window, and
+        /// hiding it sold nothing. Only the install writes a paid template into the site, so only
+        /// the install is gated. Nothing is given away by showing it either: the gallery repo is a
+        /// PUBLIC GitHub repo served over a CDN, so its contents are already world-readable.
+        /// Parity with Oqtane MegaFormController.GalleryDownloadTrialGate.
+        /// </summary>
+        private HttpResponseMessage GalleryDownloadTrialGate()
         {
             if (!MegaForm.Core.Services.LicenseService.IsTrial()) return null;
             return Request.CreateResponse((HttpStatusCode)402, new
             {
                 error = "trial_remote_gallery",
-                message = "The online template gallery is available on a paid license.",
+                message = "Installing templates from the online gallery is available on a paid license.",
                 upgradeUrl = MegaForm.Core.Services.LicenseService.UpgradeUrl
             });
         }
@@ -66,9 +75,8 @@ namespace MegaForm.WebApi
         [ActionName("RemoteGalleryList")]
         public async System.Threading.Tasks.Task<HttpResponseMessage> RemoteGalleryList(bool refresh = false)
         {
-            var gate = GalleryTrialGate();
-            if (gate != null) return gate;
-
+            // Browsing is open to trial (see GalleryDownloadTrialGate) — `trial` tells the client
+            // to show the catalog read-only, with an Upgrade CTA instead of an install action.
             var svc = BuildGalleryService();
             var res = await svc.GetManifestAsync(refresh);
             if (!res.Success || res.Value == null)
@@ -94,12 +102,21 @@ namespace MegaForm.WebApi
                     sizeBytes = t.SizeBytes,
                     assetsSizeBytes = t.AssetsSizeBytes,
                     premium = t.Premium,
+                    fieldCount = t.FieldCount,
                     installed = installed.Contains((t.Slug ?? string.Empty).Trim())
                 })
                 .ToList();
 
-            return Request.CreateResponse(HttpStatusCode.OK,
-                new { repoUrl = svc.RepoBaseUrl, offline = res.Offline, message = res.Message, templates = items });
+            return Request.CreateResponse(HttpStatusCode.OK, new
+            {
+                repoUrl = svc.RepoBaseUrl,
+                offline = res.Offline,
+                message = res.Message,
+                // Browse-only mode. The client still refuses the install action itself, and the
+                // install endpoint re-checks — this flag is UX, never the enforcement.
+                trial = MegaForm.Core.Services.LicenseService.IsTrial(),
+                templates = items
+            });
         }
 
         /// <summary>
@@ -111,9 +128,8 @@ namespace MegaForm.WebApi
         [ActionName("RemoteGalleryPreview")]
         public async System.Threading.Tasks.Task<HttpResponseMessage> RemoteGalleryPreview(string slug)
         {
-            var gate = GalleryTrialGate();
-            if (gate != null) return gate;
-
+            // Open to trial: this is the shop window. Read-only — nothing is written to the
+            // template catalog here, so a trial visitor can look but cannot keep.
             var svc = BuildGalleryService();
             var fetch = await svc.FetchTemplateAsync(slug, false);
             if (!fetch.Success)
@@ -140,7 +156,9 @@ namespace MegaForm.WebApi
         [ActionName("RemoteGalleryInstall")]
         public async System.Threading.Tasks.Task<HttpResponseMessage> RemoteGalleryInstall(JObject body)
         {
-            var gate = GalleryTrialGate();
+            // THE gate. Listing and previewing are open; writing a paid template into this site
+            // is not. Enforced here, server-side — the client's read-only rendering is only UX.
+            var gate = GalleryDownloadTrialGate();
             if (gate != null) return gate;
 
             var slug = body != null ? (string)(body["slug"] ?? body["Slug"]) : null;

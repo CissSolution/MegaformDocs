@@ -37,6 +37,9 @@ namespace MegaForm.Core.Services.GalleryRepo
         public string Sha256 { get; set; }
         public long SizeBytes { get; set; }
         public bool Premium { get; set; }
+        /// <summary>Number of fields, straight from the manifest — lets the gallery caption a card
+        /// ("Events · 20 fields") without first downloading the template document.</summary>
+        public int FieldCount { get; set; }
         public string MinModuleVersion { get; set; }
     }
 

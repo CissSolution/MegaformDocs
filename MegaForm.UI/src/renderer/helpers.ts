@@ -5,6 +5,7 @@
 import type { FormField } from '@core/types';
 import { addressPartsForScheme, combineAddress, type AddressScheme } from './composite-address';
 import { migratePremiumWizardSchemaToNative } from '@shared/premium-native-migration';
+import { rewriteSettingsAssetUrls } from '@shared/module-asset-url';
 
 export interface RendererConfig {
   formId: number;
@@ -188,6 +189,12 @@ export function normalizeSchema(config: RendererConfig): void {
     s.settings.customCss = s.settings.customCss || s.settings.CustomCss || '';
     s.settings.customContent = s.settings.customContent || s.settings.CustomContent || {};
     if (!s.settings.customContent || typeof s.settings.customContent !== 'object') s.settings.customContent = {};
+    // [AssetUrlPlatform fix 2026-07-24] Templates hard-code artwork by absolute URL, and DNN
+    // and Oqtane mount the module's images at different paths. One shared gallery now serves
+    // both, so a template authored for the other platform rendered with a DEAD hero (404 →
+    // empty panel, and the overlay colours read wrong against the fallback background).
+    // Doing it here covers every render path at once: live form, embed and preview modal.
+    rewriteSettingsAssetUrls(s.settings);
   }
   // [ContentRootMerge v20260501-04] Some authored templates put content keys at
   // the schema root under "content" (or "Content") instead of nesting them under

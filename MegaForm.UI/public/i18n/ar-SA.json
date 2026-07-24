@@ -1949,5 +1949,8 @@
   "dash.n_submissions.zero": "{n} إرسال",
   "dash.n_submissions.two": "إرسالان",
   "dash.n_submissions.few": "{n} إرسالات",
-  "dash.n_submissions.many": "{n} إرسالاً"
+  "dash.n_submissions.many": "{n} إرسالاً",
+  "wiz.gallery.online_browse": "معاينة فقط — الترخيص المدفوع يتيح التثبيت",
+  "wiz.gallery.n_fields": "{n} حقول",
+  "wiz.gallery.untitled": "قالب بدون عنوان"
 }

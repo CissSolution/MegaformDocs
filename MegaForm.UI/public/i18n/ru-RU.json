@@ -1945,5 +1945,8 @@
   "wiz.gallery.online_count": "{n} available to install",
   "wiz.gallery.online_all": "All installed",
   "wiz.remote.already": "Already installed",
-  "wiz.remote.no_preview": "Preview is unavailable for this template."
+  "wiz.remote.no_preview": "Preview is unavailable for this template.",
+  "wiz.gallery.online_browse": "Только просмотр — установка доступна по платной лицензии",
+  "wiz.gallery.n_fields": "{n} полей",
+  "wiz.gallery.untitled": "Шаблон без названия"
 }

@@ -10,6 +10,7 @@
 //
 // No form is ever created by previewing — everything is rendered in memory.
 import { getPlatformHostConfig } from '@shared/platform-host';
+import { rewriteModuleAssetUrls } from '@shared/module-asset-url';
 import { WizardTemplate } from './templates';
 
 type AnyObj = any;
@@ -217,6 +218,10 @@ function buildResolvedCustomTemplateHtml(tpl: AnyObj, compact?: boolean): string
   html = html.replace(/\{\{content:([a-zA-Z0-9_-]+)\}\}/g, (_m: string, key: string) => escHtml(String((contentValues as any)[key] || '')));
   Object.keys(fieldsByKey).forEach((key) => { html = html.replace(new RegExp('\\{\\{field:' + escRegExp(key) + '\\}\\}', 'g'), fieldsByKey[key]); });
   html = html.replace(/\{\{field:[^}]+\}\}/g, '<div class="tpl-token-field tpl-token-field-missing' + (compact ? ' tpl-token-field-compact' : '') + '"><div class="tpl-token-label">Field</div><div class="tpl-token-input' + (compact ? ' tpl-token-input-compact' : '') + '">Field placeholder</div></div>');
+  // [TokenLeak fix 2026-07-24] Anything still in {{…}} form is a token this static preview does
+  // not implement ({{script:theme_selector}} is the common one). The real renderer consumes them
+  // and emits nothing visible, so leaving them printed made the card look broken. Drop them.
+  html = html.replace(/\{\{[a-zA-Z0-9_:.\-]+\}\}/g, '');
   return html;
 }
 
@@ -233,16 +238,24 @@ function buildCustomPreview(tpl: AnyObj): string {
 // ── live card thumbnail ─────────────────────────────────────────────────────────
 function buildCustomThumbnailMarkup(tpl: AnyObj): string {
   const thumbnailTpl = Object.assign({}, tpl, { title: '', description: '' });
-  const html = buildResolvedCustomTemplateHtml(thumbnailTpl, true);
-  const css = customCssOf(tpl);
+  // [AssetUrlPlatform fix 2026-07-24] The thumbnail builds its own srcdoc rather than going
+  // through the renderer, so it needs the same platform rewrite — otherwise a card for a
+  // template authored on the other platform shows an empty panel where the hero should be.
+  const html = rewriteModuleAssetUrls(buildResolvedCustomTemplateHtml(thumbnailTpl, true));
+  const css = rewriteModuleAssetUrls(customCssOf(tpl));
   if (!html) return '';
-  const titleScrubCss =
-    '.tpl-thumb-doc :is(h1,h2,h3,[class*="title" i],[class*="headline" i],[data-role*="title" i]){color:transparent!important;text-shadow:none!important;}'
-    + '.tpl-thumb-doc :is(h1,h2,h3,[class*="title" i],[class*="headline" i],[data-role*="title" i]) *{color:transparent!important;text-shadow:none!important;}';
+  // [ThumbRealism 2026-07-24] The title used to be scrubbed to transparent, from back when the
+  // card was a bare picture and the blanked-out heading stood in for a caption. The card now
+  // prints the template's name underneath, so blanking the design's own headline just made the
+  // thumbnail look unlike the form it represents. Show it.
+  const titleScrubCss = '';
   const srcdoc = '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=760, initial-scale=1"><style>'
     + 'html,body{margin:0;padding:0;background:#ffffff;color:#0f172a;font-family:Inter,Segoe UI,Arial,sans-serif;}'
-    + 'body{width:760px;min-height:520px;overflow:hidden;}'
-    + '.tpl-thumb-doc{padding:18px;box-sizing:border-box;min-height:520px;background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);}'
+    // min-height:100vh, not a fixed 520px: fitThumbFrames sizes the iframe viewport from the
+    // card's real aspect ratio, so the document must paint its background down to whatever
+    // height it is given — otherwise short templates leave a bare strip under the content.
+    + 'body{width:760px;min-height:100vh;overflow:hidden;}'
+    + '.tpl-thumb-doc{padding:18px;box-sizing:border-box;min-height:100vh;background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);}'
     + '.tpl-thumb-doc .mfp,.tpl-thumb-doc form{pointer-events:none;}'
     + '.tpl-token-field{margin-bottom:10px;}'
     + '.tpl-token-label{margin-bottom:5px;color:#0f172a;font-size:11px;font-weight:700;line-height:1.35;}'
@@ -263,8 +276,13 @@ function buildCustomThumbnailMarkup(tpl: AnyObj): string {
     + '</div><div class="tpl-thumb-live-fade"></div></div>';
 }
 
+// Thumbnail fitting lives in @shared/thumb-fit — the builder gallery has the identical
+// markup and the identical hard-coded-scale bug, so the fix is shared rather than twinned.
+export { fitThumbFrames } from '@shared/thumb-fit';
+
 /** Live card thumbnail HTML for a template: iframe render for custom-shell, mock skeleton otherwise.
- *  Returns '' when there is nothing to show (caller falls back to an icon). */
+ *  Returns '' when there is nothing to show (caller falls back to an icon).
+ *  ⚠️ Call fitThumbFrames() on the container after inserting this markup. */
 export function buildTemplateThumbnail(tpl: WizardTemplate): string {
   const stats = collectTemplateStats(tpl as AnyObj);
   if (stats.customLayout) {
@@ -454,9 +472,14 @@ export function ensurePreviewCss(): void {
 .tpl-mini-row-options .tpl-mini-option-line{margin-bottom:5px}
 .tpl-mini-option-line.short{width:72%;margin-bottom:0}
 /* live thumbnail — iframe render */
-.tpl-thumb-live{position:absolute;inset:0;border-radius:14px;overflow:hidden;background:rgba(255,255,255,.22)}
+/* border-radius:inherit, not a fixed 14px: the thumb is now the TOP half of a card that has a
+   caption under it, so rounding the bottom corners here exposed two little wedges of the card
+   gradient. Inheriting means it rounds only where its container actually rounds. */
+.tpl-thumb-live{position:absolute;inset:0;border-radius:inherit;overflow:hidden;background:rgba(255,255,255,.22)}
 .tpl-thumb-frame-shell{position:absolute;inset:0;overflow:hidden;pointer-events:none}
-.tpl-thumb-frame{width:760px;height:520px;border:0;background:#fff;transform:scale(.315);transform-origin:top left;pointer-events:none}
+/* width/height/transform are overwritten by fitThumbFrames() once the card has a width;
+   these values are only the pre-layout fallback so nothing flashes at full size. */
+.tpl-thumb-frame{width:760px;height:700px;border:0;background:#fff;transform:scale(.315);transform-origin:top left;pointer-events:none}
 .tpl-thumb-live-fade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,0) 0%,rgba(15,23,42,.08) 100%);pointer-events:none}
 .tpl-thumb-live-custom{box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
 /* preview modal */

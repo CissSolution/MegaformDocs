@@ -1945,5 +1945,8 @@
   "wiz.gallery.online_count": "{n} available to install",
   "wiz.gallery.online_all": "All installed",
   "wiz.remote.already": "Already installed",
-  "wiz.remote.no_preview": "Preview is unavailable for this template."
+  "wiz.remote.no_preview": "Preview is unavailable for this template.",
+  "wiz.gallery.online_browse": "Nur Vorschau — eine kostenpflichtige Lizenz schaltet die Installation frei",
+  "wiz.gallery.n_fields": "{n} Felder",
+  "wiz.gallery.untitled": "Unbenannte Vorlage"
 }

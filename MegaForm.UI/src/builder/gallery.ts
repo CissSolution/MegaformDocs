@@ -5,6 +5,7 @@
    - Richer live thumbnail cards
    - Reliable template replacement into existing builder schema
    ============================================================ */
+import { fitThumbFrames } from '@shared/thumb-fit';
 
 (function () {
   'use strict';
@@ -1132,8 +1133,10 @@
     if (!html) return '';
     var srcdoc = '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=760, initial-scale=1"><style>'
       + 'html,body{margin:0;padding:0;background:#ffffff;color:#0f172a;font-family:Inter,Segoe UI,Arial,sans-serif;}'
-      + 'body{width:760px;min-height:520px;overflow:hidden;}'
-      + '.tpl-thumb-doc{padding:18px;box-sizing:border-box;min-height:520px;background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);}'
+      // min-height:100vh, not a fixed 520px — fitThumbFrames sizes the iframe viewport from the
+      // card's real aspect ratio, so the document must paint its background to that height.
+      + 'body{width:760px;min-height:100vh;overflow:hidden;}'
+      + '.tpl-thumb-doc{padding:18px;box-sizing:border-box;min-height:100vh;background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);}'
       + '.tpl-thumb-doc .mfp,.tpl-thumb-doc form{pointer-events:none;}'
       + '.tpl-token-field{margin-bottom:10px;}'
       + '.tpl-token-label{margin-bottom:5px;color:#0f172a;font-size:11px;font-weight:700;line-height:1.35;}'
@@ -1939,6 +1942,11 @@
       var id = card.getAttribute('data-tpl') || '';
       bindCard(card, id);
     });
+
+    // [ThumbCrop fix 2026-07-24] Size each live thumbnail to its card now that the grid is laid
+    // out. The stylesheet's transform:scale(.22) is a pre-layout fallback only — a fixed scale
+    // left the render in the top-left corner of the card with bare background around it.
+    fitThumbFrames(_tplGrid);
 
     var galleryEl = document.querySelector('.tpl-gallery') as HTMLElement | null;
     if (galleryEl) renderPagination(galleryEl, total, _currentPage);

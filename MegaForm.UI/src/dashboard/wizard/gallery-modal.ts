@@ -8,10 +8,10 @@
 // cross-bundle coupling with builder/gallery.ts.
 import { openImportJsonDialog } from './import-json-modal';
 import { h, icon, wt, wizardToast } from './ui';
-import { isTrialMode, showTrialUpgrade } from '@shared/trial';
+import { isTrialMode, showTrialUpgrade, trialLockBadge } from '@shared/trial';
 import { WizardTemplate, templatesState, loadTemplates, resetTemplates, wizardTemplateFromJson } from './templates';
 import { RemoteTemplate, loadRemoteTemplates, loadRemoteTemplateDoc, installRemoteTemplate, resetRemoteCache } from './remote-gallery';
-import { buildTemplateThumbnail, openTemplatePreview, ensurePreviewCss } from './gallery-preview';
+import { buildTemplateThumbnail, openTemplatePreview, ensurePreviewCss, fitThumbFrames } from './gallery-preview';
 
 // Saturated card-thumbnail gradients per category (mirrors the builder gallery) — the
 // translucent live-thumbnail skeleton reads cleanly over a saturated backdrop.
@@ -53,6 +53,13 @@ function ensureGalleryCss(): void {
   .mfwg-card:hover{border-color:#c7d2fe;box-shadow:0 12px 26px rgba(15,23,42,.1);transform:translateY(-2px)}
   .mfwg-card:focus-visible{outline:2px solid #818cf8;outline-offset:2px}
   .mfwg-thumb{height:220px;background:linear-gradient(135deg,#eef2ff,#faf5ff);display:flex;align-items:center;justify-content:center;color:#6366f1;font-size:30px;position:relative;overflow:hidden}
+  /* [CardTitle 2026-07-24] Cards were thumbnail-only — pretty, but you could not tell what any
+     of them WAS without hovering into the preview. Name + one meta line, always visible. */
+  .mfwg-cap{padding:10px 12px 11px;border-top:1px solid #f1f5f9;background:#fff}
+  .mfwg-cap b{display:block;font-size:13px;font-weight:700;color:#0f172a;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mfwg-cap span{display:block;margin-top:3px;font-size:11px;font-weight:600;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mfwg-card.mfwg-locked .mfwg-cap b{color:#64748b}
+  .mfwg-cap .mfwg-tag{display:inline-flex;align-items:center;gap:4px;color:#7c3aed}
   .mfwg-lock{position:absolute;top:9px;right:9px;z-index:3;width:28px;height:28px;border-radius:999px;background:rgba(15,23,42,.72);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px}
   .mfwg-thumb-ov{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(15,23,42,.04) 0%,rgba(15,23,42,.34) 100%);opacity:0;transition:opacity .16s}
   .mfwg-card:hover .mfwg-thumb-ov,.mfwg-card:focus-within .mfwg-thumb-ov{opacity:1}
@@ -77,6 +84,24 @@ function ensureGalleryCss(): void {
 
 function catLabel(c: string): string { return c ? c.charAt(0).toUpperCase() + c.slice(1) : 'General'; }
 
+/** Card caption: the template's name plus one line of context. Without it a card is an
+ *  unlabelled picture and you have to open the preview to find out what it is. */
+function cardCaption(title: string, meta: string): HTMLElement {
+  const name = (title || '').trim() || wt('wiz.gallery.untitled', 'Untitled template');
+  return h('div', { class: 'mfwg-cap' }, [
+    h('b', { title: name }, name),
+    h('span', null, meta),
+  ]);
+}
+
+/** "Events · 20 fields" — the field count is dropped when unknown (0). */
+function metaLine(category: string, fieldCount: number, extra?: string): string {
+  const bits = [catLabel((category || 'general').toLowerCase())];
+  if (fieldCount > 0) bits.push(wt('wiz.gallery.n_fields', '{n} fields', { n: fieldCount }));
+  if (extra) bits.push(extra);
+  return bits.join(' · ');
+}
+
 /**
  * Open the full-screen Template Gallery. `onPick(t)` fires with the chosen template and the
  * modal closes; `onImport(t)` fires when a template is loaded from an imported .json.
@@ -95,6 +120,10 @@ export function openWizardGallery(onPick: (t: WizardTemplate) => void, onImport:
   let remote: RemoteTemplate[] = [];
   let remoteState: 'idle' | 'loading' | 'ok' | 'trial' | 'error' = 'idle';
   let remoteOffline = false;
+  // [TrialBrowse 2026-07-24] The catalog IS listed on a trial install — browsing the designs is
+  // the whole point of a shop window. Only installing is refused ('trial' state below is the
+  // legacy all-or-nothing gate, kept for older servers).
+  let remoteBrowseOnly = false;
 
   const grid = h('div', { class: 'mfwg-grid' });
   const cats = h('div', { class: 'mfwg-cats' });
@@ -139,17 +168,19 @@ export function openWizardGallery(onPick: (t: WizardTemplate) => void, onImport:
     sourceTabs.appendChild(tab('online', wt('wiz.gallery.src_online', 'Online gallery'), 'fa-cloud-arrow-down'));
     if (source === 'online' && remoteState === 'ok') {
       const n = remote.filter((t) => !t.installed).length;
-      sourceTabs.appendChild(h('span', { class: 'mfwg-hint', style: 'margin-left:auto;align-self:center' },
-        n ? wt('wiz.gallery.online_count', '{n} available to install', { n }) : wt('wiz.gallery.online_all', 'All installed')));
+      const hint = remoteBrowseOnly
+        ? wt('wiz.gallery.online_browse', 'Preview only — a paid license unlocks installing')
+        : (n ? wt('wiz.gallery.online_count', '{n} available to install', { n }) : wt('wiz.gallery.online_all', 'All installed'));
+      sourceTabs.appendChild(h('span', { class: 'mfwg-hint', style: 'margin-left:auto;align-self:center' }, hint));
     }
   }
 
   function fetchRemote(): void {
     remoteState = 'loading'; renderGrid();
     loadRemoteTemplates().then((res) => {
-      if (res.trial) { remoteState = 'trial'; }
+      if (!res.ok && res.trial) { remoteState = 'trial'; }   // legacy server: whole listing gated
       else if (!res.ok) { remoteState = 'error'; }
-      else { remoteState = 'ok'; remote = res.templates; remoteOffline = !!res.offline; }
+      else { remoteState = 'ok'; remote = res.templates; remoteOffline = !!res.offline; remoteBrowseOnly = !!res.trial; }
       renderSources(); renderCats(); renderGrid();
     });
   }
@@ -165,25 +196,49 @@ export function openWizardGallery(onPick: (t: WizardTemplate) => void, onImport:
   }
 
   /** Online card: same shell as a local card, but the thumbnail is filled in once the
-   *  template document arrives, and the primary action installs instead of picking. */
+   *  template document arrives, and the primary action installs instead of picking.
+   *  On a trial install the card is READ-ONLY — the design is visible, the download is not. */
   function renderOnlineCard(t: RemoteTemplate): HTMLElement {
     const previewLabel = wt('wiz.gallery.preview', 'Preview');
-    const thumb = h('div', { class: 'mfwg-thumb mfwg-thumb-live', style: 'background:' + thumbGradient(t.category) });
+    const locked = remoteBrowseOnly && !t.installed;
+    const thumb = h('div', {
+      class: 'mfwg-thumb mfwg-thumb-live',
+      style: 'background:' + thumbGradient(t.category) + (locked ? ';filter:grayscale(.35)' : ''),
+    });
     thumb.appendChild(h('div', { class: 'mfwg-empty', style: 'padding:0;color:rgba(255,255,255,.85)' }, [icon('fa-spinner fa-spin')]));
 
-    const card = h('div', { class: 'mfwg-card', role: 'button', tabindex: '0' }, [thumb]);
+    const card = h('div', { class: 'mfwg-card' + (locked ? ' mfwg-locked' : ''), role: 'button', tabindex: '0' }, [
+      thumb,
+      cardCaption(t.title, metaLine(t.category, Number((t as any).fieldCount) || 0,
+        t.installed ? wt('wiz.remote.installed', 'Installed')
+          : (locked ? trialLockBadge() : undefined))),
+    ]);
+
+    // The fetched document, kept so a card click can preview without refetching.
+    let loadedDoc: WizardTemplate | null = null;
+    const docFor = (_slug: string) => loadedDoc;
 
     // Real thumbnail: fetch the document (server verifies it) and reuse the very same
     // renderer the installed cards use, so online and local look identical.
     loadRemoteTemplateDoc(t.slug).then((tpl) => {
+      loadedDoc = tpl;
       thumb.innerHTML = '';
       const html = tpl ? buildTemplateThumbnail(tpl) : '';
-      if (html) thumb.innerHTML = html;
+      if (html) { thumb.innerHTML = html; fitThumbFrames(thumb); }
       else thumb.appendChild(icon(t.icon && t.icon.indexOf('fa-') === 0 ? t.icon : 'fa-wand-magic-sparkles'));
       addOverlay(tpl);
     });
 
     const doInstall = () => {
+      // Trial: looking is free, keeping is not. The install endpoint refuses this too — the
+      // client short-circuit exists so the user gets the Upgrade CTA instead of an error toast.
+      if (locked) {
+        showTrialUpgrade({
+          title: wt('wiz.remote.trial_title', 'Online gallery is a premium feature'),
+          message: wt('wiz.remote.trial_msg', 'Downloading templates from the online gallery needs a paid license. Upgrade to unlock it.'),
+        });
+        return;
+      }
       if (t.installed) { wizardToast(wt('wiz.remote.already', 'Already installed')); return; }
       card.classList.add('mfwg-busy');
       wizardToast(wt('wiz.remote.installing', 'Installing…'));
@@ -208,6 +263,9 @@ export function openWizardGallery(onPick: (t: WizardTemplate) => void, onImport:
 
     function addOverlay(tpl: WizardTemplate | null): void {
       if (t.installed) thumb.appendChild(h('span', { class: 'mfwg-badge-have', title: wt('wiz.remote.installed', 'Installed') }, [icon('fa-circle-check')]));
+      // Locked still previews — that is the point of browse-only. The badge says why the card
+      // will not install, it does not take the look away.
+      if (locked) thumb.appendChild(h('span', { class: 'mfwg-lock', title: trialLockBadge(), 'aria-hidden': 'true' }, [icon('fa-lock')]));
       thumb.appendChild(h('div', { class: 'mfwg-thumb-ov' }, [
         h('button', {
           type: 'button', class: 'mfwg-peek', title: previewLabel, 'aria-label': previewLabel,
@@ -220,8 +278,17 @@ export function openWizardGallery(onPick: (t: WizardTemplate) => void, onImport:
       ]));
     }
 
-    card.addEventListener('click', doInstall);
-    card.addEventListener('keydown', (e: any) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doInstall(); } });
+    // [TrialBrowse 2026-07-24] On a browse-only install, clicking the CARD opens the preview —
+    // the upgrade prompt lives on "Use this template" inside it. Nagging on the first click
+    // meant a trial user could never actually look at what they were being sold.
+    const onCardClick = () => {
+      if (!locked) { doInstall(); return; }
+      const tpl = docFor(t.slug);
+      if (tpl) openTemplatePreview(tpl, doInstall);
+      else wizardToast(wt('wiz.remote.no_preview', 'Preview is unavailable for this template.'), 'error');
+    };
+    card.addEventListener('click', onCardClick);
+    card.addEventListener('keydown', (e: any) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onCardClick(); } });
     return card;
   }
 
@@ -263,6 +330,10 @@ export function openWizardGallery(onPick: (t: WizardTemplate) => void, onImport:
       const pick = locked
         ? () => showTrialUpgrade({ title: wt('trial.premium_title', 'Premium template'), message: wt('trial.premium_msg', 'Premium templates need a paid license. Upgrade to use this template.') })
         : () => { close(); onPick(t); };
+      // [TrialBrowse 2026-07-24] Clicking a locked card opens the PREVIEW, not the upgrade
+      // prompt — you have to be able to see the design you are being asked to pay for.
+      // `pick` (the upgrade prompt when locked) stays on "Use this template" inside it.
+      const activate = locked ? () => openTemplatePreview(t, pick) : pick;
       // Live thumbnail (iframe render for custom-shell / mock skeleton for standard);
       // falls back to an icon only when the template has nothing renderable.
       const thumbHtml = buildTemplateThumbnail(t);
@@ -273,17 +344,24 @@ export function openWizardGallery(onPick: (t: WizardTemplate) => void, onImport:
         // (compass / globe-2 / flower-2) aren't FA classes → show a neutral glyph, not raw text.
         thumb.appendChild(t.icon && t.icon.indexOf('fa-') === 0 ? icon(t.icon) : icon(t.isPremium ? 'fa-wand-magic-sparkles' : 'fa-file-lines'));
       }
-      if (locked) thumb.appendChild(h('span', { class: 'mfwg-lock', 'aria-hidden': 'true' }, [icon('fa-lock')]));
+      if (locked) thumb.appendChild(h('span', { class: 'mfwg-lock', title: trialLockBadge(), 'aria-hidden': 'true' }, [icon('fa-lock')]));
+      // [TrialBrowse 2026-07-24] A locked card can still be PREVIEWED — same rule as the online
+      // tab. Previously the eye button also fired the Upgrade CTA, so a trial user could never
+      // see what they were being asked to pay for. "Use this template" inside the preview is
+      // still `pick`, which is the upgrade prompt when locked.
       thumb.appendChild(h('div', { class: 'mfwg-thumb-ov' }, [
-        h('button', { type: 'button', class: 'mfwg-peek', title: previewLabel, 'aria-label': previewLabel, onclick: (e: any) => { e.stopPropagation(); if (locked) { pick(); } else { openTemplatePreview(t, pick); } } }, [icon(locked ? 'fa-lock' : 'fa-eye')]),
+        h('button', { type: 'button', class: 'mfwg-peek', title: previewLabel, 'aria-label': previewLabel, onclick: (e: any) => { e.stopPropagation(); openTemplatePreview(t, pick); } }, [icon('fa-eye')]),
       ]));
       grid.appendChild(h('div', {
-        class: 'mfwg-card' + (locked ? ' mfwg-locked' : ''), role: 'button', tabindex: '0', onclick: pick,
-        onkeydown: (e: any) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } },
+        class: 'mfwg-card' + (locked ? ' mfwg-locked' : ''), role: 'button', tabindex: '0', onclick: activate,
+        onkeydown: (e: any) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); } },
       }, [
         thumb,
+        cardCaption(t.title, metaLine(t.category, t.fieldCount, locked ? trialLockBadge() : undefined)),
       ]));
     });
+    // Size every live thumbnail to its card now that the grid is laid out.
+    fitThumbFrames(grid);
   }
 
   searchInput.addEventListener('input', () => { query = searchInput.value; renderGrid(); });

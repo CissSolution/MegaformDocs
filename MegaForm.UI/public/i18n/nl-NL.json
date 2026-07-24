@@ -1945,5 +1945,8 @@
   "wiz.gallery.online_count": "{n} available to install",
   "wiz.gallery.online_all": "All installed",
   "wiz.remote.already": "Already installed",
-  "wiz.remote.no_preview": "Preview is unavailable for this template."
+  "wiz.remote.no_preview": "Preview is unavailable for this template.",
+  "wiz.gallery.online_browse": "Alleen voorbeeld — een betaalde licentie ontgrendelt installeren",
+  "wiz.gallery.n_fields": "{n} velden",
+  "wiz.gallery.untitled": "Naamloos sjabloon"
 }

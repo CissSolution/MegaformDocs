@@ -1945,5 +1945,8 @@
   "wiz.gallery.online_count": "{n} available to install",
   "wiz.gallery.online_all": "All installed",
   "wiz.remote.already": "Already installed",
-  "wiz.remote.no_preview": "Preview is unavailable for this template."
+  "wiz.remote.no_preview": "Preview is unavailable for this template.",
+  "wiz.gallery.online_browse": "केवल पूर्वावलोकन — सशुल्क लाइसेंस इंस्टॉल करना अनलॉक करता है",
+  "wiz.gallery.n_fields": "{n} फ़ील्ड",
+  "wiz.gallery.untitled": "बिना शीर्षक वाला टेम्पलेट"
 }

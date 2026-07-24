@@ -27,6 +27,8 @@ export interface RemoteTemplate {
 
 export interface RemoteListResult {
   ok: boolean;
+  /** [TrialBrowse 2026-07-24] Browse-only: the catalog IS returned, but installing is refused.
+   *  (A 402 here means an older server that gated the whole listing — then `ok` is false too.) */
   trial?: boolean;
   offline?: boolean;
   error?: string;
@@ -81,11 +83,14 @@ export async function loadRemoteTemplates(force?: boolean): Promise<RemoteListRe
   if (_cache && !force) return _cache;
   try {
     const r = await fetch(apiUrl('RemoteGalleryList'), { method: 'GET', credentials: 'same-origin', headers: authHeaders(false) });
+    // 402 = a server old enough to gate the whole listing. Newer servers return the catalog
+    // with trial:true so a trial install can still browse it.
     if (r.status === 402) { _cache = { ok: false, trial: true, templates: [] }; return _cache; }
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const j = await r.json();
     _cache = {
       ok: true,
+      trial: !!j.trial,
       offline: !!j.offline,
       templates: Array.isArray(j.templates) ? j.templates : [],
     };
