@@ -80,8 +80,8 @@
     "Georgia document typography",
     "semantic red #c0392b"
   ],
-  "customCssSha256": "d08ecdae3d51ffef0d58b7d56c60079da9cc257df443bbb68a3d4bd75cf23405",
-  "shellSha256": "c22d2d1956de2e3b631e31039bf8d41f4c910572193e00c336b9d321af4a2213",
+  "customCssSha256": "325fdeb30280ed100bbe9e00b2b4efeb019323e6369a2886502e0ae7ab42d411",
+  "shellSha256": "38fbc9bd4bf06a77d86c912ed8444bf864fe8dacf908bb798796f36b976e6d8a",
   "compositeWidgetPolicy": {
     "forbiddenFieldTypes": [
       "Payment",
@@ -151,8 +151,8 @@ Preserve the shell and CSS hashes. The template is a single-page, scroll-aware p
 
 ## Hard invariants
 
-- customCss SHA-256: d08ecdae3d51ffef0d58b7d56c60079da9cc257df443bbb68a3d4bd75cf23405
-- customHtml SHA-256: c22d2d1956de2e3b631e31039bf8d41f4c910572193e00c336b9d321af4a2213
+- customCss SHA-256: 325fdeb30280ed100bbe9e00b2b4efeb019323e6369a2886502e0ae7ab42d411
+- customHtml SHA-256: 38fbc9bd4bf06a77d86c912ed8444bf864fe8dacf908bb798796f36b976e6d8a
 - theme: system
 - zero orphan and zero missing field placeholders
 - customScripts stays empty

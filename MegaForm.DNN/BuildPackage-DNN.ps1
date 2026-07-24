@@ -456,6 +456,11 @@ if (Test-Path "$assetsDir\img") {
     }
     Write-Host '  + Assets\img\* (bear + flags)'
 }
+if (Test-Path "$assetsDir\fonts") {
+    New-Item -ItemType Directory -Path "$RESOURCES\Assets\fonts" -Force | Out-Null
+    Copy-Item "$assetsDir\fonts\*" "$RESOURCES\Assets\fonts\" -Recurse -Force
+    Write-Host '  + Assets\fonts\*'
+}
 foreach ($resSub in @('PromptRecipes', 'TemplateGuides')) {
     $src = Join-Path $PROJECT_DIR "Resources\$resSub"
     if (Test-Path $src) {

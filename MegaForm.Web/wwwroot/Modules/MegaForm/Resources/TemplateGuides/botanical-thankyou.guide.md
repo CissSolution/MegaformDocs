@@ -69,8 +69,8 @@
     "leaf ornament system",
     "semantic red #c0392b"
   ],
-  "customCssSha256": "034754b3df6f82af279ac6a436839203923332026c63e3e0f8c20cc3bdaa0dcb",
-  "shellSha256": "a14a40abe0dae4c29891147b7f8fc67c1d93cbca637b0f62dc1da6400fb833cf",
+  "customCssSha256": "a77c53fac3b9d682f8759bba17f2d6ca64028992a28ac8a6a45cd450261fadd3",
+  "shellSha256": "93bcc54b6bea5b2dd6938b6cfadfa2d139127302e05afbeda07225b7cc0ba209",
   "compositeWidgetPolicy": {
     "forbiddenFieldTypes": [
       "Payment",
@@ -132,8 +132,8 @@ Preserve the shell and CSS hashes. The template is a single-page, scroll-aware p
 
 ## Hard invariants
 
-- customCss SHA-256: 034754b3df6f82af279ac6a436839203923332026c63e3e0f8c20cc3bdaa0dcb
-- customHtml SHA-256: a14a40abe0dae4c29891147b7f8fc67c1d93cbca637b0f62dc1da6400fb833cf
+- customCss SHA-256: a77c53fac3b9d682f8759bba17f2d6ca64028992a28ac8a6a45cd450261fadd3
+- customHtml SHA-256: 93bcc54b6bea5b2dd6938b6cfadfa2d139127302e05afbeda07225b7cc0ba209
 - theme: system
 - zero orphan and zero missing field placeholders
 - customScripts stays empty

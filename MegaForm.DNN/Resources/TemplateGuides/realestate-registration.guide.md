@@ -23,6 +23,7 @@
     "accommodation",
     "scholarship",
     "motivation",
+    "signature",
     "newsletter",
     "terms",
     "utm_source",
@@ -52,12 +53,21 @@
     "Programme Details",
     "&#8962;",
     "Logistics & Support",
-    "&#10003;",
+    "&#9635;",
+    "Application Summary",
+    "Item",
+    "Duration",
+    "Start",
+    "Status",
+    "Select a programme above to see summary",
+    "Total items",
     "Declaration",
-    "&#8592; Back",
-    "Submit Application &#8594;",
+    "&#8249;",
+    "Back to Forms",
+    "Submit Application",
+    "&#10003;",
     "EuroYouth Exchange &copy; 2026",
-    "Brussels &middot; Berlin &middot; Barcelona"
+    "Form REG-2026-001"
   ],
   "allowedOps": [
     "set_form_meta",
@@ -76,12 +86,11 @@
     "Bricolage display treatment",
     "semantic red #c0392b"
   ],
-  "customCssSha256": "b8adb945cfdf28b7d78bf73633ee42cd746d0e59cf2693d333564078548ad857",
-  "shellSha256": "4fa87270c9ff302cc1eff0caf2cea142d55d747d137e1b3cbc4830587886c08e",
+  "customCssSha256": "aad7feca42fbb23a66b1784c1d13c91ec303b0fd24eb14c896f7c028a1fe1fc7",
+  "shellSha256": "3fa1a46898ff41893e068a384b5876865ed8a1d19028a557c1c8917ef339fd76",
   "compositeWidgetPolicy": {
     "forbiddenFieldTypes": [
       "Payment",
-      "Signature",
       "File",
       "Razor",
       "DataRepeater",
@@ -120,6 +129,7 @@ Preserve the shell and CSS hashes. The template is a single-page, scroll-aware p
 - accommodation: Radio — Accommodation preference
 - scholarship: Checkbox — Scholarship / financial support
 - motivation: Textarea — Motivation (optional)
+- signature: Signature — Signature
 - newsletter: Checkbox — Newsletter
 - terms: Checkbox — Terms and conditions
 - utm_source: Hidden — UTM source
@@ -138,8 +148,8 @@ Preserve the shell and CSS hashes. The template is a single-page, scroll-aware p
 
 ## Hard invariants
 
-- customCss SHA-256: b8adb945cfdf28b7d78bf73633ee42cd746d0e59cf2693d333564078548ad857
-- customHtml SHA-256: 4fa87270c9ff302cc1eff0caf2cea142d55d747d137e1b3cbc4830587886c08e
+- customCss SHA-256: aad7feca42fbb23a66b1784c1d13c91ec303b0fd24eb14c896f7c028a1fe1fc7
+- customHtml SHA-256: 3fa1a46898ff41893e068a384b5876865ed8a1d19028a557c1c8917ef339fd76
 - theme: system
 - zero orphan and zero missing field placeholders
 - customScripts stays empty

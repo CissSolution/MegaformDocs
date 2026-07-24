@@ -66,8 +66,8 @@
     "sticker ornaments",
     "semantic red #c0392b"
   ],
-  "customCssSha256": "c8b636acd182d4e88151e2810a055c79d352044f90f7817e6da14ec9d3279653",
-  "shellSha256": "7b56de7c1d1c2952d72b5ab64117e7560823348000a2ffa1d1279e1b139b4a18",
+  "customCssSha256": "8f1b61d129d0a69b8d061bbce56a2dc06bb144eb971e78bcd60c27d6d6e8442a",
+  "shellSha256": "e68588c72aa61356756959c4be97ea2a2aaed0676d2c73ffe056c6ed35297f62",
   "compositeWidgetPolicy": {
     "forbiddenFieldTypes": [
       "Payment",
@@ -128,8 +128,8 @@ Preserve the shell and CSS hashes. The template is a single-page, scroll-aware p
 
 ## Hard invariants
 
-- customCss SHA-256: c8b636acd182d4e88151e2810a055c79d352044f90f7817e6da14ec9d3279653
-- customHtml SHA-256: 7b56de7c1d1c2952d72b5ab64117e7560823348000a2ffa1d1279e1b139b4a18
+- customCss SHA-256: 8f1b61d129d0a69b8d061bbce56a2dc06bb144eb971e78bcd60c27d6d6e8442a
+- customHtml SHA-256: e68588c72aa61356756959c4be97ea2a2aaed0676d2c73ffe056c6ed35297f62
 - theme: system
 - zero orphan and zero missing field placeholders
 - customScripts stays empty

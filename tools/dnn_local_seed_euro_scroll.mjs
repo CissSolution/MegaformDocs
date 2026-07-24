@@ -2,7 +2,10 @@ import fs from "node:fs";
 import path from "node:path";
 
 const repo = path.resolve(import.meta.dirname, "..");
-const templateDir = path.join(repo, "Samples", "FormTemplates", "Premium");
+// DONEE is the hand-off/canonical snapshot requested for continuing the work.
+// Seed DNN from that directory directly so the files kept for recovery are
+// exactly the source used by the live visual-QA pages.
+const templateDir = path.join(repo, "Samples", "FormTemplates", "Premium", "DONEE");
 const outputArg = process.argv.indexOf("--out");
 const outputFile = outputArg >= 0 ? path.resolve(process.argv[outputArg + 1]) : null;
 const slugs = [
