@@ -60,6 +60,12 @@
 import { MegaFormBuilder } from './core';
 import { isColorProp, colorToHex } from './inspector-color';
 import { openInspectorColorPalette } from './inspector-color-palette';
+import {
+    MEGAFORM_THEME_PRESETS,
+    MEGAFORM_THEME_PRESET_COLOR_VAR_KEYS,
+    buildMegaFormThemePresetVars,
+    getMegaFormThemePreset,
+} from '../shared/theme-presets';
 
 (function () {
     'use strict';
@@ -105,7 +111,8 @@ import { openInspectorColorPalette } from './inspector-color-palette';
 
     var THEME_STYLE_TAG_ID = 'mf-builder-theme-overrides';
 
-    // ── 12 presets — must stay in sync with theme-designer/index.ts ──
+    // Current picker catalog comes from one shared source. Legacy ids remain
+    // readable through getMegaFormThemePreset() so old forms keep their theme.
     interface ThemePreset {
         id: string;
         name: string;
@@ -113,20 +120,15 @@ import { openInspectorColorPalette } from './inspector-color-palette';
         secondary: string;
         tertiary: string;
     }
-    var PRESETS: ThemePreset[] = [
-        { id: 'default',         name: 'Default',         primary: '#3b82f6', secondary: '#eff6ff', tertiary: '#e0f2fe' },
-        { id: 'modern-blue',     name: 'Modern Blue',     primary: '#667eea', secondary: '#764ba2', tertiary: '#e8e8ff' },
-        { id: 'warm-sunset',     name: 'Warm Sunset',     primary: '#ff6b35', secondary: '#ffd4bc', tertiary: '#fff8f0' },
-        { id: 'dark-elegance',   name: 'Dark Elegance',   primary: '#e94560', secondary: '#1a1a2e', tertiary: '#16213e' },
-        { id: 'nature-green',    name: 'Nature Green',    primary: '#2d8a4e', secondary: '#c8e6c9', tertiary: '#f0f7f0' },
-        { id: 'flat-material',   name: 'Material',        primary: '#1976d2', secondary: '#e3f2fd', tertiary: '#fafafa' },
-        { id: 'classic-formal',  name: 'Classic Formal',  primary: '#8b4513', secondary: '#d5c7b5', tertiary: '#f8f4ef' },
-        { id: 'playful',         name: 'Playful',         primary: '#ff6b6b', secondary: '#ffd3d3', tertiary: '#ffecd2' },
-        { id: 'healthcare',      name: 'Healthcare',      primary: '#0077b6', secondary: '#b5d4e8', tertiary: '#f0f8ff' },
-        { id: 'executive',       name: 'Executive',       primary: '#c9a84c', secondary: '#2a2a2a', tertiary: '#1c1c1c' },
-        { id: 'tech-startup',    name: 'Tech Startup',    primary: '#38ef7d', secondary: '#141432', tertiary: '#0a0a23' },
-        { id: 'minimal',         name: 'Minimal',         primary: '#1a1a1a', secondary: '#f8f8f8', tertiary: '#ffffff' }
-    ];
+    var PRESETS: ThemePreset[] = MEGAFORM_THEME_PRESETS.map(function (preset) {
+        return {
+            id: preset.id,
+            name: preset.name,
+            primary: preset.colors[0],
+            secondary: preset.colors[1],
+            tertiary: preset.colors[2],
+        };
+    });
 
     var FONT_OPTIONS = [
         'Inter', 'Georgia', 'Roboto', 'Nunito', 'Playfair Display',
@@ -2307,16 +2309,24 @@ import { openInspectorColorPalette } from './inspector-color-palette';
                     apiHandle.setPreset(id);
                 }
             } catch (_e) { /* fall through to inline path below */ }
-            // Find preset and seed primary color into live overrides so the
-            // canvas updates even before megaform-themes.css loads.
+            // Apply the same complete palette used by Settings and the
+            // standalone Theme Designer. This also serves as the fallback if
+            // an older host exposed no adapter API.
+            var sharedPreset = getMegaFormThemePreset(id);
             var p = PRESETS.filter(function (x) { return x.id === id; })[0];
+            if (!p && sharedPreset) {
+                p = {
+                    id: sharedPreset.id,
+                    name: sharedPreset.name,
+                    primary: sharedPreset.colors[0],
+                    secondary: sharedPreset.colors[1],
+                    tertiary: sharedPreset.colors[2],
+                };
+            }
             if (p) {
-                live['--mf-primary'] = p.primary;
-                // [B56 FIX 4] Also cascade into the controls that follow
-                // primary so the iframe sees the full palette swap.
-                live['--mf-input-focus-border'] = p.primary;
-                live['--mf-check-color']        = p.primary;
-                live['--mf-progress-fill']      = p.primary;
+                MEGAFORM_THEME_PRESET_COLOR_VAR_KEYS.forEach(function (key) { delete live[key]; });
+                var palette = buildMegaFormThemePresetVars(sharedPreset!);
+                Object.keys(palette).forEach(function (key) { live[key] = palette[key]; });
             }
             persistToSchema();
             flushPreview();
@@ -3050,14 +3060,21 @@ import { openInspectorColorPalette } from './inspector-color-palette';
         },
         setPreset:     function (themeId: string) {
             currentTheme = String(themeId || 'default');
+            var sharedPreset = getMegaFormThemePreset(currentTheme);
             var p = PRESETS.filter(function (x) { return x.id === currentTheme; })[0];
+            if (!p && sharedPreset) {
+                p = {
+                    id: sharedPreset.id,
+                    name: sharedPreset.name,
+                    primary: sharedPreset.colors[0],
+                    secondary: sharedPreset.colors[1],
+                    tertiary: sharedPreset.colors[2],
+                };
+            }
             if (p) {
-                live['--mf-primary']            = p.primary;
-                live['--mf-btn-bg']             = p.primary;
-                live['--mf-btn-bg-hover']       = p.primary;
-                live['--mf-input-focus-border'] = p.primary;
-                live['--mf-check-color']        = p.primary;
-                live['--mf-progress-fill']      = p.primary;
+                MEGAFORM_THEME_PRESET_COLOR_VAR_KEYS.forEach(function (key) { delete live[key]; });
+                var palette = buildMegaFormThemePresetVars(sharedPreset!);
+                Object.keys(palette).forEach(function (key) { live[key] = palette[key]; });
             }
             persistToSchema();
             flushPreview();
@@ -3070,6 +3087,7 @@ import { openInspectorColorPalette } from './inspector-color-palette';
         },
         applyPresetVars: function (themeId: string, vars: Record<string, string>) {
             currentTheme = String(themeId || 'default');
+            MEGAFORM_THEME_PRESET_COLOR_VAR_KEYS.forEach(function (key) { delete live[key]; });
             if (vars && typeof vars === 'object') {
                 Object.keys(vars).forEach(function (k) {
                     var v = vars[k];

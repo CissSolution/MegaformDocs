@@ -63,6 +63,10 @@
    ───────────────────────────────────────────────────────────────────── */
 
 import { ThemeDesignerTemplateTree } from '../theme-designer/inspector-structure-template-tree';
+import {
+  MEGAFORM_THEME_PRESETS,
+  buildMegaFormThemePresetVars,
+} from '../shared/theme-presets';
 
 /* ── 1. Module-scoped state ────────────────────────────────────────── */
 
@@ -311,24 +315,7 @@ function renderUtilityNavHtml(): string {
 function renderPresetsPane(): string {
   // 16 mock-aligned presets. Each has 4-color swatch (matching mock's c1/c2/c3/c4
   // gradient strip), category + popular flag for filter, optional badge.
-  var presets: Array<{ id: string; name: string; colors: string[]; badge: string; category: string; style: string; popular: boolean }> = [
-    { id: 'default',  name: 'Default',  colors: ['#3b82f6','#1e293b','#f8fafc','#e2e8f0'], badge: '',    category: 'minimal', style: 'light', popular: true  },
-    { id: 'ocean',    name: 'Ocean',    colors: ['#0ea5e9','#0c4a6e','#f0f9ff','#bae6fd'], badge: '',    category: 'nature',  style: 'light', popular: true  },
-    { id: 'forest',   name: 'Forest',   colors: ['#22c55e','#14532d','#f0fdf4','#bbf7d0'], badge: '',    category: 'nature',  style: 'light', popular: false },
-    { id: 'sunset',   name: 'Sunset',   colors: ['#f97316','#7c2d12','#fff7ed','#fed7aa'], badge: '',    category: 'warm',    style: 'light', popular: false },
-    { id: 'lavender', name: 'Lavender', colors: ['#a855f7','#581c87','#faf5ff','#e9d5ff'], badge: '',    category: 'elegant', style: 'light', popular: true  },
-    { id: 'midnight', name: 'Midnight', colors: ['#6366f1','#1e1b4b','#eef2ff','#c7d2fe'], badge: 'Pro', category: 'dark',    style: 'dark',  popular: true  },
-    { id: 'rose',     name: 'Rose',     colors: ['#ec4899','#831843','#fdf2f8','#fbcfe8'], badge: 'Pro', category: 'elegant', style: 'light', popular: false },
-    { id: 'amber',    name: 'Amber',    colors: ['#f59e0b','#78350f','#fffbeb','#fde68a'], badge: '',    category: 'warm',    style: 'light', popular: false },
-    { id: 'slate',    name: 'Slate',    colors: ['#64748b','#0f172a','#f8fafc','#cbd5e1'], badge: '',    category: 'minimal', style: 'light', popular: true  },
-    { id: 'emerald',  name: 'Emerald',  colors: ['#10b981','#064e3b','#ecfdf5','#a7f3d0'], badge: 'Pro', category: 'nature',  style: 'light', popular: false },
-    { id: 'coral',    name: 'Coral',    colors: ['#fb7185','#881337','#fff1f2','#fecdd3'], badge: 'New', category: 'warm',    style: 'light', popular: false },
-    { id: 'cyber',    name: 'Cyber',    colors: ['#22d3ee','#164e63','#ecfeff','#a5f3fc'], badge: 'New', category: 'modern',  style: 'dark',  popular: true  },
-    { id: 'carbon',   name: 'Carbon',   colors: ['#18181b','#3f3f46','#27272a','#52525b'], badge: 'Pro', category: 'dark',    style: 'dark',  popular: true  },
-    { id: 'arctic',   name: 'Arctic',   colors: ['#0891b2','#155e75','#ecfeff','#cffafe'], badge: '',    category: 'minimal', style: 'light', popular: false },
-    { id: 'berry',    name: 'Berry',    colors: ['#c026d3','#701a75','#fdf4ff','#f5d0fe'], badge: 'New', category: 'elegant', style: 'light', popular: false },
-    { id: 'earth',    name: 'Earth',    colors: ['#a16207','#713f12','#fefce8','#fef08a'], badge: '',    category: 'nature',  style: 'light', popular: false },
-  ];
+  var presets = MEGAFORM_THEME_PRESETS;
 
   // 8 category chips with FontAwesome icons (lucide-react equivalents)
   var categories: Array<{ id: string; label: string; icon: string }> = [
@@ -844,73 +831,11 @@ function wirePresetsPane(panel: HTMLElement): void {
       var c2 = tile.getAttribute('data-preset-c2') || '';
       var c3 = tile.getAttribute('data-preset-c3') || '';
       var c4 = tile.getAttribute('data-preset-c4') || '';
-      // [P1-4] Darken a hex toward black by `amt` (0..1) so light preset border
-      // colors keep an accessible boundary against tinted (e.g. Sunset cream) inputs.
-      var darkenHex = function (hex: string, amt: number): string {
-        var h = String(hex || '').trim().replace(/^#/, '');
-        if (h.length === 3) h = h.charAt(0) + h.charAt(0) + h.charAt(1) + h.charAt(1) + h.charAt(2) + h.charAt(2);
-        if (!/^[0-9a-fA-F]{6}$/.test(h)) return hex;
-        var f = Math.max(0, Math.min(1, 1 - amt));
-        var ch = function (i: number) { return Math.round(parseInt(h.slice(i, i + 2), 16) * f); };
-        var hx = function (n: number) { var s = n.toString(16); return s.length === 1 ? '0' + s : s; };
-        return '#' + hx(ch(0)) + hx(ch(2)) + hx(ch(4));
-      };
+      var presetVars = buildMegaFormThemePresetVars({
+        colors: [c1, c2, c3, c4] as [string, string, string, string],
+      });
       try {
         var adapter = (window as any).MFThemeTabAdapter;
-        var presetVars: Record<string, string> = {};
-        if (c1) {
-          presetVars['--mf-primary'] = c1;
-          presetVars['--mf-primary-hover'] = c1;
-          presetVars['--mf-primary-light'] = c1 + '26';
-          presetVars['--mf-input-focus-border'] = c1;
-          presetVars['--mf-check-color'] = c1;
-          presetVars['--mf-progress-fill'] = c1;
-          presetVars['--mf-btn-bg'] = c1;
-          presetVars['--mf-btn-bg-hover'] = c1;
-          presetVars['--mf-btn-hover-bg'] = c1;
-          presetVars['--mf-color-text-inverse'] = '#ffffff';
-          presetVars['--mf-btn-color'] = '#ffffff';
-          presetVars['--mf-btn-text'] = '#ffffff';
-        }
-        if (c2) {
-          presetVars['--mf-secondary'] = c2;
-          presetVars['--mf-title-color'] = c2;
-          presetVars['--mf-text'] = c2;
-          presetVars['--mf-label-color'] = c2;
-        }
-        if (c3) {
-          presetVars['--mf-form-bg'] = c3;
-          presetVars['--mf-input-bg'] = c3;
-        }
-        if (c4) {
-          var c4b = darkenHex(c4, 0.14);
-          presetVars['--mf-border'] = c4b;
-          // [P1-4] megaform.css consumes --mf-input-border as a SHORTHAND
-          // ("1px solid #..."), applied via `border: var(--mf-input-border)`.
-          // Feeding a BARE color collapses border-style→none → invisible border.
-          // Emit a valid shorthand, and also feed the canonical color token that
-          // the Colors panel (--mf-input-border-color) and runtime both read.
-          presetVars['--mf-input-border'] = '1px solid ' + c4b;
-          presetVars['--mf-input-border-color'] = c4b;
-        }
-        // [PresetWire v20260707] Mirror the ⚙-Settings preset channel
-        // (settings-popup mfPresetColorVars) so premium templates wired to
-        // var(--mf-preset-*, <identity colour>) recolor from the builder
-        // Presets rail too — previously only the Settings popup emitted these,
-        // so rail presets changed accents but never template surfaces.
-        if (c1) {
-          presetVars['--mf-preset-primary'] = c1;
-          presetVars['--mf-preset-on-primary'] = '#ffffff';
-        }
-        if (c2) presetVars['--mf-preset-text'] = c2;
-        if (c3) {
-          presetVars['--mf-preset-surface'] = c3;
-          presetVars['--mf-preset-bg'] = c3;
-        }
-        if (c4) {
-          presetVars['--mf-preset-accent'] = c4;
-          presetVars['--mf-preset-border'] = c4;
-        }
         if (adapter && typeof adapter.applyPresetVars === 'function') {
           adapter.applyPresetVars(id, presetVars);
         } else if (adapter && typeof adapter.setPreset === 'function') {
@@ -924,36 +849,9 @@ function wirePresetsPane(panel: HTMLElement): void {
         // a reload. Safe for both standard forms and customHtml forms (B71
         // element-level overrides catch hardcoded customCss values).
         if (!(adapter && typeof adapter.applyPresetVars === 'function') && adapter && typeof adapter.setVar === 'function') {
-          if (c1) {
-            adapter.setVar('--mf-primary', c1);
-            adapter.setVar('--mf-primary-hover', c1);
-            adapter.setVar('--mf-primary-light', c1 + '26');
-            adapter.setVar('--mf-input-focus-border', c1);
-            adapter.setVar('--mf-check-color', c1);
-            adapter.setVar('--mf-progress-fill', c1);
-            adapter.setVar('--mf-btn-bg', c1);
-            adapter.setVar('--mf-btn-bg-hover', c1);
-            adapter.setVar('--mf-btn-hover-bg', c1);
-            adapter.setVar('--mf-color-text-inverse', '#ffffff');
-            adapter.setVar('--mf-btn-color', '#ffffff');
-            adapter.setVar('--mf-btn-text', '#ffffff');
-          }
-          if (c2) {
-            adapter.setVar('--mf-secondary', c2);
-            adapter.setVar('--mf-title-color', c2);
-            adapter.setVar('--mf-text', c2);
-            adapter.setVar('--mf-label-color', c2);
-          }
-          if (c3) {
-            adapter.setVar('--mf-form-bg', c3);
-            adapter.setVar('--mf-input-bg', c3);
-          }
-          if (c4) {
-            var c4d = darkenHex(c4, 0.14);
-            adapter.setVar('--mf-border', c4d);
-            adapter.setVar('--mf-input-border', '1px solid ' + c4d);
-            adapter.setVar('--mf-input-border-color', c4d);
-          }
+          Object.keys(presetVars).forEach(function (key) {
+            adapter.setVar(key, presetVars[key]);
+          });
         }
       } catch (_e) { /* defensive */ }
       grid!.querySelectorAll<HTMLElement>('.mf-tlr-preset-tile.active').forEach(function (t) { t.classList.remove('active'); });

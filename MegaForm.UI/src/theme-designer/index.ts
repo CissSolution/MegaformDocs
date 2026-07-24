@@ -2,6 +2,10 @@ import { ThemeDesignerTemplateTree } from './inspector-structure-template-tree';
 import { ThemeDesignerElementStylePanel } from './inspector-elements-panel';
 import { TD_TEMPLATE_CSS_MATCH_BADGE, TD_TEMPLATE_TREE_BADGE, TD_TEMPLATE_TREE_SYNC_BADGE, buildTemplateStructure } from './inspector-structure-template-shared';
 import { getPlatformRoute, getReturnUrl, resolveAssetUrl } from '@shared/platform-host';
+import {
+  MEGAFORM_THEME_PRESETS,
+  buildMegaFormThemePresetVars,
+} from '../shared/theme-presets';
 interface ThemePreset {
   id: string;
   name: string;
@@ -244,20 +248,15 @@ if (typeof window !== 'undefined') {
   (window as any).__MF_TD_INSPECT_CSS_RULES_BADGE__ = TD_TEMPLATE_CSS_MATCH_BADGE;
 }
 
-const PRESETS: ThemePreset[] = [
-  { id: 'default', name: 'Default', primary: '#3b82f6', secondary: '#eff6ff', tertiary: '#e0f2fe', categories: ['popular', 'modern'] },
-  { id: 'modern-blue', name: 'Modern Blue', primary: '#667eea', secondary: '#764ba2', tertiary: '#e8e8ff', categories: ['popular', 'modern'] },
-  { id: 'warm-sunset', name: 'Warm Sunset', primary: '#ff6b35', secondary: '#ffd4bc', tertiary: '#fff8f0', categories: ['warm', 'popular'] },
-  { id: 'dark-elegance', name: 'Dark Elegance', primary: '#e94560', secondary: '#1a1a2e', tertiary: '#16213e', categories: ['dark', 'elegant'] },
-  { id: 'nature-green', name: 'Nature Green', primary: '#2d8a4e', secondary: '#c8e6c9', tertiary: '#f0f7f0', categories: ['nature'] },
-  { id: 'flat-material', name: 'Material', primary: '#1976d2', secondary: '#e3f2fd', tertiary: '#fafafa', categories: ['modern'] },
-  { id: 'classic-formal', name: 'Classic Formal', primary: '#8b4513', secondary: '#d5c7b5', tertiary: '#f8f4ef', categories: ['elegant', 'warm'] },
-  { id: 'playful', name: 'Playful', primary: '#ff6b6b', secondary: '#ffd3d3', tertiary: '#ffecd2', categories: ['warm'] },
-  { id: 'healthcare', name: 'Healthcare', primary: '#0077b6', secondary: '#b5d4e8', tertiary: '#f0f8ff', categories: ['minimal', 'modern'] },
-  { id: 'executive', name: 'Executive', primary: '#c9a84c', secondary: '#2a2a2a', tertiary: '#1c1c1c', categories: ['dark', 'elegant'] },
-  { id: 'tech-startup', name: 'Tech Startup', primary: '#38ef7d', secondary: '#141432', tertiary: '#0a0a23', categories: ['modern', 'dark'] },
-  { id: 'minimal', name: 'Minimal', primary: '#1a1a1a', secondary: '#f8f8f8', tertiary: '#ffffff', categories: ['minimal', 'popular'] },
-];
+const PRESETS: ThemePreset[] = MEGAFORM_THEME_PRESETS.map((preset) => ({
+  id: preset.id,
+  name: preset.name,
+  primary: preset.colors[0],
+  secondary: preset.colors[1],
+  tertiary: preset.colors[2],
+  categories: preset.categories,
+  popular: preset.popular,
+}));
 
 class ThemeDesignerApp {
   private readonly root: HTMLElement;
@@ -868,10 +867,14 @@ class ThemeDesignerApp {
 
   private selectPreset(presetId: string): void {
     const preset = PRESETS.find((item) => item.id === presetId);
-    if (!preset) return;
+    const sharedPreset = MEGAFORM_THEME_PRESETS.find((item) => item.id === presetId);
+    if (!preset || !sharedPreset) return;
     this.currentTheme = preset.id;
     this.clearCssVars();
     this.applyHexColor(preset.primary, true);
+    this.setLiveCssVars(buildMegaFormThemePresetVars(sharedPreset));
+    this.flushLiveVarsToPreview();
+    this.syncRightPanelFromVars();
     this.rememberRecentColor(preset.primary);
     this.renderPresetList();
     this.rebuildPreview();
@@ -1120,6 +1123,11 @@ class ThemeDesignerApp {
         this.applyHexColor(livePrimary, true);
       } else if (preset) {
         this.applyHexColor(preset.primary, true);
+        const sharedPreset = MEGAFORM_THEME_PRESETS.find((item) => item.id === preset.id);
+        if (sharedPreset) {
+          this.setLiveCssVars(buildMegaFormThemePresetVars(sharedPreset));
+          this.flushLiveVarsToPreview();
+        }
       }
 
       this.syncRightPanelFromVars();

@@ -795,6 +795,8 @@ const HERO_STYLE_PROPS: Record<string, boolean> = {
   'font-size': true,
   'line-height': true,
   'font-weight': true,
+  translate: true,
+  'text-align': true,
   width: true,
   height: true,
   'object-fit': true,
@@ -810,6 +812,8 @@ function cleanStyleValue(prop: string, value: string): string {
   if (prop === 'font-size' || prop === 'line-height' || prop === 'height' || prop === 'min-height') {
     return /^\d{1,4}(\.\d{1,2})?px$/.test(v) ? v : '';
   }
+  if (prop === 'translate') return /^-?\d{1,3}(\.\d{1,2})?px\s+-?\d{1,3}(\.\d{1,2})?px$/.test(v) ? v : '';
+  if (prop === 'text-align') return /^(left|center|right|start|end)$/.test(v) ? v : '';
   if (prop === 'width') return /^(\d{1,3}(\.\d{1,2})?%|\d{1,4}(\.\d{1,2})?px)$/.test(v) ? v : '';
   if (prop === 'font-weight') return /^(400|500|600|700|800|900|normal|bold)$/.test(v) ? v : '';
   if (prop === 'object-fit') return /^(cover|contain|fill|none|scale-down)$/.test(v) ? v : '';
@@ -842,7 +846,8 @@ function queueHeroStyle(selector: string, props: Record<string, string>, liveEl?
 
 function placePanel(panel: HTMLElement, anchor: HTMLElement): void {
   const r = anchor.getBoundingClientRect();
-  const top = Math.max(8, Math.min(window.innerHeight - 260, r.bottom + 8));
+  const panelHeight = Math.max(120, panel.getBoundingClientRect().height || 260);
+  const top = Math.max(8, Math.min(window.innerHeight - panelHeight - 8, r.bottom + 8));
   const left = Math.max(8, Math.min(window.innerWidth - 300, r.left));
   panel.style.top = Math.round(top) + 'px';
   panel.style.left = Math.round(left) + 'px';
@@ -865,6 +870,12 @@ function openHeroTextStylePanel(el: HTMLElement): void {
   const size = Math.round(parseFloat(cs.fontSize || '16')) || 16;
   const lhRaw = parseFloat(cs.lineHeight || '');
   const lineHeight = isFinite(lhRaw) ? Math.round(lhRaw) : Math.round(size * 1.25);
+  const translateParts = String((cs as any).translate || '').trim().split(/\s+/);
+  const offsetXRaw = parseFloat(translateParts[0] || '');
+  const offsetYRaw = parseFloat(translateParts[1] || '');
+  const offsetX = isFinite(offsetXRaw) ? Math.round(offsetXRaw) : 0;
+  const offsetY = isFinite(offsetYRaw) ? Math.round(offsetYRaw) : 0;
+  const textAlign = /^(left|center|right|start|end)$/.test(cs.textAlign || '') ? cs.textAlign : 'left';
   const hexColor = toHexColor(cs.color || '');
   const fonts = ['', 'Inter', 'DM Serif Display', 'Libre Franklin', 'Georgia', 'Arial', 'Times New Roman'];
   const panel = document.createElement('div');
@@ -875,13 +886,16 @@ function openHeroTextStylePanel(el: HTMLElement): void {
     '<label>Font<select data-prop="font-family">' + fonts.map((f) => '<option value="' + escapeAttr(f ? "'" + f + "', sans-serif" : '') + '">' + escapeHtml(f || 'Theme') + '</option>').join('') + '</select></label>' +
     '<div class="mf-ie-hero-row mf-ie-hero-row--color"><label>Color<input type="color" data-prop="color" value="' + hexColor + '"></label><label>Hex<input type="text" data-role="color-hex" value="' + hexColor + '" spellcheck="false" placeholder="#111827"></label></div>' +
     '<div class="mf-ie-hero-row"><label>Size<input type="number" min="8" max="120" step="1" data-prop="font-size" value="' + size + '"></label><label>Line<input type="number" min="10" max="160" step="1" data-prop="line-height" value="' + lineHeight + '"></label></div>' +
-    '<label>Weight<select data-prop="font-weight"><option>400</option><option>500</option><option>600</option><option>700</option><option>800</option><option>900</option></select></label>';
+    '<div class="mf-ie-hero-row"><label>Weight<select data-prop="font-weight"><option>400</option><option>500</option><option>600</option><option>700</option><option>800</option><option>900</option></select></label><label>Align<select data-prop="text-align"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label></div>' +
+    '<div class="mf-ie-hero-row"><label>Move X<input type="number" min="-600" max="600" step="1" data-role="move-x" value="' + offsetX + '"></label><label>Move Y<input type="number" min="-600" max="600" step="1" data-role="move-y" value="' + offsetY + '"></label></div>';
   document.body.appendChild(panel);
   placePanel(panel, el);
   panel.addEventListener('mousedown', (ev) => ev.stopPropagation());
   (panel.querySelector('[data-act="close"]') as HTMLElement).addEventListener('click', () => { if (panel.parentNode) panel.parentNode.removeChild(panel); });
   const weight = panel.querySelector('[data-prop="font-weight"]') as HTMLSelectElement | null;
   if (weight) weight.value = String(Math.round(parseFloat(cs.fontWeight || '400')) || 400);
+  const align = panel.querySelector('[data-prop="text-align"]') as HTMLSelectElement | null;
+  if (align) align.value = textAlign;
   const colorInput = panel.querySelector('[data-prop="color"]') as HTMLInputElement | null;
   const hexInput = panel.querySelector('[data-role="color-hex"]') as HTMLInputElement | null;
   if (hexInput) {
@@ -912,6 +926,24 @@ function openHeroTextStylePanel(el: HTMLElement): void {
       queueHeroStyle(selector, { [prop]: val }, el);
     });
   });
+  const moveX = panel.querySelector('[data-role="move-x"]') as HTMLInputElement | null;
+  const moveY = panel.querySelector('[data-role="move-y"]') as HTMLInputElement | null;
+  const applyMove = () => {
+    const clamp = (input: HTMLInputElement | null) => Math.max(-600, Math.min(600, parseFloat(input?.value || '') || 0));
+    const x = clamp(moveX);
+    const y = clamp(moveY);
+    if (moveX) moveX.value = String(x);
+    if (moveY) moveY.value = String(y);
+    queueHeroStyle(selector, { translate: x + 'px ' + y + 'px' }, el);
+  };
+  if (moveX) {
+    moveX.addEventListener('input', applyMove);
+    moveX.addEventListener('change', applyMove);
+  }
+  if (moveY) {
+    moveY.addEventListener('input', applyMove);
+    moveY.addEventListener('change', applyMove);
+  }
 }
 
 function openImageStylePanel(el: HTMLElement, mode: 'img' | 'bg'): void {
@@ -2233,7 +2265,7 @@ function injectStyle(): void {
     '.mf-ie-bg-editable:hover{outline:2px dashed #2563eb!important;outline-offset:-2px;}' +
     '.mf-ie-style-trigger{position:fixed;z-index:2147483551;width:28px;height:28px;border-radius:8px;border:1px solid #dbe3ef;background:#fff;color:#4f46e5;box-shadow:0 6px 18px rgba(15,23,42,.18);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;padding:0;}' +
     '.mf-ie-style-trigger:hover{background:#eef2ff;}' +
-    '.mf-ie-hero-panel{position:fixed;z-index:2147483550;width:280px;background:#fff;border:1px solid #dbe3ef;border-radius:12px;box-shadow:0 18px 46px rgba(15,23,42,.24);padding:10px;font-family:Inter,Segoe UI,system-ui,sans-serif;color:#0f172a;}' +
+    '.mf-ie-hero-panel{position:fixed;z-index:2147483550;width:280px;max-height:calc(100vh - 16px);overflow-y:auto;background:#fff;border:1px solid #dbe3ef;border-radius:12px;box-shadow:0 18px 46px rgba(15,23,42,.24);padding:10px;font-family:Inter,Segoe UI,system-ui,sans-serif;color:#0f172a;}' +
     '.mf-ie-hero-panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;font-size:13px;font-weight:800;}' +
     '.mf-ie-hero-panel-head span{display:inline-flex;align-items:center;gap:7px;}' +
     '.mf-ie-hero-panel-head button{border:0;background:transparent;color:#64748b;font-size:20px;line-height:1;cursor:pointer;padding:0 2px;}' +

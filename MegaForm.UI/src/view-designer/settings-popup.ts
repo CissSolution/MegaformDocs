@@ -53,6 +53,12 @@ import {
   type ViewStarterMode,
   type ViewStarterPresetPayload,
 } from './presets';
+import {
+  MEGAFORM_THEME_PRESETS,
+  MEGAFORM_THEME_PRESET_COLOR_VAR_KEYS,
+  buildMegaFormThemePresetVars,
+  type MegaFormThemePreset,
+} from '../shared/theme-presets';
 
 const BADGE = 'SettingsPopup v20260626-B281';
 if (typeof window !== 'undefined') (window as any).__MF_SETTINGS_POPUP_BADGE__ = BADGE;
@@ -92,65 +98,17 @@ export interface SettingsOpts {
 // (builder/theme-left-rail.ts) 1:1. Selecting one writes the full --mf-* color
 // palette into the form's themeCssOverrides + settings.theme=id, so the form
 // actually re-themes AND the Theme Designer shows the same selection.
-interface MfPreset { id: string; name: string; colors: string[]; badge: string; category: string; }
-const MF_PRESETS: MfPreset[] = [
-  { id: 'default',  name: 'Default',  colors: ['#3b82f6', '#1e293b', '#f8fafc', '#e2e8f0'], badge: '',    category: 'minimal' },
-  { id: 'ocean',    name: 'Ocean',    colors: ['#0ea5e9', '#0c4a6e', '#f0f9ff', '#bae6fd'], badge: '',    category: 'nature'  },
-  { id: 'forest',   name: 'Forest',   colors: ['#22c55e', '#14532d', '#f0fdf4', '#bbf7d0'], badge: '',    category: 'nature'  },
-  { id: 'sunset',   name: 'Sunset',   colors: ['#f97316', '#7c2d12', '#fff7ed', '#fed7aa'], badge: '',    category: 'warm'    },
-  { id: 'lavender', name: 'Lavender', colors: ['#a855f7', '#581c87', '#faf5ff', '#e9d5ff'], badge: '',    category: 'elegant' },
-  { id: 'midnight', name: 'Midnight', colors: ['#6366f1', '#1e1b4b', '#eef2ff', '#c7d2fe'], badge: 'Pro', category: 'dark'    },
-  { id: 'rose',     name: 'Rose',     colors: ['#ec4899', '#831843', '#fdf2f8', '#fbcfe8'], badge: 'Pro', category: 'elegant' },
-  { id: 'amber',    name: 'Amber',    colors: ['#f59e0b', '#78350f', '#fffbeb', '#fde68a'], badge: '',    category: 'warm'    },
-  { id: 'slate',    name: 'Slate',    colors: ['#64748b', '#0f172a', '#f8fafc', '#cbd5e1'], badge: '',    category: 'minimal' },
-  { id: 'emerald',  name: 'Emerald',  colors: ['#10b981', '#064e3b', '#ecfdf5', '#a7f3d0'], badge: 'Pro', category: 'nature'  },
-  { id: 'coral',    name: 'Coral',    colors: ['#fb7185', '#881337', '#fff1f2', '#fecdd3'], badge: 'New', category: 'warm'    },
-  { id: 'cyber',    name: 'Cyber',    colors: ['#22d3ee', '#164e63', '#ecfeff', '#a5f3fc'], badge: 'New', category: 'modern'  },
-  { id: 'carbon',   name: 'Carbon',   colors: ['#18181b', '#3f3f46', '#27272a', '#52525b'], badge: 'Pro', category: 'dark'    },
-  { id: 'arctic',   name: 'Arctic',   colors: ['#0891b2', '#155e75', '#ecfeff', '#cffafe'], badge: '',    category: 'minimal' },
-  { id: 'berry',    name: 'Berry',    colors: ['#c026d3', '#701a75', '#fdf4ff', '#f5d0fe'], badge: 'New', category: 'elegant' },
-  { id: 'earth',    name: 'Earth',    colors: ['#a16207', '#713f12', '#fefce8', '#fef08a'], badge: '',    category: 'nature'  },
-];
+type MfPreset = MegaFormThemePreset;
+const MF_PRESETS: MfPreset[] = MEGAFORM_THEME_PRESETS;
 
 // Color var keys a preset owns — so switching presets REPLACES the palette cleanly
 // (without leaking stale color vars). Layout vars (--mf-form-*) are intentionally NOT here.
-const MF_PRESET_COLOR_VAR_KEYS = [
-  '--mf-primary', '--mf-primary-hover', '--mf-primary-light', '--mf-btn-bg', '--mf-btn-bg-hover',
-  '--mf-btn-hover-bg', '--mf-input-focus-border', '--mf-check-color', '--mf-progress-fill',
-  '--mf-btn-color', '--mf-btn-text', '--mf-color-text-inverse', '--mf-secondary', '--mf-text',
-  '--mf-title-color', '--mf-label-color', '--mf-form-bg', '--mf-input-bg', '--mf-page-bg',
-  '--mf-border', '--mf-input-border-color',
-  // [PresetWire v20260706] Dedicated preset channel (no global default) — premium templates
-  // derive their identity palette from var(--mf-preset-*, <own colour>): absent → identity,
-  // present → recoloured. Mirrors the server ThemeFirstPaintCssService [PresetWire] block so
-  // the builder live-preview matches the persisted SSR render. Owned by the preset so a switch
-  // replaces them cleanly.
-  '--mf-preset-primary', '--mf-preset-text', '--mf-preset-surface', '--mf-preset-accent',
-  '--mf-preset-border', '--mf-preset-bg', '--mf-preset-on-primary',
-];
+const MF_PRESET_COLOR_VAR_KEYS = MEGAFORM_THEME_PRESET_COLOR_VAR_KEYS;
 
 // Map a preset's 4 swatch colors → the full --mf-* palette the runtime renderer consumes.
 // c0 primary, c1 ink/text, c2 surface/bg, c3 accent/border.
 function mfPresetColorVars(p: MfPreset): Record<string, string> {
-  const c0 = p.colors[0] || '#3b82f6';
-  const c1 = p.colors[1] || '#1e293b';
-  const c2 = p.colors[2] || '#ffffff';
-  const c3 = p.colors[3] || c0;
-  const white = '#ffffff';
-  return {
-    '--mf-primary': c0, '--mf-primary-hover': c0, '--mf-primary-light': c0 + '26',
-    '--mf-btn-bg': c0, '--mf-btn-bg-hover': c0, '--mf-btn-hover-bg': c0,
-    '--mf-input-focus-border': c0, '--mf-check-color': c0, '--mf-progress-fill': c0,
-    '--mf-btn-color': white, '--mf-btn-text': white, '--mf-color-text-inverse': white,
-    '--mf-secondary': c1, '--mf-text': c1, '--mf-title-color': c1, '--mf-label-color': c1,
-    '--mf-form-bg': c2, '--mf-input-bg': c2, '--mf-page-bg': c2,
-    '--mf-border': c3, '--mf-input-border-color': c3,
-    // [PresetWire v20260706] Dedicated preset channel (see MF_PRESET_COLOR_VAR_KEYS). c0 primary,
-    // c1 ink/text, c2 surface, c3 accent/border. Server mirrors this in ThemeFirstPaintCssService.
-    '--mf-preset-primary': c0, '--mf-preset-text': c1, '--mf-preset-surface': c2,
-    '--mf-preset-accent': c3, '--mf-preset-border': c3, '--mf-preset-bg': c2,
-    '--mf-preset-on-primary': white,
-  };
+  return buildMegaFormThemePresetVars(p);
 }
 
 // Read an integer px value from an overrides map, falling back to a default.
