@@ -51,7 +51,9 @@
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Oqtane.Licensing.Shared.Oqtane.dll" target="lib\net9.0" />
 
     <!-- wwwroot assets → {webroot}/Modules/MegaForm/ (incl. AI Designer bundles + Beary png) -->
-    <file src="..\MegaForm.Oqtane.Server\wwwroot\Modules\MegaForm\**\*.*" target="wwwroot\Modules\MegaForm" />
+    <!-- [LicenseEdition 2026-07-24] EXCLUDE license.lic — Oqtane is Marketplace-licensed
+         (OqtaneLicenseBridge), not file-licensed. Fresh install = TRIAL until a key is activated. -->
+    <file src="..\MegaForm.Oqtane.Server\wwwroot\Modules\MegaForm\**\*.*" target="wwwroot\Modules\MegaForm" exclude="**\license.lic" />
 
     <file src="icon.png" target="" />
     <file src="license.txt" target="" />

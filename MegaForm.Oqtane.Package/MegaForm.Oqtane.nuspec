@@ -115,13 +115,16 @@
 
     <!-- FIX 3: wwwroot — path đúng: wwwroot/Modules/MegaForm/** → deploy vào {webroot}/Modules/MegaForm/ -->
     <!-- Oqtane extract: bỏ 1 segment "wwwroot" → còn Modules/MegaForm/... → vào wwwroot/Modules/MegaForm/ -->
-    <file src="..\MegaForm.Oqtane.Server\wwwroot\Modules\MegaForm\**\*.*" target="wwwroot\Modules\MegaForm" />
+    <!-- [LicenseEdition 2026-07-24] EXCLUDE license.lic: on Oqtane, licensing is driven purely by the
+         Oqtane Marketplace (OqtaneLicenseBridge). Shipping license.lic="production" would auto-license
+         every install and make the Marketplace/trial gate moot. A fresh Oqtane install is therefore
+         TRIAL until a Marketplace key is activated (then the bridge flips IsProductionLicensed). -->
+    <file src="..\MegaForm.Oqtane.Server\wwwroot\Modules\MegaForm\**\*.*" target="wwwroot\Modules\MegaForm" exclude="**\license.lic" />
 
     <!-- Package metadata -->
     <file src="icon.png" target="" />
     <file src="license.txt" target="" />
-    <!-- Note: license.lic under wwwroot\Modules\MegaForm\ is already packed by the
-         wildcard above (**\*.*). Do NOT add an explicit entry here — NuGet will
-         throw NU5050 (duplicate destination). -->
+    <!-- Note: license.lic is deliberately EXCLUDED from the wwwroot wildcard above (Oqtane =
+         Marketplace-licensed, not file-licensed). Do NOT re-add it here. -->
   </files>
 </package>
