@@ -82,6 +82,13 @@
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Azure.Storage.Blobs.dll" target="lib\net9.0" />
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Azure.Storage.Common.dll" target="lib\net9.0" />
 
+    <!-- [OqtaneLicensing v20260723] Oqtane Marketplace licensing (LicenseView + offline key
+         validation). Names contain "Oqtane" → loaded by IsOqtaneAssembly(); Client/Shared are
+         also declared in ModuleInfo.Dependencies (required for Blazor WebAssembly). -->
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Oqtane.Licensing.Client.Oqtane.dll" target="lib\net9.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Oqtane.Licensing.Server.Oqtane.dll" target="lib\net9.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Oqtane.Licensing.Shared.Oqtane.dll" target="lib\net9.0" />
+
     <!-- net10.0 builds (Oqtane 10.x hosts, e.g. :5070 Oqtane.MSSQL3 + :5000 Oqtane.New10) -->
     <file src="..\MegaForm.Oqtane.Client\bin\Release\net10.0\MegaForm.Oqtane.Client.Oqtane.dll" target="lib\net10.0" />
     <file src="..\MegaForm.Oqtane.Client\bin\Release\net10.0\MegaForm.Oqtane.Client.Oqtane.pdb" target="lib\net10.0" />
@@ -101,6 +108,10 @@
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Azure.Core.dll" target="lib\net10.0" />
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Azure.Storage.Blobs.dll" target="lib\net10.0" />
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Azure.Storage.Common.dll" target="lib\net10.0" />
+    <!-- [OqtaneLicensing v20260723] see net9.0 note above -->
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Oqtane.Licensing.Client.Oqtane.dll" target="lib\net10.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Oqtane.Licensing.Server.Oqtane.dll" target="lib\net10.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Oqtane.Licensing.Shared.Oqtane.dll" target="lib\net10.0" />
 
     <!-- FIX 3: wwwroot — path đúng: wwwroot/Modules/MegaForm/** → deploy vào {webroot}/Modules/MegaForm/ -->
     <!-- Oqtane extract: bỏ 1 segment "wwwroot" → còn Modules/MegaForm/... → vào wwwroot/Modules/MegaForm/ -->

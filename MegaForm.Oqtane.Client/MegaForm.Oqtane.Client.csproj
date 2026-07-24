@@ -41,10 +41,15 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
     <PackageReference Include="Oqtane.Client" Version="10.1.0" />
     <PackageReference Include="Oqtane.Shared" Version="10.1.0" />
+    <!-- [OqtaneLicensing v20260723] LicenseView component (Marketplace activation UI).
+         Assemblies must also be listed in ModuleInfo.Dependencies + the nuspec. -->
+    <PackageReference Include="Oqtane.Licensing" Version="10.0.0" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
     <PackageReference Include="Oqtane.Client" Version="6.0.1" />
     <PackageReference Include="Oqtane.Shared" Version="6.0.1" />
+    <!-- [OqtaneLicensing v20260723] 5.1.0 targets net8.0 — consumed fine by net9.0. -->
+    <PackageReference Include="Oqtane.Licensing" Version="5.1.0" />
   </ItemGroup>
 
 </Project>

@@ -1,9 +1,10 @@
 # MegaForm — Ghi chép bàn giao (Umbraco)
 
 > Cập nhật lần cuối: 2026-07-23 bởi Kimi Code CLI.
-> Phiên này: hoàn thiện tính năng **cloud file storage** (Google Drive / Amazon S3 / Azure Blob) — nối vào submit pipeline (fail-soft sau insert), lưu connection server-side, UI cấu hình trong builder, DI đủ 4 host + AspNetCore.Component, assembly riêng `MegaForm.Integrations.CloudStorage`, packaging DNN/Oqtane. Xem mục 2.8.
+> Phiên này (sau cloud storage): tích hợp **Oqtane.Licensing** (phương án B — Oqtane Marketplace licensing làm kênh license thứ hai, OR với `license.lic` file). Xem mục 2.10.
+> Phiên trước: hoàn thiện tính năng **cloud file storage** (Google Drive / Amazon S3 / Azure Blob) — nối vào submit pipeline (fail-soft sau insert), lưu connection server-side, UI cấu hình trong builder, DI đủ 4 host + AspNetCore.Component, assembly riêng `MegaForm.Integrations.CloudStorage`, packaging DNN/Oqtane. Xem mục 2.8.
 > Trước đó (2026-07-17): nền tảng **typed submission storage** trong `MegaForm.Core`; backup trên branch `feature/typed-submission-storage-core`.
-> Phiên tiếp theo: implement `ISubmissionDataStore` + migrations + repositories cho từng platform, bắt đầu với Umbraco hoặc Oqtane; viết typed rows song song với `DataJson` legacy; backfill legacy submissions. Ngoài ra: verify runtime cloud storage (browser test: tạo connection, test, submit form có file → file lên cloud).
+> Phiên tiếp theo: implement `ISubmissionDataStore` + migrations + repositories cho từng platform, bắt đầu với Umbraco hoặc Oqtane; viết typed rows song song với `DataJson` legacy; backfill legacy submissions. Ngoài ra: verify runtime cloud storage (browser test: tạo connection, test, submit form có file → file lên cloud); verify runtime Oqtane licensing (sandbox Marketplace flow + bridge probe).
 > Tài liệu audit: `Docs/HANDOUT_NEXT_SESSION_TYPED_SUBMISSION_STORAGE_NO_DATAJSON_2026-07-17.md`.
 > Audit security & performance (phương pháp Mythos, read-only): `Docs/AUDIT_SECURITY_PERFORMANCE_MYTHOS_2026-07-21.md` — 44 findings security (4 Critical) + 24 findings performance (2 Critical), kèm lộ trình khắc phục P0/P1/P2. **P0 đã fix xong 2026-07-21** (xem mục 8 Remediation log trong doc); còn lại P1/P2.
 
@@ -129,6 +130,20 @@ Mở rộng mask engine (vốn chỉ cho Composite parts) lên **field Text/Phon
 - **Builder:** ô "Mask (# digit, A letter, U upper, * alnum)" trong Validation panel (`dom.ts` + `field-settings.ts` save + `properties.ts` load); hint composite designer cập nhật thêm `U` (en-US).
 - **Tests:** `MegaForm.Sdk.Tests/FormValidationMaskTests.cs` — 7 tests; tổng 149/149 pass. Bundle renderer + builder đã rebuild/sync 4 platform.
 - **Lưu ý:** giá trị lưu DB là chuỗi đã mask (vd `AB-1234-XYZ`); server không kiểm tra từng ký tự đúng loại (đó là việc của client mask engine + regex Pattern nếu cấu hình kèm). Chưa verify runtime browser.
+
+### 2.10 Phase 10 — Oqtane.Licensing integration (Marketplace licensing), hoàn thành 2026-07-23
+
+Tích hợp `Oqtane.Licensing` làm **kênh license thứ hai** cho Oqtane host (theo mẫu [Oqtane.LicensedModule](https://github.com/oqtane/Oqtane.LicensedModule)), `LicenseService` vẫn là single source of truth:
+
+- **Model 2 kênh OR:** install là production khi `license.lic` = "production" (kênh classic, 4 host, direct sales) **HOẶC** có Oqtane Marketplace key hợp lệ cho package `MegaForm.Oqtane`. Không kênh nào → trial như cũ (10 forms / 25 subs / AI locked). DNN/Umbraco/Web không đổi.
+- **Core:** `LicenseService.RegisterExternalLicenseProbe(Func<bool>)` + `SafeExternalProbe()` trong `IsProductionLicensed()` (chạy trong cache 30s, fail-soft).
+- **Bridge:** `MegaForm.Oqtane.Server/Services/OqtaneLicenseBridge.cs` — probe gọi `LicenseServer.GetLicense()` (validate OFFLINE: expiry trong segment 8-9 của key + MD5-seeded KeyByte checksum; file key ở `{host bin}\MegaForm.Oqtane.lic`). **Bắt buộc** set `InstallationId` + `PackageRegistryUrl` từ `IConfigManager` (checksum chọn KeyByteSet theo registry URL — key production chỉ validate với `https://www.oqtane.net`). Cache 60s, register trong `MegaFormServerStartup.Configure`.
+- **Client:** package ref `Oqtane.Licensing` 10.0.0 (net10) / 5.1.0 (net9, lib net8.0); `ModuleInfo.Dependencies` thêm `Oqtane.Licensing.Client.Oqtane,Oqtane.Licensing.Shared.Oqtane` (bắt buộc cho WASM); `_Imports.razor` thêm `@using global::Oqtane.Licensing` (tránh nhầm `MegaForm.Oqtane.Licensing`).
+- **UI:** `Settings.razor` có section License với `<LicenseView PackageName="@ModuleState.ModuleDefinition.PackageName">` (Licensed/NotLicensed/Validating fragments; banner Purchase/Activate/Fetch built-in cho Host Users). **CỐ Ý không bọc LicenseView quanh Index.razor** — trial-with-caps là model hiện tại, không block public form; LicenseView chỉ là surface activation.
+- **Packaging:** cả 2 nuspec (`MegaForm.Oqtane.nuspec` net9+net10, `MegaForm.Oqtane.601.nuspec` net9) ship 3 DLL `Oqtane.Licensing.{Client,Server,Shared}.Oqtane.dll` từ Server bin. Pack verify: `validate-pack.ps1` PASS (1.7.113).
+- **Lưu ý vận hành:** trên localhost `LicenseView` luôn báo Licensed (Oqtane design) nhưng bridge probe KHÔNG bypass localhost → trial caps vẫn áp trên dev trừ khi activate key; test unlicensed flow bằng `?licensing=testmode`. Key sandbox Marketplace chỉ sống 7 ngày.
+- **Chưa verify:** runtime E2E (sandbox Marketplace: đăng ký product `MegaForm.Oqtane`, trỏ `PackageRegistryUrl=https://sandbox.oqtane.net`, purchase → Activate → probe flips production, caps lifted).
+- **Build:** Server + Client + Package 0 error (net9/net10); Core 0 error 4 TFM; Sdk.Tests 149/149 pass.
 
 ## 3. Trạng thái hiện tại
 

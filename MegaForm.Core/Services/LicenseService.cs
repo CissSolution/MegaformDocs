@@ -29,6 +29,33 @@ namespace MegaForm.Core.Services
         /// <summary>True when the install is running unlicensed (trial). Inverse of IsProductionLicensed.</summary>
         public static bool IsTrial() => !IsProductionLicensed();
 
+        // [OqtaneLicensing v20260723] Optional SECOND license source registered by a host at startup
+        // (e.g. the Oqtane host bridges Oqtane Marketplace licensing via Oqtane.Licensing). OR
+        // semantics: either the classic license.lic file OR the external probe marks the install
+        // production — the file channel stays authoritative for DNN/Umbraco/Web and direct sales.
+        // The probe must be cheap, thread-safe and fail-soft; it runs inside the 30s cache below,
+        // so it executes at most once per TTL. Probe exceptions are treated as "not licensed".
+        private static Func<bool> _externalLicenseProbe;
+
+        /// <summary>Registers an external licensing probe (host startup only). Passing null clears it.</summary>
+        public static void RegisterExternalLicenseProbe(Func<bool> probe)
+        {
+            lock (_licenseCacheLock)
+            {
+                _externalLicenseProbe = probe;
+                // Bust the cache so a probe registered after the first check takes effect now.
+                _licenseCacheExpiryUtc = DateTime.MinValue;
+            }
+        }
+
+        private static bool SafeExternalProbe()
+        {
+            var probe = _externalLicenseProbe;
+            if (probe == null) return false;
+            try { return probe(); }
+            catch { return false; }
+        }
+
         // [PerfFix 2026-07-05 PERF-A1] IsProductionLicensed reads license.lic from disk. It is called on
         // EVERY render (RenderModelResolver.CanonicalizeTrialMode → ResolveProductionMode), i.e. synchronous
         // file I/O on the public form hot path. Cache the result for a short TTL: removes the per-render read
@@ -48,7 +75,8 @@ namespace MegaForm.Core.Services
                 if (now < _licenseCacheExpiryUtc) return _cachedProductionLicensed;
                 string licenseValue;
                 string _path;
-                var result = TryReadLicenseValue(out licenseValue, out _path) && IsValidLicenseValue(licenseValue);
+                var result = (TryReadLicenseValue(out licenseValue, out _path) && IsValidLicenseValue(licenseValue))
+                    || SafeExternalProbe();
                 _cachedProductionLicensed = result;
                 _licenseCacheExpiryUtc = now.AddSeconds(LicenseCacheTtlSeconds);
                 return result;

@@ -57,10 +57,15 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
     <PackageReference Include="Oqtane.Server" Version="10.1.0" />
     <PackageReference Include="Oqtane.Shared" Version="10.1.0" />
+    <!-- [OqtaneLicensing v20260723] Marketplace licensing bridge (LicenseServer offline key
+         validation). Ships in the module package — see MegaForm.Oqtane.Package/*.nuspec. -->
+    <PackageReference Include="Oqtane.Licensing" Version="10.0.0" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
     <PackageReference Include="Oqtane.Server" Version="6.0.1" />
     <PackageReference Include="Oqtane.Shared" Version="6.0.1" />
+    <!-- [OqtaneLicensing v20260723] 5.1.0 targets net8.0 — consumed fine by net9.0. -->
+    <PackageReference Include="Oqtane.Licensing" Version="5.1.0" />
   </ItemGroup>
 
   <ItemGroup>

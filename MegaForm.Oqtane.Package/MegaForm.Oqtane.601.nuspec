@@ -44,6 +44,11 @@
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Azure.Core.dll" target="lib\net9.0" />
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Azure.Storage.Blobs.dll" target="lib\net9.0" />
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Azure.Storage.Common.dll" target="lib\net9.0" />
+    <!-- [OqtaneLicensing v20260723] Oqtane Marketplace licensing (LicenseView + offline key validation);
+         Client/Shared also declared in ModuleInfo.Dependencies (required for Blazor WebAssembly). -->
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Oqtane.Licensing.Client.Oqtane.dll" target="lib\net9.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Oqtane.Licensing.Server.Oqtane.dll" target="lib\net9.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Oqtane.Licensing.Shared.Oqtane.dll" target="lib\net9.0" />
 
     <!-- wwwroot assets → {webroot}/Modules/MegaForm/ (incl. AI Designer bundles + Beary png) -->
     <file src="..\MegaForm.Oqtane.Server\wwwroot\Modules\MegaForm\**\*.*" target="wwwroot\Modules\MegaForm" />

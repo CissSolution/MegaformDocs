@@ -361,6 +361,11 @@ namespace MegaForm.Oqtane.Server.Services
             // Enable the ambient MegaForm.Sdk accessor (MegaFormSdk.RunAsync) for non-DI callers
             // (e.g. a DNN Razor host / DDR template). DI consumers should inject IMegaFormClient.
             try { MegaFormSdk.Initialize(app.ApplicationServices); } catch { /* non-fatal */ }
+
+            // [OqtaneLicensing v20260723] Register the Oqtane Marketplace licensing probe as a
+            // second "production" source for LicenseService (OR with the classic license.lic
+            // file). Fail-soft: any problem leaves the file channel as the only source.
+            try { OqtaneLicenseBridge.Register(app.ApplicationServices); } catch { /* non-fatal */ }
         }
         public void ConfigureMvc(IMvcBuilder mvcBuilder) { }
     }
