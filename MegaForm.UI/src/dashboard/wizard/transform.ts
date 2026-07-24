@@ -155,7 +155,7 @@ function premiumDto(data: WizardData, ctx: WizardSaveCtx): any {
 }
 
 export function wizardToDto(data: WizardData, ctx: WizardSaveCtx): any {
-  if (data.templateIsPremium && data.templateRecord) return premiumDto(data, ctx);
+  if (data.templateIsCustomShell && data.templateRecord) return premiumDto(data, ctx);
 
   const used = new Set<string>();
   const fields = buildFields(data, used);

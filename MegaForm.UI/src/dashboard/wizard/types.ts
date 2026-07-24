@@ -16,9 +16,12 @@ export interface PremiumStepDetail { step: number; navLabel: string; navSubtitle
 export interface WizardData {
   // 1 — Setup
   formName: string; formDescription: string; category: string; template: string | null;
-  // Selected REAL template (BuilderTemplates/List record, normalized) + premium flag.
-  // null for blank / built-in quick-start. Premium → faithful custom-shell emit (② / ③).
-  templateRecord: any | null; templateIsPremium: boolean;
+  // Selected REAL template (BuilderTemplates/List record, normalized) + custom-shell flag.
+  // null for blank / built-in quick-start. Custom shell → faithful shell-preserving emit (② / ③).
+  // [QuickStart 2026-07-24] This tracks the template SHAPE, not its licensing: the free bundled
+  // starters are custom-shell too, and routing them down the standard path rebuilds `settings`
+  // from scratch and silently drops their customHtml/customCss (the design is lost on Create).
+  templateRecord: any | null; templateIsCustomShell: boolean;
   // Editable working copy of a premium template's fields (③ — add/remove in the wizard;
   // customHtml is reconciled via syncFieldPlaceholders on Create). null when not premium.
   premiumFields: any[] | null;
@@ -39,7 +42,7 @@ export interface WizardData {
 export function defaultWizardData(): WizardData {
   return {
     formName: '', formDescription: '', category: '', template: null,
-    templateRecord: null, templateIsPremium: false, premiumFields: null, premiumStepDetails: [],
+    templateRecord: null, templateIsCustomShell: false, premiumFields: null, premiumStepDetails: [],
     isMultiStep: false, fields: [], formPages: [{ id: 'page-1', title: 'Step 1', fields: [] }], showProgressBar: true,
     approvalEnabled: false, approvalNodes: [], notifySubmitter: true, deadlineDays: '3',
     theme: 'clean', primaryColor: '#3b82f6', accentColor: '#8b5cf6', fontStyle: 'inter', roundness: 'md',

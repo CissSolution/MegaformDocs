@@ -140,6 +140,10 @@ ECHO [1b/4] Sync i18n locale packs to ALL platform dirs...
 call node "MegaForm.UI\tools\i18n-sync-platforms.cjs"
 IF ERRORLEVEL 1 ( ECHO [LOI] i18n sync that bai! & EXIT /B 1 )
 ECHO.
+ECHO [1b1/4] Compose bundled template shelf ^(quick-start + premium starters^) into wwwroot...
+call node "tools\gallery\sync-bundled-templates.mjs"
+IF ERRORLEVEL 1 ( ECHO [LOI] sync-bundled-templates that bai! & EXIT /B 1 )
+ECHO.
 ECHO [1b2/4] Generate per-template facts.json + guide.md to ALL 3 platform dirs...
 call node "MegaForm.UI\tools\gen-template-facts.cjs"
 IF ERRORLEVEL 1 ( ECHO [LOI] gen-template-facts that bai! & EXIT /B 1 )

@@ -29,6 +29,11 @@ namespace MegaForm.Core.Services
             public JToken Workflow { get; set; }
             public JObject Settings { get; set; } = new JObject();
             public string TemplateGuideSlug { get; set; }
+            // [QuickStart 2026-07-24] Author-declared premium flag. NULL = "not stated"; the
+            // client then falls back to its old heuristic. The heuristic (any customHtml =>
+            // premium) mis-flagged the free quick-start starters, which all carry a small
+            // layout wrapper, so every one of them showed up LOCKED on a trial install.
+            public bool? Premium { get; set; }
             public string FileName { get; set; }
             public string RelativePath { get; set; }
             public string Folder { get; set; }
@@ -313,7 +318,11 @@ namespace MegaForm.Core.Services
 
         private static BuilderTemplateRecord Normalize(string json, string fileName, string relativePath)
         {
-            var raw = TemplateSchemaCanonicalizer.Canonicalize(JObject.Parse(json ?? "{}"));
+            var parsed = JObject.Parse(json ?? "{}");
+            // Read the premium flag off the ORIGINAL document: the canonicalizer only keeps
+            // the keys it knows about, so anything read after it would always come back null.
+            var premiumToken = parsed["premium"] ?? parsed["Premium"] ?? parsed["isPremium"] ?? parsed["IsPremium"];
+            var raw = TemplateSchemaCanonicalizer.Canonicalize(parsed);
             var settings = raw["settings"] as JObject ?? new JObject();
             var title = (string)raw["title"] ?? Path.GetFileNameWithoutExtension(fileName) ?? "Uploaded Template";
             var slug = Slugify((string)raw["slug"] ?? title);
@@ -374,10 +383,23 @@ namespace MegaForm.Core.Services
                 Rules = rules ?? new JArray(),
                 Workflow = workflow,
                 TemplateGuideSlug = templateGuideSlug,
+                Premium = ReadOptionalBool(premiumToken),
                 Settings = mergedSettings,
                 RelativePath = relativePath,
                 Folder = folder,
             };
+        }
+
+        /// <summary>Tri-state read: null when the template says nothing about being premium.</summary>
+        private static bool? ReadOptionalBool(JToken token)
+        {
+            if (token == null || token.Type == JTokenType.Null || token.Type == JTokenType.Undefined) return null;
+            if (token.Type == JTokenType.Boolean) return (bool)token;
+            var s = token.Type == JTokenType.String ? ((string)token ?? string.Empty).Trim() : token.ToString();
+            if (bool.TryParse(s, out var b)) return b;
+            if (s == "1") return true;
+            if (s == "0") return false;
+            return null;
         }
 
         private string EnsureUniqueRelativePath(string relativePath)

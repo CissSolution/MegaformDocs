@@ -114,7 +114,7 @@ function premiumSchemaFieldPreview(f: any): HTMLElement {
 }
 
 export function renderPreview(data: WizardData): HTMLElement {
-  if (data.templateIsPremium && data.templateRecord) return premiumPreview(data);
+  if (data.templateIsCustomShell && data.templateRecord) return premiumPreview(data);
   const tm = themeMeta(data.theme);
   const primary = data.primaryColor || tm.colors[0];
   const radius = Math.min(roundnessPx(data.roundness), 24);

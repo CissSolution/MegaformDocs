@@ -1479,10 +1479,22 @@ else
             .Where(r => r.ResourceType == ResourceType.Stylesheet && IsAdminOnlyAsset(r.Url))
             .Select(r => "/" + (r.Url ?? string.Empty).TrimStart('/'))
             .ToList();
-        if (urls.Count == 0 && cssUrls.Count == 0) return string.Empty;
+        // [TrialTighten fix 2026-07-24] Stamp the license/trial flags HERE, in a real <script> tag
+        // that Static render serves, and BEFORE the admin bundles are appended below (the dashboard
+        // reads them on load). The other two injection points do not reach this route:
+        //   · InjectInlineScript is JS interop — never runs on a RenderMode=Static site
+        //   · window.__MF_PLATFORM__.productionMode is wiped when the dashboard loader replaces
+        //     that object wholesale
+        // Without this, isTrialMode() fails OPEN and premium templates are never locked, licensed
+        // or not (verified undefined on a clean 10.2.1 install).
+        var licenseJs =
+            "window.__MF_PRODUCTION_MODE__=" + MegaForm.Core.Services.LicenseService.IsProductionLicensed().ToString().ToLowerInvariant() + ";"
+            + "window.__MF_TRIAL_UPGRADE_URL__=" + JsonSerializer.Serialize(MegaForm.Core.Services.LicenseService.UpgradeUrl) + ";";
+        if (urls.Count == 0 && cssUrls.Count == 0) return licenseJs;
         var arr = string.Join(",", urls.Select(u => "'" + u.Replace("'", "\\'") + "'"));
         var cssArr = string.Join(",", cssUrls.Select(u => "'" + u.Replace("'", "\\'") + "'"));
-        return "(function(){"
+        return licenseJs
+             + "(function(){"
              + "var c=[" + cssArr + "];c.forEach(function(u){"
              + "var n=u.split('?')[0].split('/').pop();"
              + "if(document.querySelector('link[href*=\"'+n+'\"]'))return;"
@@ -1712,9 +1724,16 @@ private string _listTemplate = string.Empty;
         // builder client loader REPLACES window.__MF_PLATFORM__ wholesale (adding tabId/dashboardShellBadge),
         // which wipes any productionMode we set on it above. These standalone globals survive that and are
         // the authoritative source read by the client isTrialMode() helper (premium/AI lock + Upgrade CTA).
-        InjectInlineScript(
+        var licenseFlagsJs =
             $"window.__MF_PRODUCTION_MODE__={MegaForm.Core.Services.LicenseService.IsProductionLicensed().ToString().ToLowerInvariant()};" +
-            $"window.__MF_TRIAL_UPGRADE_URL__={JsonSerializer.Serialize(MegaForm.Core.Services.LicenseService.UpgradeUrl)};");
+            $"window.__MF_TRIAL_UPGRADE_URL__={JsonSerializer.Serialize(MegaForm.Core.Services.LicenseService.UpgradeUrl)};";
+        InjectInlineScript(licenseFlagsJs);
+        // [TrialTighten fix 2026-07-24] InjectInlineScript is JS INTEROP (eval). On a site running
+        // RenderMode=Static there is no interactive pass, so it silently never runs and the flag
+        // stays undefined — isTrialMode() then fails OPEN and NOTHING is ever locked, licensed or
+        // not. Verified on a clean 10.2.1 install: window.__MF_PRODUCTION_MODE__ === undefined.
+        // Emit it as a real page Resource as well, which Static render does serve.
+        UpsertModuleInlineScript("__MF_LICENSE_FLAGS_BADGE__", licenseFlagsJs);
 
         _loading = true;
         _isAdmin = UserSecurity.IsAuthorized(PageState.User, PermissionNames.Edit, ModuleState.PermissionList);

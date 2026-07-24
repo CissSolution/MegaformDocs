@@ -250,7 +250,7 @@ function premiumFieldsEditor(data: WizardData, set: SetFn): HTMLElement {
 }
 
 export function renderFields(data: WizardData, set: SetFn): HTMLElement {
-  if (data.templateIsPremium && data.templateRecord) return premiumFieldsEditor(data, set);
+  if (data.templateIsCustomShell && data.templateRecord) return premiumFieldsEditor(data, set);
 
   const total = data.isMultiStep ? data.formPages.reduce((n, p) => n + p.fields.length, 0) : data.fields.length;
   const onMore = () => { paletteExpanded = !paletteExpanded; set({}, { rerender: true }); };

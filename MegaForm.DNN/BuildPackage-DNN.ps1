@@ -53,6 +53,7 @@ $EDITION      = if ($Trial) { 'Trial' } else { 'Production' }
 $SLIM_GALLERY = -not $KeepGalleryContent
 $GALLERY_TPL  = @()
 $GALLERY_IMG  = @()
+$GALLERY_KEEP = @()
 if ($SLIM_GALLERY) {
     $exclPath = Join-Path $SOLUTION_DIR 'tools\gallery\gallery-exclude.json'
     if (Test-Path $exclPath) {
@@ -60,6 +61,10 @@ if ($SLIM_GALLERY) {
             $excl = Get-Content $exclPath -Raw | ConvertFrom-Json
             $GALLERY_TPL = @($excl.templateFiles)
             $GALLERY_IMG = @($excl.images)
+            # Allow-LIST, not deny-list: copy exactly the named bundled starters. A deny-list
+            # ("anything not gallery-hosted") also ships whatever the publisher REFUSED —
+            # which is how DNN ended up with 8 premium starters against Oqtane's 4.
+            $GALLERY_KEEP = @($excl.bundledFiles)
         } catch {
             throw "gallery-exclude.json is unreadable: $($_.Exception.Message). Re-run tools/gallery/build-gallery.mjs."
         }
@@ -460,22 +465,48 @@ foreach ($resSub in @('PromptRecipes', 'TemplateGuides')) {
         Write-Host "  + Resources\$resSub\*"
     }
 }
-# [2026-07-09] Gallery seed = curated DONEE premium set (user direction: replace golf/pdf defaults).
+# [QuickStart 2026-07-24] The bundled shelf a fresh install opens with, in two parts:
+#   1. Samples\FormTemplates\QuickStart  — 31 FREE starters (premium:false). These are what
+#      makes a trial install usable: none of them is locked.
+#   2. the BUNDLED premium starters from the gallery source — the paid designs on display.
+#      Everything else in that folder is served from the gallery repo instead (SLIM).
+# Keep this in step with tools\gallery\sync-bundled-templates.mjs, which composes the SAME
+# two parts into the Oqtane payload.
+New-Item -ItemType Directory -Path "$RESOURCES\Templates" -Force | Out-Null
+
+$quickSrc = Join-Path $SOLUTION_DIR 'Samples\FormTemplates\QuickStart'
+if (Test-Path $quickSrc) {
+    $quickCount = 0
+    Get-ChildItem "$quickSrc\*.json" -File -ErrorAction SilentlyContinue | ForEach-Object {
+        Copy-Item $_.FullName "$RESOURCES\Templates\" -Force; $quickCount++
+    }
+    Write-Host ("  + Templates: {0} quick-start starter(s) (free, never locked on trial)" -f $quickCount) -ForegroundColor Green
+} else {
+    # Fail loudly: silently shipping only the premium starters is the "fresh install shows
+    # nothing but locked cards" regression this folder exists to prevent.
+    throw "Samples\FormTemplates\QuickStart is missing. Run: node tools/gallery/build-quickstart.mjs"
+}
+
 $tplSrc = Join-Path $SOLUTION_DIR 'Samples\FormTemplates\Premium\DONEE'
 if (Test-Path $tplSrc) {
-    New-Item -ItemType Directory -Path "$RESOURCES\Templates" -Force | Out-Null
     if ($SLIM_GALLERY) {
         # Gallery-hosted templates are downloaded on demand (Template Gallery -> Browse
         # online) on licensed installs, so they no longer ship in the package.
+        if (-not $GALLERY_KEEP -or $GALLERY_KEEP.Count -eq 0) {
+            throw "gallery-exclude.json has no bundledFiles. Re-run: node tools/gallery/build-gallery.mjs --out <gallery-repo>"
+        }
         $tplKept = 0; $tplSkipped = 0; $tplSkippedBytes = 0
         Get-ChildItem "$tplSrc\*" -File -ErrorAction SilentlyContinue | ForEach-Object {
-            if ($GALLERY_TPL -contains $_.Name) { $tplSkipped++; $tplSkippedBytes += $_.Length; return }
+            if ($GALLERY_KEEP -notcontains $_.Name) { $tplSkipped++; $tplSkippedBytes += $_.Length; return }
             Copy-Item $_.FullName "$RESOURCES\Templates\" -Force; $tplKept++
         }
-        Write-Host ("  - Templates: {0} gallery-hosted template(s) EXCLUDED ({1:N2} MB), {2} kept" -f $tplSkipped, ($tplSkippedBytes/1MB), $tplKept) -ForegroundColor Yellow
+        if ($tplKept -ne $GALLERY_KEEP.Count) {
+            throw "Expected $($GALLERY_KEEP.Count) bundled premium starter(s) but copied $tplKept. Source folder and gallery-exclude.json disagree."
+        }
+        Write-Host ("  - Templates: {0} non-bundled template(s) EXCLUDED ({1:N2} MB), {2} premium starter(s) kept" -f $tplSkipped, ($tplSkippedBytes/1MB), $tplKept) -ForegroundColor Yellow
     } else {
         Copy-Item "$tplSrc\*" "$RESOURCES\Templates\" -Recurse -Force
-        Write-Host '  + Templates\* (builder gallery seed)'
+        Write-Host '  + Templates\* (full premium set — KeepGalleryContent)'
     }
 }
 

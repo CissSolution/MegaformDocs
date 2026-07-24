@@ -7,8 +7,13 @@ import { h, icon, wt, wizardToast } from './ui';
 import { loadTemplates, templatesState, hydrateStandardFields, WizardTemplate } from './templates';
 import { premiumStepDetailsFor } from './premium-steps';
 import { openWizardGallery, openImportJson, openImportJsonPaste } from './gallery-modal';
-import { buildTemplateThumbnail, ensurePreviewCss } from './gallery-preview';
 import { isTrialMode, showTrialUpgrade } from '@shared/trial';
+
+// [Wizard 2026-07-18] Clean a library template's display name: drop a trailing ".json"
+// (uploads default the title to the file name) and tidy separator underscores/dashes.
+function cleanTemplateName(raw: string): string {
+  return String(raw || 'Template').replace(/\.json$/i, '').replace(/[_-]+/g, ' ').trim() || 'Template';
+}
 
 let counter = 1000;
 const fid = () => 'wf-' + (++counter);
@@ -20,16 +25,18 @@ function applyTemplate(tplId: string, set: SetFn): void {
     const meta = FIELD_TYPES.find(f => f.type === ft);
     return { id: fid(), type: ft, label: meta ? meta.label : 'Field', required: ft === 'email' };
   });
-  set({ template: tplId, templateRecord: null, templateIsPremium: false, premiumFields: null, premiumStepDetails: [], isMultiStep: false, fields, formPages: [{ id: 'page-1', title: 'Step 1', fields: [] }] });
+  set({ template: tplId, templateRecord: null, templateIsCustomShell: false, premiumFields: null, premiumStepDetails: [], isMultiStep: false, fields, formPages: [{ id: 'page-1', title: 'Step 1', fields: [] }] });
 }
 
-// Apply a REAL library template. Premium (custom-shell) → editable working copy of its
-// fields (③ — add/remove in the wizard). Standard → hydrate the editable wizard fields.
+// Apply a REAL library template. Custom-shell → editable working copy of its fields
+// (③ — add/remove in the wizard) and the shell survives Create. Standard → hydrate the
+// editable wizard fields. Routing is on SHAPE (isCustomShell), never on licensing:
+// the free quick-start starters carry a layout wrapper and would lose it otherwise.
 function applyRealTemplate(t: WizardTemplate, set: SetFn): void {
-  if (t.isPremium) {
-    set({ template: t.id, templateRecord: t, templateIsPremium: true, premiumFields: JSON.parse(JSON.stringify(t.fields || [])), premiumStepDetails: premiumStepDetailsFor(t), isMultiStep: false, fields: [], formPages: [{ id: 'page-1', title: 'Step 1', fields: [] }] });
+  if (t.isCustomShell) {
+    set({ template: t.id, templateRecord: t, templateIsCustomShell: true, premiumFields: JSON.parse(JSON.stringify(t.fields || [])), premiumStepDetails: premiumStepDetailsFor(t), isMultiStep: false, fields: [], formPages: [{ id: 'page-1', title: 'Step 1', fields: [] }] });
   } else {
-    set({ template: t.id, templateRecord: t, templateIsPremium: false, premiumFields: null, premiumStepDetails: [], isMultiStep: false, fields: hydrateStandardFields(t), formPages: [{ id: 'page-1', title: 'Step 1', fields: [] }] });
+    set({ template: t.id, templateRecord: t, templateIsCustomShell: false, premiumFields: null, premiumStepDetails: [], isMultiStep: false, fields: hydrateStandardFields(t), formPages: [{ id: 'page-1', title: 'Step 1', fields: [] }] });
   }
 }
 
@@ -67,20 +74,26 @@ function previewGradient(cat: string): string {
   return PREVIEW_GRADIENTS[(cat || 'general').toLowerCase()] || PREVIEW_GRADIENTS.general;
 }
 
+// [Wizard perf 2026-07-18] Lightweight template card = NAME + category gradient + icon.
+// (Previously each card rendered a live <iframe srcdoc> of the template — 17 iframes made the
+// Setup step heavy to open. The faithful render now shows ONCE, in the right-hand LIVE PREVIEW,
+// for the SELECTED template only.)
 function templatePreviewCard(t: WizardTemplate, selected: boolean, onClick: () => void, locked?: boolean): HTMLElement {
-  ensurePreviewCss();
-  const thumbHtml = buildTemplateThumbnail(t);
+  const name = cleanTemplateName(t.title);
+  const glyph = t.icon && t.icon.indexOf('fa-') === 0 ? t.icon : (t.isPremium ? 'fa-wand-magic-sparkles' : 'fa-file-lines');
   const thumb = h('span', {
-    style: 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;background:' + previewGradient(t.category) + (locked ? ';filter:grayscale(.45);opacity:.72' : ''),
-  });
-  if (thumbHtml) thumb.innerHTML = thumbHtml;
-  else thumb.appendChild(icon(t.icon && t.icon.indexOf('fa-') === 0 ? t.icon : (t.isPremium ? 'fa-wand-magic-sparkles' : 'fa-file-lines')));
+    style: 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:14px;text-align:center;overflow:hidden;background:' + previewGradient(t.category) + (locked ? ';filter:grayscale(.45);opacity:.72' : ''),
+  }, [
+    h('span', { style: 'width:38px;height:38px;border-radius:11px;background:rgba(255,255,255,.22);color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px' }, [icon(locked ? 'fa-lock' : glyph)]),
+    h('span', { style: 'color:#fff;font-weight:700;font-size:13.5px;line-height:1.25;text-shadow:0 1px 3px rgba(0,0,0,.3);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden' }, name),
+  ]);
 
   const card = h('button', {
     type: 'button',
     class: 'mfw-pick' + (selected ? ' sel' : '') + (locked ? ' mfw-locked' : ''),
-    style: 'position:relative;display:block;width:100%;height:190px;padding:0;overflow:hidden',
-    'aria-label': wt('wiz.setup.use_template_preview', 'Use template preview'),
+    style: 'position:relative;display:block;width:100%;height:132px;padding:0;overflow:hidden',
+    title: name,
+    'aria-label': name,
     onclick: onClick,
   }, [thumb]);
   if (locked) {
@@ -146,7 +159,7 @@ export function renderSetup(data: WizardData, set: SetFn): HTMLElement {
 
     h('div', { style: 'display:flex;gap:10px;margin-bottom:8px' }, [
       entryBtn('fa-layer-group', wt('wiz.setup.gallery', 'Template Gallery'), wt('wiz.setup.gallery_sub', 'Browse the full library'), () => openWizardGallery(applyPicked, importPicked)),
-      entryBtn('fa-file-arrow-up', wt('wiz.setup.import', 'Import JSON'), wt('wiz.setup.import_sub', 'Load a MegaForm export'), () => openImportJson(importPicked)),
+      entryBtn('fa-file-arrow-up', wt('wiz.setup.import', 'Import a form'), wt('wiz.setup.import_sub', 'Load a saved MegaForm export'), () => openImportJson(importPicked)),
     ]),
 
     // The button above opens the file picker directly, which is what people expect. But some
@@ -156,9 +169,9 @@ export function renderSetup(data: WizardData, set: SetFn): HTMLElement {
       h('button', {
         type: 'button',
         style: 'background:none;border:0;padding:0;color:#6366f1;font-size:12px;cursor:pointer;text-decoration:underline',
-        title: wt('wiz.setup.paste_hint', 'If the file picker does not open, use this: choose a file, drop one, or paste the JSON.'),
+        title: wt('wiz.setup.paste_hint', 'If the file picker does not open, use this: choose a file, drop one, or paste the exported form.'),
         onclick: () => openImportJsonPaste(importPicked),
-      }, wt('wiz.setup.paste', 'File picker not opening? Paste or drop the JSON instead')),
+      }, wt('wiz.setup.paste', 'File picker not opening? Paste or drop the form file instead')),
     ]),
 
     h('div', { style: 'margin-bottom:18px' }, [

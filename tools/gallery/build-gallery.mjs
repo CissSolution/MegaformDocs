@@ -63,16 +63,18 @@ function referencedImages(rawJson) {
 // can never be installed, so reject it at publish time instead of shipping it.
 const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,79}$/i;
 
-// [BundledStarters 2026-07-24] The small built-in set that ships INSIDE the module
-// package (both trial and production) so a fresh install is never an empty gallery.
-// Chosen to cover both layouts with zero artwork, keeping the package light:
-//   single-step: a contact form + a simple application
-//   multi-step : an account setup + a project intake
-// They are still published to the gallery (so they stay updatable and the feed is
-// complete) but are omitted from gallery-exclude.json, so packaging keeps them.
+// [BundledStarters 2026-07-24] The four PREMIUM designs that ship INSIDE the module package
+// alongside the free quick-start shelf (tools/gallery/build-quickstart.mjs), so a fresh install
+// shows what the paid designs look like. On a trial install these four are the only locked
+// cards — that lock is the upsell, not a bug; the 31 quick-start starters stay usable.
+//
+// All four are chosen for ZERO artwork: their weight is pure JSON, so the package stays light
+// and every hero image can live in the gallery repo instead.
+// They are still published to the gallery (so they stay updatable and the feed is complete)
+// but are omitted from gallery-exclude.json, so packaging keeps them.
 const BUNDLED_SLUGS = new Set([
   'v0-contact-map-left-corporate',
-  'vendor-application',
+  'down-under-australia',
   'tabbed-account-setup',
   'project-intake-onboarding',
 ]);
@@ -185,6 +187,17 @@ for (const file of readTemplates(SRC)) {
     duplicateFiles.push(file);
     continue;
   }
+  // A template whose artwork is not in the repo would publish a design with a dead hero:
+  // the card thumbnail and the preview both show a large empty panel, and installing it
+  // gives the customer a broken form. Refuse to publish it at all — the fix is to add the
+  // missing image under Assets/img, not to ship the template.
+  const wanted = referencedImages(raw);
+  const absent = wanted.filter((rel) => !existsSync(join(IMG_ROOT, rel.replace(/\//g, sep))));
+  if (absent.length) {
+    skipped.push({ file, reason: `missing artwork (${absent.join(', ')}) — add it under Assets/img or drop the template` });
+    continue;
+  }
+
   claimedSlugs.set(slugKey, file);
 
   // Re-serialize canonically (stable 2-space JSON) so the sha256 is reproducible
@@ -198,7 +211,7 @@ for (const file of readTemplates(SRC)) {
   // Every image the template references is pulled out of the package and shipped
   // here instead; the host downloads + extracts it on install so the absolute
   // /…/img/<rel> URLs inside the template keep resolving.
-  const wantedImages = referencedImages(raw);
+  const wantedImages = wanted; // already resolved + proven present above
   const bundleFiles = [];
   for (const rel of wantedImages) {
     const abs = join(IMG_ROOT, rel.replace(/\//g, sep));
@@ -238,7 +251,11 @@ for (const file of readTemplates(SRC)) {
     assetFiles: bundleFiles.map((f) => f.name),
     sha256: sha256Hex(bytes),
     sizeBytes: bytes.length,
-    premium: true,
+    // [QuickStart 2026-07-24] Was hard-coded true. This source folder IS the premium set, so
+    // true remains the default, but a template that states its own flag is believed — otherwise
+    // dropping a free starter in here would silently publish it as premium (and lock it on
+    // trial installs, which is exactly the bug this flag exists to prevent).
+    premium: doc.premium !== undefined ? !!doc.premium : (doc.isPremium !== undefined ? !!doc.isPremium : true),
     minModuleVersion: String(doc.minModuleVersion || ''),
     fieldCount: fields.length,
     sourceFile: basename(file),
@@ -312,6 +329,11 @@ writeFileSync(excludePath, JSON.stringify({
   galleryUrl: PUBLIC_BASE || null,
   // Starters that intentionally REMAIN in the package (never excluded).
   bundledSlugs: [...BUNDLED_SLUGS].sort(),
+  // The same starters as SOURCE FILE NAMES. Packaging must copy exactly these — an
+  // "everything not in templateFiles" rule silently also ships anything the publisher
+  // skipped (e.g. a template whose artwork is missing), which put 8 premium starters in
+  // the DNN package while Oqtane shipped 4.
+  bundledFiles: entries.filter((e) => BUNDLED_SLUGS.has(e.slug)).map((e) => e.sourceFile).sort(),
   // Source template file names (as they appear in the source folder) now hosted remotely.
   templateFiles: entries.filter((e) => !BUNDLED_SLUGS.has(e.slug)).map((e) => e.sourceFile)
     .concat(duplicateFiles)
@@ -324,6 +346,27 @@ writeFileSync(excludePath, JSON.stringify({
     .sort(),
   imageBytes: assetBytesMoved - bundledImageBytes,
 }, null, 2) + '\n', 'utf8');
+
+// ── keep the Oqtane .nuspec in sync ───────────────────────
+// The DNN build script reads gallery-exclude.json directly. NuGet cannot: the exclusion has
+// to be a literal glob list on the wwwroot <file> entry. Rewriting it from the same data
+// here is what stops the two platforms from drifting — publish a template and BOTH packages
+// stop shipping its artwork. license.lic stays excluded (Oqtane is Marketplace-licensed).
+const galleryImages = [...movedImages].filter((p) => !bundledImages.has(p)).map((p) => p.replace(/^img\//, '')).sort();
+const nuspecPath = resolve(join(REPO_ROOT, 'MegaForm.Oqtane.Package', 'MegaForm.Oqtane.nuspec'));
+let nuspecUpdated = false;
+if (existsSync(nuspecPath)) {
+  const patterns = ['**\\license.lic', ...galleryImages.map((rel) => '**\\img\\' + rel.replace(/\//g, '\\'))];
+  const nuspec = readFileSync(nuspecPath, 'utf8');
+  const lineRe = /(<file src="\.\.\\MegaForm\.Oqtane\.Server\\wwwroot\\Modules\\MegaForm\\\*\*\\\*\.\*"[^>]*?exclude=")([^"]*)(")/;
+  const m = nuspec.match(lineRe);
+  if (!m) {
+    console.error('  ! nuspec wwwroot <file> entry not found — Oqtane package exclusions NOT updated');
+  } else if (m[2] !== patterns.join(';')) {
+    writeFileSync(nuspecPath, nuspec.replace(lineRe, (_a, pre, _old, post) => pre + patterns.join(';') + post), 'utf8');
+    nuspecUpdated = true;
+  }
+}
 
 // ── self-verification ─────────────────────────────────────
 // The module REFUSES any file whose sha256 differs from the manifest, so a repo
@@ -362,6 +405,10 @@ if (missingImages.length) {
   if (missingImages.length > 15) console.log('    ... and ' + (missingImages.length - 15) + ' more');
 }
 console.log('  manifest  : manifest.json (repoVersion 1)');
+console.log('  bundled   : ' + entries.filter((e) => BUNDLED_SLUGS.has(e.slug)).length + '/' + BUNDLED_SLUGS.size
+  + ' premium starter(s) kept in the package'
+  + (entries.filter((e) => BUNDLED_SLUGS.has(e.slug)).length === BUNDLED_SLUGS.size ? '' : '  ⚠ a BUNDLED_SLUGS entry matched no template'));
+console.log('  nuspec    : ' + (nuspecUpdated ? 'UPDATED Oqtane exclusions (' + galleryImages.length + ' image pattern(s))' : 'already in sync'));
 if (PUBLIC_BASE) console.log('  public    : ' + PUBLIC_BASE.replace(/\/?$/, '/') + 'manifest.json');
 
 if (broken.length) {

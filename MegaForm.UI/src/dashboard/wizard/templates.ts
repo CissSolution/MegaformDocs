@@ -14,7 +14,14 @@ import { WizardField } from './types';
 
 export interface WizardTemplate {
   id: string; slug: string; title: string; description: string;
-  category: string; icon: string; isPremium: boolean; fieldCount: number;
+  category: string; icon: string; fieldCount: number;
+  // Two INDEPENDENT things that used to be one flag:
+  //   isCustomShell — SHAPE. The template carries settings.customHtml, so the wizard must use
+  //                   the shell-preserving editor + emit path or the design is lost on Create.
+  //   isPremium     — LICENSING. Locked behind a paid license on a trial install.
+  // The free quick-start starters are custom-shell but NOT premium; conflating the two locked
+  // the entire bundled gallery on trial installs.
+  isCustomShell: boolean; isPremium: boolean;
   fields: any[]; settings: any; submitButtonText: string; successMessage: string;
 }
 
@@ -78,6 +85,22 @@ function normalizeSettings(raw: any): any {
   return out;
 }
 
+/**
+ * Is this template premium (locked behind a paid license on a trial install)?
+ *
+ * An explicit `premium` / `isPremium` on the record wins — that is the authored answer and
+ * the bundled quick-start set states `premium:false`. Only when the template says nothing
+ * do we fall back to the legacy shape guess: a custom-HTML shell means a premium design.
+ */
+function premiumFlag(raw: any, settings: any): boolean {
+  const flag = pick(raw, 'premium', 'Premium');
+  const alt = pick(raw, 'isPremium', 'IsPremium');
+  const v = flag != null ? flag : alt;
+  if (typeof v === 'boolean') return v;
+  if (typeof v === 'string' && v.trim() !== '') return v.trim().toLowerCase() === 'true' || v.trim() === '1';
+  return !!(settings && settings.customHtml);
+}
+
 function normalizeRecord(raw: any): WizardTemplate {
   const settings = normalizeSettings(pick(raw, 'settings', 'Settings') || {});
   let fields = pick(raw, 'fields', 'Fields');
@@ -92,7 +115,12 @@ function normalizeRecord(raw: any): WizardTemplate {
     description: String(pick(raw, 'description', 'Description') || ''),
     category: String(pick(raw, 'category', 'Category') || 'general'),
     icon: String(pick(raw, 'icon', 'Icon') || ''),
-    isPremium: !!settings.customHtml,
+    // Shape: a custom-HTML shell must survive Create, premium or not.
+    isCustomShell: !!settings.customHtml,
+    // [QuickStart 2026-07-24] Licensing: trust the template's own flag when it states one. The
+    // old "has customHtml => premium" guess also caught the free quick-start starters (each
+    // carries a ~800-char layout wrapper), so a trial install showed a gallery of locks.
+    isPremium: premiumFlag(raw, settings),
     fieldCount: fields.length,
     fields,
     settings,
