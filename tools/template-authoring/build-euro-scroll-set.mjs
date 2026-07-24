@@ -43,15 +43,18 @@ const levels = [
 ];
 const durations = ['1', '2', '3', '6', '9', '12'].map((value) => o(`${value} month${value === '1' ? '' : 's'}`, value));
 
-function fields({ cv = false } = {}) {
+function fields({ cv = false, variant = 'base' } = {}) {
+  const real = variant === 'realestate';
+  const botanical = variant === 'botanical';
+  const kawaii = variant === 'kawaii';
   const result = [
-    f('first_name', 'Text', 'First name', { placeholder: 'Anna', required: true }),
-    f('last_name', 'Text', 'Last name', { placeholder: 'Müller', required: true }),
+    f('first_name', 'Text', 'First name', { placeholder: real ? 'Eleanor' : 'Anna', required: true }),
+    f('last_name', 'Text', 'Last name', { placeholder: real ? 'Hayes' : 'Müller', required: true }),
   ];
-  if (cv) result.push(f('job_title', 'Text', 'Current title / position', { placeholder: 'Student — University of Munich' }));
+  if (cv) result.push(f('job_title', 'Text', 'Current title / position', { placeholder: 'e.g. Student — University of Munich' }));
   result.push(
-    f('email', 'Email', 'Email', { placeholder: 'anna@email.eu', required: true }),
-    f('phone', 'Phone', 'Phone', { placeholder: '+49 170 123456' }),
+    f('email', 'Email', real ? 'Email address' : 'Email', { placeholder: real ? 'eleanor@example.com' : 'anna@email.eu', required: true }),
+    f('phone', 'Phone', real ? 'Phone number' : 'Phone', { placeholder: real ? '+1 555 0100' : '+49 170 123456' }),
   );
   if (cv) {
     result.push(
@@ -60,24 +63,50 @@ function fields({ cv = false } = {}) {
       ...[1, 2, 3, 4, 5].map((n) => f(`skill_${n}`, 'Text', `Skill ${n}`, { placeholder: `Skill ${n}` })),
     );
   }
-  result.push(f('birth_year', 'Number', 'Year of birth', { placeholder: '2004', validation: { min: 1970, max: 2010 } }));
+  result.push(f('birth_year', 'Number', 'Year of birth', { placeholder: real ? '2000' : '2004', validation: { min: 1970, max: 2010 } }));
   if (cv) result.push(f('nationality', 'Text', 'Nationality', { placeholder: 'German' }));
+  const accommodationOptions = cv
+    ? values(['University dorm', 'Host family', 'Private flat', 'Flexible'])
+    : ((botanical || kawaii) ? values(['University dormitory', 'Host family', 'Private flat', 'Flexible']) : accommodations);
+  const durationOptions = (botanical || kawaii || cv)
+    ? ['1', '2', '3', '6', '12'].map((value) => o(value, value))
+    : durations;
   result.push(
-    f('country', 'Select', 'Country of residence', { placeholder: 'Select country', required: true, options: countries }),
-    f('programme', 'Select', 'Programme', { placeholder: 'Select programme', required: true, options: programmes }),
-    f('duration', 'Select', 'Duration (months)', { defaultValue: '3', options: durations }),
-    f('start_month', 'Select', 'Preferred start month', { placeholder: 'Select month', required: true, options: months }),
-    f('language_level', 'Select', 'Language level', { placeholder: 'Select level', options: levels }),
+    f('country', 'Select', real ? 'Country of origin' : (kawaii ? 'Country' : 'Country of residence'), {
+      placeholder: kawaii ? 'Pick one ✈' : 'Select country', required: true, options: countries,
+    }),
+    f('programme', 'Select', 'Programme', { placeholder: kawaii ? 'Select 🌍' : 'Select programme', required: true, options: programmes }),
+    f('duration', 'Select', 'Duration (months)', { defaultValue: '3', options: durationOptions }),
+    f('start_month', 'Select', (real || kawaii || cv) ? 'Start month' : 'Preferred start month', {
+      placeholder: kawaii ? 'Pick month 🗓️' : (cv ? 'Select' : 'Select month'), required: !cv, options: months,
+    }),
+    f('language_level', 'Select', 'Language level', { placeholder: kawaii ? 'Level' : 'Select level', options: levels }),
     f('interests', 'Checkbox', 'Interests', { options: interests, ...(cv ? {} : chip()) }),
-    f('accommodation', 'Radio', 'Accommodation preference', { required: true, options: accommodations, ...chip() }),
-    f('scholarship', 'Checkbox', 'Mobility grant', { options: [o('I would like to apply for a mobility grant', 'yes')] }),
-    f('motivation', 'Textarea', 'Motivation', {
-      placeholder: 'Tell us why you want to join and what you hope to gain...',
+    f('accommodation', cv ? 'Select' : 'Radio', cv ? 'Accommodation' : 'Accommodation preference', {
+      required: real, options: accommodationOptions, ...(real ? chip() : {}), placeholder: cv ? 'Select' : undefined,
+    }),
+    f('scholarship', 'Checkbox', real ? 'Scholarship / financial support' : 'Scholarship application', {
+      options: [o(real ? 'Apply for scholarship / financial support' : (kawaii ? 'Apply for scholarship ✨' : (cv ? 'I wish to apply for a scholarship' : 'Apply for scholarship')), 'yes')],
+    }),
+    f('motivation', 'Textarea', real ? 'Motivation (optional)' : (botanical ? 'Motivation letter' : 'Motivation'), {
+      placeholder: real
+        ? 'Tell us why you want to join this programme…'
+        : (kawaii ? 'Tell us why you want to join... 🌟' : 'Tell us in a few sentences why you want to join this programme...'),
       properties: { rows: 4 }, validation: { maxLength: 1000 },
     }),
-    f('newsletter', 'Checkbox', 'Newsletter', { options: [o('Subscribe to EuroYouth newsletter', 'yes')] }),
+  );
+  if (botanical) {
+    result.push(f('signature', 'Textarea', 'Signature', {
+      placeholder: 'Sincerely, your name here...', properties: { rows: 2 },
+    }));
+  }
+  result.push(
+    f('newsletter', 'Checkbox', 'Newsletter', {
+      options: [o(botanical ? 'I would like to receive programme updates and news.' : (kawaii ? 'Send me updates & news 📬' : 'Subscribe to EuroYouth newsletter'), 'yes')],
+    }),
     f('terms', 'Checkbox', 'Terms and conditions', {
-      required: true, options: [o('I accept the EuroYouth terms and data processing policy', 'accepted')],
+      required: true,
+      options: [o(botanical ? 'I agree to the EuroYouth terms and conditions.' : (kawaii ? 'I agree to the terms & conditions' : (cv ? 'I accept the terms and conditions' : 'I accept the EuroYouth terms and data processing policy')), 'accepted')],
     }),
     f('utm_source', 'Hidden', 'UTM source'),
     f('utm_campaign', 'Hidden', 'UTM campaign'),
@@ -86,21 +115,19 @@ function fields({ cv = false } = {}) {
 }
 
 const section = (icon, title) => `<div class="mfp-section-head"><span class="mfp-section-icon" aria-hidden="true">${icon}</span><h2>${title}</h2><span aria-hidden="true"></span></div>`;
-const nav = (slug, labels) => `<nav class="mfp-scroll-nav" aria-label="Form sections">${labels.map(([key, label]) => `<a href="#${slug}-${key}">${label}</a>`).join('')}</nav>`;
+const kawaiiHead = (label, tone) => `<div class="mfp-kawaii-head mfp-kawaii-${tone}"><span>${label}</span><i aria-hidden="true"></i></div>`;
 const checks = `<div class="mfp-stack"><div class="mfp-check">{{field:newsletter}}</div><div class="mfp-check">{{field:terms}}</div></div>`;
 const hidden = `<div class="mfp-hidden">{{field:utm_source}}{{field:utm_campaign}}</div>`;
 const actions = (label) => `<div class="mfp-actions"><span aria-hidden="true">&#8592; Back</span><button type="submit" class="mfp-btn" data-mf-native-submit>${label} &#8594;</button></div>`;
 
 function baseCss({ slug, p, width, c, font, display }) {
   return `/* MegaForm Gen-3 scroll-aware single-page shell: ${slug} */
-.mfp.mfp-${slug}{--${p}-page:${c.page};--${p}-paper:${c.paper};--${p}-ink:${c.ink};--${p}-muted:${c.muted};--${p}-line:${c.line};--${p}-input:${c.input || '#fff'};--${p}-primary:${c.primary};--${p}-soft:${c.soft};--${p}-error:#c0392b;--${p}-font:${font};--${p}-display:${display};--mf-btn-bg:var(--${p}-primary);width:100%;max-width:${width + 96}px;margin:0 auto;color:var(--${p}-ink);font-family:var(--${p}-font)}
+.mfp.mfp-${slug}{--${p}-page:${c.page};--${p}-paper:${c.paper};--${p}-ink:${c.ink};--${p}-muted:${c.muted};--${p}-line:${c.line};--${p}-input:${c.input || '#fff'};--${p}-primary:${c.primary};--${p}-soft:${c.soft};--${p}-error:#c0392b;--${p}-font:${font};--${p}-display:${display};--mf-btn-bg:var(--${p}-primary);display:block!important;width:100%!important;max-width:${width}px!important;margin:0 auto!important;color:var(--${p}-ink);font-family:var(--${p}-font)}
 .mfp.mfp-${slug},.mfp.mfp-${slug} *,.mfp.mfp-${slug} *::before,.mfp.mfp-${slug} *::after{box-sizing:border-box}
-.mfp-${slug} .mfp-stage{width:100%;padding:36px 24px;border-radius:24px;background:var(--${p}-page)}
-.mfp-${slug} .mfp-paper{position:relative;width:min(100%,${width}px);margin:0 auto;background:var(--${p}-paper);box-shadow:0 24px 70px rgba(40,31,20,.16)}
-.mfp-${slug} .mfp-scroll-nav{position:sticky;z-index:18;top:12px;display:flex;gap:8px;overflow-x:auto;padding:10px 20px;border-bottom:1px solid var(--${p}-line);background:color-mix(in srgb,var(--${p}-paper) 92%,transparent);box-shadow:0 8px 18px rgba(30,25,20,.06);backdrop-filter:blur(12px);scrollbar-width:none}
-.mfp-${slug} .mfp-scroll-nav::-webkit-scrollbar{display:none}.mfp-${slug} .mfp-scroll-nav a{flex:0 0 auto;border:1px solid var(--${p}-line);border-radius:999px;padding:7px 12px;background:var(--${p}-input);color:var(--${p}-muted);font-size:10px;font-weight:800;letter-spacing:.09em;text-decoration:none;text-transform:uppercase}
-.mfp-${slug} .mfp-scroll-nav a:hover,.mfp-${slug} .mfp-scroll-nav a:focus-visible{border-color:var(--${p}-primary);background:var(--${p}-soft);color:var(--${p}-primary);outline:0}
-.mfp-${slug} .mfp-body{position:relative;padding:12px 32px 36px}.mfp-${slug} .mfp-section{scroll-margin-top:78px}
+.mf-form-wrapper .mf-form-inner .mfp.mfp-${slug}{display:block!important;width:100%!important;max-width:${width}px!important;margin-inline:auto!important}
+.mfp-${slug} .mfp-stage{width:100%;max-width:${width}px!important;margin-inline:auto!important;padding:0;border:0;border-radius:0;background:transparent}
+.mfp-${slug} .mfp-paper{position:relative;width:100%;max-width:${width}px!important;margin:0 auto!important;background:var(--${p}-paper);box-shadow:0 20px 45px rgba(40,31,20,.14)}
+.mfp-${slug} .mfp-body{position:relative;padding:12px 32px 36px}
 .mfp-${slug} .mfp-section-head{display:flex;align-items:center;gap:11px;margin:26px 0 16px}.mfp-${slug} .mfp-section-head h2{margin:0;color:var(--${p}-ink);font-size:12px;font-weight:900;letter-spacing:.14em;text-transform:uppercase}.mfp-${slug} .mfp-section-head>span:last-child{height:1px;flex:1;background:var(--${p}-line)}
 .mfp-${slug} .mfp-section-icon{display:grid;width:30px;height:30px;flex:0 0 auto;place-items:center;border-radius:8px;background:var(--${p}-soft);color:var(--${p}-primary);font-size:14px;font-weight:900}
 .mfp-${slug} .mfp-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 20px}.mfp-${slug} .mfp-stack{display:grid;gap:16px}.mfp-${slug} .mfp-wide{margin-top:16px}.mfp-${slug} .mf-field-group{min-width:0;margin:0}
@@ -112,10 +139,9 @@ function baseCss({ slug, p, width, c, font, display }) {
 .mfp-${slug} .mfp-chip .mf-option-ui{display:inline-flex!important;min-height:32px!important;align-items:center!important;padding:7px 12px!important;border:1px solid var(--${p}-line)!important;border-radius:999px!important;background:var(--${p}-input)!important;color:var(--${p}-muted)!important;box-shadow:none!important}.mfp-${slug} .mfp-chip .mf-option-label{color:inherit!important;font-size:12px!important;font-weight:700!important}.mfp-${slug} .mfp-chip .mf-option-control:checked + .mf-option-ui{border-color:var(--${p}-primary)!important;background:var(--${p}-soft)!important;color:var(--${p}-primary)!important}
 .mfp-${slug} .mfp-check .mf-option-group{display:block!important}.mfp-${slug} .mfp-check .mf-option-item{display:flex!important;align-items:flex-start!important;gap:9px!important;margin:0!important;padding:0!important}.mfp-${slug} .mfp-check .mf-option-control{position:static!important;width:17px!important;height:17px!important;margin:3px 0 0!important;accent-color:var(--${p}-primary)!important;opacity:1!important}.mfp-${slug} .mfp-check .mf-option-ui{display:block!important;padding:0!important;border:0!important;background:transparent!important;color:var(--${p}-muted)!important}.mfp-${slug} .mfp-check .mf-option-label{color:inherit!important;font-size:13px!important;line-height:1.5!important}
 .mfp-${slug} .mfp-actions{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:26px;padding-top:22px;border-top:1px solid var(--${p}-line);color:var(--${p}-muted);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.mfp-${slug} .mfp-btn{display:inline-flex;min-height:44px;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:11px 22px;background:var(--${p}-primary)!important;color:#fff!important;font:inherit;font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
-.mfp-${slug} .mfp-hidden{display:none!important}.mfp-${slug} .mf-form-title,.mfp-${slug} .mf-form-description,.mfp-${slug} .mf-success-message,.mfp-${slug} .mf-form-actions{display:none!important}.mf-form-wrapper:has(.mfp-${slug})>.mf-form-inner{width:100%!important;max-width:${width + 96}px!important}.mf-form-wrapper:has(.mfp-${slug}) .mf-form-actions{display:none!important}
-@media(max-width:700px){.mfp-${slug} .mfp-stage{padding:12px;border-radius:18px}.mfp-${slug} .mfp-body{padding:8px 20px 28px}.mfp-${slug} .mfp-row{grid-template-columns:1fr;gap:15px}.mfp-${slug} .mfp-scroll-nav{top:6px;padding:8px 14px}}
-@media(max-width:440px){.mfp-${slug} .mfp-stage{padding:0;background:transparent}.mfp-${slug} .mfp-body{padding:6px 16px 24px}.mfp-${slug} .mfp-actions{align-items:stretch;flex-direction:column-reverse}.mfp-${slug} .mfp-btn{width:100%}}
-body:has(.aperture-header) .DnnModule .mfp-${slug} .mfp-scroll-nav{top:168px}
+.mfp-${slug} .mfp-hidden{display:none!important}.mfp-${slug} .mf-form-title,.mfp-${slug} .mf-form-description,.mfp-${slug} .mf-success-message,.mfp-${slug} .mf-form-actions{display:none!important}.mf-form-wrapper:has(.mfp-${slug}){--mf-page-bg:transparent!important;--mf-form-bg:transparent!important;--mf-card-bg:transparent!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;background-image:none!important;box-shadow:none!important}.mf-form-wrapper:has(.mfp-${slug}) .mf-form,.mf-form-wrapper:has(.mfp-${slug}) .mf-form-inner{width:100%!important;max-width:none!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}.mf-form-wrapper:has(.mfp-${slug}) .mf-form-actions{display:none!important}
+@media(max-width:700px){.mfp-${slug} .mfp-body{padding:8px 20px 28px}.mfp-${slug} .mfp-row{grid-template-columns:1fr;gap:15px}}
+@media(max-width:440px){.mfp-${slug} .mfp-body{padding:6px 16px 24px}.mfp-${slug} .mfp-actions{align-items:stretch;flex-direction:column-reverse}.mfp-${slug} .mfp-btn{width:100%}}
 `;
 }
 
@@ -142,81 +168,95 @@ function realestate() {
   const slug = 'realestate-registration';
   const html = `<div class="mfp mfp-${slug} mfp-native-generated" data-mf-flexgrid="locked"><div class="mfp-stage"><article class="mfp-paper">
 <header class="mfp-header"><div class="mfp-art" aria-hidden="true"></div><div class="mfp-header-copy"><div><p class="mfp-brand">&#8962; EuroYouth Exchange</p><h1>Registration Form</h1><p>Your gateway to European youth programmes</p></div><div class="mfp-date"><small>Date</small><strong>24 Jul 2026</strong></div></div><div class="mfp-contact"><span>&#9673; Brussels, Belgium</span><span>&#9742; +32 2 555 0100</span><span>&#9993; info@euroyouth.eu</span></div><svg class="mfp-wave" viewBox="0 0 960 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0,20 C120,40 240,0 360,20 C480,40 600,0 720,20 C840,40 960,10 960,20 L960,40 L0,40 Z"></path></svg></header>
-${nav(slug, [['personal', 'Personal'], ['programme', 'Programme'], ['support', 'Support'], ['confirm', 'Confirm']])}
 <div class="mfp-body"><section class="mfp-section" id="${slug}-personal">${section('&#9786;', 'Personal Information')}<div class="mfp-row"><div>{{field:first_name}}</div><div>{{field:last_name}}</div><div>{{field:email}}</div><div>{{field:phone}}</div><div>{{field:birth_year}}</div><div>{{field:country}}</div></div></section>
 <section class="mfp-section" id="${slug}-programme">${section('&#9670;', 'Programme Details')}<div class="mfp-row"><div>{{field:programme}}</div><div>{{field:duration}}</div><div>{{field:start_month}}</div><div>{{field:language_level}}</div></div><div class="mfp-chip mfp-wide">{{field:interests}}</div></section>
 <section class="mfp-section" id="${slug}-support">${section('&#8962;', 'Logistics & Support')}<div class="mfp-chip">{{field:accommodation}}</div><div class="mfp-check mfp-wide">{{field:scholarship}}</div><div class="mfp-wide">{{field:motivation}}</div></section>
-<section class="mfp-section" id="${slug}-confirm">${section('&#10003;', 'Declaration')}${checks}</section>${hidden}${actions('Submit Application')}</div><footer class="mfp-foot">EuroYouth Exchange &copy; 2026 <span>Brussels · Berlin · Barcelona</span></footer></article></div></div>`;
+<section class="mfp-section" id="${slug}-confirm">${section('&#10003;', 'Declaration')}${checks}</section>${hidden}${actions('Submit Application')}</div><footer class="mfp-foot">EuroYouth Exchange &copy; 2026 <span>Brussels &middot; Berlin &middot; Barcelona</span></footer></article></div></div>`;
   const css = baseCss({
     slug, p: 'rey', width: 720,
     c: { page: '#f0ebe0', paper: '#fffcf5', ink: '#1c1c1e', muted: '#8a8a8f', line: '#e5e0d8', primary: '#e8881a', soft: '#fff3e0' },
     font: 'Inter,system-ui,-apple-system,"Segoe UI",sans-serif', display: '"Bricolage Grotesque",Inter,system-ui,sans-serif',
   }) + `
-.mfp-${slug} .mfp-paper{overflow:visible;border-radius:20px}.mfp-${slug} .mfp-header{position:relative;overflow:hidden;border-radius:20px 20px 0 0;background:#f5a130;color:#fff}.mfp-${slug} .mfp-art{position:absolute;inset:0;background:url('/Modules/MegaForm/Assets/img/${slug}/header-illus.png') center/cover;opacity:.24;mix-blend-mode:overlay}.DnnModule .mfp-${slug} .mfp-art{background-image:url('/DesktopModules/MegaForm/Assets/img/${slug}/header-illus.png')}
+.mfp-${slug} .mfp-paper{overflow:hidden;border-radius:20px}.mfp-${slug} .mfp-header{position:relative;overflow:hidden;border-radius:20px 20px 0 0;background:#f5a130;color:#fff}.mfp-${slug} .mfp-art{position:absolute;inset:0;background:url('/Modules/MegaForm/Assets/img/${slug}/header-illus.png') center/cover;opacity:.24;mix-blend-mode:overlay}.DnnModule .mfp-${slug} .mfp-art{background-image:url('/DesktopModules/MegaForm/Assets/img/${slug}/header-illus.png')}
 .mfp-${slug} .mfp-header-copy{position:relative;z-index:1;display:flex;justify-content:space-between;gap:24px;padding:28px 32px 8px}.mfp-${slug} .mfp-brand{margin:0 0 6px;color:rgba(255,255,255,.82);font-size:10px;font-weight:900;letter-spacing:.18em;text-transform:uppercase}.mfp-${slug} .mfp-header h1{margin:0;color:#fff;font-family:var(--rey-display);font-size:30px;font-weight:900}.mfp-${slug} .mfp-header-copy p:last-child{margin:6px 0 0;color:rgba(255,255,255,.76);font-size:13px}
 .mfp-${slug} .mfp-date{border-radius:12px;padding:9px 14px;background:rgba(255,255,255,.18);text-align:right}.mfp-${slug} .mfp-date small{display:block;font-size:9px;text-transform:uppercase}.mfp-${slug} .mfp-date strong{font-size:13px}.mfp-${slug} .mfp-contact{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:7px 22px;padding:7px 32px 14px;color:rgba(255,255,255,.82);font-size:11px}.mfp-${slug} .mfp-wave{position:relative;z-index:1;display:block;width:100%;height:38px;margin-bottom:-1px}.mfp-${slug} .mfp-wave path{fill:var(--rey-paper)}
 .mfp-${slug} .mfp-foot{display:flex;justify-content:space-between;gap:12px;padding:14px 32px 20px;color:var(--rey-muted);font-size:10px}@media(max-width:540px){.mfp-${slug} .mfp-header-copy{padding-inline:20px}.mfp-${slug} .mfp-date{display:none}.mfp-${slug} .mfp-contact{padding-inline:20px}.mfp-${slug} .mfp-foot{flex-direction:column;align-items:center}}
 `;
   return makeTemplate({
     slug, title: 'EuroYouth Estate Registration',
-    description: 'Warm illustrated EuroYouth registration sheet with sticky section navigation and long-form support.',
+    description: 'Warm illustrated EuroYouth registration sheet with a source-matched single-page form flow.',
     category: 'real-estate', categories: ['real-estate', 'registration', 'premium'], icon: 'home',
     submit: 'Submit Application', success: 'Application received. Check your email for confirmation.',
-    fields: fields(), html, css, prefix: 'rey',
+    fields: fields({ variant: 'realestate' }), html, css, prefix: 'rey',
     immutable: ['EuroYouth orange illustrated header', 'warm paper palette', 'Bricolage display treatment', 'semantic red #c0392b'],
   });
 }
 
 function botanical() {
   const slug = 'botanical-thankyou';
-  const html = `<div class="mfp mfp-${slug} mfp-native-generated" data-mf-flexgrid="locked"><div class="mfp-stage"><article class="mfp-paper"><header class="mfp-header"><div class="mfp-leaves" aria-hidden="true">&#9752; &#9752; &#10047;</div><p>EuroYouth 2026</p><h1>Application Form</h1><p>Begin your European adventure. Fill in your details below — all fields marked * are required.</p></header>
-${nav(slug, [['personal', 'Personal'], ['programme', 'Programme'], ['journey', 'Journey'], ['declaration', 'Declaration']])}
+  const html = `<div class="mfp mfp-${slug} mfp-native-generated" data-mf-flexgrid="locked"><div class="mfp-stage"><article class="mfp-paper">
+<svg class="mfp-bot-tl" viewBox="0 0 200 200" aria-hidden="true"><g fill="none"><ellipse cx="40" cy="70" rx="18" ry="32" fill="#8B9E6E" transform="rotate(-30 40 70)" opacity=".7"/><ellipse cx="70" cy="40" rx="14" ry="26" fill="#A8B87A" transform="rotate(15 70 40)" opacity=".6"/><ellipse cx="25" cy="110" rx="12" ry="22" fill="#6B7F52" transform="rotate(-50 25 110)" opacity=".65"/><ellipse cx="95" cy="25" rx="10" ry="18" fill="#C9C46B" transform="rotate(40 95 25)" opacity=".5"/><circle cx="60" cy="30" r="9" fill="#D4A844" opacity=".75"/><path d="M10 80 Q30 60 50 90" stroke="#6B7F52" stroke-width="1.5" opacity=".5"/><path d="M30 120 Q50 100 70 130" stroke="#8B9E6E" stroke-width="1.2" opacity=".45"/><path d="M80 10 Q100 30 90 60" stroke="#6B7F52" opacity=".4"/><circle cx="60" cy="21" r="4" fill="#D4A844"/><circle cx="68" cy="26" r="4" fill="#D4A844"/><circle cx="68" cy="35" r="4" fill="#D4A844"/><circle cx="60" cy="39" r="4" fill="#D4A844"/><circle cx="52" cy="35" r="4" fill="#D4A844"/><circle cx="52" cy="26" r="4" fill="#D4A844"/><circle cx="60" cy="30" r="4" fill="#F2CC6B"/></g></svg>
+<svg class="mfp-bot-tr" viewBox="0 0 120 80" aria-hidden="true"><path d="M80 10 Q110 5 115 35 Q110 60 85 50" stroke="#8B9E6E" stroke-width="1.2" fill="none" opacity=".5"/><ellipse cx="100" cy="20" rx="8" ry="14" fill="#A8B87A" transform="rotate(25 100 20)" opacity=".55"/><path d="M70 5 Q95 -5 110 15" stroke="#C9C46B" stroke-width="1.5" fill="none" stroke-dasharray="3 2" opacity=".5"/></svg>
+<svg class="mfp-bot-br" viewBox="0 0 200 200" aria-hidden="true"><g fill="none"><ellipse cx="160" cy="130" rx="18" ry="32" fill="#8B9E6E" transform="rotate(30 160 130)" opacity=".7"/><ellipse cx="135" cy="165" rx="14" ry="26" fill="#A8B87A" transform="rotate(-20 135 165)" opacity=".6"/><ellipse cx="175" cy="95" rx="10" ry="20" fill="#6B7F52" transform="rotate(50 175 95)" opacity=".6"/><ellipse cx="110" cy="175" rx="12" ry="18" fill="#C9C46B" transform="rotate(-35 110 175)" opacity=".5"/><path d="M190 120 Q170 140 150 110" stroke="#6B7F52" stroke-width="1.5" opacity=".5"/><path d="M170 175 Q150 155 130 180" stroke="#8B9E6E" stroke-width="1.2" opacity=".45"/><circle cx="140" cy="160" r="5" fill="#D4A844" opacity=".6"/></g></svg>
+<header class="mfp-header"><p>EuroYouth 2026</p><h1>Application Form</h1><i aria-hidden="true"></i><p>Begin your European adventure. Fill in your details below &mdash; all fields marked * are required.</p></header>
 <div class="mfp-body"><section class="mfp-section" id="${slug}-personal">${section('&#9752;', 'Personal Details')}<div class="mfp-row"><div>{{field:first_name}}</div><div>{{field:last_name}}</div><div>{{field:email}}</div><div>{{field:phone}}</div><div>{{field:birth_year}}</div><div>{{field:country}}</div></div></section>
 <section class="mfp-section" id="${slug}-programme">${section('&#9752;', 'Programme')}<div class="mfp-row"><div>{{field:programme}}</div><div>{{field:duration}}</div><div>{{field:start_month}}</div><div>{{field:language_level}}</div></div></section>
-<section class="mfp-section" id="${slug}-journey">${section('&#9752;', 'Your Journey')}<div class="mfp-chip">{{field:interests}}</div><div class="mfp-chip mfp-wide">{{field:accommodation}}</div><div class="mfp-check mfp-wide">{{field:scholarship}}</div><div class="mfp-wide">{{field:motivation}}</div></section>
-<section class="mfp-section" id="${slug}-declaration">${section('&#9752;', 'Declaration')}${checks}</section>${hidden}${actions('Send Application')}</div><footer class="mfp-foot">&#9752; Grow somewhere new. &#9752;</footer></article></div></div>`;
+<section class="mfp-section" id="${slug}-interests">${section('&#9752;', 'Interests')}<div class="mfp-chip">{{field:interests}}</div></section>
+<section class="mfp-section" id="${slug}-logistics">${section('&#9752;', 'Logistics')}<div class="mfp-row"><div class="mfp-radio">{{field:accommodation}}</div><div class="mfp-check">{{field:scholarship}}</div></div></section>
+<section class="mfp-section" id="${slug}-motivation">${section('&#9752;', 'Motivation Letter')}{{field:motivation}}</section>
+<section class="mfp-section" id="${slug}-signature">${section('&#9752;', 'Signature')}<p class="mfp-sign-note">Type your full name as a digital signature</p><div class="mfp-signature">{{field:signature}}</div></section>
+<section class="mfp-section" id="${slug}-consent">${section('&#9752;', 'Consent')}${checks}</section>${hidden}${actions('Send Application')}</div></article></div></div>`;
   const css = baseCss({
-    slug, p: 'bot', width: 660,
-    c: { page: '#f4edd8', paper: '#fffaf0', ink: '#4b3626', muted: '#8b7a61', line: '#cdbd98', input: '#fffaf0', primary: '#6f8f4e', soft: '#edf1df' },
-    font: 'Georgia,"Times New Roman",serif', display: '"Cormorant Garamond",Georgia,"Times New Roman",serif',
+    slug, p: 'bot', width: 672,
+    c: { page: '#f0ead6', paper: '#fdf8ee', ink: '#4a3520', muted: '#8b6e3a', line: '#c4b08a', input: '#fdf8ee', primary: '#8b6e3a', soft: '#edf1df' },
+    font: 'Lato,"Segoe UI",sans-serif', display: '"Playfair Display",Georgia,"Times New Roman",serif',
   }) + `
-.mfp-${slug} .mfp-paper{overflow:hidden;border:1px solid #d8cba9;border-radius:30px}.mfp-${slug} .mfp-header{position:relative;padding:38px 44px 28px;text-align:center}.mfp-${slug} .mfp-header>p:first-of-type{margin:0 0 12px;color:#8b6e3a;font-size:10px;font-weight:800;letter-spacing:.28em;text-transform:uppercase}.mfp-${slug} .mfp-header h1{margin:0;font-family:var(--bot-display);font-size:48px;font-style:italic;line-height:1}.mfp-${slug} .mfp-header>p:last-child{max-width:520px;margin:22px auto 0;color:#6e5a45;font-size:13px}.mfp-${slug} .mfp-leaves{position:absolute;top:16px;left:18px;color:#91a66d;font-size:25px;transform:rotate(-20deg)}
-.mfp-${slug} .mfp-scroll-nav{box-shadow:none}.mfp-${slug} .mfp-scroll-nav a{border:0;background:transparent}.mfp-${slug} .mfp-body{padding-inline:46px}.mfp-${slug} .mfp-section-icon{width:auto;height:auto;background:transparent;font-size:18px}.mfp-${slug} .mfp-section-head h2{font-family:var(--bot-display);font-size:16px}
-.mfp-${slug} .mf-input,.mfp-${slug} .mf-select,.mfp-${slug} .mf-textarea,.mfp-${slug} input:not([type='checkbox']):not([type='radio']),.mfp-${slug} select,.mfp-${slug} textarea{padding:8px 2px!important;border:0!important;border-bottom:1.5px solid var(--bot-line)!important;border-radius:0!important;background:transparent!important}.mfp-${slug} .mf-input:focus,.mfp-${slug} .mf-select:focus,.mfp-${slug} .mf-textarea:focus{box-shadow:none!important}.mfp-${slug} .mfp-btn{border-radius:4px}.mfp-${slug} .mfp-foot{padding:15px 24px 26px;text-align:center;color:#8b6e3a;font-size:12px;font-style:italic}@media(max-width:540px){.mfp-${slug} .mfp-header{padding-inline:22px}.mfp-${slug} .mfp-header h1{font-size:39px}.mfp-${slug} .mfp-body{padding-inline:22px}}
+.mfp-${slug} .mfp-paper{overflow:hidden;border:1.5px solid #ddd0a8;border-radius:24px;box-shadow:0 22px 52px rgba(73,55,30,.18)}.mfp-${slug} .mfp-bot-tl,.mfp-${slug} .mfp-bot-tr,.mfp-${slug} .mfp-bot-br{position:absolute;z-index:0;pointer-events:none}.mfp-${slug} .mfp-bot-tl{top:0;left:0;width:176px;height:176px;opacity:.8}.mfp-${slug} .mfp-bot-tr{top:0;right:0;width:112px;height:80px;opacity:.6}.mfp-${slug} .mfp-bot-br{right:0;bottom:0;width:176px;height:176px;opacity:.8}
+.mfp-${slug} .mfp-header{position:relative;z-index:1;padding:40px 40px 24px;text-align:center}.mfp-${slug} .mfp-header>p:first-child{margin:0 0 12px;color:#8b6e3a;font-size:11px;font-weight:700;letter-spacing:.25em;text-transform:uppercase}.mfp-${slug} .mfp-header h1{margin:0;color:#4a3520!important;font-family:Georgia,"Times New Roman",serif!important;font-size:48px;font-style:italic;font-weight:500;line-height:1}.mfp-${slug} .mfp-header>i{display:block;width:128px;height:1px;margin:12px auto 0;background:linear-gradient(to right,transparent,#c4b08a,transparent)}.mfp-${slug} .mfp-header>p:last-child{max-width:520px;margin:12px auto 0;color:#7a6040;font-size:14px;line-height:1.55}
+.mfp-${slug} .mfp-body{position:relative;z-index:1;padding:0 48px 40px}.mfp-${slug} .mfp-section-head{gap:12px;margin:28px 0 16px}.mfp-${slug} .mfp-section-icon{width:16px;height:16px;background:transparent;color:#7a9a56;font-size:16px}.mfp-${slug} .mfp-section-head h2{color:#6b5230;font-family:Georgia,serif;font-size:13px;letter-spacing:.18em}.mfp-${slug} .mfp-section-head>span:last-child{background:#c4b08a}
+.mfp-${slug} .mf-field-label{margin-bottom:4px;color:#8b6e3a;font-size:11px;font-weight:700;letter-spacing:.14em}.mfp-${slug} .mf-input,.mfp-${slug} .mf-select,.mfp-${slug} .mf-textarea,.mfp-${slug} input:not([type='checkbox']):not([type='radio']),.mfp-${slug} select,.mfp-${slug} textarea{min-height:39px!important;padding:8px 4px!important;border:0!important;border-bottom:2px solid #c4b08a!important;border-radius:0!important;background:transparent!important;color:#3d2e1e!important;font-size:15px!important}.mfp-${slug} .mf-input:focus,.mfp-${slug} .mf-select:focus,.mfp-${slug} .mf-textarea:focus{border-color:#8b6e3a!important;box-shadow:none!important}.mfp-${slug} input::placeholder,.mfp-${slug} textarea::placeholder{color:#bba97a!important}
+.mfp-${slug} .mfp-chip .mf-option-ui{border-color:#c4b08a!important;background:transparent!important;color:#6b5230!important}.mfp-${slug} .mfp-chip .mf-option-control:checked + .mf-option-ui{background:#8b6e3a!important;color:#fdf8ee!important}.mfp-${slug} .mfp-radio .mf-option-group{display:grid!important;gap:8px!important}.mfp-${slug} .mfp-radio .mf-option-item{display:flex!important;align-items:center!important;gap:10px!important;margin:0!important}.mfp-${slug} .mfp-radio .mf-option-control{position:static!important;width:16px!important;height:16px!important;margin:0!important;accent-color:#8b6e3a!important;opacity:1!important}.mfp-${slug} .mfp-radio .mf-option-ui{padding:0!important;border:0!important;background:transparent!important}.mfp-${slug} .mfp-radio .mf-option-label{color:#4a3520!important;font-size:14px!important}.mfp-${slug} .mfp-sign-note{margin:-3px 0 6px;color:#7a6040;font-size:12px}.mfp-${slug} .mfp-signature textarea{font-family:cursive!important;font-size:20px!important;letter-spacing:.04em!important}.mfp-${slug} .mfp-btn{border-radius:999px;background:#8b6e3a!important}
+@media(max-width:540px){.mfp-${slug} .mfp-header{padding:34px 22px 22px}.mfp-${slug} .mfp-header h1{font-size:39px}.mfp-${slug} .mfp-body{padding:0 22px 30px}.mfp-${slug} .mfp-bot-tl{width:128px;height:128px}.mfp-${slug} .mfp-bot-br{width:128px;height:128px}}
 `;
   return makeTemplate({
     slug, title: 'Botanical Thank You Application',
-    description: 'Botanical editorial application with underlined fields, sticky sections, and a warm paper finish.',
+    description: 'Botanical editorial application with source-matched underlined fields and warm paper finish.',
     category: 'application', categories: ['application', 'education', 'premium'], icon: 'leaf',
     submit: 'Send Application', success: 'Thank you. Your EuroYouth application has been received.',
-    fields: fields(), html, css, prefix: 'bot',
+    fields: fields({ variant: 'botanical' }), html, css, prefix: 'bot',
     immutable: ['botanical olive and parchment palette', 'italic editorial title', 'leaf ornament system', 'semantic red #c0392b'],
   });
 }
 
 function kawaii() {
   const slug = 'kawaii-diary';
-  const html = `<div class="mfp mfp-${slug} mfp-native-generated" data-mf-flexgrid="locked"><div class="mfp-stage"><article class="mfp-paper"><header class="mfp-header"><div class="mfp-stickers" aria-hidden="true">&#10047; &#9733; &#9728; &#9829;</div><div><h1>MY APPLICATION</h1><p>EuroYouth 2026 &#10024;</p></div></header>
-${nav(slug, [['profile', 'Profile'], ['programme', 'Programme'], ['dreams', 'Dreams'], ['finish', 'Finish']])}
-<div class="mfp-body"><section class="mfp-section" id="${slug}-profile">${section('&#9786;', 'Profile')}<div class="mfp-row"><div>{{field:first_name}}</div><div>{{field:last_name}}</div><div>{{field:email}}</div><div>{{field:phone}}</div><div>{{field:birth_year}}</div><div>{{field:country}}</div></div></section>
-<section class="mfp-section" id="${slug}-programme">${section('&#9733;', 'Programme')}<div class="mfp-row"><div>{{field:programme}}</div><div>{{field:duration}}</div><div>{{field:start_month}}</div><div>{{field:language_level}}</div></div></section>
-<section class="mfp-section" id="${slug}-dreams">${section('&#9829;', 'My Dream Trip')}<div class="mfp-chip">{{field:interests}}</div><div class="mfp-chip mfp-wide">{{field:accommodation}}</div><div class="mfp-check mfp-wide">{{field:scholarship}}</div><div class="mfp-wide">{{field:motivation}}</div></section>
-<section class="mfp-section" id="${slug}-finish">${section('&#10024;', 'One Last Thing')}${checks}</section>${hidden}${actions('Submit! &#128640;')}</div><footer class="mfp-foot">Dream big · travel far · stay curious</footer></article></div></div>`;
+  const html = `<div class="mfp mfp-${slug} mfp-native-generated" data-mf-flexgrid="locked"><div class="mfp-stage"><article class="mfp-paper">
+<svg class="mfp-kawaii-decos" viewBox="0 0 340 80" aria-hidden="true"><ellipse cx="20" cy="18" rx="12" ry="22" fill="#7EC8A0" transform="rotate(-30 20 18)" opacity=".85"/><ellipse cx="42" cy="8" rx="10" ry="18" fill="#5BAD82" transform="rotate(15 42 8)" opacity=".7"/><ellipse cx="6" cy="45" rx="8" ry="15" fill="#9ED4B2" transform="rotate(-50 6 45)" opacity=".65"/><ellipse cx="310" cy="12" rx="12" ry="22" fill="#7EC8A0" transform="rotate(30 310 12)" opacity=".85"/><ellipse cx="295" cy="5" rx="10" ry="18" fill="#5BAD82" transform="rotate(-15 295 5)" opacity=".7"/><ellipse cx="328" cy="40" rx="8" ry="15" fill="#9ED4B2" transform="rotate(50 328 40)" opacity=".65"/><polygon points="75,7 78,16 88,16 80,22 83,32 75,26 67,32 70,22 62,16 72,16" fill="#FFDD57" stroke="#fff" stroke-width="1.5"/><polygon points="260,5 263,14 273,14 265,20 268,30 260,24 252,30 255,20 247,14 257,14" fill="#FFDD57" stroke="#fff" stroke-width="1.5"/><path d="M130 55 C130 51 124 48 120 52 C116 48 110 51 110 55 C110 61 120 68 120 68 C120 68 130 61 130 55Z" fill="#FF8FA3" opacity=".8"/><path d="M230 52 C230 48 224 45 220 49 C216 45 210 48 210 52 C210 58 220 65 220 65 C220 65 230 58 230 52Z" fill="#FF8FA3" opacity=".8"/><g opacity=".7" fill="#fff" stroke="#ccc"><ellipse cx="88" cy="38" rx="16" ry="10"/><ellipse cx="78" cy="42" rx="10" ry="8"/><ellipse cx="98" cy="42" rx="10" ry="8"/><ellipse cx="255" cy="40" rx="16" ry="10"/><ellipse cx="245" cy="44" rx="10" ry="8"/><ellipse cx="265" cy="44" rx="10" ry="8"/></g><polygon points="148,30 158,25 155,35" fill="#87CEEB" stroke="#5aa8d0"/><polygon points="195,28 205,23 202,33" fill="#F9A875" stroke="#e0855a"/><circle cx="170" cy="45" r="9" fill="#FFDD57" stroke="#e8c840" stroke-width="1.5"/><g stroke="#e8c840" stroke-width="1.5"><path d="M170 30v5M170 55v5M155 45h5M180 45h5M159 34l4 4M177 52l4 4M181 34l-4 4M163 52l-4 4"/></g></svg>
+<header class="mfp-header"><div><h1>MY APPLICATION</h1><p>EuroYouth 2026 &#10024;</p></div></header>
+<div class="mfp-body"><section class="mfp-section" id="${slug}-profile">${kawaiiHead('Profile', 'blue')}<div class="mfp-row"><div>{{field:first_name}}</div><div>{{field:last_name}}</div><div>{{field:email}}</div><div>{{field:phone}}</div><div>{{field:birth_year}}</div><div>{{field:country}}</div></div></section>
+<section class="mfp-section" id="${slug}-programme">${kawaiiHead('Programme', 'coral')}<div class="mfp-row"><div>{{field:programme}}</div><div>{{field:duration}}</div><div>{{field:start_month}}</div><div>{{field:language_level}}</div></div></section>
+<section class="mfp-section" id="${slug}-interests">${kawaiiHead('Interests &#11088;', 'green')}<div class="mfp-chip">{{field:interests}}</div></section>
+<section class="mfp-section" id="${slug}-support">${kawaiiHead('Stay &amp; Support &#127968;', 'lavender')}<div class="mfp-row"><div class="mfp-radio">{{field:accommodation}}</div><div class="mfp-check">{{field:scholarship}}</div></div></section>
+<section class="mfp-section" id="${slug}-story">${kawaiiHead('My Story &#128214;', 'pink')}{{field:motivation}}</section>
+<section class="mfp-section" id="${slug}-finish">${kawaiiHead('Almost there &#127881;', 'green')}${checks}</section>${hidden}${actions('Submit! &#128640;')}</div><svg class="mfp-kawaii-bottom" viewBox="0 0 340 60" aria-hidden="true"><ellipse cx="30" cy="50" rx="12" ry="20" fill="#7EC8A0" transform="rotate(20 30 50)" opacity=".8"/><ellipse cx="12" cy="40" rx="8" ry="14" fill="#9ED4B2" transform="rotate(-20 12 40)" opacity=".65"/><ellipse cx="315" cy="48" rx="12" ry="20" fill="#7EC8A0" transform="rotate(-20 315 48)" opacity=".8"/><ellipse cx="333" cy="38" rx="8" ry="14" fill="#9ED4B2" transform="rotate(20 333 38)" opacity=".65"/><polygon points="170,19 173,27 181,27 175,33 177,42 170,37 163,42 165,33 159,27 167,27" fill="#FFDD57" stroke="#fff" stroke-width="1.5"/><path d="M70 40 C70 36 64 33 60 37 C56 33 50 36 50 40 C50 46 60 53 60 53 C60 53 70 46 70 40Z" fill="#FF8FA3" opacity=".75"/><path d="M290 38 C290 34 284 31 280 35 C276 31 270 34 270 38 C270 44 280 51 280 51 C280 51 290 44 290 38Z" fill="#FF8FA3" opacity=".75"/></svg><footer class="mfp-foot">Dream big &middot; travel far &middot; stay curious</footer></article></div></div>`;
   const css = baseCss({
-    slug, p: 'kw', width: 570,
-    c: { page: '#fbf8ea', paper: '#fffef6', ink: '#555555', muted: '#75b9d2', line: '#d8eef5', primary: '#68b9db', soft: '#eaf8fd' },
-    font: '"Trebuchet MS",Nunito,system-ui,sans-serif', display: '"Trebuchet MS",Nunito,system-ui,sans-serif',
+    slug, p: 'kw', width: 576,
+    c: { page: '#f8f5e4', paper: '#fffef5', ink: '#555555', muted: '#5aaacf', line: '#d8eef5', primary: '#87ceeb', soft: '#eaf8fd' },
+    font: 'Nunito,"Trebuchet MS",system-ui,sans-serif', display: 'Nunito,"Trebuchet MS",system-ui,sans-serif',
   }) + `
-.mfp-${slug} .mfp-stage{background-color:#fbf8ea;background-image:linear-gradient(rgba(130,130,100,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(130,130,100,.12) 1px,transparent 1px);background-size:28px 28px}.mfp-${slug} .mfp-paper{overflow:hidden;border:2px dashed #a8d5cb;border-radius:28px}.mfp-${slug} .mfp-header{padding:28px 36px 18px;text-align:center}.mfp-${slug} .mfp-stickers{margin-bottom:9px;color:#f7c84b;font-size:22px;word-spacing:14px}.mfp-${slug} .mfp-header>div:last-child{display:inline-block;border:2px dashed #89cfe2;border-radius:18px;padding:14px 28px 12px;background:rgba(255,255,255,.62)}.mfp-${slug} .mfp-header h1{margin:0;color:#5ab2d2;font-size:27px;font-weight:500}.mfp-${slug} .mfp-header p{margin:4px 0 0;color:#f9a875;font-size:12px;font-weight:800}
-.mfp-${slug} .mfp-scroll-nav{border-block:1px dashed #c9e2df;box-shadow:none}.mfp-${slug} .mfp-scroll-nav a{border-style:dashed}.mfp-${slug} .mfp-body{padding-inline:38px}.mfp-${slug} .mfp-section-icon{border-radius:999px;background:#68b9db;color:#fff}.mfp-${slug} .mfp-section:nth-of-type(2) .mfp-section-icon{background:#f59a6f}.mfp-${slug} .mfp-section:nth-of-type(3) .mfp-section-icon{background:#b79be7}.mfp-${slug} .mfp-section:nth-of-type(4) .mfp-section-icon{background:#82c9ad}
-.mfp.mfp-${slug}{--mf-btn-bg:linear-gradient(135deg,#68b9db,#b79be7)}.mfp-${slug} .mf-input,.mfp-${slug} .mf-select,.mfp-${slug} .mf-textarea,.mfp-${slug} input:not([type='checkbox']):not([type='radio']),.mfp-${slug} select,.mfp-${slug} textarea{border:2px solid var(--kw-line)!important;border-radius:15px!important}.mfp-${slug} .mfp-btn{background:linear-gradient(135deg,#68b9db,#b79be7)!important;box-shadow:0 6px 18px rgba(104,185,219,.34)}.mfp-${slug} .mfp-foot{padding:15px 20px 28px;text-align:center;color:#f59a6f;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}@media(max-width:540px){.mfp-${slug} .mfp-header{padding-inline:18px}.mfp-${slug} .mfp-body{padding-inline:20px}}
+.mf-form-wrapper:has(.mfp-${slug}){background-color:#f8f5e4!important;background-image:repeating-linear-gradient(#e8e4d2 0 1px,transparent 1px 28px),repeating-linear-gradient(90deg,#e8e4d2 0 1px,transparent 1px 28px)!important}.mfp-${slug} .mfp-paper{overflow:hidden;border:2px dashed #aaddcc;border-radius:24px;box-shadow:0 20px 48px rgba(84,133,141,.22)}.mfp-${slug} .mfp-kawaii-decos{position:absolute;z-index:0;top:0;left:0;width:100%;height:80px;pointer-events:none}.mfp-${slug} .mfp-header{position:relative;z-index:1;padding:80px 32px 20px;text-align:center}.mfp-${slug} .mfp-header>div{display:inline-block;border:2.5px dashed #87ceeb;border-radius:16px;padding:12px 24px;background:rgba(255,255,255,.7)}.mfp-${slug} .mfp-header h1{margin:0;color:#5aaacf!important;font-size:30px;font-weight:900;letter-spacing:.06em;text-shadow:2px 2px 0 rgba(0,0,0,.06)}.mfp-${slug} .mfp-header p{margin:2px 0 0;color:#f9a875;font-size:14px;font-weight:700}
+.mfp-${slug} .mfp-body{position:relative;z-index:1;display:grid;gap:28px;padding:0 40px 40px}.mfp-${slug} .mfp-kawaii-head{display:flex;align-items:center;gap:8px;margin:0 0 12px}.mfp-${slug} .mfp-kawaii-head span{border-radius:999px;padding:3px 12px;color:#fff;font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}.mfp-${slug} .mfp-kawaii-head i{height:0;flex:1;border-bottom:2px dashed currentColor;opacity:.32}.mfp-${slug} .mfp-kawaii-blue{color:#87ceeb}.mfp-${slug} .mfp-kawaii-blue span{background:#87ceeb}.mfp-${slug} .mfp-kawaii-coral{color:#f9a875}.mfp-${slug} .mfp-kawaii-coral span{background:#f9a875}.mfp-${slug} .mfp-kawaii-green{color:#7ec8a0}.mfp-${slug} .mfp-kawaii-green span{background:#7ec8a0}.mfp-${slug} .mfp-kawaii-lavender{color:#c8b8e8}.mfp-${slug} .mfp-kawaii-lavender span{background:#c8b8e8}.mfp-${slug} .mfp-kawaii-pink{color:#ffb3c1}.mfp-${slug} .mfp-kawaii-pink span{background:#ffb3c1}
+.mfp-${slug} .mfp-row{gap:12px}.mfp-${slug} .mf-field-label{margin-bottom:6px;color:#5aaacf;font-size:12px;font-weight:800;letter-spacing:.12em}.mfp-${slug} .mf-input,.mfp-${slug} .mf-select,.mfp-${slug} .mf-textarea,.mfp-${slug} input:not([type='checkbox']):not([type='radio']),.mfp-${slug} select,.mfp-${slug} textarea{min-height:47px!important;padding:11px 16px!important;border:2px solid #d8eef5!important;border-radius:16px!important;background:#fff!important;color:#555!important;font-size:15px!important}.mfp-${slug} input::placeholder,.mfp-${slug} textarea::placeholder{color:#b8d8e5!important}
+.mfp-${slug} .mfp-chip .mf-option-ui{border:2px solid #87ceeb!important;background:#fff!important;color:#555!important}.mfp-${slug} .mfp-chip .mf-option-item:nth-child(2n) .mf-option-ui{border-color:#ffdd57!important}.mfp-${slug} .mfp-chip .mf-option-item:nth-child(3n) .mf-option-ui{border-color:#7ec8a0!important}.mfp-${slug} .mfp-chip .mf-option-item:nth-child(4n) .mf-option-ui{border-color:#ffb3c1!important}.mfp-${slug} .mfp-radio .mf-option-group{display:grid!important;gap:8px!important}.mfp-${slug} .mfp-radio .mf-option-item{display:flex!important;align-items:center!important;gap:10px!important;margin:0!important}.mfp-${slug} .mfp-radio .mf-option-control{position:static!important;width:20px!important;height:20px!important;margin:0!important;accent-color:#c8b8e8!important;opacity:1!important}.mfp-${slug} .mfp-radio .mf-option-ui{padding:0!important;border:0!important;background:transparent!important}.mfp-${slug} .mfp-radio .mf-option-label{color:#555!important;font-size:14px!important}
+.mfp.mfp-${slug}{--mf-btn-bg:linear-gradient(135deg,#87ceeb,#c8b8e8)}.mfp-${slug} .mfp-btn{background:linear-gradient(135deg,#87ceeb,#c8b8e8)!important;box-shadow:0 6px 18px rgba(104,185,219,.34)}.mfp-${slug} .mfp-kawaii-bottom{position:absolute;z-index:0;right:0;bottom:0;left:0;width:100%;height:60px;pointer-events:none}.mfp-${slug} .mfp-foot{position:relative;z-index:1;padding:0 20px 28px;text-align:center;color:#f9a875;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+@media(max-width:540px){.mfp-${slug} .mfp-header{padding:72px 18px 18px}.mfp-${slug} .mfp-header>div{padding-inline:18px}.mfp-${slug} .mfp-header h1{font-size:25px}.mfp-${slug} .mfp-body{gap:24px;padding:0 20px 30px}}
 `;
   return makeTemplate({
     slug, title: 'Kawaii Diary Application',
-    description: 'Playful notebook-style EuroYouth application with pastel sections and sticky diary navigation.',
+    description: 'Playful source-matched notebook application with pastel sections and a graph-paper canvas.',
     category: 'application', categories: ['application', 'education', 'premium'], icon: 'sparkles',
     submit: 'Submit!', success: 'Submitted! Your next adventure is one step closer.',
-    fields: fields(), html, css, prefix: 'kw',
+    fields: fields({ variant: 'kawaii' }), html, css, prefix: 'kw',
     immutable: ['pastel kawaii palette', 'graph-paper background', 'sticker ornaments', 'semantic red #c0392b'],
   });
 }
@@ -224,26 +264,25 @@ ${nav(slug, [['profile', 'Profile'], ['programme', 'Programme'], ['dreams', 'Dre
 function cv() {
   const slug = 'cv-registration';
   const html = `<div class="mfp mfp-${slug} mfp-native-generated" data-mf-flexgrid="locked"><div class="mfp-stage"><article class="mfp-paper"><header class="mfp-header"><div class="mfp-name"><div>{{field:first_name}}</div><div>{{field:last_name}}</div><div class="mfp-job">{{field:job_title}}</div></div><div class="mfp-photo" aria-hidden="true">Photo</div></header>
-${nav(slug, [['contact', 'Contact'], ['profile', 'Profile'], ['programme', 'Programme'], ['declaration', 'Declaration']])}
 <div class="mfp-cv-grid"><aside class="mfp-sidebar"><section class="mfp-section" id="${slug}-contact">${section('&#9742;', 'Contact')}<div class="mfp-stack">{{field:phone}}{{field:email}}{{field:address}}{{field:website}}</div></section><section class="mfp-section">${section('&#9733;', 'Skills')}<p class="mfp-note">List your top skills</p><div class="mfp-stack">{{field:skill_1}}{{field:skill_2}}{{field:skill_3}}{{field:skill_4}}{{field:skill_5}}</div></section><section class="mfp-section">${section('&#9671;', 'Interests')}<div class="mfp-list">{{field:interests}}</div></section></aside>
-<main class="mfp-main"><section class="mfp-section" id="${slug}-profile">${section('&#9786;', 'Personal Info')}<div class="mfp-row"><div>{{field:birth_year}}</div><div>{{field:nationality}}</div><div class="mfp-span">{{field:country}}</div></div></section><section class="mfp-section" id="${slug}-programme">${section('&#9635;', 'Programme')}<div class="mfp-row"><div class="mfp-span">{{field:programme}}</div><div>{{field:duration}}</div><div>{{field:start_month}}</div><div>{{field:language_level}}</div><div class="mfp-chip">{{field:accommodation}}</div></div></section><section class="mfp-section">${section('&#9998;', 'Profile / Motivation')}{{field:motivation}}</section><section class="mfp-section" id="${slug}-declaration">${section('&#10003;', 'Declaration')}<div class="mfp-stack"><div class="mfp-check">{{field:scholarship}}</div>${checks}</div></section>${hidden}${actions('Submit Application')}</main></div></article></div></div>`;
+<main class="mfp-main"><section class="mfp-section" id="${slug}-profile">${section('&#9786;', 'Personal Info')}<div class="mfp-row"><div>{{field:birth_year}}</div><div>{{field:nationality}}</div><div class="mfp-span">{{field:country}}</div></div></section><section class="mfp-section" id="${slug}-programme">${section('&#9635;', 'Programme')}<div class="mfp-row"><div class="mfp-span">{{field:programme}}</div><div>{{field:duration}}</div><div>{{field:start_month}}</div><div>{{field:language_level}}</div><div>{{field:accommodation}}</div></div></section><section class="mfp-section">${section('&#9998;', 'Profile / Motivation')}{{field:motivation}}</section><section class="mfp-section" id="${slug}-declaration">${section('&#10003;', 'Declaration')}<div class="mfp-stack"><div class="mfp-check">{{field:scholarship}}</div>${checks}</div></section>${hidden}${actions('Submit Application')}</main></div></article></div></div>`;
   const css = baseCss({
-    slug, p: 'cvx', width: 664,
+    slug, p: 'cvx', width: 672,
     c: { page: '#f2f2f2', paper: '#ffffff', ink: '#2b2b2b', muted: '#777777', line: '#c8c8c8', primary: '#2b2b2b', soft: '#e8e8e8' },
     font: 'Georgia,"Times New Roman",serif', display: 'Georgia,"Times New Roman",serif',
   }) + `
-.mfp-${slug} .mfp-header{display:grid;grid-template-columns:1fr 80px;gap:16px;padding:28px 32px 22px;border-bottom:4px solid #2b2b2b}.mfp-${slug} .mfp-name{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 20px}.mfp-${slug} .mfp-job{grid-column:1/-1}.mfp-${slug} .mfp-photo{display:grid;width:80px;height:96px;place-items:center;border:1px solid #c8c8c8;background:#e8e8e8;color:#9a9a9a;font-size:9px;text-transform:uppercase}.mfp-${slug} .mfp-scroll-nav{top:8px;background:rgba(255,255,255,.94)}.mfp-${slug} .mfp-scroll-nav a{border-radius:0}
-.mfp-${slug} .mfp-cv-grid{display:grid;grid-template-columns:200px minmax(0,1fr)}.mfp-${slug} .mfp-sidebar{padding:8px 22px 26px;border-right:1px solid #c8c8c8;background:#f8f8f8}.mfp-${slug} .mfp-main{padding:8px 28px 30px}.mfp-${slug} .mfp-section-head{margin:22px 0 12px;padding-bottom:6px;border-bottom:1px solid #c8c8c8}.mfp-${slug} .mfp-section-icon{width:23px;height:23px;border-radius:0;background:#e8e8e8;color:#2b2b2b}.mfp-${slug} .mfp-section-head h2{font-size:11px;letter-spacing:.2em}.mfp-${slug} .mfp-section-head>span:last-child{display:none}.mfp-${slug} .mfp-note{margin:-4px 0 9px;color:#9a9a9a;font-size:11px}.mfp-${slug} .mfp-span{grid-column:1/-1}
+.mfp-${slug} .mfp-paper{box-shadow:0 14px 36px rgba(0,0,0,.16)}.mfp-${slug} .mfp-header{display:grid;grid-template-columns:1fr 80px;gap:20px;padding:32px 32px 20px;border-bottom:4px solid #2b2b2b}.mfp-${slug} .mfp-name{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 20px}.mfp-${slug} .mfp-job{grid-column:1/-1}.mfp-${slug} .mfp-photo{display:grid;width:80px;height:96px;place-items:center;border:1px solid #c8c8c8;background:#e8e8e8;color:#9a9a9a;font-size:9px;text-transform:uppercase}
+.mfp-${slug} .mfp-cv-grid{display:grid;grid-template-columns:200px minmax(0,1fr)}.mfp-${slug} .mfp-sidebar{padding:6px 24px 28px;border-right:1px solid #c8c8c8;background:#f8f8f8}.mfp-${slug} .mfp-main{padding:6px 28px 30px}.mfp-${slug} .mfp-section-head{margin:28px 0 12px;padding-bottom:6px;border-bottom:1px solid #c8c8c8}.mfp-${slug} .mfp-section-icon{width:24px;height:24px;border-radius:0;background:#e8e8e8;color:#2b2b2b}.mfp-${slug} .mfp-section-head h2{font-size:11px;letter-spacing:.2em}.mfp-${slug} .mfp-section-head>span:last-child{display:none}.mfp-${slug} .mfp-note{margin:-4px 0 9px;color:#9a9a9a;font-size:11px}.mfp-${slug} .mfp-span{grid-column:1/-1}
 .mfp-${slug} .mf-input,.mfp-${slug} .mf-select,.mfp-${slug} .mf-textarea,.mfp-${slug} input:not([type='checkbox']):not([type='radio']),.mfp-${slug} select,.mfp-${slug} textarea{padding:7px 3px!important;border:0!important;border-bottom:1px solid #cacaca!important;border-radius:0!important;background:transparent!important;font-family:Georgia,"Times New Roman",serif!important}.mfp-${slug} .mf-input:focus,.mfp-${slug} .mf-select:focus,.mfp-${slug} .mf-textarea:focus{box-shadow:none!important}.mfp-${slug} .mfp-header .mf-input{font-size:17px!important;font-weight:700!important}.mfp-${slug} .mfp-job .mf-input{color:#c0392b!important;font-size:13px!important;font-style:italic!important;font-weight:400!important}.mfp-${slug} .mfp-sidebar .mfp-stack{gap:9px}.mfp-${slug} .mfp-sidebar .mf-input{font-size:12px!important}
 .mfp-${slug} .mfp-list .mf-option-group{display:grid!important;grid-template-columns:1fr!important;gap:6px!important}.mfp-${slug} .mfp-list .mf-option-item{display:flex!important;gap:7px!important;margin:0!important;padding:0!important}.mfp-${slug} .mfp-list .mf-option-control{position:static!important;width:14px!important;height:14px!important;margin:0!important;opacity:1!important}.mfp-${slug} .mfp-list .mf-option-ui{min-width:0!important;padding:0!important;border:0!important;background:transparent!important}.mfp-${slug} .mfp-list .mf-option-label{overflow-wrap:anywhere;color:#5a5a5a!important;font-size:11px!important}.mfp-${slug} .mfp-btn{border-radius:0}
 @media(max-width:680px){.mfp-${slug} .mfp-header{grid-template-columns:1fr 64px;padding:22px 20px 18px}.mfp-${slug} .mfp-photo{width:64px;height:80px}.mfp-${slug} .mfp-cv-grid{grid-template-columns:1fr}.mfp-${slug} .mfp-sidebar{border-right:0;border-bottom:1px solid #c8c8c8}.mfp-${slug} .mfp-main{padding:6px 20px 26px}}@media(max-width:440px){.mfp-${slug} .mfp-name{grid-template-columns:1fr}.mfp-${slug} .mfp-job{grid-column:auto}.mfp-${slug} .mfp-photo{display:none}.mfp-${slug} .mfp-header{grid-template-columns:1fr}}
 `;
   return makeTemplate({
     slug, title: 'EuroYouth CV Registration',
-    description: 'Classic two-column CV application with sticky document navigation and a responsive resume layout.',
+    description: 'Classic source-matched two-column CV application with a responsive resume layout.',
     category: 'hr', categories: ['hr', 'application', 'premium'], icon: 'file-user',
     submit: 'Submit Application', success: 'Thank you. Your CV application has been received.',
-    fields: fields({ cv: true }), html, css, prefix: 'cvx',
+    fields: fields({ cv: true, variant: 'cv' }), html, css, prefix: 'cvx',
     immutable: ['classic monochrome CV palette', 'dark-red title accent', 'Georgia document typography', 'semantic red #c0392b'],
   });
 }
@@ -278,7 +317,7 @@ function guide(template) {
     },
   };
   const map = template.fields.map((item) => `- ${item.key}: ${item.type} — ${item.label}`).join('\n');
-  return `---\n${JSON.stringify(frontmatter, null, 2)}\n---\n\n# ${template.title} — deterministic edit guide\n\n## Protocol\n\nPreserve the shell and CSS hashes. The template is a single-page, scroll-aware premium shell; section anchors and field placeholders are structural.\n\n## Field map\n\n${map}\n\n## Deterministic formulas\n\n- C1: use set_form_meta for form metadata.\n- C2: use set_field_property for labels, placeholders, validation, and options.\n- C3: use set_html_text with an exact string from shellTexts.\n- C4: preserve all chip display metadata when editing choices.\n- C5: add a schema field and exactly one matching {{field:KEY}} token.\n- C6: remove both the schema field and its matching token.\n- C7: preserve section ids and matching sticky navigation hrefs.\n- C8: policy is locked; do not add page-color inheritance.\n\n## Hard invariants\n\n- customCss SHA-256: ${frontmatter.customCssSha256}\n- customHtml SHA-256: ${frontmatter.shellSha256}\n- theme: system\n- zero orphan and zero missing field placeholders\n- customScripts stays empty\n`;
+  return `---\n${JSON.stringify(frontmatter, null, 2)}\n---\n\n# ${template.title} — deterministic edit guide\n\n## Protocol\n\nPreserve the shell and CSS hashes. The template is a single-page, scroll-aware premium shell; section anchors and field placeholders are structural.\n\n## Field map\n\n${map}\n\n## Deterministic formulas\n\n- C1: use set_form_meta for form metadata.\n- C2: use set_field_property for labels, placeholders, validation, and options.\n- C3: use set_html_text with an exact string from shellTexts.\n- C4: preserve all chip display metadata when editing choices.\n- C5: add a schema field and exactly one matching {{field:KEY}} token.\n- C6: remove both the schema field and its matching token.\n- C7: preserve section ids, source order, and natural scroll flow.\n- C8: policy is locked; do not add page-color inheritance.\n\n## Hard invariants\n\n- customCss SHA-256: ${frontmatter.customCssSha256}\n- customHtml SHA-256: ${frontmatter.shellSha256}\n- theme: system\n- zero orphan and zero missing field placeholders\n- customScripts stays empty\n`;
 }
 
 const templates = [realestate(), botanical(), kawaii(), cv()];

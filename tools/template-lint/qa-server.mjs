@@ -33,6 +33,7 @@ iframe[src*="google."],iframe[src*="maps"],.mf-map-iframe{visibility:hidden!impo
 (async function(){
   const q = new URLSearchParams(location.search);
   const file = q.get('tpl');
+  const isPreview = q.get('preview') !== '0';
   const raw = await fetch('/tpl/' + encodeURIComponent(file)).then(r=>r.json());
   const settings = (raw.settings && typeof raw.settings==='object') ? raw.settings : {};
   // mirror gallery-preview.ts customHtmlOf/customCssOf: top-level ?? settings
@@ -46,7 +47,7 @@ iframe[src*="google."],iframe[src*="maps"],.mf-map-iframe{visibility:hidden!impo
   window.__MF_QA_READY = false;
   try {
     window.MegaFormRenderer.init({ formId: 990001, container: document.getElementById('host'),
-      apiBaseUrl:'/api/MegaForm/', apiBase:'/api/MegaForm/', schema, isPreview:true,
+      apiBaseUrl:'/api/MegaForm/', apiBase:'/api/MegaForm/', schema, isPreview,
       title:String(raw.title||''), description:String(raw.description||''),
       submitButtonText:String(raw.submitButtonText||'Submit'),
       successMessage:String(raw.successMessage||''),

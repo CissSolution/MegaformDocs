@@ -163,6 +163,13 @@ function childSql(item, index) {
 const templates = slugs.map(loadTemplate);
 const children = templates.map((item, index) => childSql(item, index + 1)).join("\n");
 const sql = `
+SET ANSI_NULLS ON;
+SET ANSI_PADDING ON;
+SET ANSI_WARNINGS ON;
+SET ARITHABORT ON;
+SET CONCAT_NULL_YIELDS_NULL ON;
+SET QUOTED_IDENTIFIER ON;
+SET NUMERIC_ROUNDABORT OFF;
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 BEGIN TRY
