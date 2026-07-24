@@ -383,6 +383,11 @@ function renderPresetsPane(): string {
           '<button type="button" class="mf-tlr-view-btn is-active" data-view="grid" title="Grid view"><i class="fas fa-th"></i></button>' +
           '<button type="button" class="mf-tlr-view-btn" data-view="list" title="List view"><i class="fas fa-list"></i></button>' +
         '</div>' +
+        // [RailToggle 20260724] Hide the whole Presets rail so the Design preview widens to
+        // >=1024px (its own breakpoint) and desktop-only skin heroes become visible/editable.
+        // In-row button (NOT the header X, which design-mode hides) → re-open via the edge
+        // "Show Toolbox" button (#mf-left-open-btn).
+        '<button type="button" class="mf-tlr-collapse-btn" id="mf-tlr-collapse-rail" title="Hide panel (widens the preview to show the hero)" aria-label="Hide panel"><i class="fas fa-angles-left"></i></button>' +
       '</div>' +
 
       // [Mock parity] Category chip strip — 2-row wrap, 4 per row
@@ -1161,21 +1166,24 @@ function wireUtilityNav(panel: HTMLElement): void {
   wireElementsPane(panel);
   wireColorsPane(panel);
 
-  // Collapse button — wiring lives in panels.ts; skip if already wired.
-  const collapseBtn = panel.querySelector<HTMLElement>('#mf-left-collapse-btn');
-  if (collapseBtn && !(collapseBtn as any).dataset?.mfCollapseWired) {
-    (collapseBtn as any).dataset.mfCollapseWired = '1';
-    collapseBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const leftPanel = document.getElementById('mf-panel-left');
-      const openBtn = document.getElementById('mf-left-open-btn') as HTMLAnchorElement | null;
-      if (leftPanel) {
-        leftPanel.classList.remove('mf-expanded');
-        leftPanel.classList.add('mf-collapsed');
-        if (openBtn) openBtn.style.display = 'flex';
-      }
-    });
-  }
+  // Collapse buttons — the header X (#mf-left-collapse-btn, hidden in design mode) AND the
+  // always-visible Presets-row toggle (#mf-tlr-collapse-rail). Both hide the rail so the
+  // preview widens; re-open via the edge #mf-left-open-btn.
+  const collapseRail = (e: Event): void => {
+    e.preventDefault();
+    const leftPanel = document.getElementById('mf-panel-left');
+    const openBtn = document.getElementById('mf-left-open-btn') as HTMLAnchorElement | null;
+    if (leftPanel) {
+      leftPanel.classList.remove('mf-expanded');
+      leftPanel.classList.add('mf-collapsed');
+      if (openBtn) openBtn.style.display = 'flex';
+    }
+  };
+  panel.querySelectorAll<HTMLElement>('#mf-left-collapse-btn, #mf-tlr-collapse-rail').forEach((btn) => {
+    if ((btn as any).dataset?.mfCollapseWired) return;
+    (btn as any).dataset.mfCollapseWired = '1';
+    btn.addEventListener('click', collapseRail);
+  });
 
   // Lazy-mount structure tree if user lands on STRUCTURE first.
   if (state.activeTab === 'structure') {
