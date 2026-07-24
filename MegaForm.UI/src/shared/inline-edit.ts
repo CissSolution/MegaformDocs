@@ -19,6 +19,14 @@
 // can only affect a host editing in edit mode — never a public form visitor.
 // ============================================================
 
+// [ImageUploadFix 20260724] inline-edit runs inside the builder Design-preview IFRAME, which
+// loads the renderer bundle. That bundle does NOT otherwise import the antiforgery chokepoint,
+// so uploadMfImage()/fetchMfGallery()'s same-origin POSTs went WITHOUT the DNN
+// RequestVerificationToken header → ValidateAntiForgeryToken rejected them → "Image upload
+// failed" in the picker (top-page uploads worked because the host bundle patches fetch there).
+// Importing it here self-installs the fetch/XHR token injector in the iframe too (idempotent,
+// guarded by __mfAntiforgeryInstalled, no-op on hosts without a token input).
+import '@shared/antiforgery';
 // Reuse the renderer's OWN composite-parts resolver so an edited sub-label persists with the
 // EXACT same parts array the renderer (TS + C# parity) would produce — critical because the
 // renderer is all-or-nothing on widgetProps.parts (a partial array would drop the other parts).
