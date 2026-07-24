@@ -36,20 +36,47 @@ const UNSAFE = /^(POST|PUT|DELETE|PATCH)$/i;
 // chokepoint now adds those too. Feature code stays platform-agnostic: it just fetches.
 const DNN_TOKEN_HEADER = 'RequestVerificationToken';
 
-function readToken(): string {
+// [IframeToken 20260724] The builder Design-preview renders the form in a same-origin IFRAME.
+// Inside it there is NO antiforgery <input> and NO jQuery/ServicesFramework — those live on the
+// PARENT builder page. So a mutating fetch made from the iframe (uploadMfImage in inline-edit)
+// found an empty token and 401'd. Walk window → parent → top (same-origin only) so the iframe
+// borrows the host page's token. Guarded by try/catch: a cross-origin parent throws on access
+// and is silently skipped, and on a normal top-level page the first window already has it.
+function sameOriginWindows(): Window[] {
+  const out: Window[] = [];
   try {
-    const el = document.querySelector('input[name="__RequestVerificationToken"]') as HTMLInputElement | null;
-    return (el && el.value) || '';
-  } catch {
-    return '';
+    let w: Window | null = window;
+    for (let i = 0; i < 4 && w; i++) {
+      // touching w.document throws for a cross-origin frame → that ancestor is skipped
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      try { void w.document; out.push(w); } catch { /* cross-origin ancestor */ }
+      if (w === w.parent) break;
+      w = w.parent;
+    }
+    const top = window.top;
+    if (top && out.indexOf(top) === -1) { try { void top.document; out.push(top); } catch { /* cross-origin top */ } }
+  } catch { /* no window hierarchy */ }
+  return out.length ? out : [window];
+}
+
+function readToken(): string {
+  for (const w of sameOriginWindows()) {
+    try {
+      const el = w.document.querySelector('input[name="__RequestVerificationToken"]') as HTMLInputElement | null;
+      if (el && el.value) return el.value;
+    } catch { /* try next window */ }
   }
+  return '';
 }
 
 function isDnnHost(): boolean {
-  try {
-    const p = (window as any).__MF_PLATFORM__;
-    return String((p && p.platform) || '').toLowerCase() === 'dnn';
-  } catch { return false; }
+  for (const w of sameOriginWindows()) {
+    try {
+      const p = (w as any).__MF_PLATFORM__;
+      if (String((p && p.platform) || '').toLowerCase() === 'dnn') return true;
+    } catch { /* try next window */ }
+  }
+  return false;
 }
 
 /**
@@ -62,18 +89,43 @@ function isDnnHost(): boolean {
  * which is both safer and what lets this chokepoint stay this small.
  */
 function dnnToken(): string {
-  try {
-    const w = window as any;
-    const platform = w.__MF_PLATFORM__ || {};
-    const moduleId = Number(platform.moduleId || platform.instanceId || 0) || 0;
-    const sf = w.jQuery && w.jQuery.ServicesFramework ? w.jQuery.ServicesFramework(moduleId) : null;
-    return sf ? String(sf.getAntiForgeryValue() || '') : '';
-  } catch { return ''; }
+  // Walk same-origin window → parent → top: the iframe preview has no ServicesFramework, the
+  // host builder page does. First window that yields a token wins.
+  for (const win of sameOriginWindows()) {
+    try {
+      const w = win as any;
+      const platform = w.__MF_PLATFORM__ || {};
+      const moduleId = Number(platform.moduleId || platform.instanceId || 0) || 0;
+      const sf = w.jQuery && w.jQuery.ServicesFramework ? w.jQuery.ServicesFramework(moduleId) : null;
+      const tok = sf ? String(sf.getAntiForgeryValue() || '') : '';
+      if (tok) return tok;
+    } catch { /* try next window */ }
+  }
+  return '';
 }
 
+// [IframeToken 20260724] A srcdoc iframe (the builder Design preview) has
+// location.href === "about:srcdoc" and origin === "null" — an invalid URL base that makes
+// `new URL(relativeUrl, href)` throw, so isSameOrigin() returned false and the token was
+// never attached. Resolve against, and compare to, the nearest REAL same-origin ancestor.
+function realBaseHref(): string {
+  for (const w of sameOriginWindows()) {
+    try { const h = w.location && w.location.href; if (h && h.indexOf('about:') !== 0) return h; } catch { /* next */ }
+  }
+  return '';
+}
+function pageOrigin(): string {
+  for (const w of sameOriginWindows()) {
+    try { const o = w.location && w.location.origin; if (o && o !== 'null') return o; } catch { /* next */ }
+  }
+  return '';
+}
 function isSameOrigin(url: string): boolean {
   try {
-    return new URL(url, window.location.href).origin === window.location.origin;
+    const base = realBaseHref();
+    const origin = pageOrigin();
+    if (!base || !origin) return false;
+    return new URL(url, base).origin === origin;
   } catch {
     return false;
   }
