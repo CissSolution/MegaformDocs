@@ -133,3 +133,14 @@ MegaForm.Premium.AspNetCore/wwwroot/megaform/
 
 # Marketplace publishing SOP — contains plaintext GitHub/oqtane credentials; never commit
 CLAUDE_HANDOFF_20260708_OQTANE_MARKETPLACE_PUBLISH_SOP.md
+
+# [SecretHygiene 2026-07-24] Loose credential/scratch files that accumulated at the repo root
+# while driving live sites + AI endpoints. Verified never committed — keep it that way: this
+# branch carries a large uncommitted delta, so one stray `git add -A` would leak them.
+# Prefer an env var (GH_TOKEN) over a token file.
+/token.txt
+/cookies.txt
+/login_headers.txt
+/openai-req-body.json
+/openai-req2.json
+/openai-req3.json
