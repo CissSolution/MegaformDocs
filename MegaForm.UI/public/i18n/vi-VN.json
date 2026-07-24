@@ -1939,5 +1939,11 @@
   "wiz.remote.done": "Đã cài mẫu",
   "wiz.remote.failed": "Cài đặt thất bại",
   "wiz.remote.images": "ảnh",
-  "wiz.remote.art_failed": "Đã cài mẫu, nhưng không tải được ảnh của mẫu."
+  "wiz.remote.art_failed": "Đã cài mẫu, nhưng không tải được ảnh của mẫu.",
+  "wiz.gallery.src_installed": "Đã cài",
+  "wiz.gallery.src_online": "Kho trực tuyến",
+  "wiz.gallery.online_count": "{n} mẫu có thể cài",
+  "wiz.gallery.online_all": "Đã cài hết",
+  "wiz.remote.already": "Đã cài rồi",
+  "wiz.remote.no_preview": "Không xem trước được mẫu này."
 }

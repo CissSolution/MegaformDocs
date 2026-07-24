@@ -102,6 +102,29 @@ namespace MegaForm.WebApi
                 new { repoUrl = svc.RepoBaseUrl, offline = res.Offline, message = res.Message, templates = items });
         }
 
+        /// <summary>
+        /// Returns ONE gallery template's verified JSON without installing it, so the gallery
+        /// can render a real thumbnail/preview instead of making the user install blind.
+        /// Read-only: same download + sha256 + validation path as install, nothing is written.
+        /// </summary>
+        [HttpGet]
+        [ActionName("RemoteGalleryPreview")]
+        public async System.Threading.Tasks.Task<HttpResponseMessage> RemoteGalleryPreview(string slug)
+        {
+            var gate = GalleryTrialGate();
+            if (gate != null) return gate;
+
+            var fetch = await BuildGalleryService().FetchTemplateAsync(slug, false);
+            if (!fetch.Success)
+                return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "preview_failed", message = fetch.Error });
+
+            // Hand back the raw template document; the client turns it into a WizardTemplate
+            // with the same helper it uses for an uploaded .json.
+            var resp = Request.CreateResponse(HttpStatusCode.OK);
+            resp.Content = new StringContent(fetch.Json, System.Text.Encoding.UTF8, "application/json");
+            return resp;
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("RemoteGalleryInstall")]

@@ -10,7 +10,7 @@ import { openImportJsonDialog } from './import-json-modal';
 import { h, icon, wt, wizardToast } from './ui';
 import { isTrialMode, showTrialUpgrade } from '@shared/trial';
 import { WizardTemplate, templatesState, loadTemplates, resetTemplates, wizardTemplateFromJson } from './templates';
-import { openRemoteGallery } from './remote-gallery';
+import { RemoteTemplate, loadRemoteTemplates, loadRemoteTemplateDoc, installRemoteTemplate, resetRemoteCache } from './remote-gallery';
 import { buildTemplateThumbnail, openTemplatePreview, ensurePreviewCss } from './gallery-preview';
 
 // Saturated card-thumbnail gradients per category (mirrors the builder gallery) — the
@@ -64,6 +64,13 @@ function ensureGalleryCss(): void {
   .mfwg-import{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 16px;border:1px dashed #c7d2fe;border-radius:10px;background:#fff;color:#4338ca;font-weight:700;font-size:13px;cursor:pointer}
   .mfwg-import:hover{background:#eef2ff}
   .mfwg-ft .mfwg-hint{font-size:12px;color:#94a3b8}
+  /* [GalleryRepo v20260724] source switch (Installed | Online gallery) */
+  .mfwg-sources{padding-bottom:0;border-bottom:0;gap:8px}
+  .mfwg-source{display:inline-flex;align-items:center;gap:7px;padding:6px 15px;font-weight:700}
+  .mfwg-source.on{background:linear-gradient(135deg,#6366f1,#8b5cf6);border-color:transparent;color:#fff}
+  .mfwg-badge-have{position:absolute;top:9px;left:9px;z-index:3;width:26px;height:26px;border-radius:999px;background:rgba(5,150,105,.95);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px}
+  .mfwg-card.mfwg-busy{opacity:.6;pointer-events:none}
+  .mfwg-card.mfwg-busy .mfwg-thumb::after{content:'';position:absolute;inset:0;background:rgba(15,23,42,.25)}
   `;
   document.head.appendChild(s);
 }
@@ -81,9 +88,17 @@ export function openWizardGallery(onPick: (t: WizardTemplate) => void, onImport:
 
   let activeCat = 'all';
   let query = '';
+  // [GalleryRepo v20260724] Two sources in ONE gallery: what's installed locally, and the
+  // online catalog. Sharing the grid means the online source inherits category chips,
+  // search, live thumbnails and the preview modal instead of being a bare list.
+  let source: 'installed' | 'online' = 'installed';
+  let remote: RemoteTemplate[] = [];
+  let remoteState: 'idle' | 'loading' | 'ok' | 'trial' | 'error' = 'idle';
+  let remoteOffline = false;
 
   const grid = h('div', { class: 'mfwg-grid' });
   const cats = h('div', { class: 'mfwg-cats' });
+  const sourceTabs = h('div', { class: 'mfwg-cats mfwg-sources' });
   const searchInput = h('input', { type: 'text', placeholder: wt('wiz.gallery.search_ph', 'Search templates…'), 'aria-label': wt('wiz.gallery.search_ph', 'Search templates…') }) as HTMLInputElement;
 
   const ov = h('div', { class: 'mfwg-ov', id: 'mfw-gallery-ov' }, [
@@ -94,19 +109,11 @@ export function openWizardGallery(onPick: (t: WizardTemplate) => void, onImport:
         h('div', { class: 'mfwg-search' }, [icon('fa-search'), searchInput]),
         h('button', { class: 'mfwg-x', title: wt('wiz.gallery.close', 'Close'), onclick: close }, [icon('fa-times')]),
       ]),
+      sourceTabs,
       cats,
       h('div', { class: 'mfwg-body' }, [grid]),
       h('div', { class: 'mfwg-ft' }, [
         h('button', { class: 'mfwg-import', onclick: () => openImportJson((t) => { close(); onImport(t); }) }, [icon('fa-file-arrow-up'), document.createTextNode(wt('wiz.gallery.import', 'Import JSON'))]),
-        // [GalleryRepo v20260724] Premium templates + artwork live in the online gallery
-        // (not in the package). Installing one drops it into the local catalog, so reload
-        // the wizard's catalog afterwards to make it appear in the grid above.
-        h('button', {
-          class: 'mfwg-import',
-          // resetTemplates() first: loadTemplates() short-circuits on a cached 'ok' state, so
-          // without clearing it a freshly installed template would not appear until reload.
-          onclick: () => openRemoteGallery(() => { resetTemplates(); loadTemplates(() => { renderCats(); renderGrid(); }); }),
-        }, [icon('fa-cloud-arrow-down'), document.createTextNode(wt('wiz.gallery.browse_online', 'Browse online'))]),
         h('span', { class: 'mfwg-hint' }, wt('wiz.gallery.import_hint', 'Upload a MegaForm export (.json) to start from it, or pick a template above.')),
       ]),
     ]),
@@ -116,18 +123,129 @@ export function openWizardGallery(onPick: (t: WizardTemplate) => void, onImport:
   function onKey(e: KeyboardEvent): void { if (e.key === 'Escape') close(); }
   document.addEventListener('keydown', onKey, true);
 
+  function renderSources(): void {
+    sourceTabs.innerHTML = '';
+    const tab = (key: 'installed' | 'online', label: string, ico: string) =>
+      h('button', {
+        class: 'mfwg-cat mfwg-source' + (source === key ? ' on' : ''),
+        onclick: () => {
+          if (source === key) return;
+          source = key; activeCat = 'all';
+          renderSources(); renderCats(); renderGrid();
+          if (key === 'online' && remoteState === 'idle') fetchRemote();
+        },
+      }, [icon(ico), document.createTextNode(' ' + label)]);
+    sourceTabs.appendChild(tab('installed', wt('wiz.gallery.src_installed', 'Installed'), 'fa-box-open'));
+    sourceTabs.appendChild(tab('online', wt('wiz.gallery.src_online', 'Online gallery'), 'fa-cloud-arrow-down'));
+    if (source === 'online' && remoteState === 'ok') {
+      const n = remote.filter((t) => !t.installed).length;
+      sourceTabs.appendChild(h('span', { class: 'mfwg-hint', style: 'margin-left:auto;align-self:center' },
+        n ? wt('wiz.gallery.online_count', '{n} available to install', { n }) : wt('wiz.gallery.online_all', 'All installed')));
+    }
+  }
+
+  function fetchRemote(): void {
+    remoteState = 'loading'; renderGrid();
+    loadRemoteTemplates().then((res) => {
+      if (res.trial) { remoteState = 'trial'; }
+      else if (!res.ok) { remoteState = 'error'; }
+      else { remoteState = 'ok'; remote = res.templates; remoteOffline = !!res.offline; }
+      renderSources(); renderCats(); renderGrid();
+    });
+  }
+
   function renderCats(): void {
-    const list = templatesState().list;
-    const uniq = Array.from(new Set(list.map((t) => (t.category || 'general').toLowerCase())));
+    const uniq = source === 'online'
+      ? Array.from(new Set(remote.map((t) => (t.category || 'general').toLowerCase())))
+      : Array.from(new Set(templatesState().list.map((t) => (t.category || 'general').toLowerCase())));
     cats.innerHTML = '';
-    ['all', ...uniq].forEach((c) => {
+    ['all', ...uniq.sort()].forEach((c) => {
       cats.appendChild(h('button', { class: 'mfwg-cat' + (activeCat === c ? ' on' : ''), onclick: () => { activeCat = c; renderCats(); renderGrid(); } }, c === 'all' ? wt('wiz.gallery.all', 'All templates') : catLabel(c)));
     });
+  }
+
+  /** Online card: same shell as a local card, but the thumbnail is filled in once the
+   *  template document arrives, and the primary action installs instead of picking. */
+  function renderOnlineCard(t: RemoteTemplate): HTMLElement {
+    const previewLabel = wt('wiz.gallery.preview', 'Preview');
+    const thumb = h('div', { class: 'mfwg-thumb mfwg-thumb-live', style: 'background:' + thumbGradient(t.category) });
+    thumb.appendChild(h('div', { class: 'mfwg-empty', style: 'padding:0;color:rgba(255,255,255,.85)' }, [icon('fa-spinner fa-spin')]));
+
+    const card = h('div', { class: 'mfwg-card', role: 'button', tabindex: '0' }, [thumb]);
+
+    // Real thumbnail: fetch the document (server verifies it) and reuse the very same
+    // renderer the installed cards use, so online and local look identical.
+    loadRemoteTemplateDoc(t.slug).then((tpl) => {
+      thumb.innerHTML = '';
+      const html = tpl ? buildTemplateThumbnail(tpl) : '';
+      if (html) thumb.innerHTML = html;
+      else thumb.appendChild(icon(t.icon && t.icon.indexOf('fa-') === 0 ? t.icon : 'fa-wand-magic-sparkles'));
+      addOverlay(tpl);
+    });
+
+    const doInstall = () => {
+      if (t.installed) { wizardToast(wt('wiz.remote.already', 'Already installed')); return; }
+      card.classList.add('mfwg-busy');
+      wizardToast(wt('wiz.remote.installing', 'Installing…'));
+      installRemoteTemplate(t.slug).then((res) => {
+        card.classList.remove('mfwg-busy');
+        if (res.trial) {
+          showTrialUpgrade({
+            title: wt('wiz.remote.trial_title', 'Online gallery is a premium feature'),
+            message: wt('wiz.remote.trial_msg', 'Downloading templates from the online gallery needs a paid license. Upgrade to unlock it.'),
+          });
+          return;
+        }
+        if (!res.ok) { wizardToast(wt('wiz.remote.failed', 'Install failed') + ': ' + (res.error || ''), 'error'); return; }
+        const art = res.assetsInstalled ? ' (' + res.assetsInstalled + ' ' + wt('wiz.remote.images', 'images') + ')' : '';
+        wizardToast(wt('wiz.remote.done', 'Template installed') + ': ' + (t.title || t.slug) + art);
+        if (res.assetsError) wizardToast(wt('wiz.remote.art_failed', 'Template installed, but its images could not be downloaded.'), 'error');
+        // Refresh the local catalog so the new template shows under "Installed".
+        resetTemplates();
+        loadTemplates(() => { renderSources(); renderGrid(); });
+      });
+    };
+
+    function addOverlay(tpl: WizardTemplate | null): void {
+      if (t.installed) thumb.appendChild(h('span', { class: 'mfwg-badge-have', title: wt('wiz.remote.installed', 'Installed') }, [icon('fa-circle-check')]));
+      thumb.appendChild(h('div', { class: 'mfwg-thumb-ov' }, [
+        h('button', {
+          type: 'button', class: 'mfwg-peek', title: previewLabel, 'aria-label': previewLabel,
+          onclick: (e: any) => {
+            e.stopPropagation();
+            if (tpl) openTemplatePreview(tpl, doInstall);
+            else wizardToast(wt('wiz.remote.no_preview', 'Preview is unavailable for this template.'), 'error');
+          },
+        }, [icon('fa-eye')]),
+      ]));
+    }
+
+    card.addEventListener('click', doInstall);
+    card.addEventListener('keydown', (e: any) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doInstall(); } });
+    return card;
   }
 
   function renderGrid(): void {
     const st = templatesState();
     grid.innerHTML = '';
+
+    if (source === 'online') {
+      const note = (msg: string, spin?: boolean) => grid.appendChild(h('div', { class: 'mfwg-empty' }, spin ? [icon('fa-spinner fa-spin'), document.createTextNode(' ' + msg)] : msg));
+      if (remoteState === 'loading' || remoteState === 'idle') { note(wt('wiz.remote.loading', 'Contacting the gallery…'), true); return; }
+      if (remoteState === 'trial') { note(wt('wiz.remote.trial_msg', 'Downloading templates from the online gallery needs a paid license. Upgrade to unlock it.')); return; }
+      if (remoteState === 'error') { note(wt('wiz.remote.unavailable', 'The online gallery is unreachable right now. Try again later.')); return; }
+      if (remoteOffline) grid.appendChild(h('div', { class: 'mfwg-empty', style: 'grid-column:1/-1;padding:10px 0' }, wt('wiz.remote.offline', 'The gallery is unreachable — showing the last list fetched earlier.')));
+      const rq = query.trim().toLowerCase();
+      const ritems = remote.filter((t) => {
+        if (activeCat !== 'all' && (t.category || 'general').toLowerCase() !== activeCat) return false;
+        if (rq && !((t.title || '') + ' ' + (t.description || '') + ' ' + (t.category || '')).toLowerCase().includes(rq)) return false;
+        return true;
+      });
+      if (!ritems.length) { note(wt('wiz.gallery.no_match', 'No templates match your search.')); return; }
+      ritems.forEach((t) => grid.appendChild(renderOnlineCard(t)));
+      return;
+    }
+
     if (st.status === 'loading' || st.status === 'idle') { grid.appendChild(h('div', { class: 'mfwg-empty' }, [icon('fa-spinner fa-spin'), document.createTextNode(' ' + wt('wiz.gallery.loading', 'Loading templates…'))])); return; }
     if (st.status === 'error') { grid.appendChild(h('div', { class: 'mfwg-empty' }, wt('wiz.gallery.unavailable', 'Template library unavailable. You can still Import JSON below.'))); return; }
     const q = query.trim().toLowerCase();
@@ -170,7 +288,7 @@ export function openWizardGallery(onPick: (t: WizardTemplate) => void, onImport:
 
   searchInput.addEventListener('input', () => { query = searchInput.value; renderGrid(); });
   document.body.appendChild(ov);
-  renderCats(); renderGrid();
+  renderSources(); renderCats(); renderGrid();
   // Ensure the catalog is loading; repaint when it lands.
   if (templatesState().status === 'idle' || templatesState().status === 'loading') {
     loadTemplates(() => { renderCats(); renderGrid(); });

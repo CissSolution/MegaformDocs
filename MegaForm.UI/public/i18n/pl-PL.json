@@ -1939,5 +1939,11 @@
   "wiz.remote.done": "Template installed",
   "wiz.remote.failed": "Install failed",
   "wiz.remote.images": "images",
-  "wiz.remote.art_failed": "Template installed, but its images could not be downloaded."
+  "wiz.remote.art_failed": "Template installed, but its images could not be downloaded.",
+  "wiz.gallery.src_installed": "Installed",
+  "wiz.gallery.src_online": "Online gallery",
+  "wiz.gallery.online_count": "{n} available to install",
+  "wiz.gallery.online_all": "All installed",
+  "wiz.remote.already": "Already installed",
+  "wiz.remote.no_preview": "Preview is unavailable for this template."
 }
