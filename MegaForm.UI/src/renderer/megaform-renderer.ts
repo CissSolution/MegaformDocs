@@ -267,6 +267,8 @@ interface RendererConfig {
   enableSaveResume?: boolean;
   enableCaptcha?: boolean;
   isPreview?: boolean;
+  /** [ReadOnlyPreview v20260724] Read-only render WITHOUT the builder's inline-edit chrome. */
+  readOnly?: boolean;
   resumeToken?: string;
   prefilledData?: Record<string, unknown> | null;
   title?: string;

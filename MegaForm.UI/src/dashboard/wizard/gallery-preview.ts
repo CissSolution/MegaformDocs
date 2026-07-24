@@ -328,7 +328,9 @@ function renderPreviewWithRenderer(stageEl: HTMLElement, tpl: AnyObj): boolean {
     if (!host) return false;
     renderer.init({
       formId: previewId, container: host, apiBaseUrl: getApiBase(), apiBase: getApiBase(),
-      schema: previewSchema, isPreview: true,
+      // readOnly: this is a look-before-you-install preview, so keep isPreview's "don't submit"
+      // behaviour but NOT the builder inline-edit chrome it would otherwise switch on.
+      schema: previewSchema, isPreview: true, readOnly: true,
       title: String((tpl && tpl.title) || ''), description: String((tpl && tpl.description) || ''),
       submitButtonText: String((tpl && tpl.submitButtonText) || 'Submit'),
       successMessage: String((tpl && tpl.successMessage) || ''),
@@ -346,7 +348,14 @@ function ensurePreviewModal(): HTMLElement {
   if (_previewModalEl && _previewModalEl.isConnected) return _previewModalEl;
   const modal = document.createElement('div');
   modal.id = 'mfw-tpl-preview-modal';
-  modal.className = 'tpl-preview-modal';
+  // [PreviewBlank v20260724] `mf-host-overlay` is REQUIRED, not decorative. The admin shell
+  // injects a guard so a rendered form can never leak onto the dashboard:
+  //   html.mf-admin-shell-route .mf-form-wrapper:not(.mf-host-overlay .mf-form-wrapper),
+  //   body.mf-admin-shell-route .mf-form-wrapper:not(...) { display: none !important; }
+  // The preview mounts a REAL .mf-form-wrapper via MegaFormRenderer, so without this opt-out
+  // class the rule hid it and the preview stage rendered completely blank (confirmed by asking
+  // the browser which rule won). Affected every custom-shell template, local and online alike.
+  modal.className = 'tpl-preview-modal mf-host-overlay';
   modal.innerHTML = ''
     + '<div class="tpl-preview-backdrop" data-preview-close="1"></div>'
     + '<div class="tpl-preview-dialog">'
@@ -451,7 +460,11 @@ export function ensurePreviewCss(): void {
 .tpl-thumb-live-fade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,0) 0%,rgba(15,23,42,.08) 100%);pointer-events:none}
 .tpl-thumb-live-custom{box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
 /* preview modal */
-.tpl-preview-modal{position:fixed;inset:0;z-index:2147483647;display:none;font-family:${FONT}}
+/* z-index !important: the preview is opened FROM the wizard gallery overlay (z-index
+   2147483646) and other stylesheets (megaform-builder-shell.css) also style
+   .tpl-preview-modal, so without winning outright the preview opens BEHIND the gallery
+   and looks like nothing happened. */
+.tpl-preview-modal{position:fixed;inset:0;z-index:2147483647!important;display:none;font-family:${FONT}}
 .tpl-preview-modal.is-visible{display:block}
 .tpl-preview-modal *{box-sizing:border-box}
 .tpl-preview-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.46);backdrop-filter:blur(6px)}

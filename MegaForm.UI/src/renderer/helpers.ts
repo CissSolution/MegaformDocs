@@ -27,6 +27,10 @@ export interface RendererConfig {
   enableSaveResume?: boolean;
   enableCaptcha?: boolean;
   isPreview?: boolean;
+  /** [ReadOnlyPreview v20260724] Render read-only WITHOUT the builder's inline-edit chrome.
+   *  Used by the wizard template preview, which wants isPreview's "don't submit" behaviour but
+   *  not its "this is the Design surface, enable editing" behaviour. */
+  readOnly?: boolean;
   resumeToken?: string;
   prefilledData?: Record<string, unknown> | null;
   title?: string;

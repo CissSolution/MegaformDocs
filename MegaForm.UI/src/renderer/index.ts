@@ -14,6 +14,7 @@ import { collectUnloadedWidgetTypes, injectWidgetPlugins, isWidgetTypeRegistered
 import { buildSummaryHtml } from '@shared/summary-html';
 import { initInlineEdit } from '@shared/inline-edit';
 import { applyFixedHeaderGuard } from './fixed-header-guard';
+import { trimContentGap } from './content-gap-trim';
 import { reconcilePremiumNativeStepper } from './premium-step-reconcile';
 import { t } from '@i18n';
 
@@ -1492,6 +1493,7 @@ function init(cfg: RendererConfig): void {
   bindFieldErrorClear(config.formId);
   bindPremiumSummary();
   applyFixedHeaderGuard(config.formId);
+  trimContentGap(config.formId);
 
   // Phase 1: hydrate SQL-sourced options (badge: FieldOptionsRenderer v20260430-01)
   void hydrateSqlOptions();
@@ -1546,7 +1548,12 @@ function init(cfg: RendererConfig): void {
       // [InlineEdit→Builder 20260630] Activates ONLY in the builder DESIGN preview (config.isPreview);
       // in preview, save() posts a patch to the parent builder instead of writing the DB. Public
       // ?view=form&edit=true no longer triggers inline-edit (retired — was unstable).
-      isPreview: !!config.isPreview,
+      // [ReadOnlyPreview v20260724] `isPreview` carries TWO meanings: the renderer reads it as
+      // "read-only render" while inline-edit reads it as "this is the builder Design surface, turn
+      // editing on". The wizard's template preview only wants the former, and inline-edit's
+      // position:fixed "Change image" buttons were leaking over the gallery and surviving the modal
+      // close. `readOnly` lets such a caller opt out without changing what isPreview means.
+      isPreview: !!config.isPreview && !config.readOnly,
       container: (document.getElementById(`mf-form-wrapper-${config.formId}`)
         || document.getElementById(`mf-form-${config.formId}`)) as HTMLElement | null,
     });
