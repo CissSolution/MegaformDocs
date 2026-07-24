@@ -2156,6 +2156,21 @@ export function initInlineEdit(cfg: InlineEditConfig): void {
   try { fre = enableFieldLayoutEdit(root as HTMLElement); } catch (_e) { /* layout edit is additive — never block text edit */ }
   try { enableImageEdit(root as HTMLElement); } catch (_e) { /* image edit is additive */ }
   try { blk = enableBlockActions(root as HTMLElement); } catch (_e) { /* block action menu is additive */ }
+
+  // [RescanOnResize 20260724] The Design-preview iframe can start narrower than a premium
+  // skin's hero breakpoint (>=1024px) — the hero is display:none, so its 0×0 box fails
+  // enableImageEdit's size gate and it is never tagged. When the user collapses the Presets
+  // rail the iframe widens and the hero appears; re-scan on resize so it becomes editable
+  // (enableImageEdit is idempotent — the data-mf-ie-img / -bg guards skip tagged elements).
+  try {
+    let rescanTimer: any = 0;
+    const rescan = (): void => {
+      clearTimeout(rescanTimer);
+      rescanTimer = setTimeout(() => { try { enableImageEdit(root as HTMLElement); } catch (_e) { /* additive */ } }, 220);
+    };
+    window.addEventListener('resize', rescan);
+    try { new ResizeObserver(rescan).observe(document.documentElement); } catch (_e) { /* no RO — resize event still covers it */ }
+  } catch (_e) { /* environment without resize hooks — initial pass still applied */ }
   // eslint-disable-next-line no-console
   console.log('[mf-inline-edit] v20260629-11 — ' + n + ' editable strings + ' + fre + ' resizable/draggable fields + ' + blk + ' block menus tagged (host edit-mode).');
   showHint(n);
