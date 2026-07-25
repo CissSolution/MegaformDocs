@@ -356,7 +356,11 @@ const galleryImages = [...movedImages].filter((p) => !bundledImages.has(p)).map(
 const nuspecPath = resolve(join(REPO_ROOT, 'MegaForm.Oqtane.Package', 'MegaForm.Oqtane.nuspec'));
 let nuspecUpdated = false;
 if (existsSync(nuspecPath)) {
-  const patterns = ['**\\license.lic', ...galleryImages.map((rel) => '**\\img\\' + rel.replace(/\//g, '\\'))];
+  // [FontSlim 2026-07-25] Also exclude the unreferenced self-hosted Google-Fonts pack
+  // (Assets/fonts/gf, ~12.9 MB). The shipped CSS pulls Inter/Geist from the Google Fonts CDN,
+  // so gf never loads — it was pure dead weight in the package. Kept alongside license.lic as a
+  // fixed exclusion so it survives every regeneration.
+  const patterns = ['**\\license.lic', '**\\fonts\\gf\\**', ...galleryImages.map((rel) => '**\\img\\' + rel.replace(/\//g, '\\'))];
   const nuspec = readFileSync(nuspecPath, 'utf8');
   const lineRe = /(<file src="\.\.\\MegaForm\.Oqtane\.Server\\wwwroot\\Modules\\MegaForm\\\*\*\\\*\.\*"[^>]*?exclude=")([^"]*)(")/;
   const m = nuspec.match(lineRe);

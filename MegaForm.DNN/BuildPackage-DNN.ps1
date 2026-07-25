@@ -458,8 +458,14 @@ if (Test-Path "$assetsDir\img") {
 }
 if (Test-Path "$assetsDir\fonts") {
     New-Item -ItemType Directory -Path "$RESOURCES\Assets\fonts" -Force | Out-Null
-    Copy-Item "$assetsDir\fonts\*" "$RESOURCES\Assets\fonts\" -Recurse -Force
-    Write-Host '  + Assets\fonts\*'
+    # [FontSlim 2026-07-25] SKIP Assets\fonts\gf — a 12.9 MB self-hosted Google-Fonts download
+    # (Inter/…) that NOTHING references: the shipped CSS pulls Inter/Geist from the Google Fonts
+    # CDN (@import googleapis) and falls back to system fonts, so gf was pure dead weight that
+    # doubled the package (13 → 25.6 MB). Copy every other font folder (euro-scroll, flags…).
+    Get-ChildItem "$assetsDir\fonts\*" -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne 'gf' } | ForEach-Object {
+        Copy-Item $_.FullName "$RESOURCES\Assets\fonts\" -Recurse -Force
+    }
+    Write-Host '  + Assets\fonts\* (excluding gf: unreferenced self-hosted Google Fonts, ~12.9 MB)'
 }
 foreach ($resSub in @('PromptRecipes', 'TemplateGuides')) {
     $src = Join-Path $PROJECT_DIR "Resources\$resSub"
