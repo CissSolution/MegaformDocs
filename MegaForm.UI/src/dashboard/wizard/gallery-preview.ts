@@ -11,6 +11,7 @@
 // No form is ever created by previewing — everything is rendered in memory.
 import { getPlatformHostConfig } from '@shared/platform-host';
 import { rewriteModuleAssetUrls } from '@shared/module-asset-url';
+import { buildRealFieldMarkup, MF_PREVIEW_BASE_CSS } from '@shared/token-field-markup';
 import { WizardTemplate } from './templates';
 
 type AnyObj = any;
@@ -150,22 +151,11 @@ function buildGenericPreview(fields: any[]): string {
 }
 
 // ── mock "token" field (used to fill {{field:key}} slots in custom-shell HTML) ───
+// [ThumbRealism 2026-07-24] Emit the REAL .mf-* field markup so the template's own customCss
+// styles it (see @shared/token-field-markup). The previous .tpl-token-* markup was invisible
+// to the template CSS, so premium fields showed as generic grey boxes.
 function buildMockTokenField(field: AnyObj, compact?: boolean): string {
-  const type = String((field && field.type) || 'Text').toLowerCase();
-  const label = escHtml(getFieldLabel(field));
-  const placeholder = escHtml(getFieldPlaceholder(field));
-  const rootCls = 'tpl-token-field' + (compact ? ' tpl-token-field-compact' : '');
-  const inputCls = 'tpl-token-input' + (compact ? ' tpl-token-input-compact' : '');
-  if (type === 'checkbox' || type === 'radio') {
-    return '<div class="' + rootCls + ' tpl-token-field-options"><div class="tpl-token-label">' + label + '</div>'
-      + '<div class="tpl-token-options' + (compact ? ' compact' : '') + '">' + getOptionLabels(field, compact ? 2 : 3).map((opt) =>
-        '<span class="tpl-token-option"><i class="fa-regular ' + (type === 'checkbox' ? 'fa-square' : 'fa-circle') + '"></i>' + escHtml(opt) + '</span>').join('') + '</div></div>';
-  }
-  if (type === 'select') return '<div class="' + rootCls + '"><div class="tpl-token-label">' + label + '</div><div class="' + inputCls + ' tpl-token-input-select">' + placeholder + '<i class="fa-solid fa-chevron-down"></i></div></div>';
-  if (type === 'textarea') return '<div class="' + rootCls + '"><div class="tpl-token-label">' + label + '</div><div class="' + inputCls + ' tpl-token-input-textarea">' + placeholder + '</div></div>';
-  if (type === 'file') return '<div class="' + rootCls + '"><div class="tpl-token-label">' + label + '</div><div class="' + inputCls + ' tpl-token-input-upload"><i class="fa-solid fa-cloud-arrow-up"></i><span>Upload file</span></div></div>';
-  if (type === 'payment' || type === 'paypal' || type === 'paynow') return '<div class="' + rootCls + '"><div class="tpl-token-label">' + label + '</div><div class="' + inputCls + ' tpl-token-input-payment"><i class="fa-solid fa-credit-card"></i><span>Payment widget</span></div></div>';
-  return '<div class="' + rootCls + '"><div class="tpl-token-label">' + label + '</div><div class="' + inputCls + '">' + placeholder + '</div></div>';
+  return buildRealFieldMarkup(field, compact);
 }
 
 // ── strip active content from author custom HTML before we render it in-page ─────
@@ -210,14 +200,30 @@ function buildResolvedCustomTemplateHtml(tpl: AnyObj, compact?: boolean): string
   const stats = collectTemplateStats(tpl);
   const fieldsByKey: Record<string, string> = {};
   stats.fields.forEach((field: AnyObj) => { if (field && field.key) fieldsByKey[String(field.key)] = buildMockTokenField(field, compact); });
+  // [RowToken fix 2026-07-24] Some templates place {{field:ROWKEY}} where ROWKEY is a Row
+  // container, not a leaf field (e.g. product-consultation's {{field:row_name}}). Without this
+  // the token matched nothing and fell through to the "Field placeholder" box. Render the Row's
+  // children as a real .mf-row grid so those slots show the actual fields.
+  stats.items.forEach((item: AnyObj) => {
+    if (item.kind !== 'row' || !item.field || !item.field.key) return;
+    const cols: AnyObj[] = item.field.columns || [];
+    const inner = cols.map((col) =>
+      '<div class="mf-col">' + ((col && col.fields) || []).map((f: AnyObj) => buildMockTokenField(f, compact)).join('') + '</div>').join('');
+    fieldsByKey[String(item.field.key)] =
+      '<div class="mf-row" style="display:grid;grid-template-columns:repeat(' + Math.max(1, cols.length) + ',minmax(0,1fr));gap:14px">' + inner + '</div>';
+  });
   const contentValues = ((tpl.settings && (tpl.settings.customContent || tpl.settings.CustomContent)) || tpl.customContent || {}) as Record<string, unknown>;
   html = sanitizeCustomPreviewHtml(html);
   html = html.replace(/\{\{form:title\}\}/g, escHtml(tpl.title || 'Untitled Form'));
   html = html.replace(/\{\{form:description\}\}/g, escHtml(tpl.description || ''));
-  html = html.replace(/\{\{form:submit\}\}/g, '<span class="tpl-token-submit-label">' + escHtml(tpl.submitButtonText || 'Submit') + '</span>');
+  // [SubmitToken fix 2026-07-24] Templates wrap this token in their OWN button
+  // (<button class="mfp-submit-btn"><span>{{form:submit}}</span>…). Replacing it with a styled
+  // pill of our own painted a second, differently-coloured button inside the real one. It is
+  // just the label text; the template's button provides all the styling.
+  html = html.replace(/\{\{form:submit\}\}/g, escHtml(tpl.submitButtonText || 'Submit'));
   html = html.replace(/\{\{content:([a-zA-Z0-9_-]+)\}\}/g, (_m: string, key: string) => escHtml(String((contentValues as any)[key] || '')));
   Object.keys(fieldsByKey).forEach((key) => { html = html.replace(new RegExp('\\{\\{field:' + escRegExp(key) + '\\}\\}', 'g'), fieldsByKey[key]); });
-  html = html.replace(/\{\{field:[^}]+\}\}/g, '<div class="tpl-token-field tpl-token-field-missing' + (compact ? ' tpl-token-field-compact' : '') + '"><div class="tpl-token-label">Field</div><div class="tpl-token-input' + (compact ? ' tpl-token-input-compact' : '') + '">Field placeholder</div></div>');
+  html = html.replace(/\{\{field:[^}]+\}\}/g, '<div class="mf-field-group tpl-token-field-missing"><label class="mf-field-label">Field</label><div class="mf-input">Field placeholder</div></div>');
   // [TokenLeak fix 2026-07-24] Anything still in {{…}} form is a token this static preview does
   // not implement ({{script:theme_selector}} is the common one). The real renderer consumes them
   // and emits nothing visible, so leaving them printed made the card look broken. Drop them.
@@ -257,16 +263,11 @@ function buildCustomThumbnailMarkup(tpl: AnyObj): string {
     + 'body{width:760px;min-height:100vh;overflow:hidden;}'
     + '.tpl-thumb-doc{padding:18px;box-sizing:border-box;min-height:100vh;background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);}'
     + '.tpl-thumb-doc .mfp,.tpl-thumb-doc form{pointer-events:none;}'
-    + '.tpl-token-field{margin-bottom:10px;}'
-    + '.tpl-token-label{margin-bottom:5px;color:#0f172a;font-size:11px;font-weight:700;line-height:1.35;}'
-    + '.tpl-token-input{min-height:28px;border-radius:10px;border:1px solid #dbe4f0;background:#ffffff;color:#64748b;padding:7px 10px;box-sizing:border-box;font-size:11px;display:flex;align-items:center;justify-content:space-between;gap:8px;}'
-    + '.tpl-token-input-textarea{min-height:58px;align-items:flex-start;padding-top:10px;}'
-    + '.tpl-token-input-upload,.tpl-token-input-payment{justify-content:flex-start;}'
-    + '.tpl-token-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;}'
-    + '.tpl-token-options.compact{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;}'
-    + '.tpl-token-option{display:inline-flex;align-items:center;gap:6px;min-height:28px;padding:6px 9px;border-radius:999px;border:1px solid #dbe4f0;background:#ffffff;color:#334155;font-size:10px;font-weight:600;line-height:1.3;box-sizing:border-box;}'
+    // Real .mf-* defaults so fields the template does not fully style still look right; the
+    // template's own customCss is layered after and wins.
+    + MF_PREVIEW_BASE_CSS
     + '.tpl-token-submit-label{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 16px;border-radius:999px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#ffffff;font-weight:800;font-size:12px;}'
-    + '.tpl-token-field-missing .tpl-token-input{border-style:dashed;color:#cbd5e1;}'
+    + '.mf-field-group.tpl-token-field-missing .mf-input{border-style:dashed;color:#cbd5e1;}'
     + css
     + titleScrubCss
     + '</style></head><body><div class="tpl-thumb-doc">' + html + '</div></body></html>';
@@ -279,6 +280,65 @@ function buildCustomThumbnailMarkup(tpl: AnyObj): string {
 // Thumbnail fitting lives in @shared/thumb-fit — the builder gallery has the identical
 // markup and the identical hard-coded-scale bug, so the fix is shared rather than twinned.
 export { fitThumbFrames } from '@shared/thumb-fit';
+
+// ── full-size preview snapshot (custom-shell templates) ─────────────────────────
+/**
+ * Mount a FULL snapshot of a custom-shell template into the preview stage: an isolated iframe
+ * showing the template's own HTML + CSS + real .mf-* fields + hero at natural size. No scaling
+ * — the iframe fills the stage width (so the template's responsive CSS reacts to the
+ * desktop/tablet/mobile switch) and its height tracks the rendered content.
+ */
+function mountCustomPreviewSnapshot(stageEl: HTMLElement, tpl: AnyObj): boolean {
+  const html = rewriteModuleAssetUrls(buildResolvedCustomTemplateHtml(tpl, false));
+  if (!html) return false;
+  const css = rewriteModuleAssetUrls(customCssOf(tpl));
+  // NB: body height must be the NATURAL content height — no min-height:100%. The parent sizes
+  // the iframe from body.scrollHeight; a body that stretches to 100% of the iframe would feed
+  // back into an ever-growing height (measured 46369px before this).
+  const srcdoc = '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>'
+    + 'html,body{margin:0;padding:0;background:#ffffff;color:#0f172a;font-family:Inter,Segoe UI,Arial,sans-serif;}'
+    + '.tpl-thumb-doc{box-sizing:border-box;}'
+    + '.tpl-thumb-doc .mfp,.tpl-thumb-doc form{pointer-events:none;}'
+    + MF_PREVIEW_BASE_CSS
+    + '.tpl-token-submit-label{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 20px;border-radius:999px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#ffffff;font-weight:800;}'
+    + '.mf-field-group.tpl-token-field-missing .mf-input{border-style:dashed;color:#cbd5e1;}'
+    + css
+    + '</style></head><body><div class="tpl-thumb-doc">' + html + '</div></body></html>';
+
+  stageEl.innerHTML = '';
+  const frame = document.createElement('iframe');
+  frame.className = 'tpl-preview-frame';
+  frame.setAttribute('sandbox', 'allow-same-origin');
+  frame.setAttribute('title', 'Template preview');
+  frame.setAttribute('loading', 'lazy');
+  frame.style.cssText = 'width:100%;border:0;background:#fff;display:block;border-radius:18px;min-height:600px;box-shadow:0 18px 48px rgba(15,23,42,.08)';
+  let lastWidth = -1;
+  const measure = () => {
+    try {
+      const doc = frame.contentDocument;
+      if (doc && doc.body) frame.style.height = Math.max(600, doc.body.scrollHeight) + 'px';
+    } catch { /* cross-origin can't happen for srcdoc, but stay defensive */ }
+  };
+  frame.addEventListener('load', () => {
+    lastWidth = frame.clientWidth;
+    measure();
+    // Re-measure ONLY when the iframe WIDTH changes (device switch / window resize). Observing
+    // for any size change would fire on the height WE set → runaway growth.
+    const RO = (window as any).ResizeObserver;
+    if (typeof RO === 'function') {
+      try {
+        new RO(() => {
+          const w = frame.clientWidth;
+          if (w !== lastWidth) { lastWidth = w; measure(); }
+        }).observe(frame);
+      } catch { /* fixed height is fine */ }
+    }
+  });
+  // srcdoc last, so the load listener is attached first.
+  (frame as any).srcdoc = srcdoc;
+  stageEl.appendChild(frame);
+  return true;
+}
 
 /** Live card thumbnail HTML for a template: iframe render for custom-shell, mock skeleton otherwise.
  *  Returns '' when there is nothing to show (caller falls back to an icon).
@@ -437,7 +497,17 @@ export function openTemplatePreview(tpl: WizardTemplate, onUse: () => void): voi
   if (titleEl) titleEl.textContent = tpl.title || 'Template';
   if (descEl) descEl.textContent = tpl.description || 'Preview this template before adding it to your form.';
   if (summaryEl) summaryEl.innerHTML = buildPreviewSummary(tpl as AnyObj);
-  if (stageEl && !renderPreviewWithRenderer(stageEl, tpl as AnyObj)) stageEl.innerHTML = buildPreviewStageHtml(tpl as AnyObj);
+  // [PreviewSnapshot 2026-07-24] For a custom-shell (premium) template, show a FULL snapshot of
+  // the real template — its own HTML + CSS + real .mf-* fields + hero — inside an isolated
+  // iframe, rather than a live MegaFormRenderer instance. The live renderer inherited the admin
+  // shell's guards (which hid the hero pane) and its own multi-step chrome, so the preview did
+  // not look like the form. The snapshot is self-contained and pixel-faithful. Standard
+  // templates keep the live renderer (they have no bespoke shell to preserve).
+  if (stageEl) {
+    const isCustomShell = collectTemplateStats(tpl as AnyObj).customLayout;
+    if (isCustomShell && mountCustomPreviewSnapshot(stageEl, tpl as AnyObj)) { /* snapshot mounted */ }
+    else if (!renderPreviewWithRenderer(stageEl, tpl as AnyObj)) stageEl.innerHTML = buildPreviewStageHtml(tpl as AnyObj);
+  }
   setPreviewDevice(_previewDevice || 'desktop');
   modal.classList.add('is-visible');
   document.body.classList.add('tpl-preview-open');

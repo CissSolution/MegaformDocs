@@ -26,10 +26,10 @@
     /// </summary>
     public static class MegaFormAssetVersion
     {
-        // [B408 SpacingFix v20260721] megaform.css restores the transparent 24/16 gutter on custom/premium
-        // shells (was padding:0 → card butted flush in a bare skin pane), field-gap 16→20, and adds the
-        // custom-shell single-page dup-submit suppressor. Bump busts the cached B407 CSS. Ships with the
-        // 14 new ChipCards-V3 premium templates. (B407 = dup-submit hide; B406 = ContentGapTrim + reflow.)
-        public static readonly string Current = "20260722-B408";
+        // [B409 GalleryRealism v20260725] Gallery preview/thumbnail now render real .mf-* field
+        // markup + platform-correct hero URLs + full snapshot preview; Row-keyed {{field:*}} tokens
+        // and the {{form:submit}} double-button are fixed. Bump busts the cached B408 dashboard/
+        // builder bundles so the new preview code actually loads.
+        public static readonly string Current = "20260725-B410";
     }
 }

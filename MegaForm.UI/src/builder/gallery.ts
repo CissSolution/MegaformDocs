@@ -6,6 +6,7 @@
    - Reliable template replacement into existing builder schema
    ============================================================ */
 import { fitThumbFrames } from '@shared/thumb-fit';
+import { buildRealFieldMarkup, MF_PREVIEW_BASE_CSS } from '@shared/token-field-markup';
 
 (function () {
   'use strict';
@@ -1026,30 +1027,9 @@ import { fitThumbFrames } from '@shared/thumb-fit';
   }
 
   function buildMockTokenField(field: AnyObj, compact?: boolean): string {
-    var type = String((field && field.type) || 'Text').toLowerCase();
-    var label = escHtml(getFieldLabel(field));
-    var placeholder = escHtml(getFieldPlaceholder(field));
-    var rootCls = 'tpl-token-field' + (compact ? ' tpl-token-field-compact' : '');
-    var inputCls = 'tpl-token-input' + (compact ? ' tpl-token-input-compact' : '');
-    if (type === 'checkbox' || type === 'radio') {
-      return '<div class="' + rootCls + ' tpl-token-field-options"><div class="tpl-token-label">' + label + '</div>'
-        + '<div class="tpl-token-options' + (compact ? ' compact' : '') + '">' + getOptionLabels(field, compact ? 2 : 3).map(function (opt: string) {
-          return '<span class="tpl-token-option"><i class="fa-regular ' + (type === 'checkbox' ? 'fa-square' : 'fa-circle') + '"></i>' + escHtml(opt) + '</span>';
-        }).join('') + '</div></div>';
-    }
-    if (type === 'select') {
-      return '<div class="' + rootCls + '"><div class="tpl-token-label">' + label + '</div><div class="' + inputCls + ' tpl-token-input-select">' + placeholder + '<i class="fa-solid fa-chevron-down"></i></div></div>';
-    }
-    if (type === 'textarea') {
-      return '<div class="' + rootCls + '"><div class="tpl-token-label">' + label + '</div><div class="' + inputCls + ' tpl-token-input-textarea">' + placeholder + '</div></div>';
-    }
-    if (type === 'file') {
-      return '<div class="' + rootCls + '"><div class="tpl-token-label">' + label + '</div><div class="' + inputCls + ' tpl-token-input-upload"><i class="fa-solid fa-cloud-arrow-up"></i><span>Upload file</span></div></div>';
-    }
-    if (type === 'payment' || type === 'paypal' || type === 'paynow') {
-      return '<div class="' + rootCls + '"><div class="tpl-token-label">' + label + '</div><div class="' + inputCls + ' tpl-token-input-payment"><i class="fa-solid fa-credit-card"></i><span>Payment widget</span></div></div>';
-    }
-    return '<div class="' + rootCls + '"><div class="tpl-token-label">' + label + '</div><div class="' + inputCls + '">' + placeholder + '</div></div>';
+    // [ThumbRealism 2026-07-24] Real .mf-* markup so the template's own customCss styles it
+    // (shared with the wizard gallery — see @shared/token-field-markup).
+    return buildRealFieldMarkup(field, compact);
   }
 
   function sanitizeCustomPreviewHtml(html: string): string {
@@ -1098,12 +1078,23 @@ import { fitThumbFrames } from '@shared/thumb-fit';
     stats.fields.forEach(function (field: AnyObj) {
       if (field && field.key) fieldsByKey[String(field.key)] = buildMockTokenField(field, compact);
     });
+    // [RowToken fix 2026-07-24] {{field:ROWKEY}} where ROWKEY is a Row container → render the
+    // Row's children as a real .mf-row grid (parity with the wizard gallery).
+    stats.items.forEach(function (item: AnyObj) {
+      if (item.kind !== 'row' || !item.field || !item.field.key) return;
+      var cols: AnyObj[] = item.field.columns || [];
+      var inner = cols.map(function (col: AnyObj) {
+        return '<div class="mf-col">' + ((col && col.fields) || []).map(function (f: AnyObj) { return buildMockTokenField(f, compact); }).join('') + '</div>';
+      }).join('');
+      fieldsByKey[String(item.field.key)] = '<div class="mf-row" style="display:grid;grid-template-columns:repeat(' + Math.max(1, cols.length) + ',minmax(0,1fr));gap:14px">' + inner + '</div>';
+    });
 
     var contentValues = ((tpl.settings && (tpl.settings.customContent || tpl.settings.CustomContent)) || tpl.customContent || {}) as Record<string, unknown>;
     html = sanitizeCustomPreviewHtml(html);
     html = html.replace(/\{\{form:title\}\}/g, escHtml(tpl.title || 'Untitled Form'));
     html = html.replace(/\{\{form:description\}\}/g, escHtml(tpl.description || ''));
-    html = html.replace(/\{\{form:submit\}\}/g, '<span class="tpl-token-submit-label">' + escHtml(tpl.submitButtonText || 'Submit') + '</span>');
+    // [SubmitToken fix 2026-07-24] Just the label text; the template's own button styles it.
+    html = html.replace(/\{\{form:submit\}\}/g, escHtml(tpl.submitButtonText || 'Submit'));
     html = html.replace(/\{\{content:([a-zA-Z0-9_-]+)\}\}/g, function (_m: string, key: string) { return escHtml(String((contentValues as any)[key] || '')); });
 
     Object.keys(fieldsByKey).forEach(function (key: string) {
@@ -1111,7 +1102,9 @@ import { fitThumbFrames } from '@shared/thumb-fit';
       html = html.replace(pattern, fieldsByKey[key]);
     });
 
-    html = html.replace(/\{\{field:[^}]+\}\}/g, '<div class="tpl-token-field tpl-token-field-missing' + (compact ? ' tpl-token-field-compact' : '') + '"><div class="tpl-token-label">Field</div><div class="tpl-token-input' + (compact ? ' tpl-token-input-compact' : '') + '">Field placeholder</div></div>');
+    html = html.replace(/\{\{field:[^}]+\}\}/g, '<div class="mf-field-group tpl-token-field-missing"><label class="mf-field-label">Field</label><div class="mf-input">Field placeholder</div></div>');
+    // Drop any remaining {{…}} token the static preview does not implement ({{script:*}} etc.).
+    html = html.replace(/\{\{[a-zA-Z0-9_:.\-]+\}\}/g, '');
     return html;
   }
 
@@ -1138,16 +1131,9 @@ import { fitThumbFrames } from '@shared/thumb-fit';
       + 'body{width:760px;min-height:100vh;overflow:hidden;}'
       + '.tpl-thumb-doc{padding:18px;box-sizing:border-box;min-height:100vh;background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);}'
       + '.tpl-thumb-doc .mfp,.tpl-thumb-doc form{pointer-events:none;}'
-      + '.tpl-token-field{margin-bottom:10px;}'
-      + '.tpl-token-label{margin-bottom:5px;color:#0f172a;font-size:11px;font-weight:700;line-height:1.35;}'
-      + '.tpl-token-input{min-height:28px;border-radius:10px;border:1px solid #dbe4f0;background:#ffffff;color:#64748b;padding:7px 10px;box-sizing:border-box;font-size:11px;display:flex;align-items:center;justify-content:space-between;gap:8px;}'
-      + '.tpl-token-input-textarea{min-height:58px;align-items:flex-start;padding-top:10px;}'
-      + '.tpl-token-input-upload,.tpl-token-input-payment{justify-content:flex-start;}'
-      + '.tpl-token-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;}'
-      + '.tpl-token-options.compact{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;}'
-      + '.tpl-token-option{display:inline-flex;align-items:center;gap:6px;min-height:28px;padding:6px 9px;border-radius:999px;border:1px solid #dbe4f0;background:#ffffff;color:#334155;font-size:10px;font-weight:600;line-height:1.3;box-sizing:border-box;}'
+      + MF_PREVIEW_BASE_CSS
       + '.tpl-token-submit-label{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 16px;border-radius:999px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#ffffff;font-weight:800;font-size:12px;}'
-      + '.tpl-token-field-missing .tpl-token-input{border-style:dashed;color:#cbd5e1;}'
+      + '.mf-field-group.tpl-token-field-missing .mf-input{border-style:dashed;color:#cbd5e1;}'
       + css
       + '</style></head><body><div class="tpl-thumb-doc">' + html + '</div></body></html>';
     return '<div class="tpl-thumb-live tpl-thumb-live-custom">'
