@@ -81,23 +81,37 @@ git commit -m "Add <tên template>"
 git push origin main
 ```
 
-### 4. ⭐ Purge cache jsDelivr — BẮT BUỘC
+### 4. ⭐ Purge cache jsDelivr — BẮT BUỘC, phải purge **MỌI file đã đổi**
 
-Không purge thì client vẫn nhận manifest CŨ hàng giờ (đã dính 2 lần).
+⚠️⚠️ **Bẫy chí mạng (đã dính):** purge `manifest.json` nhưng QUÊN purge một `templates/<slug>.json`
+đã đổi → server nhận manifest MỚI (sha256 mới) nhưng CDN trả file CŨ →
+**`sha256 mismatch → preview_failed`**, template hiện thumbnail trắng + "Preview is unavailable".
 
-```bash
-curl https://purge.jsdelivr.net/gh/CissSolution/megaform-gallery@main/manifest.json
-curl https://purge.jsdelivr.net/gh/CissSolution/megaform-gallery@main/templates/<slug>.json
-# nếu template có ảnh:
-curl https://purge.jsdelivr.net/gh/CissSolution/megaform-gallery@main/templates/<slug>-assets.zip
-```
-
-Kiểm tra lại (jsDelivr có nhiều edge — có thể phải chờ/purge lại 1–2 lần):
+⭐**Purge đúng danh sách = mọi file `git` báo đổi**, KHÔNG chỉ template vừa thêm. Publisher
+re-serialize + reorder nên một sửa nhỏ (đổi description/label ở template khác) cũng đổi file đó:
 
 ```powershell
-(Invoke-WebRequest "https://cdn.jsdelivr.net/gh/CissSolution/megaform-gallery@main/manifest.json" `
-  -UseBasicParsing).Content | ConvertFrom-Json | ForEach-Object { $_.templates.Count }
+cd "E:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\megaform-gallery"
+$changed = git diff --name-only HEAD~1 HEAD          # mọi file commit vừa rồi đổi
+foreach ($f in $changed) {
+  Invoke-WebRequest "https://purge.jsdelivr.net/gh/CissSolution/megaform-gallery@main/$f" -UseBasicParsing | Out-Null
+}
 ```
+
+Kiểm tra lại — sha256 CDN phải KHỚP manifest (jsDelivr nhiều edge, có thể phải purge lại 1–2 lần):
+
+```powershell
+$m = Get-Content manifest.json -Raw | ConvertFrom-Json
+foreach ($e in $m.templates) {
+  $b = (Invoke-WebRequest "https://cdn.jsdelivr.net/gh/CissSolution/megaform-gallery@main/$($e.file)" -UseBasicParsing).RawContentStream.ToArray()
+  $cdn = ([System.Security.Cryptography.SHA256]::Create().ComputeHash($b) | % { $_.ToString('x2') }) -join ''
+  if ($cdn -ne $e.sha256) { "MISMATCH: $($e.slug) — purge lại $($e.file)" }
+}
+```
+
+⭐**Consumer cache manifest trong RAM (`GalleryRepositoryService`, TTL).** Sau khi purge, site đã
+chạy vẫn giữ manifest cũ tới khi hết TTL → **restart site** (hoặc gọi `RemoteGalleryList?refresh=true`)
+để lấy manifest mới ngay.
 
 ---
 
