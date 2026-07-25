@@ -30,6 +30,6 @@
         // markup + platform-correct hero URLs + full snapshot preview; Row-keyed {{field:*}} tokens
         // and the {{form:submit}} double-button are fixed. Bump busts the cached B408 dashboard/
         // builder bundles so the new preview code actually loads.
-        public static readonly string Current = "20260725-B410";
+        public static readonly string Current = "20260725-B412";
     }
 }

@@ -1,6 +1,6 @@
-<dotnetnuke type="Package" version="5.0">
+﻿<dotnetnuke type="Package" version="5.0">
   <packages>
-    <package name="MegaForm" type="Module" version="02.00.003">
+    <package name="MegaForm" type="Module" version="02.00.005">
       <friendlyName>MegaForm</friendlyName>
       <description>Dynamic Form Builder Module for DNN - drag-and-drop builder, conditional logic, webhooks, anti-spam, email notifications, workflows, Save and Continue, Row/Column layout.</description>
       <iconFile>~/DesktopModules/MegaForm/Images/module-icon.png</iconFile>
@@ -281,12 +281,12 @@
               <path>bin</path>
             </assembly>
             <!-- [CloudStorage v20260723-01] Optional cloud file mirror (Google Drive / Amazon S3 /
-                 Azure Blob, Builder → Settings → Cloud Storage). DnnServiceLocator constructs these
+                 Azure Blob, Builder â†’ Settings â†’ Cloud Storage). DnnServiceLocator constructs these
                  providers at startup, so the DLLs must ship in the package. Only the direct feature
                  dependencies are bundled; Microsoft.Extensions.*/System.* are intentionally NOT
-                 (DNN 10 already carries them — overwriting risks assembly-version conflicts).
+                 (DNN 10 already carries them â€” overwriting risks assembly-version conflicts).
                  Azure.Core 1.55+ requires Microsoft.Extensions.* 10.x at runtime: on older DNN
-                 installs add a bindingRedirect if the Azure provider fails to load (fail-soft —
+                 installs add a bindingRedirect if the Azure provider fails to load (fail-soft â€”
                  submissions are never blocked by cloud upload errors). -->
             <assembly>
               <name>MegaForm.Integrations.CloudStorage.dll</name>

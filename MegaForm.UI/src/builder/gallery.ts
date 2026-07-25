@@ -1124,11 +1124,11 @@ import { buildRealFieldMarkup, MF_PREVIEW_BASE_CSS } from '@shared/token-field-m
     var html = buildResolvedCustomTemplateHtml(tpl, true);
     var css = String(tpl.customCss || (tpl.settings && tpl.settings.customCss) || '');
     if (!html) return '';
-    var srcdoc = '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=760, initial-scale=1"><style>'
+    var srcdoc = '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=1200, initial-scale=1"><style>'
       + 'html,body{margin:0;padding:0;background:#ffffff;color:#0f172a;font-family:Inter,Segoe UI,Arial,sans-serif;}'
-      // min-height:100vh, not a fixed 520px — fitThumbFrames sizes the iframe viewport from the
-      // card's real aspect ratio, so the document must paint its background to that height.
-      + 'body{width:760px;min-height:100vh;overflow:hidden;}'
+      // width 1200 (desktop) so premium hero panes show in the card; min-height:100vh so the
+      // document paints its background to whatever height fitThumbFrames gives the iframe.
+      + 'body{width:1200px;min-height:100vh;overflow:hidden;}'
       + '.tpl-thumb-doc{padding:18px;box-sizing:border-box;min-height:100vh;background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);}'
       + '.tpl-thumb-doc .mfp,.tpl-thumb-doc form{pointer-events:none;}'
       + MF_PREVIEW_BASE_CSS

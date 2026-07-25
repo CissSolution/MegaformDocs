@@ -20,8 +20,11 @@
 // (min-height:100vh, not a fixed px) or short templates leave a bare strip.
 // ============================================================
 
-/** Logical CSS width the thumbnail documents are authored at. */
-export const THUMB_SRC_WIDTH = 760;
+// Logical CSS width the thumbnail documents render at. Deliberately DESKTOP-wide (> the common
+// 1024px hero/split breakpoint) so a premium template's hero / side pane shows in the card too;
+// fitThumbFrames then scales it down to the small card. At the old 760px the hero collapsed and
+// the card showed only the form column (parity with the preview fix at 1240px).
+export const THUMB_SRC_WIDTH = 1200;
 
 const _observed = new WeakSet<Element>();
 

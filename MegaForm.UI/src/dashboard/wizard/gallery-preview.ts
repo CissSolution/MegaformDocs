@@ -255,12 +255,12 @@ function buildCustomThumbnailMarkup(tpl: AnyObj): string {
   // prints the template's name underneath, so blanking the design's own headline just made the
   // thumbnail look unlike the form it represents. Show it.
   const titleScrubCss = '';
-  const srcdoc = '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=760, initial-scale=1"><style>'
+  const srcdoc = '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=1200, initial-scale=1"><style>'
     + 'html,body{margin:0;padding:0;background:#ffffff;color:#0f172a;font-family:Inter,Segoe UI,Arial,sans-serif;}'
-    // min-height:100vh, not a fixed 520px: fitThumbFrames sizes the iframe viewport from the
-    // card's real aspect ratio, so the document must paint its background down to whatever
-    // height it is given — otherwise short templates leave a bare strip under the content.
-    + 'body{width:760px;min-height:100vh;overflow:hidden;}'
+    // width 1200 (desktop) so premium hero panes show; min-height:100vh, not a fixed px, so the
+    // document paints its background down to whatever height fitThumbFrames gives the iframe —
+    // otherwise short templates leave a bare strip under the content.
+    + 'body{width:1200px;min-height:100vh;overflow:hidden;}'
     + '.tpl-thumb-doc{padding:18px;box-sizing:border-box;min-height:100vh;background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);}'
     + '.tpl-thumb-doc .mfp,.tpl-thumb-doc form{pointer-events:none;}'
     // Real .mf-* defaults so fields the template does not fully style still look right; the
@@ -282,19 +282,29 @@ function buildCustomThumbnailMarkup(tpl: AnyObj): string {
 export { fitThumbFrames } from '@shared/thumb-fit';
 
 // ── full-size preview snapshot (custom-shell templates) ─────────────────────────
+// Logical viewport width the snapshot RENDERS at, per device. Desktop is deliberately wide
+// (1240 > the common 1024px hero/split breakpoint) so the template's DESKTOP layout — the
+// hero/side pane that makes it premium — actually turns on; the iframe is then scaled down to
+// fit the stage. Rendering at the stage's own ~980px collapsed the hero on every template
+// whose split only opens at min-width:1024px (brochure/floral/teal/euro-youth/…) and hid the
+// display:none-by-default hero panes (azure/obsidian/terracotta/verdant).
+const PREVIEW_LOGICAL_WIDTH: Record<'desktop' | 'tablet' | 'mobile', number> = {
+  desktop: 1240, tablet: 834, mobile: 390,
+};
+
 /**
  * Mount a FULL snapshot of a custom-shell template into the preview stage: an isolated iframe
- * showing the template's own HTML + CSS + real .mf-* fields + hero at natural size. No scaling
- * — the iframe fills the stage width (so the template's responsive CSS reacts to the
- * desktop/tablet/mobile switch) and its height tracks the rendered content.
+ * of the template's own HTML + CSS + real .mf-* fields + hero, RENDERED at a desktop-width
+ * logical viewport (so the hero pane shows) and SCALED to fit the stage.
  */
-function mountCustomPreviewSnapshot(stageEl: HTMLElement, tpl: AnyObj): boolean {
+function mountCustomPreviewSnapshot(stageEl: HTMLElement, tpl: AnyObj, device: 'desktop' | 'tablet' | 'mobile'): boolean {
   const html = rewriteModuleAssetUrls(buildResolvedCustomTemplateHtml(tpl, false));
   if (!html) return false;
   const css = rewriteModuleAssetUrls(customCssOf(tpl));
-  // NB: body height must be the NATURAL content height — no min-height:100%. The parent sizes
-  // the iframe from body.scrollHeight; a body that stretches to 100% of the iframe would feed
-  // back into an ever-growing height (measured 46369px before this).
+  const logicalWidth = PREVIEW_LOGICAL_WIDTH[device] || 1240;
+  // NB: body height must be the NATURAL content height — no min-height:100%. We size the iframe
+  // from body.scrollHeight; a body stretching to 100% of the iframe would feed back into an
+  // ever-growing height (measured 46369px before this).
   const srcdoc = '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>'
     + 'html,body{margin:0;padding:0;background:#ffffff;color:#0f172a;font-family:Inter,Segoe UI,Arial,sans-serif;}'
     + '.tpl-thumb-doc{box-sizing:border-box;}'
@@ -306,37 +316,58 @@ function mountCustomPreviewSnapshot(stageEl: HTMLElement, tpl: AnyObj): boolean 
     + '</style></head><body><div class="tpl-thumb-doc">' + html + '</div></body></html>';
 
   stageEl.innerHTML = '';
+  // A clipping wrapper that fills the stage width; the iframe inside is `logicalWidth` wide and
+  // scaled down, so the wrapper's height is the scaled content height.
+  const wrap = document.createElement('div');
+  wrap.className = 'tpl-preview-frame-wrap';
+  wrap.style.cssText = 'position:relative;width:100%;overflow:hidden;border-radius:18px;background:#fff;box-shadow:0 18px 48px rgba(15,23,42,.08)';
+
   const frame = document.createElement('iframe');
   frame.className = 'tpl-preview-frame';
   frame.setAttribute('sandbox', 'allow-same-origin');
   frame.setAttribute('title', 'Template preview');
-  frame.setAttribute('loading', 'lazy');
-  frame.style.cssText = 'width:100%;border:0;background:#fff;display:block;border-radius:18px;min-height:600px;box-shadow:0 18px 48px rgba(15,23,42,.08)';
-  let lastWidth = -1;
-  const measure = () => {
+  frame.style.cssText = 'border:0;background:#fff;display:block;transform-origin:top left;width:' + logicalWidth + 'px';
+
+  let lastW = -1;
+  const relayout = () => {
     try {
       const doc = frame.contentDocument;
-      if (doc && doc.body) frame.style.height = Math.max(600, doc.body.scrollHeight) + 'px';
-    } catch { /* cross-origin can't happen for srcdoc, but stay defensive */ }
+      if (!doc || !doc.body) return;
+      // Custom shells use grid + absolutely-positioned hero panes, so body.scrollHeight alone
+      // under-measures; take the max of body/documentElement heights. Height is at the fixed
+      // logical width, so it does not depend on the wrap width we scale into.
+      const logicalH = Math.max(
+        480,
+        doc.body.scrollHeight, doc.body.offsetHeight,
+        doc.documentElement.scrollHeight, doc.documentElement.offsetHeight,
+      );
+      frame.style.height = logicalH + 'px';
+      // Never upscale (blurry) — cap at 1. Wrap width is the stage's real content width.
+      const scale = wrap.clientWidth > 0 ? Math.min(1, wrap.clientWidth / logicalWidth) : 1;
+      frame.style.transform = 'scale(' + scale + ')';
+      wrap.style.height = Math.round(logicalH * scale) + 'px';
+    } catch { /* srcdoc is same-origin; stay defensive */ }
   };
   frame.addEventListener('load', () => {
-    lastWidth = frame.clientWidth;
-    measure();
-    // Re-measure ONLY when the iframe WIDTH changes (device switch / window resize). Observing
-    // for any size change would fire on the height WE set → runaway growth.
+    lastW = wrap.clientWidth;
+    relayout();
+    // Re-measure after layout settles: the hero background image + web fonts land late and
+    // change the true height; a single load-time read is often short (measured 465px once).
+    try { requestAnimationFrame(relayout); } catch { /* */ }
+    setTimeout(relayout, 250);
+    setTimeout(relayout, 750);
+    // Re-scale when the STAGE width changes (window resize). logicalH is width-independent, so
+    // guarding on width avoids any feedback loop with the wrap height we set.
     const RO = (window as any).ResizeObserver;
     if (typeof RO === 'function') {
       try {
-        new RO(() => {
-          const w = frame.clientWidth;
-          if (w !== lastWidth) { lastWidth = w; measure(); }
-        }).observe(frame);
-      } catch { /* fixed height is fine */ }
+        new RO(() => { const w = wrap.clientWidth; if (w !== lastW) { lastW = w; relayout(); } }).observe(wrap);
+      } catch { /* fixed size is fine */ }
     }
   });
-  // srcdoc last, so the load listener is attached first.
-  (frame as any).srcdoc = srcdoc;
-  stageEl.appendChild(frame);
+  (frame as any).srcdoc = srcdoc; // last, so the load listener is attached first
+  wrap.appendChild(frame);
+  stageEl.appendChild(wrap);
   return true;
 }
 
@@ -421,6 +452,9 @@ function renderPreviewWithRenderer(stageEl: HTMLElement, tpl: AnyObj): boolean {
 let _previewModalEl: HTMLElement | null = null;
 let _previewDevice: 'desktop' | 'tablet' | 'mobile' = 'desktop';
 let _previewOnUse: (() => void) | null = null;
+// The custom-shell template currently previewed as a snapshot; the device switch re-mounts it
+// at that device's logical width. null when the live/standard renderer is used instead.
+let _previewSnapshotTpl: AnyObj | null = null;
 
 function ensurePreviewModal(): HTMLElement {
   if (_previewModalEl && _previewModalEl.isConnected) return _previewModalEl;
@@ -483,6 +517,9 @@ function setPreviewDevice(device: 'desktop' | 'tablet' | 'mobile'): void {
   if (!stage) return;
   stage.classList.remove('is-desktop', 'is-tablet', 'is-mobile');
   stage.classList.add('is-' + device);
+  // Re-render the snapshot at this device's logical width so the hero pane turns on/off exactly
+  // as it would on a real screen of that size (desktop wide → hero shows).
+  if (_previewSnapshotTpl) mountCustomPreviewSnapshot(stage, _previewSnapshotTpl, device);
 }
 
 /** Open the in-memory preview dialog for a template. `onUse` fires when the user clicks "Use this template". */
@@ -503,9 +540,12 @@ export function openTemplatePreview(tpl: WizardTemplate, onUse: () => void): voi
   // shell's guards (which hid the hero pane) and its own multi-step chrome, so the preview did
   // not look like the form. The snapshot is self-contained and pixel-faithful. Standard
   // templates keep the live renderer (they have no bespoke shell to preserve).
+  _previewSnapshotTpl = null;
   if (stageEl) {
-    const isCustomShell = collectTemplateStats(tpl as AnyObj).customLayout;
-    if (isCustomShell && mountCustomPreviewSnapshot(stageEl, tpl as AnyObj)) { /* snapshot mounted */ }
+    // A custom-shell template (has customHtml) → snapshot; setPreviewDevice() below mounts it at
+    // the active device's logical width. Standard templates → live renderer / static fallback.
+    const canSnapshot = collectTemplateStats(tpl as AnyObj).customLayout && !!customHtmlOf(tpl as AnyObj);
+    if (canSnapshot) _previewSnapshotTpl = tpl as AnyObj;
     else if (!renderPreviewWithRenderer(stageEl, tpl as AnyObj)) stageEl.innerHTML = buildPreviewStageHtml(tpl as AnyObj);
   }
   setPreviewDevice(_previewDevice || 'desktop');
@@ -549,7 +589,7 @@ export function ensurePreviewCss(): void {
 .tpl-thumb-frame-shell{position:absolute;inset:0;overflow:hidden;pointer-events:none}
 /* width/height/transform are overwritten by fitThumbFrames() once the card has a width;
    these values are only the pre-layout fallback so nothing flashes at full size. */
-.tpl-thumb-frame{width:760px;height:700px;border:0;background:#fff;transform:scale(.315);transform-origin:top left;pointer-events:none}
+.tpl-thumb-frame{width:1200px;height:900px;border:0;background:#fff;transform:scale(.27);transform-origin:top left;pointer-events:none}
 .tpl-thumb-live-fade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,0) 0%,rgba(15,23,42,.08) 100%);pointer-events:none}
 .tpl-thumb-live-custom{box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
 /* preview modal */
