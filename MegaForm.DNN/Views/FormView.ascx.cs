@@ -38,6 +38,7 @@ namespace MegaForm.DNN.Components
         public bool SuppressInlineAdminEmptyState { get; private set; }
         public bool SuppressInlineAdminShell { get; private set; }
         public bool IsUnconfiguredAdminModuleState { get; private set; }
+        public bool ShowAdminDock { get; private set; }
         public bool ShowDropSafeAdminDock { get; private set; }
 
         public bool HasDevLock { get; private set; }
@@ -366,11 +367,12 @@ namespace MegaForm.DNN.Components
                     && HasStableModuleSelectionSettings(ViewModel);
                 var isDnnAjaxPartialRender = IsDnnAjaxPartialRender();
 
-                // [AdminDashAlwaysShow v20260506-01] Drop the IsInEditMode/IsAdminDashboardMode
-                // requirement — admin should see the dock + Dashboard button on every visit
-                // (no need to toggle DNN Edit mode), as long as the module is configured.
-                var canShowDockButtons = ViewModel != null
+                // The dock is an edit-time module control, not public page content. IsInEditMode
+                // is backed by DNN's IsEditable flag, so an admin merely viewing the page does
+                // not receive the dock markup.
+                ShowAdminDock = ViewModel != null
                     && ViewModel.IsAdmin
+                    && ViewModel.IsInEditMode
                     && !ViewModel.ShowConfigPanel
                     && !ViewModel.LiveRenderMode
                     && hasStableModuleState;
@@ -391,7 +393,8 @@ namespace MegaForm.DNN.Components
                 IsUnconfiguredAdminModuleState = isUnconfiguredAdminModule
                     && isDnnAjaxPartialRender;
 
-                ShowDropSafeAdminDock = isUnconfiguredAdminModule;
+                ShowDropSafeAdminDock = isUnconfiguredAdminModule
+                    && ViewModel.IsInEditMode;
 
                 SuppressInlineAdminEmptyState = ShouldSuppressInlineAdminEmptyState(ViewModel);
                 SuppressInlineAdminShell = ShouldSuppressInlineAdminShell(ViewModel);

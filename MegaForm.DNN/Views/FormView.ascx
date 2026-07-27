@@ -1,13 +1,13 @@
 ﻿<%@ Control Language="C#" AutoEventWireup="true" CodeBehind="FormView.ascx.cs" Inherits="MegaForm.DNN.Components.FormView" %>
 
 <%
-   // [AdminDashboardModeGate v20260506-01] Admin sees the admin shell + dock
-   // on every visit, no DNN Edit-mode toggle required. Public visitors and
-   // embed contexts still skip the shell.
+   // Admin routes remain available to authorized users, but the dock itself is
+   // an edit-time module control and must not appear on a normal page view.
    var inAdminPath = ViewModel != null && ViewModel.IsAdmin;
    var showAdminShell = inAdminPath
        && !ViewModel.EmbedMode
        && !SuppressInlineAdminShell;
+   var showAdminDock = showAdminShell && ShowAdminDock;
    var homeUrl = ResolveUrl("~/");
 %>
 
@@ -222,14 +222,16 @@ body > .mf-langpick-panel{z-index:100030;}
          gone: Oqtane has neither, every surface already carries its own Home/Close, and they were
          what collided with DNN's own in-context module toolbar. The Trial pill still appears, but
          only on a trial licence (applyTrialDockPill). --%>
-    <div class="mf-host-admin-dock">
-        <span class="mf-host-admin-pill" data-mf-trial-pill="1" style="display:none;"><i class="fas fa-flask"></i> Trial Mode</span>
-        <button type="button" class="mf-host-admin-btn" data-mf-open="views"><i class="fas fa-clone"></i> Module View</button>
-        <button type="button" class="mf-host-admin-btn" id="mf-host-settings-open" title="Module settings — form, display, database"><i class="fas fa-cog"></i> Settings</button>
-        <button type="button" class="mf-host-admin-btn" data-mf-open="builder"><i class="fas fa-pen-ruler"></i> Form Builder</button>
-        <button type="button" class="mf-host-admin-btn" id="mf-host-theme-preset-save" style="display:none;"><i class="fas fa-palette"></i> Update Theme</button>
-        <button type="button" class="mf-host-admin-btn is-primary" data-mf-open="dashboard"><i class="fas fa-table-columns"></i> Form Dashboard</button>
-    </div>
+    <% if (showAdminDock) { %>
+        <div class="mf-host-admin-dock">
+            <span class="mf-host-admin-pill" data-mf-trial-pill="1" style="display:none;"><i class="fas fa-flask"></i> Trial Mode</span>
+            <button type="button" class="mf-host-admin-btn" data-mf-open="views"><i class="fas fa-clone"></i> Module View</button>
+            <button type="button" class="mf-host-admin-btn" id="mf-host-settings-open" title="Module settings — form, display, database"><i class="fas fa-cog"></i> Settings</button>
+            <button type="button" class="mf-host-admin-btn" data-mf-open="builder"><i class="fas fa-pen-ruler"></i> Form Builder</button>
+            <button type="button" class="mf-host-admin-btn" id="mf-host-theme-preset-save" style="display:none;"><i class="fas fa-palette"></i> Update Theme</button>
+            <button type="button" class="mf-host-admin-btn is-primary" data-mf-open="dashboard"><i class="fas fa-table-columns"></i> Form Dashboard</button>
+        </div>
+    <% } %>
 </div>
 <script type="text/javascript" id="mf-dnn-admin-shell-route">
 (function () {
