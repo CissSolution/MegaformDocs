@@ -299,7 +299,8 @@ namespace MegaForm.Core.Services
             return new List<PermissionScopeInfo>
             {
                 new PermissionScopeInfo { Key = "all", Label = "All Records", Description = "Applies to every record and submission for this form." },
-                new PermissionScopeInfo { Key = "own", Label = "Own Records", Description = "Applies only to records created by the current user." }
+                new PermissionScopeInfo { Key = "own", Label = "Own Records", Description = "Applies only to records created by the current user." },
+                new PermissionScopeInfo { Key = "team", Label = "Team Records", Description = "Applies when the record team or department matches one of the current user's roles. Use team:fieldKey to select a specific field." }
             };
         }
 

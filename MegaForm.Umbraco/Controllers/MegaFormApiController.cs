@@ -20,6 +20,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Web.Common.Authorization;
+using MegaForm.Umbraco.Permissions;
 
 namespace MegaForm.Umbraco.Controllers
 {
@@ -42,6 +43,10 @@ namespace MegaForm.Umbraco.Controllers
         private readonly PermissionCatalogService _permissionCatalog;
         private readonly IWorkflowLibraryRepository _workflowLibrary;
         private readonly IWorkflowNodeUiSchemaProvider _nodeSchemaProvider;
+        private readonly WorkflowTaskService _workflowTasks;
+        private readonly IMegaFormPermissionService _nativePermissions;
+
+        private readonly Services.IUmbracoMemberContext _memberContext;
 
         public MegaFormApiController(
             IFormRepository formRepo,
@@ -55,7 +60,10 @@ namespace MegaForm.Umbraco.Controllers
             Services.UmbracoBuilderTemplateCatalogService templateCatalog,
             PermissionCatalogService permissionCatalog,
             IWorkflowLibraryRepository workflowLibrary,
-            IWorkflowNodeUiSchemaProvider nodeSchemaProvider)
+            IWorkflowNodeUiSchemaProvider nodeSchemaProvider,
+            Services.IUmbracoMemberContext memberContext,
+            WorkflowTaskService workflowTasks,
+            IMegaFormPermissionService nativePermissions)
         {
             _formRepo = formRepo;
             _subRepo = subRepo;
@@ -69,12 +77,15 @@ namespace MegaForm.Umbraco.Controllers
             _permissionCatalog = permissionCatalog;
             _workflowLibrary = workflowLibrary;
             _nodeSchemaProvider = nodeSchemaProvider;
+            _memberContext = memberContext;
+            _workflowTasks = workflowTasks;
+            _nativePermissions = nativePermissions;
         }
 
         // ── Form CRUD ──
 
         [HttpGet]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [MegaFormAuthorize(MegaFormPermissionConstants.EditLetter, FormIdParameter = "formId")]
         public IActionResult GetForm(int formId)
         {
             var form = _formRepo.GetForm(formId);
@@ -83,7 +94,7 @@ namespace MegaForm.Umbraco.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [MegaFormAuthorize(MegaFormPermissionConstants.BrowseLetter)]
         public IActionResult ListForms(int siteId = 0)
         {
             // Umbraco currently runs as a single-site host; forms are stored with PortalId -1.
@@ -94,22 +105,22 @@ namespace MegaForm.Umbraco.Controllers
 
         // Cross-platform route aliases used by the shared Vite/TS admin UI.
         [HttpGet]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [MegaFormAuthorize(MegaFormPermissionConstants.BrowseLetter)]
         [Route("/umbraco/MegaForm/MegaFormApi/Form/List")]
         public IActionResult FormList(int siteId = 0) => ListForms(siteId);
 
         [HttpGet]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [MegaFormAuthorize(MegaFormPermissionConstants.BrowseLetter)]
         [Route("/umbraco/MegaForm/MegaFormApi/Form/ListAll")]
         public IActionResult FormListAll() => ListForms(0);
 
         [HttpPost]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [MegaFormAuthorize(MegaFormPermissionConstants.DeleteLetter, FormIdParameter = "formId")]
         [Route("/umbraco/MegaForm/MegaFormApi/Form/Delete")]
         public IActionResult FormDelete(int formId) => DeleteForm(formId);
 
         [HttpGet]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [MegaFormAuthorize(MegaFormPermissionConstants.BrowseLetter, FormIdParameter = "formId")]
         [Route("/umbraco/MegaForm/MegaFormApi/Form/Stats")]
         public IActionResult FormStats(int formId)
         {
@@ -118,7 +129,7 @@ namespace MegaForm.Umbraco.Controllers
         }
 
         [HttpPost]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [MegaFormAuthorize(MegaFormPermissionConstants.CreateLetter, FormIdParameter = "formId")]
         [Route("/umbraco/MegaForm/MegaFormApi/Form/Duplicate")]
         public IActionResult DuplicateForm(int formId)
         {
@@ -127,7 +138,7 @@ namespace MegaForm.Umbraco.Controllers
         }
 
         [HttpPost]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [MegaFormAuthorize(MegaFormPermissionConstants.WorkflowLetter)]
         [Route("/umbraco/MegaForm/MegaFormApi/Workflow/Save")]
         public IActionResult SaveWorkflow([FromBody] JObject body)
         {
@@ -145,7 +156,7 @@ namespace MegaForm.Umbraco.Controllers
 
         // Builder-compatible aliases for the shared Vite/TS admin UI.
         [HttpGet]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [MegaFormAuthorize(MegaFormPermissionConstants.EditLetter, FormIdParameter = "formId")]
         [Route("/umbraco/MegaForm/MegaFormApi/Form/Get")]
         public IActionResult FormGet(int formId)
         {
@@ -155,12 +166,12 @@ namespace MegaForm.Umbraco.Controllers
         }
 
         [HttpPost]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [MegaFormAuthorize(MegaFormPermissionConstants.EditLetter)]
         [Route("/umbraco/MegaForm/MegaFormApi/Form/Save")]
         public IActionResult FormSave([FromBody] FormInfo form) => SaveForm(form);
 
         [HttpGet]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [MegaFormAuthorize(MegaFormPermissionConstants.TemplatesLetter)]
         [Route("/umbraco/MegaForm/MegaFormApi/BuilderTemplates/List")]
         public IActionResult ListBuilderTemplates()
         {
@@ -169,7 +180,7 @@ namespace MegaForm.Umbraco.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [MegaFormAuthorize(MegaFormPermissionConstants.LanguagesLetter)]
         [Route("/umbraco/MegaForm/MegaFormApi/i18n/list")]
         public IActionResult ListI18nLocales()
         {
@@ -229,12 +240,12 @@ namespace MegaForm.Umbraco.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [MegaFormAuthorize(MegaFormPermissionConstants.LanguagesLetter)]
         [Route("/umbraco/MegaForm/MegaFormApi/i18n/index.json")]
         public IActionResult I18nIndexJson() => ListI18nLocales();
 
         [HttpGet]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [MegaFormAuthorize(MegaFormPermissionConstants.LanguagesLetter)]
         [Route("/umbraco/MegaForm/MegaFormApi/i18n/{locale}.json")]
         public IActionResult GetI18nLocaleJson(string locale)
         {
@@ -268,7 +279,7 @@ namespace MegaForm.Umbraco.Controllers
         // The shared Languages UI posts to the legacy /api/MegaForm/i18n/* paths.
         // These absolute routes let the same bundle work on Umbraco without a JS fork.
         [HttpPost]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [MegaFormAuthorize(MegaFormPermissionConstants.LanguagesLetter)]
         [Route("/api/MegaForm/i18n/create")]
         [Route("/api/MegaForm/i18n/save")]
         [Route("/api/MegaForm/i18n/import")]
@@ -329,7 +340,7 @@ namespace MegaForm.Umbraco.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [MegaFormAuthorize(MegaFormPermissionConstants.LanguagesLetter)]
         [Route("/api/MegaForm/i18n/export/{locale}")]
         public IActionResult ExportI18nLocale(string locale)
         {
@@ -389,7 +400,7 @@ namespace MegaForm.Umbraco.Controllers
         }
 
         [HttpPost]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [MegaFormAuthorize(MegaFormPermissionConstants.EditLetter)]
         public IActionResult SaveForm([FromBody] FormInfo form)
         {
             if (form == null) return BadRequest(new { error = "Form payload is required" });
@@ -406,7 +417,7 @@ namespace MegaForm.Umbraco.Controllers
         }
 
         [HttpDelete]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [MegaFormAuthorize(MegaFormPermissionConstants.DeleteLetter, FormIdParameter = "formId")]
         public IActionResult DeleteForm(int formId)
         {
             _formRepo.DeleteForm(formId);
@@ -416,16 +427,45 @@ namespace MegaForm.Umbraco.Controllers
         // ── Submissions ──
 
         [HttpGet]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [AllowAnonymous]
         public IActionResult GetSubmissions(int formId, string status = null,
             string search = null, int pageIndex = 0, int pageSize = 50)
         {
-            var result = _subRepo.List(formId, status, search, null, null, pageIndex, pageSize);
+            if (formId <= 0) return BadRequest(new { error = "formId required" });
+            pageIndex = Math.Max(0, pageIndex);
+            pageSize = Math.Max(1, Math.Min(500, pageSize));
+
+            var actor = BuildUserContext();
+            var permissions = MatrixPermissions;
+            if (!CanUseSubmissionManagement(formId, actor, permissions))
+                return Forbid();
+
+            var ownOnly = permissions.IsOwnOnlyViewScope(formId, actor);
+            var rowScoped = permissions.RequiresSubmissionScopeEvaluation(formId, actor, "view");
+            (List<SubmissionInfo> Items, int TotalCount) result;
+
+            if (ownOnly && _subRepo is ISubmissionOwnerFilterableRepository ownerRepo)
+            {
+                result = ownerRepo.ListOwnedBy(formId, actor.UserId, status, search,
+                    null, null, pageIndex, pageSize);
+            }
+            else if (rowScoped)
+            {
+                var bounded = _subRepo.List(formId, status, search, null, null, 0, 5000);
+                var visible = (bounded.Items ?? new List<SubmissionInfo>())
+                    .Where(row => permissions.CanViewSubmission(formId, row, actor))
+                    .ToList();
+                result = (visible.Skip(pageIndex * pageSize).Take(pageSize).ToList(), visible.Count);
+            }
+            else
+            {
+                result = _subRepo.List(formId, status, search, null, null, pageIndex, pageSize);
+            }
             return Ok(new { items = result.Items, totalCount = result.TotalCount });
         }
 
         [HttpGet]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [AllowAnonymous]
         [Route("/umbraco/MegaForm/MegaFormApi/Submissions/List")]
         public IActionResult SubmissionsList(int formId = 0, string status = null,
             string search = null, int pageIndex = 0, int pageSize = 50)
@@ -509,9 +549,15 @@ namespace MegaForm.Umbraco.Controllers
 
             string ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "";
             string ua = Request.Headers["User-Agent"].FirstOrDefault() ?? "";
-            int? userId = _platform.IsAuthenticated ? _platform.UserId : null;
+            var actor = await BuildUserContextAsync();
+            int? userId = actor.UserId > 0 ? actor.UserId : null;
+            var query = Request.Query.ToDictionary(
+                pair => pair.Key,
+                pair => pair.Value.ToString(),
+                StringComparer.OrdinalIgnoreCase);
 
-            var result = await _processor.ProcessAsync(formId, formData, ip, ua, userId);
+            var result = await _processor.ProcessAsync(
+                formId, formData, ip, ua, userId, 0, actor, query);
             _logger.LogInformation("[MegaForm.Umbraco] ProcessAsync result Success={Success} SubmissionId={SubmissionId} Error={Error}", result.Success, result.SubmissionId, result.ErrorMessage);
             if (result.Success)
                 return Ok(new { submissionId = result.SubmissionId, success = true });
@@ -519,18 +565,24 @@ namespace MegaForm.Umbraco.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [AllowAnonymous]
         public IActionResult GetSubmission(int submissionId)
         {
             var sub = _subRepo.Get(submissionId);
             if (sub == null) return NotFound();
+            if (!CanViewSubmissionRow(sub, BuildUserContext(), MatrixPermissions))
+                return Forbid();
             return Ok(sub);
         }
 
         [HttpPost]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [Authorize]
         public IActionResult UpdateSubmissionStatus(int submissionId, string status)
         {
+            var sub = _subRepo.Get(submissionId);
+            if (sub == null) return NotFound();
+            if (!CanMutateSubmission(sub, BuildUserContext(), MatrixPermissions, delete: false))
+                return Forbid();
             _subRepo.UpdateStatus(submissionId, status);
             return Ok(new { success = true });
         }
@@ -543,12 +595,21 @@ namespace MegaForm.Umbraco.Controllers
         {
             var form = _formRepo.GetForm(formId);
             if (form == null || form.Status != "Published") return NotFound();
+            var actor = BuildUserContext();
+            var permissions = PermissionCatalogService.NormalizeRules(
+                formId, _phase2Repo.GetFormPermissions(formId));
+            var query = Request.Query.ToDictionary(
+                pair => pair.Key,
+                pair => pair.Value.ToString(),
+                StringComparer.OrdinalIgnoreCase);
+            var projection = FormAccessProjection.ProjectForActor(
+                formId, form.SchemaJson, actor, permissions, query);
             return Ok(new
             {
                 formId = form.FormId,
                 title = form.Title,
                 description = form.Description,
-                schema = form.SchemaJson,
+                schema = projection.SchemaJson,
                 submitButtonText = form.SubmitButtonText ?? "Submit",
                 enableCaptcha = form.EnableCaptcha,
                 themeJson = form.ThemeJson
@@ -558,7 +619,7 @@ namespace MegaForm.Umbraco.Controllers
         // ── Module/Content Config ──
 
         [HttpGet]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [MegaFormAuthorize(MegaFormPermissionConstants.BrowseLetter)]
         public IActionResult GetModuleConfig(int contentId)
         {
             if (contentId <= 0) contentId = _platform.ModuleId;
@@ -581,7 +642,7 @@ namespace MegaForm.Umbraco.Controllers
         }
 
         [HttpPost]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [MegaFormAuthorize(MegaFormPermissionConstants.EditLetter)]
         public IActionResult SaveModuleConfig([FromBody] JObject body)
         {
             if (body == null) return BadRequest(new { error = "Payload is required" });
@@ -630,21 +691,32 @@ namespace MegaForm.Umbraco.Controllers
         // ── Permissions ──
 
         [HttpGet("Permissions/Get")]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [Authorize]
         [Route("/umbraco/MegaForm/MegaFormApi/Permissions/Get")]
         public IActionResult GetPermissions(int formId)
         {
             if (formId <= 0) return BadRequest(new { error = "formId required" });
+            if (!CanManagePermissionsForForm(formId, BuildUserContext())) return Forbid();
             var permissions = PermissionCatalogService.NormalizeRules(formId, _phase2Repo.GetFormPermissions(formId));
             return Ok(new { permissions });
         }
 
         [HttpGet("Permissions/Catalog")]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [Authorize]
         [Route("/umbraco/MegaForm/MegaFormApi/Permissions/Catalog")]
         public IActionResult GetPermissionsCatalog(int formId)
         {
             if (formId < 0) formId = 0;
+            if (formId == 0)
+            {
+                if (!_platform.IsAdmin
+                    && !_nativePermissions.HasPermission(MegaFormPermissionConstants.ManagePermissionsLetter))
+                    return Forbid();
+            }
+            else if (!CanManagePermissionsForForm(formId, BuildUserContext()))
+            {
+                return Forbid();
+            }
             var permissions = formId > 0
                 ? PermissionCatalogService.NormalizeRules(formId, _phase2Repo.GetFormPermissions(formId))
                 : new List<FormPermissionInfo>();
@@ -653,12 +725,13 @@ namespace MegaForm.Umbraco.Controllers
         }
 
         [HttpPost("Permissions/Save")]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [Authorize]
         [Route("/umbraco/MegaForm/MegaFormApi/Permissions/Save")]
         public IActionResult SavePermissions([FromBody] JObject body)
         {
             int formId = body?.Value<int>("formId") ?? 0;
             if (formId <= 0) return BadRequest(new { error = "formId required" });
+            if (!CanManagePermissionsForForm(formId, BuildUserContext())) return Forbid();
 
             var permissions = body?["permissions"]?.ToObject<List<FormPermissionInfo>>() ?? new List<FormPermissionInfo>();
             var normalized = PermissionCatalogService.NormalizeRules(formId, permissions);
@@ -669,25 +742,118 @@ namespace MegaForm.Umbraco.Controllers
         private UserContext BuildUserContext()
         {
             var user = User;
+            var userId = _platform.UserId;
+            if (userId <= 0)
+            {
+                var idValue = user?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                    ?? user?.FindFirst("sub")?.Value;
+                int.TryParse(idValue, out userId);
+            }
             return new UserContext
             {
-                UserId = _platform.UserId,
+                UserId = userId,
                 UserName = user?.Identity?.Name ?? string.Empty,
+                DisplayName = user?.Identity?.Name ?? string.Empty,
                 Email = user?.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? string.Empty,
                 IsAuthenticated = user?.Identity?.IsAuthenticated ?? false,
                 IsAdmin = _platform.IsAdmin,
                 Roles = user?.Claims
-                    .Where(c => c.Type == System.Security.Claims.ClaimTypes.Role)
+                    .Where(c => c.Type == System.Security.Claims.ClaimTypes.Role
+                        || string.Equals(c.Type, "role", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(c.Type, "roles", StringComparison.OrdinalIgnoreCase))
                     .Select(c => c.Value)
                     .Where(v => !string.IsNullOrWhiteSpace(v))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToList() ?? new List<string>()
             };
+        }
+
+        private async Task<UserContext> BuildUserContextAsync()
+        {
+            var actor = BuildUserContext();
+            if (actor.UserId > 0) return actor;
+
+            var member = await _memberContext.GetCurrentAsync();
+            if (member?.MemberId > 0)
+            {
+                actor.UserId = member.MemberId;
+                actor.UserName = member.Username ?? actor.UserName;
+                actor.DisplayName = member.Name ?? actor.DisplayName;
+                actor.Email = member.Email ?? actor.Email;
+                actor.IsAuthenticated = true;
+            }
+            return actor;
+        }
+
+        private PermissionService MatrixPermissions => new PermissionService(_phase2Repo);
+
+        private bool CanUseSubmissionManagement(
+            int formId,
+            UserContext actor,
+            PermissionService permissions)
+        {
+            if (actor != null && (actor.IsAdmin || actor.IsSuperUser)) return true;
+            if (!HasExplicitSubmissionViewRule(formId)) return false;
+            return permissions.CanView(formId, actor);
+        }
+
+        private bool CanViewSubmissionRow(
+            SubmissionInfo submission,
+            UserContext actor,
+            PermissionService permissions)
+        {
+            if (submission == null || actor == null) return false;
+            if (actor.IsAdmin || actor.IsSuperUser) return true;
+            if (_workflowTasks.HoldsTaskForSubmission(submission.SubmissionId, actor)) return true;
+            if (PermissionService.IsSubmissionOwner(submission, actor)) return true;
+            return HasExplicitSubmissionViewRule(submission.FormId)
+                && permissions.CanView(submission.FormId, actor)
+                && permissions.CanViewSubmission(submission.FormId, submission, actor);
+        }
+
+        private static bool CanMutateSubmission(
+            SubmissionInfo submission,
+            UserContext actor,
+            PermissionService permissions,
+            bool delete)
+        {
+            if (submission == null || actor == null) return false;
+            if (actor.IsAdmin || actor.IsSuperUser) return true;
+            if (!actor.IsAuthenticated) return false;
+            return delete
+                ? permissions.CanDelete(submission.FormId, actor)
+                    && permissions.CanDeleteSubmission(submission.FormId, submission, actor)
+                : permissions.CanEdit(submission.FormId, actor)
+                    && permissions.CanEditSubmission(submission.FormId, submission, actor);
+        }
+
+        private bool CanManagePermissionsForForm(int formId, UserContext actor)
+        {
+            return actor != null
+                && (actor.IsAdmin
+                    || actor.IsSuperUser
+                    || MatrixPermissions.CanManage(formId, actor)
+                    || _nativePermissions.HasPermission(
+                        MegaFormPermissionConstants.ManagePermissionsLetter, formId));
+        }
+
+        private bool HasExplicitSubmissionViewRule(int formId)
+        {
+            return PermissionCatalogService.NormalizeRules(
+                    formId, _phase2Repo.GetFormPermissions(formId))
+                .Any(permission =>
+                {
+                    var type = PermissionCatalogService.NormalizePermissionType(
+                        permission.PermissionType);
+                    return string.Equals(type, "view", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(type, "manage", StringComparison.OrdinalIgnoreCase);
+                });
         }
 
         // ── Content App (Bellissima) ──
 
         [HttpGet]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [MegaFormAuthorize(MegaFormPermissionConstants.BrowseLetter)]
         [Route("/umbraco/MegaForm/MegaFormApi/ContentApp/Info")]
         public IActionResult ContentAppInfo(int contentId)
         {
@@ -763,7 +929,7 @@ namespace MegaForm.Umbraco.Controllers
         // ── Fields (for view config) ──
 
         [HttpGet]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [MegaFormAuthorize(MegaFormPermissionConstants.BrowseLetter, FormIdParameter = "formId")]
         public IActionResult GetFields(int formId)
         {
             var form = _formRepo.GetForm(formId);

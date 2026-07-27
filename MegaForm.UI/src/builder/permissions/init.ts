@@ -118,10 +118,6 @@ async function ensureLoaded(force?: boolean): Promise<void> {
 // default-scope grant rule or removes the matching one. Rules with custom
 // scope or fieldRestrictions are PRESERVED — see render.ts isDefaultRule().
 function findMatrixRuleIndex(perm: string, ptype: string, pid: string): number {
-  const cat = state.catalog;
-  if (!cat) return -1;
-  const def = cat.permissionTypes.find(d => d && d.key && d.key.toLowerCase() === perm.toLowerCase()) || null;
-  const defaultScope = (def && def.supportsScope === true) ? String(def.defaultScope || 'all') : 'all';
   for (let i = 0; i < state.rules.length; i += 1) {
     const r = state.rules[i];
     if (String(r.permissionType || '').toLowerCase() !== perm.toLowerCase()) continue;
@@ -129,7 +125,6 @@ function findMatrixRuleIndex(perm: string, ptype: string, pid: string): number {
     if (String(r.principalId || '') !== pid) continue;
     const restrictions = String(r.fieldRestrictions || '').trim();
     if (restrictions && restrictions !== '{}' && restrictions !== '[]') continue;  // advanced rule, preserve
-    if (String(r.scope || 'all').toLowerCase() !== defaultScope.toLowerCase()) continue;
     return i;
   }
   return -1;
@@ -163,6 +158,17 @@ function toggleCell(perm: string, ptype: string, pid: string, checked: boolean):
   } else if (existingIdx >= 0) {
     state.rules.splice(existingIdx, 1);
   }
+  setStatus('Unsaved access changes.', 'muted');
+  render();
+}
+
+function updateCellScope(perm: string, ptype: string, pid: string, scope: string): void {
+  const cat = state.catalog;
+  if (!cat) return;
+  const index = findMatrixRuleIndex(perm, ptype, pid);
+  if (index < 0) return;
+  state.rules[index].scope = String(scope || 'all').toLowerCase();
+  state.rules[index] = normalizeRule(cat, state.rules[index]);
   setStatus('Unsaved access changes.', 'muted');
   render();
 }
@@ -230,6 +236,15 @@ function bindUi(): void {
 
     // Field-visibility role chips edit the schema directly (not the permission matrix).
     if (handleFieldVisibilityChange(target, state.catalog)) return;
+
+    const scope = target as HTMLSelectElement;
+    if (scope.classList.contains('mf-perm-scope')) {
+      const perm = String(scope.getAttribute('data-perm') || '');
+      const ptype = String(scope.getAttribute('data-ptype') || '');
+      const pid = String(scope.getAttribute('data-pid') || '');
+      if (perm && ptype) updateCellScope(perm, ptype, pid, scope.value);
+      return;
+    }
 
     const cell = target as HTMLInputElement;
     if (cell.type !== 'checkbox' || !cell.classList.contains('mf-perm-cell')) return;

@@ -63,7 +63,7 @@ namespace MegaForm.DNN.Data
     /// <summary>
     /// DNN implementation of ISubmissionRepository.
     /// </summary>
-    public class DnnSubmissionRepository : ISubmissionRepository
+    public class DnnSubmissionRepository : ISubmissionRepository, ISubmissionOwnerFilterableRepository
     {
         public int Insert(SubmissionInfo sub)
         {
@@ -86,6 +86,15 @@ namespace MegaForm.DNN.Data
             int pageIndex = 0, int pageSize = 50)
         {
             return FormRepository.ListSubmissions(formId, status, search, dateFrom, dateTo, pageIndex, pageSize);
+        }
+
+        public (List<SubmissionInfo> Items, int TotalCount) ListOwnedBy(int formId, int userId,
+            string status = null, string search = null,
+            DateTime? dateFrom = null, DateTime? dateTo = null,
+            int pageIndex = 0, int pageSize = 50)
+        {
+            return FormRepository.ListSubmissionsOwnedBy(
+                formId, userId, status, search, dateFrom, dateTo, pageIndex, pageSize);
         }
 
         public void UpdateStatus(int submissionId, string status)

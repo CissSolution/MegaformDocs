@@ -279,6 +279,61 @@ WHERE " + whereSql + ";";
             return (list, total);
         }
 
+        public static (List<SubmissionInfo> Items, int TotalCount) ListSubmissionsOwnedBy(
+            int formId, int userId, string status = null, string search = null,
+            DateTime? dateFrom = null, DateTime? dateTo = null,
+            int pageIndex = 0, int pageSize = 50)
+        {
+            if (formId <= 0 || userId <= 0)
+                return (new List<SubmissionInfo>(), 0);
+
+            pageIndex = Math.Max(0, pageIndex);
+            pageSize = pageSize > 0 ? Math.Min(pageSize, 5000) : 50;
+            var where = new List<string> { "s.FormId = @FormId", "s.UserId = @UserId" };
+            var effectiveDateTo = dateTo.HasValue ? dateTo.Value.Date.AddDays(1) : (DateTime?)null;
+            if (!string.IsNullOrWhiteSpace(status)) where.Add("s.[Status] = @Status");
+            if (dateFrom.HasValue) where.Add("s.SubmittedOnUtc >= @DateFrom");
+            if (effectiveDateTo.HasValue) where.Add("s.SubmittedOnUtc < @DateTo");
+            if (!string.IsNullOrWhiteSpace(search))
+                where.Add("(ISNULL(s.DataJson, '') LIKE @Search OR ISNULL(s.IpAddress, '') LIKE @Search OR ISNULL(s.[Status], '') LIKE @Search)");
+
+            var whereSql = string.Join(" AND ", where);
+            var listSql = "SELECT s.* FROM dbo.MF_Submissions s WHERE " + whereSql
+                + " ORDER BY s.SubmittedOnUtc DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;";
+            var countSql = "SELECT COUNT(*) FROM dbo.MF_Submissions s WHERE " + whereSql + ";";
+            var items = new List<SubmissionInfo>();
+
+            using (var conn = new SqlConnection(ConnectionString))
+            {
+                conn.Open();
+                using (var cmd = new SqlCommand(listSql, conn))
+                {
+                    AddOwnedListParameters(cmd, formId, userId, status, search, dateFrom, effectiveDateTo);
+                    cmd.Parameters.AddWithValue("@Offset", pageIndex * pageSize);
+                    cmd.Parameters.AddWithValue("@PageSize", pageSize);
+                    using (var reader = cmd.ExecuteReader())
+                        while (reader.Read()) items.Add(MapSubmission(reader));
+                }
+
+                using (var cmd = new SqlCommand(countSql, conn))
+                {
+                    AddOwnedListParameters(cmd, formId, userId, status, search, dateFrom, effectiveDateTo);
+                    return (items, Convert.ToInt32(cmd.ExecuteScalar()));
+                }
+            }
+        }
+
+        private static void AddOwnedListParameters(SqlCommand cmd, int formId, int userId,
+            string status, string search, DateTime? dateFrom, DateTime? dateTo)
+        {
+            cmd.Parameters.AddWithValue("@FormId", formId);
+            cmd.Parameters.AddWithValue("@UserId", userId);
+            if (!string.IsNullOrWhiteSpace(status)) cmd.Parameters.AddWithValue("@Status", status);
+            if (!string.IsNullOrWhiteSpace(search)) cmd.Parameters.AddWithValue("@Search", "%" + search.Trim() + "%");
+            if (dateFrom.HasValue) cmd.Parameters.AddWithValue("@DateFrom", dateFrom.Value);
+            if (dateTo.HasValue) cmd.Parameters.AddWithValue("@DateTo", dateTo.Value);
+        }
+
         public static int CountSubmissions(int formId)
         {
             using (var conn = new SqlConnection(ConnectionString))

@@ -191,7 +191,8 @@ namespace MegaForm.DNN.Services
             // Forwarding a task also emails the new assignee — but only through the 8-argument
             // constructor. The 4-argument one left the sender null and forwarded in silence.
             WorkflowTasks = new WorkflowTaskService(WorkflowRepo, WorkflowRuntime, SubmissionRepo,
-                WorkflowEvaluator, WorkflowEmail, WorkflowPrincipals, LogService);
+                WorkflowEvaluator, WorkflowEmail, WorkflowPrincipals, LogService, null,
+                new PermissionService(Phase2Repo));
             Permission = new PermissionService(Phase2Repo);
 
             // [B55 v20260603] DNN connection factory targets the same

@@ -508,7 +508,7 @@ namespace MegaForm.Web.Data
         }
     }
 
-    public class EfSubmissionRepository : ISubmissionRepository
+    public class EfSubmissionRepository : ISubmissionRepository, ISubmissionOwnerFilterableRepository
     {
         private readonly MegaFormDbContext _db;
         public EfSubmissionRepository(MegaFormDbContext db) { _db = db; }
@@ -527,9 +527,19 @@ namespace MegaForm.Web.Data
         public List<SubmissionValueInfo> GetValues(int submissionId) => _db.SubmissionValues.AsNoTracking().Where(v => v.SubmissionId == submissionId).OrderBy(v => v.ValueId).ToList();
         public (List<SubmissionInfo> Items, int TotalCount) List(int formId, string status = null, string search = null,
             DateTime? dateFrom = null, DateTime? dateTo = null, int pageIndex = 0, int pageSize = 50)
+            => ListCore(formId, null, status, search, dateFrom, dateTo, pageIndex, pageSize);
+
+        public (List<SubmissionInfo> Items, int TotalCount) ListOwnedBy(int formId, int userId,
+            string status = null, string search = null,
+            DateTime? dateFrom = null, DateTime? dateTo = null, int pageIndex = 0, int pageSize = 50)
+            => ListCore(formId, userId, status, search, dateFrom, dateTo, pageIndex, pageSize);
+
+        private (List<SubmissionInfo> Items, int TotalCount) ListCore(int formId, int? userId,
+            string status, string search, DateTime? dateFrom, DateTime? dateTo, int pageIndex, int pageSize)
         {
             var q = _db.Submissions.AsNoTracking().AsQueryable();
             if (formId > 0) q = q.Where(s => s.FormId == formId);
+            if (userId.HasValue) q = q.Where(s => s.UserId == userId.Value);
             if (!string.IsNullOrWhiteSpace(status)) q = q.Where(s => s.Status == status);
             if (dateFrom.HasValue) q = q.Where(s => s.SubmittedOnUtc >= dateFrom.Value);
             if (dateTo.HasValue)

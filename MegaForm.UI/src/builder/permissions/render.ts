@@ -4,13 +4,10 @@
 // revoke at a glance without filling out a form per rule.
 //
 // Data model unchanged — each checked cell maps to a PermissionRule with
-// {permissionType, principalType, principalId, scope: defaultScope, isGranted: true}.
-// Toggling a cell adds or removes the matching rule from state.rules. Rules
-// with non-default scope or fieldRestrictions are PRESERVED untouched (the
-// matrix only owns default-scope rules) and surfaced as a count below.
-//
-// Field restrictions / per-rule scope remain editable via the API; a future
-// "Advanced rules" sub-panel can layer on top without reworking the matrix.
+// {permissionType, principalType, principalId, scope, isGranted: true}.
+// Toggling a cell adds/removes its rule; scoped permissions also expose the
+// catalog's All / Own / Team selector. Field-restriction rules are preserved
+// and surfaced as an advanced-rule count.
 
 import { BUILDER_PERMISSIONS_BADGE } from './badge';
 import type { PermissionCatalog, PermissionDefinition, PermissionPrincipal, PermissionRule, PermissionsEditorState } from './types';
@@ -39,9 +36,7 @@ function isDefaultRule(rule: PermissionRule, def: PermissionDefinition | null): 
   // Default-scope, no field restrictions → fully representable in the matrix.
   const restrictions = String(rule.fieldRestrictions || '').trim();
   if (restrictions && restrictions !== '{}' && restrictions !== '[]') return false;
-  const scope = String(rule.scope || 'all').toLowerCase();
-  const defaultScope = defaultScopeOf(null, def).toLowerCase();
-  return scope === defaultScope;
+  return true;
 }
 
 function findCellRule(
@@ -95,6 +90,23 @@ function renderPrincipalRow(
   for (const def of perms) {
     const cellRule = findCellRule(rules, catalog, def, p);
     const checked = !!(cellRule && cellRule.isGranted !== false);
+    const rawScope = String((cellRule && cellRule.scope) || defaultScopeOf(catalog, def)).toLowerCase();
+    const selectedScope = rawScope.indexOf('team:') === 0 ? 'team' : rawScope;
+    let scopeSelect = '';
+    if (def.supportsScope === true) {
+      scopeSelect = '<select class="mf-perm-scope" ' +
+        'data-perm="' + esc(def.key) + '" ' +
+        'data-ptype="' + esc(p.principalType) + '" ' +
+        'data-pid="' + esc(p.principalId) + '"' +
+        (checked ? '' : ' disabled') +
+        ' title="Record scope" style="width:72px;margin-top:3px;padding:1px 2px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;font-size:10px;color:#475569">';
+      for (const scope of (catalog.scopes || [])) {
+        scopeSelect += '<option value="' + esc(scope.key) + '"' +
+          (String(scope.key).toLowerCase() === selectedScope ? ' selected' : '') +
+          '>' + esc(scope.label) + '</option>';
+      }
+      scopeSelect += '</select>';
+    }
     html += '<td style="padding:6px;text-align:center;border-bottom:1px solid #f1f5f9;background:#fff">' +
       '<label style="display:inline-flex;align-items:center;justify-content:center;cursor:pointer;width:22px;height:22px;border-radius:4px;transition:background .15s">' +
         '<input type="checkbox" class="mf-perm-cell" ' +
@@ -103,7 +115,7 @@ function renderPrincipalRow(
           'data-pid="' + esc(p.principalId) + '"' +
           (checked ? ' checked' : '') +
           ' style="width:16px;height:16px;cursor:pointer;accent-color:#16a34a" />' +
-      '</label></td>';
+      '</label>' + scopeSelect + '</td>';
   }
   html += '</tr>';
   return html;
@@ -151,7 +163,7 @@ function renderMatrix(catalog: PermissionCatalog, rules: PermissionRule[]): stri
   const advanced = countAdvancedRules(catalog, rules);
   if (advanced > 0) {
     html += '<div style="margin-top:8px;padding:8px 10px;border:1px dashed #fbbf24;border-radius:8px;background:#fffbeb;font-size:11px;color:#92400e">' +
-      '<i class="fas fa-info-circle"></i> ' + String(advanced) + ' advanced rule(s) preserved (custom scope or field restrictions). They are saved with the matrix changes but not editable here.' +
+      '<i class="fas fa-info-circle"></i> ' + String(advanced) + ' advanced rule(s) preserved (field restrictions). They are saved with the matrix changes but not editable here.' +
     '</div>';
   }
 
@@ -206,7 +218,7 @@ export function renderPermissionsEditor(state: PermissionsEditorState): void {
     ? 'Catalog: <strong>' + esc(state.catalog.badge || BUILDER_PERMISSIONS_BADGE) + '</strong> · ' +
       String((state.catalog.principals || []).length) + ' principals · ' +
       String((state.catalog.permissionTypes || []).length) + ' permissions · ' +
-      'Tick a cell to grant, untick to revoke. Shared across Web, DNN, Oqtane.'
+      'Tick a cell to grant, choose its record scope, or untick to revoke. Shared across Web, DNN, Oqtane, Umbraco.'
     : 'Loading canonical permission catalog…';
 
   if (!state.catalog) {

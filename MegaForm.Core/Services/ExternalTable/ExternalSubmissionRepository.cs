@@ -20,7 +20,7 @@ namespace MegaForm.Core.Services.ExternalTable
     /// Reads are live. There is no copy of the customer's data in MF_Submissions — only an anchor row
     /// per record we have shown, which exists so that a submission id can address it.
     /// </summary>
-    public class ExternalSubmissionRepository : ISubmissionRepository
+    public class ExternalSubmissionRepository : ISubmissionRepository, ISubmissionOwnerFilterableRepository
     {
         private readonly ISubmissionRepository _inner;
         private readonly IExternalBindingStore _bindings;
@@ -132,6 +132,49 @@ namespace MegaForm.Core.Services.ExternalTable
             }
 
             return (sqlItems, Math.Max(0, sqlPage.TotalCount));
+        }
+
+        public (List<SubmissionInfo> Items, int TotalCount) ListOwnedBy(
+            int formId,
+            int userId,
+            string status = null,
+            string search = null,
+            DateTime? dateFrom = null,
+            DateTime? dateTo = null,
+            int pageIndex = 0,
+            int pageSize = 50)
+        {
+            var scope = ExternalSourceContext.Current;
+            var source = ExternalSourceContext.Source;
+            var binding = formId > 0 && source != ExternalSourceScope.Json
+                ? _bindings.GetByForm(formId)
+                : null;
+
+            // External customer-table rows do not carry MegaForm UserId ownership.
+            // Own-scoped access must therefore fail closed instead of leaking the table.
+            if (binding != null || source == ExternalSourceScope.Sql)
+                return (new List<SubmissionInfo>(), 0);
+
+            if (scope != null) scope.AppliedSource = ExternalSourceScope.Json;
+            if (_inner is ISubmissionOwnerFilterableRepository ownerRepository)
+            {
+                return ownerRepository.ListOwnedBy(
+                    formId, userId, status, search, dateFrom, dateTo, pageIndex, pageSize);
+            }
+
+            // Compatibility fallback for third-party repositories that have not adopted
+            // the owner-filter capability. Keep the read bounded and calculate paging
+            // after filtering so no row belonging to another user is returned.
+            var bounded = _inner.List(
+                formId, status, search, dateFrom, dateTo, 0, 5000);
+            var owned = (bounded.Items ?? new List<SubmissionInfo>())
+                .Where(item => item.UserId.HasValue && item.UserId.Value == userId)
+                .ToList();
+            return (
+                owned.Skip(Math.Max(0, pageIndex) * Math.Max(1, pageSize))
+                    .Take(Math.Max(1, pageSize))
+                    .ToList(),
+                owned.Count);
         }
 
         private static void MarkScope(ExternalSourceScope scope, ExternalBinding binding, ExternalTableQueryService.Page page)

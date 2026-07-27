@@ -632,17 +632,19 @@ namespace MegaForm.Oqtane.Server.Controllers
         }
 
         [HttpGet("Permissions/Get")]
-        [Authorize(Policy = "EditModule")]
+        [Authorize]
         public IActionResult GetPermissions([FromQuery] int formId)
         {
             if (formId <= 0) return BadRequest(new { error = "formId required" });
+            if (!CanManagePermissionsForForm(formId, GetCurrentUserContextWithRoles()))
+                return StatusCode(403, new { error = "You do not have permission to manage this form's permissions." });
 
             var permissions = PermissionCatalogService.NormalizeRules(formId, _phase2Repo.GetFormPermissions(formId));
             return Ok(new { permissions });
         }
 
         [HttpGet("Permissions/Catalog")]
-        [Authorize(Policy = "EditModule")]
+        [Authorize]
         public IActionResult GetPermissionsCatalog([FromQuery] int formId)
         {
             // formId <= 0 → SITE-LEVEL catalog (used by the Form Creation Wizard, which
@@ -650,6 +652,8 @@ namespace MegaForm.Oqtane.Server.Controllers
             // form, so the catalog is fully populated; only the form-specific permission
             // rules are skipped. ResolvePortalId(0) falls back to auth/header site.
             if (formId < 0) formId = 0;
+            if (!CanManagePermissionsForForm(formId, GetCurrentUserContextWithRoles()))
+                return StatusCode(403, new { error = "You do not have permission to manage this form's permissions." });
 
             var permissions = formId > 0
                 ? PermissionCatalogService.NormalizeRules(formId, _phase2Repo.GetFormPermissions(formId))
@@ -659,7 +663,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         }
 
         [HttpPost("Permissions/Save")]
-        [Authorize(Policy = "EditModule")]
+        [Authorize]
         public IActionResult SavePermissions([FromBody] JsonElement bodyElement)
         {
             string rawBodyJson = bodyElement.ValueKind == JsonValueKind.Undefined || bodyElement.ValueKind == JsonValueKind.Null
@@ -674,6 +678,8 @@ namespace MegaForm.Oqtane.Server.Controllers
 
             int formId = body.Value<int?>("formId") ?? body.Value<int?>("FormId") ?? 0;
             if (formId <= 0) return BadRequest(new { error = "formId required" });
+            if (!CanManagePermissionsForForm(formId, GetCurrentUserContextWithRoles()))
+                return StatusCode(403, new { error = "You do not have permission to manage this form's permissions." });
 
             var permissions = body["permissions"]?.ToObject<List<FormPermissionInfo>>() ??
                               body["Permissions"]?.ToObject<List<FormPermissionInfo>>() ??
@@ -2295,7 +2301,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         private bool CanUseSubmissionManagement(int formId, UserContext actor, PermissionService permissions)
         {
             if (IsSubmissionAdmin(actor)) return true;
-            if (actor == null || !actor.IsAuthenticated) return false;
+            if (actor == null) return false;
             if (!HasExplicitSubmissionViewRule(formId)) return false;
             return permissions.CanView(formId, actor);
         }
@@ -2303,7 +2309,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         private bool CanViewSubmissionRow(int formId, SubmissionInfo submission, UserContext actor, PermissionService permissions)
         {
             if (IsSubmissionAdmin(actor)) return true;
-            if (actor == null || !actor.IsAuthenticated) return false;
+            if (actor == null) return false;
             // [ApproverCanSee v20260711] An approver who holds a workflow task on THIS
             // submission (assignee at any point, or candidate while it is still open) must
             // be able to READ the record they are approving — the inbox detail calls
@@ -2321,6 +2327,37 @@ namespace MegaForm.Oqtane.Server.Controllers
                 return true;
             if (!HasExplicitSubmissionViewRule(formId)) return false;
             return permissions.CanView(formId, actor) && permissions.CanViewSubmission(formId, submission, actor);
+        }
+
+        private bool CanMutateSubmission(SubmissionInfo submission, UserContext actor, PermissionService permissions, bool delete)
+        {
+            if (IsSubmissionAdmin(actor) || IsModuleEditor()) return true;
+            if (actor == null || !actor.IsAuthenticated || submission == null) return false;
+            return delete
+                ? permissions.CanDelete(submission.FormId, actor)
+                    && permissions.CanDeleteSubmission(submission.FormId, submission, actor)
+                : permissions.CanEdit(submission.FormId, actor)
+                    && permissions.CanEditSubmission(submission.FormId, submission, actor);
+        }
+
+        private bool CanManagePermissionsForForm(int formId, UserContext actor)
+        {
+            if (IsSubmissionAdmin(actor)) return true;
+            if (formId > 0 && new PermissionService(_phase2Repo).CanManage(formId, actor)) return true;
+            if (!IsModuleEditor()) return false;
+            if (formId <= 0) return true;
+
+            var moduleId = AuthEntityId(EntityNames.Module);
+            if (moduleId <= 0) return false;
+            var form = _formRepo.GetForm(formId);
+            if (form != null && form.ModuleId == moduleId) return true;
+
+            var settings = ReadSettings(EntityNames.Module, moduleId);
+            var configuredFormId = ParsePositiveInt(ReadSetting(
+                settings,
+                "MegaForm:FormId",
+                ReadSetting(settings, "FormId", "0")));
+            return configuredFormId == formId;
         }
 
         // [OwnerRlsSql v20260722-01] True when the actor holds ANY workflow task on a submission
@@ -2426,6 +2463,11 @@ namespace MegaForm.Oqtane.Server.Controllers
                 && actor != null && actor.IsAuthenticated
                 && permissions.IsOwnOnlyViewScope(formId, actor)
                 && !ActorHoldsAnyTaskInForm(formId, actor);
+            bool scopedPrefetch = !isPublicListView && !isAdminActor && hasExplicitViewRule
+                && !ownerOnlySqlFilter
+                && permissions.RequiresSubmissionScopeEvaluation(formId, actor, "view");
+            int requestedPageIndex = pageIndex;
+            int requestedPageSize = pageSize;
 
             var query = new SubmissionListQuery
             {
@@ -2434,15 +2476,15 @@ namespace MegaForm.Oqtane.Server.Controllers
                 Search = search,
                 DateFrom = dateFrom,
                 DateTo = dateTo,
-                PageIndex = pageIndex,
-                PageSize = pageSize,
+                PageIndex = scopedPrefetch ? 0 : pageIndex,
+                PageSize = scopedPrefetch ? SubmissionQueryService.TrustedMaxPageSize : pageSize,
                 // [OwnerRlsSql v20260722-02] Server-set only, never client-bound. See above.
                 UserId = ownerOnlySqlFilter ? actor.UserId : (int?)null,
                 // [QueryKey250Fix v20260717-01] An ADMIN may page past the public 250 clamp (the
                 // report modal asks for 2000 and silently got 250 back — analysis ran over a quarter
                 // of the data). Non-admin callers were already clamped to 100 above, so TrustedFetch
                 // never applies to them. Facade still caps at TrustedMaxPageSize (bounded read).
-                TrustedFetch = IsSubmissionAdmin(actor)
+                TrustedFetch = IsSubmissionAdmin(actor) || scopedPrefetch
             };
             var sourceScope = new MegaForm.Core.Services.ExternalTable.ExternalSourceScope { Source = requestedSource };
             var prevScope = MegaForm.Core.Services.ExternalTable.ExternalSourceContext.Current;
@@ -2482,12 +2524,16 @@ namespace MegaForm.Oqtane.Server.Controllers
             var visibleItems = applyPerRowFilter
                 ? resultItems.Where(item => CanViewSubmissionRow(formId, new SubmissionInfo
                 {
-                    SubmissionId = item.SubmissionId,
-                    FormId = item.FormId,
-                    UserId = item.UserId,
-                    Status = item.Status
-                }, actor, permissions)).ToList()
+                     SubmissionId = item.SubmissionId,
+                     FormId = item.FormId,
+                     UserId = item.UserId,
+                     Status = item.Status,
+                     DataJson = item.DataJson
+                 }, actor, permissions)).ToList()
                 : resultItems.ToList();
+            var visibleTotal = visibleItems.Count;
+            if (scopedPrefetch)
+                visibleItems = visibleItems.Skip(requestedPageIndex * requestedPageSize).Take(requestedPageSize).ToList();
             var openTasksBySubmission = BuildOpenWorkflowTaskLookup(formId, visibleItems.Select(item => item.SubmissionId));
             return JsonOk(new
             {
@@ -2514,9 +2560,9 @@ namespace MegaForm.Oqtane.Server.Controllers
                 // with no per-row RLS) now reports the TRUE SQL TotalCount so the pager is correct.
                 // Only when genuine per-row RLS filtering is active do we fall back to the visible
                 // count (acceptable for the RLS case — the true total is intentionally not exposed).
-                TotalCount = applyPerRowFilter ? visibleItems.Count : result.TotalCount,
-                PageIndex = result.PageIndex,
-                PageSize = result.PageSize,
+                TotalCount = applyPerRowFilter ? visibleTotal : result.TotalCount,
+                PageIndex = scopedPrefetch ? requestedPageIndex : result.PageIndex,
+                PageSize = scopedPrefetch ? requestedPageSize : result.PageSize,
                 // [SourcePicker v20260715] Server-truth echo: which store ACTUALLY answered ("json" |
                 // "sql" | "" when a forced sql read fail-closed), whether this form has a SQL source
                 // at all (drives the client toggle's visibility), the table label, and whether
@@ -2987,20 +3033,28 @@ namespace MegaForm.Oqtane.Server.Controllers
         }
 
         [HttpPost("Submissions/{submissionId}/Status")]
-        [Authorize(Policy = "EditModule")]
+        [Authorize]
         public IActionResult UpdateSubmissionStatus(int submissionId, [FromBody] JsonElement body)
         {
             string status = body.TryGetProperty("status", out var s) ? s.GetString() : null;
             if (string.IsNullOrWhiteSpace(status)) return BadRequest(new { error = "status is required" });
+            var row = _subRepo.Get(submissionId);
+            if (row == null) return NotFound();
+            if (!CanMutateSubmission(row, GetCurrentUserContextWithRoles(), new PermissionService(_phase2Repo), delete: false))
+                return StatusCode(403, new { error = "You do not have permission to modify this submission." });
             _subRepo.UpdateStatus(submissionId, status);
             return Ok(new { success = true });
         }
 
         [HttpPost("Submissions/UpdateData")]
-        [Authorize(Policy = "EditModule")]
+        [Authorize]
         public IActionResult UpdateSubmissionData([FromQuery] int submissionId, [FromBody] Dictionary<string, object> data)
         {
             if (submissionId <= 0) return BadRequest(new { error = "submissionId is required" });
+            var row = _subRepo.Get(submissionId);
+            if (row == null) return NotFound();
+            if (!CanMutateSubmission(row, GetCurrentUserContextWithRoles(), new PermissionService(_phase2Repo), delete: false))
+                return StatusCode(403, new { error = "You do not have permission to modify this submission." });
             try
             {
                 _subRepo.UpdateData(submissionId, System.Text.Json.JsonSerializer.Serialize(data ?? new Dictionary<string, object>()));
@@ -3015,7 +3069,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         }
 
         [HttpGet("Submissions/Export")]
-        [Authorize(Policy = "ViewModule")]
+        [AllowAnonymous]
         public IActionResult ExportSubmissions(int formId, string format = "json",
             string status = null, string search = null, DateTime? dateFrom = null, DateTime? dateTo = null)
         {
@@ -3028,7 +3082,7 @@ namespace MegaForm.Oqtane.Server.Controllers
             // rules keep the legacy behavior; only rule-bearing forms are tightened.
             var actor = GetCurrentUserContextWithRoles();
             var permissions = new PermissionService(_phase2Repo);
-            if (!IsModuleEditor() && !permissions.CanExport(formId, actor))
+            if (!IsSubmissionAdmin(actor) && !IsModuleEditor() && !permissions.CanExport(formId, actor))
                 return StatusCode(403, new { error = "You do not have permission to export submissions for this form." });
 
             // [QueryKey250Fix v20260717-01] Export asked for 10000 but the facade clamped to 250 —
@@ -3036,6 +3090,8 @@ namespace MegaForm.Oqtane.Server.Controllers
             // lifts this authorized export to the facade's TrustedMaxPageSize (5000, bounded read).
             // status/search/dateFrom/dateTo are optional additive filters (same contract as
             // GET Submissions); omitting them exports everything, as before.
+            bool ownOnlyScope = permissions.IsOwnOnlyScope(formId, actor, "export");
+            bool rowScoped = permissions.RequiresSubmissionScopeEvaluation(formId, actor, "export");
             var result = _submissionQueries.List(new SubmissionListQuery
             {
                 FormId = formId,
@@ -3045,8 +3101,23 @@ namespace MegaForm.Oqtane.Server.Controllers
                 DateTo = dateTo,
                 PageIndex = 0,
                 PageSize = 10000,
+                UserId = ownOnlyScope ? actor.UserId : (int?)null,
                 TrustedFetch = true
             });
+            if (rowScoped && !ownOnlyScope)
+            {
+                result.Items = (result.Items ?? new List<SubmissionListItem>())
+                    .Where(item => permissions.CanExportSubmission(formId, new SubmissionInfo
+                    {
+                        SubmissionId = item.SubmissionId,
+                        FormId = item.FormId,
+                        UserId = item.UserId,
+                        Status = item.Status,
+                        DataJson = item.DataJson
+                    }, actor))
+                    .ToList();
+                result.TotalCount = result.Items.Count;
+            }
             if (string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase))
             {
                 var lines = new List<string> { "SubmissionId,SubmittedOnUtc,Status,IpAddress,Summary" };
@@ -3069,9 +3140,13 @@ namespace MegaForm.Oqtane.Server.Controllers
         }
 
         [HttpDelete("Submissions/{submissionId}")]
-        [Authorize(Policy = "EditModule")]
+        [Authorize]
         public IActionResult DeleteSubmission(int submissionId)
         {
+            var row = _subRepo.Get(submissionId);
+            if (row == null) return NotFound();
+            if (!CanMutateSubmission(row, GetCurrentUserContextWithRoles(), new PermissionService(_phase2Repo), delete: true))
+                return StatusCode(403, new { error = "You do not have permission to delete this submission." });
             try
             {
                 _subRepo.Delete(submissionId);
@@ -3085,6 +3160,38 @@ namespace MegaForm.Oqtane.Server.Controllers
             _logger.Log(LogLevel.Information, this, LogFunction.Delete,
                 "MegaForm Submission Deleted {SubmissionId}", submissionId);
             return Ok();
+        }
+
+        [HttpPost("Submissions/BulkDelete")]
+        [Authorize]
+        public IActionResult BulkDeleteSubmissions([FromBody] BulkDeleteSubmissionRequest request)
+        {
+            if (request == null || request.FormId <= 0 || request.Ids == null || request.Ids.Length == 0)
+                return BadRequest(new { error = "formId and ids are required." });
+
+            var ids = request.Ids.Distinct().ToArray();
+            var actor = GetCurrentUserContextWithRoles();
+            var permissions = new PermissionService(_phase2Repo);
+            var rows = ids.Select(_subRepo.Get).ToList();
+            if (rows.Any(row => row == null || row.FormId != request.FormId))
+                return NotFound(new { error = "One or more submissions were not found." });
+            if (rows.Any(row => !CanMutateSubmission(row, actor, permissions, delete: true)))
+                return StatusCode(403,
+                    new { error = "You do not have permission to delete one or more submissions." });
+
+            try
+            {
+                _subRepo.BulkDelete(request.FormId, ids);
+            }
+            catch (NotSupportedException)
+            {
+                return Conflict(new
+                {
+                    error = "EXTERNAL_READONLY",
+                    message = "Records from an external table cannot be deleted from MegaForm."
+                });
+            }
+            return Ok(new { success = true, deleted = ids.Length });
         }
 
 
@@ -4681,6 +4788,12 @@ namespace MegaForm.Oqtane.Server.Controllers
             public string Badge { get; set; }
             public List<string> ScriptFiles { get; set; } = new List<string>();
             public List<string> StyleFiles { get; set; } = new List<string>();
+        }
+
+        public sealed class BulkDeleteSubmissionRequest
+        {
+            public int FormId { get; set; }
+            public int[] Ids { get; set; } = Array.Empty<int>();
         }
 
     }

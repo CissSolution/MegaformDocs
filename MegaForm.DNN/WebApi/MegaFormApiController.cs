@@ -1999,7 +1999,7 @@ VALUES
     // ================================================================
     // SUBMISSIONS MANAGEMENT API (Admin)
     // ================================================================
-    [DnnAuthorize(StaticRoles = "Administrators")]
+    [DnnAuthorize]
     public class SubmissionsController : DnnApiController
     {
         private UserContext CurrentSubmissionUser
@@ -2069,7 +2069,7 @@ VALUES
         private static bool CanUseSubmissionManagement(int formId, UserContext actor)
         {
             if (IsAdminUser(actor)) return true;
-            if (actor == null || !actor.IsAuthenticated) return false;
+            if (actor == null) return false;
             if (!HasExplicitSubmissionViewRule(formId)) return false;
             return new PermissionService(new DnnPhase2RepositoryAdapter()).CanView(formId, actor);
         }
@@ -2077,7 +2077,7 @@ VALUES
         private static bool CanViewSubmissionRow(int formId, SubmissionInfo submission, UserContext actor)
         {
             if (IsAdminUser(actor)) return true;
-            if (actor == null || !actor.IsAuthenticated) return false;
+            if (actor == null) return false;
             // [ApproverCanSee v20260711] Mirror of the Oqtane fix: an approver who holds a
             // workflow task on THIS submission (assignee at any point, or candidate while it
             // is still open) must be able to READ the record they are approving — the inbox
@@ -2091,6 +2091,21 @@ VALUES
             return permissions.CanView(formId, actor) && permissions.CanViewSubmission(formId, submission, actor);
         }
 
+        private static bool CanMutateSubmission(
+            SubmissionInfo submission,
+            UserContext actor,
+            PermissionService permissions,
+            bool delete)
+        {
+            if (IsAdminUser(actor)) return true;
+            if (actor == null || !actor.IsAuthenticated || submission == null) return false;
+            return delete
+                ? permissions.CanDelete(submission.FormId, actor)
+                    && permissions.CanDeleteSubmission(submission.FormId, submission, actor)
+                : permissions.CanEdit(submission.FormId, actor)
+                    && permissions.CanEditSubmission(submission.FormId, submission, actor);
+        }
+
         [HttpGet]
         [AllowAnonymous]
         public HttpResponseMessage List(int formId = 0, string status = null, string search = null,
@@ -2099,6 +2114,7 @@ VALUES
         {
             var actor = CurrentSubmissionUser;
             var isAdmin = IsAdminUser(actor);
+            var permissions = new PermissionService(new DnnPhase2RepositoryAdapter());
             var requestedForm = formId > 0 ? FormRepository.GetForm(formId) : null;
             var isPublicListView = requestedForm != null
                 && string.Equals(requestedForm.Status, "Published", StringComparison.OrdinalIgnoreCase)
@@ -2166,6 +2182,13 @@ VALUES
             // source routing above. For an ordinary form with source=auto it is a pure passthrough.
             var service = new SubmissionQueryService(DnnServiceLocator.Instance.SubmissionRepo, formsRepo, new DnnFileRepository());
             var hasBoundQuery = !string.IsNullOrWhiteSpace(queryKey);
+            bool ownerOnlyScope = !isAdmin && !isPublicListView
+                && actor != null && actor.IsAuthenticated
+                && permissions.IsOwnOnlyViewScope(formId, actor);
+            bool scopedPrefetch = !isAdmin && !isPublicListView && !ownerOnlyScope
+                && permissions.RequiresSubmissionScopeEvaluation(formId, actor, "view");
+            int requestedPageIndex = pageIndex;
+            int requestedPageSize = pageSize;
             var sourceScope = new MegaForm.Core.Services.ExternalTable.ExternalSourceScope { Source = requestedSource };
             var prevScope = MegaForm.Core.Services.ExternalTable.ExternalSourceContext.Current;
             SubmissionPagedResult<SubmissionListItem> result;
@@ -2179,14 +2202,15 @@ VALUES
                     Search = search,
                     DateFrom = from,
                     DateTo = to,
-                    PageIndex = hasBoundQuery ? 0 : pageIndex,
+                    PageIndex = hasBoundQuery || scopedPrefetch ? 0 : pageIndex,
                     // [QueryKey250Fix v20260717-01] Bound-query pre-fetch asked for 1000 but the
                     // facade clamped to 250 — listview filters silently ran over the newest 250 rows
                     // only. 5000 matches Oqtane. TrustedFetch is ADMIN-only (server-set, never
                     // client-controlled): the anonymous public-queryKey path keeps the strict 250
                     // cap per bounded-read rule 11 (anonymous = strictest cap).
-                    PageSize = hasBoundQuery ? Math.Max(pageSize, 5000) : pageSize,
-                    TrustedFetch = isAdmin
+                    PageSize = hasBoundQuery || scopedPrefetch ? Math.Max(pageSize, 5000) : pageSize,
+                    UserId = ownerOnlyScope ? actor.UserId : (int?)null,
+                    TrustedFetch = isAdmin || scopedPrefetch
                 });
             }
             finally
@@ -2195,21 +2219,25 @@ VALUES
             }
             result = ApplyDnnListViewQuery(result, queryKey, pageIndex, pageSize);
 
-            if (!isAdmin && !isPublicListView && result.Items != null)
+            if (!isAdmin && !isPublicListView && !ownerOnlyScope && result.Items != null)
             {
                 var visible = result.Items.Where(item => CanViewSubmissionRow(formId, new SubmissionInfo
                 {
                     SubmissionId = item.SubmissionId,
                     FormId = item.FormId,
                     UserId = item.UserId,
-                    Status = item.Status
+                    Status = item.Status,
+                    DataJson = item.DataJson
                 }, actor)).ToList();
+                var visibleTotal = visible.Count;
+                if (scopedPrefetch)
+                    visible = visible.Skip(requestedPageIndex * requestedPageSize).Take(requestedPageSize).ToList();
                 result = new SubmissionPagedResult<SubmissionListItem>
                 {
                     Items = visible,
-                    TotalCount = visible.Count,
-                    PageIndex = result.PageIndex,
-                    PageSize = result.PageSize
+                    TotalCount = visibleTotal,
+                    PageIndex = scopedPrefetch ? requestedPageIndex : result.PageIndex,
+                    PageSize = scopedPrefetch ? requestedPageSize : result.PageSize
                 };
             }
 
@@ -2574,6 +2602,15 @@ VALUES
         [ValidateAntiForgeryToken]
         public HttpResponseMessage UpdateStatus(int submissionId, string status)
         {
+            var submission = DnnServiceLocator.Instance.SubmissionRepo.Get(submissionId);
+            if (submission == null)
+                return Request.CreateResponse(HttpStatusCode.NotFound);
+
+            var permissions = new PermissionService(new DnnPhase2RepositoryAdapter());
+            if (!CanMutateSubmission(submission, CurrentSubmissionUser, permissions, delete: false))
+                return Request.CreateResponse(HttpStatusCode.Forbidden,
+                    new { error = "You do not have permission to edit this submission." });
+
             FormRepository.UpdateSubmissionStatus(submissionId, status);
             return Request.CreateResponse(HttpStatusCode.OK, new { message = "Status updated." });
         }
@@ -2583,15 +2620,24 @@ VALUES
         public HttpResponseMessage UpdateData(int submissionId, [FromBody] Dictionary<string, object> data)
         {
             if (data == null) return Request.CreateResponse(HttpStatusCode.BadRequest, "No data provided.");
+            var submission = DnnServiceLocator.Instance.SubmissionRepo.Get(submissionId);
+            if (submission == null)
+                return Request.CreateResponse(HttpStatusCode.NotFound);
+
+            var permissions = new PermissionService(new DnnPhase2RepositoryAdapter());
+            if (!CanMutateSubmission(submission, CurrentSubmissionUser, permissions, delete: false))
+                return Request.CreateResponse(HttpStatusCode.Forbidden,
+                    new { error = "You do not have permission to edit this submission." });
+
             var dataJson = JsonConvert.SerializeObject(data);
             FormRepository.UpdateSubmissionData(submissionId, dataJson);
 
             // Keep typed rows in sync with the updated DataJson.
             try
             {
-                var submission = DnnServiceLocator.Instance.SubmissionRepo.Get(submissionId);
-                if (submission != null)
-                    DnnServiceLocator.Instance.TypedResync.Resync(submissionId, submission.FormId, dataJson);
+                var updatedSubmission = DnnServiceLocator.Instance.SubmissionRepo.Get(submissionId);
+                if (updatedSubmission != null)
+                    DnnServiceLocator.Instance.TypedResync.Resync(submissionId, updatedSubmission.FormId, dataJson);
             }
             catch { /* fail-soft: DataJson is authoritative */ }
 
@@ -2604,6 +2650,15 @@ VALUES
         {
             try
             {
+                var submission = DnnServiceLocator.Instance.SubmissionRepo.Get(submissionId);
+                if (submission == null)
+                    return Request.CreateResponse(HttpStatusCode.NotFound);
+
+                var permissions = new PermissionService(new DnnPhase2RepositoryAdapter());
+                if (!CanMutateSubmission(submission, CurrentSubmissionUser, permissions, delete: true))
+                    return Request.CreateResponse(HttpStatusCode.Forbidden,
+                        new { error = "You do not have permission to delete this submission." });
+
                 FormRepository.DeleteSubmission(submissionId);
                 return Request.CreateResponse(HttpStatusCode.OK, new { message = "Submission deleted." });
             }
@@ -2619,6 +2674,20 @@ VALUES
         {
             if (req?.Ids == null || req.Ids.Count == 0)
                 return Request.CreateResponse(HttpStatusCode.BadRequest, new { message = "No IDs provided." });
+
+            var permissions = new PermissionService(new DnnPhase2RepositoryAdapter());
+            var actor = CurrentSubmissionUser;
+            var preflightRows = req.Ids
+                .Distinct()
+                .Select(id => DnnServiceLocator.Instance.SubmissionRepo.Get(id))
+                .ToList();
+            if (preflightRows.Any(row => row == null))
+                return Request.CreateResponse(HttpStatusCode.NotFound,
+                    new { error = "One or more submissions were not found." });
+            if (preflightRows.Any(row => !CanMutateSubmission(row, actor, permissions, delete: true)))
+                return Request.CreateResponse(HttpStatusCode.Forbidden,
+                    new { error = "You do not have permission to delete one or more submissions." });
+
             int deleted = 0;
             int failed = 0;
             int notFound = 0;
@@ -2658,12 +2727,25 @@ VALUES
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public HttpResponseMessage Export(int formId, string dateFrom = null, string dateTo = null, string format = "json")
         {
+            var permissions = new PermissionService(new DnnPhase2RepositoryAdapter());
+            var actor = CurrentSubmissionUser;
+            if (!permissions.CanExport(formId, actor))
+                return Request.CreateResponse(HttpStatusCode.Forbidden,
+                    new { error = "You do not have permission to export submissions." });
+
             DateTime? from = string.IsNullOrEmpty(dateFrom) ? (DateTime?)null : DateTime.Parse(dateFrom);
             DateTime? to = string.IsNullOrEmpty(dateTo) ? (DateTime?)null : DateTime.Parse(dateTo);
 
             var submissions = FormRepository.ExportSubmissions(formId, from, to);
+            if (permissions.RequiresSubmissionScopeEvaluation(formId, actor, "export"))
+            {
+                submissions = submissions
+                    .Where(row => permissions.CanExportSubmission(formId, row, actor))
+                    .ToList();
+            }
 
             if (format == "csv")
             {

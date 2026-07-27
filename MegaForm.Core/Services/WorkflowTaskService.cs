@@ -24,19 +24,22 @@ namespace MegaForm.Core.Services
         private readonly IWorkflowPrincipalResolver _principalResolver;
         private readonly ILogService _log;
         private readonly DocumentRevisionService _documentRevisionService;
+        private readonly PermissionService _permissions;
 
         public WorkflowTaskService(
             IWorkflowRepository repo,
             IWorkflowEngine engine,
             ISubmissionRepository submissionRepo,
             ILogService log = null,
-            DocumentRevisionService documentRevisionService = null)
+            DocumentRevisionService documentRevisionService = null,
+            PermissionService permissions = null)
         {
             _repo = repo;
             _engine = engine;
             _submissionRepo = submissionRepo;
             _log = log;
             _documentRevisionService = documentRevisionService;
+            _permissions = permissions;
         }
 
         public WorkflowTaskService(
@@ -47,8 +50,9 @@ namespace MegaForm.Core.Services
             IWorkflowEmailSender emailSender,
             IWorkflowPrincipalResolver principalResolver,
             ILogService log = null,
-            DocumentRevisionService documentRevisionService = null)
-            : this(repo, engine, submissionRepo, log, documentRevisionService)
+            DocumentRevisionService documentRevisionService = null,
+            PermissionService permissions = null)
+            : this(repo, engine, submissionRepo, log, documentRevisionService, permissions)
         {
             _evaluator = evaluator;
             _emailSender = emailSender;
@@ -150,6 +154,16 @@ namespace MegaForm.Core.Services
         public WorkflowTaskInstance CreateAdHocReviewTask(int formId, int submissionId, string targetUser, string title, string comment, UserContext actor)
         {
             EnsureActor(actor);
+            var submission = _submissionRepo.Get(submissionId);
+            if (submission == null || submission.FormId != formId)
+                throw new InvalidOperationException("Submission does not belong to the requested form.");
+            if (!actor.IsAdmin && !actor.IsSuperUser
+                && (_permissions == null
+                    || (!_permissions.CanManage(formId, actor)
+                        && !_permissions.CanEditSubmission(formId, submission, actor))))
+            {
+                throw new InvalidOperationException("You do not have permission to route this submission.");
+            }
             if (string.IsNullOrWhiteSpace(targetUser))
                 throw new InvalidOperationException("targetUser is required.");
 
@@ -642,6 +656,11 @@ namespace MegaForm.Core.Services
                 return true;
             if (IsAssignedToActor(task, actor))
                 return true;
+            if (task != null
+                && task.Status == WorkflowTaskStatus.Pending
+                && _permissions != null
+                && _permissions.CanApprove(task.FormId, actor))
+                return true;
             return task.Status == WorkflowTaskStatus.Pending && CanActorClaim(task, actor);
         }
 
@@ -652,6 +671,10 @@ namespace MegaForm.Core.Services
             if (actor.IsAdmin || actor.IsSuperUser)
                 return true;
             if (IsAssignedToActor(task, actor))
+                return true;
+            if (task.Status == WorkflowTaskStatus.Pending
+                && _permissions != null
+                && _permissions.CanApprove(task.FormId, actor))
                 return true;
 
             var identifiers = GetActorIdentifiers(actor);

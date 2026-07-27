@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MegaForm.Core.Interfaces;
 using MegaForm.Core.Models;
+using Newtonsoft.Json.Linq;
 
 namespace MegaForm.Core.Services
 {
@@ -39,24 +40,151 @@ namespace MegaForm.Core.Services
             return CheckPermission(formId, user, "export");
         }
 
+        public bool CanApprove(int formId, UserContext user)
+        {
+            if (user == null) return false;
+            if (user.IsAdmin || user.IsSuperUser) return true;
+            return EvaluateMatchingPermission(
+                GetPrincipalMatches(_repo.GetFormPermissions(formId), user, "approve"),
+                "approve");
+        }
+
+        /// <summary>
+        /// Manage is deliberately explicit: unlike ordinary permission checks, an empty
+        /// permission table does not grant management to every authenticated caller.
+        /// Hosts use this for permission-matrix writes and other privileged form actions.
+        /// </summary>
+        public bool CanManage(int formId, UserContext user)
+        {
+            if (user == null) return false;
+            if (user.IsAdmin || user.IsSuperUser) return true;
+            return EvaluateMatchingPermission(
+                GetPrincipalMatches(_repo.GetFormPermissions(formId), user, "manage"),
+                "manage");
+        }
+
         public bool CanViewSubmission(int formId, SubmissionInfo submission, UserContext user)
         {
+            return CanAccessSubmission(formId, submission, user, "view");
+        }
+
+        public bool CanEditSubmission(int formId, SubmissionInfo submission, UserContext user)
+        {
+            return CanAccessSubmission(formId, submission, user, "edit");
+        }
+
+        public bool CanDeleteSubmission(int formId, SubmissionInfo submission, UserContext user)
+        {
+            return CanAccessSubmission(formId, submission, user, "delete");
+        }
+
+        public bool CanExportSubmission(int formId, SubmissionInfo submission, UserContext user)
+        {
+            return CanAccessSubmission(formId, submission, user, "export");
+        }
+
+        /// <summary>
+        /// Evaluates a permission against one submission, including own/team scope.
+        /// A manage grant is an unrestricted grant for every matrix permission.
+        /// Explicit denies for the requested permission win.
+        /// </summary>
+        public bool CanAccessSubmission(int formId, SubmissionInfo submission, UserContext user, string permissionType)
+        {
+            if (user == null || submission == null) return false;
             if (user.IsAdmin || user.IsSuperUser) return true;
 
-            var perms = _repo.GetFormPermissions(formId);
-            var matching = GetMatchingPermissions(perms, user, "view");
+            var normalizedType = PermissionCatalogService.NormalizePermissionType(permissionType);
+            var matching = GetPrincipalMatches(_repo.GetFormPermissions(formId), user, normalizedType);
+            if (HasExplicitDeny(matching, normalizedType)) return false;
 
-            foreach (var p in matching)
+            foreach (var permission in matching.Where(p => p.IsGranted))
             {
-                switch ((p.Scope ?? "all").ToLowerInvariant())
+                var type = PermissionCatalogService.NormalizePermissionType(permission.PermissionType);
+                if (string.Equals(type, "manage", StringComparison.OrdinalIgnoreCase))
+                    return true;
+
+                var scope = PermissionCatalogService.NormalizeScope(permission.Scope, normalizedType);
+                if (string.Equals(scope, "all", StringComparison.OrdinalIgnoreCase))
+                    return true;
+                if (string.Equals(scope, "own", StringComparison.OrdinalIgnoreCase)
+                    && IsSubmissionOwner(submission, user))
+                    return true;
+                if ((string.Equals(scope, "team", StringComparison.OrdinalIgnoreCase)
+                     || scope.StartsWith("team:", StringComparison.OrdinalIgnoreCase))
+                    && ScopeMatchesTeam(submission, user, scope))
                 {
-                    case "all": return true;
-                    case "own":
-                        if (submission.UserId == user.UserId) return true;
-                        break;
+                    return true;
                 }
             }
             return false;
+        }
+
+        /// <summary>
+        /// [OwnerGrant v20260722-01] Pure check: the authenticated user OWNS this submission
+        /// (both ids positive and equal). Hosts use this to grant the owner read access to
+        /// their own submission detail/print even when the form has no explicit view rule.
+        /// Anonymous callers and anonymous submissions (UserId null/0) never match.
+        /// </summary>
+        public static bool IsSubmissionOwner(SubmissionInfo submission, UserContext user)
+        {
+            return submission != null
+                && user != null
+                && user.IsAuthenticated
+                && user.UserId > 0
+                && submission.UserId.HasValue
+                && submission.UserId.Value > 0
+                && submission.UserId.Value == user.UserId;
+        }
+
+        /// <summary>[OwnerRlsSql v20260722-02] True when the actor holds at least one matching
+        /// "view" permission and EVERY matching grant is scope "own" — i.e. their visible set is
+        /// exactly "submissions they own" and the per-row RLS predicate can be pushed down to SQL
+        /// (exact TotalCount/paging) instead of filtering rows in memory after pagination.
+        /// Admin/superuser and anonymous callers always return false (other gates cover them).
+        /// </summary>
+        public bool IsOwnOnlyViewScope(int formId, UserContext user)
+        {
+            return IsOwnOnlyScope(formId, user, "view");
+        }
+
+        public bool IsOwnOnlyScope(int formId, UserContext user, string permissionType)
+        {
+            if (user == null || !user.IsAuthenticated) return false;
+            if (user.IsAdmin || user.IsSuperUser) return false;
+            var normalizedType = PermissionCatalogService.NormalizePermissionType(permissionType);
+            var matching = GetPrincipalMatches(_repo.GetFormPermissions(formId), user, normalizedType);
+            if (HasExplicitDeny(matching, normalizedType)) return false;
+            var granted = matching.Where(p => p.IsGranted).ToList();
+            return granted.Count > 0
+                && granted.All(p =>
+                    !string.Equals(PermissionCatalogService.NormalizePermissionType(p.PermissionType), "manage", StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(
+                        PermissionCatalogService.NormalizeScope(p.Scope, normalizedType),
+                        "own",
+                        StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
+        /// True when the actor's matching grants require a per-row own/team decision.
+        /// Hosts use this to avoid returning unfiltered lists or exports.
+        /// </summary>
+        public bool RequiresSubmissionScopeEvaluation(int formId, UserContext user, string permissionType)
+        {
+            if (user == null || user.IsAdmin || user.IsSuperUser) return false;
+            var normalizedType = PermissionCatalogService.NormalizePermissionType(permissionType);
+            var matching = GetPrincipalMatches(_repo.GetFormPermissions(formId), user, normalizedType);
+            if (HasExplicitDeny(matching, normalizedType)) return true;
+            var granted = matching.Where(p => p.IsGranted).ToList();
+            if (granted.Count == 0) return false;
+            return granted.All(p =>
+            {
+                var type = PermissionCatalogService.NormalizePermissionType(p.PermissionType);
+                if (string.Equals(type, "manage", StringComparison.OrdinalIgnoreCase)) return false;
+                return !string.Equals(
+                    PermissionCatalogService.NormalizeScope(p.Scope, normalizedType),
+                    "all",
+                    StringComparison.OrdinalIgnoreCase);
+            });
         }
 
         private bool CheckPermission(int formId, UserContext user, string permissionType)
@@ -67,18 +195,76 @@ namespace MegaForm.Core.Services
             var perms = _repo.GetFormPermissions(formId);
             if (perms == null || perms.Count == 0) return true; // no restrictions = open
 
-            return GetMatchingPermissions(perms, user, permissionType).Any();
+            var normalizedType = PermissionCatalogService.NormalizePermissionType(permissionType);
+            return EvaluateMatchingPermission(GetPrincipalMatches(perms, user, normalizedType), normalizedType);
         }
 
-        private List<FormPermissionInfo> GetMatchingPermissions(List<FormPermissionInfo> perms, UserContext user, string type)
+        private static bool EvaluateMatchingPermission(List<FormPermissionInfo> matching, string permissionType)
         {
-            return (perms ?? new List<FormPermissionInfo>()).Where(p =>
-                string.Equals(p.PermissionType, type, StringComparison.OrdinalIgnoreCase) &&
-                (
-                    (p.UserId.HasValue && p.UserId.Value == user.UserId) ||
-                    (!string.IsNullOrEmpty(p.RoleName) && user.Roles.Contains(p.RoleName, StringComparer.OrdinalIgnoreCase))
-                )
-            ).ToList();
+            if (HasExplicitDeny(matching, permissionType)) return false;
+            return matching.Any(p => p.IsGranted);
+        }
+
+        private static bool HasExplicitDeny(IEnumerable<FormPermissionInfo> matching, string permissionType)
+        {
+            return (matching ?? Enumerable.Empty<FormPermissionInfo>()).Any(p =>
+                !p.IsGranted
+                && string.Equals(
+                    PermissionCatalogService.NormalizePermissionType(p.PermissionType),
+                    permissionType,
+                    StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static List<FormPermissionInfo> GetPrincipalMatches(
+            IEnumerable<FormPermissionInfo> permissions,
+            UserContext user,
+            string permissionType)
+        {
+            var normalizedType = PermissionCatalogService.NormalizePermissionType(permissionType);
+            return (permissions ?? Enumerable.Empty<FormPermissionInfo>())
+                .Where(permission =>
+                {
+                    var type = PermissionCatalogService.NormalizePermissionType(permission.PermissionType);
+                    return (string.Equals(type, normalizedType, StringComparison.OrdinalIgnoreCase)
+                            || string.Equals(type, "manage", StringComparison.OrdinalIgnoreCase))
+                        && ServerSidePermissionEnforcementService.MatchesPrincipal(permission, user);
+                })
+                .ToList();
+        }
+
+        private static bool ScopeMatchesTeam(SubmissionInfo submission, UserContext user, string scope)
+        {
+            if (submission == null || user == null || user.Roles == null || user.Roles.Count == 0
+                || string.IsNullOrWhiteSpace(submission.DataJson))
+                return false;
+
+            try
+            {
+                var data = JObject.Parse(submission.DataJson);
+                var field = scope.StartsWith("team:", StringComparison.OrdinalIgnoreCase)
+                    ? scope.Substring(5).Trim()
+                    : string.Empty;
+                var candidates = string.IsNullOrWhiteSpace(field)
+                    ? new[] { "team", "department", "teamId", "teamName" }
+                    : new[] { field };
+
+                foreach (var candidate in candidates)
+                {
+                    var token = data.GetValue(candidate, StringComparison.OrdinalIgnoreCase);
+                    if (token == null) continue;
+                    var values = token.Type == JTokenType.Array
+                        ? token.Values<string>()
+                        : new[] { token.ToString() };
+                    if (values.Any(value => !string.IsNullOrWhiteSpace(value)
+                        && user.Roles.Contains(value.Trim(), StringComparer.OrdinalIgnoreCase)))
+                        return true;
+                }
+            }
+            catch
+            {
+                // Invalid record JSON never grants access.
+            }
+            return false;
         }
     }
 

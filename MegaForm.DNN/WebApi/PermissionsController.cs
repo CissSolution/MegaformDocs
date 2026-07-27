@@ -12,13 +12,11 @@ using Newtonsoft.Json.Linq;
 
 namespace MegaForm.WebApi
 {
-    // [v20260527-04] Replaced action-level [DnnModuleAuthorize(Edit)] with
-    // class-level [DnnAuthorize(StaticRoles="Administrators")]. DnnModuleAuthorize
-    // resolves the active module via TabId/ModuleId headers; those are now
-    // dropped by the JS layer to avoid DNN's cross-portal validation 400
-    // ("Specified page is not in this site"). For multi-portal correctness,
-    // server reads portalId from ?portalId=N query via ResolveTargetPortalId.
-    [DnnAuthorize(StaticRoles = "Administrators")]
+    // Authentication is established by DNN; each action then evaluates the
+    // canonical per-form "manage" permission (administrators/superusers bypass).
+    // This avoids depending on TabId/ModuleId headers, which the shared client
+    // intentionally drops for cross-portal requests.
+    [DnnAuthorize]
     public class PermissionsController : DnnApiController
     {
         private int ResolveTargetPortalId()
@@ -39,6 +37,12 @@ namespace MegaForm.WebApi
                 return allowed ? pid : fallback;
             }
             catch { return fallback; }
+        }
+
+        private bool CanManage(int formId)
+        {
+            return new PermissionService(new DnnPhase2RepositoryAdapter())
+                .CanManage(formId, CurrentUser);
         }
 
         private UserContext CurrentUser
@@ -72,6 +76,9 @@ namespace MegaForm.WebApi
         {
             if (formId <= 0)
                 return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "formId is required." });
+            if (!CanManage(formId))
+                return Request.CreateResponse(HttpStatusCode.Forbidden,
+                    new { error = "You do not have permission to manage this form's permissions." });
 
             var permissions = PermissionCatalogService.NormalizeRules(formId, FormRepository.GetFormPermissions(formId));
             return Request.CreateResponse(HttpStatusCode.OK, new
@@ -86,6 +93,9 @@ namespace MegaForm.WebApi
         {
             if (formId <= 0)
                 return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "formId is required." });
+            if (!CanManage(formId))
+                return Request.CreateResponse(HttpStatusCode.Forbidden,
+                    new { error = "You do not have permission to manage this form's permissions." });
 
             var portalId = ResolveTargetPortalId();
             var permissions = PermissionCatalogService.NormalizeRules(formId, FormRepository.GetFormPermissions(formId));
@@ -110,6 +120,9 @@ namespace MegaForm.WebApi
 
             if (formId <= 0)
                 return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "formId is required." });
+            if (!CanManage(formId))
+                return Request.CreateResponse(HttpStatusCode.Forbidden,
+                    new { error = "You do not have permission to manage this form's permissions." });
 
             var normalized = PermissionCatalogService.NormalizeRules(formId, permissions);
             FormRepository.SaveFormPermissions(formId, normalized);

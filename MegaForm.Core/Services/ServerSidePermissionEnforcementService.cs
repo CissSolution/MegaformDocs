@@ -221,18 +221,47 @@ namespace MegaForm.Core.Services
             return string.Equals(normalized, "create", StringComparison.OrdinalIgnoreCase) ? "submit" : normalized;
         }
 
-        private static bool MatchesPrincipal(FormPermissionInfo permission, UserContext actor)
+        /// <summary>
+        /// Canonical principal matcher shared by submit-time and submission-management
+        /// enforcement. Keeping special/user/role matching here prevents host evaluators
+        /// from drifting away from the submit pipeline.
+        /// </summary>
+        public static bool MatchesPrincipal(FormPermissionInfo permission, UserContext actor)
         {
             actor = NormalizeActor(actor);
             var principalType = (permission.PrincipalType ?? string.Empty).Trim().ToLowerInvariant();
+            if (string.IsNullOrEmpty(principalType))
+            {
+                if (permission.UserId.HasValue)
+                    principalType = "user";
+                else if (!string.IsNullOrWhiteSpace(permission.RoleName))
+                    principalType = "role";
+                else if (!string.IsNullOrWhiteSpace(permission.PrincipalId))
+                    principalType = "special";
+            }
 
             if (principalType == "user")
-                return permission.UserId.HasValue && actor.UserId > 0 && permission.UserId.Value == actor.UserId;
+            {
+                var permissionUserId = permission.UserId;
+                if (!permissionUserId.HasValue
+                    && int.TryParse(permission.PrincipalId, out var parsedUserId))
+                {
+                    permissionUserId = parsedUserId;
+                }
+                return permissionUserId.HasValue
+                    && actor.UserId > 0
+                    && permissionUserId.Value == actor.UserId;
+            }
 
             if (principalType == "role")
-                return !string.IsNullOrWhiteSpace(permission.RoleName)
+            {
+                var roleName = !string.IsNullOrWhiteSpace(permission.RoleName)
+                    ? permission.RoleName
+                    : permission.PrincipalId;
+                return !string.IsNullOrWhiteSpace(roleName)
                     && actor.Roles != null
-                    && actor.Roles.Contains(permission.RoleName, StringComparer.OrdinalIgnoreCase);
+                    && actor.Roles.Contains(roleName, StringComparer.OrdinalIgnoreCase);
+            }
 
             if (principalType == "special")
             {

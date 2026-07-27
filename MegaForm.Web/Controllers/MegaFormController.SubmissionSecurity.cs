@@ -35,7 +35,7 @@ namespace MegaForm.Web.Controllers
                 UserName = principal?.Identity?.Name ?? string.Empty,
                 IsAuthenticated = principal?.Identity?.IsAuthenticated == true,
                 Roles = principal != null
-                    ? principal.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value)
+                    ? principal.Claims.Where(c => c.Type == ClaimTypes.Role || c.Type == "role" || c.Type == "roles").Select(c => c.Value)
                         .Where(v => !string.IsNullOrWhiteSpace(v)).Distinct(StringComparer.OrdinalIgnoreCase).ToList()
                     : new System.Collections.Generic.List<string>()
             };
@@ -71,6 +71,7 @@ namespace MegaForm.Web.Controllers
                 || string.Equals(role, "Administrators", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase));
             actor.IsSuperUser = actor.Roles.Any(role => string.Equals(role, "Host", StringComparison.OrdinalIgnoreCase));
+            actor.IpAddress = HttpContext?.Connection?.RemoteIpAddress?.ToString() ?? string.Empty;
             return actor;
         }
 
@@ -91,7 +92,7 @@ namespace MegaForm.Web.Controllers
         private bool CanUseSubmissionManagement(int formId, UserContext actor, PermissionService permissions)
         {
             if (IsSubmissionAdmin(actor)) return true;
-            if (actor == null || !actor.IsAuthenticated) return false;
+            if (actor == null) return false;
             if (!HasExplicitSubmissionViewRule(formId)) return false;
             return permissions.CanView(formId, actor);
         }
@@ -99,7 +100,7 @@ namespace MegaForm.Web.Controllers
         private bool CanViewSubmissionRow(int formId, SubmissionInfo submission, UserContext actor, PermissionService permissions)
         {
             if (IsSubmissionAdmin(actor)) return true;
-            if (actor == null || !actor.IsAuthenticated) return false;
+            if (actor == null) return false;
             // An approver who holds a workflow task on THIS submission (assignee at
             // any point, or candidate while it is open) must be able to READ the
             // record they are approving — same [ApproverCanSee v20260711] rule as
@@ -116,14 +117,31 @@ namespace MegaForm.Web.Controllers
             return permissions.CanView(formId, actor) && permissions.CanViewSubmission(formId, submission, actor);
         }
 
-        /// <summary>Mutations (status/data/delete). Admin, or an explicit edit/delete
-        /// grant on a form that carries explicit rules.</summary>
-        private bool CanMutateSubmissions(int formId, UserContext actor, PermissionService permissions, bool delete = false)
+        private bool CanMutateSubmission(SubmissionInfo submission, UserContext actor, PermissionService permissions, bool delete)
         {
             if (IsSubmissionAdmin(actor)) return true;
             if (actor == null || !actor.IsAuthenticated) return false;
-            if (!HasExplicitSubmissionViewRule(formId)) return false;
-            return delete ? permissions.CanDelete(formId, actor) : permissions.CanEdit(formId, actor);
+            if (submission == null) return false;
+            return delete
+                ? permissions.CanDelete(submission.FormId, actor)
+                    && permissions.CanDeleteSubmission(submission.FormId, submission, actor)
+                : permissions.CanEdit(submission.FormId, actor)
+                    && permissions.CanEditSubmission(submission.FormId, submission, actor);
+        }
+
+        private static SubmissionInfo ToSubmissionInfo(SubmissionListItem item)
+        {
+            return item == null ? null : new SubmissionInfo
+            {
+                SubmissionId = item.SubmissionId,
+                FormId = item.FormId,
+                UserId = item.UserId,
+                Status = item.Status,
+                DataJson = item.DataJson,
+                SubmittedOnUtc = item.SubmittedOnUtc,
+                IpAddress = item.IpAddress,
+                IsSpam = item.IsSpam
+            };
         }
     }
 }

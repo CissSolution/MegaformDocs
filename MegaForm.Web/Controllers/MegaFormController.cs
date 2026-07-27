@@ -108,33 +108,10 @@ namespace MegaForm.Web.Controllers
 
         private UserContext GetCurrentUserContext()
         {
-            var user = User;
-            return new UserContext
-            {
-                UserId = ParseUserId(user),
-                UserName = user != null ? (user.FindFirstValue(ClaimTypes.Name) ?? "anonymous") : "anonymous",
-                DisplayName = user != null
-                    ? (user.FindFirstValue("display_name")
-                        ?? user.FindFirstValue("name")
-                        ?? user.FindFirstValue(ClaimTypes.Name)
-                        ?? "anonymous")
-                    : "anonymous",
-                Email = user != null ? (user.FindFirstValue(ClaimTypes.Email) ?? string.Empty) : string.Empty,
-                IsAuthenticated = user != null && user.Identity != null && user.Identity.IsAuthenticated,
-                IsAdmin = user != null && user.IsInRole("Administrator"),
-                IsSuperUser = false,
-                Roles = user != null
-                    ? user.Claims
-                        .Where(c => c.Type == ClaimTypes.Role || c.Type == "role" || c.Type == "roles")
-                        .Select(c => c.Value)
-                        .Where(v => !string.IsNullOrWhiteSpace(v))
-                        .Distinct(StringComparer.OrdinalIgnoreCase)
-                        .ToList()
-                    : new List<string>(),
-                IpAddress = HttpContext != null && HttpContext.Connection != null && HttpContext.Connection.RemoteIpAddress != null
-                    ? HttpContext.Connection.RemoteIpAddress.ToString()
-                    : string.Empty
-            };
+            // One authoritative actor builder for render, submit and submission-management
+            // paths. The previous claims-only copy disagreed with the DB-enriched builder
+            // about both roles and administrator status.
+            return GetSubmissionActorWithRoles();
         }
 
         private int ResolvePortalId(int formId)
@@ -800,7 +777,7 @@ namespace MegaForm.Web.Controllers
         // ── SUBMISSIONS ───────────────────────────────────────
 
         [HttpGet("Submissions/List")]
-        [Authorize]
+        [AllowAnonymous]
         public IActionResult ListSubmissions(int formId = 0, string status = null, string search = null,
             DateTime? dateFrom = null, DateTime? dateTo = null, int pageIndex = 0, int page = -1, int pageSize = 50)
         {
@@ -818,6 +795,12 @@ namespace MegaForm.Web.Controllers
             {
                 return StatusCode(403, new { error = "You do not have permission to view submissions." });
             }
+            bool ownOnlyScope = formId > 0 && permissions.IsOwnOnlyViewScope(formId, actor);
+            bool rowScoped = formId > 0
+                && permissions.RequiresSubmissionScopeEvaluation(formId, actor, "view")
+                && !ownOnlyScope;
+            int requestedPageIndex = pageIndex;
+            int requestedPageSize = pageSize;
             var result = _submissionQueries.List(new SubmissionListQuery
             {
                 FormId = formId,
@@ -825,9 +808,25 @@ namespace MegaForm.Web.Controllers
                 Search = search,
                 DateFrom = dateFrom,
                 DateTo = dateTo,
-                PageIndex = pageIndex,
-                PageSize = pageSize
+                PageIndex = rowScoped ? 0 : pageIndex,
+                PageSize = rowScoped ? SubmissionQueryService.TrustedMaxPageSize : pageSize,
+                UserId = ownOnlyScope ? actor.UserId : (int?)null,
+                TrustedFetch = rowScoped
             });
+
+            if (rowScoped)
+            {
+                var visible = (result.Items ?? new List<SubmissionListItem>())
+                    .Where(item => permissions.CanViewSubmission(formId, ToSubmissionInfo(item), actor))
+                    .ToList();
+                result = new SubmissionPagedResult<SubmissionListItem>
+                {
+                    Items = visible.Skip(requestedPageIndex * requestedPageSize).Take(requestedPageSize).ToList(),
+                    TotalCount = visible.Count,
+                    PageIndex = requestedPageIndex,
+                    PageSize = requestedPageSize
+                };
+            }
 
             if (formId <= 0 && result.Items != null && result.Items.Count > 0)
             {
@@ -845,7 +844,7 @@ namespace MegaForm.Web.Controllers
         }
 
         [HttpGet("Submissions/Get")]
-        [Authorize]
+        [AllowAnonymous]
         public IActionResult GetSubmission(int submissionId)
         {
             // [WebRLS v20260712] Row-level gate (admin -> task holder -> explicit
@@ -884,7 +883,7 @@ namespace MegaForm.Web.Controllers
             // [WebRLS v20260712] formId comes from the ROW, not the request.
             var row = _subRepo.Get(id);
             if (row == null) return NotFound();
-            if (!CanMutateSubmissions(row.FormId, GetSubmissionActorWithRoles(), new PermissionService(_phase2Repo)))
+            if (!CanMutateSubmission(row, GetSubmissionActorWithRoles(), new PermissionService(_phase2Repo), delete: false))
                 return StatusCode(403, new { error = "You do not have permission to modify this submission." });
             _subRepo.UpdateStatus(id, st);
             return Ok(new { success = true });
@@ -897,7 +896,7 @@ namespace MegaForm.Web.Controllers
             if (submissionId <= 0) return BadRequest(new { error = "submissionId required" });
             var row = _subRepo.Get(submissionId);
             if (row == null) return NotFound();
-            if (!CanMutateSubmissions(row.FormId, GetSubmissionActorWithRoles(), new PermissionService(_phase2Repo)))
+            if (!CanMutateSubmission(row, GetSubmissionActorWithRoles(), new PermissionService(_phase2Repo), delete: false))
                 return StatusCode(403, new { error = "You do not have permission to modify this submission." });
             _subRepo.UpdateData(submissionId, body != null ? body.ToString() : "{}");
             return Ok(new { success = true });
@@ -910,7 +909,7 @@ namespace MegaForm.Web.Controllers
             int id = body.Value<int>("submissionId");
             var row = _subRepo.Get(id);
             if (row == null) return NotFound();
-            if (!CanMutateSubmissions(row.FormId, GetSubmissionActorWithRoles(), new PermissionService(_phase2Repo), delete: true))
+            if (!CanMutateSubmission(row, GetSubmissionActorWithRoles(), new PermissionService(_phase2Repo), delete: true))
                 return StatusCode(403, new { error = "You do not have permission to delete this submission." });
             _subRepo.Delete(id);
             return Ok(new { success = true });
@@ -922,28 +921,32 @@ namespace MegaForm.Web.Controllers
         {
             int formId  = body.Value<int>("formId");
             var ids     = body["ids"]?.ToObject<int[]>() ?? Array.Empty<int>();
-            if (!CanMutateSubmissions(formId, GetSubmissionActorWithRoles(), new PermissionService(_phase2Repo), delete: true))
-                return StatusCode(403, new { error = "You do not have permission to delete submissions for this form." });
+            var actor = GetSubmissionActorWithRoles();
+            var permissions = new PermissionService(_phase2Repo);
+            var rows = ids.Select(id => _subRepo.Get(id)).ToList();
+            if (rows.Any(row => row == null || row.FormId != formId
+                || !CanMutateSubmission(row, actor, permissions, delete: true)))
+                return StatusCode(403, new { error = "You do not have permission to delete one or more requested submissions." });
             _subRepo.BulkDelete(formId, ids);
             return Ok(new { success = true, deleted = ids.Length });
         }
 
         // REST-style submission aliases used by the modern admin UI
         [HttpGet("Submissions")]
-        [Authorize]
+        [AllowAnonymous]
         public IActionResult ListSubmissionsRest(int formId = 0, string status = null, string search = null,
             DateTime? dateFrom = null, DateTime? dateTo = null, int pageIndex = 0, int page = -1, int pageSize = 50)
             => ListSubmissions(formId, status, search, dateFrom, dateTo, pageIndex, page, pageSize);
 
         [HttpGet("Submissions/{submissionId}")]
-        [Authorize]
+        [AllowAnonymous]
         public IActionResult GetSubmissionById(int submissionId) => GetSubmission(submissionId);
 
         // [SubmissionPrint v20260713] Print-ready document for ONE submission (values
         // merged into the form's Print layout). Twin of the Oqtane endpoint; same
         // row-level gate as GetSubmission ([WebRLS v20260712]) — submission data is PII.
         [HttpGet("Submissions/{submissionId}/Print")]
-        [Authorize]
+        [AllowAnonymous]
         public IActionResult PrintSubmissionById(int submissionId)
         {
             var actor = GetSubmissionActorWithRoles();
@@ -979,7 +982,7 @@ namespace MegaForm.Web.Controllers
             string st = body?.Value<string>("status") ?? body?.Value<string>("Status");
             var row = _subRepo.Get(submissionId);
             if (row == null) return NotFound();
-            if (!CanMutateSubmissions(row.FormId, GetSubmissionActorWithRoles(), new PermissionService(_phase2Repo)))
+            if (!CanMutateSubmission(row, GetSubmissionActorWithRoles(), new PermissionService(_phase2Repo), delete: false))
                 return StatusCode(403, new { error = "You do not have permission to modify this submission." });
             _subRepo.UpdateStatus(submissionId, st);
             return Ok(new { success = true });
@@ -989,6 +992,10 @@ namespace MegaForm.Web.Controllers
         [Authorize]
         public IActionResult DeleteSubmissionById(int submissionId)
         {
+            var row = _subRepo.Get(submissionId);
+            if (row == null) return NotFound();
+            if (!CanMutateSubmission(row, GetSubmissionActorWithRoles(), new PermissionService(_phase2Repo), delete: true))
+                return StatusCode(403, new { error = "You do not have permission to delete this submission." });
             _subRepo.Delete(submissionId);
             return Ok(new { success = true });
         }
@@ -1915,6 +1922,8 @@ namespace MegaForm.Web.Controllers
         public IActionResult GetPermissions(int formId)
         {
             if (formId <= 0) return BadRequest(new { error = "formId required" });
+            if (!new PermissionService(_phase2Repo).CanManage(formId, GetSubmissionActorWithRoles()))
+                return StatusCode(403, new { error = "You do not have permission to manage this form's permissions." });
 
             var permissions = PermissionCatalogService.NormalizeRules(formId, _phase2Repo.GetFormPermissions(formId));
             return Ok(new { permissions });
@@ -1928,11 +1937,21 @@ namespace MegaForm.Web.Controllers
             // Principals come from the portal, not the form, so the list is fully populated;
             // only form-specific permission rules are skipped.
             if (formId < 0) formId = 0;
+            var actor = GetSubmissionActorWithRoles();
+            if (formId == 0)
+            {
+                if (!actor.IsAdmin && !actor.IsSuperUser)
+                    return StatusCode(403, new { error = "Administrator permission is required." });
+            }
+            else if (!new PermissionService(_phase2Repo).CanManage(formId, actor))
+            {
+                return StatusCode(403, new { error = "You do not have permission to manage this form's permissions." });
+            }
 
             var permissions = formId > 0
                 ? PermissionCatalogService.NormalizeRules(formId, _phase2Repo.GetFormPermissions(formId))
                 : new List<FormPermissionInfo>();
-            var catalog = _permissionCatalog.GetCatalog(formId, ResolvePortalId(formId), GetCurrentUserContext());
+            var catalog = _permissionCatalog.GetCatalog(formId, ResolvePortalId(formId), actor);
             return Ok(new { permissions, catalog });
         }
 
@@ -1942,6 +1961,9 @@ namespace MegaForm.Web.Controllers
         {
             int formId = body?.Value<int>("formId") ?? 0;
             if (formId <= 0) return BadRequest(new { error = "formId required" });
+            var actor = GetSubmissionActorWithRoles();
+            if (!new PermissionService(_phase2Repo).CanManage(formId, actor))
+                return StatusCode(403, new { error = "You do not have permission to manage this form's permissions." });
 
             var permissions = body?["permissions"]?.ToObject<List<FormPermissionInfo>>() ?? new List<FormPermissionInfo>();
             var normalized = PermissionCatalogService.NormalizeRules(formId, permissions);
@@ -1982,17 +2004,31 @@ namespace MegaForm.Web.Controllers
 
         /// <summary>GET api/MegaForm/Submissions/Export?formId=X&amp;format=csv|json</summary>
         [HttpGet("Submissions/Export")]
-        [Authorize]
+        [AllowAnonymous]
         public IActionResult ExportSubmissions(int formId, string format = "csv")
         {
             // [WebRLS v20260712] Export dumps every row — same gate as the list.
-            if (!CanUseSubmissionManagement(formId, GetSubmissionActorWithRoles(), new PermissionService(_phase2Repo)))
+            var actor = GetSubmissionActorWithRoles();
+            var permissions = new PermissionService(_phase2Repo);
+            if (!permissions.CanExport(formId, actor))
                 return StatusCode(403, new { error = "You do not have permission to export submissions for this form." });
             var form = _formRepo.GetForm(formId);
             if (form == null) return NotFound(new { error = "form not found" });
 
             // Load all submissions (no paging for export)
-            var (items, _) = _subRepo.List(formId, pageSize: 10000);
+            bool ownOnlyScope = permissions.IsOwnOnlyScope(formId, actor, "export");
+            bool rowScoped = permissions.RequiresSubmissionScopeEvaluation(formId, actor, "export");
+            var exportResult = _submissionQueries.List(new SubmissionListQuery
+            {
+                FormId = formId,
+                PageIndex = 0,
+                PageSize = SubmissionQueryService.TrustedMaxPageSize,
+                UserId = ownOnlyScope ? actor.UserId : (int?)null,
+                TrustedFetch = true
+            });
+            var items = exportResult.Items ?? new List<SubmissionListItem>();
+            if (rowScoped && !ownOnlyScope)
+                items = items.Where(item => permissions.CanExportSubmission(formId, ToSubmissionInfo(item), actor)).ToList();
 
             if (format == "json")
             {

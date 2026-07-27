@@ -80,7 +80,7 @@ namespace MegaForm.Umbraco.Data
         }
     }
 
-    public class UmbracoSubmissionRepository : ISubmissionRepository
+    public class UmbracoSubmissionRepository : ISubmissionRepository, ISubmissionOwnerFilterableRepository
     {
         private readonly MegaFormDbContext _db;
         public UmbracoSubmissionRepository(MegaFormDbContext db) { _db = db; }
@@ -99,8 +99,20 @@ namespace MegaForm.Umbraco.Data
             string status = null, string search = null,
             DateTime? dateFrom = null, DateTime? dateTo = null,
             int pageIndex = 0, int pageSize = 50)
+            => ListCore(formId, null, status, search, dateFrom, dateTo, pageIndex, pageSize);
+
+        public (List<SubmissionInfo> Items, int TotalCount) ListOwnedBy(int formId, int userId,
+            string status = null, string search = null,
+            DateTime? dateFrom = null, DateTime? dateTo = null,
+            int pageIndex = 0, int pageSize = 50)
+            => ListCore(formId, userId, status, search, dateFrom, dateTo, pageIndex, pageSize);
+
+        private (List<SubmissionInfo> Items, int TotalCount) ListCore(int formId, int? userId,
+            string status, string search, DateTime? dateFrom, DateTime? dateTo,
+            int pageIndex, int pageSize)
         {
             var q = _db.Submissions.AsNoTracking().Where(s => s.FormId == formId);
+            if (userId.HasValue) q = q.Where(s => s.UserId == userId.Value);
             if (!string.IsNullOrEmpty(status)) q = q.Where(s => s.Status == status);
             if (dateFrom.HasValue) q = q.Where(s => s.SubmittedOnUtc >= dateFrom.Value);
             if (dateTo.HasValue) q = q.Where(s => s.SubmittedOnUtc <= dateTo.Value);
