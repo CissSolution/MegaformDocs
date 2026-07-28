@@ -2400,7 +2400,19 @@ namespace MegaForm.Oqtane.Server.Controllers
         // ══════════════════════════════════════════════════════
         //  SUBMISSIONS (admin)
         // ══════════════════════════════════════════════════════
-
+        //
+        // [AllowAnonymousReason v20260728-01] Why the read actions below carry
+        // [AllowAnonymous] (rule 3 requires the reason to be written down):
+        //   * The blog/portal widgets render a PUBLIC list of published records
+        //     (isPublicListView: a Published form + one of the whitelisted public
+        //     query keys) on pages a visitor reaches without signing in.
+        //   * Every other caller falls through to the per-form gate, which is
+        //     fail-CLOSED for an unconfigured form: CanUseSubmissionManagement /
+        //     CanViewSubmissionRow both require HasExplicitSubmissionViewRule.
+        //   * Returning 403 JSON instead of a login challenge also keeps the admin
+        //     fetch from following a redirect it cannot render.
+        // Export is deliberately NOT in this group — it dumps every row, so it stays
+        // [Authorize] + CanBulkExport ([ExportFailClosed v20260728-01]).
         [HttpGet("Submissions")]
         [AllowAnonymous]
         public IActionResult ListSubmissions(int formId, string status = null, string search = null,
@@ -3068,8 +3080,11 @@ namespace MegaForm.Oqtane.Server.Controllers
             return Ok(new { success = true });
         }
 
+        // [ExportFailClosed v20260728-01] This action dumps every row of a form, so it is NOT
+        // anonymous-reachable: [Authorize] keeps unauthenticated callers out at the pipeline
+        // (module Edit permission is still honoured below for the builder's own export button).
         [HttpGet("Submissions/Export")]
-        [AllowAnonymous]
+        [Authorize]
         public IActionResult ExportSubmissions(int formId, string format = "json",
             string status = null, string search = null, DateTime? dateFrom = null, DateTime? dateTo = null)
         {
@@ -3077,12 +3092,14 @@ namespace MegaForm.Oqtane.Server.Controllers
 
             // [SecFix Phase0-1 v20260722] The ViewModule policy alone let ANY module viewer
             // dump every submission. Require module Edit permission OR the per-form "export"
-            // permission (PermissionService.CanExport, previously never called). CanExport
-            // returns true when the form defines NO permission rules (open), so forms without
-            // rules keep the legacy behavior; only rule-bearing forms are tightened.
+            // permission.
+            // [ExportFailClosed v20260728-01] The per-form check is CanBulkExport, not
+            // CanExport: the latter returns true when the form defines NO rules at all, which
+            // combined with the old [AllowAnonymous] handed every row to passers-by. A form
+            // without rules now needs module Edit permission (or admin) to export.
             var actor = GetCurrentUserContextWithRoles();
             var permissions = new PermissionService(_phase2Repo);
-            if (!IsSubmissionAdmin(actor) && !IsModuleEditor() && !permissions.CanExport(formId, actor))
+            if (!IsSubmissionAdmin(actor) && !IsModuleEditor() && !permissions.CanBulkExport(formId, actor))
                 return StatusCode(403, new { error = "You do not have permission to export submissions for this form." });
 
             // [QueryKey250Fix v20260717-01] Export asked for 10000 but the facade clamped to 250 —
@@ -3100,7 +3117,10 @@ namespace MegaForm.Oqtane.Server.Controllers
                 DateFrom = dateFrom,
                 DateTo = dateTo,
                 PageIndex = 0,
-                PageSize = 10000,
+                // [ExportFailClosed v20260728-01] Ask for the real ceiling instead of 10000:
+                // the facade clamps a trusted fetch to TrustedMaxPageSize anyway, and a number
+                // above the cap reads like an unbounded read (rule 11) that never happens.
+                PageSize = SubmissionQueryService.TrustedMaxPageSize,
                 UserId = ownOnlyScope ? actor.UserId : (int?)null,
                 TrustedFetch = true
             });

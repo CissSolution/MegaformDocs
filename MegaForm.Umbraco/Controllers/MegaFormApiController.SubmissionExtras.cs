@@ -70,9 +70,14 @@ namespace MegaForm.Umbraco.Controllers
             return Ok(new { success = true });
         }
 
+        // [ExportFailClosed v20260728-01] This action dumps every row of a form, so it is NOT
+        // anonymous-reachable: it carries the submission-read permission letter like the rest
+        // of the submission surface, and CanBulkExport refuses the "no rules configured = open"
+        // fallback that CanExport applies. Both are needed — the letter alone still let any
+        // backoffice user with that letter dump a rule-less form's whole table.
         [HttpGet]
         [Route("/umbraco/MegaForm/MegaFormApi/Submissions/Export")]
-        [AllowAnonymous]
+        [MegaFormAuthorize(MegaFormPermissionConstants.ViewSubmissionsLetter, FormIdParameter = "formId")]
         public IActionResult ExportSubmissions(int formId, string format = "csv")
         {
             var form = _formRepo.GetForm(formId);
@@ -80,12 +85,15 @@ namespace MegaForm.Umbraco.Controllers
 
             var actor = BuildUserContext();
             var permissions = MatrixPermissions;
-            if (!permissions.CanExport(formId, actor)) return Forbid();
+            if (!permissions.CanBulkExport(formId, actor)) return Forbid();
 
+            // [ExportFailClosed v20260728-01] Bounded read (rule 11): the same ceiling the
+            // other hosts' export path clamps to, instead of an ad-hoc 10000 that this host
+            // passes straight to the repository with no facade clamp behind it.
             var ownOnly = permissions.IsOwnOnlyScope(formId, actor, "export");
             var result = ownOnly && _subRepo is ISubmissionOwnerFilterableRepository ownerRepo
-                ? ownerRepo.ListOwnedBy(formId, actor.UserId, pageSize: 10000)
-                : _subRepo.List(formId, pageSize: 10000);
+                ? ownerRepo.ListOwnedBy(formId, actor.UserId, pageSize: SubmissionQueryService.TrustedMaxPageSize)
+                : _subRepo.List(formId, pageSize: SubmissionQueryService.TrustedMaxPageSize);
             var items = result.Items ?? new List<SubmissionInfo>();
             if (permissions.RequiresSubmissionScopeEvaluation(formId, actor, "export"))
             {

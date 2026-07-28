@@ -17,6 +17,16 @@ namespace MegaForm.Core.Models
         public int PageIndex { get; set; }
         public int PageSize { get; set; } = 50;
         /// <summary>
+        /// [OwnerRlsSql v20260722-01] Server-set ONLY (never bound from a request): restricts the
+        /// list to submissions OWNED by this user (SubmissionInfo.UserId). Used for the "own"
+        /// row-level-security scope and the My-Submissions portal endpoint so the owner filter
+        /// runs in SQL and TotalCount/paging stay correct (previously a post-pagination in-memory
+        /// filter reported the page size as the total). Repositories that can push the predicate
+        /// down implement ISubmissionOwnerFilterableRepository; SubmissionQueryService falls back
+        /// to an in-memory page filter elsewhere.
+        /// </summary>
+        public int? UserId { get; set; }
+        /// <summary>
         /// [QueryKey250Fix v20260717-01] Server-set ONLY (never bound from a request): lets a
         /// trusted internal fetch (bound-query queryKey pre-filter, admin report export) page up to
         /// SubmissionQueryService.TrustedMaxPageSize instead of the public 250 clamp. The 250 clamp

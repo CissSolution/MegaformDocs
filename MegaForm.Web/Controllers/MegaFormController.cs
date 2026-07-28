@@ -775,7 +775,20 @@ namespace MegaForm.Web.Controllers
         }
 
         // ── SUBMISSIONS ───────────────────────────────────────
-
+        //
+        // [AllowAnonymousReason v20260728-01] Why the read actions below carry
+        // [AllowAnonymous] (rule 3 requires the reason to be written down):
+        //   * The attribute moves the decision from "is anyone signed in?" to the
+        //     per-form gate, so a caller who fails it gets a 403 JSON body the admin
+        //     UI can render instead of a login redirect that breaks the fetch.
+        //   * The gate itself is fail-CLOSED for an unconfigured form:
+        //     CanUseSubmissionManagement / CanViewSubmissionRow both return false
+        //     unless HasExplicitSubmissionViewRule(formId) finds a real view/manage
+        //     rule, so "no rules configured" never means "readable by the public".
+        //   * An anonymous caller can therefore only reach data on a form whose
+        //     administrator deliberately granted view to the "all_users" principal.
+        // Export is deliberately NOT in this group — it dumps every row, so it stays
+        // [Authorize] + CanBulkExport ([ExportFailClosed v20260728-01]).
         [HttpGet("Submissions/List")]
         [AllowAnonymous]
         public IActionResult ListSubmissions(int formId = 0, string status = null, string search = null,
@@ -2003,14 +2016,19 @@ namespace MegaForm.Web.Controllers
         // ── SUBMISSIONS — CSV/JSON Export ─────────────────────
 
         /// <summary>GET api/MegaForm/Submissions/Export?formId=X&amp;format=csv|json</summary>
+        // [ExportFailClosed v20260728-01] This action dumps every row of a form, so it is
+        // NOT anonymous-reachable: [Authorize] keeps unauthenticated callers out at the
+        // pipeline, and CanBulkExport refuses the "no rules configured = open" fallback
+        // that CanExport applies. Both are needed — the attribute alone still let any
+        // signed-in user dump a rule-less form.
         [HttpGet("Submissions/Export")]
-        [AllowAnonymous]
+        [Authorize]
         public IActionResult ExportSubmissions(int formId, string format = "csv")
         {
             // [WebRLS v20260712] Export dumps every row — same gate as the list.
             var actor = GetSubmissionActorWithRoles();
             var permissions = new PermissionService(_phase2Repo);
-            if (!permissions.CanExport(formId, actor))
+            if (!permissions.CanBulkExport(formId, actor))
                 return StatusCode(403, new { error = "You do not have permission to export submissions for this form." });
             var form = _formRepo.GetForm(formId);
             if (form == null) return NotFound(new { error = "form not found" });

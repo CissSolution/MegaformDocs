@@ -52,14 +52,38 @@ namespace MegaForm.Core.Services
             if (query.PageSize > maxPageSize) query.PageSize = maxPageSize;
             if (query.PageIndex < 0) query.PageIndex = 0;
 
-            var tuple = _submissions.List(
-                query.FormId,
-                query.Status,
-                query.Search,
-                query.DateFrom,
-                query.DateTo,
-                query.PageIndex,
-                query.PageSize);
+            bool ownerFilterRequested = query.UserId.HasValue && query.UserId.Value > 0;
+            bool ownerFilterInSql = ownerFilterRequested && _submissions is ISubmissionOwnerFilterableRepository;
+            var tuple = ownerFilterInSql
+                // [OwnerRlsSql v20260722-01] SQL-level owner filter — TotalCount/paging stay exact.
+                ? ((ISubmissionOwnerFilterableRepository)_submissions).ListOwnedBy(
+                    query.FormId,
+                    query.UserId.Value,
+                    query.Status,
+                    query.Search,
+                    query.DateFrom,
+                    query.DateTo,
+                    query.PageIndex,
+                    query.PageSize)
+                : _submissions.List(
+                    query.FormId,
+                    query.Status,
+                    query.Search,
+                    query.DateFrom,
+                    query.DateTo,
+                    query.PageIndex,
+                    query.PageSize);
+
+            // [OwnerRlsSql v20260722-01] Fallback for platform repos that do not implement
+            // ISubmissionOwnerFilterableRepository yet: filter the fetched page in memory.
+            // TotalCount then remains the UNFILTERED total (same trade-off the Oqtane
+            // controller had before this change) — implement the capability interface on the
+            // platform repo to get exact counts. Never triggers on Oqtane (EfSubmissionRepository
+            // implements it); no current caller sets UserId on DNN/Web.
+            if (ownerFilterRequested && !ownerFilterInSql)
+            {
+                tuple = (tuple.Items.Where(s => s.UserId == query.UserId.Value).ToList(), tuple.TotalCount);
+            }
 
             string singleTitle = string.Empty;
             FormSchema singleSchema = null;

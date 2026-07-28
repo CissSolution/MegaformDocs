@@ -40,6 +40,33 @@ namespace MegaForm.Core.Services
             return CheckPermission(formId, user, "export");
         }
 
+        /// <summary>
+        /// [ExportFailClosed v20260728-01] Gate for the bulk CSV/JSON dump endpoints.
+        /// Deliberately stricter than <see cref="CanExport"/> on two points:
+        ///   1. An empty permission table grants NOTHING. A form nobody has configured
+        ///      must not hand its whole submission table to a caller the administrator
+        ///      never named — CheckPermission's "no rules = open" fallback is fine for a
+        ///      single record behind a row-level gate, but it is not an acceptable default
+        ///      for an unbounded PII dump.
+        ///   2. The caller must be authenticated. The "all_users" special principal
+        ///      matches anonymous visitors, so an export grant on it would otherwise put
+        ///      every row of the form on the public internet.
+        /// Admin/superuser still pass; everyone else needs an explicit granted export
+        /// (or manage) rule that matches them, and an explicit deny still wins.
+        /// </summary>
+        public bool CanBulkExport(int formId, UserContext user)
+        {
+            if (user == null) return false;
+            // Hosts differ in which flag they populate for a signed-in caller (DNN derives
+            // IsAuthenticated from UserID, the ASP.NET hosts from the principal), so accept
+            // either — an anonymous caller has neither.
+            if (!user.IsAuthenticated && user.UserId <= 0) return false;
+            if (user.IsAdmin || user.IsSuperUser) return true;
+            return EvaluateMatchingPermission(
+                GetPrincipalMatches(_repo.GetFormPermissions(formId), user, "export"),
+                "export");
+        }
+
         public bool CanApprove(int formId, UserContext user)
         {
             if (user == null) return false;

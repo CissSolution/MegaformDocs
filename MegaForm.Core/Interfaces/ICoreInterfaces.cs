@@ -42,6 +42,23 @@ namespace MegaForm.Core.Interfaces
         void InsertValues(int submissionId, List<SubmissionValueInfo> values);
     }
 
+    /// <summary>
+    /// [OwnerRlsSql v20260722-01] Optional capability (separate from ISubmissionRepository so
+    /// existing DNN / Web / Umbraco implementations stay source-compatible): the repository can
+    /// push the "owned by user" predicate into SQL — same filter set as List plus
+    /// SubmissionInfo.UserId == userId — so TotalCount and paging are exact for owner-scoped
+    /// lists (RLS scope "own", My-Submissions portal). SubmissionQueryService checks for this
+    /// interface when SubmissionListQuery.UserId is set and falls back to an in-memory page
+    /// filter when the platform repo does not implement it yet.
+    /// </summary>
+    public interface ISubmissionOwnerFilterableRepository
+    {
+        (List<SubmissionInfo> Items, int TotalCount) ListOwnedBy(int formId, int userId,
+            string status = null, string search = null,
+            DateTime? dateFrom = null, DateTime? dateTo = null,
+            int pageIndex = 0, int pageSize = 50);
+    }
+
     public interface IDraftRepository
     {
         int SaveDraft(SavedDraftInfo draft);

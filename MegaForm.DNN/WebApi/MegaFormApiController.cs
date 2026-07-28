@@ -2106,6 +2106,16 @@ VALUES
                     && permissions.CanEditSubmission(submission.FormId, submission, actor);
         }
 
+        // [AllowAnonymousReason v20260728-01] Why this read action opts out of the
+        // controller's [DnnAuthorize] (rule 3 requires the reason to be written down):
+        //   * The blog/portal widgets render a PUBLIC list of published records
+        //     (isPublicListView: a Published form + one of the whitelisted public
+        //     query keys) on pages a visitor reaches without signing in.
+        //   * Every other caller falls through to the per-form gate, which is
+        //     fail-CLOSED for an unconfigured form: CanUseSubmissionManagement
+        //     requires HasExplicitSubmissionViewRule(formId).
+        // Export is deliberately NOT anonymous — it dumps every row, so it keeps the
+        // controller's [DnnAuthorize] + CanBulkExport ([ExportFailClosed v20260728-01]).
         [HttpGet]
         [AllowAnonymous]
         public HttpResponseMessage List(int formId = 0, string status = null, string search = null,
@@ -2503,6 +2513,10 @@ VALUES
             return DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var parsed) ? parsed : (DateTime?)null;
         }
 
+        // [AllowAnonymousReason v20260728-01] Same reasoning as List: the real gate is
+        // CanViewSubmissionRow below, which is fail-CLOSED for a form with no explicit
+        // view/manage rule. Anonymous reaches a row only when an administrator granted
+        // view to the "all_users" principal on that form.
         [HttpGet]
         [AllowAnonymous]
         public HttpResponseMessage Get(int submissionId)
@@ -2726,13 +2740,17 @@ VALUES
             public List<int> Ids { get; set; }
         }
 
+        // [ExportFailClosed v20260728-01] This action dumps every row of a form, so it does NOT
+        // carry [AllowAnonymous]: it inherits the controller's [DnnAuthorize] (signed-in caller
+        // required) and CanBulkExport refuses the "no rules configured = open" fallback that
+        // CanExport applies. Both are needed — the attribute alone still let any signed-in user
+        // dump a rule-less form.
         [HttpGet]
-        [AllowAnonymous]
         public HttpResponseMessage Export(int formId, string dateFrom = null, string dateTo = null, string format = "json")
         {
             var permissions = new PermissionService(new DnnPhase2RepositoryAdapter());
             var actor = CurrentSubmissionUser;
-            if (!permissions.CanExport(formId, actor))
+            if (!permissions.CanBulkExport(formId, actor))
                 return Request.CreateResponse(HttpStatusCode.Forbidden,
                     new { error = "You do not have permission to export submissions." });
 
