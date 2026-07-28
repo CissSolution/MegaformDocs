@@ -253,6 +253,11 @@
               <name>01.06.40.SqlDataProvider</name>
               <version>01.06.40</version>
             </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>01.06.41.SqlDataProvider</name>
+              <version>01.06.41</version>
+            </script>
             <script type="UnInstall">
               <path>SqlScripts</path>
               <name>Uninstall.SqlDataProvider</name>
@@ -280,38 +285,18 @@
               <name>MegaForm.Sdk.dll</name>
               <path>bin</path>
             </assembly>
-            <!-- [CloudStorage v20260723-01] Optional cloud file mirror (Google Drive / Amazon S3 /
-                 Azure Blob, Builder â†’ Settings â†’ Cloud Storage). DnnServiceLocator constructs these
-                 providers at startup, so the DLLs must ship in the package. Only the direct feature
-                 dependencies are bundled; Microsoft.Extensions.*/System.* are intentionally NOT
-                 (DNN 10 already carries them â€” overwriting risks assembly-version conflicts).
-                 Azure.Core 1.55+ requires Microsoft.Extensions.* 10.x at runtime: on older DNN
-                 installs add a bindingRedirect if the Azure provider fails to load (fail-soft â€”
-                 submissions are never blocked by cloud upload errors). -->
-            <assembly>
-              <name>MegaForm.Integrations.CloudStorage.dll</name>
-              <path>bin</path>
-            </assembly>
-            <assembly>
-              <name>AWSSDK.Core.dll</name>
-              <path>bin</path>
-            </assembly>
-            <assembly>
-              <name>AWSSDK.S3.dll</name>
-              <path>bin</path>
-            </assembly>
-            <assembly>
-              <name>Azure.Core.dll</name>
-              <path>bin</path>
-            </assembly>
-            <assembly>
-              <name>Azure.Storage.Blobs.dll</name>
-              <path>bin</path>
-            </assembly>
-            <assembly>
-              <name>Azure.Storage.Common.dll</name>
-              <path>bin</path>
-            </assembly>
+            <!-- [CloudStorage v20260723-01] Cloud file mirror: Google Drive rides on MegaForm.Core
+                 + the framework HttpClient, so it needs no assembly of its own.
+                 [AzureBlobRemoved v20260726] Azure Blob provider DROPPED. Azure.Storage.Blobs pulled
+                 Azure.Core 1.55 → System.ClientModel + .NET 10 System.* transitively; Azure.Core has an
+                 assembly-level attribute whose type lives in System.ClientModel, and DNN scans EVERY
+                 bin assembly's attributes at startup (MEF SafeDirectoryCatalog) → a missing
+                 System.ClientModel.dll crashed the WHOLE site (TypeInitializationException).
+                 [S3AddOn 2026-07-28] Amazon S3 moved OUT of this package into
+                 MegaForm.CloudStorageS3_<version>_Install.zip: MegaForm.Integrations.CloudStorage.dll
+                 + AWSSDK.Core + AWSSDK.S3 are 0.73 MB that only an S3-mirroring install executes.
+                 DnnServiceLocator resolves the provider by reflection, so the module works with or
+                 without the add-on and the two can be installed in either order. -->
           </assemblies>
         </component>
         <component type="ResourceFile">

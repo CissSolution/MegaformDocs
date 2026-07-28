@@ -78,6 +78,22 @@ $OUTPUT_ZIP   = Join-Path $OUTPUT_DIR "${MODULE_NAME}_${VERSION}${EDITION_TAG}_I
 $ROOT_BUILDTS_BAT = Join-Path $SOLUTION_DIR 'BuildTS.bat'
 $DNN_CSPROJ       = Join-Path $PROJECT_DIR 'MegaForm.DNN.csproj'
 
+# [PkgSlim 2026-07-28] Source maps are build artifacts: ~0.22 MB of the package, downloaded by
+# nobody at runtime and useful only with the original sources, which do not ship either.
+function Test-BuildArtifact {
+    param([Parameter(Mandatory = $true)][string]$FileName)
+    return $FileName -like '*.map'
+}
+
+# [PkgSlim 2026-07-28] Artwork for templates that no longer exist anywhere in the package.
+# festa-italiana was removed from the gallery, so its two 1024x1024 PNGs (2.6 MB) are referenced
+# by nothing that ships — the one mention left in the dashboard image picker points at
+# img/mock/festa-italiana-hero.png, a path this package does not carry at all.
+$ORPHAN_IMG = @(
+    'festa-italiana/festa-italiana-hero.png',
+    'festa-italiana/festa-italiana-texture.png'
+)
+
 function Assert-CommandAvailable {
     param(
         [Parameter(Mandatory = $true)][string]$CommandName,
@@ -303,27 +319,27 @@ if ($dapperDll -and (Test-Path $dapperDll)) {
     Write-Host '  + bin\Dapper.dll'
 }
 
-# [CloudStorage v20260723-01] Cloud storage provider DLLs (Google Drive / S3 / Azure Blob mirror).
-# Copied from the DNN build output (they flow there via the MegaForm.Integrations.CloudStorage
-# project reference). Only direct feature deps — Microsoft.Extensions.*/System.* stay out on
-# purpose (DNN 10 already ships them; overwriting risks assembly-version conflicts).
+# [CloudStorage v20260723-01] Cloud storage provider DLLs (Google Drive rides on the framework
+# HttpClient; Amazon S3 ships its SDK). Copied from the DNN build output (they flow there via the
+# MegaForm.Integrations.CloudStorage project reference).
+# [AzureBlobRemoved v20260726] Azure Blob provider was DROPPED. Azure.Storage.Blobs pulled Azure.Core
+# 1.55 → System.ClientModel + .NET 10 System.* transitively; Azure.Core carries an assembly-level
+# attribute whose type lives in System.ClientModel, and DNN scans EVERY bin assembly's custom
+# attributes at startup (MEF SafeDirectoryCatalog) → a missing System.ClientModel.dll took the WHOLE
+# DNN site down (TypeInitializationException 'ExtensionPointManager'). Removing the Azure Blob
+# provider deletes that entire fragile dependency chain — no Azure.Core / Azure.Storage.* /
+# System.ClientModel / System.Memory.Data / System.IO.Hashing / System.Diagnostics.DiagnosticSource
+# ship anymore, and the net472 build/package is clean. Only the S3 SDK is bundled.
+# [S3AddOn 2026-07-28] These three DLLs are NO LONGER in the module package. AWSSDK.Core +
+# AWSSDK.S3 are 0.72 MB that only an S3-mirroring install ever executes, and the package has to
+# fit the store's upload limit. They ship as a separate add-on zip built at the end of this
+# script; DnnServiceLocator resolves the provider by reflection and simply offers one less cloud
+# target when the add-on is absent.
 $cloudDllNames = @(
     'MegaForm.Integrations.CloudStorage.dll',
     'AWSSDK.Core.dll',
-    'AWSSDK.S3.dll',
-    'Azure.Core.dll',
-    'Azure.Storage.Blobs.dll',
-    'Azure.Storage.Common.dll'
+    'AWSSDK.S3.dll'
 )
-foreach ($name in $cloudDllNames) {
-    $src = Join-Path (Split-Path $dnnDll) $name
-    if (Test-Path $src) {
-        Copy-Item $src "$STAGING\bin\" -Force
-        Write-Host "  + bin\$name"
-    } else {
-        Write-Warning "Cloud storage DLL khong tim thay (bo qua): $name"
-    }
-}
 
 # [DNN sync 2026-06-22] DNN scripts are *.SqlDataProvider (not *.sql); the old `*.sql` glob copied
 # ZERO scripts so installs/upgrades shipped no schema. Copy both extensions.
@@ -360,6 +376,7 @@ if (Test-Path "$assetsDir\css\plugins") {
 }
 
 Get-ChildItem "$assetsDir\js\*.js" -ErrorAction SilentlyContinue | ForEach-Object {
+    if (Test-BuildArtifact $_.Name) { return }
     Copy-Item $_.FullName "$RESOURCES\Assets\js\" -Force
     Write-Host "  + Assets\js\$($_.Name)"
 }
@@ -367,6 +384,7 @@ Get-ChildItem "$assetsDir\js\*.js" -ErrorAction SilentlyContinue | ForEach-Objec
 if (Test-Path "$assetsDir\js\builder") {
     Get-ChildItem "$assetsDir\js\builder\*" -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
         $rel = $_.FullName.Replace("$assetsDir\js\builder\", '')
+        if (Test-BuildArtifact $_.Name) { return }
         $destDir = Join-Path "$RESOURCES\Assets\js\builder" (Split-Path $rel)
         if (-not (Test-Path $destDir)) { New-Item -ItemType Directory -Path $destDir -Force | Out-Null }
         Copy-Item $_.FullName (Join-Path "$RESOURCES\Assets\js\builder" $rel) -Force
@@ -376,6 +394,7 @@ if (Test-Path "$assetsDir\js\builder") {
 
 if (Test-Path "$assetsDir\js\bundles") {
     Get-ChildItem "$assetsDir\js\bundles\*" -File -ErrorAction SilentlyContinue | ForEach-Object {
+        if (Test-BuildArtifact $_.Name) { return }
         Copy-Item $_.FullName "$RESOURCES\Assets\js\bundles\" -Force
         Write-Host "  + Assets\js\bundles\$($_.Name)" -ForegroundColor Magenta
     }
@@ -384,6 +403,10 @@ if (Test-Path "$assetsDir\js\bundles") {
 if (Test-Path "$assetsDir\js\plugins") {
     Get-ChildItem "$assetsDir\js\plugins\*" -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
         $rel = $_.FullName.Replace("$assetsDir\js\plugins\", '')
+        # [PkgSlim 2026-07-28] plugins\i18n is a 4th identical copy of the 39 locale files —
+        # nothing resolves locales relative to the plugins folder (see the i18n note below).
+        if ($rel -like 'i18n\*') { return }
+        if (Test-BuildArtifact $_.Name) { return }
         $destDir = Join-Path "$RESOURCES\Assets\js\plugins" (Split-Path $rel)
         if (-not (Test-Path $destDir)) { New-Item -ItemType Directory -Path $destDir -Force | Out-Null }
         Copy-Item $_.FullName (Join-Path "$RESOURCES\Assets\js\plugins" $rel) -Force
@@ -400,13 +423,16 @@ if (Test-Path "$assetsDir\js\locales") {
 
 # [i18n language packs 2026-07-09] EXPLICIT + ROBUST copy of the 39 locale JSON files
 # (+ index.json). These feed BOTH the Languages admin panel (MegaFormApiController.List
-# enumerates these folders) AND runtime lazy-loading of non-English locales. The API
-# ResolveI18nFolders() probes, in order: Assets/js/i18n, Assets/i18n, Assets/js/builder/i18n,
-# Assets/js/bundles/i18n. Previously ONLY builder/i18n rode in via the recursive builder copy
-# (which was intermittently dropping the subfolder → a fresh install shipped ZERO languages,
-# Languages panel showed only the en-US baseline). Copy to ALL THREE js locations explicitly so
-# a locale is found no matter which probe path the host resolves first. Flat folders (40 files).
-foreach ($i18nSub in @('i18n', 'builder\i18n', 'bundles\i18n')) {
+# enumerates these folders) AND runtime lazy-loading of non-English locales.
+# [PkgSlim 2026-07-28] ONE folder, not three. The same 39 files rode in four times
+# (js\i18n, js\builder\i18n, js\bundles\i18n and — via the recursive plugins copy —
+# js\plugins\i18n): 4.15 MB shipped for 1.04 MB of content, the single biggest waste in the
+# package. builder\i18n is the copy both readers actually use: the browser resolves
+# /DesktopModules/MegaForm/Assets/js/builder/i18n/<loc>.json (resolveI18nBase in
+# MegaForm.UI/src/i18n/index.ts) and the API probe list ResolveI18nFolders() includes it —
+# it returns the FIRST folder that exists, and ResolveWritableI18nFolder (the Languages panel's
+# save target) points at builder\i18n too.
+foreach ($i18nSub in @('builder\i18n')) {
     $i18nSrc = Join-Path "$assetsDir\js" $i18nSub
     if (Test-Path $i18nSrc) {
         $i18nDst = Join-Path "$RESOURCES\Assets\js" $i18nSub
@@ -445,6 +471,9 @@ if (Test-Path "$assetsDir\img") {
         # Template artwork now ships in the gallery's per-template assets zip and is
         # extracted on install, so keep it OUT of the package.
         if ($SLIM_GALLERY -and ($GALLERY_IMG -contains ($rel -replace '\\', '/'))) {
+            $imgSkipped++; $imgSkippedBytes += $_.Length; return
+        }
+        if ($ORPHAN_IMG -contains ($rel -replace '\\', '/')) {
             $imgSkipped++; $imgSkippedBytes += $_.Length; return
         }
         $destDir = Join-Path "$RESOURCES\Assets\img" (Split-Path $rel)
@@ -549,12 +578,17 @@ Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\builder\reactf
 Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\builder\i18n\index.json') -Label 'Packaged i18n locale index'
 Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\builder\i18n\en-US.json') -Label 'Packaged English locale'
 Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\builder\i18n\vi-VN.json') -Label 'Packaged Vietnamese locale'
-# Canonical Assets/js/i18n (MegaFormApiController.List probes this FIRST) — guard the explicit copy.
-Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\i18n\index.json') -Label 'Packaged i18n (js/i18n) index'
-Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\i18n\fr-FR.json') -Label 'Packaged i18n (js/i18n) French'
-$__i18nCount = (Get-ChildItem (Join-Path $RESOURCES 'Assets\js\i18n\*.json') -File -ErrorAction SilentlyContinue | Measure-Object).Count
-if ($__i18nCount -lt 39) { throw "Thieu language packs: chi co $__i18nCount/40 file trong Assets\js\i18n (expected 39 locales + index.json)" }
-Write-Host "  [OK] Language packs: $__i18nCount files in Assets\js\i18n" -ForegroundColor Green
+# [PkgSlim 2026-07-28] The locale files ship ONCE, in Assets\js\builder\i18n — the folder the
+# browser fetches on DNN and the one ResolveI18nFolders()/ResolveWritableI18nFolder() land on.
+# The guard moved with them; it still fails the build if a fresh install would ship no languages.
+Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\builder\i18n\fr-FR.json') -Label 'Packaged i18n French'
+$__i18nCount = (Get-ChildItem (Join-Path $RESOURCES 'Assets\js\builder\i18n\*.json') -File -ErrorAction SilentlyContinue | Measure-Object).Count
+if ($__i18nCount -lt 39) { throw "Thieu language packs: chi co $__i18nCount/40 file trong Assets\js\builder\i18n (expected 39 locales + index.json)" }
+# Nothing may ship a second copy: that duplication was 3.11 MB of the package.
+foreach ($__dupI18n in @('Assets\js\i18n', 'Assets\js\bundles\i18n', 'Assets\js\plugins\i18n')) {
+    if (Test-Path (Join-Path $RESOURCES $__dupI18n)) { throw "Duplicate locale folder crept back into the package: $__dupI18n" }
+}
+Write-Host "  [OK] Language packs: $__i18nCount files in Assets\js\builder\i18n (single copy)" -ForegroundColor Green
 Write-Host ''
 
 # ============================================================
@@ -580,7 +614,18 @@ Write-Host ''
 
 Write-Host '[6/7] Tao Install Package...' -ForegroundColor Yellow
 
-if (Test-Path $OUTPUT_ZIP) { Remove-Item $OUTPUT_ZIP -Force }
+# [LockedOutput 2026-07-28] A browser that still has the previous zip open (uploading it to the
+# store, say) keeps an exclusive handle on Windows and the whole build died on Remove-Item after
+# doing all the work. Fall back to <name>.new.zip and say so, instead of throwing away the build.
+if (Test-Path $OUTPUT_ZIP) {
+    try {
+        Remove-Item $OUTPUT_ZIP -Force -ErrorAction Stop
+    } catch {
+        $OUTPUT_ZIP = [System.IO.Path]::ChangeExtension($OUTPUT_ZIP, $null).TrimEnd('.') + '.new.zip'
+        Write-Warning "File cu dang bi khoa boi tien trinh khac -> ghi ra: $(Split-Path $OUTPUT_ZIP -Leaf)"
+        if (Test-Path $OUTPUT_ZIP) { Remove-Item $OUTPUT_ZIP -Force }
+    }
+}
 
 $zip = [System.IO.Compression.ZipFile]::Open($OUTPUT_ZIP, 'Create')
 
@@ -600,6 +645,67 @@ Get-ChildItem "$STAGING\SqlScripts" -File | ForEach-Object {
 }
 
 $zip.Dispose()
+
+# ------------------------------------------------------------
+# [S3AddOn 2026-07-28] Optional add-on: Amazon S3 storage provider.
+# A DNN "Library" package carrying only MegaForm.Integrations.CloudStorage.dll + the AWS SDK
+# (~0.73 MB). Kept out of the module package because only S3-mirroring installs run that code
+# and the module has to fit the store's upload limit. Install order does not matter — the
+# module resolves the provider by reflection on every app start.
+# ------------------------------------------------------------
+$addonDir = Join-Path $OUTPUT_DIR '_s3addon'
+if (Test-Path $addonDir) { Remove-Item $addonDir -Recurse -Force }
+New-Item -ItemType Directory -Path "$addonDir\bin" -Force | Out-Null
+$addonCopied = 0
+foreach ($name in $cloudDllNames) {
+    $src = Join-Path (Split-Path $dnnDll) $name
+    if (Test-Path $src) { Copy-Item $src "$addonDir\bin\" -Force; $addonCopied++ }
+    else { Write-Warning "S3 add-on DLL khong tim thay (bo qua): $name" }
+}
+if ($addonCopied -gt 0) {
+    $addonAssemblies = ($cloudDllNames | ForEach-Object {
+        "            <assembly>`r`n              <name>$_</name>`r`n              <path>bin</path>`r`n            </assembly>"
+    }) -join "`r`n"
+    $addonManifest = @"
+<dotnetnuke type="Package" version="5.0">
+  <packages>
+    <package name="MegaForm.CloudStorageS3" type="Library" version="$VERSION">
+      <friendlyName>MegaForm Cloud Storage - Amazon S3</friendlyName>
+      <description>Optional add-on for MegaForm: mirrors submission file uploads to an Amazon S3 bucket. Install it only if you configure an S3 connection; MegaForm works without it (Google Drive stays built in).</description>
+      <iconFile></iconFile>
+      <owner>
+        <name>CISS Solution</name>
+        <organization>CISS Solution</organization>
+        <url></url>
+        <email></email>
+      </owner>
+      <license></license>
+      <releaseNotes>Ships MegaForm.Integrations.CloudStorage.dll + AWSSDK.Core + AWSSDK.S3, which used to ride inside the MegaForm module package.</releaseNotes>
+      <azureCompatible>true</azureCompatible>
+      <dependencies />
+      <components>
+        <component type="Assembly">
+          <assemblies>
+$addonAssemblies
+          </assemblies>
+        </component>
+      </components>
+    </package>
+  </packages>
+</dotnetnuke>
+"@
+    Set-Content -Path "$addonDir\MegaForm.CloudStorageS3.dnn" -Value $addonManifest -Encoding UTF8
+    $addonZip = Join-Path $OUTPUT_DIR "MegaForm.CloudStorageS3_${VERSION}_Install.zip"
+    if (Test-Path $addonZip) { Remove-Item $addonZip -Force }
+    $az = [System.IO.Compression.ZipFile]::Open($addonZip, 'Create')
+    [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($az, "$addonDir\MegaForm.CloudStorageS3.dnn", 'MegaForm.CloudStorageS3.dnn') | Out-Null
+    Get-ChildItem "$addonDir\bin" -File | ForEach-Object {
+        [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($az, $_.FullName, "bin/$($_.Name)") | Out-Null
+    }
+    $az.Dispose()
+    Write-Host ("  + S3 add-on: {0} ({1:N1} KB)" -f (Split-Path $addonZip -Leaf), ((Get-Item $addonZip).Length / 1KB)) -ForegroundColor Cyan
+}
+Remove-Item $addonDir -Recurse -Force
 
 # ============================================================
 #  7. Don dep + Ket qua

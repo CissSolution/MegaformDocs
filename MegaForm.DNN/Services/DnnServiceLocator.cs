@@ -225,12 +225,23 @@ namespace MegaForm.DNN.Services
             // same portal-settings blob the ModuleConfig admin endpoints write (full key — it
             // already carries the MegaForm_ prefix, so ReadPortalSetting's prefixing must NOT
             // be applied here).
-            var storageProviders = new IStorageProvider[]
-            {
-                new GoogleDriveProvider(StorageHttpClient),
-                new MegaForm.Integrations.CloudStorage.AmazonS3StorageProvider(),
-                new MegaForm.Integrations.CloudStorage.AzureBlobStorageProvider()
-            };
+            // [S3AddOn 2026-07-28] Amazon S3 is resolved by REFLECTION, not a compile-time
+            // reference. Its provider lives in MegaForm.Integrations.CloudStorage.dll, which drags
+            // AWSSDK.Core + AWSSDK.S3 (~0.73 MB) — dead weight for the majority of installs that
+            // never mirror to S3, and the module package has to fit a store upload limit. Those
+            // three DLLs now ship as the separate "MegaForm Cloud Storage — Amazon S3" add-on.
+            // A hard `new` here would also make the whole locator unloadable when the add-on is
+            // absent: the CLR resolves types when the enclosing method is JIT-compiled, so a
+            // try/catch around the constructor would NOT save it. Google Drive stays built in
+            // (it rides on MegaForm.Core + the framework HttpClient, no SDK).
+            // [AzureBlobRemoved v20260726] Azure Blob provider dropped — it dragged Azure.Core
+            // 1.55 → System.ClientModel + .NET 10 System.* into the net472 DNN bin (whole-site
+            // crash risk).
+            var providerList = new List<IStorageProvider> { new GoogleDriveProvider(StorageHttpClient) };
+            var s3 = TryLoadOptionalStorageProvider(
+                "MegaForm.Integrations.CloudStorage.AmazonS3StorageProvider, MegaForm.Integrations.CloudStorage");
+            if (s3 != null) providerList.Add(s3);
+            var storageProviders = providerList.ToArray();
             StorageIntegration = new StorageIntegrationService(storageProviders);
             var cloudConnections = new DelegateCloudStorageConnectionProvider(ReadCloudStorageConnectionsJson);
             CloudStorageUploader = new SubmissionCloudStorageUploader(
@@ -304,6 +315,28 @@ namespace MegaForm.DNN.Services
                 new DnnFileRepository(), new DnnDiskStorageService(),
                 SubmissionProcessor, WorkflowTasks, WorkflowRepo);
             MegaFormSdk.Initialize(new SingleClientServiceProvider(sdkClient));
+        }
+
+        /// <summary>
+        /// [S3AddOn 2026-07-28] Loads a storage provider that ships in an OPTIONAL add-on package.
+        /// Returns null when the add-on is not installed — the module then simply offers one less
+        /// cloud target. Everything is caught, including the type-load failures the CLR raises when
+        /// the provider's own dependencies (AWSSDK.*) are missing from bin.
+        /// </summary>
+        private static IStorageProvider TryLoadOptionalStorageProvider(string assemblyQualifiedName)
+        {
+            try
+            {
+                var type = Type.GetType(assemblyQualifiedName, throwOnError: false);
+                if (type == null) return null;
+                return Activator.CreateInstance(type) as IStorageProvider;
+            }
+            catch (Exception ex)
+            {
+                DotNetNuke.Instrumentation.LoggerSource.Instance.GetLogger(typeof(DnnServiceLocator))
+                    .Info("MegaForm optional storage provider not available (" + assemblyQualifiedName + "): " + ex.Message);
+                return null;
+            }
         }
 
         /// <summary>
