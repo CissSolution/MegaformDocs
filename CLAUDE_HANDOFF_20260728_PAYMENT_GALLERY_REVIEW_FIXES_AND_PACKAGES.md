@@ -122,6 +122,47 @@ file .006 nữa**, chỉ dùng .007.
 **Asset parity**: 3 file payment **hash SHA-256 giống nhau trên cả 4 runtime root** (DNN / Web / Oqtane /
 Umbraco) — Umbraco phải copy tay vì `BuildTS.ps1` không sync nó.
 
+## 7b. Đã commit + đã cài lên megademo.ai (bổ sung cuối phiên)
+
+| Commit | Nội dung |
+|---|---|
+| `a836ea6` | payment: fail-CLOSED khi không re-derive được giá field-mode (+ resolver cộng multi-value) |
+| `3d3bd9e` | gallery: subdir base URL / Trees API `truncated` không còn xoá sạch template |
+| `aeacf38` | release: DNN 02.00.007 + Oqtane 2.0.6, gỡ `Azure.*` khỏi nuspec (đang chặn pack) |
+| `aa21e5a` | calculator: đưa widget về TS trong git + chạy ngầm mặc định + 3 kiểu hiển thị |
+
+⚠️ `MegaForm.dnn` và `FormView.ascx.cs` **chỉ commit đúng dòng version** (2 file này còn mang thay
+đổi của task khác trong worktree: gỡ Azure ở manifest, đổi `AiFeatureGate.IsEnabled→IsAvailable`).
+
+**Đã cài `MegaForm_02.00.007_Install.zip` lên `http://megademo.ai`** qua API PersonaBar
+(`POST /API/PersonaBar/Extensions/InstallPackage`, script `install-megaform-dnn.mjs` ở scratchpad).
+DB: `Packages.Version=2.0.7`, `DesktopModules.Version=02.00.07.00`. Backup trước khi cài ở
+`E:\DNN_SITES\_backup_MegaDemo_20260728_163945` (bin + DesktopModules + `.bak` 44 MB).
+⭐ Trái với ghi chú cũ, đường cài này **CÓ** ghi đè `bin/*.dll` (log "Assembly updated").
+
+### QA đã chạy trên site thật (form 41 `QA 007 — Payment price gate`)
+
+| Ca | Kết quả |
+|---|---|
+| Calculator `payment_total=99` + payment giả `status:paid` | 400 *"Payment provider is not configured"* → giá resolve OK, chặn ở gateway |
+| Calculator thiếu `payment_total` | 400 *"does not match this form's price"* → **cổng mới chặn trước khi gọi Stripe** |
+| `payment_total: null` | 400 — chặn |
+| Không thanh toán | 400 *"Payment is required…"* |
+| Fixed price 99 (form 42) / Number source (form 43) | 400 *"provider is not configured"* → control, resolve OK |
+| Calculator `hidden` (mặc định) | 0px, không nhãn, vẫn nạp `$99.00` → `$148.50` vào Payment |
+| `input` / `inline` / `callout` | 65px / 23px / 90px, cùng giá trị live |
+
+⚠️ Vẫn CHƯA chạy giao dịch sandbox thật (megademo không có Stripe/PayPal credential).
+🧹 Form QA để lại trên megademo: **41, 42, 43, 44, 45** — xoá khi không cần.
+
+## 7c. Backlog owner giao cho phiên sau
+
+1. **DocFX**: viết tài liệu cho **Payment widget** và **Calculator widget** (bao gồm `amountMode`,
+   `amountFieldKey`, `amountFieldResultKey`, 4 `displayMode`, và luật fail-closed phía server).
+2. Làm giàu `https://cisssolution.github.io/DNN_MegaformDocs/articles/dnn-widgets.html` —
+   **tách thành các sub-page** nằm dưới trang đó (mỗi widget một trang).
+3. **Quay GIF minh hoạ** cho từng widget (harness GIF pure-JS đã có, xem memory `reference_demo_gif_recording`).
+
 ## 8. Việc CÒN LẠI
 
 1. 🔴 **E2E sandbox Stripe + PayPal chưa chạy** (không có credential trong máy). Chưa được ghi
