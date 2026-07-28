@@ -155,6 +155,38 @@ DB: `Packages.Version=2.0.7`, `DesktopModules.Version=02.00.07.00`. Backup trư�
 ⚠️ Vẫn CHƯA chạy giao dịch sandbox thật (megademo không có Stripe/PayPal credential).
 🧹 Form QA để lại trên megademo: **41, 42, 43, 44, 45** — xoá khi không cần.
 
+## 7d. Giảm dung lượng gói DNN: 14.63 MB → 6.82 MB (`03a44b5`)
+
+Lý do gói phình 7× so với `01.06.17` (2.1 MB) — đo bằng script, không ước lượng:
+
+| Nguyên nhân | Zipped | Xử lý |
+|---|---|---|
+| **i18n đóng gói 4 lần** (`js\i18n`, `builder\i18n`, `bundles\i18n`, `plugins\i18n`) | 4.15 MB (nội dung thật 1.04) | ship **1 bản** `builder\i18n` + guard chặn bản sao quay lại |
+| **2 PNG festa-italiana 1024²** (template đã rời gallery, **không ai tham chiếu**) | 2.49 MB | loại khỏi gói (`$ORPHAN_IMG`) |
+| **`megaform-ai-bear.png` 1024²** trong khi render ở ô **56px** | 1.34 MB | re-encode **128×128 → 21 KB** |
+| **AWSSDK.Core + AWSSDK.S3 + CloudStorage.dll** | 0.73 MB | tách ra **add-on riêng** |
+| 2 file `.js.map` | 0.22 MB | loại khỏi Resources.zip |
+
+**Add-on mới**: `MegaForm.CloudStorageS3_02.00.007_Install.zip` (0.73 MB, DNN package type
+**Library**). `DnnServiceLocator` nạp provider bằng **reflection** — nếu `new` cứng thì CLR resolve
+type lúc JIT method ⇒ thiếu DLL là **chết cả locator**, `try/catch` tại chỗ KHÔNG cứu được.
+Google Drive không ảnh hưởng (nằm trong `MegaForm.Core`).
+
+⭐ Commit này **kéo theo** phần gỡ Azure Blob 07-26 còn treo trong `MegaForm.dnn` +
+`DnnServiceLocator.cs` (mọi gói từ 07-26 đã ship phần đó rồi).
+⭐ `Assets/img/megaform-ai-bear.png` bị `.gitignore *.png` ⇒ **bản 128px chỉ nằm trên đĩa**
+(bản gốc 1024² lưu ở scratchpad `megaform-ai-bear-1024-original.png`).
+⭐ Build script nay không chết khi zip cũ bị **trình duyệt khoá** (đang upload) → ghi `<tên>.new.zip`.
+
+**Đã kiểm trên megademo.ai**: cài gói slim → **gỡ hẳn AWSSDK khỏi `bin`** → site HTTP 200, schema
+API 200, locale `vi-VN` 200 (105.9 KB), calculator.js 200, submit đi đúng đường payment gate ⇒
+reflection trả null, không sập. Cài add-on sau đó: `Packages` = MegaForm 2.0.7 (Module) +
+MegaForm.CloudStorageS3 2.0.7 (Library).
+
+⚠️ Gói Production `MegaForm_02.00.007_Install.zip` (14.6 MB, bản cũ) đang bị Chrome khoá file nên
+bản slim ghi ra **`MegaForm_02.00.007_Install.new.zip`** — đóng tab Chrome đang giữ file rồi đổi tên
+đè lại (hoặc chạy lại script).
+
 ## 7c. Backlog owner giao cho phiên sau
 
 1. **DocFX**: viết tài liệu cho **Payment widget** và **Calculator widget** (bao gồm `amountMode`,
