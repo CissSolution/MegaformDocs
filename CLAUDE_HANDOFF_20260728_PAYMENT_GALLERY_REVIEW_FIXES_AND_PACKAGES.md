@@ -162,6 +162,9 @@ DB: `Packages.Version=2.0.7`, `DesktopModules.Version=02.00.07.00`. Backup trư�
 2. Làm giàu `https://cisssolution.github.io/DNN_MegaformDocs/articles/dnn-widgets.html` —
    **tách thành các sub-page** nằm dưới trang đó (mỗi widget một trang).
 3. **Quay GIF minh hoạ** cho từng widget (harness GIF pure-JS đã có, xem memory `reference_demo_gif_recording`).
+4. **Ảnh form trên `DNN_MegaformDocs/index.html` đang bị bóp hẹp** — sửa **skin 2 cột** để cột form
+   rộng ra và cột text chỉ chiếm **1/3** (hiện là `564px 564px`, xem skin `[G]Skins/Aperture/form-2col.ascx`
+   trong memory `reference_site_dnn_megademo`), rồi **chụp lại** ảnh cho trang docs.
 
 ## 8. Việc CÒN LẠI
 
