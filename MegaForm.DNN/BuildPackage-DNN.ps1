@@ -85,6 +85,13 @@ function Test-BuildArtifact {
     return $FileName -like '*.map'
 }
 
+# [CodeEditorAddOn 2026-07-28] The Monaco bundle behind the Source/Razor tab — 1.02 MB, the single
+# biggest file in the package, and only builder users who open a code editor ever load it. It ships
+# as its own add-on. Safe to leave out: the builder injects it with a <script> tag whose onerror
+# path is already handled, and mountMonacoEditor() falls back to a plain <textarea> with the same
+# contract (written for air-gapped installs).
+$CODE_EDITOR_JS = 'megaform-unified-monaco.js'
+
 # [PkgSlim 2026-07-28] Artwork for templates that no longer exist anywhere in the package.
 # festa-italiana was removed from the gallery, so its two 1024x1024 PNGs (2.6 MB) are referenced
 # by nothing that ships — the one mention left in the dashboard image picker points at
@@ -377,6 +384,8 @@ if (Test-Path "$assetsDir\css\plugins") {
 
 Get-ChildItem "$assetsDir\js\*.js" -ErrorAction SilentlyContinue | ForEach-Object {
     if (Test-BuildArtifact $_.Name) { return }
+    # [CodeEditorAddOn 2026-07-28] Monaco (1.02 MB, 15% of the package) ships separately.
+    if ($_.Name -eq $CODE_EDITOR_JS) { return }
     Copy-Item $_.FullName "$RESOURCES\Assets\js\" -Force
     Write-Host "  + Assets\js\$($_.Name)"
 }
@@ -706,6 +715,65 @@ $addonAssemblies
     Write-Host ("  + S3 add-on: {0} ({1:N1} KB)" -f (Split-Path $addonZip -Leaf), ((Get-Item $addonZip).Length / 1KB)) -ForegroundColor Cyan
 }
 Remove-Item $addonDir -Recurse -Force
+
+# ------------------------------------------------------------
+# [CodeEditorAddOn 2026-07-28] Optional add-on: the Monaco code editor bundle.
+# A ResourceFile package that drops megaform-unified-monaco.js back into
+# DesktopModules/MegaForm/Assets/js — the exact path the builder's script tag asks for, so
+# nothing else changes once it is installed. Without it the Source/Razor tab degrades to a
+# <textarea>, which is what an air-gapped install already gets.
+# ------------------------------------------------------------
+$editorSrc = Join-Path "$assetsDir\js" $CODE_EDITOR_JS
+if (Test-Path $editorSrc) {
+    $edDir = Join-Path $OUTPUT_DIR '_editoraddon'
+    if (Test-Path $edDir) { Remove-Item $edDir -Recurse -Force }
+    New-Item -ItemType Directory -Path "$edDir\payload\Assets\js" -Force | Out-Null
+    Copy-Item $editorSrc "$edDir\payload\Assets\js\" -Force
+    $edResources = Join-Path $edDir 'Resources.zip'
+    [System.IO.Compression.ZipFile]::CreateFromDirectory("$edDir\payload", $edResources, [System.IO.Compression.CompressionLevel]::Optimal, $false)
+    $edManifest = @"
+<dotnetnuke type="Package" version="5.0">
+  <packages>
+    <package name="MegaForm.CodeEditor" type="Library" version="$VERSION">
+      <friendlyName>MegaForm Code Editor (Monaco)</friendlyName>
+      <description>Optional add-on for MegaForm: the Monaco editor used by the Source / Razor / Custom HTML tabs. Without it those tabs fall back to a plain textarea; everything else works the same.</description>
+      <iconFile></iconFile>
+      <owner>
+        <name>CISS Solution</name>
+        <organization>CISS Solution</organization>
+        <url></url>
+        <email></email>
+      </owner>
+      <license></license>
+      <releaseNotes>Ships Assets/js/megaform-unified-monaco.js, which used to ride inside the MegaForm module package (1.02 MB).</releaseNotes>
+      <azureCompatible>true</azureCompatible>
+      <dependencies />
+      <components>
+        <component type="ResourceFile">
+          <resourceFiles>
+            <basePath>DesktopModules/MegaForm</basePath>
+            <resourceFile>
+              <name>Resources.zip</name>
+            </resourceFile>
+          </resourceFiles>
+        </component>
+      </components>
+    </package>
+  </packages>
+</dotnetnuke>
+"@
+    Set-Content -Path "$edDir\MegaForm.CodeEditor.dnn" -Value $edManifest -Encoding UTF8
+    $edZip = Join-Path $OUTPUT_DIR "MegaForm.CodeEditor_${VERSION}_Install.zip"
+    if (Test-Path $edZip) { Remove-Item $edZip -Force }
+    $ez = [System.IO.Compression.ZipFile]::Open($edZip, 'Create')
+    [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($ez, "$edDir\MegaForm.CodeEditor.dnn", 'MegaForm.CodeEditor.dnn') | Out-Null
+    [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($ez, $edResources, 'Resources.zip') | Out-Null
+    $ez.Dispose()
+    Remove-Item $edDir -Recurse -Force
+    Write-Host ("  + Code editor add-on: {0} ({1:N1} KB)" -f (Split-Path $edZip -Leaf), ((Get-Item $edZip).Length / 1KB)) -ForegroundColor Cyan
+} else {
+    Write-Warning "Khong tim thay $CODE_EDITOR_JS - bo qua goi code editor add-on."
+}
 
 # ============================================================
 #  7. Don dep + Ket qua
