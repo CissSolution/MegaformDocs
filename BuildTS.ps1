@@ -84,7 +84,7 @@ Write-Host "  [OK] node_modules san sang" -ForegroundColor Green
 Write-Host ""
 Write-Host "[2/3] Building Vite bundles..." -ForegroundColor Yellow
 
-$allModules = @("builder-loader","i18n","widgets","renderer","builder","unified-monaco","workflow","submissions","dashboard","languages","settings-popup","views","presets","embed","admin-live","theme-designer","theme-inspector","dnn-host","captcha","appointment","phone-pro","grid-repeater")
+$allModules = @("builder-loader","i18n","widgets","renderer","builder","unified-monaco","workflow","submissions","dashboard","languages","settings-popup","views","presets","embed","admin-live","theme-designer","theme-inspector","dnn-host","captcha","appointment","phone-pro","calculator","grid-repeater")
 $targets = if ($Module) { @($Module) } else { $allModules }
 $failed = @()
 
@@ -117,6 +117,13 @@ foreach ($m in $targets) {
         $exitCode = $LASTEXITCODE
         Pop-Location
         $bp = Join-Path $SCRIPT_DIR "Assets\js\plugins\megaform-widget-phone-pro.js"
+    } elseif ($m -eq "calculator") {
+        # Shares the plugin tsconfig with phone-pro (one tsc pass emits every plugin listed there).
+        Push-Location $SCRIPT_DIR
+        $out = (tsc -p "MegaForm.UI\src\widgets\plugins\tsconfig.json" 2>&1)
+        $exitCode = $LASTEXITCODE
+        Pop-Location
+        $bp = Join-Path $SCRIPT_DIR "Assets\js\plugins\megaform-widget-calculator.js"
     } elseif ($m -eq "grid-repeater") {
         Push-Location $SCRIPT_DIR
         $out = (tsc -p "MegaForm.UI\src\widgets\tsconfig.grid-repeater.json" 2>&1)
@@ -237,6 +244,7 @@ foreach ($target in $SYNC_TARGETS) {
     Verify-SyncedFile (Join-Path $ASSETS_JS "plugins\megaform-widget-captcha.js") (Join-Path $dest "js\plugins\megaform-widget-captcha.js") "$label captcha"
     Verify-SyncedFile (Join-Path $ASSETS_JS "plugins\megaform-widget-appointment.js") (Join-Path $dest "js\plugins\megaform-widget-appointment.js") "$label appointment"
     Verify-SyncedFile (Join-Path $ASSETS_JS "plugins\megaform-widget-phone-pro.js") (Join-Path $dest "js\plugins\megaform-widget-phone-pro.js") "$label phone-pro"
+    Verify-SyncedFile (Join-Path $ASSETS_JS "plugins\megaform-widget-calculator.js") (Join-Path $dest "js\plugins\megaform-widget-calculator.js") "$label calculator"
     Verify-SyncedFile (Join-Path $ASSETS_JS "plugins\megaform-widget-qrcode.js") (Join-Path $dest "js\plugins\megaform-widget-qrcode.js") "$label qrcode"
     Verify-SyncedFile (Join-Path $ASSETS_JS "plugins\megaform-widget-grid-repeater.js") (Join-Path $dest "js\plugins\megaform-widget-grid-repeater.js") "$label grid-repeater"
     Verify-SyncedFile (Join-Path $ASSETS_JS "megaform-builder-loader.js") (Join-Path $dest "js\megaform-builder-loader.js") "$label builder-loader"

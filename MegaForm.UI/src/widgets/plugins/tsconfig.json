@@ -9,6 +9,7 @@
     "outDir": "../../../../Assets/js/plugins"
   },
   "include": [
+    "megaform-widget-calculator.ts",
     "megaform-widget-phone-pro.ts",
     "megaform-widget-payment-unified.ts",
     "megaform-widget-content-slider.ts",

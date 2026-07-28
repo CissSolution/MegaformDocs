@@ -1,7 +1,35 @@
 /* MegaForm Calculator Widget — Styles */
 
-/* Container */
-.mf-wg-calc{border:1px solid rgba(0,0,0,.08);border-radius:14px;padding:16px;background:linear-gradient(135deg,#fafbff 0%,#f8f9fc 100%);box-shadow:0 1px 3px rgba(0,0,0,.04)}
+/* Container
+   [Agnostic 2026-07-28] The widget dissolves into whatever form hosts it: it inherits font
+   and colour, paints no background of its own, and only manages spacing. The old card
+   (border + gradient + shadow) survives as .mf-wg-calc--chrome and is applied ONLY when the
+   calculator renders input fields of its own — the one case where it needs to read as a
+   distinct block. Fixed colours here would clash with a flat, a dark, or a corporate form. */
+.mf-wg-calc{font-family:inherit;color:inherit;background:transparent;border:0;box-shadow:none;padding:0}
+.mf-wg-calc--chrome{border:1px solid rgba(0,0,0,.08);border-radius:14px;padding:16px;background:linear-gradient(135deg,#fafbff 0%,#f8f9fc 100%);box-shadow:0 1px 3px rgba(0,0,0,.04)}
+
+/* Silent mode — the field exists in the DOM (it still submits its value) but nothing paints.
+   .mf-calc-host-hidden is put on the surrounding field group at runtime so the label and the
+   field chrome go with it; the builder canvas is deliberately left visible. */
+.mf-wg-calc--hidden,.mf-wg-calc--headless{display:none!important}
+.mf-calc-host-hidden{display:none!important}
+
+/* Mode: input mimicry — .mf-input already carries the form's border/radius/focus ring, so
+   only the read-only affordance is added here. */
+.mf-wg-calc-native{margin:0}
+.mf-wg-calc-native-label{display:block;font-family:inherit;font-size:inherit;color:inherit;opacity:.8;margin-bottom:6px}
+.mf-wg-calc-native-input[readonly]{width:100%;box-sizing:border-box;font-family:inherit;font-size:inherit;color:inherit;font-weight:700;background-color:rgba(0,0,0,.02);cursor:not-allowed}
+.mf-wg-calc-native + .mf-wg-calc-native{margin-top:10px}
+
+/* Mode: inline native text — nothing but type. */
+.mf-wg-calc-inline{font-family:inherit;font-size:1em;color:inherit;margin:8px 0}
+.mf-wg-calc-inline-label{opacity:.8}
+.mf-wg-calc-inline-value{font-size:1.15em;color:var(--mf-primary,var(--primary-color,currentColor))}
+
+/* Mode: neutral callout — a translucent grey reads correctly on light and dark alike. */
+.mf-wg-calc-callout{margin-top:12px;padding:12px 14px;border-radius:10px;background:rgba(127,127,127,.08);font-family:inherit;color:inherit}
+.mf-wg-calc-callout .mf-wg-calc-results{margin-top:0}
 
 /* Variables Grid */
 .mf-wg-calc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:12px}
@@ -26,20 +54,21 @@
 .mf-wg-calc-check:hover{background:#f0f0ff}
 .mf-wg-calc-check input[type="checkbox"]{width:16px;height:16px;accent-color:#6366f1}
 
-/* Results */
+/* Results — sizes are relative (em) and colours inherit, so a row reads correctly on a dark
+   theme as well as a light one. The only accent is the form's own primary colour. */
 .mf-wg-calc-results{margin-top:14px}
-.mf-wg-calc-result-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px dashed #e2e8f0}
+.mf-wg-calc-result-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;border-bottom:1px dashed rgba(127,127,127,.25)}
 .mf-wg-calc-result-row:last-child{border-bottom:none}
-.mf-wg-calc-result-label{font-size:12px;text-transform:uppercase;letter-spacing:.3px;color:#64748b;font-weight:600}
-.mf-wg-calc-result-number{font-size:16px;font-weight:700;color:#1e293b}
-.mf-wg-calc-result-prefix,.mf-wg-calc-result-suffix{font-size:14px;color:#64748b;font-weight:500}
-.mf-wg-calc-result-number.is-error{color:#ef4444}
+.mf-wg-calc-result-label{font-size:.8em;text-transform:uppercase;letter-spacing:.3px;color:inherit;opacity:.7;font-weight:600}
+.mf-wg-calc-result-number{font-size:1.05em;font-weight:700;color:inherit}
+.mf-wg-calc-result-prefix,.mf-wg-calc-result-suffix{font-size:.9em;color:inherit;opacity:.7;font-weight:500}
+.mf-wg-calc-result-number.is-error{color:#dc2626;opacity:1}
 
 /* Highlighted Total */
-.mf-wg-calc-result-highlight{background:#f0f0ff;border-radius:12px;padding:14px 16px;margin-top:8px;border:1px solid #e0e7ff !important}
-.mf-wg-calc-result-highlight .mf-wg-calc-result-label{font-size:14px;color:#4338ca}
-.mf-wg-calc-result-highlight .mf-wg-calc-result-number{font-size:24px;color:#4338ca}
-.mf-wg-calc-result-highlight .mf-wg-calc-result-prefix,.mf-wg-calc-result-highlight .mf-wg-calc-result-suffix{font-size:16px;color:#6366f1}
+.mf-wg-calc-result-highlight{background:rgba(127,127,127,.06);border-radius:12px;padding:12px 14px;margin-top:8px;border:none !important}
+.mf-wg-calc-result-highlight .mf-wg-calc-result-label{font-size:.9em;opacity:.85}
+.mf-wg-calc-result-highlight .mf-wg-calc-result-number{font-size:1.5em;color:var(--mf-primary,var(--primary-color,currentColor))}
+.mf-wg-calc-result-highlight .mf-wg-calc-result-prefix,.mf-wg-calc-result-highlight .mf-wg-calc-result-suffix{font-size:1em;color:var(--mf-primary,var(--primary-color,currentColor));opacity:.75}
 
 /* Breakdown */
 .mf-wg-calc-breakdown{margin-top:12px;border:1px dashed #cbd5e1;border-radius:12px;padding:12px;background:#f8fafc}
