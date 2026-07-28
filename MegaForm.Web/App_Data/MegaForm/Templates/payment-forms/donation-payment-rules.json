@@ -197,7 +197,8 @@
         "amountLabel": "Amount due",
         "payLabel": "Pay now",
         "amountMode": "field",
-        "amountFieldKey": "payment_calculator"
+        "amountFieldKey": "payment_calculator",
+        "amountFieldResultKey": "payment_total"
       }
     },
     {

@@ -15,6 +15,7 @@
     minAmount: number;
     maxAmount: number;
     amountFieldKey: string;
+    amountFieldResultKey: string;
     currency: string;
     locale: string;
     listenEventName: string;
@@ -94,6 +95,7 @@
       minAmount: 0,
       maxAmount: 0,
       amountFieldKey: '',
+      amountFieldResultKey: '',
       currency: 'USD',
       locale: 'en-US',
       listenEventName: 'mfw:totals-changed',
@@ -143,6 +145,7 @@
       minAmount: toNumber(src.minAmount, d.minAmount),
       maxAmount: toNumber(src.maxAmount, d.maxAmount),
       amountFieldKey: toString(src.amountFieldKey, d.amountFieldKey),
+      amountFieldResultKey: toString(src.amountFieldResultKey, d.amountFieldResultKey),
       currency: toString(src.currency, d.currency).toUpperCase(),
       locale: toString(src.locale, d.locale),
       listenEventName: toString(src.listenEventName, d.listenEventName),
@@ -228,40 +231,33 @@
       ' data-field-key="', u.esc(field.key), '"',
       ' data-payment-props="', jsonProps, '"',
       ' data-active-provider="', u.esc(activeProvider), '"',
+      ' data-payment-status="', u.esc(value.status), '"',
       ' style="--mfw-accent:', u.esc(props.accentColor), ';">',
       '<div class="mfw-payment-card">',
-      '<div class="mfw-payment-top">',
-      '<div class="mfw-payment-header">',
-      '<div class="mfw-payment-title">', u.esc(props.title), '</div>',
-      '<div class="mfw-payment-description">', u.esc(props.description), '</div>',
-      '</div>',
       '<div class="mfw-payment-summary">',
-      '<div class="mfw-payment-amount-box">',
+      '<div class="mfw-payment-amount-box" aria-label="', u.esc(props.amountLabel), '">',
       '<span class="mfw-payment-amount-label">', u.esc(props.amountLabel), '</span>',
       '<strong class="mfw-payment-amount" data-role="amount-display">', u.esc(formatMoney(amount, props.currency, props.locale)), '</strong>',
       '</div>',
-      '<div class="mfw-payment-status" data-role="status-badge" data-status="', u.esc(value.status), '">', u.esc(getStatusText(value, props)), '</div>',
+      '<div class="mfw-payment-status" data-role="status-badge" data-status="', u.esc(value.status), '" role="status" aria-live="polite">', u.esc(getStatusText(value, props)), '</div>',
       '</div>',
-      '</div>',
-      (showStripe && showPayPal) ? [
-        '<div class="mfw-payment-provider-switch" data-role="provider-switch">',
-        '<button type="button" class="mfw-payment-provider-btn is-active" data-role="provider-btn" data-provider="stripe" aria-pressed="true">',
-        '<span class="mfw-payment-provider-brand"><span class="mfw-payment-provider-mark is-stripe" aria-hidden="true">S</span><span>Stripe</span></span>',
-        '<span class="mfw-payment-provider-meta">', u.esc(tr('widget.payment.stripe_note', 'Cards, wallets')), '</span>',
-        '</button>',
-        '<button type="button" class="mfw-payment-provider-btn" data-role="provider-btn" data-provider="paypal" aria-pressed="false">',
-        '<span class="mfw-payment-provider-brand"><span class="mfw-payment-provider-mark is-paypal" aria-hidden="true">P</span><span>PayPal</span></span>',
-        '<span class="mfw-payment-provider-meta">', u.esc(tr('widget.payment.paypal_note', 'PayPal, cards')), '</span>',
-        '</button>',
-        '</div>'
+      '<div class="mfw-payment-provider-switch', showStripe && showPayPal ? '' : ' is-single', '" data-role="provider-switch" role="group" aria-label="Payment method">',
+      showStripe ? [
+        '<button type="button" class="mfw-payment-provider-btn', activeProvider === 'stripe' ? ' is-active' : '', '" data-role="provider-btn" data-provider="stripe" aria-pressed="', activeProvider === 'stripe' ? 'true' : 'false', '">',
+        '<span class="mfw-payment-provider-mark is-stripe" aria-hidden="true">S</span>',
+        '<span>Stripe</span>',
+        '</button>'
       ].join('') : '',
+      showPayPal ? [
+        '<button type="button" class="mfw-payment-provider-btn', activeProvider === 'paypal' ? ' is-active' : '', '" data-role="provider-btn" data-provider="paypal" aria-pressed="', activeProvider === 'paypal' ? 'true' : 'false', '">',
+        '<span class="mfw-payment-provider-mark is-paypal" aria-hidden="true">P</span>',
+        '<span>PayPal</span>',
+        '</button>'
+      ].join('') : '',
+      '</div>',
       '<div class="mfw-payment-stage">',
       showStripe ? [
         '<section class="mfw-payment-method mfw-payment-method-stripe', activeProvider === 'stripe' ? ' is-active' : '', '" data-provider-panel="stripe"', activeProvider === 'stripe' ? '' : ' hidden', '>',
-        '<div class="mfw-payment-method-head">',
-        '<span class="mfw-payment-method-name"><span class="mfw-payment-method-mark is-stripe" aria-hidden="true">S</span><span>Pay with card</span></span>',
-        '<span class="mfw-payment-method-note">', u.esc(tr('widget.payment.stripe_note', 'Cards, wallets')), '</span>',
-        '</div>',
         '<div class="mfw-payment-stripe-box" data-role="stripe-box">',
         '<div class="mfw-payment-stripe-element" data-role="stripe-element"></div>',
         '<button type="button" class="mfw-payment-btn" data-role="stripe-pay-btn">', u.esc(props.payLabel), '</button>',
@@ -270,17 +266,13 @@
       ].join('') : '',
       showPayPal ? [
         '<section class="mfw-payment-method mfw-payment-method-paypal', activeProvider === 'paypal' ? ' is-active' : '', '" data-provider-panel="paypal"', activeProvider === 'paypal' ? '' : ' hidden', '>',
-        '<div class="mfw-payment-method-head">',
-        '<span class="mfw-payment-method-name"><span class="mfw-payment-method-mark is-paypal" aria-hidden="true">P</span><span>Pay with PayPal</span></span>',
-        '<span class="mfw-payment-method-note">', u.esc(tr('widget.payment.paypal_note', 'PayPal, cards')), '</span>',
-        '</div>',
         '<div class="mfw-payment-paypal-box" data-role="paypal-box">',
         '<div class="mfw-payment-paypal-buttons" data-role="paypal-buttons"></div>',
         '</div>',
         '</section>'
       ].join('') : '',
       '</div>',
-      '<div class="mfw-payment-inline-msg" data-role="inline-message"></div>',
+      '<div class="mfw-payment-inline-msg" data-role="inline-message" role="status" aria-live="polite"></div>',
       '</div>',
       '<input type="hidden" name="', u.esc(field.key), '" id="', u.esc(inputId), '" value="', jsonValue, '" />',
       '</div>'
@@ -358,8 +350,12 @@
     var sync = function () {
       var latestProps = getWrapProps(wrap);
       var value = getStoredValue(wrap);
-      var resolved = resolveAmountFromField(wrap, latestProps.amountFieldKey || props.amountFieldKey);
-      applyResolvedAmount(wrap, hidden, value, resolved, latestProps.currency || props.currency, latestProps.locale || props.locale, 'Amount updated from field source.');
+      var resolved = resolveAmountFromField(
+        wrap,
+        latestProps.amountFieldKey || props.amountFieldKey,
+        latestProps.amountFieldResultKey || props.amountFieldResultKey
+      );
+      applyResolvedAmount(wrap, hidden, value, resolved, latestProps.currency || props.currency, latestProps.locale || props.locale, '');
     };
 
     var queueSync = function () {
@@ -412,7 +408,7 @@
 
       var currency = detail.currency ? String(detail.currency).toUpperCase() : props.currency;
       var value = getStoredValue(wrap);
-      applyResolvedAmount(wrap, hidden, value, amount, currency, props.locale, amount > 0 ? tr('widget.payment.amount_updated_pricing', 'Amount updated from pricing widget.') : tr('widget.payment.waiting_for_amount_pricing', 'Waiting for amount from pricing widget.'));
+      applyResolvedAmount(wrap, hidden, value, amount, currency, props.locale, amount > 0 ? '' : tr('widget.payment.waiting_for_amount_pricing', 'Waiting for amount from pricing widget.'));
     };
 
     var target: AnyObj = document;
@@ -430,7 +426,7 @@
       return;
     }
     if (props.amountMode === 'field' && props.amountFieldKey) {
-      var resolved = resolveAmountFromField(wrap, props.amountFieldKey);
+      var resolved = resolveAmountFromField(wrap, props.amountFieldKey, props.amountFieldResultKey);
       applyResolvedAmount(wrap, hidden, value, resolved, props.currency, props.locale, resolved > 0 ? 'Amount linked to field: ' + props.amountFieldKey : 'Waiting for source field amount.', false);
       return;
     }
@@ -520,7 +516,10 @@
     wrap._mfwStripeReadySignature = '';
     wrap._mfwStripeReadyPromise = null;
     if (host) host.innerHTML = note ? '<div class="mfw-payment-mini-hint is-' + escHtml(kind) + '">' + escHtml(note) + '</div>' : '';
-    if (btn) btn.disabled = true;
+    if (btn) {
+      btn.disabled = true;
+      btn.hidden = true;
+    }
   }
 
   async function ensureStripeReady(wrap: HTMLElement & AnyObj, props: PaymentProps, hidden: HTMLInputElement, forceActive: boolean): Promise<boolean> {
@@ -546,6 +545,7 @@
     var signature = [props.stripePublishableKey, props.stripeCreateIntentUrl, value.amount, value.currency || props.currency, props.stripeAppearanceTheme || 'stripe'].join('|');
     if (wrap._mfwStripeReadySignature === signature && wrap._mfwStripeState && wrap._mfwStripeState.elements) {
       btn.disabled = false;
+      btn.hidden = false;
       return true;
     }
     if (wrap._mfwStripeReadyPromise && wrap._mfwStripeReadySignature === signature) {
@@ -569,7 +569,16 @@
         });
         if (!response || !response.clientSecret) throw new Error('Stripe client secret was not returned by the server.');
         host.innerHTML = '';
-        var elements = stripe.elements({ clientSecret: response.clientSecret, appearance: { theme: props.stripeAppearanceTheme || 'stripe' } });
+        var elements = stripe.elements({
+          clientSecret: response.clientSecret,
+          appearance: {
+            theme: props.stripeAppearanceTheme || 'stripe',
+            variables: {
+              colorPrimary: props.accentColor || '#4f46e5',
+              borderRadius: '8px'
+            }
+          }
+        });
         var paymentElement = elements.create('payment');
         paymentElement.mount(host);
         wrap._mfwStripeState = {
@@ -580,7 +589,7 @@
           paymentIntentId: response.paymentIntentId || ''
         };
         btn.disabled = false;
-        setInlineMessage(wrap, tr('widget.payment.card_ready', 'Secure card form is ready.'), 'info');
+        btn.hidden = false;
         return true;
       } catch (err: any) {
         clearStripeState(wrap, host, btn, toErrorMessage(err, props.errorLabel), 'error');
@@ -598,6 +607,13 @@
       if (!browserWindow.paypal || !browserWindow.paypal.Buttons) throw new Error('PayPal SDK failed to load.');
       host.innerHTML = '';
       browserWindow.paypal.Buttons({
+        style: {
+          layout: 'horizontal',
+          height: 40,
+          shape: 'rect',
+          label: 'paypal',
+          tagline: false
+        },
         createOrder: function () {
           var value = getStoredValue(wrap);
           if (value.amount <= 0) throw new Error('Amount must be greater than zero.');
@@ -693,7 +709,11 @@
         { value: 'listenTotals', label: 'From totals event (advanced)' }
       ]),
       '<div class="mfw-paycfg-mode" data-amount-mode="fixed">' + renderNumber('Fixed amount', 'amount', props.amount, '0.01') + '</div>',
-      '<div class="mfw-paycfg-mode" data-amount-mode="field">' + renderSelect('Source field', 'amountFieldKey', props.amountFieldKey, fields) + '<div class="mfw-paycfg-help">Choose a Number, Calculator, hidden amount field, or pricing field.</div></div>',
+      '<div class="mfw-paycfg-mode" data-amount-mode="field">' +
+        renderSelect('Source field', 'amountFieldKey', props.amountFieldKey, fields) +
+        renderText('Calculator result key', 'amountFieldResultKey', props.amountFieldResultKey) +
+        '<div class="mfw-paycfg-help">For a Calculator field, enter the formula key (for example payment_total). Leave blank when the calculator has one result.</div>' +
+      '</div>',
       '<div class="mfw-paycfg-mode" data-amount-mode="listenTotals">' + renderText('Totals event name', 'listenEventName', props.listenEventName) + renderText('Event target selector', 'listenSelector', props.listenSelector) + '</div>',
       '<div class="mfw-paycfg-mode" data-amount-mode="field">' + renderNumber('Minimum amount', 'minAmount', props.minAmount, '0.01') + renderNumber('Maximum amount', 'maxAmount', props.maxAmount, '0.01') + '<div class="mfw-paycfg-help">Server-enforced bounds for variable amounts (0 = no bound).</div></div>',
       '<div class="mfw-paycfg-mode" data-amount-mode="listenTotals">' + renderNumber('Minimum amount', 'minAmount', props.minAmount, '0.01') + renderNumber('Maximum amount', 'maxAmount', props.maxAmount, '0.01') + '<div class="mfw-paycfg-help">Server-enforced bounds for variable amounts (0 = no bound).</div></div>',
@@ -920,6 +940,11 @@
 
   function setStatusVisual(wrap: HTMLElement, value: PaymentValue, props: PaymentProps): void {
     var badge = wrap.querySelector('[data-role="status-badge"]') as HTMLElement | null;
+    wrap.setAttribute('data-payment-status', value.status);
+    wrap.setAttribute('aria-busy', value.status === 'pending' ? 'true' : 'false');
+    wrap.querySelectorAll('[data-role="provider-btn"]').forEach(function (node: Element) {
+      (node as HTMLButtonElement).disabled = value.status === 'pending' || value.status === 'paid';
+    });
     if (!badge) return;
     badge.setAttribute('data-status', value.status);
     badge.textContent = getStatusText(value, props);
@@ -968,7 +993,7 @@
   }
 
 
-  function resolveAmountFromField(wrap: HTMLElement, fieldKey: string): number {
+  function resolveAmountFromField(wrap: HTMLElement, fieldKey: string, resultKey: string = ''): number {
     if (!fieldKey) return 0;
     var scope = findFormScope(wrap);
     var root: ParentNode = scope instanceof HTMLElement ? scope : document;
@@ -976,10 +1001,10 @@
     var nodes = root.querySelectorAll(selector);
     if (!nodes || !nodes.length) {
       var fallback = root.querySelector('#' + cssEscape('mf-' + getFormIdFromWrap(wrap) + '-' + fieldKey));
-      if (fallback) return readAmountFromElements([fallback as Element]);
+      if (fallback) return readAmountFromElements([fallback as Element], resultKey);
       return 0;
     }
-    return readAmountFromElements(Array.prototype.slice.call(nodes));
+    return readAmountFromElements(Array.prototype.slice.call(nodes), resultKey);
   }
 
   function getFormIdFromWrap(wrap: HTMLElement): string {
@@ -987,25 +1012,59 @@
     return match ? match[1] : '0';
   }
 
-  function readAmountFromElements(nodes: Element[]): number {
+  function readAmountFromElements(nodes: Element[], resultKey: string = ''): number {
     var values: number[] = [];
     nodes.forEach(function (node: Element) {
       var el = node as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
       if (el instanceof HTMLInputElement) {
         if ((el.type === 'radio' || el.type === 'checkbox') && !el.checked) return;
         if (el.type === 'hidden' || el.type === 'number' || el.type === 'text' || el.type === 'email' || el.type === 'tel') {
-          values.push(coerceAmount(el.value));
+          values.push(extractAmountValue(el.value, resultKey));
           return;
         }
       }
       var raw: any = (el as any).value != null ? (el as any).value : (el.textContent || '');
-      values.push(coerceAmount(raw));
+      values.push(extractAmountValue(raw, resultKey));
     });
     if (!values.length) return 0;
     if (values.length === 1) return roundMoney(values[0]);
     var sum = 0;
     values.forEach(function (v) { if (isFinite(v)) sum += v; });
     return roundMoney(sum);
+  }
+
+  /**
+   * Canonical amount bridge for calculated fields.
+   * Calculator stores { variables, results }; simple Number/Hidden fields store
+   * a scalar. An explicit result key wins, otherwise a conventional total key
+   * or the only numeric calculator result is used.
+   */
+  function extractAmountValue(raw: any, resultKey: string = ''): number {
+    var parsed = typeof raw === 'string' ? safeJson(raw) : raw;
+    if (parsed && typeof parsed === 'object') {
+      var results = parsed.results && typeof parsed.results === 'object' ? parsed.results : null;
+      var wanted = String(resultKey || '').trim();
+      if (wanted) {
+        if (results && results[wanted] != null) return roundMoney(coerceAmount(results[wanted]));
+        if (parsed[wanted] != null) return roundMoney(coerceAmount(parsed[wanted]));
+        return 0;
+      }
+      var keys = ['grandTotal', 'total', 'amount', 'payment_total', 'value'];
+      for (var i = 0; i < keys.length; i++) {
+        if (results && results[keys[i]] != null) return roundMoney(coerceAmount(results[keys[i]]));
+        if (parsed[keys[i]] != null) return roundMoney(coerceAmount(parsed[keys[i]]));
+      }
+      if (results) {
+        var numericResults: number[] = [];
+        Object.keys(results).forEach(function (key: string) {
+          var n = Number(results[key]);
+          if (isFinite(n)) numericResults.push(n);
+        });
+        if (numericResults.length === 1) return roundMoney(numericResults[0]);
+      }
+      return 0;
+    }
+    return roundMoney(coerceAmount(raw));
   }
 
   function matchesFieldTarget(target: AnyObj, fieldKey: string): boolean {

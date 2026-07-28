@@ -421,7 +421,7 @@ namespace MegaForm.Core.Payments
 
         private sealed class ExpectedPrice
         {
-            public string Mode;            // fixed | field | bounds
+            public string Mode;            // fixed | field | bounds | unresolved
             public decimal? Amount;        // authoritative when Mode != bounds
             public string Currency;        // authoritative when set
             public decimal? Min;
@@ -431,9 +431,16 @@ namespace MegaForm.Core.Payments
         /// <summary>
         /// Re-derive the price the server can vouch for. fixed → schema amount.
         /// field → the source field's value inside THIS submission (the data is
-        /// present at submit time, unlike at create-intent time). listenTotals or
-        /// an unresolvable source → optional min/max bounds; the gateway amount
-        /// becomes the recorded truth.
+        /// present at submit time, unlike at create-intent time). listenTotals →
+        /// optional min/max bounds; the gateway amount becomes the recorded truth.
+        ///
+        /// [SecFix 2026-07-28 PAY-3] A field-mode widget whose source cannot be
+        /// re-derived is "unresolved", NOT "bounds". Degrading to bounds looked
+        /// harmless but most widgets carry no minAmount/maxAmount, so any paid
+        /// claim then passed with no price check at all — a 50-cent intent could
+        /// settle a calculated $500 order by mangling the calculator payload.
+        /// The widget itself refuses to charge when it cannot resolve the amount,
+        /// so a legitimate payer never lands here.
         /// </summary>
         private ExpectedPrice ResolveExpectedPrice(FormField field, Dictionary<string, object> props, Dictionary<string, object> formData)
         {
@@ -452,14 +459,16 @@ namespace MegaForm.Core.Payments
                 if (!string.IsNullOrWhiteSpace(sourceKey))
                 {
                     decimal parsed;
-                    if (TryCoerceAmount(GetFormValue(formData, sourceKey), out parsed) && parsed > 0m)
+                    string resultKey = ReadString(props, "amountFieldResultKey");
+                    if (PaymentAmountResolver.TryResolve(GetFormValue(formData, sourceKey), resultKey, out parsed) && parsed > 0m)
                     {
                         expected.Mode = "field";
                         expected.Amount = Math.Round(parsed, 2, MidpointRounding.AwayFromZero);
                         return expected;
                     }
                 }
-                return expected; // unresolvable source → bounds only
+                expected.Mode = "unresolved";   // fail CLOSED, see the note above
+                return expected;
             }
             if (mode == "listentotals")
             {
@@ -482,6 +491,12 @@ namespace MegaForm.Core.Payments
             if (gatewayAmount <= 0m)
             {
                 return PaymentVerificationOutcome.Reject(field.Key, "Payment was not completed. Please try again.");
+            }
+            if (string.Equals(expected.Mode, "unresolved", StringComparison.Ordinal))
+            {
+                Log("Payment field '" + field.Key + "' is amountMode=field but the server could not re-derive " +
+                    "its price from the submitted data — rejecting (fail closed).");
+                return PaymentVerificationOutcome.Reject(field.Key, "The payment does not match this form's price.");
             }
             if (!string.IsNullOrWhiteSpace(expected.Currency) &&
                 !string.Equals(expected.Currency, gatewayCurrency, StringComparison.OrdinalIgnoreCase))
@@ -592,25 +607,6 @@ namespace MegaForm.Core.Payments
                 return parsed;
             }
             return null;
-        }
-
-        /// <summary>Server-side twin of the widget's amount coercion: accept "1,250.50",
-        /// "$99", plain numbers; reject everything else.</summary>
-        private static bool TryCoerceAmount(object raw, out decimal amount)
-        {
-            amount = 0m;
-            if (raw == null) return false;
-            if (raw is decimal) { amount = (decimal)raw; return true; }
-            if (raw is int) { amount = (int)raw; return true; }
-            if (raw is long) { amount = (long)raw; return true; }
-            if (raw is double) { amount = (decimal)(double)raw; return true; }
-
-            var text = Convert.ToString(raw, CultureInfo.InvariantCulture);
-            if (string.IsNullOrWhiteSpace(text)) return false;
-            var cleaned = System.Text.RegularExpressions.Regex.Replace(text, "[^0-9,.\\-]", string.Empty);
-            if (cleaned.IndexOf(',') >= 0 && cleaned.IndexOf('.') < 0) cleaned = cleaned.Replace(',', '.');
-            else cleaned = cleaned.Replace(",", string.Empty);
-            return decimal.TryParse(cleaned, NumberStyles.Any, CultureInfo.InvariantCulture, out amount);
         }
 
         private void Log(string message)
