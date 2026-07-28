@@ -78,6 +78,18 @@ namespace MegaForm.Sdk.Tests
                 ListingUrl("https://raw.githubusercontent.com/CissSolution/megaform-gallery/main/"));
         }
 
+        [Theory]
+        // A base URL pointing INTO the repo: both listings enumerate from the repo root, so the
+        // paths would never match the manifest's and the reconcile would drop every template.
+        [InlineData("https://raw.githubusercontent.com/CissSolution/megaform-gallery/main/gallery/")]
+        [InlineData("https://cdn.jsdelivr.net/gh/CissSolution/megaform-gallery@main/gallery/")]
+        // Too short to name a repo at all.
+        [InlineData("https://raw.githubusercontent.com/CissSolution/megaform-gallery/")]
+        public void ListingUrl_SubdirectoryBase_ReturnsNull(string baseUrl)
+        {
+            Assert.Null(ListingUrl(baseUrl));
+        }
+
         [Fact]
         public void ListingUrl_UnknownHost_ReturnsNull()
         {

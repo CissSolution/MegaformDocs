@@ -204,6 +204,11 @@ namespace MegaForm.Core.Services.GalleryRepo
                 var gitTree = root["tree"] as JArray;
                 if (gitTree != null)
                 {
+                    // The Trees API caps a recursive listing and flags it with truncated:true.
+                    // A partial listing here is worse than none: the reconcile below deletes
+                    // every manifest entry it cannot see, so a big repo would silently empty
+                    // the gallery. Fail open — trust the manifest.
+                    if (root.Value<bool?>("truncated") == true) return null;
                     foreach (var n in gitTree.OfType<JObject>())
                     {
                         if (!string.Equals((string)n["type"], "blob", StringComparison.OrdinalIgnoreCase)) continue;
@@ -242,6 +247,11 @@ namespace MegaForm.Core.Services.GalleryRepo
         /// [PrivateGalleryRepo 2026-07-28] The data API only knows PUBLIC repos, so a private
         /// gallery served from raw.githubusercontent has to be enumerated through the GitHub API
         /// instead — which is also why api.github.com is on the token allowlist.
+        ///
+        /// Both listings enumerate paths from the REPO ROOT, while manifest entries are relative
+        /// to the configured base URL. They only line up when the base URL IS the repo root, so a
+        /// base pointing into a subdirectory returns null (trust the manifest) instead of a
+        /// listing that matches nothing and would drop every template.
         /// </summary>
         internal static string BuildListingUrl(string baseUrl)
         {
@@ -252,14 +262,15 @@ namespace MegaForm.Core.Services.GalleryRepo
 
                 if (u.Host.EndsWith("jsdelivr.net", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (segs.Length < 3 || !string.Equals(segs[0], "gh", StringComparison.OrdinalIgnoreCase)) return null;
+                    // gh / owner / repo[@ref]
+                    if (segs.Length != 3 || !string.Equals(segs[0], "gh", StringComparison.OrdinalIgnoreCase)) return null;
                     return "https://data.jsdelivr.com/v1/packages/gh/" + segs[1] + "/" + segs[2];
                 }
 
                 if (string.Equals(u.Host, "raw.githubusercontent.com", StringComparison.OrdinalIgnoreCase))
                 {
-                    // owner / repo / ref [ / subdir… ]
-                    if (segs.Length < 3) return null;
+                    // owner / repo / ref
+                    if (segs.Length != 3) return null;
                     return "https://api.github.com/repos/" + segs[0] + "/" + segs[1]
                         + "/git/trees/" + segs[2] + "?recursive=1";
                 }
