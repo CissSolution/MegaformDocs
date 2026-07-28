@@ -112,6 +112,14 @@ namespace MegaForm.DNN.Services
 
         private DnnServiceLocator()
         {
+            // [FlagAssetBase 2026-07-28] DNN mounts the module's images under
+            // /DesktopModules/MegaForm/Assets/img/, not the Oqtane default /Modules/MegaForm/img/.
+            // Core's server-side country-picker flag is the one image URL emitted from Core, so
+            // without this every SSR-rendered phone/address widget (and every PRINTED form, where
+            // no JS runs to repair it) asked for a 404 and showed the bare "US" text chip instead
+            // of the flag. Set once, on first use of any Core service in this app domain.
+            MegaForm.Core.Services.FormHtmlRenderer.ModuleImageBase = "/DesktopModules/MegaForm/Assets/img/";
+
             // 1. Platform implementations
             EmailSender = new DnnEmailSender();
             LogService = new DnnLogService();

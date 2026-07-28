@@ -123,24 +123,77 @@ const DIAL_PREFERRED: Record<string, string> = { '+1': 'US', '+7': 'RU' };
 
 let flagBase: string | null = null;
 
-/** Resolve the flag asset folder from any loaded megaform-*.js, else a sane default. */
+/** Scan one document for a megaform script and derive the module root from it. */
+function flagBaseFromDocument(doc: Document): string | null {
+  const scripts = doc.getElementsByTagName('script');
+  for (let i = scripts.length - 1; i >= 0; i--) {
+    const src = (scripts[i].getAttribute('src') || '').split('#')[0].split('?')[0];
+    if (!src) continue;
+    const low = src.toLowerCase();
+    const jsIdx = low.indexOf('/js/');
+    if (jsIdx >= 0 && low.indexOf('megaform') >= 0) return src.substring(0, jsIdx) + '/img/flags/4x3/';
+  }
+  return null;
+}
+
+/**
+ * Resolve the flag asset folder.
+ *
+ * [FlagAssetBase 2026-07-28] The old version scanned only the current document and, when that
+ * found nothing, hard-coded the OQTANE root — which 404s on DNN (/DesktopModules/MegaForm/Assets/)
+ * and on the Web host (/megaform/), so the picker fell back to the bare "US" text chip. It also
+ * memoised that wrong guess for the life of the page. Two contexts hit the miss:
+ *   • a srcdoc iframe (builder Design preview, gallery thumbnails) has no megaform <script>;
+ *   • DNN Client Resource Management can combine/minify the bundles into a file whose name no
+ *     longer contains "megaform".
+ * So: walk same-origin ancestors too, fall back to the PLATFORM flag rather than one host's
+ * layout, and never cache a value that came from the fallback — a later call may resolve properly.
+ */
 export function getFlagAssetBaseUrl(): string {
   if (flagBase) return flagBase;
   try {
-    const scripts = document.getElementsByTagName('script');
-    for (let i = scripts.length - 1; i >= 0; i--) {
-      const src = (scripts[i].getAttribute('src') || '').split('#')[0].split('?')[0];
-      if (!src) continue;
-      const low = src.toLowerCase();
-      const jsIdx = low.indexOf('/js/');
-      if (jsIdx >= 0 && low.indexOf('megaform') >= 0) {
-        flagBase = src.substring(0, jsIdx) + '/img/flags/4x3/';
-        return flagBase;
+    // current document first, then same-origin parents (srcdoc/preview iframes)
+    let win: Window | null = window;
+    for (let hops = 0; win && hops < 5; hops++) {
+      let doc: Document | null = null;
+      try { doc = win.document; } catch { doc = null; }   // cross-origin ancestor
+      if (doc) {
+        const found = flagBaseFromDocument(doc);
+        if (found) { flagBase = found; return flagBase; }
       }
+      const next: Window | null = win.parent;
+      if (!next || next === win) break;
+      win = next;
     }
   } catch { /* SSR / no document */ }
-  flagBase = '/Modules/MegaForm/img/flags/4x3/';
-  return flagBase;
+  // Not resolvable from a script tag — use the platform marker, and do NOT memoise it.
+  try {
+    const platform = String((window as any).__MF_PLATFORM__?.platform || '').toLowerCase();
+    if (platform === 'dnn') return '/DesktopModules/MegaForm/Assets/img/flags/4x3/';
+  } catch { /* no window */ }
+  return '/Modules/MegaForm/img/flags/4x3/';
+}
+
+/**
+ * [FlagAssetBase 2026-07-28] Repair flag <img> URLs that SSR emitted against a different module
+ * root. Core renders the picker server-side (that HTML also feeds PRINT), and older builds baked
+ * the Oqtane root into it unconditionally. Rewriting on bind fixes installs whose DLL predates the
+ * Core fix, without waiting for a module upgrade.
+ */
+function repairSsrFlagUrls(scope: Document | HTMLElement): void {
+  const base = getFlagAssetBaseUrl();
+  const imgs = scope.querySelectorAll<HTMLImageElement>('img.mf-ccp-flag-img');
+  imgs.forEach((img) => {
+    const src = img.getAttribute('src') || '';
+    const slash = src.lastIndexOf('/');
+    if (slash < 0) return;
+    const file = src.substring(slash + 1);              // e.g. "us.svg"
+    if (!file || src.substring(0, slash + 1) === base) return;
+    img.setAttribute('src', base + file);
+    img.style.removeProperty('display');
+    const frame = img.parentElement;
+    if (frame) frame.className = frame.className.replace(/\s*is-missing\b/g, '');
+  });
 }
 
 function esc(s: unknown): string {
@@ -353,6 +406,8 @@ function closeDropdown(st: PickerState, focusTrigger: boolean): void {
 /** Wire every un-bound .mf-ccp picker within `scope`. Idempotent. */
 export function bindCountryPickers(scope?: Document | HTMLElement): void {
   const root: Document | HTMLElement = scope || document;
+  // Runs before the :not([data-bound]) filter below, so it also repairs pickers bound earlier.
+  repairSsrFlagUrls(root);
   const nodes = root.querySelectorAll<HTMLElement>('.mf-ccp[data-mf-ccp]:not([data-bound])');
   nodes.forEach((wrap) => {
     const trigger = wrap.querySelector<HTMLButtonElement>('.mf-ccp-trigger');

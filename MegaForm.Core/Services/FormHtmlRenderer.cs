@@ -39,6 +39,28 @@ namespace MegaForm.Core.Services
         /// <summary>Marker attribute the JS hydrator looks for to skip a client rebuild.</summary>
         public const string SsrMarkerAttr = "data-mf-ssr=\"1\"";
 
+        // [FlagAssetBase 2026-07-28] Where THIS host serves the module's images from. The two
+        // mount layouts differ:
+        //     Oqtane / Web / Umbraco   /Modules/MegaForm/img/
+        //     DNN                      /DesktopModules/MegaForm/Assets/img/
+        // The country-picker flag was the one image URL emitted server-side, and it was hard-coded
+        // to the Oqtane root — so every SSR-rendered phone/address widget on DNN requested a 404
+        // and fell back to the plain "US" text chip. The client renderer resolves this per platform
+        // (@shared/module-asset-url), but SSR output also feeds PRINT, where no JS runs to repair
+        // it. Hosts whose layout differs set this once at start-up (see DnnServiceLocator).
+        private static string _moduleImageBase = "/Modules/MegaForm/img/";
+        /// <summary>Module image root for this host, always with a trailing slash.</summary>
+        public static string ModuleImageBase
+        {
+            get { return _moduleImageBase; }
+            set
+            {
+                var v = (value ?? string.Empty).Trim();
+                if (v.Length == 0) { _moduleImageBase = "/Modules/MegaForm/img/"; return; }
+                _moduleImageBase = v.EndsWith("/", StringComparison.Ordinal) ? v : v + "/";
+            }
+        }
+
         /// <summary>Widget field types whose label is rendered by the widget itself (self-labeled),
         /// so the server wrapper must NOT add a &lt;label&gt; (matches the TS isWidgetSelfLabeled list).</summary>
         private static readonly HashSet<string> AlwaysLabeledWidgets = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -1125,7 +1147,7 @@ namespace MegaForm.Core.Services
         {
             var iso = (country?.Iso2 ?? "US").ToLowerInvariant();
             return "<span class=\"mf-ccp-flag-frame\" aria-hidden=\"true\"><span class=\"mf-ccp-flag-fallback\">"
-                + Esc(country?.Iso2 ?? "US") + "</span><img class=\"mf-ccp-flag-img\" src=\"/Modules/MegaForm/img/flags/4x3/"
+                + Esc(country?.Iso2 ?? "US") + "</span><img class=\"mf-ccp-flag-img\" src=\"" + Esc(ModuleImageBase) + "flags/4x3/"
                 + Esc(iso) + ".svg\" alt=\"\" loading=\"lazy\" decoding=\"async\" onerror=\"this.style.display=&quot;none&quot;;this.parentNode.className+=&quot; is-missing&quot;\"></span>";
         }
 
