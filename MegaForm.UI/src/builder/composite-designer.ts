@@ -23,6 +23,10 @@ import { addressPartsForScheme } from '../renderer/composite-address';
 // [Composite Registry v20260616] Single source — seed parts from COMPOSITE_PRESETS and list
 // presets from COMPOSITE_PRESET_META (was a local PRESETS/DIAL_CODES mirror that could drift).
 import { COMPOSITE_PRESETS, COMPOSITE_DIAL_CODES, compositePresetKeys, compositePresetLabel, compositePartLabel } from '../renderer/helpers';
+// [FlagPreview 2026-07-28] Live Preview claims to mirror the runtime, so it draws the
+// runtime's flag chip. It used to print the emoji 🇺🇸, which Windows renders as the bare
+// letters "US" (no regional-indicator glyph) — the exact thing the flag is meant to replace.
+import { previewFlagHtml } from '../renderer/country-picker';
 import { wt } from './designer-i18n';
 
 (function () {
@@ -614,7 +618,10 @@ import { wt } from './designer-i18n';
         var ctrl;
         var st = 'width:100%;min-width:0;';
         if (p.type === 'country') {
-          ctrl = '<button type="button" class="mf-input" style="' + st + 'text-align:left;">🇺🇸</button>'; // [B268] flag-only compact trigger
+          // [FlagPreview 2026-07-28] Real flag chip (runtime markup) — was the emoji 🇺🇸,
+          // which has no glyph on Windows and fell back to the letters "US".
+          ctrl = '<button type="button" class="mf-input" style="' + st + 'text-align:left;display:flex;align-items:center;gap:6px;">'
+            + previewFlagHtml(p.def || p.placeholder) + '</button>';
         } else if (p.type === 'select') {
           var opts = (Array.isArray(p.options) ? p.options : []).map(function (o: any) { var ov = o && o.value != null ? o.value : o; var ol = o && o.label != null ? o.label : ov; return '<option value="' + escA(ov) + '">' + esc(ol) + '</option>'; }).join('');
           ctrl = '<select class="mf-input" style="' + st + '">' + opts + '</select>';

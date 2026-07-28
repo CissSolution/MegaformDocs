@@ -13,6 +13,9 @@ import SortableModule from 'sortablejs';
 // [Fidelity v20260616] Shared cell sizing so the canvas composite preview matches the runtime
 // (fraction widths 1/4·1/2·full, flex shares) — single source in renderer/helpers.
 import { compositeCellStyle } from '../renderer/helpers';
+// [FlagPreview 2026-07-28] Same flag chip the runtime picker draws — the canvas preview
+// showed the dial code "+1" where the published form shows a flag.
+import { previewFlagHtml } from '../renderer/country-picker';
 // [2026-06-27 #2 Steps-in-builder] Surface the custom-shell wizard's step structure
 // (which lives only in customHtml, invisible to the schema-driven canvas).
 import { fieldStepMap } from '@shared/custom-html-insert';
@@ -3320,7 +3323,10 @@ import { fieldStepMap } from '@shared/custom-html-insert';
                     const isSelect = t === 'select';
                     const isCountry = t === 'country';
                     const inner = isCountry
-                        ? `<span class="mf-comp-prev-ph">${ph || '+1'}</span><i class="fas fa-caret-down"></i>`
+                        // [FlagPreview 2026-07-28] Show the FLAG, not the dial code. The runtime
+                        // country part renders a flag chip with no code (data-show-code="none"),
+                        // so printing "+1" here made the canvas disagree with the published form.
+                        ? `<span class="mf-comp-prev-flag">${previewFlagHtml(p.def || p.placeholder)}</span><i class="fas fa-caret-down"></i>`
                         : isSelect
                           ? `<span class="mf-comp-prev-ph">${ph || cap || 'Select'}</span><i class="fas fa-caret-down"></i>`
                           : `<span class="mf-comp-prev-ph">${ph}</span>`;

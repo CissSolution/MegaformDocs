@@ -241,6 +241,20 @@ function flagHtml(c: PickerCountry): string {
     '</span>';
 }
 
+/**
+ * [FlagPreview 2026-07-28] Static flag chip for the BUILDER previews (canvas card + the
+ * Input Designer's Live Preview). Those two used to draw the country part as literal
+ * text — "+1" on the canvas, the emoji 🇺🇸 in the designer — and neither shows a flag:
+ * Windows ships no glyph for the regional-indicator pair, so the emoji renders as the
+ * letters "US". Both previews claim to mirror the runtime, so they render the runtime's
+ * own flag markup instead; .mf-ccp-flag-* CSS is loaded in the builder shell, which
+ * hides the ISO fallback unless the image 404s.
+ * Preview only — inert markup, no picker behaviour.
+ */
+export function previewFlagHtml(value?: string, valueMode: 'dial' | 'iso2' = 'dial'): string {
+  return flagHtml(resolveCountry(value, valueMode));
+}
+
 function matchesSearch(c: PickerCountry, q: string): boolean {
   if (!q) return true;
   const term = norm(q);
