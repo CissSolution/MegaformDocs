@@ -1948,5 +1948,11 @@
   "wiz.remote.no_preview": "Không xem trước được mẫu này.",
   "wiz.gallery.online_browse": "Chỉ xem trước — bản có phí mới cài được",
   "wiz.gallery.n_fields": "{n} trường",
-  "wiz.gallery.untitled": "Mẫu chưa đặt tên"
+  "wiz.gallery.untitled": "Mẫu chưa đặt tên",
+  "des.comp.countrySection": "Bộ chọn quốc gia",
+  "des.comp.countryDefault": "Quốc gia mặc định",
+  "des.comp.countryAuto": "Tự động - theo ngôn ngữ biểu mẫu",
+  "des.comp.countryAllowed": "Quốc gia được phép",
+  "des.comp.countryAllowedHint": "không chọn = tất cả",
+  "des.comp.countryAllowedClear": "Bỏ chọn (cho phép tất cả)"
 }

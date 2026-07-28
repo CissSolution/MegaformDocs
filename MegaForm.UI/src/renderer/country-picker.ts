@@ -222,13 +222,35 @@ export function byDial(dial: string): PickerCountry | null {
 }
 
 /** Resolve the country to show on first render from a stored value (dial or iso2). */
+/**
+ * [LocaleDefaultCountry 2026-07-28] Which country a picker starts on when the field carries
+ * no stored value and the designer set no default. Reads the REGION of the active MegaForm
+ * locale — 'vi-VN' → VN, 'en-US' → US — so a form running in Vietnamese opens on the
+ * Vietnamese flag instead of a hard-coded US one.
+ *
+ * Locale comes from window.MegaFormI18n (the i18n bundle owns it and it can change at
+ * runtime via the language picker), never from an import: this file ships in the renderer
+ * bundle, which must not depend on the i18n bundle's load order. Unknown or region-less
+ * locales ('en') fall back to US, the previous behaviour.
+ */
+export function localeDefaultIso2(): string {
+  try {
+    const i18n = (window as any).MegaFormI18n;
+    const loc = String((i18n && typeof i18n.getLocale === 'function' ? i18n.getLocale() : '') || '');
+    const region = (loc.split(/[-_]/)[1] || '').toUpperCase();
+    if (region && byIso2(region)) return region;
+  } catch { /* no window / i18n not loaded yet */ }
+  return 'US';
+}
+
 export function resolveCountry(value: string | undefined, valueMode: 'dial' | 'iso2'): PickerCountry {
   const v = String(value || '').trim();
   if (v) {
     if (valueMode === 'iso2') { const c = byIso2(v); if (c) return c; }
     else { const c = byDial(v); if (c) return c; }
   }
-  return byIso2('US') as PickerCountry;
+  // [LocaleDefaultCountry 2026-07-28] No stored value → follow the form's language.
+  return (byIso2(localeDefaultIso2()) || byIso2('US')) as PickerCountry;
 }
 
 function flagHtml(c: PickerCountry): string {

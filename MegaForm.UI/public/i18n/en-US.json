@@ -1948,5 +1948,11 @@
   "wiz.remote.no_preview": "Preview is unavailable for this template.",
   "wiz.gallery.online_browse": "Preview only — a paid license unlocks installing",
   "wiz.gallery.n_fields": "{n} fields",
-  "wiz.gallery.untitled": "Untitled template"
+  "wiz.gallery.untitled": "Untitled template",
+  "des.comp.countrySection": "Country picker",
+  "des.comp.countryDefault": "Default country",
+  "des.comp.countryAuto": "Auto - follow form language",
+  "des.comp.countryAllowed": "Allowed countries",
+  "des.comp.countryAllowedHint": "none selected = all",
+  "des.comp.countryAllowedClear": "Clear (allow all)"
 }

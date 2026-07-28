@@ -560,7 +560,7 @@ namespace MegaForm.Core.Services
                 if (field.Required) sb.Append(" <span class=\"mf-required\">*</span>");
                 sb.Append("</label>");
             }
-            sb.Append(RenderInput(field, formId, tr));
+            sb.Append(RenderInput(field, formId, tr, locale));
             if (!selfLabeled && !string.IsNullOrEmpty(tr.HelpText))
                 sb.Append("<div class=\"mf-field-help\">").Append(Esc(tr.HelpText)).Append("</div>");
             sb.Append("<div class=\"mf-field-error\" id=\"mf-err-").Append(Esc(field.Key)).Append("\"></div></div>");
@@ -590,7 +590,7 @@ namespace MegaForm.Core.Services
         // ────────────────────────────────────────────────────────────────
         // Input HTML per type (mirrors renderInput)
         // ────────────────────────────────────────────────────────────────
-        private static string RenderInput(FormField field, int formId, ResolvedField tr)
+        private static string RenderInput(FormField field, int formId, ResolvedField tr, string locale = null)
         {
             var id = "mf-" + formId + "-" + field.Key;
             var name = field.Key;
@@ -774,7 +774,7 @@ namespace MegaForm.Core.Services
                         + Esc(preview) + "…</span></div><input type=\"hidden\" name=\"" + name + "\" id=\"" + id + "\" value=\"\">";
                 }
                 case "Composite":
-                    return RenderCompositeInput(field, id, name, val, ph, ro, req);
+                    return RenderCompositeInput(field, id, name, val, ph, ro, req, locale);
                 default:
                     // Widget — emit a labelled hydration placeholder. The JS widget engine
                     // (MegaFormWidgets.renderWidget) fills the body on load; the label/help
@@ -1002,7 +1002,7 @@ namespace MegaForm.Core.Services
             public string Dial { get; set; }
         }
 
-        private static string RenderCompositeInput(FormField field, string id, string name, string val, string ph, string ro, string req)
+        private static string RenderCompositeInput(FormField field, string id, string name, string val, string ph, string ro, string req, string locale = null)
         {
             var preset = CompositePreset(field);
             var parts = ResolveCompositeParts(field, preset);
@@ -1026,7 +1026,7 @@ namespace MegaForm.Core.Services
                     rowMap[row] = rowParts;
                     rowOrder.Add(row);
                 }
-                rowParts.Add(RenderCompositePart(part, val, nav, visibleIndex, isScalarSingle, ro, labelPos));
+                rowParts.Add(RenderCompositePart(part, val, nav, visibleIndex, isScalarSingle, ro, labelPos, locale));
                 visibleIndex++;
             }
 
@@ -1044,7 +1044,7 @@ namespace MegaForm.Core.Services
                 + "</div><input type=\"hidden\" name=\"" + Esc(name) + "\" id=\"" + Esc(id) + "\" value=\"" + Esc(val) + "\">";
         }
 
-        private static string RenderCompositePart(CompositePart part, string val, string nav, int visibleIndex, bool isScalarSingle, string ro, string labelPos = "bottom")
+        private static string RenderCompositePart(CompositePart part, string val, string nav, int visibleIndex, bool isScalarSingle, string ro, string labelPos = "bottom", string locale = null)
         {
             var partValue = isScalarSingle
                 ? (val ?? string.Empty)
@@ -1058,7 +1058,7 @@ namespace MegaForm.Core.Services
 
             if (string.Equals(type, "country", StringComparison.OrdinalIgnoreCase))
             {
-                control = RenderCountryPickerControl(part, partValue, label, tabIdx, reqAttr, ro);
+                control = RenderCountryPickerControl(part, partValue, label, tabIdx, reqAttr, ro, locale);
             }
             else if (string.Equals(type, "select", StringComparison.OrdinalIgnoreCase))
             {
@@ -1117,13 +1117,13 @@ namespace MegaForm.Core.Services
             return "<div class=\"mf-composite-cell\" style=\"" + CompositeCellStyle(part) + "\">" + cellInner + "</div>" + sepHtml;
         }
 
-        private static string RenderCountryPickerControl(CompositePart part, string value, string ariaLabel, string tabIdx, string reqAttr, string ro)
+        private static string RenderCountryPickerControl(CompositePart part, string value, string ariaLabel, string tabIdx, string reqAttr, string ro, string locale = null)
         {
             var valueMode = string.Equals(part.ValueMode, "iso2", StringComparison.OrdinalIgnoreCase) ? "iso2" : "dial";
             // [B268] Compact flag-only trigger for phone (dial) — hide the redundant "+1" chip; the
             // dial code stays the stored value + is shown in the open list. Address (iso2) keeps its chip.
             var showCode = valueMode == "iso2" ? "iso2" : "none";
-            var selected = ResolveCountry(value, valueMode);
+            var selected = ResolveCountry(value, valueMode, locale);
             var storedVal = valueMode == "iso2" ? selected.Iso2 : selected.Dial;
             var codeText = showCode == "none" ? string.Empty : (showCode == "iso2" ? selected.Iso2 : selected.Dial);
             var allowedAttr = part.Allowed != null && part.Allowed.Count > 0
@@ -1151,7 +1151,27 @@ namespace MegaForm.Core.Services
                 + Esc(iso) + ".svg\" alt=\"\" loading=\"lazy\" decoding=\"async\" onerror=\"this.style.display=&quot;none&quot;;this.parentNode.className+=&quot; is-missing&quot;\"></span>";
         }
 
-        private static PickerCountry ResolveCountry(string value, string valueMode)
+        /// <summary>
+        /// [LocaleDefaultCountry 2026-07-28] ISO2 the picker starts on when nothing is stored and
+        /// the designer chose no default: the REGION of the form's locale ("vi-VN" → VN), so a form
+        /// rendered in Vietnamese opens on the Vietnamese flag. Region-less ("en") or unknown
+        /// locales keep the previous US default. Mirrors localeDefaultIso2() in country-picker.ts —
+        /// SSR output also feeds PRINT, where no client code runs to correct it.
+        /// </summary>
+        private static string LocaleDefaultIso2(string locale)
+        {
+            var loc = (locale ?? string.Empty).Trim();
+            var sep = loc.IndexOfAny(new[] { '-', '_' });
+            if (sep >= 0 && sep + 1 < loc.Length)
+            {
+                var region = loc.Substring(sep + 1).ToUpperInvariant();
+                if (Countries.Any(c => string.Equals(c.Iso2, region, StringComparison.OrdinalIgnoreCase)))
+                    return region;
+            }
+            return "US";
+        }
+
+        private static PickerCountry ResolveCountry(string value, string valueMode, string locale = null)
         {
             var v = (value ?? string.Empty).Trim();
             if (!string.IsNullOrEmpty(v))
@@ -1168,7 +1188,10 @@ namespace MegaForm.Core.Services
                     if (byDial != null) return byDial;
                 }
             }
-            return Countries.First(c => c.Iso2 == "US");
+            // [LocaleDefaultCountry 2026-07-28] Nothing stored → follow the form's language.
+            var fallback = LocaleDefaultIso2(locale);
+            return Countries.FirstOrDefault(c => string.Equals(c.Iso2, fallback, StringComparison.OrdinalIgnoreCase))
+                ?? Countries.First(c => c.Iso2 == "US");
         }
 
         private static readonly List<PickerCountry> Countries = new List<PickerCountry>

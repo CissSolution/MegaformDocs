@@ -27,6 +27,8 @@ import { COMPOSITE_PRESETS, COMPOSITE_DIAL_CODES, compositePresetKeys, composite
 // runtime's flag chip. It used to print the emoji 🇺🇸, which Windows renders as the bare
 // letters "US" (no regional-indicator glyph) — the exact thing the flag is meant to replace.
 import { previewFlagHtml } from '../renderer/country-picker';
+// [CountryPartSettings 2026-07-28] Default country + Allowed countries for a `country` part.
+import { countryPartSettingsHtml, bindCountryPartSettings } from './country-part-settings';
 import { wt } from './designer-i18n';
 
 (function () {
@@ -534,6 +536,8 @@ import { wt } from './designer-i18n';
           ? '<div class="mf-comp-des-sub-title">' + wt('des.comp.options', 'Options') + ' <span class="mf-comp-des-hint">' + wt('des.comp.optionsHint', 'one per line:') + ' <code>value | Label</code></span></div>' +
             '<textarea class="mf-comp-des-in mf-comp-des-opts" data-f="options" rows="4" placeholder="' + escA(wt('des.comp.optionsPlaceholder', 'us | United States\nca | Canada')) + '">' + esc(optsTxt) + '</textarea>'
           : '') +
+        // [CountryPartSettings 2026-07-28] Only a country part has a flag to default or restrict.
+        (p.type === 'country' ? countryPartSettingsHtml(p, wt) : '') +
         '</div>';
     }
 
@@ -541,6 +545,9 @@ import { wt } from './designer-i18n';
       var body = row.querySelector('.mf-comp-des-part-body') as HTMLElement;
       if (!body) return;
       function get(f: string) { return body.querySelector('[data-f="' + f + '"]') as any; }
+
+      // [CountryPartSettings 2026-07-28] Default country + Allowed countries (country parts only).
+      if (p.type === 'country') bindCountryPartSettings(body, p, function () { commit(); renderPreview(); });
 
       var headFields = ['label', 'sublabel', 'key', 'type', 'width', 'required'];
       function applyAndMaybeRerenderHead(touchedHead: boolean) {
