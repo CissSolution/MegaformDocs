@@ -86,15 +86,16 @@ v1.7.107 (20260717) — 🎨 PREMIUM TEMPLATE THEME INHERITANCE. All 14 non-lock
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Microsoft.CodeAnalysis.dll" target="lib\net9.0" />
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Microsoft.CodeAnalysis.CSharp.dll" target="lib\net9.0" />
 
-    <!-- [CloudStorage v20260723-01] Cloud storage providers (Google Drive / Amazon S3 / Azure
-         Blob) for the post-submit file mirror. AWSSDK + Azure.Storage are NOT provided by the
-         Oqtane host, so they must ship inside the package. -->
+    <!-- [CloudStorage v20260723-01] Cloud storage providers (Google Drive / Amazon S3) for the
+         post-submit file mirror. AWSSDK is NOT provided by the Oqtane host, so it must ship
+         inside the package.
+         [AzureBlobRemoved v20260726] The three Azure.* entries were deleted here: the provider
+         itself was dropped from MegaForm.Integrations.CloudStorage (Azure.Core 1.55 dragged in
+         System.ClientModel and crashed DNN's net472 bin), so those DLLs no longer land in the
+         Server output and nuget pack aborted with NU5019 "File not found: Azure.Core.dll". -->
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\MegaForm.Integrations.CloudStorage.dll" target="lib\net9.0" />
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\AWSSDK.Core.dll" target="lib\net9.0" />
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\AWSSDK.S3.dll" target="lib\net9.0" />
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Azure.Core.dll" target="lib\net9.0" />
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Azure.Storage.Blobs.dll" target="lib\net9.0" />
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Azure.Storage.Common.dll" target="lib\net9.0" />
 
     <!-- [OqtaneLicensing v20260723] Oqtane Marketplace licensing (LicenseView + offline key
          validation). Names contain "Oqtane" → loaded by IsOqtaneAssembly(); Client/Shared are
@@ -119,9 +120,8 @@ v1.7.107 (20260717) — 🎨 PREMIUM TEMPLATE THEME INHERITANCE. All 14 non-lock
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\MegaForm.Integrations.CloudStorage.dll" target="lib\net10.0" />
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\AWSSDK.Core.dll" target="lib\net10.0" />
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\AWSSDK.S3.dll" target="lib\net10.0" />
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Azure.Core.dll" target="lib\net10.0" />
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Azure.Storage.Blobs.dll" target="lib\net10.0" />
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Azure.Storage.Common.dll" target="lib\net10.0" />
+    <!-- [AzureBlobRemoved v20260726] see the net9.0 note above -->
+
     <!-- [OqtaneLicensing v20260723] see net9.0 note above -->
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Oqtane.Licensing.Client.Oqtane.dll" target="lib\net10.0" />
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Oqtane.Licensing.Server.Oqtane.dll" target="lib\net10.0" />
@@ -133,7 +133,7 @@ v1.7.107 (20260717) — 🎨 PREMIUM TEMPLATE THEME INHERITANCE. All 14 non-lock
          Oqtane Marketplace (OqtaneLicenseBridge). Shipping license.lic="production" would auto-license
          every install and make the Marketplace/trial gate moot. A fresh Oqtane install is therefore
          TRIAL until a Marketplace key is activated (then the bridge flips IsProductionLicensed). -->
-    <file src="..\MegaForm.Oqtane.Server\wwwroot\Modules\MegaForm\**\*.*" target="wwwroot\Modules\MegaForm" exclude="**\license.lic;**\fonts\gf\**;**\img\azure-contact-request\hero.jpg;**\img\brochure-youth\brochure-youth-hero.jpg;**\img\bulgaria-discovery\bulgaria-plovdiv.png;**\img\bulgaria-discovery\bulgaria-rose-hero.png;**\img\euro-youth\euro-youth-hero.png;**\img\festa-italiana\festa-italiana-hero.png;**\img\festa-italiana\festa-italiana-texture.png;**\img\floral-youth\floral-youth-hero.jpg;**\img\mock\americana-coast.png;**\img\mock\americana-hero.png;**\img\mock\outback-station-side.png;**\img\obsidian-member-login\hero.jpg;**\img\realestate-registration\header-illus.png;**\img\teal-brochure\teal-brochure-hero.jpg;**\img\terracotta-product-feedback\hero.jpg;**\img\verdant-member-registration\hero.jpg;**\img\vintage-americana-header.png" />
+    <file src="..\MegaForm.Oqtane.Server\wwwroot\Modules\MegaForm\**\*.*" target="wwwroot\Modules\MegaForm" exclude="**\license.lic;**\fonts\gf\**;**\img\azure-contact-request\hero.jpg;**\img\brochure-youth\brochure-youth-hero.jpg;**\img\bulgaria-discovery\bulgaria-plovdiv.png;**\img\bulgaria-discovery\bulgaria-rose-hero.png;**\img\christmas-americana-header.png;**\img\euro-youth\euro-youth-hero.png;**\img\floral-youth\floral-youth-hero.jpg;**\img\mock\americana-coast.png;**\img\mock\americana-hero.png;**\img\mock\outback-station-side.png;**\img\realestate-registration\header-illus.png;**\img\teal-brochure\teal-brochure-hero.jpg;**\img\terracotta-product-feedback\hero.jpg;**\img\verdant-member-registration\hero.jpg;**\img\vintage-americana-header.png" />
 
     <!-- Package metadata -->
     <file src="icon.png" target="" />

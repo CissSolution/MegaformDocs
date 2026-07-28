@@ -30,6 +30,10 @@
         // markup + platform-correct hero URLs + full snapshot preview; Row-keyed {{field:*}} tokens
         // and the {{form:submit}} double-button are fixed. Bump busts the cached B408 dashboard/
         // builder bundles so the new preview code actually loads.
-        public static readonly string Current = "20260725-B412";
+        // [B416-PaymentCompact+PriceFailClosed 20260728] Payment runtime collapsed to amount +
+        // status + provider choice + checkout, Calculator amounts resolve through
+        // amountFieldResultKey, and the submit-time verifier now rejects a paid claim whose
+        // field-mode price the server cannot re-derive. Busts the B412 renderer/widget bundles.
+        public static readonly string Current = "20260728-B416";
     }
 }
