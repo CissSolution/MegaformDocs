@@ -187,6 +187,40 @@ MegaForm.CloudStorageS3 2.0.7 (Library).
 bản slim ghi ra **`MegaForm_02.00.007_Install.new.zip`** — đóng tab Chrome đang giữ file rồi đổi tên
 đè lại (hoặc chạy lại script).
 
+## 7e. Vòng 2: Monaco tách add-on → **5.80 MB** (`bf45cee`)
+
+| Gói | Dung lượng |
+|---|---|
+| `MegaForm_02.00.007_Install.zip` | **5.80 MB** (từ 14.63) |
+| `MegaForm.CodeEditor_02.00.007_Install.zip` (Monaco) | 1.02 MB |
+| `MegaForm.CloudStorageS3_02.00.007_Install.zip` | 0.73 MB |
+
+Monaco an toàn để tách vì builder nhúng nó bằng `<script>` **đã xử lý `onerror`**, và
+`mountMonacoEditor()` fallback sang `<textarea>` (đường code viết sẵn cho air-gapped install).
+**Đã test trên megademo**: xoá file khỏi site → builder vẫn boot, **0 page error, 0 request 404
+của MegaForm**, `.monaco-editor` = 0, thay bằng **11 textarea**. Cài add-on → file trở lại HTTP 200,
+`Packages` có thêm `MegaForm.CodeEditor 2.0.7 (Library)`.
+
+⚠️ **Đính chính**: `Assets/fonts/euro-scroll` (0.22 MB) **KHÔNG phải rác** — lần trước tôi kết luận
+"không ai tham chiếu" nhưng chỉ grep trong nội dung gói. Grep toàn repo cho thấy **4 template premium**
+(`kawaii-diary`, `botanical-thankyou`, `realestate-registration` ×2) có `@font-face` trỏ
+`/DesktopModules/MegaForm/Assets/fonts/euro-scroll/*.woff2`. Template đó nằm trên gallery ⇒ bỏ font
+khỏi gói là khách cài từ gallery bị mất chữ. **Giữ nguyên**; cách đúng là đưa woff2 vào assets zip
+của chính template trên gallery.
+
+### KB — trả lời "nạp từ đâu"
+- **Runtime luôn đọc KB từ DB** (`MF_AI_Knowledge`, `MF_AI_KB_*`), không đọc file ⇒ đổi nguồn seed
+  không ảnh hưởng lúc chạy.
+- Nguồn seed hiện tại **khác nhau giữa 2 nền**: DNN = `SqlScripts/01.06.27*, 01.06.28-seed.sql,
+  01.06.28b/c/i-*.sql`; Oqtane = `MegaForm.Core/Seed/ai-knowledge-seed.json` (**1.42 MB**) nhúng
+  **EmbeddedResource** vào `MegaForm.Oqtane.Server.Oqtane.dll`.
+- Kênh gallery `kb/` **đã có sẵn API** trong `GalleryRepositoryService` (`KbManifestPath`,
+  `KbSeedPath`, `GetKbManifestAsync`) nhưng **CHƯA CÓ CODE NÀO GỌI** — hạ tầng dựng rồi, chưa đấu dây.
+- ⇒ Thống nhất theo yêu cầu owner: cả 2 nền nạp KB từ `kb/manifest.json` + `kb/ai-knowledge-seed.json`
+  trên repo (đã có sha256 + cache + SsrfGuard), rồi `AiKnowledgeSeedMerger` merge vào DB; giữ một
+  seed tối thiểu trong gói cho site offline. Lợi: cập nhật KB **không cần phát hành module**; Oqtane
+  nupkg giảm ~1.42 MB, DNN giảm ~0.2 MB.
+
 ## 7c. Backlog owner giao cho phiên sau
 
 1. **DocFX**: viết tài liệu cho **Payment widget** và **Calculator widget** (bao gồm `amountMode`,
@@ -194,7 +228,13 @@ bản slim ghi ra **`MegaForm_02.00.007_Install.new.zip`** — đóng tab Chrome
 2. Làm giàu `https://cisssolution.github.io/DNN_MegaformDocs/articles/dnn-widgets.html` —
    **tách thành các sub-page** nằm dưới trang đó (mỗi widget một trang).
 3. **Quay GIF minh hoạ** cho từng widget (harness GIF pure-JS đã có, xem memory `reference_demo_gif_recording`).
-4. **Ảnh form trên `DNN_MegaformDocs/index.html` đang bị bóp hẹp** — sửa **skin 2 cột** để cột form
+4. **KB dùng CHUNG cơ chế cho DNN + Oqtane** (owner yêu cầu): bỏ seed bằng `SqlScripts/ai-knowledge-*`
+   trên DNN, cả 2 nền nạp KB qua kênh gallery `kb/` (API đã có, chưa ai gọi — xem §7e).
+5. **Cơ chế "asset pack" tải theo yêu cầu** (nếu store vẫn chặt): 37 gói ngôn ngữ (0.98 MB) + 271 cờ
+   SVG (0.64 MB) đưa lên repo public, tải + giải nén bằng đúng `GalleryInstallService` (đã có sha256 +
+   chống zip-slip). Ghi vào `DesktopModules/MegaForm/...`, fallback `Portals/{id}/MegaForm/packs/`.
+   Kèm build `-Slim` (gói store) và bản full offline. → ~4 MB.
+6. **Ảnh form trên `DNN_MegaformDocs/index.html` đang bị bóp hẹp** — sửa **skin 2 cột** để cột form
    rộng ra và cột text chỉ chiếm **1/3** (hiện là `564px 564px`, xem skin `[G]Skins/Aperture/form-2col.ascx`
    trong memory `reference_site_dnn_megademo`), rồi **chụp lại** ảnh cho trang docs.
 
