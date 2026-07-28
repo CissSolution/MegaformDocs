@@ -56,7 +56,45 @@ namespace MegaForm.Core.Services.TypedSubmission
         public static string Canonicalize(string type)
         {
             var t = (type ?? string.Empty).Trim();
-            return Aliases.TryGetValue(t, out var canonical) ? canonical : t;
+            if (Aliases.TryGetValue(t, out var canonical)) return canonical;
+            // [CompositeAliasRender 2026-07-28] Palette tiles are named CompositePhone /
+            // CompositeAddress / … and every WRITE path rewrites them to a canonical
+            // Composite field carrying a preset. A schema that skipped those paths — an
+            // AI-authored form applied straight from JSON — kept the tile name, and the
+            // renderer had no case for it, so the field drew a "plugin not installed"
+            // placeholder instead of the phone/address inputs. Canonicalising on READ makes
+            // such a form render correctly with no data migration. Keep in parity with
+            // canonicalizeFieldType() in renderer/field-type-semantics.ts.
+            if (t.Length > CompositeTypePrefix.Length
+                && t.StartsWith(CompositeTypePrefix, StringComparison.OrdinalIgnoreCase))
+                return CompositeTypePrefix;
+            return t;
+        }
+
+        private const string CompositeTypePrefix = "Composite";
+
+        /// <summary>
+        /// [CompositeAliasRender 2026-07-28] Preset implied by a palette-tile type name:
+        /// "CompositePhone" → "phone", "CompositeNamePlus" → "name_plus". Returns empty for
+        /// anything that is not such an alias. Mirrors compositeAliasToPresetMap() on the
+        /// client, which derives the same pairs from COMPOSITE_PRESET_META.
+        /// </summary>
+        public static string CompositePresetFromAlias(string type)
+        {
+            var t = (type ?? string.Empty).Trim();
+            if (t.Length <= CompositeTypePrefix.Length
+                || !t.StartsWith(CompositeTypePrefix, StringComparison.OrdinalIgnoreCase))
+                return string.Empty;
+
+            var rest = t.Substring(CompositeTypePrefix.Length);
+            var sb = new System.Text.StringBuilder(rest.Length + 4);
+            for (var i = 0; i < rest.Length; i++)
+            {
+                var ch = rest[i];
+                if (char.IsUpper(ch) && i > 0) sb.Append('_');
+                sb.Append(char.ToLowerInvariant(ch));
+            }
+            return sb.ToString();
         }
 
         /// <summary>True for display-only widgets that submit no value (e.g. DataRepeater, QRCode).</summary>

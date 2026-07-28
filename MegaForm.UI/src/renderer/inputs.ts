@@ -3,7 +3,7 @@
 // ============================================================
 
 import type { FormField } from '@core/types';
-import { displayText, esc, compositePartsFor, compositePartLabel, compositeCellStyle, scalarPresetBaseType } from './helpers';
+import { displayText, esc, compositePartsFor, compositePresetFor, compositePartLabel, compositeCellStyle, scalarPresetBaseType } from './helpers';
 import { renderCountryPickerControl } from './country-picker';
 import { evaluateCondition } from './conditional';
 import { canonicalizeFieldType } from './field-type-semantics';
@@ -664,7 +664,9 @@ export function renderInput(field: FormField, formId: number, formData: Record<s
     case 'Composite': {
       // [Composite v1] One business field → several sub-inputs → ONE stored value.
       const cParts = compositePartsFor(field);
-      const cPreset = (field as any).widgetProps?.preset || (field as any).preset || '';
+      // [CompositeAliasRender 2026-07-28] Same fallback as the parts lookup, so a field that
+      // still carries the palette-tile type ('CompositePhone') gets its preset too.
+      const cPreset = compositePresetFor(field);
       if (!cParts.length) {
         // No parts/preset configured → graceful fallback to a single text input.
         return `<input type="text" class="mf-input" id="${id}" name="${name}" value="${esc(val)}" placeholder="${esc(ph)}"${ro}${req}>`;

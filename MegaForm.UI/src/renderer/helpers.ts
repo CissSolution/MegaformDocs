@@ -556,10 +556,25 @@ export function compositeAliasToPresetMap(): Record<string, string> {
   return out;
 }
 
+/**
+ * [CompositeAliasRender 2026-07-28] Preset for a composite field, falling back to the one
+ * implied by a palette-tile type name ('CompositePhone' → 'phone'). Write paths normally
+ * rewrite the tile to {type:'Composite', widgetProps.preset}; a schema applied straight
+ * from AI JSON can carry the tile name with no preset, and without this it renders as an
+ * empty composite. Uses the alias map, so new presets are covered automatically.
+ */
+export function compositePresetFor(field: FormField): string {
+  const wp: any = (field as any).widgetProps || {};
+  const explicit = wp.preset || (field as any).preset || '';
+  if (explicit) return String(explicit);
+  const alias = String((field as any).type || '');
+  return compositeAliasToPresetMap()[alias] || '';
+}
+
 export function compositePartsFor(field: FormField): CompositePart[] {
   const wp: any = (field as any).widgetProps || {};
   if (wp.parts && wp.parts.length) return wp.parts;
-  const preset = wp.preset || (field as any).preset || '';
+  const preset = compositePresetFor(field);
   // Address is template-based: layout + sub-inputs come from the chosen scheme
   // (US/International/Canada/UK) unless the author has overridden `parts` above.
   if (preset === 'address') return addressPartsForScheme((wp.addressScheme || 'us') as AddressScheme) as CompositePart[];

@@ -1220,7 +1220,14 @@ namespace MegaForm.Core.Services
             => Regex.Replace(dial ?? string.Empty, "[^0-9]", string.Empty);
 
         private static string CompositePreset(FormField field)
-            => WidgetStringProp(field, "preset") ?? FieldStringProp(field, "preset") ?? string.Empty;
+        {
+            var explicitPreset = WidgetStringProp(field, "preset") ?? FieldStringProp(field, "preset");
+            if (!string.IsNullOrEmpty(explicitPreset)) return explicitPreset;
+            // [CompositeAliasRender 2026-07-28] Fall back to the preset implied by a palette-tile
+            // type name ("CompositePhone" → "phone") so a schema that never went through a write
+            // path still renders its sub-inputs instead of an empty composite.
+            return SubmissionFieldTypeSemantics.CompositePresetFromAlias(field != null ? field.Type : null);
+        }
 
         private static List<CompositePart> ResolveCompositeParts(FormField field, string preset)
         {
