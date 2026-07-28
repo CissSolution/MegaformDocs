@@ -1008,8 +1008,13 @@ namespace MegaForm.Oqtane.Server.Controllers
             // Admin-configurable; empty falls back to GalleryRepositoryService.DefaultRepoBaseUrl.
             // Every outbound call is SsrfGuard-checked inside the repository service.
             var url = _configuration?["MegaForm:GalleryRepoUrl"];
+            // [PrivateGalleryRepo 2026-07-28] Optional read-only GitHub token for a PRIVATE
+            // gallery repo (raw.githubusercontent — the jsDelivr CDN cannot serve one). Server
+            // configuration only; the service attaches it exclusively to GitHub hosts, so
+            // re-pointing the URL setting above cannot exfiltrate it.
+            var token = _configuration?["MegaForm:GalleryRepoToken"];
             return new MegaForm.Core.Services.GalleryRepo.GalleryInstallService(
-                new MegaForm.Core.Services.GalleryRepo.GalleryRepositoryService(url));
+                new MegaForm.Core.Services.GalleryRepo.GalleryRepositoryService(url, token));
         }
 
         /// <summary>Module image root. Bundle entries are "img/&lt;rel&gt;", so extracting under

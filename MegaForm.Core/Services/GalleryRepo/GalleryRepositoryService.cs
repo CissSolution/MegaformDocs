@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
@@ -82,13 +84,54 @@ namespace MegaForm.Core.Services.GalleryRepo
             new ConcurrentDictionary<string, CacheEntry>(StringComparer.OrdinalIgnoreCase);
 
         private readonly string _baseUrl;
+        private readonly string _accessToken;
 
         public GalleryRepositoryService(string repoBaseUrl)
+            : this(repoBaseUrl, null) { }
+
+        /// <summary>
+        /// [PrivateGalleryRepo 2026-07-28] <paramref name="accessToken"/> is an optional
+        /// read-only GitHub token, used ONLY when the repo is private and therefore served
+        /// from raw.githubusercontent instead of the jsDelivr CDN. It is host configuration
+        /// (never a request value) and never leaves the server.
+        /// </summary>
+        public GalleryRepositoryService(string repoBaseUrl, string accessToken)
         {
             _baseUrl = NormalizeBaseUrl(repoBaseUrl);
+            _accessToken = (accessToken ?? string.Empty).Trim();
         }
 
         public string RepoBaseUrl => _baseUrl;
+
+        // ── token handling ────────────────────────────────────
+        //
+        // [PrivateGalleryRepo 2026-07-28] The repo base URL is ADMIN-CONFIGURABLE. Attaching the
+        // token by "is this the configured base URL?" would hand it to anyone who can edit that
+        // setting: point the URL at their own host and the server posts the shared credential
+        // straight to it. SsrfGuard does NOT stop that — it blocks private/loopback targets, not
+        // an ordinary public domain.
+        //
+        // So the token is attached by DESTINATION, against a hard-coded allowlist of the two
+        // GitHub hosts that can serve a private repo. A base URL pointing anywhere else still
+        // works (public CDN content) but is never sent the credential.
+        private static readonly HashSet<string> TokenHosts =
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "raw.githubusercontent.com",
+                "api.github.com",
+            };
+
+        /// <summary>True when <paramref name="url"/> is a GitHub host cleared to receive the token.</summary>
+        internal static bool IsTokenAllowedForUrl(string url)
+        {
+            try
+            {
+                var u = new Uri(url);
+                return string.Equals(u.Scheme, "https", StringComparison.OrdinalIgnoreCase)
+                    && TokenHosts.Contains(u.Host);
+            }
+            catch { return false; }
+        }
 
         public static string NormalizeBaseUrl(string repoBaseUrl)
         {
@@ -103,8 +146,128 @@ namespace MegaForm.Core.Services.GalleryRepo
 
         // ── manifests ─────────────────────────────────────────
 
-        public Task<GalleryRepoFetchResult<GalleryRepoManifest>> GetTemplatesManifestAsync(bool forceRefresh)
-            => FetchJsonAsync<GalleryRepoManifest>(TemplatesManifestPath, forceRefresh);
+        /// <summary>
+        /// [FilesAreTruth v20260726] The manifest lists what was PUBLISHED; the repo holds what
+        /// actually EXISTS. An owner who deletes templates/&lt;slug&gt;.json by hand on GitHub expects
+        /// the card to disappear — but the manifest still names it, so the gallery kept showing a
+        /// tile whose install 404s (owner report: festa-italiana + obsidian-member-login).
+        /// Reconcile the two: drop every manifest entry whose file is no longer in the repo listing.
+        /// The manifest stays authoritative for METADATA and for the sha256 each download is
+        /// verified against — dropping it entirely would cost that integrity check and force one
+        /// HTTP round-trip per template just to render the grid.
+        /// Fail-open: if the listing cannot be read (non-jsDelivr host, API down), the manifest is
+        /// returned untouched, i.e. exactly the previous behaviour.
+        /// </summary>
+        public async Task<GalleryRepoFetchResult<GalleryRepoManifest>> GetTemplatesManifestAsync(bool forceRefresh)
+        {
+            var res = await FetchJsonAsync<GalleryRepoManifest>(TemplatesManifestPath, forceRefresh).ConfigureAwait(false);
+            if (!res.Success || res.Value?.Templates == null || res.Value.Templates.Count == 0) return res;
+
+            var present = await GetRepoFileSetAsync(forceRefresh).ConfigureAwait(false);
+            if (present == null || present.Count == 0) return res;   // fail-open
+
+            var kept = res.Value.Templates
+                .Where(t => t != null && (string.IsNullOrWhiteSpace(t.File) || present.Contains(t.File.Replace('\\', '/').TrimStart('/'))))
+                .ToList();
+            if (kept.Count != res.Value.Templates.Count) res.Value.Templates = kept;
+            return res;
+        }
+
+        /// <summary>
+        /// Paths (repo-relative, forward slashes) currently in the repo, via the jsDelivr data API
+        /// — one call, CDN-backed, same TTL as the manifest. Returns null when the base URL is not
+        /// a jsDelivr /gh/ URL or the listing cannot be parsed, so callers fail open.
+        /// </summary>
+        private async Task<HashSet<string>> GetRepoFileSetAsync(bool forceRefresh)
+        {
+            var listingUrl = BuildListingUrl(_baseUrl);
+            if (listingUrl == null) return null;
+            try
+            {
+                var now = DateTime.UtcNow;
+                CacheEntry cached;
+                string body = null;
+                if (!forceRefresh && _cache.TryGetValue(listingUrl, out cached) && cached.Body != null && now < cached.ExpiryUtc)
+                    body = cached.Body;
+                if (body == null)
+                {
+                    body = await DownloadStringWithCapAsync(listingUrl, MaxManifestBytes).ConfigureAwait(false);
+                    if (!string.IsNullOrWhiteSpace(body))
+                        _cache[listingUrl] = new CacheEntry { ExpiryUtc = now.Add(CacheTtl), Body = body };
+                }
+                if (string.IsNullOrWhiteSpace(body)) return null;
+                var root = JObject.Parse(body);
+                var files = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                // [PrivateGalleryRepo 2026-07-28] Two listing shapes: jsDelivr nests
+                // {files:[{name,files:[…]}]}, the Git Trees API returns a FLAT
+                // {tree:[{path,type}]}. Blobs only — a "tree" entry is a directory.
+                var gitTree = root["tree"] as JArray;
+                if (gitTree != null)
+                {
+                    foreach (var n in gitTree.OfType<JObject>())
+                    {
+                        if (!string.Equals((string)n["type"], "blob", StringComparison.OrdinalIgnoreCase)) continue;
+                        var p = (string)n["path"];
+                        if (!string.IsNullOrEmpty(p)) files.Add(p);
+                    }
+                }
+                else
+                {
+                    CollectListingPaths(root["files"] as JArray, string.Empty, files);
+                }
+                return files.Count > 0 ? files : null;
+            }
+            catch { return null; }
+        }
+
+        private static void CollectListingPaths(JArray nodes, string prefix, HashSet<string> into)
+        {
+            if (nodes == null) return;
+            foreach (var n in nodes.OfType<JObject>())
+            {
+                var name = (string)n["name"];
+                if (string.IsNullOrEmpty(name)) continue;
+                var path = prefix.Length == 0 ? name : prefix + "/" + name;
+                var children = n["files"] as JArray;
+                if (children != null) CollectListingPaths(children, path, into);
+                else into.Add(path);
+            }
+        }
+
+        /// <summary>
+        /// Listing endpoint for the configured repo, or null when the layout is not recognised
+        /// (the caller then falls back to "trust the manifest").
+        ///   jsDelivr  `https://cdn.jsdelivr.net/gh/owner/repo@ref/` → data-API package listing
+        ///   raw       `https://raw.githubusercontent.com/owner/repo/ref/` → Git Trees API
+        /// [PrivateGalleryRepo 2026-07-28] The data API only knows PUBLIC repos, so a private
+        /// gallery served from raw.githubusercontent has to be enumerated through the GitHub API
+        /// instead — which is also why api.github.com is on the token allowlist.
+        /// </summary>
+        internal static string BuildListingUrl(string baseUrl)
+        {
+            try
+            {
+                var u = new Uri(baseUrl);
+                var segs = u.AbsolutePath.Trim('/').Split('/');
+
+                if (u.Host.EndsWith("jsdelivr.net", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (segs.Length < 3 || !string.Equals(segs[0], "gh", StringComparison.OrdinalIgnoreCase)) return null;
+                    return "https://data.jsdelivr.com/v1/packages/gh/" + segs[1] + "/" + segs[2];
+                }
+
+                if (string.Equals(u.Host, "raw.githubusercontent.com", StringComparison.OrdinalIgnoreCase))
+                {
+                    // owner / repo / ref [ / subdir… ]
+                    if (segs.Length < 3) return null;
+                    return "https://api.github.com/repos/" + segs[0] + "/" + segs[1]
+                        + "/git/trees/" + segs[2] + "?recursive=1";
+                }
+
+                return null;
+            }
+            catch { return null; }
+        }
 
         public Task<GalleryRepoFetchResult<KbRepoManifest>> GetKbManifestAsync(bool forceRefresh)
             => FetchJsonAsync<KbRepoManifest>(KbManifestPath, forceRefresh);
@@ -265,13 +428,13 @@ namespace MegaForm.Core.Services.GalleryRepo
 
         // ── http primitives (size-capped) ─────────────────────
 
-        private static async Task<string> DownloadStringWithCapAsync(string url, long maxBytes)
+        private async Task<string> DownloadStringWithCapAsync(string url, long maxBytes)
         {
             var bytes = await DownloadBytesWithCapAsync(url, maxBytes).ConfigureAwait(false);
             return Encoding.UTF8.GetString(bytes);
         }
 
-        private static async Task<byte[]> DownloadBytesWithCapAsync(string url, long maxBytes)
+        private async Task<byte[]> DownloadBytesWithCapAsync(string url, long maxBytes)
         {
             // [SecFix 2026-07-24] The repo base URL is ADMIN-CONFIGURABLE, so every outbound
             // request here is a user-controlled URL — SECURITY_CODING_RULES §9 requires it to go
@@ -282,25 +445,43 @@ namespace MegaForm.Core.Services.GalleryRepo
             if (!SsrfGuard.IsUrlAllowed(url, out ssrfReason))
                 throw new InvalidOperationException("Blocked by SSRF guard: " + ssrfReason);
 
-            using (var response = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false))
+            using (var request = new HttpRequestMessage(HttpMethod.Get, url))
             {
-                response.EnsureSuccessStatusCode();
-                if (response.Content.Headers.ContentLength.HasValue
-                    && response.Content.Headers.ContentLength.Value > maxBytes)
-                    throw new InvalidDataException("Remote file exceeds the " + maxBytes + " byte cap.");
-
-                using (var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
-                using (var ms = new MemoryStream())
+                // [PrivateGalleryRepo 2026-07-28] Credential goes on the REQUEST, never on the
+                // shared static HttpClient: a default header would be sent to every destination
+                // this service touches, including an admin-configured one. And it is attached
+                // only for the hard-coded GitHub hosts — see IsTokenAllowedForUrl.
+                if (_accessToken.Length > 0 && IsTokenAllowedForUrl(url))
                 {
-                    var buffer = new byte[81920];
-                    int read;
-                    while ((read = await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false)) > 0)
+                    request.Headers.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _accessToken);
+                    // Trees API answers JSON; raw.githubusercontent answers the file itself.
+                    request.Headers.Accept.ParseAdd(
+                        url.IndexOf("//api.github.com/", StringComparison.OrdinalIgnoreCase) >= 0
+                            ? "application/vnd.github+json"
+                            : "application/vnd.github.raw");
+                }
+
+                using (var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false))
+                {
+                    response.EnsureSuccessStatusCode();
+                    if (response.Content.Headers.ContentLength.HasValue
+                        && response.Content.Headers.ContentLength.Value > maxBytes)
+                        throw new InvalidDataException("Remote file exceeds the " + maxBytes + " byte cap.");
+
+                    using (var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+                    using (var ms = new MemoryStream())
                     {
-                        ms.Write(buffer, 0, read);
-                        if (ms.Length > maxBytes)
-                            throw new InvalidDataException("Remote file exceeds the " + maxBytes + " byte cap.");
+                        var buffer = new byte[81920];
+                        int read;
+                        while ((read = await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false)) > 0)
+                        {
+                            ms.Write(buffer, 0, read);
+                            if (ms.Length > maxBytes)
+                                throw new InvalidDataException("Remote file exceeds the " + maxBytes + " byte cap.");
+                        }
+                        return ms.ToArray();
                     }
-                    return ms.ToArray();
                 }
             }
         }

@@ -33,14 +33,22 @@ namespace MegaForm.WebApi
         //  demand. LICENSED feature → trial gets 402 (same contract as the form caps).
         // ══════════════════════════════════════════════════════
 
-        /// <summary>Host setting "MegaForm_GalleryRepoUrl"; empty falls back to the built-in default.</summary>
+        /// <summary>
+        /// Host setting "MegaForm_GalleryRepoUrl"; empty falls back to the built-in default.
+        /// [PrivateGalleryRepo 2026-07-28] "MegaForm_GalleryRepoToken" is an optional read-only
+        /// GitHub token for a PRIVATE gallery repo (served from raw.githubusercontent, which the
+        /// jsDelivr CDN cannot do). Read host-side only; the service attaches it exclusively to
+        /// GitHub hosts, so re-pointing the URL setting cannot exfiltrate it.
+        /// </summary>
         private static MegaForm.Core.Services.GalleryRepo.GalleryInstallService BuildGalleryService()
         {
-            string url = null;
+            string url = null, token = null;
             try { url = DotNetNuke.Entities.Controllers.HostController.Instance.GetString("MegaForm_GalleryRepoUrl", string.Empty); }
             catch { /* fall back to default */ }
+            try { token = DotNetNuke.Entities.Controllers.HostController.Instance.GetEncryptedString("MegaForm_GalleryRepoToken", DotNetNuke.Common.Utilities.Config.GetDecryptionkey()); }
+            catch { /* no token configured — public repo */ }
             return new MegaForm.Core.Services.GalleryRepo.GalleryInstallService(
-                new MegaForm.Core.Services.GalleryRepo.GalleryRepositoryService(url));
+                new MegaForm.Core.Services.GalleryRepo.GalleryRepositoryService(url, token));
         }
 
         /// <summary>
