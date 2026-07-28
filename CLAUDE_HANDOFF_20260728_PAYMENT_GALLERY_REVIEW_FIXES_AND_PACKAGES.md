@@ -223,6 +223,24 @@ của chính template trên gallery.
 
 ## 7c. Backlog owner giao cho phiên sau
 
+> Ưu tiên: **(0) và (0b) làm TRƯỚC** — mọi kết luận "đã xong" của phiên 07-28 đều đo trên megademo,
+> là site **nâng cấp chồng nhiều lần** (file cũ của bản 14.6 MB vẫn còn nằm lại trên đĩa vì DNN
+> không xoá file đã gỡ khỏi manifest). Chưa có bằng chứng nào từ **clean install**.
+
+0. 🔴 **Visual QA lại trên site DNN SẠCH, cài bằng package** (`MegaForm_02.00.007_Install.zip` 5.80 MB):
+   - dựng site DNN mới (clone Test20 theo SOP trong `reference_site_dnn_megademo`), cài **chỉ bằng gói**,
+     **không** copy tay DLL/asset;
+   - chụp màn hình đối chiếu: form render 2 cột, **Payment compact** (amount + status + 2 provider),
+     **Calculator `hidden` mặc định** (không hiện, không nhân đôi số tiền), 3 kiểu `input/inline/callout`;
+   - cờ điện thoại (271 SVG), ngôn ngữ (đổi `?mflocale=vi-VN` → UI tiếng Việt), gallery online, builder;
+   - **cả 2 trạng thái**: chưa cài add-on (Monaco → `<textarea>`, không có S3 trong danh sách cloud) và
+     sau khi cài 2 add-on;
+   - đối chiếu với ảnh QA phiên này ở scratchpad `qa007-*.png` để bắt regression.
+0b. 🔴 **Visual QA KB được nạp ĐẦY ĐỦ** trên site sạch đó: đếm `MF_AI_Knowledge` / `MF_AI_KB_Rules` /
+   `MF_AI_KB_Templates` / `MF_AI_KB_Feedback` sau khi cài, so với số dòng trong
+   `MegaForm.Core/Seed/ai-knowledge-seed.json` (1.42 MB) và với site Oqtane; mở AI Assistant →
+   kiểm tra rule/template gợi ý ra đúng, không rỗng. Đây là điều kiện tiên quyết trước khi đổi
+   nguồn seed sang kênh gallery ở mục 4.
 1. **DocFX**: viết tài liệu cho **Payment widget** và **Calculator widget** (bao gồm `amountMode`,
    `amountFieldKey`, `amountFieldResultKey`, 4 `displayMode`, và luật fail-closed phía server).
 2. Làm giàu `https://cisssolution.github.io/DNN_MegaformDocs/articles/dnn-widgets.html` —
@@ -244,27 +262,23 @@ của chính template trên gallery.
    "payment E2E PASS" cho tới khi có bằng chứng dashboard/API của provider. Kịch bản: §10 handout Codex,
    **thêm ca mới**: sửa payload Calculator bằng DevTools cho lệch result key ⇒ **server phải từ chối**
    (trước bản này là được chấp nhận).
-2. 🔴 **Chưa commit.** Phạm vi nên stage = 16 file của Codex (§12 handout đó) **+** các file phiên này:
-   ```
-   MegaForm.Core/Payments/PaymentAmountResolver.cs
-   MegaForm.Core/Payments/PaymentSubmissionVerifier.cs
-   MegaForm.Core/Services/GalleryRepo/GalleryRepositoryService.cs
-   MegaForm.Sdk.Tests/PaymentAmountResolverTests.cs
-   MegaForm.Sdk.Tests/GalleryRepoTokenScopeTests.cs
-   Assets/css/plugins/megaform-widgets-builtin.css
-   MegaForm.Oqtane.Package/MegaForm.Oqtane.nuspec
-   MegaForm.Oqtane.Client/ModuleInfo.cs
-   MegaForm.Oqtane.Shared/AssetVersion.cs
-   MegaForm.DNN/MegaForm.dnn
-   MegaForm.DNN/Views/FormView.ascx.cs
-   ```
-   ⚠️ Worktree còn rất nhiều thay đổi task khác ⇒ **tuyệt đối không `git add .` / `-A`**.
+2. ✅ **ĐÃ COMMIT** 8 commit: `a836ea6` payment · `3d3bd9e` gallery · `aeacf38` release 007/2.0.6 ·
+   `aa21e5a` calculator TS · `03a44b5` slim gói + tách S3 · `bf45cee` tách Monaco · `cff99fd`/`d875f7e`/
+   `6ff0bc1` docs. ⚠️ Worktree vẫn còn ~600 file của task khác ⇒ **tuyệt đối không `git add .` / `-A`**.
+   ⚠️ **Oqtane `2.0.6` chưa pack lại** sau các commit calculator/payment cuối phiên — pack lại trước khi
+   phát hành Oqtane (`_packrun_crlf.cmd`, nhớ `--no-incremental` cho Shared+Server).
 3. 🟡 **48 file `.cs` chưa từng `git add`** (từ 07-28 permission matrix) vẫn treo ⇒ clean checkout vẫn
    chưa build được ở tầng host. Chưa xử lý phiên này.
 4. 🟡 Gallery: phần việc GitHub (bot account + fine-grained PAT + chuyển private) vẫn cần owner —
    **thứ tự an toàn** ở §3 handout gallery: phát hành .007 / 2.0.6 → khách nhập token → mới private.
 5. ✅ **`token.txt` ĐÃ được gitignore** (`.gitignore:141`, đã commit) — mục "chưa gitignore" trong các
    bàn giao trước là thông tin cũ. `token.txt`/`cookies.txt`/`login_headers.txt` đều untracked.
+6. 🧹 **Trạng thái megademo.ai khi kết phiên**: đã cài `MegaForm 2.0.7` + 2 add-on
+   (`MegaForm.CloudStorageS3`, `MegaForm.CodeEditor`); form QA **41–45** còn nằm đó; file cũ của bản
+   14.6 MB (4 thư mục i18n, ảnh festa, AWSSDK...) **vẫn còn trên đĩa** vì DNN không xoá file đã gỡ khỏi
+   manifest ⇒ **không dùng site này để kết luận về gói slim**, phải QA trên site sạch (mục 0).
+   Backup trước khi cài: `E:\DNN_SITES\_backup_MegaDemo_20260728_163945` (bin + DesktopModules + .bak
+   44 MB + `removed_s3_dlls\` + `removed_monaco\`).
 
 ## 9. Lệnh chạy lại nhanh
 
