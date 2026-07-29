@@ -126,7 +126,12 @@
               "type": "Number",
               "label": "Deposit Amount (USD)",
               "required": true,
-              "placeholder": " "
+              "placeholder": " ",
+              "validation": {
+                "min": 10,
+                "max": 5000
+              },
+              "helpText": "The deposit you are paying today."
             }
           ]
         }
@@ -152,7 +157,11 @@
                 "title": "Complete payment",
                 "description": "Pay securely to finish your submission.",
                 "amountLabel": "Amount due",
-                "payLabel": "Pay now"
+                "payLabel": "Pay now",
+                "amountMode": "field",
+                "amountFieldKey": "deposit_amount",
+                "minAmount": 10,
+                "maxAmount": 5000
               }
             }
           ]

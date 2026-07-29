@@ -173,6 +173,7 @@ body > div[style*="display:none"]:has(.megaform-module) {
     justify-content: center;
 }
 
+
 /* [B286 2026-06-26] Wizard (multi-step) STANDARD forms were the only AI-generated form type
    still showing the gray --mf-page-bg + wrapper padding as an extra "card/frame" AROUND the
    white form card — every single-page AI form is a frameless custom-shell. Drop the page-bg
@@ -1977,6 +1978,17 @@ body > div[style*="display:none"]:has(.megaform-module) {
     height: 22px;
     opacity: .65;
 }
+/* [SignaturePlaceholderHide v20260726] Hide the pen + "Sign here" hint the moment the user
+   starts drawing (interactive.ts drops .mf-signature-empty on first stroke). This rule used to
+   be injected by inputs.ts at render time, but on DNN the premium/custom-shell signature markup
+   comes from SSR (FormHtmlRenderer) and only the BIND path runs client-side — so the injected
+   <style> was never added and the placeholder stayed visible over the signature. Living in the
+   always-loaded canonical CSS makes it fire regardless of render path / platform. */
+.mf-signature-field:not(.mf-signature-empty) .mf-signature-placeholder {
+    opacity: 0;
+    visibility: hidden;
+}
+@media print { .mf-signature-placeholder { display: none !important; } }
 .mf-signature-actions {
     display: flex;
     gap: 8px;
@@ -3434,4 +3446,50 @@ html body:has(.navbar):has(.mfp-americana)
    .mf-premium-native-mode signal covers every premium template (no per-template :has()). */
 .mf-form-wrapper.mf-premium-native-mode.mf-has-multistep-shell .mf-multistep-frame {
     gap: 0 !important;
+}
+
+/* ============================================================
+   [DnnTightSpacing v20260725] DNN-ONLY field vertical-rhythm normalizer
+   ------------------------------------------------------------
+   On DNN the SSR is a skeleton and the CLIENT builds the form, so the built-in
+   AND the AI (pure-grid default) shells stack fields with a 20px flex gap that
+   reads too airy on a DNN page (owner report: "giãn cách dòng quá rộng").
+   Tighten the FIELD-TO-FIELD vertical gap to a single compact value so every
+   MegaForm form on DNN — built-in templates and AI-generated templates alike —
+   shares ONE rhythm. Measured live (playwright, login host): the 20px comes from
+   `.mfp-card-body{display:flex;gap:20px}` for pure-grid/custom-shell shells and
+   from `--mf-field-gap` (margin-bottom / mf-form-row gap) for generic forms.
+   Scoped to `.DnnModule` — a class DNN alone emits — so Oqtane/Web/Umbraco keep
+   their 20px. Only ROW-gap is forced (never column-gap) so 2-col field rows keep
+   their horizontal spacing. One knob: change 12px in the two places below. */
+.DnnModule .mf-form-wrapper {
+    --mf-field-gap: 12px;            /* generic: .mf-field-group margin-bottom + .mf-form-row/.mf-row-column gap */
+}
+.DnnModule .mf-form-wrapper .mfp-card-body,
+.DnnModule .mf-form-wrapper .mf-fields-container,
+.DnnModule .mf-form-wrapper .mfp-step-body,
+.DnnModule .mf-form-wrapper .mfp-body-inner {
+    row-gap: 12px !important;        /* premium/custom-shell flex containers hardcode gap:20px in template customCss */
+}
+
+/* ============================================================
+   [ShellTopTrim 2026-07-29] LAST RULE ON PURPOSE.
+   Custom-shell / premium forms bring their own top rhythm — .mfp-container adds
+   16px and .mfp-card-header another 24px — and [SpacingFix v20260721] then adds a
+   24px wrapper gutter on top of that. Inside a skin pane that stacked into ~64px
+   of dead space above the form title (measured on the clean-install 2-column QA
+   page: pane top 137px, card top 177px, title 202px) — owner report "top spacing
+   quá nhiều".
+   Only the TOP is trimmed: bottom/left/right keep the SpacingFix gutter that stops
+   the card butting against a pane edge or the footer, and the rule is gated on an
+   actual shell container so plain / theme-default forms are untouched.
+   Why here and why doubled class: SpacingFix's themed arm
+   `.mf-form-wrapper[class*="mf-theme-"]:not(.mf-theme-default)` is ALSO (0,3,0)
+   !important, so an equally-specific override placed earlier in the file loses on
+   source order. `.mf-form-wrapper.mf-form-wrapper` makes it (0,4,0) and the file
+   position keeps it last.
+   ============================================================ */
+.mf-form-wrapper.mf-form-wrapper.mf-custom-shell-mode:has(.mfp-container),
+.mf-form-wrapper.mf-form-wrapper[data-mf-has-custom-html]:has(.mfp-container) {
+    padding-top: 0 !important;
 }

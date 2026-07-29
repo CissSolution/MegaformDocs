@@ -14,6 +14,17 @@ namespace MegaForm.DNN.Services
     /// </summary>
     public class DnnAiKnowledgeService : IAiKnowledgeService
     {
+        /// <summary>
+        /// [KbSeedParity 2026-07-29] DNN used to get its knowledge base from the
+        /// SqlDataProvider inserts only — a frozen subset of the canonical seed. Merge the
+        /// bundled <c>ai-knowledge-seed.json</c> on first use so DNN matches the other
+        /// platforms. Runs at most once per app domain and never throws.
+        /// </summary>
+        public DnnAiKnowledgeService()
+        {
+            DnnKbSeeder.EnsureSeeded(this);
+        }
+
         // ── Entry ───────────────────────────────────────────────────────
         public IEnumerable<AiKnowledgeEntry> ListEntries(string kind, string search, int? portalId, int top)
             => AiKnowledgeRepository.List(kind, search, portalId, top);
