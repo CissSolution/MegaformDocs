@@ -75,11 +75,19 @@ function Invoke-PackageUpload {
     try {
         $fileContent = [Net.Http.StreamContent]::new($fileStream)
         $fileContent.Headers.ContentType =
-            [Net.Http.Headers.MediaTypeHeaderValue]::new('application/octet-stream')
+            [Net.Http.Headers.MediaTypeHeaderValue]::new('application/zip')
 
         $multipart = [Net.Http.MultipartFormDataContent]::new()
         try {
             $multipart.Add($fileContent, 'POSTFILE', [IO.Path]::GetFileName($resolvedFile))
+            # DNN 10.2's upload controller compares the raw Content-Disposition
+            # name to the quoted literal `"POSTFILE"`. HttpClient emits an
+            # unquoted token by default, so normalize the header to match the
+            # browser FormData request produced by Persona Bar.
+            $fileContent.Headers.ContentDisposition.Name = '"POSTFILE"'
+            $fileContent.Headers.ContentDisposition.FileName =
+                '"' + [IO.Path]::GetFileName($resolvedFile) + '"'
+            $fileContent.Headers.ContentDisposition.FileNameStar = $null
 
             $request = [Net.Http.HttpRequestMessage]::new(
                 [Net.Http.HttpMethod]::Post,

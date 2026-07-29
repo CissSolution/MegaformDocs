@@ -1,3 +1,17 @@
+1.0.4
+
+- Prevents long rich-text code samples from widening the mobile article grid.
+- Adds safe wrapping/scrolling constraints without changing stored editorial HTML.
+
+1.0.3
+
+- Makes public and admin views independent of the parent Razor Host `Dnn` helper.
+- Preserves Host-only administration through the SuperUser wrapper.
+
+1.0.1
+
+- Adds a Host-only Razor wrapper for DNN SuperUser administration pages.
+
 1.0.0
 
 - Adds the public MegaForm Blogs Razor presentation.

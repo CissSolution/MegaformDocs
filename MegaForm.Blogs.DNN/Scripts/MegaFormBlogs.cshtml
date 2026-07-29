@@ -3,6 +3,7 @@
     Data contract: IMegaFormClient.Apps / Queries / Records / Files only.
     No DataJson parsing and no direct database access.
 *@
+@inherits DotNetNuke.Web.Razor.DotNetNukeWebPage<dynamic>
 @using System
 @using System.Linq
 @using System.Collections.Generic
@@ -72,7 +73,10 @@
     var portalId = DotNetNuke.Entities.Portals.PortalSettings.Current == null
         ? 0 : DotNetNuke.Entities.Portals.PortalSettings.Current.PortalId;
     var scope = new MegaFormScope { PortalId = portalId };
-    var baseUrl = DotNetNuke.Common.Globals.NavigateURL(Dnn.Tab.TabID);
+    var activeTab = DotNetNuke.Entities.Portals.PortalSettings.Current == null
+        ? null : DotNetNuke.Entities.Portals.PortalSettings.Current.ActiveTab;
+    var baseUrl = activeTab == null
+        ? Request.RawUrl : DotNetNuke.Common.Globals.NavigateURL(activeTab.TabID);
     var slug = (Request.QueryString["slug"] ?? "").Trim();
     var category = (Request.QueryString["category"] ?? "").Trim();
     var search = (Request.QueryString["q"] ?? "").Trim();
@@ -133,7 +137,7 @@
             .Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(x => x).ToList();
 }
 
-<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs.css?v=20260729c" />
+<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs.css?v=20260729g" />
 
 <main class="mfb" aria-labelledby="mfb-title">
     @if (!string.IsNullOrWhiteSpace(loadError))

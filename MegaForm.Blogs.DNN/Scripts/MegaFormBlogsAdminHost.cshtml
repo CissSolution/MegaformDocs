@@ -1,0 +1,22 @@
+@inherits DotNetNuke.Web.Razor.DotNetNukeWebPage<dynamic>
+@using DotNetNuke.Entities.Users
+@{
+    var currentUser = UserController.Instance.GetCurrentUserInfo();
+    var hostAllowed = currentUser != null && currentUser.IsSuperUser;
+    if (!hostAllowed) {
+        Response.StatusCode = 403;
+    }
+}
+@if (!hostAllowed)
+{
+    <section class="mfb-shell">
+        <div class="mfb-notice">
+            <h1>Host access required</h1>
+            <p>This Blog administration page is restricted to DNN SuperUsers.</p>
+        </div>
+    </section>
+}
+else
+{
+    @RenderPage("~/DesktopModules/RazorModules/RazorHost/Scripts/MegaFormBlogsAdmin.cshtml")
+}

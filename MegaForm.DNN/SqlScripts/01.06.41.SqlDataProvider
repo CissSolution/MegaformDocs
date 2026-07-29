@@ -1,0 +1,146 @@
+-- MegaForm 01.06.41 — AI knowledge: SQL-table data-entry forms + insertSql token rules (2026-07-26)
+--
+-- Three prompt_rule entries that keep the AI on rails when a form WRITES into an existing
+-- SQL table (the "form nhap lieu cho bang X" flow), including tables with foreign keys:
+--   sql-table-data-entry-form           — one field per real column, FK column -> SQL-backed Select
+--   db-insert-token-rules               — :token semantics: composite sub-parts (:name.first),
+--                                         multi-select CSV coercion, auto-supplied :_submissionId
+--   premium-template-retarget-sql-table — retarget a premium template at a table: fields change,
+--                                         customHtml/customCss/theme and Section steps do NOT
+--
+-- Canonical twin: MegaForm.Core/Seed/ai-knowledge-seed.json (entries 330/331/332) — the Oqtane,
+-- Web and Umbraco ports seed from that embedded resource; DNN seeds from SqlScripts, so BOTH
+-- must carry the same text. Idempotent MERGE on Slug (built-in rows only) — safe to re-run.
+
+MERGE dbo.MF_AI_Knowledge AS t
+USING (SELECT N'sql-table-data-entry-form' AS Slug, CAST(NULL AS INT) AS PortalId) AS s
+  ON (t.Slug = s.Slug AND t.PortalId IS NULL)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  Kind = N'prompt_rule',
+  Title = N'Data-entry form for an existing SQL table (including tables with foreign keys)',
+  Summary = N'One input field per real column, FK columns become SQL-backed Selects on the parent table, and settings.databaseInsert writes the row on submit. A one-field form for a multi-column table is always wrong.',
+  Body = N'When the user asks for a form that WRITES INTO an existing table ("form nhap lieu cho bang X", "data entry form for table X", "create a form from the selected tables"), build a full data-entry form, not a lookup picker.
+
+1. COLUMNS ARE THE SPEC. Read the real column list (the attached-tables COLUMNS context, or the SqlColumns tool). Never guess a column name. Emit ONE field per writable column and keep the column order.
+2. SKIP columns the database fills itself: IDENTITY / auto-increment primary keys, rowversion / timestamp, and audit columns (CreatedOnUtc, ModifiedOn, ...). Keep a nullable SubmissionId column OUT of the visible fields but INSIDE the INSERT (see rule 6).
+3. TYPE MAP: nvarchar/varchar <=255 -> Text (name contains email -> Email, phone -> Composite preset phone); nvarchar(max)/ntext or >255 -> Textarea; int/bigint/decimal/money/float -> Number; date/datetime/datetime2 -> Date; bit -> Radio/Select with values 1 and 0 (NOT a Checkbox, see the token rules entry); char(2)/char(3) code columns -> Select over the lookup table when one is attached.
+4. REQUIRED = NOT NULL without a default. A NOT NULL column with no field on the form makes every submit fail.
+5. FOREIGN KEYS. A column named <Parent>Id / <Parent>_id / ParentId is a FK. Emit a Select whose VALUE is the parent primary key and whose LABEL is the parent name column, and set BOTH properties.optionsSource:"sql" AND properties.optionsSql — optionsSql alone renders an empty dropdown. Shape: {"key":"department_id","type":"Select","label":"Department","required":true,"properties":{"optionsSource":"sql","optionsSql":"SELECT Id AS value, Name AS label FROM [dbo].[MF_Test_Departments] ORDER BY Name"}}. The INSERT must bind the FK column to that field (:department_id) — never to the label text, or SQL Server rejects the row with a FK violation and the whole row is lost.
+6. WIRE THE WRITE. Single form -> settings.databaseInsert = {enabled:true, connectionKey:"DashboardDatabase", databaseType:"SqlServer", insertSql:"INSERT INTO [dbo].[X](...) VALUES (...)", parameterMapping:{}}; app_batch form -> just set tableName. Always include the join-back column when the table has one: [SubmissionId] <- :_submissionId.
+7. NEVER emit a databaseInsert whose target table does not exist — databaseInsert creates nothing. If the table is not in the attached-tables context, emit an app_batch with a CREATE TABLE entry instead.
+8. SANITY: a form with 1-2 fields for a table with 8 columns is a bug, not a summary. Include every writable column; the user deletes extras in the Builder.',
+  Tags = N'prompt_rule,sql,table,data-entry,databaseInsert,foreign-key,fk,select,optionsSql,ai-on-rails',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (Slug, Kind, Title, Summary, Body, Tags, Examples, PortalId, Source, Version, CreatedOnDate)
+  VALUES (N'sql-table-data-entry-form', N'prompt_rule',
+          N'Data-entry form for an existing SQL table (including tables with foreign keys)',
+          N'One input field per real column, FK columns become SQL-backed Selects on the parent table, and settings.databaseInsert writes the row on submit. A one-field form for a multi-column table is always wrong.',
+          N'When the user asks for a form that WRITES INTO an existing table ("form nhap lieu cho bang X", "data entry form for table X", "create a form from the selected tables"), build a full data-entry form, not a lookup picker.
+
+1. COLUMNS ARE THE SPEC. Read the real column list (the attached-tables COLUMNS context, or the SqlColumns tool). Never guess a column name. Emit ONE field per writable column and keep the column order.
+2. SKIP columns the database fills itself: IDENTITY / auto-increment primary keys, rowversion / timestamp, and audit columns (CreatedOnUtc, ModifiedOn, ...). Keep a nullable SubmissionId column OUT of the visible fields but INSIDE the INSERT (see rule 6).
+3. TYPE MAP: nvarchar/varchar <=255 -> Text (name contains email -> Email, phone -> Composite preset phone); nvarchar(max)/ntext or >255 -> Textarea; int/bigint/decimal/money/float -> Number; date/datetime/datetime2 -> Date; bit -> Radio/Select with values 1 and 0 (NOT a Checkbox, see the token rules entry); char(2)/char(3) code columns -> Select over the lookup table when one is attached.
+4. REQUIRED = NOT NULL without a default. A NOT NULL column with no field on the form makes every submit fail.
+5. FOREIGN KEYS. A column named <Parent>Id / <Parent>_id / ParentId is a FK. Emit a Select whose VALUE is the parent primary key and whose LABEL is the parent name column, and set BOTH properties.optionsSource:"sql" AND properties.optionsSql — optionsSql alone renders an empty dropdown. Shape: {"key":"department_id","type":"Select","label":"Department","required":true,"properties":{"optionsSource":"sql","optionsSql":"SELECT Id AS value, Name AS label FROM [dbo].[MF_Test_Departments] ORDER BY Name"}}. The INSERT must bind the FK column to that field (:department_id) — never to the label text, or SQL Server rejects the row with a FK violation and the whole row is lost.
+6. WIRE THE WRITE. Single form -> settings.databaseInsert = {enabled:true, connectionKey:"DashboardDatabase", databaseType:"SqlServer", insertSql:"INSERT INTO [dbo].[X](...) VALUES (...)", parameterMapping:{}}; app_batch form -> just set tableName. Always include the join-back column when the table has one: [SubmissionId] <- :_submissionId.
+7. NEVER emit a databaseInsert whose target table does not exist — databaseInsert creates nothing. If the table is not in the attached-tables context, emit an app_batch with a CREATE TABLE entry instead.
+8. SANITY: a form with 1-2 fields for a table with 8 columns is a bug, not a summary. Include every writable column; the user deletes extras in the Builder.',
+          N'prompt_rule,sql,table,data-entry,databaseInsert,foreign-key,fk,select,optionsSql,ai-on-rails',
+          NULL, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+GO
+
+MERGE dbo.MF_AI_Knowledge AS t
+USING (SELECT N'db-insert-token-rules' AS Slug, CAST(NULL AS INT) AS PortalId) AS s
+  ON (t.Slug = s.Slug AND t.PortalId IS NULL)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  Kind = N'prompt_rule',
+  Title = N'insertSql token rules — composite sub-parts, multi-select values, auto-supplied tokens',
+  Summary = N'A :token binds the submitted value of that field key. Composite sub-parts use :field.part, multi-selects arrive as a comma-joined string, and :_submissionId/:_formId/:_submittedOnUtc are supplied by the server.',
+  Body = N'settings.databaseInsert.insertSql is a parameterised statement. Every :token is bound server-side to a submitted value — never string-concatenated — so wrapping a token in quotes ('':name'') is wrong and breaks the bind.
+
+TOKEN -> VALUE
+- :field_key binds the value submitted under that exact field key. parameterMapping is optional; use it only to point a token at a DIFFERENT field key ({":cust":"customer_name"}).
+- COMPOSITE fields (type:"Composite" with widgetProps.preset name / name_plus / address / phone / dob / time) submit ONE combined value under the field key. To fill two columns from one composite, address the sub-part: VALUES (:name.first, :name.last). The server flattens the dot to an underscore (@name_first) and reads the raw part the renderer posts under __mf_parts. Requires MegaForm FormDatabaseInsert v20260726-01 or newer; on older builds a dotted token made SQL Server throw "Cannot call methods on nvarchar" (Msg 258) and the WHOLE row was silently dropped. Sub-part keys come from the preset: name -> first,last; name_plus -> prefix,first,middle,last,suffix; address -> street,city,state,zip; phone -> country,area,number,ext; dob -> day,month,year.
+- Use :name (no dot) when the table has ONE full-name column. Never invent a dotted sub-part on a non-composite field — a scalar field has no parts and the token binds NULL.
+- MULTI-SELECT fields (Checkbox and Chips) always submit an ARRAY, even with a single option ticked. The server joins them with ", " into one string. Map them to NVARCHAR wide enough for every option (>= 400 for interests/skills). NEVER map a Checkbox/Chips field to a BIT, INT or DATE column: an empty selection binds "" and the row fails. For a yes/no BIT column use a Radio/Select with values 1 and 0.
+- AUTO-SUPPLIED: :_submissionId (identity of the MegaForm submission this row mirrors), :_formId, :_submittedOnUtc. Include [SubmissionId] <- :_submissionId whenever the table has that column so the custom row can be joined back to MF_Submissions.
+- Date fields submit yyyy-MM-dd strings; that binds cleanly to date/datetime2. Number fields submit strings too — the column type does the conversion, so keep numeric columns numeric.
+
+STATEMENT SHAPE — exactly ONE INSERT. No trailing second statement, no semicolon-stacking, no -- or /* */ comments: the server rejects the whole config. Bracket every identifier ([dbo].[Table], [Column]).
+
+FAIL-SOFT WARNING: the custom-table write never blocks the submission. If the INSERT throws, the MegaForm submission still saves and the custom row is silently missing. So a wrong token type, a missing NOT NULL column or a FK violation shows up as "rows stopped appearing", not as an error. Use the builder Test INSERT button (dry-run inside a rolled-back transaction) after generating the SQL.',
+  Tags = N'prompt_rule,databaseInsert,insertSql,token,composite,__mf_parts,multi-select,checkbox,chips,submissionId,ai-on-rails',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (Slug, Kind, Title, Summary, Body, Tags, Examples, PortalId, Source, Version, CreatedOnDate)
+  VALUES (N'db-insert-token-rules', N'prompt_rule',
+          N'insertSql token rules — composite sub-parts, multi-select values, auto-supplied tokens',
+          N'A :token binds the submitted value of that field key. Composite sub-parts use :field.part, multi-selects arrive as a comma-joined string, and :_submissionId/:_formId/:_submittedOnUtc are supplied by the server.',
+          N'settings.databaseInsert.insertSql is a parameterised statement. Every :token is bound server-side to a submitted value — never string-concatenated — so wrapping a token in quotes ('':name'') is wrong and breaks the bind.
+
+TOKEN -> VALUE
+- :field_key binds the value submitted under that exact field key. parameterMapping is optional; use it only to point a token at a DIFFERENT field key ({":cust":"customer_name"}).
+- COMPOSITE fields (type:"Composite" with widgetProps.preset name / name_plus / address / phone / dob / time) submit ONE combined value under the field key. To fill two columns from one composite, address the sub-part: VALUES (:name.first, :name.last). The server flattens the dot to an underscore (@name_first) and reads the raw part the renderer posts under __mf_parts. Requires MegaForm FormDatabaseInsert v20260726-01 or newer; on older builds a dotted token made SQL Server throw "Cannot call methods on nvarchar" (Msg 258) and the WHOLE row was silently dropped. Sub-part keys come from the preset: name -> first,last; name_plus -> prefix,first,middle,last,suffix; address -> street,city,state,zip; phone -> country,area,number,ext; dob -> day,month,year.
+- Use :name (no dot) when the table has ONE full-name column. Never invent a dotted sub-part on a non-composite field — a scalar field has no parts and the token binds NULL.
+- MULTI-SELECT fields (Checkbox and Chips) always submit an ARRAY, even with a single option ticked. The server joins them with ", " into one string. Map them to NVARCHAR wide enough for every option (>= 400 for interests/skills). NEVER map a Checkbox/Chips field to a BIT, INT or DATE column: an empty selection binds "" and the row fails. For a yes/no BIT column use a Radio/Select with values 1 and 0.
+- AUTO-SUPPLIED: :_submissionId (identity of the MegaForm submission this row mirrors), :_formId, :_submittedOnUtc. Include [SubmissionId] <- :_submissionId whenever the table has that column so the custom row can be joined back to MF_Submissions.
+- Date fields submit yyyy-MM-dd strings; that binds cleanly to date/datetime2. Number fields submit strings too — the column type does the conversion, so keep numeric columns numeric.
+
+STATEMENT SHAPE — exactly ONE INSERT. No trailing second statement, no semicolon-stacking, no -- or /* */ comments: the server rejects the whole config. Bracket every identifier ([dbo].[Table], [Column]).
+
+FAIL-SOFT WARNING: the custom-table write never blocks the submission. If the INSERT throws, the MegaForm submission still saves and the custom row is silently missing. So a wrong token type, a missing NOT NULL column or a FK violation shows up as "rows stopped appearing", not as an error. Use the builder Test INSERT button (dry-run inside a rolled-back transaction) after generating the SQL.',
+          N'prompt_rule,databaseInsert,insertSql,token,composite,__mf_parts,multi-select,checkbox,chips,submissionId,ai-on-rails',
+          NULL, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+GO
+
+MERGE dbo.MF_AI_Knowledge AS t
+USING (SELECT N'premium-template-retarget-sql-table' AS Slug, CAST(NULL AS INT) AS PortalId) AS s
+  ON (t.Slug = s.Slug AND t.PortalId IS NULL)
+WHEN MATCHED AND t.Source = 'megaform-builtin' THEN UPDATE SET
+  Kind = N'prompt_rule',
+  Title = N'Retarget a premium template at an existing SQL table — fields change, the shell does not',
+  Summary = N'Rename/retype the data fields to the table columns and wire settings.databaseInsert; never touch customHtml/customCss/theme and never drop the template Section steps.',
+  Body = N'Retargeting a PREMIUM template at an existing SQL table ("make this form write into MF_Test_Employees", "sua form nay cho khop bang X") is a FIELD edit, never a design edit. The shell is frozen; the data model moves.
+
+KEEP FROZEN — never emit these, they are re-asserted from the existing form on apply:
+- settings.customHtml, settings.customCss, settings.theme, settings.templateGuideSlug.
+- Every Section / Heading / Divider field. Those are the template STEPS and headings the shell paints and the wizard pages through; dropping premium_step_2..4 collapses a 4-step form to one page. They are restored automatically if omitted, but omit nothing.
+- Row containers and their columns[] — the shell grid depends on them. Retype the fields INSIDE a Row, never the Row.
+
+WHAT YOU DO CHANGE, per real column of the target table:
+- key (rename to the column, snake_case), label, placeholder, required, helpText, options.
+- type — Text -> Select / Date / Number / Composite is expected and is applied (scalar to scalar only).
+- properties / widgetProps — for an FK column emit properties.optionsSource:"sql" AND properties.optionsSql (SELECT Id AS value, Name AS label FROM [dbo].[Parent]); for a phone column widgetProps.preset:"phone".
+- Fields with no matching column: delete them. Their wrapper markup is removed from the shell automatically (a label with no input would otherwise linger).
+
+ALSO WIRE THE WRITE: emit schema.settings.databaseInsert {enabled:true, connectionKey, databaseType:"SqlServer", insertSql, parameterMapping:{}} — databaseInsert and themeCssOverrides are the ONLY settings keys a premium edit may emit. Follow the insertSql token rules entry (composite sub-parts :name.first, multi-select CSV, :_submissionId join-back).
+
+REBRAND COPY the shell hard-codes (hero title, step labels, section captions) with htmlTextSwaps [{find,replace}] where `find` is one of the SHELL TEXTS given verbatim — never by rewriting customHtml.',
+  Tags = N'prompt_rule,premium,template,on-rails,sql,table,retarget,databaseInsert,section,steps,keep-style,ai-on-rails',
+  Version = t.Version + 1, UpdatedOnDate = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (Slug, Kind, Title, Summary, Body, Tags, Examples, PortalId, Source, Version, CreatedOnDate)
+  VALUES (N'premium-template-retarget-sql-table', N'prompt_rule',
+          N'Retarget a premium template at an existing SQL table — fields change, the shell does not',
+          N'Rename/retype the data fields to the table columns and wire settings.databaseInsert; never touch customHtml/customCss/theme and never drop the template Section steps.',
+          N'Retargeting a PREMIUM template at an existing SQL table ("make this form write into MF_Test_Employees", "sua form nay cho khop bang X") is a FIELD edit, never a design edit. The shell is frozen; the data model moves.
+
+KEEP FROZEN — never emit these, they are re-asserted from the existing form on apply:
+- settings.customHtml, settings.customCss, settings.theme, settings.templateGuideSlug.
+- Every Section / Heading / Divider field. Those are the template STEPS and headings the shell paints and the wizard pages through; dropping premium_step_2..4 collapses a 4-step form to one page. They are restored automatically if omitted, but omit nothing.
+- Row containers and their columns[] — the shell grid depends on them. Retype the fields INSIDE a Row, never the Row.
+
+WHAT YOU DO CHANGE, per real column of the target table:
+- key (rename to the column, snake_case), label, placeholder, required, helpText, options.
+- type — Text -> Select / Date / Number / Composite is expected and is applied (scalar to scalar only).
+- properties / widgetProps — for an FK column emit properties.optionsSource:"sql" AND properties.optionsSql (SELECT Id AS value, Name AS label FROM [dbo].[Parent]); for a phone column widgetProps.preset:"phone".
+- Fields with no matching column: delete them. Their wrapper markup is removed from the shell automatically (a label with no input would otherwise linger).
+
+ALSO WIRE THE WRITE: emit schema.settings.databaseInsert {enabled:true, connectionKey, databaseType:"SqlServer", insertSql, parameterMapping:{}} — databaseInsert and themeCssOverrides are the ONLY settings keys a premium edit may emit. Follow the insertSql token rules entry (composite sub-parts :name.first, multi-select CSV, :_submissionId join-back).
+
+REBRAND COPY the shell hard-codes (hero title, step labels, section captions) with htmlTextSwaps [{find,replace}] where `find` is one of the SHELL TEXTS given verbatim — never by rewriting customHtml.',
+          N'prompt_rule,premium,template,on-rails,sql,table,retarget,databaseInsert,section,steps,keep-style,ai-on-rails',
+          NULL, NULL, N'megaform-builtin', 1, SYSUTCDATETIME());
+GO
+

@@ -5,6 +5,7 @@ Thin DNN Razor Host presentation layer for the `blog-starter` configured app.
 - `MegaFormBlogs.cshtml`: public home, search/category filtering, article detail and attachments.
 - `MegaFormBlogsAdmin.cshtml`: role-gated typed record editing, visual HTML authoring,
   typed image/author galleries, and workflow actions.
+- `MegaFormBlogsAdminHost.cshtml`: DNN SuperUser-only wrapper for Host administration pages.
 - `megaform-blogs.css`: responsive ACME-derived design without a frontend runtime.
 
 Both scripts depend only on the public `MegaForm.Sdk` facade. They do not read

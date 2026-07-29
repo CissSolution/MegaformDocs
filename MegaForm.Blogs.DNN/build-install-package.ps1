@@ -65,6 +65,7 @@ try {
     New-ContentZip -Path $razorZip -Files @{
         'MegaFormBlogs.cshtml' = Join-Path $PSScriptRoot 'Scripts\MegaFormBlogs.cshtml'
         'MegaFormBlogsAdmin.cshtml' = Join-Path $PSScriptRoot 'Scripts\MegaFormBlogsAdmin.cshtml'
+        'MegaFormBlogsAdminHost.cshtml' = Join-Path $PSScriptRoot 'Scripts\MegaFormBlogsAdminHost.cshtml'
     }
     New-ContentZip -Path $assetZip -Files @{
         'megaform-blogs.css' = Join-Path $PSScriptRoot 'Assets\megaform-blogs.css'

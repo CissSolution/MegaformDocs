@@ -2,6 +2,7 @@
     MegaForm Blogs - authenticated editorial console for DNN Razor Host.
     Uses typed Records and first-class Workflows SDK APIs. No SQL/DataJson access.
 *@
+@inherits DotNetNuke.Web.Razor.DotNetNukeWebPage<dynamic>
 @using System
 @using System.Linq
 @using System.Collections.Generic
@@ -71,7 +72,10 @@
 @{
     var portalId = DotNetNuke.Entities.Portals.PortalSettings.Current == null
         ? 0 : DotNetNuke.Entities.Portals.PortalSettings.Current.PortalId;
-    var adminBaseUrl = DotNetNuke.Common.Globals.NavigateURL(Dnn.Tab.TabID);
+    var activeTab = DotNetNuke.Entities.Portals.PortalSettings.Current == null
+        ? null : DotNetNuke.Entities.Portals.PortalSettings.Current.ActiveTab;
+    var adminBaseUrl = activeTab == null
+        ? Request.RawUrl : DotNetNuke.Common.Globals.NavigateURL(activeTab.TabID);
     var user = DotNetNuke.Entities.Users.UserController.Instance.GetCurrentUserInfo();
     // DNN's service locator is process-wide, so it deliberately does not capture a
     // request user. Carry the complete actor in the SDK scope: workflow role queues
@@ -235,7 +239,7 @@
 }
 
 <link rel="stylesheet" href="/DesktopModules/MegaForm/Assets/css/plugins/megaform-widget-rich-text.css?v=20260729a" />
-<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs.css?v=20260729f" />
+<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs.css?v=20260729g" />
 
 <main class="mfb mfb-admin">
     @if (!allowed)

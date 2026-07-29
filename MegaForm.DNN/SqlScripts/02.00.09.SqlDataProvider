@@ -1,0 +1,72 @@
+-- MegaForm 02.00.09 - repair the App Builder schema on sites whose package
+-- version advanced past 01.06.42 before that idempotent migration was applied.
+-- Additive only: existing forms, typed values, submissions, and workflows remain unchanged.
+
+IF OBJECT_ID(N'dbo.MF_AppDefinitions', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.MF_AppDefinitions
+    (
+        AppId              INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_MF_AppDefinitions PRIMARY KEY,
+        PortalId           INT NOT NULL,
+        AppKey             NVARCHAR(80) NOT NULL,
+        AppName            NVARCHAR(200) NOT NULL,
+        Description        NVARCHAR(1000) NULL,
+        AppScope           NVARCHAR(80) NULL,
+        Icon               NVARCHAR(100) NULL,
+        AccentColor        NVARCHAR(32) NULL,
+        ManifestJson       NVARCHAR(MAX) NULL,
+        SettingsJson       NVARCHAR(MAX) NULL,
+        ResourcesJson      NVARCHAR(MAX) NULL,
+        IsEnabled          BIT NOT NULL CONSTRAINT DF_MF_AppDefinitions_IsEnabled DEFAULT(1),
+        SortOrder          INT NOT NULL CONSTRAINT DF_MF_AppDefinitions_SortOrder DEFAULT(0),
+        CreatedByUserId    INT NOT NULL CONSTRAINT DF_MF_AppDefinitions_CreatedBy DEFAULT(0),
+        CreatedOnUtc       DATETIME2(3) NOT NULL CONSTRAINT DF_MF_AppDefinitions_Created DEFAULT(SYSUTCDATETIME()),
+        ModifiedByUserId   INT NOT NULL CONSTRAINT DF_MF_AppDefinitions_ModifiedBy DEFAULT(0),
+        ModifiedOnUtc      DATETIME2(3) NULL,
+        CONSTRAINT UQ_MF_AppDefinitions_Portal_Key UNIQUE(PortalId, AppKey)
+    );
+END
+GO
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.indexes
+    WHERE object_id=OBJECT_ID(N'dbo.MF_AppDefinitions')
+      AND name=N'IX_MF_AppDefinitions_Portal_Scope'
+)
+    CREATE INDEX IX_MF_AppDefinitions_Portal_Scope
+        ON dbo.MF_AppDefinitions(PortalId, AppScope, IsEnabled, SortOrder);
+GO
+
+IF OBJECT_ID(N'dbo.MF_AppQueries', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.MF_AppQueries
+    (
+        QueryId            INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_MF_AppQueries PRIMARY KEY,
+        AppId              INT NOT NULL,
+        FormId             INT NOT NULL CONSTRAINT DF_MF_AppQueries_FormId DEFAULT(0),
+        QueryKey           NVARCHAR(80) NOT NULL,
+        QueryName          NVARCHAR(200) NOT NULL,
+        Description        NVARCHAR(1000) NULL,
+        QueryType          NVARCHAR(40) NULL,
+        DefinitionJson     NVARCHAR(MAX) NULL,
+        IsSystem           BIT NOT NULL CONSTRAINT DF_MF_AppQueries_IsSystem DEFAULT(0),
+        SortOrder          INT NOT NULL CONSTRAINT DF_MF_AppQueries_SortOrder DEFAULT(0),
+        CreatedByUserId    INT NOT NULL CONSTRAINT DF_MF_AppQueries_CreatedBy DEFAULT(0),
+        CreatedOnUtc       DATETIME2(3) NOT NULL CONSTRAINT DF_MF_AppQueries_Created DEFAULT(SYSUTCDATETIME()),
+        ModifiedByUserId   INT NOT NULL CONSTRAINT DF_MF_AppQueries_ModifiedBy DEFAULT(0),
+        ModifiedOnUtc      DATETIME2(3) NULL,
+        CONSTRAINT UQ_MF_AppQueries_App_Key UNIQUE(AppId, QueryKey),
+        CONSTRAINT FK_MF_AppQueries_App FOREIGN KEY(AppId)
+            REFERENCES dbo.MF_AppDefinitions(AppId) ON DELETE CASCADE
+    );
+END
+GO
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.indexes
+    WHERE object_id=OBJECT_ID(N'dbo.MF_AppQueries')
+      AND name=N'IX_MF_AppQueries_App_Form'
+)
+    CREATE INDEX IX_MF_AppQueries_App_Form
+        ON dbo.MF_AppQueries(AppId, FormId, SortOrder);
+GO
