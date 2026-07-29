@@ -623,3 +623,183 @@ MegaForm.Sdk.IInboxApi.AttachFileAsync(MegaForm.Sdk.InboxFileAttachmentRequest! 
 MegaForm.Sdk.MegaFormClient.AttachFileAsync(MegaForm.Sdk.InboxFileAttachmentRequest! request, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.InboxFileAttachmentResultDto!>!
 MegaForm.Sdk.IInboxApi.SendSubmissionAsync(MegaForm.Sdk.SendSubmissionToInboxRequest! request, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.InboxSendSubmissionResultDto!>!
 MegaForm.Sdk.MegaFormClient.SendSubmissionAsync(MegaForm.Sdk.SendSubmissionToInboxRequest! request, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.InboxSendSubmissionResultDto!>!
+MegaForm.Sdk.AppDto
+MegaForm.Sdk.AppDto.AccentColor.get -> string?
+MegaForm.Sdk.AppDto.AccentColor.set -> void
+MegaForm.Sdk.AppDto.AppDto() -> void
+MegaForm.Sdk.AppDto.AppId.get -> int
+MegaForm.Sdk.AppDto.AppId.set -> void
+MegaForm.Sdk.AppDto.AppKey.get -> string?
+MegaForm.Sdk.AppDto.AppKey.set -> void
+MegaForm.Sdk.AppDto.AppName.get -> string?
+MegaForm.Sdk.AppDto.AppName.set -> void
+MegaForm.Sdk.AppDto.AppScope.get -> string?
+MegaForm.Sdk.AppDto.AppScope.set -> void
+MegaForm.Sdk.AppDto.Description.get -> string?
+MegaForm.Sdk.AppDto.Description.set -> void
+MegaForm.Sdk.AppDto.Forms.get -> System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.AppFormRefDto!>!
+MegaForm.Sdk.AppDto.Forms.set -> void
+MegaForm.Sdk.AppDto.Icon.get -> string?
+MegaForm.Sdk.AppDto.Icon.set -> void
+MegaForm.Sdk.AppDto.IsEnabled.get -> bool
+MegaForm.Sdk.AppDto.IsEnabled.set -> void
+MegaForm.Sdk.AppDto.Queries.get -> System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.AppQueryRefDto!>!
+MegaForm.Sdk.AppDto.Queries.set -> void
+MegaForm.Sdk.AppFormRefDto
+MegaForm.Sdk.AppFormRefDto.Alias.get -> string?
+MegaForm.Sdk.AppFormRefDto.Alias.set -> void
+MegaForm.Sdk.AppFormRefDto.AppFormRefDto() -> void
+MegaForm.Sdk.AppFormRefDto.FormId.get -> int
+MegaForm.Sdk.AppFormRefDto.FormId.set -> void
+MegaForm.Sdk.AppFormRefDto.IsPrimary.get -> bool
+MegaForm.Sdk.AppFormRefDto.IsPrimary.set -> void
+MegaForm.Sdk.AppFormRefDto.Role.get -> string?
+MegaForm.Sdk.AppFormRefDto.Role.set -> void
+MegaForm.Sdk.AppFormRefDto.Title.get -> string?
+MegaForm.Sdk.AppFormRefDto.Title.set -> void
+MegaForm.Sdk.AppQueryRefDto
+MegaForm.Sdk.AppQueryRefDto.Alias.get -> string?
+MegaForm.Sdk.AppQueryRefDto.Alias.set -> void
+MegaForm.Sdk.AppQueryRefDto.AppQueryRefDto() -> void
+MegaForm.Sdk.AppQueryRefDto.FormId.get -> int
+MegaForm.Sdk.AppQueryRefDto.FormId.set -> void
+MegaForm.Sdk.AppQueryRefDto.QueryId.get -> int
+MegaForm.Sdk.AppQueryRefDto.QueryId.set -> void
+MegaForm.Sdk.AppQueryRefDto.QueryKey.get -> string?
+MegaForm.Sdk.AppQueryRefDto.QueryKey.set -> void
+MegaForm.Sdk.AppQueryRefDto.QueryType.get -> string?
+MegaForm.Sdk.AppQueryRefDto.QueryType.set -> void
+MegaForm.Sdk.AppQueryRequest
+MegaForm.Sdk.AppQueryRequest.AppQueryRequest() -> void
+MegaForm.Sdk.AppQueryRequest.Page.get -> int
+MegaForm.Sdk.AppQueryRequest.Page.set -> void
+MegaForm.Sdk.AppQueryRequest.PageSize.get -> int
+MegaForm.Sdk.AppQueryRequest.PageSize.set -> void
+MegaForm.Sdk.AppQueryRequest.Parameters.get -> System.Collections.Generic.Dictionary<string!, object!>!
+MegaForm.Sdk.AppQueryRequest.Parameters.set -> void
+MegaForm.Sdk.AppQueryRequest.Search.get -> string?
+MegaForm.Sdk.AppQueryRequest.Search.set -> void
+MegaForm.Sdk.AppQueryResultDto
+MegaForm.Sdk.AppQueryResultDto.AppKey.get -> string?
+MegaForm.Sdk.AppQueryResultDto.AppKey.set -> void
+MegaForm.Sdk.AppQueryResultDto.AppQueryResultDto() -> void
+MegaForm.Sdk.AppQueryResultDto.FormId.get -> int
+MegaForm.Sdk.AppQueryResultDto.FormId.set -> void
+MegaForm.Sdk.AppQueryResultDto.IsBounded.get -> bool
+MegaForm.Sdk.AppQueryResultDto.IsBounded.set -> void
+MegaForm.Sdk.AppQueryResultDto.Items.get -> System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.AppRecordDto!>!
+MegaForm.Sdk.AppQueryResultDto.Items.set -> void
+MegaForm.Sdk.AppQueryResultDto.Page.get -> int
+MegaForm.Sdk.AppQueryResultDto.Page.set -> void
+MegaForm.Sdk.AppQueryResultDto.PageSize.get -> int
+MegaForm.Sdk.AppQueryResultDto.PageSize.set -> void
+MegaForm.Sdk.AppQueryResultDto.QueryKey.get -> string?
+MegaForm.Sdk.AppQueryResultDto.QueryKey.set -> void
+MegaForm.Sdk.AppQueryResultDto.TotalCount.get -> int
+MegaForm.Sdk.AppQueryResultDto.TotalCount.set -> void
+MegaForm.Sdk.AppRecordDto
+MegaForm.Sdk.AppRecordDto.AppRecordDto() -> void
+MegaForm.Sdk.AppRecordDto.Data.get -> System.Collections.Generic.IReadOnlyDictionary<string!, object!>!
+MegaForm.Sdk.AppRecordDto.Data.set -> void
+MegaForm.Sdk.AppRecordDto.FormId.get -> int
+MegaForm.Sdk.AppRecordDto.FormId.set -> void
+MegaForm.Sdk.AppRecordDto.IsTyped.get -> bool
+MegaForm.Sdk.AppRecordDto.IsTyped.set -> void
+MegaForm.Sdk.AppRecordDto.Status.get -> string?
+MegaForm.Sdk.AppRecordDto.Status.set -> void
+MegaForm.Sdk.AppRecordDto.SubmissionId.get -> int
+MegaForm.Sdk.AppRecordDto.SubmissionId.set -> void
+MegaForm.Sdk.AppRecordDto.SubmittedOnUtc.get -> System.DateTime
+MegaForm.Sdk.AppRecordDto.SubmittedOnUtc.set -> void
+MegaForm.Sdk.AppRecordDto.UserId.get -> int?
+MegaForm.Sdk.AppRecordDto.UserId.set -> void
+MegaForm.Sdk.IAppApi
+MegaForm.Sdk.IAppApi.GetAppAsync(string! appKey, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.AppDto?>!
+MegaForm.Sdk.IMegaFormClient.Apps.get -> MegaForm.Sdk.IAppApi!
+MegaForm.Sdk.IMegaFormClient.Queries.get -> MegaForm.Sdk.IQueryApi!
+MegaForm.Sdk.IMegaFormClient.Records.get -> MegaForm.Sdk.IRecordApi!
+MegaForm.Sdk.IMegaFormClient.Workflows.get -> MegaForm.Sdk.IWorkflowApi!
+MegaForm.Sdk.IQueryApi
+MegaForm.Sdk.IQueryApi.ExecuteAsync(string! appKey, string! queryKey, MegaForm.Sdk.AppQueryRequest? request = null, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.AppQueryResultDto!>!
+MegaForm.Sdk.IRecordApi
+MegaForm.Sdk.IRecordApi.GetRecordAsync(int submissionId, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.AppRecordDto?>!
+MegaForm.Sdk.IRecordApi.PatchRecordAsync(int submissionId, System.Collections.Generic.Dictionary<string!, object!>! values, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.AppRecordDto?>!
+MegaForm.Sdk.IWorkflowApi
+MegaForm.Sdk.MegaFormClient.Apps.get -> MegaForm.Sdk.IAppApi!
+MegaForm.Sdk.MegaFormClient.ExecuteAsync(string! appKey, string! queryKey, MegaForm.Sdk.AppQueryRequest? request = null, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.AppQueryResultDto!>!
+static MegaForm.Sdk.MegaFormClient.CreateApplicationClient(MegaForm.Core.Interfaces.IFormRepository! forms, MegaForm.Core.Interfaces.ISubmissionRepository! submissions, MegaForm.Core.Interfaces.IPlatformContext? platform, MegaForm.Core.Interfaces.IFileRepository? files, MegaForm.Core.Interfaces.IStorageService? storage, MegaForm.Core.Services.SubmissionProcessor? submissionProcessor, MegaForm.Core.Services.WorkflowTaskService? workflowTasks, MegaForm.Core.Interfaces.IWorkflowRepository? workflowRepository, MegaForm.Core.Interfaces.IPhase2Repository! phase2, MegaForm.Core.Interfaces.ISubmissionDataStore! typedStore) -> MegaForm.Sdk.MegaFormClient!
+MegaForm.Sdk.MegaFormClient.GetAppAsync(string! appKey, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.AppDto?>!
+MegaForm.Sdk.MegaFormClient.GetRecordAsync(int submissionId, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.AppRecordDto?>!
+MegaForm.Sdk.MegaFormClient.PatchRecordAsync(int submissionId, System.Collections.Generic.Dictionary<string!, object!>! values, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.AppRecordDto?>!
+MegaForm.Sdk.MegaFormClient.Queries.get -> MegaForm.Sdk.IQueryApi!
+MegaForm.Sdk.MegaFormClient.Records.get -> MegaForm.Sdk.IRecordApi!
+MegaForm.Sdk.MegaFormClient.Workflows.get -> MegaForm.Sdk.IWorkflowApi!
+MegaForm.Sdk.GalleryItemDto
+MegaForm.Sdk.GalleryItemDto.AltText.get -> string?
+MegaForm.Sdk.GalleryItemDto.AltText.set -> void
+MegaForm.Sdk.GalleryItemDto.Caption.get -> string?
+MegaForm.Sdk.GalleryItemDto.Caption.set -> void
+MegaForm.Sdk.GalleryItemDto.ContentType.get -> string?
+MegaForm.Sdk.GalleryItemDto.ContentType.set -> void
+MegaForm.Sdk.GalleryItemDto.FieldKey.get -> string?
+MegaForm.Sdk.GalleryItemDto.FieldKey.set -> void
+MegaForm.Sdk.GalleryItemDto.FileId.get -> int?
+MegaForm.Sdk.GalleryItemDto.FileId.set -> void
+MegaForm.Sdk.GalleryItemDto.FileName.get -> string?
+MegaForm.Sdk.GalleryItemDto.FileName.set -> void
+MegaForm.Sdk.GalleryItemDto.FormId.get -> int
+MegaForm.Sdk.GalleryItemDto.FormId.set -> void
+MegaForm.Sdk.GalleryItemDto.GalleryItemDto() -> void
+MegaForm.Sdk.GalleryItemDto.ItemId.get -> string!
+MegaForm.Sdk.GalleryItemDto.ItemId.set -> void
+MegaForm.Sdk.GalleryItemDto.Source.get -> string?
+MegaForm.Sdk.GalleryItemDto.Source.set -> void
+MegaForm.Sdk.GalleryItemDto.SubmissionId.get -> int
+MegaForm.Sdk.GalleryItemDto.SubmissionId.set -> void
+MegaForm.Sdk.GalleryItemDto.Title.get -> string?
+MegaForm.Sdk.GalleryItemDto.Title.set -> void
+MegaForm.Sdk.GalleryItemDto.Url.get -> string!
+MegaForm.Sdk.GalleryItemDto.Url.set -> void
+MegaForm.Sdk.GalleryQueryRequest
+MegaForm.Sdk.GalleryQueryRequest.AltTextFieldKey.get -> string!
+MegaForm.Sdk.GalleryQueryRequest.AltTextFieldKey.set -> void
+MegaForm.Sdk.GalleryQueryRequest.AppKey.get -> string!
+MegaForm.Sdk.GalleryQueryRequest.AppKey.set -> void
+MegaForm.Sdk.GalleryQueryRequest.CaptionFieldKey.get -> string!
+MegaForm.Sdk.GalleryQueryRequest.CaptionFieldKey.set -> void
+MegaForm.Sdk.GalleryQueryRequest.DeduplicateByUrl.get -> bool
+MegaForm.Sdk.GalleryQueryRequest.DeduplicateByUrl.set -> void
+MegaForm.Sdk.GalleryQueryRequest.GalleryQueryRequest() -> void
+MegaForm.Sdk.GalleryQueryRequest.ImageFieldKeys.get -> System.Collections.Generic.List<string!>!
+MegaForm.Sdk.GalleryQueryRequest.ImageFieldKeys.set -> void
+MegaForm.Sdk.GalleryQueryRequest.IncludeUploadedImages.get -> bool
+MegaForm.Sdk.GalleryQueryRequest.IncludeUploadedImages.set -> void
+MegaForm.Sdk.GalleryQueryRequest.Query.get -> MegaForm.Sdk.AppQueryRequest!
+MegaForm.Sdk.GalleryQueryRequest.Query.set -> void
+MegaForm.Sdk.GalleryQueryRequest.QueryKey.get -> string!
+MegaForm.Sdk.GalleryQueryRequest.QueryKey.set -> void
+MegaForm.Sdk.GalleryQueryRequest.TitleFieldKey.get -> string!
+MegaForm.Sdk.GalleryQueryRequest.TitleFieldKey.set -> void
+MegaForm.Sdk.GalleryResultDto
+MegaForm.Sdk.GalleryResultDto.AppKey.get -> string?
+MegaForm.Sdk.GalleryResultDto.AppKey.set -> void
+MegaForm.Sdk.GalleryResultDto.FormId.get -> int
+MegaForm.Sdk.GalleryResultDto.FormId.set -> void
+MegaForm.Sdk.GalleryResultDto.GalleryResultDto() -> void
+MegaForm.Sdk.GalleryResultDto.IsBounded.get -> bool
+MegaForm.Sdk.GalleryResultDto.IsBounded.set -> void
+MegaForm.Sdk.GalleryResultDto.Items.get -> System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.GalleryItemDto!>!
+MegaForm.Sdk.GalleryResultDto.Items.set -> void
+MegaForm.Sdk.GalleryResultDto.Page.get -> int
+MegaForm.Sdk.GalleryResultDto.Page.set -> void
+MegaForm.Sdk.GalleryResultDto.PageSize.get -> int
+MegaForm.Sdk.GalleryResultDto.PageSize.set -> void
+MegaForm.Sdk.GalleryResultDto.QueryKey.get -> string?
+MegaForm.Sdk.GalleryResultDto.QueryKey.set -> void
+MegaForm.Sdk.GalleryResultDto.SourceRecordCount.get -> int
+MegaForm.Sdk.GalleryResultDto.SourceRecordCount.set -> void
+MegaForm.Sdk.IGalleryApi
+MegaForm.Sdk.IGalleryApi.QueryGalleryAsync(MegaForm.Sdk.GalleryQueryRequest! request, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.GalleryResultDto!>!
+MegaForm.Sdk.IMegaFormClient.Gallery.get -> MegaForm.Sdk.IGalleryApi!
+MegaForm.Sdk.MegaFormClient.Gallery.get -> MegaForm.Sdk.IGalleryApi!
+MegaForm.Sdk.MegaFormClient.QueryGalleryAsync(MegaForm.Sdk.GalleryQueryRequest! request, MegaForm.Sdk.MegaFormScope? scope = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<MegaForm.Sdk.GalleryResultDto!>!

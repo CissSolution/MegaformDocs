@@ -12,7 +12,7 @@
          developers who use MegaForm programmatically (CreateForm/ListForms/FindData…). -->
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>MegaForm.Sdk</PackageId>
-    <Version>0.1.0-preview</Version>
+    <Version>1.0.0</Version>
     <Description>Programmatic SDK for MegaForm: create forms, list forms, query submissions. Host-agnostic facade over MegaForm.Core.</Description>
     <Authors>MegaForm Team</Authors>
     <Company>MegaForm</Company>

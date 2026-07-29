@@ -18,7 +18,7 @@ namespace MegaForm.Sdk
         public static IServiceCollection AddMegaFormSdk(this IServiceCollection services)
         {
             if (services == null) throw new ArgumentNullException(nameof(services));
-            services.TryAddScoped<IMegaFormClient>(sp => new MegaFormClient(
+            services.TryAddScoped<IMegaFormClient>(sp => MegaFormClient.CreateApplicationClient(
                 sp.GetRequiredService<IFormRepository>(),
                 sp.GetRequiredService<ISubmissionRepository>(),
                 sp.GetService<IPlatformContext>(),
@@ -26,7 +26,9 @@ namespace MegaForm.Sdk
                 sp.GetService<IStorageService>(),
                 sp.GetService<SubmissionProcessor>(),
                 sp.GetService<WorkflowTaskService>(),
-                sp.GetService<IWorkflowRepository>()));
+                sp.GetService<IWorkflowRepository>(),
+                sp.GetRequiredService<IPhase2Repository>(),
+                sp.GetRequiredService<ISubmissionDataStore>()));
             return services;
         }
     }

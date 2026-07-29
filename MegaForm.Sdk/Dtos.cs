@@ -601,4 +601,123 @@ namespace MegaForm.Sdk
         /// <summary>Whether this option is selected by default.</summary>
         public bool Selected { get; set; }
     }
+
+    /// <summary>Persistent application definition exposed to custom modules.</summary>
+    public sealed class AppDto
+    {
+        public int AppId { get; set; }
+        public string? AppKey { get; set; }
+        public string? AppName { get; set; }
+        public string? Description { get; set; }
+        public string? AppScope { get; set; }
+        public string? Icon { get; set; }
+        public string? AccentColor { get; set; }
+        public bool IsEnabled { get; set; }
+        public IReadOnlyList<AppFormRefDto> Forms { get; set; } = Array.Empty<AppFormRefDto>();
+        public IReadOnlyList<AppQueryRefDto> Queries { get; set; } = Array.Empty<AppQueryRefDto>();
+    }
+
+    /// <summary>Logical form binding inside an app manifest.</summary>
+    public sealed class AppFormRefDto
+    {
+        public int FormId { get; set; }
+        public string? Alias { get; set; }
+        public string? Role { get; set; }
+        public string? Title { get; set; }
+        public bool IsPrimary { get; set; }
+    }
+
+    /// <summary>Named-query binding inside an app manifest.</summary>
+    public sealed class AppQueryRefDto
+    {
+        public int QueryId { get; set; }
+        public int FormId { get; set; }
+        public string? QueryKey { get; set; }
+        public string? QueryType { get; set; }
+        public string? Alias { get; set; }
+    }
+
+    /// <summary>Paging, search, and field parameters for a persisted named query.</summary>
+    public sealed class AppQueryRequest
+    {
+        public int Page { get; set; } = 1;
+        public int PageSize { get; set; } = 20;
+        public string? Search { get; set; }
+        public Dictionary<string, object> Parameters { get; set; } =
+            new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+    }
+
+    /// <summary>A typed application record; values come from MF_SubmissionValue* rows.</summary>
+    public sealed class AppRecordDto
+    {
+        public int SubmissionId { get; set; }
+        public int FormId { get; set; }
+        public string? Status { get; set; }
+        public int? UserId { get; set; }
+        public DateTime SubmittedOnUtc { get; set; }
+        public IReadOnlyDictionary<string, object> Data { get; set; } =
+            new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+        public bool IsTyped { get; set; }
+    }
+
+    /// <summary>Result of executing one app named query.</summary>
+    public sealed class AppQueryResultDto
+    {
+        public string? AppKey { get; set; }
+        public string? QueryKey { get; set; }
+        public int FormId { get; set; }
+        public IReadOnlyList<AppRecordDto> Items { get; set; } = Array.Empty<AppRecordDto>();
+        public int TotalCount { get; set; }
+        public int Page { get; set; }
+        public int PageSize { get; set; }
+        public bool IsBounded { get; set; }
+    }
+
+    /// <summary>
+    /// Field mapping and paging for a reusable image gallery backed by an app named query.
+    /// Image fields are canonical typed values; uploaded image files can be included alongside
+    /// them without exposing storage paths.
+    /// </summary>
+    public sealed class GalleryQueryRequest
+    {
+        public string AppKey { get; set; } = string.Empty;
+        public string QueryKey { get; set; } = string.Empty;
+        public AppQueryRequest Query { get; set; } = new AppQueryRequest();
+        public List<string> ImageFieldKeys { get; set; } = new List<string>();
+        public string TitleFieldKey { get; set; } = "title";
+        public string AltTextFieldKey { get; set; } = "image_alt_text";
+        public string CaptionFieldKey { get; set; } = "excerpt";
+        public bool IncludeUploadedImages { get; set; } = true;
+        public bool DeduplicateByUrl { get; set; } = true;
+    }
+
+    /// <summary>A safe image projection from either a typed field or a MegaForm-managed file.</summary>
+    public sealed class GalleryItemDto
+    {
+        public string ItemId { get; set; } = string.Empty;
+        public int SubmissionId { get; set; }
+        public int FormId { get; set; }
+        public string? Source { get; set; }
+        public string? FieldKey { get; set; }
+        public int? FileId { get; set; }
+        public string? FileName { get; set; }
+        public string? ContentType { get; set; }
+        public string Url { get; set; } = string.Empty;
+        public string? Title { get; set; }
+        public string? AltText { get; set; }
+        public string? Caption { get; set; }
+    }
+
+    /// <summary>Gallery projection result, preserving the source query's paging metadata.</summary>
+    public sealed class GalleryResultDto
+    {
+        public string? AppKey { get; set; }
+        public string? QueryKey { get; set; }
+        public int FormId { get; set; }
+        public IReadOnlyList<GalleryItemDto> Items { get; set; } = Array.Empty<GalleryItemDto>();
+        public int SourceRecordCount { get; set; }
+        public int Page { get; set; }
+        public int PageSize { get; set; }
+        public bool IsBounded { get; set; }
+    }
 }

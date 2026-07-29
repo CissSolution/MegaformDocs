@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using MegaForm.Core.Interfaces;
 using MegaForm.Core.Models;
 using MegaForm.Core.Rendering;
 using MegaForm.Core.Services;
+using MegaForm.Core.Services.TypedSubmission;
 using MegaForm.Core.Utilities;
 using MegaForm.Core.Workflow;
 using Newtonsoft.Json;
@@ -20,7 +22,7 @@ namespace MegaForm.Sdk
     /// Tenant/user context comes from the ambient <see cref="IPlatformContext"/> (when the
     /// host provides one) and can be overridden per call via <see cref="MegaFormScope"/>.
     /// </summary>
-    public sealed class MegaFormClient : IMegaFormClient, IFormApi, ISubmissionApi, IDashboardApi, ISubmissionDashboardApi, IInboxApi, IFileApi, ISchemaApi
+    public sealed class MegaFormClient : IMegaFormClient, IFormApi, ISubmissionApi, IDashboardApi, ISubmissionDashboardApi, IInboxApi, IWorkflowApi, IFileApi, IGalleryApi, ISchemaApi, IAppApi, IQueryApi, IRecordApi
     {
         private readonly IFormRepository _forms;
         private readonly ISubmissionRepository _submissions;
@@ -30,6 +32,8 @@ namespace MegaForm.Sdk
         private readonly SubmissionProcessor? _processor;
         private readonly WorkflowTaskService? _workflowTasks;
         private readonly IWorkflowRepository? _workflowRepository;
+        private readonly IPhase2Repository? _phase2;
+        private readonly ISubmissionDataStore? _typedStore;
 
         /// <summary>
         /// Create a client. <paramref name="platform"/>/<paramref name="files"/>/<paramref name="storage"/>
@@ -40,7 +44,7 @@ namespace MegaForm.Sdk
         /// back to validate-then-insert.
         /// </summary>
         public MegaFormClient(IFormRepository forms, ISubmissionRepository submissions, IPlatformContext? platform = null, IFileRepository? files = null, IStorageService? storage = null, SubmissionProcessor? submissionProcessor = null)
-            : this(forms, submissions, platform, files, storage, submissionProcessor, null, null)
+            : this(forms, submissions, platform, files, storage, submissionProcessor, null, null, null, null)
         {
         }
 
@@ -49,6 +53,15 @@ namespace MegaForm.Sdk
         /// hosts that have registered workflow services and want the SDK Inbox surface enabled.
         /// </summary>
         public MegaFormClient(IFormRepository forms, ISubmissionRepository submissions, IPlatformContext? platform, IFileRepository? files, IStorageService? storage, SubmissionProcessor? submissionProcessor, WorkflowTaskService? workflowTasks, IWorkflowRepository? workflowRepository)
+            : this(forms, submissions, platform, files, storage, submissionProcessor, workflowTasks, workflowRepository, null, null)
+        {
+        }
+
+        /// <summary>
+        /// Full application constructor. Supplying phase2 + typedStore enables Apps, Queries,
+        /// and Records while preserving every legacy constructor for binary compatibility.
+        /// </summary>
+        private MegaFormClient(IFormRepository forms, ISubmissionRepository submissions, IPlatformContext? platform, IFileRepository? files, IStorageService? storage, SubmissionProcessor? submissionProcessor, WorkflowTaskService? workflowTasks, IWorkflowRepository? workflowRepository, IPhase2Repository? phase2, ISubmissionDataStore? typedStore)
         {
             _forms = forms ?? throw new ArgumentNullException(nameof(forms));
             _submissions = submissions ?? throw new ArgumentNullException(nameof(submissions));
@@ -58,7 +71,25 @@ namespace MegaForm.Sdk
             _processor = submissionProcessor;
             _workflowTasks = workflowTasks;
             _workflowRepository = workflowRepository;
+            _phase2 = phase2;
+            _typedStore = typedStore;
         }
+
+        /// <summary>Create a fully wired client with typed app/query/record APIs enabled.</summary>
+        public static MegaFormClient CreateApplicationClient(
+            IFormRepository forms,
+            ISubmissionRepository submissions,
+            IPlatformContext? platform,
+            IFileRepository? files,
+            IStorageService? storage,
+            SubmissionProcessor? submissionProcessor,
+            WorkflowTaskService? workflowTasks,
+            IWorkflowRepository? workflowRepository,
+            IPhase2Repository phase2,
+            ISubmissionDataStore typedStore) =>
+            new MegaFormClient(
+                forms, submissions, platform, files, storage, submissionProcessor,
+                workflowTasks, workflowRepository, phase2, typedStore);
 
         /// <inheritdoc/>
         public IFormApi Forms => this;
@@ -79,7 +110,22 @@ namespace MegaForm.Sdk
         public IFileApi Files => this;
 
         /// <inheritdoc/>
+        public IGalleryApi Gallery => this;
+
+        /// <inheritdoc/>
         public ISchemaApi Schema => this;
+
+        /// <inheritdoc/>
+        public IAppApi Apps => this;
+
+        /// <inheritdoc/>
+        public IQueryApi Queries => this;
+
+        /// <inheritdoc/>
+        public IRecordApi Records => this;
+
+        /// <inheritdoc/>
+        public IWorkflowApi Workflows => this;
 
         private int ResolvePortalId(MegaFormScope? scope)
         {
@@ -291,6 +337,291 @@ namespace MegaForm.Sdk
             var form = _forms.GetForm(formId);
             return form != null && (form.PortalId == 0 || portalId == 0 || form.PortalId == portalId);
         }
+
+        // ── App / Query / Record APIs ─────────────────────────────────────────
+
+        /// <inheritdoc/>
+        public Task<AppDto?> GetAppAsync(string appKey, MegaFormScope? scope = null, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (string.IsNullOrWhiteSpace(appKey)) throw new ArgumentException("App key is required.", nameof(appKey));
+            var portalId = ResolvePortalId(scope);
+            var bundle = new AppDefinitionService(RequirePhase2(), _forms).Get(portalId, appKey, true);
+            if (bundle?.App == null) return Task.FromResult<AppDto?>(null);
+
+            return Task.FromResult<AppDto?>(new AppDto
+            {
+                AppId = bundle.App.AppId,
+                AppKey = bundle.App.AppKey,
+                AppName = bundle.App.AppName,
+                Description = bundle.App.Description,
+                AppScope = bundle.App.AppScope,
+                Icon = bundle.App.Icon,
+                AccentColor = bundle.App.AccentColor,
+                IsEnabled = bundle.App.IsEnabled,
+                Forms = (bundle.Manifest?.Forms ?? new List<AppManifestFormRef>())
+                    .Select(x => new AppFormRefDto
+                    {
+                        FormId = x.FormId,
+                        Alias = x.Alias,
+                        Role = x.Role,
+                        Title = x.Title,
+                        IsPrimary = x.IsPrimary
+                    }).ToList(),
+                Queries = (bundle.Manifest?.Queries ?? new List<AppManifestQueryRef>())
+                    .Select(x => new AppQueryRefDto
+                    {
+                        QueryId = x.QueryId,
+                        FormId = x.FormId,
+                        QueryKey = x.QueryKey,
+                        QueryType = x.QueryType,
+                        Alias = x.Alias
+                    }).ToList()
+            });
+        }
+
+        /// <inheritdoc/>
+        public Task<AppQueryResultDto> ExecuteAsync(string appKey, string queryKey, AppQueryRequest? request = null, MegaFormScope? scope = null, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (string.IsNullOrWhiteSpace(appKey)) throw new ArgumentException("App key is required.", nameof(appKey));
+            if (string.IsNullOrWhiteSpace(queryKey)) throw new ArgumentException("Query key is required.", nameof(queryKey));
+            request ??= new AppQueryRequest();
+            var result = RequireAppRecords().Execute(new AppRecordQueryRequest
+            {
+                PortalId = ResolvePortalId(scope),
+                AppKey = appKey,
+                QueryKey = queryKey,
+                Page = request.Page,
+                PageSize = request.PageSize,
+                Search = request.Search,
+                Parameters = request.Parameters ?? new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+            });
+
+            return Task.FromResult(new AppQueryResultDto
+            {
+                AppKey = result.App?.AppKey,
+                QueryKey = result.Query?.QueryKey,
+                FormId = result.Form?.FormId ?? 0,
+                Items = result.Items.Select(ToAppRecordDto).ToList(),
+                TotalCount = result.TotalCount,
+                Page = result.Page,
+                PageSize = result.PageSize,
+                IsBounded = result.IsBounded
+            });
+        }
+
+        /// <inheritdoc/>
+        public async Task<GalleryResultDto> QueryGalleryAsync(GalleryQueryRequest request, MegaFormScope? scope = null, CancellationToken cancellationToken = default)
+        {
+            if (request == null) throw new ArgumentNullException(nameof(request));
+            if (string.IsNullOrWhiteSpace(request.AppKey)) throw new ArgumentException("App key is required.", nameof(request));
+            if (string.IsNullOrWhiteSpace(request.QueryKey)) throw new ArgumentException("Query key is required.", nameof(request));
+
+            var source = await ExecuteAsync(
+                request.AppKey,
+                request.QueryKey,
+                request.Query ?? new AppQueryRequest(),
+                scope,
+                cancellationToken).ConfigureAwait(false);
+
+            var fieldKeys = request.ImageFieldKeys == null || request.ImageFieldKeys.Count == 0
+                ? new List<string>
+                {
+                    "featured_image_url", "image_url", "author_avatar_url",
+                    "avatar_url", "photo_url", "thumbnail_url"
+                }
+                : request.ImageFieldKeys
+                    .Where(key => !string.IsNullOrWhiteSpace(key))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+            var items = new List<GalleryItemDto>();
+            var urls = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var record in source.Items ?? Array.Empty<AppRecordDto>())
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var title = GalleryText(record, request.TitleFieldKey, "Record #" + record.SubmissionId);
+                var altText = GalleryText(record, request.AltTextFieldKey, title);
+                var caption = GalleryText(record, request.CaptionFieldKey, string.Empty);
+
+                foreach (var fieldKey in fieldKeys)
+                {
+                    if (record.Data == null || !record.Data.TryGetValue(fieldKey, out var raw)) continue;
+                    var url = NormalizeGalleryUrl(Convert.ToString(raw, CultureInfo.InvariantCulture));
+                    if (string.IsNullOrWhiteSpace(url)) continue;
+                    if (request.DeduplicateByUrl && !urls.Add(url)) continue;
+
+                    items.Add(new GalleryItemDto
+                    {
+                        ItemId = "record:" + record.SubmissionId + ":" + fieldKey,
+                        SubmissionId = record.SubmissionId,
+                        FormId = record.FormId,
+                        Source = "typed-field",
+                        FieldKey = fieldKey,
+                        Url = url,
+                        Title = title,
+                        AltText = altText,
+                        Caption = caption
+                    });
+                }
+
+                if (!request.IncludeUploadedImages || _files == null || _storage == null) continue;
+                foreach (var file in _files.GetBySubmission(record.SubmissionId) ?? new List<FileInfo>())
+                {
+                    if (!IsImageFile(file)) continue;
+                    string url;
+                    try { url = NormalizeGalleryUrl(_storage.GetFileUrl(file.StoredPath)); }
+                    catch { continue; }
+                    if (string.IsNullOrWhiteSpace(url)) continue;
+                    if (request.DeduplicateByUrl && !urls.Add(url)) continue;
+
+                    items.Add(new GalleryItemDto
+                    {
+                        ItemId = "file:" + file.FileId,
+                        SubmissionId = record.SubmissionId,
+                        FormId = record.FormId,
+                        Source = "uploaded-file",
+                        FieldKey = file.FieldKey,
+                        FileId = file.FileId,
+                        FileName = file.OriginalName,
+                        ContentType = file.ContentType,
+                        Url = url,
+                        Title = string.IsNullOrWhiteSpace(title) ? file.OriginalName : title,
+                        AltText = string.IsNullOrWhiteSpace(altText) ? file.OriginalName : altText,
+                        Caption = caption
+                    });
+                }
+            }
+
+            return new GalleryResultDto
+            {
+                AppKey = source.AppKey,
+                QueryKey = source.QueryKey,
+                FormId = source.FormId,
+                Items = items,
+                SourceRecordCount = source.TotalCount,
+                Page = source.Page,
+                PageSize = source.PageSize,
+                IsBounded = source.IsBounded
+            };
+        }
+
+        /// <inheritdoc/>
+        public Task<AppRecordDto?> GetRecordAsync(int submissionId, MegaFormScope? scope = null, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var record = RequireAppRecords().GetRecord(ResolvePortalId(scope), submissionId);
+            return Task.FromResult(record == null ? null : ToAppRecordDto(record));
+        }
+
+        /// <inheritdoc/>
+        public Task<AppRecordDto?> PatchRecordAsync(int submissionId, Dictionary<string, object> values, MegaFormScope? scope = null, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (values == null) throw new ArgumentNullException(nameof(values));
+            if (_typedStore == null)
+                throw new InvalidOperationException("Typed submission storage is required for record updates.");
+            if (!IsSubmissionInPortal(submissionId, scope))
+                return Task.FromResult<AppRecordDto?>(null);
+
+            var submission = _submissions.Get(submissionId);
+            var form = _forms.GetForm(submission.FormId);
+            var data = new SubmissionDataResolver(_typedStore)
+                .GetTypedFirstData(submissionId, submission.DataJson);
+            foreach (var pair in values)
+                data[pair.Key] = pair.Value;
+
+            FormSchema schema;
+            try
+            {
+                schema = RenderModelResolver.Resolve(
+                    form.SchemaJson, form.SettingsJson, form.SubmitButtonText,
+                    form.SuccessMessage, form.RedirectUrl).Schema ?? new FormSchema();
+            }
+            catch
+            {
+                throw new InvalidOperationException("Form schema is invalid; the record was not changed.");
+            }
+
+            var fields = new SubmissionFieldNormalizer().Normalize(form.FormId, schema, data);
+            _typedStore.ReplaceFields(submissionId, form.FormId, fields);
+
+            // Submission.Status is the canonical workflow/query status. If callers
+            // patch the logical status field, keep the master column in the same
+            // operation so named-query filtering cannot diverge from typed data.
+            if (values.TryGetValue("status", out var patchedStatus))
+            {
+                var status = Convert.ToString(patchedStatus);
+                if (!string.IsNullOrWhiteSpace(status))
+                    _submissions.UpdateStatus(submissionId, status);
+            }
+
+            // Compatibility mirror only. New APIs read the typed rows above; legacy DNN
+            // renderers continue to work until their read path is migrated.
+            _submissions.UpdateData(submissionId, JsonConvert.SerializeObject(data));
+            var updated = RequireAppRecords().GetRecord(ResolvePortalId(scope), submissionId);
+            return Task.FromResult(updated == null ? null : ToAppRecordDto(updated));
+        }
+
+        private IPhase2Repository RequirePhase2() =>
+            _phase2 ?? throw new InvalidOperationException(
+                "App APIs are unavailable because the host did not register IPhase2Repository.");
+
+        private AppRecordQueryService RequireAppRecords() =>
+            new AppRecordQueryService(RequirePhase2(), _forms, _submissions, _typedStore);
+
+        private static string GalleryText(AppRecordDto record, string? fieldKey, string fallback)
+        {
+            if (record?.Data == null || string.IsNullOrWhiteSpace(fieldKey))
+                return fallback;
+            var safeFieldKey = fieldKey!;
+            if (!record.Data.TryGetValue(safeFieldKey, out var value) || value == null)
+                return fallback;
+            var text = Convert.ToString(value, CultureInfo.InvariantCulture);
+            return string.IsNullOrWhiteSpace(text) ? fallback : text!;
+        }
+
+        private static string NormalizeGalleryUrl(string? value)
+        {
+            var url = (value ?? string.Empty).Trim();
+            if (url.Length == 0) return string.Empty;
+            if (url.StartsWith("data:image/", StringComparison.OrdinalIgnoreCase)) return url;
+            if (url.StartsWith("~/", StringComparison.Ordinal)) return "/" + url.Substring(2);
+            if (url.StartsWith("/", StringComparison.Ordinal)) return url;
+            if (Uri.TryCreate(url, UriKind.Absolute, out var absolute) &&
+                (absolute.Scheme == Uri.UriSchemeHttp || absolute.Scheme == Uri.UriSchemeHttps))
+                return url;
+            return string.Empty;
+        }
+
+        private static bool IsImageFile(FileInfo file)
+        {
+            if (file == null) return false;
+            if (!string.IsNullOrWhiteSpace(file.ContentType) &&
+                file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+                return true;
+            var name = file.OriginalName ?? string.Empty;
+            return name.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)
+                || name.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase)
+                || name.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
+                || name.EndsWith(".gif", StringComparison.OrdinalIgnoreCase)
+                || name.EndsWith(".webp", StringComparison.OrdinalIgnoreCase)
+                || name.EndsWith(".svg", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static AppRecordDto ToAppRecordDto(AppRecordInfo record) => new AppRecordDto
+        {
+            SubmissionId = record.SubmissionId,
+            FormId = record.FormId,
+            Status = record.Status,
+            UserId = record.UserId,
+            SubmittedOnUtc = record.SubmittedOnUtc,
+            Data = new Dictionary<string, object>(
+                record.Data ?? new Dictionary<string, object>(),
+                StringComparer.OrdinalIgnoreCase),
+            IsTyped = record.IsTyped
+        };
 
         private static SubmitResult ToSubmitResult(CoreSubmitResult r) => new SubmitResult
         {

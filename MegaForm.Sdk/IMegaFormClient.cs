@@ -29,8 +29,60 @@ namespace MegaForm.Sdk
         /// <summary>Uploaded-file listing + download.</summary>
         IFileApi Files { get; }
 
+        /// <summary>Typed image gallery projections over app named queries and uploaded files.</summary>
+        IGalleryApi Gallery { get; }
+
         /// <summary>Parse a form's SchemaJson into typed, read-only field metadata.</summary>
         ISchemaApi Schema { get; }
+
+        /// <summary>Persistent application manifests and form/query bindings.</summary>
+        IAppApi Apps { get; }
+
+        /// <summary>Execute persistent named queries and receive typed record dictionaries.</summary>
+        IQueryApi Queries { get; }
+
+        /// <summary>Read and patch typed application records without parsing DataJson.</summary>
+        IRecordApi Records { get; }
+
+        /// <summary>First-class workflow surface; Inbox remains a compatibility alias.</summary>
+        IWorkflowApi Workflows { get; }
+    }
+
+    /// <summary>Read persistent MegaForm application definitions.</summary>
+    public interface IAppApi
+    {
+        Task<AppDto?> GetAppAsync(string appKey, MegaFormScope? scope = null, CancellationToken cancellationToken = default);
+    }
+
+    /// <summary>Execute a persisted app named query against typed records.</summary>
+    public interface IQueryApi
+    {
+        Task<AppQueryResultDto> ExecuteAsync(string appKey, string queryKey, AppQueryRequest? request = null, MegaFormScope? scope = null, CancellationToken cancellationToken = default);
+    }
+
+    /// <summary>Typed-first record access. DataJson is not exposed by this API.</summary>
+    public interface IRecordApi
+    {
+        Task<AppRecordDto?> GetRecordAsync(int submissionId, MegaFormScope? scope = null, CancellationToken cancellationToken = default);
+        Task<AppRecordDto?> PatchRecordAsync(int submissionId, Dictionary<string, object> values, MegaFormScope? scope = null, CancellationToken cancellationToken = default);
+    }
+
+    /// <summary>
+    /// Builds reusable image galleries from typed application records and MegaForm-managed files.
+    /// The caller controls field mapping, so the same API can project posts, authors, products,
+    /// portfolios, or any other image-bearing form.
+    /// </summary>
+    public interface IGalleryApi
+    {
+        Task<GalleryResultDto> QueryGalleryAsync(GalleryQueryRequest request, MegaFormScope? scope = null, CancellationToken cancellationToken = default);
+    }
+
+    /// <summary>
+    /// Workflow task API promoted as a first-class application capability.
+    /// It intentionally reuses the battle-tested Inbox contract.
+    /// </summary>
+    public interface IWorkflowApi : IInboxApi
+    {
     }
 
     /// <summary>Parse a form's schema JSON into typed field metadata (pure, no I/O).</summary>
