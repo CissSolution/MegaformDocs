@@ -200,7 +200,7 @@ namespace MegaForm.DNN.Services
             // constructor. The 4-argument one left the sender null and forwarded in silence.
             WorkflowTasks = new WorkflowTaskService(WorkflowRepo, WorkflowRuntime, SubmissionRepo,
                 WorkflowEvaluator, WorkflowEmail, WorkflowPrincipals, LogService, null,
-                new PermissionService(Phase2Repo));
+                new PermissionService(Phase2Repo), DataResolver, TypedResync);
             Permission = new PermissionService(Phase2Repo);
 
             // [B55 v20260603] DNN connection factory targets the same
@@ -310,10 +310,11 @@ namespace MegaForm.DNN.Services
             //    SubmissionDashboard.GetDetailAsync — without them every Inbox call throws.
             // These are the same repositories the rest of DNN already uses, so this only exposes the
             // existing behavior through the SDK; it does not change how files or tasks are stored.
-            var sdkClient = new MegaFormClient(
+            var sdkClient = MegaFormClient.CreateApplicationClient(
                 FormRepo, SubmissionRepo, null,
                 new DnnFileRepository(), new DnnDiskStorageService(),
-                SubmissionProcessor, WorkflowTasks, WorkflowRepo);
+                SubmissionProcessor, WorkflowTasks, WorkflowRepo,
+                Phase2Repo, TypedStore);
             MegaFormSdk.Initialize(new SingleClientServiceProvider(sdkClient));
         }
 

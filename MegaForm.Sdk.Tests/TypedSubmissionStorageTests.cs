@@ -214,6 +214,21 @@ namespace MegaForm.Sdk.Tests
         }
 
         [Fact]
+        public void ExtractTypedValues_LongString_UsesLosslessLongTextStorage()
+        {
+            var value = new string('x', 1025);
+            var values = _normalizer.ExtractTypedValues(new SubmissionFieldWrite
+            {
+                FieldKey = "featured_image_url",
+                DataType = "string",
+                Value = value
+            });
+
+            Assert.Empty(values.StringValues);
+            Assert.Equal(new[] { value }, values.LongTextValues);
+        }
+
+        [Fact]
         public void Normalize_CompositeField_StoresJson()
         {
             var schema = new FormSchema

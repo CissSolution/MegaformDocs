@@ -607,7 +607,12 @@ namespace MegaForm.Core.Services.Starters
                     DueInHours = 24,
                     PendingSubmissionStatus = pending,
                     ApprovedSubmissionStatus = approved,
-                    RejectedSubmissionStatus = rejected
+                    RejectedSubmissionStatus = rejected,
+                    // Seed identities use *.local addresses. Avoid blocking starter
+                    // installation on SMTP retries; real deployments can enable mail
+                    // after configuring their transport.
+                    NotifyOnCreate = false,
+                    NotifyOnForward = false
                 })
             };
         }

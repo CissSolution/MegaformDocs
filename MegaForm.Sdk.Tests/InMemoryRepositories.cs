@@ -110,6 +110,7 @@ namespace MegaForm.Sdk.Tests
 
     internal sealed class InMemoryWorkflowRepository : IWorkflowRepository
     {
+        private readonly Dictionary<int, WorkflowDefinition> _definitions = new();
         private readonly Dictionary<string, WorkflowCaseInstance> _cases = new();
         private readonly Dictionary<string, WorkflowExecutionContext> _executions = new();
         private readonly Dictionary<string, WorkflowTaskInstance> _tasks = new();
@@ -118,8 +119,9 @@ namespace MegaForm.Sdk.Tests
         public WorkflowEnvelope GetEnvelope(int formId) => new WorkflowEnvelope();
         public void SaveDraft(int formId, WorkflowDefinition draft) { }
         public void ApplyDraft(int formId, string appliedBy = "system") { }
-        public WorkflowDefinition GetByFormId(int formId) => null;
-        public void Save(int formId, WorkflowDefinition definition) { }
+        public WorkflowDefinition GetByFormId(int formId) =>
+            _definitions.TryGetValue(formId, out var definition) ? definition : null;
+        public void Save(int formId, WorkflowDefinition definition) => _definitions[formId] = definition;
 
         public string SaveExecution(WorkflowExecutionContext ctx)
         {

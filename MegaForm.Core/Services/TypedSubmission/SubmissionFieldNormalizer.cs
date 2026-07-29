@@ -16,6 +16,11 @@ namespace MegaForm.Core.Services.TypedSubmission
     /// </summary>
     public sealed class SubmissionFieldNormalizer
     {
+        // Matches MF_SubmissionValueString.Value (nvarchar(1024)). Text controls
+        // normally use the string table, but valid data URIs and plugin values can
+        // exceed that physical limit. Route those values to long-text losslessly.
+        private const int MaxStringStorageLength = 1024;
+
         /// <summary>
         /// Maps a form field type to the canonical typed storage classification.
         /// </summary>
@@ -165,7 +170,7 @@ namespace MegaForm.Core.Services.TypedSubmission
             {
                 case SubmissionDataType.String:
                     foreach (var p in parts.Where(x => x != null))
-                        values.StringValues.Add(p);
+                        AddLosslessString(values, p);
                     break;
 
                 case SubmissionDataType.LongText:
@@ -181,7 +186,7 @@ namespace MegaForm.Core.Services.TypedSubmission
                         else if (!string.IsNullOrWhiteSpace(p))
                             // Lossless fallback: an unparseable numeric value must NEVER be dropped,
                             // otherwise the reconstructed dictionary loses it once DataJson is off.
-                            values.StringValues.Add(p);
+                            AddLosslessString(values, p);
                     }
                     break;
 
@@ -193,7 +198,7 @@ namespace MegaForm.Core.Services.TypedSubmission
                             values.DateValues.Add(dt);
                         else if (!string.IsNullOrWhiteSpace(p))
                             // Lossless fallback (see Number above).
-                            values.StringValues.Add(p);
+                            AddLosslessString(values, p);
                     }
                     break;
 
@@ -215,6 +220,14 @@ namespace MegaForm.Core.Services.TypedSubmission
             }
 
             return values;
+        }
+
+        private static void AddLosslessString(TypedFieldValues values, string value)
+        {
+            if (value != null && value.Length > MaxStringStorageLength)
+                values.LongTextValues.Add(value);
+            else
+                values.StringValues.Add(value);
         }
 
         private static bool IsNonDataField(FormField field)

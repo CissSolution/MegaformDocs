@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MegaForm.Core.Interfaces;
 using MegaForm.Core.Models;
+using MegaForm.Core.Services.TypedSubmission;
 using MegaForm.Core.Workflow;
 using Newtonsoft.Json;
 
@@ -25,6 +26,8 @@ namespace MegaForm.Core.Services
         private readonly ILogService _log;
         private readonly DocumentRevisionService _documentRevisionService;
         private readonly PermissionService _permissions;
+        private readonly SubmissionDataResolver _dataResolver;
+        private readonly TypedSubmissionResyncService _typedResync;
 
         public WorkflowTaskService(
             IWorkflowRepository repo,
@@ -32,7 +35,9 @@ namespace MegaForm.Core.Services
             ISubmissionRepository submissionRepo,
             ILogService log = null,
             DocumentRevisionService documentRevisionService = null,
-            PermissionService permissions = null)
+            PermissionService permissions = null,
+            SubmissionDataResolver dataResolver = null,
+            TypedSubmissionResyncService typedResync = null)
         {
             _repo = repo;
             _engine = engine;
@@ -40,6 +45,8 @@ namespace MegaForm.Core.Services
             _log = log;
             _documentRevisionService = documentRevisionService;
             _permissions = permissions;
+            _dataResolver = dataResolver;
+            _typedResync = typedResync;
         }
 
         public WorkflowTaskService(
@@ -51,8 +58,10 @@ namespace MegaForm.Core.Services
             IWorkflowPrincipalResolver principalResolver,
             ILogService log = null,
             DocumentRevisionService documentRevisionService = null,
-            PermissionService permissions = null)
-            : this(repo, engine, submissionRepo, log, documentRevisionService, permissions)
+            PermissionService permissions = null,
+            SubmissionDataResolver dataResolver = null,
+            TypedSubmissionResyncService typedResync = null)
+            : this(repo, engine, submissionRepo, log, documentRevisionService, permissions, dataResolver, typedResync)
         {
             _evaluator = evaluator;
             _emailSender = emailSender;
@@ -354,7 +363,7 @@ namespace MegaForm.Core.Services
 
             if (task.SubmissionId > 0 && !string.IsNullOrWhiteSpace(task.PendingSubmissionStatus))
             {
-                try { _submissionRepo.UpdateStatus(task.SubmissionId, task.PendingSubmissionStatus); }
+                try { UpdateSubmissionStatus(task.SubmissionId, task.PendingSubmissionStatus); }
                 catch (Exception ex) { _log?.LogWarning("MegaForm.Workflow", "Forward status update failed: " + ex.Message); }
                 try { _documentRevisionService?.SyncWorkflowStatus(task.SubmissionId, task.PendingSubmissionStatus, actor.UserId); }
                 catch (Exception ex) { _log?.LogWarning("MegaForm.Workflow", "Forward document status sync failed: " + ex.Message); }
@@ -502,7 +511,7 @@ namespace MegaForm.Core.Services
                 if (ctx != null && ctx.Status == WorkflowExecutionStatus.Waiting)
                 {
                     var waitingStatus = ResolveWaitingSubmissionStatus(task, ctx);
-                    _submissionRepo.UpdateStatus(task.SubmissionId, waitingStatus);
+                    UpdateSubmissionStatus(task.SubmissionId, waitingStatus);
                     _documentRevisionService?.SyncWorkflowStatus(task.SubmissionId, waitingStatus, task.AssignedUserId);
                     return;
                 }
@@ -510,7 +519,7 @@ namespace MegaForm.Core.Services
                 if (string.Equals(outcomeHandle, "rejected", StringComparison.OrdinalIgnoreCase))
                 {
                     var rejectedStatus = task.RejectedSubmissionStatus ?? "rejected";
-                    _submissionRepo.UpdateStatus(task.SubmissionId, rejectedStatus);
+                    UpdateSubmissionStatus(task.SubmissionId, rejectedStatus);
                     _documentRevisionService?.SyncWorkflowStatus(task.SubmissionId, rejectedStatus, task.AssignedUserId);
                     return;
                 }
@@ -518,7 +527,7 @@ namespace MegaForm.Core.Services
                 if (ctx != null && ctx.Status == WorkflowExecutionStatus.Completed)
                 {
                     var approvedStatus = task.ApprovedSubmissionStatus ?? "approved";
-                    _submissionRepo.UpdateStatus(task.SubmissionId, approvedStatus);
+                    UpdateSubmissionStatus(task.SubmissionId, approvedStatus);
                     _documentRevisionService?.SyncWorkflowStatus(task.SubmissionId, approvedStatus, task.AssignedUserId);
                 }
             }
@@ -648,6 +657,46 @@ namespace MegaForm.Core.Services
         {
             if (!IsAssignedToActor(task, actor) && !CanActorClaim(task, actor))
                 throw new InvalidOperationException("You do not have access to this task.");
+        }
+
+        private void UpdateSubmissionStatus(int submissionId, string status)
+        {
+            _submissionRepo.UpdateStatus(submissionId, status);
+
+            // Keep the status field inside the typed record aligned with the master
+            // submission status. DataJson is written only as the compatibility mirror.
+            if (_typedResync == null || string.IsNullOrWhiteSpace(status))
+                return;
+
+            try
+            {
+                var submission = _submissionRepo.Get(submissionId);
+                if (submission == null)
+                    return;
+
+                Dictionary<string, object> data;
+                if (_dataResolver != null)
+                {
+                    data = _dataResolver.GetTypedFirstData(submissionId, submission.DataJson);
+                }
+                else
+                {
+                    data = string.IsNullOrWhiteSpace(submission.DataJson)
+                        ? new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                        : JsonConvert.DeserializeObject<Dictionary<string, object>>(submission.DataJson)
+                            ?? new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+                }
+
+                data["status"] = status;
+                var compatibilityJson = JsonConvert.SerializeObject(data);
+                _submissionRepo.UpdateData(submissionId, compatibilityJson);
+                _typedResync.Resync(submissionId, submission.FormId, compatibilityJson);
+            }
+            catch (Exception ex)
+            {
+                _log?.LogWarning(nameof(WorkflowTaskService),
+                    $"Workflow status typed-sync failed for submission {submissionId}; master status remains '{status}'. {ex.Message}");
+            }
         }
 
         private bool CanActorWork(WorkflowTaskInstance task, UserContext actor)

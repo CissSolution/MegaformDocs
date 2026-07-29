@@ -133,7 +133,8 @@ namespace MegaForm.Core.Services
             if (ctx.Status == WorkflowExecutionStatus.Running)
                 ctx.Status = WorkflowExecutionStatus.Completed;
 
-            ctx.CompletedAt = DateTime.UtcNow;
+            if (ctx.Status != WorkflowExecutionStatus.Waiting)
+                ctx.CompletedAt = DateTime.UtcNow;
 
             // Persist final state
             try { _repo.UpdateExecution(ctx); }
@@ -298,6 +299,16 @@ namespace MegaForm.Core.Services
 
                     ctx.Status       = WorkflowExecutionStatus.Failed;
                     ctx.ErrorMessage = nodeResult.Error ?? "Node '" + node.Label + "' failed.";
+                    return;
+                }
+
+                // A human-task node parks the workflow until WorkflowTaskService resumes
+                // it with an explicit outcome. Walking the default edge here bypasses the
+                // approval and leaves the submit request waiting on later side effects.
+                if (string.Equals(nodeResult.Status, "waiting", StringComparison.OrdinalIgnoreCase))
+                {
+                    ctx.Status = WorkflowExecutionStatus.Waiting;
+                    try { _repo.UpdateExecution(ctx); } catch { }
                     return;
                 }
 

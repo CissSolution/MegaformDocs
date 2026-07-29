@@ -15,6 +15,7 @@ using MegaForm.Core.Interfaces;
 using MegaForm.Core.Models;
 using MegaForm.Core.ViewModes;
 using MegaForm.Core.Workflow;
+using MegaForm.Core.Services.TypedSubmission;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -54,6 +55,8 @@ namespace MegaForm.Core.Services.Starters
         private readonly IWorkflowIdentityProvisioningService _identityProvisioning;
         private readonly IStarterPlatformAdapter _platform;
         private readonly ILogService _log;
+        private readonly SubmissionDataResolver _dataResolver;
+        private readonly TypedSubmissionResyncService _typedResync;
 
 #pragma warning disable CS8625
         public ConfiguredAppStarterService(
@@ -67,7 +70,9 @@ namespace MegaForm.Core.Services.Starters
             AppQueryRegistryService queries,
             IWorkflowIdentityProvisioningService identityProvisioning,
             IStarterPlatformAdapter platform,
-            ILogService log = null)
+            ILogService log = null,
+            SubmissionDataResolver dataResolver = null,
+            TypedSubmissionResyncService typedResync = null)
         {
             _forms = forms ?? throw new ArgumentNullException(nameof(forms));
             _submissions = submissions ?? throw new ArgumentNullException(nameof(submissions));
@@ -80,6 +85,8 @@ namespace MegaForm.Core.Services.Starters
             _identityProvisioning = identityProvisioning ?? throw new ArgumentNullException(nameof(identityProvisioning));
             _platform = platform ?? throw new ArgumentNullException(nameof(platform));
             _log = log;
+            _dataResolver = dataResolver ?? new SubmissionDataResolver(null);
+            _typedResync = typedResync;
         }
 #pragma warning restore CS8625
 
@@ -687,24 +694,9 @@ namespace MegaForm.Core.Services.Starters
                 .Select(s => new AppStarterSeededSubmission
                 {
                     SubmissionId = s.SubmissionId,
-                    Data = ParseDataJson(s.DataJson)
+                    Data = _dataResolver.GetData(s.SubmissionId, s.DataJson)
                 })
                 .ToList();
-        }
-
-        private Dictionary<string, object> ParseDataJson(string dataJson)
-        {
-            if (string.IsNullOrWhiteSpace(dataJson))
-                return new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
-            try
-            {
-                return JsonConvert.DeserializeObject<Dictionary<string, object>>(dataJson)
-                       ?? new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
-            }
-            catch
-            {
-                return new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
-            }
         }
 
         private static string ResolveSubmissionKey(AppStarterSeededSubmission row, string key)
@@ -790,6 +782,9 @@ namespace MegaForm.Core.Services.Starters
                 FieldKey = pair.Key,
                 FieldValue = SerializeSubmissionValue(pair.Value)
             }).ToList());
+            // Direct starter rows follow the same typed-first storage contract as normal
+            // submissions. DataJson remains only as the legacy compatibility mirror.
+            _typedResync?.Resync(submissionId, formId, submission.DataJson);
             PersistAttachments(submissionId, attachments);
             return submissionId;
         }
@@ -870,9 +865,11 @@ namespace MegaForm.Core.Services.Starters
 
             try
             {
-                var data = JObject.Parse(submission.DataJson);
+                var data = _dataResolver.GetData(submissionId, submission.DataJson);
                 data["status"] = status;
-                _submissions.UpdateData(submissionId, data.ToString(Newtonsoft.Json.Formatting.None));
+                var updatedJson = JsonConvert.SerializeObject(data);
+                _submissions.UpdateData(submissionId, updatedJson);
+                _typedResync?.Resync(submissionId, submission.FormId, updatedJson);
             }
             catch { }
         }
@@ -882,9 +879,8 @@ namespace MegaForm.Core.Services.Starters
             try
             {
                 var submission = _submissions.Get(submissionId);
-                if (submission != null && !string.IsNullOrWhiteSpace(submission.DataJson))
-                    return JsonConvert.DeserializeObject<Dictionary<string, object>>(submission.DataJson)
-                           ?? new Dictionary<string, object>(fallback ?? new Dictionary<string, object>(), StringComparer.OrdinalIgnoreCase);
+                if (submission != null)
+                    return _dataResolver.GetData(submissionId, submission.DataJson);
             }
             catch { }
 
