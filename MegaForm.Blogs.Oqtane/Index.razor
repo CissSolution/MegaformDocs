@@ -1,0 +1,257 @@
+@namespace MegaForm.Blogs.Client
+@inherits ModuleBase
+@inject MegaForm.Sdk.IMegaFormClient Mega
+@inject NavigationManager Nav
+
+@* MegaForm Blogs - public Oqtane surface (twin of MegaFormBlogs.cshtml).
+   Data contract: IMegaFormClient only. No DataJson parsing, no direct database access. *@
+
+<link rel="stylesheet" href="/Modules/MegaFormBlogs/megaform-blogs.css?v=20260730a" />
+
+<main class="mfb" aria-labelledby="mfb-title">
+    @if (_loadError != null)
+    {
+        <section class="mfb-state mfb-state-error">
+            <strong>Blog is being prepared.</strong>
+            <span>@_loadError</span>
+        </section>
+    }
+    else if (_loading)
+    {
+        <section class="mfb-state">Loading stories…</section>
+    }
+    else if (_app == null)
+    {
+        <section class="mfb-state">The Blog Publishing app has not been installed for this site.</section>
+    }
+    else if (_detail != null)
+    {
+        var author = BlogData.Text(_detail, "author_name", "MegaForm Editorial");
+        var avatar = BlogData.Text(_detail, "author_avatar_url", "");
+        var tags = BlogData.Text(_detail, "tags", "").Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+        <article class="mfb-article">
+            <nav class="mfb-breadcrumb" aria-label="Breadcrumb">
+                <a href="@BaseUrl">Blog</a><span>/</span>
+                <span>@BlogData.Text(_detail, "category", "Insights")</span>
+            </nav>
+            <header class="mfb-article-head">
+                <span class="mfb-chip">@BlogData.Text(_detail, "content_type", "Article")</span>
+                <h1 id="mfb-title">@BlogData.Text(_detail, "title", "Untitled story")</h1>
+                <p class="mfb-lead">@BlogData.Text(_detail, "subtitle", BlogData.Text(_detail, "excerpt", ""))</p>
+                <div class="mfb-byline">
+                    @if (!string.IsNullOrWhiteSpace(avatar))
+                    {
+                        <img src="@avatar" alt="" />
+                    }
+                    else
+                    {
+                        <span class="mfb-avatar">@BlogData.Initials(author)</span>
+                    }
+                    <span><strong>@author</strong><small>@BlogData.Text(_detail, "publish_date", "") · @ReadingMinutes(_detail) min read</small></span>
+                </div>
+            </header>
+            <figure class="mfb-article-hero">
+                <img src="@ImageUrl(_detail)" alt="@BlogData.Text(_detail, "image_alt_text", BlogData.Text(_detail, "title", "Article image"))" />
+            </figure>
+            <div class="mfb-article-layout">
+                <div class="mfb-prose">@((MarkupString)BlogData.Text(_detail, "body", "<p>Article content is being prepared.</p>"))</div>
+                <aside>
+                    <section class="mfb-author-card">
+                        <span class="mfb-avatar mfb-avatar-lg">@BlogData.Initials(author)</span>
+                        <h2>@author</h2>
+                        <p class="mfb-muted">@BlogData.Text(_detail, "author_role", "Contributor")</p>
+                        <p>@BlogData.Text(_detail, "author_bio", "A member of the MegaForm editorial team.")</p>
+                    </section>
+                    @if (tags.Length > 0)
+                    {
+                        <section class="mfb-side-card">
+                            <h2>Topics</h2>
+                            <div class="mfb-tags">
+                                @foreach (var tag in tags)
+                                {
+                                    <span>#@tag.Trim()</span>
+                                }
+                            </div>
+                        </section>
+                    }
+                    @if (_detailFiles.Count > 0)
+                    {
+                        <section class="mfb-side-card">
+                            <h2>Attachments</h2>
+                            @foreach (var file in _detailFiles)
+                            {
+                                <a class="mfb-attachment" href="@($"/api/MegaForm/SdkDemo/Download?submissionId={_detail.SubmissionId}&fileId={file.FileId}")">
+                                    <span>↓</span> @file.FileName
+                                </a>
+                            }
+                        </section>
+                    }
+                </aside>
+            </div>
+        </article>
+    }
+    else
+    {
+        <section class="mfb-hero">
+            <div class="mfb-shell">
+                <span class="mfb-eyebrow">◆ Featured stories</span>
+                <h1 id="mfb-title">Insights &amp; Ideas</h1>
+                <p>Design, development and product thinking from the MegaForm community.</p>
+                @if (_featured != null)
+                {
+                    <article class="mfb-feature">
+                        <a class="mfb-feature-image" href="@SlugUrl(_featured)">
+                            <img src="@ImageUrl(_featured)" alt="@BlogData.Text(_featured, "image_alt_text", "")" />
+                            <span>Featured</span>
+                        </a>
+                        <div class="mfb-feature-copy">
+                            <div><span class="mfb-chip">@BlogData.Text(_featured, "category", "Insights")</span> <small>@ReadingMinutes(_featured) min read</small></div>
+                            <h2><a href="@SlugUrl(_featured)">@BlogData.Text(_featured, "title", "Untitled story")</a></h2>
+                            <p>@BlogData.Text(_featured, "excerpt", "")</p>
+                            <div class="mfb-card-foot">
+                                <span><strong>@BlogData.Text(_featured, "author_name", "MegaForm Editorial")</strong><small>@BlogData.Text(_featured, "publish_date", "")</small></span>
+                                <span>@BlogData.Compact(BlogData.Num(_featured, "view_count")) reads · @BlogData.Num(_featured, "comment_count") comments</span>
+                            </div>
+                        </div>
+                    </article>
+                }
+            </div>
+        </section>
+
+        <section class="mfb-shell mfb-content">
+            <div class="mfb-main">
+                <header class="mfb-section-head">
+                    <div><span class="mfb-trend">↗</span><h2>Popular this week</h2></div>
+                    <span>@_total stories</span>
+                </header>
+                @if (_posts.Count == 0)
+                {
+                    <div class="mfb-state">No published stories yet.</div>
+                }
+                else
+                {
+                    <div class="mfb-grid">
+                        @foreach (var post in _posts.Where(p => _featured == null || p.SubmissionId != _featured.SubmissionId))
+                        {
+                            <article class="mfb-card">
+                                <a class="mfb-card-image" href="@SlugUrl(post)">
+                                    <img src="@ImageUrl(post)" alt="@BlogData.Text(post, "image_alt_text", "")" />
+                                </a>
+                                <div class="mfb-card-body">
+                                    <div><span class="mfb-chip">@BlogData.Text(post, "category", "Insights")</span><small>@ReadingMinutes(post) min</small></div>
+                                    <h3><a href="@SlugUrl(post)">@BlogData.Text(post, "title", "Untitled story")</a></h3>
+                                    <p>@BlogData.Text(post, "excerpt", "")</p>
+                                    <div class="mfb-card-foot">
+                                        <span><strong>@BlogData.Text(post, "author_name", "MegaForm Editorial")</strong><small>@BlogData.Text(post, "publish_date", "")</small></span>
+                                        <span>@BlogData.Compact(BlogData.Num(post, "view_count")) reads</span>
+                                    </div>
+                                </div>
+                            </article>
+                        }
+                    </div>
+                }
+            </div>
+        </section>
+    }
+</main>
+
+@code {
+    private const string PlaceholderImage =
+        "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=1400&h=900&fit=crop";
+
+    private bool _loading = true;
+    private string _loadError;
+    private AppDto _app;
+    private AppRecordDto _featured;
+    private AppRecordDto _detail;
+    private List<AppRecordDto> _posts = new List<AppRecordDto>();
+    private IReadOnlyList<FileDto> _detailFiles = new List<FileDto>();
+    private int _total;
+    private string _slug = "";
+
+    public override string Title => "MegaForm Blogs";
+
+    private string BaseUrl => NavigateUrl(PageState.Page.Path);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _slug = ReadQuery("slug");
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            _loading = true;
+            var scope = new MegaFormScope { PortalId = PageState?.Site?.SiteId ?? 0 };
+            _app = await Mega.Apps.GetAppAsync(BlogData.AppKey, scope);
+            if (_app == null) return;
+
+            var request = new AppQueryRequest { Page = 1, PageSize = 12 };
+            if (!string.IsNullOrWhiteSpace(_slug))
+            {
+                request.PageSize = 1;
+                request.Parameters["slug"] = _slug;
+            }
+            var result = await Mega.Queries.ExecuteAsync(BlogData.AppKey, BlogData.PublicQuery, request, scope);
+            _posts = result?.Items?.ToList() ?? new List<AppRecordDto>();
+            _total = result?.TotalCount ?? 0;
+
+            if (!string.IsNullOrWhiteSpace(_slug))
+            {
+                _detail = _posts.FirstOrDefault();
+                _featured = null;
+                _detailFiles = _detail == null
+                    ? new List<FileDto>()
+                    : await Mega.Files.ListForSubmissionAsync(_detail.SubmissionId, scope);
+            }
+            else
+            {
+                _detail = null;
+                var featured = await Mega.Queries.ExecuteAsync(BlogData.AppKey, BlogData.FeaturedQuery,
+                    new AppQueryRequest { Page = 1, PageSize = 1 }, scope);
+                _featured = featured?.Items?.FirstOrDefault() ?? _posts.FirstOrDefault();
+            }
+            _loadError = null;
+        }
+        catch (Exception)
+        {
+            // This surface is anonymous: never echo exception text to visitors.
+            _loadError = "The blog could not be loaded. The site log has the details.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static string ImageUrl(AppRecordDto record)
+        => BlogData.Text(record, "featured_image_url", PlaceholderImage);
+
+    private string SlugUrl(AppRecordDto record)
+        => BaseUrl + "?slug=" + Uri.EscapeDataString(BlogData.Text(record, "slug", ""));
+
+    private static int ReadingMinutes(AppRecordDto record)
+    {
+        var configured = BlogData.Num(record, "reading_time");
+        if (configured > 0) return configured;
+        var plain = System.Text.RegularExpressions.Regex.Replace(BlogData.Text(record, "body", ""), "<[^>]+>", " ");
+        var words = System.Text.RegularExpressions.Regex.Matches(plain, @"\b[\p{L}\p{N}]+\b").Count;
+        return Math.Max(1, (int)Math.Ceiling(words / 220d));
+    }
+
+    private string ReadQuery(string key)
+    {
+        var uri = Nav?.Uri ?? "";
+        var index = uri.IndexOf('?');
+        if (index < 0) return "";
+        foreach (var part in uri.Substring(index + 1).Split(new[] { '&' }, StringSplitOptions.RemoveEmptyEntries))
+        {
+            var pair = part.Split(new[] { '=' }, 2);
+            if (pair.Length == 2 && pair[0].Equals(key, StringComparison.OrdinalIgnoreCase))
+                return Uri.UnescapeDataString(pair[1]).Trim();
+        }
+        return "";
+    }
+}

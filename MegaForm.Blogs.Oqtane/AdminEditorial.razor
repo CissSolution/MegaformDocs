@@ -1,0 +1,230 @@
+@namespace MegaForm.Blogs.Client
+@inject MegaForm.Sdk.IMegaFormClient Mega
+
+@* Screen 2 of 3 - twin of MegaFormBlogsAdminEditorial.cshtml.
+   Moving a card patches the canonical typed `status` field through Records.PatchRecordAsync;
+   MF_Submissions.Status stays the transport/workflow status. *@
+
+@if (_error != null)
+{
+    <div style="padding:16px 24px"><div class="mfba-notice err">@_error</div></div>
+}
+else if (_loading)
+{
+    <div class="mfba-board-wrap"><div class="mfba-empty">Loading the board…</div></div>
+}
+else
+{
+    @if (_message != null)
+    {
+        <div style="padding:12px 24px 0"><div class="mfba-notice ok">@_message</div></div>
+    }
+    @if (_truncated)
+    {
+        <div style="padding:12px 24px 0"><div class="mfba-notice err">Showing the first @_all.Count of @_total posts. Narrow the filters to see the rest.</div></div>
+    }
+
+    <div style="display:flex;flex-wrap:wrap;gap:12px;padding:16px 24px 0">
+        <span class="mfba-field">
+            @BlogData.Icon("search")
+            <input value="@_search" @oninput="OnSearch" placeholder="Search posts..." style="width:192px" aria-label="Search posts" />
+        </span>
+        <select class="mfba-select" value="@_author" @onchange="OnAuthor" aria-label="Filter by author">
+            <option value="">All Authors</option>
+            @foreach (var author in _authors)
+            {
+                <option value="@author">@author</option>
+            }
+        </select>
+        <select class="mfba-select" value="@_priority" @onchange="OnPriority" aria-label="Filter by priority">
+            <option value="">All Priorities</option>
+            <option value="Launch Critical">Launch Critical</option>
+            <option value="High">High</option>
+            <option value="Normal">Normal</option>
+            <option value="Low">Low</option>
+        </select>
+    </div>
+
+    <div class="mfba-board-wrap">
+        <div class="mfba-board">
+            @for (var columnIndex = 0; columnIndex < BlogData.StatusOrder.Length; columnIndex++)
+            {
+                var index = columnIndex;
+                var status = BlogData.StatusOrder[index];
+                var cards = Visible().Where(p => BlogData.StatusKey(p) == status)
+                    .OrderByDescending(p => p.SubmittedOnUtc).ToList();
+                <div class="mfba-kcol">
+                    <div class="mfba-kcol-head">
+                        <div>
+                            <span class="mfba-kdot" style="background:@BlogData.ColumnColor(status)"></span>
+                            <h3>@BlogData.ColumnLabel(status)</h3>
+                            <span class="mfba-kcount">@cards.Count</span>
+                        </div>
+                    </div>
+                    <div class="mfba-klist @(_dragging > 0 ? "over" : "")"
+                         @ondragover:preventDefault="true"
+                         @ondrop="() => DropAsync(status)">
+                        @foreach (var post in cards)
+                        {
+                            var id = post.SubmissionId;
+                            var image = BlogData.Text(post, "featured_image_url", "");
+                            var avatar = BlogData.Text(post, "author_avatar_url", "");
+                            var author = BlogData.Text(post, "author_name", "MegaForm Editorial");
+                            <article class="mfba-kcard @(_dragging == id ? "drag" : "")" draggable="true"
+                                     @ondragstart="() => _dragging = id" @ondragend="() => _dragging = 0">
+                                <div class="mfba-kcard-top">
+                                    <div>
+                                        @BlogData.Icon("grip", "mfba-icon mfba-icon-md")
+                                        <span class="mfba-pdot @BlogData.PriorityClass(post)"
+                                              title="@BlogData.Text(post, "editorial_priority", "Normal") priority"></span>
+                                    </div>
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(image))
+                                {
+                                    <div class="mfba-kthumb"><img src="@image" alt="@BlogData.Text(post, "image_alt_text", "")" loading="lazy" /></div>
+                                }
+                                <h4 class="mfba-clamp2">@BlogData.Text(post, "title", "Untitled story")</h4>
+                                <div class="mfba-kmeta">
+                                    <span>@BlogData.Icon("tag", "mfba-icon mfba-icon-sm")@BlogData.Text(post, "category", "Insights")</span>
+                                    @if (status == "scheduled")
+                                    {
+                                        var when = BlogData.Text(post, "publish_date", "");
+                                        @if (!string.IsNullOrWhiteSpace(when))
+                                        {
+                                            <span>@BlogData.Icon("calendar", "mfba-icon mfba-icon-sm")@when</span>
+                                        }
+                                    }
+                                </div>
+                                <div class="mfba-kfoot">
+                                    <div>
+                                        @if (!string.IsNullOrWhiteSpace(avatar))
+                                        {
+                                            <img src="@avatar" alt="" loading="lazy" />
+                                        }
+                                        else
+                                        {
+                                            <span class="mfba-avatar">@BlogData.Initials(author)</span>
+                                        }
+                                        <span>@author</span>
+                                    </div>
+                                    <time>@BlogData.Icon("clock", "mfba-icon mfba-icon-sm")@BlogData.Ago(post.SubmittedOnUtc)</time>
+                                </div>
+                                <div class="mfba-kmove">
+                                    @if (index > 0)
+                                    {
+                                        var previous = BlogData.StatusOrder[index - 1];
+                                        <button type="button" title="Move to @BlogData.ColumnLabel(previous)"
+                                                @onclick="() => MoveAsync(id, previous)">◀ @BlogData.ColumnLabel(previous)</button>
+                                    }
+                                    @if (index < BlogData.StatusOrder.Length - 1)
+                                    {
+                                        var next = BlogData.StatusOrder[index + 1];
+                                        <button type="button" title="Move to @BlogData.ColumnLabel(next)"
+                                                @onclick="() => MoveAsync(id, next)">@BlogData.ColumnLabel(next) ▶</button>
+                                    }
+                                </div>
+                            </article>
+                        }
+                        @if (cards.Count == 0)
+                        {
+                            <div class="mfba-kempty">Drop posts here</div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public MegaFormScope Scope { get; set; }
+    [Parameter] public string AdminBaseUrl { get; set; }
+
+    private bool _loading = true;
+    private string _error;
+    private string _message;
+    private bool _truncated;
+    private int _total;
+    private int _dragging;
+
+    private string _search = "";
+    private string _author = "";
+    private string _priority = "";
+
+    private List<AppRecordDto> _all = new List<AppRecordDto>();
+    private List<string> _authors = new List<string>();
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            _loading = true;
+            var queue = await Mega.Queries.ExecuteAsync(BlogData.AppKey, BlogData.PostsQuery,
+                new AppQueryRequest { Page = 1, PageSize = 200 }, Scope);
+            _all = queue?.Items?.ToList() ?? new List<AppRecordDto>();
+            _total = queue?.TotalCount ?? 0;
+            _truncated = _total > _all.Count;
+            _authors = _all.Select(p => BlogData.Text(p, "author_name", ""))
+                .Where(a => !string.IsNullOrWhiteSpace(a))
+                .Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(a => a).ToList();
+            _error = null;
+        }
+        catch (Exception ex)
+        {
+            _error = "The editorial board could not load: " + ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private IEnumerable<AppRecordDto> Visible()
+    {
+        return _all.Where(p =>
+            (string.IsNullOrWhiteSpace(_author)
+                || string.Equals(BlogData.Text(p, "author_name", ""), _author, StringComparison.OrdinalIgnoreCase))
+            && (string.IsNullOrWhiteSpace(_priority)
+                || string.Equals(BlogData.Text(p, "editorial_priority", "Normal"), _priority, StringComparison.OrdinalIgnoreCase))
+            && (string.IsNullOrWhiteSpace(_search)
+                || BlogData.Text(p, "title", "").IndexOf(_search, StringComparison.OrdinalIgnoreCase) >= 0));
+    }
+
+    private void OnSearch(ChangeEventArgs e) => _search = (e.Value?.ToString() ?? "").Trim();
+    private void OnAuthor(ChangeEventArgs e) => _author = e.Value?.ToString() ?? "";
+    private void OnPriority(ChangeEventArgs e) => _priority = e.Value?.ToString() ?? "";
+
+    private async Task DropAsync(string status)
+    {
+        var id = _dragging;
+        _dragging = 0;
+        if (id > 0) await MoveAsync(id, status);
+    }
+
+    private async Task MoveAsync(int submissionId, string status)
+    {
+        try
+        {
+            // Ownership check: only records this app's own named query returned may move.
+            if (!_all.Any(p => p.SubmissionId == submissionId))
+            {
+                _error = "That post does not belong to the Blog application.";
+                return;
+            }
+            if (!BlogData.StatusOrder.Contains(status)) return;
+
+            var saved = await Mega.Records.PatchRecordAsync(submissionId,
+                new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase) { ["status"] = status }, Scope);
+            _message = saved == null
+                ? "The post no longer exists."
+                : "Moved #" + submissionId + " to " + BlogData.ColumnLabel(status).ToLowerInvariant() + ".";
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = "The move failed: " + ex.Message;
+        }
+    }
+}

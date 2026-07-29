@@ -1,0 +1,406 @@
+@namespace MegaForm.Blogs.Client
+@inject MegaForm.Sdk.IMegaFormClient Mega
+
+@* Screen 1 of 3 - twin of MegaFormBlogsAdmin.cshtml. Typed reads only, no DataJson. *@
+
+@if (_error != null)
+{
+    <main class="mfba-body"><div class="mfba-notice err">@_error</div></main>
+}
+else if (_loading)
+{
+    <main class="mfba-body"><div class="mfba-empty">Loading the editorial console…</div></main>
+}
+else
+{
+    <main class="mfba-body">
+        @if (_message != null)
+        {
+            <div class="mfba-notice ok">@_message</div>
+        }
+
+        <section class="mfba-stats" aria-label="Blog key figures">
+            <div class="mfba-stat">
+                <div class="mfba-stat-top">
+                    <span class="mfba-stat-chip mfba-c-blue">@BlogData.Icon("file-text")</span>
+                    <span class="mfba-trend up">@BlogData.Icon("trending-up", "mfba-icon mfba-icon-sm")+@_thisMonth</span>
+                </div>
+                <p class="mfba-stat-value">@_totalPosts.ToString("N0", CultureInfo.InvariantCulture)</p>
+                <p class="mfba-stat-label">Total Articles</p>
+                <p class="mfba-stat-sub">@_thisMonth articles this month</p>
+            </div>
+            <div class="mfba-stat">
+                <div class="mfba-stat-top">
+                    <span class="mfba-stat-chip mfba-c-emerald">@BlogData.Icon("eye")</span>
+                    <span class="mfba-trend up" title="Unique readers">@BlogData.Icon("trending-up", "mfba-icon mfba-icon-sm")@BlogData.Compact(_uniqueReaders)</span>
+                </div>
+                <p class="mfba-stat-value">@BlogData.Compact(_totalReads)</p>
+                <p class="mfba-stat-label">Total Reads</p>
+                <p class="mfba-stat-sub">@BlogData.Compact(_uniqueReaders) unique readers</p>
+            </div>
+            <div class="mfba-stat">
+                <div class="mfba-stat-top">
+                    <span class="mfba-stat-chip mfba-c-violet">@BlogData.Icon("message-circle")</span>
+                    <span class="mfba-trend @(_pending.Count > 0 ? "down" : "up")">
+                        @BlogData.Icon(_pending.Count > 0 ? "trending-down" : "trending-up", "mfba-icon mfba-icon-sm")@_pending.Count
+                    </span>
+                </div>
+                <p class="mfba-stat-value">@_totalComments.ToString("N0", CultureInfo.InvariantCulture)</p>
+                <p class="mfba-stat-label">Comments</p>
+                <p class="mfba-stat-sub">awaiting moderation: @_pending.Count</p>
+            </div>
+            <div class="mfba-stat">
+                <div class="mfba-stat-top">
+                    <span class="mfba-stat-chip mfba-c-amber">@BlogData.Icon("users")</span>
+                    <span class="mfba-trend @(_flagged > 0 ? "down" : "up")">
+                        @BlogData.Icon(_flagged > 0 ? "trending-down" : "trending-up", "mfba-icon mfba-icon-sm")@_flagged
+                    </span>
+                </div>
+                <p class="mfba-stat-value">@_authors.Count</p>
+                <p class="mfba-stat-label">Active Authors</p>
+                <p class="mfba-stat-sub">@_flagged comment(s) flagged as spam</p>
+            </div>
+        </section>
+
+        <section class="mfba-quick" aria-label="Quick access">
+            <a href="@(AdminBaseUrl + "?view=editorial")"><span class="mfba-quick-ico mfba-bg-blue">@BlogData.Icon("plus")</span><strong>New Post</strong><small>Create a new article</small></a>
+            <a href="@(AdminBaseUrl + "?view=comments")"><span class="mfba-quick-ico mfba-bg-violet">@BlogData.Icon("message-circle")</span><strong>Comments</strong><small>@_pending.Count pending review</small></a>
+            <a href="@(AdminBaseUrl + "?view=editorial")"><span class="mfba-quick-ico mfba-bg-amber">@BlogData.Icon("layout")</span><strong>Editorial</strong><small>Kanban board</small></a>
+            <a href="@BlogUrl"><span class="mfba-quick-ico mfba-bg-emerald">@BlogData.Icon("bar-chart")</span><strong>Analytics</strong><small>View performance</small></a>
+            <a href="@(AdminBaseUrl + "?view=editorial")"><span class="mfba-quick-ico mfba-bg-pink">@BlogData.Icon("users")</span><strong>Authors</strong><small>@_authors.Count contributors</small></a>
+            <a href="@AdminBaseUrl"><span class="mfba-quick-ico mfba-bg-slate">@BlogData.Icon("settings")</span><strong>Settings</strong><small>Blog configuration</small></a>
+        </section>
+
+        <div class="mfba-grid">
+            <div class="mfba-col">
+                <section class="mfba-panel">
+                    <div class="mfba-panel-head">
+                        <h2>@BlogData.Icon("file-text", "mfba-icon mfba-icon-lg") Recent Posts</h2>
+                        <a class="mfba-panel-link" href="@(AdminBaseUrl + "?view=editorial")">View All @BlogData.Icon("chevron-right", "mfba-icon mfba-icon-md")</a>
+                    </div>
+                    <div class="mfba-thead">
+                        <span>Post</span><span class="st">Status</span><span class="vw r">Views</span><span class="ac r">Actions</span>
+                    </div>
+                    <div class="mfba-rows">
+                        @if (_recent.Count == 0)
+                        {
+                            <div class="mfba-empty">No typed blog records yet.</div>
+                        }
+                        @foreach (var post in _recent)
+                        {
+                            var key = BlogData.StatusKey(post);
+                            var avatar = BlogData.Text(post, "author_avatar_url", "");
+                            var views = BlogData.Num(post, "view_count");
+                            <div class="mfba-trow">
+                                <div class="mfba-post">
+                                    @if (!string.IsNullOrWhiteSpace(avatar))
+                                    {
+                                        <img src="@avatar" alt="" loading="lazy" />
+                                    }
+                                    else
+                                    {
+                                        <span class="mfba-avatar">@BlogData.Initials(BlogData.Text(post, "author_name", "MegaForm"))</span>
+                                    }
+                                    <div style="min-width:0">
+                                        <p class="mfba-post-title mfba-clamp1">@BlogData.Text(post, "title", "Untitled story")</p>
+                                        <div class="mfba-post-meta">
+                                            <span>@BlogData.Text(post, "author_name", "MegaForm Editorial")</span>
+                                            <span class="sep">·</span>
+                                            <span>@BlogData.Icon("tag", "mfba-icon mfba-icon-sm")@BlogData.Text(post, "category", "Insights")</span>
+                                            <span class="sep">·</span>
+                                            <span>@BlogData.Icon("calendar", "mfba-icon mfba-icon-sm")@BlogData.Text(post, "publish_date", post.SubmittedOnUtc.ToString("MMM d, yyyy", CultureInfo.InvariantCulture))</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="mfba-pill mfba-st-@key">@BlogData.StatusLabel(key)</span>
+                                <span class="mfba-views">@BlogData.Icon("eye", "mfba-icon mfba-icon-md")@(views > 0 ? BlogData.Compact(views) : "—")</span>
+                                <div class="mfba-actions">
+                                    <a class="mfba-iconbtn" href="@(AdminBaseUrl + "?view=editorial")" title="Open in the editorial board">@BlogData.Icon("layout", "mfba-icon mfba-icon-md")</a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </section>
+
+                <section class="mfba-panel">
+                    <div class="mfba-panel-head">
+                        <h2>@BlogData.Icon("message-circle", "mfba-icon mfba-icon-lg") Pending Comments <span class="mfba-pill mfba-count">@_pending.Count</span></h2>
+                        <a class="mfba-panel-link" href="@(AdminBaseUrl + "?view=comments")">Moderate All @BlogData.Icon("chevron-right", "mfba-icon mfba-icon-md")</a>
+                    </div>
+                    <div class="mfba-rows">
+                        @if (_commentsFormId == 0)
+                        {
+                            <div class="mfba-empty">The Blog Comments form is not bound to this app.</div>
+                        }
+                        else if (_pending.Count == 0)
+                        {
+                            <div class="mfba-empty">Nothing is waiting for moderation.</div>
+                        }
+                        @foreach (var pair in _pending.Take(3))
+                        {
+                            var row = pair.Row;
+                            var typed = pair.Typed;
+                            var who = BlogData.Text(typed, "commenter_name", "Anonymous");
+                            var slug = BlogData.Text(typed, "post_slug", "");
+                            var parent = _posts.FirstOrDefault(p => string.Equals(BlogData.Text(p, "slug", ""), slug, StringComparison.OrdinalIgnoreCase));
+                            <div class="mfba-comment">
+                                <span class="mfba-avatar">@BlogData.Initials(who)</span>
+                                <div class="mfba-comment-main">
+                                    <div class="mfba-comment-top">
+                                        <strong>@who</strong>
+                                        @if (row.IsSpam)
+                                        {
+                                            <span class="mfba-pill-sm mfba-flag">@BlogData.Icon("flag", "mfba-icon mfba-icon-sm") Flagged</span>
+                                        }
+                                        <time>@BlogData.Ago(row.SubmittedOnUtc)</time>
+                                    </div>
+                                    <p class="mfba-comment-body mfba-clamp2">@BlogData.Text(typed, "comment_body", "")</p>
+                                    <p class="mfba-comment-on">On: <strong>@(parent == null ? slug : BlogData.Text(parent, "title", slug))</strong></p>
+                                </div>
+                                <div class="mfba-comment-act">
+                                    <button class="mfba-chip-btn ok" type="button" @onclick='() => ModerateAsync(row.SubmissionId, "approved")'>@BlogData.Icon("check-circle", "mfba-icon mfba-icon-md") Approve</button>
+                                    <button class="mfba-chip-btn no" type="button" @onclick='() => ModerateAsync(row.SubmissionId, "hidden")'>@BlogData.Icon("trash", "mfba-icon mfba-icon-md") Trash</button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </section>
+            </div>
+
+            <div class="mfba-col">
+                <section class="mfba-panel">
+                    <div class="mfba-panel-head"><h2>@BlogData.Icon("activity", "mfba-icon mfba-icon-lg") Recent Activity</h2></div>
+                    <div class="mfba-panel-body">
+                        <div class="mfba-feed">
+                            @if (_feed.Count == 0)
+                            {
+                                <div class="mfba-empty">No recent editorial activity.</div>
+                            }
+                            @foreach (var item in _feed)
+                            {
+                                <div class="mfba-feed-item">
+                                    <span class="mfba-feed-ico">@BlogData.Icon(item.Icon, "mfba-icon mfba-icon-md " + item.Tone)</span>
+                                    <div style="min-width:0;flex:1">
+                                        <p class="mfba-feed-text">@item.Lead<strong>@item.Target</strong></p>
+                                        <p class="mfba-feed-time">@BlogData.Icon("clock", "mfba-icon mfba-icon-sm")@BlogData.Ago(item.When)</p>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </section>
+
+                <section class="mfba-panel">
+                    <div class="mfba-panel-head"><h2>@BlogData.Icon("bar-chart", "mfba-icon mfba-icon-lg") Top Performing</h2></div>
+                    <div class="mfba-panel-body">
+                        <div class="mfba-top">
+                            @if (_top.Count == 0)
+                            {
+                                <div class="mfba-empty">No reads recorded yet.</div>
+                            }
+                            @for (var index = 0; index < _top.Count; index++)
+                            {
+                                var post = _top[index];
+                                var views = BlogData.Num(post, "view_count");
+                                var share = _topMax == 0 ? 0 : (int)Math.Round(views * 100d / _topMax);
+                                var shares = BlogData.Num(post, "share_count");
+                                <div class="mfba-top-row">
+                                    <span class="mfba-top-rank">@(index + 1)</span>
+                                    <div class="mfba-top-main">
+                                        <p class="mfba-clamp1">@BlogData.Text(post, "title", "Untitled story")</p>
+                                        <div class="mfba-bar-row">
+                                            <span class="mfba-bar"><i style="width:@(share)%"></i></span>
+                                            <span class="mfba-bar-val">@BlogData.Compact(views)</span>
+                                        </div>
+                                    </div>
+                                    <span class="mfba-top-delta @(shares > 0 ? "up" : "down")" title="Shares">@(shares > 0 ? "+" : "")@shares</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </section>
+
+                <section class="mfba-panel">
+                    <div class="mfba-panel-head"><h2>@BlogData.Icon("shield", "mfba-icon mfba-icon-lg") Admin Sections</h2></div>
+                    <div class="mfba-links">
+                        <a href="@(AdminBaseUrl + "?view=comments")">@BlogData.Icon("message-circle")<span>Comments Moderation</span>
+                            @if (_pending.Count > 0)
+                            {
+                                <span class="mfba-pill mfba-count">@_pending.Count pending</span>
+                            }
+                            else
+                            {
+                                @BlogData.Icon("arrow-right", "mfba-icon mfba-icon-md")
+                            }
+                        </a>
+                        <a href="@(AdminBaseUrl + "?view=editorial")">@BlogData.Icon("layout")<span>Editorial Kanban</span>@BlogData.Icon("arrow-right", "mfba-icon mfba-icon-md")</a>
+                        <a href="@BlogUrl">@BlogData.Icon("rss")<span>Blog Home</span>@BlogData.Icon("arrow-right", "mfba-icon mfba-icon-md")</a>
+                    </div>
+                </section>
+
+                @if (_scanTruncated)
+                {
+                    <p class="mfba-stat-sub">Comment figures cover the most recent @ScanCap comments; open Comments Moderation for the full queue.</p>
+                }
+            </div>
+        </div>
+    </main>
+}
+
+@code {
+    [Parameter] public MegaFormScope Scope { get; set; }
+    [Parameter] public string AdminBaseUrl { get; set; }
+    [Parameter] public string BlogUrl { get; set; }
+
+    private const int ScanCap = 60;
+
+    private bool _loading = true;
+    private string _error;
+    private string _message;
+    private int _commentsFormId;
+    private bool _scanTruncated;
+
+    private List<AppRecordDto> _posts = new List<AppRecordDto>();
+    private List<AppRecordDto> _recent = new List<AppRecordDto>();
+    private List<AppRecordDto> _top = new List<AppRecordDto>();
+    private List<string> _authors = new List<string>();
+    private List<CommentRow> _all = new List<CommentRow>();
+    private List<CommentRow> _pending = new List<CommentRow>();
+    private List<FeedItem> _feed = new List<FeedItem>();
+
+    private int _totalPosts, _totalReads, _uniqueReaders, _thisMonth, _totalComments, _flagged, _topMax;
+
+    private sealed class CommentRow
+    {
+        public SubmissionListItemDto Row { get; set; }
+        public AppRecordDto Typed { get; set; }
+    }
+
+    private sealed class FeedItem
+    {
+        public string Icon { get; set; }
+        public string Tone { get; set; }
+        public string Lead { get; set; }
+        public string Target { get; set; }
+        public DateTime When { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            _loading = true;
+            var queue = await Mega.Queries.ExecuteAsync(BlogData.AppKey, BlogData.PostsQuery,
+                new AppQueryRequest { Page = 1, PageSize = 100 }, Scope);
+            _posts = queue?.Items?.ToList() ?? new List<AppRecordDto>();
+            _totalPosts = queue?.TotalCount ?? 0;
+            _totalReads = _posts.Sum(p => BlogData.Num(p, "view_count"));
+            _uniqueReaders = _posts.Sum(p => BlogData.Num(p, "unique_readers"));
+            _thisMonth = _posts.Count(p =>
+                DateTime.TryParse(BlogData.Text(p, "publish_date", ""), CultureInfo.InvariantCulture,
+                    DateTimeStyles.None, out var when)
+                && when.Year == DateTime.UtcNow.Year && when.Month == DateTime.UtcNow.Month);
+            _authors = _posts.Select(p => BlogData.Text(p, "author_name", ""))
+                .Where(a => !string.IsNullOrWhiteSpace(a))
+                .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            _recent = _posts.OrderByDescending(p => p.SubmittedOnUtc).Take(5).ToList();
+            _top = _posts.OrderByDescending(p => BlogData.Num(p, "view_count")).Take(5).ToList();
+            _topMax = _top.Count == 0 ? 0 : Math.Max(1, BlogData.Num(_top[0], "view_count"));
+
+            _commentsFormId = await BlogData.ResolveCommentsFormIdAsync(Mega, Scope);
+            _all.Clear();
+            if (_commentsFormId > 0)
+            {
+                var scan = await Mega.SubmissionDashboard.SearchAsync(
+                    new SubmissionSearchQuery { FormId = _commentsFormId, Page = 1, PageSize = ScanCap }, Scope);
+                if (scan?.Items != null)
+                {
+                    _scanTruncated = scan.TotalCount > scan.Items.Count;
+                    foreach (var row in scan.Items)
+                    {
+                        var typed = await Mega.Records.GetRecordAsync(row.SubmissionId, Scope);
+                        if (typed != null) _all.Add(new CommentRow { Row = row, Typed = typed });
+                    }
+                }
+            }
+            _pending = _all.Where(c => BlogData.ModerationKey(c.Typed) == "pending").ToList();
+            _flagged = _all.Count(c => c.Row.IsSpam);
+            _totalComments = _all.Count > 0 ? _all.Count : _posts.Sum(p => BlogData.Num(p, "comment_count"));
+
+            BuildFeed();
+            _error = null;
+        }
+        catch (Exception ex)
+        {
+            _error = "The editorial console could not load: " + ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void BuildFeed()
+    {
+        var feed = new List<FeedItem>();
+        foreach (var post in _posts.OrderByDescending(p => p.SubmittedOnUtc).Take(4))
+        {
+            var key = BlogData.StatusKey(post);
+            feed.Add(new FeedItem
+            {
+                Icon = key == "published" ? "check-circle" : key == "scheduled" ? "calendar" : "book-open",
+                Tone = key == "published" ? "mfba-i-emerald" : key == "scheduled" ? "mfba-i-violet" : "mfba-i-blue",
+                Lead = BlogData.Text(post, "author_name", "An editor")
+                       + (key == "published" ? " published " : key == "scheduled" ? " scheduled " : " saved draft "),
+                Target = BlogData.Text(post, "title", "Untitled story"),
+                When = post.SubmittedOnUtc
+            });
+        }
+        foreach (var pair in _all.Where(c => c.Row.IsSpam).Take(1))
+        {
+            feed.Add(new FeedItem
+            {
+                Icon = "flag", Tone = "mfba-i-red",
+                Lead = "New comment flagged on ",
+                Target = BlogData.Text(pair.Typed, "post_slug", "a post"),
+                When = pair.Row.SubmittedOnUtc
+            });
+        }
+        foreach (var post in _posts.OrderByDescending(p => BlogData.Num(p, "view_count")).Take(1))
+        {
+            feed.Add(new FeedItem
+            {
+                Icon = "flame", Tone = "mfba-i-orange",
+                Lead = "Trending post detected ",
+                Target = BlogData.Text(post, "title", "Untitled story"),
+                When = post.SubmittedOnUtc
+            });
+        }
+        _feed = feed.OrderByDescending(f => f.When).Take(6).ToList();
+    }
+
+    private async Task ModerateAsync(int submissionId, string next)
+    {
+        try
+        {
+            // Ownership check: refuse anything outside this app's comment form.
+            var typed = await Mega.Records.GetRecordAsync(submissionId, Scope);
+            if (typed == null || _commentsFormId == 0 || typed.FormId != _commentsFormId)
+            {
+                _error = "That comment does not belong to the Blog application.";
+                return;
+            }
+            await Mega.Records.PatchRecordAsync(submissionId,
+                new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase) { ["moderation_status"] = next },
+                Scope);
+            _message = "Comment moved to " + BlogData.ModerationLabel(next).ToLowerInvariant() + ".";
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = "The moderation action failed: " + ex.Message;
+        }
+    }
+}

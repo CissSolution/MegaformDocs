@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>MegaForm.Blogs.Oqtane</id>
+    <version>1.1.0</version>
+    <authors>MegaForm Team</authors>
+    <owners>MegaForm</owners>
+    <title>MegaForm Blogs</title>
+    <description>Public blog and editorial console for Oqtane, built on the MegaForm blog-starter app. Install MegaForm first: this module reads and writes everything through MegaForm.Sdk and ships no database objects of its own.</description>
+    <copyright>MegaForm Team</copyright>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="expression">MIT</license>
+    <projectUrl>https://dnndefender.com/</projectUrl>
+    <tags>oqtane module blog megaform editorial</tags>
+    <releaseNotes>1.1.0 - Adds the editorial console: admin dashboard, editorial kanban and comment moderation, matching MegaForm Blogs for DNN 1.1.0.</releaseNotes>
+    <summary>Blog module for Oqtane over the MegaForm blog-starter app.</summary>
+
+    <packageTypes>
+      <packageType name="Dependency" />
+      <packageType name="Oqtane.Framework" version="6.0.0" />
+    </packageTypes>
+
+    <dependencies>
+      <group targetFramework="net9.0" />
+      <group targetFramework="net10.0" />
+    </dependencies>
+  </metadata>
+  <files>
+    <!-- Module assembly. The name contains "Oqtane" so the host loads it.
+         MegaForm.Sdk.dll is deliberately NOT shipped here: the MegaForm module already
+         provides it, and shipping a second copy would risk a version split. -->
+    <file src="bin\Release\net9.0\MegaForm.Blogs.Oqtane.Client.Oqtane.dll" target="lib\net9.0" />
+    <file src="bin\Release\net10.0\MegaForm.Blogs.Oqtane.Client.Oqtane.dll" target="lib\net10.0" />
+
+    <!-- Stylesheets -> {webroot}/Modules/MegaFormBlogs/ -->
+    <file src="wwwroot\Modules\MegaFormBlogs\*.css" target="wwwroot\Modules\MegaFormBlogs" />
+  </files>
+</package>

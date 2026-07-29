@@ -1,0 +1,127 @@
+@namespace MegaForm.Blogs.Client
+@inherits ModuleBase
+@inject MegaForm.Sdk.IMegaFormClient Mega
+@inject NavigationManager Nav
+
+@* MegaForm Blogs - Oqtane editorial console shell (twin of MegaFormBlogsAdminHost.cshtml).
+   Routes between the three admin screens and enforces the role gate independently of the
+   Oqtane page permission, so a page grant alone never exposes the console. *@
+
+<link rel="stylesheet" href="/Modules/MegaFormBlogs/megaform-blogs-admin.css?v=20260730a" />
+
+<div class="mfba @(_view == "comments" ? "mfba-comments-page" : "")">
+    @if (!_allowed)
+    {
+        <header class="mfba-head">
+            <div class="mfba-head-row">
+                <div>
+                    <h1>Editorial access required</h1>
+                    <p>Sign in as an Administrator, Host, or a Blog role to manage posts.</p>
+                </div>
+            </div>
+        </header>
+    }
+    else
+    {
+        <header class="mfba-head">
+            <nav class="mfba-crumb" aria-label="Breadcrumb">
+                <a href="@BlogUrl">Blog</a>@BlogData.Icon("chevron-right", "mfba-icon mfba-icon-md")
+                <strong>@ScreenTitle</strong>
+            </nav>
+            <div class="mfba-head-row">
+                <div>
+                    <h1>@ScreenTitle</h1>
+                    <p>@ScreenSubtitle</p>
+                </div>
+                <div class="mfba-head-actions">
+                    <a class="mfba-btn-outline @(_view == "dashboard" ? "on" : "")" href="@ViewUrl("dashboard")">@BlogData.Icon("bar-chart", "mfba-icon mfba-icon-md") Dashboard</a>
+                    <a class="mfba-btn-outline @(_view == "editorial" ? "on" : "")" href="@ViewUrl("editorial")">@BlogData.Icon("layout", "mfba-icon mfba-icon-md") Editorial</a>
+                    <a class="mfba-btn-outline @(_view == "comments" ? "on" : "")" href="@ViewUrl("comments")">@BlogData.Icon("message-circle", "mfba-icon mfba-icon-md") Comments</a>
+                </div>
+            </div>
+        </header>
+
+        @if (_view == "editorial")
+        {
+            <AdminEditorial Scope="_scope" AdminBaseUrl="@AdminBaseUrl" />
+        }
+        else if (_view == "comments")
+        {
+            <AdminComments Scope="_scope" AdminBaseUrl="@AdminBaseUrl" BlogUrl="@BlogUrl" />
+        }
+        else
+        {
+            <AdminDashboard Scope="_scope" AdminBaseUrl="@AdminBaseUrl" BlogUrl="@BlogUrl" />
+        }
+    }
+</div>
+
+@code {
+    private static readonly string[] BlogRoles =
+    {
+        "Administrators", "Host", "Blog Authors", "Blog Editors",
+        "SEO Reviewers", "Content Legal Reviewers", "Blog Publishers"
+    };
+
+    private bool _allowed;
+    private string _view = "dashboard";
+    private MegaFormScope _scope = new MegaFormScope();
+
+    public override string Title => "Blog editorial console";
+
+    private string AdminBaseUrl => NavigateUrl(PageState.Page.Path);
+    private string BlogUrl => NavigateUrl(PageState.Page.Path);
+
+    private string ScreenTitle => _view == "editorial" ? "Editorial Kanban"
+        : _view == "comments" ? "Comments Moderation" : "Admin Dashboard";
+
+    private string ScreenSubtitle => _view == "editorial"
+        ? "Move posts between columns to update the typed status"
+        : _view == "comments" ? "Review and moderate user comments"
+        : "Overview of your blog performance and content pipeline";
+
+    protected override void OnParametersSet()
+    {
+        _view = ReadQuery("view");
+        if (_view != "editorial" && _view != "comments") _view = "dashboard";
+
+        var user = PageState?.User;
+        var roles = SplitRoles(user?.Roles);
+        _allowed = user != null && user.UserId > 0
+                   && roles.Any(r => BlogRoles.Contains(r, StringComparer.OrdinalIgnoreCase));
+
+        _scope = new MegaFormScope
+        {
+            PortalId = PageState?.Site?.SiteId ?? 0,
+            UserId = user?.UserId ?? 0,
+            UserName = user?.Username ?? "",
+            DisplayName = user?.DisplayName ?? "",
+            UserEmail = user?.Email ?? "",
+            IsAuthenticated = user != null && user.UserId > 0,
+            IsAdmin = roles.Any(r => r.Equals("Administrators", StringComparison.OrdinalIgnoreCase)
+                                  || r.Equals("Host", StringComparison.OrdinalIgnoreCase)),
+            IsSuperUser = roles.Any(r => r.Equals("Host", StringComparison.OrdinalIgnoreCase)),
+            Roles = roles
+        };
+    }
+
+    private static List<string> SplitRoles(string roles)
+        => (roles ?? "").Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(r => r.Trim()).Where(r => r.Length > 0).ToList();
+
+    private string ViewUrl(string view) => AdminBaseUrl + "?view=" + view;
+
+    private string ReadQuery(string key)
+    {
+        var uri = Nav?.Uri ?? "";
+        var index = uri.IndexOf('?');
+        if (index < 0) return "";
+        foreach (var part in uri.Substring(index + 1).Split(new[] { '&' }, StringSplitOptions.RemoveEmptyEntries))
+        {
+            var pair = part.Split(new[] { '=' }, 2);
+            if (pair.Length == 2 && pair[0].Equals(key, StringComparison.OrdinalIgnoreCase))
+                return Uri.UnescapeDataString(pair[1]).Trim().ToLowerInvariant();
+        }
+        return "";
+    }
+}

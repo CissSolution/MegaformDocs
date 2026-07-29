@@ -1,0 +1,297 @@
+@namespace MegaForm.Blogs.Client
+@inject MegaForm.Sdk.IMegaFormClient Mega
+
+@* Screen 3 of 3 - twin of MegaFormBlogsAdminComments.cshtml.
+   The comment child form has no named query, so this reads a hard-capped page through
+   ISubmissionDashboardApi and resolves each row with IRecordApi. DataJson is never parsed.
+   Moderation writes the canonical typed `moderation_status` field. *@
+
+@if (_error != null)
+{
+    <div style="padding:16px 24px"><div class="mfba-notice err">@_error</div></div>
+}
+else if (_loading)
+{
+    <div class="mfba-list"><div class="mfba-empty">Loading the moderation queue…</div></div>
+}
+else
+{
+    <nav class="mfba-tabs" aria-label="Moderation status">
+        @foreach (var item in Tabs)
+        {
+            var key = item.Key;
+            <a class="@(_tab == key ? "on" : "")" href="javascript:void(0)" @onclick="() => _tab = key" @onclick:preventDefault="true">
+                @item.Value<em>@CountFor(key)</em>
+            </a>
+        }
+    </nav>
+
+    @if (_message != null)
+    {
+        <div style="padding:16px 24px 0"><div class="mfba-notice ok">@_message</div></div>
+    }
+
+    <div style="padding:16px 24px 0">
+        <span class="mfba-field">
+            @BlogData.Icon("search")
+            <input value="@_search" @oninput="OnSearch" placeholder="Search comments..." style="width:256px" aria-label="Search comments" />
+        </span>
+    </div>
+
+    @if (_selected.Count > 0)
+    {
+        <div class="mfba-bulk">
+            <strong>@_selected.Count selected</strong>
+            <div class="mfba-bulk-actions">
+                <button class="mfba-btn-outline" type="button" @onclick='() => BulkAsync("approved")'>@BlogData.Icon("check", "mfba-icon mfba-icon-md") Approve</button>
+                <button class="mfba-btn-outline" type="button" @onclick='() => BulkAsync("spam")'>@BlogData.Icon("alert", "mfba-icon mfba-icon-md") Mark as Spam</button>
+                <button class="mfba-btn-outline danger" type="button" @onclick='() => BulkAsync("hidden")'>@BlogData.Icon("trash", "mfba-icon mfba-icon-md") Trash</button>
+            </div>
+            <button class="mfba-bulk-clear" type="button" @onclick="() => _selected.Clear()">Clear selection</button>
+        </div>
+    }
+
+    <div class="mfba-list">
+        <div class="mfba-list-head">
+            <input type="checkbox" checked="@AllSelected" @onchange="ToggleAll" aria-label="Select every comment" />
+            <div class="mfba-col-comment">Comment</div>
+            <div class="mfba-col-post">Post</div>
+            <div class="mfba-col-status">Status</div>
+            <div class="mfba-col-actions">Actions</div>
+        </div>
+        <div class="mfba-list-body">
+            @if (_commentsFormId == 0)
+            {
+                <div class="mfba-empty">The Blog Comments form is not bound to the <code>blog-starter</code> app for this site.</div>
+            }
+            else if (Filtered().Count == 0)
+            {
+                <div class="mfba-empty">@BlogData.Icon("message-circle", "mfba-icon mfba-icon-lg") No comments found.</div>
+            }
+            @foreach (var pair in Filtered())
+            {
+                var row = pair.Row;
+                var typed = pair.Typed;
+                var id = row.SubmissionId;
+                var key = BlogData.ModerationKey(typed);
+                var who = BlogData.Text(typed, "commenter_name", "Anonymous");
+                var email = BlogData.Text(typed, "commenter_email", "");
+                var slug = BlogData.Text(typed, "post_slug", "");
+                var parent = _posts.FirstOrDefault(p => string.Equals(BlogData.Text(p, "slug", ""), slug, StringComparison.OrdinalIgnoreCase));
+                var registered = BlogData.Num(typed, "cms_user_id") > 0;
+                var replies = _replyCounts.ContainsKey(id) ? _replyCounts[id] : 0;
+                <div class="mfba-crow @(_selected.Contains(id) ? "sel" : "")">
+                    <input type="checkbox" checked="@_selected.Contains(id)" @onchange="() => Toggle(id)"
+                           aria-label="@("Select comment from " + who)" />
+                    <div class="mfba-col-comment">
+                        <div class="mfba-cwho">
+                            <span class="mfba-avatar">@BlogData.Initials(who)</span>
+                            <div>
+                                <div class="mfba-cwho-name">
+                                    <strong>@who</strong>
+                                    @if (registered)
+                                    {
+                                        <span class="mfba-pill-sm mfba-reg">Registered</span>
+                                    }
+                                    @if (row.IsSpam)
+                                    {
+                                        <span class="mfba-pill-sm mfba-flag">@BlogData.Icon("flag", "mfba-icon mfba-icon-sm") Flagged</span>
+                                    }
+                                </div>
+                                <small>@(string.IsNullOrWhiteSpace(email) ? "no email" : email) · @BlogData.Ago(row.SubmittedOnUtc)</small>
+                            </div>
+                        </div>
+                        <p class="mfba-cbody mfba-clamp2">@BlogData.Text(typed, "comment_body", "")</p>
+                        <div class="mfba-cstats">
+                            <span>@BlogData.Icon("thumbs-up", "mfba-icon mfba-icon-sm") @BlogData.Num(typed, "like_count")</span>
+                            <span>@BlogData.Icon("message-circle", "mfba-icon mfba-icon-sm") @replies replies</span>
+                        </div>
+                    </div>
+                    <div class="mfba-col-post">
+                        @if (parent == null)
+                        {
+                            <span class="mfba-stat-sub">@(string.IsNullOrWhiteSpace(slug) ? "unlinked" : slug)</span>
+                        }
+                        else
+                        {
+                            <a class="mfba-clamp2" href="@(BlogUrl + "?slug=" + Uri.EscapeDataString(slug))">@BlogData.Text(parent, "title", slug)</a>
+                        }
+                    </div>
+                    <div class="mfba-col-status">
+                        <span class="mfba-pill mfba-st-@key">@BlogData.ModerationLabel(key)</span>
+                    </div>
+                    <div class="mfba-col-actions">
+                        @if (key == "pending")
+                        {
+                            <button class="mfba-iconbtn ok" type="button" title="Approve" @onclick='() => ModerateAsync(id, "approved")'>@BlogData.Icon("check", "mfba-icon mfba-icon-md")</button>
+                            <button class="mfba-iconbtn stop" type="button" title="Mark as spam" @onclick='() => ModerateAsync(id, "spam")'>@BlogData.Icon("ban", "mfba-icon mfba-icon-md")</button>
+                        }
+                        @if (key == "approved")
+                        {
+                            <button class="mfba-iconbtn warn" type="button" title="Unapprove" @onclick='() => ModerateAsync(id, "pending")'>@BlogData.Icon("x", "mfba-icon mfba-icon-md")</button>
+                        }
+                        @if (key == "hidden" || key == "spam")
+                        {
+                            <button class="mfba-iconbtn ok" type="button" title="Restore and approve" @onclick='() => ModerateAsync(id, "approved")'>@BlogData.Icon("check", "mfba-icon mfba-icon-md")</button>
+                        }
+                        <button class="mfba-iconbtn stop" type="button" title="Move to trash" @onclick='() => ModerateAsync(id, "hidden")'>@BlogData.Icon("trash", "mfba-icon mfba-icon-md")</button>
+                    </div>
+                </div>
+            }
+        </div>
+        @if (_truncated)
+        {
+            <p class="mfba-stat-sub" style="margin-top:12px">Showing the most recent @ScanCap comments. Use search to reach older rows.</p>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public MegaFormScope Scope { get; set; }
+    [Parameter] public string AdminBaseUrl { get; set; }
+    [Parameter] public string BlogUrl { get; set; }
+
+    private const int ScanCap = 150;
+
+    private static readonly Dictionary<string, string> Tabs = new Dictionary<string, string>
+    {
+        ["all"] = "All", ["pending"] = "Pending", ["approved"] = "Approved",
+        ["spam"] = "Spam", ["hidden"] = "Trash"
+    };
+
+    private bool _loading = true;
+    private string _error;
+    private string _message;
+    private bool _truncated;
+    private int _commentsFormId;
+    private string _tab = "all";
+    private string _search = "";
+
+    private readonly HashSet<int> _selected = new HashSet<int>();
+    private List<CommentRow> _rows = new List<CommentRow>();
+    private List<AppRecordDto> _posts = new List<AppRecordDto>();
+    private Dictionary<int, int> _replyCounts = new Dictionary<int, int>();
+
+    private sealed class CommentRow
+    {
+        public SubmissionListItemDto Row { get; set; }
+        public AppRecordDto Typed { get; set; }
+    }
+
+    private bool AllSelected => _rows.Count > 0 && _selected.Count == Filtered().Count && Filtered().Count > 0;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            _loading = true;
+            var postResult = await Mega.Queries.ExecuteAsync(BlogData.AppKey, BlogData.PostsQuery,
+                new AppQueryRequest { Page = 1, PageSize = 200 }, Scope);
+            _posts = postResult?.Items?.ToList() ?? new List<AppRecordDto>();
+
+            _commentsFormId = await BlogData.ResolveCommentsFormIdAsync(Mega, Scope);
+            _rows.Clear();
+            if (_commentsFormId > 0)
+            {
+                var scan = await Mega.SubmissionDashboard.SearchAsync(
+                    new SubmissionSearchQuery { FormId = _commentsFormId, Page = 1, PageSize = ScanCap }, Scope);
+                if (scan?.Items != null)
+                {
+                    _truncated = scan.TotalCount > scan.Items.Count;
+                    foreach (var row in scan.Items)
+                    {
+                        var typed = await Mega.Records.GetRecordAsync(row.SubmissionId, Scope);
+                        if (typed != null) _rows.Add(new CommentRow { Row = row, Typed = typed });
+                    }
+                }
+            }
+            _replyCounts = _rows.GroupBy(r => BlogData.Num(r.Typed, "parent_comment_id"))
+                .Where(g => g.Key > 0).ToDictionary(g => g.Key, g => g.Count());
+            _error = null;
+        }
+        catch (Exception ex)
+        {
+            _error = "The moderation queue could not load: " + ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private int CountFor(string key)
+        => key == "all" ? _rows.Count : _rows.Count(r => BlogData.ModerationKey(r.Typed) == key);
+
+    private List<CommentRow> Filtered()
+    {
+        return _rows.Where(r =>
+        {
+            if (_tab != "all" && BlogData.ModerationKey(r.Typed) != _tab) return false;
+            if (!string.IsNullOrWhiteSpace(_search))
+            {
+                var haystack = BlogData.Text(r.Typed, "comment_body", "") + " "
+                    + BlogData.Text(r.Typed, "commenter_name", "") + " "
+                    + BlogData.Text(r.Typed, "commenter_email", "");
+                if (haystack.IndexOf(_search, StringComparison.OrdinalIgnoreCase) < 0) return false;
+            }
+            return true;
+        }).OrderByDescending(r => r.Row.SubmittedOnUtc).ToList();
+    }
+
+    private void OnSearch(ChangeEventArgs e) => _search = (e.Value?.ToString() ?? "").Trim();
+
+    private void Toggle(int id)
+    {
+        if (!_selected.Remove(id)) _selected.Add(id);
+    }
+
+    private void ToggleAll(ChangeEventArgs e)
+    {
+        _selected.Clear();
+        if (e.Value is bool on && on)
+            foreach (var row in Filtered()) _selected.Add(row.Row.SubmissionId);
+    }
+
+    private async Task BulkAsync(string next)
+    {
+        var targets = _selected.ToList();
+        var changed = 0;
+        foreach (var id in targets)
+        {
+            if (await ApplyAsync(id, next)) changed++;
+        }
+        _selected.Clear();
+        _message = changed == 0
+            ? "Nothing was moderated: those rows do not belong to the Blog Comments form."
+            : changed + " comment(s) moved to " + BlogData.ModerationLabel(next).ToLowerInvariant() + ".";
+        await LoadAsync();
+    }
+
+    private async Task ModerateAsync(int id, string next)
+    {
+        if (await ApplyAsync(id, next))
+            _message = "Comment moved to " + BlogData.ModerationLabel(next).ToLowerInvariant() + ".";
+        await LoadAsync();
+    }
+
+    private async Task<bool> ApplyAsync(int submissionId, string next)
+    {
+        try
+        {
+            // Ownership check: refuse anything outside this app's comment form.
+            var typed = await Mega.Records.GetRecordAsync(submissionId, Scope);
+            if (typed == null || _commentsFormId == 0 || typed.FormId != _commentsFormId) return false;
+            await Mega.Records.PatchRecordAsync(submissionId,
+                new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase) { ["moderation_status"] = next },
+                Scope);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _error = "The moderation action failed: " + ex.Message;
+            return false;
+        }
+    }
+}
