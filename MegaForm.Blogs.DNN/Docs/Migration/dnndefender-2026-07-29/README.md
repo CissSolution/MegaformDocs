@@ -54,7 +54,7 @@ Starter records remain available for development history but are typed as `archi
 
 - Razor files use MegaForm application, record, gallery/file, and workflow SDK APIs.
 - Blog fields are read from typed values. Legacy `DataJson` is not used as the Blog read/write surface.
-- The public view uses the `published-posts` named query; the admin register uses `all-posts`.
+- The public view uses the `public-posts` named query (`featured-posts` for the hero); the admin register uses `all-posts`.
 - `AppRecordQueryService` resolves typed values before applying a named-query status filter. `MF_Submissions.Status` remains a transport/workflow status fallback, not the canonical Blog publication field.
 - Admin saves article HTML through the Records API. The editor is Quill-based and stores trusted editorial HTML rather than URL-encoded markup.
 - Featured images, author images, and article gallery insertion use MegaForm-managed gallery/file data.

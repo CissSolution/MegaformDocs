@@ -62,14 +62,32 @@ $razorZip = [IO.Path]::GetTempFileName()
 $assetZip = [IO.Path]::GetTempFileName()
 
 try {
-    New-ContentZip -Path $razorZip -Files @{
+    $razorFiles = @{
         'MegaFormBlogs.cshtml' = Join-Path $PSScriptRoot 'Scripts\MegaFormBlogs.cshtml'
         'MegaFormBlogsAdmin.cshtml' = Join-Path $PSScriptRoot 'Scripts\MegaFormBlogsAdmin.cshtml'
+        'MegaFormBlogsAdminEditorial.cshtml' = Join-Path $PSScriptRoot 'Scripts\MegaFormBlogsAdminEditorial.cshtml'
+        'MegaFormBlogsAdminComments.cshtml' = Join-Path $PSScriptRoot 'Scripts\MegaFormBlogsAdminComments.cshtml'
         'MegaFormBlogsAdminHost.cshtml' = Join-Path $PSScriptRoot 'Scripts\MegaFormBlogsAdminHost.cshtml'
     }
-    New-ContentZip -Path $assetZip -Files @{
+    $assetFiles = @{
         'megaform-blogs.css' = Join-Path $PSScriptRoot 'Assets\megaform-blogs.css'
+        'megaform-blogs-admin.css' = Join-Path $PSScriptRoot 'Assets\megaform-blogs-admin.css'
     }
+
+    # Fail loudly when a declared payload file is missing. A clean clone that silently
+    # dropped MegaFormBlogsAdminHost.cshtml would ship an admin console with no Host guard.
+    $missing = @()
+    foreach ($set in @($razorFiles, $assetFiles)) {
+        foreach ($name in $set.Keys) {
+            if (-not (Test-Path -LiteralPath $set[$name])) { $missing += $set[$name] }
+        }
+    }
+    if ($missing.Count -gt 0) {
+        throw "Missing package source file(s):`n  " + ($missing -join "`n  ")
+    }
+
+    New-ContentZip -Path $razorZip -Files $razorFiles
+    New-ContentZip -Path $assetZip -Files $assetFiles
 
     $outputDirectory = Split-Path -Parent $OutputPath
     if (-not (Test-Path -LiteralPath $outputDirectory)) {

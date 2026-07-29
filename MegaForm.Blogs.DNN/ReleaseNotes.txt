@@ -1,3 +1,12 @@
+1.1.0
+
+- Adds the full editorial console: admin dashboard, editorial kanban, and comments moderation.
+- The Host wrapper now routes ?view=editorial and ?view=comments and keeps the SuperUser check.
+- Kanban drag-and-drop patches the canonical typed `status` field through the Records API.
+- Comment moderation writes the typed `moderation_status` field; DataJson is never parsed.
+- The anonymous blog page no longer echoes exception text; failures go to the DNN event log.
+- The package build now fails when a declared source file is missing.
+
 1.0.4
 
 - Prevents long rich-text code samples from widening the mobile article grid.

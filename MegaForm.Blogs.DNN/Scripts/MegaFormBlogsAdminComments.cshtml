@@ -1,0 +1,529 @@
+@*
+    MegaForm Blogs - comments moderation (screen 3 of 3).
+    The comment child form has no named query, so the console reads a bounded page of
+    submissions through ISubmissionDashboardApi and resolves each row's values through
+    IRecordApi. DataJson is never parsed here.
+    Moderation writes the canonical typed `moderation_status` field (pending/approved/spam/hidden).
+*@
+@inherits DotNetNuke.Web.Razor.DotNetNukeWebPage<dynamic>
+@using System
+@using System.Linq
+@using System.Globalization
+@using System.Collections.Generic
+@using System.Security.Cryptography
+@using MegaForm.Sdk
+
+@functions {
+    static T Run<T>(System.Func<IMegaFormClient, System.Threading.Tasks.Task<T>> action)
+    {
+        var initializeMegaForm = MegaForm.DNN.Services.DnnServiceLocator.Instance;
+        return System.Threading.Tasks.Task.Run(() => MegaFormSdk.RunAsync(action)).GetAwaiter().GetResult();
+    }
+
+    static string Text(AppRecordDto record, string key, string fallback)
+    {
+        if (record == null || record.Data == null || !record.Data.ContainsKey(key) || record.Data[key] == null)
+            return fallback;
+        var value = Convert.ToString(record.Data[key]);
+        return string.IsNullOrWhiteSpace(value) ? fallback : value;
+    }
+
+    static int Num(AppRecordDto record, string key)
+    {
+        int value;
+        return int.TryParse(Text(record, key, "0"), NumberStyles.Any, CultureInfo.InvariantCulture, out value) ? value : 0;
+    }
+
+    static bool CanManage(DotNetNuke.Entities.Users.UserInfo user)
+    {
+        if (user == null || user.UserID < 0) return false;
+        if (user.IsSuperUser) return true;
+        var allowed = new[] { "Administrators", "Blog Editors", "Blog Publishers" };
+        return user.Roles != null && user.Roles.Any(role => allowed.Contains(role, StringComparer.OrdinalIgnoreCase));
+    }
+
+    static string EnsureCsrfToken()
+    {
+        const string key = "MegaFormBlogs.CsrfToken";
+        var session = System.Web.HttpContext.Current.Session;
+        var token = session[key] as string;
+        if (!string.IsNullOrWhiteSpace(token)) return token;
+        var bytes = new byte[32];
+        using (var random = RandomNumberGenerator.Create()) { random.GetBytes(bytes); }
+        token = Convert.ToBase64String(bytes);
+        session[key] = token;
+        return token;
+    }
+
+    static void ValidateCsrfToken(string posted)
+    {
+        const string key = "MegaFormBlogs.CsrfToken";
+        var expected = System.Web.HttpContext.Current.Session[key] as string;
+        var valid = !string.IsNullOrWhiteSpace(expected) && !string.IsNullOrWhiteSpace(posted) && expected.Length == posted.Length;
+        var difference = valid ? 0 : 1;
+        var length = valid ? expected.Length : 0;
+        for (var index = 0; index < length; index++) { difference |= expected[index] ^ posted[index]; }
+        if (difference != 0)
+            throw new InvalidOperationException("The moderation session expired. Reload this page and try again.");
+    }
+
+    static string Initials(string name)
+    {
+        var parts = (name ?? "").Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0) return "?";
+        return string.Concat(parts.Take(2).Select(x => char.ToUpperInvariant(x[0])));
+    }
+
+    static string Ago(DateTime utc)
+    {
+        var span = DateTime.UtcNow - utc;
+        if (span.TotalMinutes < 1) return "just now";
+        if (span.TotalMinutes < 60) return (int)span.TotalMinutes + " minutes ago";
+        if (span.TotalHours < 24) return (int)span.TotalHours + " hours ago";
+        if (span.TotalDays < 30) return (int)span.TotalDays + " days ago";
+        return utc.ToString("MMM d, yyyy", CultureInfo.InvariantCulture);
+    }
+
+    // The persisted app manifest does not carry form bindings on every install (a seeded
+    // blog-starter can ship "Forms": []), so fall back to identifying the comment child form
+    // by its schema shape rather than by a title string. Cached for the request.
+    static int ResolveCommentsFormId(MegaFormScope scope)
+    {
+        var items = System.Web.HttpContext.Current == null ? null : System.Web.HttpContext.Current.Items;
+        const string cacheKey = "MegaFormBlogs.CommentsFormId";
+        if (items != null && items.Contains(cacheKey)) { return (int)items[cacheKey]; }
+
+        var resolved = Run(async c =>
+        {
+            var app = await c.Apps.GetAppAsync("blog-starter", scope);
+            if (app != null && app.Forms != null)
+            {
+                var bound = app.Forms.FirstOrDefault(f =>
+                    string.Equals(f.Alias, "comments", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(f.Role, "comments", StringComparison.OrdinalIgnoreCase));
+                if (bound != null && bound.FormId > 0) { return bound.FormId; }
+            }
+
+            var forms = await c.Forms.ListFormsAsync(new FormQuery { Page = 1, PageSize = 200 }, scope);
+            if (forms == null || forms.Items == null) { return 0; }
+            var ordered = forms.Items
+                .OrderByDescending(f => (f.Title ?? "").IndexOf("comment", StringComparison.OrdinalIgnoreCase) >= 0)
+                .ToList();
+            foreach (var form in ordered)
+            {
+                var candidate = form;
+                if (string.IsNullOrWhiteSpace(candidate.SchemaJson))
+                {
+                    candidate = await c.Forms.GetFormAsync(form.FormId, scope) ?? form;
+                }
+                if (string.IsNullOrWhiteSpace(candidate.SchemaJson)) { continue; }
+                var keys = c.Schema.ParseForm(candidate).Fields.Select(x => x.Key ?? "").ToList();
+                if (keys.Contains("comment_body", StringComparer.OrdinalIgnoreCase)
+                    && keys.Contains("post_slug", StringComparer.OrdinalIgnoreCase)
+                    && keys.Contains("moderation_status", StringComparer.OrdinalIgnoreCase))
+                {
+                    return candidate.FormId;
+                }
+            }
+            return 0;
+        });
+
+        if (items != null) { items[cacheKey] = resolved; }
+        return resolved;
+    }
+
+    static string ModerationKey(AppRecordDto record)
+    {
+        var value = Text(record, "moderation_status", "pending").Trim().ToLowerInvariant();
+        var known = new[] { "pending", "approved", "spam", "hidden" };
+        return known.Contains(value) ? value : "pending";
+    }
+
+    static string ModerationLabel(string key)
+    {
+        switch (key)
+        {
+            case "approved": return "Approved";
+            case "spam": return "Spam";
+            case "hidden": return "Trash";
+            default: return "Pending";
+        }
+    }
+
+    static System.Web.IHtmlString Icon(string name, string cssClass = "mfba-icon")
+    {
+        string body;
+        switch (name)
+        {
+            case "chevron-right": body = "<path d='m9 18 6-6-6-6'/>"; break;
+            case "search": body = "<circle cx='11' cy='11' r='8'/><path d='m21 21-4.3-4.3'/>"; break;
+            case "check": body = "<path d='M20 6 9 17l-5-5'/>"; break;
+            case "x": body = "<path d='M18 6 6 18'/><path d='m6 6 12 12'/>"; break;
+            case "ban": body = "<circle cx='12' cy='12' r='10'/><path d='m4.9 4.9 14.2 14.2'/>"; break;
+            case "reply": body = "<polyline points='9 17 4 12 9 7'/><path d='M20 18v-2a4 4 0 0 0-4-4H4'/>"; break;
+            case "eye": body = "<path d='M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0'/><circle cx='12' cy='12' r='3'/>"; break;
+            case "trash": body = "<path d='M3 6h18'/><path d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6'/><path d='M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/>"; break;
+            case "flag": body = "<path d='M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z'/><line x1='4' x2='4' y1='22' y2='15'/>"; break;
+            case "thumbs-up": body = "<path d='M7 10v12'/><path d='M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z'/>"; break;
+            case "message-circle": body = "<path d='M7.9 20A9 9 0 1 0 4 16.1L2 22Z'/>"; break;
+            case "alert": body = "<path d='m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3'/><path d='M12 9v4'/><path d='M12 17h.01'/>"; break;
+            default: body = ""; break;
+        }
+        return new System.Web.HtmlString("<svg class='" + cssClass + "' viewBox='0 0 24 24' aria-hidden='true'>" + body + "</svg>");
+    }
+}
+
+@{
+    var portalId = DotNetNuke.Entities.Portals.PortalSettings.Current == null
+        ? 0 : DotNetNuke.Entities.Portals.PortalSettings.Current.PortalId;
+    var activeTab = DotNetNuke.Entities.Portals.PortalSettings.Current == null
+        ? null : DotNetNuke.Entities.Portals.PortalSettings.Current.ActiveTab;
+    var adminBaseUrl = activeTab == null ? Request.RawUrl : DotNetNuke.Common.Globals.NavigateURL(activeTab.TabID);
+    var commentsUrl = adminBaseUrl + "?view=comments";
+    var user = DotNetNuke.Entities.Users.UserController.Instance.GetCurrentUserInfo();
+    var scope = new MegaFormScope
+    {
+        PortalId = portalId,
+        UserId = user == null ? 0 : user.UserID,
+        UserName = user == null ? "" : user.Username,
+        DisplayName = user == null ? "" : user.DisplayName,
+        UserEmail = user == null ? "" : user.Email,
+        IsAuthenticated = user != null && user.UserID >= 0,
+        IsAdmin = user != null && (user.IsSuperUser || user.IsInRole("Administrators")),
+        IsSuperUser = user != null && user.IsSuperUser,
+        Roles = user == null || user.Roles == null ? new List<string>() : user.Roles.ToList(),
+        IpAddress = Request.UserHostAddress ?? ""
+    };
+    var allowed = CanManage(user);
+    var csrfToken = allowed ? EnsureCsrfToken() : "";
+    var message = "";
+    var messageError = false;
+
+    // Bounded admin scan: one capped page of the comment form, then a typed read per row.
+    const int ScanCap = 150;
+    AppDto app = null;
+    var commentsFormId = 0;
+    var scanTruncated = false;
+    var rows = new List<Tuple<SubmissionListItemDto, AppRecordDto>>();
+    var posts = new List<AppRecordDto>();
+
+    if (allowed && Request.HttpMethod == "POST")
+    {
+        try
+        {
+            ValidateCsrfToken(Request.Form["mfb_csrf"]);
+            var actionToken = (Request.Form["mfb_action"] ?? "").Trim();
+            var separator = actionToken.IndexOf('|');
+            var action = (separator < 0 ? actionToken : actionToken.Substring(0, separator)).ToLowerInvariant();
+            var actionArgument = separator < 0 ? "" : actionToken.Substring(separator + 1);
+
+            string next = null;
+            if (action == "approve" || action == "bulk-approve") { next = "approved"; }
+            else if (action == "spam" || action == "bulk-spam") { next = "spam"; }
+            else if (action == "trash" || action == "bulk-trash") { next = "hidden"; }
+            else if (action == "unapprove") { next = "pending"; }
+
+            if (next != null)
+            {
+                var targets = new List<int>();
+                if (action.StartsWith("bulk-"))
+                {
+                    var selected = Request.Form.GetValues("mfb_sel");
+                    if (selected != null)
+                    {
+                        foreach (var raw in selected)
+                        {
+                            int parsed;
+                            if (int.TryParse(raw, out parsed)) { targets.Add(parsed); }
+                        }
+                    }
+                }
+                else
+                {
+                    int parsed;
+                    if (int.TryParse(actionArgument, out parsed)) { targets.Add(parsed); }
+                }
+
+                if (targets.Count == 0)
+                {
+                    throw new InvalidOperationException("Select at least one comment first.");
+                }
+
+                var ownerFormId = ResolveCommentsFormId(scope);
+                if (ownerFormId == 0)
+                {
+                    throw new InvalidOperationException("The Blog Comments form is not bound to this app.");
+                }
+
+                var changed = 0;
+                foreach (var target in targets)
+                {
+                    var typed = Run(c => c.Records.GetRecordAsync(target, scope));
+                    // Ownership check: refuse anything outside this app's comment form.
+                    if (typed == null || typed.FormId != ownerFormId) { continue; }
+                    Run(c => c.Records.PatchRecordAsync(target, new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        ["moderation_status"] = next
+                    }, scope));
+                    changed++;
+                }
+                message = changed == 0
+                    ? "Nothing was moderated: those rows do not belong to the Blog Comments form."
+                    : changed + " comment(s) moved to " + ModerationLabel(next).ToLowerInvariant() + ".";
+                messageError = changed == 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            messageError = true;
+        }
+    }
+
+    if (allowed)
+    {
+        try
+        {
+            app = Run(c => c.Apps.GetAppAsync("blog-starter", scope));
+            commentsFormId = ResolveCommentsFormId(scope);
+
+            var postResult = Run(c => c.Queries.ExecuteAsync("blog-starter", "all-posts",
+                new AppQueryRequest { Page = 1, PageSize = 200 }, scope));
+            posts = postResult == null || postResult.Items == null ? new List<AppRecordDto>() : postResult.Items.ToList();
+
+            if (commentsFormId > 0)
+            {
+                var scan = Run(c => c.SubmissionDashboard.SearchAsync(
+                    new SubmissionSearchQuery { FormId = commentsFormId, Page = 1, PageSize = ScanCap }, scope));
+                if (scan != null && scan.Items != null)
+                {
+                    scanTruncated = scan.TotalCount > scan.Items.Count;
+                    foreach (var row in scan.Items)
+                    {
+                        var typed = Run(c => c.Records.GetRecordAsync(row.SubmissionId, scope));
+                        if (typed != null) { rows.Add(Tuple.Create(row, typed)); }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            messageError = true;
+        }
+    }
+
+    var tab = (Request.QueryString["tab"] ?? "all").Trim().ToLowerInvariant();
+    var search = (Request.QueryString["q"] ?? "").Trim();
+    var tabs = new[]
+    {
+        Tuple.Create("all", "All"),
+        Tuple.Create("pending", "Pending"),
+        Tuple.Create("approved", "Approved"),
+        Tuple.Create("spam", "Spam"),
+        Tuple.Create("hidden", "Trash")
+    };
+    if (!tabs.Any(t => t.Item1 == tab)) { tab = "all"; }
+
+    Func<string, int> countFor = key => key == "all" ? rows.Count : rows.Count(r => ModerationKey(r.Item2) == key);
+
+    var filtered = rows.Where(r =>
+    {
+        if (tab != "all" && ModerationKey(r.Item2) != tab) { return false; }
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var haystack = Text(r.Item2, "comment_body", "") + " " + Text(r.Item2, "commenter_name", "") + " " + Text(r.Item2, "commenter_email", "");
+            if (haystack.IndexOf(search, StringComparison.OrdinalIgnoreCase) < 0) { return false; }
+        }
+        return true;
+    }).OrderByDescending(r => r.Item1.SubmittedOnUtc).ToList();
+
+    var replyCounts = rows.GroupBy(r => Num(r.Item2, "parent_comment_id"))
+        .Where(g => g.Key > 0).ToDictionary(g => g.Key, g => g.Count());
+}
+
+<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs-admin.css?v=20260730a" />
+
+<div class="mfba mfba-comments-page">
+    @if (!allowed)
+    {
+        <header class="mfba-head">
+            <div class="mfba-head-row"><div><h1>Moderator access required</h1><p>Sign in as an Administrator, Blog Editor or Blog Publisher to moderate comments.</p></div></div>
+        </header>
+    }
+    else
+    {
+        <header class="mfba-head">
+            <nav class="mfba-crumb" aria-label="Breadcrumb">
+                <a href="/Blogs">Blog</a>@Icon("chevron-right", "mfba-icon mfba-icon-md")
+                <a href="@adminBaseUrl">Admin</a>@Icon("chevron-right", "mfba-icon mfba-icon-md")
+                <strong>Comments</strong>
+            </nav>
+            <div class="mfba-head-row">
+                <div>
+                    <h1>Comments Moderation</h1>
+                    <p>Review and moderate user comments</p>
+                </div>
+                <div class="mfba-head-actions">
+                    <label class="mfba-sr" for="mfba-cq">Search comments</label>
+                    <span class="mfba-field">
+                        @Icon("search")
+                        <input id="mfba-cq" value="@search" placeholder="Search comments..." style="width:256px"
+                               onkeydown="if(event.key==='Enter'){event.preventDefault();mfbaSearch();}" />
+                    </span>
+                </div>
+            </div>
+            <nav class="mfba-tabs" aria-label="Moderation status">
+                @foreach (var item in tabs)
+                {
+                    var href = commentsUrl + "&tab=" + item.Item1 + (string.IsNullOrWhiteSpace(search) ? "" : "&q=" + Server.UrlEncode(search));
+                    <a class="@(tab == item.Item1 ? "on" : "")" href="@href">@item.Item2<em>@countFor(item.Item1)</em></a>
+                }
+            </nav>
+        </header>
+
+        <input type="hidden" name="mfb_csrf" value="@csrfToken" />
+
+        @* Code context here (we are inside the else block, past the markup above), so no @ prefix. *@
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            <div style="padding:16px 24px 0"><div class="mfba-notice @(messageError ? "err" : "ok")">@message</div></div>
+        }
+
+        <div class="mfba-bulk" id="mfba-bulk" hidden>
+            <strong><span id="mfba-bulk-n">0</span> selected</strong>
+            <div class="mfba-bulk-actions">
+                <button class="mfba-btn-outline" type="submit" name="mfb_action" value="bulk-approve">@Icon("check", "mfba-icon mfba-icon-md") Approve</button>
+                <button class="mfba-btn-outline" type="submit" name="mfb_action" value="bulk-spam">@Icon("alert", "mfba-icon mfba-icon-md") Mark as Spam</button>
+                <button class="mfba-btn-outline danger" type="submit" name="mfb_action" value="bulk-trash">@Icon("trash", "mfba-icon mfba-icon-md") Trash</button>
+            </div>
+            <button class="mfba-bulk-clear" type="button" onclick="mfbaClear()">Clear selection</button>
+        </div>
+
+        <div class="mfba-list">
+            <div class="mfba-list-head">
+                <input type="checkbox" id="mfba-all" onclick="mfbaToggleAll(this)" aria-label="Select every comment" />
+                <div class="mfba-col-comment">Comment</div>
+                <div class="mfba-col-post">Post</div>
+                <div class="mfba-col-status">Status</div>
+                <div class="mfba-col-actions">Actions</div>
+            </div>
+            <div class="mfba-list-body">
+                @if (commentsFormId == 0)
+                {
+                    <div class="mfba-empty">The Blog Comments form is not bound to the <code>blog-starter</code> app for this portal.</div>
+                }
+                else if (filtered.Count == 0)
+                {
+                    <div class="mfba-empty">@Icon("message-circle", "mfba-icon mfba-icon-lg") No comments found.</div>
+                }
+                @foreach (var pair in filtered)
+                {
+                    var row = pair.Item1;
+                    var typed = pair.Item2;
+                    var key = ModerationKey(typed);
+                    var who = Text(typed, "commenter_name", "Anonymous");
+                    var email = Text(typed, "commenter_email", "");
+                    var slug = Text(typed, "post_slug", "");
+                    var parent = posts.FirstOrDefault(p => string.Equals(Text(p, "slug", ""), slug, StringComparison.OrdinalIgnoreCase));
+                    var registered = Num(typed, "cms_user_id") > 0;
+                    var replies = replyCounts.ContainsKey(row.SubmissionId) ? replyCounts[row.SubmissionId] : 0;
+                    <div class="mfba-crow">
+                        <input type="checkbox" name="mfb_sel" value="@row.SubmissionId" onclick="mfbaCount()" aria-label="Select comment from @who" />
+                        <div class="mfba-col-comment">
+                            <div class="mfba-cwho">
+                                <span class="mfba-avatar">@Initials(who)</span>
+                                <div>
+                                    <div class="mfba-cwho-name">
+                                        <strong>@who</strong>
+                                        @if (registered) { <span class="mfba-pill-sm mfba-reg">Registered</span> }
+                                        @if (row.IsSpam) { <span class="mfba-pill-sm mfba-flag">@Icon("flag", "mfba-icon mfba-icon-sm") Flagged</span> }
+                                    </div>
+                                    <small>@(string.IsNullOrWhiteSpace(email) ? "no email" : email) &middot; @Ago(row.SubmittedOnUtc)</small>
+                                </div>
+                            </div>
+                            <p class="mfba-cbody mfba-clamp2">@Text(typed, "comment_body", "")</p>
+                            <div class="mfba-cstats">
+                                <span>@Icon("thumbs-up", "mfba-icon mfba-icon-sm") @Num(typed, "like_count")</span>
+                                <span>@Icon("message-circle", "mfba-icon mfba-icon-sm") @replies replies</span>
+                            </div>
+                        </div>
+                        <div class="mfba-col-post">
+                            @if (parent == null)
+                            {
+                                <span class="mfba-stat-sub">@(string.IsNullOrWhiteSpace(slug) ? "unlinked" : slug)</span>
+                            }
+                            else
+                            {
+                                <a class="mfba-clamp2" href="/Blogs?slug=@Server.UrlEncode(slug)">@Text(parent, "title", slug)</a>
+                            }
+                        </div>
+                        <div class="mfba-col-status">
+                            <span class="mfba-pill mfba-st-@key">@ModerationLabel(key)</span>
+                        </div>
+                        <div class="mfba-col-actions">
+                            @if (key == "pending")
+                            {
+                                <button class="mfba-iconbtn ok" type="submit" name="mfb_action" value="approve|@row.SubmissionId" title="Approve">@Icon("check", "mfba-icon mfba-icon-md")</button>
+                                <button class="mfba-iconbtn stop" type="submit" name="mfb_action" value="spam|@row.SubmissionId" title="Mark as spam">@Icon("ban", "mfba-icon mfba-icon-md")</button>
+                            }
+                            @if (key == "approved")
+                            {
+                                <button class="mfba-iconbtn warn" type="submit" name="mfb_action" value="unapprove|@row.SubmissionId" title="Unapprove">@Icon("x", "mfba-icon mfba-icon-md")</button>
+                            }
+                            @if (key == "hidden" || key == "spam")
+                            {
+                                <button class="mfba-iconbtn ok" type="submit" name="mfb_action" value="approve|@row.SubmissionId" title="Restore and approve">@Icon("check", "mfba-icon mfba-icon-md")</button>
+                            }
+                            <a class="mfba-iconbtn" href="/Blogs?slug=@Server.UrlEncode(slug)" title="View on the blog">@Icon("eye", "mfba-icon mfba-icon-md")</a>
+                            <button class="mfba-iconbtn stop" type="submit" name="mfb_action" value="trash|@row.SubmissionId" title="Move to trash">@Icon("trash", "mfba-icon mfba-icon-md")</button>
+                        </div>
+                    </div>
+                }
+            </div>
+            @if (scanTruncated)
+            {
+                <p class="mfba-stat-sub" style="margin-top:12px">Showing the most recent @ScanCap comments. Use search to reach older rows.</p>
+            }
+        </div>
+    }
+</div>
+
+@if (allowed)
+{
+    <script>
+    (function () {
+        "use strict";
+        var base = "@commentsUrl";
+        var tab = "@tab";
+        window.mfbaSearch = function () {
+            var q = (document.getElementById("mfba-cq").value || "").trim();
+            window.location.href = base + "&tab=" + tab + (q ? "&q=" + encodeURIComponent(q) : "");
+        };
+        function boxes() { return Array.prototype.slice.call(document.querySelectorAll('input[name="mfb_sel"]')); }
+        window.mfbaCount = function () {
+            var picked = boxes().filter(function (b) { return b.checked; });
+            var bar = document.getElementById("mfba-bulk");
+            document.getElementById("mfba-bulk-n").textContent = picked.length;
+            bar.hidden = picked.length === 0;
+            boxes().forEach(function (b) {
+                var row = b.closest(".mfba-crow");
+                if (row) { row.classList.toggle("sel", b.checked); }
+            });
+            var all = document.getElementById("mfba-all");
+            if (all) { all.checked = picked.length > 0 && picked.length === boxes().length; }
+        };
+        window.mfbaToggleAll = function (source) {
+            boxes().forEach(function (b) { b.checked = source.checked; });
+            window.mfbaCount();
+        };
+        window.mfbaClear = function () {
+            boxes().forEach(function (b) { b.checked = false; });
+            var all = document.getElementById("mfba-all");
+            if (all) { all.checked = false; }
+            window.mfbaCount();
+        };
+        window.mfbaCount();
+    })();
+    </script>
+}

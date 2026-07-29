@@ -1,0 +1,415 @@
+@*
+    MegaForm Blogs - editorial kanban (screen 2 of 3).
+    Dragging a card patches the canonical typed `status` field through Records.PatchRecordAsync.
+    MF_Submissions.Status is left alone: it stays the transport/workflow status.
+*@
+@inherits DotNetNuke.Web.Razor.DotNetNukeWebPage<dynamic>
+@using System
+@using System.Linq
+@using System.Globalization
+@using System.Collections.Generic
+@using System.Security.Cryptography
+@using MegaForm.Sdk
+
+@functions {
+    static T Run<T>(System.Func<IMegaFormClient, System.Threading.Tasks.Task<T>> action)
+    {
+        var initializeMegaForm = MegaForm.DNN.Services.DnnServiceLocator.Instance;
+        return System.Threading.Tasks.Task.Run(() => MegaFormSdk.RunAsync(action)).GetAwaiter().GetResult();
+    }
+
+    static string Text(AppRecordDto record, string key, string fallback)
+    {
+        if (record == null || record.Data == null || !record.Data.ContainsKey(key) || record.Data[key] == null)
+            return fallback;
+        var value = Convert.ToString(record.Data[key]);
+        return string.IsNullOrWhiteSpace(value) ? fallback : value;
+    }
+
+    static bool CanManage(DotNetNuke.Entities.Users.UserInfo user)
+    {
+        if (user == null || user.UserID < 0) return false;
+        if (user.IsSuperUser) return true;
+        var allowed = new[] { "Administrators", "Blog Authors", "Blog Editors", "SEO Reviewers", "Content Legal Reviewers", "Blog Publishers" };
+        return user.Roles != null && user.Roles.Any(role => allowed.Contains(role, StringComparer.OrdinalIgnoreCase));
+    }
+
+    static string EnsureCsrfToken()
+    {
+        const string key = "MegaFormBlogs.CsrfToken";
+        var session = System.Web.HttpContext.Current.Session;
+        var token = session[key] as string;
+        if (!string.IsNullOrWhiteSpace(token)) return token;
+        var bytes = new byte[32];
+        using (var random = RandomNumberGenerator.Create()) { random.GetBytes(bytes); }
+        token = Convert.ToBase64String(bytes);
+        session[key] = token;
+        return token;
+    }
+
+    static void ValidateCsrfToken(string posted)
+    {
+        const string key = "MegaFormBlogs.CsrfToken";
+        var expected = System.Web.HttpContext.Current.Session[key] as string;
+        var valid = !string.IsNullOrWhiteSpace(expected) && !string.IsNullOrWhiteSpace(posted) && expected.Length == posted.Length;
+        var difference = valid ? 0 : 1;
+        var length = valid ? expected.Length : 0;
+        for (var index = 0; index < length; index++) { difference |= expected[index] ^ posted[index]; }
+        if (difference != 0)
+            throw new InvalidOperationException("The editorial session expired. Reload this page and try again.");
+    }
+
+    static string Initials(string name)
+    {
+        var parts = (name ?? "").Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0) return "MF";
+        return string.Concat(parts.Take(2).Select(x => char.ToUpperInvariant(x[0])));
+    }
+
+    static string Ago(DateTime utc)
+    {
+        var span = DateTime.UtcNow - utc;
+        if (span.TotalMinutes < 1) return "just now";
+        if (span.TotalMinutes < 60) return (int)span.TotalMinutes + " minutes ago";
+        if (span.TotalHours < 24) return (int)span.TotalHours + " hours ago";
+        if (span.TotalDays < 30) return (int)span.TotalDays + " days ago";
+        return utc.ToString("MMM d, yyyy", CultureInfo.InvariantCulture);
+    }
+
+    static string StatusKey(AppRecordDto record)
+    {
+        var value = Text(record, "status", "draft").Trim().ToLowerInvariant().Replace(' ', '_');
+        var known = new[] { "draft", "in_review", "seo_review", "legal_review", "ready_to_publish", "scheduled", "published", "archived" };
+        return known.Contains(value) ? value : "draft";
+    }
+
+    static string PriorityClass(AppRecordDto record)
+    {
+        switch (Text(record, "editorial_priority", "Normal").Trim().ToLowerInvariant())
+        {
+            case "launch critical":
+            case "high": return "mfba-p-high";
+            case "low": return "mfba-p-low";
+            default: return "mfba-p-medium";
+        }
+    }
+
+    static System.Web.IHtmlString Icon(string name, string cssClass = "mfba-icon")
+    {
+        string body;
+        switch (name)
+        {
+            case "chevron-right": body = "<path d='m9 18 6-6-6-6'/>"; break;
+            case "chevron-left": body = "<path d='m15 18-6-6 6-6'/>"; break;
+            case "plus": body = "<path d='M5 12h14'/><path d='M12 5v14'/>"; break;
+            case "search": body = "<circle cx='11' cy='11' r='8'/><path d='m21 21-4.3-4.3'/>"; break;
+            case "grip": body = "<circle cx='9' cy='12' r='1'/><circle cx='9' cy='5' r='1'/><circle cx='9' cy='19' r='1'/><circle cx='15' cy='12' r='1'/><circle cx='15' cy='5' r='1'/><circle cx='15' cy='19' r='1'/>"; break;
+            case "more": body = "<circle cx='12' cy='12' r='1'/><circle cx='19' cy='12' r='1'/><circle cx='5' cy='12' r='1'/>"; break;
+            case "tag": body = "<path d='M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.42l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42z'/><circle cx='7.5' cy='7.5' r='.75' fill='currentColor'/>"; break;
+            case "calendar": body = "<path d='M8 2v4'/><path d='M16 2v4'/><rect width='18' height='18' x='3' y='4' rx='2'/><path d='M3 10h18'/>"; break;
+            case "clock": body = "<circle cx='12' cy='12' r='10'/><polyline points='12 6 12 12 16 14'/>"; break;
+            case "pencil": body = "<path d='M21.17 6.81a1 1 0 0 0-3.98-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.63l4.35-1.33a2 2 0 0 0 .83-.5z'/>"; break;
+            default: body = ""; break;
+        }
+        return new System.Web.HtmlString("<svg class='" + cssClass + "' viewBox='0 0 24 24' aria-hidden='true'>" + body + "</svg>");
+    }
+}
+
+@{
+    var portalId = DotNetNuke.Entities.Portals.PortalSettings.Current == null
+        ? 0 : DotNetNuke.Entities.Portals.PortalSettings.Current.PortalId;
+    var activeTab = DotNetNuke.Entities.Portals.PortalSettings.Current == null
+        ? null : DotNetNuke.Entities.Portals.PortalSettings.Current.ActiveTab;
+    var adminBaseUrl = activeTab == null ? Request.RawUrl : DotNetNuke.Common.Globals.NavigateURL(activeTab.TabID);
+    var editorialUrl = adminBaseUrl + "?view=editorial";
+    var user = DotNetNuke.Entities.Users.UserController.Instance.GetCurrentUserInfo();
+    var scope = new MegaFormScope
+    {
+        PortalId = portalId,
+        UserId = user == null ? 0 : user.UserID,
+        UserName = user == null ? "" : user.Username,
+        DisplayName = user == null ? "" : user.DisplayName,
+        UserEmail = user == null ? "" : user.Email,
+        IsAuthenticated = user != null && user.UserID >= 0,
+        IsAdmin = user != null && (user.IsSuperUser || user.IsInRole("Administrators")),
+        IsSuperUser = user != null && user.IsSuperUser,
+        Roles = user == null || user.Roles == null ? new List<string>() : user.Roles.ToList(),
+        IpAddress = Request.UserHostAddress ?? ""
+    };
+    var allowed = CanManage(user);
+    var csrfToken = allowed ? EnsureCsrfToken() : "";
+    var message = "";
+    var messageError = false;
+    AppQueryResultDto queue = null;
+
+    var columns = new[]
+    {
+        Tuple.Create("draft", "Draft", "#62748e"),
+        Tuple.Create("in_review", "Editorial Review", "#fe9a00"),
+        Tuple.Create("seo_review", "SEO Check", "#2b7fff"),
+        Tuple.Create("legal_review", "Legal Review", "#ad46ff"),
+        Tuple.Create("ready_to_publish", "Ready to Publish", "#00bc7d"),
+        Tuple.Create("scheduled", "Scheduled", "#00b8db"),
+        Tuple.Create("published", "Published", "#00c950"),
+        Tuple.Create("archived", "Archived", "#a8a29e")
+    };
+
+    if (allowed && Request.HttpMethod == "POST")
+    {
+        try
+        {
+            ValidateCsrfToken(Request.Form["mfb_csrf"]);
+            var moveId = 0;
+            int.TryParse(Request.Form["mfb_move_id"], out moveId);
+            var moveTo = (Request.Form["mfb_move_to"] ?? "").Trim().ToLowerInvariant();
+            if (moveId > 0 && columns.Any(c => c.Item1 == moveTo))
+            {
+                // Ownership check: only records returned by this app's own named query may move.
+                var owned = Run(c => c.Queries.ExecuteAsync("blog-starter", "all-posts",
+                    new AppQueryRequest { Page = 1, PageSize = 200 }, scope));
+                var ownedIds = owned == null || owned.Items == null
+                    ? new HashSet<int>() : new HashSet<int>(owned.Items.Select(i => i.SubmissionId));
+                if (!ownedIds.Contains(moveId))
+                {
+                    throw new InvalidOperationException("That post does not belong to the Blog application.");
+                }
+                var saved = Run(c => c.Records.PatchRecordAsync(moveId, new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["status"] = moveTo
+                }, scope));
+                message = saved == null ? "The post no longer exists." : "Moved #" + moveId + " to " + moveTo.Replace('_', ' ') + ".";
+                messageError = saved == null;
+            }
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            messageError = true;
+        }
+    }
+
+    if (allowed)
+    {
+        try
+        {
+            queue = Run(c => c.Queries.ExecuteAsync("blog-starter", "all-posts",
+                new AppQueryRequest { Page = 1, PageSize = 200, Search = Request.QueryString["q"] }, scope));
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            messageError = true;
+        }
+    }
+
+    var allPosts = queue == null || queue.Items == null ? new List<AppRecordDto>() : queue.Items.ToList();
+    var boardTruncated = queue != null && queue.TotalCount > allPosts.Count;
+    var authorFilter = (Request.QueryString["author"] ?? "").Trim();
+    var priorityFilter = (Request.QueryString["priority"] ?? "").Trim();
+    var searchTerm = (Request.QueryString["q"] ?? "").Trim();
+    var authorList = allPosts.Select(p => Text(p, "author_name", "")).Where(a => !string.IsNullOrWhiteSpace(a))
+        .Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(a => a).ToList();
+    var visible = allPosts.Where(p =>
+        (string.IsNullOrWhiteSpace(authorFilter) || string.Equals(Text(p, "author_name", ""), authorFilter, StringComparison.OrdinalIgnoreCase)) &&
+        (string.IsNullOrWhiteSpace(priorityFilter) || string.Equals(Text(p, "editorial_priority", "Normal"), priorityFilter, StringComparison.OrdinalIgnoreCase))
+    ).ToList();
+}
+
+<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs-admin.css?v=20260730a" />
+
+<div class="mfba">
+    @if (!allowed)
+    {
+        <header class="mfba-head">
+            <div class="mfba-head-row"><div><h1>Editorial access required</h1><p>Sign in with a Blog or Administrator role to manage posts.</p></div></div>
+        </header>
+    }
+    else
+    {
+        <header class="mfba-head">
+            <nav class="mfba-crumb" aria-label="Breadcrumb">
+                <a href="/Blogs">Blog</a>@Icon("chevron-right", "mfba-icon mfba-icon-md")
+                <a href="@adminBaseUrl">Admin</a>@Icon("chevron-right", "mfba-icon mfba-icon-md")
+                <strong>Editorial Calendar</strong>
+            </nav>
+            <div class="mfba-head-row">
+                <div>
+                    <h1>Editorial Kanban</h1>
+                    <p>Drag and drop posts between columns to update the typed status</p>
+                </div>
+                <div class="mfba-head-actions">
+                    <label class="mfba-sr" for="mfba-kq">Search posts</label>
+                    <span class="mfba-field">
+                        @Icon("search")
+                        <input id="mfba-kq" value="@searchTerm" placeholder="Search posts..." style="width:192px"
+                               onkeydown="if(event.key==='Enter'){event.preventDefault();mfbaFilter();}" />
+                    </span>
+                    <label class="mfba-sr" for="mfba-kauthor">Filter by author</label>
+                    <select id="mfba-kauthor" class="mfba-select" onchange="mfbaFilter()">
+                        <option value="">All Authors</option>
+                        @foreach (var author in authorList)
+                        {
+                            <option value="@author" @(string.Equals(author, authorFilter, StringComparison.OrdinalIgnoreCase) ? "selected" : "")>@author</option>
+                        }
+                    </select>
+                    <label class="mfba-sr" for="mfba-kpriority">Filter by priority</label>
+                    <select id="mfba-kpriority" class="mfba-select" onchange="mfbaFilter()">
+                        <option value="">All Priorities</option>
+                        @foreach (var priority in new[] { "Launch Critical", "High", "Normal", "Low" })
+                        {
+                            <option value="@priority" @(string.Equals(priority, priorityFilter, StringComparison.OrdinalIgnoreCase) ? "selected" : "")>@priority</option>
+                        }
+                    </select>
+                    <a class="mfba-btn" href="@adminBaseUrl">@Icon("plus") New Post</a>
+                </div>
+            </div>
+        </header>
+
+        <input type="hidden" name="mfb_csrf" value="@csrfToken" />
+        <input type="hidden" name="mfb_move_id" id="mfb_move_id" value="" />
+        <input type="hidden" name="mfb_move_to" id="mfb_move_to" value="" />
+
+        @* Code context here (we are inside the else block, past the markup above), so no @ prefix. *@
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            <div style="padding:12px 24px 0"><div class="mfba-notice @(messageError ? "err" : "ok")">@message</div></div>
+        }
+        if (boardTruncated)
+        {
+            <div style="padding:12px 24px 0"><div class="mfba-notice err">Showing the first @allPosts.Count of @queue.TotalCount posts. Narrow the search to see the rest.</div></div>
+        }
+
+        <div class="mfba-board-wrap">
+            <div class="mfba-board">
+                @for (var columnIndex = 0; columnIndex < columns.Length; columnIndex++)
+                {
+                    var column = columns[columnIndex];
+                    var cards = visible.Where(p => StatusKey(p) == column.Item1)
+                        .OrderByDescending(p => p.SubmittedOnUtc).ToList();
+                    <div class="mfba-kcol" data-mfba-col="@column.Item1">
+                        <div class="mfba-kcol-head">
+                            <div>
+                                <span class="mfba-kdot" style="background:@column.Item3"></span>
+                                <h3>@column.Item2</h3>
+                                <span class="mfba-kcount">@cards.Count</span>
+                            </div>
+                            <a class="mfba-iconbtn" href="@adminBaseUrl" title="New post in @column.Item2">@Icon("plus", "mfba-icon mfba-icon-md")</a>
+                        </div>
+                        <div class="mfba-klist" data-mfba-drop="@column.Item1">
+                            @foreach (var post in cards)
+                            {
+                                var image = Text(post, "featured_image_url", "");
+                                var avatar = Text(post, "author_avatar_url", "");
+                                var author = Text(post, "author_name", "MegaForm Editorial");
+                                var scheduled = Text(post, "publish_date", "");
+                                <article class="mfba-kcard" draggable="true" data-mfba-id="@post.SubmissionId">
+                                    <div class="mfba-kcard-top">
+                                        <div>
+                                            @Icon("grip", "mfba-icon mfba-icon-md")
+                                            <span class="mfba-pdot @PriorityClass(post)" title="@Text(post, "editorial_priority", "Normal") priority"></span>
+                                        </div>
+                                        <a class="mfba-iconbtn" href="@adminBaseUrl?edit=@post.SubmissionId" title="Edit post">@Icon("pencil", "mfba-icon mfba-icon-md")</a>
+                                    </div>
+                                    @if (!string.IsNullOrWhiteSpace(image))
+                                    {
+                                        <div class="mfba-kthumb"><img src="@image" alt="@Text(post, "image_alt_text", "")" loading="lazy" /></div>
+                                    }
+                                    <h4 class="mfba-clamp2">@Text(post, "title", "Untitled story")</h4>
+                                    <div class="mfba-kmeta">
+                                        <span>@Icon("tag", "mfba-icon mfba-icon-sm")@Text(post, "category", "Insights")</span>
+                                        @if (column.Item1 == "scheduled" && !string.IsNullOrWhiteSpace(scheduled))
+                                        {
+                                            <span>@Icon("calendar", "mfba-icon mfba-icon-sm")@scheduled</span>
+                                        }
+                                    </div>
+                                    <div class="mfba-kfoot">
+                                        <div>
+                                            @if (!string.IsNullOrWhiteSpace(avatar))
+                                            {
+                                                <img src="@avatar" alt="" loading="lazy" />
+                                            }
+                                            else
+                                            {
+                                                <span class="mfba-avatar">@Initials(author)</span>
+                                            }
+                                            <span>@author</span>
+                                        </div>
+                                        <time>@Icon("clock", "mfba-icon mfba-icon-sm")@Ago(post.SubmittedOnUtc)</time>
+                                    </div>
+                                    <div class="mfba-kmove">
+                                        @if (columnIndex > 0)
+                                        {
+                                            <button type="button" title="Move to @columns[columnIndex - 1].Item2"
+                                                    onclick="mfbaMove(@post.SubmissionId,'@columns[columnIndex - 1].Item1')">&#9664; @columns[columnIndex - 1].Item2</button>
+                                        }
+                                        @if (columnIndex < columns.Length - 1)
+                                        {
+                                            <button type="button" title="Move to @columns[columnIndex + 1].Item2"
+                                                    onclick="mfbaMove(@post.SubmissionId,'@columns[columnIndex + 1].Item1')">@columns[columnIndex + 1].Item2 &#9654;</button>
+                                        }
+                                    </div>
+                                </article>
+                            }
+                            @if (cards.Count == 0)
+                            {
+                                <div class="mfba-kempty">Drop posts here</div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@if (allowed)
+{
+    <script>
+    (function () {
+        "use strict";
+        var base = "@editorialUrl";
+        window.mfbaFilter = function () {
+            var q = (document.getElementById("mfba-kq").value || "").trim();
+            var a = document.getElementById("mfba-kauthor").value;
+            var p = document.getElementById("mfba-kpriority").value;
+            var parts = [];
+            if (q) parts.push("q=" + encodeURIComponent(q));
+            if (a) parts.push("author=" + encodeURIComponent(a));
+            if (p) parts.push("priority=" + encodeURIComponent(p));
+            window.location.href = base + (parts.length ? "&" + parts.join("&") : "");
+        };
+        window.mfbaMove = function (id, status) {
+            var idInput = document.getElementById("mfb_move_id");
+            var toInput = document.getElementById("mfb_move_to");
+            if (!idInput || !toInput) return;
+            idInput.value = id;
+            toInput.value = status;
+            var form = idInput.form || document.forms[0];
+            if (form) { form.submit(); }
+        };
+
+        var dragged = null;
+        document.querySelectorAll("[data-mfba-id]").forEach(function (card) {
+            card.addEventListener("dragstart", function (e) {
+                dragged = card;
+                card.classList.add("drag");
+                if (e.dataTransfer) { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", card.getAttribute("data-mfba-id")); }
+            });
+            card.addEventListener("dragend", function () { card.classList.remove("drag"); dragged = null; });
+        });
+        document.querySelectorAll("[data-mfba-drop]").forEach(function (list) {
+            list.addEventListener("dragover", function (e) { e.preventDefault(); list.classList.add("over"); });
+            list.addEventListener("dragleave", function () { list.classList.remove("over"); });
+            list.addEventListener("drop", function (e) {
+                e.preventDefault();
+                list.classList.remove("over");
+                if (!dragged) return;
+                var target = list.getAttribute("data-mfba-drop");
+                var source = dragged.closest("[data-mfba-col]");
+                if (source && source.getAttribute("data-mfba-col") === target) return;
+                window.mfbaMove(dragged.getAttribute("data-mfba-id"), target);
+            });
+        });
+    })();
+    </script>
+}

@@ -124,7 +124,10 @@
     }
     catch (Exception ex)
     {
-        loadError = ex.Message;
+        // This page is anonymous. Never echo exception text to the client: log it to the
+        // DNN event log and show a neutral notice instead (root CLAUDE.md rule 10).
+        DotNetNuke.Services.Exceptions.Exceptions.LogException(ex);
+        loadError = "The blog could not be loaded. The site log has the details.";
     }
 
     var posts = publicResult == null ? new List<AppRecordDto>() : publicResult.Items.ToList();

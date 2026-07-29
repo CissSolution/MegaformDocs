@@ -1,3 +1,11 @@
+@*
+    MegaForm Blogs - Host-only wrapper and screen router.
+    The SuperUser check is deliberately independent of DNN page permissions: DNN keeps a
+    built-in Administrator grant on admin pages, and a non-Host Administrator must not be
+    able to run the editorial console. Do not remove it.
+    `view` is matched against a fixed whitelist so the query string can never choose an
+    arbitrary script path.
+*@
 @inherits DotNetNuke.Web.Razor.DotNetNukeWebPage<dynamic>
 @using DotNetNuke.Entities.Users
 @{
@@ -6,6 +14,11 @@
     if (!hostAllowed) {
         Response.StatusCode = 403;
     }
+
+    var requestedView = (Request.QueryString["view"] ?? "").Trim().ToLowerInvariant();
+    var screen = "MegaFormBlogsAdmin.cshtml";
+    if (requestedView == "editorial") { screen = "MegaFormBlogsAdminEditorial.cshtml"; }
+    else if (requestedView == "comments") { screen = "MegaFormBlogsAdminComments.cshtml"; }
 }
 @if (!hostAllowed)
 {
@@ -18,5 +31,5 @@
 }
 else
 {
-    @RenderPage("~/DesktopModules/RazorModules/RazorHost/Scripts/MegaFormBlogsAdmin.cshtml")
+    @RenderPage("~/DesktopModules/RazorModules/RazorHost/Scripts/" + screen)
 }

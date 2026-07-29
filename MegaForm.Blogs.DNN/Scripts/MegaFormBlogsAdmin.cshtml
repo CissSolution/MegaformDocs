@@ -1,10 +1,14 @@
 @*
-    MegaForm Blogs - authenticated editorial console for DNN Razor Host.
-    Uses typed Records and first-class Workflows SDK APIs. No SQL/DataJson access.
+    MegaForm Blogs - admin dashboard (screen 1 of 3).
+    Sibling screens: MegaFormBlogsAdminEditorial.cshtml, MegaFormBlogsAdminComments.cshtml.
+    Data contract: IMegaFormClient only. No DataJson parsing, no SQL, no MegaForm repositories.
+    DNN Razor Host compiles each script in isolation, so the small helper block below is
+    duplicated across the three admin screens on purpose.
 *@
 @inherits DotNetNuke.Web.Razor.DotNetNukeWebPage<dynamic>
 @using System
 @using System.Linq
+@using System.Globalization
 @using System.Collections.Generic
 @using System.Security.Cryptography
 @using MegaForm.Sdk
@@ -24,6 +28,12 @@
         return string.IsNullOrWhiteSpace(value) ? fallback : value;
     }
 
+    static int Num(AppRecordDto record, string key)
+    {
+        int value;
+        return int.TryParse(Text(record, key, "0"), NumberStyles.Any, CultureInfo.InvariantCulture, out value) ? value : 0;
+    }
+
     static bool CanManage(DotNetNuke.Entities.Users.UserInfo user)
     {
         if (user == null || user.UserID < 0) return false;
@@ -38,12 +48,8 @@
         var session = System.Web.HttpContext.Current.Session;
         var token = session[key] as string;
         if (!string.IsNullOrWhiteSpace(token)) return token;
-
         var bytes = new byte[32];
-        using (var random = RandomNumberGenerator.Create())
-        {
-            random.GetBytes(bytes);
-        }
+        using (var random = RandomNumberGenerator.Create()) { random.GetBytes(bytes); }
         token = Convert.ToBase64String(bytes);
         session[key] = token;
         return token;
@@ -53,19 +59,145 @@
     {
         const string key = "MegaFormBlogs.CsrfToken";
         var expected = System.Web.HttpContext.Current.Session[key] as string;
-        var valid = !string.IsNullOrWhiteSpace(expected)
-            && !string.IsNullOrWhiteSpace(posted)
-            && expected.Length == posted.Length;
+        var valid = !string.IsNullOrWhiteSpace(expected) && !string.IsNullOrWhiteSpace(posted) && expected.Length == posted.Length;
         var difference = valid ? 0 : 1;
         var length = valid ? expected.Length : 0;
-        for (var index = 0; index < length; index++)
-        {
-            difference |= expected[index] ^ posted[index];
-        }
+        for (var index = 0; index < length; index++) { difference |= expected[index] ^ posted[index]; }
         if (difference != 0)
-        {
             throw new InvalidOperationException("The editorial session expired. Reload this page and try again.");
+    }
+
+    static string Initials(string name)
+    {
+        var parts = (name ?? "").Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0) return "MF";
+        return string.Concat(parts.Take(2).Select(x => char.ToUpperInvariant(x[0])));
+    }
+
+    // The persisted app manifest does not carry form bindings on every install (a seeded
+    // blog-starter can ship "Forms": []), so fall back to identifying the comment child form
+    // by its schema shape rather than by a title string. Cached for the request.
+    static int ResolveCommentsFormId(MegaFormScope scope)
+    {
+        var items = System.Web.HttpContext.Current == null ? null : System.Web.HttpContext.Current.Items;
+        const string cacheKey = "MegaFormBlogs.CommentsFormId";
+        if (items != null && items.Contains(cacheKey)) { return (int)items[cacheKey]; }
+
+        var resolved = Run(async c =>
+        {
+            var app = await c.Apps.GetAppAsync("blog-starter", scope);
+            if (app != null && app.Forms != null)
+            {
+                var bound = app.Forms.FirstOrDefault(f =>
+                    string.Equals(f.Alias, "comments", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(f.Role, "comments", StringComparison.OrdinalIgnoreCase));
+                if (bound != null && bound.FormId > 0) { return bound.FormId; }
+            }
+
+            var forms = await c.Forms.ListFormsAsync(new FormQuery { Page = 1, PageSize = 200 }, scope);
+            if (forms == null || forms.Items == null) { return 0; }
+            var ordered = forms.Items
+                .OrderByDescending(f => (f.Title ?? "").IndexOf("comment", StringComparison.OrdinalIgnoreCase) >= 0)
+                .ToList();
+            foreach (var form in ordered)
+            {
+                var candidate = form;
+                if (string.IsNullOrWhiteSpace(candidate.SchemaJson))
+                {
+                    candidate = await c.Forms.GetFormAsync(form.FormId, scope) ?? form;
+                }
+                if (string.IsNullOrWhiteSpace(candidate.SchemaJson)) { continue; }
+                var keys = c.Schema.ParseForm(candidate).Fields.Select(x => x.Key ?? "").ToList();
+                if (keys.Contains("comment_body", StringComparer.OrdinalIgnoreCase)
+                    && keys.Contains("post_slug", StringComparer.OrdinalIgnoreCase)
+                    && keys.Contains("moderation_status", StringComparer.OrdinalIgnoreCase))
+                {
+                    return candidate.FormId;
+                }
+            }
+            return 0;
+        });
+
+        if (items != null) { items[cacheKey] = resolved; }
+        return resolved;
+    }
+
+    static string Ago(DateTime utc)
+    {
+        var span = DateTime.UtcNow - utc;
+        if (span.TotalMinutes < 1) return "just now";
+        if (span.TotalMinutes < 60) return (int)span.TotalMinutes + "m ago";
+        if (span.TotalHours < 24) return (int)span.TotalHours + "h ago";
+        if (span.TotalDays < 30) return (int)span.TotalDays + "d ago";
+        return utc.ToString("MMM d, yyyy", CultureInfo.InvariantCulture);
+    }
+
+    static string StatusLabel(string status)
+    {
+        switch ((status ?? "").ToLowerInvariant())
+        {
+            case "published": return "Published";
+            case "in_review": return "Editorial";
+            case "seo_review": return "SEO Check";
+            case "legal_review": return "Legal";
+            case "ready_to_publish": return "Ready";
+            case "scheduled": return "Scheduled";
+            case "archived": return "Archived";
+            default: return "Draft";
         }
+    }
+
+    static string StatusKey(AppRecordDto record)
+    {
+        var value = Text(record, "status", "draft").Trim().ToLowerInvariant().Replace(' ', '_');
+        var known = new[] { "draft", "in_review", "seo_review", "legal_review", "ready_to_publish", "scheduled", "published", "archived" };
+        return known.Contains(value) ? value : "draft";
+    }
+
+    static string Compact(int value)
+    {
+        if (value >= 1000000) return (value / 1000000d).ToString("0.#", CultureInfo.InvariantCulture) + "M";
+        if (value >= 1000) return (value / 1000d).ToString("0.#", CultureInfo.InvariantCulture) + "k";
+        return value.ToString(CultureInfo.InvariantCulture);
+    }
+
+    // Lucide icon paths, inlined so the module ships no external icon font or CDN.
+    static System.Web.IHtmlString Icon(string name, string cssClass = "mfba-icon")
+    {
+        string body;
+        switch (name)
+        {
+            case "chevron-right": body = "<path d='m9 18 6-6-6-6'/>"; break;
+            case "plus": body = "<path d='M5 12h14'/><path d='M12 5v14'/>"; break;
+            case "search": body = "<circle cx='11' cy='11' r='8'/><path d='m21 21-4.3-4.3'/>"; break;
+            case "trending-up": body = "<polyline points='22 7 13.5 15.5 8.5 10.5 2 17'/><polyline points='16 7 22 7 22 13'/>"; break;
+            case "trending-down": body = "<polyline points='22 17 13.5 8.5 8.5 13.5 2 7'/><polyline points='16 17 22 17 22 11'/>"; break;
+            case "eye": body = "<path d='M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0'/><circle cx='12' cy='12' r='3'/>"; break;
+            case "message-circle": body = "<path d='M7.9 20A9 9 0 1 0 4 16.1L2 22Z'/>"; break;
+            case "file-text": body = "<path d='M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z'/><path d='M14 2v4a2 2 0 0 0 2 2h4'/><path d='M16 13H8'/><path d='M16 17H8'/><path d='M10 9H8'/>"; break;
+            case "users": body = "<path d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/><circle cx='9' cy='7' r='4'/><path d='M22 21v-2a4 4 0 0 0-3-3.87'/><path d='M16 3.13a4 4 0 0 1 0 7.75'/>"; break;
+            case "bar-chart": body = "<line x1='18' x2='18' y1='20' y2='10'/><line x1='12' x2='12' y1='20' y2='4'/><line x1='6' x2='6' y1='20' y2='14'/>"; break;
+            case "settings": body = "<path d='M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z'/><circle cx='12' cy='12' r='3'/>"; break;
+            case "bell": body = "<path d='M10.27 21a2 2 0 0 0 3.46 0'/><path d='M3.26 15.33A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.67C19.41 13.96 18 12.5 18 8A6 6 0 0 0 6 8c0 4.5-1.41 5.96-2.74 7.33'/>"; break;
+            case "flame": body = "<path d='M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z'/>"; break;
+            case "calendar": body = "<path d='M8 2v4'/><path d='M16 2v4'/><rect width='18' height='18' x='3' y='4' rx='2'/><path d='M3 10h18'/>"; break;
+            case "clock": body = "<circle cx='12' cy='12' r='10'/><polyline points='12 6 12 12 16 14'/>"; break;
+            case "pencil": body = "<path d='M21.17 6.81a1 1 0 0 0-3.98-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.63l4.35-1.33a2 2 0 0 0 .83-.5z'/>"; break;
+            case "trash": body = "<path d='M3 6h18'/><path d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6'/><path d='M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/>"; break;
+            case "check-circle": body = "<circle cx='12' cy='12' r='10'/><path d='m9 12 2 2 4-4'/>"; break;
+            case "flag": body = "<path d='M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z'/><line x1='4' x2='4' y1='22' y2='15'/>"; break;
+            case "arrow-right": body = "<path d='M5 12h14'/><path d='m12 5 7 7-7 7'/>"; break;
+            case "activity": body = "<path d='M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2'/>"; break;
+            case "book-open": body = "<path d='M12 7v14'/><path d='M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z'/>"; break;
+            case "tag": body = "<path d='M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.42l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42z'/><circle cx='7.5' cy='7.5' r='.75' fill='currentColor'/>"; break;
+            case "layout": body = "<rect width='18' height='18' x='3' y='3' rx='2'/><path d='M3 9h18'/><path d='M9 21V9'/>"; break;
+            case "shield": body = "<path d='M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z'/>"; break;
+            case "rss": body = "<path d='M4 11a9 9 0 0 1 9 9'/><path d='M4 4a16 16 0 0 1 16 16'/><circle cx='5' cy='19' r='1'/>"; break;
+            case "image": body = "<rect width='18' height='18' x='3' y='3' rx='2'/><circle cx='9' cy='9' r='2'/><path d='m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21'/>"; break;
+            case "save": body = "<path d='M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z'/><path d='M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7'/><path d='M7 3v4a1 1 0 0 0 1 1h7'/>"; break;
+            default: body = ""; break;
+        }
+        return new System.Web.HtmlString("<svg class='" + cssClass + "' viewBox='0 0 24 24' aria-hidden='true'>" + body + "</svg>");
     }
 }
 
@@ -76,6 +208,9 @@
         ? null : DotNetNuke.Entities.Portals.PortalSettings.Current.ActiveTab;
     var adminBaseUrl = activeTab == null
         ? Request.RawUrl : DotNetNuke.Common.Globals.NavigateURL(activeTab.TabID);
+    var editorialUrl = adminBaseUrl + "?view=editorial";
+    var commentsUrl = adminBaseUrl + "?view=comments";
+    var blogUrl = "/Blogs";
     var user = DotNetNuke.Entities.Users.UserController.Instance.GetCurrentUserInfo();
     // DNN's service locator is process-wide, so it deliberately does not capture a
     // request user. Carry the complete actor in the SDK scope: workflow role queues
@@ -90,21 +225,28 @@
         IsAuthenticated = user != null && user.UserID >= 0,
         IsAdmin = user != null && (user.IsSuperUser || user.IsInRole("Administrators")),
         IsSuperUser = user != null && user.IsSuperUser,
-        Roles = user == null || user.Roles == null
-            ? new List<string>()
-            : user.Roles.ToList(),
+        Roles = user == null || user.Roles == null ? new List<string>() : user.Roles.ToList(),
         IpAddress = Request.UserHostAddress ?? ""
     };
     var allowed = CanManage(user);
     var csrfToken = allowed ? EnsureCsrfToken() : "";
     var message = "";
     var messageError = false;
+
+    AppDto app = null;
     AppRecordDto editing = null;
     InboxBoardDto board = null;
     AppQueryResultDto queue = null;
     IReadOnlyList<FileDto> editingFiles = new List<FileDto>();
     IReadOnlyList<GalleryItemDto> postImages = new List<GalleryItemDto>();
     IReadOnlyList<GalleryItemDto> authorImages = new List<GalleryItemDto>();
+    var commentsFormId = 0;
+    var commentRows = new List<Tuple<SubmissionListItemDto, AppRecordDto>>();
+
+    // Bounded admin scan. The comment child form has no named query, so the console reads
+    // a capped page of submissions and resolves typed values per row; it never parses DataJson.
+    const int CommentScanCap = 60;
+    var commentScanTruncated = false;
 
     if (allowed && Request.HttpMethod == "POST")
     {
@@ -114,9 +256,10 @@
             var actionToken = (Request.Form["mfb_action"] ?? "").Trim();
             var separator = actionToken.IndexOf('|');
             var action = (separator < 0 ? actionToken : actionToken.Substring(0, separator)).ToLowerInvariant();
-            var actionTaskId = separator < 0 ? "" : actionToken.Substring(separator + 1);
+            var actionArgument = separator < 0 ? "" : actionToken.Substring(separator + 1);
             var submissionId = 0;
             int.TryParse(Request.Form["submission_id"], out submissionId);
+
             if (action == "save" && submissionId > 0)
             {
                 var values = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
@@ -138,46 +281,46 @@
                 message = editing == null ? "The post no longer exists." : "Typed blog record saved.";
                 messageError = editing == null;
             }
-            else if ((action == "claim" || action == "approve" || action == "reject") && !string.IsNullOrWhiteSpace(actionTaskId))
+            else if ((action == "capprove" || action == "cspam" || action == "chide") && !string.IsNullOrWhiteSpace(actionArgument))
+            {
+                var commentId = 0;
+                int.TryParse(actionArgument, out commentId);
+                var moderationFormId = ResolveCommentsFormId(scope);
+                var target = commentId > 0 ? Run(c => c.Records.GetRecordAsync(commentId, scope)) : null;
+                // Ownership check: only moderate rows that belong to this app's comment form.
+                if (target == null || moderationFormId == 0 || target.FormId != moderationFormId)
+                {
+                    throw new InvalidOperationException("That comment does not belong to the Blog application.");
+                }
+                var next = action == "capprove" ? "approved" : action == "cspam" ? "spam" : "hidden";
+                Run(c => c.Records.PatchRecordAsync(commentId, new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["moderation_status"] = next
+                }, scope));
+                message = "Comment moved to " + next + ".";
+            }
+            else if ((action == "claim" || action == "approve" || action == "reject") && !string.IsNullOrWhiteSpace(actionArgument))
             {
                 var blogRecords = Run(c => c.Queries.ExecuteAsync("blog-starter", "all-posts",
                     new AppQueryRequest { Page = 1, PageSize = 100 }, scope));
                 var blogIds = new HashSet<int>();
                 if (blogRecords != null && blogRecords.Items != null)
                 {
-                    foreach (var record in blogRecords.Items)
-                    {
-                        blogIds.Add(record.SubmissionId);
-                    }
+                    foreach (var record in blogRecords.Items) { blogIds.Add(record.SubmissionId); }
                 }
-                var actionBoard = Run(c => c.Workflows.GetMyInboxAsync(
-                    new InboxQuery { RecentCompleted = 15 }, scope));
-                var actionTask = actionBoard == null
-                    ? null
+                var actionBoard = Run(c => c.Workflows.GetMyInboxAsync(new InboxQuery { RecentCompleted = 15 }, scope));
+                var actionTask = actionBoard == null ? null
                     : actionBoard.Incoming.Concat(actionBoard.InProgress)
-                        .FirstOrDefault(task => string.Equals(task.TaskId, actionTaskId, StringComparison.OrdinalIgnoreCase));
+                        .FirstOrDefault(task => string.Equals(task.TaskId, actionArgument, StringComparison.OrdinalIgnoreCase));
                 if (actionTask == null || !blogIds.Contains(actionTask.SubmissionId))
                 {
                     throw new InvalidOperationException("This workflow task does not belong to the Blog application.");
                 }
-                var request = new InboxTaskActionRequest
-                {
-                    TaskId = actionTaskId,
-                    Comment = Request.Form["comment_" + actionTaskId]
-                };
+                var request = new InboxTaskActionRequest { TaskId = actionArgument, Comment = Request.Form["comment_" + actionArgument] };
                 InboxTaskResultDto result;
-                if (action == "claim")
-                {
-                    result = Run(c => c.Workflows.ClaimAsync(request, scope));
-                }
-                else if (action == "approve")
-                {
-                    result = Run(c => c.Workflows.ApproveAsync(request, scope));
-                }
-                else
-                {
-                    result = Run(c => c.Workflows.RejectAsync(request, scope));
-                }
+                if (action == "claim") { result = Run(c => c.Workflows.ClaimAsync(request, scope)); }
+                else if (action == "approve") { result = Run(c => c.Workflows.ApproveAsync(request, scope)); }
+                else { result = Run(c => c.Workflows.RejectAsync(request, scope)); }
                 message = result.Success ? "Workflow action completed." : (result.Error ?? "Workflow action failed.");
                 messageError = !result.Success;
             }
@@ -193,15 +336,31 @@
     {
         try
         {
+            app = Run(c => c.Apps.GetAppAsync("blog-starter", scope));
             board = Run(c => c.Workflows.GetMyInboxAsync(new InboxQuery { RecentCompleted = 15 }, scope));
             queue = Run(c => c.Queries.ExecuteAsync("blog-starter", "all-posts",
                 new AppQueryRequest { Page = 1, PageSize = 100, Search = Request.QueryString["q"] }, scope));
+
+            commentsFormId = ResolveCommentsFormId(scope);
+
+            if (commentsFormId > 0)
+            {
+                var scan = Run(c => c.SubmissionDashboard.SearchAsync(
+                    new SubmissionSearchQuery { FormId = commentsFormId, Page = 1, PageSize = CommentScanCap }, scope));
+                if (scan != null && scan.Items != null)
+                {
+                    commentScanTruncated = scan.TotalCount > scan.Items.Count;
+                    foreach (var row in scan.Items)
+                    {
+                        var typed = Run(c => c.Records.GetRecordAsync(row.SubmissionId, scope));
+                        if (typed != null) { commentRows.Add(Tuple.Create(row, typed)); }
+                    }
+                }
+            }
+
             var editId = 0;
             int.TryParse(Request.QueryString["edit"], out editId);
-            if (editing == null && editId > 0)
-            {
-                editing = Run(c => c.Records.GetRecordAsync(editId, scope));
-            }
+            if (editing == null && editId > 0) { editing = Run(c => c.Records.GetRecordAsync(editId, scope)); }
             if (editing != null)
             {
                 editingFiles = Run(c => c.Files.ListForSubmissionAsync(editing.SubmissionId, scope));
@@ -214,20 +373,14 @@
                     TitleFieldKey = "title",
                     AltTextFieldKey = "image_alt_text",
                     CaptionFieldKey = "media_caption",
-                    // The post library is a typed URL gallery. Attachments for the
-                    // current record remain visible below through IFileApi; avoiding
-                    // a per-record file lookup keeps the editorial page fast.
+                    // The post library is a typed URL gallery. Attachments for the current
+                    // record remain visible below through IFileApi; avoiding a per-record
+                    // file lookup keeps the editorial page fast.
                     IncludeUploadedImages = false
                 }, scope));
-                var galleryItems = postGallery == null
-                    ? new List<GalleryItemDto>()
-                    : postGallery.Items.ToList();
-                postImages = galleryItems
-                    .Where(image => !string.Equals(image.FieldKey, "author_avatar_url", StringComparison.OrdinalIgnoreCase))
-                    .ToList();
-                authorImages = galleryItems
-                    .Where(image => string.Equals(image.FieldKey, "author_avatar_url", StringComparison.OrdinalIgnoreCase))
-                    .ToList();
+                var galleryItems = postGallery == null ? new List<GalleryItemDto>() : postGallery.Items.ToList();
+                postImages = galleryItems.Where(i => !string.Equals(i.FieldKey, "author_avatar_url", StringComparison.OrdinalIgnoreCase)).ToList();
+                authorImages = galleryItems.Where(i => string.Equals(i.FieldKey, "author_avatar_url", StringComparison.OrdinalIgnoreCase)).ToList();
             }
         }
         catch (Exception ex)
@@ -236,197 +389,444 @@
             messageError = true;
         }
     }
+
+    var posts = queue == null || queue.Items == null ? new List<AppRecordDto>() : queue.Items.ToList();
+    var totalPosts = queue == null ? 0 : queue.TotalCount;
+    var totalReads = posts.Sum(p => Num(p, "view_count"));
+    var uniqueReaders = posts.Sum(p => Num(p, "unique_readers"));
+    var publishedThisMonth = posts.Count(p =>
+    {
+        DateTime when;
+        return DateTime.TryParse(Text(p, "publish_date", ""), CultureInfo.InvariantCulture, DateTimeStyles.None, out when)
+            && when.Year == DateTime.UtcNow.Year && when.Month == DateTime.UtcNow.Month;
+    });
+    var authors = posts.Select(p => Text(p, "author_name", "")).Where(a => !string.IsNullOrWhiteSpace(a))
+        .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+    var pendingComments = commentRows.Where(c => string.Equals(Text(c.Item2, "moderation_status", "pending"), "pending", StringComparison.OrdinalIgnoreCase)).ToList();
+    var flaggedComments = commentRows.Count(c => c.Item1.IsSpam);
+    var totalComments = commentRows.Count > 0 ? commentRows.Count : posts.Sum(p => Num(p, "comment_count"));
+    var postsById = posts.ToDictionary(p => Text(p, "post_uid", "#" + p.SubmissionId), p => p, StringComparer.OrdinalIgnoreCase);
+    var recentPosts = posts.OrderByDescending(p => p.SubmittedOnUtc).Take(5).ToList();
+    var topPosts = posts.OrderByDescending(p => Num(p, "view_count")).Take(5).ToList();
+    var topMax = topPosts.Count == 0 ? 1 : Math.Max(1, Num(topPosts[0], "view_count"));
 }
 
 <link rel="stylesheet" href="/DesktopModules/MegaForm/Assets/css/plugins/megaform-widget-rich-text.css?v=20260729a" />
-<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs.css?v=20260729g" />
+<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs-admin.css?v=20260730a" />
 
-<main class="mfb mfb-admin">
+<div class="mfba">
     @if (!allowed)
     {
-        <section class="mfb-state mfb-state-error">
-            <h1>Editorial access required</h1>
-            <p>Sign in with a Blog or Administrator role to manage posts.</p>
-        </section>
+        <header class="mfba-head">
+            <div class="mfba-head-row"><div><h1>Editorial access required</h1><p>Sign in with a Blog or Administrator role to manage posts.</p></div></div>
+        </header>
     }
     else
     {
-        <header class="mfb-admin-head">
-            <div><span class="mfb-eyebrow">MegaForm workflow</span><h1>Blog editorial console</h1></div>
-            <span>Signed in as <strong>@user.DisplayName</strong></span>
+        <header class="mfba-head">
+            <nav class="mfba-crumb" aria-label="Breadcrumb">
+                <a href="@blogUrl">Blog</a>@Icon("chevron-right", "mfba-icon mfba-icon-md")<strong>Admin Dashboard</strong>
+            </nav>
+            <div class="mfba-head-row">
+                <div>
+                    <h1>Admin Dashboard</h1>
+                    <p>Overview of your blog performance and content pipeline</p>
+                </div>
+                <div class="mfba-head-actions">
+                    <label class="mfba-sr" for="mfba-q">Search posts and authors</label>
+                    <span class="mfba-field">
+                        @Icon("search")
+                        <input id="mfba-q" value="@Request.QueryString["q"]" placeholder="Search posts, authors..."
+                               onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('mfba-go').click();}" />
+                    </span>
+                    <button id="mfba-go" type="button" class="mfba-sr"
+                            onclick="var q=document.getElementById('mfba-q').value.trim();window.location.href='@adminBaseUrl'+(q?'?q='+encodeURIComponent(q):'');">Search</button>
+                    <button type="button" class="mfba-bell" title="@pendingComments.Count comment(s) awaiting moderation">
+                        @Icon("bell", "mfba-icon mfba-icon-lg")
+                        @if (pendingComments.Count > 0) { <span></span> }
+                    </button>
+                    <a class="mfba-btn" href="@commentsUrl">@Icon("plus") New Post</a>
+                </div>
+            </div>
         </header>
+
         <input type="hidden" name="mfb_csrf" value="@csrfToken" />
 
-        if (!string.IsNullOrWhiteSpace(message))
-        {
-            <div class="mfb-notice @(messageError ? "error" : "success")">@message</div>
-        }
-
-        <section class="mfb-kpis">
-            @{
-                var blogSubmissionIds = new HashSet<int>();
-                if (queue != null && queue.Items != null)
-                {
-                    foreach (var record in queue.Items)
-                    {
-                        blogSubmissionIds.Add(record.SubmissionId);
-                    }
-                }
-                var blogIncoming = board == null
-                    ? new List<InboxTaskDto>()
-                    : board.Incoming.Where(task => blogSubmissionIds.Contains(task.SubmissionId)).ToList();
-                var blogInProgress = board == null
-                    ? new List<InboxTaskDto>()
-                    : board.InProgress.Where(task => blogSubmissionIds.Contains(task.SubmissionId)).ToList();
-                var blogCompleted = board == null
-                    ? new List<InboxTaskDto>()
-                    : board.Completed.Where(task => blogSubmissionIds.Contains(task.SubmissionId)).ToList();
+        <main class="mfba-body">
+            @if (!string.IsNullOrWhiteSpace(message))
+            {
+                <div class="mfba-notice @(messageError ? "err" : "ok")">@message</div>
             }
-            <div><strong>@blogIncoming.Count</strong><span>Incoming</span></div>
-            <div><strong>@blogInProgress.Count</strong><span>In progress</span></div>
-            <div><strong>@blogCompleted.Count</strong><span>Completed</span></div>
-            <div><strong>@(queue == null ? 0 : queue.TotalCount)</strong><span>Total posts</span></div>
-        </section>
 
-        if (editing != null)
-        {
-            <section class="mfb-editor">
-                <div class="mfb-section-head"><h2>Edit typed record #@editing.SubmissionId</h2><a href="@adminBaseUrl">Close</a></div>
-                <div class="mfb-editor-actions">
-                    <input type="hidden" name="submission_id" value="@editing.SubmissionId" />
-                    <div class="mfb-form-grid">
-                        <label>Title<input name="title" value="@Text(editing, "title", "")" required /></label>
-                        <label>Slug<input name="slug" value="@Text(editing, "slug", "")" required /></label>
-                        <label>Category<input name="category" value="@Text(editing, "category", "")" /></label>
-                        <label>Author<input name="author_name" value="@Text(editing, "author_name", "")" /></label>
-                        <label class="wide">Excerpt<textarea name="excerpt" rows="3">@Text(editing, "excerpt", "")</textarea></label>
-                        <div class="wide mfb-rich-field" id="mfb-body-editor">
-                            <label>Article body (trusted editorial HTML)<textarea name="body" rows="14">@Text(editing, "body", "")</textarea></label>
-                        </div>
-                        <div class="wide mfb-media-field">
-                            <label>Featured image URL<input name="featured_image_url" value="@Text(editing, "featured_image_url", "")" /></label>
-                            <button class="mfb-media-button" type="button" data-mfb-gallery-open="featured_image_url" data-mfb-gallery-tab="posts">Browse image gallery</button>
-                        </div>
-                        <label>Image alt text<input name="image_alt_text" value="@Text(editing, "image_alt_text", "")" /></label>
-                        <div class="mfb-media-field">
-                            <label>Author avatar URL<input name="author_avatar_url" value="@Text(editing, "author_avatar_url", "")" /></label>
-                            <button class="mfb-media-button" type="button" data-mfb-gallery-open="author_avatar_url" data-mfb-gallery-tab="authors">Choose author image</button>
-                        </div>
-                        <label>Tags<input name="tags" value="@Text(editing, "tags", "")" /></label>
-                        <label>SEO title<input name="seo_title" value="@Text(editing, "seo_title", "")" /></label>
-                        <label class="wide">SEO description<textarea name="seo_description" rows="3">@Text(editing, "seo_description", "")</textarea></label>
+            <section class="mfba-stats" aria-label="Blog key figures">
+                <div class="mfba-stat">
+                    <div class="mfba-stat-top">
+                        <span class="mfba-stat-chip mfba-c-blue">@Icon("file-text")</span>
+                        <span class="mfba-trend up">@Icon("trending-up", "mfba-icon mfba-icon-sm")+@publishedThisMonth</span>
                     </div>
-                    <div class="mfb-editor-toolbar">
-                        <button class="mfb-media-button primary" type="button" data-mfb-gallery-open="body" data-mfb-gallery-tab="posts">Insert gallery image into article</button>
-                        <span>Images remain typed values or MegaForm-managed files; the editor stores clean HTML through Records API.</span>
-                    </div>
-                    <button class="mfb-button" type="submit" name="mfb_action" value="save">Save through Records API</button>
+                    <p class="mfba-stat-value">@totalPosts.ToString("N0", CultureInfo.InvariantCulture)</p>
+                    <p class="mfba-stat-label">Total Articles</p>
+                    <p class="mfba-stat-sub">@publishedThisMonth articles this month</p>
                 </div>
-                @if (editingFiles.Count > 0)
-                {
-                    <div class="mfb-files"><strong>Managed by MegaForm Files API:</strong>
-                    @foreach (var file in editingFiles)
-                    {
-                        <a href="/DesktopModules/MegaForm/API/SdkDemo/Download?submissionId=@editing.SubmissionId&amp;fileId=@file.FileId">@file.FileName</a>
-                    }
+                <div class="mfba-stat">
+                    <div class="mfba-stat-top">
+                        <span class="mfba-stat-chip mfba-c-emerald">@Icon("eye")</span>
+                        <span class="mfba-trend up" title="Unique readers">@Icon("trending-up", "mfba-icon mfba-icon-sm")@Compact(uniqueReaders)</span>
                     </div>
-                }
-                <div id="mfb-gallery-dialog" class="mfb-gallery-dialog" role="dialog" aria-modal="true" aria-labelledby="mfb-gallery-title" hidden>
-                    <div class="mfb-gallery-backdrop" data-mfb-gallery-close></div>
-                    <section class="mfb-gallery-sheet">
-                        <header>
-                            <div>
-                                <span class="mfb-eyebrow">MegaForm typed gallery</span>
-                                <h2 id="mfb-gallery-title">Choose an image</h2>
-                            </div>
-                            <button type="button" class="mfb-gallery-close" data-mfb-gallery-close aria-label="Close gallery">&times;</button>
-                        </header>
-                        <div class="mfb-gallery-controls">
-                            <div class="mfb-gallery-tabs" role="tablist" aria-label="Image source">
-                                <button type="button" role="tab" data-mfb-gallery-filter="posts">Post images <span>@postImages.Count</span></button>
-                                <button type="button" role="tab" data-mfb-gallery-filter="authors">Authors <span>@authorImages.Count</span></button>
-                            </div>
-                            <input id="mfb-gallery-search" type="search" placeholder="Search by title, author or caption" aria-label="Search gallery" />
-                        </div>
-                        <div class="mfb-gallery-grid">
-                            @foreach (var image in postImages)
-                            {
-                                <button type="button" class="mfb-gallery-card" data-mfb-gallery-kind="posts"
-                                        data-mfb-gallery-title="@image.Title" data-mfb-gallery-alt="@image.AltText"
-                                        data-mfb-gallery-search="@((image.Title ?? "") + " " + (image.Caption ?? "") + " " + (image.FileName ?? ""))">
-                                    <span class="mfb-gallery-thumb"><img src="@image.Url" alt="@image.AltText" loading="lazy" /></span>
-                                    <strong>@(string.IsNullOrWhiteSpace(image.Title) ? "Untitled image" : image.Title)</strong>
-                                    <small>@(image.Source == "uploaded-file" ? "MegaForm file" : "Typed image field")</small>
-                                </button>
-                            }
-                            @foreach (var image in authorImages)
-                            {
-                                var authorRecord = queue == null || queue.Items == null
-                                    ? null
-                                    : queue.Items.FirstOrDefault(record => record.SubmissionId == image.SubmissionId);
-                                var authorName = Text(authorRecord, "author_name", image.Title ?? "Unnamed author");
-                                <button type="button" class="mfb-gallery-card author" data-mfb-gallery-kind="authors"
-                                        data-mfb-gallery-title="@authorName" data-mfb-gallery-alt="@authorName"
-                                        data-mfb-gallery-search="@(authorName + " " + (image.Caption ?? ""))">
-                                    <span class="mfb-gallery-thumb"><img src="@image.Url" alt="@authorName" loading="lazy" /></span>
-                                    <strong>@authorName</strong>
-                                    <small>Typed author image</small>
-                                </button>
-                            }
-                            <div class="mfb-gallery-empty" hidden>No matching images.</div>
-                        </div>
-                        <footer><span id="mfb-gallery-status" aria-live="polite">Select an image to use it.</span></footer>
-                    </section>
+                    <p class="mfba-stat-value">@Compact(totalReads)</p>
+                    <p class="mfba-stat-label">Total Reads</p>
+                    <p class="mfba-stat-sub">@Compact(uniqueReaders) unique readers</p>
+                </div>
+                <div class="mfba-stat">
+                    <div class="mfba-stat-top">
+                        <span class="mfba-stat-chip mfba-c-violet">@Icon("message-circle")</span>
+                        <span class="mfba-trend @(pendingComments.Count > 0 ? "down" : "up")">
+                            @Icon(pendingComments.Count > 0 ? "trending-down" : "trending-up", "mfba-icon mfba-icon-sm")@pendingComments.Count
+                        </span>
+                    </div>
+                    <p class="mfba-stat-value">@totalComments.ToString("N0", CultureInfo.InvariantCulture)</p>
+                    <p class="mfba-stat-label">Comments</p>
+                    <p class="mfba-stat-sub">awaiting moderation: @pendingComments.Count</p>
+                </div>
+                <div class="mfba-stat">
+                    <div class="mfba-stat-top">
+                        <span class="mfba-stat-chip mfba-c-amber">@Icon("users")</span>
+                        <span class="mfba-trend @(flaggedComments > 0 ? "down" : "up")">
+                            @Icon(flaggedComments > 0 ? "trending-down" : "trending-up", "mfba-icon mfba-icon-sm")@flaggedComments
+                        </span>
+                    </div>
+                    <p class="mfba-stat-value">@authors.Count</p>
+                    <p class="mfba-stat-label">Active Authors</p>
+                    <p class="mfba-stat-sub">@flaggedComments comment(s) flagged as spam</p>
                 </div>
             </section>
-        }
 
-        <section class="mfb-admin-grid">
-            <div class="mfb-panel">
-                <div class="mfb-section-head"><h2>My workflow tasks</h2><span>Claim · approve · request changes</span></div>
-                @{
-                    var tasks = blogIncoming.Concat(blogInProgress).ToList();
-                }
-                @if (tasks.Count == 0)
-                {
-                    <div class="mfb-state">No active tasks for your account.</div>
-                }
-                @foreach (var task in tasks)
-                {
-                    <article class="mfb-task">
-                        <div><strong>@task.NodeLabel</strong><span>Post #@task.SubmissionId · @task.Status</span></div>
-                        <div class="mfb-task-actions">
-                            <input name="comment_@task.TaskId" placeholder="Optional review note" />
-                            @if (task.AllowClaim) { <button type="submit" name="mfb_action" value="claim|@task.TaskId">Claim</button> }
-                            <button type="submit" name="mfb_action" value="approve|@task.TaskId">Approve</button>
-                            <button type="submit" class="danger" name="mfb_action" value="reject|@task.TaskId">Request changes</button>
+            <section class="mfba-quick" aria-label="Quick access">
+                <a href="@commentsUrl"><span class="mfba-quick-ico mfba-bg-blue">@Icon("plus")</span><strong>New Post</strong><small>Create a new article</small></a>
+                <a href="@commentsUrl"><span class="mfba-quick-ico mfba-bg-violet">@Icon("message-circle")</span><strong>Comments</strong><small>@pendingComments.Count pending review</small></a>
+                <a href="@editorialUrl"><span class="mfba-quick-ico mfba-bg-amber">@Icon("layout")</span><strong>Editorial</strong><small>Kanban board</small></a>
+                <a href="@blogUrl"><span class="mfba-quick-ico mfba-bg-emerald">@Icon("bar-chart")</span><strong>Analytics</strong><small>View performance</small></a>
+                <a href="@editorialUrl"><span class="mfba-quick-ico mfba-bg-pink">@Icon("users")</span><strong>Authors</strong><small>@authors.Count contributors</small></a>
+                <a href="@adminBaseUrl"><span class="mfba-quick-ico mfba-bg-slate">@Icon("settings")</span><strong>Settings</strong><small>Blog configuration</small></a>
+            </section>
+
+            @if (editing != null)
+            {
+                <section class="mfba-panel">
+                    <div class="mfba-panel-head">
+                        <h2>@Icon("save", "mfba-icon mfba-icon-lg") Edit typed record #@editing.SubmissionId</h2>
+                        <a class="mfba-panel-link" href="@adminBaseUrl">Close</a>
+                    </div>
+                    <div class="mfba-editor">
+                        <input type="hidden" name="submission_id" value="@editing.SubmissionId" />
+                        <div class="mfba-form-grid">
+                            <label>Title<input name="title" value="@Text(editing, "title", "")" required /></label>
+                            <label>Slug<input name="slug" value="@Text(editing, "slug", "")" required /></label>
+                            <label>Category<input name="category" value="@Text(editing, "category", "")" /></label>
+                            <label>Author<input name="author_name" value="@Text(editing, "author_name", "")" /></label>
+                            <label class="wide">Excerpt<textarea name="excerpt" rows="3">@Text(editing, "excerpt", "")</textarea></label>
+                            <div class="wide mfba-rich" id="mfb-body-editor">
+                                <label>Article body (trusted editorial HTML)<textarea name="body" rows="14">@Text(editing, "body", "")</textarea></label>
+                            </div>
+                            <div class="wide mfba-media-field">
+                                <label>Featured image URL<input name="featured_image_url" value="@Text(editing, "featured_image_url", "")" /></label>
+                                <button class="mfba-btn-outline" type="button" data-mfb-gallery-open="featured_image_url" data-mfb-gallery-tab="posts">@Icon("image", "mfba-icon mfba-icon-md") Browse gallery</button>
+                            </div>
+                            <label>Image alt text<input name="image_alt_text" value="@Text(editing, "image_alt_text", "")" /></label>
+                            <div class="mfba-media-field">
+                                <label>Author avatar URL<input name="author_avatar_url" value="@Text(editing, "author_avatar_url", "")" /></label>
+                                <button class="mfba-btn-outline" type="button" data-mfb-gallery-open="author_avatar_url" data-mfb-gallery-tab="authors">@Icon("users", "mfba-icon mfba-icon-md") Author</button>
+                            </div>
+                            <label>Tags<input name="tags" value="@Text(editing, "tags", "")" /></label>
+                            <label>SEO title<input name="seo_title" value="@Text(editing, "seo_title", "")" /></label>
+                            <label class="wide">SEO description<textarea name="seo_description" rows="3">@Text(editing, "seo_description", "")</textarea></label>
                         </div>
-                    </article>
-                }
-            </div>
-
-            <div class="mfb-panel">
-                <div class="mfb-section-head"><h2>Content register</h2><span>Named query: all-posts</span></div>
-                <div class="mfb-inline-search" role="search">
-                    <input id="mfb-admin-q" name="q" value="@Request.QueryString["q"]" placeholder="Search posts"
-                           onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('mfb-admin-search-go').click();}" />
-                    <button id="mfb-admin-search-go" type="button"
-                            onclick="var q=document.getElementById('mfb-admin-q').value.trim();window.location.href='@adminBaseUrl'+(q?'?q='+encodeURIComponent(q):'');">Search</button>
-                </div>
-                @if (queue != null)
-                {
-                    foreach (var post in queue.Items)
+                        <div class="mfba-editor-toolbar">
+                            <button class="mfba-btn-outline" type="button" data-mfb-gallery-open="body" data-mfb-gallery-tab="posts">@Icon("image", "mfba-icon mfba-icon-md") Insert gallery image into article</button>
+                            <span>Images stay typed values or MegaForm-managed files; the editor saves clean HTML through the Records API.</span>
+                        </div>
+                        <button class="mfba-btn" type="submit" name="mfb_action" value="save">@Icon("save", "mfba-icon mfba-icon-md") Save through Records API</button>
+                    </div>
+                    @if (editingFiles.Count > 0)
                     {
-                        <article class="mfb-register-row">
-                            <div><strong>@Text(post, "title", "Untitled")</strong><span>@post.Status · @Text(post, "author_name", "No author")</span></div>
-                            <a href="@adminBaseUrl?edit=@post.SubmissionId">Edit</a>
-                        </article>
+                        <div class="mfba-files"><strong>Managed by MegaForm Files API:</strong>
+                            @foreach (var file in editingFiles)
+                            {
+                                <a href="/DesktopModules/MegaForm/API/SdkDemo/Download?submissionId=@editing.SubmissionId&amp;fileId=@file.FileId">@file.FileName</a>
+                            }
+                        </div>
                     }
-                }
+                    <div id="mfb-gallery-dialog" class="mfba-dialog" role="dialog" aria-modal="true" aria-labelledby="mfb-gallery-title" hidden>
+                        <div class="mfba-dialog-backdrop" data-mfb-gallery-close></div>
+                        <section class="mfba-sheet">
+                            <header>
+                                <h2 id="mfb-gallery-title">Choose an image</h2>
+                                <button type="button" class="mfba-iconbtn" data-mfb-gallery-close aria-label="Close gallery">&times;</button>
+                            </header>
+                            <div class="mfba-gallery-controls">
+                                <div class="mfba-gallery-tabs" role="tablist" aria-label="Image source">
+                                    <button type="button" role="tab" data-mfb-gallery-filter="posts">Post images <span>@postImages.Count</span></button>
+                                    <button type="button" role="tab" data-mfb-gallery-filter="authors">Authors <span>@authorImages.Count</span></button>
+                                </div>
+                                <span class="mfba-field">@Icon("search")<input id="mfb-gallery-search" type="search" placeholder="Search by title, author or caption" aria-label="Search gallery" /></span>
+                            </div>
+                            <div class="mfba-gallery-grid">
+                                @foreach (var image in postImages)
+                                {
+                                    <button type="button" class="mfba-gcard" data-mfb-gallery-kind="posts"
+                                            data-mfb-gallery-title="@image.Title" data-mfb-gallery-alt="@image.AltText"
+                                            data-mfb-gallery-search="@((image.Title ?? "") + " " + (image.Caption ?? "") + " " + (image.FileName ?? ""))">
+                                        <span class="mfba-gthumb"><img src="@image.Url" alt="@image.AltText" loading="lazy" /></span>
+                                        <strong>@(string.IsNullOrWhiteSpace(image.Title) ? "Untitled image" : image.Title)</strong>
+                                        <small>@(image.Source == "uploaded-file" ? "MegaForm file" : "Typed image field")</small>
+                                    </button>
+                                }
+                                @foreach (var image in authorImages)
+                                {
+                                    var authorRecord = posts.FirstOrDefault(r => r.SubmissionId == image.SubmissionId);
+                                    var authorName = Text(authorRecord, "author_name", image.Title ?? "Unnamed author");
+                                    <button type="button" class="mfba-gcard" data-mfb-gallery-kind="authors"
+                                            data-mfb-gallery-title="@authorName" data-mfb-gallery-alt="@authorName"
+                                            data-mfb-gallery-search="@(authorName + " " + (image.Caption ?? ""))">
+                                        <span class="mfba-gthumb"><img src="@image.Url" alt="@authorName" loading="lazy" /></span>
+                                        <strong>@authorName</strong>
+                                        <small>Typed author image</small>
+                                    </button>
+                                }
+                                <div class="mfba-gempty" hidden>No matching images.</div>
+                            </div>
+                            <footer><span id="mfb-gallery-status" aria-live="polite">Select an image to use it.</span></footer>
+                        </section>
+                    </div>
+                </section>
+            }
+
+            <div class="mfba-grid">
+                <div class="mfba-col">
+
+                    <section class="mfba-panel">
+                        <div class="mfba-panel-head">
+                            <h2>@Icon("file-text", "mfba-icon mfba-icon-lg") Recent Posts</h2>
+                            <a class="mfba-panel-link" href="@editorialUrl">View All @Icon("chevron-right", "mfba-icon mfba-icon-md")</a>
+                        </div>
+                        <div class="mfba-thead">
+                            <span>Post</span><span class="st">Status</span><span class="vw r">Views</span><span class="ac r">Actions</span>
+                        </div>
+                        <div class="mfba-rows">
+                            @if (recentPosts.Count == 0)
+                            {
+                                <div class="mfba-empty">No typed blog records yet.</div>
+                            }
+                            @foreach (var post in recentPosts)
+                            {
+                                var statusKey = StatusKey(post);
+                                var avatar = Text(post, "author_avatar_url", "");
+                                var views = Num(post, "view_count");
+                                <div class="mfba-trow">
+                                    <div class="mfba-post">
+                                        @if (!string.IsNullOrWhiteSpace(avatar))
+                                        {
+                                            <img src="@avatar" alt="" loading="lazy" />
+                                        }
+                                        else
+                                        {
+                                            <span class="mfba-avatar">@Initials(Text(post, "author_name", "MegaForm"))</span>
+                                        }
+                                        <div style="min-width:0">
+                                            <p class="mfba-post-title mfba-clamp1">@Text(post, "title", "Untitled story")</p>
+                                            <div class="mfba-post-meta">
+                                                <span>@Text(post, "author_name", "MegaForm Editorial")</span>
+                                                <span class="sep">&middot;</span>
+                                                <span>@Icon("tag", "mfba-icon mfba-icon-sm")@Text(post, "category", "Insights")</span>
+                                                <span class="sep">&middot;</span>
+                                                <span>@Icon("calendar", "mfba-icon mfba-icon-sm")@Text(post, "publish_date", post.SubmittedOnUtc.ToString("MMM d, yyyy", CultureInfo.InvariantCulture))</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span class="mfba-pill mfba-st-@statusKey">@StatusLabel(statusKey)</span>
+                                    <span class="mfba-views">@Icon("eye", "mfba-icon mfba-icon-md")@(views > 0 ? Compact(views) : "—")</span>
+                                    <div class="mfba-actions">
+                                        <a class="mfba-iconbtn" href="@adminBaseUrl?edit=@post.SubmissionId" title="Edit">@Icon("pencil", "mfba-icon mfba-icon-md")</a>
+                                        <a class="mfba-iconbtn" href="@editorialUrl" title="Move to another editorial column">@Icon("layout", "mfba-icon mfba-icon-md")</a>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </section>
+
+                    <section class="mfba-panel">
+                        <div class="mfba-panel-head">
+                            <h2>@Icon("message-circle", "mfba-icon mfba-icon-lg") Pending Comments <span class="mfba-pill mfba-count">@pendingComments.Count</span></h2>
+                            <a class="mfba-panel-link" href="@commentsUrl">Moderate All @Icon("chevron-right", "mfba-icon mfba-icon-md")</a>
+                        </div>
+                        <div class="mfba-rows">
+                            @if (commentsFormId == 0)
+                            {
+                                <div class="mfba-empty">The Blog Comments form is not bound to this app.</div>
+                            }
+                            else if (pendingComments.Count == 0)
+                            {
+                                <div class="mfba-empty">Nothing is waiting for moderation.</div>
+                            }
+                            @foreach (var pair in pendingComments.Take(3))
+                            {
+                                var row = pair.Item1;
+                                var typed = pair.Item2;
+                                var who = Text(typed, "commenter_name", "Anonymous");
+                                var slug = Text(typed, "post_slug", "");
+                                var parent = posts.FirstOrDefault(p => string.Equals(Text(p, "slug", ""), slug, StringComparison.OrdinalIgnoreCase));
+                                <div class="mfba-comment">
+                                    <span class="mfba-avatar">@Initials(who)</span>
+                                    <div class="mfba-comment-main">
+                                        <div class="mfba-comment-top">
+                                            <strong>@who</strong>
+                                            @if (row.IsSpam) { <span class="mfba-pill-sm mfba-flag">@Icon("flag", "mfba-icon mfba-icon-sm") Flagged</span> }
+                                            <time>@Ago(row.SubmittedOnUtc)</time>
+                                        </div>
+                                        <p class="mfba-comment-body mfba-clamp2">@Text(typed, "comment_body", "")</p>
+                                        <p class="mfba-comment-on">On: <strong>@(parent == null ? slug : Text(parent, "title", slug))</strong></p>
+                                    </div>
+                                    <div class="mfba-comment-act">
+                                        <button class="mfba-chip-btn ok" type="submit" name="mfb_action" value="capprove|@row.SubmissionId">@Icon("check-circle", "mfba-icon mfba-icon-md") Approve</button>
+                                        <button class="mfba-chip-btn no" type="submit" name="mfb_action" value="chide|@row.SubmissionId">@Icon("trash", "mfba-icon mfba-icon-md") Trash</button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </section>
+
+                    @{
+                        var blogSubmissionIds = new HashSet<int>(posts.Select(p => p.SubmissionId));
+                        var blogTasks = board == null ? new List<InboxTaskDto>()
+                            : board.Incoming.Concat(board.InProgress).Where(t => blogSubmissionIds.Contains(t.SubmissionId)).ToList();
+                    }
+                    @if (blogTasks.Count > 0)
+                    {
+                        <section class="mfba-panel">
+                            <div class="mfba-panel-head">
+                                <h2>@Icon("shield", "mfba-icon mfba-icon-lg") My workflow tasks <span class="mfba-pill mfba-count">@blogTasks.Count</span></h2>
+                                <span class="mfba-stat-sub">Claim &middot; approve &middot; request changes</span>
+                            </div>
+                            <div class="mfba-rows">
+                                @foreach (var task in blogTasks.Take(6))
+                                {
+                                    <div class="mfba-task">
+                                        <div class="mfba-task-main">
+                                            <strong>@task.NodeLabel</strong>
+                                            <small>Post #@task.SubmissionId &middot; @task.Status</small>
+                                        </div>
+                                        <input class="mfba-task-note" name="comment_@task.TaskId" placeholder="Optional review note" />
+                                        <div class="mfba-task-act">
+                                            @if (task.AllowClaim) { <button class="mfba-chip-btn ok" type="submit" name="mfb_action" value="claim|@task.TaskId">Claim</button> }
+                                            <button class="mfba-chip-btn ok" type="submit" name="mfb_action" value="approve|@task.TaskId">@Icon("check-circle", "mfba-icon mfba-icon-md") Approve</button>
+                                            <button class="mfba-chip-btn no" type="submit" name="mfb_action" value="reject|@task.TaskId">Changes</button>
+                                        </div>
+                                    </div>
+                                }
+                                @if (blogTasks.Count > 6)
+                                {
+                                    <div class="mfba-empty">@(blogTasks.Count - 6) more task(s) in the editorial queue.</div>
+                                }
+                            </div>
+                        </section>
+                    }
+                </div>
+
+                <div class="mfba-col">
+                    <section class="mfba-panel">
+                        <div class="mfba-panel-head"><h2>@Icon("activity", "mfba-icon mfba-icon-lg") Recent Activity</h2></div>
+                        <div class="mfba-panel-body">
+                            <div class="mfba-feed">
+                                @{
+                                    var feed = new List<Tuple<string, string, string, string, DateTime>>();
+                                    foreach (var post in posts.OrderByDescending(p => p.SubmittedOnUtc).Take(4))
+                                    {
+                                        var key = StatusKey(post);
+                                        var icon = key == "published" ? "check-circle" : key == "scheduled" ? "calendar" : "book-open";
+                                        var tone = key == "published" ? "mfba-i-emerald" : key == "scheduled" ? "mfba-i-violet" : "mfba-i-blue";
+                                        var verb = key == "published" ? " published " : key == "scheduled" ? " scheduled " : " saved draft ";
+                                        feed.Add(Tuple.Create(icon, tone, Text(post, "author_name", "An editor") + verb, Text(post, "title", "Untitled story"), post.SubmittedOnUtc));
+                                    }
+                                    foreach (var pair in commentRows.Where(c => c.Item1.IsSpam).Take(1))
+                                    {
+                                        feed.Add(Tuple.Create("flag", "mfba-i-red", "New comment flagged on ", Text(pair.Item2, "post_slug", "a post"), pair.Item1.SubmittedOnUtc));
+                                    }
+                                    foreach (var post in posts.OrderByDescending(p => Num(p, "view_count")).Take(1))
+                                    {
+                                        feed.Add(Tuple.Create("flame", "mfba-i-orange", "Trending post detected ", Text(post, "title", "Untitled story"), post.SubmittedOnUtc));
+                                    }
+                                }
+                                @if (feed.Count == 0)
+                                {
+                                    <div class="mfba-empty">No recent editorial activity.</div>
+                                }
+                                @foreach (var item in feed.OrderByDescending(f => f.Item5).Take(6))
+                                {
+                                    <div class="mfba-feed-item">
+                                        <span class="mfba-feed-ico">@Icon(item.Item1, "mfba-icon mfba-icon-md " + item.Item2)</span>
+                                        <div style="min-width:0;flex:1">
+                                            <p class="mfba-feed-text">@item.Item3<strong>@item.Item4</strong></p>
+                                            <p class="mfba-feed-time">@Icon("clock", "mfba-icon mfba-icon-sm")@Ago(item.Item5)</p>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="mfba-panel">
+                        <div class="mfba-panel-head"><h2>@Icon("bar-chart", "mfba-icon mfba-icon-lg") Top Performing</h2></div>
+                        <div class="mfba-panel-body">
+                            <div class="mfba-top">
+                                @if (topPosts.Count == 0)
+                                {
+                                    <div class="mfba-empty">No reads recorded yet.</div>
+                                }
+                                @for (var index = 0; index < topPosts.Count; index++)
+                                {
+                                    var post = topPosts[index];
+                                    var views = Num(post, "view_count");
+                                    var share = (int)Math.Round(views * 100d / topMax);
+                                    var shares = Num(post, "share_count");
+                                    <div class="mfba-top-row">
+                                        <span class="mfba-top-rank">@(index + 1)</span>
+                                        <div class="mfba-top-main">
+                                            <p class="mfba-clamp1">@Text(post, "title", "Untitled story")</p>
+                                            <div class="mfba-bar-row">
+                                                <span class="mfba-bar"><i style="width:@(share)%"></i></span>
+                                                <span class="mfba-bar-val">@Compact(views)</span>
+                                            </div>
+                                        </div>
+                                        <span class="mfba-top-delta @(shares > 0 ? "up" : "down")">@(shares > 0 ? "+" : "")@shares</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="mfba-panel">
+                        <div class="mfba-panel-head"><h2>@Icon("shield", "mfba-icon mfba-icon-lg") Admin Sections</h2></div>
+                        <div class="mfba-links">
+                            <a href="@commentsUrl">@Icon("message-circle")<span>Comments Moderation</span>
+                                @if (pendingComments.Count > 0) { <span class="mfba-pill mfba-count">@pendingComments.Count pending</span> } else { @Icon("arrow-right", "mfba-icon mfba-icon-md") }
+                            </a>
+                            <a href="@editorialUrl">@Icon("layout")<span>Editorial Kanban</span>@Icon("arrow-right", "mfba-icon mfba-icon-md")</a>
+                            <a href="@blogUrl">@Icon("rss")<span>Blog Home</span>@Icon("arrow-right", "mfba-icon mfba-icon-md")</a>
+                            <a href="@blogUrl">@Icon("book-open")<span>Post Archive</span>@Icon("arrow-right", "mfba-icon mfba-icon-md")</a>
+                            <a href="@adminBaseUrl">@Icon("clock")<span>Recent Posts</span>@Icon("arrow-right", "mfba-icon mfba-icon-md")</a>
+                        </div>
+                    </section>
+
+                    @if (commentScanTruncated)
+                    {
+                        <p class="mfba-stat-sub">Comment figures cover the most recent @CommentScanCap comments; open Comments Moderation for the full queue.</p>
+                    }
+                </div>
             </div>
-        </section>
+        </main>
     }
-</main>
+</div>
+
 @if (allowed && editing != null)
 {
     <script src="/DesktopModules/MegaForm/Assets/js/megaform-widgets.js?v=20260729a"></script>
@@ -441,19 +841,10 @@
             var initialHtml = fallback ? fallback.value : "";
             try {
                 editorHost.innerHTML = window.MegaFormWidgets.renderWidget({
-                    type: "RichText",
-                    key: "body",
-                    label: "Article body",
+                    type: "RichText", key: "body", label: "Article body",
                     helpText: "Visual editor for trusted editorial HTML. Use the gallery below for managed images.",
                     required: true,
-                    widgetProps: {
-                        height: 460,
-                        toolbar: "full",
-                        placeholder: "Write the article...",
-                        showWordCount: true,
-                        imageUpload: "disabled",
-                        platform: "dnn"
-                    }
+                    widgetProps: { height: 460, toolbar: "full", placeholder: "Write the article...", showWordCount: true, imageUpload: "disabled", platform: "dnn" }
                 }, editorFormId, initialHtml);
                 window.MegaFormWidgets.bindWidgets(editorHost);
             } catch (editorError) {
@@ -463,18 +854,15 @@
 
         var dialog = document.getElementById("mfb-gallery-dialog");
         if (!dialog) return;
-        var cards = Array.prototype.slice.call(dialog.querySelectorAll(".mfb-gallery-card"));
+        var cards = Array.prototype.slice.call(dialog.querySelectorAll(".mfba-gcard"));
         var tabs = Array.prototype.slice.call(dialog.querySelectorAll("[data-mfb-gallery-filter]"));
         var search = document.getElementById("mfb-gallery-search");
-        var empty = dialog.querySelector(".mfb-gallery-empty");
+        var empty = dialog.querySelector(".mfba-gempty");
         var status = document.getElementById("mfb-gallery-status");
-        var activeTarget = "body";
-        var activeKind = "posts";
-        var lastTrigger = null;
+        var activeTarget = "body", activeKind = "posts", lastTrigger = null;
 
         function refreshGallery() {
-            var term = (search.value || "").toLowerCase().trim();
-            var visible = 0;
+            var term = (search.value || "").toLowerCase().trim(), visible = 0;
             cards.forEach(function (card) {
                 var kindMatches = card.getAttribute("data-mfb-gallery-kind") === activeKind;
                 var textMatches = !term || (card.getAttribute("data-mfb-gallery-search") || "").toLowerCase().indexOf(term) >= 0;
@@ -490,37 +878,29 @@
             empty.hidden = visible !== 0;
             status.textContent = visible + (visible === 1 ? " image available." : " images available.");
         }
-
         function openGallery(target, kind, trigger) {
             activeTarget = target || "body";
             activeKind = kind || (activeTarget === "author_avatar_url" ? "authors" : "posts");
             lastTrigger = trigger || null;
             search.value = "";
             dialog.hidden = false;
-            document.body.classList.add("mfb-gallery-open");
+            document.body.classList.add("mfba-gallery-open");
             refreshGallery();
             window.setTimeout(function () { search.focus(); }, 0);
         }
-
         function closeGallery() {
             dialog.hidden = true;
-            document.body.classList.remove("mfb-gallery-open");
+            document.body.classList.remove("mfba-gallery-open");
             if (lastTrigger) lastTrigger.focus();
         }
-
         document.querySelectorAll("[data-mfb-gallery-open]").forEach(function (button) {
             button.addEventListener("click", function () {
                 openGallery(button.getAttribute("data-mfb-gallery-open"), button.getAttribute("data-mfb-gallery-tab"), button);
             });
         });
-        dialog.querySelectorAll("[data-mfb-gallery-close]").forEach(function (button) {
-            button.addEventListener("click", closeGallery);
-        });
+        dialog.querySelectorAll("[data-mfb-gallery-close]").forEach(function (b) { b.addEventListener("click", closeGallery); });
         tabs.forEach(function (tab) {
-            tab.addEventListener("click", function () {
-                activeKind = tab.getAttribute("data-mfb-gallery-filter") || "posts";
-                refreshGallery();
-            });
+            tab.addEventListener("click", function () { activeKind = tab.getAttribute("data-mfb-gallery-filter") || "posts"; refreshGallery(); });
         });
         search.addEventListener("input", refreshGallery);
         cards.forEach(function (card) {
@@ -553,9 +933,7 @@
                 closeGallery();
             });
         });
-        document.addEventListener("keydown", function (event) {
-            if (!dialog.hidden && event.key === "Escape") closeGallery();
-        });
+        document.addEventListener("keydown", function (e) { if (!dialog.hidden && e.key === "Escape") closeGallery(); });
     })();
     </script>
 }

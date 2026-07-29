@@ -1,6 +1,6 @@
 <dotnetnuke type="Package" version="5.0">
   <packages>
-    <package name="MegaForm.Blogs.DNN" type="Library" version="01.00.004">
+    <package name="MegaForm.Blogs.DNN" type="Library" version="01.01.000">
       <friendlyName>MegaForm Blogs for DNN</friendlyName>
       <description>Thin Razor Host presentation layer for the MegaForm blog-starter configured app.</description>
       <owner>

@@ -50,9 +50,15 @@ The worktree contains unrelated user changes. Do not reset, clean, overwrite, or
 - Typed values are canonical. Do not add direct `MF_Submissions.DataJson` parsing.
 - Do not add Blog-owned SQL tables or direct MegaForm repository/SQL access.
 - Use `Records.PatchRecordAsync` for editorial writes.
-- Use named queries for public/admin reads:
-  - public: `published-posts`
-  - admin: `all-posts`
+- Use named queries for public/admin reads. The keys are defined in
+  `MegaForm.Core/Services/Starters/ConfiguredAppStarterDefinitions.cs`; there is no
+  `published-posts` key:
+  - public list and article detail: `public-posts`
+  - public hero: `featured-posts`
+  - admin register, kanban and gallery: `all-posts`
+- The comment child form has no named query. Admin screens read it through
+  `SubmissionDashboard.SearchAsync` with a hard page cap and resolve each row with
+  `Records.GetRecordAsync`, so typed values stay canonical and DataJson is never parsed.
 - Use `IGalleryApi` and `IFileApi` for typed URLs and MegaForm-managed uploads.
 - Use MegaForm workflow APIs for claim, approve and request-changes actions.
 - Keep the Quill editor bundled by MegaForm; do not add a second CDN editor stack.
