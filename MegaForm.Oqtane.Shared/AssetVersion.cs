@@ -34,6 +34,10 @@
         // status + provider choice + checkout, Calculator amounts resolve through
         // amountFieldResultKey, and the submit-time verifier now rejects a paid claim whose
         // field-mode price the server cannot re-derive. Busts the B412 renderer/widget bundles.
-        public static readonly string Current = "20260728-B416";
+        // [B417-ShellTopTrim+PaymentTemplateAmounts 20260729] megaform.css drops the wrapper's top
+        // padding on custom-shell forms (it stacked on the shell's own 16px+24px and pushed the card
+        // down inside a pane); the two bundled Payment templates now ship a real amount source
+        // (deposit field / hidden Calculator) instead of rendering "$0.00 — set a payment amount".
+        public static readonly string Current = "20260729-B417";
     }
 }

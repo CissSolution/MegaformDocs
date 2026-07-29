@@ -38,7 +38,7 @@ v1.7.107 (20260717) — 🎨 PREMIUM TEMPLATE THEME INHERITANCE. All 14 non-lock
     </packageTypes>
 
     <dependencies>
-      <group targetFramework="net9.0" />
+      <group targetFramework="net10.0" />
     </dependencies>
   </metadata>
   <files>
@@ -58,33 +58,21 @@ v1.7.107 (20260717) — 🎨 PREMIUM TEMPLATE THEME INHERITANCE. All 14 non-lock
     <!-- net9.0 builds -->
 
     <!-- Client Blazor WASM DLL — tên chứa "Oqtane" → được load bởi IsOqtaneAssembly() -->
-    <file src="..\MegaForm.Oqtane.Client\bin\Release\net9.0\MegaForm.Oqtane.Client.Oqtane.dll" target="lib\net9.0" />
-    <file src="..\MegaForm.Oqtane.Client\bin\Release\net9.0\MegaForm.Oqtane.Client.Oqtane.pdb" target="lib\net9.0" />
 
     <!-- Server DLL — tên chứa "Oqtane" → được load -->
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\MegaForm.Oqtane.Server.Oqtane.dll" target="lib\net9.0" />
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\MegaForm.Oqtane.Server.Oqtane.pdb" target="lib\net9.0" />
 
     <!-- Shared DLL — tên chứa "Oqtane" → được load -->
-    <file src="..\MegaForm.Oqtane.Shared\bin\Release\net9.0\MegaForm.Oqtane.Shared.Oqtane.dll" target="lib\net9.0" />
-    <file src="..\MegaForm.Oqtane.Shared\bin\Release\net9.0\MegaForm.Oqtane.Shared.Oqtane.pdb" target="lib\net9.0" />
 
     <!-- Core DLL — tên KHÔNG chứa "Oqtane" → KHÔNG được load vào AppDomain -->
     <!-- Nhưng vẫn cần trong bin/ vì Client/Server DLL có reference đến nó -->
     <!-- .NET runtime sẽ tự resolve khi cần (dependency resolution) -->
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\MegaForm.Core.dll" target="lib\net9.0" />
 
     <!-- Third-party dependencies not provided by Oqtane host -->
     <!-- Newtonsoft.Json is used by MegaForm.Core; Oqtane 6 does NOT ship it -->
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Newtonsoft.Json.dll" target="lib\net9.0" />
     <!-- [pkg-fix 20260625] MegaForm runtime deps the Oqtane host does NOT provide. Without these a
          CLEAN-host install crashes at startup (ReflectionTypeLoadException during Oqtane's assembly
          scan): MegaForm.Sdk → Microsoft.AspNetCore.Razor.Language → Roslyn (CodeAnalysis). The
          :5070 dev site only worked because it had accumulated them from earlier manual deploys. -->
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\MegaForm.Sdk.dll" target="lib\net9.0" />
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Microsoft.AspNetCore.Razor.Language.dll" target="lib\net9.0" />
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Microsoft.CodeAnalysis.dll" target="lib\net9.0" />
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Microsoft.CodeAnalysis.CSharp.dll" target="lib\net9.0" />
 
     <!-- [CloudStorage v20260723-01] Cloud storage providers (Google Drive / Amazon S3) for the
          post-submit file mirror. AWSSDK is NOT provided by the Oqtane host, so it must ship
@@ -93,30 +81,26 @@ v1.7.107 (20260717) — 🎨 PREMIUM TEMPLATE THEME INHERITANCE. All 14 non-lock
          itself was dropped from MegaForm.Integrations.CloudStorage (Azure.Core 1.55 dragged in
          System.ClientModel and crashed DNN's net472 bin), so those DLLs no longer land in the
          Server output and nuget pack aborted with NU5019 "File not found: Azure.Core.dll". -->
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\MegaForm.Integrations.CloudStorage.dll" target="lib\net9.0" />
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\AWSSDK.Core.dll" target="lib\net9.0" />
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\AWSSDK.S3.dll" target="lib\net9.0" />
 
     <!-- [OqtaneLicensing v20260723] Oqtane Marketplace licensing (LicenseView + offline key
          validation). Names contain "Oqtane" → loaded by IsOqtaneAssembly(); Client/Shared are
          also declared in ModuleInfo.Dependencies (required for Blazor WebAssembly). -->
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Oqtane.Licensing.Client.Oqtane.dll" target="lib\net9.0" />
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Oqtane.Licensing.Server.Oqtane.dll" target="lib\net9.0" />
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Oqtane.Licensing.Shared.Oqtane.dll" target="lib\net9.0" />
 
     <!-- net10.0 builds (Oqtane 10.x hosts, e.g. :5070 Oqtane.MSSQL3 + :5000 Oqtane.New10) -->
+    <!-- [PackageSlim 2026-07-29] net9.0 (Oqtane 6) assets are NO LONGER shipped here. That
+         framework needed its own copy of Roslyn / Razor.Language / Newtonsoft (3.8 MB) plus a
+         second set of MegaForm assemblies - 5.8 MB for a line this listing does not target.
+         The Oqtane 6 build still exists: pack MegaForm.Oqtane.601.nuspec for it. -->
     <file src="..\MegaForm.Oqtane.Client\bin\Release\net10.0\MegaForm.Oqtane.Client.Oqtane.dll" target="lib\net10.0" />
-    <file src="..\MegaForm.Oqtane.Client\bin\Release\net10.0\MegaForm.Oqtane.Client.Oqtane.pdb" target="lib\net10.0" />
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\MegaForm.Oqtane.Server.Oqtane.dll" target="lib\net10.0" />
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\MegaForm.Oqtane.Server.Oqtane.pdb" target="lib\net10.0" />
     <file src="..\MegaForm.Oqtane.Shared\bin\Release\net10.0\MegaForm.Oqtane.Shared.Oqtane.dll" target="lib\net10.0" />
-    <file src="..\MegaForm.Oqtane.Shared\bin\Release\net10.0\MegaForm.Oqtane.Shared.Oqtane.pdb" target="lib\net10.0" />
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\MegaForm.Core.dll" target="lib\net10.0" />
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Newtonsoft.Json.dll" target="lib\net10.0" />
+    <!-- [PackageSlim 2026-07-29] Roslyn / Razor.Language / Newtonsoft are NOT shipped for
+         net10.0: the Oqtane 10.x host already carries them (checked against a pristine
+         Oqtane.Framework.10.2.1 install), so a second copy was 3.8 MB of pure duplication -
+         and two copies of one assembly is a load-order risk, not a safety net. The net9.0
+         entries stay: Oqtane 6 genuinely does not provide them (see the note above). -->
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\MegaForm.Sdk.dll" target="lib\net10.0" />
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Microsoft.AspNetCore.Razor.Language.dll" target="lib\net10.0" />
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Microsoft.CodeAnalysis.dll" target="lib\net10.0" />
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Microsoft.CodeAnalysis.CSharp.dll" target="lib\net10.0" />
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\MegaForm.Integrations.CloudStorage.dll" target="lib\net10.0" />
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\AWSSDK.Core.dll" target="lib\net10.0" />
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\AWSSDK.S3.dll" target="lib\net10.0" />
@@ -133,7 +117,20 @@ v1.7.107 (20260717) — 🎨 PREMIUM TEMPLATE THEME INHERITANCE. All 14 non-lock
          Oqtane Marketplace (OqtaneLicenseBridge). Shipping license.lic="production" would auto-license
          every install and make the Marketplace/trial gate moot. A fresh Oqtane install is therefore
          TRIAL until a Marketplace key is activated (then the bridge flips IsProductionLicensed). -->
-    <file src="..\MegaForm.Oqtane.Server\wwwroot\Modules\MegaForm\**\*.*" target="wwwroot\Modules\MegaForm" exclude="**\license.lic;**\fonts\gf\**;**\img\azure-contact-request\hero.jpg;**\img\brochure-youth\brochure-youth-hero.jpg;**\img\bulgaria-discovery\bulgaria-plovdiv.png;**\img\bulgaria-discovery\bulgaria-rose-hero.png;**\img\christmas-americana-header.png;**\img\euro-youth\euro-youth-hero.png;**\img\floral-youth\floral-youth-hero.jpg;**\img\mock\americana-coast.png;**\img\mock\americana-hero.png;**\img\mock\outback-station-side.png;**\img\realestate-registration\header-illus.png;**\img\teal-brochure\teal-brochure-hero.jpg;**\img\terracotta-product-feedback\hero.jpg;**\img\verdant-member-registration\hero.jpg;**\img\vintage-americana-header.png" />
+    <!-- [PackageSlim 2026-07-29] The store upload was 56.5 MB, and 44 MB of it was wwwroot the
+         module never needs at runtime. Measured on 2.0.8:
+           img\mock\**            29.2 MB  — design mock-ups for premium templates that are SERVED
+                                             FROM THE GALLERY REPO; not one of the 35 BUNDLED
+                                             templates references any image (verified by scanning
+                                             QuickStart + the 4 bundled premium files).
+           img\festa-italiana\**   2.5 MB  — orphaned pair, its template left the bundle long ago.
+           img\euro-youth\**       1.4 MB  — gallery template artwork (its hero was already excluded).
+           js\i18n\**              1.0 MB  — a SECOND copy of the language packs; Oqtane serves
+                                             locales from js\builder\i18n (MegaFormController:803).
+           **\*.js.map             0.5 MB  — source maps have no business in a store package.
+         Gallery-installed templates keep working: GalleryInstallService downloads a template's
+         assets alongside it. Anything a bundled template needs stays in the package. -->
+    <file src="..\MegaForm.Oqtane.Server\wwwroot\Modules\MegaForm\**\*.*" target="wwwroot\Modules\MegaForm" exclude="**\license.lic;**\fonts\gf\**;**\img\mock\**;**\img\festa-italiana\**;**\img\euro-youth\**;**\js\i18n\**;**\*.js.map;**\img\azure-contact-request\hero.jpg;**\img\brochure-youth\brochure-youth-hero.jpg;**\img\bulgaria-discovery\bulgaria-plovdiv.png;**\img\bulgaria-discovery\bulgaria-rose-hero.png;**\img\christmas-americana-header.png;**\img\floral-youth\floral-youth-hero.jpg;**\img\realestate-registration\header-illus.png;**\img\teal-brochure\teal-brochure-hero.jpg;**\img\terracotta-product-feedback\hero.jpg;**\img\verdant-member-registration\hero.jpg;**\img\vintage-americana-header.png" />
 
     <!-- Package metadata -->
     <file src="icon.png" target="" />

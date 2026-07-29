@@ -350,6 +350,25 @@ namespace MegaForm.Oqtane.Server.Controllers
                 return Ok(new List<FormDto>());
             }
 
+            // [StarterForms 2026-07-29] A brand-new install answered this with an empty list, so the
+            // only way into the product was the New Form wizard. Materialise the bundled starter
+            // shelf on the first empty list for a site (once per site, fail-soft) and answer with it.
+            // SECURITY: this is the one WRITE on a read path, so the site comes from the REQUEST
+            // ALIAS resolved by Oqtane's tenant manager — server-side truth the caller cannot
+            // spoof — and never from the query string. (AuthEntityId(Site) is not usable here: it
+            // is only populated when the caller supplies the entity headers, so a plain dashboard
+            // call left it at 0 and the shelf never appeared.) Fires only while that site has zero
+            // forms, at most once per site per app domain.
+            var aliasSiteId = _tenantManager != null && _tenantManager.GetAlias() != null
+                ? _tenantManager.GetAlias().SiteId
+                : 0;
+            if ((forms == null || forms.Count == 0) && aliasSiteId > 0)
+            {
+                var seeded = MegaForm.Oqtane.Server.Services.OqtaneStarterFormSeeder.SeedIfEmpty(
+                    _formRepo, _env?.ContentRootPath, aliasSiteId, moduleId, ParseClaimsUserId(User));
+                if (seeded > 0) forms = _formRepo.ListForms(aliasSiteId, pageSize: 0);
+            }
+
             return Ok((forms ?? new List<FormInfo>()).Select(ToDto));
         }
 

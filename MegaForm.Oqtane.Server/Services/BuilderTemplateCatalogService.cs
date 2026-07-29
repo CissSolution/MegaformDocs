@@ -30,7 +30,12 @@ namespace MegaForm.Oqtane.Server.Services
             try
             {
                 Directory.CreateDirectory(appDataDir);
-                if (Directory.EnumerateFiles(appDataDir, "*.json").Any()) return; // already populated
+                // [StaleCatalog 2026-07-29] This used to bail out as soon as App_Data held ANY
+                // template, so a site seeded by an older build kept that old shelf forever — an
+                // upgrade shipped new templates into wwwroot and the gallery never showed them
+                // (seen on a fresh 2.0.7 install still listing the 33 templates of a 1.7.x copy).
+                // Copy per FILE instead: anything the package ships and App_Data lacks is added,
+                // and a template the admin edited or uploaded is never overwritten.
                 var webRoot = env.WebRootPath;
                 if (string.IsNullOrEmpty(webRoot)) webRoot = Path.Combine(env.ContentRootPath, "wwwroot");
                 var shipped = Path.Combine(webRoot, "Modules", "MegaForm", "Templates");

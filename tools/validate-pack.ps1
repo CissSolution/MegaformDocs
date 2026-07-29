@@ -27,8 +27,14 @@ $tmp = Join-Path $env:TEMP ("mfpack_" + [guid]::NewGuid().ToString('N'))
 [System.IO.Compression.ZipFile]::ExtractToDirectory((Resolve-Path $Nupkg), $tmp)
 try {
   # 1. required DLLs per target framework
+  # [PackageSlim 2026-07-29] The store package targets Oqtane 10.x (net10.0) only — the net9.0
+  # payload (Oqtane 6) was 5.8 MB of a listing nobody installs from here, and it lives on in
+  # MegaForm.Oqtane.601.nuspec. A net9.0 folder is therefore OPTIONAL: validated when present,
+  # never demanded. Every framework the package DOES ship must still be complete.
   $req = @('MegaForm.Core.dll','MegaForm.Oqtane.Server.Oqtane.dll','MegaForm.Oqtane.Client.Oqtane.dll','MegaForm.Oqtane.Shared.Oqtane.dll')
-  foreach ($tfm in @('net9.0','net10.0')) {
+  $shipped = @(Get-ChildItem (Join-Path $tmp 'lib') -Directory -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name)
+  if (-not ($shipped -contains 'net10.0')) { $fail += "missing lib\net10.0 (the framework this package targets)" }
+  foreach ($tfm in $shipped) {
     $lib = Join-Path $tmp "lib\$tfm"
     foreach ($d in $req) { if (-not (Test-Path (Join-Path $lib $d))) { $fail += "missing lib\$tfm\$d" } }
   }
