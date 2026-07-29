@@ -82,7 +82,25 @@ mock/
 !Docs/docfx/images/*.png
 
 # Built JS bundles (output of MegaForm.UI build → Assets/js). Source is MegaForm.UI/src + Assets/ts.
-Assets/js/
+# NOTE: `Assets/js/**` (not `Assets/js/`) — git will not look inside an EXCLUDED DIRECTORY, so the
+# re-includes below only work when the contents, rather than the folder itself, are the excluded thing.
+Assets/js/**
+!Assets/js/plugins/
+!Assets/js/plugins/vendor/
+!Assets/js/plugins/vendor/quill/
+
+# [RichTextGuard 2026-07-29] Two exceptions, because BuildPackage-DNN.ps1 now HARD-FAILS the pack
+# when they are missing (Assert-RequiredFile) and neither can be rebuilt from this repo:
+#   · quill.min.js — third-party vendor drop, not built from our sources (same class as
+#     reactflow.min.js, which the pack script syncs from a developer-local folder).
+#   · megaform-widget-rich-text.js — the Razor Blog admin editor. It has NO .ts source anywhere
+#     in the repo, exactly like megaform-widget-calculator.js did before it was ported back.
+#     Tracking the build output keeps a clean checkout packable; porting the source into
+#     MegaForm.UI/src/widgets/plugins/ is the real fix and is still owed.
+!Assets/js/plugins/megaform-widget-rich-text.js
+!Assets/js/plugins/vendor/
+!Assets/js/plugins/vendor/quill/
+!Assets/js/plugins/vendor/quill/*.js
 
 # Large self-hosted font binaries (deployment assets, re-mirrored from Google Fonts)
 Assets/fonts/

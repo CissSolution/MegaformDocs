@@ -1,0 +1,557 @@
+@*
+    MegaForm Blogs - authenticated editorial console for DNN Razor Host.
+    Uses typed Records and first-class Workflows SDK APIs. No SQL/DataJson access.
+*@
+@using System
+@using System.Linq
+@using System.Collections.Generic
+@using System.Security.Cryptography
+@using MegaForm.Sdk
+
+@functions {
+    static T Run<T>(System.Func<IMegaFormClient, System.Threading.Tasks.Task<T>> action)
+    {
+        var initializeMegaForm = MegaForm.DNN.Services.DnnServiceLocator.Instance;
+        return System.Threading.Tasks.Task.Run(() => MegaFormSdk.RunAsync(action)).GetAwaiter().GetResult();
+    }
+
+    static string Text(AppRecordDto record, string key, string fallback)
+    {
+        if (record == null || record.Data == null || !record.Data.ContainsKey(key) || record.Data[key] == null)
+            return fallback;
+        var value = Convert.ToString(record.Data[key]);
+        return string.IsNullOrWhiteSpace(value) ? fallback : value;
+    }
+
+    static bool CanManage(DotNetNuke.Entities.Users.UserInfo user)
+    {
+        if (user == null || user.UserID < 0) return false;
+        if (user.IsSuperUser) return true;
+        var allowed = new[] { "Administrators", "Blog Authors", "Blog Editors", "SEO Reviewers", "Content Legal Reviewers", "Blog Publishers" };
+        return user.Roles != null && user.Roles.Any(role => allowed.Contains(role, StringComparer.OrdinalIgnoreCase));
+    }
+
+    static string EnsureCsrfToken()
+    {
+        const string key = "MegaFormBlogs.CsrfToken";
+        var session = System.Web.HttpContext.Current.Session;
+        var token = session[key] as string;
+        if (!string.IsNullOrWhiteSpace(token)) return token;
+
+        var bytes = new byte[32];
+        using (var random = RandomNumberGenerator.Create())
+        {
+            random.GetBytes(bytes);
+        }
+        token = Convert.ToBase64String(bytes);
+        session[key] = token;
+        return token;
+    }
+
+    static void ValidateCsrfToken(string posted)
+    {
+        const string key = "MegaFormBlogs.CsrfToken";
+        var expected = System.Web.HttpContext.Current.Session[key] as string;
+        var valid = !string.IsNullOrWhiteSpace(expected)
+            && !string.IsNullOrWhiteSpace(posted)
+            && expected.Length == posted.Length;
+        var difference = valid ? 0 : 1;
+        var length = valid ? expected.Length : 0;
+        for (var index = 0; index < length; index++)
+        {
+            difference |= expected[index] ^ posted[index];
+        }
+        if (difference != 0)
+        {
+            throw new InvalidOperationException("The editorial session expired. Reload this page and try again.");
+        }
+    }
+}
+
+@{
+    var portalId = DotNetNuke.Entities.Portals.PortalSettings.Current == null
+        ? 0 : DotNetNuke.Entities.Portals.PortalSettings.Current.PortalId;
+    var adminBaseUrl = DotNetNuke.Common.Globals.NavigateURL(Dnn.Tab.TabID);
+    var user = DotNetNuke.Entities.Users.UserController.Instance.GetCurrentUserInfo();
+    // DNN's service locator is process-wide, so it deliberately does not capture a
+    // request user. Carry the complete actor in the SDK scope: workflow role queues
+    // must see the same identity that passed the DNN page permission check.
+    var scope = new MegaFormScope
+    {
+        PortalId = portalId,
+        UserId = user == null ? 0 : user.UserID,
+        UserName = user == null ? "" : user.Username,
+        DisplayName = user == null ? "" : user.DisplayName,
+        UserEmail = user == null ? "" : user.Email,
+        IsAuthenticated = user != null && user.UserID >= 0,
+        IsAdmin = user != null && (user.IsSuperUser || user.IsInRole("Administrators")),
+        IsSuperUser = user != null && user.IsSuperUser,
+        Roles = user == null || user.Roles == null
+            ? new List<string>()
+            : user.Roles.ToList(),
+        IpAddress = Request.UserHostAddress ?? ""
+    };
+    var allowed = CanManage(user);
+    var csrfToken = allowed ? EnsureCsrfToken() : "";
+    var message = "";
+    var messageError = false;
+    AppRecordDto editing = null;
+    InboxBoardDto board = null;
+    AppQueryResultDto queue = null;
+    IReadOnlyList<FileDto> editingFiles = new List<FileDto>();
+    IReadOnlyList<GalleryItemDto> postImages = new List<GalleryItemDto>();
+    IReadOnlyList<GalleryItemDto> authorImages = new List<GalleryItemDto>();
+
+    if (allowed && Request.HttpMethod == "POST")
+    {
+        try
+        {
+            ValidateCsrfToken(Request.Form["mfb_csrf"]);
+            var actionToken = (Request.Form["mfb_action"] ?? "").Trim();
+            var separator = actionToken.IndexOf('|');
+            var action = (separator < 0 ? actionToken : actionToken.Substring(0, separator)).ToLowerInvariant();
+            var actionTaskId = separator < 0 ? "" : actionToken.Substring(separator + 1);
+            var submissionId = 0;
+            int.TryParse(Request.Form["submission_id"], out submissionId);
+            if (action == "save" && submissionId > 0)
+            {
+                var values = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["title"] = Request.Form["title"] ?? "",
+                    ["slug"] = Request.Form["slug"] ?? "",
+                    ["excerpt"] = Request.Form["excerpt"] ?? "",
+                    ["body"] = Request.Form["body"] ?? "",
+                    ["category"] = Request.Form["category"] ?? "",
+                    ["tags"] = Request.Form["tags"] ?? "",
+                    ["featured_image_url"] = Request.Form["featured_image_url"] ?? "",
+                    ["image_alt_text"] = Request.Form["image_alt_text"] ?? "",
+                    ["author_name"] = Request.Form["author_name"] ?? "",
+                    ["author_avatar_url"] = Request.Form["author_avatar_url"] ?? "",
+                    ["seo_title"] = Request.Form["seo_title"] ?? "",
+                    ["seo_description"] = Request.Form["seo_description"] ?? ""
+                };
+                editing = Run(c => c.Records.PatchRecordAsync(submissionId, values, scope));
+                message = editing == null ? "The post no longer exists." : "Typed blog record saved.";
+                messageError = editing == null;
+            }
+            else if ((action == "claim" || action == "approve" || action == "reject") && !string.IsNullOrWhiteSpace(actionTaskId))
+            {
+                var blogRecords = Run(c => c.Queries.ExecuteAsync("blog-starter", "all-posts",
+                    new AppQueryRequest { Page = 1, PageSize = 100 }, scope));
+                var blogIds = new HashSet<int>();
+                if (blogRecords != null && blogRecords.Items != null)
+                {
+                    foreach (var record in blogRecords.Items)
+                    {
+                        blogIds.Add(record.SubmissionId);
+                    }
+                }
+                var actionBoard = Run(c => c.Workflows.GetMyInboxAsync(
+                    new InboxQuery { RecentCompleted = 15 }, scope));
+                var actionTask = actionBoard == null
+                    ? null
+                    : actionBoard.Incoming.Concat(actionBoard.InProgress)
+                        .FirstOrDefault(task => string.Equals(task.TaskId, actionTaskId, StringComparison.OrdinalIgnoreCase));
+                if (actionTask == null || !blogIds.Contains(actionTask.SubmissionId))
+                {
+                    throw new InvalidOperationException("This workflow task does not belong to the Blog application.");
+                }
+                var request = new InboxTaskActionRequest
+                {
+                    TaskId = actionTaskId,
+                    Comment = Request.Form["comment_" + actionTaskId]
+                };
+                InboxTaskResultDto result;
+                if (action == "claim")
+                {
+                    result = Run(c => c.Workflows.ClaimAsync(request, scope));
+                }
+                else if (action == "approve")
+                {
+                    result = Run(c => c.Workflows.ApproveAsync(request, scope));
+                }
+                else
+                {
+                    result = Run(c => c.Workflows.RejectAsync(request, scope));
+                }
+                message = result.Success ? "Workflow action completed." : (result.Error ?? "Workflow action failed.");
+                messageError = !result.Success;
+            }
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            messageError = true;
+        }
+    }
+
+    if (allowed)
+    {
+        try
+        {
+            board = Run(c => c.Workflows.GetMyInboxAsync(new InboxQuery { RecentCompleted = 15 }, scope));
+            queue = Run(c => c.Queries.ExecuteAsync("blog-starter", "all-posts",
+                new AppQueryRequest { Page = 1, PageSize = 100, Search = Request.QueryString["q"] }, scope));
+            var editId = 0;
+            int.TryParse(Request.QueryString["edit"], out editId);
+            if (editing == null && editId > 0)
+            {
+                editing = Run(c => c.Records.GetRecordAsync(editId, scope));
+            }
+            if (editing != null)
+            {
+                editingFiles = Run(c => c.Files.ListForSubmissionAsync(editing.SubmissionId, scope));
+                var postGallery = Run(c => c.Gallery.QueryGalleryAsync(new GalleryQueryRequest
+                {
+                    AppKey = "blog-starter",
+                    QueryKey = "all-posts",
+                    Query = new AppQueryRequest { Page = 1, PageSize = 100 },
+                    ImageFieldKeys = new List<string> { "featured_image_url", "og_image_url", "author_avatar_url" },
+                    TitleFieldKey = "title",
+                    AltTextFieldKey = "image_alt_text",
+                    CaptionFieldKey = "media_caption",
+                    // The post library is a typed URL gallery. Attachments for the
+                    // current record remain visible below through IFileApi; avoiding
+                    // a per-record file lookup keeps the editorial page fast.
+                    IncludeUploadedImages = false
+                }, scope));
+                var galleryItems = postGallery == null
+                    ? new List<GalleryItemDto>()
+                    : postGallery.Items.ToList();
+                postImages = galleryItems
+                    .Where(image => !string.Equals(image.FieldKey, "author_avatar_url", StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+                authorImages = galleryItems
+                    .Where(image => string.Equals(image.FieldKey, "author_avatar_url", StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            messageError = true;
+        }
+    }
+}
+
+<link rel="stylesheet" href="/DesktopModules/MegaForm/Assets/css/plugins/megaform-widget-rich-text.css?v=20260729a" />
+<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs.css?v=20260729f" />
+
+<main class="mfb mfb-admin">
+    @if (!allowed)
+    {
+        <section class="mfb-state mfb-state-error">
+            <h1>Editorial access required</h1>
+            <p>Sign in with a Blog or Administrator role to manage posts.</p>
+        </section>
+    }
+    else
+    {
+        <header class="mfb-admin-head">
+            <div><span class="mfb-eyebrow">MegaForm workflow</span><h1>Blog editorial console</h1></div>
+            <span>Signed in as <strong>@user.DisplayName</strong></span>
+        </header>
+        <input type="hidden" name="mfb_csrf" value="@csrfToken" />
+
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            <div class="mfb-notice @(messageError ? "error" : "success")">@message</div>
+        }
+
+        <section class="mfb-kpis">
+            @{
+                var blogSubmissionIds = new HashSet<int>();
+                if (queue != null && queue.Items != null)
+                {
+                    foreach (var record in queue.Items)
+                    {
+                        blogSubmissionIds.Add(record.SubmissionId);
+                    }
+                }
+                var blogIncoming = board == null
+                    ? new List<InboxTaskDto>()
+                    : board.Incoming.Where(task => blogSubmissionIds.Contains(task.SubmissionId)).ToList();
+                var blogInProgress = board == null
+                    ? new List<InboxTaskDto>()
+                    : board.InProgress.Where(task => blogSubmissionIds.Contains(task.SubmissionId)).ToList();
+                var blogCompleted = board == null
+                    ? new List<InboxTaskDto>()
+                    : board.Completed.Where(task => blogSubmissionIds.Contains(task.SubmissionId)).ToList();
+            }
+            <div><strong>@blogIncoming.Count</strong><span>Incoming</span></div>
+            <div><strong>@blogInProgress.Count</strong><span>In progress</span></div>
+            <div><strong>@blogCompleted.Count</strong><span>Completed</span></div>
+            <div><strong>@(queue == null ? 0 : queue.TotalCount)</strong><span>Total posts</span></div>
+        </section>
+
+        if (editing != null)
+        {
+            <section class="mfb-editor">
+                <div class="mfb-section-head"><h2>Edit typed record #@editing.SubmissionId</h2><a href="@adminBaseUrl">Close</a></div>
+                <div class="mfb-editor-actions">
+                    <input type="hidden" name="submission_id" value="@editing.SubmissionId" />
+                    <div class="mfb-form-grid">
+                        <label>Title<input name="title" value="@Text(editing, "title", "")" required /></label>
+                        <label>Slug<input name="slug" value="@Text(editing, "slug", "")" required /></label>
+                        <label>Category<input name="category" value="@Text(editing, "category", "")" /></label>
+                        <label>Author<input name="author_name" value="@Text(editing, "author_name", "")" /></label>
+                        <label class="wide">Excerpt<textarea name="excerpt" rows="3">@Text(editing, "excerpt", "")</textarea></label>
+                        <div class="wide mfb-rich-field" id="mfb-body-editor">
+                            <label>Article body (trusted editorial HTML)<textarea name="body" rows="14">@Text(editing, "body", "")</textarea></label>
+                        </div>
+                        <div class="wide mfb-media-field">
+                            <label>Featured image URL<input name="featured_image_url" value="@Text(editing, "featured_image_url", "")" /></label>
+                            <button class="mfb-media-button" type="button" data-mfb-gallery-open="featured_image_url" data-mfb-gallery-tab="posts">Browse image gallery</button>
+                        </div>
+                        <label>Image alt text<input name="image_alt_text" value="@Text(editing, "image_alt_text", "")" /></label>
+                        <div class="mfb-media-field">
+                            <label>Author avatar URL<input name="author_avatar_url" value="@Text(editing, "author_avatar_url", "")" /></label>
+                            <button class="mfb-media-button" type="button" data-mfb-gallery-open="author_avatar_url" data-mfb-gallery-tab="authors">Choose author image</button>
+                        </div>
+                        <label>Tags<input name="tags" value="@Text(editing, "tags", "")" /></label>
+                        <label>SEO title<input name="seo_title" value="@Text(editing, "seo_title", "")" /></label>
+                        <label class="wide">SEO description<textarea name="seo_description" rows="3">@Text(editing, "seo_description", "")</textarea></label>
+                    </div>
+                    <div class="mfb-editor-toolbar">
+                        <button class="mfb-media-button primary" type="button" data-mfb-gallery-open="body" data-mfb-gallery-tab="posts">Insert gallery image into article</button>
+                        <span>Images remain typed values or MegaForm-managed files; the editor stores clean HTML through Records API.</span>
+                    </div>
+                    <button class="mfb-button" type="submit" name="mfb_action" value="save">Save through Records API</button>
+                </div>
+                @if (editingFiles.Count > 0)
+                {
+                    <div class="mfb-files"><strong>Managed by MegaForm Files API:</strong>
+                    @foreach (var file in editingFiles)
+                    {
+                        <a href="/DesktopModules/MegaForm/API/SdkDemo/Download?submissionId=@editing.SubmissionId&amp;fileId=@file.FileId">@file.FileName</a>
+                    }
+                    </div>
+                }
+                <div id="mfb-gallery-dialog" class="mfb-gallery-dialog" role="dialog" aria-modal="true" aria-labelledby="mfb-gallery-title" hidden>
+                    <div class="mfb-gallery-backdrop" data-mfb-gallery-close></div>
+                    <section class="mfb-gallery-sheet">
+                        <header>
+                            <div>
+                                <span class="mfb-eyebrow">MegaForm typed gallery</span>
+                                <h2 id="mfb-gallery-title">Choose an image</h2>
+                            </div>
+                            <button type="button" class="mfb-gallery-close" data-mfb-gallery-close aria-label="Close gallery">&times;</button>
+                        </header>
+                        <div class="mfb-gallery-controls">
+                            <div class="mfb-gallery-tabs" role="tablist" aria-label="Image source">
+                                <button type="button" role="tab" data-mfb-gallery-filter="posts">Post images <span>@postImages.Count</span></button>
+                                <button type="button" role="tab" data-mfb-gallery-filter="authors">Authors <span>@authorImages.Count</span></button>
+                            </div>
+                            <input id="mfb-gallery-search" type="search" placeholder="Search by title, author or caption" aria-label="Search gallery" />
+                        </div>
+                        <div class="mfb-gallery-grid">
+                            @foreach (var image in postImages)
+                            {
+                                <button type="button" class="mfb-gallery-card" data-mfb-gallery-kind="posts"
+                                        data-mfb-gallery-title="@image.Title" data-mfb-gallery-alt="@image.AltText"
+                                        data-mfb-gallery-search="@((image.Title ?? "") + " " + (image.Caption ?? "") + " " + (image.FileName ?? ""))">
+                                    <span class="mfb-gallery-thumb"><img src="@image.Url" alt="@image.AltText" loading="lazy" /></span>
+                                    <strong>@(string.IsNullOrWhiteSpace(image.Title) ? "Untitled image" : image.Title)</strong>
+                                    <small>@(image.Source == "uploaded-file" ? "MegaForm file" : "Typed image field")</small>
+                                </button>
+                            }
+                            @foreach (var image in authorImages)
+                            {
+                                var authorRecord = queue == null || queue.Items == null
+                                    ? null
+                                    : queue.Items.FirstOrDefault(record => record.SubmissionId == image.SubmissionId);
+                                var authorName = Text(authorRecord, "author_name", image.Title ?? "Unnamed author");
+                                <button type="button" class="mfb-gallery-card author" data-mfb-gallery-kind="authors"
+                                        data-mfb-gallery-title="@authorName" data-mfb-gallery-alt="@authorName"
+                                        data-mfb-gallery-search="@(authorName + " " + (image.Caption ?? ""))">
+                                    <span class="mfb-gallery-thumb"><img src="@image.Url" alt="@authorName" loading="lazy" /></span>
+                                    <strong>@authorName</strong>
+                                    <small>Typed author image</small>
+                                </button>
+                            }
+                            <div class="mfb-gallery-empty" hidden>No matching images.</div>
+                        </div>
+                        <footer><span id="mfb-gallery-status" aria-live="polite">Select an image to use it.</span></footer>
+                    </section>
+                </div>
+            </section>
+        }
+
+        <section class="mfb-admin-grid">
+            <div class="mfb-panel">
+                <div class="mfb-section-head"><h2>My workflow tasks</h2><span>Claim · approve · request changes</span></div>
+                @{
+                    var tasks = blogIncoming.Concat(blogInProgress).ToList();
+                }
+                @if (tasks.Count == 0)
+                {
+                    <div class="mfb-state">No active tasks for your account.</div>
+                }
+                @foreach (var task in tasks)
+                {
+                    <article class="mfb-task">
+                        <div><strong>@task.NodeLabel</strong><span>Post #@task.SubmissionId · @task.Status</span></div>
+                        <div class="mfb-task-actions">
+                            <input name="comment_@task.TaskId" placeholder="Optional review note" />
+                            @if (task.AllowClaim) { <button type="submit" name="mfb_action" value="claim|@task.TaskId">Claim</button> }
+                            <button type="submit" name="mfb_action" value="approve|@task.TaskId">Approve</button>
+                            <button type="submit" class="danger" name="mfb_action" value="reject|@task.TaskId">Request changes</button>
+                        </div>
+                    </article>
+                }
+            </div>
+
+            <div class="mfb-panel">
+                <div class="mfb-section-head"><h2>Content register</h2><span>Named query: all-posts</span></div>
+                <div class="mfb-inline-search" role="search">
+                    <input id="mfb-admin-q" name="q" value="@Request.QueryString["q"]" placeholder="Search posts"
+                           onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('mfb-admin-search-go').click();}" />
+                    <button id="mfb-admin-search-go" type="button"
+                            onclick="var q=document.getElementById('mfb-admin-q').value.trim();window.location.href='@adminBaseUrl'+(q?'?q='+encodeURIComponent(q):'');">Search</button>
+                </div>
+                @if (queue != null)
+                {
+                    foreach (var post in queue.Items)
+                    {
+                        <article class="mfb-register-row">
+                            <div><strong>@Text(post, "title", "Untitled")</strong><span>@post.Status · @Text(post, "author_name", "No author")</span></div>
+                            <a href="@adminBaseUrl?edit=@post.SubmissionId">Edit</a>
+                        </article>
+                    }
+                }
+            </div>
+        </section>
+    }
+</main>
+@if (allowed && editing != null)
+{
+    <script src="/DesktopModules/MegaForm/Assets/js/megaform-widgets.js?v=20260729a"></script>
+    <script src="/DesktopModules/MegaForm/Assets/js/plugins/megaform-widget-rich-text.js?v=20260729c"></script>
+    <script>
+    (function () {
+        "use strict";
+        var editorFormId = "blog-@editing.SubmissionId";
+        var editorHost = document.getElementById("mfb-body-editor");
+        if (editorHost && window.MegaFormWidgets) {
+            var fallback = editorHost.querySelector('textarea[name="body"]');
+            var initialHtml = fallback ? fallback.value : "";
+            try {
+                editorHost.innerHTML = window.MegaFormWidgets.renderWidget({
+                    type: "RichText",
+                    key: "body",
+                    label: "Article body",
+                    helpText: "Visual editor for trusted editorial HTML. Use the gallery below for managed images.",
+                    required: true,
+                    widgetProps: {
+                        height: 460,
+                        toolbar: "full",
+                        placeholder: "Write the article...",
+                        showWordCount: true,
+                        imageUpload: "disabled",
+                        platform: "dnn"
+                    }
+                }, editorFormId, initialHtml);
+                window.MegaFormWidgets.bindWidgets(editorHost);
+            } catch (editorError) {
+                console.error("MegaForm Blogs: visual editor could not start", editorError);
+            }
+        }
+
+        var dialog = document.getElementById("mfb-gallery-dialog");
+        if (!dialog) return;
+        var cards = Array.prototype.slice.call(dialog.querySelectorAll(".mfb-gallery-card"));
+        var tabs = Array.prototype.slice.call(dialog.querySelectorAll("[data-mfb-gallery-filter]"));
+        var search = document.getElementById("mfb-gallery-search");
+        var empty = dialog.querySelector(".mfb-gallery-empty");
+        var status = document.getElementById("mfb-gallery-status");
+        var activeTarget = "body";
+        var activeKind = "posts";
+        var lastTrigger = null;
+
+        function refreshGallery() {
+            var term = (search.value || "").toLowerCase().trim();
+            var visible = 0;
+            cards.forEach(function (card) {
+                var kindMatches = card.getAttribute("data-mfb-gallery-kind") === activeKind;
+                var textMatches = !term || (card.getAttribute("data-mfb-gallery-search") || "").toLowerCase().indexOf(term) >= 0;
+                var show = kindMatches && textMatches;
+                card.hidden = !show;
+                if (show) visible++;
+            });
+            tabs.forEach(function (tab) {
+                var selected = tab.getAttribute("data-mfb-gallery-filter") === activeKind;
+                tab.classList.toggle("active", selected);
+                tab.setAttribute("aria-selected", selected ? "true" : "false");
+            });
+            empty.hidden = visible !== 0;
+            status.textContent = visible + (visible === 1 ? " image available." : " images available.");
+        }
+
+        function openGallery(target, kind, trigger) {
+            activeTarget = target || "body";
+            activeKind = kind || (activeTarget === "author_avatar_url" ? "authors" : "posts");
+            lastTrigger = trigger || null;
+            search.value = "";
+            dialog.hidden = false;
+            document.body.classList.add("mfb-gallery-open");
+            refreshGallery();
+            window.setTimeout(function () { search.focus(); }, 0);
+        }
+
+        function closeGallery() {
+            dialog.hidden = true;
+            document.body.classList.remove("mfb-gallery-open");
+            if (lastTrigger) lastTrigger.focus();
+        }
+
+        document.querySelectorAll("[data-mfb-gallery-open]").forEach(function (button) {
+            button.addEventListener("click", function () {
+                openGallery(button.getAttribute("data-mfb-gallery-open"), button.getAttribute("data-mfb-gallery-tab"), button);
+            });
+        });
+        dialog.querySelectorAll("[data-mfb-gallery-close]").forEach(function (button) {
+            button.addEventListener("click", closeGallery);
+        });
+        tabs.forEach(function (tab) {
+            tab.addEventListener("click", function () {
+                activeKind = tab.getAttribute("data-mfb-gallery-filter") || "posts";
+                refreshGallery();
+            });
+        });
+        search.addEventListener("input", refreshGallery);
+        cards.forEach(function (card) {
+            card.addEventListener("click", function () {
+                var image = card.querySelector("img");
+                var url = image ? image.getAttribute("src") : "";
+                var alt = card.getAttribute("data-mfb-gallery-alt") || card.getAttribute("data-mfb-gallery-title") || "";
+                if (!url) return;
+                if (activeTarget === "body") {
+                    if (!window.MegaRTE || !window.MegaRTE.insertImage(editorFormId, "body", url, alt)) {
+                        status.textContent = "The visual editor is still loading. Please try again.";
+                        return;
+                    }
+                } else {
+                    var input = document.querySelector('[name="' + activeTarget + '"]');
+                    if (!input) return;
+                    input.value = url;
+                    input.dispatchEvent(new Event("input", { bubbles: true }));
+                    input.dispatchEvent(new Event("change", { bubbles: true }));
+                    if (activeTarget === "featured_image_url") {
+                        var altInput = document.querySelector('[name="image_alt_text"]');
+                        if (altInput && !altInput.value) altInput.value = alt;
+                    }
+                    if (activeTarget === "author_avatar_url") {
+                        var authorInput = document.querySelector('[name="author_name"]');
+                        var authorName = card.getAttribute("data-mfb-gallery-title") || "";
+                        if (authorInput && authorName) authorInput.value = authorName;
+                    }
+                }
+                closeGallery();
+            });
+        });
+        document.addEventListener("keydown", function (event) {
+            if (!dialog.hidden && event.key === "Escape") closeGallery();
+        });
+    })();
+    </script>
+}

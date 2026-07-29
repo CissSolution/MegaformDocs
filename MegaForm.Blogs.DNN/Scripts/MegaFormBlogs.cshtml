@@ -1,0 +1,328 @@
+@*
+    MegaForm Blogs - public DNN Razor Host surface.
+    Data contract: IMegaFormClient.Apps / Queries / Records / Files only.
+    No DataJson parsing and no direct database access.
+*@
+@using System
+@using System.Linq
+@using System.Collections.Generic
+@using System.Text.RegularExpressions
+@using MegaForm.Sdk
+
+@functions {
+    static T Run<T>(System.Func<IMegaFormClient, System.Threading.Tasks.Task<T>> action)
+    {
+        var initializeMegaForm = MegaForm.DNN.Services.DnnServiceLocator.Instance;
+        return System.Threading.Tasks.Task.Run(() => MegaFormSdk.RunAsync(action)).GetAwaiter().GetResult();
+    }
+
+    static string Text(AppRecordDto record, string key, string fallback)
+    {
+        if (record == null || record.Data == null || !record.Data.ContainsKey(key) || record.Data[key] == null)
+            return fallback;
+        var value = Convert.ToString(record.Data[key]);
+        return string.IsNullOrWhiteSpace(value) ? fallback : value;
+    }
+
+    static int Number(AppRecordDto record, string key)
+    {
+        int value;
+        return int.TryParse(Text(record, key, "0"), out value) ? value : 0;
+    }
+
+    static int ReadingMinutes(AppRecordDto record)
+    {
+        var configured = Number(record, "reading_time");
+        if (configured > 0) return configured;
+        var plain = Regex.Replace(Text(record, "body", ""), "<[^>]+>", " ");
+        var words = Regex.Matches(plain, @"\b[\p{L}\p{N}]+\b").Count;
+        return Math.Max(1, (int)Math.Ceiling(words / 220d));
+    }
+
+    static bool Flag(AppRecordDto record, string key)
+    {
+        bool value;
+        return bool.TryParse(Text(record, key, "false"), out value) && value;
+    }
+
+    static string DateLabel(AppRecordDto record, string key)
+    {
+        DateTime value;
+        return DateTime.TryParse(Text(record, key, ""), out value)
+            ? value.ToString("MMM d, yyyy")
+            : record.SubmittedOnUtc.ToString("MMM d, yyyy");
+    }
+
+    static string Initials(string name)
+    {
+        var parts = (name ?? "").Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0) return "MF";
+        return string.Concat(parts.Take(2).Select(x => char.ToUpperInvariant(x[0])));
+    }
+
+    static string ImageUrl(AppRecordDto record)
+    {
+        return Text(record, "featured_image_url",
+            "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=1400&h=900&fit=crop");
+    }
+
+}
+
+@{
+    var portalId = DotNetNuke.Entities.Portals.PortalSettings.Current == null
+        ? 0 : DotNetNuke.Entities.Portals.PortalSettings.Current.PortalId;
+    var scope = new MegaFormScope { PortalId = portalId };
+    var baseUrl = DotNetNuke.Common.Globals.NavigateURL(Dnn.Tab.TabID);
+    var slug = (Request.QueryString["slug"] ?? "").Trim();
+    var category = (Request.QueryString["category"] ?? "").Trim();
+    var search = (Request.QueryString["q"] ?? "").Trim();
+    var pageNumber = 1;
+    int.TryParse(Request.QueryString["page"], out pageNumber);
+    if (pageNumber < 1) { pageNumber = 1; }
+
+    AppDto app = null;
+    AppQueryResultDto publicResult = null;
+    AppQueryResultDto featuredResult = null;
+    AppQueryResultDto categoryResult = null;
+    AppRecordDto detail = null;
+    IReadOnlyList<FileDto> detailFiles = new List<FileDto>();
+    string loadError = null;
+
+    try
+    {
+        app = Run(c => c.Apps.GetAppAsync("blog-starter", scope));
+        var publicRequest = new AppQueryRequest { Page = pageNumber, PageSize = 12, Search = search };
+        if (!string.IsNullOrWhiteSpace(category))
+        {
+            publicRequest.Parameters["category"] = category;
+        }
+        if (!string.IsNullOrWhiteSpace(slug))
+        {
+            publicRequest.PageSize = 1;
+            publicRequest.Parameters["slug"] = slug;
+        }
+        publicResult = Run(c => c.Queries.ExecuteAsync("blog-starter", "public-posts", publicRequest, scope));
+        if (!string.IsNullOrWhiteSpace(slug))
+        {
+            detail = publicResult.Items.FirstOrDefault();
+            if (detail != null)
+            {
+                detailFiles = Run(c => c.Files.ListForSubmissionAsync(detail.SubmissionId, scope));
+            }
+        }
+        else
+        {
+            featuredResult = Run(c => c.Queries.ExecuteAsync("blog-starter", "featured-posts",
+                new AppQueryRequest { Page = 1, PageSize = 1 }, scope));
+            categoryResult = Run(c => c.Queries.ExecuteAsync("blog-starter", "public-posts",
+                new AppQueryRequest { Page = 1, PageSize = 100 }, scope));
+        }
+    }
+    catch (Exception ex)
+    {
+        loadError = ex.Message;
+    }
+
+    var posts = publicResult == null ? new List<AppRecordDto>() : publicResult.Items.ToList();
+    var featured = featuredResult == null ? null : featuredResult.Items.FirstOrDefault();
+    if (featured == null && posts.Count > 0) { featured = posts[0]; }
+    var categories = categoryResult == null
+        ? new List<string>()
+        : categoryResult.Items.Select(x => Text(x, "category", "Insights"))
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(x => x).ToList();
+}
+
+<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs.css?v=20260729c" />
+
+<main class="mfb" aria-labelledby="mfb-title">
+    @if (!string.IsNullOrWhiteSpace(loadError))
+    {
+        <section class="mfb-state mfb-state-error">
+            <strong>Blog is being prepared.</strong>
+            <span>@loadError</span>
+        </section>
+    }
+    else if (app == null)
+    {
+        <section class="mfb-state">The Blog Publishing app has not been installed for this portal.</section>
+    }
+    else if (!string.IsNullOrWhiteSpace(slug))
+    {
+        if (detail == null)
+        {
+            <section class="mfb-state">
+                <h1>Article not found</h1>
+                <a class="mfb-button" href="@baseUrl">Back to all stories</a>
+            </section>
+        }
+        else
+        {
+            var author = Text(detail, "author_name", "MegaForm Editorial");
+            var avatar = Text(detail, "author_avatar_url", "");
+            var tags = Text(detail, "tags", "").Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            <article class="mfb-article">
+                <nav class="mfb-breadcrumb" aria-label="Breadcrumb">
+                    <a href="@baseUrl">Blog</a><span>/</span>
+                    <a href="@baseUrl?category=@HttpUtility.UrlEncode(Text(detail, "category", "Insights"))">@Text(detail, "category", "Insights")</a>
+                </nav>
+                <header class="mfb-article-head">
+                    <span class="mfb-chip">@Text(detail, "content_type", "Article")</span>
+                    <h1 id="mfb-title">@Text(detail, "title", "Untitled story")</h1>
+                    <p class="mfb-lead">@Text(detail, "subtitle", Text(detail, "excerpt", ""))</p>
+                    <div class="mfb-byline">
+                        @if (!string.IsNullOrWhiteSpace(avatar))
+                        {
+                            <img src="@avatar" alt="" />
+                        }
+                        else
+                        {
+                            <span class="mfb-avatar">@Initials(author)</span>
+                        }
+                        <span><strong>@author</strong><small>@DateLabel(detail, "publish_date") · @ReadingMinutes(detail) min read</small></span>
+                    </div>
+                </header>
+                <figure class="mfb-article-hero">
+                    <img src="@ImageUrl(detail)" alt="@Text(detail, "image_alt_text", Text(detail, "title", "Article image"))" />
+                    @if (!string.IsNullOrWhiteSpace(Text(detail, "media_caption", "")))
+                    {
+                        <figcaption>@Text(detail, "media_caption", "")</figcaption>
+                    }
+                </figure>
+                <div class="mfb-article-layout">
+                    <div class="mfb-prose">@Html.Raw(Text(detail, "body", "<p>Article content is being prepared.</p>"))</div>
+                    <aside>
+                        <section class="mfb-author-card">
+                            <span class="mfb-avatar mfb-avatar-lg">@Initials(author)</span>
+                            <h2>@author</h2>
+                            <p class="mfb-muted">@Text(detail, "author_role", "Contributor")</p>
+                            <p>@Text(detail, "author_bio", "A member of the MegaForm editorial team.")</p>
+                        </section>
+                        @if (tags.Length > 0)
+                        {
+                            <section class="mfb-side-card">
+                                <h2>Topics</h2>
+                                <div class="mfb-tags">
+                                    @foreach (var tag in tags)
+                                    {
+                                        <a href="@baseUrl?q=@HttpUtility.UrlEncode(tag.Trim())">#@tag.Trim()</a>
+                                    }
+                                </div>
+                            </section>
+                        }
+                        @if (detailFiles.Count > 0)
+                        {
+                            <section class="mfb-side-card">
+                                <h2>Attachments</h2>
+                                @foreach (var file in detailFiles)
+                                {
+                                    <a class="mfb-attachment" href="/DesktopModules/MegaForm/API/SdkDemo/Download?submissionId=@detail.SubmissionId&amp;fileId=@file.FileId">
+                                        <span>↓</span> @file.FileName
+                                    </a>
+                                }
+                            </section>
+                        }
+                    </aside>
+                </div>
+            </article>
+        }
+    }
+    else
+    {
+        <section class="mfb-hero">
+            <div class="mfb-shell">
+                <span class="mfb-eyebrow">◆ Featured stories</span>
+                <h1 id="mfb-title">Insights &amp; Ideas</h1>
+                <p>Design, development and product thinking from the MegaForm community.</p>
+                <div class="mfb-search" role="search">
+                    <label class="sr-only" for="mfb-q">Search articles</label>
+                    <input id="mfb-q" name="q" value="@search" placeholder="Search articles, topics, authors..."
+                           onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('mfb-search-go').click();}" />
+                    <button id="mfb-search-go" type="button"
+                            onclick="var q=document.getElementById('mfb-q').value.trim();window.location.href='@baseUrl'+(q?'?q='+encodeURIComponent(q):'');">Search</button>
+                </div>
+
+                @if (featured != null)
+                {
+                    <article class="mfb-feature">
+                        <a class="mfb-feature-image" href="@baseUrl?slug=@HttpUtility.UrlEncode(Text(featured, "slug", ""))">
+                            <img src="@ImageUrl(featured)" alt="@Text(featured, "image_alt_text", "")" />
+                            <span>Featured</span>
+                        </a>
+                        <div class="mfb-feature-copy">
+                            <div><span class="mfb-chip">@Text(featured, "category", "Insights")</span> <small>@ReadingMinutes(featured) min read</small></div>
+                            <h2><a href="@baseUrl?slug=@HttpUtility.UrlEncode(Text(featured, "slug", ""))">@Text(featured, "title", "Untitled story")</a></h2>
+                            <p>@Text(featured, "excerpt", "")</p>
+                            <div class="mfb-card-foot">
+                                <span><strong>@Text(featured, "author_name", "MegaForm Editorial")</strong><small>@DateLabel(featured, "publish_date")</small></span>
+                                <span>@Number(featured, "view_count").ToString("N0") reads · @Number(featured, "comment_count") comments</span>
+                            </div>
+                        </div>
+                    </article>
+                }
+            </div>
+        </section>
+
+        <section class="mfb-shell mfb-content">
+            <div class="mfb-main">
+                <header class="mfb-section-head">
+                    <div><span class="mfb-trend">↗</span><h2>@(string.IsNullOrWhiteSpace(search) ? "Popular this week" : "Search results")</h2></div>
+                    <span>@(publicResult == null ? 0 : publicResult.TotalCount) stories</span>
+                </header>
+                <nav class="mfb-categories" aria-label="Blog categories">
+                    <a class="@(string.IsNullOrWhiteSpace(category) ? "active" : "")" href="@baseUrl">All</a>
+                    @foreach (var item in categories)
+                    {
+                        <a class="@(string.Equals(item, category, StringComparison.OrdinalIgnoreCase) ? "active" : "")"
+                           href="@baseUrl?category=@HttpUtility.UrlEncode(item)">@item</a>
+                    }
+                </nav>
+                @if (posts.Count == 0)
+                {
+                    <div class="mfb-state">No published stories match this filter.</div>
+                }
+                else
+                {
+                    <div class="mfb-grid">
+                        @foreach (var post in posts.Where(x => featured == null || x.SubmissionId != featured.SubmissionId))
+                        {
+                            <article class="mfb-card">
+                                <a class="mfb-card-image" href="@baseUrl?slug=@HttpUtility.UrlEncode(Text(post, "slug", ""))">
+                                    <img src="@ImageUrl(post)" alt="@Text(post, "image_alt_text", "")" />
+                                    @if (Flag(post, "is_featured")) { <span>Featured</span> }
+                                </a>
+                                <div class="mfb-card-body">
+                                    <div><span class="mfb-chip">@Text(post, "category", "Insights")</span><small>@ReadingMinutes(post) min</small></div>
+                                    <h3><a href="@baseUrl?slug=@HttpUtility.UrlEncode(Text(post, "slug", ""))">@Text(post, "title", "Untitled story")</a></h3>
+                                    <p>@Text(post, "excerpt", "")</p>
+                                    <div class="mfb-card-foot">
+                                        <span><strong>@Text(post, "author_name", "MegaForm Editorial")</strong><small>@DateLabel(post, "publish_date")</small></span>
+                                        <span>@Number(post, "view_count").ToString("N0") reads</span>
+                                    </div>
+                                </div>
+                            </article>
+                        }
+                    </div>
+                }
+            </div>
+            <aside class="mfb-sidebar">
+                <section class="mfb-side-card">
+                    <h2>Trending topics</h2>
+                    <div class="mfb-tags">
+                        @foreach (var tag in new[] { "Design Systems", "Accessibility", "AI", "Performance", "Product" })
+                        {
+                            <a href="@baseUrl?q=@HttpUtility.UrlEncode(tag)">#@tag</a>
+                        }
+                    </div>
+                </section>
+                <section class="mfb-newsletter">
+                    <h2>Stay updated</h2>
+                    <p>New insights delivered to your inbox.</p>
+                    <input type="email" aria-label="Email address" placeholder="Your email" />
+                    <button type="button">Subscribe</button>
+                    <small>Demo UI — connect this to a MegaForm newsletter form when required.</small>
+                </section>
+            </aside>
+        </section>
+    }
+</main>

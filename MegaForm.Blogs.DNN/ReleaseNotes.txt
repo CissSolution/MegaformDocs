@@ -1,0 +1,6 @@
+1.0.0
+
+- Adds the public MegaForm Blogs Razor presentation.
+- Adds the Host/role-gated Blog administration Razor presentation.
+- Uses the typed MegaForm Records, Gallery, File, and Workflow SDK APIs.
+- Reuses MegaForm's self-hosted rich-text editor assets.

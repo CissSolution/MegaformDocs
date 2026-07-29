@@ -254,6 +254,9 @@ Write-Host "[2b] Found $bundleCount TS bundles in Assets\js\bundles\" -Foregroun
 Assert-RequiredFile -PathToCheck (Join-Path $bundlesDir 'megaform-builder.js') -Label 'Builder bundle'
 Assert-RequiredFile -PathToCheck (Join-Path $SOLUTION_DIR 'Assets\js\megaform-builder-loader.js') -Label 'Builder loader'
 Assert-RequiredFile -PathToCheck (Join-Path $SOLUTION_DIR 'Assets\js\plugins\megaform-widget-qrcode.js') -Label 'QRCode plugin'
+Assert-RequiredFile -PathToCheck (Join-Path $SOLUTION_DIR 'Assets\js\plugins\megaform-widget-rich-text.js') -Label 'RichText widget'
+Assert-RequiredFile -PathToCheck (Join-Path $SOLUTION_DIR 'Assets\js\plugins\vendor\quill\quill.min.js') -Label 'Self-hosted Quill runtime'
+Assert-RequiredFile -PathToCheck (Join-Path $SOLUTION_DIR 'Assets\css\plugins\vendor\quill\quill.snow.css') -Label 'Self-hosted Quill theme'
 Assert-RequiredFile -PathToCheck (Join-Path $SOLUTION_DIR 'Assets\js\megaform-dashboard.js') -Label 'Dashboard bundle'
 Assert-RequiredFile -PathToCheck (Join-Path $builderDir 'megaform-workflow-reactflow.js') -Label 'Workflow canvas bundle'
 Assert-RequiredFile -PathToCheck (Join-Path $builderDir 'react.production.min.js') -Label 'React runtime'
@@ -514,6 +517,19 @@ foreach ($resSub in @('PromptRecipes', 'TemplateGuides')) {
         Write-Host "  + Resources\$resSub\*"
     }
 }
+# [KbSeedParity 2026-07-29] Ship the canonical AI-knowledge seed so DNN reaches the same KB
+# as Oqtane/Web/Umbraco. Until now DNN only had the frozen SqlDataProvider inserts (64 entries
+# against the seed's 329) and nothing topped it up at runtime; DnnKbSeeder merges this file on
+# the first KB read. ~1.4 MB raw / ~0.17 MB in the zip.
+$kbSeedSrc = Join-Path $SOLUTION_DIR 'MegaForm.Core\Seed\ai-knowledge-seed.json'
+if (Test-Path $kbSeedSrc) {
+    New-Item -ItemType Directory -Path "$RESOURCES\Seed" -Force | Out-Null
+    Copy-Item $kbSeedSrc "$RESOURCES\Seed\" -Force
+    Write-Host ("  + Seed\ai-knowledge-seed.json ({0:N2} MB raw - AI knowledge base)" -f ((Get-Item $kbSeedSrc).Length / 1MB)) -ForegroundColor Green
+} else {
+    throw "MegaForm.Core\Seed\ai-knowledge-seed.json is missing - the DNN KB would install at the SqlScripts subset only."
+}
+
 # [QuickStart 2026-07-24] The bundled shelf a fresh install opens with, in two parts:
 #   1. Samples\FormTemplates\QuickStart  — 31 FREE starters (premium:false). These are what
 #      makes a trial install usable: none of them is locked.
@@ -578,6 +594,9 @@ Write-Host ''
 Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\bundles\megaform-builder.js') -Label 'Packaged builder bundle'
 Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\megaform-builder-loader.js') -Label 'Packaged builder loader'
 Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\plugins\megaform-widget-qrcode.js') -Label 'Packaged QRCode plugin'
+Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\plugins\megaform-widget-rich-text.js') -Label 'Packaged RichText widget'
+Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\plugins\vendor\quill\quill.min.js') -Label 'Packaged self-hosted Quill runtime'
+Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\css\plugins\vendor\quill\quill.snow.css') -Label 'Packaged self-hosted Quill theme'
 Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\megaform-dashboard.js') -Label 'Packaged dashboard bundle'
 Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\builder\megaform-workflow-reactflow.js') -Label 'Packaged workflow canvas bundle'
 Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\builder\react.production.min.js') -Label 'Packaged React runtime'

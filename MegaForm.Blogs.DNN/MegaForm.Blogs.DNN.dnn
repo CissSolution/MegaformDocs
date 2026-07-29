@@ -1,0 +1,39 @@
+<dotnetnuke type="Package" version="5.0">
+  <packages>
+    <package name="MegaForm.Blogs.DNN" type="Library" version="01.00.000">
+      <friendlyName>MegaForm Blogs for DNN</friendlyName>
+      <description>Thin Razor Host presentation layer for the MegaForm blog-starter configured app.</description>
+      <owner>
+        <name>MegaForm</name>
+        <organization>MegaForm</organization>
+        <url>https://dnndefender.com/</url>
+        <email>support@dnndefender.com</email>
+      </owner>
+      <license src="License.txt" />
+      <releaseNotes src="ReleaseNotes.txt" />
+      <azureCompatible>true</azureCompatible>
+      <dependencies>
+        <dependency type="CoreVersion">09.04.00</dependency>
+        <dependency type="Package" version="02.00.008">MegaForm</dependency>
+      </dependencies>
+      <components>
+        <component type="ResourceFile">
+          <resourceFiles>
+            <basePath>DesktopModules/RazorModules/RazorHost/Scripts</basePath>
+            <resourceFile>
+              <name>RazorScripts.zip</name>
+            </resourceFile>
+          </resourceFiles>
+        </component>
+        <component type="ResourceFile">
+          <resourceFiles>
+            <basePath>DesktopModules/MegaFormBlogs/Assets</basePath>
+            <resourceFile>
+              <name>BlogAssets.zip</name>
+            </resourceFile>
+          </resourceFiles>
+        </component>
+      </components>
+    </package>
+  </packages>
+</dotnetnuke>
