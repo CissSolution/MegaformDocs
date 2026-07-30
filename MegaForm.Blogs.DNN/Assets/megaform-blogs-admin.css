@@ -495,13 +495,22 @@
    Appended at end-of-file: at equal specificity, source order wins.
    ============================================================================ */
 
-.mfba-newpost { margin-top: 18px; }
+/* Compared against the mock's post editor (`admin/editor`): its content column is ~930px with
+   a 320px settings rail beside it, so no single input ever spans the window. We have no rail
+   yet, so at minimum cap the measure — a Title input stretched across 1200px of console reads
+   as unfinished, and a 60-character line is past comfortable reading width anyway. Left-aligned
+   rather than centred, which is where the mock's content column sits.
+   NOTE: matching the mock properly means a two-column editor + settings rail. That is a
+   redesign of AdminNewPost, not a width cap — see the handoff. */
+.mfba-newpost { margin-top: 18px; max-width: 980px; }
 
+/* Padded like the mock's editor cards (p-5/p-6). Without this the labels and help text sit
+   flush against the panel border, which is what made the form read as a bare table. */
 .mfba-newform {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
-  gap: 16px 20px;
-  padding: 4px 0 8px;
+  gap: 18px 20px;
+  padding: 20px 24px 8px;
 }
 
 .mfba-fld { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
@@ -602,8 +611,19 @@
    page keeps a normal CMS layout. isolation:isolate gives host-theme immunity without
    `contain:layout`, which would trap position:fixed descendants (a documented MegaForm
    regression - popups rendered in-flow at the bottom of the page). */
-.mf-oq-surface.is-inline { position: relative; width: 100%; overflow-x: auto;
+.mf-oq-surface.is-inline { position: relative; width: 100%;
   isolation: isolate; min-height: 60vh; }
+
+/* 🔴 MegaForm's own is-inline rule carries `overflow-x: auto`, which its very wide form
+   builder needs. Copying it verbatim was a mistake here: it made the WHOLE console an outer
+   horizontal scroller wrapped around the kanban's own `.mfba-board-wrap` scroller. Two nested
+   x-scrollers cut content at BOTH edges and put a scrollbar under every view, including the
+   comments list, which has nothing wide in it at all. Measured on every width and every view.
+   The board owns the only sideways scroll; the surface must not compete with it.
+   `clip` rather than `hidden`/`visible`: it suppresses the scrollbar without creating a scroll
+   container (so `.mfba-head`'s sticky positioning still resolves against the page) and without
+   letting a stray wide child push the page sideways. */
+.mf-oq-surface.mfba-surface { overflow-x: clip; }
 
 /* Blog console palette, higher specificity than MegaForm's generic surface background. */
 .mf-oq-surface.mfba-surface { background: var(--mfba-bg, #f5f4f1); }
@@ -643,17 +663,11 @@ html.mf-host-editmode .mf-fs-toggle.mf-fs-floating:hover { background: #6366f1; 
    every flex child, which is what keeps text from pushing a row wide.
    ============================================================================ */
 
-/* 1. Scroll affordance. Edge fades that appear only while there is more board in that
-      direction: the gradients are painted in the scrollport (background-attachment:
-      local for the white "cover" layers, scroll for the fades), so they self-hide at
-      each end. Plus a visible slim scrollbar, because a board you cannot tell scrolls
-      is a board users think is cut off. */
+/* 1. Scroll affordance — a visible slim scrollbar, and nothing else. An earlier attempt
+      painted self-hiding edge-fade gradients here; compared side by side against the mock
+      (which has no fade at all) they read as the content being smudged/cut rather than
+      scrollable, so they are gone. Mock parity: a clean edge plus a real scrollbar. */
 .mfba-board-wrap {
-  background:
-    linear-gradient(to right, var(--mfba-bg), transparent) left center / 28px 100% no-repeat local,
-    linear-gradient(to left,  var(--mfba-bg), transparent) right center / 28px 100% no-repeat local,
-    linear-gradient(to right, rgba(15,10,9,.14), transparent) left center / 14px 100% no-repeat scroll,
-    linear-gradient(to left,  rgba(15,10,9,.14), transparent) right center / 14px 100% no-repeat scroll;
   scrollbar-width: thin;
   overscroll-behavior-x: contain;
 }

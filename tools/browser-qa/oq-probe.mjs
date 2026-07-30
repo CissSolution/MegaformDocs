@@ -286,7 +286,10 @@ async function main() {
             const doc = document.documentElement;
             const bad = [], scrollers = [];
             const seen = new Set();
-            document.querySelectorAll('.mfb *, .mfba *, .mfb, .mfba').forEach((el) => {
+            // Include the SURFACE itself, not just its contents. Missing it once already hid a
+            // real bug: the surface carried overflow-x:auto, so the whole console was a second,
+            // outer horizontal scroller nested around the board's own.
+            document.querySelectorAll('.mf-oq-surface, .mf-oq-surface *, .mfb, .mfb *, .mfba, .mfba *').forEach((el) => {
               const cs = getComputedStyle(el);
               if (cs.display === 'none' || cs.visibility === 'hidden') return;
               const rect = el.getBoundingClientRect();

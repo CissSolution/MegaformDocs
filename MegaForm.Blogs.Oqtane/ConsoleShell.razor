@@ -17,7 +17,7 @@
    ConsoleBaseUrl is what the view tabs link to, and it differs per host: the page URL when
    inline, the Edit-action URL inside the dialog. Everything else is identical. *@
 
-<link rel="stylesheet" href="/Modules/MegaFormBlogs/megaform-blogs-admin.css?v=20260730d" />
+<link rel="stylesheet" href="/Modules/MegaFormBlogs/megaform-blogs-admin.css?v=20260730e" />
 
 <div class="mf-oq-surface is-inline mfba-surface" data-mfba-surface="1">
     <div class="mfba @(View == "comments" ? "mfba-comments-page" : "")">
@@ -75,7 +75,7 @@
 
 @* Mounts the windowed/fullscreen toast on <body>. Self-guarding: it no-ops when MegaForm's
    own platform-host bundle has already installed the identical toggle on this page. *@
-<script src="/Modules/MegaFormBlogs/megaform-blogs-fs.js?v=20260730d"></script>
+<script src="/Modules/MegaFormBlogs/megaform-blogs-fs.js?v=20260730e"></script>
 
 @code {
     [Parameter] public MegaFormScope Scope { get; set; }
