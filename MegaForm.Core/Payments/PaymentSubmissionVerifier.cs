@@ -195,6 +195,16 @@ namespace MegaForm.Core.Payments
                 }
 
                 var expected = ResolveExpectedPrice(field, props, formData);
+                if (string.Equals(expected.Mode, "unresolved", StringComparison.Ordinal))
+                {
+                    // Nothing the gateway says can rescue a claim we cannot price, so stop before
+                    // spending a round-trip on it. CheckExpectedPrice repeats the check for callers
+                    // that reach it by another path.
+                    Log("Payment field '" + field.Key + "' could not be priced server-side (amountMode=field " +
+                        "whose source did not re-derive, or amountMode=listenTotals with no minAmount/maxAmount) " +
+                        "— rejecting without contacting the gateway (fail closed).");
+                    return PaymentVerificationOutcome.Reject(field.Key, "The payment does not match this form's price.");
+                }
 
                 var gatewayResult = provider == "stripe"
                     ? await VerifyStripeAsync(form, field, claimed, transactionId, expected).ConfigureAwait(false)
@@ -472,7 +482,21 @@ namespace MegaForm.Core.Payments
             }
             if (mode == "listentotals")
             {
-                return expected; // client-computed → bounds only
+                // [PAY-4 v20260730] The total is computed in the browser, so the server can never
+                // re-derive it. Declared bounds are therefore the ONLY price guard this mode has —
+                // and with none declared this branch used to fall through to Mode="bounds" with no
+                // Amount, no Min and no Max, which CheckExpectedPrice accepts for any capture above
+                // zero. A 1,050 EUR cart could be settled with a 0.01 EUR capture and still be
+                // stored as verified, because BuildVerifiedValue then rewrites the recorded amount
+                // from the gateway so the row looks perfectly consistent.
+                // A bound-less listenTotals field is unpriceable, exactly like an unresolvable
+                // field-mode one, so it fails closed the same way. Declaring minAmount/maxAmount is
+                // a deliberate, auditable guard and keeps working.
+                if (!expected.Min.HasValue && !expected.Max.HasValue)
+                {
+                    expected.Mode = "unresolved";
+                }
+                return expected;
             }
 
             // fixed, or legacy widget with a stored amount and no explicit mode.
@@ -494,8 +518,9 @@ namespace MegaForm.Core.Payments
             }
             if (string.Equals(expected.Mode, "unresolved", StringComparison.Ordinal))
             {
-                Log("Payment field '" + field.Key + "' is amountMode=field but the server could not re-derive " +
-                    "its price from the submitted data — rejecting (fail closed).");
+                Log("Payment field '" + field.Key + "' could not be priced server-side (amountMode=field whose " +
+                    "source did not re-derive, or amountMode=listenTotals with no minAmount/maxAmount) " +
+                    "— rejecting (fail closed).");
                 return PaymentVerificationOutcome.Reject(field.Key, "The payment does not match this form's price.");
             }
             if (!string.IsNullOrWhiteSpace(expected.Currency) &&
