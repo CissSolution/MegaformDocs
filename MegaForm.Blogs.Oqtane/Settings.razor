@@ -1,0 +1,418 @@
+@namespace MegaForm.Blogs.Client
+@inherits ModuleBase
+@implements ISettingsControl
+@inject ISettingService SettingService
+
+@* MegaForm Blogs - per-instance settings.
+
+   This pane is what makes ONE module definition serve every blog and news surface. "View"
+   picks the profile and the surface together, matching the routes in the ACME NewsDesk mock;
+   everything else narrows or dresses that choice.
+
+   Contract notes (all three cost a silent failure if broken):
+    - Title must NOT touch ModuleState/PageState: the framework calls Activator.CreateInstance
+      on a bare instance purely to read it.
+    - @namespace must match Index.razor's, or module discovery registers a phantom second
+      module definition.
+    - SetSetting's 3-arg overload means isPrivate = false. Correct here (anonymous visitors
+      must be able to read display settings) but never store a secret through it.
+*@
+
+<div class="container">
+
+    <fieldset class="mb-3">
+        <legend class="h6">View</legend>
+
+        <div class="row mb-2 align-items-center">
+            <label class="col-sm-3 col-form-label" for="mfb-view">View</label>
+            <div class="col-sm-9">
+                <select id="mfb-view" class="form-select" value="@_view"
+                        @onchange="OnViewChanged">
+                    <optgroup label="Blog">
+                        <option value="blog:listing">Blog — listing (blog home)</option>
+                        <option value="blog:detail">Blog — post detail</option>
+                        <option value="blog:category">Blog — category page</option>
+                        <option value="blog:author">Blog — author profile</option>
+                        <option value="blog:archive">Blog — archive</option>
+                        <option value="blog:featured">Blog — featured strip</option>
+                        <option value="blog:console">Blog — admin console (editorial)</option>
+                    </optgroup>
+                    <optgroup label="News">
+                        <option value="news:listing">News — listing (news desk)</option>
+                        <option value="news:detail">News — article detail</option>
+                        <option value="news:category">News — section page</option>
+                        <option value="news:author">News — reporter profile</option>
+                        <option value="news:archive">News — archive</option>
+                        <option value="news:featured">News — breaking strip</option>
+                        <option value="news:console">News — admin console (newsroom)</option>
+                    </optgroup>
+                </select>
+                <div class="form-text">@ViewHelp()</div>
+            </div>
+        </div>
+
+        <div class="row mb-2 align-items-center">
+            <label class="col-sm-3 col-form-label" for="mfb-layout">Layout</label>
+            <div class="col-sm-9">
+                <select id="mfb-layout" class="form-select" @bind="_config.Layout">
+                    <option value="grid">Grid — cards</option>
+                    <option value="list">List — one per row</option>
+                    <option value="magazine">Magazine — lead + rail</option>
+                    <option value="compact">Compact — dense headlines</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row mb-2 align-items-center">
+            <label class="col-sm-3 col-form-label" for="mfb-theme">Theme variant</label>
+            <div class="col-sm-9">
+                <select id="mfb-theme" class="form-select" @bind="_config.ThemeVariant">
+                    <option value="default">Default — follow the site theme</option>
+                    <option value="dark">Dark</option>
+                    <option value="brand">Brand</option>
+                </select>
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset class="mb-3">
+        <legend class="h6">Content source</legend>
+
+        <div class="row mb-2 align-items-center">
+            <label class="col-sm-3 col-form-label" for="mfb-appkey">App key</label>
+            <div class="col-sm-9">
+                <input id="mfb-appkey" class="form-control" @bind="_config.AppKey" maxlength="128" />
+                <div class="form-text">The MegaForm app that holds the posts. Default <code>blog-starter</code>.</div>
+            </div>
+        </div>
+
+        <div class="row mb-2 align-items-center">
+            <label class="col-sm-3 col-form-label" for="mfb-querykey">Named query</label>
+            <div class="col-sm-9">
+                <input id="mfb-querykey" class="form-control" @bind="_config.QueryKey"
+                       placeholder="@_config.EffectiveQueryKey()" maxlength="64" />
+                <div class="form-text">
+                    Leave empty to use the default for this view (<code>@_config.EffectiveQueryKey()</code>).
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-2 align-items-center">
+            <label class="col-sm-3 col-form-label" for="mfb-featuredquery">Featured query</label>
+            <div class="col-sm-9">
+                <input id="mfb-featuredquery" class="form-control" @bind="_config.FeaturedQueryKey" maxlength="64" />
+                <div class="form-text">Feeds the hero. Empty means no hero at all.</div>
+            </div>
+        </div>
+
+        <div class="row mb-2 align-items-center">
+            <label class="col-sm-3 col-form-label" for="mfb-pagesize">Posts per page</label>
+            <div class="col-sm-9">
+                <input id="mfb-pagesize" type="number" class="form-control" min="1" max="100"
+                       @bind="_config.PageSize" />
+                <div class="form-text">1–100. The read engine caps a page at 100.</div>
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset class="mb-3">
+        <legend class="h6">Filtering</legend>
+
+        <div class="row mb-2 align-items-center">
+            <label class="col-sm-3 col-form-label" for="mfb-filterfield">Pin to field</label>
+            <div class="col-sm-9">
+                <select id="mfb-filterfield" class="form-select" @bind="_config.FilterField">
+                    <option value="">(not pinned)</option>
+                    <option value="category">category</option>
+                    <option value="tags">tags</option>
+                    <option value="author_name">author_name</option>
+                    <option value="author_email">author_email</option>
+                    <option value="content_type">content_type</option>
+                    <option value="audience">audience</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row mb-2 align-items-center">
+            <label class="col-sm-3 col-form-label" for="mfb-filtervalue">Pin to value</label>
+            <div class="col-sm-9">
+                <input id="mfb-filtervalue" class="form-control" @bind="_config.FilterValue" maxlength="256" />
+                <div class="form-text">
+                    Both the field and the value are required — a field with an empty value is a real
+                    equality filter and would empty the listing. Filters compose, so a News view can
+                    also be pinned to a category.
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-2 align-items-center">
+            <label class="col-sm-3 col-form-label" for="mfb-allowurl">Allow URL filtering</label>
+            <div class="col-sm-9">
+                <select id="mfb-allowurl" class="form-select" value="@B(_config.AllowUrlFilter)"
+                        @onchange="e => _config.AllowUrlFilter = ParseBool(e)">
+                    <option value="true">Yes — honour ?category=, ?tag=, ?author=</option>
+                    <option value="false">No — this page is locked to the pinned filter</option>
+                </select>
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset class="mb-3">
+        <legend class="h6">Wording</legend>
+
+        <div class="row mb-2 align-items-center">
+            <label class="col-sm-3 col-form-label" for="mfb-showhero">Show hero</label>
+            <div class="col-sm-9">
+                <select id="mfb-showhero" class="form-select" value="@B(_config.ShowHero)"
+                        @onchange="e => _config.ShowHero = ParseBool(e)">
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                </select>
+            </div>
+        </div>
+
+        @foreach (var row in TextRows())
+        {
+            <div class="row mb-2 align-items-center">
+                <label class="col-sm-3 col-form-label" for="@row.Id">@row.Label</label>
+                <div class="col-sm-9">
+                    <input id="@row.Id" class="form-control" value="@row.Get()"
+                           @onchange="e => row.Set(e.Value?.ToString())" maxlength="400"
+                           placeholder="@row.Placeholder" />
+                </div>
+            </div>
+        }
+
+        <div class="row mb-2 align-items-center">
+            <label class="col-sm-3 col-form-label" for="mfb-placeholder">Placeholder image</label>
+            <div class="col-sm-9">
+                <input id="mfb-placeholder" class="form-control" @bind="_config.PlaceholderImageUrl" maxlength="500" />
+                <div class="form-text">http(s) or a site-relative path. Anything else reverts to the default.</div>
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset class="mb-3">
+        <legend class="h6">Card chrome</legend>
+        @foreach (var flag in BoolRows())
+        {
+            <div class="row mb-2 align-items-center">
+                <label class="col-sm-3 col-form-label" for="@flag.Id">@flag.Label</label>
+                <div class="col-sm-9">
+                    <select id="@flag.Id" class="form-select" value="@B(flag.Get())"
+                            @onchange="e => flag.Set(ParseBool(e))">
+                        <option value="true">Show</option>
+                        <option value="false">Hide</option>
+                    </select>
+                </div>
+            </div>
+        }
+    </fieldset>
+
+    <fieldset class="mb-3">
+        <legend class="h6">Where a post opens</legend>
+
+        <div class="row mb-2 align-items-center">
+            <label class="col-sm-3 col-form-label" for="mfb-detailpage">Detail page</label>
+            <div class="col-sm-9">
+                <select id="mfb-detailpage" class="form-select" value="@_config.DetailPageId.ToString()"
+                        @onchange="e => _config.DetailPageId = ParseInt(e)">
+                    <option value="0">This page</option>
+                    @* NB: do not name this variable "page" — Razor parses "@page.X" as the @page directive. *@
+                    @foreach (var sitePage in SitePages())
+                    {
+                        <option value="@sitePage.PageId">@sitePage.Name</option>
+                    }
+                </select>
+                <div class="form-text">Send readers to a dedicated detail page, or keep them here.</div>
+            </div>
+        </div>
+
+        <div class="row mb-2 align-items-center">
+            <label class="col-sm-3 col-form-label" for="mfb-slugsource">Slug source</label>
+            <div class="col-sm-9">
+                <select id="mfb-slugsource" class="form-select" @bind="_config.SlugSource">
+                    <option value="query">Query string — ?slug=my-post</option>
+                    <option value="urlparameters">URL parameters — /!/my-post</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row mb-2 align-items-center">
+            <label class="col-sm-3 col-form-label" for="mfb-slugparam">Slug parameter</label>
+            <div class="col-sm-9">
+                <input id="mfb-slugparam" class="form-control" @bind="_config.SlugParam" maxlength="32" />
+                <div class="form-text">Lower-case letters, digits, <code>-</code> and <code>_</code>.</div>
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset class="mb-3">
+        <legend class="h6">Editorial console</legend>
+
+        <div class="row mb-2 align-items-center">
+            <label class="col-sm-3 col-form-label" for="mfb-consoleview">Default screen</label>
+            <div class="col-sm-9">
+                <select id="mfb-consoleview" class="form-select" @bind="_config.ConsoleView">
+                    <option value="dashboard">Dashboard</option>
+                    <option value="editorial">Editorial kanban</option>
+                    <option value="comments">Comment moderation</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row mb-2 align-items-center">
+            <label class="col-sm-3 col-form-label" for="mfb-consoleroles">Roles allowed</label>
+            <div class="col-sm-9">
+                <input id="mfb-consoleroles" class="form-control" @bind="_config.ConsoleRoles" maxlength="512" />
+                <div class="form-text">
+                    Comma separated. This narrows access; it never grants it — the console keeps its
+                    own role check regardless of what is typed here.
+                </div>
+            </div>
+        </div>
+    </fieldset>
+
+</div>
+
+@code {
+    private BlogInstanceConfig _config = new BlogInstanceConfig();
+    private string _view = "blog:listing";
+
+    // Constant on purpose: the framework reads Title off a bare instance, so touching
+    // ModuleState or PageState here throws during module-settings discovery.
+    public override string Title => "Blog Settings";
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            _config = BlogInstanceConfig.Read(ModuleState?.Settings);
+        }
+        catch (Exception)
+        {
+            // Anonymous-safe habit kept even in admin UI: no ex.Message on screen.
+            _config = new BlogInstanceConfig();
+            AddModuleMessage("Saved blog settings could not be read, so defaults are shown.",
+                MessageType.Warning);
+        }
+        _view = _config.Profile + ":" + _config.Mode;
+    }
+
+    private void OnViewChanged(ChangeEventArgs e)
+    {
+        _view = e.Value?.ToString() ?? "blog:listing";
+        var parts = _view.Split(':');
+        if (parts.Length == 2)
+        {
+            _config.Profile = parts[0];
+            _config.Mode = parts[1];
+        }
+    }
+
+    private string ViewHelp()
+    {
+        switch (_config.Mode)
+        {
+            case "detail": return "Renders one post, read from the slug. Put this on the detail page.";
+            case "category": return "Lists one category. The category comes from ?category= or the pin below.";
+            case "author": return "One author and their posts. From ?author= or the pin below.";
+            case "archive": return "Everything published, filterable by category, tag and date.";
+            case "featured": return "Just the featured strip — no list underneath.";
+            case "console": return "The editorial console, for signed-in editors only.";
+            default:
+                return _config.IsNews
+                    ? "Reverse-chronological news desk. Automatically limited to content_type = News."
+                    : "The blog home: hero plus the most-read posts.";
+        }
+    }
+
+    public async Task UpdateSettings()
+    {
+        try
+        {
+            // A page id could only be out of range through tampering, but validate anyway:
+            // BlogInstanceConfig cannot see PageState, so this is the one check that belongs here.
+            if (_config.DetailPageId != 0 && !SitePages().Any(p => p.PageId == _config.DetailPageId))
+                _config.DetailPageId = 0;
+
+            var settings = await SettingService.GetModuleSettingsAsync(ModuleState.ModuleId);
+            foreach (var row in _config.ToSettings())
+                settings = SettingService.SetSetting(settings, row.Key, row.Value);
+            await SettingService.UpdateModuleSettingsAsync(settings, ModuleState.ModuleId);
+        }
+        catch (Exception)
+        {
+            AddModuleMessage("The blog settings could not be saved. The site log has the details.",
+                MessageType.Error);
+        }
+    }
+
+    private List<Page> SitePages()
+    {
+        var pages = PageState?.Pages;
+        if (pages == null) return new List<Page>();
+        var siteId = PageState.Site?.SiteId ?? 0;
+        return pages
+            .Where(p => p != null && !p.IsDeleted && (siteId == 0 || p.SiteId == siteId))
+            .ToList();
+    }
+
+    private static string B(bool value) => value ? "true" : "false";
+
+    private static bool ParseBool(ChangeEventArgs e)
+        => bool.TryParse(e.Value?.ToString(), out var parsed) && parsed;
+
+    private static int ParseInt(ChangeEventArgs e)
+        => int.TryParse(e.Value?.ToString(), out var parsed) ? Math.Max(0, parsed) : 0;
+
+    private sealed class TextRow
+    {
+        public string Id;
+        public string Label;
+        public string Placeholder;
+        public Func<string> Get;
+        public Action<string> Set;
+    }
+
+    private List<TextRow> TextRows() => new List<TextRow>
+    {
+        new TextRow { Id = "mfb-eyebrow", Label = "Hero eyebrow",
+            Placeholder = _config.IsNews ? "Latest" : "Featured stories",
+            Get = () => _config.HeroEyebrow, Set = v => _config.HeroEyebrow = v },
+        new TextRow { Id = "mfb-herotitle", Label = "Hero title",
+            Placeholder = _config.IsNews ? "Newsroom" : "Insights & Ideas",
+            Get = () => _config.HeroTitle, Set = v => _config.HeroTitle = v },
+        new TextRow { Id = "mfb-herosub", Label = "Hero subtitle",
+            Placeholder = "One line under the title",
+            Get = () => _config.HeroSubtitle, Set = v => _config.HeroSubtitle = v },
+        new TextRow { Id = "mfb-sectionheading", Label = "List heading",
+            Placeholder = _config.IsNews ? "Latest news" : "Popular this week",
+            Get = () => _config.SectionHeading, Set = v => _config.SectionHeading = v },
+        new TextRow { Id = "mfb-empty", Label = "Empty message",
+            Placeholder = "No published stories yet.",
+            Get = () => _config.EmptyMessage, Set = v => _config.EmptyMessage = v }
+    };
+
+    private sealed class BoolRow
+    {
+        public string Id;
+        public string Label;
+        public Func<bool> Get;
+        public Action<bool> Set;
+    }
+
+    private List<BoolRow> BoolRows() => new List<BoolRow>
+    {
+        new BoolRow { Id = "mfb-readingtime", Label = "Reading time",
+            Get = () => _config.ShowReadingTime, Set = v => _config.ShowReadingTime = v },
+        new BoolRow { Id = "mfb-metrics", Label = "Reads and comments",
+            Get = () => _config.ShowMetrics, Set = v => _config.ShowMetrics = v },
+        new BoolRow { Id = "mfb-author", Label = "Author byline",
+            Get = () => _config.ShowAuthor, Set = v => _config.ShowAuthor = v },
+        new BoolRow { Id = "mfb-tags", Label = "Tags",
+            Get = () => _config.ShowTags, Set = v => _config.ShowTags = v },
+        new BoolRow { Id = "mfb-attachments", Label = "Attachments",
+            Get = () => _config.ShowAttachments, Set = v => _config.ShowAttachments = v }
+    };
+}

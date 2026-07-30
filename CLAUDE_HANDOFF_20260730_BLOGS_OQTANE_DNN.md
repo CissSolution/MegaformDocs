@@ -12,9 +12,9 @@ the MegaForm engine. Read this before touching Blog code, then
 | --- | --- | --- |
 | Package | `MegaForm.Blogs.DNN` **1.1.0** | `MegaForm.Blogs.Oqtane` **1.1.0** |
 | Public blog | live | live |
-| Admin dashboard | live, interactive | renders, **buttons inert** (see §4.1) |
-| Editorial kanban | live, drag + move buttons work | renders, **inert** |
-| Comment moderation | live, tabs + bulk work | renders, **inert** |
+| Admin dashboard | live, interactive | live at `/*/37/Edit` — nav links broken (§4.1) |
+| Editorial kanban | live, drag + move buttons work | **move buttons work and persist** (§4.1) |
+| Comment moderation | live, tabs + bulk work | renders; re-test after the §4.1 URL fix |
 | Create a new post | **does not exist** (§4.2) | **does not exist** (§4.2) |
 | Verified on | `megaclean008.ai`, MegaForm 2.0.10 | `localhost:5131`, MegaForm 2.0.11, Oqtane 10.2.1 |
 
@@ -107,25 +107,62 @@ What already exists against that list, so nobody rebuilds it:
 
 ## 4. The two blockers to solve first
 
-### 4.1 🔴 Oqtane runs `RenderMode: Static` — every admin interaction is dead
+### 4.1 ✅ CORRECTED 2026-07-30 — the console is NOT dead. The bug is one wrong URL.
 
-`E:\DNN_SITES\OqtaneSites\Oqtane.MegaForm.Clean2010\appsettings.json` has
-`"RenderMode": "Static"`, `"Runtime": "Server"`. Static SSR means there is no interactive circuit:
-the three admin components render correctly and then **ignore every `@onclick`, `@oninput` and
-drag handler**. The public blog is unaffected because it is links and markup only.
+> **This section was wrong when written.** It claimed Static SSR kills every admin interaction and
+> asked for a full `<form method="post">` refactor of four components. Re-verified on :5131 by real
+> clicks — **do not do that refactor.** Original claim kept below for the record.
 
-Three ways out, in the order I would try them:
+**What is actually true.** `appsettings.json` does say `"RenderMode": "Static"`, `"Runtime": "Server"`,
+but Oqtane still renders a module's **Edit action** inside an interactive boundary. The console lives
+at the Edit route, so its handlers are alive:
 
-1. **Make the admin work without interactivity** — plain `<form method="post">` round-trips, exactly
-   how the DNN twin already works. Survives Static SSR *and* Interactive, and keeps the two platforms
-   behaving identically. Most work, best outcome.
-2. Opt the module into interactivity per component (`@rendermode InteractiveServer` on the admin
-   components). Smaller change, but check Oqtane 10.2.1 actually honours it inside its
-   `RenderModeBoundary`, and that `IMegaFormClient` still resolves in that boundary.
-3. Flip the site to `RenderMode: Interactive`. One line, but it changes the whole site's behaviour
-   and is the owner's call, not ours.
+- At `http://localhost:5131/*/37/Edit?view=editorial` the kanban renders 58 buttons + 34 draggables,
+  and clicking a move button **works**: card "Draft: Series Planning for Content Teams" (SubmissionId
+  **32**) went Draft → Editorial Review, **survived a full `page.goto` reload**, then was moved back
+  and again survived a reload.
+- That is a genuine server write, not optimistic UI: `AdminEditorial` keeps `_all` in a per-instance
+  field filled by `OnInitializedAsync` → `Mega.Queries.ExecuteAsync`
+  ([AdminEditorial.razor:154-166](MegaForm.Blogs.Oqtane/AdminEditorial.razor#L154-L166)) with **no
+  static cache**, so a fresh document load re-reads from the database. A cache could only have shown
+  the *old* value; the *new* value after reload can only come from a real `PatchRecordAsync`.
+- ⚠️ `MF_Submissions.ModifiedOnUtc` is **NULL on all 34 rows** — the patch path never stamps it, so
+  never use that column to decide whether a write landed.
 
-Verify whichever path with a real click, not by reading code — that is how this was missed.
+**The real defect — `AdminBaseUrl` points out of the console.**
+[Edit.razor:72-73](MegaForm.Blogs.Oqtane/Edit.razor#L72-L73) sets both to the same value:
+
+```csharp
+private string AdminBaseUrl => NavigateUrl(PageState.Page.Path);   // ← wrong: the PAGE, not the module
+private string BlogUrl      => NavigateUrl(PageState.Page.Path);   //   correct as-is
+```
+
+So every console link (`ViewUrl` at `:112`, and ~10 links in `AdminDashboard.razor`) resolves to
+`http://localhost:5131/?view=dashboard` — the **public page**, where `.mfba` does not exist at all
+(measured: `hasConsole:false, hasPublic:true`). Navigating between Dashboard / Editorial / Comments
+therefore ejects you from the console, which is almost certainly what got misread as "buttons inert".
+
+Fix is one line, reusing the idiom MegaForm's own module already uses
+(`EditUrl("Builder")` / `EditUrl("Submissions")`, [Index.razor:2786](MegaForm.Oqtane.Client/Index.razor#L2786)):
+
+```csharp
+private string AdminBaseUrl => EditUrl("Edit");   // stays on /*/{moduleid}/Edit
+```
+
+Then re-click all three tabs on :5131 to confirm, and check the DNN twin still builds its own URLs
+correctly (it uses a different host script, so it is probably unaffected).
+
+<details><summary>Original (incorrect) text</summary>
+
+Static SSR means there is no interactive circuit: the three admin components render correctly and then
+ignore every `@onclick`, `@oninput` and drag handler. Three ways out: (1) plain `<form method="post">`
+round-trips like the DNN twin; (2) `@rendermode InteractiveServer` per component; (3) flip the site to
+`RenderMode: Interactive`.
+
+</details>
+
+Lesson that stands: **verify with a real click, not by reading code** — that is how this was missed,
+in both directions.
 
 ### 4.2 🔴 Creating a post is not implemented anywhere
 

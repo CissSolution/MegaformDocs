@@ -58,6 +58,46 @@ namespace MegaForm.Blogs.Client
             return utc.ToString("MMM d, yyyy", CultureInfo.InvariantCulture);
         }
 
+        /// <summary>
+        /// Parse a stored date value. Typed storage hands back either a DateTime or the string the
+        /// author typed, so try the invariant round-trip shapes first and only then the current
+        /// culture. Returns null when the value is not a date at all.
+        /// </summary>
+        public static DateTime? ParseDate(AppRecordDto record, string key)
+        {
+            var raw = Text(record, key, "");
+            if (raw.Length == 0) return null;
+            if (DateTime.TryParse(raw, CultureInfo.InvariantCulture,
+                    DateTimeStyles.AdjustToUniversal | DateTimeStyles.AllowWhiteSpaces, out var invariant))
+                return invariant;
+            if (DateTime.TryParse(raw, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces, out var current))
+                return current;
+            return null;
+        }
+
+        /// <summary>
+        /// Human date for a post. A blog reads better relative ("3d ago"); a news desk needs the
+        /// absolute dateline. Falls back to the raw stored string so a non-date value still shows
+        /// something rather than vanishing.
+        /// </summary>
+        public static string DateLabel(AppRecordDto record, string key, bool relative)
+        {
+            var parsed = ParseDate(record, key);
+            if (parsed == null) return Text(record, key, "");
+            var value = parsed.Value;
+            if (relative && value <= DateTime.UtcNow) return Ago(value);
+            return value.ToString("MMM d, yyyy", CultureInfo.CurrentCulture);
+        }
+
+        /// <summary>The machine-readable value for a &lt;time datetime="…"&gt; attribute.</summary>
+        public static string DateAttribute(AppRecordDto record, string key)
+        {
+            var parsed = ParseDate(record, key);
+            return parsed == null
+                ? ""
+                : parsed.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        }
+
         public static string Compact(int value)
         {
             if (value >= 1000000) return (value / 1000000d).ToString("0.#", CultureInfo.InvariantCulture) + "M";
@@ -147,9 +187,11 @@ namespace MegaForm.Blogs.Client
         /// blog-starter can ship an empty Forms list), so fall back to identifying the comment
         /// child form by its schema shape rather than by a title string.
         /// </summary>
-        public static async Task<int> ResolveCommentsFormIdAsync(IMegaFormClient client, MegaFormScope scope)
+        public static async Task<int> ResolveCommentsFormIdAsync(
+            IMegaFormClient client, MegaFormScope scope, string appKey = AppKey)
         {
-            var app = await client.Apps.GetAppAsync(AppKey, scope);
+            var app = await client.Apps.GetAppAsync(
+                string.IsNullOrWhiteSpace(appKey) ? AppKey : appKey, scope);
             if (app?.Forms != null)
             {
                 var bound = app.Forms.FirstOrDefault(f =>

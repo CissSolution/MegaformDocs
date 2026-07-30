@@ -4,77 +4,145 @@
 @inject NavigationManager Nav
 
 @* MegaForm Blogs - public Oqtane surface (twin of MegaFormBlogs.cshtml).
+
+   ONE module, many surfaces. Which surface this instance is comes from Module Settings
+   (BlogInstanceConfig.Mode + Profile); the query for that surface comes from BlogQueryPlan.
+   Nothing on this page is hardcoded to "blog": a News instance is the same code with a
+   different profile and a content_type filter.
+
    Data contract: IMegaFormClient only. No DataJson parsing, no direct database access. *@
 
-<link rel="stylesheet" href="/Modules/MegaFormBlogs/megaform-blogs.css?v=20260730a" />
+<link rel="stylesheet" href="/Modules/MegaFormBlogs/megaform-blogs.css?v=20260730b" />
 
-<main class="mfb" aria-labelledby="mfb-title">
+<main class="@_config.WrapperClass()" aria-labelledby="mfb-title">
     @if (_loadError != null)
     {
         <section class="mfb-state mfb-state-error">
-            <strong>Blog is being prepared.</strong>
+            <strong>@(_config.IsNews ? "The newsroom is being prepared." : "Blog is being prepared.")</strong>
             <span>@_loadError</span>
         </section>
     }
     else if (_loading)
     {
-        <section class="mfb-state">Loading stories…</section>
+        <section class="mfb-state">Loading@(_config.IsNews ? " the latest" : " stories")…</section>
     }
     else if (_app == null)
     {
         <section class="mfb-state">The Blog Publishing app has not been installed for this site.</section>
     }
+    else if (_config.IsConsole)
+    {
+        @* ---- console: the editorial/newsroom admin surface on a page -------------------- *@
+        if (!_consoleAllowed)
+        {
+            <section class="mfb-state">
+                <strong>Editorial access required.</strong>
+                <span>Sign in with an editorial role to manage @(_config.IsNews ? "news" : "posts").</span>
+            </section>
+        }
+        else
+        {
+            <div class="mfb-console-launch">
+                @* The module's Edit action is always interactive, even when the site renders
+                   statically, so keep a way through to it next to the inline console. *@
+                <a class="mfb-btn" href="@ConsoleUrl(_consoleView)">Open the full console ↗</a>
+            </div>
+            @if (_consoleView == "editorial")
+            {
+                <AdminEditorial Scope="_scope" AdminBaseUrl="@ConsoleUrl("editorial")" AppKey="@_config.AppKey" />
+            }
+            else if (_consoleView == "comments")
+            {
+                <AdminComments Scope="_scope" AdminBaseUrl="@ConsoleUrl("comments")" BlogUrl="@BaseUrl" AppKey="@_config.AppKey" />
+            }
+            else if (_consoleView == "new")
+            {
+                <AdminNewPost Scope="_scope" AdminBaseUrl="@ConsoleUrl("dashboard")" AppKey="@_config.AppKey" IsNews="@_config.IsNews" />
+            }
+            else
+            {
+                <AdminDashboard Scope="_scope" AdminBaseUrl="@ConsoleUrl("dashboard")" BlogUrl="@BaseUrl" AppKey="@_config.AppKey" />
+            }
+        }
+    }
+    else if (_notFound)
+    {
+        @* ---- not found: an unknown slug must not render a hero and an empty list -------- *@
+        <section class="mfb-state mfb-state-empty">
+            <strong>@(_config.IsNews ? "That article is not available." : "That story is not available.")</strong>
+            <span>It may have been unpublished, or the link may be wrong.</span>
+            <a class="mfb-btn" href="@BaseUrl">@(_config.IsNews ? "Back to the news desk" : "Back to the blog")</a>
+        </section>
+    }
     else if (_detail != null)
     {
-        var author = BlogData.Text(_detail, "author_name", "MegaForm Editorial");
+        var author = BlogData.Text(_detail, "author_name", DefaultAuthor);
         var avatar = BlogData.Text(_detail, "author_avatar_url", "");
-        var tags = BlogData.Text(_detail, "tags", "").Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+        var tags = BlogData.Text(_detail, "tags", "")
+            .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
         <article class="mfb-article">
             <nav class="mfb-breadcrumb" aria-label="Breadcrumb">
-                <a href="@BaseUrl">Blog</a><span>/</span>
-                <span>@BlogData.Text(_detail, "category", "Insights")</span>
+                <a href="@BaseUrl">@(_config.IsNews ? "News" : "Blog")</a><span>/</span>
+                <span>@BlogData.Text(_detail, "category", DefaultCategory)</span>
             </nav>
             <header class="mfb-article-head">
-                <span class="mfb-chip">@BlogData.Text(_detail, "content_type", "Article")</span>
-                <h1 id="mfb-title">@BlogData.Text(_detail, "title", "Untitled story")</h1>
+                <span class="mfb-chip">@BlogData.Text(_detail, "content_type", _config.IsNews ? "News" : "Article")</span>
+                <h1 id="mfb-title">@BlogData.Text(_detail, "title", UntitledLabel)</h1>
                 <p class="mfb-lead">@BlogData.Text(_detail, "subtitle", BlogData.Text(_detail, "excerpt", ""))</p>
-                <div class="mfb-byline">
-                    @if (!string.IsNullOrWhiteSpace(avatar))
-                    {
-                        <img src="@avatar" alt="" />
-                    }
-                    else
-                    {
-                        <span class="mfb-avatar">@BlogData.Initials(author)</span>
-                    }
-                    <span><strong>@author</strong><small>@BlogData.Text(_detail, "publish_date", "") · @ReadingMinutes(_detail) min read</small></span>
-                </div>
+                @if (_config.ShowAuthor)
+                {
+                    <div class="mfb-byline">
+                        @if (!string.IsNullOrWhiteSpace(avatar))
+                        {
+                            <img src="@avatar" alt="" />
+                        }
+                        else
+                        {
+                            <span class="mfb-avatar">@BlogData.Initials(author)</span>
+                        }
+                        <span>
+                            <strong>@author</strong>
+                            <small>
+                                <time datetime="@BlogData.DateAttribute(_detail, "publish_date")">@DateText(_detail)</time>
+                                @if (_config.ShowReadingTime)
+                                {
+                                    @(" · " + ReadingMinutes(_detail) + " min read")
+                                }
+                            </small>
+                        </span>
+                    </div>
+                }
             </header>
             <figure class="mfb-article-hero">
-                <img src="@ImageUrl(_detail)" alt="@BlogData.Text(_detail, "image_alt_text", BlogData.Text(_detail, "title", "Article image"))" />
+                <img src="@ImageUrl(_detail)"
+                     alt="@BlogData.Text(_detail, "image_alt_text", BlogData.Text(_detail, "title", "Article image"))" />
             </figure>
             <div class="mfb-article-layout">
                 <div class="mfb-prose">@((MarkupString)BlogData.Text(_detail, "body", "<p>Article content is being prepared.</p>"))</div>
                 <aside>
-                    <section class="mfb-author-card">
-                        <span class="mfb-avatar mfb-avatar-lg">@BlogData.Initials(author)</span>
-                        <h2>@author</h2>
-                        <p class="mfb-muted">@BlogData.Text(_detail, "author_role", "Contributor")</p>
-                        <p>@BlogData.Text(_detail, "author_bio", "A member of the MegaForm editorial team.")</p>
-                    </section>
-                    @if (tags.Length > 0)
+                    @if (_config.ShowAuthor)
+                    {
+                        <section class="mfb-author-card">
+                            <span class="mfb-avatar mfb-avatar-lg">@BlogData.Initials(author)</span>
+                            <h2>@author</h2>
+                            <p class="mfb-muted">@BlogData.Text(_detail, "author_role", "Contributor")</p>
+                            <p>@BlogData.Text(_detail, "author_bio", "")</p>
+                            <a class="mfb-panel-link" href="@AuthorUrl(author)">More from this author →</a>
+                        </section>
+                    }
+                    @if (_config.ShowTags && tags.Length > 0)
                     {
                         <section class="mfb-side-card">
                             <h2>Topics</h2>
                             <div class="mfb-tags">
                                 @foreach (var tag in tags)
                                 {
-                                    <span>#@tag.Trim()</span>
+                                    <a href="@TagUrl(tag.Trim())">#@tag.Trim()</a>
                                 }
                             </div>
                         </section>
                     }
-                    @if (_detailFiles.Count > 0)
+                    @if (_config.ShowAttachments && _detailFiles.Count > 0)
                     {
                         <section class="mfb-side-card">
                             <h2>Attachments</h2>
@@ -92,72 +160,170 @@
     }
     else
     {
-        <section class="mfb-hero">
-            <div class="mfb-shell">
-                <span class="mfb-eyebrow">◆ Featured stories</span>
-                <h1 id="mfb-title">Insights &amp; Ideas</h1>
-                <p>Design, development and product thinking from the MegaForm community.</p>
-                @if (_featured != null)
-                {
-                    <article class="mfb-feature">
-                        <a class="mfb-feature-image" href="@SlugUrl(_featured)">
-                            <img src="@ImageUrl(_featured)" alt="@BlogData.Text(_featured, "image_alt_text", "")" />
-                            <span>Featured</span>
-                        </a>
-                        <div class="mfb-feature-copy">
-                            <div><span class="mfb-chip">@BlogData.Text(_featured, "category", "Insights")</span> <small>@ReadingMinutes(_featured) min read</small></div>
-                            <h2><a href="@SlugUrl(_featured)">@BlogData.Text(_featured, "title", "Untitled story")</a></h2>
-                            <p>@BlogData.Text(_featured, "excerpt", "")</p>
-                            <div class="mfb-card-foot">
-                                <span><strong>@BlogData.Text(_featured, "author_name", "MegaForm Editorial")</strong><small>@BlogData.Text(_featured, "publish_date", "")</small></span>
-                                <span>@BlogData.Compact(BlogData.Num(_featured, "view_count")) reads · @BlogData.Num(_featured, "comment_count") comments</span>
-                            </div>
-                        </div>
-                    </article>
-                }
-            </div>
-        </section>
-
-        <section class="mfb-shell mfb-content">
-            <div class="mfb-main">
-                <header class="mfb-section-head">
-                    <div><span class="mfb-trend">↗</span><h2>Popular this week</h2></div>
-                    <span>@_total stories</span>
-                </header>
-                @if (_posts.Count == 0)
-                {
-                    <div class="mfb-state">No published stories yet.</div>
-                }
-                else
-                {
-                    <div class="mfb-grid">
-                        @foreach (var post in _posts.Where(p => _featured == null || p.SubmissionId != _featured.SubmissionId))
-                        {
-                            <article class="mfb-card">
-                                <a class="mfb-card-image" href="@SlugUrl(post)">
-                                    <img src="@ImageUrl(post)" alt="@BlogData.Text(post, "image_alt_text", "")" />
-                                </a>
-                                <div class="mfb-card-body">
-                                    <div><span class="mfb-chip">@BlogData.Text(post, "category", "Insights")</span><small>@ReadingMinutes(post) min</small></div>
-                                    <h3><a href="@SlugUrl(post)">@BlogData.Text(post, "title", "Untitled story")</a></h3>
-                                    <p>@BlogData.Text(post, "excerpt", "")</p>
-                                    <div class="mfb-card-foot">
-                                        <span><strong>@BlogData.Text(post, "author_name", "MegaForm Editorial")</strong><small>@BlogData.Text(post, "publish_date", "")</small></span>
-                                        <span>@BlogData.Compact(BlogData.Num(post, "view_count")) reads</span>
-                                    </div>
+        @* ---- listing / category / author / archive / featured -------------------------- *@
+        @if (_config.ShowHero && _config.Mode != "archive")
+        {
+            <section class="mfb-hero">
+                <div class="mfb-shell">
+                    <span class="mfb-eyebrow">@HeroEyebrow</span>
+                    <h1 id="mfb-title">@HeroTitle</h1>
+                    <p>@HeroSubtitle</p>
+                    @if (_featured != null)
+                    {
+                        <article class="mfb-feature">
+                            <a class="mfb-feature-image" href="@SlugUrl(_featured)">
+                                <img src="@ImageUrl(_featured)" alt="@BlogData.Text(_featured, "image_alt_text", "")" />
+                                <span>@(_config.IsNews ? "Top story" : "Featured")</span>
+                            </a>
+                            <div class="mfb-feature-copy">
+                                <div>
+                                    <span class="mfb-chip">@BlogData.Text(_featured, "category", DefaultCategory)</span>
+                                    @if (_config.ShowReadingTime)
+                                    {
+                                        <small>@ReadingMinutes(_featured) min read</small>
+                                    }
                                 </div>
-                            </article>
+                                <h2><a href="@SlugUrl(_featured)">@BlogData.Text(_featured, "title", UntitledLabel)</a></h2>
+                                <p>@BlogData.Text(_featured, "excerpt", "")</p>
+                                <div class="mfb-card-foot">
+                                    @if (_config.ShowAuthor)
+                                    {
+                                        <span>
+                                            <strong>@BlogData.Text(_featured, "author_name", DefaultAuthor)</strong>
+                                            <small><time datetime="@BlogData.DateAttribute(_featured, "publish_date")">@DateText(_featured)</time></small>
+                                        </span>
+                                    }
+                                    @if (_config.ShowMetrics)
+                                    {
+                                        <span>@BlogData.Compact(BlogData.Num(_featured, "view_count")) reads · @BlogData.Num(_featured, "comment_count") comments</span>
+                                    }
+                                </div>
+                            </div>
+                        </article>
+                    }
+                </div>
+            </section>
+        }
+
+        @if (_config.Mode != "featured")
+        {
+            <section class="mfb-shell mfb-content">
+                <div class="mfb-main">
+                    <header class="mfb-section-head">
+                        <div>
+                            <span class="mfb-trend">↗</span>
+                            <h2 id="@(_config.ShowHero && _config.Mode != "archive" ? "" : "mfb-title")">@SectionHeading</h2>
+                        </div>
+                        <span>@_total @(_total == 1 ? ItemLabelSingular : ItemLabelPlural)</span>
+                    </header>
+
+                    @* A GET form works under static SSR and interactive rendering alike. *@
+                    <form class="mfb-filterbar" method="get" action="@BaseUrl">
+                        <input type="search" name="q" value="@_url.Search"
+                               placeholder="@(_config.IsNews ? "Search the news" : "Search stories")"
+                               aria-label="Search" />
+                        @if (_plan.HasFilter && _config.AllowUrlFilter)
+                        {
+                            <input type="hidden" name="@FilterQueryKey(_plan.FilterField)" value="@_plan.FilterValue" />
                         }
-                    </div>
-                }
-            </div>
-        </section>
+                        <button type="submit">Search</button>
+                        @if (_url.Search.Length > 0 || _plan.HasFilter)
+                        {
+                            <a class="mfb-filter-clear" href="@BaseUrl">Clear</a>
+                        }
+                    </form>
+
+                    @if (_truncated)
+                    {
+                        @* The read engine bounds its source scan. Say so rather than quietly
+                           serving a short list - CLAUDE.md rule 11 is about silence, not the cap. *@
+                        <div class="mfb-state mfb-state-note">
+                            Showing the most recent @BlogInstanceConfig.MaxSourceRecords records only.
+                            Narrow the filter to reach older @ItemLabelPlural.
+                        </div>
+                    }
+
+                    @if (_posts.Count == 0)
+                    {
+                        <div class="mfb-state mfb-state-empty">@EmptyMessage</div>
+                    }
+                    else
+                    {
+                        <div class="mfb-grid">
+                            @foreach (var post in VisiblePosts())
+                            {
+                                <article class="mfb-card">
+                                    <a class="mfb-card-image" href="@SlugUrl(post)">
+                                        <img src="@ImageUrl(post)" alt="@BlogData.Text(post, "image_alt_text", "")" />
+                                    </a>
+                                    <div class="mfb-card-body">
+                                        <div>
+                                            <a class="mfb-chip" href="@CategoryUrl(BlogData.Text(post, "category", DefaultCategory))">@BlogData.Text(post, "category", DefaultCategory)</a>
+                                            @if (_config.ShowReadingTime)
+                                            {
+                                                <small>@ReadingMinutes(post) min</small>
+                                            }
+                                        </div>
+                                        <h3><a href="@SlugUrl(post)">@BlogData.Text(post, "title", UntitledLabel)</a></h3>
+                                        <p>@BlogData.Text(post, "excerpt", "")</p>
+                                        <div class="mfb-card-foot">
+                                            @if (_config.ShowAuthor)
+                                            {
+                                                <span>
+                                                    <strong>@BlogData.Text(post, "author_name", DefaultAuthor)</strong>
+                                                    <small><time datetime="@BlogData.DateAttribute(post, "publish_date")">@DateText(post)</time></small>
+                                                </span>
+                                            }
+                                            @if (_config.ShowMetrics)
+                                            {
+                                                <span>@BlogData.Compact(BlogData.Num(post, "view_count")) reads</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </article>
+                            }
+                        </div>
+
+                        @if (_totalPages > 1)
+                        {
+                            <nav class="mfb-pager" aria-label="Pagination">
+                                @if (_plan.Page > 1)
+                                {
+                                    <a class="mfb-pager-prev" href="@PageUrl(_plan.Page - 1)" rel="prev">← Newer</a>
+                                }
+                                <span class="mfb-pager-pages">
+                                    @foreach (var number in PageWindow())
+                                    {
+                                        if (number == _plan.Page)
+                                        {
+                                            <strong aria-current="page">@number</strong>
+                                        }
+                                        else
+                                        {
+                                            <a href="@PageUrl(number)">@number</a>
+                                        }
+                                    }
+                                </span>
+                                <span class="mfb-pager-of">Page @_plan.Page of @_totalPages</span>
+                                @if (_plan.Page < _totalPages)
+                                {
+                                    <a class="mfb-pager-next" href="@PageUrl(_plan.Page + 1)" rel="next">Older →</a>
+                                }
+                            </nav>
+                        }
+                    }
+                </div>
+            </section>
+        }
     }
 </main>
 
 @code {
-    private const string PlaceholderImage =
-        "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=1400&h=900&fit=crop";
+    private static readonly string[] ConsoleRolesFallback =
+    {
+        "Administrators", "Host", "Blog Authors", "Blog Editors",
+        "SEO Reviewers", "Content Legal Reviewers", "Blog Publishers"
+    };
 
     private bool _loading = true;
     private string _loadError;
@@ -167,16 +333,66 @@
     private List<AppRecordDto> _posts = new List<AppRecordDto>();
     private IReadOnlyList<FileDto> _detailFiles = new List<FileDto>();
     private int _total;
-    private string _slug = "";
+    private int _totalPages = 1;
+    private bool _truncated;
+    private bool _notFound;
+
+    private BlogInstanceConfig _config = new BlogInstanceConfig();
+    private BlogUrlState _url = new BlogUrlState();
+    private BlogQueryPlan _plan = BlogQueryPlan.Build(new BlogInstanceConfig(), new BlogUrlState());
+
+    private MegaFormScope _scope = new MegaFormScope();
+    private bool _consoleAllowed;
+    private string _consoleView = "dashboard";
 
     public override string Title => "MegaForm Blogs";
 
     private string BaseUrl => NavigateUrl(PageState.Page.Path);
 
+    // ---- lifecycle ---------------------------------------------------------------------------
+
     protected override async Task OnParametersSetAsync()
     {
-        _slug = ReadQuery("slug");
+        _config = BlogInstanceConfig.Read(ModuleState?.Settings);
+        _url = BlogUrlState.Parse(Nav?.Uri ?? "", _config);
+
+        // urlparameters mode: /page/!/my-slug puts the slug in PageState.UrlParameters.
+        if (_config.SlugSource == "urlparameters" && _url.Slug.Length == 0)
+            _url.Slug = FirstUrlParameter();
+
+        _plan = BlogQueryPlan.Build(_config, _url);
+        BuildScope();
         await LoadAsync();
+    }
+
+    private void BuildScope()
+    {
+        var user = PageState?.User;
+        var roles = SplitRoles(user?.Roles);
+        _scope = new MegaFormScope
+        {
+            PortalId = PageState?.Site?.SiteId ?? 0,
+            UserId = user?.UserId ?? 0,
+            UserName = user?.Username ?? "",
+            DisplayName = user?.DisplayName ?? "",
+            UserEmail = user?.Email ?? "",
+            IsAuthenticated = user != null && user.UserId > 0,
+            IsAdmin = roles.Any(r => r.Equals("Administrators", StringComparison.OrdinalIgnoreCase)
+                                  || r.Equals("Host", StringComparison.OrdinalIgnoreCase)),
+            IsSuperUser = roles.Any(r => r.Equals("Host", StringComparison.OrdinalIgnoreCase)),
+            Roles = roles
+        };
+
+        // The ConsoleRoles setting may only NARROW access. The independent role check below is
+        // what actually grants it, so a mis-typed setting can never open the console up.
+        var allowed = _config.ConsoleRoleList();
+        if (allowed.Count == 0) allowed = ConsoleRolesFallback.ToList();
+        _consoleAllowed = user != null && user.UserId > 0
+                          && roles.Any(r => allowed.Contains(r, StringComparer.OrdinalIgnoreCase))
+                          && roles.Any(r => ConsoleRolesFallback.Contains(r, StringComparer.OrdinalIgnoreCase));
+
+        var requested = BlogUrlState.Read(Nav?.Uri ?? "", "view", 32).ToLowerInvariant();
+        _consoleView = BlogInstanceConfig.ConsoleRoutes.Contains(requested) ? requested : _config.ConsoleView;
     }
 
     private async Task LoadAsync()
@@ -184,41 +400,59 @@
         try
         {
             _loading = true;
-            var scope = new MegaFormScope { PortalId = PageState?.Site?.SiteId ?? 0 };
-            _app = await Mega.Apps.GetAppAsync(BlogData.AppKey, scope);
+            _notFound = false;
+            _app = await Mega.Apps.GetAppAsync(_config.AppKey, _scope);
             if (_app == null) return;
 
-            var request = new AppQueryRequest { Page = 1, PageSize = 12 };
-            if (!string.IsNullOrWhiteSpace(_slug))
+            // The console reads its own data through the admin components.
+            if (_config.IsConsole)
             {
-                request.PageSize = 1;
-                request.Parameters["slug"] = _slug;
+                _loadError = null;
+                return;
             }
-            var result = await Mega.Queries.ExecuteAsync(BlogData.AppKey, BlogData.PublicQuery, request, scope);
+
+            if (_plan.DetailWithoutSlug)
+            {
+                _notFound = true;
+                _loadError = null;
+                return;
+            }
+
+            var result = await Mega.Queries.ExecuteAsync(
+                _config.AppKey, _plan.QueryKey, _plan.Request, _scope);
+
             _posts = result?.Items?.ToList() ?? new List<AppRecordDto>();
             _total = result?.TotalCount ?? 0;
+            _truncated = result?.IsBounded ?? false;
+            _totalPages = _plan.TotalPages(_total);
 
-            if (!string.IsNullOrWhiteSpace(_slug))
+            if (_plan.IsDetail)
             {
                 _detail = _posts.FirstOrDefault();
                 _featured = null;
-                _detailFiles = _detail == null
-                    ? new List<FileDto>()
-                    : await Mega.Files.ListForSubmissionAsync(_detail.SubmissionId, scope);
+                if (_detail == null)
+                {
+                    _notFound = true;
+                    _detailFiles = new List<FileDto>();
+                }
+                else
+                {
+                    _detailFiles = _config.ShowAttachments
+                        ? await Mega.Files.ListForSubmissionAsync(_detail.SubmissionId, _scope)
+                        : new List<FileDto>();
+                }
             }
             else
             {
                 _detail = null;
-                var featured = await Mega.Queries.ExecuteAsync(BlogData.AppKey, BlogData.FeaturedQuery,
-                    new AppQueryRequest { Page = 1, PageSize = 1 }, scope);
-                _featured = featured?.Items?.FirstOrDefault() ?? _posts.FirstOrDefault();
+                _featured = await LoadFeaturedAsync();
             }
             _loadError = null;
         }
         catch (Exception)
         {
             // This surface is anonymous: never echo exception text to visitors.
-            _loadError = "The blog could not be loaded. The site log has the details.";
+            _loadError = "The content could not be loaded. The site log has the details.";
         }
         finally
         {
@@ -226,32 +460,175 @@
         }
     }
 
-    private static string ImageUrl(AppRecordDto record)
-        => BlogData.Text(record, "featured_image_url", PlaceholderImage);
+    /// <summary>
+    /// The hero. An empty FeaturedQueryKey means the admin turned the hero off; in "featured" mode
+    /// the main query IS the featured query, so reuse its first row instead of querying twice.
+    /// </summary>
+    private async Task<AppRecordDto> LoadFeaturedAsync()
+    {
+        if (!_config.ShowHero) return null;
+        if (_config.Mode == "featured") return _posts.FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(_config.FeaturedQueryKey)) return null;
 
+        // A filtered surface (a category or author page) should lead with one of ITS posts,
+        // not with the site-wide featured story.
+        if (_plan.HasFilter || _url.Search.Length > 0) return _posts.FirstOrDefault();
+
+        var featured = await Mega.Queries.ExecuteAsync(
+            _config.AppKey, _config.FeaturedQueryKey, BlogQueryPlan.FeaturedRequest(), _scope);
+        return featured?.Items?.FirstOrDefault() ?? _posts.FirstOrDefault();
+    }
+
+    /// <summary>Do not repeat the hero story as the first card.</summary>
+    private IEnumerable<AppRecordDto> VisiblePosts()
+        => _posts.Where(p => _featured == null || p.SubmissionId != _featured.SubmissionId);
+
+    // ---- wording -----------------------------------------------------------------------------
+
+    private string DefaultAuthor => "MegaForm Editorial";
+    private string DefaultCategory => _config.IsNews ? "News" : "Insights";
+    private string UntitledLabel => _config.IsNews ? "Untitled article" : "Untitled story";
+    private string ItemLabelSingular => _config.IsNews ? "article" : "story";
+    private string ItemLabelPlural => _config.IsNews ? "articles" : "stories";
+
+    private string HeroEyebrow => Or(_config.HeroEyebrow, _config.IsNews ? "Latest" : "◆ Featured stories");
+
+    private string HeroTitle => Or(_config.HeroTitle, _config.IsNews ? "Newsroom" : "Insights & Ideas");
+
+    private string HeroSubtitle => Or(_config.HeroSubtitle, _config.IsNews
+        ? "Reporting and analysis from the MegaForm newsroom."
+        : "Design, development and product thinking from the MegaForm community.");
+
+    private string SectionHeading
+    {
+        get
+        {
+            if (_config.SectionHeading.Length > 0) return _config.SectionHeading;
+            switch (_config.Mode)
+            {
+                case "category": return _plan.HasFilter ? _plan.FilterValue : "All categories";
+                case "author": return _plan.HasFilter ? _plan.FilterValue : "All authors";
+                case "archive": return "Archive";
+                default:
+                    if (_url.Search.Length > 0) return "Results for “" + _url.Search + "”";
+                    return _config.IsNews ? "Latest news" : "Popular this week";
+            }
+        }
+    }
+
+    private string EmptyMessage => Or(_config.EmptyMessage,
+        _url.Search.Length > 0
+            ? "Nothing matched that search."
+            : (_config.IsNews ? "No news published yet." : "No published stories yet."));
+
+    private static string Or(string value, string fallback)
+        => string.IsNullOrWhiteSpace(value) ? fallback : value;
+
+    /// <summary>A blog reads better relative; a news desk needs the dateline.</summary>
+    private string DateText(AppRecordDto record)
+        => BlogData.DateLabel(record, "publish_date", relative: !_config.IsNews);
+
+    // ---- urls --------------------------------------------------------------------------------
+
+    private string ImageUrl(AppRecordDto record)
+        => BlogData.Text(record, "featured_image_url", _config.PlaceholderImageUrl);
+
+    /// <summary>
+    /// Where a post opens. DetailPageId sends readers to a dedicated detail instance; 0 keeps
+    /// them on this page. SlugSource picks between ?slug= and Oqtane url parameters.
+    /// </summary>
     private string SlugUrl(AppRecordDto record)
-        => BaseUrl + "?slug=" + Uri.EscapeDataString(BlogData.Text(record, "slug", ""));
+    {
+        var slug = BlogData.Text(record, "slug", "");
+        var target = DetailBaseUrl();
+        if (slug.Length == 0) return target;
 
-    private static int ReadingMinutes(AppRecordDto record)
+        if (_config.SlugSource == "urlparameters")
+            return target.TrimEnd('/') + "/!/" + Uri.EscapeDataString(slug);
+
+        return target + "?" + _config.SlugParam + "=" + Uri.EscapeDataString(slug);
+    }
+
+    private string DetailBaseUrl()
+    {
+        if (_config.DetailPageId > 0)
+        {
+            var target = PageState?.Pages?.FirstOrDefault(p => p != null && p.PageId == _config.DetailPageId);
+            if (target != null) return NavigateUrl(target.Path);
+        }
+        return BaseUrl;
+    }
+
+    private string CategoryUrl(string category)
+        => _config.AllowUrlFilter && !string.IsNullOrWhiteSpace(category)
+            ? BaseUrl + "?category=" + Uri.EscapeDataString(category)
+            : BaseUrl;
+
+    private string TagUrl(string tag)
+        => _config.AllowUrlFilter && !string.IsNullOrWhiteSpace(tag)
+            ? BaseUrl + "?tag=" + Uri.EscapeDataString(tag)
+            : BaseUrl;
+
+    private string AuthorUrl(string author)
+        => _config.AllowUrlFilter && !string.IsNullOrWhiteSpace(author)
+            ? BaseUrl + "?author=" + Uri.EscapeDataString(author)
+            : BaseUrl;
+
+    private string ConsoleUrl(string view)
+        => EditUrl("Edit") + "?view=" + Uri.EscapeDataString(view ?? "dashboard");
+
+    private static string FilterQueryKey(string field)
+    {
+        switch (field)
+        {
+            case "tags": return "tag";
+            case "author_name": return "author";
+            default: return "category";
+        }
+    }
+
+    /// <summary>Page links keep the current filter and search; only the page number moves.</summary>
+    private string PageUrl(int number)
+    {
+        var parts = new List<string>();
+        if (_url.Category.Length > 0) parts.Add("category=" + Uri.EscapeDataString(_url.Category));
+        if (_url.Tag.Length > 0) parts.Add("tag=" + Uri.EscapeDataString(_url.Tag));
+        if (_url.Author.Length > 0) parts.Add("author=" + Uri.EscapeDataString(_url.Author));
+        if (_url.Search.Length > 0) parts.Add("q=" + Uri.EscapeDataString(_url.Search));
+        if (number > 1) parts.Add("page=" + number.ToString(CultureInfo.InvariantCulture));
+        return parts.Count == 0 ? BaseUrl : BaseUrl + "?" + string.Join("&", parts);
+    }
+
+    /// <summary>At most seven page numbers, centred on the current one.</summary>
+    private IEnumerable<int> PageWindow()
+    {
+        const int window = 7;
+        var first = Math.Max(1, _plan.Page - window / 2);
+        var last = Math.Min(_totalPages, first + window - 1);
+        first = Math.Max(1, last - window + 1);
+        for (var number = first; number <= last; number++) yield return number;
+    }
+
+    private string FirstUrlParameter()
+    {
+        var parameters = PageState?.UrlParameters;
+        if (string.IsNullOrWhiteSpace(parameters)) return "";
+        var first = parameters.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "";
+        first = first.Trim();
+        return first.Length > 200 ? first.Substring(0, 200) : first;
+    }
+
+    private static List<string> SplitRoles(string roles)
+        => (roles ?? "").Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(r => r.Trim()).Where(r => r.Length > 0).ToList();
+
+    private int ReadingMinutes(AppRecordDto record)
     {
         var configured = BlogData.Num(record, "reading_time");
         if (configured > 0) return configured;
-        var plain = System.Text.RegularExpressions.Regex.Replace(BlogData.Text(record, "body", ""), "<[^>]+>", " ");
+        var plain = System.Text.RegularExpressions.Regex.Replace(
+            BlogData.Text(record, "body", ""), "<[^>]+>", " ");
         var words = System.Text.RegularExpressions.Regex.Matches(plain, @"\b[\p{L}\p{N}]+\b").Count;
         return Math.Max(1, (int)Math.Ceiling(words / 220d));
-    }
-
-    private string ReadQuery(string key)
-    {
-        var uri = Nav?.Uri ?? "";
-        var index = uri.IndexOf('?');
-        if (index < 0) return "";
-        foreach (var part in uri.Substring(index + 1).Split(new[] { '&' }, StringSplitOptions.RemoveEmptyEntries))
-        {
-            var pair = part.Split(new[] { '=' }, 2);
-            if (pair.Length == 2 && pair[0].Equals(key, StringComparison.OrdinalIgnoreCase))
-                return Uri.UnescapeDataString(pair[1]).Trim();
-        }
-        return "";
     }
 }

@@ -7,7 +7,7 @@
    Routes between the three admin screens and enforces the role gate independently of the
    Oqtane page permission, so a page grant alone never exposes the console. *@
 
-<link rel="stylesheet" href="/Modules/MegaFormBlogs/megaform-blogs-admin.css?v=20260730a" />
+<link rel="stylesheet" href="/Modules/MegaFormBlogs/megaform-blogs-admin.css?v=20260730b" />
 
 <div class="mfba @(_view == "comments" ? "mfba-comments-page" : "")">
     @if (!_allowed)
@@ -37,21 +37,26 @@
                     <a class="mfba-btn-outline @(_view == "dashboard" ? "on" : "")" href="@ViewUrl("dashboard")">@BlogData.Icon("bar-chart", "mfba-icon mfba-icon-md") Dashboard</a>
                     <a class="mfba-btn-outline @(_view == "editorial" ? "on" : "")" href="@ViewUrl("editorial")">@BlogData.Icon("layout", "mfba-icon mfba-icon-md") Editorial</a>
                     <a class="mfba-btn-outline @(_view == "comments" ? "on" : "")" href="@ViewUrl("comments")">@BlogData.Icon("message-circle", "mfba-icon mfba-icon-md") Comments</a>
+                    <a class="mfba-btn @(_view == "new" ? "on" : "")" href="@ViewUrl("new")">@BlogData.Icon("plus", "mfba-icon mfba-icon-md") New @(_config.IsNews ? "article" : "post")</a>
                 </div>
             </div>
         </header>
 
         @if (_view == "editorial")
         {
-            <AdminEditorial Scope="_scope" AdminBaseUrl="@AdminBaseUrl" />
+            <AdminEditorial Scope="_scope" AdminBaseUrl="@AdminBaseUrl" AppKey="@_config.AppKey" />
         }
         else if (_view == "comments")
         {
-            <AdminComments Scope="_scope" AdminBaseUrl="@AdminBaseUrl" BlogUrl="@BlogUrl" />
+            <AdminComments Scope="_scope" AdminBaseUrl="@AdminBaseUrl" BlogUrl="@BlogUrl" AppKey="@_config.AppKey" />
+        }
+        else if (_view == "new")
+        {
+            <AdminNewPost Scope="_scope" AdminBaseUrl="@AdminBaseUrl" AppKey="@_config.AppKey" IsNews="@_config.IsNews" />
         }
         else
         {
-            <AdminDashboard Scope="_scope" AdminBaseUrl="@AdminBaseUrl" BlogUrl="@BlogUrl" />
+            <AdminDashboard Scope="_scope" AdminBaseUrl="@AdminBaseUrl" BlogUrl="@BlogUrl" AppKey="@_config.AppKey" />
         }
     }
 </div>
@@ -66,29 +71,44 @@
     private bool _allowed;
     private string _view = "dashboard";
     private MegaFormScope _scope = new MegaFormScope();
+    private BlogInstanceConfig _config = new BlogInstanceConfig();
 
     public override string Title => "Blog editorial console";
 
-    private string AdminBaseUrl => NavigateUrl(PageState.Page.Path);
+    // AdminBaseUrl must stay INSIDE the console (the module's Edit action), otherwise every
+    // nav link lands on the public page where .mfba does not exist and the console looks dead.
+    // EditUrl(action) is the same idiom MegaForm's own module uses (Oqtane.Client/Index.razor:2786).
+    private string AdminBaseUrl => EditUrl("Edit");
     private string BlogUrl => NavigateUrl(PageState.Page.Path);
 
     private string ScreenTitle => _view == "editorial" ? "Editorial Kanban"
-        : _view == "comments" ? "Comments Moderation" : "Admin Dashboard";
+        : _view == "comments" ? "Comments Moderation"
+        : _view == "new" ? ("New " + (_config.IsNews ? "Article" : "Post"))
+        : "Admin Dashboard";
 
     private string ScreenSubtitle => _view == "editorial"
         ? "Move posts between columns to update the typed status"
         : _view == "comments" ? "Review and moderate user comments"
+        : _view == "new" ? "Write a draft and let the editorial board take it from there"
         : "Overview of your blog performance and content pipeline";
 
     protected override void OnParametersSet()
     {
-        _view = ReadQuery("view");
-        if (_view != "editorial" && _view != "comments") _view = "dashboard";
+        _config = BlogInstanceConfig.Read(ModuleState?.Settings);
+
+        _view = ReadQuery("view").Trim().ToLowerInvariant();
+        if (!BlogInstanceConfig.ConsoleRoutes.Contains(_view)) _view = _config.ConsoleView;
 
         var user = PageState?.User;
         var roles = SplitRoles(user?.Roles);
+
+        // The ConsoleRoles setting may only NARROW access: an editor must be in the configured
+        // list AND in the module's own role list, so a mis-typed setting cannot open this up.
+        var configured = _config.ConsoleRoleList();
+        if (configured.Count == 0) configured = BlogRoles.ToList();
         _allowed = user != null && user.UserId > 0
-                   && roles.Any(r => BlogRoles.Contains(r, StringComparer.OrdinalIgnoreCase));
+                   && roles.Any(r => BlogRoles.Contains(r, StringComparer.OrdinalIgnoreCase))
+                   && roles.Any(r => configured.Contains(r, StringComparer.OrdinalIgnoreCase));
 
         _scope = new MegaFormScope
         {

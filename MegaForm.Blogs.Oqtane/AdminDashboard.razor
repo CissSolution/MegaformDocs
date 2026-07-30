@@ -63,7 +63,7 @@ else
         </section>
 
         <section class="mfba-quick" aria-label="Quick access">
-            <a href="@(AdminBaseUrl + "?view=editorial")"><span class="mfba-quick-ico mfba-bg-blue">@BlogData.Icon("plus")</span><strong>New Post</strong><small>Create a new article</small></a>
+            <a href="@(AdminBaseUrl + "?view=new")"><span class="mfba-quick-ico mfba-bg-blue">@BlogData.Icon("plus")</span><strong>New Post</strong><small>Create a new article</small></a>
             <a href="@(AdminBaseUrl + "?view=comments")"><span class="mfba-quick-ico mfba-bg-violet">@BlogData.Icon("message-circle")</span><strong>Comments</strong><small>@_pending.Count pending review</small></a>
             <a href="@(AdminBaseUrl + "?view=editorial")"><span class="mfba-quick-ico mfba-bg-amber">@BlogData.Icon("layout")</span><strong>Editorial</strong><small>Kanban board</small></a>
             <a href="@BlogUrl"><span class="mfba-quick-ico mfba-bg-emerald">@BlogData.Icon("bar-chart")</span><strong>Analytics</strong><small>View performance</small></a>
@@ -252,6 +252,9 @@ else
     [Parameter] public string AdminBaseUrl { get; set; }
     [Parameter] public string BlogUrl { get; set; }
 
+    /// <summary>Which MegaForm app to manage. Follows the instance's AppKey setting.</summary>
+    [Parameter] public string AppKey { get; set; } = BlogData.AppKey;
+
     private const int ScanCap = 60;
 
     private bool _loading = true;
@@ -292,7 +295,7 @@ else
         try
         {
             _loading = true;
-            var queue = await Mega.Queries.ExecuteAsync(BlogData.AppKey, BlogData.PostsQuery,
+            var queue = await Mega.Queries.ExecuteAsync(AppKey, BlogData.PostsQuery,
                 new AppQueryRequest { Page = 1, PageSize = 100 }, Scope);
             _posts = queue?.Items?.ToList() ?? new List<AppRecordDto>();
             _totalPosts = queue?.TotalCount ?? 0;
@@ -309,7 +312,7 @@ else
             _top = _posts.OrderByDescending(p => BlogData.Num(p, "view_count")).Take(5).ToList();
             _topMax = _top.Count == 0 ? 0 : Math.Max(1, BlogData.Num(_top[0], "view_count"));
 
-            _commentsFormId = await BlogData.ResolveCommentsFormIdAsync(Mega, Scope);
+            _commentsFormId = await BlogData.ResolveCommentsFormIdAsync(Mega, Scope, AppKey);
             _all.Clear();
             if (_commentsFormId > 0)
             {

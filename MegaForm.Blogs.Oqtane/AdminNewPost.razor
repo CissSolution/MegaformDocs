@@ -1,0 +1,441 @@
+@namespace MegaForm.Blogs.Client
+@inherits ModuleBase
+@inject MegaForm.Sdk.IMegaFormClient Mega
+@inject NavigationManager Nav
+
+@* MegaForm Blogs - create a post.
+
+   Until now neither platform could author a post: both consoles could only edit records that
+   already existed, so a blog could not actually be started. This screen closes that.
+
+   It is generated FROM THE FORM SCHEMA rather than from a hardcoded field list: every required
+   input on the posts form is rendered with a control that matches its type, and its Select
+   options come from the schema. Add a field to the form and it appears here, which is the whole
+   point of building on the MegaForm engine.
+
+   Writing goes through Submissions.SubmitAsync, so the row runs the same server-side validation
+   as a public submit (and the same UniqueId generation for post_uid, which validation skips). *@
+
+<section class="mfba-panel mfba-newpost">
+    <header class="mfba-panel-head">
+        <h2>@(IsNews ? "New article" : "New post")</h2>
+        <a class="mfba-panel-link" href="@AdminBaseUrl">Back to the console</a>
+    </header>
+
+    @if (_loading)
+    {
+        <div class="mfba-note">Loading the post form…</div>
+    }
+    else if (_error != null)
+    {
+        <div class="mfba-note mfba-note-error">@_error</div>
+    }
+    else if (_createdId > 0)
+    {
+        <div class="mfba-note mfba-note-ok">
+            <strong>@(IsNews ? "Article" : "Post") created.</strong>
+            <span>“@_created” was saved as <code>@_form["status"]</code>.</span>
+            <div class="mfba-newpost-actions">
+                <a class="mfba-btn" href="@(AdminBaseUrl + "?view=editorial")">Open the editorial board</a>
+                <button type="button" class="mfba-btn-outline" @onclick="ResetAsync">Write another</button>
+            </div>
+        </div>
+    }
+    else
+    {
+        @if (_message != null)
+        {
+            <div class="mfba-note mfba-note-error">@_message</div>
+        }
+
+        <div class="mfba-newform">
+            @foreach (var field in _fields)
+            {
+                @* .mfba-fld, not .mfba-field: the sheet already uses .mfba-field for the
+                   inline search-icon wrapper, which would collapse these label/input rows. *@
+                <div class="mfba-fld @(IsWide(field) ? "mfba-fld-wide" : "")">
+                    <label for="@("mfb-new-" + field.Key)">
+                        @field.Label
+                        @if (field.Required)
+                        {
+                            <span class="mfba-req" aria-hidden="true">*</span>
+                        }
+                    </label>
+
+                    @if (HasOptions(field))
+                    {
+                        <select id="@("mfb-new-" + field.Key)" value="@Value(field.Key)"
+                                @onchange="e => Set(field.Key, e.Value?.ToString())">
+                            <option value="">— choose —</option>
+                            @foreach (var option in field.Options)
+                            {
+                                <option value="@option.Value">@(string.IsNullOrWhiteSpace(option.Label) ? option.Value : option.Label)</option>
+                            }
+                        </select>
+                    }
+                    else if (IsMultiline(field))
+                    {
+                        <textarea id="@("mfb-new-" + field.Key)" rows="@(field.Type == "RichText" ? 12 : 3)"
+                                  value="@Value(field.Key)"
+                                  @onchange="e => Set(field.Key, e.Value?.ToString())"></textarea>
+                    }
+                    else
+                    {
+                        <input id="@("mfb-new-" + field.Key)" type="@InputType(field)"
+                               value="@Value(field.Key)"
+                               @onchange="e => Set(field.Key, e.Value?.ToString())" />
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(field.HelpText))
+                    {
+                        <small class="mfba-hint">@field.HelpText</small>
+                    }
+                    @if (_fieldErrors.ContainsKey(field.Key))
+                    {
+                        <small class="mfba-err">@_fieldErrors[field.Key]</small>
+                    }
+                </div>
+            }
+        </div>
+
+        <footer class="mfba-newform-foot">
+            <button type="button" class="mfba-btn" disabled="@_saving" @onclick="SaveAsync">
+                @(_saving ? "Saving…" : "Create " + (IsNews ? "article" : "post"))
+            </button>
+            <a class="mfba-btn-outline" href="@AdminBaseUrl">Cancel</a>
+        </footer>
+    }
+</section>
+
+@code {
+    [Parameter] public MegaFormScope Scope { get; set; }
+    [Parameter] public string AdminBaseUrl { get; set; }
+    [Parameter] public string AppKey { get; set; } = BlogData.AppKey;
+
+    /// <summary>Seeds content_type and the wording. Follows the instance's profile.</summary>
+    [Parameter] public bool IsNews { get; set; }
+
+    /// <summary>
+    /// Optional fields worth offering on create even though the form does not require them —
+    /// without these a new post has no image, no tags and no subtitle until someone edits it.
+    /// </summary>
+    private static readonly string[] AlsoOffer =
+    {
+        "subtitle", "featured_image_url", "image_alt_text", "tags", "seo_title", "seo_description"
+    };
+
+    /// <summary>Never render these on create: server-generated, or set by other screens.</summary>
+    private static readonly string[] NeverOffer =
+    {
+        "post_uid", "view_count", "comment_count", "like_count", "share_count",
+        "reading_time", "recent_order"
+    };
+
+    private bool _loading = true;
+    private bool _saving;
+    private string _error;
+    private string _message;
+    private int _formId;
+    private int _createdId;
+    private string _created = "";
+
+    private List<FormFieldInfo> _fields = new List<FormFieldInfo>();
+    private readonly Dictionary<string, string> _form =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, string> _fieldErrors =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            _loading = true;
+
+            // The named query result carries the form id, so there is no manifest guessing and no
+            // schema-shape trick needed for the posts form.
+            var probe = await Mega.Queries.ExecuteAsync(AppKey, BlogData.PostsQuery,
+                new AppQueryRequest { Page = 1, PageSize = 1 }, Scope);
+            _formId = probe?.FormId ?? 0;
+            if (_formId <= 0)
+            {
+                _error = "The posts form for this app could not be found.";
+                return;
+            }
+
+            var form = await Mega.Forms.GetFormAsync(_formId, Scope);
+            if (form == null)
+            {
+                _error = "The posts form could not be read.";
+                return;
+            }
+
+            var schema = Mega.Schema.ParseForm(form);
+            _fields = schema.Fields
+                .Where(f => f != null
+                            && !string.IsNullOrWhiteSpace(f.Key)
+                            && f.IsInputField
+                            && !f.Hidden
+                            && !f.ReadOnly
+                            && !NeverOffer.Contains(f.Key, StringComparer.OrdinalIgnoreCase)
+                            && (f.Required || AlsoOffer.Contains(f.Key, StringComparer.OrdinalIgnoreCase)))
+                .OrderBy(f => f.Required ? 0 : 1)
+                .ThenBy(f => f.Order)
+                .ToList();
+
+            SeedDefaults();
+            _error = null;
+        }
+        catch (Exception)
+        {
+            _error = "The post form could not be prepared. The site log has the details.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    /// <summary>Sensible defaults for a draft so an author types a title and a body, not boilerplate.</summary>
+    private void SeedDefaults()
+    {
+        _form.Clear();
+        _fieldErrors.Clear();
+
+        Default("status", "draft");
+        Default("content_type", IsNews ? "News" : "Blog Post");
+        Default("audience", "Public");
+        Default("language", "en-US");
+        Default("publish_date", DateTime.UtcNow.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+        Default("author_name", FirstNonEmpty(Scope?.DisplayName, Scope?.UserName, "MegaForm Editorial"));
+        Default("author_email", Scope?.UserEmail ?? "");
+
+        // Any other Select with exactly one sensible default: take the schema's own selected option.
+        foreach (var field in _fields.Where(HasOptions))
+        {
+            if (_form.ContainsKey(field.Key) && _form[field.Key].Length > 0) continue;
+            var selected = field.Options.FirstOrDefault(o => o.Selected) ?? null;
+            if (selected != null && !string.IsNullOrWhiteSpace(selected.Value))
+                _form[field.Key] = selected.Value;
+        }
+    }
+
+    private void Default(string key, string value)
+    {
+        if (_fields.Any(f => string.Equals(f.Key, key, StringComparison.OrdinalIgnoreCase)))
+            _form[key] = value ?? "";
+    }
+
+    private static string FirstNonEmpty(params string[] candidates)
+        => candidates.FirstOrDefault(c => !string.IsNullOrWhiteSpace(c)) ?? "";
+
+    // ---- binding -----------------------------------------------------------------------------
+
+    private string Value(string key)
+        => _form.TryGetValue(key, out var value) ? value : "";
+
+    private void Set(string key, string value)
+    {
+        _form[key] = value ?? "";
+        _fieldErrors.Remove(key);
+
+        // Typing a title fills the slug and the category key, the way the seeded data is shaped.
+        if (string.Equals(key, "title", StringComparison.OrdinalIgnoreCase) && Value("slug").Length == 0)
+            _form["slug"] = Slugify(value);
+        if (string.Equals(key, "category", StringComparison.OrdinalIgnoreCase))
+            _form["category_uid"] = CategoryUid(value);
+    }
+
+    private static bool HasOptions(FormFieldInfo field)
+        => field.Options != null && field.Options.Count > 0;
+
+    private static bool IsMultiline(FormFieldInfo field)
+        => field.Type == "Textarea" || field.Type == "RichText";
+
+    private static bool IsWide(FormFieldInfo field)
+        => IsMultiline(field) || field.Key == "title";
+
+    private static string InputType(FormFieldInfo field)
+    {
+        switch (field.Type)
+        {
+            case "Email": return "email";
+            case "Date": return "date";
+            case "DateTime": return "datetime-local";
+            case "Number":
+            case "Currency": return "number";
+            case "Url": return "url";
+            default: return "text";
+        }
+    }
+
+    // ---- save --------------------------------------------------------------------------------
+
+    private async Task SaveAsync()
+    {
+        if (_saving) return;
+        _saving = true;
+        _message = null;
+        _fieldErrors.Clear();
+
+        try
+        {
+            // Client-side required check first, so an author gets field-level feedback instead of
+            // one server error. The server still validates - this is convenience, not the gate.
+            foreach (var field in _fields.Where(f => f.Required))
+            {
+                if (Value(field.Key).Trim().Length == 0)
+                    _fieldErrors[field.Key] = "Required.";
+            }
+            if (_fieldErrors.Count > 0)
+            {
+                _message = "Fill in the highlighted fields.";
+                return;
+            }
+
+            if (Value("slug").Length == 0 && Value("title").Length > 0)
+                _form["slug"] = Slugify(Value("title"));
+            if (_form.ContainsKey("category_uid") && Value("category_uid").Length == 0)
+                _form["category_uid"] = CategoryUid(Value("category"));
+
+            // Nothing enforces slug uniqueness, and public-posts is queried BY slug, so a duplicate
+            // makes the detail page ambiguous. Claim a free one before writing.
+            var slug = await ClaimSlugAsync(Value("slug"));
+            if (slug == null)
+            {
+                _message = "That slug is already taken and a free variant could not be found.";
+                _fieldErrors["slug"] = "Already in use.";
+                return;
+            }
+            _form["slug"] = slug;
+
+            var data = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            foreach (var pair in _form)
+            {
+                if (pair.Value == null) continue;
+                var trimmed = pair.Value.Trim();
+                if (trimmed.Length == 0) continue;      // never send an empty required-looking value
+                data[pair.Key] = trimmed;
+            }
+
+            var result = await Mega.Submissions.SubmitAsync(_formId, data, Scope);
+            if (result == null || !result.Success)
+            {
+                if (result?.ValidationErrors != null)
+                {
+                    foreach (var pair in result.ValidationErrors)
+                        _fieldErrors[pair.Key] = pair.Value;
+                }
+                // The SDK's message is validation feedback for an authenticated editor, not an
+                // exception, so it is safe to show; fall back to a generic line when absent.
+                _message = string.IsNullOrWhiteSpace(result?.ErrorMessage)
+                    ? "The post could not be saved."
+                    : result.ErrorMessage;
+                return;
+            }
+
+            _createdId = result.SubmissionId;
+            _created = Value("title");
+
+            // SubmitAsync writes the typed `status` field but leaves MF_Submissions.Status at
+            // whatever the form's pipeline assigned (in_review here). Named queries filter on
+            // that master column, so a post created as "published" would be invisible to
+            // public-posts. PatchRecordAsync is the SDK call that keeps the two in step -
+            // it updates the typed field AND the master column in one operation - so patch the
+            // status straight back over itself to reconcile them.
+            var chosenStatus = Value("status").Trim();
+            if (_createdId > 0 && chosenStatus.Length > 0)
+            {
+                await Mega.Records.PatchRecordAsync(_createdId,
+                    new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        ["status"] = chosenStatus
+                    }, Scope);
+            }
+        }
+        catch (Exception)
+        {
+            _message = "The post could not be saved. The site log has the details.";
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task ResetAsync()
+    {
+        _createdId = 0;
+        _created = "";
+        _message = null;
+        SeedDefaults();
+        await Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Return a slug no published-or-draft post is using, trying -2, -3, … Returns null when even
+    /// the variants are taken, rather than silently overwriting the reader-facing URL space.
+    /// </summary>
+    private async Task<string> ClaimSlugAsync(string desired)
+    {
+        var root = Slugify(desired);
+        if (root.Length == 0) root = "post";
+
+        for (var attempt = 0; attempt < 25; attempt++)
+        {
+            var candidate = attempt == 0
+                ? root
+                : root + "-" + (attempt + 1).ToString(CultureInfo.InvariantCulture);
+            if (!await SlugTakenAsync(candidate)) return candidate;
+        }
+        return null;
+    }
+
+    private async Task<bool> SlugTakenAsync(string slug)
+    {
+        var request = new AppQueryRequest { Page = 1, PageSize = 1 };
+        request.Parameters["slug"] = slug;
+        // all-posts has no status filter, so this sees drafts and archived posts too.
+        var existing = await Mega.Queries.ExecuteAsync(AppKey, BlogData.PostsQuery, request, Scope);
+        return (existing?.TotalCount ?? 0) > 0;
+    }
+
+    private static string Slugify(string value)
+    {
+        var text = (value ?? "").Trim().ToLowerInvariant();
+        if (text.Length == 0) return "";
+        var builder = new System.Text.StringBuilder(text.Length);
+        var lastDash = false;
+        foreach (var ch in text)
+        {
+            if (char.IsLetterOrDigit(ch) && ch < 128)
+            {
+                builder.Append(ch);
+                lastDash = false;
+            }
+            else if (!lastDash && builder.Length > 0)
+            {
+                builder.Append('-');
+                lastDash = true;
+            }
+        }
+        var slug = builder.ToString().Trim('-');
+        return slug.Length > 120 ? slug.Substring(0, 120).Trim('-') : slug;
+    }
+
+    /// <summary>
+    /// Matches the convention the seeded rows use: Design -> CAT-DESIGN, AI/ML -> CAT-AIML.
+    /// </summary>
+    private static string CategoryUid(string category)
+    {
+        var text = (category ?? "").Trim().ToUpperInvariant();
+        if (text.Length == 0) return "";
+        var builder = new System.Text.StringBuilder(text.Length + 4);
+        foreach (var ch in text)
+        {
+            if (char.IsLetterOrDigit(ch) && ch < 128) builder.Append(ch);
+        }
+        return builder.Length == 0 ? "" : "CAT-" + builder.ToString();
+    }
+}

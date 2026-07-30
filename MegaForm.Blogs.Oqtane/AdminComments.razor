@@ -151,6 +151,9 @@ else
     [Parameter] public string AdminBaseUrl { get; set; }
     [Parameter] public string BlogUrl { get; set; }
 
+    /// <summary>Which MegaForm app to manage. Follows the instance's AppKey setting.</summary>
+    [Parameter] public string AppKey { get; set; } = BlogData.AppKey;
+
     private const int ScanCap = 150;
 
     private static readonly Dictionary<string, string> Tabs = new Dictionary<string, string>
@@ -187,11 +190,11 @@ else
         try
         {
             _loading = true;
-            var postResult = await Mega.Queries.ExecuteAsync(BlogData.AppKey, BlogData.PostsQuery,
+            var postResult = await Mega.Queries.ExecuteAsync(AppKey, BlogData.PostsQuery,
                 new AppQueryRequest { Page = 1, PageSize = 200 }, Scope);
             _posts = postResult?.Items?.ToList() ?? new List<AppRecordDto>();
 
-            _commentsFormId = await BlogData.ResolveCommentsFormIdAsync(Mega, Scope);
+            _commentsFormId = await BlogData.ResolveCommentsFormIdAsync(Mega, Scope, AppKey);
             _rows.Clear();
             if (_commentsFormId > 0)
             {

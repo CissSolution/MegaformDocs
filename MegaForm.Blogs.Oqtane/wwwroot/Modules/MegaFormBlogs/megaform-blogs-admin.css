@@ -460,3 +460,91 @@
   .mfba-board-wrap { padding: 16px; }
   .mfba-dialog { padding: 8px; }
 }
+
+/* ============================================================================
+   [MFBA-NEWPOST-20260730] The create-post screen.
+
+   Uses the console's fixed palette on purpose (--mfba-*): the editor must stay
+   legible whatever skin the site wears, which is why this sheet does not borrow
+   host theme colours the way the public sheet does.
+
+   Class names are .mfba-fld / .mfba-newform, NOT .mfba-field / .mfba-form:
+   .mfba-field is already the inline search-icon wrapper above and would
+   collapse these label/input rows into one line.
+   Appended at end-of-file: at equal specificity, source order wins.
+   ============================================================================ */
+
+.mfba-newpost { margin-top: 18px; }
+
+.mfba-newform {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
+  gap: 16px 20px;
+  padding: 4px 0 8px;
+}
+
+.mfba-fld { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.mfba-fld-wide { grid-column: 1 / -1; }
+
+.mfba-fld > label {
+  color: var(--mfba-ink);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.mfba-req { margin-left: 3px; color: var(--mfba-primary, #df0000); }
+
+.mfba-fld input,
+.mfba-fld select,
+.mfba-fld textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 11px;
+  border: 1px solid var(--mfba-line);
+  border-radius: 6px;
+  background: var(--mfba-card);
+  color: var(--mfba-ink);
+  font: inherit;
+  font-size: 14px;
+}
+
+.mfba-fld textarea { resize: vertical; line-height: 1.55; }
+
+.mfba-fld input:focus,
+.mfba-fld select:focus,
+.mfba-fld textarea:focus {
+  outline: 2px solid rgba(223, 0, 0, .35);
+  outline-offset: -1px;
+}
+
+.mfba-hint { color: var(--mfba-dim); font-size: 12px; line-height: 1.45; }
+.mfba-err { color: var(--mfba-primary, #df0000); font-size: 12px; font-weight: 650; }
+.mfba-fld:has(.mfba-err) input,
+.mfba-fld:has(.mfba-err) select,
+.mfba-fld:has(.mfba-err) textarea { border-color: var(--mfba-primary, #df0000); }
+
+.mfba-newform-foot {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--mfba-line);
+}
+
+.mfba-note {
+  margin: 14px 0;
+  padding: 14px 16px;
+  border: 1px solid var(--mfba-line);
+  border-radius: 10px;
+  background: var(--mfba-muted-soft, #f3f2ee);
+  color: var(--mfba-dim);
+  font-size: 14px;
+}
+.mfba-note strong { display: block; color: var(--mfba-ink); }
+.mfba-note span { display: block; margin-top: 4px; }
+.mfba-note-error { border-color: #fda29b; background: #fff1f0; color: #b42318; }
+.mfba-note-ok { border-color: #a6f4c5; background: #ecfdf3; color: #027a48; }
+.mfba-note-ok strong { color: #027a48; }
+
+.mfba-newpost-actions { display: flex; gap: 10px; margin-top: 12px; }

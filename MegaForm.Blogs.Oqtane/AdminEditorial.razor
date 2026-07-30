@@ -140,6 +140,9 @@ else
     [Parameter] public MegaFormScope Scope { get; set; }
     [Parameter] public string AdminBaseUrl { get; set; }
 
+    /// <summary>Which MegaForm app to manage. Follows the instance's AppKey setting.</summary>
+    [Parameter] public string AppKey { get; set; } = BlogData.AppKey;
+
     private bool _loading = true;
     private string _error;
     private string _message;
@@ -161,7 +164,7 @@ else
         try
         {
             _loading = true;
-            var queue = await Mega.Queries.ExecuteAsync(BlogData.AppKey, BlogData.PostsQuery,
+            var queue = await Mega.Queries.ExecuteAsync(AppKey, BlogData.PostsQuery,
                 new AppQueryRequest { Page = 1, PageSize = 200 }, Scope);
             _all = queue?.Items?.ToList() ?? new List<AppRecordDto>();
             _total = queue?.TotalCount ?? 0;

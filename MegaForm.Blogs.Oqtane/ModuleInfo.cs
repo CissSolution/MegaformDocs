@@ -13,12 +13,18 @@ namespace MegaForm.Blogs.Client
         public ModuleDefinition ModuleDefinition => new ModuleDefinition
         {
             Name = "MegaForm Blogs",
-            Description = "Public blog and editorial console over the MegaForm blog-starter app.",
-            Version = "1.1.0",
-            ReleaseVersions = "1.1.0",
+            Description = "Multi-purpose Blog/News module over the MegaForm blog-starter app: "
+                        + "listing, article detail, category, author, archive, featured strip or "
+                        + "editorial console, chosen per instance in Module Settings.",
+            // Oqtane only swaps the DLL when this version increases.
+            Version = "1.2.0",
+            ReleaseVersions = "1.1.0,1.2.0",
             Dependencies = "MegaForm.Sdk",
             PackageName = "MegaForm.Blogs.Oqtane",
-            Categories = "Common"
+            Categories = "Common",
+            // Per-instance configuration: this is what makes one module definition serve every
+            // blog and news surface. The assembly name must match AssemblyName in the .csproj.
+            SettingsType = "MegaForm.Blogs.Client.Settings, MegaForm.Blogs.Oqtane.Client.Oqtane"
         };
     }
 }
