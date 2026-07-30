@@ -209,10 +209,12 @@ The pieces are all present:
   `chrome-error`; retry it.
 - `display:flex` beats the UA `[hidden]` rule — restate `.x[hidden] { display: none }` or a hidden bar
   shows forever.
-- Session scratchpad has the drivers worth keeping:
-  `oq-drive.mjs` (Oqtane CDP login + API + screenshots), `dnnshot.mjs` (DNN login + screenshots),
-  `shot.mjs`, `hex.mjs` / `tokens.mjs` (measure design tokens), `fix-encoding.ps1`.
-  **Move them into `tools/` before the temp directory is cleaned.**
+- The drivers these findings came from live in **`tools/browser-qa/`**:
+  `oq-drive.mjs` (Oqtane CDP login + API calls + screenshots), `dnnshot.mjs` (DNN login +
+  screenshots), `shot.mjs` (any URL), `hex.mjs` / `tokens.mjs` (measure design tokens off a running
+  page instead of guessing colours), `fix-encoding.ps1`.
+  ⚠️ `.gitignore:68` has a blanket `qa/` rule, so they are deliberately **not** under `tools/qa/` —
+  that path is invisible to git. Do not "tidy" them back into a folder called `qa`.
 
 ---
 
