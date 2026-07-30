@@ -231,3 +231,50 @@ dotnet Oqtane.Server.dll
 `:5130` was not touched. Two verification posts exist on form 10: **107** (`in_review`/`published` —
 kept deliberately as evidence of the pre-fix mismatch) and **108** (`published`/`published`, the live
 News article). Delete both if you want the seed pristine.
+
+---
+
+## 2c. Responsive pass vs the mock (1.3.0, second round)
+
+Owner reported the console "chưa responsive". Compared screen-by-screen against the mock running
+on **:3001** (`/templates/blog/admin/{editorial,comments,editor}` — `shot.mjs` captures it with no
+login). One root cause, self-inflicted:
+
+🔴 **`.mf-oq-surface.is-inline` was copied verbatim from MegaForm, including `overflow-x: auto`.**
+MegaForm's very wide form builder needs it; the blog console does not. It made the whole console an
+**outer horizontal scroller wrapped around the kanban's own `.mfba-board-wrap` scroller**. Two
+nested x-scrollers cut content at **both** edges and gave **every** view a scrollbar — including the
+comments list, six short rows of text — and let the page sit scrolled sideways with the Oqtane logo
+clipped. Measured scrolling on all 7 widths × all 4 views.
+
+Fix: `.mf-oq-surface.mfba-surface { overflow-x: clip }`. **`clip`, not `hidden`/`visible`** — it
+suppresses the scrollbar without creating a scroll container (so `.mfba-head`'s `position: sticky`
+still resolves against the page) and without letting a stray wide child push the page over.
+
+⭐ **Why the earlier audit missed it:** the offender was the surface itself and `resp=`'s selector
+list only walked `.mfba *` / `.mfb *`. It now includes `.mf-oq-surface`. When auditing overflow,
+always include the container you added, not just its contents.
+
+Two things the side-by-side changed:
+
+- **Edge-fade gradients removed.** The mock has no fade; next to it they read as content being
+  smudged rather than scrollable. Clean edge + a real slim scrollbar + column scroll-snap is the
+  mock's answer and it is better.
+- **The kanban still does not restack.** The mock slices its last column at 1310px too, with the
+  same `w-72` / `shrink-0` / `min-w-max` / `overflow-x-auto` recipe. That is the design.
+
+Create form: was full-bleed (a Title input across 1200px, labels flush against the panel border,
+which is what made it read as a bare table). Capped to the mock's ~930px content measure and padded
+like the mock's editor cards.
+
+**After:** `editorial` scrolls only `.mfba-board-wrap`; `comments`, `new` and `dashboard` have no
+horizontal scroller at any width; nothing overflows the page at 1440/1280/1024/820/768/480/390.
+
+### 📌 Not mock parity, and not pretended to be
+
+The mock's post editor (`admin/editor`) is a **two-column layout**: ~930px content (title, hero,
+rich-text editor with a real toolbar, excerpt with a character counter) plus a **320px settings
+rail** — Publish Settings (status/visibility), Author picker, Category chips, Tags with suggestions,
+and an SEO card with a search preview and score. Ours is a single-column schema-generated form.
+Closing that is an `AdminNewPost` redesign, not a CSS change. Same for the mock's one-row board
+toolbar (search + selects + button beside the title) versus our two rows.
