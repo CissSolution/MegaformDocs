@@ -89,6 +89,80 @@ Change it in Module Settings — that is the feature.
 
 ---
 
+## 2b. 1.3.0 — the console is inline, not a popup (windowed ⇄ fullscreen)
+
+The owner hit the console at `/new-admin/*/38/Edit?view=new` and it was drawn inside a dark
+Oqtane modal with an X. A dialog is the wrong shape for editorial work, so 1.3.0 removes it.
+
+### ⭐⭐⭐ Why Oqtane put it in a dialog, and the one-line opt-out
+
+Verified against the **decompiled `Oqtane.Client` 10.1.0 assembly**, not guessed:
+
+1. `Oqtane.Models.Route` only sets `ModuleId`/`Action` when the path contains the `/*/` marker,
+   so `/new-admin/*/38/Edit` ⇒ `ModuleId=38, Action="Edit"`; a plain page URL keeps `ModuleId=-1`.
+2. `Oqtane.UI.ContainerBuilder.OnParametersSet()`:
+   ```csharp
+   if (PageState.ModuleId != -1 && PageState.Route.Action != "" && ModuleState.UseAdminContainer)
+       typeName = PageState.Site.AdminContainerType ?? "Oqtane.Themes.AdminContainer, Oqtane.Client";
+   ```
+3. `Oqtane.Themes.AdminContainer` renders
+   `.app-admin-modal > .modal[role=dialog] > .modal-dialog > .modal-content > (.modal-header + .modal-body)`.
+   The dark backdrop is the **site's own** `wwwroot/css/app.css`: `.app-admin-modal .modal { position:fixed; z-index:9999; background:rgba(0,0,0,.3) }`.
+   The X is a plain link to `PageState.ReturnUrl`, not a JS dismiss. The title bar text is the
+   control's `Title` property, via `ModuleState.ControlTitle`.
+4. 🔑 **`Oqtane.Modules.ModuleBase` declares `public virtual bool UseAdminContainer => true`** — so
+   every action control opts into the dialog *by omission*.
+
+**The fix is one line** in `Edit.razor`:
+```csharp
+public override bool UseAdminContainer => false;
+```
+A repo-wide grep found **no other `UseAdminContainer` override anywhere**. MegaForm avoids the same
+dialog a different way: it never builds an `EditUrl` — its panels are `?mfpanel=` on the *current
+page*, so `ModuleId` stays `-1`. Its own `EditUrl`-based helpers (`BuildBuilderUrl()`,
+`BuildSubmissionsUrl()`, `BuildDashboardUrl()`) are dead code with no call sites.
+
+> Bonus fact from the same assembly, which settles the render-mode question in §3:
+> `ModuleBase` also declares `public virtual string RenderMode => "Interactive"`. Module controls
+> are Interactive **regardless of the site's `RenderMode: Static`** — which is exactly why the
+> console is interactive and why `curl` sees no blog markup.
+
+### What changed
+
+- **`ConsoleShell.razor` (new)** — the whole console (header, tabs, the four screens) lives here
+  once. `Index.razor` and `Edit.razor` both render it and differ only in `ConsoleBaseUrl`, so the
+  two hosts cannot drift.
+- **Inline is the intended path.** Give an instance the "admin console" View and it renders in its
+  own page pane with tabs on that page's URL (`/new-admin?view=editorial`) — no dialog, ever.
+  This path was previously half-built: it dropped the admin components into the public `.mfb`
+  wrapper with no `.mfba` root and never linked the admin stylesheet, so the console rendered
+  unstyled. Fixed.
+- **Windowed ⇄ fullscreen** reuses MegaForm's contract **verbatim** instead of forking it:
+  `.mf-oq-surface` + `is-inline` (default) / `is-fs`, persisted in
+  `localStorage['mf-surface-fs']`, install-guarded by `window.__mfFsToggle` so it never
+  double-mounts beside MegaForm's own toggle. New file
+  `wwwroot/Modules/MegaFormBlogs/megaform-blogs-fs.js` (shipped via a new `*.js` glob in the
+  nuspec — the `*.css` glob does not match it).
+- ⭐ **`is-fs` is `z-index:10000` because Oqtane's dialog is `9999`.** That single digit is
+  load-bearing: it is what lets a surface be lifted out of any host dialog. Do not "tidy" either
+  number. The toggle itself floats at `2147483600` so it stays reachable above both.
+
+### Verified by clicking (1.3.0, `:5131`)
+
+| Check | Result |
+| --- | --- |
+| `/new-admin` (console View) | `mf-oq-surface is-inline mfba-surface`, admin CSS loaded, **no `.app-admin-modal`** |
+| its tabs | `/new-admin?view=dashboard|editorial|comments|new` — page-local |
+| `/new-admin/*/38/Edit?view=new` | **no `.app-admin-modal`**, renders inline, all 19 create fields |
+| toggle click | `relative/auto` → **`fixed/10000`**, label Fullscreen→Windowed, 5 host elements inerted |
+| toggle click back | `relative/auto`, **0 inerted** — fully reversible |
+
+Still a popup, and left alone deliberately: Oqtane's own **module Settings** page. That control is
+`Oqtane.Modules.Admin.ModuleSettings` (framework code, not ours), and a settings dialog is the
+right shape anyway.
+
+---
+
 ## 3. Traps this session found (the expensive ones)
 
 - ⭐⭐⭐ **`curl` cannot see this blog.** The site is `RenderMode: Static` but the module renders through
