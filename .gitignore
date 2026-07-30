@@ -162,3 +162,6 @@ CLAUDE_HANDOFF_20260708_OQTANE_MARKETPLACE_PUBLISH_SOP.md
 /openai-req-body.json
 /openai-req2.json
 /openai-req3.json
+
+# Browser-QA driver scratch output (chrome profile + screenshots)
+tools/browser-qa/oq/
