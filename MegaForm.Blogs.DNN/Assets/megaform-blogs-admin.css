@@ -44,6 +44,27 @@
 .mfba input, .mfba select, .mfba textarea { font: inherit; color: inherit; }
 .mfba ul { margin: 0; padding: 0; list-style: none; }
 
+/* ── [MFBA-THEMEBLEED-20260730] host-theme colour guard ────────────────────
+   Measured on :5131: `.mfba-kcard h4` rendered WHITE ON WHITE — contrast 1.00,
+   card titles literally invisible. `.mfba-head-row h1` 1.06, `.mfba-kcol-head h3` 1.10.
+
+   Why: the rules above set margin/font-weight on headings but no `color`, so headings
+   took their colour by INHERITANCE from `.mfba`. An inherited value has no specificity
+   at all, so it loses to ANY matching rule — and the Oqtane theme ships bare
+   `h1..h6 { color: … }`. On a dark-themed page that colour is white.
+
+   Fix: re-assert `inherit` with a class-scoped selector. `.mfba :where(h1)` is
+   specificity (0,1,0), which beats the theme's (0,0,1) element rule, while `:where()`
+   keeps it weak enough that this module's own component rules (`.mfba-kmeta`,
+   `.mfba-hint`, …) still win. That is also why this block sits HERE, before the
+   component rules, instead of at end-of-file: on an equal-specificity tie the later
+   rule wins, and the component rules must be the ones that win.
+
+   `a`, `span` and `div` are deliberately NOT in the list: their colour is set by the
+   module's own classes, and blanketing them would flatten intentional muted text. */
+.mfba :where(h1, h2, h3, h4, h5, h6, p, li, td, th, dt, dd, label, legend,
+             strong, b, em, i, small, time, figcaption, summary, blockquote) { color: inherit; }
+
 /* ── shared atoms ─────────────────────────────────────────────────────── */
 
 .mfba-icon { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
@@ -604,3 +625,80 @@ html.mf-host-editmode .mf-fs-toggle.mf-fs-floating { border-color: #6366f1; colo
   box-shadow: 0 8px 24px rgba(99, 102, 241, .45); }
 html.mf-host-editmode .mf-fs-toggle.mf-fs-floating:hover { background: #6366f1; color: #fff;
   border-color: #6366f1; }
+
+/* ============================================================================
+   [MFBA-RESPONSIVE-20260730] small-screen pass on the console.
+
+   Measured first, then fixed. The page itself never overflowed at 1440/1280/1024/
+   820/768/480/390 — `.mfba-board-wrap` is a real `overflow-x:auto` scroller — so the
+   kanban was never "broken layout". Two things did make it look broken:
+     1. invisible titles (see MFBA-THEMEBLEED above) — that white-on-white h4 is the
+        mysterious empty gap above each card's tag;
+     2. the board slices the last column at the container edge with NO affordance, so
+        it reads as clipped rather than scrollable.
+
+   The ACME mock's board is the SAME design (w-72 / shrink-0 / min-w-max /
+   overflow-x-auto) and deliberately never stacks, so this does not restack it either.
+   What the mock does have and we did not is its `min-w-0` + `shrink-0` discipline on
+   every flex child, which is what keeps text from pushing a row wide.
+   ============================================================================ */
+
+/* 1. Scroll affordance. Edge fades that appear only while there is more board in that
+      direction: the gradients are painted in the scrollport (background-attachment:
+      local for the white "cover" layers, scroll for the fades), so they self-hide at
+      each end. Plus a visible slim scrollbar, because a board you cannot tell scrolls
+      is a board users think is cut off. */
+.mfba-board-wrap {
+  background:
+    linear-gradient(to right, var(--mfba-bg), transparent) left center / 28px 100% no-repeat local,
+    linear-gradient(to left,  var(--mfba-bg), transparent) right center / 28px 100% no-repeat local,
+    linear-gradient(to right, rgba(15,10,9,.14), transparent) left center / 14px 100% no-repeat scroll,
+    linear-gradient(to left,  rgba(15,10,9,.14), transparent) right center / 14px 100% no-repeat scroll;
+  scrollbar-width: thin;
+  overscroll-behavior-x: contain;
+}
+.mfba-board-wrap::-webkit-scrollbar { height: 10px; }
+.mfba-board-wrap::-webkit-scrollbar-track { background: var(--mfba-muted-soft); border-radius: 999px; }
+.mfba-board-wrap::-webkit-scrollbar-thumb { background: #c9c5c0; border-radius: 999px; }
+.mfba-board-wrap::-webkit-scrollbar-thumb:hover { background: var(--mfba-dim); }
+
+/* Land on a column edge instead of mid-card, so a partial column never looks clipped. */
+.mfba-board { scroll-snap-align: none; }
+.mfba-kcol { scroll-snap-align: start; }
+.mfba-board-wrap { scroll-snap-type: x proximity; }
+
+/* 2. min-width:0 / shrink-0 discipline, ported from the mock. Without it a long
+      headline gives its flex parent an automatic minimum width and pushes the whole
+      row wide instead of clamping. */
+.mfba-kcard-top, .mfba-kfoot, .mfba-kmeta, .mfba-crow, .mfba-comment,
+.mfba-head-row, .mfba-panel-head, .mfba-links span { min-width: 0; }
+.mfba-kcard-top > div:first-child, .mfba-kfoot > div, .mfba-kmeta span { min-width: 0; }
+.mfba-kcard h4 { overflow-wrap: anywhere; }
+.mfba-kcard-top .mfba-icon, .mfba-pdot, .mfba-kdot,
+.mfba-kfoot img, .mfba-kfoot .mfba-avatar { flex: 0 0 auto; }
+
+/* 3. Pane-safety. `.mfba` asks for min-height:100vh, which is right for a standalone
+      admin page and wrong inside a module pane — it forces a full viewport of empty
+      surface under a short console. The fullscreen surface keeps the tall behaviour. */
+.mf-oq-surface.is-inline > .mfba { min-height: 0; }
+.mf-oq-surface.is-fs > .mfba { min-height: 0; }
+
+/* 4. Phone: the column may use the width it has rather than a hard 288px, so one
+      column plus a hint of the next fits a 390px screen instead of one and a sliver. */
+@media (max-width: 640px) {
+  .mfba-kcol { width: min(288px, 82vw); }
+  .mfba-klist { min-height: 240px; }
+  .mfba-board-wrap { padding: 12px; }
+  /* the toolbar above the board: let it wrap instead of overflowing (the mock has this
+     bug — its board toolbar is flex with no wrap — so this is deliberately NOT parity) */
+  .mfba-head-actions { width: 100%; }
+  .mfba-head-actions > a { flex: 1 1 auto; justify-content: center; }
+}
+
+/* 5. Very narrow panes/phones: stop the 2-up form grid and the stat pair from
+      squeezing text into a column of single characters. */
+@media (max-width: 420px) {
+  .mfba-stats { grid-template-columns: minmax(0, 1fr); }
+  .mfba-newform { grid-template-columns: minmax(0, 1fr); }
+  .mfba-quick { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

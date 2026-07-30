@@ -200,6 +200,129 @@ async function main() {
         console.log('SETTINGS', p, '->', set, saved);
         continue;
       }
+      // contrast=<url>  reports computed colour vs the nearest painted background for the text
+      // that matters, with a WCAG ratio. Inherited colour loses to ANY matching rule, so a host
+      // theme's bare `h1 { color: … }` beats a module's inherited ink - this is how a light
+      // console ends up with invisible headings.
+      if (p.startsWith('contrast=')) {
+        const url = p.slice('contrast='.length);
+        await goto(url, 9000);
+        const r = await ev(`(() => {
+          const sels = ['.mfba-head-row h1', '.mfba-head-row p', '.mfba-kcol-head h3',
+                        '.mfba-kcard h4', '.mfba-kcard .mfba-ktag', '.mfba-kmeta',
+                        '.mfba-panel-head h2', '.mfba-fld > label', '.mfba-stat-val',
+                        '.mfb-hero h1', '.mfb-card-body h3', '.mfb-card-body p'];
+          const lum = (c) => {
+            const m = c.match(/[\\d.]+/g); if (!m) return null;
+            const f = m.slice(0,3).map(Number).map(v => { v/=255; return v <= .03928 ? v/12.92 : Math.pow((v+.055)/1.055, 2.4); });
+            return .2126*f[0] + .7152*f[1] + .0722*f[2];
+          };
+          const bgOf = (el) => {
+            let n = el;
+            while (n && n !== document.documentElement) {
+              const bg = getComputedStyle(n).backgroundColor;
+              const m = bg.match(/[\\d.]+/g);
+              if (m && (m.length < 4 || Number(m[3]) > 0.05)) return bg;
+              n = n.parentElement;
+            }
+            return 'rgb(255,255,255)';
+          };
+          const out = [];
+          sels.forEach((s) => {
+            const el = document.querySelector(s);
+            if (!el) return;
+            const cs = getComputedStyle(el);
+            const fg = cs.color, bg = bgOf(el);
+            const l1 = lum(fg), l2 = lum(bg);
+            let ratio = null;
+            if (l1 !== null && l2 !== null) {
+              const hi = Math.max(l1,l2), lo = Math.min(l1,l2);
+              ratio = Math.round(((hi + .05) / (lo + .05)) * 100) / 100;
+            }
+            out.push({ sel: s, fg: fg, bg: bg, ratio: ratio, fail: ratio !== null && ratio < 4.5 });
+          });
+          return JSON.stringify(out);
+        })()`);
+        console.log('CONTRAST', url, r);
+        continue;
+      }
+      // shots=<name>:<url>  captures PNGs at the widths that matter. Overflow numbers do not tell
+      // you a layout is UGLY - squeezed columns, a sidebar that should have dropped, a sliced
+      // board - so look at it.
+      if (p.startsWith('shots=')) {
+        const rest = p.slice('shots='.length);
+        const cut = rest.indexOf(':http');
+        const name = rest.slice(0, cut);
+        const url = rest.slice(cut + 1);
+        const widths = [1310, 1024, 768, 390];
+        await goto(url, 9000);
+        for (const w of widths) {
+          await cdp.call('Emulation.setDeviceMetricsOverride',
+            { width: w, height: 1000, deviceScaleFactor: 1, mobile: w <= 480 });
+          await sleep(1600);
+          const shot = await cdp.call('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
+          const file = path.join(OUT, `${name}-${w}.png`);
+          fs.writeFileSync(file, Buffer.from(shot.data, 'base64'));
+          console.log('SHOT    ', file);
+        }
+        await cdp.call('Emulation.clearDeviceMetricsOverride');
+        continue;
+      }
+      // resp=<url>  responsive audit: renders the page at several widths and reports what
+      // overflows. "Overflow" here means an element whose right edge is past the viewport, or a
+      // clipped (non-scrollable) box wider than its own content box — i.e. content the user
+      // cannot reach. Elements that opt into overflow-x:auto/scroll are reported separately as
+      // intentional, because a horizontally scrolled kanban is a design, not a bug.
+      if (p.startsWith('resp=')) {
+        const target = p.slice('resp='.length);
+        const widths = [1440, 1280, 1024, 820, 768, 480, 390];
+        await goto(/^https?:\/\//i.test(target) ? target : baseUrl + target, 9000);
+        for (const w of widths) {
+          await cdp.call('Emulation.setDeviceMetricsOverride',
+            { width: w, height: 900, deviceScaleFactor: 1, mobile: w <= 480 });
+          await sleep(1400);
+          const r = await ev(`(() => {
+            const vw = window.innerWidth;
+            const doc = document.documentElement;
+            const bad = [], scrollers = [];
+            const seen = new Set();
+            document.querySelectorAll('.mfb *, .mfba *, .mfb, .mfba').forEach((el) => {
+              const cs = getComputedStyle(el);
+              if (cs.display === 'none' || cs.visibility === 'hidden') return;
+              const rect = el.getBoundingClientRect();
+              if (rect.width === 0 && rect.height === 0) return;
+              const key = el.tagName + '.' + (typeof el.className === 'string' ? el.className : '');
+              const scrollable = /(auto|scroll)/.test(cs.overflowX);
+              if (scrollable && el.scrollWidth > el.clientWidth + 2) {
+                if (!seen.has('S' + key)) { seen.add('S' + key); scrollers.push(key.slice(0, 70)); }
+                return;
+              }
+              // clipped content the user cannot reach
+              if (!scrollable && el.scrollWidth > el.clientWidth + 2 && cs.overflowX === 'hidden') {
+                if (!seen.has('C' + key)) { seen.add('C' + key); bad.push('CLIPPED ' + key.slice(0, 62)); }
+                return;
+              }
+              // sticking out past the viewport
+              if (rect.right > vw + 1 && rect.width <= vw * 3) {
+                if (!seen.has('O' + key)) {
+                  seen.add('O' + key);
+                  bad.push('PAST-VIEWPORT +' + Math.round(rect.right - vw) + 'px ' + key.slice(0, 52));
+                }
+              }
+            });
+            return JSON.stringify({
+              vw: vw,
+              docScroll: doc.scrollWidth - doc.clientWidth,
+              bodyScroll: document.body.scrollWidth - vw,
+              offenders: bad.slice(0, 12),
+              intentionalScrollers: scrollers.slice(0, 6)
+            });
+          })()`);
+          console.log('RESP ' + String(w).padStart(5) + 'px ', r);
+        }
+        await cdp.call('Emulation.clearDeviceMetricsOverride');
+        continue;
+      }
       // fs=<path>  loads a console page and CLICKS the windowed/fullscreen toggle, reporting the
       // surface state before/after and whether host chrome was made inert. Verifying the mode
       // control by clicking it is the point; reading the CSS proves nothing.

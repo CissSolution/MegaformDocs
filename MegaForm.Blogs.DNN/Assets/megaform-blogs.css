@@ -58,3 +58,20 @@
 .mfb-layout-compact .mfb-card-image,.mfb-layout-compact .mfb-card p{display:none}
 .mfb-layout-compact .mfb-card{flex-direction:row}
 .mfb-layout-magazine .mfb-grid{grid-template-columns:repeat(auto-fit,minmax(min(20rem,100%),1fr))}
+
+/* ============================================================================
+   [MFB-THEMEBLEED-20260730] host-theme colour guard for headings.
+
+   Every heading rule in this sheet sets margin/size but no `color`, so headings
+   take their colour by INHERITANCE from `.mfb`. An inherited value has no
+   specificity, so it loses to ANY matching rule — and Oqtane themes ship bare
+   `h1..h6 { color: … }`. It only looks fine on a light theme by luck; on the stock
+   dark theme those headings go white on the white `.mfb-card` and vanish. This is
+   the exact failure that was measured on the admin console (contrast 1.00).
+
+   `.mfb :where(h1)` is specificity (0,1,0): it beats the theme's (0,0,1) element
+   rule, and `:where()` keeps it weak enough that this sheet's own component rules
+   still win. `p` and `small` are deliberately excluded — they carry `.mfb-muted`
+   (also (0,1,0)), and blanketing them would flatten intentional muted text.
+   ============================================================================ */
+.mfb :where(h1,h2,h3,h4,h5,h6,time,figcaption,blockquote,li,th,td,label){color:inherit}
