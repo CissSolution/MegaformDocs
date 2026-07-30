@@ -548,3 +548,59 @@
 .mfba-note-ok strong { color: #027a48; }
 
 .mfba-newpost-actions { display: flex; gap: 10px; margin-top: 12px; }
+
+/* ============================================================================
+   [MFBA-SURFACE-20260730] Windowed ⇄ fullscreen surface for the editorial console.
+
+   These are MegaForm's OWN class names and values, reused verbatim rather than
+   forked, so one toggle drives both products and the z-index ladder stays
+   consistent. Source of truth: MegaForm.Oqtane.Client/Index.razor:390-410 and
+   MegaForm.UI/src/shared/platform-host.ts:593+.
+
+   The two numbers that matter, and why:
+     .mf-oq-surface.is-fs   z-index 10000       — Oqtane renders a module's
+         Edit-action control inside `.app-admin-modal > .modal` at
+         `position:fixed; z-index:9999`. 10000 is deliberately ONE ABOVE it, so
+         Fullscreen lifts the console out of that dialog. Do not "tidy" either value.
+     .mf-fs-toggle.mf-fs-floating  z-index 2147483600 — the mode control must stay
+         reachable above a fullscreen surface AND above the host modal.
+
+   Duplicate declarations are harmless when the MegaForm module is on the same page:
+   the values are identical. Blog-specific styling is scoped with the extra
+   .mfba-surface class so it wins on specificity regardless of link order, instead
+   of fighting MegaForm's sheet.
+
+   NOTE: the DNN twin has no .mf-oq-surface yet, so these rules are inert there.
+   Appended at end-of-file: at equal specificity, source order wins.
+   ============================================================================ */
+
+.mf-oq-surface { background: #f8fafc; }
+.mf-oq-surface.is-fs { position: fixed; inset: 0; z-index: 10000; overflow: auto; }
+
+/* Inline (windowed) is the DEFAULT: the console sits in the module pane so the Oqtane
+   page keeps a normal CMS layout. isolation:isolate gives host-theme immunity without
+   `contain:layout`, which would trap position:fixed descendants (a documented MegaForm
+   regression - popups rendered in-flow at the bottom of the page). */
+.mf-oq-surface.is-inline { position: relative; width: 100%; overflow-x: auto;
+  isolation: isolate; min-height: 60vh; }
+
+/* Blog console palette, higher specificity than MegaForm's generic surface background. */
+.mf-oq-surface.mfba-surface { background: var(--mfba-bg, #f5f4f1); }
+.mf-oq-surface.mfba-surface.is-fs { padding: 18px clamp(12px, 3vw, 32px) 40px; }
+.mf-oq-surface.mfba-surface.is-inline > .mfba { margin: 0; }
+
+/* Fullscreen console gets the page's own scroll, so the inner board is never double-scrolled. */
+.mf-oq-surface.mfba-surface.is-fs > .mfba { max-width: 1220px; margin: 0 auto; }
+
+.mf-fs-toggle { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #cbd5e1;
+  background: #fff; color: #334155; padding: 7px 11px; border-radius: 9px; font-family: inherit;
+  font-size: 13px; font-weight: 600; cursor: pointer; transition: .15s; white-space: nowrap; }
+.mf-fs-toggle:hover { background: #0f172a; color: #fff; border-color: #0f172a; }
+.mf-fs-toggle svg { width: 14px; height: 14px; flex-shrink: 0; }
+.mf-fs-toggle.mf-fs-floating { position: fixed; right: 16px; bottom: 16px; top: auto;
+  z-index: 2147483600; box-shadow: 0 6px 20px rgba(15, 23, 42, .28); }
+[dir="rtl"] .mf-fs-toggle.mf-fs-floating { right: auto; left: 16px; }
+html.mf-host-editmode .mf-fs-toggle.mf-fs-floating { border-color: #6366f1; color: #4338ca;
+  box-shadow: 0 8px 24px rgba(99, 102, 241, .45); }
+html.mf-host-editmode .mf-fs-toggle.mf-fs-floating:hover { background: #6366f1; color: #fff;
+  border-color: #6366f1; }

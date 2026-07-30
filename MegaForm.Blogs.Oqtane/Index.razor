@@ -12,7 +12,23 @@
 
    Data contract: IMegaFormClient only. No DataJson parsing, no direct database access. *@
 
-<link rel="stylesheet" href="/Modules/MegaFormBlogs/megaform-blogs.css?v=20260730b" />
+@if (_config.IsConsole)
+{
+    @* The editorial console as a PAGE, not a popup. This is the intended way to run it: the
+       console sits in the module pane like any other module, and ConsoleShell gives it the
+       windowed/fullscreen surface. Its tabs stay on THIS page's URL, so nothing ever navigates
+       into Oqtane's admin dialog. *@
+    <ConsoleShell Scope="_scope"
+                  ConsoleBaseUrl="@BaseUrl"
+                  BlogUrl="@BaseUrl"
+                  AppKey="@_config.AppKey"
+                  IsNews="_config.IsNews"
+                  Allowed="_consoleAllowed"
+                  View="@_consoleView" />
+}
+else
+{
+<link rel="stylesheet" href="/Modules/MegaFormBlogs/megaform-blogs.css?v=20260730c" />
 
 <main class="@_config.WrapperClass()" aria-labelledby="mfb-title">
     @if (_loadError != null)
@@ -29,41 +45,6 @@
     else if (_app == null)
     {
         <section class="mfb-state">The Blog Publishing app has not been installed for this site.</section>
-    }
-    else if (_config.IsConsole)
-    {
-        @* ---- console: the editorial/newsroom admin surface on a page -------------------- *@
-        if (!_consoleAllowed)
-        {
-            <section class="mfb-state">
-                <strong>Editorial access required.</strong>
-                <span>Sign in with an editorial role to manage @(_config.IsNews ? "news" : "posts").</span>
-            </section>
-        }
-        else
-        {
-            <div class="mfb-console-launch">
-                @* The module's Edit action is always interactive, even when the site renders
-                   statically, so keep a way through to it next to the inline console. *@
-                <a class="mfb-btn" href="@ConsoleUrl(_consoleView)">Open the full console ↗</a>
-            </div>
-            @if (_consoleView == "editorial")
-            {
-                <AdminEditorial Scope="_scope" AdminBaseUrl="@ConsoleUrl("editorial")" AppKey="@_config.AppKey" />
-            }
-            else if (_consoleView == "comments")
-            {
-                <AdminComments Scope="_scope" AdminBaseUrl="@ConsoleUrl("comments")" BlogUrl="@BaseUrl" AppKey="@_config.AppKey" />
-            }
-            else if (_consoleView == "new")
-            {
-                <AdminNewPost Scope="_scope" AdminBaseUrl="@ConsoleUrl("dashboard")" AppKey="@_config.AppKey" IsNews="@_config.IsNews" />
-            }
-            else
-            {
-                <AdminDashboard Scope="_scope" AdminBaseUrl="@ConsoleUrl("dashboard")" BlogUrl="@BaseUrl" AppKey="@_config.AppKey" />
-            }
-        }
     }
     else if (_notFound)
     {
@@ -317,6 +298,7 @@
         }
     }
 </main>
+}
 
 @code {
     private static readonly string[] ConsoleRolesFallback =
@@ -573,9 +555,6 @@
         => _config.AllowUrlFilter && !string.IsNullOrWhiteSpace(author)
             ? BaseUrl + "?author=" + Uri.EscapeDataString(author)
             : BaseUrl;
-
-    private string ConsoleUrl(string view)
-        => EditUrl("Edit") + "?view=" + Uri.EscapeDataString(view ?? "dashboard");
 
     private static string FilterQueryKey(string field)
     {

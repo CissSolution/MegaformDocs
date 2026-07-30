@@ -67,6 +67,36 @@ const PROBE = `(() => {
     paneModules: Array.from(document.querySelectorAll('[id^=app-module-]')).map(e=>e.id),
     bodyHasBlogWord: (document.body.innerText||'').indexOf('MegaForm Blogs') >= 0,
     found: findText ? ((document.body.innerText||'').indexOf(findText) >= 0) : null,
+    // Windowed/fullscreen surface state + whether Oqtane put us in its admin modal.
+    surfaceClass: (q('.mf-oq-surface') || {}).className || null,
+    hasFsToggle: !!q('body > .mf-fs-toggle'),
+    fsToggleLabel: ((q('body > .mf-fs-toggle') || {}).innerText || '').trim() || null,
+    inAdminModal: !!(q('.mfba') && q('.mfba').closest('.app-admin-modal')),
+    adminModalPresent: !!q('.app-admin-modal'),
+    adminCssLoaded: Array.from(document.querySelectorAll('link[rel=stylesheet]'))
+      .some(l => (l.getAttribute('href')||'').indexOf('megaform-blogs-admin.css') >= 0),
+    // Ancestor chain of the console/public root, with position+z-index. This is how you find
+    // out WHO is putting a module control inside a modal.
+    ancestors: (() => {
+      const el = q('.mfba') || q('.mfb');
+      if (!el) return null;
+      const chain = [];
+      let n = el;
+      while (n && n !== document.documentElement) {
+        const cs = getComputedStyle(n);
+        chain.push({
+          tag: n.tagName.toLowerCase(),
+          id: n.id || null,
+          cls: (typeof n.className === 'string' ? n.className : '').slice(0, 90) || null,
+          pos: cs.position,
+          z: cs.zIndex,
+          disp: cs.display,
+          role: n.getAttribute && n.getAttribute('role')
+        });
+        n = n.parentElement;
+      }
+      return chain;
+    })(),
     foundInColumn: (() => {
       if (!findText) return null;
       const cols = Array.from(document.querySelectorAll('.mfba [class*="col"]'));
@@ -170,6 +200,34 @@ async function main() {
         console.log('SETTINGS', p, '->', set, saved);
         continue;
       }
+      // fs=<path>  loads a console page and CLICKS the windowed/fullscreen toggle, reporting the
+      // surface state before/after and whether host chrome was made inert. Verifying the mode
+      // control by clicking it is the point; reading the CSS proves nothing.
+      if (p.startsWith('fs=')) {
+        const target = p.slice('fs='.length);
+        await goto(/^https?:\/\//i.test(target) ? target : baseUrl + target, 9000);
+        for (let i = 0; i < 40; i++) { if (await ev("!!document.querySelector('body > .mf-fs-toggle')")) break; await sleep(700); }
+        const report = await ev(`(() => {
+          const surf = () => document.querySelector('.mf-oq-surface');
+          const btn = document.querySelector('body > .mf-fs-toggle');
+          if (!btn) return JSON.stringify({ error: 'no-toggle' });
+          const snap = (tag) => {
+            const s = surf();
+            const cs = s ? getComputedStyle(s) : null;
+            return { tag, cls: s ? s.className : null, pos: cs ? cs.position : null,
+                     z: cs ? cs.zIndex : null, label: (btn.innerText||'').trim(),
+                     inerted: document.querySelectorAll('[data-mf-inerted="1"]').length };
+          };
+          const before = snap('before');
+          btn.click();
+          const after = snap('afterClick');
+          btn.click();
+          const back = snap('afterSecondClick');
+          return JSON.stringify({ before, after, back });
+        })()`);
+        console.log('FS      ', target, report);
+        continue;
+      }
       // create-post=<title>|<category>|<status>  authors a real post through the console's
       // New-post screen, i.e. through Submissions.SubmitAsync, and reports what came back.
       if (p.startsWith('create-post=')) {
@@ -219,7 +277,11 @@ async function main() {
         console.log('CREATE   click:', clicked, '=>', result);
         continue;
       }
-      await goto(baseUrl + p, 8000);
+      // Accept an absolute URL as well as a path. Git Bash rewrites a bare "/new-admin"
+      // argument into "C:/Program Files/Git/new-admin" (MSYS path conversion), so passing the
+      // full http:// URL is the reliable way to reach a root-level page from a shell.
+      const target = /^https?:\/\//i.test(p) ? p : baseUrl + p;
+      await goto(target, 8000);
       console.log('HOST ', p.padEnd(18), await ev(PROBE));
     }
     cdp.close();

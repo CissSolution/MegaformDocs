@@ -1,0 +1,118 @@
+@namespace MegaForm.Blogs.Client
+
+@* MegaForm Blogs - the editorial console shell, shared by both entry points.
+
+   ONE console, rendered INLINE. Two hosts render it:
+     - Index.razor  when the instance's View is "admin console": the console sits in the page
+       pane like any other module. This is the intended way to run it.
+     - Edit.razor   the module's Edit action, which Oqtane always wraps in
+       `.app-admin-modal > .modal` (position:fixed; z-index:9999). We cannot stop Oqtane doing
+       that, so instead the surface can be lifted OUT of the dialog with Fullscreen
+       (.mf-oq-surface.is-fs is z-index:10000, one above it).
+
+   The surface adopts MegaForm's existing contract verbatim (.mf-oq-surface + is-inline/is-fs)
+   so a single toggle drives both products - see megaform-blogs-fs.js. Windowed is the default;
+   the choice is remembered per browser.
+
+   ConsoleBaseUrl is what the view tabs link to, and it differs per host: the page URL when
+   inline, the Edit-action URL inside the dialog. Everything else is identical. *@
+
+<link rel="stylesheet" href="/Modules/MegaFormBlogs/megaform-blogs-admin.css?v=20260730c" />
+
+<div class="mf-oq-surface is-inline mfba-surface" data-mfba-surface="1">
+    <div class="mfba @(View == "comments" ? "mfba-comments-page" : "")">
+        @if (!Allowed)
+        {
+            <header class="mfba-head">
+                <div class="mfba-head-row">
+                    <div>
+                        <h1>Editorial access required</h1>
+                        <p>Sign in as an Administrator, Host, or a Blog role to manage @(IsNews ? "news" : "posts").</p>
+                    </div>
+                </div>
+            </header>
+        }
+        else
+        {
+            <header class="mfba-head">
+                <nav class="mfba-crumb" aria-label="Breadcrumb">
+                    <a href="@BlogUrl">@(IsNews ? "News" : "Blog")</a>@BlogData.Icon("chevron-right", "mfba-icon mfba-icon-md")
+                    <strong>@ScreenTitle</strong>
+                </nav>
+                <div class="mfba-head-row">
+                    <div>
+                        <h1>@ScreenTitle</h1>
+                        <p>@ScreenSubtitle</p>
+                    </div>
+                    <div class="mfba-head-actions">
+                        <a class="mfba-btn-outline @(View == "dashboard" ? "on" : "")" href="@ViewUrl("dashboard")">@BlogData.Icon("bar-chart", "mfba-icon mfba-icon-md") Dashboard</a>
+                        <a class="mfba-btn-outline @(View == "editorial" ? "on" : "")" href="@ViewUrl("editorial")">@BlogData.Icon("layout", "mfba-icon mfba-icon-md") Editorial</a>
+                        <a class="mfba-btn-outline @(View == "comments" ? "on" : "")" href="@ViewUrl("comments")">@BlogData.Icon("message-circle", "mfba-icon mfba-icon-md") Comments</a>
+                        <a class="mfba-btn @(View == "new" ? "on" : "")" href="@ViewUrl("new")">@BlogData.Icon("plus", "mfba-icon mfba-icon-md") New @(IsNews ? "article" : "post")</a>
+                    </div>
+                </div>
+            </header>
+
+            @if (View == "editorial")
+            {
+                <AdminEditorial Scope="Scope" AdminBaseUrl="@ConsoleBaseUrl" AppKey="@AppKey" />
+            }
+            else if (View == "comments")
+            {
+                <AdminComments Scope="Scope" AdminBaseUrl="@ConsoleBaseUrl" BlogUrl="@BlogUrl" AppKey="@AppKey" />
+            }
+            else if (View == "new")
+            {
+                <AdminNewPost Scope="Scope" AdminBaseUrl="@ConsoleBaseUrl" AppKey="@AppKey" IsNews="IsNews" />
+            }
+            else
+            {
+                <AdminDashboard Scope="Scope" AdminBaseUrl="@ConsoleBaseUrl" BlogUrl="@BlogUrl" AppKey="@AppKey" />
+            }
+        }
+    </div>
+</div>
+
+@* Mounts the windowed/fullscreen toast on <body>. Self-guarding: it no-ops when MegaForm's
+   own platform-host bundle has already installed the identical toggle on this page. *@
+<script src="/Modules/MegaFormBlogs/megaform-blogs-fs.js?v=20260730c"></script>
+
+@code {
+    [Parameter] public MegaFormScope Scope { get; set; }
+
+    /// <summary>Where the view tabs point: the page URL when inline, the Edit URL in the dialog.</summary>
+    [Parameter] public string ConsoleBaseUrl { get; set; } = "";
+
+    /// <summary>The public blog/news page, for the breadcrumb.</summary>
+    [Parameter] public string BlogUrl { get; set; } = "";
+
+    [Parameter] public string AppKey { get; set; } = BlogData.AppKey;
+    [Parameter] public bool IsNews { get; set; }
+    [Parameter] public bool Allowed { get; set; }
+
+    /// <summary>dashboard | editorial | comments | new — already whitelisted by the host.</summary>
+    [Parameter] public string View { get; set; } = "dashboard";
+
+    private string ScreenTitle => View == "editorial" ? "Editorial Kanban"
+        : View == "comments" ? "Comments Moderation"
+        : View == "new" ? ("New " + (IsNews ? "Article" : "Post"))
+        : "Admin Dashboard";
+
+    private string ScreenSubtitle => View == "editorial"
+        ? "Move posts between columns to update the typed status"
+        : View == "comments" ? "Review and moderate user comments"
+        : View == "new" ? "Write a draft and let the editorial board take it from there"
+        : (IsNews ? "Overview of newsroom output and the content pipeline"
+                  : "Overview of your blog performance and content pipeline");
+
+    /// <summary>
+    /// Append ?view= to whatever base this host gave us, preserving an existing query string
+    /// (a page URL can already carry one, the Edit URL does not).
+    /// </summary>
+    private string ViewUrl(string view)
+    {
+        var url = ConsoleBaseUrl ?? "";
+        var separator = url.IndexOf('?') >= 0 ? "&" : "?";
+        return url + separator + "view=" + view;
+    }
+}

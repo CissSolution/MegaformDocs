@@ -1,65 +1,29 @@
 @namespace MegaForm.Blogs.Client
 @inherits ModuleBase
-@inject MegaForm.Sdk.IMegaFormClient Mega
 @inject NavigationManager Nav
 
-@* MegaForm Blogs - Oqtane editorial console shell (twin of MegaFormBlogsAdminHost.cshtml).
-   Routes between the three admin screens and enforces the role gate independently of the
-   Oqtane page permission, so a page grant alone never exposes the console. *@
+@* MegaForm Blogs - the module's Edit action.
 
-<link rel="stylesheet" href="/Modules/MegaFormBlogs/megaform-blogs-admin.css?v=20260730b" />
+   Oqtane renders every module action control inside `.app-admin-modal > .modal`
+   (position:fixed; z-index:9999) — a popup. An editorial console is not popup work, so:
 
-<div class="mfba @(_view == "comments" ? "mfba-comments-page" : "")">
-    @if (!_allowed)
-    {
-        <header class="mfba-head">
-            <div class="mfba-head-row">
-                <div>
-                    <h1>Editorial access required</h1>
-                    <p>Sign in as an Administrator, Host, or a Blog role to manage posts.</p>
-                </div>
-            </div>
-        </header>
-    }
-    else
-    {
-        <header class="mfba-head">
-            <nav class="mfba-crumb" aria-label="Breadcrumb">
-                <a href="@BlogUrl">Blog</a>@BlogData.Icon("chevron-right", "mfba-icon mfba-icon-md")
-                <strong>@ScreenTitle</strong>
-            </nav>
-            <div class="mfba-head-row">
-                <div>
-                    <h1>@ScreenTitle</h1>
-                    <p>@ScreenSubtitle</p>
-                </div>
-                <div class="mfba-head-actions">
-                    <a class="mfba-btn-outline @(_view == "dashboard" ? "on" : "")" href="@ViewUrl("dashboard")">@BlogData.Icon("bar-chart", "mfba-icon mfba-icon-md") Dashboard</a>
-                    <a class="mfba-btn-outline @(_view == "editorial" ? "on" : "")" href="@ViewUrl("editorial")">@BlogData.Icon("layout", "mfba-icon mfba-icon-md") Editorial</a>
-                    <a class="mfba-btn-outline @(_view == "comments" ? "on" : "")" href="@ViewUrl("comments")">@BlogData.Icon("message-circle", "mfba-icon mfba-icon-md") Comments</a>
-                    <a class="mfba-btn @(_view == "new" ? "on" : "")" href="@ViewUrl("new")">@BlogData.Icon("plus", "mfba-icon mfba-icon-md") New @(_config.IsNews ? "article" : "post")</a>
-                </div>
-            </div>
-        </header>
+     - the preferred way to run the console is INLINE: give the instance the
+       "admin console" View in Module Settings and it renders in the page pane
+       (Index.razor). That path has no dialog at all.
+     - this route still works, and ConsoleShell's surface can be lifted out of the
+       dialog with the Fullscreen toggle (.mf-oq-surface.is-fs is z-index:10000).
 
-        @if (_view == "editorial")
-        {
-            <AdminEditorial Scope="_scope" AdminBaseUrl="@AdminBaseUrl" AppKey="@_config.AppKey" />
-        }
-        else if (_view == "comments")
-        {
-            <AdminComments Scope="_scope" AdminBaseUrl="@AdminBaseUrl" BlogUrl="@BlogUrl" AppKey="@_config.AppKey" />
-        }
-        else if (_view == "new")
-        {
-            <AdminNewPost Scope="_scope" AdminBaseUrl="@AdminBaseUrl" AppKey="@_config.AppKey" IsNews="@_config.IsNews" />
-        }
-        else
-        {
-            <AdminDashboard Scope="_scope" AdminBaseUrl="@AdminBaseUrl" BlogUrl="@BlogUrl" AppKey="@_config.AppKey" />
-        }
-    }
-</div>
+   All the markup lives in ConsoleShell so the two hosts cannot drift. The role gate is
+   enforced here, independently of the Oqtane page permission, so a page grant alone
+   never exposes the console. *@
+
+<ConsoleShell Scope="_scope"
+              ConsoleBaseUrl="@AdminBaseUrl"
+              BlogUrl="@BlogUrl"
+              AppKey="@_config.AppKey"
+              IsNews="_config.IsNews"
+              Allowed="_allowed"
+              View="@_view" />
 
 @code {
     private static readonly string[] BlogRoles =
@@ -75,28 +39,27 @@
 
     public override string Title => "Blog editorial console";
 
-    // AdminBaseUrl must stay INSIDE the console (the module's Edit action), otherwise every
-    // nav link lands on the public page where .mfba does not exist and the console looks dead.
-    // EditUrl(action) is the same idiom MegaForm's own module uses (Oqtane.Client/Index.razor:2786).
+    // ⭐ THIS is what stops the popup. Oqtane.UI.ContainerBuilder.OnParametersSet swaps the
+    // theme's container for Oqtane.Themes.AdminContainer — which renders
+    // `.app-admin-modal > .modal[role=dialog]` at position:fixed; z-index:9999 — whenever
+    //     PageState.ModuleId != -1 && PageState.Route.Action != "" && ModuleState.UseAdminContainer
+    // ModuleBase declares `public virtual bool UseAdminContainer => true`, so every action
+    // control gets the dialog by default. Overriding it to false keeps the normal theme
+    // container, so the console renders INLINE in the pane on this route too.
+    // (Verified against the decompiled Oqtane.Client 10.1.0 assembly.)
+    public override bool UseAdminContainer => false;
+
+    // Inside the dialog the tabs must stay on the Edit action, or a click would drop the user
+    // onto the public page. EditUrl(action) is the idiom MegaForm's own module uses
+    // (Oqtane.Client/Index.razor:2786).
     private string AdminBaseUrl => EditUrl("Edit");
     private string BlogUrl => NavigateUrl(PageState.Page.Path);
-
-    private string ScreenTitle => _view == "editorial" ? "Editorial Kanban"
-        : _view == "comments" ? "Comments Moderation"
-        : _view == "new" ? ("New " + (_config.IsNews ? "Article" : "Post"))
-        : "Admin Dashboard";
-
-    private string ScreenSubtitle => _view == "editorial"
-        ? "Move posts between columns to update the typed status"
-        : _view == "comments" ? "Review and moderate user comments"
-        : _view == "new" ? "Write a draft and let the editorial board take it from there"
-        : "Overview of your blog performance and content pipeline";
 
     protected override void OnParametersSet()
     {
         _config = BlogInstanceConfig.Read(ModuleState?.Settings);
 
-        _view = ReadQuery("view").Trim().ToLowerInvariant();
+        _view = BlogUrlState.Read(Nav?.Uri ?? "", "view", 32).ToLowerInvariant();
         if (!BlogInstanceConfig.ConsoleRoutes.Contains(_view)) _view = _config.ConsoleView;
 
         var user = PageState?.User;
@@ -128,20 +91,4 @@
     private static List<string> SplitRoles(string roles)
         => (roles ?? "").Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
             .Select(r => r.Trim()).Where(r => r.Length > 0).ToList();
-
-    private string ViewUrl(string view) => AdminBaseUrl + "?view=" + view;
-
-    private string ReadQuery(string key)
-    {
-        var uri = Nav?.Uri ?? "";
-        var index = uri.IndexOf('?');
-        if (index < 0) return "";
-        foreach (var part in uri.Substring(index + 1).Split(new[] { '&' }, StringSplitOptions.RemoveEmptyEntries))
-        {
-            var pair = part.Split(new[] { '=' }, 2);
-            if (pair.Length == 2 && pair[0].Equals(key, StringComparison.OrdinalIgnoreCase))
-                return Uri.UnescapeDataString(pair[1]).Trim().ToLowerInvariant();
-        }
-        return "";
-    }
 }
