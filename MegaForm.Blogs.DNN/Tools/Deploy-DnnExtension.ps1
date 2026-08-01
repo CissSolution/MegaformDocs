@@ -9,6 +9,9 @@ param(
     [Parameter(Mandatory)]
     [string[]]$PackagePath,
 
+    # Page to land on after login. Only needs to be a page that exists; defaults to the site root.
+    [string]$ReturnPath,
+
     [switch]$Install
 )
 
@@ -120,8 +123,12 @@ function Invoke-PackageUpload {
 }
 
 $baseUrl = $SiteUrl.AbsoluteUri.TrimEnd('/') + '/'
-$loginUrl = $baseUrl + 'Login?returnurl=%2fBlogs'
-$blogsUrl = $baseUrl + 'Blogs'
+# The landing page after login was hardcoded to /Blogs, which 404s on any site that does not
+# happen to have that page — a clean DNN, for instance. -ReturnPath makes it the caller's choice
+# and defaults to the site root, which every site has.
+$returnPath = if ($ReturnPath) { $ReturnPath.TrimStart('/') } else { '' }
+$loginUrl = $baseUrl + 'Login?returnurl=' + [uri]::EscapeDataString('/' + $returnPath)
+$blogsUrl = $baseUrl + $returnPath
 
 $handler = [Net.Http.HttpClientHandler]::new()
 $handler.AllowAutoRedirect = $true
