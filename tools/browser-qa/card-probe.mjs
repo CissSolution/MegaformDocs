@@ -120,7 +120,12 @@ async function main() {
     `--user-data-dir=${path.join(outDir, '.p')}`, `--window-size=${width},1200`, '--hide-scrollbars',
     '--disable-features=DnsOverHttps'
   ];
-  if (hostMap) args.push(`--host-resolver-rules=MAP ${hostMap} 127.0.0.1`);
+  // Comma-separated hosts become one rule EACH: "MAP a,b 127.0.0.1" is not valid syntax and
+  // Chrome silently drops the whole switch, so the second host fails to resolve.
+  if (hostMap) {
+    const rules = hostMap.split(',').map((h) => `MAP ${h.trim()} 127.0.0.1`).join(', ');
+    args.push(`--host-resolver-rules=${rules}`);
+  }
   args.push('about:blank');
   const chrome = spawn(CHROME, args, { stdio: 'ignore' });
 

@@ -1,0 +1,67 @@
+{
+  "version": "1.0",
+  "slug": "docs-reader-events",
+  "title": "Docs Reader Events",
+  "description": "One submission per page view of the DocFX documentation site. Written by the beacon in tools/docs-analytics/main.js. Four fields on purpose: every field costs index/typed/field rows, so the shape is kept as small as it can be and still answer 'which page, how many people, where from'.",
+  "category": "general",
+  "categories": ["general", "analytics"],
+  "icon": "bar-chart",
+  "submitButtonText": "Record",
+  "successMessage": "Recorded.",
+  "fields": [
+    {
+      "key": "page_path",
+      "type": "Text",
+      "label": "Page path",
+      "required": true,
+      "placeholder": "/articles/quickstart.html",
+      "helpText": "Pathname only — never the query string, which can carry personal data.",
+      "defaultValue": "", "cssClass": "", "width": "100%", "readOnly": false,
+      "prefillParam": "", "validation": {}, "options": [], "showIf": null,
+      "htmlContent": "", "fileSettings": null, "properties": {}
+    },
+    {
+      "key": "visitor_key",
+      "type": "Text",
+      "label": "Visitor key",
+      "required": false,
+      "placeholder": "random id from localStorage",
+      "helpText": "A random id the browser generates and keeps. Not an IP, not a fingerprint — and a bot that does not run JS never gets one, which is a better filter than a user-agent blocklist.",
+      "defaultValue": "", "cssClass": "", "width": "100%", "readOnly": false,
+      "prefillParam": "", "validation": {}, "options": [], "showIf": null,
+      "htmlContent": "", "fileSettings": null, "properties": {}
+    },
+    {
+      "key": "referrer",
+      "type": "Text",
+      "label": "Referrer",
+      "required": false,
+      "placeholder": "https://www.google.com/",
+      "helpText": "Origin only, not the full referring URL.",
+      "defaultValue": "", "cssClass": "", "width": "100%", "readOnly": false,
+      "prefillParam": "", "validation": {}, "options": [], "showIf": null,
+      "htmlContent": "", "fileSettings": null, "properties": {}
+    },
+    {
+      "key": "event_type",
+      "type": "Text",
+      "label": "Event type",
+      "required": false,
+      "defaultValue": "view",
+      "helpText": "view today; leaves room for search or download later without a second form.",
+      "placeholder": "view", "cssClass": "", "width": "100%", "readOnly": false,
+      "prefillParam": "", "validation": {}, "options": [], "showIf": null,
+      "htmlContent": "", "fileSettings": null, "properties": {}
+    }
+  ],
+  "settings": {
+    "multiPage": false,
+    "customContent": {},
+    "customScripts": {},
+    "customHtml": "",
+    "customCss": "",
+    "themeSelector": { "enabled": false }
+  },
+  "rules": [],
+  "workflow": { "notifications": [] }
+}
