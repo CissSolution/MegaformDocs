@@ -56,7 +56,13 @@
             var stats = ViewModel.Stats.ContainsKey(form.FormId) ? ViewModel.Stats[form.FormId] : null;
             var fieldCount = 0;
             try {
-                var schema = Newtonsoft.Json.JsonConvert.DeserializeObject<MegaForm.Models.FormSchema>(form.SchemaJson ?? "{}");
+                // [FormListCompileFix v20260801] Was MegaForm.Models.FormSchema - a namespace that
+                // has never existed in this solution (the type lives in MegaForm.Core.Models).
+                // An .ascx compiles at RUNTIME, so the whole control threw CS0234 the moment anyone
+                // opened ctl=FormList - and nobody did until the Persona Bar started linking here.
+                // The page still answers 200, with the compile error rendered inside the module
+                // container, so an HTTP check alone reports success.
+                var schema = Newtonsoft.Json.JsonConvert.DeserializeObject<MegaForm.Core.Models.FormSchema>(form.SchemaJson ?? "{}");
                 if (schema?.Fields != null) fieldCount = schema.Fields.Count;
             } catch { }
             var isPublished = form.Status == "Published";

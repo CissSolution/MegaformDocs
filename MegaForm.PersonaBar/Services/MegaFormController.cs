@@ -75,7 +75,7 @@ namespace MegaForm.PersonaBar.Services
                     submissions = summary.Submissions,
                     lastSubmissionUtc = summary.LastSubmissionUtc,
                     hasHostPage = host != null,
-                    dashboardUrl = MegaFormHostPageResolver.BuildPageUrl(host),
+                    dashboardUrl = MegaFormHostPageResolver.BuildDashboardUrl(host),
                     newFormUrl = MegaFormHostPageResolver.BuildControlUrl(host, "Edit", 0),
                     maxPageSize = MaxPageSize
                 });

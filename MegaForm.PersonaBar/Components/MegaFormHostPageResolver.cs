@@ -20,6 +20,13 @@ namespace MegaForm.PersonaBar.Components
     {
         public int TabId { get; set; }
         public int ModuleId { get; set; }
+
+        /// <summary>
+        /// True when this instance is configured as the admin dashboard surface
+        /// (MegaForm_ModuleMode = admin_dashboard). Decides whether landing on the plain
+        /// page URL shows a dashboard or an unconfigured form - see BuildDashboardUrl.
+        /// </summary>
+        public bool IsAdminDashboardMode { get; set; }
     }
 
     internal static class MegaFormHostPageResolver
@@ -49,8 +56,14 @@ namespace MegaForm.PersonaBar.Components
 
                 if (candidates.Count == 0) return null;
 
-                var preferred = candidates.FirstOrDefault(IsAdminDashboard) ?? candidates[0];
-                return new MegaFormHostPage { TabId = preferred.TabID, ModuleId = preferred.ModuleID };
+                var dashboardInstance = candidates.FirstOrDefault(IsAdminDashboard);
+                var preferred = dashboardInstance ?? candidates[0];
+                return new MegaFormHostPage
+                {
+                    TabId = preferred.TabID,
+                    ModuleId = preferred.ModuleID,
+                    IsAdminDashboardMode = dashboardInstance != null,
+                };
             }
             catch
             {
@@ -80,10 +93,33 @@ namespace MegaForm.PersonaBar.Components
             return Globals.NavigateURL(host.TabId, controlKey, parameters);
         }
 
-        /// <summary>The plain page URL — used for "open the dashboard".</summary>
+        /// <summary>The plain page URL.</summary>
         public static string BuildPageUrl(MegaFormHostPage host)
         {
             return host == null ? null : Globals.NavigateURL(host.TabId);
+        }
+
+        /// <summary>
+        /// Where "Open dashboard" should actually go.
+        ///
+        /// [PbDashboardUrl v20260801] It used to be BuildPageUrl — the bare page URL — which
+        /// only works when the module sitting on that page happens to be in admin_dashboard
+        /// mode. Resolve() falls back to ANY MegaForm instance, so on a portal whose only
+        /// instance renders a form (the default mode) and has no form assigned yet, the button
+        /// landed the administrator on "No form has been configured for this module."
+        /// FormView.ascx renders the dashboard shell only for IsAdminDashboardMode, and there
+        /// is no query-string override for the mode, so a plain page URL cannot ask for it.
+        ///
+        /// The FormList control is a real dashboard (portal-wide form list + stats) that does
+        /// not depend on the module's own formId, and it is registered controlType="Edit", so
+        /// DNN gates it on edit permission exactly like the builder link next to it.
+        /// </summary>
+        public static string BuildDashboardUrl(MegaFormHostPage host)
+        {
+            if (host == null) return null;
+            return host.IsAdminDashboardMode
+                ? Globals.NavigateURL(host.TabId)
+                : BuildControlUrl(host, "FormList", 0);
         }
     }
 }
