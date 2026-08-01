@@ -691,6 +691,32 @@ body > div[style*="display:none"]:has(.megaform-module) {
     margin: 0 auto !important;
 }
 
+/* [PremiumNativeCardFix v20260731] A premium NATIVE-generated shell reaches neither arm above.
+   Measured on dnndefender.com/MegaForm-Continue/Wellness-Patient-Intake (1440px viewport):
+   the wrapper carries `mf-custom-shell-mode mf-custom-html-mode mf-premium-native-mode` but
+   NO mf-theme-* class (so the first arm's [class*="mf-theme-"] misses) and NO
+   data-mf-has-custom-html ATTRIBUTE — only the same-named class (so the second arm misses too).
+   With both arms missing, `.mf-form-wrapper > .mf-form-inner` below still painted the standard
+   card: white / 1px #e2e8f0 / 8px radius at y=174 x=416 w=882, with the template's own
+   .mfp card at y=199 x=497 w=720. That is a 25px empty rounded strip above the form header
+   (the inner card's 24px padding-top) plus 81px of dead white down each side — the "card thừa".
+
+   .mfp is deliberately NOT stripped here. Templates paint .mfp without !important, so an
+   !important strip would erase the real card instead of the extra one. */
+.mf-form-wrapper.mf-custom-shell-mode > .mf-form-inner,
+.mf-form-wrapper.mf-custom-shell-mode > .mf-form,
+.mf-form-wrapper.mf-custom-html-mode > .mf-form-inner,
+.mf-form-wrapper.mf-custom-html-mode > .mf-form,
+.mf-form-wrapper.mf-premium-native-mode > .mf-form-inner,
+.mf-form-wrapper.mf-premium-native-mode > .mf-form {
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+}
+
 /* Drop the page wrapper's own BACKGROUND/FRAME when a custom design takes over the visual
    frame (the inner shell owns the look), but keep OUTER PADDING so the card breathes.
    [SpacingFix v20260721] Was `padding: 0` — with no padding the premium/custom card butted
