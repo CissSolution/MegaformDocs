@@ -35,18 +35,27 @@ namespace MegaForm.Core.Services.GalleryRepo
         /// Official repository. Override via host config key "MegaForm:GalleryRepoUrl"
         /// (DNN host setting "MegaForm_GalleryRepoUrl").
         ///
-        /// Served through the jsDelivr CDN rather than GitHub Pages: the content lives in the
-        /// public repo CissSolution/megaform-gallery, and jsDelivr serves any public GitHub repo
-        /// directly with a proper application/json content-type, global caching and no per-repo
-        /// Pages configuration. GitHub Pages was not serving for this organisation, and a CDN is
-        /// the better distribution channel for many installs anyway (raw.githubusercontent is
-        /// rate-limited and not intended as one).
+        /// Served from GitHub Pages for the same public repo, CissSolution/megaform-gallery.
+        /// Publishing is then just a push: Pages redeploys itself and answers with
+        /// `Cache-Control: max-age=600`, so a new template is live within ten minutes.
         ///
-        /// NOTE for publishers: jsDelivr caches a branch ref, so after pushing new templates hit
-        /// https://purge.jsdelivr.net/gh/CissSolution/megaform-gallery@main/manifest.json
-        /// (and the changed files) to make the update visible immediately.
+        /// [PagesOverCdn v20260801] This used to be the jsDelivr CDN, and moving off it was not a
+        /// preference — a branch ref there is unusable for a gallery that changes:
+        ///   - jsDelivr's data API listing for @main sat frozen on a SIX-DAY-OLD commit
+        ///     (byte-identical to dc53e2a) through several pushes and a full file purge. It hid
+        ///     seven published templates, because GetTemplatesManifestAsync reconciles against it.
+        ///   - purge.jsdelivr.net clears the FILE cache only; that listing cannot be purged.
+        ///     Publishing correctly therefore could not fix it, and neither could waiting.
+        /// Pages avoids the whole class of problem twice over: it serves current content, and it
+        /// is not a host BuildListingUrl knows how to enumerate, so the reconcile is skipped and
+        /// the manifest is authoritative — on every module version ever shipped, including builds
+        /// older than the [StaleListing v20260801] repair. Existing installs still pointed at
+        /// jsDelivr keep working, just with that repair doing the work.
+        ///
+        /// NOTE the capital letters. GitHub Pages answers this owner subdomain case-sensitively:
+        /// CissSolution.github.io serves, cissolution.github.io returns 404 (measured, 3/3).
         /// </summary>
-        public const string DefaultRepoBaseUrl = "https://cdn.jsdelivr.net/gh/CissSolution/megaform-gallery@main/";
+        public const string DefaultRepoBaseUrl = "https://CissSolution.github.io/megaform-gallery/";
 
         public const string TemplatesManifestPath = "manifest.json";
         public const string KbManifestPath = "kb/manifest.json";
@@ -60,6 +69,17 @@ namespace MegaForm.Core.Services.GalleryRepo
 
         private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(15);
         private static readonly TimeSpan HttpTimeout = TimeSpan.FromSeconds(20);
+
+        /// <summary>
+        /// How many manifest entries the listing may disagree about before the reconcile in
+        /// <see cref="GetTemplatesManifestAsync"/> stops probing and just trusts the manifest.
+        /// A handful means "the owner deleted a few files"; dozens means the listing itself is
+        /// wrong (stale ref, wrong repo, changed layout) and is not worth one request each.
+        /// </summary>
+        private const int MaxListingProbes = 12;
+
+        // Prefix so an existence probe cannot collide with the cached BODY of the same URL.
+        private const string ProbeCacheKeyPrefix = "HEAD ";
 
         private static readonly HttpClient _http = CreateClient();
 
@@ -157,6 +177,16 @@ namespace MegaForm.Core.Services.GalleryRepo
         /// HTTP round-trip per template just to render the grid.
         /// Fail-open: if the listing cannot be read (non-jsDelivr host, API down), the manifest is
         /// returned untouched, i.e. exactly the previous behaviour.
+        ///
+        /// [StaleListing v20260801] Absent from the listing is NOT proof the file is gone. The two
+        /// sources are cached independently and the listing is the slower of the two: on 2026-08-01
+        /// the purged manifest already advertised 47 templates while data.jsdelivr.com still
+        /// enumerated 41 (`X-Cache: HIT`, `max-age` a year) — so three freshly published templates
+        /// were dropped here and never reached the grid, with no error anywhere to explain it.
+        /// purge.jsdelivr.net clears the FILE cache, not the data API, so publishing cannot fix it.
+        /// A missing entry is now confirmed against the file itself before the card is removed:
+        /// a definite 404/410 deletes it, anything else keeps it. Deletions still disappear (one
+        /// extra HEAD each), a lagging listing no longer hides new work.
         /// </summary>
         public async Task<GalleryRepoFetchResult<GalleryRepoManifest>> GetTemplatesManifestAsync(bool forceRefresh)
         {
@@ -166,11 +196,85 @@ namespace MegaForm.Core.Services.GalleryRepo
             var present = await GetRepoFileSetAsync(forceRefresh).ConfigureAwait(false);
             if (present == null || present.Count == 0) return res;   // fail-open
 
+            var disputed = res.Value.Templates
+                .Where(t => t != null && !string.IsNullOrWhiteSpace(t.File)
+                            && !present.Contains(t.File.Replace('\\', '/').TrimStart('/')))
+                .ToList();
+            if (disputed.Count == 0) return res;
+            if (disputed.Count > MaxListingProbes) return res;        // listing looks wrong, not the manifest
+
+            var gone = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var t in disputed)
+            {
+                if (!await RepoFileExistsAsync(t.File, forceRefresh).ConfigureAwait(false))
+                    gone.Add(t.File);
+            }
+            if (gone.Count == 0) return res;
+
             var kept = res.Value.Templates
-                .Where(t => t != null && (string.IsNullOrWhiteSpace(t.File) || present.Contains(t.File.Replace('\\', '/').TrimStart('/'))))
+                .Where(t => t != null && (string.IsNullOrWhiteSpace(t.File) || !gone.Contains(t.File)))
                 .ToList();
             if (kept.Count != res.Value.Templates.Count) res.Value.Templates = kept;
             return res;
+        }
+
+        /// <summary>
+        /// Does one repo-relative file actually exist? Used only to second-guess a listing that
+        /// claims it does not, so it is deliberately biased towards keeping the card: only a
+        /// definite 404/410 answers false. A blocked, throttled or broken probe answers true —
+        /// removing a template from the grid must need evidence, not the absence of it.
+        /// </summary>
+        private async Task<bool> RepoFileExistsAsync(string relativePath, bool forceRefresh)
+        {
+            var safe = SanitizeRelativePath(relativePath);
+            if (safe == null) return false;                          // unusable path — the card is dead anyway
+
+            var url = _baseUrl + safe;
+            var key = ProbeCacheKeyPrefix + url;
+            var now = DateTime.UtcNow;
+
+            CacheEntry cached;
+            if (!forceRefresh && _cache.TryGetValue(key, out cached) && cached.Body != null && now < cached.ExpiryUtc)
+                return cached.Body == "1";
+
+            bool exists;
+            try
+            {
+                exists = await RemoteFileRespondsAsync(url).ConfigureAwait(false);
+            }
+            catch
+            {
+                return true;                                         // fail-open, and do not cache a guess
+            }
+
+            _cache[key] = new CacheEntry { ExpiryUtc = now.Add(CacheTtl), Body = exists ? "1" : "0" };
+            return exists;
+        }
+
+        private async Task<bool> RemoteFileRespondsAsync(string url)
+        {
+            // Same SSRF choke point as every other outbound call here — the base URL is
+            // admin-configurable (SECURITY_CODING_RULES §9).
+            string ssrfReason;
+            if (!SsrfGuard.IsUrlAllowed(url, out ssrfReason))
+                throw new InvalidOperationException("Blocked by SSRF guard: " + ssrfReason);
+
+            using (var request = new HttpRequestMessage(HttpMethod.Head, url))
+            {
+                // Credential on the request, never on the shared client — see DownloadBytesWithCapAsync.
+                if (_accessToken.Length > 0 && IsTokenAllowedForUrl(url))
+                {
+                    request.Headers.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _accessToken);
+                    request.Headers.Accept.ParseAdd("application/vnd.github.raw");
+                }
+
+                using (var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false))
+                {
+                    return response.StatusCode != System.Net.HttpStatusCode.NotFound
+                        && response.StatusCode != System.Net.HttpStatusCode.Gone;
+                }
+            }
         }
 
         /// <summary>
@@ -252,6 +356,13 @@ namespace MegaForm.Core.Services.GalleryRepo
         /// to the configured base URL. They only line up when the base URL IS the repo root, so a
         /// base pointing into a subdirectory returns null (trust the manifest) instead of a
         /// listing that matches nothing and would drop every template.
+        ///
+        /// Returning null for every OTHER host is what makes a self-hosted gallery immune to the
+        /// stale-listing problem on EVERY module version ever shipped, including builds older than
+        /// the [StaleListing v20260801] fix: with no listing there is no reconcile, so a published
+        /// manifest is what the grid shows. Locked by GalleryRepoTokenScopeTests
+        /// .ListingUrl_UnknownHost_ReturnsNull — that case is load-bearing, not incidental.
+        /// (Stays internal: those tests reach it with BindingFlags.NonPublic.)
         /// </summary>
         internal static string BuildListingUrl(string baseUrl)
         {

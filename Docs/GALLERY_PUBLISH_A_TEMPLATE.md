@@ -1,9 +1,9 @@
 # Đẩy 1 template mới lên Online Gallery
 
-Gallery online = repo GitHub **`CissSolution/megaform-gallery`**, phục vụ qua CDN jsDelivr:
+Gallery online = repo GitHub **`CissSolution/megaform-gallery`**, phục vụ qua **GitHub Pages**:
 
 ```
-https://cdn.jsdelivr.net/gh/CissSolution/megaform-gallery@main/manifest.json
+https://CissSolution.github.io/megaform-gallery/manifest.json
 ```
 
 Module KHÔNG bao giờ gọi thẳng GitHub từ trình duyệt — server tải, verify sha256 rồi mới lưu.
@@ -35,7 +35,7 @@ Publisher quy về một khoá chung khi đóng gói ảnh, và client tự đ�
 
 ---
 
-## 4 bước đẩy lên
+## Các bước đẩy lên
 
 ### 1. Bỏ file JSON vào thư mục nguồn
 
@@ -45,15 +45,20 @@ Samples/FormTemplates/Premium/DONEE/<ten-file>.json
 
 Nếu template có ảnh mới → copy ảnh vào `Assets/img/<thư-mục>/`.
 
-### 2. Build lại gallery
+### 2. Chạy publish — 1 lệnh
 
-```bash
+```powershell
 cd "E:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um"
-
-node tools/gallery/build-gallery.mjs ^
-  --out "E:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\megaform-gallery" ^
-  --base "https://cdn.jsdelivr.net/gh/CissSolution/megaform-gallery@main/"
+.\tools\gallery\Publish-Gallery.ps1 -Message "Add <tên template>"
 ```
+
+Script chạy tuần tự: kiểm remote của clone → `pull --ff-only` → build → **chặn nếu số template
+giảm** (thêm `-Force` nếu đúng là xoá có chủ đích) → commit → push → chờ tới khi manifest **live**
+khớp đúng bản vừa build rồi mới báo xong. Muốn xem trước mà chưa đẩy: thêm `-WhatIfOnly`.
+
+⚠️ Trên máy có **hai** clone gallery và ngày 01/08 **cả hai đều tụt lại sau origin** (44 và 35
+template, origin 47). Chạy `build-gallery.mjs` tay từ một clone cũ = **xoá ngược** template khỏi
+gallery. Script tự `pull` trước và tự chặn khi số template giảm — đó là lý do nó tồn tại.
 
 Đọc kỹ output — nó nói thẳng cái gì bị bỏ và vì sao:
 
@@ -72,46 +77,28 @@ Lệnh này đồng thời:
 
 ⚠️ **Nếu build báo `FAILED`** thì repo sinh ra KHÔNG cài được — sửa rồi chạy lại, đừng push.
 
-### 3. Commit + push repo gallery
+### 3. Không còn bước purge
 
-```bash
-cd "E:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\megaform-gallery"
-git add -A
-git commit -m "Add <tên template>"
-git push origin main
-```
+`[PagesOverCdn v20260801]` Gallery phục vụ từ **GitHub Pages**
+(`https://CissSolution.github.io/megaform-gallery/`), push xong Pages tự deploy, `max-age=600`.
+Không có gì để purge và không có gì phải chờ ngoài 10 phút cache.
 
-### 4. ⭐ Purge cache jsDelivr — BẮT BUỘC, phải purge **MỌI file đã đổi**
+Trước đây phục vụ qua jsDelivr `@main` và bước purge là bắt buộc. Bỏ vì nó **không đủ**: purge chỉ
+dọn cache **file**, còn **data-API listing** (`data.jsdelivr.com/v1/packages/gh/…`) không purge
+được — ngày 01/08 nó đứng im ở ảnh chụp commit `dc53e2a` **6 ngày tuổi** và làm `GalleryRepositoryService`
+âm thầm **ẩn 7 template đã publish**, trong đó 4 cái ẩn từ 26–27/07 mà không ai biết. Ref nhánh trên
+jsDelivr không dùng được cho gallery hay đổi; ref theo commit thì luôn đúng.
 
-⚠️⚠️ **Bẫy chí mạng (đã dính):** purge `manifest.json` nhưng QUÊN purge một `templates/<slug>.json`
-đã đổi → server nhận manifest MỚI (sha256 mới) nhưng CDN trả file CŨ →
-**`sha256 mismatch → preview_failed`**, template hiện thumbnail trắng + "Preview is unavailable".
+⭐ Hostname Pages **phân biệt hoa/thường**: `CissSolution.github.io` chạy, `cissolution.github.io`
+trả 404.
 
-⭐**Purge đúng danh sách = mọi file `git` báo đổi**, KHÔNG chỉ template vừa thêm. Publisher
-re-serialize + reorder nên một sửa nhỏ (đổi description/label ở template khác) cũng đổi file đó:
+⭐**Consumer cache manifest trong RAM (`GalleryRepositoryService`, TTL 15 phút).** Site đang chạy
+vẫn giữ manifest cũ tới khi hết TTL → **restart site** (hoặc gọi `RemoteGalleryList?refresh=true`)
+để lấy ngay.
 
-```powershell
-cd "E:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\megaform-gallery"
-$changed = git diff --name-only HEAD~1 HEAD          # mọi file commit vừa rồi đổi
-foreach ($f in $changed) {
-  Invoke-WebRequest "https://purge.jsdelivr.net/gh/CissSolution/megaform-gallery@main/$f" -UseBasicParsing | Out-Null
-}
-```
-
-Kiểm tra lại — sha256 CDN phải KHỚP manifest (jsDelivr nhiều edge, có thể phải purge lại 1–2 lần):
-
-```powershell
-$m = Get-Content manifest.json -Raw | ConvertFrom-Json
-foreach ($e in $m.templates) {
-  $b = (Invoke-WebRequest "https://cdn.jsdelivr.net/gh/CissSolution/megaform-gallery@main/$($e.file)" -UseBasicParsing).RawContentStream.ToArray()
-  $cdn = ([System.Security.Cryptography.SHA256]::Create().ComputeHash($b) | % { $_.ToString('x2') }) -join ''
-  if ($cdn -ne $e.sha256) { "MISMATCH: $($e.slug) — purge lại $($e.file)" }
-}
-```
-
-⭐**Consumer cache manifest trong RAM (`GalleryRepositoryService`, TTL).** Sau khi purge, site đã
-chạy vẫn giữ manifest cũ tới khi hết TTL → **restart site** (hoặc gọi `RemoteGalleryList?refresh=true`)
-để lấy manifest mới ngay.
+⚠️ Site nào **đã lưu** URL jsDelivr trong setting thì vẫn dùng URL đó (mặc định mới chỉ áp dụng khi
+setting trống) — ở đó việc hiển thị đủ template dựa vào bản vá `[StaleListing v20260801]`, cần DLL
+`MegaForm.Core` mới.
 
 ---
 

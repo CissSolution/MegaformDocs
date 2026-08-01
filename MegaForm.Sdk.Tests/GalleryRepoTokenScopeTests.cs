@@ -98,12 +98,23 @@ namespace MegaForm.Sdk.Tests
         }
 
         [Fact]
-        public void DefaultRepo_StaysOnThePublicCdn()
+        public void DefaultRepo_StaysOnGitHubPages()
         {
             // Changing the default is a distribution decision, not a refactor side effect.
+            // [PagesOverCdn v20260801] Moved off jsDelivr because its branch listing froze on a
+            // six-day-old commit and hid seven published templates. The capitals are load-bearing:
+            // cissolution.github.io 404s, CissSolution.github.io serves.
             Assert.Equal(
-                "https://cdn.jsdelivr.net/gh/CissSolution/megaform-gallery@main/",
+                "https://CissSolution.github.io/megaform-gallery/",
                 GalleryRepositoryService.DefaultRepoBaseUrl);
+        }
+
+        [Fact]
+        public void DefaultRepo_HasNoListingEndpoint_SoTheManifestIsAuthoritative()
+        {
+            // The reason the move fixes old installs too: no listing means no reconcile, so
+            // nothing can silently drop a template the manifest advertises.
+            Assert.Null(ListingUrl(GalleryRepositoryService.DefaultRepoBaseUrl));
         }
     }
 }
