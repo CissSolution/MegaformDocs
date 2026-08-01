@@ -15,6 +15,9 @@
     --mf-pb-line: var(--dnn-color-neutral, #e4e7eb);
     --mf-pb-wash: color-mix(in srgb, var(--mf-pb-ink) 3%, var(--mf-pb-surface));
     --mf-pb-radius: var(--dnn-controls-radius, 4px);
+    /* The add-to-page popover is absolutely positioned; without a positioned ancestor it
+       resolves against the initial containing block and lands over the stat tiles. */
+    position: relative;
 }
 
 .mf-pb-hidden { display: none !important; }

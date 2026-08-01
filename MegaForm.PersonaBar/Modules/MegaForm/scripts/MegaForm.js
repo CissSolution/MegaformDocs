@@ -181,8 +181,18 @@ define(['jquery'], function ($) {
         $box.find('.mf-pb-cancel').text(t('Cancel', 'Cancel'));
         $box.find('.mf-pb-confirm').text(t('Add', 'Add'));
 
-        var pos = $anchor.position();
-        $box.css({ top: pos.top + 22, left: Math.max(8, pos.left - 240) }).appendTo($panel);
+        // Position from viewport rects, not $anchor.position(): the latter measures against the
+        // link's offsetParent, which is not the panel, so the box drifted up over the stat tiles.
+        // The panel is the scroll container, hence + scrollTop.
+        $box.appendTo($panel);
+        var a = $anchor[0].getBoundingClientRect();
+        var pRect = $panel[0].getBoundingClientRect();
+        var boxW = $box.outerWidth() || 320;
+        var top = (a.bottom - pRect.top) + $panel.scrollTop() + 6;
+        var left = (a.left - pRect.left) - (boxW - a.width);
+        // Keep it inside the panel at either edge.
+        left = Math.max(8, Math.min(left, $panel[0].clientWidth - boxW - 8));
+        $box.css({ top: Math.round(top), left: Math.round(left) });
 
         var chosen = null;
         function renderPages(list) {

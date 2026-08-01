@@ -179,12 +179,25 @@ async function main() {
       const pageName = first.textContent.trim().slice(0, 40);
       first.click();
       await sleep(300);
+      // Report where the popover actually landed relative to the link that opened it —
+      // an absolutely positioned box with no positioned ancestor drifts silently.
+      const panel = d.querySelector('.mf-pb-body');
+      const bb = box.getBoundingClientRect(), lb = link.getBoundingClientRect(), pb = panel.getBoundingClientRect();
+      w.__mfPop = JSON.stringify({
+        boxTop: Math.round(bb.top), linkBottom: Math.round(lb.bottom),
+        below: bb.top >= lb.bottom - 2,
+        insidePanel: bb.left >= pb.left - 1 && bb.right <= pb.right + 1,
+        boxLeft: Math.round(bb.left - pb.left), boxRight: Math.round(pb.right - bb.right)
+      });
       const confirm = box.querySelector('.mf-pb-confirm');
       if (!confirm || confirm.disabled) return 'confirm-disabled';
+      w.__mfHoldOpen = true;
+      await sleep(200);
       confirm.click();
       await sleep(4000);
       const alert = d.querySelector('.mf-pb-alert');
       return JSON.stringify({
+        placement: w.__mfPop,
         picked: pageName,
         pickerClosed: !d.querySelector('.mf-pb-drop'),
         result: alert && !alert.classList.contains('mf-pb-hidden') ? alert.textContent.trim().slice(0, 120) : null,
