@@ -165,3 +165,8 @@ CLAUDE_HANDOFF_20260708_OQTANE_MARKETPLACE_PUBLISH_SOP.md
 
 # Browser-QA driver scratch output (chrome profile + screenshots)
 tools/browser-qa/oq/
+
+# [BrowserQA 2026-08-01] Headless Chrome writes its user-data-dir as <outDir>/.p (see
+# tools/browser-qa/*.mjs). A single QA run leaves ~100MB of profile behind; none of it
+# belongs in the repo.
+tools/browser-qa/**/.p/
