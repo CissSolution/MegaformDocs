@@ -42,6 +42,92 @@
         return user.Roles != null && user.Roles.Any(role => allowed.Contains(role, StringComparer.OrdinalIgnoreCase));
     }
 
+    // ---- create-a-post helpers ------------------------------------------------------------
+    //
+    // Ported from MegaForm.Blogs.Oqtane/AdminNewPost.razor. Until now DNN could only EDIT an
+    // existing post: the dashboard's "New Post" tile pointed at the comments screen, so a blog
+    // could not actually be started from DNN at all.
+    //
+    // The posts form has 14 REQUIRED fields and the editor below only collects 7 of them, so the
+    // rest are seeded here. Without that, SubmitAsync fails validation and the post silently
+    // never appears.
+
+    static string Slugify(string value)
+    {
+        var text = (value ?? "").Trim().ToLowerInvariant();
+        if (text.Length == 0) return "";
+        var builder = new System.Text.StringBuilder(text.Length);
+        var lastDash = false;
+        foreach (var ch in text)
+        {
+            if (char.IsLetterOrDigit(ch) && ch < 128) { builder.Append(ch); lastDash = false; }
+            else if (!lastDash && builder.Length > 0) { builder.Append('-'); lastDash = true; }
+        }
+        var slug = builder.ToString().Trim('-');
+        return slug.Length > 120 ? slug.Substring(0, 120).Trim('-') : slug;
+    }
+
+    /// Matches the seeded convention: Design -> CAT-DESIGN, AI/ML -> CAT-AIML.
+    static string CategoryUid(string category)
+    {
+        var text = (category ?? "").Trim().ToUpperInvariant();
+        if (text.Length == 0) return "";
+        var builder = new System.Text.StringBuilder(text.Length + 4);
+        foreach (var ch in text) { if (char.IsLetterOrDigit(ch) && ch < 128) builder.Append(ch); }
+        return builder.Length == 0 ? "" : "CAT-" + builder.ToString();
+    }
+
+    /// A slug no existing post is using, trying -2, -3, ... public-posts is queried BY slug, so a
+    /// duplicate makes the reader-facing detail page ambiguous.
+    static string ClaimFreeSlug(string desired, MegaFormScope scope)
+    {
+        var root = Slugify(desired);
+        if (root.Length == 0) root = "post";
+        for (var attempt = 0; attempt < 25; attempt++)
+        {
+            var candidate = attempt == 0 ? root : root + "-" + (attempt + 1);
+            var request = new AppQueryRequest { Page = 1, PageSize = 1 };
+            request.Parameters["slug"] = candidate;
+            var existing = Run(c => c.Queries.ExecuteAsync("blog-starter", "all-posts", request, scope));
+            if (existing == null || existing.TotalCount == 0) return candidate;
+        }
+        return null;
+    }
+
+    /// 🔴 post_uid is the key reader-events and comments are grouped by, and the server-side
+    /// generator hands the SAME value to every post created through a console. Measured on Oqtane:
+    /// 28 posts, 24 distinct uids - four console-created posts all collided on POST-01001, which a
+    /// seeded post already owned, so one article's read count was reported by five articles.
+    /// The "S" prefix matters: seeded uids are numeric (POST-01001..), so a bare POST-<id> would
+    /// collide once a site reaches submission 1001.
+    static void EnsureUniquePostUid(int submissionId, MegaFormScope scope)
+    {
+        try
+        {
+            var record = Run(c => c.Records.GetRecordAsync(submissionId, scope));
+            if (record == null) return;
+            var current = Text(record, "post_uid", "").Trim();
+            if (current.Length > 0)
+            {
+                var probe = new AppQueryRequest { Page = 1, PageSize = 5 };
+                probe.Parameters["post_uid"] = current;
+                var others = Run(c => c.Queries.ExecuteAsync("blog-starter", "all-posts", probe, scope));
+                var clash = others != null && others.Items != null
+                            && others.Items.Any(r => r.SubmissionId != submissionId);
+                if (!clash) return;
+            }
+            Run(c => c.Records.PatchRecordAsync(submissionId,
+                new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["post_uid"] = "POST-S" + submissionId
+                }, scope));
+        }
+        catch (Exception)
+        {
+            // A post that saved is worth more than a perfect uid.
+        }
+    }
+
     static string EnsureCsrfToken()
     {
         const string key = "MegaFormBlogs.CsrfToken";
@@ -235,6 +321,7 @@
 
     AppDto app = null;
     AppRecordDto editing = null;
+    var creatingNew = false;
     InboxBoardDto board = null;
     AppQueryResultDto queue = null;
     IReadOnlyList<FileDto> editingFiles = new List<FileDto>();
@@ -260,7 +347,89 @@
             var submissionId = 0;
             int.TryParse(Request.Form["submission_id"], out submissionId);
 
-            if (action == "save" && submissionId > 0)
+            if (action == "create")
+            {
+                // The named query result carries the posts form id, so there is no manifest
+                // guessing: the same trick AdminNewPost.razor uses on Oqtane.
+                var probeResult = Run(c => c.Queries.ExecuteAsync("blog-starter", "all-posts",
+                    new AppQueryRequest { Page = 1, PageSize = 1 }, scope));
+                var postsFormId = probeResult == null ? 0 : probeResult.FormId;
+                var userName = user == null || string.IsNullOrWhiteSpace(user.DisplayName)
+                    ? "MegaForm Editorial" : user.DisplayName;
+                var userEmail = user == null ? "" : (user.Email ?? "");
+
+                // The 7 fields the editor collects...
+                var newValues = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+                foreach (var key in new[] { "title", "excerpt", "body", "category", "tags",
+                                            "featured_image_url", "image_alt_text", "author_name",
+                                            "author_avatar_url", "seo_title", "seo_description",
+                                            "content_type", "status" })
+                {
+                    var raw = (Request.Form[key] ?? "").Trim();
+                    if (raw.Length > 0) { newValues[key] = raw; }
+                }
+
+                // ...and the required ones it does not, seeded exactly like the Oqtane twin.
+                var chosenStatus = (Request.Form["status"] ?? "draft").Trim();
+                if (chosenStatus.Length == 0) { chosenStatus = "draft"; }
+                newValues["status"] = chosenStatus;
+                if (!newValues.ContainsKey("content_type")) { newValues["content_type"] = "Blog Post"; }
+                newValues["audience"] = "Public";
+                newValues["language"] = "en-US";
+                newValues["publish_date"] = DateTime.UtcNow.ToString("yyyy-MM-dd");
+                if (!newValues.ContainsKey("author_name")) { newValues["author_name"] = userName; }
+                newValues["author_email"] = userEmail;
+                newValues["category_uid"] = CategoryUid(Request.Form["category"] ?? "");
+
+                if (postsFormId <= 0)
+                {
+                    message = "The posts form for this app could not be found.";
+                    messageError = true;
+                }
+
+                var wantedSlug = (Request.Form["slug"] ?? "").Trim();
+                if (wantedSlug.Length == 0) { wantedSlug = (Request.Form["title"] ?? "").Trim(); }
+                var freeSlug = postsFormId <= 0 ? null : ClaimFreeSlug(wantedSlug, scope);
+                if (postsFormId <= 0)
+                {
+                    // message already set above
+                }
+                else if (freeSlug == null)
+                {
+                    message = "That slug is already taken and a free variant could not be found.";
+                    messageError = true;
+                }
+                else
+                {
+                    newValues["slug"] = freeSlug;
+                    var created = Run(c => c.Submissions.SubmitAsync(postsFormId, newValues, scope));
+                    if (created == null || !created.Success)
+                    {
+                        message = created == null || string.IsNullOrWhiteSpace(created.ErrorMessage)
+                            ? "The post could not be saved." : created.ErrorMessage;
+                        messageError = true;
+                    }
+                    else
+                    {
+                        // 🔴 SubmitAsync writes the typed `status` field but leaves
+                        // MF_Submissions.Status at whatever the form pipeline assigned. Named
+                        // queries filter that MASTER column, so a post created as "published"
+                        // would be invisible to public-posts. PatchRecordAsync updates both, so
+                        // patch the status straight back over itself to reconcile them.
+                        Run(c => c.Records.PatchRecordAsync(created.SubmissionId,
+                            new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                            { ["status"] = chosenStatus }, scope));
+
+                        EnsureUniquePostUid(created.SubmissionId, scope);
+
+                        editing = Run(c => c.Records.GetRecordAsync(created.SubmissionId, scope));
+                        message = "Post created (#" + created.SubmissionId + ") as " + chosenStatus + ".";
+                        messageError = false;
+                    }
+                }
+            }
+            else if (action == "save" && submissionId > 0)
+
             {
                 var values = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
                 {
@@ -359,6 +528,16 @@
             }
 
             var editId = 0;
+            // ?edit=new opens the same editor with nothing in it. Reusing the edit form rather
+            // than adding a screen keeps one set of markup, one CSRF path and one layout.
+            // 🔴 The trigger is "0", NOT "new". DNN rewrites ?edit=<v> into the path segment
+            // /edit/<v>, and a NON-NUMERIC segment does not survive a form post: /edit/838 posts
+            // back fine, /edit/new silently never reaches this handler - no POST, no message, and
+            // the form just sits there looking broken. Measured 2026-07-31 by proving the existing
+            // save path works on /edit/838 while create did nothing on /edit/new.
+            var editRaw = (Request.QueryString["edit"] ?? "").Trim();
+            creatingNew = editRaw == "0"
+                          || string.Equals(editRaw, "new", StringComparison.OrdinalIgnoreCase);
             int.TryParse(Request.QueryString["edit"], out editId);
             if (editing == null && editId > 0) { editing = Run(c => c.Records.GetRecordAsync(editId, scope)); }
             if (editing != null)
@@ -412,7 +591,7 @@
 }
 
 <link rel="stylesheet" href="/DesktopModules/MegaForm/Assets/css/plugins/megaform-widget-rich-text.css?v=20260729a" />
-<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs-admin.css?v=20260730a" />
+<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs-admin.css?v=20260731a" />
 
 <div class="mfba">
     @if (!allowed)
@@ -502,7 +681,7 @@
             </section>
 
             <section class="mfba-quick" aria-label="Quick access">
-                <a href="@commentsUrl"><span class="mfba-quick-ico mfba-bg-blue">@Icon("plus")</span><strong>New Post</strong><small>Create a new article</small></a>
+                <a href="@(adminBaseUrl + "?edit=0")"><span class="mfba-quick-ico mfba-bg-blue">@Icon("plus")</span><strong>New Post</strong><small>Create a new article</small></a>
                 <a href="@commentsUrl"><span class="mfba-quick-ico mfba-bg-violet">@Icon("message-circle")</span><strong>Comments</strong><small>@pendingComments.Count pending review</small></a>
                 <a href="@editorialUrl"><span class="mfba-quick-ico mfba-bg-amber">@Icon("layout")</span><strong>Editorial</strong><small>Kanban board</small></a>
                 <a href="@blogUrl"><span class="mfba-quick-ico mfba-bg-emerald">@Icon("bar-chart")</span><strong>Analytics</strong><small>View performance</small></a>
@@ -510,42 +689,63 @@
                 <a href="@adminBaseUrl"><span class="mfba-quick-ico mfba-bg-slate">@Icon("settings")</span><strong>Settings</strong><small>Blog configuration</small></a>
             </section>
 
-            @if (editing != null)
+            @if (editing != null || creatingNew)
             {
                 <section class="mfba-panel">
                     <div class="mfba-panel-head">
-                        <h2>@Icon("save", "mfba-icon mfba-icon-lg") Edit typed record #@editing.SubmissionId</h2>
+                        <h2>@Icon("save", "mfba-icon mfba-icon-lg") @(editing == null ? "New post" : "Edit typed record #" + editing.SubmissionId)</h2>
                         <a class="mfba-panel-link" href="@adminBaseUrl">Close</a>
                     </div>
                     <div class="mfba-editor">
-                        <input type="hidden" name="submission_id" value="@editing.SubmissionId" />
+                        <input type="hidden" name="submission_id" value="@(editing == null ? 0 : editing.SubmissionId)" />
                         <div class="mfba-form-grid">
-                            <label>Title<input name="title" value="@Text(editing, "title", "")" required /></label>
-                            <label>Slug<input name="slug" value="@Text(editing, "slug", "")" required /></label>
-                            <label>Category<input name="category" value="@Text(editing, "category", "")" /></label>
-                            <label>Author<input name="author_name" value="@Text(editing, "author_name", "")" /></label>
-                            <label class="wide">Excerpt<textarea name="excerpt" rows="3">@Text(editing, "excerpt", "")</textarea></label>
+                            <label>Title<input name="title" value="@(editing == null ? "" : Text(editing, "title", ""))" required /></label>
+                            <label>Slug@(editing == null ? " — leave blank to derive it from the title" : "")<input name="slug" value="@(editing == null ? "" : Text(editing, "slug", ""))" @(editing == null ? "" : "required") /></label>
+                            <label>Category<input name="category" value="@(editing == null ? "" : Text(editing, "category", ""))" /></label>
+                            <label>Author<input name="author_name" value="@(editing == null ? "" : Text(editing, "author_name", ""))" /></label>
+                            <label class="wide">Excerpt<textarea name="excerpt" rows="3">@(editing == null ? "" : Text(editing, "excerpt", ""))</textarea></label>
                             <div class="wide mfba-rich" id="mfb-body-editor">
-                                <label>Article body (trusted editorial HTML)<textarea name="body" rows="14">@Text(editing, "body", "")</textarea></label>
+                                <label>Article body (trusted editorial HTML)<textarea name="body" rows="14">@(editing == null ? "" : Text(editing, "body", ""))</textarea></label>
                             </div>
                             <div class="wide mfba-media-field">
-                                <label>Featured image URL<input name="featured_image_url" value="@Text(editing, "featured_image_url", "")" /></label>
+                                <label>Featured image URL<input name="featured_image_url" value="@(editing == null ? "" : Text(editing, "featured_image_url", ""))" /></label>
                                 <button class="mfba-btn-outline" type="button" data-mfb-gallery-open="featured_image_url" data-mfb-gallery-tab="posts">@Icon("image", "mfba-icon mfba-icon-md") Browse gallery</button>
                             </div>
-                            <label>Image alt text<input name="image_alt_text" value="@Text(editing, "image_alt_text", "")" /></label>
+                            <label>Image alt text<input name="image_alt_text" value="@(editing == null ? "" : Text(editing, "image_alt_text", ""))" /></label>
                             <div class="mfba-media-field">
-                                <label>Author avatar URL<input name="author_avatar_url" value="@Text(editing, "author_avatar_url", "")" /></label>
+                                <label>Author avatar URL<input name="author_avatar_url" value="@(editing == null ? "" : Text(editing, "author_avatar_url", ""))" /></label>
                                 <button class="mfba-btn-outline" type="button" data-mfb-gallery-open="author_avatar_url" data-mfb-gallery-tab="authors">@Icon("users", "mfba-icon mfba-icon-md") Author</button>
                             </div>
-                            <label>Tags<input name="tags" value="@Text(editing, "tags", "")" /></label>
-                            <label>SEO title<input name="seo_title" value="@Text(editing, "seo_title", "")" /></label>
-                            <label class="wide">SEO description<textarea name="seo_description" rows="3">@Text(editing, "seo_description", "")</textarea></label>
+                            <label>Status
+                                <select name="status">
+                                    <option value="draft">Draft</option>
+                                    <option value="in_review">Editorial review</option>
+                                    <option value="ready_to_publish">Ready to publish</option>
+                                    <option value="published">Published</option>
+                                </select>
+                            </label>
+                            <label>Content type
+                                <select name="content_type">
+                                    <option value="Blog Post">Blog Post</option>
+                                    <option value="News">News</option>
+                                </select>
+                            </label>
+                            <label>Tags<input name="tags" value="@(editing == null ? "" : Text(editing, "tags", ""))" /></label>
+                            <label>SEO title<input name="seo_title" value="@(editing == null ? "" : Text(editing, "seo_title", ""))" /></label>
+                            <label class="wide">SEO description<textarea name="seo_description" rows="3">@(editing == null ? "" : Text(editing, "seo_description", ""))</textarea></label>
                         </div>
                         <div class="mfba-editor-toolbar">
                             <button class="mfba-btn-outline" type="button" data-mfb-gallery-open="body" data-mfb-gallery-tab="posts">@Icon("image", "mfba-icon mfba-icon-md") Insert gallery image into article</button>
                             <span>Images stay typed values or MegaForm-managed files; the editor saves clean HTML through the Records API.</span>
                         </div>
-                        <button class="mfba-btn" type="submit" name="mfb_action" value="save">@Icon("save", "mfba-icon mfba-icon-md") Save through Records API</button>
+                        @if (editing == null)
+                        {
+                            <button class="mfba-btn" type="submit" name="mfb_action" value="create">@Icon("plus", "mfba-icon mfba-icon-md") Create post</button>
+                        }
+                        else
+                        {
+                            <button class="mfba-btn" type="submit" name="mfb_action" value="save">@Icon("save", "mfba-icon mfba-icon-md") Save through Records API</button>
+                        }
                     </div>
                     @if (editingFiles.Count > 0)
                     {

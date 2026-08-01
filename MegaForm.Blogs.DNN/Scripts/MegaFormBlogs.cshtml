@@ -27,8 +27,19 @@
 
     static int Number(AppRecordDto record, string key)
     {
+        // 🔴 NumberStyles.Any is load-bearing, and the plain int.TryParse overload that used to be
+        // here made every counter on the public blog read ZERO.
+        //
+        // Typed storage hands a Number field back as a decimal, so Convert.ToString gives
+        // "2.000000" — and int.TryParse("2.000000") is FALSE, which fell through to 0. Every card
+        // showed "0 reads" while the database held the right value, including seeded posts with
+        // 15,420 views. The two admin scripts already had the correct overload; only this one, the
+        // surface readers actually see, did not.
         int value;
-        return int.TryParse(Text(record, key, "0"), out value) ? value : 0;
+        return int.TryParse(Text(record, key, "0"),
+                            System.Globalization.NumberStyles.Any,
+                            System.Globalization.CultureInfo.InvariantCulture,
+                            out value) ? value : 0;
     }
 
     static int ReadingMinutes(AppRecordDto record)
@@ -61,10 +72,198 @@
         return string.Concat(parts.Take(2).Select(x => char.ToUpperInvariant(x[0])));
     }
 
+    /// "1 read", not "1 reads". These labels sit on every card of a public page, so the one case
+    /// that reads wrong is the one a new blog shows most.
+    static string Plural(int count, string singular, string plural)
+    {
+        return count.ToString("N0") + " " + (count == 1 ? singular : plural);
+    }
+
     static string ImageUrl(AppRecordDto record)
     {
         return Text(record, "featured_image_url",
             "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=1400&h=900&fit=crop");
+    }
+
+    // ---- read tracking ---------------------------------------------------------------------
+    //
+    // ⭐ TWIN OF MegaForm.Blogs.Oqtane/BlogReadTracker.cs. Keep the two in step: the whole point is
+    // that a read counts the same on both platforms.
+    //
+    // WHAT THIS DOES NOT DO: it does not touch view_count. MegaForm.Core's
+    // BlogAnalyticsRollupService already ASSIGNS view_count / unique_readers / share_count / ... to
+    // every post by counting rows in the blog app's `reader-events` form and grouping them on
+    // post_uid, and DnnServiceLocator already schedules it. The counter was never missing — only
+    // the events were. Appending an event also avoids the lost-update race an increment would have
+    // had, and cannot damage the post it is counting.
+    //
+    // WHERE THIS DIFFERS FROM THE OQTANE TWIN, AND WHY: Oqtane's module is a client assembly with
+    // no HttpContext, so it asks the browser for a random visitor id. A Razor Host script runs
+    // server-side with the real request in hand, so it identifies a visitor by a hash of IP + user
+    // agent and screens crawlers by user agent. Both produce the same rows; only the key differs.
+
+    static readonly System.Collections.Concurrent.ConcurrentDictionary<string, DateTime> ReadSeen =
+        new System.Collections.Concurrent.ConcurrentDictionary<string, DateTime>(StringComparer.Ordinal);
+
+    static readonly System.Collections.Concurrent.ConcurrentDictionary<string, int> ReaderEventsFormIds =
+        new System.Collections.Concurrent.ConcurrentDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+    static readonly TimeSpan ReadDedupeWindow = TimeSpan.FromMinutes(30);
+    const int MaxReadEntries = 20000;
+
+    static readonly string[] BotMarkers = new[]
+    {
+        "bot", "crawl", "spider", "slurp", "curl", "wget", "python-requests", "httpclient",
+        "headlesschrome", "phantomjs", "lighthouse", "pingdom", "uptime", "monitor",
+        "facebookexternalhit", "embedly", "preview", "scrapy", "postman", "insomnia",
+        "go-http-client", "java/", "okhttp", "libwww", "feedfetcher", "rss"
+    };
+
+    static bool IsBot(string userAgent)
+    {
+        if (string.IsNullOrWhiteSpace(userAgent)) return true;   // no user agent at all: not a browser
+        var agent = userAgent.ToLowerInvariant();
+        return BotMarkers.Any(m => agent.IndexOf(m, StringComparison.Ordinal) >= 0);
+    }
+
+    /// A stable, non-reversible visitor key. The raw IP is never stored and the hash cannot be
+    /// reversed to one; the portal id salts it so the same visitor is not correlated across sites.
+    static string VisitorKey(string ip, string userAgent, int portalId)
+    {
+        var material = (ip ?? "") + "|" + (userAgent ?? "") + "|mfb-salt|" + portalId;
+        using (var sha = System.Security.Cryptography.SHA256.Create())
+        {
+            var bytes = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(material));
+            var sb = new System.Text.StringBuilder(32);
+            for (var i = 0; i < 16; i++) sb.Append(bytes[i].ToString("x2"));
+            return sb.ToString();
+        }
+    }
+
+    /// Claims this (post, visitor) pair for the dedupe window. Atomic: two concurrent requests
+    /// must not both win. This is a rate limiter, never a correctness mechanism — it lives in
+    /// process memory and an app-pool recycle empties it.
+    static bool ClaimFirstRead(string key)
+    {
+        var now = DateTime.UtcNow;
+        DateTime previous;
+        if (ReadSeen.TryGetValue(key, out previous) && now - previous < ReadDedupeWindow) return false;
+
+        var claimed = ReadSeen.AddOrUpdate(key, now,
+            (k, existing) => now - existing < ReadDedupeWindow ? existing : now);
+        if (claimed != now) return false;
+
+        if (ReadSeen.Count > MaxReadEntries)
+        {
+            foreach (var pair in ReadSeen.ToArray())
+            {
+                if (now - pair.Value >= ReadDedupeWindow)
+                {
+                    DateTime dropped;
+                    ReadSeen.TryRemove(pair.Key, out dropped);
+                }
+            }
+        }
+        return true;
+    }
+
+    static int ResolveReaderEventsFormId(string appKey, MegaFormScope scope)
+    {
+        var cacheKey = appKey + "|" + scope.PortalId;
+        int cached;
+        if (ReaderEventsFormIds.TryGetValue(cacheKey, out cached) && cached > 0) return cached;
+
+        var resolved = 0;
+        var app = Run(c => c.Apps.GetAppAsync(appKey, scope));
+        if (app != null && app.Forms != null)
+        {
+            var bound = app.Forms.FirstOrDefault(f =>
+                string.Equals(f.Alias, "reader-events", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(f.Role, "reader-events", StringComparison.OrdinalIgnoreCase));
+            if (bound != null && bound.FormId > 0) resolved = bound.FormId;
+        }
+
+        // A seeded manifest can ship an empty Forms list, so fall back to the schema's fingerprint
+        // exactly the way ResolveCommentsFormId does elsewhere in this module.
+        if (resolved <= 0)
+        {
+            var forms = Run(c => c.Forms.ListFormsAsync(new FormQuery { Page = 1, PageSize = 200 }, scope));
+            if (forms != null && forms.Items != null)
+            {
+                foreach (var form in forms.Items.OrderByDescending(f =>
+                    (f.Title ?? "").IndexOf("reader", StringComparison.OrdinalIgnoreCase) >= 0))
+                {
+                    var candidate = form;
+                    if (string.IsNullOrWhiteSpace(candidate.SchemaJson))
+                    {
+                        var full = Run(c => c.Forms.GetFormAsync(form.FormId, scope));
+                        if (full != null) candidate = full;
+                    }
+                    if (string.IsNullOrWhiteSpace(candidate.SchemaJson)) continue;
+
+                    var keys = Run(c => System.Threading.Tasks.Task.FromResult(
+                        c.Schema.ParseForm(candidate).Fields.Select(x => x.Key ?? "").ToList()));
+                    if (keys.Contains("event_type", StringComparer.OrdinalIgnoreCase)
+                        && keys.Contains("post_uid", StringComparer.OrdinalIgnoreCase)
+                        && keys.Contains("visitor_key", StringComparer.OrdinalIgnoreCase))
+                    {
+                        resolved = candidate.FormId;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (resolved > 0) ReaderEventsFormIds[cacheKey] = resolved;
+        return resolved;
+    }
+
+    /// Records one read. Every failure path returns false rather than throwing: a reader's page
+    /// must never fail because analytics did.
+    /// NOTE: ip / userAgent / referrer MUST be captured on the page thread by the caller —
+    /// Run<T> hops onto a threadpool thread where HttpContext.Current is null.
+    static bool TrackRead(string appKey, MegaFormScope scope, AppRecordDto post,
+                          string ip, string userAgent, string referrer)
+    {
+        if (post == null) return false;
+
+        var postUid = Text(post, "post_uid", "");
+        if (string.IsNullOrWhiteSpace(postUid)) return false;   // the rollup groups on post_uid
+        if (IsBot(userAgent)) return false;
+
+        var visitorKey = VisitorKey(ip, userAgent, scope.PortalId);
+        var key = postUid.Trim() + "|" + visitorKey;
+        if (!ClaimFirstRead(key)) return false;
+
+        try
+        {
+            var formId = ResolveReaderEventsFormId(appKey, scope);
+            if (formId <= 0) return false;
+
+            var data = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            data["post_uid"] = postUid.Trim();
+            data["post_slug"] = Text(post, "slug", "");
+            data["event_type"] = "read";
+            data["event_date"] = DateTime.UtcNow.ToString("yyyy-MM-dd");
+            data["visitor_key"] = visitorKey;
+            if (!string.IsNullOrWhiteSpace(referrer))
+            {
+                data["referrer"] = referrer.Length > 400 ? referrer.Substring(0, 400) : referrer;
+            }
+
+            var result = Run(c => c.Submissions.SubmitAsync(formId, data, scope));
+            if (result != null && result.Success) return true;
+
+            DateTime dropped;
+            ReadSeen.TryRemove(key, out dropped);
+            return false;
+        }
+        catch (Exception)
+        {
+            DateTime dropped;
+            ReadSeen.TryRemove(key, out dropped);
+            return false;
+        }
     }
 
 }
@@ -130,6 +329,39 @@
         loadError = "The blog could not be loaded. The site log has the details.";
     }
 
+    // ---- read tracking -------------------------------------------------------------------
+    // Its OWN try/catch, deliberately outside the block above and deliberately never assigning
+    // loadError: a reader must not see "the blog could not be loaded" because analytics failed.
+    //
+    // ⚠️ The three request values are read HERE, on the page thread. Run<T> hops onto a threadpool
+    // thread via Task.Run where HttpContext.Current is null, so reading them any later yields
+    // nothing and every visitor would hash to the same key.
+    if (detail != null)
+    {
+        try
+        {
+            var trackIp = Request.UserHostAddress ?? "";
+            var trackAgent = Request.UserAgent ?? "";
+            var trackReferrer = Request.UrlReferrer == null ? "" : Request.UrlReferrer.ToString();
+
+            // A HEAD request is not a read, and neither is a prefetch or a link-preview fetch.
+            var isGet = string.Equals(Request.HttpMethod, "GET", StringComparison.OrdinalIgnoreCase);
+            var purpose = (Request.Headers["Sec-Purpose"] ?? Request.Headers["Purpose"]
+                           ?? Request.Headers["X-Moz"] ?? "").ToLowerInvariant();
+            var isPrefetch = purpose.IndexOf("prefetch", StringComparison.Ordinal) >= 0
+                          || purpose.IndexOf("preview", StringComparison.Ordinal) >= 0;
+
+            if (isGet && !isPrefetch)
+            {
+                TrackRead("blog-starter", scope, detail, trackIp, trackAgent, trackReferrer);
+            }
+        }
+        catch (Exception trackEx)
+        {
+            DotNetNuke.Services.Exceptions.Exceptions.LogException(trackEx);
+        }
+    }
+
     var posts = publicResult == null ? new List<AppRecordDto>() : publicResult.Items.ToList();
     var featured = featuredResult == null ? null : featuredResult.Items.FirstOrDefault();
     if (featured == null && posts.Count > 0) { featured = posts[0]; }
@@ -140,7 +372,7 @@
             .Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(x => x).ToList();
 }
 
-<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs.css?v=20260729g" />
+<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs.css?v=20260731a" />
 
 <main class="mfb" aria-labelledby="mfb-title">
     @if (!string.IsNullOrWhiteSpace(loadError))
@@ -236,11 +468,18 @@
     }
     else
     {
-        <section class="mfb-hero">
+        @* The module's own eyebrow, display title and strapline are GONE as of 1.2.2, matching
+           MegaForm.Blogs.Oqtane 1.4.0.
+
+           They were hardcoded English marketing copy ("◆ Featured stories" / "Insights & Ideas" /
+           "Design, development and product thinking from the MegaForm community") that no site
+           owner could change, stacked directly under the skin's own page heading. Two titles for
+           one page is not a style choice, it is duplicated chrome — and it pushed the first story
+           most of a screen down. The skin owns the page identity; this module owns the content.
+
+           The search box stays: it is functionality, not chrome. *@
+        <section class="mfb-hero mfb-hero-bare">
             <div class="mfb-shell">
-                <span class="mfb-eyebrow">◆ Featured stories</span>
-                <h1 id="mfb-title">Insights &amp; Ideas</h1>
-                <p>Design, development and product thinking from the MegaForm community.</p>
                 <div class="mfb-search" role="search">
                     <label class="sr-only" for="mfb-q">Search articles</label>
                     <input id="mfb-q" name="q" value="@search" placeholder="Search articles, topics, authors..."
@@ -262,7 +501,7 @@
                             <p>@Text(featured, "excerpt", "")</p>
                             <div class="mfb-card-foot">
                                 <span><strong>@Text(featured, "author_name", "MegaForm Editorial")</strong><small>@DateLabel(featured, "publish_date")</small></span>
-                                <span>@Number(featured, "view_count").ToString("N0") reads · @Number(featured, "comment_count") comments</span>
+                                <span>@Plural(Number(featured, "view_count"), "read", "reads") · @Plural(Number(featured, "comment_count"), "comment", "comments")</span>
                             </div>
                         </div>
                     </article>
@@ -304,7 +543,7 @@
                                     <p>@Text(post, "excerpt", "")</p>
                                     <div class="mfb-card-foot">
                                         <span><strong>@Text(post, "author_name", "MegaForm Editorial")</strong><small>@DateLabel(post, "publish_date")</small></span>
-                                        <span>@Number(post, "view_count").ToString("N0") reads</span>
+                                        <span>@Plural(Number(post, "view_count"), "read", "reads")</span>
                                     </div>
                                 </div>
                             </article>

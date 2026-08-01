@@ -189,7 +189,10 @@
 
 /* ── quick access ─────────────────────────────────────────────────────── */
 
-.mfba-quick { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+/* auto-fit, not a fixed 6: the tile count is now conditional (there is no "edit the latest
+   post" tile on a blog with no posts), and a fixed track count leaves a ragged hole on the
+   very first screen a new install shows. The narrow breakpoints below still pin 3 and 2. */
+.mfba-quick { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(10rem, 100%), 1fr)); gap: 12px; }
 .mfba-quick a {
   display: flex; flex-direction: column; align-items: center; gap: 8px;
   padding: 16px; border: 1px solid var(--mfba-line); border-radius: var(--mfba-r-panel);
@@ -236,7 +239,12 @@
 .mfba-post { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .mfba-post > img, .mfba-avatar { width: 32px; height: 32px; flex: 0 0 auto; border-radius: 50%; object-fit: cover; }
 .mfba-avatar { display: inline-flex; align-items: center; justify-content: center; background: var(--mfba-muted); color: var(--mfba-dim); font-size: 13px; font-weight: 600; }
-.mfba-post-title { font-size: 14px; font-weight: 500; }
+/* `color` is NOT optional here. This is an <a> (it opens the editor), and the inherit
+   re-assertion block near the top of this file deliberately leaves `a` out — so without an
+   explicit colour the title takes the host theme's `a { color }`, which on stock Oqtane is a
+   link blue on a white card. Same failure shape as the white-on-white headings of 07-30. */
+.mfba-post-title { display: block; color: var(--mfba-ink); font-size: 14px; font-weight: 500; }
+a.mfba-post-title:hover { color: var(--mfba-primary); }
 .mfba-post-meta { display: flex; overflow: hidden; align-items: center; gap: 8px; margin-top: 2px; color: var(--mfba-dim); font-size: 12px; white-space: nowrap; }
 .mfba-post-meta span { display: inline-flex; align-items: center; gap: 4px; }
 .mfba-post-meta > span:first-child { overflow: hidden; text-overflow: ellipsis; }
@@ -716,3 +724,61 @@ html.mf-host-editmode .mf-fs-toggle.mf-fs-floating:hover { background: #6366f1; 
   .mfba-newform { grid-template-columns: minmax(0, 1fr); }
   .mfba-quick { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* ============================================================================
+   [MFBA-EDITPOST-20260730] The edit screen, and the links that reach it.
+
+   Appended at end-of-file: these are new component rules, and at equal
+   specificity the later rule wins. (The one thing that must NOT live here is
+   an inherit re-assertion — that belongs above the component rules, which is
+   why the heading block sits at the top of this file.)
+   ============================================================================ */
+
+/* Edit / preview on a kanban card. The card itself is draggable, so these sit in the
+   card's top row beside the grip rather than floating over the content. */
+.mfba-kacts { display: flex; align-items: center; gap: 2px; flex: 0 0 auto; }
+.mfba-kacts .mfba-iconbtn { width: 24px; height: 24px; color: var(--mfba-dim); }
+.mfba-kacts .mfba-iconbtn:hover { color: var(--mfba-primary); background: var(--mfba-muted); }
+
+/* The three publish gates, shown above the editor.
+
+   This strip exists because gate 2 has no other visible symptom: a post can read
+   "Published" everywhere in this console and still be invisible to every public
+   listing, because MF_Submissions.Status — the column named queries actually filter
+   on — was left behind by SubmitAsync. Showing all three side by side is what turns
+   that from a two-hour trace into a glance. */
+.mfba-gates {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
+  gap: 10px;
+  margin: 14px 0 4px;
+}
+
+.mfba-gate {
+  display: flex; align-items: center; gap: 10px; min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--mfba-line); border-radius: 10px;
+  background: var(--mfba-card);
+}
+.mfba-gate > div { min-width: 0; }
+.mfba-gate strong { display: block; color: var(--mfba-ink); font-size: 12px; font-weight: 650; }
+.mfba-gate small { display: block; color: var(--mfba-dim); font-size: 13px; overflow-wrap: anywhere; }
+
+.mfba-gate-n {
+  display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--mfba-muted); color: var(--mfba-dim);
+  font-size: 12px; font-weight: 650;
+}
+
+.mfba-gate.on { border-color: #a6f4c5; background: #f6fefa; }
+.mfba-gate.on .mfba-gate-n { background: #dbfce7; color: #027a48; }
+.mfba-gate.warn { border-color: #fda29b; background: #fffafa; }
+.mfba-gate.warn .mfba-gate-n { background: #ffe2e2; color: #b42318; }
+.mfba-gate.warn small { color: #b42318; font-weight: 600; }
+
+/* The editor's footer mixes a button, a link and a note; keep them on one baseline and
+   let them wrap rather than widen the panel. */
+.mfba-newform-foot { flex-wrap: wrap; }
+.mfba-newform-foot .mfba-panel-link { margin-left: 4px; }
+.mfba-newform-foot .mfba-hint { margin-left: auto; }

@@ -1,3 +1,57 @@
+1.3.0
+
+- You can now WRITE a post from DNN. Until this release the admin could only edit posts that
+  already existed, and the dashboard's "New Post" tile pointed at the comments screen - so a blog
+  could not be started from DNN at all. The tile now opens an empty editor, and Create writes the
+  post through the same Records/Submissions APIs the rest of the console uses.
+  - Status and Content type are choosable on the form; the other required fields the posts form
+    insists on (audience, language, publish date, author email, category key) are filled in for you.
+  - Leave the slug blank and it is derived from the title, then a free variant is claimed so two
+    posts can never share a reader-facing URL.
+  - After the post is created its status is written back through the Records API, which updates
+    both the typed field and the master submission status. Without that step a post created as
+    "Published" is invisible to every public listing.
+  - A post whose generated id collides with another post is given its own, because that id is what
+    read counts and comments are grouped by.
+
+  NOTE: the New Post link is ?edit=0. DNN rewrites a query value into a path segment, and a
+  non-numeric one (?edit=new) does not survive a form post - the page silently never receives it.
+
+1.2.2
+
+- Removes the module's own eyebrow, display title and strapline from the blog listing, so the
+  page carries one heading instead of two. The removed copy was hardcoded English marketing text
+  no site owner could edit, stacked under the skin's own page heading, and it pushed the first
+  story most of a screen down. The skin owns the page identity; this module owns the content.
+  The search box stays - it is functionality, not chrome. Matches MegaForm.Blogs.Oqtane 1.4.0.
+
+1.2.1
+
+- Fixes every number on the public blog rendering as 0 - read counts, comment counts, reading
+  time. Typed storage returns a Number field as a decimal ("2.000000"), which the plain
+  int.TryParse overload rejects, so the page fell back to zero while the database held the right
+  value. Both admin screens already parsed these correctly; the reader-facing page did not.
+
+1.2.0
+
+- Counts reads. Opening a post records a row in the blog app's `reader-events` form; MegaForm's
+  own analytics rollup turns those rows into each post's view count. This module never edits the
+  counter itself, so two readers arriving at once cannot lose a count between them.
+  One reader refreshing counts once per half hour. Crawlers, HEAD requests and link-preview
+  prefetches are not counted. The visitor key is a one-way hash of address and browser; no address
+  is stored.
+- Follows the site theme instead of assuming a light one. Card, panel, chip, input and hero
+  colours are now derived from the theme's own body colours, so the blog reads correctly on a dark
+  or branded skin. Measured contrast stays above 4.5 on dark, light, navy and sepia.
+  (Bootstrap's --bs-secondary-bg / --bs-tertiary-bg / --bs-border-color are deliberately NOT used:
+  on a dark theme they still report daylight values.)
+- Headings no longer inherit the host theme's colour, which could render a card title
+  white-on-white.
+
+  KNOWN LIMITATION: view counts only appear once the blog app's manifest binds its forms. A seeded
+  install ships that list empty, which silently stops the analytics rollup before it starts. Run
+  Tools\Repair-BlogAppManifest.ps1 once (it supports -WhatIf) and restart the site.
+
 1.1.0
 
 - Adds the full editorial console: admin dashboard, editorial kanban, and comments moderation.

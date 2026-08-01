@@ -1,3 +1,16 @@
+/* [MFB-INHERIT-20260730] MUST stay above every component rule below.
+
+   The host theme ships bare `h1..h6 { color: … }`. Our headings set margin and size but take
+   their colour by INHERITANCE, and an inherited value has no specificity at all — so it loses to
+   ANY matching rule, including that bare one. Measured on :5131 before this line existed:
+   `.mfb-card-body h3` computed to rgb(173,175,174) — the theme's grey — on a white card.
+
+   This block goes FIRST, not last, on purpose: it ties with the component rules on specificity,
+   and on a tie the LATER rule wins, which must be the component. Moving it to the end of the
+   file would flatten every intentional muted colour in the sheet.
+   `a` is excluded deliberately: link colour is set by the module's own classes. */
+.mfb :where(h1,h2,h3,h4,h5,h6,p,li,td,th,dt,dd,label,legend,strong,b,em,i,small,time,
+            figcaption,summary,blockquote){color:inherit}
 .mfb{--mfb-surface:var(--mf-page-surface,var(--bs-body-bg,var(--surface-color,#fff)));--mfb-ink:var(--mf-page-text,var(--bs-body-color,var(--default-color,#101828)));--mfb-muted:var(--mf-page-muted,var(--bs-secondary-color,#667085));--mfb-line:var(--mf-page-border,var(--border-color,#e4e7ec));--mfb-accent:var(--mf-page-primary,var(--accent-color,#6d4aff));--mfb-soft:#f6f5ff;background:var(--mfb-surface);color:var(--mfb-ink);font-family:Inter,"Segoe UI",system-ui,sans-serif;line-height:1.55}.mfb *{box-sizing:border-box}.mfb a{color:inherit;text-decoration:none}.mfb img{display:block;max-width:100%}.mfb-shell{width:min(1180px,calc(100% - 36px));margin:auto}.mfb-hero{margin-top:-20px;padding:76px 0 54px;background:radial-gradient(circle at 15% 10%,#e9e4ff 0,transparent 33%),linear-gradient(145deg,#fbfbff,#f5f7fb);border-bottom:1px solid var(--mfb-line)}.mfb-eyebrow{display:inline-flex;color:var(--mfb-accent);font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}.mfb-hero>div>h1,.mfb-article-head h1{margin:8px 0 10px;font-size:clamp(42px,7vw,72px);line-height:1.03;letter-spacing:-.045em}.mfb-hero>div>p,.mfb-lead{max-width:720px;margin:0;color:var(--mfb-muted);font-size:19px}.mfb-search{position:relative;max-width:680px;margin:30px 0 38px}.mfb-search input{width:100%;height:58px;padding:0 132px 0 22px;border:1px solid #d0d5dd;border-radius:999px;background:#fff;font-size:16px;box-shadow:0 14px 35px #1018280c}.mfb-search button,.mfb-newsletter button,.mfb-button{border:0;border-radius:999px;background:var(--mfb-accent);color:#fff;font-weight:750;cursor:pointer}.mfb-search button{position:absolute;right:6px;top:6px;height:46px;padding:0 26px}.mfb-feature{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr);overflow:hidden;border:1px solid var(--mfb-line);border-radius:26px;background:#fff;box-shadow:0 22px 60px #10182814}.mfb-feature-image{position:relative;min-height:430px;overflow:hidden}.mfb-feature-image img,.mfb-card-image img,.mfb-article-hero img{width:100%;height:100%;object-fit:cover;transition:transform .45s ease}.mfb-feature:hover img,.mfb-card:hover img{transform:scale(1.035)}.mfb-feature-image>span,.mfb-card-image>span{position:absolute;left:18px;top:18px;padding:6px 11px;border-radius:999px;background:var(--mfb-accent);color:#fff;font-size:12px;font-weight:800}.mfb-feature-copy{display:flex;flex-direction:column;justify-content:center;padding:40px}.mfb-chip{display:inline-block;padding:5px 10px;border-radius:999px;background:var(--mfb-soft);color:var(--mfb-accent);font-size:12px;font-weight:800}.mfb-feature-copy small,.mfb-card-body small{margin-left:9px;color:var(--mfb-muted)}.mfb-feature-copy h2{margin:17px 0 12px;font-size:32px;line-height:1.18;letter-spacing:-.025em}.mfb-feature-copy p,.mfb-card-body p{color:var(--mfb-muted)}.mfb-card-foot{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-top:auto;padding-top:22px;border-top:1px solid var(--mfb-line);color:var(--mfb-muted);font-size:12px}.mfb-card-foot>span:first-child{display:flex;flex-direction:column}.mfb-card-foot strong{color:var(--mfb-ink);font-size:13px}.mfb-card-foot small{margin:0}.mfb-content{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:42px;padding-top:58px;padding-bottom:70px}.mfb-section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}.mfb-section-head>div{display:flex;align-items:center;gap:10px}.mfb-section-head h2{margin:0;font-size:24px}.mfb-section-head>span{color:var(--mfb-muted);font-size:13px}.mfb-trend{color:var(--mfb-accent);font-size:25px;font-weight:900}.mfb-categories{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:25px}.mfb-categories a{padding:8px 14px;border-radius:999px;background:#f2f4f7;color:#475467;font-size:13px;font-weight:700}.mfb-categories a.active,.mfb-categories a:hover{background:var(--mfb-accent);color:#fff}.mfb-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}.mfb-card{display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--mfb-line);border-radius:18px;background:#fff;box-shadow:0 4px 15px #10182808;transition:transform .25s,box-shadow .25s}.mfb-card:hover{transform:translateY(-3px);box-shadow:0 18px 38px #10182814}.mfb-card-image{position:relative;aspect-ratio:16/10;overflow:hidden}.mfb-card-body{display:flex;flex:1;flex-direction:column;padding:20px}.mfb-card-body h3{margin:12px 0 7px;font-size:20px;line-height:1.25}.mfb-card-body p{display:-webkit-box;overflow:hidden;margin:0 0 18px;-webkit-box-orient:vertical;-webkit-line-clamp:2}.mfb-sidebar{display:flex;flex-direction:column;gap:20px}.mfb-side-card,.mfb-author-card,.mfb-newsletter,.mfb-panel,.mfb-editor{padding:22px;border:1px solid var(--mfb-line);border-radius:18px;background:#fff}.mfb-side-card h2,.mfb-author-card h2,.mfb-newsletter h2{margin:0 0 13px;font-size:17px}.mfb-tags{display:flex;flex-wrap:wrap;gap:8px}.mfb-tags a{padding:7px 10px;border-radius:999px;background:#f2f4f7;color:#475467;font-size:12px}.mfb-tags a:hover{background:var(--mfb-soft);color:var(--mfb-accent)}.mfb-newsletter{border:0;background:linear-gradient(145deg,#7657ff,#4f35d3);color:#fff}.mfb-newsletter p,.mfb-newsletter small{color:#e7e1ff}.mfb-newsletter input{width:100%;height:44px;margin:8px 0;padding:0 13px;border:1px solid #ffffff55;border-radius:10px;background:#ffffff17;color:#fff}.mfb-newsletter input::placeholder{color:#ffffffaa}.mfb-newsletter button{width:100%;height:42px;background:#fff;color:#4f35d3}.mfb-newsletter small{display:block;margin-top:10px}.mfb-state{margin:30px auto;padding:25px;border:1px dashed #cbd5e1;border-radius:16px;background:#f8fafc;color:#475467;text-align:center}.mfb-state-error{border-color:#fda29b;background:#fff1f0;color:#b42318}.mfb-state span{display:block;margin-top:5px}.mfb-button{display:inline-block;padding:10px 17px}.mfb-article{width:min(1180px,calc(100% - 36px));margin:40px auto 80px}.mfb-breadcrumb{display:flex;gap:9px;color:var(--mfb-muted);font-size:13px}.mfb-article-head{max-width:900px;margin:42px auto;text-align:center}.mfb-lead{margin:16px auto}.mfb-byline{display:flex;align-items:center;justify-content:center;gap:11px;margin-top:25px}.mfb-byline img,.mfb-avatar{width:46px;height:46px;border-radius:50%;object-fit:cover}.mfb-avatar{display:inline-grid;place-items:center;background:var(--mfb-soft);color:var(--mfb-accent);font-weight:850}.mfb-byline>span:last-child{display:flex;flex-direction:column;text-align:left}.mfb-byline small{color:var(--mfb-muted)}.mfb-article-hero{overflow:hidden;margin:0;border-radius:24px}.mfb-article-hero img{aspect-ratio:16/8;object-fit:cover}.mfb-article-hero figcaption{padding-top:8px;color:var(--mfb-muted);font-size:12px}.mfb-article-layout{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:52px;max-width:1000px;margin:45px auto}.mfb-prose{font-family:Georgia,serif;font-size:18px;line-height:1.85}.mfb-prose h2,.mfb-prose h3{font-family:Inter,"Segoe UI",sans-serif;line-height:1.25}.mfb-prose img{height:auto;border-radius:14px}.mfb-prose blockquote{margin:28px 0;padding:8px 0 8px 20px;border-left:4px solid var(--mfb-accent);color:#475467}.mfb-article-layout aside{display:flex;flex-direction:column;gap:18px}.mfb-author-card{text-align:center}.mfb-avatar-lg{width:64px;height:64px;margin:auto}.mfb-author-card h2{margin:12px 0 0}.mfb-muted{color:var(--mfb-muted)}.mfb-attachment{display:block;padding:8px 0;border-top:1px solid var(--mfb-line);color:var(--mfb-accent)!important;font-size:13px}.mfb-admin{width:min(1220px,calc(100% - 32px));margin:30px auto 70px}.mfb-admin-head{display:flex;align-items:end;justify-content:space-between;margin-bottom:25px}.mfb-admin-head h1{margin:5px 0 0;font-size:36px}.mfb-admin-head>span{color:var(--mfb-muted)}.mfb-notice{margin:0 0 18px;padding:12px 15px;border-radius:10px}.mfb-notice.success{background:#ecfdf3;color:#027a48}.mfb-notice.error{background:#fef3f2;color:#b42318}.mfb-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}.mfb-kpis>div{padding:20px;border:1px solid var(--mfb-line);border-radius:14px;background:#fff}.mfb-kpis strong,.mfb-kpis span{display:block}.mfb-kpis strong{font-size:30px}.mfb-kpis span{color:var(--mfb-muted);font-size:13px}.mfb-editor{margin-bottom:22px}.mfb-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:18px}.mfb-form-grid label{font-size:12px;font-weight:750}.mfb-form-grid label.wide{grid-column:1/-1}.mfb-form-grid input,.mfb-form-grid textarea,.mfb-task input,.mfb-inline-search input{width:100%;margin-top:5px;padding:10px 11px;border:1px solid #d0d5dd;border-radius:9px;font:inherit;font-weight:400}.mfb-files{display:flex;flex-wrap:wrap;gap:10px;margin-top:15px}.mfb-files a{color:var(--mfb-accent)}.mfb-admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}.mfb-task,.mfb-register-row{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:14px 0;border-top:1px solid var(--mfb-line)}.mfb-task>div,.mfb-register-row>div{display:flex;flex-direction:column}.mfb-task span,.mfb-register-row span{color:var(--mfb-muted);font-size:12px}.mfb-task form{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px}.mfb-task input{flex-basis:100%}.mfb-task button,.mfb-inline-search button{padding:7px 10px;border:0;border-radius:7px;background:#344054;color:#fff;font-weight:700;cursor:pointer}.mfb-task button.danger{background:#b42318}.mfb-register-row>a{color:var(--mfb-accent);font-weight:750}.mfb-inline-search{display:flex;gap:7px;margin-bottom:8px}.mfb-inline-search input{margin:0}.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 @media(max-width:900px){.mfb-feature,.mfb-content,.mfb-article-layout,.mfb-admin-grid{grid-template-columns:1fr}.mfb-feature-image{min-height:300px}.mfb-sidebar{display:grid;grid-template-columns:1fr 1fr}.mfb-kpis{grid-template-columns:repeat(2,1fr)}}@media(max-width:620px){.mfb-shell,.mfb-article,.mfb-admin{width:min(100% - 22px,1180px)}.mfb-hero{padding:52px 0 34px}.mfb-hero>div>h1,.mfb-article-head h1{font-size:40px}.mfb-feature-copy{padding:24px}.mfb-feature-copy h2{font-size:25px}.mfb-grid,.mfb-sidebar,.mfb-form-grid{grid-template-columns:1fr}.mfb-card-foot,.mfb-admin-head,.mfb-task{align-items:flex-start;flex-direction:column}.mfb-kpis{gap:8px}.mfb-kpis>div{padding:14px}.mfb-content{gap:25px}.mfb-article-layout{gap:25px}}
 .mfb-article-layout>*{min-width:0}.mfb-prose{min-width:0;overflow-wrap:anywhere;word-break:normal}.mfb-prose pre{max-width:100%;overflow:auto;white-space:pre-wrap}.mfb-prose code{overflow-wrap:anywhere;word-break:break-word}
@@ -75,3 +88,91 @@
    (also (0,1,0)), and blanketing them would flatten intentional muted text.
    ============================================================================ */
 .mfb :where(h1,h2,h3,h4,h5,h6,time,figcaption,blockquote,li,th,td,label){color:inherit}
+
+/* ============================================================================
+   [MFB-THEMECOMPAT-20260730] Follow the host theme instead of assuming daylight.
+
+   THE MEASUREMENT THAT DROVE THIS (localhost:5131, stock Oqtane 10.2.1):
+     body                 #060606 / #adafae      → the default theme is DARK
+     --mfb-surface        #060606                → the token chain was already correct
+     .mfb-card   painted  rgb(255,255,255)       → …and the rules under it hardcoded white
+     .mfb-card-body h3    rgb(173,175,174)       → grey text on that white card. Unreadable.
+
+   So the tokens were never the problem. Everything below re-expresses the literal light
+   colours in the sheet as token arithmetic, which is the only part that was missing.
+
+   🔴 --bs-secondary-bg / --bs-tertiary-bg / --bs-border-color ARE NOT USABLE. On that same
+   dark theme they measured #e9ecef, #f8f9fa and #dee2e6 — daylight values on a black page.
+   Bootstrap's surface ramp is not maintained by the theme, only --bs-body-bg/-color are. Deriving
+   from those two with color-mix is what makes this work on ANY skin rather than on Bootstrap's.
+
+   color-mix is also the graceful-degradation story: a browser that does not support it drops the
+   whole declaration and keeps the literal above, i.e. exactly today's light rendering.
+
+   Percentages are chosen so a LIGHT theme lands within a shade of the original palette
+   (--mfb-line 82/18 → #e0e1e4 vs the old #e4e7ec), which keeps the approved light design
+   pixel-stable while giving a dark theme correct surfaces.
+   ============================================================================ */
+
+.mfb{
+  /* Cards sit ON the page rather than punching a hole in it. Deliberately equal to the surface
+     so a light theme renders exactly as before (white card, white page, visible border). */
+  --mfb-card: var(--mfb-surface);
+  /* Secondary text. This was the LAST --bs-* dependency and it measured as a real failure:
+     --bs-secondary-color is not kept in step with the theme's body colour, so a light skin
+     inherited the dark skin's rgba(173,175,174,.75) and body copy landed at contrast 2.21 on
+     white. Deriving it from the ink the theme really uses is the only version that holds:
+     dark 5.4, light 7.6, navy 8.0 — all measured, all above 4.5. */
+  --mfb-muted: color-mix(in srgb, var(--mfb-ink) 72%, var(--mfb-surface));
+  /* Chips, tags, wells: a slight lift in whichever direction the theme runs. */
+  --mfb-fill: color-mix(in srgb, var(--mfb-surface) 92%, var(--mfb-ink) 8%);
+  --mfb-line: color-mix(in srgb, var(--mfb-surface) 82%, var(--mfb-ink) 18%);
+  --mfb-soft: color-mix(in srgb, var(--mfb-surface) 92%, var(--mfb-accent) 8%);
+}
+
+/* surfaces that were literal #fff */
+.mfb-feature,.mfb-card,.mfb-side-card,.mfb-author-card,.mfb-panel,.mfb-editor,
+.mfb-kpis>div,.mfb-gallery-sheet,.mfb-gallery-card{
+  background:var(--mfb-card);color:var(--mfb-ink);
+}
+
+/* the hero's daylight gradient */
+.mfb-hero{
+  background:linear-gradient(145deg,
+    color-mix(in srgb, var(--mfb-accent) 7%, var(--mfb-surface)), var(--mfb-surface));
+}
+
+/* form controls: white boxes with light-grey borders */
+.mfb-search input,.mfb-form-grid input,.mfb-form-grid textarea,.mfb-task input,
+.mfb-inline-search input,.mfb-gallery-controls input,.mfb-media-button,
+.mfb-gallery-tabs button{
+  border-color:var(--mfb-line);background:var(--mfb-card);color:var(--mfb-ink);
+}
+.mfb-search input::placeholder,.mfb-filterbar input::placeholder{color:var(--mfb-muted)}
+
+/* pill lists */
+.mfb-categories a,.mfb-tags a,.mfb-gallery-close,.mfb-gallery-thumb{
+  background:var(--mfb-fill);color:var(--mfb-muted);
+}
+.mfb-categories a.active,.mfb-categories a:hover{background:var(--mfb-accent);color:#fff}
+.mfb-tags a:hover{background:var(--mfb-soft);color:var(--mfb-accent)}
+
+/* states and quiet prose */
+.mfb-state{border-color:var(--mfb-line);background:var(--mfb-fill);color:var(--mfb-muted)}
+.mfb-prose blockquote{color:var(--mfb-muted)}
+.mfb-gallery-controls{background:var(--mfb-fill)}
+.mfb-notice.success,.mfb-notice.error{color:#fff}
+.mfb-notice.success{background:#027a48}
+.mfb-notice.error{background:#b42318}
+
+/* The card title is the exact element that measured grey-on-white. State its colour rather
+   than inheriting it — see the [MFB-INHERIT] note at the top of this file. */
+.mfb-card-body h3,.mfb-feature-copy h2,.mfb-section-head h2,.mfb-card-foot strong{
+  color:var(--mfb-ink);
+}
+
+/* Hero with its heading turned off (the 1.4.0 default). The 76px top padding existed to give a
+   72px display title room to breathe; with no title it was just a screen of empty page above the
+   first story — which is exactly what it looked like. The negative top margin also goes: it was
+   there to pull the hero band under the page chrome, and a bare hero is not a band. */
+.mfb-hero-bare{margin-top:0;padding-top:20px;padding-bottom:28px;background:none;border-bottom:0}
