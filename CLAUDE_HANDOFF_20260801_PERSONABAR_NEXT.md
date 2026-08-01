@@ -146,6 +146,35 @@ profiles · `7352faf` docs beacon · `d047bec` popover placement · `18fa01c` CO
 Gallery: `CissSolution/megaform-gallery@60b59e9`, CDN purged and re-verified — the served
 manifest is the current one and all 47 templates hash-match it.
 
+**Correction (same day).** That check covered the install path only, and the owner still could not
+see the new templates. The grid is filtered a second time against the jsDelivr **data API**
+listing, which lags the manifest and — unlike the file cache — **cannot be purged**
+(`X-Cache: HIT`, `max-age` one year). It was still enumerating 40 templates, so
+`GetTemplatesManifestAsync` was dropping 7 cards: the euroyouth trio, `christmas-americana-signup`
+and the three `invoice-*-application`, the last four hidden since 26–27 July. Fixed in
+`GalleryRepositoryService` (`[StaleListing v20260801]`) — a disputed entry is now confirmed with a
+HEAD against the file, and only a definite 404/410 removes it. **Needs the new `MegaForm.Core` DLL
+deployed**; publishing alone changes nothing.
+
+**Root cause, then the real fix.** The `@main` listing turned out to be byte-identical to the one
+for commit `dc53e2a` (26/07) — frozen, not lagging. Per-commit listings are exact
+(`@dc53e2a`→41, `@01f8388`→45, `@60b59e9`→48), so a branch ref on jsDelivr cannot be used for a
+gallery that changes. The default therefore moved to **GitHub Pages**
+(`https://CissSolution.github.io/megaform-gallery/`, `[PagesOverCdn v20260801]`) — the same repo,
+already Pages-enabled via `.nojekyll` and serving the current 47 templates the whole time. The
+"Pages not available for this organisation" note in the code was stale.
+
+Pages fixes it twice over: content is current (`max-age=600`, so publish is live in ten minutes, no
+purge step), and it is not a host `BuildListingUrl` can enumerate — so the reconcile is skipped and
+the manifest is authoritative on **every module version ever shipped**, including builds older than
+the `[StaleListing]` repair.
+
+⭐ The capitals are load-bearing: `cissolution.github.io` returns 404, `CissSolution.github.io`
+serves (3/3). ⚠️ Sites where an admin already saved the jsDelivr URL keep using it — the new
+default only applies where no setting was stored. ⚠️ The local clone `E:\_megaform_gallery_repo`
+is at `523aae7` with 35 templates against `60b59e9`/47 on GitHub; publishing from it without
+pulling first would delete 12 templates.
+
 ⚠️ `.gitignore` still blocks `*.png`. Six artwork files were force-added for this work; the other
 ~287 under `Assets/img` remain outside git, so a clean clone still cannot rebuild every template's
 artwork.

@@ -1,6 +1,9 @@
 // Persona Bar QA: host login -> open the MegaForm panel -> probe it -> screenshot.
 //
-// usage: node personabar-megaform.mjs <outDir> <site> <user> <pass>
+// usage: node personabar-megaform.mjs <outDir> <site> <user> <pass> [hostMap|-] [--allow-writes]
+//   hostMap      omit for a local QA host, "-" for a publicly resolvable domain
+//   --allow-writes  enables the add-to-page step, which CREATES A MODULE on a real page.
+//                   Never pass it against a site you care about.
 //
 // Why a browser and not curl: the Persona Bar is a Knockout SPA living in an iframe
 // (#personaBar-iframe). Its menu items, the AMD module load and the /API/personaBar
@@ -14,6 +17,16 @@ const outDir = path.resolve(process.argv[2]);
 const site = process.argv[3].replace(/\/$/, '');
 const user = process.argv[4];
 const pass = process.argv[5];
+// Optional 5th arg. Omitted = map the site's own host to 127.0.0.1, which is what every
+// local QA host needs. Pass "-" for a site that resolves publicly (dnndefender.com), or
+// the mapping sends the real domain to this machine and nothing loads.
+const hostMapArg = process.argv[6];
+
+// [QaWriteGuard v20260801] The add-to-page step is a REAL write: it calls AddToPage, which
+// creates a module on a real page. Run against dnndefender.com it added a MegaForm module to
+// the live "404 Error Page" (TabModuleID 21755) because the picker takes the FIRST page in the
+// list. Read-only by default now; opt in with --allow-writes on a disposable site only.
+const allowWrites = process.argv.includes('--allow-writes');
 
 fs.mkdirSync(outDir, { recursive: true });
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
@@ -46,11 +59,12 @@ function wsConnect(wsUrl) {
 
 async function main() {
   const host = new URL(site).hostname;
+  const mapHost = hostMapArg === '-' ? null : (hostMapArg || host);
   const chrome = spawn(CHROME, [
     `--remote-debugging-port=${DBG}`, '--headless=new', '--disable-gpu',
     `--user-data-dir=${path.join(outDir, '.p')}`, '--window-size=1440,1200', '--hide-scrollbars',
     // The QA hosts exist only in the Windows hosts file; Chrome's async DNS would NXDOMAIN them.
-    `--host-resolver-rules=MAP ${host} 127.0.0.1`,
+    ...(mapHost ? [`--host-resolver-rules=MAP ${mapHost} 127.0.0.1`] : []),
     '--disable-features=DnsOverHttps',
     'about:blank'], { stdio: 'ignore' });
 
@@ -164,7 +178,7 @@ async function main() {
     // The Persona Bar cannot drag a form onto a pane (its panel is an iframe overlay and DNN's
     // drag-to-pane lives in the Edit Bar), so this picker is the supported equivalent. Driving
     // the real controls also exercises the antiforgery token that utility.sf.post attaches.
-    const addFlow = await ev(`(async () => {
+    const addFlow = !allowWrites ? 'SKIPPED (read-only; pass --allow-writes on a disposable site)' : await ev(`(async () => {
       const d = document.getElementById('personaBar-iframe').contentDocument;
       const w = document.getElementById('personaBar-iframe').contentWindow;
       const sleep = (ms) => new Promise(r => w.setTimeout(r, ms));
@@ -216,7 +230,13 @@ async function main() {
       const j = await r.json();
       return (j.items && j.items[0]) ? j.items[0].builderUrl : null;
     })()`, true);
-    if (builderUrl) {
+    // [QaWriteGuard v20260801] Opening the builder is not as read-only as it looks: after this
+    // step ran against dnndefender.com, form 381's UpdatedOnUtc had moved to that run's
+    // timestamp with UpdatedByUserId=1. Whatever the builder does on load, it is not something
+    // to do to a live form by accident - so it is gated with the same switch as add-to-page.
+    if (builderUrl && !allowWrites) {
+      console.log('builder hand-off: SKIPPED (read-only; loading the builder can touch the form)');
+    } else if (builderUrl) {
       await cdp.call('Page.navigate', { url: builderUrl });
       await sleep(9000);
       const landed = await ev(`JSON.stringify({
