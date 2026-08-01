@@ -1,0 +1,60 @@
+<!-- [PersonaBar v20260731-01] MegaForm panel.
+     Markup only: every value is filled in by scripts/MegaForm.js from
+     /API/personaBar/MegaForm/*. Class names follow the Persona Bar's own panels
+     (socialpanelheader / socialpanelbody / dnn-ui-common-button) so the panel
+     inherits DNN's chrome instead of re-styling it. -->
+<!-- socialpanelheader > h3.caption + div.actions is the Persona Bar's own header layout
+     (see Dnn.Recyclebin). Using it means the buttons sit where DNN puts every other
+     panel's buttons instead of being nudged into place with a negative margin. -->
+<div class="socialpanelheader" id="megaform-headerPanel">
+    <h3 class="caption" data-mf-resx="PanelTitle">MegaForm</h3>
+    <div class="actions">
+        <button type="button" class="mf-pb-dashboard dnn-ui-common-button large" data-mf-resx="OpenDashboard">Open dashboard</button>
+        <button type="button" class="mf-pb-new dnn-ui-common-button large" role="primary" data-mf-resx="NewForm">New form</button>
+    </div>
+</div>
+
+<div class="socialpanelbody mf-pb-body" id="megaform-bodyPanel">
+
+    <div class="mf-pb-alert mf-pb-hidden" role="alert"></div>
+
+    <ul class="mf-pb-stats">
+        <li><span class="mf-pb-stat-value" data-mf-stat="forms">&mdash;</span><span class="mf-pb-stat-label" data-mf-resx="StatForms">Forms</span></li>
+        <li><span class="mf-pb-stat-value" data-mf-stat="publishedForms">&mdash;</span><span class="mf-pb-stat-label" data-mf-resx="StatPublished">Published</span></li>
+        <li><span class="mf-pb-stat-value" data-mf-stat="submissions">&mdash;</span><span class="mf-pb-stat-label" data-mf-resx="StatSubmissions">Submissions</span></li>
+        <li><span class="mf-pb-stat-value" data-mf-stat="lastSubmission">&mdash;</span><span class="mf-pb-stat-label" data-mf-resx="StatLastSubmission">Last submission</span></li>
+    </ul>
+
+    <!-- Server caps the page size, so the search box is not a nicety: it is how you
+         reach a form that is not on the first page. -->
+    <div class="mf-pb-toolbar">
+        <input type="search" class="mf-pb-search" autocomplete="off"
+               placeholder="Search forms by title" aria-label="Search forms by title" />
+        <select class="mf-pb-status" aria-label="Filter by status">
+            <option value="" data-mf-resx="StatusAll">All statuses</option>
+            <option value="Published" data-mf-resx="StatusPublished">Published</option>
+            <option value="Draft" data-mf-resx="StatusDraft">Draft</option>
+        </select>
+    </div>
+
+    <table class="mf-pb-table">
+        <thead>
+            <tr>
+                <th data-mf-resx="ColForm">Form</th>
+                <th class="mf-pb-num" data-mf-resx="ColFields">Fields</th>
+                <th class="mf-pb-num" data-mf-resx="ColSubmissions">Submissions</th>
+                <th data-mf-resx="ColModified">Modified</th>
+                <th class="mf-pb-actions-col" data-mf-resx="ColActions">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="mf-pb-rows"></tbody>
+    </table>
+
+    <p class="mf-pb-empty mf-pb-hidden" data-mf-resx="NoForms">No forms match this filter.</p>
+
+    <div class="mf-pb-pager">
+        <button type="button" class="dnn-ui-common-button small mf-pb-prev" data-mf-resx="Previous">Previous</button>
+        <span class="mf-pb-pageinfo"></span>
+        <button type="button" class="dnn-ui-common-button small mf-pb-next" data-mf-resx="Next">Next</button>
+    </div>
+</div>

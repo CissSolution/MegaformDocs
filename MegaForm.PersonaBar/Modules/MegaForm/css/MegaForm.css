@@ -1,0 +1,231 @@
+/* [PersonaBar v20260801-02] MegaForm panel.
+   Scoped under .mf-pb-* only. The panel frame, header bar and button chrome come from the
+   Persona Bar's own stylesheet (socialpanelheader / socialpanelbody / dnn-ui-common-button) —
+   restyling those would fight the host on every DNN upgrade.
+
+   Colours come from DNN's own custom properties with the stock Persona Bar values as
+   fallbacks, so the panel follows a re-skinned Persona Bar instead of hardcoding blue. */
+
+.mf-pb-body {
+    --mf-pb-primary: var(--dnn-color-primary, #1e88c3);
+    --mf-pb-on-primary: var(--dnn-color-primary-contrast, #fff);
+    --mf-pb-surface: var(--dnn-color-background, #fff);
+    --mf-pb-ink: var(--dnn-color-foreground, #1e2b3c);
+    --mf-pb-muted: var(--dnn-color-neutral-dark, #6b7684);
+    --mf-pb-line: var(--dnn-color-neutral, #e4e7eb);
+    --mf-pb-wash: color-mix(in srgb, var(--mf-pb-ink) 3%, var(--mf-pb-surface));
+    --mf-pb-radius: var(--dnn-controls-radius, 4px);
+}
+
+.mf-pb-hidden { display: none !important; }
+
+/* .socialpanelheader is position:absolute with height:72px while .socialpanelbody only
+   reserves margin-top:103px. Buttons on their own line push the header past that and it
+   covers the first stat tile — so the actions have to float onto the title's line. */
+#megaform-headerPanel .actions { float: right; margin-top: 2px; }
+#megaform-headerPanel .actions .dnn-ui-common-button + .dnn-ui-common-button { margin-left: 8px; }
+
+.mf-pb-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0 0 16px;
+    padding: 11px 14px;
+    border: 1px solid #e3b100;
+    border-left-width: 3px;
+    border-radius: var(--mf-pb-radius);
+    background: #fdf6e0;
+    color: #6b5200;
+    font-size: 13px;
+}
+.mf-pb-alert.is-success { border-color: #2e9e5b; background: #eaf7ef; color: #1d6b3d; }
+
+/* ── Stat tiles ─────────────────────────────────────────────────────────── */
+.mf-pb-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+    margin: 0 0 20px;
+    padding: 0;
+    list-style: none;
+}
+
+.mf-pb-stats li {
+    position: relative;
+    min-width: 0;
+    padding: 14px 16px 14px 18px;
+    border: 1px solid var(--mf-pb-line);
+    border-radius: var(--mf-pb-radius);
+    background: var(--mf-pb-surface);
+    overflow: hidden;
+}
+
+/* A 3px spine instead of a full coloured tile: reads as a group without shouting. */
+.mf-pb-stats li::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: var(--mf-pb-primary);
+    opacity: .85;
+}
+.mf-pb-stats li:nth-child(2)::before { opacity: .6; }
+.mf-pb-stats li:nth-child(3)::before { opacity: .4; }
+.mf-pb-stats li:nth-child(4)::before { opacity: .25; }
+
+.mf-pb-stat-value {
+    display: block;
+    font-size: 25px;
+    line-height: 1.15;
+    font-weight: 600;
+    color: var(--mf-pb-ink);
+    /* A long timestamp must not push the tile wider than its share of the row. */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mf-pb-stat-label {
+    display: block;
+    margin-top: 5px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--mf-pb-muted);
+}
+
+/* ── Toolbar ────────────────────────────────────────────────────────────── */
+.mf-pb-toolbar { display: flex; gap: 10px; margin: 0 0 14px; }
+.mf-pb-toolbar .mf-pb-search { flex: 1 1 auto; min-width: 0; }
+.mf-pb-toolbar .mf-pb-search,
+.mf-pb-toolbar .mf-pb-status {
+    height: 34px;
+    padding: 0 12px;
+    border: 1px solid var(--mf-pb-line);
+    border-radius: var(--mf-pb-radius);
+    background: var(--mf-pb-surface);
+    color: var(--mf-pb-ink);
+    font-size: 13px;
+}
+.mf-pb-toolbar .mf-pb-search:focus,
+.mf-pb-toolbar .mf-pb-status:focus {
+    outline: 0;
+    border-color: var(--mf-pb-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mf-pb-primary) 18%, transparent);
+}
+
+/* ── Table ──────────────────────────────────────────────────────────────── */
+.mf-pb-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.mf-pb-table th,
+.mf-pb-table td {
+    padding: 11px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--mf-pb-line);
+    vertical-align: middle;
+}
+
+.mf-pb-table th {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--mf-pb-muted);
+    background: var(--mf-pb-wash);
+    border-bottom-color: var(--mf-pb-line);
+}
+.mf-pb-table th:first-child { border-top-left-radius: var(--mf-pb-radius); }
+.mf-pb-table th:last-child { border-top-right-radius: var(--mf-pb-radius); }
+
+.mf-pb-table tbody tr:hover { background: var(--mf-pb-wash); }
+
+.mf-pb-table .mf-pb-num { text-align: right; width: 96px; font-variant-numeric: tabular-nums; }
+.mf-pb-table .mf-pb-actions-col { width: 210px; white-space: nowrap; }
+/* A timestamp that wraps doubles every row's height; the title column absorbs long content. */
+.mf-pb-table .mf-pb-modified { white-space: nowrap; width: 165px; color: var(--mf-pb-muted); }
+
+.mf-pb-formtitle { font-weight: 600; color: var(--mf-pb-ink); }
+.mf-pb-formid { margin-left: 8px; color: var(--mf-pb-muted); font-size: 11px; white-space: nowrap; opacity: .8; }
+
+.mf-pb-badge {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    background: color-mix(in srgb, var(--mf-pb-ink) 8%, var(--mf-pb-surface));
+    color: var(--mf-pb-muted);
+}
+.mf-pb-badge-published { background: #e2f4e8; color: #1f7a43; }
+.mf-pb-badge-draft { background: #f3f0e2; color: #7a651f; }
+
+.mf-pb-action {
+    margin-right: 12px;
+    color: var(--mf-pb-primary);
+    text-decoration: none;
+    cursor: pointer;
+}
+.mf-pb-action:hover { text-decoration: underline; }
+/* A disabled jump is still a link element, so the cue has to be explicit. */
+.mf-pb-disabled { opacity: .45; cursor: not-allowed; text-decoration: none !important; }
+
+.mf-pb-empty { margin: 26px 0; color: var(--mf-pb-muted); font-size: 13px; }
+
+.mf-pb-pager { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+.mf-pb-pager .mf-pb-pageinfo { font-size: 12px; color: var(--mf-pb-muted); }
+.mf-pb-pager button[disabled] { opacity: .45; cursor: not-allowed; }
+
+/* ── Add-to-page popover ────────────────────────────────────────────────────
+   The Persona Bar panel is an iframe overlay covering the page, so a form cannot be
+   dragged onto a pane — DNN's drag-to-pane lives in the Edit Bar. This picker is the
+   one-click equivalent: choose page + pane, the server places the module. */
+.mf-pb-drop {
+    position: absolute;
+    z-index: 20;
+    width: 320px;
+    padding: 14px;
+    border: 1px solid var(--mf-pb-line);
+    border-radius: var(--mf-pb-radius);
+    background: var(--mf-pb-surface);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, .16);
+}
+.mf-pb-drop h4 { margin: 0 0 4px; font-size: 13px; font-weight: 600; color: var(--mf-pb-ink); }
+.mf-pb-drop p { margin: 0 0 10px; font-size: 11px; color: var(--mf-pb-muted); }
+.mf-pb-drop input,
+.mf-pb-drop select {
+    width: 100%;
+    box-sizing: border-box;
+    height: 32px;
+    margin-bottom: 8px;
+    padding: 0 10px;
+    border: 1px solid var(--mf-pb-line);
+    border-radius: var(--mf-pb-radius);
+    font-size: 13px;
+}
+.mf-pb-drop .mf-pb-pagelist {
+    max-height: 190px;
+    overflow-y: auto;
+    margin: 0 0 10px;
+    border: 1px solid var(--mf-pb-line);
+    border-radius: var(--mf-pb-radius);
+}
+.mf-pb-drop .mf-pb-pagelist button {
+    display: block;
+    width: 100%;
+    padding: 7px 10px;
+    border: 0;
+    border-bottom: 1px solid var(--mf-pb-line);
+    background: none;
+    text-align: left;
+    font-size: 12px;
+    color: var(--mf-pb-ink);
+    cursor: pointer;
+}
+.mf-pb-drop .mf-pb-pagelist button:last-child { border-bottom: 0; }
+.mf-pb-drop .mf-pb-pagelist button:hover,
+.mf-pb-drop .mf-pb-pagelist button.is-active {
+    background: color-mix(in srgb, var(--mf-pb-primary) 12%, var(--mf-pb-surface));
+}
+.mf-pb-drop .mf-pb-pagepath { display: block; font-size: 10px; color: var(--mf-pb-muted); }
+.mf-pb-drop-actions { display: flex; justify-content: flex-end; gap: 8px; }

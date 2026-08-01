@@ -1,0 +1,27 @@
+1.0.0
+
+- MegaForm now has its own entry in the DNN Persona Bar, under Content. Until this
+  release the only way into MegaForm's admin surfaces was a page that already had a
+  MegaForm module on it - so an administrator who wanted to see how many forms and
+  submissions a portal held had to know which page to open first.
+  - The panel shows portal-wide counters (forms, published forms, submissions, last
+    submission) and a searchable, paged list of forms with field and submission counts.
+  - Edit and Submissions on each row hand off to the real MegaForm screens. Those are
+    DNN module controls and need a page that hosts the module: if the portal has none,
+    the buttons are disabled and say so instead of producing a URL that 404s. A module
+    already set to Admin Dashboard mode is preferred as the hand-off target.
+  - Visibility is the Persona Bar's own permission grid (Administrators by default), so
+    who may open MegaForm is managed where every other DNN menu item is managed.
+
+  NOTE: this is a separate package from MegaForm on purpose. Package type "PersonaBar"
+  is Host-only to install, and a DNN site without the Persona Bar can skip it while
+  MegaForm itself keeps working. It requires the MegaForm package (02.00.008 or newer)
+  because the panel reads through MegaForm.DNN.dll.
+
+  NOTE: the assembly targets .NET Framework 4.8. Dnn.PersonaBar.Library on DNN 10.x is
+  built for 4.8, and a 4.7.2 build cannot reference it (MSB3274) - every Persona Bar type
+  disappears at compile time.
+
+  NOTE: DNN install does NOT overwrite bin/*.dll. Upgrading this package on a live site
+  means stopping the app pool, copying MegaForm.PersonaBar.dll into bin, and starting it
+  again - the same rule as the other MegaForm assemblies.

@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MegaForm.Umbraco.Host", "Me
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MegaForm.Integrations.CloudStorage", "MegaForm.Integrations.CloudStorage\MegaForm.Integrations.CloudStorage.csproj", "{FBF079BB-DD03-4A09-9ECB-D7F9F1170935}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MegaForm.PersonaBar", "MegaForm.PersonaBar\MegaForm.PersonaBar.csproj", "{677CBC5F-BA3D-4096-908F-A991A344711A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -216,6 +218,24 @@ Global
 		{FBF079BB-DD03-4A09-9ECB-D7F9F1170935}.Wasm|x64.Build.0 = Debug|Any CPU
 		{FBF079BB-DD03-4A09-9ECB-D7F9F1170935}.Wasm|x86.ActiveCfg = Debug|Any CPU
 		{FBF079BB-DD03-4A09-9ECB-D7F9F1170935}.Wasm|x86.Build.0 = Debug|Any CPU
+		{677CBC5F-BA3D-4096-908F-A991A344711A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{677CBC5F-BA3D-4096-908F-A991A344711A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{677CBC5F-BA3D-4096-908F-A991A344711A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{677CBC5F-BA3D-4096-908F-A991A344711A}.Debug|x64.Build.0 = Debug|Any CPU
+		{677CBC5F-BA3D-4096-908F-A991A344711A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{677CBC5F-BA3D-4096-908F-A991A344711A}.Debug|x86.Build.0 = Debug|Any CPU
+		{677CBC5F-BA3D-4096-908F-A991A344711A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{677CBC5F-BA3D-4096-908F-A991A344711A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{677CBC5F-BA3D-4096-908F-A991A344711A}.Release|x64.ActiveCfg = Release|Any CPU
+		{677CBC5F-BA3D-4096-908F-A991A344711A}.Release|x64.Build.0 = Release|Any CPU
+		{677CBC5F-BA3D-4096-908F-A991A344711A}.Release|x86.ActiveCfg = Release|Any CPU
+		{677CBC5F-BA3D-4096-908F-A991A344711A}.Release|x86.Build.0 = Release|Any CPU
+		{677CBC5F-BA3D-4096-908F-A991A344711A}.Wasm|Any CPU.ActiveCfg = Debug|Any CPU
+		{677CBC5F-BA3D-4096-908F-A991A344711A}.Wasm|Any CPU.Build.0 = Debug|Any CPU
+		{677CBC5F-BA3D-4096-908F-A991A344711A}.Wasm|x64.ActiveCfg = Debug|Any CPU
+		{677CBC5F-BA3D-4096-908F-A991A344711A}.Wasm|x64.Build.0 = Debug|Any CPU
+		{677CBC5F-BA3D-4096-908F-A991A344711A}.Wasm|x86.ActiveCfg = Debug|Any CPU
+		{677CBC5F-BA3D-4096-908F-A991A344711A}.Wasm|x86.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

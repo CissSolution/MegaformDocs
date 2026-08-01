@@ -324,6 +324,25 @@ Copy-Item $coreDll "$STAGING\bin\" -Force
 Write-Host '  + bin\MegaForm.Core.dll'
 Copy-Item $sdkDll "$STAGING\bin\" -Force
 Write-Host '  + bin\MegaForm.Sdk.dll'
+
+# [PersonaBarMerge 2026-08-01] Content > MegaForm panel, folded in from the former
+# MegaForm.PersonaBar package. Built separately because it targets net48 (Dnn.PersonaBar.Library
+# on DNN 10.x is a 4.8 assembly and a net472 project cannot reference it at all).
+$pbDll = @(
+    "$SOLUTION_DIR\MegaForm.PersonaBar\bin\$Configuration\net48\MegaForm.PersonaBar.dll",
+    "$SOLUTION_DIR\MegaForm.PersonaBar\bin\Release\net48\MegaForm.PersonaBar.dll",
+    "$SOLUTION_DIR\MegaForm.PersonaBar\bin\Debug\net48\MegaForm.PersonaBar.dll"
+) | Where-Object { Test-Path $_ } | Select-Object -First 1
+
+if ($pbDll) {
+    Copy-Item $pbDll "$STAGING\bin\" -Force
+    Write-Host '  + bin\MegaForm.PersonaBar.dll'
+} else {
+    # Not fatal, but the package would install a menu whose controller does not exist, so say so
+    # loudly rather than shipping a panel whose every API call 404s.
+    Write-Warning 'MegaForm.PersonaBar.dll khong tim thay - panel Content > MegaForm se KHONG chay.'
+    Write-Warning '  Build truoc: dotnet build MegaForm.PersonaBar\MegaForm.PersonaBar.csproj -c Release'
+}
 if ($dapperDll -and (Test-Path $dapperDll)) {
     Copy-Item $dapperDll "$STAGING\bin\" -Force
     Write-Host '  + bin\Dapper.dll'
@@ -353,14 +372,44 @@ $cloudDllNames = @(
 
 # [DNN sync 2026-06-22] DNN scripts are *.SqlDataProvider (not *.sql); the old `*.sql` glob copied
 # ZERO scripts so installs/upgrades shipped no schema. Copy both extensions.
-Get-ChildItem "$PROJECT_DIR\SqlScripts\*" -Include *.SqlDataProvider, *.sql -ErrorAction SilentlyContinue | ForEach-Object {
+# [PkgSlim 2026-07-29] …but ONLY .SqlDataProvider actually runs. DNN executes the scripts NAMED in
+# the manifest's <component type="Script"> block, and every one of those 36 nodes names a
+# *.SqlDataProvider file — not a single plain .sql is declared. The 14 plain .sql files (the
+# 01.06.28*-seed.sql set, 160 KB compressed) therefore shipped to every customer and were never
+# executed by anything. Package the declared extension only.
+Get-ChildItem "$PROJECT_DIR\SqlScripts\*" -Include *.SqlDataProvider -ErrorAction SilentlyContinue | ForEach-Object {
     Copy-Item $_.FullName "$STAGING\SqlScripts\" -Force
     Write-Host "  + SqlScripts\$($_.Name)"
 }
 
-Get-ChildItem "$PROJECT_DIR\Views\*.ascx" -ErrorAction SilentlyContinue | ForEach-Object {
-    Copy-Item $_.FullName "$RESOURCES\Views\" -Force
-    Write-Host "  + Views\$($_.Name)"
+# Every script the manifest declares must be on disk, or the install runs against a half-built
+# schema. Fail the build loudly instead of shipping the gap.
+$declaredScripts = ([regex]::Matches((Get-Content $MANIFEST -Raw), '<name>([^<]+\.SqlDataProvider)</name>') |
+    ForEach-Object { $_.Groups[1].Value }) | Sort-Object -Unique
+$missingScripts = @($declaredScripts | Where-Object { -not (Test-Path (Join-Path "$STAGING\SqlScripts" $_)) })
+if ($missingScripts.Count -gt 0) {
+    throw ("MegaForm.dnn declares {0} SQL script(s) that are not in SqlScripts\: {1}" -f $missingScripts.Count, ($missingScripts -join ', '))
+}
+Write-Host ("  [OK] {0} manifest-declared SQL script(s) present" -f $declaredScripts.Count) -ForegroundColor Green
+
+# [PkgSlim 2026-07-29] Views\*Old.ascx (FormViewOld, FormEditOld) are registered by NO manifest —
+# not the current one, not any that ever shipped — and MegaForm.DNN.csproj already excludes their
+# code-behind. A blanket glob is what kept shipping them. Package what the manifest registers.
+$registeredViews = ([regex]::Matches((Get-Content $MANIFEST -Raw), '<controlSrc>[^<]*/([^/<]+\.ascx)</controlSrc>') |
+    ForEach-Object { $_.Groups[1].Value }) | Sort-Object -Unique
+foreach ($view in $registeredViews) {
+    $src = Join-Path "$PROJECT_DIR\Views" $view
+    if (-not (Test-Path $src)) { throw "MegaForm.dnn registers Views\$view but the file is missing." }
+    Copy-Item $src "$RESOURCES\Views\" -Force
+    Write-Host "  + Views\$view"
+}
+# The builder/editor markup the registered controls pull in at runtime is not itself a moduleControl.
+foreach ($extraView in @('FormEdit.ascx', 'Submissions.ascx')) {
+    $src = Join-Path "$PROJECT_DIR\Views" $extraView
+    if ((Test-Path $src) -and -not (Test-Path (Join-Path "$RESOURCES\Views" $extraView))) {
+        Copy-Item $src "$RESOURCES\Views\" -Force
+        Write-Host "  + Views\$extraView"
+    }
 }
 
 $assetsDir = "$SOLUTION_DIR\Assets"
@@ -396,6 +445,10 @@ Get-ChildItem "$assetsDir\js\*.js" -ErrorAction SilentlyContinue | ForEach-Objec
 if (Test-Path "$assetsDir\js\builder") {
     Get-ChildItem "$assetsDir\js\builder\*" -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
         $rel = $_.FullName.Replace("$assetsDir\js\builder\", '')
+        # [LanguagePacksAddOn 2026-07-29] builder\i18n is handled by its own explicit step below,
+        # which keeps the default pair and hands the rest to the add-on. This recursive copy would
+        # otherwise put all 39 back — the same way the plugins copy used to smuggle in a 4th set.
+        if ($rel -like 'i18n\*') { return }
         if (Test-BuildArtifact $_.Name) { return }
         $destDir = Join-Path "$RESOURCES\Assets\js\builder" (Split-Path $rel)
         if (-not (Test-Path $destDir)) { New-Item -ItemType Directory -Path $destDir -Force | Out-Null }
@@ -444,6 +497,15 @@ if (Test-Path "$assetsDir\js\locales") {
 # MegaForm.UI/src/i18n/index.ts) and the API probe list ResolveI18nFolders() includes it —
 # it returns the FIRST folder that exists, and ResolveWritableI18nFolder (the Languages panel's
 # save target) points at builder\i18n too.
+# [LanguagePacksAddOn 2026-07-29] 39 locale files were 1.06 MB of a 6 MB package — the single
+# biggest block in it. Only the ones a site actually renders are needed on disk: loadLocale()
+# fetches ONE locale by name (megaform-i18n.js), so the rest were bytes every customer downloaded
+# and no install ever read. Ship the default pair + the manifest, move the other 36 into the
+# MegaForm.LanguagePacks add-on. Deliberately an ADD-ON, not a CDN fetch: on a public form the
+# request is an anonymous browser GET of a static file, so a remote base would send every
+# non-English visitor to a third-party host and break air-gapped/intranet DNN installs outright.
+$I18N_KEEP = @('en-US.json', 'vi-VN.json', 'index.json')
+$script:I18nAddOnFiles = @()
 foreach ($i18nSub in @('builder\i18n')) {
     $i18nSrc = Join-Path "$assetsDir\js" $i18nSub
     if (Test-Path $i18nSrc) {
@@ -451,9 +513,16 @@ foreach ($i18nSub in @('builder\i18n')) {
         New-Item -ItemType Directory -Path $i18nDst -Force | Out-Null
         $n = 0
         Get-ChildItem "$i18nSrc\*.json" -File -ErrorAction SilentlyContinue | ForEach-Object {
-            Copy-Item $_.FullName $i18nDst -Force; $n++
+            if ($I18N_KEEP -contains $_.Name) {
+                Copy-Item $_.FullName $i18nDst -Force; $n++
+            } else {
+                $script:I18nAddOnFiles += $_
+            }
         }
-        Write-Host "  + Assets\js\$i18nSub\*.json  ($n language files)" -ForegroundColor Green
+        Write-Host "  + Assets\js\$i18nSub\*.json  ($n bundled language file(s))" -ForegroundColor Green
+        if ($script:I18nAddOnFiles.Count -gt 0) {
+            Write-Host ("  - Assets\js\$i18nSub : {0} locale(s) moved to the Language Packs add-on ({1:N0} KB)" -f $script:I18nAddOnFiles.Count, (($script:I18nAddOnFiles | Measure-Object Length -Sum).Sum / 1KB)) -ForegroundColor Yellow
+        }
     }
 }
 
@@ -475,11 +544,30 @@ if (Test-Path "$assetsDir\themes") {
 #  - Resources\PromptRecipes + Resources\TemplateGuides (AiToolsController reads
 #    ~/DesktopModules/MegaForm/Resources/...)
 #  - Templates (BuilderTemplateCatalogService data root — seed the builder gallery)
+# [FlagAllowList 2026-07-29] Assets\img\flags\4x3 carries 271 SVG; the country picker only ever
+# asks for the 182 ISO2 codes in its own COUNTRIES table (country-picker.ts builds the URL as
+# base + iso + '.svg', one request per rendered country — nothing enumerates the folder). The other
+# 89 files are territories the picker cannot offer: 229 KB shipped to every customer for nothing.
+# Derive the allow-list FROM THE CODE so the package can never drift from the picker.
+$flagAllowList = @()
+$countryPickerTs = Join-Path $SOLUTION_DIR 'MegaForm.UI\src\renderer\country-picker.ts'
+if (Test-Path $countryPickerTs) {
+    $flagAllowList = ([regex]::Matches((Get-Content $countryPickerTs -Raw), "iso2:\s*'([A-Za-z-]{2,6})'") |
+        ForEach-Object { $_.Groups[1].Value.ToLowerInvariant() }) | Sort-Object -Unique
+}
+if ($flagAllowList.Count -lt 180) {
+    throw ("Flag allow-list came back with only {0} entries - the COUNTRIES regex in BuildPackage-DNN.ps1 no longer matches country-picker.ts. Fix it before packaging, or every phone field ships without flags." -f $flagAllowList.Count)
+}
+
 if (Test-Path "$assetsDir\img") {
     New-Item -ItemType Directory -Path "$RESOURCES\Assets\img" -Force | Out-Null
     $imgSkipped = 0; $imgSkippedBytes = 0
+    $flagSkipped = 0; $flagSkippedBytes = 0
     Get-ChildItem "$assetsDir\img\*" -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
         $rel = $_.FullName.Replace("$assetsDir\img\", '')
+        if ($rel -match '^flags\\' -and $flagAllowList -notcontains $_.BaseName.ToLowerInvariant()) {
+            $flagSkipped++; $flagSkippedBytes += $_.Length; return
+        }
         # Template artwork now ships in the gallery's per-template assets zip and is
         # extracted on install, so keep it OUT of the package.
         if ($SLIM_GALLERY -and ($GALLERY_IMG -contains ($rel -replace '\\', '/'))) {
@@ -495,7 +583,14 @@ if (Test-Path "$assetsDir\img") {
     if ($imgSkipped -gt 0) {
         Write-Host ("  - Assets\img: {0} gallery-hosted image(s) EXCLUDED ({1:N1} MB)" -f $imgSkipped, ($imgSkippedBytes/1MB)) -ForegroundColor Yellow
     }
-    Write-Host '  + Assets\img\* (bear + flags)'
+    if ($flagSkipped -gt 0) {
+        Write-Host ("  - Assets\img\flags: {0} flag(s) the picker never asks for EXCLUDED ({1:N0} KB)" -f $flagSkipped, ($flagSkippedBytes/1KB)) -ForegroundColor Yellow
+    }
+    $flagsShipped = @(Get-ChildItem "$RESOURCES\Assets\img\flags" -Recurse -File -ErrorAction SilentlyContinue).Count
+    if ($flagsShipped -lt 180) {
+        throw ("Only $flagsShipped flag(s) made it into the package - the phone country picker needs one per offered country. Check the allow-list.")
+    }
+    Write-Host ("  + Assets\img\* (bear + {0} flags)" -f $flagsShipped)
 }
 if (Test-Path "$assetsDir\fonts") {
     New-Item -ItemType Directory -Path "$RESOURCES\Assets\fonts" -Force | Out-Null
@@ -609,9 +704,16 @@ Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\builder\i18n\v
 # [PkgSlim 2026-07-28] The locale files ship ONCE, in Assets\js\builder\i18n — the folder the
 # browser fetches on DNN and the one ResolveI18nFolders()/ResolveWritableI18nFolder() land on.
 # The guard moved with them; it still fails the build if a fresh install would ship no languages.
-Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\builder\i18n\fr-FR.json') -Label 'Packaged i18n French'
+# [LanguagePacksAddOn 2026-07-29] The module now ships the DEFAULT pair plus the manifest; the
+# other 36 locales live in the add-on. index.json is what the Languages panel lists from, so it
+# must never leave the module.
+Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\builder\i18n\index.json') -Label 'Packaged locale manifest'
 $__i18nCount = (Get-ChildItem (Join-Path $RESOURCES 'Assets\js\builder\i18n\*.json') -File -ErrorAction SilentlyContinue | Measure-Object).Count
-if ($__i18nCount -lt 39) { throw "Thieu language packs: chi co $__i18nCount/40 file trong Assets\js\builder\i18n (expected 39 locales + index.json)" }
+if ($__i18nCount -lt $I18N_KEEP.Count) { throw "Thieu language packs: chi co $__i18nCount/$($I18N_KEEP.Count) file trong Assets\js\builder\i18n" }
+$__i18nSourceCount = (Get-ChildItem (Join-Path "$assetsDir\js" 'builder\i18n\*.json') -File -ErrorAction SilentlyContinue | Measure-Object).Count
+if (($__i18nCount + $script:I18nAddOnFiles.Count) -ne $__i18nSourceCount) {
+    throw "Language packs lost in packaging: $__i18nCount bundled + $($script:I18nAddOnFiles.Count) add-on != $__i18nSourceCount on disk"
+}
 # Nothing may ship a second copy: that duplication was 3.11 MB of the package.
 foreach ($__dupI18n in @('Assets\js\i18n', 'Assets\js\bundles\i18n', 'Assets\js\plugins\i18n')) {
     if (Test-Path (Join-Path $RESOURCES $__dupI18n)) { throw "Duplicate locale folder crept back into the package: $__dupI18n" }
@@ -638,6 +740,19 @@ $resourcesZip = Join-Path $STAGING 'Resources.zip'
 if (Test-Path $resourcesZip) { Remove-Item $resourcesZip -Force }
 [System.IO.Compression.ZipFile]::CreateFromDirectory($RESOURCES, $resourcesZip, [System.IO.Compression.CompressionLevel]::Optimal, $false)
 Write-Host '  + Resources.zip [OK]' -ForegroundColor Green
+
+# [PersonaBarMerge 2026-08-01] The panel's SPA. The root of this zip IS the Persona Bar's
+# Modules folder, so entries must start at MegaForm/... — the loader resolves
+# Modules/<folderName>/<path>.{html,js,css} straight from the menu row in the manifest.
+$pbSrc = Join-Path $SOLUTION_DIR 'MegaForm.PersonaBar\Modules'
+if (Test-Path (Join-Path $pbSrc 'MegaForm\MegaForm.html')) {
+    $personaZip = Join-Path $STAGING 'PersonaBar.zip'
+    if (Test-Path $personaZip) { Remove-Item $personaZip -Force }
+    [System.IO.Compression.ZipFile]::CreateFromDirectory($pbSrc, $personaZip, [System.IO.Compression.CompressionLevel]::Optimal, $false)
+    Write-Host '  + PersonaBar.zip [OK]' -ForegroundColor Green
+} else {
+    Write-Warning "Khong thay $pbSrc\MegaForm\MegaForm.html - panel se trong ruong."
+}
 Write-Host ''
 
 Write-Host '[6/7] Tao Install Package...' -ForegroundColor Yellow
@@ -657,7 +772,7 @@ if (Test-Path $OUTPUT_ZIP) {
 
 $zip = [System.IO.Compression.ZipFile]::Open($OUTPUT_ZIP, 'Create')
 
-@('MegaForm.dnn', 'License.txt', 'ReleaseNotes.txt', 'icon.gif', 'Resources.zip') | ForEach-Object {
+@('MegaForm.dnn', 'License.txt', 'ReleaseNotes.txt', 'icon.gif', 'Resources.zip', 'PersonaBar.zip') | ForEach-Object {
     $fp = Join-Path $STAGING $_
     if (Test-Path $fp) {
         [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $fp, $_) | Out-Null
@@ -792,6 +907,63 @@ if (Test-Path $editorSrc) {
     Write-Host ("  + Code editor add-on: {0} ({1:N1} KB)" -f (Split-Path $edZip -Leaf), ((Get-Item $edZip).Length / 1KB)) -ForegroundColor Cyan
 } else {
     Write-Warning "Khong tim thay $CODE_EDITOR_JS - bo qua goi code editor add-on."
+}
+
+# ------------------------------------------------------------
+# [LanguagePacksAddOn 2026-07-29] Optional add-on: the 36 locales the module no longer bundles.
+# Same ResourceFile shape as the code editor: DNN unzips them straight back into
+# DesktopModules/MegaForm/Assets/js/builder/i18n - the exact folder the browser fetches and the
+# Languages panel writes to - so no application code changes once it is installed. Without it a
+# site runs English + Vietnamese, and loadLocale() already falls back to en-US on a 404.
+# ------------------------------------------------------------
+if ($script:I18nAddOnFiles.Count -gt 0) {
+    $lpDir = Join-Path $OUTPUT_DIR '_langpacks'
+    if (Test-Path $lpDir) { Remove-Item $lpDir -Recurse -Force }
+    New-Item -ItemType Directory -Path "$lpDir\payload\Assets\js\builder\i18n" -Force | Out-Null
+    foreach ($lp in $script:I18nAddOnFiles) { Copy-Item $lp.FullName "$lpDir\payload\Assets\js\builder\i18n\" -Force }
+    $lpResources = Join-Path $lpDir 'Resources.zip'
+    [System.IO.Compression.ZipFile]::CreateFromDirectory("$lpDir\payload", $lpResources, [System.IO.Compression.CompressionLevel]::Optimal, $false)
+    $lpNames = ($script:I18nAddOnFiles | ForEach-Object { $_.BaseName }) -join ', '
+    $lpManifest = @"
+<dotnetnuke type="Package" version="5.0">
+  <packages>
+    <package name="MegaForm.LanguagePacks" type="Library" version="$VERSION">
+      <friendlyName>MegaForm Language Packs</friendlyName>
+      <description>Optional add-on for MegaForm: $($script:I18nAddOnFiles.Count) extra admin-UI languages. The module itself ships English and Vietnamese; install this to offer the rest. Nothing else changes - the files land in the folder MegaForm already reads.</description>
+      <iconFile></iconFile>
+      <owner>
+        <name>CISS Solution</name>
+        <organization>CISS Solution</organization>
+        <url></url>
+        <email></email>
+      </owner>
+      <license></license>
+      <releaseNotes>Locales: $lpNames. These used to ride inside the MegaForm module package (1.06 MB compressed).</releaseNotes>
+      <azureCompatible>true</azureCompatible>
+      <dependencies />
+      <components>
+        <component type="ResourceFile">
+          <resourceFiles>
+            <basePath>DesktopModules/MegaForm</basePath>
+            <resourceFile>
+              <name>Resources.zip</name>
+            </resourceFile>
+          </resourceFiles>
+        </component>
+      </components>
+    </package>
+  </packages>
+</dotnetnuke>
+"@
+    Set-Content -Path "$lpDir\MegaForm.LanguagePacks.dnn" -Value $lpManifest -Encoding UTF8
+    $lpZip = Join-Path $OUTPUT_DIR "MegaForm.LanguagePacks_${VERSION}_Install.zip"
+    if (Test-Path $lpZip) { Remove-Item $lpZip -Force }
+    $lz = [System.IO.Compression.ZipFile]::Open($lpZip, 'Create')
+    [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($lz, "$lpDir\MegaForm.LanguagePacks.dnn", 'MegaForm.LanguagePacks.dnn') | Out-Null
+    [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($lz, $lpResources, 'Resources.zip') | Out-Null
+    $lz.Dispose()
+    Remove-Item $lpDir -Recurse -Force
+    Write-Host ("  + Language packs add-on: {0} ({1} locales, {2:N1} KB)" -f (Split-Path $lpZip -Leaf), $script:I18nAddOnFiles.Count, ((Get-Item $lpZip).Length / 1KB)) -ForegroundColor Cyan
 }
 
 # ============================================================

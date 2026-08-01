@@ -1,0 +1,4 @@
+Copyright 2026 MegaForm.
+
+This package is supplied for use with the licensed MegaForm installation on
+the target DNN instance. Redistribution is not granted by this package.

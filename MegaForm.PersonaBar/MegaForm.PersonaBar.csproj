@@ -1,0 +1,79 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!--
+      net48, khác MegaForm.DNN (net472): Dnn.PersonaBar.Library.dll của DNN 10.x được
+      biên dịch cho .NET Framework 4.8, net472 KHÔNG resolve nổi (MSB3274) và mọi type
+      Persona Bar biến mất. net48 tham chiếu ngược net472 thì bình thường.
+    -->
+    <TargetFramework>net48</TargetFramework>
+    <RootNamespace>MegaForm.PersonaBar</RootNamespace>
+    <AssemblyName>MegaForm.PersonaBar</AssemblyName>
+    <Version>1.0.0</Version>
+    <LangVersion>7.3</LangVersion>
+    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+    <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+    <!--
+      Gói này CHỈ chứa mã Persona Bar. Không copy assembly nào khác vào output:
+      MegaForm.DNN.dll / MegaForm.Core.dll do gói MegaForm ship, và
+      "DNN install KHÔNG ghi đè bin/*.dll" nên ship trùng chỉ tạo lệch phiên bản.
+    -->
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Dùng lại repository + model của MegaForm.DNN; KHÔNG ship lại DLL đó. -->
+    <ProjectReference Include="..\MegaForm.DNN\MegaForm.DNN.csproj">
+      <Private>false</Private>
+    </ProjectReference>
+  </ItemGroup>
+
+  <!--
+    DNN References — thư mục RIÊNG, không dùng chung MegaForm.DNN\References. Lý do:
+    Dnn.PersonaBar.Library của DNN 10.x kéo theo System.Web.Http 5.3, còn References của
+    MegaForm.DNN đang giữ 5.2.3 (CS1705 nếu trộn). MegaForm.DNN vẫn phải build với 5.2.3
+    để chạy được trên site DNN 9.x, nên hai gói giữ hai bộ reference riêng.
+    Đổ DLL vào đây bằng SetupReferences.ps1 (cần bin của DNN 10.x).
+
+    Persona Bar nằm ở assembly RIÊNG chứ không nhét vào MegaForm.DNN.dll: site DNN cũ
+    (không có Dnn.PersonaBar.Library) chỉ cần không cài gói này là xong.
+  -->
+  <ItemGroup>
+    <Reference Include="Dnn.PersonaBar.Library">
+      <HintPath>References\Dnn.PersonaBar.Library.dll</HintPath>
+      <Private>false</Private>
+      <SpecificVersion>false</SpecificVersion>
+    </Reference>
+    <Reference Include="DotNetNuke">
+      <HintPath>References\DotNetNuke.dll</HintPath>
+      <Private>false</Private>
+      <SpecificVersion>false</SpecificVersion>
+    </Reference>
+    <Reference Include="DotNetNuke.Web">
+      <HintPath>References\DotNetNuke.Web.dll</HintPath>
+      <Private>false</Private>
+      <SpecificVersion>false</SpecificVersion>
+    </Reference>
+    <Reference Include="DotNetNuke.Instrumentation">
+      <HintPath>References\DotNetNuke.Instrumentation.dll</HintPath>
+      <Private>false</Private>
+      <SpecificVersion>false</SpecificVersion>
+    </Reference>
+    <Reference Include="System.Web.Http">
+      <HintPath>References\System.Web.Http.dll</HintPath>
+      <Private>false</Private>
+      <SpecificVersion>false</SpecificVersion>
+    </Reference>
+    <Reference Include="System.Net.Http.Formatting">
+      <HintPath>References\System.Net.Http.Formatting.dll</HintPath>
+      <Private>false</Private>
+      <SpecificVersion>false</SpecificVersion>
+    </Reference>
+    <Reference Include="System.Web" />
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+
+  <!-- Tài nguyên SPA được đóng gói bởi BuildPackage-PersonaBar.ps1, không biên dịch. -->
+  <ItemGroup>
+    <None Include="Modules\**\*" />
+  </ItemGroup>
+</Project>
