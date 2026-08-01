@@ -1,0 +1,657 @@
+{
+  "version": "1.0",
+  "slug": "volunteer-application-euroyouth",
+  "title": "Volunteer Application Form",
+  "description": "A nonprofit volunteer intake: orange banner, mission copy, four programme cards, interest chips and a GDPR declaration.",
+  "category": "application",
+  "categories": [
+    "application",
+    "premium",
+    "nonprofit"
+  ],
+  "icon": "heart-handshake",
+  "submitButtonText": "Submit Application",
+  "successMessage": "Application received. Our volunteer team will contact you shortly.",
+  "fields": [
+    {
+      "placeholder": "—",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Mr.",
+          "value": "Mr."
+        },
+        {
+          "label": "Ms.",
+          "value": "Ms."
+        },
+        {
+          "label": "Mrs.",
+          "value": "Mrs."
+        },
+        {
+          "label": "Dr.",
+          "value": "Dr."
+        },
+        {
+          "label": "Mx.",
+          "value": "Mx."
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "prefix",
+      "type": "Select",
+      "label": "Prefix",
+      "required": false
+    },
+    {
+      "placeholder": "Anna",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "first_name",
+      "type": "Text",
+      "label": "First name",
+      "required": true
+    },
+    {
+      "placeholder": "Müller",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "last_name",
+      "type": "Text",
+      "label": "Last name",
+      "required": true
+    },
+    {
+      "placeholder": "anna@email.eu",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "email",
+      "type": "Email",
+      "label": "Email address",
+      "required": true
+    },
+    {
+      "placeholder": "+49 170 1234567",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "phone",
+      "type": "Phone",
+      "label": "Phone number",
+      "required": false
+    },
+    {
+      "placeholder": "2000",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "birth_year",
+      "type": "Text",
+      "label": "Year of birth",
+      "required": false
+    },
+    {
+      "placeholder": "Select country",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Germany",
+          "value": "Germany"
+        },
+        {
+          "label": "France",
+          "value": "France"
+        },
+        {
+          "label": "Spain",
+          "value": "Spain"
+        },
+        {
+          "label": "Italy",
+          "value": "Italy"
+        },
+        {
+          "label": "Portugal",
+          "value": "Portugal"
+        },
+        {
+          "label": "Netherlands",
+          "value": "Netherlands"
+        },
+        {
+          "label": "Austria",
+          "value": "Austria"
+        },
+        {
+          "label": "Belgium",
+          "value": "Belgium"
+        },
+        {
+          "label": "Greece",
+          "value": "Greece"
+        },
+        {
+          "label": "Poland",
+          "value": "Poland"
+        },
+        {
+          "label": "Sweden",
+          "value": "Sweden"
+        },
+        {
+          "label": "Ireland",
+          "value": "Ireland"
+        },
+        {
+          "label": "Other",
+          "value": "Other"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "country",
+      "type": "Select",
+      "label": "Country of residence",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Community Care",
+          "value": "community",
+          "description": "Berlin · Athens · Warsaw — support local families and social services."
+        },
+        {
+          "label": "Education Support",
+          "value": "education",
+          "description": "Lisbon · Budapest · Sofia — assist teachers and youth literacy projects."
+        },
+        {
+          "label": "Environmental",
+          "value": "environment",
+          "description": "Amsterdam · Vienna · Oslo — sustainability and conservation volunteering."
+        },
+        {
+          "label": "Health & Wellbeing",
+          "value": "health",
+          "description": "Madrid · Lyon · Rotterdam — support clinics and health awareness drives."
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "cards",
+        "optionColumns": 2
+      },
+      "key": "programme",
+      "type": "Radio",
+      "label": "Volunteer programme",
+      "required": true,
+      "optionDisplay": "cards",
+      "choiceDisplay": "cards",
+      "optionVariant": "cards",
+      "optionColumns": 2,
+      "widgetProps": {
+        "optionDisplay": "cards",
+        "optionColumns": 2
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "1 month",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "1 month",
+          "value": "1 month"
+        },
+        {
+          "label": "3 months",
+          "value": "3 months"
+        },
+        {
+          "label": "6 months",
+          "value": "6 months"
+        },
+        {
+          "label": "12 months",
+          "value": "12 months"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "duration",
+      "type": "Select",
+      "label": "Duration",
+      "required": false
+    },
+    {
+      "placeholder": "Select month",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "January 2026",
+          "value": "January"
+        },
+        {
+          "label": "February 2026",
+          "value": "February"
+        },
+        {
+          "label": "March 2026",
+          "value": "March"
+        },
+        {
+          "label": "April 2026",
+          "value": "April"
+        },
+        {
+          "label": "May 2026",
+          "value": "May"
+        },
+        {
+          "label": "June 2026",
+          "value": "June"
+        },
+        {
+          "label": "July 2026",
+          "value": "July"
+        },
+        {
+          "label": "August 2026",
+          "value": "August"
+        },
+        {
+          "label": "September 2026",
+          "value": "September"
+        },
+        {
+          "label": "October 2026",
+          "value": "October"
+        },
+        {
+          "label": "November 2026",
+          "value": "November"
+        },
+        {
+          "label": "December 2026",
+          "value": "December"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "start_month",
+      "type": "Select",
+      "label": "Preferred start",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Teaching",
+          "value": "Teaching"
+        },
+        {
+          "label": "Healthcare",
+          "value": "Healthcare"
+        },
+        {
+          "label": "Environment",
+          "value": "Environment"
+        },
+        {
+          "label": "Community",
+          "value": "Community"
+        },
+        {
+          "label": "Youth Work",
+          "value": "Youth Work"
+        },
+        {
+          "label": "Arts",
+          "value": "Arts"
+        },
+        {
+          "label": "Sports",
+          "value": "Sports"
+        },
+        {
+          "label": "Elderly Care",
+          "value": "Elderly Care"
+        },
+        {
+          "label": "Refugees",
+          "value": "Refugees"
+        },
+        {
+          "label": "Literacy",
+          "value": "Literacy"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "chips"
+      },
+      "key": "interests",
+      "type": "Checkbox",
+      "label": "Areas of interest",
+      "required": false,
+      "optionDisplay": "chips",
+      "choiceDisplay": "chips",
+      "optionVariant": "chips",
+      "widgetProps": {
+        "optionDisplay": "chips"
+      }
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Host family",
+          "value": "host",
+          "description": "Live with locals"
+        },
+        {
+          "label": "Student dorm",
+          "value": "dorm",
+          "description": "On campus"
+        },
+        {
+          "label": "Shared flat",
+          "value": "shared",
+          "description": "With peers"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "cards",
+        "optionColumns": 3
+      },
+      "key": "accommodation",
+      "type": "Radio",
+      "label": "Accommodation preference",
+      "required": false,
+      "optionDisplay": "cards",
+      "choiceDisplay": "cards",
+      "optionVariant": "cards",
+      "optionColumns": 3,
+      "widgetProps": {
+        "optionDisplay": "cards",
+        "optionColumns": 3
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Select level",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "A1 — Beginner",
+          "value": "A1 — Beginner"
+        },
+        {
+          "label": "A2 — Elementary",
+          "value": "A2 — Elementary"
+        },
+        {
+          "label": "B1 — Intermediate",
+          "value": "B1 — Intermediate"
+        },
+        {
+          "label": "B2 — Upper-intermediate",
+          "value": "B2 — Upper-intermediate"
+        },
+        {
+          "label": "C1 — Advanced",
+          "value": "C1 — Advanced"
+        },
+        {
+          "label": "C2 — Fluent",
+          "value": "C2 — Fluent"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "language_level",
+      "type": "Select",
+      "label": "Language level",
+      "required": false
+    },
+    {
+      "placeholder": "Share your motivation…",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "motivation",
+      "type": "Textarea",
+      "label": "Why do you want to volunteer? (optional)",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "I am applying for a scholarship / stipend to cover travel and accommodation costs.",
+          "value": "yes"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "scholarship",
+      "type": "Checkbox",
+      "label": "I am applying for a scholarship / stipend to cover travel and accommodation costs.",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "I would like to receive updates about future volunteer programmes and opportunities.",
+          "value": "yes"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "newsletter",
+      "type": "Checkbox",
+      "label": "I would like to receive updates about future volunteer programmes and opportunities.",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "I confirm that the information provided is accurate and I agree to the terms & conditions and privacy policy.",
+          "value": "yes"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "terms",
+      "type": "Checkbox",
+      "label": "I confirm that the information provided is accurate and I agree to the terms & conditions and privacy policy.",
+      "required": true
+    }
+  ],
+  "settings": {
+    "theme": "volunteer-application-premium",
+    "multiPage": false,
+    "customContent": {},
+    "customScripts": {},
+    "customHtml": "<div class='mfp mfp-vol mfp-native-generated' data-mf-flexgrid=\"locked\" style=\"background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;box-shadow:none!important\"><header class='vol-banner'><div class='vol-banner-copy'><div class='vol-eyebrow'>EUROYOUTH 2026</div><h1>Volunteer Application Form</h1><div class='vol-rating'><span>★★★★★</span>12,000+ volunteers placed</div></div><div class='vol-thumb' role='presentation'><span class='vol-badge'>VOLUNTEER</span></div></header><div class='vol-intro'><p>EuroYouth is a nonprofit organization that provides basic healthcare, education, nutrition, job skills, and community development programs to those who, due to the harsh circumstances of their lives, have been deprived of the most basic living conditions.</p><p>We encourage the participation of volunteers who support our mission and are willing to contribute. The information provided through this form will be kept confidential and will help us determine the most satisfying and appropriate volunteer opportunity for you.</p></div><div class='vol-card'><div class='vol-rule'><span>Personal information</span><i></i></div><div class='vol-grid vol-name'><label class='vol-field'><span>Prefix</span>{{field:prefix}}</label><label class='vol-field'><span>First name *</span>{{field:first_name}}</label><label class='vol-field'><span>Last name *</span>{{field:last_name}}</label></div><div class='vol-grid vol-2'><label class='vol-field'><span>Email address *</span>{{field:email}}</label><label class='vol-field'><span>Phone number</span>{{field:phone}}</label></div><div class='vol-grid vol-2'><label class='vol-field'><span>Year of birth</span>{{field:birth_year}}</label><label class='vol-field'><span>Country of residence</span>{{field:country}}</label></div><div class='vol-rule'><span>Volunteer programme</span><i></i></div><label class='vol-field'><span class='vol-hide'>Programme</span>{{field:programme}}</label><div class='vol-grid vol-2'><label class='vol-field'><span>Duration</span>{{field:duration}}</label><label class='vol-field'><span>Preferred start</span>{{field:start_month}}</label></div><div class='vol-rule'><span>Areas of interest</span><i></i></div><label class='vol-field'><span class='vol-hide'>Interests</span>{{field:interests}}</label><div class='vol-rule'><span>Stay &amp; support</span><i></i></div><label class='vol-field'><span>Accommodation preference</span>{{field:accommodation}}</label><label class='vol-field'><span>Language level</span>{{field:language_level}}</label><label class='vol-field'><span>Why do you want to volunteer? (optional)</span>{{field:motivation}}</label><div class='vol-consent'><label class='vol-field vol-consent-item'><span>Scholarship</span>{{field:scholarship}}</label></div><div class='vol-rule'><span>Declaration</span><i></i></div><div class='vol-consent'><label class='vol-field vol-consent-item'><span>Newsletter</span>{{field:newsletter}}</label><label class='vol-field vol-consent-item'><span>Terms</span>{{field:terms}}</label></div><button class='vol-submit' type='submit' style=\"background:var(--vol-primary)!important;color:var(--vol-on-primary)!important;border:0!important;border-radius:12px!important;padding:13px 20px!important;width:100%!important;font-weight:700!important;box-shadow:none!important;cursor:pointer!important\">Submit Application</button><p class='vol-gdpr'>* Required fields. Your data is protected under GDPR.</p></div></div>",
+    "customCss": ".mfp.mfp-vol{--vol-primary:var(--mf-page-primary,var(--mf-preset-primary,#F97316));--vol-surface:var(--mf-page-surface,var(--mf-preset-surface,#ffffff));--vol-text:var(--mf-page-text,var(--mf-preset-text,#1A1A2E));--vol-muted:var(--mf-page-muted,var(--mf-preset-muted,#6B7280));--vol-border:var(--mf-page-border,var(--mf-preset-border,transparent));--vol-on-primary:var(--mf-preset-on-primary,#fff);--vol-accent:var(--mf-page-primary,var(--mf-preset-primary,#FB923C));--vol-fill:color-mix(in srgb, var(--vol-text) 5%, var(--vol-surface));--vol-fill-strong:color-mix(in srgb, var(--vol-text) 9%, var(--vol-surface));--vol-soft:color-mix(in srgb, var(--vol-primary) 12%, var(--vol-surface));--vol-hairline:color-mix(in srgb, var(--vol-text) 12%, var(--vol-surface));--vol-page:color-mix(in srgb, var(--vol-text) 4%, var(--vol-surface));--vol-input-bg:var(--mf-page-input-bg,var(--vol-fill));}.mfp.mfp-vol{background:transparent!important;border:0!important;padding:0!important;font-family:'Inter',system-ui,-apple-system,sans-serif;display:flex;flex-direction:column;gap:18px}.mfp-vol .vol-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:22px 26px;border-radius:14px;background:var(--vol-primary);color:#fff}.mfp-vol .vol-eyebrow{font-size:11px;font-weight:700;letter-spacing:.1em}.mfp-vol .vol-banner h1{margin:6px 0 6px;font-size:24px;line-height:1.2;font-weight:700}.mfp-vol .vol-rating{display:flex;align-items:center;gap:8px;font-size:12px;opacity:.95}.mfp-vol .vol-thumb{position:relative;flex:0 0 auto;width:132px;height:88px;border-radius:10px;overflow:hidden;background-repeat:no-repeat;background-position:center;background-size:cover}.mfp-vol .vol-thumb{background-image:url('/Modules/MegaForm/img/volunteer-application-euroyouth/volunteer-hero.png');}.DnnModule .mfp-vol .vol-thumb{background-image:url('/DesktopModules/MegaForm/Assets/img/volunteer-application-euroyouth/volunteer-hero.png')}.mfp-vol .vol-badge{position:absolute;top:6px;right:6px;padding:4px 8px;border-radius:6px;background:rgba(0,0,0,.55);font-size:9px;font-weight:700;letter-spacing:.08em;color:#fff}.mfp-vol .vol-intro{padding:0 8px;text-align:center;font-style:italic;font-size:14px;line-height:1.6;color:color-mix(in srgb, var(--vol-text) 78%, var(--vol-surface))}.mfp-vol .vol-intro p{margin:0 0 12px}.mfp-vol .vol-card{padding:26px 30px 30px;border-radius:16px;background:var(--vol-surface);box-shadow:0 4px 18px color-mix(in srgb, var(--vol-text) 9%, transparent);display:flex;flex-direction:column;gap:14px}.mfp-vol .vol-rule{display:flex;align-items:center;gap:12px;margin-top:8px}.mfp-vol .vol-rule span{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--vol-primary)}.mfp-vol .vol-rule i{flex:1;height:1px;background:color-mix(in srgb, var(--vol-primary) 35%, transparent)}.mfp-vol .vol-grid{display:grid;gap:14px}.mfp-vol .vol-2{grid-template-columns:1fr 1fr}.mfp-vol .vol-name{grid-template-columns:90px 1fr 1fr}.mfp-vol .vol-hide{display:none!important}.mfp-vol .vol-consent{display:flex;flex-direction:column;gap:8px}.mfp-vol .vol-gdpr{margin:6px 0 0;text-align:center;font-size:11px;color:var(--vol-muted)}.mfp-vol .vol-field{display:block;margin:0}.mfp-vol .vol-field>span{display:block;margin:0 0 6px!important;color:var(--vol-muted);font-size:11px;line-height:16px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}.mfp-vol .vol-field .mf-field-label{display:none!important}.mfp-vol .mf-field-group{margin:0!important;width:100%}.mfp-vol .mf-input,.mfp-vol .mf-select,.mfp-vol .mf-textarea{width:100%!important;box-sizing:border-box!important;border:0!important;border-radius:0!important;background:transparent!important;padding:8px 2px!important;color:var(--vol-text)!important;font:500 14px/20px inherit!important;min-height:42px!important;outline:0!important;box-shadow:none!important;transition:border-color .15s ease,background .15s ease!important}.mfp-vol .mf-textarea{min-height:96px!important;height:auto!important;resize:vertical}.mfp-vol .mf-input::placeholder,.mfp-vol .mf-textarea::placeholder{color:color-mix(in srgb, var(--vol-text) 42%, transparent)!important;opacity:1}.mfp-vol .mf-input:focus,.mfp-vol .mf-select:focus,.mfp-vol .mf-textarea:focus{border-color:var(--vol-primary)!important;background:var(--vol-fill-strong)!important}.mfp-vol .mf-field-error{color:#dc2626;font-size:11px;margin-top:4px}.mfp-vol .mf-option-group--cards{display:grid;gap:8px}.mfp-vol .mf-option-item{margin:0!important}.mfp-vol .mf-option-group--cards{align-items:stretch}.mfp-vol .mf-option-group--cards .mf-option-item{display:flex}.mfp-vol .mf-option-group--cards .mf-option-ui{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%;height:100%;box-sizing:border-box;padding:12px;border:1.5px solid var(--vol-hairline);border-radius:12px;background:var(--vol-fill);cursor:pointer;transition:all .15s ease}.mfp-vol .mf-option-group--cards .mf-option-check,.mfp-vol .mf-option-group--chips .mf-option-check{display:none!important}.mfp-vol .mf-option-group--cards .mf-option-ui{position:relative;padding-right:34px}.mfp-vol .mf-option-group--cards .mf-option-item.is-selected .mf-option-ui::after,.mfp-vol .mf-option-group--cards input:checked+.mf-option-ui::after{content:'';position:absolute;top:14px;right:14px;width:11px;height:6px;border-left:2.5px solid var(--vol-primary);border-bottom:2.5px solid var(--vol-primary);transform:rotate(-45deg);border-radius:1px}.mfp-vol .mf-option-group--cards .mf-option-item.is-selected .mf-option-ui,.mfp-vol .mf-option-group--cards input:checked+.mf-option-ui{border-color:var(--vol-primary);background:var(--vol-soft)}.mfp-vol .mf-option-label{color:var(--vol-text);font-size:13px;font-weight:600}.mfp-vol .mf-option-desc{color:var(--vol-muted);font-size:11px;margin-top:2px}.mfp-vol .mf-option-group--chips{display:flex;flex-wrap:wrap;gap:8px}.mfp-vol .mf-option-group--chips .mf-option-ui{padding:7px 14px;border-radius:999px;border:1.5px solid var(--vol-hairline);background:var(--vol-fill);color:var(--vol-muted);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s ease}.mfp-vol .mf-option-group--chips .mf-option-item.is-selected .mf-option-ui,.mfp-vol .mf-option-group--chips input:checked+.mf-option-ui{background:var(--vol-primary);border-color:var(--vol-primary);color:var(--vol-on-primary)}.mf-form-wrapper:has(.mfp-vol) .mf-form-actions{display:none!important}.mfp-vol .vol-submit{width:100%!important;border:0!important;border-radius:12px!important;padding:13px 20px!important;background:var(--vol-primary)!important;color:var(--vol-on-primary)!important;font:700 14px/20px inherit!important;cursor:pointer!important;box-shadow:none!important}.mfp-vol .vol-submit:hover{filter:brightness(1.05)}.mfp-vol .vol-consent-item{display:block}.mfp-vol .vol-consent-item>span{display:none!important}.mfp-vol .vol-consent-item .mf-field-label{display:none!important}.mfp-vol .vol-consent-item .mf-option-group{display:block}.mfp-vol .vol-consent-item .mf-option-ui{border:0!important;background:none!important;padding:0!important;color:var(--vol-muted)!important;font-weight:400!important;font-size:12px!important;line-height:18px!important}.mfp-vol .mf-form-title,.mfp-vol .mf-form-description{display:none!important}.mfp-vol .mf-input,.mfp-vol .mf-select,.mfp-vol .mf-textarea{border-bottom:1.5px solid var(--vol-hairline)!important;border-radius:0!important;background:transparent!important}.mfp-vol .mf-input:focus,.mfp-vol .mf-select:focus,.mfp-vol .mf-textarea:focus{border-bottom-color:var(--vol-primary)!important;background:transparent!important}.mfp-vol .mf-textarea{border:1.5px solid var(--vol-hairline)!important;border-radius:10px!important;padding:12px 14px!important}.mfp-vol .mf-field-group[data-key='programme'] .mf-option-group{grid-template-columns:repeat(2,1fr)!important}.mfp-vol .mf-field-group[data-key='accommodation'] .mf-option-group{grid-template-columns:repeat(3,1fr)!important}@media (max-width:640px){.mfp-vol .vol-2,.mfp-vol .vol-name{grid-template-columns:1fr}.mfp-vol .mf-option-group{grid-template-columns:1fr!important}}",
+    "themeSelector": {
+      "enabled": true
+    },
+    "premiumGeneratedShell": true,
+    "showProgressBar": false,
+    "themeCompatibility": {
+      "policy": "hybrid",
+      "supportsPageColors": true,
+      "supportsPageTypography": true,
+      "supportsDarkHost": true,
+      "prefixes": [
+        "vol"
+      ],
+      "immutable": []
+    }
+  },
+  "rules": [],
+  "workflow": {
+    "notifications": []
+  }
+}

@@ -1,0 +1,717 @@
+{
+  "version": "1.0",
+  "slug": "holiday-request-travel",
+  "title": "Holiday Request Form",
+  "description": "A soft violet travel request form — personal details, destination, programme track, interests and consent on a single page.",
+  "category": "registration",
+  "categories": [
+    "registration",
+    "premium",
+    "travel"
+  ],
+  "icon": "plane",
+  "submitButtonText": "Submit Holiday Request",
+  "successMessage": "Request received. We will be in touch within 2 business days.",
+  "fields": [
+    {
+      "placeholder": "—",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Mr.",
+          "value": "Mr."
+        },
+        {
+          "label": "Ms.",
+          "value": "Ms."
+        },
+        {
+          "label": "Mrs.",
+          "value": "Mrs."
+        },
+        {
+          "label": "Dr.",
+          "value": "Dr."
+        },
+        {
+          "label": "Mx.",
+          "value": "Mx."
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "prefix",
+      "type": "Select",
+      "label": "Prefix",
+      "required": false
+    },
+    {
+      "placeholder": "First name",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "first_name",
+      "type": "Text",
+      "label": "First name",
+      "required": true
+    },
+    {
+      "placeholder": "Last name",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "last_name",
+      "type": "Text",
+      "label": "Last name",
+      "required": true
+    },
+    {
+      "placeholder": "(888) 000-0000",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "mobile",
+      "type": "Phone",
+      "label": "Mobile number",
+      "required": false
+    },
+    {
+      "placeholder": "name@example.com",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "email",
+      "type": "Email",
+      "label": "Email",
+      "required": true
+    },
+    {
+      "placeholder": "Select country",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Germany",
+          "value": "Germany"
+        },
+        {
+          "label": "France",
+          "value": "France"
+        },
+        {
+          "label": "Spain",
+          "value": "Spain"
+        },
+        {
+          "label": "Italy",
+          "value": "Italy"
+        },
+        {
+          "label": "Portugal",
+          "value": "Portugal"
+        },
+        {
+          "label": "Netherlands",
+          "value": "Netherlands"
+        },
+        {
+          "label": "Austria",
+          "value": "Austria"
+        },
+        {
+          "label": "Belgium",
+          "value": "Belgium"
+        },
+        {
+          "label": "Greece",
+          "value": "Greece"
+        },
+        {
+          "label": "Poland",
+          "value": "Poland"
+        },
+        {
+          "label": "Sweden",
+          "value": "Sweden"
+        },
+        {
+          "label": "Ireland",
+          "value": "Ireland"
+        },
+        {
+          "label": "Other",
+          "value": "Other"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "country",
+      "type": "Select",
+      "label": "Country of residence",
+      "required": false
+    },
+    {
+      "placeholder": "Select level",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "A1 — Beginner",
+          "value": "A1 — Beginner"
+        },
+        {
+          "label": "A2 — Elementary",
+          "value": "A2 — Elementary"
+        },
+        {
+          "label": "B1 — Intermediate",
+          "value": "B1 — Intermediate"
+        },
+        {
+          "label": "B2 — Upper-intermediate",
+          "value": "B2 — Upper-intermediate"
+        },
+        {
+          "label": "C1 — Advanced",
+          "value": "C1 — Advanced"
+        },
+        {
+          "label": "C2 — Fluent",
+          "value": "C2 — Fluent"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "language_level",
+      "type": "Select",
+      "label": "Language level",
+      "required": false
+    },
+    {
+      "placeholder": "Select destination",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Amsterdam",
+          "value": "Amsterdam"
+        },
+        {
+          "label": "Athens",
+          "value": "Athens"
+        },
+        {
+          "label": "Barcelona",
+          "value": "Barcelona"
+        },
+        {
+          "label": "Berlin",
+          "value": "Berlin"
+        },
+        {
+          "label": "Brussels",
+          "value": "Brussels"
+        },
+        {
+          "label": "Dublin",
+          "value": "Dublin"
+        },
+        {
+          "label": "Florence",
+          "value": "Florence"
+        },
+        {
+          "label": "Lisbon",
+          "value": "Lisbon"
+        },
+        {
+          "label": "Madrid",
+          "value": "Madrid"
+        },
+        {
+          "label": "Paris",
+          "value": "Paris"
+        },
+        {
+          "label": "Prague",
+          "value": "Prague"
+        },
+        {
+          "label": "Vienna",
+          "value": "Vienna"
+        },
+        {
+          "label": "Other",
+          "value": "Other"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "destination",
+      "type": "Select",
+      "label": "Destination",
+      "required": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "7 days",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "3 days",
+          "value": "3 days"
+        },
+        {
+          "label": "5 days",
+          "value": "5 days"
+        },
+        {
+          "label": "7 days",
+          "value": "7 days"
+        },
+        {
+          "label": "10 days",
+          "value": "10 days"
+        },
+        {
+          "label": "14 days",
+          "value": "14 days"
+        },
+        {
+          "label": "21 days",
+          "value": "21 days"
+        },
+        {
+          "label": "30 days",
+          "value": "30 days"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "duration",
+      "type": "Select",
+      "label": "Duration",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Domestic",
+          "value": "domestic",
+          "description": "Within your country"
+        },
+        {
+          "label": "International",
+          "value": "international",
+          "description": "Overseas travel"
+        },
+        {
+          "label": "Multi-country",
+          "value": "multi-country",
+          "description": "Several destinations"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "cards",
+        "optionColumns": 3
+      },
+      "key": "travel_type",
+      "type": "Radio",
+      "label": "Travel type",
+      "required": true,
+      "optionDisplay": "cards",
+      "choiceDisplay": "cards",
+      "optionVariant": "cards",
+      "optionColumns": 3,
+      "widgetProps": {
+        "optionDisplay": "cards",
+        "optionColumns": 3
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Erasmus Exchange",
+          "value": "erasmus",
+          "description": "Berlin · Paris · Madrid"
+        },
+        {
+          "label": "Language Immersion",
+          "value": "language",
+          "description": "Florence · Lisbon · Vienna"
+        },
+        {
+          "label": "Solidarity Corps",
+          "value": "volunteer",
+          "description": "Amsterdam · Prague · Athens"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "cards",
+        "optionColumns": 1
+      },
+      "key": "programme",
+      "type": "Radio",
+      "label": "Programme",
+      "required": false,
+      "optionDisplay": "cards",
+      "choiceDisplay": "cards",
+      "optionVariant": "cards",
+      "optionColumns": 1,
+      "widgetProps": {
+        "optionDisplay": "cards",
+        "optionColumns": 1
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Select month",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "January 2026",
+          "value": "January"
+        },
+        {
+          "label": "February 2026",
+          "value": "February"
+        },
+        {
+          "label": "March 2026",
+          "value": "March"
+        },
+        {
+          "label": "April 2026",
+          "value": "April"
+        },
+        {
+          "label": "May 2026",
+          "value": "May"
+        },
+        {
+          "label": "June 2026",
+          "value": "June"
+        },
+        {
+          "label": "July 2026",
+          "value": "July"
+        },
+        {
+          "label": "August 2026",
+          "value": "August"
+        },
+        {
+          "label": "September 2026",
+          "value": "September"
+        },
+        {
+          "label": "October 2026",
+          "value": "October"
+        },
+        {
+          "label": "November 2026",
+          "value": "November"
+        },
+        {
+          "label": "December 2026",
+          "value": "December"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "start_month",
+      "type": "Select",
+      "label": "Preferred start",
+      "required": false
+    },
+    {
+      "placeholder": "Select type",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Host family — Live with locals",
+          "value": "host"
+        },
+        {
+          "label": "Student dorm — On campus",
+          "value": "dorm"
+        },
+        {
+          "label": "Shared flat — With peers",
+          "value": "shared"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "accommodation",
+      "type": "Select",
+      "label": "Accommodation",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Art & Design",
+          "value": "Art & Design"
+        },
+        {
+          "label": "Technology",
+          "value": "Technology"
+        },
+        {
+          "label": "Sustainability",
+          "value": "Sustainability"
+        },
+        {
+          "label": "Music",
+          "value": "Music"
+        },
+        {
+          "label": "Sports",
+          "value": "Sports"
+        },
+        {
+          "label": "Cuisine",
+          "value": "Cuisine"
+        },
+        {
+          "label": "History",
+          "value": "History"
+        },
+        {
+          "label": "Entrepreneurship",
+          "value": "Entrepreneurship"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "chips"
+      },
+      "key": "interests",
+      "type": "Checkbox",
+      "label": "Interests",
+      "required": false,
+      "optionDisplay": "chips",
+      "choiceDisplay": "chips",
+      "optionVariant": "chips",
+      "widgetProps": {
+        "optionDisplay": "chips"
+      }
+    },
+    {
+      "placeholder": "What are you hoping to get out of this experience?",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "motivation",
+      "type": "Textarea",
+      "label": "Motivation",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Send me updates about new programmes and destinations",
+          "value": "yes"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "newsletter",
+      "type": "Checkbox",
+      "label": "Send me updates about new programmes and destinations",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "I agree to the terms and conditions",
+          "value": "yes"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "terms",
+      "type": "Checkbox",
+      "label": "I agree to the terms and conditions",
+      "required": true
+    }
+  ],
+  "settings": {
+    "theme": "holiday-request-premium",
+    "multiPage": false,
+    "customContent": {},
+    "customScripts": {},
+    "customHtml": "<div class='mfp mfp-hol mfp-native-generated' data-mf-flexgrid=\"locked\" style=\"background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;box-shadow:none!important\"><div class='hol-card'><div class='hol-accent'></div><header class='hol-head'><div><h1>Holiday Request Form</h1><p>Domestic &amp; International</p></div><div class='hol-art' role='presentation'></div></header><div class='hol-rule'></div><div class='hol-body'><section><div class='hol-sec'><div class='hol-sec-icon'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg></div><div><div class='hol-sec-t'>Personal Information</div><div class='hol-sec-s'>Your basic details</div></div></div><div class='hol-grid hol-name'><label class='hol-field'><span>Prefix</span>{{field:prefix}}</label><label class='hol-field'><span>First name *</span>{{field:first_name}}</label><label class='hol-field'><span>Last name *</span>{{field:last_name}}</label></div><div class='hol-grid hol-2'><label class='hol-field'><span>Mobile number</span>{{field:mobile}}</label><label class='hol-field'><span>Email *</span>{{field:email}}</label></div><div class='hol-grid hol-2'><label class='hol-field'><span>Country of residence</span>{{field:country}}</label><label class='hol-field'><span>Language level</span>{{field:language_level}}</label></div></section><section><div class='hol-sec'><div class='hol-sec-icon'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z'/><circle cx='12' cy='10' r='3'/></svg></div><div><div class='hol-sec-t'>Holiday Destination</div><div class='hol-sec-s'>Where would you like to go?</div></div></div><div class='hol-grid hol-2'><label class='hol-field'><span>Destination *</span>{{field:destination}}</label><label class='hol-field'><span>Duration</span>{{field:duration}}</label></div><label class='hol-field hol-wide'><span>Travel type *</span>{{field:travel_type}}</label></section><section><div class='hol-sec'><div class='hol-sec-icon'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M22 10 12 5 2 10l10 5 10-5z'/><path d='M6 12v5c3 3 9 3 12 0v-5'/></svg></div><div><div class='hol-sec-t'>Programme</div><div class='hol-sec-s'>Select your preferred track</div></div></div><label class='hol-field hol-wide'><span class='hol-hide'>Programme</span>{{field:programme}}</label><div class='hol-grid hol-2'><label class='hol-field'><span>Preferred start</span>{{field:start_month}}</label><label class='hol-field'><span>Accommodation</span>{{field:accommodation}}</label></div></section><section><div class='hol-sec'><div class='hol-sec-icon'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8'/></svg></div><div><div class='hol-sec-t'>Interests</div><div class='hol-sec-s'>Pick what excites you (optional)</div></div></div><label class='hol-field hol-wide'><span class='hol-hide'>Interests</span>{{field:interests}}</label></section><section><div class='hol-sec'><div class='hol-sec-icon'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><rect x='3' y='5' width='18' height='16' rx='2'/><path d='M16 3v4M8 3v4M3 11h18'/></svg></div><div><div class='hol-sec-t'>Motivation</div><div class='hol-sec-s'>Tell us about your goals (optional)</div></div></div><label class='hol-field hol-wide'><span class='hol-hide'>Motivation</span>{{field:motivation}}</label></section><section class='hol-consent'><label class='hol-field hol-consent-item'><span>Newsletter</span>{{field:newsletter}}</label><label class='hol-field hol-consent-item'><span>Terms</span>{{field:terms}}</label></section><button class='hol-submit' type='submit' style=\"background:var(--hol-primary)!important;color:var(--hol-on-primary)!important;border:0!important;border-radius:12px!important;padding:13px 20px!important;width:100%!important;font-weight:700!important;box-shadow:none!important;cursor:pointer!important\">Submit Holiday Request</button></div></div></div>",
+    "customCss": ".mfp.mfp-hol{--hol-primary:var(--mf-page-primary,var(--mf-preset-primary,#7B5EA7));--hol-surface:var(--mf-page-surface,var(--mf-preset-surface,#ffffff));--hol-text:var(--mf-page-text,var(--mf-preset-text,#1A1A2E));--hol-muted:var(--mf-page-muted,var(--mf-preset-muted,#6B6B80));--hol-border:var(--mf-page-border,var(--mf-preset-border,transparent));--hol-on-primary:var(--mf-preset-on-primary,#fff);--hol-accent:var(--mf-page-primary,var(--mf-preset-primary,#A989D1));--hol-fill:color-mix(in srgb, var(--hol-text) 5%, var(--hol-surface));--hol-fill-strong:color-mix(in srgb, var(--hol-text) 9%, var(--hol-surface));--hol-soft:color-mix(in srgb, var(--hol-primary) 12%, var(--hol-surface));--hol-hairline:color-mix(in srgb, var(--hol-text) 12%, var(--hol-surface));--hol-page:color-mix(in srgb, var(--hol-text) 4%, var(--hol-surface));--hol-input-bg:var(--mf-page-input-bg,var(--hol-fill));}.mfp.mfp-hol{background:transparent!important;border:0!important;padding:0!important;font-family:'Inter',system-ui,-apple-system,sans-serif}.mfp-hol .hol-card{position:relative;overflow:hidden;border-radius:16px;background:var(--hol-surface);box-shadow:0 4px 18px color-mix(in srgb, var(--hol-text) 10%, transparent)}.mfp-hol .hol-accent{position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,var(--hol-primary),var(--hol-accent))}.mfp-hol .hol-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:30px 32px 22px}.mfp-hol .hol-art{flex:0 0 auto;width:96px;height:76px;background-repeat:no-repeat;background-position:center;background-size:contain}.mfp-hol .hol-art{background-image:url('/Modules/MegaForm/img/holiday-request-travel/holiday-luggage.png');}.DnnModule .mfp-hol .hol-art{background-image:url('/DesktopModules/MegaForm/Assets/img/holiday-request-travel/holiday-luggage.png')}.mfp-hol .hol-head h1{margin:0;font-size:24px;line-height:1.2;font-weight:700;color:var(--hol-text)}.mfp-hol .hol-head p{margin:4px 0 0;font-size:14px;font-weight:500;color:var(--hol-accent)}.mfp-hol .hol-rule{height:1px;margin:0 32px;background:var(--hol-hairline)}.mfp-hol .hol-body{padding:26px 32px 30px;display:flex;flex-direction:column;gap:30px}.mfp-hol .hol-sec{display:flex;align-items:center;gap:10px;margin-bottom:16px}.mfp-hol .hol-sec-icon{flex:0 0 auto;width:28px;height:28px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:var(--hol-soft);color:var(--hol-primary)}.mfp-hol .hol-sec-icon svg{width:14px;height:14px}.mfp-hol .hol-sec-t{font-size:14px;font-weight:700;color:var(--hol-text)}.mfp-hol .hol-sec-s{font-size:12px;color:var(--hol-muted)}.mfp-hol .hol-grid{display:grid;gap:12px;margin-bottom:12px}.mfp-hol .hol-2{grid-template-columns:1fr 1fr}.mfp-hol .hol-name{grid-template-columns:100px 1fr 1fr}.mfp-hol .hol-wide{display:block;margin-top:4px}.mfp-hol .hol-hide{display:none!important}.mfp-hol .hol-consent{display:flex;flex-direction:column;gap:10px}.mfp-hol .hol-field{display:block;margin:0}.mfp-hol .hol-field>span{display:block;margin:0 0 6px!important;color:var(--hol-muted);font-size:11px;line-height:16px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}.mfp-hol .hol-field .mf-field-label{display:none!important}.mfp-hol .mf-field-group{margin:0!important;width:100%}.mfp-hol .mf-input,.mfp-hol .mf-select,.mfp-hol .mf-textarea{width:100%!important;box-sizing:border-box!important;border:1.5px solid transparent!important;border-radius:10px!important;background:var(--hol-input-bg)!important;padding:11px 14px!important;color:var(--hol-text)!important;font:500 14px/20px inherit!important;min-height:42px!important;outline:0!important;box-shadow:none!important;transition:border-color .15s ease,background .15s ease!important}.mfp-hol .mf-textarea{min-height:96px!important;height:auto!important;resize:vertical}.mfp-hol .mf-input::placeholder,.mfp-hol .mf-textarea::placeholder{color:color-mix(in srgb, var(--hol-text) 42%, transparent)!important;opacity:1}.mfp-hol .mf-input:focus,.mfp-hol .mf-select:focus,.mfp-hol .mf-textarea:focus{border-color:var(--hol-primary)!important;background:var(--hol-fill-strong)!important}.mfp-hol .mf-field-error{color:#dc2626;font-size:11px;margin-top:4px}.mfp-hol .mf-option-group--cards{display:grid;gap:8px}.mfp-hol .mf-option-item{margin:0!important}.mfp-hol .mf-option-group--cards{align-items:stretch}.mfp-hol .mf-option-group--cards .mf-option-item{display:flex}.mfp-hol .mf-option-group--cards .mf-option-ui{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%;height:100%;box-sizing:border-box;padding:12px;border:1.5px solid var(--hol-hairline);border-radius:12px;background:var(--hol-fill);cursor:pointer;transition:all .15s ease}.mfp-hol .mf-option-group--cards .mf-option-check,.mfp-hol .mf-option-group--chips .mf-option-check{display:none!important}.mfp-hol .mf-option-group--cards .mf-option-ui{position:relative;padding-right:34px}.mfp-hol .mf-option-group--cards .mf-option-item.is-selected .mf-option-ui::after,.mfp-hol .mf-option-group--cards input:checked+.mf-option-ui::after{content:'';position:absolute;top:14px;right:14px;width:11px;height:6px;border-left:2.5px solid var(--hol-primary);border-bottom:2.5px solid var(--hol-primary);transform:rotate(-45deg);border-radius:1px}.mfp-hol .mf-option-group--cards .mf-option-item.is-selected .mf-option-ui,.mfp-hol .mf-option-group--cards input:checked+.mf-option-ui{border-color:var(--hol-primary);background:var(--hol-soft)}.mfp-hol .mf-option-label{color:var(--hol-text);font-size:13px;font-weight:600}.mfp-hol .mf-option-desc{color:var(--hol-muted);font-size:11px;margin-top:2px}.mfp-hol .mf-option-group--chips{display:flex;flex-wrap:wrap;gap:8px}.mfp-hol .mf-option-group--chips .mf-option-ui{padding:7px 14px;border-radius:999px;border:1.5px solid var(--hol-hairline);background:var(--hol-fill);color:var(--hol-muted);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s ease}.mfp-hol .mf-option-group--chips .mf-option-item.is-selected .mf-option-ui,.mfp-hol .mf-option-group--chips input:checked+.mf-option-ui{background:var(--hol-primary);border-color:var(--hol-primary);color:var(--hol-on-primary)}.mf-form-wrapper:has(.mfp-hol) .mf-form-actions{display:none!important}.mfp-hol .hol-submit{width:100%!important;border:0!important;border-radius:12px!important;padding:13px 20px!important;background:var(--hol-primary)!important;color:var(--hol-on-primary)!important;font:700 14px/20px inherit!important;cursor:pointer!important;box-shadow:none!important}.mfp-hol .hol-submit:hover{filter:brightness(1.05)}.mfp-hol .hol-consent-item{display:block}.mfp-hol .hol-consent-item>span{display:none!important}.mfp-hol .hol-consent-item .mf-field-label{display:none!important}.mfp-hol .hol-consent-item .mf-option-group{display:block}.mfp-hol .hol-consent-item .mf-option-ui{border:0!important;background:none!important;padding:0!important;color:var(--hol-muted)!important;font-weight:400!important;font-size:12px!important;line-height:18px!important}.mfp-hol .mf-form-title,.mfp-hol .mf-form-description{display:none!important}.mfp-hol .mf-field-group[data-key='travel_type'] .mf-option-group{grid-template-columns:repeat(3,1fr)!important}.mfp-hol .mf-field-group[data-key='programme'] .mf-option-group{grid-template-columns:1fr!important}@media (max-width:640px){.mfp-hol .hol-2,.mfp-hol .hol-name{grid-template-columns:1fr}.mfp-hol .mf-option-group{grid-template-columns:1fr!important}}",
+    "themeSelector": {
+      "enabled": true
+    },
+    "premiumGeneratedShell": true,
+    "showProgressBar": false,
+    "themeCompatibility": {
+      "policy": "hybrid",
+      "supportsPageColors": true,
+      "supportsPageTypography": true,
+      "supportsDarkHost": true,
+      "prefixes": [
+        "hol"
+      ],
+      "immutable": []
+    }
+  },
+  "rules": [],
+  "workflow": {
+    "notifications": []
+  }
+}
