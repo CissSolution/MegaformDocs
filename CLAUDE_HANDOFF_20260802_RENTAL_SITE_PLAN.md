@@ -211,6 +211,57 @@ Only after 1–3 land is the data model safe to freeze.
 
 ---
 
+## 4b. Build log — what is actually standing
+
+Site: `http://localhost:5130` (host / `abc@ABC1024`), DB `Oqtane_MegaFormClean20011`.
+
+| | |
+|---|---|
+| Page | **PageId 35**, path `cho-thue`, "Nha cho thue" — appears in the site menu |
+| Module | **ModuleId 37** (`MegaForm.Client, MegaForm.Oqtane.Client.Oqtane`), PageModule 37, pane Default |
+| Verified | `/cho-thue` → HTTP 200, renders the MegaForm module with Settings / Form Builder / Form Dashboard and the expected "No form configured" state (screenshot in `tools/browser-qa/oq/chothue.png`) |
+
+Builder script: `tools/rental-site/build-site.mjs` (steps: `page`, `fixperm`, `status`).
+
+### 🔴 Oqtane's REST API could not provision this — read before trying again
+
+Provisioning a page + module through `/api/page` and `/api/module` failed in four distinct ways,
+and the failures actively mislead:
+
+1. **`POST /api/page` answered 200 with an EMPTY body and created the page anyway.** Treating an
+   empty body as failure is wrong; the row was there.
+2. **Permissions cannot be passed on create.** Sending `home.permissionList` verbatim → the page is
+   created with **zero permission rows**. Re-keying the entries to `entityId: 0` → **400**, and the
+   Oqtane log says `An error occurred while saving the entity changes` from `PageController.Post`.
+   Sending them with their real `permissionId`s → 400 as well (primary-key collision). Oqtane only
+   accepts entries whose `entityId` is already the new page's id, which the caller cannot know
+   before the page exists.
+3. **A page with no permissions is unreachable.** `GET /api/page` omits it and `GET /api/page/{id}`
+   answers **403 even for host** (`Unauthorized Page Get Attempt 34` in the log). It cannot be
+   found, repaired, or re-created — its path is taken. The only way out was deleting the row.
+4. **`GET /api/pagemodule?siteid=1` is 404 on Oqtane 10.2.1** — the list-by-site form does not
+   exist in this build, though the recipe in `tools/browser-qa/oq-drive.mjs` assumes it.
+
+So the page, module, page-module binding and their permission rows were inserted **directly in the
+database**, modelled on the home page's own rows (View for RoleId 2 and 5, Edit for RoleId 5).
+That is acceptable here because this is a disposable local test site, and it is the reason the
+provisioning is not yet a repeatable script. ⚠️ **Oqtane caches the page list** — after a direct
+insert the site must be restarted before the page appears, and remember it **installs-then-exits**
+on the first launch after a change, so it usually needs starting twice.
+
+⭐ Reading the Oqtane **`Log` table** is what turned "400, empty body" into a diagnosis. Do that
+first next time instead of guessing at payload shapes.
+
+### Next build steps
+
+1. Create the five forms **through MegaForm's API** (`POST /api/MegaForm/Form`, policy `EditModule`
+   — needs moduleId 37 and the Oqtane headers). Author the schema JSON directly: rent and discount
+   MUST be `"type": "number"` or they land in the JSON table and no numeric filter can ever reach
+   them (§2).
+2. Declare the relations (building→room, room→reading, room→tenant, tenant→private docs).
+3. Seed the 20 buildings / ~500 rooms / ~9,000 readings.
+4. Then confront the public search, knowing from §2 that the facet filtering needs building.
+
 ## 5. Sample data to seed (20 buildings, ~500 rooms)
 
 Districts and character, chosen so the set stresses the model rather than filling rows:
