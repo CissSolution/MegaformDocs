@@ -1,3 +1,9 @@
+> **Superseded by [`CLAUDE_HANDOFF_20260802_SESSION.md`](CLAUDE_HANDOFF_20260802_SESSION.md)** for
+> current state, and by [`CLAUDE_HANDOFF_20260802_PERSONABAR_CODEX.md`](CLAUDE_HANDOFF_20260802_PERSONABAR_CODEX.md)
+> for the Persona Bar work itself. Two problems described below as open have since been fixed:
+> "Open dashboard" landing on the empty state, and the gallery hiding published templates. Kept for
+> the clean-install evidence and the packaging detail it records.
+
 # Persona Bar — where it stands and what to pick up next
 
 2026-08-01. Supersedes `CLAUDE_HANDOFF_20260731_PERSONABAR_MEGAFORM.md`, which described the
