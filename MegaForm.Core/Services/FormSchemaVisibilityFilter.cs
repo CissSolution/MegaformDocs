@@ -86,6 +86,16 @@ namespace MegaForm.Core.Services
 
             context = context ?? new RuleEvaluationContext();
 
+            // [StepAccess v20260802] Resolve step-level rules BEFORE the per-field pass. A rule on the
+            // Section that opens a step applies to everything in that step, and the cascade expresses
+            // that by adding those keys to the policy — so the loop below enforces them with the code
+            // it already had. A local policy is created when the caller passed none, because a step
+            // rule is a reason to filter even where per-role restrictions are absent.
+            var effectivePolicy = policy ?? new FieldAccessPolicy();
+            foreach (var fields in FieldArrays(schema))
+                FormStepAccessCascade.Collect(fields, context, effectivePolicy);
+            policy = effectivePolicy.IsEmpty ? policy : effectivePolicy;
+
             var changed = false;
             foreach (var fields in FieldArrays(schema))
                 changed |= ProjectFieldArray(fields, context, policy, result);

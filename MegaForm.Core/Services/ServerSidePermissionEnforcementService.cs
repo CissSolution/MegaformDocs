@@ -86,6 +86,10 @@ namespace MegaForm.Core.Services
             // into the same read-only set the FieldRestrictions path uses, so a POST cannot overwrite a
             // field the visitor may only view — the stored value is preserved on edit.
             AddReadOnlyIfFields(schema, context, fieldPolicy);
+            // [StepAccess v20260802] A rule on the Section that opens a step governs every field in
+            // that step. Folded into the same policy, so a POST cannot write past a step the visitor
+            // may only read — enforced here, not merely hidden by the renderer.
+            FormStepAccessCascade.Collect(schema, context, fieldPolicy);
             ApplyFieldPolicy(schemaKeys, fieldPolicy, result.Data, context, result.RemovedFields, existingData);
 
             result.RuleContext = BuildRuleContext(result.Data, actor, normalizedPermissions, query, explicitSubmitRules.Count == 0);
