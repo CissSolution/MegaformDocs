@@ -91,10 +91,13 @@ async function main() {
                      'X-Requested-With': 'XMLHttpRequest', RequestVerificationToken: token },
           body: ${JSON.stringify(body)} });
         const text = await r.text();
-        return { status: r.status, hadToken: !!token, body: text.slice(0, 1500) };
+        return { status: r.status, hadToken: !!token, body: text.slice(0, 20000) };
       })()`);
       console.log('HTTP', out && out.status, '|', body.slice(0, 60));
-      console.log('  ', (out && out.body || '').replace(/\s+/g, ' ').slice(0, 400));
+      // Full body when MF_FULL=1 - reading a stored HTML block needs all of it, not a preview.
+      console.log(process.env.MF_FULL === '1'
+        ? (out && out.body)
+        : '   ' + (out && out.body || '').replace(/\s+/g, ' ').slice(0, 400));
     }
     cdp.close();
   } finally {
