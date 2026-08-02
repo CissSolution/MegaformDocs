@@ -142,12 +142,85 @@ migration that would add them never runs there (`01060030_AddReporting.cs:74-82`
 
 ---
 
+## 2b. The capability scan landed — four answers that redirect the build
+
+### 🔴 Public listing photos cannot come from form uploads
+
+One File field **can** hold many files (`fileSettings.maxFiles > 1` → the value is a JSON array),
+and on Oqtane they land at
+`App_Data/MegaForm/PrivateUploads/form-{formId}/field-{fieldKey}/{16-hex-guid}{ext}`.
+
+But **both download endpoints are unconditionally `[Authorize]`** — an anonymous visitor gets
+**401 for every submission upload**. There is no way to make one uploaded file public while another
+stays private. So a public rental listing **cannot show photos that were uploaded through a form**.
+Photos for the public side have to live somewhere anonymously readable (Oqtane's own file manager /
+a public folder) and be referenced by URL. The owner's instinct to split private documents into a
+separate form still holds — it is just no longer the thing that protects them.
+
+Also: there is no image field type, no lightbox or gallery viewer, and no resizing/thumbnailing
+anywhere — a "thumbnail" is the full-size original constrained by CSS. And the Builder's **File
+Settings panel is dead UI**: the values are loaded into the inputs but never read back into the
+schema, so `maxFiles` must be set in the schema JSON directly.
+
+### 🔴 The MegaForm module on Oqtane cannot render a list at all
+
+Its list/card/ListView modes are **hard-coded to `false`** and have been since 2026-06-17; the
+ListView mount is dead code, and there is no `MF_ModuleViewConfig` table on Oqtane (that is
+DNN-only). Even on DNN, ListView's "detail" is a **modal overlay, not a page**.
+
+**The only shipped public list→detail surface on Oqtane is the MegaForm Blogs module** — one module
+definition exposing 14 surfaces (7 modes × 2 profiles) chosen per instance in Module Settings:
+listing / detail / category / author / archive / … Routing is by **slug**, either `?slug=my-slug`
+or Oqtane url-parameters `/page/!/my-slug`, and the detail can sit on the same instance or a
+different page. The list is searchable and filterable from the URL with real pagination, and — the
+part that matters most — **it renders for anonymous visitors with no auth gate**, because it talks
+to the in-process SDK rather than the HTTP API, so the 250-row query-key cap in §2 does not apply
+to it.
+
+**So the public side of this site should be built on the Blogs module, not the MegaForm module.**
+
+### App starters are the right delivery vehicle — but not configurable
+
+A starter stamps out a whole multi-form app in one admin click, in this order: app definition →
+primary form → related forms → **parent/child relations** → named queries → views → permissions →
+workflow → role accounts → sample submissions. The **blog starter already creates four forms wired
+with has_many relations and cascade delete** — structurally exactly what this needs.
+
+Limits: a starter creates **no pages and no module instances** (it only writes ModuleSettings onto
+the one module the admin clicked from) and **no SQL tables**. And there is **no JSON authoring
+format on Oqtane** — `ConfiguredAppStarterDefinitions.Get()` is a hardcoded switch that recognises
+only `blog`; adding one key takes **six synchronised edits across both platform hosts**.
+
+### Per-property admin assignment is not expressible (as the owner suspected)
+
+The real ACL table is **`MF_Permissions`** (not `MF_FormPermissions`). Seven permission types
+(submit/view/edit/delete/export/approve/manage), three principal kinds (role / individual user /
+all_users·authenticated·anonymous), explicit deny wins, and a per-rule record **scope: all / own /
+team / team:&lt;fieldKey&gt;** honoured on view/edit/delete/export.
+
+But there is **no per-record ACL** — `MF_Permissions` is keyed by FormId with no SubmissionId — and
+`team:&lt;field&gt;` compares the record's field to the caller's **role names**, never to their user id.
+So "this admin may edit only these properties" has to be modelled as **a role per property group**,
+not per user. The builder UI cannot author `team:&lt;fieldKey&gt;` or FieldRestrictions at all; both must
+be written directly. The owner deferred this, and that was the right call.
+
 ## 3. Where the plan is heading
 
 > An Agoda-style faceted search over ~500 rooms is **not** reachable by configuring MegaForm. It is
 > missing the filter operators, the read path, and the map — three separate gaps, not one.
 
-The shape I would propose, to be confirmed once §4 lands:
+**Revised after §2b**, the split is sharper than "SQL tables vs submissions":
+
+| Layer | Build it on | Why |
+|---|---|---|
+| Public browse + detail | **Blogs module** (slug routing, anonymous, paginated, searchable) | the only shipped list→detail surface on Oqtane; bypasses the 250-row cap |
+| Public photos | Oqtane file manager URLs, **not** form uploads | every submission upload is 401 for anonymous |
+| Faceted numeric filter | **new** — either over `MF_SubmissionValueNumber` (index already exists) or over SQL tables | no numeric operator exists anywhere |
+| Multi-marker map | **new** — a ListView/Blogs wrapper template can bootstrap inline `<script>`, which is the hook | no map library is vendored |
+| Admin data entry, monthly history, tenant + private docs | MegaForm forms + relations | this is what the product is good at |
+| Provisioning the whole app in one click | a starter, modelled on the blog starter | it already creates 4 forms + relations + permissions + sample data |
+
+The earlier shape, kept because it still holds where the two overlap:
 
 - **Rental inventory lives in real SQL tables**, read through the external-table path — the one
   already QA'd against a **500,000-row** table with fast paging. Filtering, sorting and facets then
@@ -181,33 +254,21 @@ with a data-driven navigation block. I lean to the second and would put both to 
 
 ---
 
-## 4. 🔴 Unfinished research — start here
+## 4. Research status
 
-An 11-agent capability scan was still running when the session ended and **returned nothing**
-(0/11 after ~40 minutes; the 4-agent search scan completed in 10). Re-run it — the script is saved
-and completed agents replay from cache:
+The 11-agent capability scan **completed** on the resume run (it had returned nothing on the first
+attempt) — its answers are folded into §2b. The 4-agent search/filter scan completed earlier and is
+in §2. Nothing material is outstanding; the data model can be frozen.
 
-```
-Workflow({ scriptPath: "…/workflows/scripts/map-rental-site-capabilities-wf_f8bc1611-25f.js",
-           resumeFromRunId: "wf_f8bc1611-25f" })
-```
-
-It still owes answers on:
-
-1. **Images** — can ONE field hold MANY images? Where are they stored on Oqtane, what are the
-   limits, and can a listing photo be public while a contract scan stays private? (The owner's
-   split-into-a-separate-form decision may make the last part moot, but the multi-image question is
-   load-bearing for the photo lists.)
-2. **Public display** — how a visitor gets from a list to one record's detail page (routing/URL),
-   what the detail view can render, and what ListView vs DataRepeater vs the Blogs multipurpose
-   views each actually support.
-3. **App starters** — the repo has six (`LeaveRequest`, `Proposal`, `PurchaseOrder`, `Recruitment`,
-   `DocumentExchange`, `ConfiguredAppStarter`). Establish exactly what one creates (forms? pages?
-   modules? queries? sample data?) — a "rental" starter is very likely the right delivery vehicle
-   for the 20-building seed.
-4. **Roles** — how far the existing model goes, given the owner deferred per-property assignment.
-
-Only after 1–3 land is the data model safe to freeze.
+⭐ Correction to §2 worth carrying: the earlier probe said the map story was hopeless. It is
+narrower than that. The `Map` widget is display-only and stores nothing — but a **separate
+`Geolocation` widget DOES store `{lat, lng, address, timestamp}`** as JSON in the submission, so a
+room's coordinates have a home. And a **per-record map already works today**: ListView / Blogs row
+templates are raw HTML with `{{field:KEY}}` tokens written straight into the DOM, so
+`<iframe src="…openstreetmap.org/export/embed.html?…&marker={{field:lat}},{{field:lng}}">` renders
+per row. What is missing is only *many markers on one map*, and ListView re-executes inline
+`<script>` blocks after every render (`listview/runtime.ts:1431-1439`), which is the hook to build
+it on.
 
 ---
 
