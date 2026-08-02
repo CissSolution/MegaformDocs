@@ -360,7 +360,30 @@ if (existsSync(nuspecPath)) {
   // (Assets/fonts/gf, ~12.9 MB). The shipped CSS pulls Inter/Geist from the Google Fonts CDN,
   // so gf never loads — it was pure dead weight in the package. Kept alongside license.lic as a
   // fixed exclusion so it survives every regeneration.
-  const patterns = ['**\\license.lic', '**\\fonts\\gf\\**', ...galleryImages.map((rel) => '**\\img\\' + rel.replace(/\//g, '\\'))];
+  //
+  // [SlimSurvives 2026-08-02] EVERYTHING that must stay excluded belongs in this array. The
+  // write below REPLACES the whole exclude attribute, so a rule hand-added to the nuspec is
+  // deleted by the next gallery publish. That is what happened to the 2026-07-29 slimming: the
+  // package quietly went back to 50 MB and nobody noticed, because the size is only visible
+  // when you build one. Measured on the payload this list is applied to:
+  //   img\mock          24 files, 36 MB — no bundled template references any image at all
+  //   *.map             32 files,  8 MB — sourcemaps, not wanted in a store package
+  //   js\i18n, js\bundles\i18n, js\plugins\i18n — three byte-identical copies of the 39-locale
+  //     folder, 3.8 MB each. Oqtane serves locales from js\builder\i18n ONLY (the i18n/list and
+  //     i18n/Get endpoints read WebRootPath\Modules\MegaForm\js\builder\i18n), and the shipped
+  //     bundles only ever build API-shaped URLs (/api/MegaForm/i18n), never a relative folder.
+  //     js\builder\i18n therefore stays; the other three are copy-loop residue.
+  const patterns = [
+    '**\\license.lic',
+    '**\\fonts\\gf\\**',
+    '**\\img\\mock\\**',
+    '**\\*.map',
+    '**\\*.pdb',
+    '**\\js\\i18n\\**',
+    '**\\js\\bundles\\i18n\\**',
+    '**\\js\\plugins\\i18n\\**',
+    ...galleryImages.map((rel) => '**\\img\\' + rel.replace(/\//g, '\\')),
+  ];
   const nuspec = readFileSync(nuspecPath, 'utf8');
   const lineRe = /(<file src="\.\.\\MegaForm\.Oqtane\.Server\\wwwroot\\Modules\\MegaForm\\\*\*\\\*\.\*"[^>]*?exclude=")([^"]*)(")/;
   const m = nuspec.match(lineRe);

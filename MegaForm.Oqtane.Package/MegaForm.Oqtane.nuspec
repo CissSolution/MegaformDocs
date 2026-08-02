@@ -95,11 +95,25 @@ v1.7.107 (20260717) — 🎨 PREMIUM TEMPLATE THEME INHERITANCE. All 14 non-lock
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\MegaForm.Oqtane.Server.Oqtane.dll" target="lib\net10.0" />
     <file src="..\MegaForm.Oqtane.Shared\bin\Release\net10.0\MegaForm.Oqtane.Shared.Oqtane.dll" target="lib\net10.0" />
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\MegaForm.Core.dll" target="lib\net10.0" />
-    <!-- [PackageSlim 2026-07-29] Roslyn / Razor.Language / Newtonsoft are NOT shipped for
-         net10.0: the Oqtane 10.x host already carries them (checked against a pristine
-         Oqtane.Framework.10.2.1 install), so a second copy was 3.8 MB of pure duplication -
-         and two copies of one assembly is a load-order risk, not a safety net. The net9.0
-         entries stay: Oqtane 6 genuinely does not provide them (see the note above). -->
+    <!-- [SlimRevert 2026-08-02] Roslyn / Razor.Language / Newtonsoft SHIP AGAIN for net10.0.
+         [PackageSlim 2026-07-29] dropped them "because the Oqtane 10.x host already carries them
+         (checked against a pristine Oqtane.Framework.10.2.1 install)". That check was wrong: the
+         only copies inside that media are under BlazorDebugProxy\, a debug folder that is not on
+         the server's probing path. The application root has none of them.
+         The result was a package that cannot start a clean Oqtane at all - two crashes in a row
+         on a fresh 10.2.1 + MegaForm 2.0.11:
+           FileNotFoundException: Microsoft.AspNetCore.Razor.Language 6.0.36.0
+             at OqtaneServiceCollectionExtensions.AddOqtaneAssemblies   (assembly scan)
+           FileNotFoundException: Newtonsoft.Json 13.0.0.0
+             at ControllerActionDescriptorProvider.GetDescriptors        (MapControllers)
+         Every Oqtane site that kept working had accumulated these from a pre-slim package -
+         exactly the trap [pkg-fix 20260625] above already described, walked into a second time.
+         3.8 MB is the price of booting; do not "slim" these again without installing the result
+         on a genuinely fresh host first. -->
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Microsoft.AspNetCore.Razor.Language.dll" target="lib\net10.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Newtonsoft.Json.dll" target="lib\net10.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Microsoft.CodeAnalysis.dll" target="lib\net10.0" />
+    <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\Microsoft.CodeAnalysis.CSharp.dll" target="lib\net10.0" />
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\MegaForm.Sdk.dll" target="lib\net10.0" />
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\MegaForm.Integrations.CloudStorage.dll" target="lib\net10.0" />
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net10.0\AWSSDK.Core.dll" target="lib\net10.0" />
@@ -130,7 +144,7 @@ v1.7.107 (20260717) — 🎨 PREMIUM TEMPLATE THEME INHERITANCE. All 14 non-lock
            **\*.js.map             0.5 MB  — source maps have no business in a store package.
          Gallery-installed templates keep working: GalleryInstallService downloads a template's
          assets alongside it. Anything a bundled template needs stays in the package. -->
-    <file src="..\MegaForm.Oqtane.Server\wwwroot\Modules\MegaForm\**\*.*" target="wwwroot\Modules\MegaForm" exclude="**\license.lic;**\fonts\gf\**;**\img\mock\**;**\img\festa-italiana\**;**\img\euro-youth\**;**\js\i18n\**;**\*.js.map;**\img\azure-contact-request\hero.jpg;**\img\brochure-youth\brochure-youth-hero.jpg;**\img\bulgaria-discovery\bulgaria-plovdiv.png;**\img\bulgaria-discovery\bulgaria-rose-hero.png;**\img\christmas-americana-header.png;**\img\floral-youth\floral-youth-hero.jpg;**\img\realestate-registration\header-illus.png;**\img\teal-brochure\teal-brochure-hero.jpg;**\img\terracotta-product-feedback\hero.jpg;**\img\verdant-member-registration\hero.jpg;**\img\vintage-americana-header.png" />
+    <file src="..\MegaForm.Oqtane.Server\wwwroot\Modules\MegaForm\**\*.*" target="wwwroot\Modules\MegaForm" exclude="**\license.lic;**\fonts\gf\**;**\img\mock\**;**\*.map;**\*.pdb;**\js\i18n\**;**\js\bundles\i18n\**;**\js\plugins\i18n\**;**\img\azure-contact-request\hero.jpg;**\img\brochure-youth\brochure-youth-hero.jpg;**\img\bulgaria-discovery\bulgaria-plovdiv.png;**\img\bulgaria-discovery\bulgaria-rose-hero.png;**\img\christmas-americana-header.png;**\img\dance-competition-registration\dance-hero.png;**\img\euro-youth\euro-youth-hero.png;**\img\floral-youth\floral-youth-hero.jpg;**\img\holiday-request-travel\holiday-luggage.png;**\img\mock\americana-coast.png;**\img\mock\americana-hero.png;**\img\mock\outback-station-side.png;**\img\realestate-registration\header-illus.png;**\img\teal-brochure\teal-brochure-hero.jpg;**\img\terracotta-product-feedback\hero.jpg;**\img\verdant-member-registration\hero.jpg;**\img\vintage-americana-header.png;**\img\volunteer-application-euroyouth\volunteer-hero.png" />
 
     <!-- Package metadata -->
     <file src="icon.png" target="" />
