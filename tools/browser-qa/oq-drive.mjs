@@ -6,9 +6,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import http from 'node:http';
+import { fileURLToPath } from 'node:url';
 
 const [baseUrl, user, pass, ...steps] = process.argv.slice(2);
-const OUT = path.resolve('./oq');
+// Relative to THIS script, not the shell's cwd: `./oq` meant the driver dropped screenshots
+// wherever it happened to be invoked from, which littered the repo root the first time it was
+// run from there instead of writing next to the other QA output.
+const OUT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'oq');
 fs.mkdirSync(OUT, { recursive: true });
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const DBG = 9390;

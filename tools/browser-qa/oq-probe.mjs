@@ -8,9 +8,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import http from 'node:http';
+import { fileURLToPath } from 'node:url';
 
 const [baseUrl, user, pass, ...extra] = process.argv.slice(2);
-const OUT = path.resolve('./oq');
+// Relative to THIS script, not the shell's cwd — see the same note in oq-drive.mjs.
+const OUT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'oq');
 fs.mkdirSync(OUT, { recursive: true });
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const DBG = 9391;
@@ -59,8 +61,16 @@ const PROBE = `(() => {
     pagerPages: Array.from(document.querySelectorAll('.mfb-pager-pages > *')).map(e=>(e.textContent||'').trim()),
     pagerOf: (q('.mfb-pager-of') || {}).textContent || null,
     consoleTabs: Array.from(document.querySelectorAll('.mfba-head-actions a')).map(a=>({t:(a.textContent||'').trim(),h:a.getAttribute('href')})),
+    // The console link chain, as data. Every 🔴 dead-end in the 07-30d audit was a missing or
+    // mislabelled href, so list what the screen actually offers rather than trusting the markup.
+    editLinks: Array.from(document.querySelectorAll('a[href*="view=edit"]')).map(a=>a.getAttribute('href')).slice(0,8),
+    previewLinks: Array.from(document.querySelectorAll('.mfba a[target="_blank"]')).map(a=>a.getAttribute('href')).slice(0,8),
+    quickTiles: Array.from(document.querySelectorAll('.mfba-quick a')).map(a=>({t:((a.querySelector('strong')||{}).textContent||'').trim(),h:a.getAttribute('href')})),
     settingsView: (q('#mfb-view') || {}).value || null,
     settingsOptions: document.querySelectorAll('#mfb-view option').length,
+    publicPageValue: (q('#mfb-publicpage') || {}).value || null,
+    pageOptions: Array.from(document.querySelectorAll('#mfb-publicpage option'))
+      .map(o => o.value + ':' + (o.textContent||'').trim()).slice(0, 24),
     newFormFields: document.querySelectorAll('.mfba-fld').length,
     newFormLabels: Array.from(document.querySelectorAll('.mfba-fld > label')).map(l=>(l.textContent||'').trim()).slice(0,30),
     blogCssHref: Array.from(document.querySelectorAll('link[rel=stylesheet]')).map(l=>l.getAttribute('href')).filter(h=>h && h.indexOf('megaform-blogs')>=0),
@@ -200,6 +210,174 @@ async function main() {
         console.log('SETTINGS', p, '->', set, saved);
         continue;
       }
+      // vars=<url>  the theme-compatibility measurement. Dumps what the host theme actually sets,
+      // what the module's token chain resolves to, and — the part that matters — the PAINTED
+      // background of each surface. A token block can chain to the theme correctly and still look
+      // broken, because the rules underneath hardcode #fff; only the painted value shows that.
+      if (p.startsWith('vars=')) {
+        const url = p.slice('vars='.length);
+        await goto(/^https?:\/\//i.test(url) ? url : baseUrl + url, 9000);
+        const r = await ev(`(() => {
+          const root = getComputedStyle(document.documentElement);
+          const body = getComputedStyle(document.body);
+          const host = {};
+          ['--bs-body-bg','--bs-body-color','--bs-secondary-color','--bs-secondary-bg',
+           '--bs-tertiary-bg','--bs-border-color','--bs-emphasis-color',
+           '--mf-page-surface','--mf-page-text','--mf-page-muted','--mf-page-border','--mf-page-primary',
+           '--surface-color','--default-color','--accent-color','--border-color'
+          ].forEach(v => { const val = root.getPropertyValue(v).trim(); if (val) host[v] = val; });
+
+          const scope = document.querySelector('.mfb') || document.querySelector('.mfba');
+          const mod = {};
+          if (scope) {
+            const scs = getComputedStyle(scope);
+            ['--mfb-surface','--mfb-ink','--mfb-muted','--mfb-line','--mfb-accent','--mfb-soft',
+             '--mfb-card','--mfb-soft-fill'
+            ].forEach(v => { const val = scs.getPropertyValue(v).trim(); if (val) mod[v] = val; });
+          }
+
+          // What is actually painted. Anything that reads white on a dark body is the defect.
+          const painted = [];
+          ['body','.mfb','.mfb-hero','.mfb-feature','.mfb-card','.mfb-card-body h3','.mfb-card-body p',
+           '.mfb-side-card','.mfb-categories a','.mfb-tags a','.mfb-search input','.mfb-state',
+           '.mfb-pager a','.mfb-filterbar input','.mfb-chip','.mfb-prose'
+          ].forEach(sel => {
+            const el = document.querySelector(sel);
+            if (!el) return;
+            const cs = getComputedStyle(el);
+            painted.push({ sel, bg: cs.backgroundColor, bgImage: (cs.backgroundImage||'none').slice(0,60), fg: cs.color });
+          });
+          return JSON.stringify({ bodyBg: body.backgroundColor, bodyFg: body.color, host, mod, painted });
+        })()`);
+        console.log('VARS    ', url, r);
+        continue;
+      }
+      // theme=<name>:<bg>/<fg>:<url>  proves theme compatibility in BOTH directions without
+      // reinstalling a theme: it rewrites the two variables the module's token chain actually
+      // reads (--bs-body-bg / --bs-body-color) on :root, then measures and screenshots.
+      // Stock Oqtane ships dark, so the light case would otherwise never be tested at all.
+      if (p.startsWith('theme=')) {
+        const spec = p.slice('theme='.length);
+        const cut = spec.indexOf(':http');
+        const [name, colours] = spec.slice(0, cut).split(':');
+        const [bg, fg] = colours.split('/');
+        const url = spec.slice(cut + 1);
+        await goto(url, 9000);
+        await ev(`(() => {
+          const s = document.createElement('style');
+          s.id = 'mf-theme-probe';
+          s.textContent = ':root{--bs-body-bg:${bg} !important;--bs-body-color:${fg} !important}'
+            + 'body{background:${bg} !important;color:${fg} !important}';
+          document.head.appendChild(s);
+          return 'injected';
+        })()`);
+        await sleep(1200);
+        const r = await ev(`(() => {
+          const out = [];
+          // Same color(srgb …) handling as the contrast= handler — see the note there.
+          const lum = (c) => {
+            if (!c) return null;
+            const m = c.match(/[-\\d.]+/g); if (!m) return null;
+            const raw = m.slice(0, 3).map(Number);
+            if (raw.length < 3) return null;
+            const scaled = /^color\\(/i.test(c) ? raw : raw.map(v => v / 255);
+            const f = scaled.map(v => { v = Math.min(1, Math.max(0, v));
+              return v <= .03928 ? v/12.92 : Math.pow((v+.055)/1.055, 2.4); });
+            return .2126*f[0] + .7152*f[1] + .0722*f[2]; };
+          const bgOf = (el) => { let n = el;
+            while (n && n !== document.documentElement) { const b = getComputedStyle(n).backgroundColor;
+              const m = b.match(/[\\d.]+/g); if (m && (m.length < 4 || Number(m[3]) > 0.05)) return b; n = n.parentElement; }
+            return 'rgb(255,255,255)'; };
+          ['.mfb-card','.mfb-feature','.mfb-hero','.mfb-card-body h3','.mfb-card-body p',
+           '.mfb-section-head h2','.mfb-categories a','.mfb-pager a','.mfb-filterbar input'
+          ].forEach(sel => {
+            const el = document.querySelector(sel); if (!el) return;
+            const cs = getComputedStyle(el);
+            const fgc = cs.color, bgc = bgOf(el);
+            const l1 = lum(fgc), l2 = lum(bgc);
+            let ratio = null;
+            if (l1 !== null && l2 !== null) { const hi = Math.max(l1,l2), lo = Math.min(l1,l2);
+              ratio = Math.round(((hi + .05) / (lo + .05)) * 100) / 100; }
+            out.push({ sel, bg: bgc, fg: fgc, ratio, fail: ratio !== null && ratio < 4.5 });
+          });
+          return JSON.stringify(out);
+        })()`);
+        console.log('THEME   ', name, r);
+        await cdp.call('Emulation.setDeviceMetricsOverride',
+          { width: 1310, height: 1000, deviceScaleFactor: 1, mobile: false });
+        await sleep(900);
+        const shot = await cdp.call('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
+        const file = path.join(OUT, `theme-${name}.png`);
+        fs.writeFileSync(file, Buffer.from(shot.data, 'base64'));
+        await cdp.call('Emulation.clearDeviceMetricsOverride');
+        console.log('THEME   shot', file);
+        continue;
+      }
+      // options=<url>|<selectId>  waits for a Blazor settings pane to finish rendering, then dumps
+      // one <select>'s options. A control whose value silently refuses to change is almost always
+      // a control with no matching option, and that is invisible from the outside otherwise.
+      if (p.startsWith('options=')) {
+        const [url, selectId] = p.slice('options='.length).split('|');
+        await goto(/^https?:\/\//i.test(url) ? url : baseUrl + url, 9000);
+        for (let i = 0; i < 40; i++) { if (await ev("!!document.querySelector('#mfb-view')")) break; await sleep(700); }
+        const r = await ev(`(() => {
+          const el = document.querySelector('#' + ${JSON.stringify(selectId)});
+          return JSON.stringify({
+            present: !!el,
+            value: el ? el.value : null,
+            options: el ? Array.from(el.options).map(o => o.value + ':' + (o.textContent||'').trim()) : null,
+            selectIds: Array.from(document.querySelectorAll('select')).map(s => s.id).slice(0, 20)
+          });
+        })()`);
+        console.log('OPTIONS ', selectId, r);
+        continue;
+      }
+      // set-setting=<settingsUrl>|<controlId>=<value>[,<controlId>=<value>…]  drives ANY control
+      // on a module's real Settings pane and clicks Oqtane's Save, so the round trip through
+      // ISettingsControl.UpdateSettings — including its whitelists — is what gets tested.
+      // Generalises `settings=` above, which only knows module 37's view and page size.
+      //
+      // The URL is passed whole because Oqtane's `/*/<moduleId>/Settings` form is relative to
+      // the page the module sits on: `/*/38/Settings` finds nothing when module 38 lives on
+      // /new-admin. Pass `http://host/new-admin/*/38/Settings`.
+      if (p.startsWith('set-setting=')) {
+        const [settingsUrl, changeSpec] = p.slice('set-setting='.length).split('|');
+        await goto(/^https?:\/\//i.test(settingsUrl) ? settingsUrl : baseUrl + settingsUrl, 9000);
+        for (let i = 0; i < 40; i++) { if (await ev("!!document.querySelector('#mfb-view')")) break; await sleep(700); }
+        const set = await ev(`(() => {
+          const out = [];
+          ${JSON.stringify((changeSpec || '').split(',').filter(Boolean))}.forEach((pair) => {
+            const eq = pair.indexOf('=');
+            const id = pair.slice(0, eq), value = pair.slice(eq + 1);
+            const el = document.querySelector('#' + id);
+            if (!el) { out.push(id + ':missing'); return; }
+            el.value = value;
+            el.dispatchEvent(new Event('change', {bubbles:true}));
+            el.dispatchEvent(new Event('input', {bubbles:true}));
+            out.push(id + ':' + el.value + (el.value === value ? '' : ' (REJECTED)'));
+          });
+          return out.join(' ');
+        })()`);
+        await sleep(1500);
+        // ⚠️ NEVER click a blind "Save". Oqtane's admin routes render several different panes,
+        // and a Save on the wrong one writes the wrong entity — page theme, container, permissions.
+        // Two gates: the blog pane must be present (#mfb-view), and every control we were asked to
+        // set must have accepted its value. Anything else aborts WITHOUT saving.
+        const refused = /missing|REJECTED/.test(set) ? set : null;
+        const saved = refused
+          ? 'ABORTED (not saved): ' + refused
+          : await ev(`(() => {
+              if (!document.querySelector('#mfb-view')) return 'ABORTED: not the blog settings pane';
+              const form = document.querySelector('#mfb-view').closest('form') || document;
+              const btn = Array.from(form.querySelectorAll('button,a'))
+                .find(b => /^\\s*save\\s*$/i.test(b.textContent||''));
+              if (!btn) return 'no-save-button';
+              btn.click(); return 'saved';
+            })()`);
+        await sleep(6000);
+        console.log('SET-SETTING', settingsUrl, '->', set, saved);
+        continue;
+      }
       // contrast=<url>  reports computed colour vs the nearest painted background for the text
       // that matters, with a WCAG ratio. Inherited colour loses to ANY matching rule, so a host
       // theme's bare `h1 { color: … }` beats a module's inherited ink - this is how a light
@@ -212,9 +390,19 @@ async function main() {
                         '.mfba-kcard h4', '.mfba-kcard .mfba-ktag', '.mfba-kmeta',
                         '.mfba-panel-head h2', '.mfba-fld > label', '.mfba-stat-val',
                         '.mfb-hero h1', '.mfb-card-body h3', '.mfb-card-body p'];
+          // ⚠️ Must handle color(srgb r g b) as well as rgb(r g b). Once a stylesheet uses
+          // color-mix() — which the theme-compat layer does — Chrome reports the result in the
+          // color() form with 0–1 components. Dividing those by 255 makes every mixed colour
+          // read as near-black, which is how a perfectly good #7e807f got reported as contrast
+          // 1.03 and nearly cost a correct fix. See CLAUDE_HANDOFF_20260730e.
           const lum = (c) => {
-            const m = c.match(/[\\d.]+/g); if (!m) return null;
-            const f = m.slice(0,3).map(Number).map(v => { v/=255; return v <= .03928 ? v/12.92 : Math.pow((v+.055)/1.055, 2.4); });
+            if (!c) return null;
+            const m = c.match(/[-\\d.]+/g); if (!m) return null;
+            const raw = m.slice(0, 3).map(Number);
+            if (raw.length < 3) return null;
+            const scaled = /^color\\(/i.test(c) ? raw : raw.map(v => v / 255);
+            const f = scaled.map(v => { v = Math.min(1, Math.max(0, v));
+              return v <= .03928 ? v/12.92 : Math.pow((v+.055)/1.055, 2.4); });
             return .2126*f[0] + .7152*f[1] + .0722*f[2];
           };
           const bgOf = (el) => {
@@ -352,6 +540,97 @@ async function main() {
           return JSON.stringify({ before, after, back });
         })()`);
         console.log('FS      ', target, report);
+        continue;
+      }
+      // repair-uid=<consoleUrl>|<id>  opens a post in the edit screen and, if it is sharing its
+      // post_uid with another post, clicks the repair action. post_uid is the key reader-events and
+      // comments are grouped by, so a duplicate makes several posts report one another's numbers.
+      if (p.startsWith('repair-uid=')) {
+        const [consoleUrl, id] = p.slice('repair-uid='.length).split('|');
+        await goto(consoleUrl + (consoleUrl.indexOf('?') >= 0 ? '&' : '?') + 'view=edit&id=' + id, 10000);
+        for (let i = 0; i < 40; i++) { if (await ev("!!document.querySelector('#mfb-edit-title')")) break; await sleep(700); }
+        const before = await ev(`(() => {
+          const note = Array.from(document.querySelectorAll('.mfba-note-error'))
+            .find(n => /shares its ID/i.test(n.innerText||''));
+          return JSON.stringify({ clash: !!note, text: note ? note.innerText.trim().slice(0,150) : null });
+        })()`);
+        const clicked = await ev(`(() => {
+          const b = Array.from(document.querySelectorAll('button'))
+            .find(x => /own ID/i.test(x.textContent||''));
+          if (!b) return 'no-repair-button';
+          b.click(); return 'clicked';
+        })()`);
+        await sleep(8000);
+        const after = await ev(`(() => {
+          const ok = document.querySelector('.mfba-note-ok');
+          const still = Array.from(document.querySelectorAll('.mfba-note-error'))
+            .find(n => /shares its ID/i.test(n.innerText||''));
+          return JSON.stringify({ ok: ok ? ok.innerText.trim().slice(0,160) : null, stillClashing: !!still });
+        })()`);
+        console.log('REPAIR-UID', id, before, '->', clicked, after);
+        continue;
+      }
+      // edit-post=<consoleUrl>|<id>|<field>=<value>[,<field>=<value>…]  opens a post in the edit
+      // screen, reports the three publish gates as the editor sees them, applies the changes and
+      // saves. This is the only way to test the write path that matters: PatchRecordAsync writes
+      // the typed field AND MF_Submissions.Status together, so "did gate 2 follow gate 1?" is a
+      // question only a real save can answer.
+      if (p.startsWith('edit-post=')) {
+        const [consoleUrl, id, changeSpec] = p.slice('edit-post='.length).split('|');
+        await goto(consoleUrl + (consoleUrl.indexOf('?') >= 0 ? '&' : '?') + 'view=edit&id=' + id, 10000);
+        for (let i = 0; i < 40; i++) { if (await ev("!!document.querySelector('#mfb-edit-title')")) break; await sleep(700); }
+
+        const readState = `(() => {
+          const gates = Array.from(document.querySelectorAll('.mfba-gate')).map(g => ({
+            n: (g.querySelector('.mfba-gate-n')||{}).textContent,
+            label: (g.querySelector('strong')||{}).textContent,
+            value: (g.querySelector('small')||{}).textContent,
+            state: g.className.replace('mfba-gate','').trim() || 'neutral'
+          }));
+          const g = (k) => { const el = document.querySelector('#mfb-edit-' + k); return el ? el.value : null; };
+          return JSON.stringify({
+            gates,
+            fieldCount: document.querySelectorAll('.mfba-fld').length,
+            title: g('title'), slug: g('slug'), status: g('status'),
+            contentType: g('content_type'), category: g('category'),
+            publishDate: g('publish_date'),
+            // A date control that could not parse its stored value comes up EMPTY, and saving
+            // would then wipe a date nobody edited. Reported explicitly for that reason.
+            dateControlEmpty: (() => { const el = document.querySelector('#mfb-edit-publish_date');
+              return el ? (el.type === 'date' && !el.value) : null; })(),
+            previewHref: (() => { const a = Array.from(document.querySelectorAll('.mfba-newform-foot a'))
+              .find(x => /preview/i.test(x.textContent||'')); return a ? a.getAttribute('href') : null; })(),
+            note: (document.querySelector('.mfba-note') || {}).innerText || null
+          });
+        })()`;
+        console.log('EDIT     loaded:', await ev(readState));
+
+        if (changeSpec) {
+          const applied = await ev(`(() => {
+            const out = [];
+            ${JSON.stringify(changeSpec.split(','))}.forEach((pair) => {
+              const eq = pair.indexOf('=');
+              const key = pair.slice(0, eq), value = pair.slice(eq + 1);
+              const el = document.querySelector('#mfb-edit-' + key);
+              if (!el) { out.push(key + ':missing'); return; }
+              el.focus(); el.value = value;
+              el.dispatchEvent(new Event('input', {bubbles:true}));
+              el.dispatchEvent(new Event('change', {bubbles:true}));
+              el.blur();
+              out.push(key + ':' + el.value);
+            });
+            return out.join(' ');
+          })()`);
+          await sleep(2000);
+          const clicked = await ev(`(() => {
+            const b = Array.from(document.querySelectorAll('button')).find(b => /save changes/i.test(b.textContent||''));
+            if (!b) return 'no-save-button';
+            b.click(); return 'clicked';
+          })()`);
+          await sleep(9000);
+          console.log('EDIT     applied:', applied, '=>', clicked);
+          console.log('EDIT     after save:', await ev(readState));
+        }
         continue;
       }
       // create-post=<title>|<category>|<status>  authors a real post through the console's
