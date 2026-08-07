@@ -126,6 +126,10 @@ namespace MegaForm.Oqtane.Server.Services
 
             using (var db = factory.CreateDbContext())
             {
+                // The scanner queries WaitUntilUtc/LeaseUntilUtc/EscalatedAtUtc directly, and it
+                // can be the first thing to touch this tenant after an upgrade — heal the schema
+                // before the first query rather than logging "Invalid column name" every tick.
+                WorkflowTimerSchemaBootstrapper.Ensure(db);
                 ScanDueExecutions(db, services);
                 ScanOverdueTasks(db, services);
             }

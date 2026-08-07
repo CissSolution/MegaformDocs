@@ -87,6 +87,9 @@ namespace MegaForm.Oqtane.Server.Data
         public string SaveExecution(WorkflowExecutionContext ctx)
         {
             using var db = _dbContextFactory.CreateDbContext();
+            // First write of the execution row is the earliest point WaitUntilUtc is needed —
+            // add the timer columns here if this tenant's database predates them.
+            WorkflowTimerSchemaBootstrapper.Ensure(db);
             db.Set<WorkflowExecutionRow>().Add(new WorkflowExecutionRow
             {
                 ExecutionId = ctx.ExecutionId,
@@ -106,6 +109,9 @@ namespace MegaForm.Oqtane.Server.Data
         public void UpdateExecution(WorkflowExecutionContext ctx)
         {
             using var db = _dbContextFactory.CreateDbContext();
+            // An execution started by a pre-upgrade process reaches its first update here
+            // without ever passing through SaveExecution in this process.
+            WorkflowTimerSchemaBootstrapper.Ensure(db);
             var row = db.Set<WorkflowExecutionRow>().FirstOrDefault(r => r.ExecutionId == ctx.ExecutionId);
             if (row == null)
                 return;
@@ -259,6 +265,8 @@ namespace MegaForm.Oqtane.Server.Data
                 return;
 
             using var db = _dbContextFactory.CreateDbContext();
+            // MF_WorkflowTasks.EscalatedAtUtc is written a few lines down.
+            WorkflowTimerSchemaBootstrapper.Ensure(db);
             var row = db.Set<WorkflowTaskRow>().FirstOrDefault(r => r.TaskId == task.TaskId);
             if (row == null)
             {

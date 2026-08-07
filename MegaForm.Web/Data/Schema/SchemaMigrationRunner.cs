@@ -54,11 +54,10 @@ namespace MegaForm.Web.Data.Schema
                 return;
             }
 
-            var scriptsDir = ResolveScriptsDirectory(contentRootPath, providerFolder);
-            if (scriptsDir == null)
+            var scripts = LoadScripts(contentRootPath, providerFolder);
+            if (scripts.Count == 0)
             {
-                // Not an error: the package may not ship the scripts folder yet.
-                Console.WriteLine("[MegaForm] Schema runner: no scripts folder for " + providerFolder + ", skipped.");
+                Console.WriteLine("[MegaForm] Schema runner: no scripts found for " + providerFolder + ", skipped.");
                 return;
             }
 
@@ -89,7 +88,7 @@ namespace MegaForm.Web.Data.Schema
                     Console.WriteLine("[MegaForm] Schema runner: baseline 0001 recorded.");
                 }
 
-                foreach (var script in ListScripts(scriptsDir))
+                foreach (var script in scripts)
                 {
                     if (script.Version <= 1) continue;
                     if (applied.ContainsKey(script.Version))
@@ -170,6 +169,77 @@ namespace MegaForm.Web.Data.Schema
                 if (Directory.Exists(dir)) return dir;
             }
             return null;
+        }
+
+        /// <summary>
+        /// Scripts come from two places and a host may have either or both:
+        /// files on disk (this project's own output, or a hotfix an operator dropped in)
+        /// and resources embedded in this assembly (the only copy a NuGet consumer gets —
+        /// contentFiles are packed without copyToOutput, so nothing lands in their output).
+        /// Disk wins per version so a dropped-in fix overrides the shipped one.
+        /// </summary>
+        private static List<ScriptInfo> LoadScripts(string contentRootPath, string providerFolder)
+        {
+            var byVersion = new Dictionary<int, ScriptInfo>();
+
+            foreach (var script in ListEmbeddedScripts(providerFolder))
+                byVersion[script.Version] = script;
+
+            var dir = ResolveScriptsDirectory(contentRootPath, providerFolder);
+            if (dir != null)
+            {
+                foreach (var script in ListScripts(dir))
+                    byVersion[script.Version] = script; // disk overrides embedded
+            }
+
+            var all = new List<ScriptInfo>(byVersion.Values);
+            all.Sort((a, b) => a.Version.CompareTo(b.Version));
+            return all;
+        }
+
+        private static List<ScriptInfo> ListEmbeddedScripts(string providerFolder)
+        {
+            var scripts = new List<ScriptInfo>();
+            var assembly = typeof(SchemaMigrationRunner).Assembly;
+
+            // Resource names are "<RootNamespace>.Data.Schema.Scripts.<provider>.NNNN_name.sql".
+            // Match on the provider segment rather than the root namespace so renaming the
+            // assembly cannot quietly stop the runner from finding anything.
+            var marker = ".Scripts." + providerFolder + ".";
+
+            foreach (var resourceName in assembly.GetManifestResourceNames())
+            {
+                if (resourceName.IndexOf(marker, StringComparison.OrdinalIgnoreCase) < 0) continue;
+                if (!resourceName.EndsWith(".sql", StringComparison.OrdinalIgnoreCase)) continue;
+
+                var fileName = resourceName.Substring(
+                    resourceName.IndexOf(marker, StringComparison.OrdinalIgnoreCase) + marker.Length);
+
+                int version;
+                if (!TryParseVersion(fileName, out version)) continue;
+
+                string sql;
+                using (var stream = assembly.GetManifestResourceStream(resourceName))
+                {
+                    if (stream == null) continue;
+                    using (var reader = new StreamReader(stream, Encoding.UTF8))
+                    {
+                        sql = reader.ReadToEnd();
+                    }
+                }
+
+                scripts.Add(new ScriptInfo
+                {
+                    Version  = version,
+                    Name     = fileName.EndsWith(".sql", StringComparison.OrdinalIgnoreCase)
+                                   ? fileName.Substring(0, fileName.Length - 4)
+                                   : fileName,
+                    FileName = fileName,
+                    Sql      = sql,
+                    Checksum = ComputeChecksum(sql)
+                });
+            }
+            return scripts;
         }
 
         // ── DB-native single-instance lock ───────────────────────────────────

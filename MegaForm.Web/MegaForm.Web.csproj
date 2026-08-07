@@ -50,8 +50,14 @@
     <Compile Remove="Program.cs" />
     <EmbeddedResource Include="..\MegaForm.Core\Seed\ai-knowledge-seed.json" LogicalName="MegaForm.Web.Seed.ai-knowledge-seed.json" />
     <Content Include="license.lic" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <!-- [CloudReady A4 v20260804] Versioned schema scripts for SchemaMigrationRunner.
-         Content (not EmbeddedResource) so they flow to consuming hosts' output dirs. -->
+    <!-- [CloudReady A4 v20260807] Versioned schema scripts for SchemaMigrationRunner.
+         EmbeddedResource is what makes them reach NuGet consumers: as Content alone they
+         pack into contentFiles WITHOUT copyToOutput (NuGet does not translate
+         CopyToOutputDirectory into it), so MegaForm.Web.Host never received a single .sql
+         and the runner silently logged "no scripts folder, skipped". Content is kept as
+         well so an operator can still drop a hotfix script on disk — the runner reads both
+         and disk wins per version. -->
+    <EmbeddedResource Include="Data\Schema\Scripts\**\*.sql" />
     <Content Include="Data\Schema\Scripts\**\*.sql" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

@@ -1,6 +1,6 @@
-﻿<dotnetnuke type="Package" version="5.0">
+<dotnetnuke type="Package" version="5.0">
   <packages>
-    <package name="MegaForm" type="Module" version="02.00.011">
+    <package name="MegaForm" type="Module" version="02.00.012">
       <friendlyName>MegaForm</friendlyName>
       <description>Dynamic Form Builder Module for DNN - drag-and-drop builder, conditional logic, webhooks, anti-spam, email notifications, workflows, Save and Continue, Row/Column layout.</description>
       <iconFile>~/DesktopModules/MegaForm/Images/module-icon.png</iconFile>
@@ -274,6 +274,11 @@
               <name>02.00.09.SqlDataProvider</name>
               <version>02.00.09</version>
             </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>02.00.012.SqlDataProvider</name>
+              <version>02.00.012</version>
+            </script>
             <script type="UnInstall">
               <path>SqlScripts</path>
               <name>Uninstall.SqlDataProvider</name>
@@ -360,12 +365,14 @@
         <component type="PersonaBarMenu">
           <menu>
             <!-- identifier is what [MenuPermission(MenuName = "MegaForm")] checks; folderName +
-                 path are what the loader turns into Modules/MegaForm/MegaForm.{html,js,css}. -->
+                 path are what the loader turns into Modules/MegaForm/{path}.{html,js,css}.
+                 Keep the dated path when changing PersonaBar JS/CSS so RequireJS does not
+                 reuse a stale browser-side module keyed by the old path. -->
             <identifier>MegaForm</identifier>
             <moduleName>MegaForm</moduleName>
             <folderName>MegaForm</folderName>
             <resourceKey>nav_MegaForm</resourceKey>
-            <path>MegaForm</path>
+            <path>MegaForm_20260802</path>
             <parent>Content</parent>
             <order>25</order>
             <defaultPermissions>Administrators</defaultPermissions>
