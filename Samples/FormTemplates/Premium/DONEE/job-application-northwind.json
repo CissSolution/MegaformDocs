@@ -1,0 +1,330 @@
+{
+  "version": "1.0",
+  "slug": "job-application-northwind",
+  "title": "Careers at Northwind — Job Application",
+  "description": "Slate job application: personal info, position and experience, cover letter. Submit stays locked until the form is valid, and the thank-you names the role applied for. Save-and-resume enabled (DNN renders the Save Draft button).",
+  "category": "hr",
+  "categories": [
+    "hr",
+    "application"
+  ],
+  "icon": "briefcase",
+  "submitButtonText": "Submit Application",
+  "successMessage": "Application received. Our team will review it shortly.",
+  "settings": {
+    "theme": "custom",
+    "multiPage": false,
+    "showProgressBar": false,
+    "customContent": {},
+    "customScripts": {},
+    "customHtml": "<div class='mfp mfp-job mfp-native-generated' data-mf-flexgrid=\"locked\" style=\"background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;box-shadow:none!important\"><div class='job-card'><div class='job-hero'><div class='job-hero-inner'><div class='job-hero-emblem'><i class='fa fa-briefcase'></i></div><div class='job-hero-eyebrow'>Careers at</div><h1 class='job-hero-display'>Northwind</h1><div class='job-hero-sub'>Tell us who you are and what you would like to build</div></div></div><div class='job-tagline'><span class='job-dot'></span><span class='job-tagline-text'>Remote first · Four-day week · Equity for everyone</span><span class='job-dot'></span></div><div class='job-body'><div class='job-rule'><span>Contact Information</span><i></i></div><div class='job-grid job-2'><label class='job-field'><span>Full name *</span>{{field:full_name}}</label><label class='job-field'><span>Email *</span>{{field:email}}</label><label class='job-field'><span>Phone</span>{{field:phone}}</label><label class='job-field'><span>LinkedIn or portfolio</span>{{field:linkedin}}</label></div><div class='job-rule'><span>Position Details</span><i></i></div><label class='job-field'><span>Position *</span>{{field:position}}</label><div class='job-grid job-2'><label class='job-field'><span>Years of experience *</span>{{field:experience}}</label><label class='job-field'><span>Earliest start</span>{{field:availability}}</label></div><div class='job-rule'><span>Cover Letter</span><i></i></div><label class='job-field'><span>Cover letter *</span>{{field:cover_letter}}</label><div class='job-consent'><label class='job-field job-consent-item'><span>Consent</span>{{field:terms}}</label></div><button class='job-submit' type='submit'>Submit Application</button></div></div></div>",
+    "customCss": ".mfp.mfp-job {--job-primary:#0F172A;--job-accent:#334155;--job-surface:var(--mf-page-surface,var(--mf-preset-surface,#FFFFFF));--job-text:var(--mf-page-text,var(--mf-preset-text,#0F172A));--job-muted:var(--mf-page-muted,var(--mf-preset-muted,#64748B));--job-border:var(--mf-page-border,var(--mf-preset-border,#E2E8F0));--job-on-primary:var(--mf-preset-on-primary,#FFFFFF);--job-deco:#64748B;--job-page:#F8FAFC;--job-fill:#F8FAFC;--job-fill-strong:color-mix(in srgb, var(--job-text) 9%, var(--job-surface));--job-soft:color-mix(in srgb, var(--job-primary) 12%, var(--job-surface));--job-hairline:color-mix(in srgb, var(--job-text) 12%, var(--job-surface));}.mfp.mfp-job {background:transparent!important;border:0!important;padding:0!important;font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif}.mfp.mfp-job .job-card{overflow:hidden;border-radius:16px;max-width:620px;margin:0 auto;background:var(--job-surface);box-shadow:0 2px 14px color-mix(in srgb, var(--job-text) 10%, transparent)}.mfp.mfp-job .job-hero{position:relative;overflow:hidden;text-align:center;padding:34px 30px 28px;background:linear-gradient(150deg,#0F172A 0%,#334155 100%)}.mfp.mfp-job .job-hero-inner{position:relative}.mfp.mfp-job .job-hero-emblem{width:44px;height:44px;margin:0 auto 18px;border-radius:999px;display:flex;align-items:center;justify-content:center;border:1px solid var(--job-deco);background:rgba(255,255,255,.07);color:var(--job-deco);font-size:18px}.mfp.mfp-job .job-hero-eyebrow{margin:0 0 12px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4em;color:rgba(255,255,255,.66)}.mfp.mfp-job .job-hero h1.job-hero-display{margin:0;font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:38px;line-height:1!important;font-weight:800;color:#FFFFFF!important;font-weight:800!important;letter-spacing:-.01em}.mfp.mfp-job .job-hero-hairline{display:flex;align-items:center;justify-content:center;gap:12px;margin:16px 0}.mfp.mfp-job .job-hr{height:1px;width:40px;background:var(--job-deco);opacity:.7}.mfp.mfp-job .job-hr-word{font-size:10px;font-weight:400;text-transform:uppercase;letter-spacing:.3em;color:rgba(255,255,255,.66)}.mfp.mfp-job .job-hero-sub{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:18px;font-weight:400;color:rgba(255,255,255,.86)}.mfp.mfp-job .job-tagline{display:flex;align-items:center;justify-content:center;gap:12px;padding:13px 16px;background:var(--job-surface);border-top:1px solid var(--job-border);border-bottom:1px solid var(--job-border)}.mfp.mfp-job .job-dot{width:4px;height:4px;border-radius:999px;background:var(--job-deco)}.mfp.mfp-job .job-tagline-text{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.32em;color:var(--job-primary)}.mfp.mfp-job .job-promo{padding:24px 30px;text-align:center;background:var(--job-surface);border-bottom:1px solid var(--job-border)}.mfp.mfp-job .job-promo-kicker{margin:0 0 4px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.3em;color:var(--job-deco)}.mfp.mfp-job .job-promo-headline{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:36px;font-weight:500;letter-spacing:-.02em;color:var(--job-text)}.mfp.mfp-job .job-promo-hr{width:48px;height:1px;margin:12px auto;background:var(--job-deco)}.mfp.mfp-job .job-promo-body{margin:0;font-size:12px;line-height:1.6;color:var(--job-muted)}.mfp.mfp-job .job-body{padding:24px 30px 30px;display:flex;flex-direction:column;gap:16px}.mfp.mfp-job .job-caption{margin:6px 0 0;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.16em;text-align:center;color:var(--job-primary)}.mfp.mfp-job .job-rule{display:flex;align-items:center;gap:12px;padding-top:6px}.mfp.mfp-job .job-rule span{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--job-muted)}.mfp.mfp-job .job-rule i{flex:1;height:1px;background:var(--job-hairline)}.mfp.mfp-job .job-grid{display:grid;gap:12px}.mfp.mfp-job .job-2{grid-template-columns:1fr 1fr}.mfp.mfp-job .job-consent{display:flex;flex-direction:column;gap:8px}.mfp.mfp-job .job-field{display:block;margin:0}.mfp.mfp-job .job-field>span{display:block;margin:0 0 6px!important;color:var(--job-muted);font-size:10px;line-height:15px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.mfp.mfp-job .job-field .mf-field-label{display:none!important}.mfp.mfp-job .mf-field-group{margin:0!important;width:100%}.mfp.mfp-job .mf-form-title,.mfp.mfp-job .mf-form-description{display:none!important}.mfp.mfp-job .mf-field-group .mf-input,.mfp.mfp-job .mf-field-group .mf-select,.mfp.mfp-job .mf-field-group .mf-textarea{width:100%!important;box-sizing:border-box!important;border:1px solid var(--job-border)!important;border-radius:8px!important;background:var(--job-fill)!important;padding:9px 12px!important;color:var(--job-text)!important;font-family:inherit!important;font-size:14px!important;font-weight:400!important;line-height:20px!important;min-height:42px!important;outline:0!important;box-shadow:none!important;transition:border-color .15s ease,background .15s ease!important}.mfp.mfp-job .mf-field-group .mf-input:focus,.mfp.mfp-job .mf-field-group .mf-select:focus,.mfp.mfp-job .mf-field-group .mf-textarea:focus{border-color:var(--job-primary)!important;background:var(--job-surface)!important}.mfp.mfp-job .mf-field-group .mf-textarea{min-height:92px!important;height:auto!important;resize:vertical}.mfp.mfp-job .mf-field-group .mf-input::placeholder,.mfp.mfp-job .mf-field-group .mf-textarea::placeholder{color:color-mix(in srgb, var(--job-text) 40%, transparent)!important;opacity:1}.mfp.mfp-job .mf-field-error{color:#dc2626;font-size:11px;margin-top:4px}.mfp.mfp-job .mf-option-group--cards{display:grid;gap:8px;align-items:stretch}.mfp.mfp-job .mf-option-item{margin:0!important}.mfp.mfp-job .mf-option-group--cards .mf-option-item{display:flex}.mfp.mfp-job .mf-option-group--cards .mf-option-ui{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:100%;height:100%;box-sizing:border-box;padding:12px 34px 12px 14px;border:2px solid var(--job-border);border-radius:12px;background:transparent;cursor:pointer;transition:all .15s ease}.mfp.mfp-job .mf-option-group--cards .mf-option-check,.mfp.mfp-job .mf-option-group--chips .mf-option-check{display:none!important}.mfp.mfp-job .mf-option-group--cards .mf-option-item.is-selected .mf-option-ui,.mfp.mfp-job .mf-option-group--cards input:checked+.mf-option-ui{border-color:var(--job-primary);background:var(--job-soft)}.mfp.mfp-job .mf-option-group--cards .mf-option-item.is-selected .mf-option-ui::after,.mfp.mfp-job .mf-option-group--cards input:checked+.mf-option-ui::after{content:'';position:absolute;top:15px;right:15px;width:11px;height:6px;border-left:2.5px solid var(--job-primary);border-bottom:2.5px solid var(--job-primary);transform:rotate(-45deg);border-radius:1px}.mfp.mfp-job .mf-option-label{color:var(--job-text);font-size:13px;font-weight:700}.mfp.mfp-job .mf-option-desc{color:var(--job-muted);font-size:11px;font-weight:400}.mfp.mfp-job .mf-option-group--chips{display:flex;flex-wrap:wrap;gap:6px}.mfp.mfp-job .mf-option-group--chips .mf-option-ui{padding:6px 13px;border-radius:999px;border:1px solid var(--job-border);background:transparent;color:var(--job-muted);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s ease}.mfp.mfp-job .mf-option-group--chips .mf-option-label{font-size:12px;font-weight:600;color:inherit}.mfp.mfp-job .mf-option-group--chips .mf-option-item.is-selected .mf-option-label,.mfp.mfp-job .mf-option-group--chips input:checked+.mf-option-ui .mf-option-label{color:inherit}.mfp.mfp-job .mf-option-group--chips .mf-option-item.is-selected .mf-option-ui,.mfp.mfp-job .mf-option-group--chips input:checked+.mf-option-ui{background:var(--job-primary);border-color:var(--job-primary);color:var(--job-on-primary)}.mfp.mfp-job .mf-field-group[data-key='position'] .mf-option-group--cards{grid-template-columns:repeat(1,1fr)!important}.mfp.mfp-job .job-consent-item>span{display:none!important}.mfp.mfp-job .job-consent-item .mf-field-label{display:none!important}.mfp.mfp-job .job-consent-item .mf-option-group{display:block}.mfp.mfp-job .job-consent-item .mf-option-ui{border:0!important;background:none!important;padding:0!important;color:var(--job-muted)!important;font-weight:400!important;font-size:12px!important;line-height:18px!important}.mf-form-wrapper:has(.mfp-job) .mf-form-actions{display:none!important}.mfp.mfp-job button.job-submit[type=\"submit\"]{width:100%!important;border:0!important;border-radius:12px!important;padding:14px 20px!important;background:var(--job-primary)!important;color:var(--job-on-primary)!important;font-family:inherit!important;font-size:14px!important;font-weight:900!important;line-height:20px!important;text-transform:uppercase!important;letter-spacing:.14em!important;cursor:pointer!important;box-shadow:none!important;transition:filter .15s ease,opacity .15s ease}.mfp.mfp-job button.job-submit[type=\"submit\"]:hover{filter:brightness(1.06)}.mfp.mfp-job button.job-submit.mf-nav-blocked,.mfp.mfp-job button.job-submit[disabled]{background:var(--job-border)!important;cursor:not-allowed!important;filter:none!important}.mfp.mfp-job .mf-form-actions button,.mfp.mfp-job .mf-btn-submit{background:var(--job-primary)!important}@media (max-width:640px){.mfp.mfp-job .job-2{grid-template-columns:1fr}.mfp.mfp-job .job-hero-display{font-size:34px}.mfp.mfp-job .mf-option-group--cards{grid-template-columns:1fr!important}}",
+    "themeSelector": false,
+    "premiumGeneratedShell": true,
+    "gateNavigationUntilValid": true,
+    "postSubmitExperience": {
+      "enabled": true,
+      "mode": "rich",
+      "title": "Application received",
+      "message": "Thank you {{field:full_name}}. We have your application for {{field:position}} and will reply to {{field:email}}.",
+      "showSubmissionId": true,
+      "submissionIdLabel": "Reference:",
+      "showAnswerSummary": false,
+      "allowFillAgain": true,
+      "fillAgainLabel": "Submit another",
+      "doneLabel": "Done"
+    },
+    "themeCompatibility": {
+      "policy": "hybrid",
+      "supportsPageColors": false,
+      "supportsPageTypography": true,
+      "supportsDarkHost": true,
+      "prefixes": [
+        "job"
+      ],
+      "immutable": [
+        "primary",
+        "accent",
+        "deco"
+      ]
+    }
+  },
+  "fields": [
+    {
+      "placeholder": "Alex Morgan",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "full_name",
+      "type": "Text",
+      "label": "Full name",
+      "required": true
+    },
+    {
+      "placeholder": "alex@email.com",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "email",
+      "type": "Email",
+      "label": "Email",
+      "required": true
+    },
+    {
+      "placeholder": "(555) 010-2233",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "phone",
+      "type": "Phone",
+      "label": "Phone",
+      "required": false
+    },
+    {
+      "placeholder": "https://…",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "linkedin",
+      "type": "Url",
+      "label": "LinkedIn or portfolio",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Frontend Developer",
+          "value": "frontend",
+          "description": "TypeScript · design systems"
+        },
+        {
+          "label": "Backend Developer",
+          "value": "backend",
+          "description": "C# · SQL · queues"
+        },
+        {
+          "label": "Full Stack Developer",
+          "value": "fullstack",
+          "description": "Both of the above"
+        },
+        {
+          "label": "UI/UX Designer",
+          "value": "design",
+          "description": "Research · prototypes · handoff"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "cards",
+        "optionColumns": 1
+      },
+      "key": "position",
+      "type": "Radio",
+      "label": "Position",
+      "required": true,
+      "optionDisplay": "cards",
+      "choiceDisplay": "cards",
+      "optionVariant": "cards",
+      "widgetProps": {
+        "optionDisplay": "cards",
+        "optionColumns": 1
+      },
+      "allowOptionHtml": true,
+      "optionColumns": 1
+    },
+    {
+      "placeholder": "Select experience",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Less than 1",
+          "value": "Less than 1"
+        },
+        {
+          "label": "1–3",
+          "value": "1–3"
+        },
+        {
+          "label": "3–5",
+          "value": "3–5"
+        },
+        {
+          "label": "5–8",
+          "value": "5–8"
+        },
+        {
+          "label": "8+",
+          "value": "8+"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "experience",
+      "type": "Select",
+      "label": "Years of experience",
+      "required": true,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Select…",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Immediately",
+          "value": "Immediately"
+        },
+        {
+          "label": "In 2 weeks",
+          "value": "In 2 weeks"
+        },
+        {
+          "label": "In a month",
+          "value": "In a month"
+        },
+        {
+          "label": "In 3 months",
+          "value": "In 3 months"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "availability",
+      "type": "Select",
+      "label": "Earliest start",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "What would you like to work on, and why here?",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {
+        "minLength": 80,
+        "customMessage": "A short paragraph please — at least 80 characters."
+      },
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "cover_letter",
+      "type": "Textarea",
+      "label": "Cover letter",
+      "required": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "I agree to Northwind storing my application for 12 months",
+          "value": "yes"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "list"
+      },
+      "key": "terms",
+      "type": "Checkbox",
+      "label": "Consent",
+      "required": true,
+      "optionDisplay": "list",
+      "choiceDisplay": "list",
+      "optionVariant": "list",
+      "widgetProps": {
+        "optionDisplay": "list"
+      },
+      "allowOptionHtml": true
+    }
+  ],
+  "rules": [],
+  "workflow": {
+    "notifications": []
+  }
+}

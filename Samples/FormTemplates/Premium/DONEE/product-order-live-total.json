@@ -1,0 +1,372 @@
+{
+  "version": "1.0",
+  "slug": "product-order-live-total",
+  "title": "Product Order",
+  "description": "Product order with a LIVE order summary aside: subtotal, 10% tax and total recompute as the plan and quantity change. Submit stays locked until the form is valid. The pricing rule is an assumption — the source mock never computed a price.",
+  "category": "ecommerce",
+  "categories": [
+    "ecommerce",
+    "order"
+  ],
+  "icon": "shopping-cart",
+  "submitButtonText": "Place Order",
+  "successMessage": "Order received. A confirmation is on its way.",
+  "settings": {
+    "theme": "custom",
+    "multiPage": false,
+    "showProgressBar": false,
+    "customContent": {},
+    "customScripts": {
+      "order_total": "(function(){\n  var root = (typeof __mfCurrentScriptRoot !== 'undefined' && __mfCurrentScriptRoot) || document;\n  var scope = (root && root.closest) ? (root.closest('.mfp') || document) : document;\n  var LABELS = {};\n  var MONEY = {\"currency\":\"$\",\"taxRate\":0.1,\"productField\":\"product\",\"qtyField\":\"quantity\",\"prices\":{\"starter\":29,\"pro\":99},\"quoted\":\"enterprise\",\"quotedText\":\"Quoted\"};\n  var EMPTY = \"—\";\n\n  function val(key) {\n    var els = scope.querySelectorAll('[name=\"' + key + '\"]');\n    if (!els.length) return '';\n    var first = els[0];\n    if (first.type === 'checkbox' || first.type === 'radio') {\n      var picked = [];\n      for (var i = 0; i < els.length; i++) if (els[i].checked) picked.push(labelFor(els[i]));\n      return picked.join(', ');\n    }\n    if (first.tagName === 'SELECT') {\n      var o = first.options[first.selectedIndex];\n      return o && o.value ? o.textContent.trim() : '';\n    }\n    return String(first.value || '').trim();\n  }\n  function raw(key) {\n    var el = scope.querySelector('[name=\"' + key + '\"]');\n    if (!el) return '';\n    if (el.tagName === 'SELECT') { var o = el.options[el.selectedIndex]; return o ? o.value : ''; }\n    if (el.type === 'checkbox' || el.type === 'radio') {\n      var els = scope.querySelectorAll('[name=\"' + key + '\"]');\n      for (var i = 0; i < els.length; i++) if (els[i].checked) return els[i].value;\n      return '';\n    }\n    return String(el.value || '');\n  }\n  function labelFor(input) {\n    var ui = input.nextElementSibling;\n    var lab = ui && ui.querySelector ? ui.querySelector('.mf-option-label') : null;\n    if (lab) return lab.textContent.trim();\n    return String(input.value || '');\n  }\n  function money(n) {\n    var cur = (MONEY && MONEY.currency) || '';\n    return cur + (Math.round((n || 0) * 100) / 100).toFixed(2);\n  }\n\n  function paint() {\n    var nodes = scope.querySelectorAll('[data-mf-echo]');\n    for (var i = 0; i < nodes.length; i++) {\n      var key = nodes[i].getAttribute('data-mf-echo');\n      var v;\n      if (key === '__subtotal' || key === '__tax' || key === '__total') { continue; }\n      v = val(key);\n      if (!v && LABELS[key]) v = '';\n      nodes[i].textContent = v || EMPTY;\n      nodes[i].classList.toggle('is-empty', !v);\n    }\n    if (MONEY) {\n      var unit = 0;\n      var prices = MONEY.prices || {};\n      var picked = raw(MONEY.productField);\n      if (Object.prototype.hasOwnProperty.call(prices, picked)) unit = Number(prices[picked]) || 0;\n      var qty = parseFloat(raw(MONEY.qtyField)) || 0;\n      var sub = unit * qty;\n      var tax = sub * (Number(MONEY.taxRate) || 0);\n      var tot = sub + tax;\n      var quoted = MONEY.quoted && picked === MONEY.quoted;\n      set('__subtotal', quoted ? MONEY.quotedText : money(sub));\n      set('__tax', quoted ? MONEY.quotedText : money(tax));\n      set('__total', quoted ? MONEY.quotedText : money(tot));\n    }\n  }\n  function set(key, text) {\n    var n = scope.querySelectorAll('[data-mf-echo=\"' + key + '\"]');\n    for (var i = 0; i < n.length; i++) n[i].textContent = text;\n  }\n\n  scope.addEventListener('input', paint, true);\n  scope.addEventListener('change', paint, true);\n  // A card/chip click updates the hidden input after its own handler, so re-read on the next tick.\n  scope.addEventListener('click', function () { setTimeout(paint, 60); }, true);\n  setTimeout(paint, 120); setTimeout(paint, 600); paint();\n})();"
+    },
+    "customHtml": "<div class='mfp mfp-pod mfp-native-generated' data-mf-flexgrid=\"locked\" style=\"background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;box-shadow:none!important\"><div class='pod-card'><div class='pod-hero'><div class='pod-hero-inner'><div class='pod-hero-emblem'><i class='fa fa-shopping-cart'></i></div><div class='pod-hero-eyebrow'>Checkout</div><h1 class='pod-hero-display'>Place your order</h1><div class='pod-hero-sub'>Pick a plan, tell us where to ship</div></div></div><div class='pod-split'><div class='pod-main'><div class='pod-body'><div class='pod-rule'><span>Personal Information</span><i></i></div><div class='pod-grid pod-2'><label class='pod-field'><span>Full name *</span>{{field:full_name}}</label><label class='pod-field'><span>Email *</span>{{field:email}}</label><label class='pod-field'><span>Phone</span>{{field:phone}}</label></div><div class='pod-rule'><span>Shipping Address</span><i></i></div><div class='pod-grid pod-2'><label class='pod-field'><span>Street address *</span>{{field:address}}</label><label class='pod-field'><span>City *</span>{{field:city}}</label><label class='pod-field'><span>Postal code *</span>{{field:postcode}}</label><label class='pod-field'><span>Country *</span>{{field:country}}</label></div><div class='pod-rule'><span>Order Items</span><i></i></div><div class='pod-grid pod-2'><label class='pod-field'><span>Quantity *</span>{{field:quantity}}</label></div><label class='pod-field'><span>Product *</span>{{field:product}}</label><div class='pod-rule'><span>Notes</span><i></i></div><label class='pod-field'><span>Order notes</span>{{field:order_notes}}</label><div class='pod-consent'><label class='pod-field pod-consent-item'><span>Terms</span>{{field:terms}}</label></div>{{script:order_total}}<button class='pod-submit' type='submit'>Place Order</button></div></div><aside class='pod-aside'><div class='pod-aside-title'>Order summary</div><div class='pod-aside-row'><span>Plan</span><span data-mf-echo='product'>—</span></div><div class='pod-aside-row'><span>Quantity</span><span data-mf-echo='quantity'>—</span></div><div class='pod-aside-row'><span>Subtotal</span><span data-mf-echo='__subtotal'>—</span></div><div class='pod-aside-row'><span>Tax (10%)</span><span data-mf-echo='__tax'>—</span></div><div class='pod-aside-total'><span>Total</span><span data-mf-echo='__total'>—</span></div><div class='pod-aside-note'>Enterprise is quoted per seat — we will confirm before charging.</div></aside></div></div></div>",
+    "customCss": ".mfp.mfp-pod {--pod-primary:#4F46E5;--pod-accent:#0EA5E9;--pod-surface:var(--mf-page-surface,var(--mf-preset-surface,#FFFFFF));--pod-text:var(--mf-page-text,var(--mf-preset-text,#0F172A));--pod-muted:var(--mf-page-muted,var(--mf-preset-muted,#64748B));--pod-border:var(--mf-page-border,var(--mf-preset-border,#E2E8F0));--pod-on-primary:var(--mf-preset-on-primary,#FFFFFF);--pod-deco:#0EA5E9;--pod-page:#F8FAFC;--pod-fill:#F8FAFC;--pod-fill-strong:color-mix(in srgb, var(--pod-text) 9%, var(--pod-surface));--pod-soft:color-mix(in srgb, var(--pod-primary) 12%, var(--pod-surface));--pod-hairline:color-mix(in srgb, var(--pod-text) 12%, var(--pod-surface));}.mfp.mfp-pod {background:transparent!important;border:0!important;padding:0!important;font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif}.mfp.mfp-pod .pod-card{overflow:hidden;border-radius:16px;max-width:940px;margin:0 auto;background:var(--pod-surface);box-shadow:0 2px 14px color-mix(in srgb, var(--pod-text) 10%, transparent)}.mfp.mfp-pod .pod-hero{position:relative;overflow:hidden;text-align:center;padding:32px 28px 26px;background:linear-gradient(135deg,#4F46E5 0%,#0EA5E9 100%)}.mfp.mfp-pod .pod-hero-inner{position:relative}.mfp.mfp-pod .pod-hero-emblem{width:44px;height:44px;margin:0 auto 18px;border-radius:999px;display:flex;align-items:center;justify-content:center;border:1px solid var(--pod-deco);background:rgba(255,255,255,.07);color:var(--pod-deco);font-size:18px}.mfp.mfp-pod .pod-hero-eyebrow{margin:0 0 12px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4em;color:rgba(255,255,255,.72)}.mfp.mfp-pod .pod-hero h1.pod-hero-display{margin:0;font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:34px;line-height:1!important;font-weight:800;color:#FFFFFF!important;font-weight:800!important;letter-spacing:-.01em}.mfp.mfp-pod .pod-hero-hairline{display:flex;align-items:center;justify-content:center;gap:12px;margin:16px 0}.mfp.mfp-pod .pod-hr{height:1px;width:40px;background:var(--pod-deco);opacity:.7}.mfp.mfp-pod .pod-hr-word{font-size:10px;font-weight:400;text-transform:uppercase;letter-spacing:.3em;color:rgba(255,255,255,.72)}.mfp.mfp-pod .pod-hero-sub{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:18px;font-weight:400;color:rgba(255,255,255,.9)}.mfp.mfp-pod .pod-tagline{display:flex;align-items:center;justify-content:center;gap:12px;padding:13px 16px;background:var(--pod-surface);border-top:1px solid var(--pod-border);border-bottom:1px solid var(--pod-border)}.mfp.mfp-pod .pod-dot{width:4px;height:4px;border-radius:999px;background:var(--pod-deco)}.mfp.mfp-pod .pod-tagline-text{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.32em;color:var(--pod-primary)}.mfp.mfp-pod .pod-promo{padding:24px 30px;text-align:center;background:var(--pod-surface);border-bottom:1px solid var(--pod-border)}.mfp.mfp-pod .pod-promo-kicker{margin:0 0 4px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.3em;color:var(--pod-deco)}.mfp.mfp-pod .pod-promo-headline{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:36px;font-weight:500;letter-spacing:-.02em;color:var(--pod-text)}.mfp.mfp-pod .pod-promo-hr{width:48px;height:1px;margin:12px auto;background:var(--pod-deco)}.mfp.mfp-pod .pod-promo-body{margin:0;font-size:12px;line-height:1.6;color:var(--pod-muted)}.mfp.mfp-pod .pod-body{padding:24px 30px 30px;display:flex;flex-direction:column;gap:16px}.mfp.mfp-pod .pod-caption{margin:6px 0 0;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.16em;text-align:center;color:var(--pod-primary)}.mfp.mfp-pod .pod-rule{display:flex;align-items:center;gap:12px;padding-top:6px}.mfp.mfp-pod .pod-rule span{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--pod-muted)}.mfp.mfp-pod .pod-rule i{flex:1;height:1px;background:var(--pod-hairline)}.mfp.mfp-pod .pod-grid{display:grid;gap:12px}.mfp.mfp-pod .pod-2{grid-template-columns:1fr 1fr}.mfp.mfp-pod .pod-consent{display:flex;flex-direction:column;gap:8px}.mfp.mfp-pod .pod-field{display:block;margin:0}.mfp.mfp-pod .pod-field>span{display:block;margin:0 0 6px!important;color:var(--pod-muted);font-size:10px;line-height:15px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.mfp.mfp-pod .pod-field .mf-field-label{display:none!important}.mfp.mfp-pod .mf-field-group{margin:0!important;width:100%}.mfp.mfp-pod .mf-form-title,.mfp.mfp-pod .mf-form-description{display:none!important}.mfp.mfp-pod .mf-field-group .mf-input,.mfp.mfp-pod .mf-field-group .mf-select,.mfp.mfp-pod .mf-field-group .mf-textarea{width:100%!important;box-sizing:border-box!important;border:1px solid var(--pod-border)!important;border-radius:8px!important;background:var(--pod-fill)!important;padding:9px 12px!important;color:var(--pod-text)!important;font-family:inherit!important;font-size:14px!important;font-weight:400!important;line-height:20px!important;min-height:42px!important;outline:0!important;box-shadow:none!important;transition:border-color .15s ease,background .15s ease!important}.mfp.mfp-pod .mf-field-group .mf-input:focus,.mfp.mfp-pod .mf-field-group .mf-select:focus,.mfp.mfp-pod .mf-field-group .mf-textarea:focus{border-color:var(--pod-primary)!important;background:var(--pod-surface)!important}.mfp.mfp-pod .mf-field-group .mf-textarea{min-height:92px!important;height:auto!important;resize:vertical}.mfp.mfp-pod .mf-field-group .mf-input::placeholder,.mfp.mfp-pod .mf-field-group .mf-textarea::placeholder{color:color-mix(in srgb, var(--pod-text) 40%, transparent)!important;opacity:1}.mfp.mfp-pod .mf-field-error{color:#dc2626;font-size:11px;margin-top:4px}.mfp.mfp-pod .mf-option-group--cards{display:grid;gap:8px;align-items:stretch}.mfp.mfp-pod .mf-option-item{margin:0!important}.mfp.mfp-pod .mf-option-group--cards .mf-option-item{display:flex}.mfp.mfp-pod .mf-option-group--cards .mf-option-ui{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:100%;height:100%;box-sizing:border-box;padding:12px 34px 12px 14px;border:2px solid var(--pod-border);border-radius:12px;background:transparent;cursor:pointer;transition:all .15s ease}.mfp.mfp-pod .mf-option-group--cards .mf-option-check,.mfp.mfp-pod .mf-option-group--chips .mf-option-check{display:none!important}.mfp.mfp-pod .mf-option-group--cards .mf-option-item.is-selected .mf-option-ui,.mfp.mfp-pod .mf-option-group--cards input:checked+.mf-option-ui{border-color:var(--pod-primary);background:var(--pod-soft)}.mfp.mfp-pod .mf-option-group--cards .mf-option-item.is-selected .mf-option-ui::after,.mfp.mfp-pod .mf-option-group--cards input:checked+.mf-option-ui::after{content:'';position:absolute;top:15px;right:15px;width:11px;height:6px;border-left:2.5px solid var(--pod-primary);border-bottom:2.5px solid var(--pod-primary);transform:rotate(-45deg);border-radius:1px}.mfp.mfp-pod .mf-option-label{color:var(--pod-text);font-size:13px;font-weight:700}.mfp.mfp-pod .mf-option-desc{color:var(--pod-muted);font-size:11px;font-weight:400}.mfp.mfp-pod .mf-option-group--chips{display:flex;flex-wrap:wrap;gap:6px}.mfp.mfp-pod .mf-option-group--chips .mf-option-ui{padding:6px 13px;border-radius:999px;border:1px solid var(--pod-border);background:transparent;color:var(--pod-muted);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s ease}.mfp.mfp-pod .mf-option-group--chips .mf-option-label{font-size:12px;font-weight:600;color:inherit}.mfp.mfp-pod .mf-option-group--chips .mf-option-item.is-selected .mf-option-label,.mfp.mfp-pod .mf-option-group--chips input:checked+.mf-option-ui .mf-option-label{color:inherit}.mfp.mfp-pod .mf-option-group--chips .mf-option-item.is-selected .mf-option-ui,.mfp.mfp-pod .mf-option-group--chips input:checked+.mf-option-ui{background:var(--pod-primary);border-color:var(--pod-primary);color:var(--pod-on-primary)}.mfp.mfp-pod .mf-field-group[data-key='product'] .mf-option-group--cards{grid-template-columns:repeat(1,1fr)!important}.mfp.mfp-pod .pod-consent-item>span{display:none!important}.mfp.mfp-pod .pod-consent-item .mf-field-label{display:none!important}.mfp.mfp-pod .pod-consent-item .mf-option-group{display:block}.mfp.mfp-pod .pod-consent-item .mf-option-ui{border:0!important;background:none!important;padding:0!important;color:var(--pod-muted)!important;font-weight:400!important;font-size:12px!important;line-height:18px!important}.mf-form-wrapper:has(.mfp-pod) .mf-form-actions{display:none!important}.mfp.mfp-pod button.pod-submit[type=\"submit\"]{width:100%!important;border:0!important;border-radius:12px!important;padding:14px 20px!important;background:var(--pod-primary)!important;color:var(--pod-on-primary)!important;font-family:inherit!important;font-size:14px!important;font-weight:900!important;line-height:20px!important;text-transform:uppercase!important;letter-spacing:.14em!important;cursor:pointer!important;box-shadow:none!important;transition:filter .15s ease,opacity .15s ease}.mfp.mfp-pod button.pod-submit[type=\"submit\"]:hover{filter:brightness(1.06)}.mfp.mfp-pod button.pod-submit.mf-nav-blocked,.mfp.mfp-pod button.pod-submit[disabled]{background:var(--pod-border)!important;cursor:not-allowed!important;filter:none!important}.mfp.mfp-pod .mf-form-actions button,.mfp.mfp-pod .mf-btn-submit{background:var(--pod-primary)!important}.mfp.mfp-pod .pod-split{display:grid;grid-template-columns:1fr 270px;gap:0;align-items:start}.mfp.mfp-pod .pod-main{min-width:0}.mfp.mfp-pod .pod-aside{position:sticky;top:16px;align-self:start;padding:22px 20px;border-left:1px solid var(--pod-border);background:color-mix(in srgb, var(--pod-primary) 5%, var(--pod-surface))}.mfp.mfp-pod .pod-aside-title{margin:0 0 12px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.16em;color:var(--pod-primary)}.mfp.mfp-pod .pod-aside-row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;font-size:12px;border-bottom:1px solid var(--pod-hairline)}.mfp.mfp-pod .pod-aside-row span:first-child{color:var(--pod-muted)}.mfp.mfp-pod .pod-aside-row span:last-child{color:var(--pod-text);font-weight:700;text-align:right}.mfp.mfp-pod .pod-aside-total{display:flex;justify-content:space-between;gap:10px;margin-top:12px;padding-top:12px;border-top:2px solid var(--pod-primary);font-size:15px;font-weight:900;color:var(--pod-text)}.mfp.mfp-pod .pod-aside-empty{color:var(--pod-muted);font-size:12px;font-style:italic}@media (max-width:860px){.mfp.mfp-pod .pod-split{grid-template-columns:1fr}.mfp.mfp-pod .pod-aside{position:static;border-left:0;border-top:1px solid var(--pod-border)}}@media (max-width:640px){.mfp.mfp-pod .pod-2{grid-template-columns:1fr}.mfp.mfp-pod .pod-hero-display{font-size:34px}.mfp.mfp-pod .mf-option-group--cards{grid-template-columns:1fr!important}}.mfp.mfp-pod .pod-aside-note{margin-top:12px;font-size:11px;line-height:1.5;color:var(--pod-muted)}",
+    "themeSelector": false,
+    "premiumGeneratedShell": true,
+    "gateNavigationUntilValid": true,
+    "postSubmitExperience": {
+      "enabled": true,
+      "mode": "rich",
+      "title": "Order received",
+      "message": "Thank you {{field:full_name}}. Your order for {{field:product}} (x{{field:quantity}}) is confirmed and a receipt is on its way to {{field:email}}.",
+      "showSubmissionId": true,
+      "submissionIdLabel": "Reference:",
+      "showAnswerSummary": false,
+      "allowFillAgain": true,
+      "fillAgainLabel": "Submit another",
+      "doneLabel": "Done"
+    },
+    "themeCompatibility": {
+      "policy": "hybrid",
+      "supportsPageColors": false,
+      "supportsPageTypography": true,
+      "supportsDarkHost": true,
+      "prefixes": [
+        "pod"
+      ],
+      "immutable": [
+        "primary",
+        "accent",
+        "deco"
+      ]
+    }
+  },
+  "fields": [
+    {
+      "placeholder": "Alex Morgan",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "full_name",
+      "type": "Text",
+      "label": "Full name",
+      "required": true
+    },
+    {
+      "placeholder": "alex@email.com",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "email",
+      "type": "Email",
+      "label": "Email",
+      "required": true
+    },
+    {
+      "placeholder": "(555) 010-2233",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "phone",
+      "type": "Phone",
+      "label": "Phone",
+      "required": false
+    },
+    {
+      "placeholder": "123 Main Street",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "address",
+      "type": "Text",
+      "label": "Street address",
+      "required": true
+    },
+    {
+      "placeholder": "Portland",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "city",
+      "type": "Text",
+      "label": "City",
+      "required": true
+    },
+    {
+      "placeholder": "97201",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "postcode",
+      "type": "Text",
+      "label": "Postal code",
+      "required": true
+    },
+    {
+      "placeholder": "Select Country",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "United States",
+          "value": "United States"
+        },
+        {
+          "label": "Canada",
+          "value": "Canada"
+        },
+        {
+          "label": "United Kingdom",
+          "value": "United Kingdom"
+        },
+        {
+          "label": "Germany",
+          "value": "Germany"
+        },
+        {
+          "label": "Australia",
+          "value": "Australia"
+        },
+        {
+          "label": "Other",
+          "value": "Other"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "country",
+      "type": "Select",
+      "label": "Country",
+      "required": true,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Starter Plan",
+          "value": "starter",
+          "description": "$29 per month · one workspace"
+        },
+        {
+          "label": "Pro Plan",
+          "value": "pro",
+          "description": "$99 per month · unlimited workspaces"
+        },
+        {
+          "label": "Enterprise",
+          "value": "enterprise",
+          "description": "Custom · SSO, audit log, SLA"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "cards",
+        "optionColumns": 1
+      },
+      "key": "product",
+      "type": "Radio",
+      "label": "Product",
+      "required": true,
+      "optionDisplay": "cards",
+      "choiceDisplay": "cards",
+      "optionVariant": "cards",
+      "widgetProps": {
+        "optionDisplay": "cards",
+        "optionColumns": 1
+      },
+      "allowOptionHtml": true,
+      "optionColumns": 1
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "1",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "1",
+          "value": "1"
+        },
+        {
+          "label": "2",
+          "value": "2"
+        },
+        {
+          "label": "3",
+          "value": "3"
+        },
+        {
+          "label": "5",
+          "value": "5"
+        },
+        {
+          "label": "10",
+          "value": "10"
+        },
+        {
+          "label": "25",
+          "value": "25"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "quantity",
+      "type": "Select",
+      "label": "Quantity",
+      "required": true,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Purchase order number, delivery window…",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "order_notes",
+      "type": "Textarea",
+      "label": "Order notes",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "I agree to the terms of sale",
+          "value": "yes"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "list"
+      },
+      "key": "terms",
+      "type": "Checkbox",
+      "label": "Terms",
+      "required": true,
+      "optionDisplay": "list",
+      "choiceDisplay": "list",
+      "optionVariant": "list",
+      "widgetProps": {
+        "optionDisplay": "list"
+      },
+      "allowOptionHtml": true
+    }
+  ],
+  "rules": [],
+  "workflow": {
+    "notifications": []
+  }
+}

@@ -33,7 +33,7 @@ import { fileURLToPath } from 'url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, '..', '..');
-const OUT_DIR = join(REPO, 'Samples', 'FormTemplates', 'Premium', 'DONEE');
+export const OUT_DIR = join(REPO, 'Samples', 'FormTemplates', 'Premium', 'DONEE');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared option sets. Every mock ships the same lists; a skin overrides only
@@ -66,7 +66,7 @@ const opts = (list) => list.map((v) => (typeof v === 'string' ? { label: v, valu
 // `optionVariant` aliases. Emitting one place only is how a card group silently renders as a
 // plain radio list.
 // ─────────────────────────────────────────────────────────────────────────────
-function field(key, type, label, extra = {}) {
+export function field(key, type, label, extra = {}) {
   const f = {
     placeholder: '', helpText: '', defaultValue: '', cssClass: '', width: '100%',
     readOnly: false, prefillParam: '', validation: {}, options: null, showIf: null,
@@ -78,7 +78,7 @@ function field(key, type, label, extra = {}) {
   return f;
 }
 
-function choiceField(key, type, label, options, display, columns, extra = {}) {
+export function choiceField(key, type, label, options, display, columns, extra = {}) {
   const props = { optionDisplay: display };
   if (columns) props.optionColumns = columns;
   const f = field(key, type, label, {
@@ -95,7 +95,7 @@ function choiceField(key, type, label, options, display, columns, extra = {}) {
   return f;
 }
 
-function buildFields(spec) {
+export function buildFields(spec) {
   const s = spec.body || {};
   const programmeOptions = s.programmes || PROGRAMMES;
   const interests = s.interests || INTERESTS;
@@ -147,21 +147,21 @@ function buildFields(spec) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Shell (customHtml)
 // ─────────────────────────────────────────────────────────────────────────────
-const esc = (s) => String(s == null ? '' : s)
+export const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-function slot(p, label, key, extraClass = '') {
+export function slot(p, label, key, extraClass = '') {
   const cls = extraClass ? `${p}-field ${extraClass}` : `${p}-field`;
   return `<label class='${cls}'><span>${esc(label)}</span>{{field:${key}}}</label>`;
 }
 
-function caption(p, text, style) {
+export function caption(p, text, style) {
   return style === 'rule'
     ? `<div class='${p}-rule'><span>${esc(text)}</span><i></i></div>`
     : `<div class='${p}-caption'>${esc(text)}</div>`;
 }
 
-function buildHero(spec) {
+export function buildHero(spec) {
   const p = spec.prefix;
   const h = spec.hero;
   const bits = [];
@@ -179,7 +179,7 @@ function buildHero(spec) {
   return `<div class='${p}-hero'>${bits.join('')}</div>`;
 }
 
-function buildStrips(spec) {
+export function buildStrips(spec) {
   const p = spec.prefix;
   return (spec.strips || []).map((s) => {
     if (s.kind === 'tagline') {
@@ -210,7 +210,7 @@ function buildStrips(spec) {
  *   { consent: [[label, key], …] }         plain sentence rows, no caption
  *   { html }                               raw decorative markup, no field
  */
-function defaultSections(spec) {
+export function defaultSections(spec) {
   const b = spec.body || {};
   const c = spec.captions;
   return [
@@ -232,14 +232,22 @@ function defaultSections(spec) {
   ];
 }
 
-function buildShell(spec) {
+export function buildShell(spec) {
   const p = spec.prefix;
   const cap = (t) => caption(p, t, spec.sectionCaptionStyle);
   const sections = spec.sections ? spec.sections(spec) : defaultSections(spec);
 
-  const chunks = [buildStrips(spec), `<div class='${p}-body'>`];
+  const chunks = [buildStrips(spec)];
+  // A design with a live sidebar (a booking summary, an order total) splits the body so the aside
+  // can be sticky. The aside is markup only — a {{script:…}} section is what makes it live.
+  if (spec.asideHtml) chunks.push(`<div class='${p}-split'><div class='${p}-main'>`);
+  chunks.push(`<div class='${p}-body'>`);
   sections.forEach((s) => {
     if (s.html) { chunks.push(s.html); return; }
+    // {{script:KEY}} becomes a hidden anchor; the renderer executes settings.customScripts[KEY]
+    // next to it with __mfCurrentScriptRoot resolved. This is how a template gets live behaviour
+    // without an engine change.
+    if (s.script) { chunks.push(`{{script:${s.script}}}`); return; }
     if (s.consent) {
       chunks.push(`<div class='${p}-consent'>`);
       s.consent.forEach(([label, key]) => chunks.push(slot(p, label, key, `${p}-consent-item`)));
@@ -256,6 +264,7 @@ function buildShell(spec) {
   });
   chunks.push(`<button class='${p}-submit' type='submit'>${esc(spec.submitLabel)}</button>`);
   chunks.push(`</div>`);
+  if (spec.asideHtml) chunks.push(`</div><aside class='${p}-aside'>${spec.asideHtml}</aside></div>`);
   const body = chunks.join('');
 
   // The inline overrides on the root are the de-carding contract: the host paints .mfp as a card,
@@ -275,11 +284,11 @@ function buildShell(spec) {
 // payload is FULLY percent-encoded: "<" becomes %3C and "/" becomes %2F, the literal "</" never
 // appears, and the browser decodes it when it parses the URI.
 // ─────────────────────────────────────────────────────────────────────────────
-function svgDataUri(svg) {
+export function svgDataUri(svg) {
   return `url("data:image/svg+xml,${encodeURIComponent(svg).replace(/'/g, '%27')}")`;
 }
 
-function snowTexture(stroke = 'white') {
+export function snowTexture(stroke = 'white') {
   const flakes = [[40, 30, 0.6], [110, 64, 0.4], [210, 24, 0.5], [300, 50, 0.35], [400, 28, 0.5],
     [500, 60, 0.4], [560, 110, 0.5], [40, 150, 0.4], [540, 170, 0.45], [90, 200, 0.35],
     [480, 210, 0.4], [300, 220, 0.3], [180, 180, 0.4]];
@@ -290,7 +299,7 @@ function snowTexture(stroke = 'white') {
   return svgDataUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 240">${g}</svg>`);
 }
 
-function confettiTexture(a, b) {
+export function confettiTexture(a, b) {
   const dots = [];
   for (let i = 0; i < 26; i++) {
     const x = (i * 47) % 600, y = (i * 83) % 240, r = 2 + (i % 3);
@@ -304,7 +313,7 @@ const TEXTURES = { snow: snowTexture, confetti: confettiTexture };
 // ─────────────────────────────────────────────────────────────────────────────
 // CSS
 // ─────────────────────────────────────────────────────────────────────────────
-function buildCss(spec) {
+export function buildCss(spec) {
   const p = spec.prefix;
   const c = spec.palette;
   const v = (n) => `var(--${p}-${n})`;
@@ -345,7 +354,7 @@ function buildCss(spec) {
     + `--${p}-on-primary:var(--mf-preset-on-primary,${c.onPrimary || '#fff'});`
     + `--${p}-deco:${c.deco || c.primary};`
     + `--${p}-page:${c.page || '#fff'};`
-    + `--${p}-fill:color-mix(in srgb, ${v('text')} 5%, ${v('surface')});`
+    + `--${p}-fill:${c.inputBg || c.page || c.surface};`
     + `--${p}-fill-strong:color-mix(in srgb, ${v('text')} 9%, ${v('surface')});`
     + `--${p}-soft:color-mix(in srgb, ${v('primary')} 12%, ${v('surface')});`
     + `--${p}-hairline:color-mix(in srgb, ${v('text')} 12%, ${v('surface')});`
@@ -380,15 +389,18 @@ function buildCss(spec) {
   // The bridge qualifies headings with an element (`.mfp[class*="mfp-"] h1`), so this side needs
   // the element AND !important on the colour or the hero headline turns into host body text.
   parts.push(`${S}.${p}-hero h1.${p}-hero-display{margin:0;font-family:${spec.displayFontStack};`
-    + `font-size:${h.displaySize || '48px'};line-height:1;font-weight:${h.displayWeight || 500};`
+    + `font-size:${h.displaySize || '48px'};line-height:1!important;font-weight:${h.displayWeight || 500};`
     + `${h.displayItalic ? 'font-style:italic;' : ''}color:${h.onHero}!important;`
+    // The bridge forces a weight onto headings too, so the weight needs !important or a 500-weight
+    // serif display renders at 700 and stops matching the mock.
+    + `font-weight:${h.displayWeight || 500}!important;`
     + `letter-spacing:${h.displayTracking || '-.01em'}}`);
   parts.push(`${S}.${p}-hero-hairline{display:flex;align-items:center;justify-content:center;`
     + `gap:12px;margin:16px 0}`);
   parts.push(`${S}.${p}-hr{height:1px;width:40px;background:${v('deco')};opacity:.7}`);
-  parts.push(`${S}.${p}-hr-word{font-size:10px;text-transform:uppercase;letter-spacing:.3em;`
-    + `color:${h.onHeroMuted}}`);
-  parts.push(`${S}.${p}-hero-sub{font-family:${spec.displayFontStack};font-size:18px;`
+  parts.push(`${S}.${p}-hr-word{font-size:10px;font-weight:400;text-transform:uppercase;`
+    + `letter-spacing:.3em;color:${h.onHeroMuted}}`);
+  parts.push(`${S}.${p}-hero-sub{font-family:${spec.displayFontStack};font-size:18px;font-weight:400;`
     + `${h.displayItalic ? 'font-style:italic;' : ''}color:${h.onHeroSoft || h.onHeroMuted}}`);
 
   // Strips
@@ -402,8 +414,8 @@ function buildCss(spec) {
     + `border-bottom:1px solid ${v('border')}}`);
   parts.push(`${S}.${p}-promo-kicker{margin:0 0 4px;font-size:10px;font-weight:900;`
     + `text-transform:uppercase;letter-spacing:.3em;color:${v('deco')}}`);
-  parts.push(`${S}.${p}-promo-headline{font-family:${spec.displayFontStack};font-size:34px;`
-    + `font-weight:500;letter-spacing:-.02em;color:${v('text')}}`);
+  parts.push(`${S}.${p}-promo-headline{font-family:${spec.displayFontStack};font-size:${spec.promoHeadlineSize || '36px'};`
+    + `font-weight:500;line-height:1.1!important;letter-spacing:-.02em;color:${v('text')}}`);
   parts.push(`${S}.${p}-promo-hr{width:48px;height:1px;margin:12px auto;background:${v('deco')}}`);
   parts.push(`${S}.${p}-promo-body{margin:0;font-size:12px;line-height:1.6;color:${v('muted')}}`);
 
@@ -429,26 +441,32 @@ function buildCss(spec) {
   parts.push(`${S}.mf-form-title,${S}.mf-form-description{display:none!important}`);
 
   // Inputs
-  const inputSel = `${S}.mf-input,${S}.mf-select,${S}.mf-textarea`;
+  // MEASURED, not guessed. Five rules set an input's background here. The compat bridge's
+  // ":where(#wrapper) .mfp[class*=\"mfp-\"] .mf-input" is (0,3,0) !important - the SAME weight as
+  // "${S}.mf-input" - so source order decided it, and the bridge is emitted after customCss. It
+  // won, and the input rendered host #FAFAFA / #09090B instead of the skin's colours. Adding
+  // .mf-field-group takes this to (0,4,0), which is above both the bridge and the module CSS.
+  const AT = '[class]';
+  const inputSel = `${S}.mf-input${AT},${S}.mf-select${AT},${S}.mf-textarea${AT}`;
   if (spec.inputVariant === 'underline') {
     parts.push(`${inputSel}{width:100%!important;box-sizing:border-box!important;border:0!important;`
       + `border-bottom:2px solid ${v('border')}!important;border-radius:0!important;`
       + `background:transparent!important;padding:9px 0!important;color:${v('text')}!important;`
-      + `font:500 14px/20px inherit!important;min-height:40px!important;outline:0!important;`
+      + `font-family:inherit!important;font-size:14px!important;font-weight:400!important;line-height:20px!important;min-height:40px!important;outline:0!important;`
       + `box-shadow:none!important;transition:border-color .15s ease!important}`);
-    parts.push(`${S}.mf-input:focus,${S}.mf-select:focus,${S}.mf-textarea:focus`
+    parts.push(`${S}.mf-input${AT}:focus,${S}.mf-select${AT}:focus,${S}.mf-textarea${AT}:focus`
       + `{border-bottom-color:${v('primary')}!important;background:transparent!important}`);
   } else {
     parts.push(`${inputSel}{width:100%!important;box-sizing:border-box!important;`
       + `border:1px solid ${v('border')}!important;border-radius:8px!important;`
       + `background:${v('fill')}!important;padding:9px 12px!important;color:${v('text')}!important;`
-      + `font:500 14px/20px inherit!important;min-height:42px!important;outline:0!important;`
+      + `font-family:inherit!important;font-size:14px!important;font-weight:400!important;line-height:20px!important;min-height:42px!important;outline:0!important;`
       + `box-shadow:none!important;transition:border-color .15s ease,background .15s ease!important}`);
-    parts.push(`${S}.mf-input:focus,${S}.mf-select:focus,${S}.mf-textarea:focus`
+    parts.push(`${S}.mf-input${AT}:focus,${S}.mf-select${AT}:focus,${S}.mf-textarea${AT}:focus`
       + `{border-color:${v('primary')}!important;background:${v('surface')}!important}`);
   }
-  parts.push(`${S}.mf-textarea{min-height:92px!important;height:auto!important;resize:vertical}`);
-  parts.push(`${S}.mf-input::placeholder,${S}.mf-textarea::placeholder`
+  parts.push(`${S}.mf-textarea${AT}{min-height:92px!important;height:auto!important;resize:vertical}`);
+  parts.push(`${S}.mf-input${AT}::placeholder,${S}.mf-textarea${AT}::placeholder`
     + `{color:color-mix(in srgb, ${v('text')} 40%, transparent)!important;opacity:1}`);
   parts.push(`${S}.mf-field-error{color:#dc2626;font-size:11px;margin-top:4px}`);
 
@@ -471,13 +489,18 @@ function buildCss(spec) {
     + `border-left:2.5px solid ${v('primary')};border-bottom:2.5px solid ${v('primary')};`
     + `transform:rotate(-45deg);border-radius:1px}`);
   parts.push(`${S}.mf-option-label{color:${v('text')};font-size:13px;font-weight:700}`);
-  parts.push(`${S}.mf-option-desc{color:${v('muted')};font-size:11px}`);
+  parts.push(`${S}.mf-option-desc{color:${v('muted')};font-size:11px;font-weight:400}`);
 
   // Chips
   parts.push(`${S}.mf-option-group--chips{display:flex;flex-wrap:wrap;gap:6px}`);
   parts.push(`${S}.mf-option-group--chips .mf-option-ui{padding:6px 13px;border-radius:999px;`
     + `border:1px solid ${v('border')};background:transparent;color:${v('muted')};font-size:12px;`
     + `font-weight:600;cursor:pointer;transition:all .15s ease}`);
+  // A chip's text lives in .mf-option-label, which the CARD rule below sizes at 13px/700. Without
+  // this the chips measured 13px/700/text-colour against the mock's 12px/600/muted.
+  parts.push(`${S}.mf-option-group--chips .mf-option-label{font-size:12px;font-weight:600;color:inherit}`);
+  parts.push(`${S}.mf-option-group--chips .mf-option-item.is-selected .mf-option-label,`
+    + `${S}.mf-option-group--chips input:checked+.mf-option-ui .mf-option-label{color:inherit}`);
   parts.push(`${S}.mf-option-group--chips .mf-option-item.is-selected .mf-option-ui,`
     + `${S}.mf-option-group--chips input:checked+.mf-option-ui`
     + `{background:${v('primary')};border-color:${v('primary')};color:${v('on-primary')}}`);
@@ -535,7 +558,7 @@ function buildCss(spec) {
   parts.push(`${SUB}{width:100%!important;border:0!important;`
     + `border-radius:${spec.submitRadius || '12px'}!important;padding:14px 20px!important;`
     + `background:${spec.submitBackground || v('primary')}!important;color:${v('on-primary')}!important;`
-    + `font:900 13px/20px inherit!important;text-transform:uppercase;letter-spacing:.14em;`
+    + `font-family:inherit!important;font-size:14px!important;font-weight:900!important;line-height:20px!important;text-transform:uppercase!important;letter-spacing:.14em!important;`
     + `cursor:pointer!important;box-shadow:none!important;transition:filter .15s ease,opacity .15s ease}`);
   parts.push(`${SUB}:hover{filter:brightness(1.06)}`);
   // GateUntilValid paints the blocked state on the button the renderer manages; the authored
@@ -546,9 +569,33 @@ function buildCss(spec) {
   parts.push(`${S}.mf-form-actions button,${S}.mf-btn-submit`
     + `{background:${spec.submitBackground || v('primary')}!important}`);
 
+  // Sticky aside layout
+  if (spec.asideHtml) {
+    parts.push(`${S}.${p}-split{display:grid;grid-template-columns:1fr ${spec.asideWidth || '270px'};`
+      + `gap:0;align-items:start}`);
+    parts.push(`${S}.${p}-main{min-width:0}`);
+    parts.push(`${S}.${p}-aside{position:sticky;top:16px;align-self:start;padding:22px 20px;`
+      + `border-left:1px solid ${v('border')};background:color-mix(in srgb, ${v('primary')} 5%, ${v('surface')})}`);
+    parts.push(`${S}.${p}-aside-title{margin:0 0 12px;font-size:11px;font-weight:900;`
+      + `text-transform:uppercase;letter-spacing:.16em;color:${v('primary')}}`);
+    parts.push(`${S}.${p}-aside-row{display:flex;justify-content:space-between;gap:10px;`
+      + `padding:7px 0;font-size:12px;border-bottom:1px solid ${v('hairline')}}`);
+    parts.push(`${S}.${p}-aside-row span:first-child{color:${v('muted')}}`);
+    parts.push(`${S}.${p}-aside-row span:last-child{color:${v('text')};font-weight:700;text-align:right}`);
+    parts.push(`${S}.${p}-aside-total{display:flex;justify-content:space-between;gap:10px;`
+      + `margin-top:12px;padding-top:12px;border-top:2px solid ${v('primary')};font-size:15px;`
+      + `font-weight:900;color:${v('text')}}`);
+    parts.push(`${S}.${p}-aside-empty{color:${v('muted')};font-size:12px;font-style:italic}`);
+    // Inside the guard on purpose: emitted unconditionally, this rule changed all six existing
+    // templates by 169 bytes each and added CSS for markup they do not have.
+    parts.push(`@media (max-width:860px){${S}.${p}-split{grid-template-columns:1fr}`
+      + `${S}.${p}-aside{position:static;border-left:0;border-top:1px solid ${v('border')}}}`);
+  }
   parts.push(`@media (max-width:640px){${S}.${p}-2{grid-template-columns:1fr}`
     + `${S}.${p}-hero-display{font-size:34px}`
     + `${S}.mf-option-group--cards{grid-template-columns:1fr!important}}`);
+
+  if (spec.extraCss) parts.push(spec.extraCss.replace(/@S@/g, S));
 
   return parts.join('');
 }
@@ -556,7 +603,7 @@ function buildCss(spec) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Template assembly
 // ─────────────────────────────────────────────────────────────────────────────
-function buildTemplate(spec) {
+export function buildTemplate(spec) {
   const fields = buildFields(spec);
   const customHtml = buildShell(spec);
   const customCss = buildCss(spec);
@@ -573,10 +620,10 @@ function buildTemplate(spec) {
     successMessage: spec.successMessage,
     settings: {
       theme: spec.theme || 'custom',
-      multiPage: false,
+      multiPage: !!spec.multiPage,
       showProgressBar: false,
-      customContent: {},
-      customScripts: {},
+      customContent: spec.customContent || {},
+      customScripts: spec.customScripts || {},
       customHtml,
       customCss,
       themeSelector: false,
@@ -616,7 +663,7 @@ function buildTemplate(spec) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Validation. Every check here is a failure mode that has actually shipped.
 // ─────────────────────────────────────────────────────────────────────────────
-function validate(tpl) {
+export function validate(tpl) {
   const errs = [];
   const s = tpl.settings;
   const css = s.customCss;
@@ -654,6 +701,23 @@ function validate(tpl) {
     errs.push('data-URI SVG is not fully percent-encoded — NeutralizeStyleBreakout will corrupt it');
   }
 
+  // Every {{script:KEY}} anchor must have a body, and every body must have an anchor. A script
+  // with no anchor never runs and a form that quietly lost its live totals looks identical to one
+  // that never had them.
+  const anchors = new Set((html.match(/\{\{script:([A-Za-z0-9_-]+)\}\}/g) || [])
+    .map((m) => m.slice(9, -2)));
+  const bodies = new Set(Object.keys(s.customScripts || {}));
+  anchors.forEach((k) => { if (!bodies.has(k)) errs.push(`{{script:${k}}} has no customScripts body`); });
+  bodies.forEach((k) => { if (!anchors.has(k)) errs.push(`customScripts['${k}'] has no {{script:${k}}} anchor`); });
+
+  // A live-echo script writes into [data-mf-echo="…"] nodes. A node the script never targets is
+  // dead decoration; a target with no node is a silent no-op.
+  const echoNodes = new Set((html.match(/data-mf-echo=['"]([A-Za-z0-9_.-]+)['"]/g) || [])
+    .map((m) => m.replace(/.*=['"]/, '').replace(/['"]$/, '')));
+  if (echoNodes.size && !bodies.size) {
+    errs.push(`customHtml has ${echoNodes.size} data-mf-echo node(s) but no customScripts to fill them`);
+  }
+
   // The success screen is the whole point of shipping feature 3 first.
   const ps = s.postSubmitExperience || {};
   if (!/\{\{field:/.test(String(ps.message || ''))) {
@@ -667,8 +731,8 @@ function validate(tpl) {
 // ─────────────────────────────────────────────────────────────────────────────
 // The skins
 // ─────────────────────────────────────────────────────────────────────────────
-const SERIF = `'Cormorant Garamond','Playfair Display',Georgia,'Times New Roman',serif`;
-const SANS = `'Inter',system-ui,-apple-system,'Segoe UI',sans-serif`;
+export const SERIF = `'Cormorant Garamond','Playfair Display',Georgia,'Times New Roman',serif`;
+export const SANS = `'Inter',system-ui,-apple-system,'Segoe UI',sans-serif`;
 
 const SKINS = [
   {
@@ -693,7 +757,7 @@ const SKINS = [
       background: 'linear-gradient(160deg,#1B8C6E 0%,#0E5C47 100%)',
       texture: 'snow', textureArgs: ['white'],
       emblemIcon: 'fa-snowflake',
-      eyebrow: 'Merry', display: 'Christmas', displayItalic: true, displaySize: '52px',
+      eyebrow: 'Merry', display: 'Christmas', displayItalic: true, displaySize: '48px',
       hairlineWord: 'and', subtitle: 'Happy New Year',
       onHero: '#FFFFFF', onHeroMuted: 'rgba(255,255,255,.7)', onHeroSoft: 'rgba(255,255,255,.85)',
     },
@@ -1084,38 +1148,73 @@ const SKINS = [
 // ─────────────────────────────────────────────────────────────────────────────
 // main
 // ─────────────────────────────────────────────────────────────────────────────
-const args = process.argv.slice(2);
-const only = args.includes('--only') ? args[args.indexOf('--only') + 1] : null;
-const checkOnly = args.includes('--check');
+// The generator body only runs when this file IS the entry point. build-mock-conversions.mjs
+// imports the builders above, and an import that also wrote 6 templates as a side effect would
+// be a trap for whoever added the next one.
+const isMain = (() => {
+  try { return resolve(process.argv[1] || '') === fileURLToPath(import.meta.url); }
+  catch { return false; }
+})();
 
-if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
-
-let failed = 0;
-let wrote = 0;
-for (const spec of SKINS) {
-  if (only && spec.slug !== only) continue;
-  const tpl = buildTemplate(spec);
-  const errs = validate(tpl);
-  const dest = join(OUT_DIR, `${spec.slug}.json`);
-  const json = JSON.stringify(tpl, null, 2) + '\n';
-
-  if (errs.length) {
-    failed++;
-    console.error(`FAIL ${spec.slug}`);
-    errs.forEach((e) => console.error(`      ${e}`));
-    continue;
+export function writeTemplates(specs, { only = null, checkOnly = false } = {}) {
+  if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
+  let failed = 0;
+  let wrote = 0;
+  for (const spec of specs) {
+    if (only && spec.slug !== only) continue;
+    const tpl = buildTemplate(spec);
+    const errs = validate(tpl);
+    const dest = join(OUT_DIR, `${spec.slug}.json`);
+    const json = JSON.stringify(tpl, null, 2) + '\n';
+    if (errs.length) {
+      failed++;
+      console.error(`FAIL ${spec.slug}`);
+      errs.forEach((e) => console.error(`      ${e}`));
+      continue;
+    }
+    let note = ' (new)';
+    if (existsSync(dest)) note = readFileSync(dest, 'utf8') === json ? ' (byte-identical)' : ' (updated)';
+    if (!checkOnly) { writeFileSync(dest, json); wrote++; }
+    console.log(`ok   ${spec.slug}  ${json.length} bytes, ${tpl.fields.length} fields,`
+      + ` css ${tpl.settings.customCss.length}, html ${tpl.settings.customHtml.length}${note}`);
   }
-
-  let note = '';
-  if (existsSync(dest)) {
-    note = readFileSync(dest, 'utf8') === json ? ' (byte-identical)' : ' (updated)';
-  } else {
-    note = ' (new)';
-  }
-  if (!checkOnly) { writeFileSync(dest, json); wrote++; }
-  console.log(`ok   ${spec.slug}  ${json.length} bytes, ${tpl.fields.length} fields,`
-    + ` css ${tpl.settings.customCss.length}, html ${tpl.settings.customHtml.length}${note}`);
+  return { wrote, failed, total: specs.length };
 }
 
-console.log(`\n${checkOnly ? 'checked' : 'wrote'} ${checkOnly ? SKINS.length : wrote} template(s), ${failed} failure(s)`);
-process.exit(failed ? 1 : 0);
+if (isMain) {
+  const args = process.argv.slice(2);
+  const only = args.includes('--only') ? args[args.indexOf('--only') + 1] : null;
+  const checkOnly = args.includes('--check');
+
+  if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
+
+  let failed = 0;
+  let wrote = 0;
+  for (const spec of SKINS) {
+    if (only && spec.slug !== only) continue;
+    const tpl = buildTemplate(spec);
+    const errs = validate(tpl);
+    const dest = join(OUT_DIR, `${spec.slug}.json`);
+    const json = JSON.stringify(tpl, null, 2) + '\n';
+
+    if (errs.length) {
+      failed++;
+      console.error(`FAIL ${spec.slug}`);
+      errs.forEach((e) => console.error(`      ${e}`));
+      continue;
+    }
+
+    let note = '';
+    if (existsSync(dest)) {
+      note = readFileSync(dest, 'utf8') === json ? ' (byte-identical)' : ' (updated)';
+    } else {
+      note = ' (new)';
+    }
+    if (!checkOnly) { writeFileSync(dest, json); wrote++; }
+    console.log(`ok   ${spec.slug}  ${json.length} bytes, ${tpl.fields.length} fields,`
+      + ` css ${tpl.settings.customCss.length}, html ${tpl.settings.customHtml.length}${note}`);
+  }
+
+  console.log(`\n${checkOnly ? 'checked' : 'wrote'} ${checkOnly ? SKINS.length : wrote} template(s), ${failed} failure(s)`);
+    process.exit(failed ? 1 : 0);
+}

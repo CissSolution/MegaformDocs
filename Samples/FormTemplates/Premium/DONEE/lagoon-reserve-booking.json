@@ -1,0 +1,458 @@
+{
+  "version": "1.0",
+  "slug": "lagoon-reserve-booking",
+  "title": "Lagoon Reserve — Reservation",
+  "description": "Cream, gold and burgundy hotel reservation with a STICKY summary aside that updates live as the guest types: dates, room, occupancy and requests mirror into the panel. Submit stays locked until the form is valid, and the confirmation names the guest.",
+  "category": "booking",
+  "categories": [
+    "booking",
+    "premium",
+    "hospitality"
+  ],
+  "icon": "bed",
+  "submitButtonText": "Confirm Reservation",
+  "successMessage": "Reservation confirmed. A confirmation email is on its way.",
+  "settings": {
+    "theme": "custom",
+    "multiPage": false,
+    "showProgressBar": false,
+    "customContent": {},
+    "customScripts": {
+      "stay_summary": "(function(){\n  var root = (typeof __mfCurrentScriptRoot !== 'undefined' && __mfCurrentScriptRoot) || document;\n  var scope = (root && root.closest) ? (root.closest('.mfp') || document) : document;\n  var LABELS = {};\n  var MONEY = null;\n  var EMPTY = \"—\";\n\n  function val(key) {\n    var els = scope.querySelectorAll('[name=\"' + key + '\"]');\n    if (!els.length) return '';\n    var first = els[0];\n    if (first.type === 'checkbox' || first.type === 'radio') {\n      var picked = [];\n      for (var i = 0; i < els.length; i++) if (els[i].checked) picked.push(labelFor(els[i]));\n      return picked.join(', ');\n    }\n    if (first.tagName === 'SELECT') {\n      var o = first.options[first.selectedIndex];\n      return o && o.value ? o.textContent.trim() : '';\n    }\n    return String(first.value || '').trim();\n  }\n  function raw(key) {\n    var el = scope.querySelector('[name=\"' + key + '\"]');\n    if (!el) return '';\n    if (el.tagName === 'SELECT') { var o = el.options[el.selectedIndex]; return o ? o.value : ''; }\n    if (el.type === 'checkbox' || el.type === 'radio') {\n      var els = scope.querySelectorAll('[name=\"' + key + '\"]');\n      for (var i = 0; i < els.length; i++) if (els[i].checked) return els[i].value;\n      return '';\n    }\n    return String(el.value || '');\n  }\n  function labelFor(input) {\n    var ui = input.nextElementSibling;\n    var lab = ui && ui.querySelector ? ui.querySelector('.mf-option-label') : null;\n    if (lab) return lab.textContent.trim();\n    return String(input.value || '');\n  }\n  function money(n) {\n    var cur = (MONEY && MONEY.currency) || '';\n    return cur + (Math.round((n || 0) * 100) / 100).toFixed(2);\n  }\n\n  function paint() {\n    var nodes = scope.querySelectorAll('[data-mf-echo]');\n    for (var i = 0; i < nodes.length; i++) {\n      var key = nodes[i].getAttribute('data-mf-echo');\n      var v;\n      if (key === '__subtotal' || key === '__tax' || key === '__total') { continue; }\n      v = val(key);\n      if (!v && LABELS[key]) v = '';\n      nodes[i].textContent = v || EMPTY;\n      nodes[i].classList.toggle('is-empty', !v);\n    }\n    if (MONEY) {\n      var unit = 0;\n      var prices = MONEY.prices || {};\n      var picked = raw(MONEY.productField);\n      if (Object.prototype.hasOwnProperty.call(prices, picked)) unit = Number(prices[picked]) || 0;\n      var qty = parseFloat(raw(MONEY.qtyField)) || 0;\n      var sub = unit * qty;\n      var tax = sub * (Number(MONEY.taxRate) || 0);\n      var tot = sub + tax;\n      var quoted = MONEY.quoted && picked === MONEY.quoted;\n      set('__subtotal', quoted ? MONEY.quotedText : money(sub));\n      set('__tax', quoted ? MONEY.quotedText : money(tax));\n      set('__total', quoted ? MONEY.quotedText : money(tot));\n    }\n  }\n  function set(key, text) {\n    var n = scope.querySelectorAll('[data-mf-echo=\"' + key + '\"]');\n    for (var i = 0; i < n.length; i++) n[i].textContent = text;\n  }\n\n  scope.addEventListener('input', paint, true);\n  scope.addEventListener('change', paint, true);\n  // A card/chip click updates the hidden input after its own handler, so re-read on the next tick.\n  scope.addEventListener('click', function () { setTimeout(paint, 60); }, true);\n  setTimeout(paint, 120); setTimeout(paint, 600); paint();\n})();"
+    },
+    "customHtml": "<div class='mfp mfp-lgn mfp-native-generated' data-mf-flexgrid=\"locked\" style=\"background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;box-shadow:none!important\"><div class='lgn-card'><div class='lgn-hero'><div class='lgn-hero-inner'><div class='lgn-hero-emblem'><i class='fa fa-bed'></i></div><div class='lgn-hero-eyebrow'>Convenience &amp; Luxury</div><h1 class='lgn-hero-display'>Lagoon Reserve</h1><div class='lgn-hero-hairline'><span class='lgn-hr'></span><span class='lgn-hr-word'>est. 1908</span><span class='lgn-hr'></span></div><div class='lgn-hero-sub'>Stay a while</div></div></div><div class='lgn-tagline'><span class='lgn-dot'></span><span class='lgn-tagline-text'>Lagoon views · Spa · Two restaurants</span><span class='lgn-dot'></span></div><div class='lgn-split'><div class='lgn-main'><div class='lgn-body'><div class='lgn-rule'><span>Guest Details</span><i></i></div><div class='lgn-grid lgn-2'><label class='lgn-field'><span>First name *</span>{{field:first_name}}</label><label class='lgn-field'><span>Last name *</span>{{field:last_name}}</label><label class='lgn-field'><span>Email *</span>{{field:email}}</label><label class='lgn-field'><span>Phone</span>{{field:phone}}</label></div><label class='lgn-field'><span>Country *</span>{{field:country}}</label><div class='lgn-rule'><span>Dates &amp; Occupancy</span><i></i></div><div class='lgn-grid lgn-2'><label class='lgn-field'><span>Check-in date *</span>{{field:check_in}}</label><label class='lgn-field'><span>Check-out date *</span>{{field:check_out}}</label><label class='lgn-field'><span>Number of guests</span>{{field:guests}}</label></div><div class='lgn-rule'><span>Room</span><i></i></div><label class='lgn-field'><span>Room *</span>{{field:room_type}}</label><label class='lgn-field'><span>Occupancy</span>{{field:occupancy}}</label><div class='lgn-rule'><span>Requests</span><i></i></div><label class='lgn-field'><span>Special requests</span>{{field:requests}}</label><div class='lgn-consent'><label class='lgn-field lgn-consent-item'><span>Newsletter</span>{{field:newsletter}}</label><label class='lgn-field lgn-consent-item'><span>Terms</span>{{field:terms}}</label></div>{{script:stay_summary}}<button class='lgn-submit' type='submit'>Confirm Reservation</button></div></div><aside class='lgn-aside'><div class='lgn-aside-title'>Your stay</div><div class='lgn-aside-row'><span>Guest</span><span data-mf-echo='first_name'>—</span></div><div class='lgn-aside-row'><span>Check-in</span><span data-mf-echo='check_in'>—</span></div><div class='lgn-aside-row'><span>Check-out</span><span data-mf-echo='check_out'>—</span></div><div class='lgn-aside-row'><span>Guests</span><span data-mf-echo='guests'>—</span></div><div class='lgn-aside-row'><span>Room</span><span data-mf-echo='room_type'>—</span></div><div class='lgn-aside-row'><span>Occupancy</span><span data-mf-echo='occupancy'>—</span></div><div class='lgn-aside-total'><span>Requests</span><span data-mf-echo='requests'>—</span></div></aside></div></div></div>",
+    "customCss": ".mfp.mfp-lgn {--lgn-primary:#6B1E2E;--lgn-accent:#C8962C;--lgn-surface:var(--mf-page-surface,var(--mf-preset-surface,#FFFFFF));--lgn-text:var(--mf-page-text,var(--mf-preset-text,#1C1C1C));--lgn-muted:var(--mf-page-muted,var(--mf-preset-muted,#9A8C7E));--lgn-border:var(--mf-page-border,var(--mf-preset-border,#EDE8E0));--lgn-on-primary:var(--mf-preset-on-primary,#FFFFFF);--lgn-deco:#C8962C;--lgn-page:#FDF8F0;--lgn-fill:#FDF8F0;--lgn-fill-strong:color-mix(in srgb, var(--lgn-text) 9%, var(--lgn-surface));--lgn-soft:color-mix(in srgb, var(--lgn-primary) 12%, var(--lgn-surface));--lgn-hairline:color-mix(in srgb, var(--lgn-text) 12%, var(--lgn-surface));}.mfp.mfp-lgn {background:transparent!important;border:0!important;padding:0!important;font-family:'DM Sans','Inter',system-ui,sans-serif}.mfp.mfp-lgn .lgn-card{overflow:hidden;border-radius:8px;max-width:940px;margin:0 auto;background:var(--lgn-surface);box-shadow:0 2px 14px color-mix(in srgb, var(--lgn-text) 10%, transparent)}.mfp.mfp-lgn .lgn-hero{position:relative;overflow:hidden;text-align:center;padding:40px 30px 32px;background:linear-gradient(155deg,#6B1E2E 0%,#3d0f1a 60%,#1C1C1C 100%)}.mfp.mfp-lgn .lgn-hero-inner{position:relative}.mfp.mfp-lgn .lgn-hero-emblem{width:44px;height:44px;margin:0 auto 18px;border-radius:999px;display:flex;align-items:center;justify-content:center;border:1px solid var(--lgn-deco);background:rgba(255,255,255,.07);color:var(--lgn-deco);font-size:18px}.mfp.mfp-lgn .lgn-hero-eyebrow{margin:0 0 12px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4em;color:rgba(240,216,152,.68)}.mfp.mfp-lgn .lgn-hero h1.lgn-hero-display{margin:0;font-family:'Cormorant Garamond','Playfair Display',Georgia,'Times New Roman',serif;font-size:44px;line-height:1!important;font-weight:500;font-style:italic;color:#F0D898!important;font-weight:500!important;letter-spacing:-.01em}.mfp.mfp-lgn .lgn-hero-hairline{display:flex;align-items:center;justify-content:center;gap:12px;margin:16px 0}.mfp.mfp-lgn .lgn-hr{height:1px;width:40px;background:var(--lgn-deco);opacity:.7}.mfp.mfp-lgn .lgn-hr-word{font-size:10px;font-weight:400;text-transform:uppercase;letter-spacing:.3em;color:rgba(240,216,152,.68)}.mfp.mfp-lgn .lgn-hero-sub{font-family:'Cormorant Garamond','Playfair Display',Georgia,'Times New Roman',serif;font-size:18px;font-weight:400;font-style:italic;color:rgba(255,255,255,.86)}.mfp.mfp-lgn .lgn-tagline{display:flex;align-items:center;justify-content:center;gap:12px;padding:13px 16px;background:var(--lgn-surface);border-top:1px solid var(--lgn-border);border-bottom:1px solid var(--lgn-border)}.mfp.mfp-lgn .lgn-dot{width:4px;height:4px;border-radius:999px;background:var(--lgn-deco)}.mfp.mfp-lgn .lgn-tagline-text{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.32em;color:var(--lgn-primary)}.mfp.mfp-lgn .lgn-promo{padding:24px 30px;text-align:center;background:var(--lgn-surface);border-bottom:1px solid var(--lgn-border)}.mfp.mfp-lgn .lgn-promo-kicker{margin:0 0 4px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.3em;color:var(--lgn-deco)}.mfp.mfp-lgn .lgn-promo-headline{font-family:'Cormorant Garamond','Playfair Display',Georgia,'Times New Roman',serif;font-size:36px;font-weight:500;letter-spacing:-.02em;color:var(--lgn-text)}.mfp.mfp-lgn .lgn-promo-hr{width:48px;height:1px;margin:12px auto;background:var(--lgn-deco)}.mfp.mfp-lgn .lgn-promo-body{margin:0;font-size:12px;line-height:1.6;color:var(--lgn-muted)}.mfp.mfp-lgn .lgn-body{padding:24px 30px 30px;display:flex;flex-direction:column;gap:16px}.mfp.mfp-lgn .lgn-caption{margin:6px 0 0;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.16em;text-align:center;color:var(--lgn-primary)}.mfp.mfp-lgn .lgn-rule{display:flex;align-items:center;gap:12px;padding-top:6px}.mfp.mfp-lgn .lgn-rule span{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--lgn-muted)}.mfp.mfp-lgn .lgn-rule i{flex:1;height:1px;background:var(--lgn-hairline)}.mfp.mfp-lgn .lgn-grid{display:grid;gap:12px}.mfp.mfp-lgn .lgn-2{grid-template-columns:1fr 1fr}.mfp.mfp-lgn .lgn-consent{display:flex;flex-direction:column;gap:8px}.mfp.mfp-lgn .lgn-field{display:block;margin:0}.mfp.mfp-lgn .lgn-field>span{display:block;margin:0 0 6px!important;color:var(--lgn-muted);font-size:10px;line-height:15px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.mfp.mfp-lgn .lgn-field .mf-field-label{display:none!important}.mfp.mfp-lgn .mf-field-group{margin:0!important;width:100%}.mfp.mfp-lgn .mf-form-title,.mfp.mfp-lgn .mf-form-description{display:none!important}.mfp.mfp-lgn .mf-field-group .mf-input,.mfp.mfp-lgn .mf-field-group .mf-select,.mfp.mfp-lgn .mf-field-group .mf-textarea{width:100%!important;box-sizing:border-box!important;border:1px solid var(--lgn-border)!important;border-radius:8px!important;background:var(--lgn-fill)!important;padding:9px 12px!important;color:var(--lgn-text)!important;font-family:inherit!important;font-size:14px!important;font-weight:400!important;line-height:20px!important;min-height:42px!important;outline:0!important;box-shadow:none!important;transition:border-color .15s ease,background .15s ease!important}.mfp.mfp-lgn .mf-field-group .mf-input:focus,.mfp.mfp-lgn .mf-field-group .mf-select:focus,.mfp.mfp-lgn .mf-field-group .mf-textarea:focus{border-color:var(--lgn-primary)!important;background:var(--lgn-surface)!important}.mfp.mfp-lgn .mf-field-group .mf-textarea{min-height:92px!important;height:auto!important;resize:vertical}.mfp.mfp-lgn .mf-field-group .mf-input::placeholder,.mfp.mfp-lgn .mf-field-group .mf-textarea::placeholder{color:color-mix(in srgb, var(--lgn-text) 40%, transparent)!important;opacity:1}.mfp.mfp-lgn .mf-field-error{color:#dc2626;font-size:11px;margin-top:4px}.mfp.mfp-lgn .mf-option-group--cards{display:grid;gap:8px;align-items:stretch}.mfp.mfp-lgn .mf-option-item{margin:0!important}.mfp.mfp-lgn .mf-option-group--cards .mf-option-item{display:flex}.mfp.mfp-lgn .mf-option-group--cards .mf-option-ui{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:100%;height:100%;box-sizing:border-box;padding:12px 34px 12px 14px;border:2px solid var(--lgn-border);border-radius:12px;background:transparent;cursor:pointer;transition:all .15s ease}.mfp.mfp-lgn .mf-option-group--cards .mf-option-check,.mfp.mfp-lgn .mf-option-group--chips .mf-option-check{display:none!important}.mfp.mfp-lgn .mf-option-group--cards .mf-option-item.is-selected .mf-option-ui,.mfp.mfp-lgn .mf-option-group--cards input:checked+.mf-option-ui{border-color:var(--lgn-primary);background:var(--lgn-soft)}.mfp.mfp-lgn .mf-option-group--cards .mf-option-item.is-selected .mf-option-ui::after,.mfp.mfp-lgn .mf-option-group--cards input:checked+.mf-option-ui::after{content:'';position:absolute;top:15px;right:15px;width:11px;height:6px;border-left:2.5px solid var(--lgn-primary);border-bottom:2.5px solid var(--lgn-primary);transform:rotate(-45deg);border-radius:1px}.mfp.mfp-lgn .mf-option-label{color:var(--lgn-text);font-size:13px;font-weight:700}.mfp.mfp-lgn .mf-option-desc{color:var(--lgn-muted);font-size:11px;font-weight:400}.mfp.mfp-lgn .mf-option-group--chips{display:flex;flex-wrap:wrap;gap:6px}.mfp.mfp-lgn .mf-option-group--chips .mf-option-ui{padding:6px 13px;border-radius:999px;border:1px solid var(--lgn-border);background:transparent;color:var(--lgn-muted);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s ease}.mfp.mfp-lgn .mf-option-group--chips .mf-option-label{font-size:12px;font-weight:600;color:inherit}.mfp.mfp-lgn .mf-option-group--chips .mf-option-item.is-selected .mf-option-label,.mfp.mfp-lgn .mf-option-group--chips input:checked+.mf-option-ui .mf-option-label{color:inherit}.mfp.mfp-lgn .mf-option-group--chips .mf-option-item.is-selected .mf-option-ui,.mfp.mfp-lgn .mf-option-group--chips input:checked+.mf-option-ui{background:var(--lgn-primary);border-color:var(--lgn-primary);color:var(--lgn-on-primary)}.mfp.mfp-lgn .mf-field-group[data-key='room_type'] .mf-option-group--cards{grid-template-columns:repeat(1,1fr)!important}.mfp.mfp-lgn .lgn-consent-item>span{display:none!important}.mfp.mfp-lgn .lgn-consent-item .mf-field-label{display:none!important}.mfp.mfp-lgn .lgn-consent-item .mf-option-group{display:block}.mfp.mfp-lgn .lgn-consent-item .mf-option-ui{border:0!important;background:none!important;padding:0!important;color:var(--lgn-muted)!important;font-weight:400!important;font-size:12px!important;line-height:18px!important}.mf-form-wrapper:has(.mfp-lgn) .mf-form-actions{display:none!important}.mfp.mfp-lgn button.lgn-submit[type=\"submit\"]{width:100%!important;border:0!important;border-radius:12px!important;padding:14px 20px!important;background:var(--lgn-primary)!important;color:var(--lgn-on-primary)!important;font-family:inherit!important;font-size:14px!important;font-weight:900!important;line-height:20px!important;text-transform:uppercase!important;letter-spacing:.14em!important;cursor:pointer!important;box-shadow:none!important;transition:filter .15s ease,opacity .15s ease}.mfp.mfp-lgn button.lgn-submit[type=\"submit\"]:hover{filter:brightness(1.06)}.mfp.mfp-lgn button.lgn-submit.mf-nav-blocked,.mfp.mfp-lgn button.lgn-submit[disabled]{background:var(--lgn-border)!important;cursor:not-allowed!important;filter:none!important}.mfp.mfp-lgn .mf-form-actions button,.mfp.mfp-lgn .mf-btn-submit{background:var(--lgn-primary)!important}.mfp.mfp-lgn .lgn-split{display:grid;grid-template-columns:1fr 280px;gap:0;align-items:start}.mfp.mfp-lgn .lgn-main{min-width:0}.mfp.mfp-lgn .lgn-aside{position:sticky;top:16px;align-self:start;padding:22px 20px;border-left:1px solid var(--lgn-border);background:color-mix(in srgb, var(--lgn-primary) 5%, var(--lgn-surface))}.mfp.mfp-lgn .lgn-aside-title{margin:0 0 12px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.16em;color:var(--lgn-primary)}.mfp.mfp-lgn .lgn-aside-row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;font-size:12px;border-bottom:1px solid var(--lgn-hairline)}.mfp.mfp-lgn .lgn-aside-row span:first-child{color:var(--lgn-muted)}.mfp.mfp-lgn .lgn-aside-row span:last-child{color:var(--lgn-text);font-weight:700;text-align:right}.mfp.mfp-lgn .lgn-aside-total{display:flex;justify-content:space-between;gap:10px;margin-top:12px;padding-top:12px;border-top:2px solid var(--lgn-primary);font-size:15px;font-weight:900;color:var(--lgn-text)}.mfp.mfp-lgn .lgn-aside-empty{color:var(--lgn-muted);font-size:12px;font-style:italic}@media (max-width:860px){.mfp.mfp-lgn .lgn-split{grid-template-columns:1fr}.mfp.mfp-lgn .lgn-aside{position:static;border-left:0;border-top:1px solid var(--lgn-border)}}@media (max-width:640px){.mfp.mfp-lgn .lgn-2{grid-template-columns:1fr}.mfp.mfp-lgn .lgn-hero-display{font-size:34px}.mfp.mfp-lgn .mf-option-group--cards{grid-template-columns:1fr!important}}",
+    "themeSelector": false,
+    "premiumGeneratedShell": true,
+    "gateNavigationUntilValid": true,
+    "postSubmitExperience": {
+      "enabled": true,
+      "mode": "rich",
+      "title": "Reservation confirmed",
+      "message": "Thank you {{field:first_name}}. Your {{field:room_type}} is held from {{field:check_in}} to {{field:check_out}} for {{field:guests}} guest(s). Confirmation sent to {{field:email}}.",
+      "showSubmissionId": true,
+      "submissionIdLabel": "Reference:",
+      "showAnswerSummary": false,
+      "allowFillAgain": true,
+      "fillAgainLabel": "Submit another",
+      "doneLabel": "Done"
+    },
+    "themeCompatibility": {
+      "policy": "hybrid",
+      "supportsPageColors": false,
+      "supportsPageTypography": true,
+      "supportsDarkHost": true,
+      "prefixes": [
+        "lgn"
+      ],
+      "immutable": [
+        "primary",
+        "accent",
+        "deco"
+      ]
+    }
+  },
+  "fields": [
+    {
+      "placeholder": "Anna",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "first_name",
+      "type": "Text",
+      "label": "First name",
+      "required": true
+    },
+    {
+      "placeholder": "Müller",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "last_name",
+      "type": "Text",
+      "label": "Last name",
+      "required": true
+    },
+    {
+      "placeholder": "anna@email.eu",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "email",
+      "type": "Email",
+      "label": "Email",
+      "required": true
+    },
+    {
+      "placeholder": "+49 170 1234567",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "phone",
+      "type": "Phone",
+      "label": "Phone",
+      "required": false
+    },
+    {
+      "placeholder": "Select country",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Germany",
+          "value": "Germany"
+        },
+        {
+          "label": "France",
+          "value": "France"
+        },
+        {
+          "label": "Spain",
+          "value": "Spain"
+        },
+        {
+          "label": "Italy",
+          "value": "Italy"
+        },
+        {
+          "label": "United Kingdom",
+          "value": "United Kingdom"
+        },
+        {
+          "label": "United States",
+          "value": "United States"
+        },
+        {
+          "label": "Japan",
+          "value": "Japan"
+        },
+        {
+          "label": "Other",
+          "value": "Other"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "country",
+      "type": "Select",
+      "label": "Country",
+      "required": true,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "check_in",
+      "type": "Date",
+      "label": "Check-in date",
+      "required": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "check_out",
+      "type": "Date",
+      "label": "Check-out date",
+      "required": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "2",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "1",
+          "value": "1"
+        },
+        {
+          "label": "2",
+          "value": "2"
+        },
+        {
+          "label": "3",
+          "value": "3"
+        },
+        {
+          "label": "4",
+          "value": "4"
+        },
+        {
+          "label": "5",
+          "value": "5"
+        },
+        {
+          "label": "6+",
+          "value": "6+"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "guests",
+      "type": "Select",
+      "label": "Number of guests",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Lagoon Room",
+          "value": "lagoon",
+          "description": "32 m² · lagoon view · king bed"
+        },
+        {
+          "label": "Garden Suite",
+          "value": "garden",
+          "description": "58 m² · terrace · separate living room"
+        },
+        {
+          "label": "Reserve Villa",
+          "value": "villa",
+          "description": "110 m² · private pool · butler"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "cards",
+        "optionColumns": 1
+      },
+      "key": "room_type",
+      "type": "Radio",
+      "label": "Room",
+      "required": true,
+      "optionDisplay": "cards",
+      "choiceDisplay": "cards",
+      "optionVariant": "cards",
+      "widgetProps": {
+        "optionDisplay": "cards",
+        "optionColumns": 1
+      },
+      "allowOptionHtml": true,
+      "optionColumns": 1
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Single",
+          "value": "Single"
+        },
+        {
+          "label": "Double",
+          "value": "Double"
+        },
+        {
+          "label": "Family",
+          "value": "Family"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "cards",
+        "optionColumns": 3
+      },
+      "key": "occupancy",
+      "type": "Radio",
+      "label": "Occupancy",
+      "required": false,
+      "optionDisplay": "cards",
+      "choiceDisplay": "cards",
+      "optionVariant": "cards",
+      "widgetProps": {
+        "optionDisplay": "cards",
+        "optionColumns": 3
+      },
+      "allowOptionHtml": true,
+      "optionColumns": 3
+    },
+    {
+      "placeholder": "Late arrival, dietary needs, celebrations…",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "requests",
+      "type": "Textarea",
+      "label": "Special requests",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Send me seasonal offers",
+          "value": "yes"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "list"
+      },
+      "key": "newsletter",
+      "type": "Checkbox",
+      "label": "Newsletter",
+      "required": false,
+      "optionDisplay": "list",
+      "choiceDisplay": "list",
+      "optionVariant": "list",
+      "widgetProps": {
+        "optionDisplay": "list"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "I agree to the reservation terms and privacy policy",
+          "value": "yes"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "list"
+      },
+      "key": "terms",
+      "type": "Checkbox",
+      "label": "Terms",
+      "required": true,
+      "optionDisplay": "list",
+      "choiceDisplay": "list",
+      "optionVariant": "list",
+      "widgetProps": {
+        "optionDisplay": "list"
+      },
+      "allowOptionHtml": true
+    }
+  ],
+  "rules": [],
+  "workflow": {
+    "notifications": []
+  }
+}
