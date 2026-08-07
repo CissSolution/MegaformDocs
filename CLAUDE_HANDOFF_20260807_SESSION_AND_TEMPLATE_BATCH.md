@@ -63,7 +63,7 @@ Ordered by how many mocks need them. Every claim below was checked against curre
 | 2 | **Submit/Next disabled until valid** | 7 mocks | validation fires on submit; `setButtonState` (`renderer/index.ts:2743`) toggles only on page bounds |
 | 3 | **Success screen with FIELD interpolation** | 7 mocks | `resolvePostSubmitTokens` (`renderer/index.ts:3709-3719`) resolves exactly three tokens — `{{submission:id}}`, `{{form:title}}`, `{{form:description}}` — and **no field values**. Also cannot re-arm a blank form or tear down a sidebar |
 | 4 | **Curated review table inside a step** | golden-pro + 3 invoice | `reviewBeforeSubmit` injects a separate `#mf-review-<id>` with its own buttons and lists every key |
-| 5 | **Save as draft / resume later** | job-application | does not exist at any level; every `SaveDraft` symbol is a builder-side WORKFLOW draft |
+| 5 | ~~**Save as draft / resume later**~~ ⚠️ **WRONG, see below** | job-application | ~~does not exist at any level~~ — it exists and WORKS on DNN. `Draft/Save` + `Draft/Get` endpoints (`MegaForm.Web/Controllers/MegaFormController.cs:1075`, `MegaForm.DNN/WebApi/MegaFormApiController.cs:2869`), `FormRepository.SaveDraft`, `EnableSaveResume` on the form entity, `bindSaveDraft()` in the renderer, resume via `?resume=<token>`. `FormView.ascx:866` emits the button under `if (ViewModel.EnableSaveResume)`. **The real gap is narrow: the TS-built actions row (`renderer/index.ts:253`) does not emit `mf-btn-save-<id>`, so Web/Oqtane have no button, and Oqtane has no `Draft/Save` route.** job-application on DNN needs only `EnableSaveResume = true` |
 | 6 | **Cross-field validation (`equalTo`)** | register | `FieldValidation` (`FormSchema.cs:244`) has MinLength/MaxLength/Min/Max/Pattern/mask/customMessage only. Grep for `equalTo`/`matchField` across `MegaForm.UI/src` + `MegaForm.Core`: **zero hits** |
 | 7 | **Password show/hide toggle** | register | no control in the renderer |
 | 8 | **Live character counter** | job-application | grep `charCounter`/`showCharCount`: **zero hits**. `MaxLength` enforces only |
@@ -124,6 +124,12 @@ of runtime compilation both cite the missing sandbox. Options A/B/C are written 
 
 ## 3. OPEN BUGS AND UNFINISHED WORK
 
+> **RESOLVED 2026-08-07 (later the same day).** Both claims marked ⚠️ below were wrong; see
+> `CLAUDE_HANDOFF_20260807B_FEATURES_2_3_SHIPPED.md`. Module 10599 **is** in `admin_dashboard`
+> mode — the query that said otherwise read the wrong setting name (the real key is
+> `MegaForm_ModuleMode`). The working URL is the dashboard page + `?mfFormId=<id>#mf-submissions`,
+> not `ctl=FormList`, and that is now what `BuildSubmissionsUrl` returns.
+
 ### 🔴 Persona Bar → Submissions lands on a page that never loads
 Reported with a screenshot: `/mfqa-admin/ctl/Submissions/mid/10599/formId/52` spins on
 "Loading submissions…" forever.
@@ -137,11 +143,13 @@ Diagnosed, **not fixed**:
 - The owner wants it to go to **the submission dashboard's submissions view, filtered to that form**.
 - The dashboard's own convention (`MegaForm.UI/src/dashboard/index.ts:170-212`) is
   `<dashboardPath>?mfFormId=<id>#mf-submissions`.
-- ⚠️ I tested `http://megaclean008.ai/mfqa-admin?mfFormId=52#mf-submissions` and it rendered
-  **form 52 as a public form**, not a dashboard — because module 10599 is NOT in
-  `admin_dashboard` mode. `BuildDashboardUrl` already handles that case by routing through
-  `ctl=FormList`. **Next step: test `ctl/FormList/mid/10599?mfFormId=52#mf-submissions` and, if it
-  lands on the filtered submissions view, change `submissionsUrl` to that shape.**
+- ⚠️ **WRONG — corrected 2026-08-07.** I wrote that `mfqa-admin?mfFormId=52#mf-submissions`
+  rendered a public form "because module 10599 is NOT in `admin_dashboard` mode". It is:
+  `ModuleSettings` row `MegaForm_ModuleMode = admin_dashboard`. The earlier check looked for
+  setting names `MegaFormModuleMode`/`ModuleMode`/`moduleMode`, none of which exist, so every
+  module came back `(none)`. Verified in a browser: that URL opens the dashboard on
+  **All forms / Form #55** with the rows loaded. Fixed by `BuildSubmissionsUrl`, which reuses
+  `BuildDashboardUrl` so the admin_dashboard-vs-`ctl=FormList` decision stays in one place.
 
 ### 🔴 Not started
 1. **Publish invoice-blue to the gallery.** Live gallery is

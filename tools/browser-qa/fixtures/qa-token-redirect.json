@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "slug": "qa-token-redirect",
+  "title": "QA — field token inside a redirect URL",
+  "description": "Internal QA fixture: proves resolvePostSubmitTokens percent-encodes field values in the 'url' context, so a submitted value cannot inject query parameters or take over the destination (open redirect). Not a gallery template.",
+  "category": "QA",
+  "icon": "fa-flask",
+  "submitButtonText": "Submit",
+  "successMessage": "Submitted.",
+  "settings": {
+    "multiPage": false,
+    "gateNavigationUntilValid": true,
+    "postSubmitExperience": {
+      "enabled": true,
+      "mode": "redirect-timed",
+      "title": "Redirecting",
+      "message": "Redirecting with ref={{field:first_name}}",
+      "redirectUrl": "http://megaclean008.ai/mfqa-form?ref={{field:first_name}}",
+      "redirectDelaySeconds": 1,
+      "redirectNotice": "Redirecting in",
+      "showSubmissionId": false,
+      "showAnswerSummary": false,
+      "allowFillAgain": false
+    }
+  },
+  "fields": [
+    {
+      "key": "first_name",
+      "type": "Text",
+      "label": "First name (the value that lands in the redirect query string)",
+      "required": true,
+      "placeholder": " "
+    }
+  ],
+  "customHtml": "",
+  "customCss": "",
+  "rules": [],
+  "workflow": null,
+  "premium": false
+}

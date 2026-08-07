@@ -121,5 +121,32 @@ namespace MegaForm.PersonaBar.Components
                 ? Globals.NavigateURL(host.TabId)
                 : BuildControlUrl(host, "FormList", 0);
         }
+
+        /// <summary>
+        /// Where the per-form "Submissions" link should go: the submission dashboard's
+        /// Submissions view, filtered to that form.
+        ///
+        /// [PbSubmissionsUrl v20260807] It used to be BuildControlUrl(host, "Submissions", formId),
+        /// i.e. ~/Default.aspx?ctl=Submissions&amp;mid=..&amp;formId=... That control IS registered
+        /// (DesktopModules/MegaForm/Views/Submissions.ascx) so the link was not bogus — it rendered
+        /// and then sat on "Loading submissions…" forever. The dashboard SPA is the surface that
+        /// actually lists submissions, and it addresses a form the way its own navigation does:
+        /// &lt;dashboard&gt;?mfFormId=&lt;id&gt;#mf-submissions (MegaForm.UI/src/dashboard/index.ts).
+        /// Verified on megaclean008: that URL lands on "All forms / Form #55" with the rows loaded.
+        ///
+        /// Reuses BuildDashboardUrl so the admin_dashboard-vs-FormList decision lives in exactly
+        /// one place — a portal whose only MegaForm instance is not a dashboard still degrades the
+        /// same way "Open dashboard" does, instead of growing a second rule.
+        /// </summary>
+        public static string BuildSubmissionsUrl(MegaFormHostPage host, int formId)
+        {
+            var url = BuildDashboardUrl(host);
+            if (string.IsNullOrEmpty(url) || formId <= 0) return url;
+
+            // Friendly URLs render the control route as path segments (no '?'), the raw writer
+            // keeps a query string — handle both rather than assuming one.
+            var separator = url.IndexOf('?') >= 0 ? "&" : "?";
+            return url + separator + "mfFormId=" + formId + "#mf-submissions";
+        }
     }
 }

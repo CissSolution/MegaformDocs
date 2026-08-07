@@ -506,6 +506,25 @@ namespace MegaForm.Core.Models
         [JsonProperty("showPageTitles")]
         public bool ShowPageTitles { get; set; } = true;
 
+        /// <summary>
+        /// [GateUntilValid v20260807] Keep Next / Submit disabled until the CURRENT page passes
+        /// client-side validation. Opt-in — false (the default) leaves every existing form's
+        /// buttons exactly as they were, which is why this is a flag and not a behaviour change.
+        /// <para>
+        /// Renderer affordance ONLY: goNextPage still calls validatePage, submit still calls
+        /// validateForm, and the server still re-enforces every rule. Never treat a form with
+        /// this flag set as pre-validated.
+        /// </para>
+        /// <para>
+        /// FormSettings is a strict POCO with no JsonExtensionData, so a settings key that is not
+        /// declared here is silently DROPPED the first time a form round-trips through the typed
+        /// model (builder Save, RenderModelResolver.SettingsJson). Declaring it is what makes the
+        /// flag survive at all.
+        /// </para>
+        /// </summary>
+        [JsonProperty("gateNavigationUntilValid")]
+        public bool GateNavigationUntilValid { get; set; }
+
         [JsonProperty("honeypotFieldName")]
         public string HoneypotFieldName { get; set; } = "__mf_hp";
 

@@ -8,14 +8,18 @@ import type { RendererConfig, ShowIfRule } from './helpers';
 import { displayText, esc, flattenFields, normalizeSchema } from './helpers';
 import { RENDERER_SIGNATURE_SIZING_BADGE, renderInput, renderSingleFieldElement, renderRowElement, renderFlexGridElement } from './inputs';
 import { evaluateCondition, getFieldValue, bindConditionalLogic } from './conditional';
-import { validatePage, validateForm, collectFormData, clearFieldErrors, bindFieldErrorClear } from './validation';
+import { validatePage, pageFieldErrors, validateForm, collectFormData, clearFieldErrors, bindFieldErrorClear } from './validation';
 import { bindInteractiveElements } from './interactive';
 import { collectUnloadedWidgetTypes, injectWidgetPlugins, isWidgetTypeRegistered } from '@shared/widget-plugin-autoload';
 import { buildSummaryHtml } from '@shared/summary-html';
 import { initInlineEdit } from '@shared/inline-edit';
 import { applyFixedHeaderGuard } from './fixed-header-guard';
 import { trimContentGap } from './content-gap-trim';
-import { reconcilePremiumNativeStepper } from './premium-step-reconcile';
+import {
+  reconcilePremiumNativePageFields,
+  reconcilePremiumNativeStepper,
+  syncPremiumNativeStepChrome,
+} from './premium-step-reconcile';
 import { t } from '@i18n';
 
 let config: RendererConfig;
@@ -166,6 +170,13 @@ function getNavigationButtonText(kind: 'previous' | 'next'): string {
   const settings = (config.schema?.settings || {}) as any;
   if (kind === 'previous') return String(settings.previousButtonText || 'Previous').trim() || 'Previous';
   return String(settings.nextButtonText || 'Next').trim() || 'Next';
+}
+
+function getLocalizedNavigationButtonText(kind: 'previous' | 'next'): string {
+  const configured = getNavigationButtonText(kind);
+  const defaultText = kind === 'previous' ? 'Previous' : 'Next';
+  if (configured !== defaultText) return configured;
+  return mfI18nT(kind === 'previous' ? 'form.previous' : 'form.next', defaultText);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -868,6 +879,16 @@ function buildCustomShellCompatibilityCss(formId: number, settings: any, customC
     `  color: var(--mf-btn-color, var(--mf-btn-text, var(--primary-foreground, #ffffff))) !important;`,
     `  font-family: var(--mf-font-family, inherit) !important;`,
     `}`,
+    // Invoice application templates already draw their own centered .io-card.
+    // Keep .io-page as a transparent layout wrapper so it cannot become a
+    // second full-width card around the authored invoice.
+    `${W} .mfp.mfp-invoice-orange .io-page,`,
+    `${W} .mfp.mfp-invoice-dark .io-page,`,
+    `${W} .mfp.mfp-invoice-minimal .io-page {`,
+    `  background: transparent !important;`,
+    `  padding: 0 !important;`,
+    `  min-height: 0 !important;`,
+    `}`,
   ].join('\n');
 }
 
@@ -1491,6 +1512,7 @@ function init(cfg: RendererConfig): void {
   bindInteractiveElements(config);
   bindSaveDraft();
   bindFieldErrorClear(config.formId);
+  bindNavigationGate();
   bindPremiumSummary();
   applyFixedHeaderGuard(config.formId);
   trimContentGap(config.formId);
@@ -1895,7 +1917,7 @@ function hydrateCustomSsrFields(settings: any): void {
   if (isMultiStepCustomHtmlMode()) {
     if (isPremiumNativeCustomHtmlMode()) {
       bindPremiumNativeShellControls(container);
-    } else {
+    } else if (!usesAuthoredCustomStepActions()) {
       hideCustomHtmlSubmitBlocks(container);
     }
     customHtmlHasOwnSubmit = false;
@@ -2297,7 +2319,7 @@ function renderCustomHtml(container: HTMLElement, settings: any): void {
   if (isMultiStepCustomHtmlMode()) {
     if (isPremiumNativeCustomHtmlMode()) {
       bindPremiumNativeShellControls(container);
-    } else {
+    } else if (!usesAuthoredCustomStepActions()) {
       hideCustomHtmlSubmitBlocks(container);
     }
     customHtmlHasOwnSubmit = false;
@@ -2403,6 +2425,172 @@ function isMultiStepCustomHtmlMode(): boolean {
   return !!(settings.customHtml && String(settings.customHtml).trim()) && totalPages > 1;
 }
 
+/**
+ * A customHtml shell may already ship a native premium step rail. Only those
+ * shells suppress MegaForm's generic schema-driven step navigation. Arbitrary
+ * customHtml forms without this markup receive the generic navigation as an
+ * override as soon as their schema has more than one page.
+ */
+function customShellHasNativeStepNavigation(): boolean {
+  if (!isMultiStepCustomHtmlMode()) return false;
+  const container = document.getElementById(`mf-fields-container-${config.formId}`);
+  if (!container) return false;
+  return !!container.querySelector(
+    '.au-step,.bg-step,.ey-step,.fi-step,[data-mf-native-step]'
+  );
+}
+
+function usesGenericCustomStepNavigation(): boolean {
+  return isMultiStepCustomHtmlMode() && !customShellHasNativeStepNavigation();
+}
+
+interface AuthoredCustomStepActions {
+  host: HTMLElement;
+  forward: HTMLButtonElement | HTMLInputElement;
+  back: HTMLElement | null;
+}
+
+function getAuthoredCustomStepActions(): AuthoredCustomStepActions | null {
+  if (!usesGenericCustomStepNavigation()) return null;
+  const container = document.getElementById(`mf-fields-container-${config.formId}`);
+  if (!container) return null;
+
+  const candidates = Array.from(
+    container.querySelectorAll<HTMLButtonElement | HTMLInputElement>(
+      'button[type="submit"],input[type="submit"],button.mfp-submit,button[class*="submit" i]'
+    )
+  ).filter(candidate => !candidate.classList.contains('mf-authored-step-back'));
+  for (const forward of candidates) {
+    const host = forward.closest<HTMLElement>('.mfp-actions,[class*="actions" i]');
+    if (!host || host.classList.contains('mf-form-actions')) continue;
+    const back = host.querySelector<HTMLElement>(
+      '[data-mf-native-back],[data-action="back"],[data-action="previous"],[class*="back" i]'
+    );
+    return { host, forward, back };
+  }
+  return null;
+}
+
+function usesAuthoredCustomStepActions(): boolean {
+  return getAuthoredCustomStepActions() !== null;
+}
+
+function syncAuthoredCustomStepActions(): boolean {
+  const authored = getAuthoredCustomStepActions();
+  if (!authored) return false;
+
+  const { host, forward } = authored;
+  if (!forward.dataset.mfOriginalSubmitHtml) {
+    forward.dataset.mfOriginalSubmitHtml = forward instanceof HTMLInputElement
+      ? forward.value
+      : forward.innerHTML;
+  }
+
+  let back = authored.back;
+  if (!back) {
+    const injected = document.createElement('button');
+    injected.type = 'button';
+    injected.className = `${forward.className || 'mf-btn'} mf-authored-step-back`;
+    injected.setAttribute('data-mf-step-back', '1');
+    injected.textContent = `← ${getLocalizedNavigationButtonText('previous')}`;
+    host.insertBefore(injected, forward);
+    back = injected;
+  } else {
+    back.setAttribute('data-mf-step-back', '1');
+    if (!/^(BUTTON|A)$/i.test(back.tagName)) {
+      back.setAttribute('role', 'button');
+      back.setAttribute('tabindex', '0');
+    }
+  }
+
+  const onLastPage = currentPage === totalPages - 1;
+  host.hidden = false;
+  host.style.removeProperty('display');
+  // Keep the Back element in flex layout on page 1 so authored
+  // justify-content:space-between continues to pin Next to the right.
+  back.hidden = false;
+  back.style.display = '';
+  back.style.visibility = currentPage === 0 ? 'hidden' : '';
+  back.style.pointerEvents = currentPage === 0 ? 'none' : '';
+  back.setAttribute('aria-hidden', currentPage === 0 ? 'true' : 'false');
+
+  if (onLastPage) {
+    forward.setAttribute('type', 'submit');
+    forward.removeAttribute('data-mf-step-forward');
+    if (forward instanceof HTMLInputElement) {
+      forward.value = forward.dataset.mfOriginalSubmitHtml || forward.value;
+    } else {
+      forward.innerHTML = forward.dataset.mfOriginalSubmitHtml || forward.innerHTML;
+    }
+  } else {
+    forward.setAttribute('type', 'button');
+    forward.setAttribute('data-mf-step-forward', '1');
+    const nextText = `${getLocalizedNavigationButtonText('next')} →`;
+    if (forward instanceof HTMLInputElement) forward.value = nextText;
+    else forward.textContent = nextText;
+  }
+  return true;
+}
+
+function collectPageFieldKeys(fields: any[], pageIndex: number, keyToPage: Map<string, number>): void {
+  (fields || []).forEach(field => {
+    const key = String(field?.key || field?.Key || '').trim();
+    if (key) keyToPage.set(key, pageIndex);
+    const columns = field?.columns || field?.Columns || [];
+    (columns || []).forEach((column: any) => collectPageFieldKeys(column?.fields || column?.Fields || [], pageIndex, keyToPage));
+    const items = field?.items || field?.Items || [];
+    (items || []).forEach((item: any) => {
+      const nested = item?.field || item?.Field || item;
+      if (nested) collectPageFieldKeys([nested], pageIndex, keyToPage);
+    });
+  });
+}
+
+/**
+ * Custom SSR shells do not necessarily contain generic .mf-page wrappers,
+ * especially when a page break was added after the shell was authored. In
+ * fallback-navigation mode, page the rendered field groups directly from the
+ * schema while leaving the authored shell/chrome untouched.
+ */
+function syncGenericCustomStepFields(): void {
+  if (!usesGenericCustomStepNavigation()) return;
+  const container = document.getElementById(`mf-fields-container-${config.formId}`);
+  if (!container) return;
+
+  const keyToPage = new Map<string, number>();
+  fieldPages.forEach((fields, pageIndex) => collectPageFieldKeys(fields as any[], pageIndex, keyToPage));
+
+  container.querySelectorAll<HTMLElement>('.mf-field-group[data-key]').forEach(fieldEl => {
+    const key = String(fieldEl.getAttribute('data-key') || '').trim();
+    const pageIndex = keyToPage.get(key);
+    if (pageIndex == null) return;
+    const visible = pageIndex === currentPage;
+    fieldEl.hidden = !visible;
+    fieldEl.setAttribute('aria-hidden', visible ? 'false' : 'true');
+  });
+
+  // Collapse an authored row only when every rendered field inside it belongs
+  // to the same hidden page. Mixed-page rows keep their layout and page each
+  // child independently.
+  container.querySelectorAll<HTMLElement>('.mf-row').forEach(row => {
+    const groups = Array.from(row.querySelectorAll<HTMLElement>('.mf-field-group[data-key]'));
+    if (!groups.length) return;
+    const pages = new Set(
+      groups
+        .map(group => keyToPage.get(String(group.getAttribute('data-key') || '').trim()))
+        .filter((page): page is number => page != null)
+    );
+    if (pages.size === 1) {
+      const onlyPage = Array.from(pages)[0];
+      row.hidden = onlyPage !== currentPage;
+      row.setAttribute('aria-hidden', onlyPage === currentPage ? 'false' : 'true');
+    } else {
+      row.hidden = false;
+      row.setAttribute('aria-hidden', 'false');
+    }
+  });
+}
+
 function isPremiumNativeCustomHtmlMode(): boolean {
   const settings = (config.schema!.settings || {}) as any;
   return isMultiStepCustomHtmlMode() && !!(settings.premiumNativePageBreak === true || settings.PremiumNativePageBreak === true);
@@ -2495,17 +2683,47 @@ function updatePremiumNativeShellState(): void {
     return Number.isFinite(n) ? n : idx;
   };
 
+  // Surviving schema pages retain their original premiumStepIndex (for
+  // example 1 and 4), so ordinal currentPage cannot address the frozen shell
+  // page directly.
+  const pageToStep = reconcilePremiumNativeStepper(root, fieldPages);
+  const activeStep = pageToStep[currentPage] ?? currentPage;
+  reconcilePremiumNativePageFields(root, fieldPages, pageToStep);
+  syncPremiumNativeStepChrome(root, totalPages, currentPage);
+
+  const activeFieldKeys = new Set<string>();
+  const collectActiveFieldKeys = (fields: any[]): void => {
+    (fields || []).forEach(field => {
+      const key = String(field?.key || field?.Key || '').trim();
+      if (key) activeFieldKeys.add(key);
+      const columns = field?.columns || field?.Columns;
+      if (Array.isArray(columns)) {
+        columns.forEach((column: any) => collectActiveFieldKeys(column?.fields || column?.Fields || []));
+      }
+    });
+  };
+  collectActiveFieldKeys(fieldPages[currentPage] || []);
+
+  const activeGenericPage = document.getElementById(`mf-page-${config.formId}-${currentPage}`);
   const pageEls = Array.from(root.querySelectorAll<HTMLElement>('.au-page,.bg-page,.ey-page,.fi-page,[data-mf-native-page]'));
   pageEls.forEach((el, idx) => {
     const pageIndex = attrIndex(el, 'data-step', idx);
-    el.classList.toggle('is-active', pageIndex === currentPage);
-    el.classList.toggle('is-done', pageIndex < currentPage);
+    const genericOwner = el.closest<HTMLElement>('.mf-page');
+    // A deleted page-break merges its fields into the preceding schema page.
+    // If a frozen shell page still contains rendered fields inside the active
+    // generated page, it remains visible as part of that merge.
+    const mergedFieldsAreActive = !!activeGenericPage
+      && genericOwner === activeGenericPage
+      && !!el.querySelector('.mf-field-group');
+    const containsActiveSchemaField = Array.from(el.querySelectorAll<HTMLElement>('[data-key]'))
+      .some(fieldEl => activeFieldKeys.has(String(fieldEl.getAttribute('data-key') || '').trim()));
+    const isActive = pageIndex === activeStep || mergedFieldsAreActive || containsActiveSchemaField;
+    el.classList.toggle('is-active', isActive);
+    el.classList.toggle('is-done', !isActive && pageIndex < activeStep);
   });
 
   // [StepBarReconcile v20260707] The static rail can have MORE items than schema pages
   // (page break deleted in the builder) — hide the dead item and map page→rail index.
-  const pageToStep = reconcilePremiumNativeStepper(root, fieldPages);
-  const activeStep = pageToStep[currentPage] ?? currentPage;
   const stepEls = Array.from(root.querySelectorAll<HTMLElement>('.au-step,.bg-step,.ey-step,.fi-step,[data-mf-native-step]'));
   stepEls.forEach((el, idx) => {
     const pageIndex = attrIndex(el, 'data-step', idx);
@@ -2521,8 +2739,7 @@ function updatePremiumNativeShellState(): void {
   });
 
   const pct = Math.max(0, Math.min(100, Math.round(((currentPage + 1) / Math.max(1, totalPages)) * 100)));
-  root.querySelectorAll<HTMLElement>('.au-progress i,[data-mf-native-progress-fill]').forEach(el => { el.style.width = pct + '%'; });
-  root.querySelectorAll<HTMLElement>('[data-bg-current],[data-ey-current],[data-mf-native-current]').forEach(el => { el.textContent = String(currentPage + 1); });
+  root.querySelectorAll<HTMLElement>('.au-progress i,.ey-progress i,.bg-progress i,.fi-progress i,[data-mf-native-progress-fill]').forEach(el => { el.style.width = pct + '%'; });
 
   premiumNativeActionButtons(root, 'back').forEach(btn => setButtonState(btn, currentPage > 0, currentPage === 0));
   premiumNativeActionButtons(root, 'next').forEach(btn => setButtonState(btn, currentPage < totalPages - 1, false));
@@ -2787,13 +3004,14 @@ function buildStepIndicator(): void {
     return;
   }
 
-  // [fix 20260630] ANY multi-step customHtml shell (premium au/bg/ey/fi-stepband OR a custom wizard)
-  // renders its OWN stepper inside the customHtml — NEVER also emit the generic .mf-steps (that
-  // produced a DOUBLE stepper). Broadened from premium-native to isMultiStepCustomHtmlMode so it also
-  // covers shells not flagged premiumNativePageBreak (e.g. euro-youth). The prior hide lived in
-  // updateNavigation gated on hasPremiumNativeCustomActions(), which races/misses; suppress
-  // deterministically at build time instead.
-  if (isMultiStepCustomHtmlMode()) { bar.innerHTML = ''; bar.style.display = 'none'; return; }
+  // Premium shells own their stepper, so never emit a duplicate generic rail.
+  // A regular customHtml shell has no such assumption: adding a schema page
+  // break must immediately give it MegaForm's generic navigation override.
+  if (customShellHasNativeStepNavigation()) {
+    bar.innerHTML = '';
+    bar.style.display = 'none';
+    return;
+  }
 
   // [B286 2026-06-26] Derive each step's label from the ACTUAL page structure (fieldPages) —
   // the page's leading Section heading, else a generic "Step N". The old logic counted pageBreak
@@ -2820,6 +3038,120 @@ function buildStepIndicator(): void {
   bar.style.display = '';
 }
 
+// ═══════════════════════════════════════════════════════════
+//  GATE NAV UNTIL VALID  [GateUntilValid v20260807-01]
+//  Keeps Next / Submit disabled until the CURRENT page passes the page-level
+//  rules. Every mock in the 2026-08 template batch behaves this way; the
+//  renderer only ever toggled these buttons on page bounds (setButtonState).
+//
+//  OPT-IN per form (settings.gateNavigationUntilValid) so no existing form
+//  changes behaviour, and OFF in the builder preview for the same reason
+//  goNextPage skips its gate there — the host must be able to page through a
+//  wizard without filling it in.
+//
+//  This is an AFFORDANCE, never an authorisation. goNextPage still calls
+//  validatePage, submit still calls validateForm, and the server still
+//  re-enforces everything. So it deliberately errs toward ENABLED: a rule it
+//  cannot read must never leave the user staring at a dead button. Any throw
+//  inside the gate unblocks every button it manages.
+// ═══════════════════════════════════════════════════════════
+const GATE_UNTIL_VALID_BADGE = 'GateUntilValid v20260807-01';
+if (typeof window !== 'undefined') (window as any).__MF_GATE_UNTIL_VALID_BADGE__ = GATE_UNTIL_VALID_BADGE;
+
+function gateNavigationEnabled(): boolean {
+  if (config.isPreview) return false;
+  const s: any = (config.schema && (config.schema as any).settings) || {};
+  return s.gateNavigationUntilValid === true || s.GateNavigationUntilValid === true;
+}
+
+/** Fields of the page the gate is judging. Single-page forms have no fieldPages
+ *  split, so fall back to the whole schema — Submit must gate there too (most of
+ *  the batch's mocks are single-page). */
+function gatedPageFields(): any[] {
+  const page = fieldPages[currentPage];
+  if (page && page.length) return page;
+  return ((config.schema && config.schema.fields) || []) as any[];
+}
+
+/** Mark ONE button blocked/unblocked. Handles both real <button>s (the generic
+ *  rail) and the premium shells' <a>/<div> action elements, which ignore
+ *  `disabled` entirely and need pointer-events + aria to actually be inert. */
+function applyGateState(btn: HTMLElement, blocked: boolean): void {
+  if ('disabled' in btn) (btn as HTMLButtonElement).disabled = blocked;
+  btn.setAttribute('aria-disabled', blocked ? 'true' : 'false');
+  btn.classList.toggle('mf-nav-blocked', blocked);
+  // Restore to '' rather than a literal value so a template's own CSS wins again
+  // once the page is valid.
+  btn.style.pointerEvents = blocked ? 'none' : '';
+  btn.style.opacity = blocked ? '.55' : '';
+  btn.style.cursor = blocked ? 'not-allowed' : '';
+}
+
+function gatedNavButtons(): HTMLElement[] {
+  const out: HTMLElement[] = [];
+  const push = (el: HTMLElement | null) => { if (el) out.push(el); };
+  const last = currentPage >= totalPages - 1;
+  if (!last) push(document.getElementById(`mf-btn-next-${config.formId}`));
+  if (last) push(document.getElementById(`mf-btn-submit-${config.formId}`));
+
+  const root = getPremiumNativeRoot();
+  if (root) {
+    premiumNativeActionButtons(root, last ? 'submit' : 'next').forEach(b => push(b));
+  }
+  // Step buttons authored into a custom shell (bindNavigation routes their
+  // clicks through goNextPage, so they need the same visual gate).
+  const container = document.getElementById(`mf-fields-container-${config.formId}`);
+  if (container && !last) {
+    container.querySelectorAll<HTMLElement>('[data-mf-step-forward="1"]').forEach(b => push(b));
+  }
+  return out;
+}
+
+function syncNavigationGate(): void {
+  let buttons: HTMLElement[] = [];
+  try {
+    buttons = gatedNavButtons();
+    if (!gateNavigationEnabled()) {
+      // Not opted in (or preview): make sure nothing stays blocked from a
+      // previous state, then leave every button alone.
+      buttons.forEach(b => { if (b.classList.contains('mf-nav-blocked')) applyGateState(b, false); });
+      return;
+    }
+    // `true` = also apply the Composite per-part rules. Without it the gate judges only a
+    // composite's combined value, which for password_confirm is just the first box.
+    const errors = pageFieldErrors(gatedPageFields(), config.formId, true);
+    const blocked = Object.keys(errors).length > 0;
+    buttons.forEach(b => applyGateState(b, blocked));
+
+    // The gate re-reads validity on every keystroke, so it also knows when a
+    // message painted by an earlier failed Next click has gone stale. Clearing
+    // is scoped to opted-in forms: elsewhere the mf-err-* spans keep their
+    // existing (sticky) behaviour.
+    gatedPageFields().forEach((f: any) => {
+      const key = f && (f.key || f.Key);
+      if (!key || errors[key]) return;
+      const errEl = document.getElementById(`mf-err-${key}`);
+      if (errEl && errEl.textContent) { errEl.textContent = ''; errEl.style.display = 'none'; }
+    });
+  } catch (_e) {
+    // Never leave a dead button behind a gate we could not evaluate.
+    try { buttons.forEach(b => applyGateState(b, false)); } catch (_e2) { /* defensive */ }
+  }
+}
+
+function bindNavigationGate(): void {
+  if (!gateNavigationEnabled()) return;
+  const form = document.getElementById(`mf-form-${config.formId}`)
+    || document.getElementById(`mf-form-wrapper-${config.formId}`);
+  if (!form || form.dataset.mfNavGateBound === '1') return;
+  form.dataset.mfNavGateBound = '1';
+  // input covers typing; change covers select/checkbox/radio/file and the
+  // widgets that dispatch change on their hidden value input.
+  form.addEventListener('input', () => syncNavigationGate());
+  form.addEventListener('change', () => syncNavigationGate());
+  syncNavigationGate();
+}
+
 function updateNavigation(): void {
   const prevBtn = document.getElementById(`mf-btn-prev-${config.formId}`);
   const nextBtn = document.getElementById(`mf-btn-next-${config.formId}`);
@@ -2835,6 +3167,9 @@ function updateNavigation(): void {
     if (bar) bar.style.display = 'none';
     updatePremiumNativeShellState();
     applyPaymentSubmitMode();
+    // [GateUntilValid] After updatePremiumNativeShellState, which re-enables the
+    // shell's own submit unconditionally.
+    syncNavigationGate();
     return;
   }
 
@@ -2846,9 +3181,24 @@ function updateNavigation(): void {
   if (prevBtn) prevBtn.style.display = currentPage > 0 ? '' : 'none';
   if (nextBtn) nextBtn.style.display = currentPage < totalPages - 1 ? '' : 'none';
   if (submitBtn) submitBtn.style.display = shellSubmitMode ? (currentPage === totalPages - 1 ? '' : 'none') : (customHtmlHasOwnSubmit ? 'none' : (currentPage === totalPages - 1 ? '' : 'none'));
-  // Any multi-step customHtml shell owns the stepper → always hide the generic .mf-steps
-  // (deterministic, not gated on action-button detection which races → no more double stepper).
-  if (isMultiStepCustomHtmlMode() && bar) bar.style.display = 'none';
+  // Hide the generic rail only when the rendered custom shell actually has a
+  // native one. Arbitrary customHtml forms use the schema-driven override.
+  if (customShellHasNativeStepNavigation() && bar) bar.style.display = 'none';
+  if (usesGenericCustomStepNavigation()) {
+    const wrapper = document.getElementById(`mf-form-wrapper-${config.formId}`);
+    const actions = document.querySelector<HTMLElement>(`#mf-form-${config.formId} .mf-form-actions`);
+    wrapper?.classList.add('mf-generic-step-nav-override');
+    if (syncAuthoredCustomStepActions()) {
+      // Reuse the template's own action row and button styling.
+      actions?.style.setProperty('display', 'none', 'important');
+    } else {
+      // The global duplicate-submit guard uses !important for single-page
+      // custom shells. This inline important is scoped to the multi-page
+      // fallback so its Next/Previous/Submit footer remains usable.
+      actions?.style.setProperty('display', 'flex', 'important');
+    }
+    syncGenericCustomStepFields();
+  }
   // [fix 20260701] Hide the generic Next/Prev/Submit DETERMINISTICALLY for premium-native shells.
   // bindPremiumNativeShellControls (init, same isPremiumNativeCustomHtmlMode gate) already bound the
   // shell's OWN au/bg/ey/fi-next/back/submit, so the generic actions are redundant. Dropped the racy
@@ -2871,6 +3221,7 @@ function updateNavigation(): void {
     });
   }
   syncTabbedStepNavState();
+  syncNavigationGate();
 }
 
 function bindNavigation(): void {
@@ -2880,6 +3231,31 @@ function bindNavigation(): void {
   document.getElementById(`mf-btn-next-${config.formId}`)?.addEventListener('click', () => {
     goNextPage();
   });
+  const container = document.getElementById(`mf-fields-container-${config.formId}`);
+  if (container && container.dataset.mfAuthoredStepActionsBound !== '1') {
+    container.dataset.mfAuthoredStepActionsBound = '1';
+    container.addEventListener('click', event => {
+      const target = event.target as HTMLElement;
+      if (target.closest('[data-mf-step-forward="1"]')) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        goNextPage();
+        return;
+      }
+      if (target.closest('[data-mf-step-back="1"]')) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        goPrevPage();
+      }
+    });
+    container.addEventListener('keydown', event => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      const target = event.target as HTMLElement;
+      if (!target.closest('[data-mf-step-back="1"]')) return;
+      event.preventDefault();
+      goPrevPage();
+    });
+  }
 }
 
 function goPrevPage(): void {
@@ -3228,7 +3604,13 @@ function bindSubmit(): void {
       const actions = wrapper.querySelector<HTMLElement>('.mf-form-actions');
       if (header) header.style.display = 'none';
       if (actions) {
-        if (totalPages > 1) actions.style.display = '';
+        if (usesAuthoredCustomStepActions()) {
+          actions.style.setProperty('display', 'none', 'important');
+        } else if (usesGenericCustomStepNavigation()) {
+          actions.style.setProperty('display', 'flex', 'important');
+        } else if (totalPages > 1) {
+          actions.style.display = '';
+        }
         else actions.style.display = customHtmlHasOwnSubmit ? 'none' : '';
       }
       wrapper.style.padding = '0'; wrapper.style.margin = '0';
@@ -3443,16 +3825,64 @@ function getPostSubmitConfig(): any {
   };
 }
 
-function resolvePostSubmitTokens(text: string, result: any): string {
+// [PostSubmitFieldTokens v20260807-01] A value the visitor just typed must never be
+// echoed back blindly. Suppress the internal/honeypot keys (same list the answer
+// summary skips) and anything that was entered into a password input — including a
+// Composite whose combined hidden value contains a password part.
+// Unreadable ⇒ treated as secret: refusing to echo is the safe direction.
+function postSubmitTokenIsSecret(key: string): boolean {
+  if (/^__mf|^mf_hp_|honeypot/i.test(key)) return true;
+  try {
+    // The token grammar below restricts `key` to [A-Za-z0-9_.-], so it cannot
+    // break out of this attribute selector.
+    const el = document.querySelector<HTMLInputElement>(`[name="${key}"]`);
+    if (!el) return false;
+    if (String(el.type || '').toLowerCase() === 'password') return true;
+    const grp = el.closest('.mf-field-group');
+    if (grp && grp.querySelector('input[type="password"]')) return true;
+  } catch (_e) {
+    return true;
+  }
+  return false;
+}
+
+// [PostSubmitFieldTokens v20260807-01] Adds {{field:<key>}} to the success screen.
+// Until now it resolved exactly three tokens and NO field value, so the line 7 of the
+// 2026-08 mocks want — "Thanks {{field:first_name}}, we emailed {{field:email}}" —
+// rendered the braces verbatim.
+//
+// Values come from lastSubmittedData (the same snapshot the answer summary uses) via
+// the same mfFmtSummaryValue formatter, so a checkbox array or a composite object
+// formats identically in both places. An unknown key resolves to '' rather than the
+// literal token: a typo must not put {{…}} on a visitor's screen.
+//
+// SECURITY (Docs/SECURITY_CODING_RULES.md §5):
+//  * ctx 'text' returns the RAW value. Every caller runs it through escHtml /
+//    nl2brHtml — that is what keeps the screen from becoming an HTML-injection sink,
+//    so any NEW caller must encode too.
+//  * ctx 'url' encodeURIComponent's each value. Not cosmetic: raw, a submitted value
+//    could inject query parameters, and a token at the START of redirectUrl would
+//    hand the visitor control of the whole destination (open redirect). Encoded,
+//    "https://evil.example" can no longer become a scheme + authority.
+function resolvePostSubmitTokens(text: string, result: any, ctx: 'text' | 'url' = 'text'): string {
   if (!text) return '';
   const subId = String(result && (result.submissionId || result.SubmissionId) || '');
   const settings: any = (config && config.schema && (config.schema as any).settings) || {};
   const formTitle = String(config?.title || settings.title || settings.Title || '');
   const formDesc  = String(config?.description || settings.description || settings.Description || '');
+  const enc = (v: string): string => (ctx === 'url' ? encodeURIComponent(v) : v);
+  const data: Record<string, unknown> = lastSubmittedData || {};
+  // Function replacements throughout: a '$' in a form title or a submitted value must
+  // stay a '$' and not be read as a $&/$1 backreference.
   return text
-    .replace(/\{\{\s*submission:id\s*\}\}/gi, subId)
-    .replace(/\{\{\s*form:title\s*\}\}/gi, formTitle)
-    .replace(/\{\{\s*form:description\s*\}\}/gi, formDesc);
+    .replace(/\{\{\s*submission:id\s*\}\}/gi, () => enc(subId))
+    .replace(/\{\{\s*form:title\s*\}\}/gi, () => enc(formTitle))
+    .replace(/\{\{\s*form:description\s*\}\}/gi, () => enc(formDesc))
+    .replace(/\{\{\s*field:([A-Za-z0-9_.\-]+)\s*\}\}/gi, (_m: string, key: string) => {
+      if (postSubmitTokenIsSecret(key)) return '';
+      if (!Object.prototype.hasOwnProperty.call(data, key)) return '';
+      return enc(mfFmtSummaryValue(data[key]));
+    });
 }
 
 function buildPostSubmitButtonsHtml(ps: any): string {
@@ -3598,6 +4028,11 @@ function buildSummaryRows(data: Record<string, unknown>, rowClass: string, hideE
   const rows: string[] = [];
   Object.keys(data || {}).forEach(k => {
     if (/^__mf|^mf_hp_|honeypot/i.test(k)) return;
+    // [PostSubmitFieldTokens v20260807-01] Pre-existing leak found while building the
+    // field tokens: showAnswerSummary printed EVERY submitted key in clear text, so a
+    // form with a password field put the visitor's password on the thank-you screen.
+    // Same guard the {{field:*}} tokens use.
+    if (postSubmitTokenIsSecret(k)) return;
     const v = mfFmtSummaryValue((data as any)[k]);
     if (v === '' && hideEmpty !== false) return;
     rows.push(
@@ -3749,7 +4184,9 @@ function showSuccess(result: any): void {
   const fid = config.formId;
   const ps = getPostSubmitConfig();
   const legacyRedirect = result.redirectUrl || result.RedirectUrl || '';
-  const effectiveRedirect = ps && ps.redirectUrl ? resolvePostSubmitTokens(ps.redirectUrl, result) : legacyRedirect;
+  // 'url' context: field values land in a destination the browser will navigate to,
+  // so each one is percent-encoded (see resolvePostSubmitTokens).
+  const effectiveRedirect = ps && ps.redirectUrl ? resolvePostSubmitTokens(ps.redirectUrl, result, 'url') : legacyRedirect;
 
   // Redirect modes short-circuit before any rendering (unchanged behaviour).
   if (ps && ps.mode === 'redirect-immediate' && effectiveRedirect) { window.location.href = effectiveRedirect; return; }

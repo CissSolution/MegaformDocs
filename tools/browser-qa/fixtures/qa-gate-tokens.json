@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "slug": "qa-gate-tokens",
+  "title": "QA — Nav gate + post-submit field tokens",
+  "description": "Internal QA fixture for GateUntilValid v20260807 and PostSubmitFieldTokens v20260807. Not a gallery template: keep it out of Samples/FormTemplates and out of the published manifest.",
+  "category": "QA",
+  "icon": "fa-flask",
+  "submitButtonText": "Submit",
+  "successMessage": "Submitted.",
+  "settings": {
+    "multiPage": true,
+    "showProgressBar": true,
+    "gateNavigationUntilValid": true,
+    "postSubmitExperience": {
+      "enabled": true,
+      "mode": "rich",
+      "title": "Thanks, {{field:first_name}}!",
+      "message": "TOKEN CHECKS\nemail -> [{{field:email}}]\nchoices (array) -> [{{field:topics}}]\npassword MUST be empty -> [{{field:account_password}}]\nunknown key MUST be empty -> [{{field:no_such_field}}]\nsubmission id -> [{{submission:id}}]\nform title -> [{{form:title}}]",
+      "showSubmissionId": true,
+      "submissionIdLabel": "Reference:",
+      "showAnswerSummary": true,
+      "hideEmptyAnswers": true,
+      "allowFillAgain": true,
+      "fillAgainLabel": "Run again",
+      "doneLabel": "Done"
+    }
+  },
+  "fields": [
+    {
+      "key": "step_one",
+      "type": "Section",
+      "label": "Page 1 — required + format rules",
+      "properties": { "pageBreak": false }
+    },
+    {
+      "key": "first_name",
+      "type": "Text",
+      "label": "First name",
+      "required": true,
+      "placeholder": " "
+    },
+    {
+      "key": "email",
+      "type": "Email",
+      "label": "Email",
+      "required": true,
+      "placeholder": " "
+    },
+    {
+      "key": "website",
+      "type": "Url",
+      "label": "Website (optional — an invalid value must re-block Next)",
+      "required": false,
+      "placeholder": " "
+    },
+    {
+      "key": "topics",
+      "type": "Checkbox",
+      "label": "Topics (array value, for the token formatter)",
+      "required": false,
+      "options": [
+        { "label": "Alpha", "value": "alpha" },
+        { "label": "Beta", "value": "beta" }
+      ]
+    },
+    {
+      "key": "step_two",
+      "type": "Section",
+      "label": "Page 2 — Submit stays blocked until this page is valid",
+      "properties": { "pageBreak": true }
+    },
+    {
+      "key": "account_password",
+      "type": "Composite",
+      "label": "Password (must never be echoed on the success screen)",
+      "required": true,
+      "widgetProps": { "preset": "password_confirm" }
+    },
+    {
+      "key": "notes",
+      "type": "Textarea",
+      "label": "Notes (optional)",
+      "required": false,
+      "placeholder": " "
+    }
+  ],
+  "customHtml": "",
+  "customCss": "",
+  "rules": [],
+  "workflow": null,
+  "premium": false
+}

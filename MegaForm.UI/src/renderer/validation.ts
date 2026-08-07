@@ -33,34 +33,132 @@ function requiredMsg(label: string): string {
   return vtr('form.field_required', '{field} is required', { field: String(label || '') });
 }
 
-/** Validate current page fields (multi-step) */
-export function validatePage(pageFields: FormField[], formId: number): boolean {
-  const flat = flattenFields(pageFields);
-  let valid = true;
-  clearFieldErrors(formId);
+// [GateUntilValid v20260807] Composite per-part rules — required part, matchKey (Confirm
+// Email / Confirm Password), mask completeness, pattern, numeric bounds, DOB age — lifted
+// out of validateForm as a READ-ONLY evaluation. validateForm still owns the painting; this
+// owns the rules, so the nav gate can enforce exactly what submit enforces instead of
+// growing a second, weaker copy.
+// Returns the FIRST failing part's message plus EVERY failing part key, because validateForm
+// rings all of them and that behaviour is preserved.
+interface CompositeFailure { msg: string; badPartKeys: string[]; }
 
-  flat.forEach(field => {
+function compositePartFailure(field: FormField): CompositeFailure | null {
+  const hiddenEl = document.querySelector<HTMLInputElement>(`input[type="hidden"][name="${field.key}"]`);
+  const grp = hiddenEl ? hiddenEl.closest('.mf-field-group') : null;
+  if (!grp) return null;
+
+  const cParts = compositePartsFor(field).filter((p: any) => !p.hidden);
+  // Snapshot every sibling value BEFORE judging, so matchKey and dateAge can compare parts.
+  const siblingValues: Record<string, string> = {};
+  cParts.forEach((p: any) => {
+    const el = grp.querySelector<HTMLInputElement>(`[data-mf-part="${p.key}"]`);
+    siblingValues[p.key] = el ? String(el.value || '') : '';
+  });
+
+  let msg = '';
+  const badPartKeys: string[] = [];
+  cParts.forEach((p: any) => {
+    if (!grp.querySelector<HTMLElement>(`[data-mf-part="${p.key}"]`)) return;
+    const pv = siblingValues[p.key];
+    const lbl = compositePartLabel(p);
+    let e = '';
+    if (p.required && !pv) e = requiredMsg(lbl);
+    else if (pv) {
+      // [Composite v1.4] numeric VALUE bounds (distinct from char-length min/maxLength)
+      // and mask completeness join the existing length/pattern checks.
+      const isNum = p.type === 'number' || p.min != null || p.max != null;
+      if (p.minLength && pv.length < p.minLength) {
+        e = vtr('form.min_length', 'Minimum {n} characters', { n: String(p.minLength), min: String(p.minLength) });
+      } else if (p.maxLength && pv.length > p.maxLength) {
+        e = vtr('form.max_length', 'Maximum {n} characters', { n: String(p.maxLength), max: String(p.maxLength) });
+      } else if (isNum) {
+        const num = Number(pv);
+        if (Number.isNaN(num)) e = vtr('form.invalid_number', 'Must be a number');
+        else if (p.min != null && num < Number(p.min)) e = vtr('form.min_value', 'Minimum {n}', { n: String(p.min) });
+        else if (p.max != null && num > Number(p.max)) e = vtr('form.max_value', 'Maximum {n}', { n: String(p.max) });
+      } else if (p.mask && pv.length < String(p.mask).length) {
+        e = p.patternMsg || vtr('form.incomplete', 'Incomplete — please fill all digits');
+      } else if (p.pattern) {
+        try { if (!new RegExp(p.pattern).test(pv)) e = p.patternMsg || vtr('form.invalid_format', 'Invalid format'); } catch { /* bad regex */ }
+      }
+    }
+    // [Composite v1.4] Cross-part match. Runs even when pv is empty so a required confirm
+    // part reports "required" before it reports "does not match".
+    if (!e && p.matchKey) {
+      if (pv !== siblingValues[p.matchKey]) {
+        e = p.matchMsg || vtr('form.match', '{field} does not match', { field: String(lbl || '') });
+      }
+    }
+    // [Composite v1.4] DOB age validation (uses the sibling day/month/year values).
+    if (!e && p.dateAge) {
+      const age = calculateAge(siblingValues.day, siblingValues.month, siblingValues.year);
+      if (!Number.isNaN(age)) {
+        if (p.minAge != null && age < Number(p.minAge)) e = vtr('form.min_age', 'Must be at least {n} years old', { n: String(p.minAge) });
+        else if (p.maxAge != null && age > Number(p.maxAge)) e = vtr('form.max_age', 'Must be at most {n} years old', { n: String(p.maxAge) });
+      }
+    }
+    if (e) {
+      badPartKeys.push(p.key);
+      if (!msg) msg = lbl ? lbl + ': ' + e : e;
+    }
+  });
+  return msg ? { msg, badPartKeys } : null;
+}
+
+// [GateUntilValid v20260807] The page-level rule set, extracted as a READ-ONLY pass so the
+// painting gate (validatePage, on Next/Continue) and the silent gate that drives the disabled
+// state of Next/Submit (syncNavigationGate in index.ts) can never drift apart. Two copies of a
+// rule set in this codebase has already cost us once — role-visibility grew two rule systems and
+// only one of them was known to callers. Returns { key: message } for the fields that FAIL;
+// writes nothing to the DOM.
+//
+// Note on precedence: `required` short-circuits the format checks. That is not a behaviour change
+// — the Email/Url checks require a truthy value, so an empty required field could never reach them.
+export function pageFieldErrors(
+  pageFields: FormField[],
+  formId: number,
+  includeCompositeParts = false,
+): Record<string, string> {
+  const errors: Record<string, string> = {};
+  flattenFields(pageFields).forEach(field => {
     if (['Html', 'Section', 'Hidden', 'Row'].includes(field.type)) return;
     if (field.showIf && !evaluateCondition(field.showIf as any)) return;
 
     const val = getFieldValue(field.key, field.type, formId);
     const effType = effectiveFieldType(field);   // [Unify v2] scalar-preset Composite → base type
-    const errEl = document.getElementById(`mf-err-${field.key}`);
 
     if (field.required && (!val || (Array.isArray(val) && val.length === 0))) {
-      if (errEl) { errEl.textContent = requiredMsg(field.label); errEl.style.display = 'block'; }
-      valid = false;
+      errors[field.key] = requiredMsg(field.label);
+    } else if (effType === 'Email' && val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(val))) {
+      errors[field.key] = vtr('form.invalid_email', 'Invalid email');
+    } else if (effType === 'Url' && val && !/^https?:\/\/.+/.test(String(val))) {
+      errors[field.key] = vtr('form.invalid_url', 'Please enter a valid URL starting with http:// or https://');
     }
-    if (effType === 'Email' && val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(val))) {
-      if (errEl) { errEl.textContent = vtr('form.invalid_email', 'Invalid email'); errEl.style.display = 'block'; }
-      valid = false;
-    }
-    if (effType === 'Url' && val && !/^https?:\/\/.+/.test(String(val))) {
-      if (errEl) { errEl.textContent = vtr('form.invalid_url', 'Please enter a valid URL starting with http:// or https://'); errEl.style.display = 'block'; }
-      valid = false;
+
+    // Opt-in, and only for the nav gate. A Composite hides its per-part rules behind ONE
+    // combined value: password_confirm combines to `v.password`, so judging the combined
+    // value alone declared the field valid the moment the FIRST box had text — the gate
+    // unblocked Submit on a password that did not match its confirmation. validatePage
+    // keeps its original (combined-value-only) semantics so no existing form's Next
+    // button gets stricter; the gate asks for the full rule set.
+    if (includeCompositeParts && !errors[field.key] && field.type === 'Composite') {
+      const fail = compositePartFailure(field);
+      if (fail) errors[field.key] = fail.msg;
     }
   });
-  return valid;
+  return errors;
+}
+
+/** Validate current page fields (multi-step) */
+export function validatePage(pageFields: FormField[], formId: number): boolean {
+  const errors = pageFieldErrors(pageFields, formId);
+  clearFieldErrors(formId);
+
+  Object.keys(errors).forEach(key => {
+    const errEl = document.getElementById(`mf-err-${key}`);
+    if (errEl) { errEl.textContent = errors[key]; errEl.style.display = 'block'; }
+  });
+  return Object.keys(errors).length === 0;
 }
 
 /** Full form validation */
@@ -116,67 +214,19 @@ export function validateForm(config: RendererConfig): boolean {
       const hiddenEl = document.querySelector<HTMLInputElement>(`input[type="hidden"][name="${field.key}"]`);
       const grp = hiddenEl ? hiddenEl.closest('.mf-field-group') : null;
       if (grp) {
-        const cParts = compositePartsFor(field).filter((p: any) => !p.hidden);
-        // Snapshot sibling values so matchKey validation can compare parts.
-        const siblingValues: Record<string, string> = {};
-        cParts.forEach((p: any) => {
-          const el = grp.querySelector<HTMLInputElement>(`[data-mf-part="${p.key}"]`);
-          siblingValues[p.key] = el ? String(el.value || '') : '';
-        });
-        let partErr = '';
-        let firstBadPart: HTMLElement | null = null;
-        cParts.forEach((p: any) => {
-          const el = grp.querySelector<HTMLElement>(`[data-mf-part="${p.key}"]`);
-          if (!el) return;
-          el.classList.remove('mf-error');
-          const pv = siblingValues[p.key];
-          const lbl = compositePartLabel(p);
-          let e = '';
-          if (p.required && !pv) e = requiredMsg(lbl);
-          else if (pv) {
-            // [Composite v1.4] numeric VALUE bounds (distinct from char-length min/maxLength)
-            // and mask completeness join the existing length/pattern checks.
-            const isNum = p.type === 'number' || p.min != null || p.max != null;
-            if (p.minLength && pv.length < p.minLength) {
-              e = vtr('form.min_length', 'Minimum {n} characters', { n: String(p.minLength), min: String(p.minLength) });
-            } else if (p.maxLength && pv.length > p.maxLength) {
-              e = vtr('form.max_length', 'Maximum {n} characters', { n: String(p.maxLength), max: String(p.maxLength) });
-            } else if (isNum) {
-              const num = Number(pv);
-              if (Number.isNaN(num)) e = vtr('form.invalid_number', 'Must be a number');
-              else if (p.min != null && num < Number(p.min)) e = vtr('form.min_value', 'Minimum {n}', { n: String(p.min) });
-              else if (p.max != null && num > Number(p.max)) e = vtr('form.max_value', 'Maximum {n}', { n: String(p.max) });
-            } else if (p.mask && pv.length < String(p.mask).length) {
-              e = p.patternMsg || vtr('form.incomplete', 'Incomplete — please fill all digits');
-            } else if (p.pattern) {
-              try { if (!new RegExp(p.pattern).test(pv)) e = p.patternMsg || vtr('form.invalid_format', 'Invalid format'); } catch { /* bad regex */ }
-            }
-          }
-          // [Composite v1.4] Cross-part match (Confirm Email / Confirm Password).
-          // Runs even when pv is empty so that a required confirm part correctly reports
-          // the required message before the mismatch message.
-          if (!e && p.matchKey) {
-            const siblingVal = siblingValues[p.matchKey];
-            if (pv !== siblingVal) {
-              e = p.matchMsg || vtr('form.match', '{field} does not match', { field: String(lbl || '') });
-            }
-          }
-          // [Composite v1.4] DOB age validation (uses sibling day/month/year values).
-          if (!e && p.dateAge) {
-            const age = calculateAge(siblingValues.day, siblingValues.month, siblingValues.year);
-            if (!Number.isNaN(age)) {
-              if (p.minAge != null && age < Number(p.minAge)) e = vtr('form.min_age', 'Must be at least {n} years old', { n: String(p.minAge) });
-              else if (p.maxAge != null && age > Number(p.maxAge)) e = vtr('form.max_age', 'Must be at most {n} years old', { n: String(p.maxAge) });
-            }
-          }
-          if (e) {
+        // The rules themselves live in compositePartFailure so the nav gate applies the
+        // same ones; this block owns only the painting.
+        grp.querySelectorAll<HTMLElement>('[data-mf-part]').forEach(el => el.classList.remove('mf-error'));
+        const fail = compositePartFailure(field);
+        if (fail) {
+          if (!errors[field.key]) errors[field.key] = fail.msg;
+          fail.badPartKeys.forEach(pk => {
+            const el = grp.querySelector<HTMLElement>(`[data-mf-part="${pk}"]`);
+            if (!el) return;
             el.classList.add('mf-error');
-            if (!partErr) { partErr = lbl ? lbl + ': ' + e : e; }
-            if (!firstBadPart) firstBadPart = el;
-          }
-        });
-        if (partErr && !errors[field.key]) errors[field.key] = partErr;
-        if (firstBadPart && !firstError) firstError = firstBadPart;
+            if (!firstError) firstError = el;
+          });
+        }
       }
     }
 
@@ -227,15 +277,22 @@ export function collectFormData(config: RendererConfig): Record<string, unknown>
     if (['Html', 'Section', 'Row'].includes(field.type)) return;
     if (field.showIf && !evaluateCondition(field.showIf as any)) return;
     if (field.type === 'File') {
-      // [FileRequiredValueFix v20260502-08] Previously File fields were skipped
-      // entirely → server's `Required && IsNullOrWhiteSpace(value)` always
-      // tripped because the data dict had no key for the field. Result: forms
-      // with a required File (e.g. "Transcript") could never submit even when
-      // the user had picked a file. Now include selected filename(s) as the
-      // value so the required check passes; actual file payload upload is
-      // handled out-of-band (or by a future multipart submit). Reads input.files
-      // for the field's <input type="file" name="<key>">.
-      const fileInput = document.querySelector<HTMLInputElement>(`input[type="file"][name="${field.key}"]`);
+      // [ReceiptUploadFix v20260713-01] The dropzone uploader stores the uploaded-file
+      // metadata JSON in the field's hidden value input — send THAT, it is what the
+      // server's PersistSubmissionFiles* reads to record MF_Files rows against the
+      // submission. Without it the submission saved file-less even after a successful
+      // upload (the old code only sent picked filenames, and only when the file input
+      // carried a name attribute — the SSR markup keeps the name on the hidden input).
+      const hiddenVal = document.querySelector<HTMLInputElement>(`input[type="hidden"][name="${field.key}"]`)?.value || '';
+      if (hiddenVal.trim()) {
+        data[field.key] = hiddenVal;
+        return;
+      }
+      // [FileRequiredValueFix v20260502-08] Fallback: include selected filename(s) so a
+      // required File field passes the server's required check even when no upload
+      // metadata exists (e.g. upload endpoint unavailable).
+      const fileInput = document.querySelector<HTMLInputElement>(
+        `input[type="file"][name="${field.key}"], input[type="file"][data-field-key="${field.key}"]`);
       if (fileInput && fileInput.files && fileInput.files.length > 0) {
         const names: string[] = [];
         for (let i = 0; i < fileInput.files.length; i++) names.push(fileInput.files[i].name);

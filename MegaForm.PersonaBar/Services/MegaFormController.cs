@@ -125,7 +125,7 @@ namespace MegaForm.PersonaBar.Services
                     submissions = counts.ContainsKey(f.FormId) ? counts[f.FormId] : 0,
                     modifiedUtc = f.UpdatedOnUtc ?? f.CreatedOnUtc,
                     builderUrl = MegaFormHostPageResolver.BuildControlUrl(host, "Edit", f.FormId),
-                    submissionsUrl = MegaFormHostPageResolver.BuildControlUrl(host, "Submissions", f.FormId)
+                    submissionsUrl = MegaFormHostPageResolver.BuildSubmissionsUrl(host, f.FormId)
                 }).ToArray();
 
                 return Request.CreateResponse(HttpStatusCode.OK, new
@@ -162,7 +162,7 @@ namespace MegaForm.PersonaBar.Services
                 var search = (searchTerm ?? string.Empty).Trim();
 
                 var pages = TabController.Instance.GetTabsByPortal(PortalId).Values
-                    .Where(t => t != null && !t.IsDeleted && !t.DisableLink && !t.IsSystem)
+                    .Where(t => IsAllowedPlacementTab(t))
                     .Where(t => search.Length == 0 ||
                                 (t.TabName ?? string.Empty).IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0 ||
                                 (t.TabPath ?? string.Empty).IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0)
@@ -201,6 +201,9 @@ namespace MegaForm.PersonaBar.Services
                 var tab = TabController.Instance.GetTab(request.TabId, PortalId, false);
                 if (tab == null || tab.IsDeleted)
                     return Request.CreateErrorResponse(HttpStatusCode.NotFound, "That page is not in this site.");
+                if (!IsAllowedPlacementTab(tab))
+                    return Request.CreateErrorResponse(HttpStatusCode.BadRequest,
+                        "MegaForm cannot place forms on system, login, registration, or error pages.");
 
                 var form = FormRepository.GetForm(request.FormId);
                 if (form == null || form.PortalId != PortalId)
@@ -270,6 +273,17 @@ namespace MegaForm.PersonaBar.Services
             public int FormId { get; set; }
             public int TabId { get; set; }
             public string Pane { get; set; }
+        }
+
+        private static bool IsAllowedPlacementTab(TabInfo tab)
+        {
+            if (tab == null || tab.IsDeleted || tab.DisableLink || tab.IsSystem) return false;
+
+            var label = ((tab.TabName ?? string.Empty) + " " + (tab.TabPath ?? string.Empty)).ToLowerInvariant();
+            if (label.Contains("404") || label.Contains("500") || label.Contains("error page")) return false;
+            if (label.Contains("login") || label.Contains("register") || label.Contains("registration")) return false;
+
+            return true;
         }
     }
 }
