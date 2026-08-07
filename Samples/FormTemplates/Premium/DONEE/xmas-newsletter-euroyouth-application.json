@@ -1,0 +1,653 @@
+{
+  "version": "1.0",
+  "slug": "xmas-newsletter-euroyouth-application",
+  "title": "Christmas Newsletter — EuroYouth Application",
+  "description": "Crimson and gold festive application on cream: underlined fields, gold rule work, programme cards and chip interests. Gated submit and a name-aware thank-you.",
+  "category": "application",
+  "categories": [
+    "application",
+    "premium",
+    "seasonal"
+  ],
+  "icon": "gift",
+  "submitButtonText": "Subscribe & Apply",
+  "successMessage": "Application received. Watch your inbox for the Christmas edition.",
+  "settings": {
+    "theme": "custom",
+    "multiPage": false,
+    "showProgressBar": false,
+    "customContent": {},
+    "customScripts": {},
+    "customHtml": "<div class='mfp mfp-xnl mfp-native-generated' data-mf-flexgrid=\"locked\" style=\"background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;box-shadow:none!important\"><div class='xnl-card'><div class='xnl-hero'><div class='xnl-hero-texture' role='presentation'></div><div class='xnl-hero-inner'><div class='xnl-hero-emblem'><i class='fa fa-gift'></i></div><div class='xnl-hero-eyebrow'>Season of</div><h1 class='xnl-hero-display'>Giving</h1><div class='xnl-hero-hairline'><span class='xnl-hr'></span><span class='xnl-hr-word'>est. 2026</span><span class='xnl-hr'></span></div><div class='xnl-hero-sub'>The EuroYouth Christmas Edition</div></div></div><div class='xnl-tagline'><span class='xnl-dot'></span><span class='xnl-tagline-text'>Twelve Programmes · One Europe</span><span class='xnl-dot'></span></div><div class='xnl-promo'><div class='xnl-promo-kicker'>Inside this issue</div><div class='xnl-promo-headline'>Winter Intake</div><div class='xnl-promo-hr'></div><p class='xnl-promo-body'>Programme spots for the winter intake, host-family stories from Florence and Lisbon, and the 2026 mobility calendar — delivered before the new year.</p></div><div class='xnl-body'><div class='xnl-caption'>Pick a Programme</div><label class='xnl-field'><span>Programme</span>{{field:programme}}</label><div class='xnl-caption'>Your Details</div><div class='xnl-grid xnl-2'><label class='xnl-field'><span>First name *</span>{{field:first_name}}</label><label class='xnl-field'><span>Last name *</span>{{field:last_name}}</label><label class='xnl-field'><span>Email *</span>{{field:email}}</label><label class='xnl-field'><span>Phone</span>{{field:phone}}</label><label class='xnl-field'><span>Birth year</span>{{field:birth_year}}</label><label class='xnl-field'><span>Country *</span>{{field:country}}</label></div><div class='xnl-caption'>Timing &amp; Stay</div><div class='xnl-grid xnl-2'><label class='xnl-field'><span>Start month *</span>{{field:start_month}}</label><label class='xnl-field'><span>Duration (months)</span>{{field:duration}}</label><label class='xnl-field'><span>Language level</span>{{field:language_level}}</label></div><label class='xnl-field'><span>Accommodation</span>{{field:accommodation}}</label><div class='xnl-caption'>What to Send You</div><label class='xnl-field'><span>Interests</span>{{field:interests}}</label><div class='xnl-caption'>Tell Us More</div><label class='xnl-field'><span>Motivation</span>{{field:motivation}}</label><div class='xnl-consent'><label class='xnl-field xnl-consent-item'><span>Newsletter</span>{{field:newsletter}}</label><label class='xnl-field xnl-consent-item'><span>Terms</span>{{field:terms}}</label></div><button class='xnl-submit' type='submit'>Subscribe &amp; Apply</button></div></div></div>",
+    "customCss": ".mfp.mfp-xnl {--xnl-primary:#C41E3A;--xnl-accent:#9B0E25;--xnl-surface:var(--mf-page-surface,var(--mf-preset-surface,#FFF9F5));--xnl-text:var(--mf-page-text,var(--mf-preset-text,#2D1F1F));--xnl-muted:var(--mf-page-muted,var(--mf-preset-muted,#7A5C5C));--xnl-border:var(--mf-page-border,var(--mf-preset-border,#E8D5D0));--xnl-on-primary:var(--mf-preset-on-primary,#FFFFFF);--xnl-deco:#D4A017;--xnl-page:#F5EDE8;--xnl-fill:color-mix(in srgb, var(--xnl-text) 5%, var(--xnl-surface));--xnl-fill-strong:color-mix(in srgb, var(--xnl-text) 9%, var(--xnl-surface));--xnl-soft:color-mix(in srgb, var(--xnl-primary) 12%, var(--xnl-surface));--xnl-hairline:color-mix(in srgb, var(--xnl-text) 12%, var(--xnl-surface));}.mfp.mfp-xnl {background:transparent!important;border:0!important;padding:0!important;font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif}.mfp.mfp-xnl .xnl-card{overflow:hidden;border-radius:4px;max-width:620px;margin:0 auto;background:var(--xnl-surface);box-shadow:0 2px 14px color-mix(in srgb, var(--xnl-text) 10%, transparent)}.mfp.mfp-xnl .xnl-hero{position:relative;overflow:hidden;text-align:center;padding:38px 30px 30px;background:linear-gradient(165deg,#C41E3A 0%,#9B0E25 100%)}.mfp.mfp-xnl .xnl-hero-texture{position:absolute;inset:0;background-image:url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20600%20240%22%3E%3Cg%20transform%3D%22translate(40%2C30)%22%20opacity%3D%220.6%22%20stroke%3D%22%23FFF3CC%22%20stroke-width%3D%221%22%20fill%3D%22none%22%3E%3Cline%20x1%3D%22-6%22%20y1%3D%220%22%20x2%3D%226%22%20y2%3D%220%22%2F%3E%3Cline%20x1%3D%220%22%20y1%3D%22-6%22%20x2%3D%220%22%20y2%3D%226%22%2F%3E%3Cline%20x1%3D%22-4.2%22%20y1%3D%22-4.2%22%20x2%3D%224.2%22%20y2%3D%224.2%22%2F%3E%3Cline%20x1%3D%224.2%22%20y1%3D%22-4.2%22%20x2%3D%22-4.2%22%20y2%3D%224.2%22%2F%3E%3C%2Fg%3E%3Cg%20transform%3D%22translate(110%2C64)%22%20opacity%3D%220.4%22%20stroke%3D%22%23FFF3CC%22%20stroke-width%3D%221%22%20fill%3D%22none%22%3E%3Cline%20x1%3D%22-6%22%20y1%3D%220%22%20x2%3D%226%22%20y2%3D%220%22%2F%3E%3Cline%20x1%3D%220%22%20y1%3D%22-6%22%20x2%3D%220%22%20y2%3D%226%22%2F%3E%3Cline%20x1%3D%22-4.2%22%20y1%3D%22-4.2%22%20x2%3D%224.2%22%20y2%3D%224.2%22%2F%3E%3Cline%20x1%3D%224.2%22%20y1%3D%22-4.2%22%20x2%3D%22-4.2%22%20y2%3D%224.2%22%2F%3E%3C%2Fg%3E%3Cg%20transform%3D%22translate(210%2C24)%22%20opacity%3D%220.5%22%20stroke%3D%22%23FFF3CC%22%20stroke-width%3D%221%22%20fill%3D%22none%22%3E%3Cline%20x1%3D%22-6%22%20y1%3D%220%22%20x2%3D%226%22%20y2%3D%220%22%2F%3E%3Cline%20x1%3D%220%22%20y1%3D%22-6%22%20x2%3D%220%22%20y2%3D%226%22%2F%3E%3Cline%20x1%3D%22-4.2%22%20y1%3D%22-4.2%22%20x2%3D%224.2%22%20y2%3D%224.2%22%2F%3E%3Cline%20x1%3D%224.2%22%20y1%3D%22-4.2%22%20x2%3D%22-4.2%22%20y2%3D%224.2%22%2F%3E%3C%2Fg%3E%3Cg%20transform%3D%22translate(300%2C50)%22%20opacity%3D%220.35%22%20stroke%3D%22%23FFF3CC%22%20stroke-width%3D%221%22%20fill%3D%22none%22%3E%3Cline%20x1%3D%22-6%22%20y1%3D%220%22%20x2%3D%226%22%20y2%3D%220%22%2F%3E%3Cline%20x1%3D%220%22%20y1%3D%22-6%22%20x2%3D%220%22%20y2%3D%226%22%2F%3E%3Cline%20x1%3D%22-4.2%22%20y1%3D%22-4.2%22%20x2%3D%224.2%22%20y2%3D%224.2%22%2F%3E%3Cline%20x1%3D%224.2%22%20y1%3D%22-4.2%22%20x2%3D%22-4.2%22%20y2%3D%224.2%22%2F%3E%3C%2Fg%3E%3Cg%20transform%3D%22translate(400%2C28)%22%20opacity%3D%220.5%22%20stroke%3D%22%23FFF3CC%22%20stroke-width%3D%221%22%20fill%3D%22none%22%3E%3Cline%20x1%3D%22-6%22%20y1%3D%220%22%20x2%3D%226%22%20y2%3D%220%22%2F%3E%3Cline%20x1%3D%220%22%20y1%3D%22-6%22%20x2%3D%220%22%20y2%3D%226%22%2F%3E%3Cline%20x1%3D%22-4.2%22%20y1%3D%22-4.2%22%20x2%3D%224.2%22%20y2%3D%224.2%22%2F%3E%3Cline%20x1%3D%224.2%22%20y1%3D%22-4.2%22%20x2%3D%22-4.2%22%20y2%3D%224.2%22%2F%3E%3C%2Fg%3E%3Cg%20transform%3D%22translate(500%2C60)%22%20opacity%3D%220.4%22%20stroke%3D%22%23FFF3CC%22%20stroke-width%3D%221%22%20fill%3D%22none%22%3E%3Cline%20x1%3D%22-6%22%20y1%3D%220%22%20x2%3D%226%22%20y2%3D%220%22%2F%3E%3Cline%20x1%3D%220%22%20y1%3D%22-6%22%20x2%3D%220%22%20y2%3D%226%22%2F%3E%3Cline%20x1%3D%22-4.2%22%20y1%3D%22-4.2%22%20x2%3D%224.2%22%20y2%3D%224.2%22%2F%3E%3Cline%20x1%3D%224.2%22%20y1%3D%22-4.2%22%20x2%3D%22-4.2%22%20y2%3D%224.2%22%2F%3E%3C%2Fg%3E%3Cg%20transform%3D%22translate(560%2C110)%22%20opacity%3D%220.5%22%20stroke%3D%22%23FFF3CC%22%20stroke-width%3D%221%22%20fill%3D%22none%22%3E%3Cline%20x1%3D%22-6%22%20y1%3D%220%22%20x2%3D%226%22%20y2%3D%220%22%2F%3E%3Cline%20x1%3D%220%22%20y1%3D%22-6%22%20x2%3D%220%22%20y2%3D%226%22%2F%3E%3Cline%20x1%3D%22-4.2%22%20y1%3D%22-4.2%22%20x2%3D%224.2%22%20y2%3D%224.2%22%2F%3E%3Cline%20x1%3D%224.2%22%20y1%3D%22-4.2%22%20x2%3D%22-4.2%22%20y2%3D%224.2%22%2F%3E%3C%2Fg%3E%3Cg%20transform%3D%22translate(40%2C150)%22%20opacity%3D%220.4%22%20stroke%3D%22%23FFF3CC%22%20stroke-width%3D%221%22%20fill%3D%22none%22%3E%3Cline%20x1%3D%22-6%22%20y1%3D%220%22%20x2%3D%226%22%20y2%3D%220%22%2F%3E%3Cline%20x1%3D%220%22%20y1%3D%22-6%22%20x2%3D%220%22%20y2%3D%226%22%2F%3E%3Cline%20x1%3D%22-4.2%22%20y1%3D%22-4.2%22%20x2%3D%224.2%22%20y2%3D%224.2%22%2F%3E%3Cline%20x1%3D%224.2%22%20y1%3D%22-4.2%22%20x2%3D%22-4.2%22%20y2%3D%224.2%22%2F%3E%3C%2Fg%3E%3Cg%20transform%3D%22translate(540%2C170)%22%20opacity%3D%220.45%22%20stroke%3D%22%23FFF3CC%22%20stroke-width%3D%221%22%20fill%3D%22none%22%3E%3Cline%20x1%3D%22-6%22%20y1%3D%220%22%20x2%3D%226%22%20y2%3D%220%22%2F%3E%3Cline%20x1%3D%220%22%20y1%3D%22-6%22%20x2%3D%220%22%20y2%3D%226%22%2F%3E%3Cline%20x1%3D%22-4.2%22%20y1%3D%22-4.2%22%20x2%3D%224.2%22%20y2%3D%224.2%22%2F%3E%3Cline%20x1%3D%224.2%22%20y1%3D%22-4.2%22%20x2%3D%22-4.2%22%20y2%3D%224.2%22%2F%3E%3C%2Fg%3E%3Cg%20transform%3D%22translate(90%2C200)%22%20opacity%3D%220.35%22%20stroke%3D%22%23FFF3CC%22%20stroke-width%3D%221%22%20fill%3D%22none%22%3E%3Cline%20x1%3D%22-6%22%20y1%3D%220%22%20x2%3D%226%22%20y2%3D%220%22%2F%3E%3Cline%20x1%3D%220%22%20y1%3D%22-6%22%20x2%3D%220%22%20y2%3D%226%22%2F%3E%3Cline%20x1%3D%22-4.2%22%20y1%3D%22-4.2%22%20x2%3D%224.2%22%20y2%3D%224.2%22%2F%3E%3Cline%20x1%3D%224.2%22%20y1%3D%22-4.2%22%20x2%3D%22-4.2%22%20y2%3D%224.2%22%2F%3E%3C%2Fg%3E%3Cg%20transform%3D%22translate(480%2C210)%22%20opacity%3D%220.4%22%20stroke%3D%22%23FFF3CC%22%20stroke-width%3D%221%22%20fill%3D%22none%22%3E%3Cline%20x1%3D%22-6%22%20y1%3D%220%22%20x2%3D%226%22%20y2%3D%220%22%2F%3E%3Cline%20x1%3D%220%22%20y1%3D%22-6%22%20x2%3D%220%22%20y2%3D%226%22%2F%3E%3Cline%20x1%3D%22-4.2%22%20y1%3D%22-4.2%22%20x2%3D%224.2%22%20y2%3D%224.2%22%2F%3E%3Cline%20x1%3D%224.2%22%20y1%3D%22-4.2%22%20x2%3D%22-4.2%22%20y2%3D%224.2%22%2F%3E%3C%2Fg%3E%3Cg%20transform%3D%22translate(300%2C220)%22%20opacity%3D%220.3%22%20stroke%3D%22%23FFF3CC%22%20stroke-width%3D%221%22%20fill%3D%22none%22%3E%3Cline%20x1%3D%22-6%22%20y1%3D%220%22%20x2%3D%226%22%20y2%3D%220%22%2F%3E%3Cline%20x1%3D%220%22%20y1%3D%22-6%22%20x2%3D%220%22%20y2%3D%226%22%2F%3E%3Cline%20x1%3D%22-4.2%22%20y1%3D%22-4.2%22%20x2%3D%224.2%22%20y2%3D%224.2%22%2F%3E%3Cline%20x1%3D%224.2%22%20y1%3D%22-4.2%22%20x2%3D%22-4.2%22%20y2%3D%224.2%22%2F%3E%3C%2Fg%3E%3Cg%20transform%3D%22translate(180%2C180)%22%20opacity%3D%220.4%22%20stroke%3D%22%23FFF3CC%22%20stroke-width%3D%221%22%20fill%3D%22none%22%3E%3Cline%20x1%3D%22-6%22%20y1%3D%220%22%20x2%3D%226%22%20y2%3D%220%22%2F%3E%3Cline%20x1%3D%220%22%20y1%3D%22-6%22%20x2%3D%220%22%20y2%3D%226%22%2F%3E%3Cline%20x1%3D%22-4.2%22%20y1%3D%22-4.2%22%20x2%3D%224.2%22%20y2%3D%224.2%22%2F%3E%3Cline%20x1%3D%224.2%22%20y1%3D%22-4.2%22%20x2%3D%22-4.2%22%20y2%3D%224.2%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E\");background-size:cover;background-repeat:no-repeat;pointer-events:none}.mfp.mfp-xnl .xnl-hero-inner{position:relative}.mfp.mfp-xnl .xnl-hero-emblem{width:44px;height:44px;margin:0 auto 18px;border-radius:999px;display:flex;align-items:center;justify-content:center;border:1px solid var(--xnl-deco);background:rgba(255,255,255,.07);color:var(--xnl-deco);font-size:18px}.mfp.mfp-xnl .xnl-hero-eyebrow{margin:0 0 12px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4em;color:rgba(255,243,204,.75)}.mfp.mfp-xnl .xnl-hero h1.xnl-hero-display{margin:0;font-family:'Cormorant Garamond','Playfair Display',Georgia,'Times New Roman',serif;font-size:50px;line-height:1;font-weight:500;font-style:italic;color:#FFFFFF!important;letter-spacing:-.01em}.mfp.mfp-xnl .xnl-hero-hairline{display:flex;align-items:center;justify-content:center;gap:12px;margin:16px 0}.mfp.mfp-xnl .xnl-hr{height:1px;width:40px;background:var(--xnl-deco);opacity:.7}.mfp.mfp-xnl .xnl-hr-word{font-size:10px;text-transform:uppercase;letter-spacing:.3em;color:rgba(255,243,204,.75)}.mfp.mfp-xnl .xnl-hero-sub{font-family:'Cormorant Garamond','Playfair Display',Georgia,'Times New Roman',serif;font-size:18px;font-style:italic;color:rgba(255,255,255,.86)}.mfp.mfp-xnl .xnl-tagline{display:flex;align-items:center;justify-content:center;gap:12px;padding:13px 16px;background:var(--xnl-surface);border-top:1px solid var(--xnl-border);border-bottom:1px solid var(--xnl-border)}.mfp.mfp-xnl .xnl-dot{width:4px;height:4px;border-radius:999px;background:var(--xnl-deco)}.mfp.mfp-xnl .xnl-tagline-text{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.32em;color:var(--xnl-primary)}.mfp.mfp-xnl .xnl-promo{padding:24px 30px;text-align:center;background:var(--xnl-surface);border-bottom:1px solid var(--xnl-border)}.mfp.mfp-xnl .xnl-promo-kicker{margin:0 0 4px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.3em;color:var(--xnl-deco)}.mfp.mfp-xnl .xnl-promo-headline{font-family:'Cormorant Garamond','Playfair Display',Georgia,'Times New Roman',serif;font-size:34px;font-weight:500;letter-spacing:-.02em;color:var(--xnl-text)}.mfp.mfp-xnl .xnl-promo-hr{width:48px;height:1px;margin:12px auto;background:var(--xnl-deco)}.mfp.mfp-xnl .xnl-promo-body{margin:0;font-size:12px;line-height:1.6;color:var(--xnl-muted)}.mfp.mfp-xnl .xnl-body{padding:24px 30px 30px;display:flex;flex-direction:column;gap:16px}.mfp.mfp-xnl .xnl-caption{margin:6px 0 0;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.16em;text-align:center;color:var(--xnl-primary)}.mfp.mfp-xnl .xnl-rule{display:flex;align-items:center;gap:12px;padding-top:6px}.mfp.mfp-xnl .xnl-rule span{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--xnl-muted)}.mfp.mfp-xnl .xnl-rule i{flex:1;height:1px;background:var(--xnl-hairline)}.mfp.mfp-xnl .xnl-grid{display:grid;gap:12px}.mfp.mfp-xnl .xnl-2{grid-template-columns:1fr 1fr}.mfp.mfp-xnl .xnl-consent{display:flex;flex-direction:column;gap:8px}.mfp.mfp-xnl .xnl-field{display:block;margin:0}.mfp.mfp-xnl .xnl-field>span{display:block;margin:0 0 6px!important;color:var(--xnl-muted);font-size:10px;line-height:15px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.mfp.mfp-xnl .xnl-field .mf-field-label{display:none!important}.mfp.mfp-xnl .mf-field-group{margin:0!important;width:100%}.mfp.mfp-xnl .mf-form-title,.mfp.mfp-xnl .mf-form-description{display:none!important}.mfp.mfp-xnl .mf-input,.mfp.mfp-xnl .mf-select,.mfp.mfp-xnl .mf-textarea{width:100%!important;box-sizing:border-box!important;border:0!important;border-bottom:2px solid var(--xnl-border)!important;border-radius:0!important;background:transparent!important;padding:9px 0!important;color:var(--xnl-text)!important;font:500 14px/20px inherit!important;min-height:40px!important;outline:0!important;box-shadow:none!important;transition:border-color .15s ease!important}.mfp.mfp-xnl .mf-input:focus,.mfp.mfp-xnl .mf-select:focus,.mfp.mfp-xnl .mf-textarea:focus{border-bottom-color:var(--xnl-primary)!important;background:transparent!important}.mfp.mfp-xnl .mf-textarea{min-height:92px!important;height:auto!important;resize:vertical}.mfp.mfp-xnl .mf-input::placeholder,.mfp.mfp-xnl .mf-textarea::placeholder{color:color-mix(in srgb, var(--xnl-text) 40%, transparent)!important;opacity:1}.mfp.mfp-xnl .mf-field-error{color:#dc2626;font-size:11px;margin-top:4px}.mfp.mfp-xnl .mf-option-group--cards{display:grid;gap:8px;align-items:stretch}.mfp.mfp-xnl .mf-option-item{margin:0!important}.mfp.mfp-xnl .mf-option-group--cards .mf-option-item{display:flex}.mfp.mfp-xnl .mf-option-group--cards .mf-option-ui{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:100%;height:100%;box-sizing:border-box;padding:12px 34px 12px 14px;border:2px solid var(--xnl-border);border-radius:12px;background:transparent;cursor:pointer;transition:all .15s ease}.mfp.mfp-xnl .mf-option-group--cards .mf-option-check,.mfp.mfp-xnl .mf-option-group--chips .mf-option-check{display:none!important}.mfp.mfp-xnl .mf-option-group--cards .mf-option-item.is-selected .mf-option-ui,.mfp.mfp-xnl .mf-option-group--cards input:checked+.mf-option-ui{border-color:var(--xnl-primary);background:var(--xnl-soft)}.mfp.mfp-xnl .mf-option-group--cards .mf-option-item.is-selected .mf-option-ui::after,.mfp.mfp-xnl .mf-option-group--cards input:checked+.mf-option-ui::after{content:'';position:absolute;top:15px;right:15px;width:11px;height:6px;border-left:2.5px solid var(--xnl-primary);border-bottom:2.5px solid var(--xnl-primary);transform:rotate(-45deg);border-radius:1px}.mfp.mfp-xnl .mf-option-label{color:var(--xnl-text);font-size:13px;font-weight:700}.mfp.mfp-xnl .mf-option-desc{color:var(--xnl-muted);font-size:11px}.mfp.mfp-xnl .mf-option-group--chips{display:flex;flex-wrap:wrap;gap:6px}.mfp.mfp-xnl .mf-option-group--chips .mf-option-ui{padding:6px 13px;border-radius:999px;border:1px solid var(--xnl-border);background:transparent;color:var(--xnl-muted);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s ease}.mfp.mfp-xnl .mf-option-group--chips .mf-option-item.is-selected .mf-option-ui,.mfp.mfp-xnl .mf-option-group--chips input:checked+.mf-option-ui{background:var(--xnl-primary);border-color:var(--xnl-primary);color:var(--xnl-on-primary)}.mfp.mfp-xnl .mf-field-group[data-key='programme'] .mf-option-group--cards{grid-template-columns:repeat(1,1fr)!important}.mfp.mfp-xnl .mf-field-group[data-key='accommodation'] .mf-option-group--cards{grid-template-columns:repeat(2,1fr)!important}.mfp.mfp-xnl .xnl-consent-item>span{display:none!important}.mfp.mfp-xnl .xnl-consent-item .mf-field-label{display:none!important}.mfp.mfp-xnl .xnl-consent-item .mf-option-group{display:block}.mfp.mfp-xnl .xnl-consent-item .mf-option-ui{border:0!important;background:none!important;padding:0!important;color:var(--xnl-muted)!important;font-weight:400!important;font-size:12px!important;line-height:18px!important}.mf-form-wrapper:has(.mfp-xnl) .mf-form-actions{display:none!important}.mfp.mfp-xnl button.xnl-submit[type=\"submit\"]{width:100%!important;border:0!important;border-radius:4px!important;padding:14px 20px!important;background:var(--xnl-primary)!important;color:var(--xnl-on-primary)!important;font:900 13px/20px inherit!important;text-transform:uppercase;letter-spacing:.14em;cursor:pointer!important;box-shadow:none!important;transition:filter .15s ease,opacity .15s ease}.mfp.mfp-xnl button.xnl-submit[type=\"submit\"]:hover{filter:brightness(1.06)}.mfp.mfp-xnl button.xnl-submit.mf-nav-blocked,.mfp.mfp-xnl button.xnl-submit[disabled]{background:var(--xnl-border)!important;cursor:not-allowed!important;filter:none!important}.mfp.mfp-xnl .mf-form-actions button,.mfp.mfp-xnl .mf-btn-submit{background:var(--xnl-primary)!important}@media (max-width:640px){.mfp.mfp-xnl .xnl-2{grid-template-columns:1fr}.mfp.mfp-xnl .xnl-hero-display{font-size:34px}.mfp.mfp-xnl .mf-option-group--cards{grid-template-columns:1fr!important}}",
+    "themeSelector": false,
+    "premiumGeneratedShell": true,
+    "gateNavigationUntilValid": true,
+    "postSubmitExperience": {
+      "enabled": true,
+      "mode": "rich",
+      "title": "You are on the list!",
+      "message": "Thank you {{field:first_name}}. The Christmas edition is on its way to {{field:email}}.",
+      "showSubmissionId": true,
+      "submissionIdLabel": "Reference:",
+      "showAnswerSummary": false,
+      "allowFillAgain": true,
+      "fillAgainLabel": "Submit another",
+      "doneLabel": "Done"
+    },
+    "themeCompatibility": {
+      "policy": "hybrid",
+      "supportsPageColors": false,
+      "supportsPageTypography": true,
+      "supportsDarkHost": true,
+      "prefixes": [
+        "xnl"
+      ],
+      "immutable": [
+        "primary",
+        "accent",
+        "deco"
+      ]
+    }
+  },
+  "fields": [
+    {
+      "placeholder": "Anna",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "first_name",
+      "type": "Text",
+      "label": "First name",
+      "required": true
+    },
+    {
+      "placeholder": "Müller",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "last_name",
+      "type": "Text",
+      "label": "Last name",
+      "required": true
+    },
+    {
+      "placeholder": "anna@email.eu",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "email",
+      "type": "Email",
+      "label": "Email",
+      "required": true
+    },
+    {
+      "placeholder": "+49 170 1234567",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "phone",
+      "type": "Phone",
+      "label": "Phone",
+      "required": false
+    },
+    {
+      "placeholder": "2004",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "birth_year",
+      "type": "Text",
+      "label": "Birth year",
+      "required": false
+    },
+    {
+      "placeholder": "Select…",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Germany",
+          "value": "Germany"
+        },
+        {
+          "label": "France",
+          "value": "France"
+        },
+        {
+          "label": "Spain",
+          "value": "Spain"
+        },
+        {
+          "label": "Italy",
+          "value": "Italy"
+        },
+        {
+          "label": "Portugal",
+          "value": "Portugal"
+        },
+        {
+          "label": "Netherlands",
+          "value": "Netherlands"
+        },
+        {
+          "label": "Austria",
+          "value": "Austria"
+        },
+        {
+          "label": "Belgium",
+          "value": "Belgium"
+        },
+        {
+          "label": "Greece",
+          "value": "Greece"
+        },
+        {
+          "label": "Poland",
+          "value": "Poland"
+        },
+        {
+          "label": "Sweden",
+          "value": "Sweden"
+        },
+        {
+          "label": "Ireland",
+          "value": "Ireland"
+        },
+        {
+          "label": "Other",
+          "value": "Other"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "country",
+      "type": "Select",
+      "label": "Country",
+      "required": true,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Erasmus Exchange",
+          "value": "erasmus",
+          "description": "Berlin · Paris · Madrid"
+        },
+        {
+          "label": "Language Immersion",
+          "value": "language",
+          "description": "Florence · Lisbon · Vienna"
+        },
+        {
+          "label": "Solidarity Corps",
+          "value": "volunteer",
+          "description": "Amsterdam · Prague · Athens"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "cards",
+        "optionColumns": 1
+      },
+      "key": "programme",
+      "type": "Radio",
+      "label": "Programme",
+      "required": true,
+      "optionDisplay": "cards",
+      "choiceDisplay": "cards",
+      "optionVariant": "cards",
+      "widgetProps": {
+        "optionDisplay": "cards",
+        "optionColumns": 1
+      },
+      "allowOptionHtml": true,
+      "optionColumns": 1
+    },
+    {
+      "placeholder": "Select…",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "January",
+          "value": "January"
+        },
+        {
+          "label": "February",
+          "value": "February"
+        },
+        {
+          "label": "March",
+          "value": "March"
+        },
+        {
+          "label": "April",
+          "value": "April"
+        },
+        {
+          "label": "May",
+          "value": "May"
+        },
+        {
+          "label": "June",
+          "value": "June"
+        },
+        {
+          "label": "July",
+          "value": "July"
+        },
+        {
+          "label": "August",
+          "value": "August"
+        },
+        {
+          "label": "September",
+          "value": "September"
+        },
+        {
+          "label": "October",
+          "value": "October"
+        },
+        {
+          "label": "November",
+          "value": "November"
+        },
+        {
+          "label": "December",
+          "value": "December"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "start_month",
+      "type": "Select",
+      "label": "Start month",
+      "required": true,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Select…",
+      "helpText": "",
+      "defaultValue": "3",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "1",
+          "value": "1"
+        },
+        {
+          "label": "2",
+          "value": "2"
+        },
+        {
+          "label": "3",
+          "value": "3"
+        },
+        {
+          "label": "6",
+          "value": "6"
+        },
+        {
+          "label": "9",
+          "value": "9"
+        },
+        {
+          "label": "12",
+          "value": "12"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "duration",
+      "type": "Select",
+      "label": "Duration (months)",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Select…",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "A1",
+          "value": "A1"
+        },
+        {
+          "label": "A2",
+          "value": "A2"
+        },
+        {
+          "label": "B1",
+          "value": "B1"
+        },
+        {
+          "label": "B2",
+          "value": "B2"
+        },
+        {
+          "label": "C1",
+          "value": "C1"
+        },
+        {
+          "label": "C2",
+          "value": "C2"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "language_level",
+      "type": "Select",
+      "label": "Language level",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Host family",
+          "value": "Host family"
+        },
+        {
+          "label": "Student dorm",
+          "value": "Student dorm"
+        },
+        {
+          "label": "Private flat",
+          "value": "Private flat"
+        },
+        {
+          "label": "Not needed",
+          "value": "Not needed"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "cards",
+        "optionColumns": 2
+      },
+      "key": "accommodation",
+      "type": "Radio",
+      "label": "Accommodation",
+      "required": false,
+      "optionDisplay": "cards",
+      "choiceDisplay": "cards",
+      "optionVariant": "cards",
+      "widgetProps": {
+        "optionDisplay": "cards",
+        "optionColumns": 2
+      },
+      "allowOptionHtml": true,
+      "optionColumns": 2
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Art & Design",
+          "value": "Art & Design"
+        },
+        {
+          "label": "Technology",
+          "value": "Technology"
+        },
+        {
+          "label": "Sustainability",
+          "value": "Sustainability"
+        },
+        {
+          "label": "Music",
+          "value": "Music"
+        },
+        {
+          "label": "Sports",
+          "value": "Sports"
+        },
+        {
+          "label": "Cuisine",
+          "value": "Cuisine"
+        },
+        {
+          "label": "History",
+          "value": "History"
+        },
+        {
+          "label": "Entrepreneurship",
+          "value": "Entrepreneurship"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "chips"
+      },
+      "key": "interests",
+      "type": "Checkbox",
+      "label": "Interests",
+      "required": false,
+      "optionDisplay": "chips",
+      "choiceDisplay": "chips",
+      "optionVariant": "chips",
+      "widgetProps": {
+        "optionDisplay": "chips"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Why do you want to join EuroYouth?",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "motivation",
+      "type": "Textarea",
+      "label": "Motivation",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Send me EuroYouth updates and offers",
+          "value": "yes"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "list"
+      },
+      "key": "newsletter",
+      "type": "Checkbox",
+      "label": "Newsletter",
+      "required": false,
+      "optionDisplay": "list",
+      "choiceDisplay": "list",
+      "optionVariant": "list",
+      "widgetProps": {
+        "optionDisplay": "list"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "I agree to the terms and conditions",
+          "value": "yes"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "list"
+      },
+      "key": "terms",
+      "type": "Checkbox",
+      "label": "Terms",
+      "required": true,
+      "optionDisplay": "list",
+      "choiceDisplay": "list",
+      "optionVariant": "list",
+      "widgetProps": {
+        "optionDisplay": "list"
+      },
+      "allowOptionHtml": true
+    }
+  ],
+  "rules": [],
+  "workflow": {
+    "notifications": []
+  }
+}

@@ -3104,6 +3104,13 @@ function gatedNavButtons(): HTMLElement[] {
   if (container && !last) {
     container.querySelectorAll<HTMLElement>('[data-mf-step-forward="1"]').forEach(b => push(b));
   }
+  // [GateUntilValid v20260807-02] A premium/custom shell draws its OWN submit button inside the
+  // fields container and the generic rail is hidden, so gating only mf-btn-submit-<id> left the
+  // one button the visitor can actually see looking live while it did nothing. Seen on the
+  // xmas-sale skin: the real submit was disabled, the authored one was not.
+  if (container && last) {
+    container.querySelectorAll<HTMLElement>('button[type="submit"]').forEach(b => push(b));
+  }
   return out;
 }
 
