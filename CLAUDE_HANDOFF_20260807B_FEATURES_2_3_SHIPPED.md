@@ -222,6 +222,82 @@ PS 5.1 wraps each line as an ErrorRecord, and `$ErrorActionPreference='Stop'` ab
   ship Core before anyone edits a gated form in the builder.
 - Gallery: pushed, live, 48 templates.
 
+## 5b. Template batch — 6 of 16 shipped (commit `21def18`)
+
+`tools/templates/build-euroyouth-skins.mjs` — one generator, six skins over ONE shared body.
+Re-running it reproduces the first five **byte-identically**; that is the contract that makes it a
+generator rather than a one-shot script. Validates before writing: CSS comment balance, brace
+balance, exactly one `{{field:KEY}}` per field (and no slot for a field that does not exist),
+data-URI encoding, and that the success message interpolates at least one field.
+
+| Template | Form | From mock |
+|---|---|---|
+| `xmas-sale-euroyouth-application` | 59 | xmas-sale |
+| `xmas-newsletter-euroyouth-application` | 58 | xmas-newsletter |
+| `agency-flyer-euroyouth-application` | 57 | agency-flyer |
+| `kids-first-book-registration` | 61 | hotel-concierge (misfiled — see below) |
+| `gold-suite-membership-application` | 60 | hotel-suite |
+| `rose-wellness-registration` | 62 | rose-registration |
+
+All six verified at 1440px on `/mfqa-wide`: they render, and the CTA is greyed + inert on load,
+then turns brand-coloured once the required fields are filled — the first templates to actually
+use features 2 and 3.
+
+### Content bugs resolved on conversion instead of shipped
+- The mock filed **hotel-concierge is not a hotel form**: copy says "saved to your first book",
+  fields are SCHOOL / AUTHOR / ADDRESS, placeholders "Mia" / "Meadowlark School", hero PNG never
+  referenced. Ships as `kids-first-book-registration`. ⚠️ owner should confirm the rename.
+- **hotel-suite, hotel-concierge and rose all carried EuroYouth's "Programme track" + CEFR
+  "Language level"** into forms with nothing to do with student mobility. Tracks relabelled with
+  options that belong to each form; CEFR level dropped.
+- **rose's hero photograph is still missing** (`/images/rose-wellness-hero.png`, not in the repo).
+  The hero degrades to a gradient + petal texture; add the file plus one `background-image` rule
+  and nothing else changes.
+
+### ⭐⭐⭐ Four things QA found that no build could have
+1. **The gate never touched a custom shell's OWN submit button.** `gatedNavButtons` collected
+   `mf-btn-submit-<id>` and the premium-native action classes, but a generated shell draws its own
+   `<button type="submit">` inside the fields container and the generic rail is hidden — so the one
+   button the visitor can see stayed live while the real one was disabled. Fixed in the renderer
+   (`GateUntilValid v20260807-02`).
+2. **⭐ Specificity: the compat bridge outranks a one-class template scope.**
+   `CustomShellCompatibilityCssService` emits
+   `:where(#mf-form-wrapper-N) .mfp[class*="mfp-"] <target> {…!important}`. The `:where()` carries
+   no weight — deliberate — but `.mfp[class*="mfp-"]` is **two** class-level selectors and the
+   bridge still says `!important`. A rule scoped `.mfp-<prefix> .x` is one deep, so it LOST:
+   measured, the white serif hero headline rendered near-black and the emerald CTA rendered host
+   blue `#3b82f6`. Every authored rule is now scoped `.mfp.mfp-<prefix>`, and the two targets the
+   bridge qualifies with an element (`h1`, `button[type=submit]`) carry the element on our side too.
+3. **⭐ Chaining the brand colour through `--mf-page-primary` gives the skin away.** A seasonal
+   skin whose identity IS its colour repainted itself in the host brand. Brand colours are now
+   literal and declared in `themeCompatibility.immutable`; surface/text/muted/border still chain so
+   a dark host stays readable. `brandFollowsHost: true` opts back in.
+4. **A `::after` rule that only restyles the pseudo-element produces no box.** The tier popularity
+   bars rendered as empty grey tracks until the rule declared its own `content`.
+
+### ⭐⭐ Two landmines recorded in the generator
+- An inline `data:image/svg+xml` texture must be **fully percent-encoded**:
+  `NeutralizeStyleBreakout` rewrites every `</` in authored CSS, which would corrupt the URI into a
+  silently broken image.
+- The popularity-bar widths are **pre-baked CSS** keyed off each option's value, because `style=`
+  is stripped on both render paths. Consequence worth stating: that tier list is fixed by the
+  generator — an editor adding a fourth tier in the builder gets no bar.
+
+### 🔴 Still to convert — 8 of 16
+| Blocked on | Templates |
+|---|---|
+| nothing — just work | `newsletter` (S), `job-application` (S) |
+| feature 4 (curated review table inside a step) | `golden-pro-registration` (L) |
+| feature 1 (live value echo into the shell) | `invoice-form`, `invoice-spinera`, `invoice-codexo` (family 2) |
+| feature 1 + a greenfield sticky-aside mirror | `hotel-booking`, `product-order` (family 3) |
+
+`product-order` additionally has **no correct behaviour to copy**: its own mock never writes
+`item.price`, so the $99 / $9.90 / $108.90 on screen is a fixture, not a computation. The real
+pricing rule has to come from the owner.
+
+Family 0 (`register`, `festa-italiana`) is still un-QA'd — it is pure verification on `/mfqa-wide`
+now that the page exists.
+
 ## 6. Next
 
 1. Convert **Family 1**: one generator, 5 skins (+ `rose-registration`) = 8 of 16. Both new
