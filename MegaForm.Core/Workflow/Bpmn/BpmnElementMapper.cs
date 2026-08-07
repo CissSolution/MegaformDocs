@@ -36,7 +36,10 @@ namespace MegaForm.Core.Workflow.Bpmn
 
     public static class BpmnElementMapper
     {
-        /// <summary>Namespace-agnostic hint an author can put on a serviceTask: megaform:type="webhook".</summary>
+        /// <summary>
+        /// Hint an author can put on a serviceTask to choose the node type outright:
+        /// megaform:type="webhook|email|database|googlesheets" (xmlns:megaform="http://megaform.io/bpmn/1.0").
+        /// </summary>
         public const string TypeHintAttribute = "type";
 
         public static BpmnMappedElement Map(
@@ -151,7 +154,9 @@ namespace MegaForm.Core.Workflow.Bpmn
 
         private static BpmnMappedElement MapServiceTask(BpmnElement element, BpmnImportResult result)
         {
-            var hint = (element.ExtensionAttribute(TypeHintAttribute) ?? string.Empty).Trim().ToLowerInvariant();
+            // MegaFormAttribute, not ExtensionAttribute: only a hint written for MegaForm counts as
+            // the author choosing the node type. camunda:type="external" is not that.
+            var hint = (element.MegaFormAttribute(TypeHintAttribute) ?? string.Empty).Trim().ToLowerInvariant();
             var guessed = false;
 
             if (hint.Length == 0)
@@ -311,7 +316,7 @@ namespace MegaForm.Core.Workflow.Bpmn
             if (users.Count > 0) config["CandidateUsers"] = users;
             if (roles.Count > 0) config["CandidateRoles"] = roles;
 
-            var dueHours = element.ExtensionAttribute("dueInHours");
+            var dueHours = element.MegaFormAttribute("dueInHours");
             int hours;
             if (!string.IsNullOrWhiteSpace(dueHours) &&
                 int.TryParse(dueHours.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out hours) &&
@@ -326,10 +331,10 @@ namespace MegaForm.Core.Workflow.Bpmn
         private static Dictionary<string, object> EmailConfig(BpmnElement element)
         {
             var config = new Dictionary<string, object>();
-            var to = element.ExtensionAttribute("to");
+            var to = element.MegaFormAttribute("to");
             if (!string.IsNullOrWhiteSpace(to)) config["To"] = to.Trim();
 
-            var subject = element.ExtensionAttribute("subject");
+            var subject = element.MegaFormAttribute("subject");
             config["Subject"] = !string.IsNullOrWhiteSpace(subject)
                 ? subject.Trim()
                 : DisplayName(element);
@@ -339,10 +344,10 @@ namespace MegaForm.Core.Workflow.Bpmn
         private static Dictionary<string, object> WebhookConfig(BpmnElement element)
         {
             var config = new Dictionary<string, object>();
-            var url = element.ExtensionAttribute("url");
+            var url = element.MegaFormAttribute("url");
             if (!string.IsNullOrWhiteSpace(url)) config["Url"] = url.Trim();
 
-            var method = (element.ExtensionAttribute("method") ?? string.Empty).Trim().ToUpperInvariant();
+            var method = (element.MegaFormAttribute("method") ?? string.Empty).Trim().ToUpperInvariant();
             WebhookMethod parsed;
             config["Method"] = (int)(Enum.TryParse(method, true, out parsed) ? parsed : WebhookMethod.POST);
             return config;

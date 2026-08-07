@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="Definitions_0expense" targetNamespace="http://bpmn.io/schema/bpmn"
+                  exporter="Camunda Modeler" exporterVersion="5.22.0">
+  <bpmn:collaboration id="Collaboration_1">
+    <bpmn:participant id="Participant_1" name="Expense claim" processRef="Process_expense" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_expense" name="Expense claim" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="Lane_employee" name="Employee">
+        <bpmn:flowNodeRef>StartEvent_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_amount</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_finance" name="Finance">
+        <bpmn:flowNodeRef>Activity_review</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_pay</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_wait</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_notify</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_end</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="StartEvent_1" name="Claim submitted">
+      <bpmn:outgoing>Flow_start</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="Gateway_amount" name="Over 5000?" default="Flow_small">
+      <bpmn:incoming>Flow_start</bpmn:incoming>
+      <bpmn:outgoing>Flow_large</bpmn:outgoing>
+      <bpmn:outgoing>Flow_small</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Activity_review" name="Finance review"
+                   camunda:candidateGroups="finance" camunda:assignee="">
+      <bpmn:incoming>Flow_large</bpmn:incoming>
+      <bpmn:outgoing>Flow_reviewed</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:intermediateCatchEvent id="Event_wait" name="Settlement window">
+      <bpmn:incoming>Flow_reviewed</bpmn:incoming>
+      <bpmn:outgoing>Flow_afterwait</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_1">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">P2D</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:serviceTask id="Activity_pay" name="Post payment to ledger" camunda:type="external">
+      <bpmn:incoming>Flow_afterwait</bpmn:incoming>
+      <bpmn:outgoing>Flow_paid</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sendTask id="Activity_notify" name="Notify claimant">
+      <bpmn:incoming>Flow_small</bpmn:incoming>
+      <bpmn:incoming>Flow_paid</bpmn:incoming>
+      <bpmn:outgoing>Flow_done</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="Event_end" name="Claim closed">
+      <bpmn:incoming>Flow_done</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_start" sourceRef="StartEvent_1" targetRef="Gateway_amount" />
+    <bpmn:sequenceFlow id="Flow_large" name="Yes" sourceRef="Gateway_amount" targetRef="Activity_review">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${amount &gt;= 5000}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_small" name="No" sourceRef="Gateway_amount" targetRef="Activity_notify" />
+    <bpmn:sequenceFlow id="Flow_reviewed" sourceRef="Activity_review" targetRef="Event_wait" />
+    <bpmn:sequenceFlow id="Flow_afterwait" sourceRef="Event_wait" targetRef="Activity_pay" />
+    <bpmn:sequenceFlow id="Flow_paid" sourceRef="Activity_pay" targetRef="Activity_notify" />
+    <bpmn:sequenceFlow id="Flow_done" sourceRef="Activity_notify" targetRef="Event_end" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1">
+      <bpmndi:BPMNShape id="Participant_1_di" bpmnElement="Participant_1" isHorizontal="true">
+        <dc:Bounds x="129" y="80" width="900" height="380" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_employee_di" bpmnElement="Lane_employee" isHorizontal="true">
+        <dc:Bounds x="159" y="80" width="870" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_finance_di" bpmnElement="Lane_finance" isHorizontal="true">
+        <dc:Bounds x="159" y="230" width="870" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
+        <dc:Bounds x="212" y="132" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_amount_di" bpmnElement="Gateway_amount" isMarkerVisible="true">
+        <dc:Bounds x="325" y="125" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_review_di" bpmnElement="Activity_review">
+        <dc:Bounds x="300" y="280" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_wait_di" bpmnElement="Event_wait">
+        <dc:Bounds x="462" y="302" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_pay_di" bpmnElement="Activity_pay">
+        <dc:Bounds x="560" y="280" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_notify_di" bpmnElement="Activity_notify">
+        <dc:Bounds x="740" y="280" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_end_di" bpmnElement="Event_end">
+        <dc:Bounds x="922" y="302" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_start_di" bpmnElement="Flow_start">
+        <di:waypoint x="248" y="150" /><di:waypoint x="325" y="150" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

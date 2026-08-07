@@ -20,4 +20,10 @@
     <ProjectReference Include="..\MegaForm.Core\MegaForm.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- [BpmnImport B1] Real exporter output, kept as a file rather than a string literal so it
+         stays byte-identical to what Camunda Modeler writes. -->
+    <Content Include="TestData\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

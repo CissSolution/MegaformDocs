@@ -46,24 +46,49 @@ namespace MegaForm.Core.Workflow.Bpmn
         }
 
         /// <summary>
-        /// Reads an extension attribute by local name — `megaform:type` and a bare `type`
-        /// both answer to "type". Prefers a namespaced attribute over an unnamespaced one so
-        /// a MegaForm hint always beats an incidental attribute of the same name.
+        /// A hint the author wrote FOR MegaForm: `megaform:type`, or a bare unnamespaced `type`.
+        ///
+        /// Deliberately does not accept another vendor's namespace. Camunda writes
+        /// camunda:type="external" on ordinary service tasks, and reading that as a MegaForm hint
+        /// makes the importer believe the author chose a node type when they did not — so it stops
+        /// warning that it guessed, which is the one thing that must not happen silently.
         /// </summary>
-        public string ExtensionAttribute(string localName)
+        public string MegaFormAttribute(string localName)
         {
             if (Xml == null || string.IsNullOrEmpty(localName)) return null;
 
-            string fallback = null;
+            string unnamespaced = null;
             foreach (var attr in Xml.Attributes())
             {
                 if (!string.Equals(attr.Name.LocalName, localName, StringComparison.OrdinalIgnoreCase))
                     continue;
-                if (!string.IsNullOrEmpty(attr.Name.NamespaceName))
+
+                var ns = attr.Name.NamespaceName ?? string.Empty;
+                if (ns.IndexOf("megaform", StringComparison.OrdinalIgnoreCase) >= 0)
                     return attr.Value;
-                fallback = attr.Value;
+                if (ns.Length == 0)
+                    unnamespaced = attr.Value;
             }
-            return fallback;
+            return unnamespaced;
+        }
+
+        /// <summary>
+        /// Any attribute with this local name, whatever the namespace, preferring a MegaForm one.
+        /// For attributes that mean the same thing across vendors — candidateGroups, assignee —
+        /// where borrowing Camunda's value is exactly what the author would want.
+        /// </summary>
+        public string ExtensionAttribute(string localName)
+        {
+            var mine = MegaFormAttribute(localName);
+            if (!string.IsNullOrEmpty(mine)) return mine;
+
+            if (Xml == null || string.IsNullOrEmpty(localName)) return null;
+            foreach (var attr in Xml.Attributes())
+            {
+                if (string.Equals(attr.Name.LocalName, localName, StringComparison.OrdinalIgnoreCase))
+                    return attr.Value;
+            }
+            return null;
         }
 
         /// <summary>True when this element has a child (at any depth) with the given local name.</summary>
