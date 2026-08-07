@@ -26,6 +26,16 @@ const apiPath = process.argv[7];
 const jsonBodies = process.argv.slice(8);
 if (jsonBodies.length === 0) jsonBodies.push('{}');
 
+// MF_HEADERS='{"ModuleId":"10603","TabId":"1009"}' adds request headers.
+// Most MegaForm DNN endpoints sit behind [DnnModuleAuthorize], which resolves the module from
+// the ModuleId/TabId headers — without them DNN answers 401 no matter how good the session is.
+// An env var rather than another positional argument, so existing callers keep working.
+let extraHeaders = {};
+if (process.env.MF_HEADERS) {
+  try { extraHeaders = JSON.parse(process.env.MF_HEADERS); }
+  catch (e) { console.error('MF_HEADERS is not valid JSON:', e.message); process.exit(2); }
+}
+
 fs.mkdirSync(outDir, { recursive: true });
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const DBG = 9386;
@@ -63,7 +73,17 @@ async function main() {
     for (let i = 0; i < 60 && !t; i++) { try { t = await httpJson(`http://127.0.0.1:${DBG}/json`); } catch { await sleep(250); } }
     const cdp = await wsConnect(t.find((x) => x.type === 'page').webSocketDebuggerUrl);
     await cdp.call('Page.enable'); await cdp.call('Runtime.enable');
-    const ev = async (e) => (await cdp.call('Runtime.evaluate', { expression: e, returnByValue: true, awaitPromise: true })).result?.value;
+    // A thrown expression comes back as exceptionDetails with result.value undefined. Reading
+    // only .value turned every such failure into a silent `undefined`, which reads as "the call
+    // returned nothing" instead of "the call blew up" — say which.
+    const ev = async (e) => {
+      const r = await cdp.call('Runtime.evaluate', { expression: e, returnByValue: true, awaitPromise: true });
+      if (r.exceptionDetails) {
+        const d = r.exceptionDetails;
+        console.error('  [evaluate threw]', d.exception?.description || d.text || JSON.stringify(d).slice(0, 400));
+      }
+      return r.result?.value;
+    };
 
     await cdp.call('Page.navigate', { url: site + '/Login' });
     await sleep(7000);
@@ -79,6 +99,9 @@ async function main() {
     })()`);
     await sleep(10000);
     console.log('session:', await ev("document.body.innerHTML.indexOf('/ctl/Logoff') >= 0 ? 'authenticated' : 'ANONYMOUS'"));
+    // The POST is a same-origin fetch from THIS page, so where the login left us decides where it
+    // goes. A redirect to another alias or an error page turns every call into "Failed to fetch".
+    console.log('page:   ', await ev('location.href'));
 
     for (const body of jsonBodies) {
       const out = await ev(`(async () => {
@@ -87,8 +110,9 @@ async function main() {
         if (!token) { const el = document.querySelector('input[name="__RequestVerificationToken"]'); if (el) token = el.value; }
         const r = await fetch(${JSON.stringify(apiPath)}, {
           method: 'POST', credentials: 'same-origin',
-          headers: { 'Content-Type': 'application/json', Accept: 'application/json',
+          headers: Object.assign({ 'Content-Type': 'application/json', Accept: 'application/json',
                      'X-Requested-With': 'XMLHttpRequest', RequestVerificationToken: token },
+                     ${JSON.stringify(extraHeaders)}),
           body: ${JSON.stringify(body)} });
         const text = await r.text();
         return { status: r.status, hadToken: !!token, body: text.slice(0, 20000) };
