@@ -50,6 +50,9 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
     <Reference Include="System.Net.Http" />
     <Reference Include="System.IO.Compression" />
+    <!-- [BpmnImport B1] XDocument for the BPMN importer. Part of the framework on net472,
+         but only through an explicit reference; modern TFMs have it in the BCL. -->
+    <Reference Include="System.Xml.Linq" />
     <!-- [BYOM L1] System.Text.Json package needed for MegaFormRowXmlSerializer
          JsonElement projection on net472. Modern TFMs have it in the BCL. -->
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
