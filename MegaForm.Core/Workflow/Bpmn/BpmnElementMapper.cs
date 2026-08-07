@@ -77,7 +77,7 @@ namespace MegaForm.Core.Workflow.Bpmn
                     return MapExclusiveGateway(element, result);
 
                 case "parallelgateway":
-                    return MapParallelGateway(element, result);
+                    return MapParallelGateway(element, options, result);
 
                 case "intermediatecatchevent":
                     return MapIntermediateCatchEvent(element, options, result);
@@ -261,19 +261,23 @@ namespace MegaForm.Core.Workflow.Bpmn
             return Node(element, WorkflowNodeType.Switch, switchConfig);
         }
 
-        private static BpmnMappedElement MapParallelGateway(BpmnElement element, BpmnImportResult result)
+        private static BpmnMappedElement MapParallelGateway(
+            BpmnElement element, BpmnImportOptions options, BpmnImportResult result)
         {
             var outgoing = element.OutgoingFlowIds.Count;
             var incoming = element.IncomingFlowIds.Count;
 
-            if (outgoing > 1)
-                return Node(element, WorkflowNodeType.Fork, new Dictionary<string, object>());
+            // One in, one out: a diverging gateway that diverges nowhere. Route through it.
+            if (outgoing <= 1 && incoming <= 1)
+                return BpmnMappedElement.PassThrough();
 
-            if (incoming > 1)
-                return Node(element, WorkflowNodeType.Join, new Dictionary<string, object>());
-
-            // One in, one out: a diverging gateway that diverges nowhere.
-            return BpmnMappedElement.PassThrough();
+            // Fork and Join are declared in WorkflowNodeType but are NOT in SupportedNodeTypes.All
+            // and have no executor. WorkflowEvaluator.ValidateNode rejects an unsupported type with
+            // severity "error" in BOTH Draft and Apply mode, so importing a parallel gateway as a
+            // Fork would produce a definition that cannot even be SAVED — an import that reports
+            // success and then fails at the first save is worse than one that says what it cannot do.
+            return Unsupported(element, options, result,
+                "parallel branches have no runtime executor yet, so a Fork/Join node cannot be saved");
         }
 
         // ── Configs ──────────────────────────────────────────────────────────

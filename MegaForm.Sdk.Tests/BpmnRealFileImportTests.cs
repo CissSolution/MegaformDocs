@@ -72,7 +72,7 @@ namespace MegaForm.Sdk.Tests
             var json = (string)condition.Config["ConditionsJson"];
             Assert.Contains("\"field\":\"amount\"", json);
             Assert.Contains("\"operator\":\"gte\"", json);
-            Assert.Contains("\"value\":5000", json);
+            Assert.Contains("\"value\":\"5000\"", json); // a string, so the host culture cannot reformat it
         }
 
         [Fact]

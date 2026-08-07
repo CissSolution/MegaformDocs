@@ -51,23 +51,23 @@ namespace MegaForm.Core.Workflow.Bpmn
                 if (map.Node != null) definition.Nodes.Add(map.Node);
             }
 
+            ReportSkippedProcesses(model, result);
+
+            // Unknown elements reached the mapper through Elements and came back as unsupported,
+            // so strict mode refuses on them exactly as it does on a subProcess — otherwise strict
+            // reported success while the workflow was quietly truncated at the element it did not
+            // recognise.
             if (options.Strict && result.UnsupportedElements.Count > 0)
-            {
-                var failure = BpmnImportResult.Failed(
-                    "Strict import: " + result.UnsupportedElements.Count +
-                    " element(s) cannot be represented in a MegaForm workflow.");
-                failure.UnsupportedElements.AddRange(result.UnsupportedElements);
-                failure.Warnings.AddRange(result.Warnings);
-                return failure;
-            }
+                return Fail(result, "Strict import: " + result.UnsupportedElements.Count +
+                                    " element(s) cannot be represented in a MegaForm workflow.");
 
             if (definition.Nodes.Count == 0)
-                return BpmnImportResult.Failed("The BPMN process has no element that maps to a workflow node.");
+                return Fail(result, "The BPMN process has no element that maps to a workflow node.");
 
             // ── 2. Start node ────────────────────────────────────────────────
             definition.StartNodeId = ResolveStartNode(model, mapped, result);
             if (string.IsNullOrEmpty(definition.StartNodeId))
-                return BpmnImportResult.Failed(
+                return Fail(result,
                     "Could not work out where the workflow starts: no start event with a usable outgoing flow.");
 
             // ── 3. Flows → edges ─────────────────────────────────────────────
@@ -75,8 +75,7 @@ namespace MegaForm.Core.Workflow.Bpmn
 
             // ── 4. Gateway wiring that needs the edges to exist ──────────────
             ApplyConditionExpressions(model, mapped, definition, result);
-            ApplySwitchCases(model, mapped, definition);
-            PairForksWithJoins(model, mapped, definition, result);
+            ApplySwitchCases(model, mapped, definition, result);
 
             // ── 5. Layout ────────────────────────────────────────────────────
             ApplyLayout(model, mapped, definition);
@@ -86,6 +85,20 @@ namespace MegaForm.Core.Workflow.Bpmn
             result.Success    = true;
             result.Definition = definition;
             return result;
+        }
+
+        /// <summary>
+        /// Fails while keeping everything learned so far. A bare BpmnImportResult.Failed starts a
+        /// fresh result, so a refusal late in the run threw away the warnings and the unsupported
+        /// list — leaving the author with "could not work out where the workflow starts" and no
+        /// mention of the element that broke the chain, which is the very thing they need.
+        /// </summary>
+        private static BpmnImportResult Fail(BpmnImportResult accumulated, string error)
+        {
+            var failure = BpmnImportResult.Failed(error);
+            failure.Warnings.AddRange(accumulated.Warnings);
+            failure.UnsupportedElements.AddRange(accumulated.UnsupportedElements);
+            return failure;
         }
 
         // ── Start ────────────────────────────────────────────────────────────
@@ -200,16 +213,87 @@ namespace MegaForm.Core.Workflow.Bpmn
                         continue;
                     }
 
-                    var edge = new WorkflowEdge
+                    var handle = HandleFor(model, sourceNode, element, flow);
+
+                    // A condition on a flow leaving anything but a gateway is not enforced by
+                    // anything downstream — MegaForm decides at Condition/Switch nodes, not on
+                    // edges. Say so rather than let a styled "conditional" edge imply a gate.
+                    if (flow.HasCondition &&
+                        sourceNode.Type != WorkflowNodeType.Condition &&
+                        sourceNode.Type != WorkflowNodeType.Switch)
+                    {
+                        result.Warn(flow.Id, "sequenceFlow",
+                            "The condition on the flow out of '" + (sourceNode.Label ?? sourceNode.Id) +
+                            "' is not enforced — this step now continues for every submission.");
+                    }
+
+                    definition.Edges.Add(new WorkflowEdge
                     {
                         SourceNodeId = sourceNode.Id,
                         TargetNodeId = targetNodeId,
-                        SourceHandle = HandleFor(model, sourceNode, element, flow),
+                        SourceHandle = handle,
                         Label        = flow.Name,
                         EdgeType     = EdgeTypeFor(sourceNode, flow),
-                    };
-                    definition.Edges.Add(edge);
+                    });
                 }
+
+                WarnAboutExitShape(model, element, sourceNode, result);
+            }
+        }
+
+        /// <summary>
+        /// Warnings about a node's exits as a whole — the decisions that cannot be explained one
+        /// flow at a time, and that an author would otherwise only discover in production.
+        /// </summary>
+        private void WarnAboutExitShape(
+            BpmnModel model, BpmnElement element, WorkflowNode sourceNode, BpmnImportResult result)
+        {
+            var label = sourceNode.Label ?? element.Id;
+            var exits = element.OutgoingFlowIds.Count;
+
+            if (!string.IsNullOrEmpty(element.DefaultFlowId) && EffectiveDefaultFlowId(element) == null)
+                result.Warn(element.Id, element.LocalName,
+                    "'" + label + "' has a default flow attribute pointing at '" + element.DefaultFlowId +
+                    "', which is not one of its exits; it was ignored.");
+
+            if (sourceNode.Type == WorkflowNodeType.Approval)
+            {
+                if (exits == 1)
+                    result.Warn(element.Id, element.LocalName,
+                        "'" + label + "' has one exit, so a rejection continues down the same path as an " +
+                        "approval. Draw a second flow for the rejection if they should differ.");
+                else if (exits > 2)
+                    result.Warn(element.Id, element.LocalName,
+                        "'" + label + "' has " + exits + " exits; an approval has only two outcomes, so " +
+                        "only the approve and reject paths will ever run.");
+                return;
+            }
+
+            if (sourceNode.Type == WorkflowNodeType.Condition)
+            {
+                var conditioned = ConditionedFlowIds(model, element).Count;
+                if (EffectiveDefaultFlowId(element) == null && conditioned != 1)
+                    result.Warn(element.Id, element.LocalName,
+                        conditioned == 0
+                            ? "Neither exit of '" + label + "' carries a condition, so document order decided " +
+                              "which one is Yes."
+                            : "Both exits of '" + label + "' carry a condition, but a MegaForm condition has one " +
+                              "test: the first was kept and the other branch became the No path.");
+                return;
+            }
+
+            if (sourceNode.Type == WorkflowNodeType.Switch)
+            {
+                var unconditioned = 0;
+                foreach (var flowId in element.OutgoingFlowIds)
+                {
+                    var flow = model.FindFlow(flowId);
+                    if (flow != null && !flow.HasCondition) unconditioned++;
+                }
+                if (EffectiveDefaultFlowId(element) == null && unconditioned > 1)
+                    result.Warn(element.Id, element.LocalName,
+                        "'" + label + "' has " + unconditioned + " exits with no condition and no default " +
+                        "flow; the first was treated as the default and the rest became cases you must fill in.");
             }
         }
 
@@ -225,9 +309,73 @@ namespace MegaForm.Core.Workflow.Bpmn
                 return "case:" + CaseIndexOf(model, element, flow);
             }
 
-            // Fork edges are informational — the executor starts branches from
-            // ForkNodeConfig.BranchStartNodeIds, not by walking handles.
+            if (sourceNode.Type == WorkflowNodeType.Approval)
+                return ApprovalHandleFor(model, element, flow);
+
             return "default";
+        }
+
+        /// <summary>
+        /// Which outcome an approval's exit belongs to.
+        ///
+        /// This is not cosmetic. WorkflowTaskService resumes with the handle "approved" or
+        /// "rejected", and WorkflowEngineV2.ResolveNextFromEdge falls back to the first
+        /// "default"-handled edge when it finds no exact match. Writing both exits as "default" —
+        /// which is what every non-gateway node used to get — therefore sends a REJECTED claim
+        /// down the approval path. On a diagram whose approve branch pays an expense, rejecting
+        /// paid it.
+        ///
+        /// A userTask with one exit keeps "default" on purpose: BPMN modelled no reject path, so
+        /// both outcomes continue the same way. BuildEdges warns about it.
+        /// </summary>
+        private string ApprovalHandleFor(BpmnModel model, BpmnElement element, BpmnSequenceFlow flow)
+        {
+            if (element.OutgoingFlowIds.Count <= 1) return "default";
+
+            var rejectFlowId = RejectFlowIdOf(model, element);
+            if (rejectFlowId == null) return "default";
+
+            if (string.Equals(rejectFlowId, flow.Id, StringComparison.Ordinal)) return "rejected";
+
+            // Only the first non-reject exit can be the approval; a third exit would be
+            // unreachable whatever handle it carried, so it keeps "default" and BuildEdges warns.
+            var approveFlowId = FirstFlowOtherThan(element, rejectFlowId);
+            return string.Equals(approveFlowId, flow.Id, StringComparison.Ordinal) ? "approved" : "default";
+        }
+
+        /// <summary>
+        /// Picks the rejection exit by name first — modellers label these "Reject", "No", "Denied" —
+        /// then by the `default` attribute, then by document order. Returns null when the task has
+        /// fewer than two exits.
+        /// </summary>
+        private static string RejectFlowIdOf(BpmnModel model, BpmnElement element)
+        {
+            if (element.OutgoingFlowIds.Count < 2) return null;
+
+            foreach (var flowId in element.OutgoingFlowIds)
+            {
+                var flow = model.FindFlow(flowId);
+                if (flow == null || string.IsNullOrWhiteSpace(flow.Name)) continue;
+
+                var name = flow.Name.Trim().ToLowerInvariant();
+                if (name.Contains("reject") || name.Contains("deny") || name.Contains("denied") ||
+                    name.Contains("decline") || name == "no" || name.Contains("not approved"))
+                    return flowId;
+            }
+
+            var explicitDefault = EffectiveDefaultFlowId(element);
+            if (explicitDefault != null) return explicitDefault;
+
+            return element.OutgoingFlowIds[1];
+        }
+
+        private static string FirstFlowOtherThan(BpmnElement element, string excludedFlowId)
+        {
+            foreach (var flowId in element.OutgoingFlowIds)
+            {
+                if (!string.Equals(flowId, excludedFlowId, StringComparison.Ordinal)) return flowId;
+            }
+            return null;
         }
 
         private WorkflowEdgeType EdgeTypeFor(WorkflowNode sourceNode, BpmnSequenceFlow flow)
@@ -246,8 +394,9 @@ namespace MegaForm.Core.Workflow.Bpmn
         /// </summary>
         private bool IsTrueBranch(BpmnModel model, BpmnElement element, BpmnSequenceFlow flow)
         {
-            if (!string.IsNullOrEmpty(element.DefaultFlowId))
-                return !string.Equals(element.DefaultFlowId, flow.Id, StringComparison.Ordinal);
+            var explicitDefault = EffectiveDefaultFlowId(element);
+            if (explicitDefault != null)
+                return !string.Equals(explicitDefault, flow.Id, StringComparison.Ordinal);
 
             var conditioned = ConditionedFlowIds(model, element);
             if (conditioned.Count == 1)
@@ -255,6 +404,20 @@ namespace MegaForm.Core.Workflow.Bpmn
 
             return element.OutgoingFlowIds.Count > 0 &&
                    string.Equals(element.OutgoingFlowIds[0], flow.Id, StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// The gateway's `default` attribute, but only when it actually names one of this
+        /// gateway's exits. A stale value — left behind by hand editing, a format conversion, or
+        /// re-parenting a flow — would otherwise make `flow.Id != default` true for EVERY exit, so
+        /// both branches of a two-way gateway would be written as "true" and the "false" branch
+        /// would never exist. Returns null when the attribute is absent or dangling.
+        /// </summary>
+        private static string EffectiveDefaultFlowId(BpmnElement element)
+        {
+            var id = element.DefaultFlowId;
+            if (string.IsNullOrEmpty(id)) return null;
+            return element.OutgoingFlowIds.Contains(id) ? id : null;
         }
 
         private List<string> ConditionedFlowIds(BpmnModel model, BpmnElement element)
@@ -268,11 +431,32 @@ namespace MegaForm.Core.Workflow.Bpmn
             return ids;
         }
 
+        /// <summary>
+        /// Exactly one exit can be the default. Without this cap, every unconditioned exit of a
+        /// three-way gateway got the "default" handle, and the engine takes the FIRST edge with a
+        /// matching handle — so the second and third became unreachable without a word being said.
+        /// </summary>
         private bool IsDefaultFlow(BpmnModel model, BpmnElement element, BpmnSequenceFlow flow)
         {
-            if (!string.IsNullOrEmpty(element.DefaultFlowId))
-                return string.Equals(element.DefaultFlowId, flow.Id, StringComparison.Ordinal);
-            return !flow.HasCondition && ConditionedFlowIds(model, element).Count > 0;
+            var explicitDefault = EffectiveDefaultFlowId(element);
+            if (explicitDefault != null)
+                return string.Equals(explicitDefault, flow.Id, StringComparison.Ordinal);
+
+            // No usable `default` attribute: the first exit with no condition plays that part,
+            // and any further unconditioned exits become ordinary cases the author must fill in.
+            var firstUnconditioned = FirstUnconditionedFlowId(model, element);
+            return firstUnconditioned != null &&
+                   string.Equals(firstUnconditioned, flow.Id, StringComparison.Ordinal);
+        }
+
+        private static string FirstUnconditionedFlowId(BpmnModel model, BpmnElement element)
+        {
+            foreach (var flowId in element.OutgoingFlowIds)
+            {
+                var flow = model.FindFlow(flowId);
+                if (flow != null && !flow.HasCondition) return flowId;
+            }
+            return null;
         }
 
         /// <summary>
@@ -324,11 +508,15 @@ namespace MegaForm.Core.Workflow.Bpmn
                 }
                 else
                 {
-                    map.Node.Config["ConditionsJson"] = string.Empty;
+                    // NOT an empty string: WorkflowEvaluator.EvaluateCondition returns TRUE for a
+                    // blank ConditionsJson, so an untranslated gateway would send every submission
+                    // down the YES branch — auto-approving on exactly the diagrams where a human
+                    // meant to decide. The sentinel can never match, so it falls to No instead.
+                    map.Node.Config["ConditionsJson"] = BpmnConditionTranslator.UnresolvedConditionJson();
                     result.Warn(element.Id, element.LocalName,
-                        "Condition '" + (map.Node.Label ?? element.Id) + "' was left empty because " +
+                        "Condition '" + (map.Node.Label ?? element.Id) + "' could not be translated because " +
                         (reason ?? "the branch could not be identified") +
-                        ". Set it before applying, or every submission takes the No branch.");
+                        ". Until you set it, every submission takes the No branch.");
                 }
 
                 if (trueFlow != null && !string.IsNullOrWhiteSpace(trueFlow.Name))
@@ -336,10 +524,25 @@ namespace MegaForm.Core.Workflow.Bpmn
             }
         }
 
+        /// <summary>
+        /// Fills a Switch's field and case values from the gateway's own conditions.
+        ///
+        /// A three-way `${region == 'EU'}` gateway already carries exactly what a Switch needs, so
+        /// read it rather than leave placeholders. The placeholders were not merely unhelpful: an
+        /// empty case Value MATCHES, because SwitchNodeExecutor compares the resolved field (empty,
+        /// since FieldKey was empty too) against the case value with string equality. Case 0 caught
+        /// every submission and the default branch was unreachable.
+        ///
+        /// When the conditions cannot be read — different fields, operators other than equality,
+        /// expressions the translator refuses — the node is DISABLED. A disabled Switch returns
+        /// "handle::default", which is the diagram's own default branch: the one place a routing
+        /// decision the importer could not make can safely land.
+        /// </summary>
         private void ApplySwitchCases(
             BpmnModel model,
             Dictionary<string, BpmnMappedElement> mapped,
-            WorkflowDefinition definition)
+            WorkflowDefinition definition,
+            BpmnImportResult result)
         {
             foreach (var element in model.Elements)
             {
@@ -348,118 +551,67 @@ namespace MegaForm.Core.Workflow.Bpmn
                 if (map.Node.Type != WorkflowNodeType.Switch) continue;
 
                 var cases = new List<Dictionary<string, object>>();
+                var comparisons = new List<BpmnConditionTranslator.BpmnComparison>();
                 var index = 0;
+                var readable = true;
+
                 foreach (var flowId in element.OutgoingFlowIds)
                 {
                     var flow = model.FindFlow(flowId);
                     if (flow == null || IsDefaultFlow(model, element, flow)) continue;
 
+                    BpmnConditionTranslator.BpmnComparison comparison;
+                    string reason;
+                    if (!BpmnConditionTranslator.TryParseComparison(flow.ConditionExpression, out comparison, out reason) ||
+                        !string.Equals(comparison.Operator, "eq", StringComparison.Ordinal))
+                    {
+                        readable = false;
+                        comparison = null;
+                    }
+                    comparisons.Add(comparison);
+
                     var entry = new Dictionary<string, object>();
                     entry["Id"]    = "case-" + index;
-                    entry["Value"] = string.Empty; // the literal cannot be read reliably; author fills it
+                    entry["Value"] = comparison != null ? comparison.Literal : string.Empty;
                     entry["Label"] = !string.IsNullOrWhiteSpace(flow.Name)
                         ? flow.Name.Trim()
                         : ("Case " + (index + 1));
                     cases.Add(entry);
                     index++;
                 }
+
                 map.Node.Config["Cases"] = cases;
-            }
-        }
 
-        /// <summary>
-        /// Records each Fork's branch entry points and the Join that closes it. The Join is the
-        /// nearest node reachable from every branch — nearest by the longest hop count across
-        /// branches, so a Join that only some branches reach early is not chosen over the real one.
-        /// </summary>
-        private void PairForksWithJoins(
-            BpmnModel model,
-            Dictionary<string, BpmnMappedElement> mapped,
-            WorkflowDefinition definition,
-            BpmnImportResult result)
-        {
-            var adjacency = BuildAdjacency(definition);
-
-            foreach (var element in model.Elements)
-            {
-                BpmnMappedElement map;
-                if (!mapped.TryGetValue(element.Id, out map) || map == null || map.Node == null) continue;
-                if (map.Node.Type != WorkflowNodeType.Fork) continue;
-
-                var branchStarts = new List<string>();
-                foreach (var flowId in element.OutgoingFlowIds)
+                // Every case has to test the SAME field — a Switch compares one field against N
+                // values. Mixed fields mean the gateway was doing something a Switch cannot.
+                string field = null;
+                if (readable && comparisons.Count > 0)
                 {
-                    var flow = model.FindFlow(flowId);
-                    if (flow == null) continue;
-                    var target = ResolveNodeTarget(model, mapped, flow.TargetRef);
-                    if (!string.IsNullOrEmpty(target) && !branchStarts.Contains(target))
-                        branchStarts.Add(target);
+                    foreach (var comparison in comparisons)
+                    {
+                        if (comparison == null) { readable = false; break; }
+                        if (field == null) field = comparison.Field;
+                        else if (!string.Equals(field, comparison.Field, StringComparison.OrdinalIgnoreCase))
+                        {
+                            readable = false;
+                            break;
+                        }
+                    }
                 }
-                map.Node.Config["BranchStartNodeIds"] = branchStarts;
 
-                var join = FindJoin(definition, adjacency, branchStarts);
-                if (join != null)
+                if (readable && !string.IsNullOrEmpty(field))
                 {
-                    map.Node.Config["JoinNodeId"] = join;
-                }
-                else
-                {
-                    result.Warn(element.Id, element.LocalName,
-                        "Parallel gateway '" + (map.Node.Label ?? element.Id) +
-                        "' has no Join that all its branches reach — set the Join node before applying.");
-                }
-            }
-        }
-
-        private string FindJoin(
-            WorkflowDefinition definition, Dictionary<string, List<string>> adjacency, List<string> branchStarts)
-        {
-            if (branchStarts.Count == 0) return null;
-
-            var joinIds = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var node in definition.Nodes)
-            {
-                if (node.Type == WorkflowNodeType.Join) joinIds.Add(node.Id);
-            }
-            if (joinIds.Count == 0) return null;
-
-            Dictionary<string, int> best = null;
-            foreach (var start in branchStarts)
-            {
-                var distances = BreadthFirstDistances(adjacency, start);
-
-                if (best == null)
-                {
-                    best = new Dictionary<string, int>(StringComparer.Ordinal);
-                    foreach (var pair in distances)
-                        if (joinIds.Contains(pair.Key)) best[pair.Key] = pair.Value;
+                    map.Node.Config["FieldKey"] = field;
                     continue;
                 }
 
-                var narrowed = new Dictionary<string, int>(StringComparer.Ordinal);
-                foreach (var pair in best)
-                {
-                    int distance;
-                    if (distances.TryGetValue(pair.Key, out distance))
-                        narrowed[pair.Key] = Math.Max(pair.Value, distance);
-                }
-                best = narrowed;
-                if (best.Count == 0) return null;
+                map.Node.Config["FieldKey"] = string.Empty;
+                map.Node.IsDisabled = true;
+                result.Warn(element.Id, element.LocalName,
+                    "'" + (map.Node.Label ?? element.Id) + "' could not be read as a single field compared " +
+                    "against fixed values, so it is imported switched OFF and every submission takes its " +
+                    "default branch. Set the field and the case values, then enable it.");
             }
-
-            if (best == null || best.Count == 0) return null;
-
-            string winner = null;
-            var bestDistance = int.MaxValue;
-            foreach (var pair in best)
-            {
-                if (pair.Value < bestDistance)
-                {
-                    bestDistance = pair.Value;
-                    winner = pair.Key;
-                }
-            }
-            return winner;
         }
 
         private static Dictionary<string, List<string>> BuildAdjacency(WorkflowDefinition definition)
@@ -562,6 +714,31 @@ namespace MegaForm.Core.Workflow.Bpmn
                 if (reachable.ContainsKey(node.Id)) continue;
                 result.Warn(null, node.Type.ToString(),
                     "'" + (node.Label ?? node.Id) + "' cannot be reached from the start of the workflow.");
+            }
+        }
+
+        /// <summary>
+        /// A collaboration has one process per pool and MegaForm runs one workflow per submission,
+        /// so only one pool can be imported. Which one, and what was left behind, must be said out
+        /// loud — the alternative is a file that imports "successfully" as a third of itself.
+        /// </summary>
+        private static void ReportSkippedProcesses(BpmnModel model, BpmnImportResult result)
+        {
+            if (model.SkippedProcessIds.Count > 0)
+            {
+                result.Warn(model.ProcessId, "process",
+                    "This document has " + (model.SkippedProcessIds.Count + 1) + " pools. Only '" +
+                    (model.ProcessId ?? "the first") + "' was imported; " +
+                    string.Join(", ", model.SkippedProcessIds.ToArray()) +
+                    " were not, because a MegaForm workflow runs for one form.");
+            }
+
+            if (model.EmptyProcessIds.Count > 0)
+            {
+                result.Warn(model.ProcessId, "process",
+                    "Ignored " + model.EmptyProcessIds.Count + " empty pool(s) (" +
+                    string.Join(", ", model.EmptyProcessIds.ToArray()) +
+                    ") — a black-box participant has nothing to import.");
             }
         }
 

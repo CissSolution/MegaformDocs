@@ -142,10 +142,24 @@ namespace MegaForm.Core.Workflow.Bpmn
         /// <summary>Element id → shape bounds. Empty when the file has no BPMNDiagram.</summary>
         public Dictionary<string, BpmnShapeBounds> Shapes { get; private set; }
 
-        /// <summary>Name of the first process element, used as the workflow name.</summary>
+        /// <summary>Name of the chosen process element, used as the workflow name.</summary>
         public string ProcessName { get; private set; }
 
-        /// <summary>Local names of elements found inside a process that are not flow nodes we model.</summary>
+        /// <summary>Id of the chosen process, so a multi-pool import can say which pool it took.</summary>
+        public string ProcessId { get; private set; }
+
+        /// <summary>Ids of processes that had flow nodes but were not the one imported (other pools).</summary>
+        public List<string> SkippedProcessIds { get; private set; }
+
+        /// <summary>Ids of processes with nothing in them — black-box participants.</summary>
+        public List<string> EmptyProcessIds { get; private set; }
+
+        /// <summary>
+        /// Elements sitting where a flow node would sit that this reader does not model —
+        /// "adHocSubProcess", a vendor extension, a BPMN version we do not know. Without this the
+        /// element vanished, its flows dead-ended, and STRICT mode still reported success while
+        /// quietly truncating the workflow.
+        /// </summary>
         public List<BpmnElement> UnknownElements { get; private set; }
 
         private readonly Dictionary<string, BpmnElement> _byId =
@@ -163,12 +177,26 @@ namespace MegaForm.Core.Workflow.Bpmn
             "intermediateCatchEvent", "intermediateThrowEvent", "boundaryEvent",
         };
 
+        /// <summary>
+        /// Direct children of a process that are bookkeeping, not steps. Anything else that is not
+        /// a flow node and not a sequenceFlow is reported as unknown rather than ignored.
+        /// </summary>
+        private static readonly HashSet<string> ProcessBookkeepingNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "laneSet", "lane", "flowNodeRef", "extensionElements", "documentation", "ioSpecification",
+            "property", "dataObject", "dataObjectReference", "dataStoreReference", "textAnnotation",
+            "association", "group", "auditing", "monitoring", "resourceRole", "correlationSubscription",
+            "supportedInterfaceRef", "artifact",
+        };
+
         private BpmnModel()
         {
-            Elements        = new List<BpmnElement>();
-            Flows           = new List<BpmnSequenceFlow>();
-            Shapes          = new Dictionary<string, BpmnShapeBounds>(StringComparer.Ordinal);
-            UnknownElements = new List<BpmnElement>();
+            Elements          = new List<BpmnElement>();
+            Flows             = new List<BpmnSequenceFlow>();
+            Shapes            = new Dictionary<string, BpmnShapeBounds>(StringComparer.Ordinal);
+            UnknownElements   = new List<BpmnElement>();
+            SkippedProcessIds = new List<string>();
+            EmptyProcessIds   = new List<string>();
         }
 
         public BpmnElement FindElement(string id)
@@ -238,16 +266,72 @@ namespace MegaForm.Core.Workflow.Bpmn
             }
 
             var result = new BpmnModel();
-            var process = processes[0];
+
+            var process = ChooseProcess(processes, result);
+            if (process == null)
+            {
+                error = "None of the " + processes.Count + " <process> element(s) in this document " +
+                        "contains anything to import.";
+                return false;
+            }
+
             result.ProcessName = Attr(process, "name");
+            result.ProcessId   = Attr(process, "id");
 
             result.ReadFlowNodes(process);
+            // Before LinkFlows: unknown elements join Elements, and they need their incoming and
+            // outgoing flows wired up like any other node or the graph breaks around them.
+            result.ReadUnknownElements(process);
             result.ReadSequenceFlows(process);
             result.LinkFlows();
             result.ReadDiagram(doc.Root);
 
             model = result;
             return true;
+        }
+
+        /// <summary>
+        /// Picks the process to import, and records the ones it did not pick.
+        ///
+        /// Taking index 0 was wrong twice over. A collaboration has one process per pool, so the
+        /// other pools vanished with Success=true and no warning. And a black-box participant —
+        /// an empty process, which is how modellers draw a party whose internals they do not own —
+        /// is frequently FIRST, which made the importer refuse a file it could have imported.
+        /// So: only processes with something in them, executable ones preferred.
+        /// </summary>
+        private static XElement ChooseProcess(List<XElement> processes, BpmnModel result)
+        {
+            var candidates = new List<XElement>();
+            foreach (var process in processes)
+            {
+                if (HasFlowNode(process)) candidates.Add(process);
+                else result.EmptyProcessIds.Add(Attr(process, "id") ?? "(no id)");
+            }
+            if (candidates.Count == 0) return null;
+
+            XElement chosen = null;
+            foreach (var candidate in candidates)
+            {
+                var executable = Attr(candidate, "isExecutable");
+                if (string.Equals(executable, "true", StringComparison.OrdinalIgnoreCase)) { chosen = candidate; break; }
+            }
+            if (chosen == null) chosen = candidates[0];
+
+            foreach (var candidate in candidates)
+            {
+                if (!ReferenceEquals(candidate, chosen))
+                    result.SkippedProcessIds.Add(Attr(candidate, "id") ?? "(no id)");
+            }
+            return chosen;
+        }
+
+        private static bool HasFlowNode(XElement process)
+        {
+            foreach (var el in process.Descendants())
+            {
+                if (FlowNodeNames.Contains(el.Name.LocalName)) return true;
+            }
+            return false;
         }
 
         // ── Reading ──────────────────────────────────────────────────────────
@@ -263,6 +347,11 @@ namespace MegaForm.Core.Workflow.Bpmn
                 var localName = el.Name.LocalName;
                 if (string.Equals(localName, "sequenceFlow", StringComparison.OrdinalIgnoreCase)) continue;
                 if (!FlowNodeNames.Contains(localName)) continue;
+
+                // A subProcess's children belong to the subProcess, not to this process. Hoisting
+                // them produced phantom top-level nodes that nothing pointed at, next to the
+                // "unsupported subProcess" placeholder that stood for the same work.
+                if (IsInsideSubProcess(el, process)) continue;
 
                 var element = new BpmnElement
                 {
@@ -328,6 +417,72 @@ namespace MegaForm.Core.Workflow.Bpmn
                 var target = FindElement(flow.TargetRef);
                 if (target != null) target.IncomingFlowIds.Add(flow.Id);
             }
+        }
+
+        private static bool IsInsideSubProcess(XElement element, XElement process)
+        {
+            for (var parent = element.Parent; parent != null && parent != process; parent = parent.Parent)
+            {
+                var name = parent.Name.LocalName;
+                if (string.Equals(name, "subProcess", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(name, "transaction", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(name, "adHocSubProcess", StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Registers anything sitting where a step would sit that this reader does not model —
+        /// "adHocSubProcess", a vendor extension, a BPMN version we do not know.
+        ///
+        /// They join Elements rather than being noted on the side, so they travel the SAME path as
+        /// a subProcess: the mapper refuses them, strict mode fails, and lenient mode leaves a
+        /// disabled placeholder. That placeholder is what keeps the chain intact — an element that
+        /// merely vanished took its neighbours' connections with it, and the workflow then had no
+        /// start at all.
+        ///
+        /// Only direct children of the process and of its lanes are examined. Going deeper would
+        /// sweep up every timeDuration and conditionExpression, which are parts of a step, not steps.
+        /// </summary>
+        private void ReadUnknownElements(XElement process)
+        {
+            foreach (var el in process.Elements())
+            {
+                CollectUnknown(el);
+
+                if (string.Equals(el.Name.LocalName, "laneSet", StringComparison.OrdinalIgnoreCase))
+                {
+                    foreach (var lane in el.Elements())
+                    {
+                        foreach (var child in lane.Elements()) CollectUnknown(child);
+                    }
+                }
+            }
+        }
+
+        private void CollectUnknown(XElement el)
+        {
+            var localName = el.Name.LocalName;
+            if (FlowNodeNames.Contains(localName)) return;
+            if (ProcessBookkeepingNames.Contains(localName)) return;
+            if (string.Equals(localName, "sequenceFlow", StringComparison.OrdinalIgnoreCase)) return;
+
+            var id = Attr(el, "id");
+            if (string.IsNullOrEmpty(id)) return;      // unreferenceable — no flow can point at it
+            if (_byId.ContainsKey(id)) return;
+
+            var element = new BpmnElement
+            {
+                Id        = id,
+                LocalName = localName,
+                Name      = Attr(el, "name"),
+                Xml       = el,
+            };
+
+            _byId[id] = element;
+            Elements.Add(element);
+            UnknownElements.Add(element);
         }
 
         private void ReadDiagram(XElement root)

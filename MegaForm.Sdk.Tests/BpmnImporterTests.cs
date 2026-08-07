@@ -158,11 +158,65 @@ namespace MegaForm.Sdk.Tests
             var json = (string)condition.Config["ConditionsJson"];
             Assert.Contains("\"field\":\"amount\"", json);
             Assert.Contains("\"operator\":\"gt\"", json);
-            Assert.Contains("\"value\":1000", json);
+
+            // A STRING, even though 1000 is a number. WorkflowEvaluator compares by calling
+            // ToString() on the deserialized value, which for a boxed double formats in the host's
+            // culture — 0.5 would become "0,5" on this machine's locale and then fail the
+            // invariant-culture numeric parse, so every gt/lt would quietly return false.
+            Assert.Contains("\"value\":\"1000\"", json);
         }
 
         [Fact]
-        public void An_expression_we_cannot_translate_leaves_the_condition_empty_and_warns()
+        public void A_numeric_literal_keeps_the_authors_own_text()
+        {
+            const string xml = @"
+<definitions xmlns='http://www.omg.org/spec/BPMN/20100524/MODEL'>
+  <process id='P'>
+    <startEvent id='S' />
+    <exclusiveGateway id='G' default='F2' />
+    <endEvent id='E1' /><endEvent id='E2' />
+    <sequenceFlow id='F0' sourceRef='S' targetRef='G' />
+    <sequenceFlow id='F1' sourceRef='G' targetRef='E1'>
+      <conditionExpression>${total == 10.50}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id='F2' sourceRef='G' targetRef='E2' />
+  </process>
+</definitions>";
+
+            var result = Import(xml);
+            var json = (string)SingleOfType(result.Definition, WorkflowNodeType.Condition).Config["ConditionsJson"];
+
+            // Not "10.5": the run-time eq is a string comparison, so renormalising through double
+            // would stop it matching the value a form actually submitted.
+            Assert.Contains("\"value\":\"10.50\"", json);
+        }
+
+        [Fact]
+        public void A_relational_comparison_against_a_word_is_refused_rather_than_never_firing()
+        {
+            const string xml = @"
+<definitions xmlns='http://www.omg.org/spec/BPMN/20100524/MODEL'>
+  <process id='P'>
+    <startEvent id='S' />
+    <exclusiveGateway id='G' default='F2' />
+    <endEvent id='E1' /><endEvent id='E2' />
+    <sequenceFlow id='F0' sourceRef='S' targetRef='G' />
+    <sequenceFlow id='F1' sourceRef='G' targetRef='E1'>
+      <conditionExpression>${grade &gt; 'B'}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id='F2' sourceRef='G' targetRef='E2' />
+  </process>
+</definitions>";
+
+            var result = Import(xml);
+
+            // gt/lt are numeric-only at run time, so a rule against 'B' could never fire — that
+            // reads as a working condition that simply never matches. Refuse and say why.
+            Assert.Contains(result.Warnings, w => w.Message.Contains("needs a numeric value"));
+        }
+
+        [Fact]
+        public void An_expression_we_cannot_translate_fails_closed_towards_the_No_branch()
         {
             const string xml = @"
 <definitions xmlns='http://www.omg.org/spec/BPMN/20100524/MODEL'>
@@ -180,9 +234,38 @@ namespace MegaForm.Sdk.Tests
 
             var result = Import(xml);
             var condition = SingleOfType(result.Definition, WorkflowNodeType.Condition);
+            var json = (string)condition.Config["ConditionsJson"];
 
-            Assert.Equal(string.Empty, condition.Config["ConditionsJson"]);
+            // NOT empty. WorkflowEvaluator.EvaluateCondition returns TRUE for a blank
+            // ConditionsJson, so leaving it empty would send every submission down the YES branch —
+            // auto-approving on exactly the gateways where a human meant to decide. The sentinel
+            // compares a key no form can have, so it can never be true.
+            Assert.NotEqual(string.Empty, json);
+            Assert.Contains("__bpmn_condition_not_imported", json);
+
             Assert.Contains(result.Warnings, w => w.Message.Contains("combines several conditions"));
+            Assert.Contains(result.Warnings, w => w.Message.Contains("takes the No branch"));
+        }
+
+        [Fact]
+        public void The_fail_closed_condition_is_json_the_evaluator_can_read()
+        {
+            var result = Import(TwoWayGateway);
+            var good = (string)SingleOfType(result.Definition, WorkflowNodeType.Condition).Config["ConditionsJson"];
+
+            // Both the translated and the sentinel form must survive the round trip the engine
+            // does — a malformed sentinel would be caught by EvaluateCondition's catch and treated
+            // as false, which happens to be right, but for the wrong reason and only by luck.
+            foreach (var json in new[] { good, BpmnConditionTranslator.UnresolvedConditionJson() })
+            {
+                var parsed = Newtonsoft.Json.Linq.JObject.Parse(json);
+                Assert.Equal("group", (string)parsed["type"]);
+                var children = (Newtonsoft.Json.Linq.JArray)parsed["children"];
+                Assert.Single(children);
+                Assert.Equal("rule", (string)children[0]["type"]);
+                Assert.False(string.IsNullOrWhiteSpace((string)children[0]["field"]));
+                Assert.False(string.IsNullOrWhiteSpace((string)children[0]["operator"]));
+            }
         }
 
         // ── Exclusive gateway, many ways ─────────────────────────────────────
@@ -228,7 +311,7 @@ namespace MegaForm.Sdk.Tests
         // ── Parallel gateway ─────────────────────────────────────────────────
 
         [Fact]
-        public void Parallel_gateways_become_a_fork_that_knows_its_branches_and_its_join()
+        public void Parallel_gateways_are_refused_because_the_runtime_cannot_execute_them()
         {
             const string xml = @"
 <definitions xmlns='http://www.omg.org/spec/BPMN/20100524/MODEL'>
@@ -251,17 +334,82 @@ namespace MegaForm.Sdk.Tests
             var result = Import(xml);
             Assert.True(result.Success);
 
-            var fork = SingleOfType(result.Definition, WorkflowNodeType.Fork);
-            var join = SingleOfType(result.Definition, WorkflowNodeType.Join);
+            // Fork and Join exist in WorkflowNodeType but are NOT in SupportedNodeTypes.All and
+            // have no executor, and WorkflowEvaluator rejects an unsupported type with severity
+            // "error" in BOTH Draft and Apply mode. Importing them would produce a definition that
+            // cannot even be SAVED — an import that reports success and then fails at the first
+            // save is worse than one that says what it cannot do.
+            Assert.DoesNotContain(result.Definition.Nodes, n => n.Type == WorkflowNodeType.Fork);
+            Assert.DoesNotContain(result.Definition.Nodes, n => n.Type == WorkflowNodeType.Join);
+            Assert.Equal(2, result.UnsupportedElements.Count(u => u.Contains("parallelGateway")));
+            Assert.Contains(result.UnsupportedElements, u => u.Contains("no runtime executor"));
 
-            var branches = Assert.IsType<List<string>>(fork.Config["BranchStartNodeIds"]);
-            Assert.Equal(2, branches.Count);
-            var branchLabels = branches.Select(id => NodeById(result.Definition, id).Label).ToList();
-            Assert.Contains("Notify finance", branchLabels);
-            Assert.Contains("Notify HR", branchLabels);
+            // The two tasks between them still arrive, as disabled placeholders' neighbours.
+            Assert.Contains(result.Definition.Nodes, n => n.Label == "Notify finance");
+            Assert.Contains(result.Definition.Nodes, n => n.Label == "Notify HR");
+        }
 
-            Assert.Equal(join.Id, fork.Config["JoinNodeId"]);
-            Assert.All(EdgesFrom(result.Definition, fork.Id), e => Assert.Equal(WorkflowEdgeType.Fork, e.EdgeType));
+        [Fact]
+        public void Strict_mode_refuses_a_parallel_gateway_outright()
+        {
+            const string xml = @"
+<definitions xmlns='http://www.omg.org/spec/BPMN/20100524/MODEL'>
+  <process id='P'>
+    <startEvent id='S' />
+    <parallelGateway id='Fork' />
+    <serviceTask id='A' name='A' /><serviceTask id='B' name='B' />
+    <sequenceFlow id='F0' sourceRef='S' targetRef='Fork' />
+    <sequenceFlow id='F1' sourceRef='Fork' targetRef='A' />
+    <sequenceFlow id='F2' sourceRef='Fork' targetRef='B' />
+  </process>
+</definitions>";
+
+            var result = Import(xml, strict: true);
+            Assert.False(result.Success);
+        }
+
+        // ── Approval outcomes ────────────────────────────────────────────────
+
+        [Fact]
+        public void An_approvals_two_exits_get_the_handles_the_engine_resumes_with()
+        {
+            const string xml = @"
+<definitions xmlns='http://www.omg.org/spec/BPMN/20100524/MODEL'>
+  <process id='P'>
+    <startEvent id='S' />
+    <userTask id='T' name='Manager approval' />
+    <serviceTask id='Pay' name='Pay claim' />
+    <sendTask id='Tell' name='Notify rejection' />
+    <sequenceFlow id='F0' sourceRef='S' targetRef='T' />
+    <sequenceFlow id='F_ok' name='Approve' sourceRef='T' targetRef='Pay' />
+    <sequenceFlow id='F_no' name='Reject' sourceRef='T' targetRef='Tell' />
+  </process>
+</definitions>";
+
+            var result = Import(xml);
+            var approval = SingleOfType(result.Definition, WorkflowNodeType.Approval);
+            var edges = EdgesFrom(result.Definition, approval.Id);
+
+            // WorkflowTaskService resumes with "approved"/"rejected", and the engine falls back to
+            // the first "default" edge when it finds no exact match. Two "default" edges therefore
+            // sent a REJECTED claim down the approval path — on this diagram, it paid it.
+            Assert.Equal("Pay claim",
+                NodeById(result.Definition, edges.Single(e => e.SourceHandle == "approved").TargetNodeId).Label);
+            Assert.Equal("Notify rejection",
+                NodeById(result.Definition, edges.Single(e => e.SourceHandle == "rejected").TargetNodeId).Label);
+            Assert.DoesNotContain(edges, e => e.SourceHandle == "default");
+        }
+
+        [Fact]
+        public void An_approval_with_one_exit_keeps_default_and_says_rejection_follows_it()
+        {
+            var result = Import(LinearProcess);
+            var approval = SingleOfType(result.Definition, WorkflowNodeType.Approval);
+
+            // BPMN modelled no reject path, so both outcomes continue the same way. That is a
+            // faithful import — but the author has to be told, not left to find out in production.
+            Assert.Equal("default", EdgesFrom(result.Definition, approval.Id).Single().SourceHandle);
+            Assert.Contains(result.Warnings, w => w.Message.Contains("rejection continues down the same path"));
         }
 
         // ── Timer ────────────────────────────────────────────────────────────
@@ -413,6 +561,237 @@ namespace MegaForm.Sdk.Tests
 
             Assert.Equal(new[] { "Reviewers" }, roles);
             Assert.Contains(result.Warnings, w => w.ElementId == "T" && w.Message.Contains("names no assignee"));
+        }
+
+        // ── Gateway shapes that used to route silently wrong ─────────────────
+
+        [Fact]
+        public void A_switch_reads_its_field_and_case_values_from_the_gateway_conditions()
+        {
+            const string xml = @"
+<definitions xmlns='http://www.omg.org/spec/BPMN/20100524/MODEL'>
+  <process id='P'>
+    <startEvent id='S' />
+    <exclusiveGateway id='G' name='Route by region' default='F_other' />
+    <endEvent id='E1' name='EU' /><endEvent id='E2' name='US' /><endEvent id='E3' name='Other' />
+    <sequenceFlow id='F0' sourceRef='S' targetRef='G' />
+    <sequenceFlow id='F_eu' name='EU' sourceRef='G' targetRef='E1'>
+      <conditionExpression>${region == 'EU'}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id='F_us' name='US' sourceRef='G' targetRef='E2'>
+      <conditionExpression>${region == 'US'}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id='F_other' name='Other' sourceRef='G' targetRef='E3' />
+  </process>
+</definitions>";
+
+            var result = Import(xml);
+            var node = SingleOfType(result.Definition, WorkflowNodeType.Switch);
+            var cases = Assert.IsType<List<Dictionary<string, object>>>(node.Config["Cases"]);
+
+            // The gateway already says which field and which values; reading them beats leaving
+            // placeholders. An empty case value MATCHES — SwitchNodeExecutor compares the resolved
+            // field against it with string equality — so case 0 used to catch every submission and
+            // the default branch was unreachable.
+            Assert.Equal("region", node.Config["FieldKey"]);
+            Assert.Equal("EU", cases[0]["Value"]);
+            Assert.Equal("US", cases[1]["Value"]);
+            Assert.False(node.IsDisabled);
+        }
+
+        [Fact]
+        public void A_switch_whose_conditions_cannot_be_read_is_imported_switched_off()
+        {
+            const string xml = @"
+<definitions xmlns='http://www.omg.org/spec/BPMN/20100524/MODEL'>
+  <process id='P'>
+    <startEvent id='S' />
+    <exclusiveGateway id='G' name='Route' default='F3' />
+    <endEvent id='E1' /><endEvent id='E2' /><endEvent id='E3' />
+    <sequenceFlow id='F0' sourceRef='S' targetRef='G' />
+    <sequenceFlow id='F1' sourceRef='G' targetRef='E1'>
+      <conditionExpression>${region == 'EU'}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id='F2' sourceRef='G' targetRef='E2'>
+      <conditionExpression>${score &gt; 10}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id='F3' sourceRef='G' targetRef='E3' />
+  </process>
+</definitions>";
+
+            var result = Import(xml);
+            var node = SingleOfType(result.Definition, WorkflowNodeType.Switch);
+
+            // Two different fields: a Switch tests ONE field against N values, so this gateway was
+            // doing something it cannot express. Disabled means the executor returns
+            // "handle::default" — the diagram's own default branch, the one safe landing place.
+            Assert.True(node.IsDisabled);
+            Assert.Equal(string.Empty, node.Config["FieldKey"]);
+            Assert.Contains(result.Warnings, w => w.Message.Contains("imported switched OFF"));
+        }
+
+        [Fact]
+        public void A_default_attribute_that_names_a_foreign_flow_is_ignored_and_reported()
+        {
+            const string xml = @"
+<definitions xmlns='http://www.omg.org/spec/BPMN/20100524/MODEL'>
+  <process id='P'>
+    <startEvent id='S' />
+    <exclusiveGateway id='G' name='Big?' default='F_stale' />
+    <endEvent id='E1' name='Yes side' /><endEvent id='E2' name='No side' />
+    <sequenceFlow id='F0' sourceRef='S' targetRef='G' />
+    <sequenceFlow id='F_yes' sourceRef='G' targetRef='E1'>
+      <conditionExpression>${amount &gt; 1000}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id='F_no' sourceRef='G' targetRef='E2' />
+  </process>
+</definitions>";
+
+            var result = Import(xml);
+            var condition = SingleOfType(result.Definition, WorkflowNodeType.Condition);
+            var edges = EdgesFrom(result.Definition, condition.Id);
+
+            // A stale default made `flow.Id != default` true for EVERY exit, so both edges were
+            // written "true", no "false" edge existed, and a false result fell off the end of the
+            // workflow. Falling back to the conditioned flow is the honest reading.
+            Assert.Equal("Yes side", NodeById(result.Definition, edges.Single(e => e.SourceHandle == "true").TargetNodeId).Label);
+            Assert.Equal("No side",  NodeById(result.Definition, edges.Single(e => e.SourceHandle == "false").TargetNodeId).Label);
+            Assert.Contains(result.Warnings, w => w.Message.Contains("not one of its exits"));
+        }
+
+        [Fact]
+        public void Only_one_exit_can_be_the_default_and_the_rest_become_cases()
+        {
+            const string xml = @"
+<definitions xmlns='http://www.omg.org/spec/BPMN/20100524/MODEL'>
+  <process id='P'>
+    <startEvent id='S' />
+    <exclusiveGateway id='G' name='Route' />
+    <endEvent id='E1' name='EU' /><endEvent id='E2' name='US' /><endEvent id='E3' name='Rest' />
+    <sequenceFlow id='F0' sourceRef='S' targetRef='G' />
+    <sequenceFlow id='F1' sourceRef='G' targetRef='E1'>
+      <conditionExpression>${region == 'EU'}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id='F2' sourceRef='G' targetRef='E2' />
+    <sequenceFlow id='F3' sourceRef='G' targetRef='E3' />
+  </process>
+</definitions>";
+
+            var result = Import(xml);
+            var node = SingleOfType(result.Definition, WorkflowNodeType.Switch);
+            var edges = EdgesFrom(result.Definition, node.Id);
+
+            // Every unconditioned exit used to get "default", and the engine takes the FIRST edge
+            // with a matching handle — so the third exit was unreachable without a word being said.
+            Assert.Single(edges.Where(e => e.SourceHandle == "default"));
+            Assert.Contains(result.Warnings, w => w.Message.Contains("exits with no condition"));
+        }
+
+        [Fact]
+        public void A_condition_on_a_flow_that_no_gateway_enforces_is_reported()
+        {
+            const string xml = @"
+<definitions xmlns='http://www.omg.org/spec/BPMN/20100524/MODEL'>
+  <process id='P'>
+    <startEvent id='S' />
+    <serviceTask id='A' name='Charge card' />
+    <endEvent id='E' />
+    <sequenceFlow id='F0' sourceRef='S' targetRef='A' />
+    <sequenceFlow id='F1' sourceRef='A' targetRef='E'>
+      <conditionExpression>${amount &gt; 0}</conditionExpression>
+    </sequenceFlow>
+  </process>
+</definitions>";
+
+            var result = Import(xml);
+
+            // MegaForm gates at Condition/Switch nodes, never on an edge. Carrying the condition
+            // over as edge styling would imply a gate that does not exist.
+            Assert.Contains(result.Warnings, w => w.Message.Contains("is not enforced"));
+        }
+
+        // ── Documents with more than one pool ─────────────────────────────────
+
+        [Fact]
+        public void A_collaboration_imports_the_executable_pool_and_names_the_ones_it_skipped()
+        {
+            const string xml = @"
+<definitions xmlns='http://www.omg.org/spec/BPMN/20100524/MODEL'>
+  <collaboration id='C'>
+    <participant id='P1' name='Customer' processRef='Proc_black_box' />
+    <participant id='P2' name='Us' processRef='Proc_real' />
+  </collaboration>
+  <process id='Proc_black_box' name='Customer' />
+  <process id='Proc_other' name='Other pool'>
+    <startEvent id='S9' /><endEvent id='E9' />
+    <sequenceFlow id='F9' sourceRef='S9' targetRef='E9' />
+  </process>
+  <process id='Proc_real' name='Us' isExecutable='true'>
+    <startEvent id='S' />
+    <userTask id='T' name='Review' />
+    <endEvent id='E' />
+    <sequenceFlow id='F1' sourceRef='S' targetRef='T' />
+    <sequenceFlow id='F2' sourceRef='T' targetRef='E' />
+  </process>
+</definitions>";
+
+            var result = Import(xml);
+
+            // Taking index 0 was wrong twice: other pools vanished with Success=true, and a
+            // black-box participant sitting first made the importer refuse an importable file.
+            Assert.True(result.Success);
+            Assert.Equal("Us", result.Definition.Name);
+            Assert.Contains(result.Warnings, w => w.Message.Contains("Proc_other"));
+            Assert.Contains(result.Warnings, w => w.Message.Contains("empty pool"));
+        }
+
+        [Fact]
+        public void An_element_the_reader_does_not_model_is_listed_rather_than_dropped()
+        {
+            const string xml = @"
+<definitions xmlns='http://www.omg.org/spec/BPMN/20100524/MODEL'>
+  <process id='P'>
+    <startEvent id='S' />
+    <adHocSubProcess id='Ad' name='Gather evidence' />
+    <endEvent id='E' />
+    <sequenceFlow id='F1' sourceRef='S' targetRef='Ad' />
+    <sequenceFlow id='F2' sourceRef='Ad' targetRef='E' />
+  </process>
+</definitions>";
+
+            var lenient = Import(xml);
+            Assert.Contains(lenient.UnsupportedElements, u => u.Contains("adHocSubProcess"));
+
+            // Strict has to fail on these too — otherwise it reported success while quietly
+            // truncating the workflow at the element it did not recognise.
+            Assert.False(Import(xml, strict: true).Success);
+        }
+
+        [Fact]
+        public void Steps_inside_a_subprocess_do_not_become_top_level_nodes()
+        {
+            const string xml = @"
+<definitions xmlns='http://www.omg.org/spec/BPMN/20100524/MODEL'>
+  <process id='P'>
+    <startEvent id='S' />
+    <subProcess id='Sub' name='Collect documents'>
+      <startEvent id='InnerS' />
+      <userTask id='InnerT' name='Upload passport' />
+      <endEvent id='InnerE' />
+      <sequenceFlow id='IF1' sourceRef='InnerS' targetRef='InnerT' />
+    </subProcess>
+    <endEvent id='E' />
+    <sequenceFlow id='F1' sourceRef='S' targetRef='Sub' />
+    <sequenceFlow id='F2' sourceRef='Sub' targetRef='E' />
+  </process>
+</definitions>";
+
+            var result = Import(xml);
+
+            // The subProcess stands for that work as one unsupported placeholder; hoisting its
+            // children as well produced phantom nodes nothing pointed at.
+            Assert.DoesNotContain(result.Definition.Nodes, n => n.Label == "Upload passport");
+            Assert.Contains(result.UnsupportedElements, u => u.Contains("subProcess"));
         }
 
         // ── Refusals ─────────────────────────────────────────────────────────
