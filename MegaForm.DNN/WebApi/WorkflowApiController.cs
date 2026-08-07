@@ -14,7 +14,7 @@ using Newtonsoft.Json.Linq;
 namespace MegaForm.WebApi
 {
     [DnnAuthorize]
-    public class WorkflowController : DnnApiController
+    public partial class WorkflowController : DnnApiController
     {
         private static string ConnStr =>
             DotNetNuke.Common.Utilities.Config.GetConnectionString();
