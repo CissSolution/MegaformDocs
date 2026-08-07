@@ -196,6 +196,9 @@ namespace MegaForm.Umbraco.Composers
             builder.Services.AddScoped<INodeExecutor, AddRoleNodeExecutor>();
             builder.Services.AddScoped<INodeExecutor, AddUserNodeExecutor>();
             builder.Services.AddScoped<INodeExecutor, AddUserToRoleNodeExecutor>();
+            // [CloudReady A2 v20260806] Durable timer node (Delay) — resumed by
+            // MegaFormWorkflowTimerScannerHostedService below.
+            builder.Services.AddScoped<INodeExecutor, DelayNodeExecutor>();
 
             // ── UI / helpers
             builder.Services.AddSingleton<IThemeDesignerHostRenderer, ThemeDesignerHostRenderer>();
@@ -237,6 +240,10 @@ namespace MegaForm.Umbraco.Composers
             // ── Hosted services
             builder.Services.AddHostedService<MegaFormWarmupHostedService>();
             builder.Services.AddHostedService<MegaFormBlogScheduledHostedService>();
+            // [CloudReady A2 v20260806] Durable timer scanner (Delay resume + one-shot
+            // overdue reminder). Always on — a database with no waiting executions
+            // or overdue tasks simply scans empty.
+            builder.Services.AddHostedService<MegaFormWorkflowTimerScannerHostedService>();
 
             // ── Native Umbraco schema migration (replaces the Task.Run hosted-service bootstrap)
             builder.AddNotificationHandler<UmbracoApplicationStartingNotification, Migrations.MegaFormSchemaMigrationRunner>();
@@ -297,7 +304,7 @@ namespace MegaForm.Umbraco.Composers
             // settings), the per-host blob reader, and the fail-soft uploader SubmissionProcessor
             // picks up via its optional ctor parameter.
             services.AddSingleton<IStorageProvider, MegaForm.Integrations.CloudStorage.AmazonS3StorageProvider>();
-            services.AddSingleton<IStorageProvider, MegaForm.Integrations.CloudStorage.AzureBlobStorageProvider>();
+            // [AzureBlobRemoved v20260726] Azure Blob provider dropped (Azure.Core net472 crash risk).
             services.AddSingleton<IStorageIntegrationService, StorageIntegrationService>();
             services.AddScoped<ICloudStorageConnectionProvider>(sp =>
                 new DelegateCloudStorageConnectionProvider(() =>

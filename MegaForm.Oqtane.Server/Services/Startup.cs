@@ -218,8 +218,25 @@ namespace MegaForm.Oqtane.Server.Services
             // outbound-call/SQL surfaces have not been reviewed for this host.
             services.AddScoped<INodeExecutor, EmailNodeExecutor>();
             services.AddScoped<INodeExecutor, EndNodeExecutor>();
+            // [CloudReady A2 v20260806] Durable timer node (Delay). The matching scanner
+            // (WorkflowTimerScannerHostedService below) is always on — Delay does not
+            // resume without it.
+            services.AddScoped<INodeExecutor, DelayNodeExecutor>();
             services.AddScoped<IWorkflowEngine, WorkflowEngineV2>();
             services.AddScoped<WorkflowEngine>();
+
+            // [CloudReady A1 v20260804] Async workflow execution queue. Oqtane stays on
+            // Sync by default — opt in per install with MegaForm:Workflow:ExecutionMode=queue.
+            // The worker hosted service is also gated on that flag (see
+            // WorkflowQueueWorkerHostedService), so a default install never polls.
+            services.AddScoped<IWorkflowExecutionQueue, OqtaneWorkflowExecutionQueue>();
+            services.AddSingleton<IWorkflowExecutionModeProvider>(sp =>
+                new ConfigWorkflowExecutionModeProvider(
+                    sp.GetService<IConfiguration>()?["MegaForm:Workflow:ExecutionMode"]));
+            services.AddHostedService<WorkflowQueueWorkerHostedService>();
+            // [CloudReady A2 v20260806] Durable timer scanner: resumes due Delay waits
+            // (per tenant) and sends the one-shot overdue task reminder. Always on.
+            services.AddHostedService<WorkflowTimerScannerHostedService>();
 
             services.AddScoped<PermissionService>();
             services.AddScoped<PermissionCatalogService>();
@@ -271,7 +288,7 @@ namespace MegaForm.Oqtane.Server.Services
             services.AddHttpClient<MegaForm.Core.Integrations.Storage.IStorageProvider, MegaForm.Core.Integrations.Storage.Providers.GoogleDriveProvider>("GoogleDrive");
             services.AddHttpClient<MegaForm.Core.Integrations.Storage.ICalendarProvider, MegaForm.Core.Integrations.Storage.Providers.GoogleCalendarProvider>("GoogleCalendar");
             services.AddSingleton<MegaForm.Core.Integrations.Storage.IStorageProvider, MegaForm.Integrations.CloudStorage.AmazonS3StorageProvider>();
-            services.AddSingleton<MegaForm.Core.Integrations.Storage.IStorageProvider, MegaForm.Integrations.CloudStorage.AzureBlobStorageProvider>();
+            // [AzureBlobRemoved v20260726] Azure Blob provider dropped (Azure.Core net472 crash risk).
             services.AddSingleton<MegaForm.Core.Integrations.Storage.IStorageIntegrationService, MegaForm.Core.Integrations.Storage.StorageIntegrationService>();
             // Named cloud connections live in the SAME Site-settings seam the SQL named
             // connections use (see ReadNamedConnectionsJson below), under the cloud catalog key.

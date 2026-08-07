@@ -72,6 +72,7 @@ namespace MegaForm.AspNetCore.Component
             {
                 options.ContentRootPath = environment?.ContentRootPath;
                 options.BaseUrl = configuration?["App:BaseUrl"] ?? options.BaseUrl;
+                options.WorkflowExecutionMode = configuration?["Workflow:ExecutionMode"] ?? options.WorkflowExecutionMode;
 
                 if (string.IsNullOrWhiteSpace(options.ConnectionString))
                 {
@@ -152,6 +153,10 @@ namespace MegaForm.AspNetCore.Component
                 using var scope = app.Services.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<MegaFormDbContext>();
                 DatabaseSchemaBootstrapper.EnsureMegaFormSchema(db);
+                // [CloudReady A4 v20260804] Mirror of MegaForm.Web/Program.cs: after the
+                // bootstrappers own the baseline, apply versioned scripts 0002+ under a
+                // DB-native single-instance lock (records baseline 0001 on first run).
+                MegaForm.Web.Data.Schema.SchemaMigrationRunner.ApplyPending(db, app.Environment.ContentRootPath);
                 Console.WriteLine("[MegaForm] Database ready.");
             }
             catch (Exception ex)
@@ -225,6 +230,12 @@ namespace MegaForm.AspNetCore.Component
             // WorkflowEngineV2 — real graph-based workflow runtime for the ASP.NET Core host.
             // (The NoOpWorkflowEngine implementation remains available in Core for hosts that need it.)
             services.AddScoped<IWorkflowEngine, WorkflowEngineV2>();
+            // [CloudReady A1 v20260804] Async workflow execution queue (mirror of
+            // MegaForm.Web/Program.cs). Default sync; set Workflow:ExecutionMode=queue
+            // (or MegaFormOptions.WorkflowExecutionMode) to opt in.
+            services.AddScoped<IWorkflowExecutionQueue, EfWorkflowExecutionQueue>();
+            services.AddSingleton<IWorkflowExecutionModeProvider>(
+                new ConfigWorkflowExecutionModeProvider(options.WorkflowExecutionMode));
             services.AddScoped<WorkflowTaskService>();
             services.AddScoped<WorkflowTransparencyService>();
             services.AddScoped<SubmissionWorkflowDetailService>();
@@ -250,6 +261,8 @@ namespace MegaForm.AspNetCore.Component
             services.AddScoped<INodeExecutor, AddRoleNodeExecutor>();
             services.AddScoped<INodeExecutor, AddUserNodeExecutor>();
             services.AddScoped<INodeExecutor, AddUserToRoleNodeExecutor>();
+            // [CloudReady A2 v20260806] Durable timer node (Delay) — mirror of MegaForm.Web.
+            services.AddScoped<INodeExecutor, DelayNodeExecutor>();
 
             services.AddScoped<IConnectionRegistry, WebConnectionRegistry>();
             services.AddScoped<IDatabaseWorkflowMetadataService, DatabaseWorkflowMetadataService>();
@@ -298,6 +311,12 @@ namespace MegaForm.AspNetCore.Component
             services.AddHostedService<MegaForm.Web.HostedServices.MegaFormWarmupHostedService>();
             services.AddHostedService<MegaForm.Web.HostedServices.WebKbSeederHostedService>();
             services.AddHostedService<MegaForm.Web.HostedServices.BlogScheduledHostedService>();
+            // [CloudReady A1 v20260804] Always-on; in sync mode the queue simply stays
+            // empty (and leftovers from a previous queued run still get drained).
+            services.AddHostedService<MegaForm.Web.HostedServices.WorkflowQueueWorkerService>();
+            // [CloudReady A2 v20260806] Durable timer scanner (Delay resume + overdue
+            // reminder) — mirror of MegaForm.Web/Program.cs.
+            services.AddHostedService<MegaForm.Web.HostedServices.WorkflowTimerScannerService>();
 
             // Reporting indexer (B55)
             services.AddScoped<SubmissionIndexerService>(sp =>
@@ -438,7 +457,7 @@ namespace MegaForm.AspNetCore.Component
             services.AddHttpClient<IStorageProvider, GoogleDriveProvider>("GoogleDrive");
             services.AddHttpClient<ICalendarProvider, GoogleCalendarProvider>("GoogleCalendar");
             services.AddSingleton<IStorageProvider, MegaForm.Integrations.CloudStorage.AmazonS3StorageProvider>();
-            services.AddSingleton<IStorageProvider, MegaForm.Integrations.CloudStorage.AzureBlobStorageProvider>();
+            // [AzureBlobRemoved v20260726] Azure Blob provider dropped (Azure.Core net472 crash risk).
             services.AddSingleton<IStorageIntegrationService, StorageIntegrationService>();
 
             // [CloudStorage v20260723-01] Post-submit cloud file mirror. The uploader is an

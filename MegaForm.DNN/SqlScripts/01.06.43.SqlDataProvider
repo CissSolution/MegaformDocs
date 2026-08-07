@@ -1,0 +1,38 @@
+-- MegaForm 01.06.43 - Workflow Timer Scheduler Registration
+-- [CloudReady A2 v20260806] Registers the DNN scheduled task that resumes due
+-- Delay waits and sends the one-shot overdue task reminder.
+
+IF NOT EXISTS (SELECT 1 FROM Schedule WHERE TypeFullName = 'MegaForm.DNN.Services.WorkflowTimerScheduleItem, MegaForm.DNN')
+BEGIN
+    INSERT INTO Schedule (
+        TypeFullName,
+        TimeLapse,
+        TimeLapseMeasurement,
+        RetryTimeLapse,
+        RetryTimeLapseMeasurement,
+        RetainHistoryNum,
+        AttachToEvent,
+        CatchUpEnabled,
+        Enabled,
+        ObjectDependencies,
+        Servers,
+        FriendlyName
+    )
+    VALUES (
+        'MegaForm.DNN.Services.WorkflowTimerScheduleItem, MegaForm.DNN',
+        1,
+        'm',
+        2,
+        'm',
+        10,
+        '',
+        0,
+        1,
+        '',
+        NULL,
+        'MegaForm Workflow Timer'
+    );
+END
+GO
+
+PRINT 'MegaForm 01.06.43 - Workflow timer scheduler registered.';

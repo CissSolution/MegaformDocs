@@ -96,7 +96,8 @@ namespace MegaForm.Oqtane.Server.Data
                 StartedAt = ctx.StartedAt,
                 CurrentNodeId = ctx.CurrentNodeId ?? string.Empty,
                 ContextJson = Serialize(ctx),
-                ErrorMessage = ctx.ErrorMessage ?? string.Empty
+                ErrorMessage = ctx.ErrorMessage ?? string.Empty,
+                WaitUntilUtc = ctx.WaitUntilUtc
             });
             db.SaveChanges();
             return ctx.ExecutionId;
@@ -114,6 +115,9 @@ namespace MegaForm.Oqtane.Server.Data
             row.CompletedAt = ctx.CompletedAt;
             row.ContextJson = Serialize(ctx);
             row.ErrorMessage = ctx.ErrorMessage ?? string.Empty;
+            // [CloudReady A2] Engine owns WaitUntilUtc; the scanner owns Lease* —
+            // do not touch LeaseOwner/LeaseUntilUtc here.
+            row.WaitUntilUtc = ctx.WaitUntilUtc;
             db.SaveChanges();
         }
 
@@ -287,6 +291,7 @@ namespace MegaForm.Oqtane.Server.Data
             row.ClaimedAt = task.ClaimedAt;
             row.DueAt = task.DueAt;
             row.CompletedAt = task.CompletedAt;
+            row.EscalatedAtUtc = task.EscalatedAtUtc;
             db.SaveChanges();
         }
 
@@ -435,7 +440,8 @@ namespace MegaForm.Oqtane.Server.Data
                 CreatedAt = row.CreatedAt,
                 ClaimedAt = row.ClaimedAt,
                 DueAt = row.DueAt,
-                CompletedAt = row.CompletedAt
+                CompletedAt = row.CompletedAt,
+                EscalatedAtUtc = row.EscalatedAtUtc
             };
         }
 

@@ -39,6 +39,12 @@ namespace MegaForm.Web.Data
             {
                 creator.CreateTables();
             }
+
+            // [TypedStorage 2026-07-18] Ensure the 7 typed-submission tables exist on
+            // existing databases that were created before this feature. This is an
+            // idempotent, provider-specific DDL upgrade that runs after the legacy
+            // MegaForm schema is in place.
+            TypedSubmissionSchemaBootstrapper.EnsureTypedTables(db);
         }
 
         private static void EnsureSqliteDirectory(MegaFormDbContext db)

@@ -15,7 +15,7 @@ namespace MegaForm.Sdk.Tests
         private static readonly MegaFormScope Scope = new MegaFormScope { PortalId = 7, UserId = 42 };
 
         [Fact]
-        public async Task Named_query_uses_master_status_and_typed_values()
+        public async Task Named_query_uses_typed_app_status_instead_of_submission_transport_status()
         {
             var forms = new InMemoryFormRepository();
             var submissions = new InMemorySubmissionRepository();
@@ -28,17 +28,29 @@ namespace MegaForm.Sdk.Tests
                 Status = "published",
                 SchemaJson = "{\"fields\":[{\"key\":\"title\",\"type\":\"Text\"}]}"
             });
-            var submissionId = submissions.Insert(new SubmissionInfo
+            var draftId = submissions.Insert(new SubmissionInfo
             {
                 FormId = formId,
                 Status = "published",
                 DataJson = "{\"title\":\"Legacy title\",\"status\":\"draft\"}",
                 SubmittedOnUtc = DateTime.UtcNow
             });
-            typed.Seed(submissionId, formId, new Dictionary<string, object>
+            typed.Seed(draftId, formId, new Dictionary<string, object>
             {
-                ["title"] = "Typed title",
+                ["title"] = "Typed draft",
                 ["status"] = "draft"
+            });
+            var publishedId = submissions.Insert(new SubmissionInfo
+            {
+                FormId = formId,
+                Status = "Submitted",
+                DataJson = "{\"title\":\"Legacy published\",\"status\":\"published\"}",
+                SubmittedOnUtc = DateTime.UtcNow.AddMinutes(1)
+            });
+            typed.Seed(publishedId, formId, new Dictionary<string, object>
+            {
+                ["title"] = "Typed published",
+                ["status"] = "published"
             });
 
             var phase2 = NewPhase2(formId);
@@ -51,7 +63,8 @@ namespace MegaForm.Sdk.Tests
             var record = Assert.Single(result.Items);
             Assert.True(record.IsTyped);
             Assert.Equal("published", record.Status);
-            Assert.Equal("Typed title", record.Data["title"]);
+            Assert.Equal(publishedId, record.SubmissionId);
+            Assert.Equal("Typed published", record.Data["title"]);
         }
 
         [Fact]

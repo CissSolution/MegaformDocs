@@ -3,6 +3,29 @@
 A submitted form can be routed to people for approval. This page explains what actually happens —
 including the two things that surprise most people the first time.
 
+## Watch a two-step approval run
+
+The recording below is one submission travelling a real two-step flow, with three different users
+signed in along the way — nobody assigns anything by hand:
+
+![An employee submits, the task appears in the manager's inbox to claim and approve, then the second step lands in the finance user's inbox](../images/10-inbox-approval.gif)
+
+**Steps shown**
+
+1. An employee (*emp.hoa*) fills in the *Account setup* form and submits.
+2. The workflow's first Approval step names the **Manager** role, so the task appears in
+   *mgr.nam*'s **My Inbox** — with the form name, step label, a due date from the step's SLA and
+   a priority flag. The manager opens it (the right-hand pane shows every form response), clicks
+   **Claim** — the *Assigned to Me* counter ticks up — then **Approve**, writes an optional
+   approval note, and **Confirm Approval**.
+3. The moment step 1 completes, the workflow creates the **step 2** task for the **Finance**
+   role: it is already waiting in *fin.lan*'s inbox. Finance approves the same way, and the
+   submission's status badge reads **Approved**.
+
+The inbox is a three-pane workboard: folders and per-form filters on the left (*Inbox, Assigned to
+Me, Forwarded, Completed, Starred*), the task list in the middle, and the selected task's detail —
+form responses, history, and the workflow view — on the right.
+
 ## How a task reaches a person
 
 When a submission reaches an **Approval** node, MegaForm creates a task and pauses the workflow. Who

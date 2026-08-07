@@ -69,6 +69,12 @@ builder.Services.AddScoped<IWorkflowEvaluator,   WorkflowEvaluator>();
 builder.Services.AddScoped<IWorkflowEmailSender, WebWorkflowEmailSender>();
 builder.Services.AddScoped<IWorkflowPrincipalResolver, WebWorkflowPrincipalResolver>();
 builder.Services.AddScoped<IWorkflowEngine,      WorkflowEngineV2>();
+// [CloudReady A1 v20260804] Async workflow execution queue. Default mode is sync
+// (identical to today); set Workflow:ExecutionMode=queue to enqueue post-submit
+// executions for WorkflowQueueWorkerService instead of running them inline.
+builder.Services.AddScoped<IWorkflowExecutionQueue, EfWorkflowExecutionQueue>();
+builder.Services.AddSingleton<IWorkflowExecutionModeProvider>(
+    new ConfigWorkflowExecutionModeProvider(cfg["Workflow:ExecutionMode"]));
 builder.Services.AddSingleton<IWebhookWorkflowNodeUiService, WebhookWorkflowNodeUiService>();
 builder.Services.AddSingleton<IEmailWorkflowNodeUiService, EmailWorkflowNodeUiService>();
 builder.Services.AddSingleton<IWorkflowNodeUiSchemaProvider, WorkflowNodeUiSchemaProvider>();
@@ -85,6 +91,9 @@ builder.Services.AddScoped<INodeExecutor, GoogleSheetsNodeExecutor>();
 builder.Services.AddScoped<INodeExecutor, SwitchNodeExecutor>();
 builder.Services.AddScoped<INodeExecutor, LoopNodeExecutor>();
 builder.Services.AddScoped<INodeExecutor, ApprovalNodeExecutor>();
+// [CloudReady A2 v20260806] Durable timer node (Delay) — parks executions until
+// WorkflowTimerScannerService resumes them.
+builder.Services.AddScoped<INodeExecutor, DelayNodeExecutor>();
 // IConnectionRegistry — reads named connection strings from appsettings (never from frontend)
 builder.Services.AddScoped<IConnectionRegistry, WebConnectionRegistry>();
 builder.Services.AddScoped<IDatabaseWorkflowMetadataService, DatabaseWorkflowMetadataService>();
@@ -120,7 +129,7 @@ builder.Services.AddScoped<MegaForm.Core.Payments.PaymentSubmissionVerifier>();
 builder.Services.AddHttpClient<MegaForm.Core.Integrations.Storage.IStorageProvider, MegaForm.Core.Integrations.Storage.Providers.GoogleDriveProvider>("GoogleDrive");
 builder.Services.AddHttpClient<MegaForm.Core.Integrations.Storage.ICalendarProvider, MegaForm.Core.Integrations.Storage.Providers.GoogleCalendarProvider>("GoogleCalendar");
 builder.Services.AddSingleton<MegaForm.Core.Integrations.Storage.IStorageProvider, MegaForm.Integrations.CloudStorage.AmazonS3StorageProvider>();
-builder.Services.AddSingleton<MegaForm.Core.Integrations.Storage.IStorageProvider, MegaForm.Integrations.CloudStorage.AzureBlobStorageProvider>();
+// [AzureBlobRemoved v20260726] Azure Blob provider dropped (Azure.Core net472 crash risk).
 builder.Services.AddSingleton<MegaForm.Core.Integrations.Storage.IStorageIntegrationService, MegaForm.Core.Integrations.Storage.StorageIntegrationService>();
 // Named cloud connections live in module settings (moduleId=0), same seam the SQL named
 // connections use (MegaFormController ListNamedConnections), under the cloud catalog key.
@@ -145,6 +154,11 @@ builder.Services.AddScoped<ILocalizationProvider, WebLocalizationProvider>();
 builder.Services.AddHostedService<MegaForm.Web.HostedServices.MegaFormWarmupHostedService>();
 builder.Services.AddHostedService<MegaForm.Web.HostedServices.WebKbSeederHostedService>();
 builder.Services.AddHostedService<MegaForm.Web.HostedServices.BlogScheduledHostedService>();
+builder.Services.AddHostedService<MegaForm.Web.HostedServices.WorkflowQueueWorkerService>();
+// [CloudReady A2 v20260806] Durable timer scanner: resumes due Delay waits and
+// sends the one-shot overdue task reminder. Always on — a database with no
+// waiting executions or overdue tasks simply scans empty.
+builder.Services.AddHostedService<MegaForm.Web.HostedServices.WorkflowTimerScannerService>();
 
 // ── MegaForm SDK (IMegaFormClient facade) ────────────────────────────────────
 // Resolves the repositories + IPlatformContext + IStorageService + SubmissionProcessor
@@ -282,6 +296,10 @@ if (MegaForm.Web.Controllers.SetupController.IsSetupComplete(app.Environment))
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<MegaFormDbContext>();
         DatabaseSchemaBootstrapper.EnsureMegaFormSchema(db);
+        // [CloudReady A4 v20260804] Bootstrappers own the baseline schema; the runner
+        // records baseline 0001 on first sight of any DB and then applies pending
+        // versioned scripts (0002+) under a DB-native single-instance lock.
+        MegaForm.Web.Data.Schema.SchemaMigrationRunner.ApplyPending(db, app.Environment.ContentRootPath);
         Console.WriteLine("[MegaForm] Database ready.");
     }
     catch (Exception ex)

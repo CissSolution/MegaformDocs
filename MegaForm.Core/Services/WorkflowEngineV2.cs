@@ -160,6 +160,16 @@ namespace MegaForm.Core.Services
             if (ctx == null)
                 throw new InvalidOperationException("Workflow execution not found.");
 
+            // [CloudReady A2 v20260806] Double-resume guard. Until now ResumeAsync ran
+            // on ANY status, so two callers (user approve racing a timer scanner, or
+            // two scanner instances claiming the same row) could both walk the graph
+            // and fire node side effects twice. Only a Waiting execution may resume;
+            // anything else is a clear error, same style as "not found" above.
+            if (ctx.Status != WorkflowExecutionStatus.Waiting)
+                throw new InvalidOperationException(
+                    "Workflow execution '" + executionId + "' is not waiting (status=" +
+                    ctx.Status.ToString().ToLowerInvariant() + ") — it cannot be resumed.");
+
             var runtime = ResolveWorkflowForForm(ctx.FormId);
             var definition = runtime != null ? runtime.Definition : null;
             if (definition == null)
@@ -168,6 +178,7 @@ namespace MegaForm.Core.Services
                 ctx.Status = WorkflowExecutionStatus.Completed;
                 ctx.ErrorMessage = null;
                 ctx.PendingTaskId = string.Empty;
+                ctx.WaitUntilUtc = null;
                 ctx.CompletedAt = DateTime.UtcNow;
                 _repo.UpdateExecution(ctx);
                 return ctx;
@@ -188,6 +199,10 @@ namespace MegaForm.Core.Services
             ctx.Status = WorkflowExecutionStatus.Running;
             ctx.ErrorMessage = null;
             ctx.PendingTaskId = string.Empty;
+            // [CloudReady A2] The wait is over — clear the timer marker before walking
+            // on. If the run parks at ANOTHER Delay later, WalkGraphAsync stamps a
+            // fresh WaitUntilUtc.
+            ctx.WaitUntilUtc = null;
             ctx.CompletedAt = null;
 
             string next = ResolveNextFromEdge(definition, node.Id,
@@ -308,6 +323,14 @@ namespace MegaForm.Core.Services
                 if (string.Equals(nodeResult.Status, "waiting", StringComparison.OrdinalIgnoreCase))
                 {
                     ctx.Status = WorkflowExecutionStatus.Waiting;
+                    // [CloudReady A2 v20260806] A Delay node carries its wake time as a
+                    // DateTime in OutputData (WorkflowNodeResult.WaitUntil). Stamp it
+                    // onto the context so the persist below writes both ContextJson and
+                    // the queryable MF_WorkflowExecutions.WaitUntilUtc column the timer
+                    // scanner scans. Human-task waits (anonymous-object output) leave
+                    // WaitUntilUtc null — users resume those, not the scanner.
+                    if (nodeResult.OutputData is DateTime)
+                        ctx.WaitUntilUtc = (DateTime)nodeResult.OutputData;
                     try { _repo.UpdateExecution(ctx); } catch { }
                     return;
                 }

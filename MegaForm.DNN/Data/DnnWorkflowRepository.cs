@@ -85,13 +85,14 @@ IF EXISTS (SELECT 1 FROM [dbo].[MF_WorkflowExecutions] WHERE [ExecutionId] = @Ex
            [CompletedAt] = @CompletedAt,
            [CurrentNodeId] = @CurrentNodeId,
            [ContextJson] = @ContextJson,
-           [ErrorMessage] = @ErrorMessage
+           [ErrorMessage] = @ErrorMessage,
+           [WaitUntilUtc] = @WaitUntilUtc
      WHERE [ExecutionId] = @ExecutionId;
 ELSE
     INSERT INTO [dbo].[MF_WorkflowExecutions]
-        ([ExecutionId], [FormId], [SubmissionId], [Status], [StartedAt], [CompletedAt], [CurrentNodeId], [ContextJson], [ErrorMessage])
+        ([ExecutionId], [FormId], [SubmissionId], [Status], [StartedAt], [CompletedAt], [CurrentNodeId], [ContextJson], [ErrorMessage], [WaitUntilUtc])
     VALUES
-        (@ExecutionId, @FormId, @SubmissionId, @Status, @StartedAt, @CompletedAt, @CurrentNodeId, @ContextJson, @ErrorMessage);";
+        (@ExecutionId, @FormId, @SubmissionId, @Status, @StartedAt, @CompletedAt, @CurrentNodeId, @ContextJson, @ErrorMessage, @WaitUntilUtc);";
 
                 AddParam(cmd, "@ExecutionId", ctx.ExecutionId);
                 AddParam(cmd, "@FormId", ctx.FormId);
@@ -102,6 +103,7 @@ ELSE
                 AddParam(cmd, "@CurrentNodeId", ctx.CurrentNodeId ?? string.Empty);
                 AddParam(cmd, "@ContextJson", Serialize(ctx));
                 AddParam(cmd, "@ErrorMessage", ctx.ErrorMessage ?? string.Empty);
+                AddParam(cmd, "@WaitUntilUtc", (object)ctx.WaitUntilUtc ?? DBNull.Value);
                 cmd.ExecuteNonQuery();
             }
 
@@ -119,7 +121,8 @@ UPDATE [dbo].[MF_WorkflowExecutions]
        [CompletedAt] = @CompletedAt,
        [CurrentNodeId] = @CurrentNodeId,
        [ContextJson] = @ContextJson,
-       [ErrorMessage] = @ErrorMessage
+       [ErrorMessage] = @ErrorMessage,
+       [WaitUntilUtc] = @WaitUntilUtc
  WHERE [ExecutionId] = @ExecutionId;";
                 AddParam(cmd, "@ExecutionId", ctx.ExecutionId);
                 AddParam(cmd, "@Status", (ctx.Status.ToString() ?? "running").ToLowerInvariant());
@@ -127,6 +130,9 @@ UPDATE [dbo].[MF_WorkflowExecutions]
                 AddParam(cmd, "@CurrentNodeId", ctx.CurrentNodeId ?? string.Empty);
                 AddParam(cmd, "@ContextJson", Serialize(ctx));
                 AddParam(cmd, "@ErrorMessage", ctx.ErrorMessage ?? string.Empty);
+                // [CloudReady A2 v20260806] Engine owns WaitUntilUtc (Delay wake time);
+                // DNN runs a single scheduler instance so no lease columns are written.
+                AddParam(cmd, "@WaitUntilUtc", (object)ctx.WaitUntilUtc ?? DBNull.Value);
                 cmd.ExecuteNonQuery();
             }
         }
@@ -367,13 +373,14 @@ IF EXISTS (SELECT 1 FROM [dbo].[MF_WorkflowTasks] WHERE [TaskId] = @TaskId)
            [CreatedAt] = @CreatedAt,
            [ClaimedAt] = @ClaimedAt,
            [DueAt] = @DueAt,
-           [CompletedAt] = @CompletedAt
+           [CompletedAt] = @CompletedAt,
+           [EscalatedAtUtc] = @EscalatedAtUtc
      WHERE [TaskId] = @TaskId;
 ELSE
     INSERT INTO [dbo].[MF_WorkflowTasks]
-        ([TaskId], [CaseId], [ExecutionId], [FormId], [SubmissionId], [NodeId], [NodeLabel], [Status], [CandidateRolesJson], [CandidateUsersJson], [AssignedUserId], [AssignedUserName], [AssignedDisplayName], [AllowClaim], [AllowForward], [AllowReassign], [CommentRequiredOnReject], [PendingSubmissionStatus], [ApprovedSubmissionStatus], [RejectedSubmissionStatus], [Outcome], [Comment], [CreatedAt], [ClaimedAt], [DueAt], [CompletedAt])
+        ([TaskId], [CaseId], [ExecutionId], [FormId], [SubmissionId], [NodeId], [NodeLabel], [Status], [CandidateRolesJson], [CandidateUsersJson], [AssignedUserId], [AssignedUserName], [AssignedDisplayName], [AllowClaim], [AllowForward], [AllowReassign], [CommentRequiredOnReject], [PendingSubmissionStatus], [ApprovedSubmissionStatus], [RejectedSubmissionStatus], [Outcome], [Comment], [CreatedAt], [ClaimedAt], [DueAt], [CompletedAt], [EscalatedAtUtc])
     VALUES
-        (@TaskId, @CaseId, @ExecutionId, @FormId, @SubmissionId, @NodeId, @NodeLabel, @Status, @CandidateRolesJson, @CandidateUsersJson, @AssignedUserId, @AssignedUserName, @AssignedDisplayName, @AllowClaim, @AllowForward, @AllowReassign, @CommentRequiredOnReject, @PendingSubmissionStatus, @ApprovedSubmissionStatus, @RejectedSubmissionStatus, @Outcome, @Comment, @CreatedAt, @ClaimedAt, @DueAt, @CompletedAt);";
+        (@TaskId, @CaseId, @ExecutionId, @FormId, @SubmissionId, @NodeId, @NodeLabel, @Status, @CandidateRolesJson, @CandidateUsersJson, @AssignedUserId, @AssignedUserName, @AssignedDisplayName, @AllowClaim, @AllowForward, @AllowReassign, @CommentRequiredOnReject, @PendingSubmissionStatus, @ApprovedSubmissionStatus, @RejectedSubmissionStatus, @Outcome, @Comment, @CreatedAt, @ClaimedAt, @DueAt, @CompletedAt, @EscalatedAtUtc);";
 
                 AddTaskParams(cmd, task);
                 cmd.ExecuteNonQuery();
@@ -434,6 +441,80 @@ SELECT *
             return items;
         }
 
+        // ─── [CloudReady A2 v20260806] Timer-scanner queries ──────────────────
+        // DNN-specific (not on IWorkflowRepository): the WorkflowTimerScheduleItem
+        // polls these. DNN's scheduler guarantees one running instance per schedule,
+        // so no lease is taken — the engine's Waiting-status guard is the safety net.
+
+        /// <summary>ExecutionIds of due Delay waits (Status='waiting', WaitUntilUtc &lt;= nowUtc).</summary>
+        public List<string> ListDueWaitingExecutionIds(DateTime nowUtc, int maxCount)
+        {
+            var ids = new List<string>();
+            using (var conn = OpenConnection())
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = @"
+SELECT TOP (@MaxCount) [ExecutionId]
+  FROM [dbo].[MF_WorkflowExecutions]
+ WHERE [Status] = 'waiting'
+   AND [WaitUntilUtc] IS NOT NULL
+   AND [WaitUntilUtc] <= @NowUtc
+ ORDER BY [WaitUntilUtc];";
+                AddParam(cmd, "@MaxCount", maxCount <= 0 ? 10 : maxCount);
+                AddParam(cmd, "@NowUtc", nowUtc);
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                        ids.Add(GetString(reader, "ExecutionId"));
+                }
+            }
+            return ids;
+        }
+
+        /// <summary>Open tasks past DueAt that have not had their one overdue reminder yet.</summary>
+        public List<WorkflowTaskInstance> ListOverdueTasks(DateTime nowUtc, int maxCount)
+        {
+            var items = new List<WorkflowTaskInstance>();
+            using (var conn = OpenConnection())
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = @"
+SELECT TOP (@MaxCount) *
+  FROM [dbo].[MF_WorkflowTasks]
+ WHERE [DueAt] IS NOT NULL
+   AND [DueAt] < @NowUtc
+   AND ([Status] = 'pending' OR [Status] = 'claimed')
+   AND [EscalatedAtUtc] IS NULL
+ ORDER BY [DueAt];";
+                AddParam(cmd, "@MaxCount", maxCount <= 0 ? 25 : maxCount);
+                AddParam(cmd, "@NowUtc", nowUtc);
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                        items.Add(MapTask(reader));
+                }
+            }
+            return items;
+        }
+
+        /// <summary>Stamp the one-shot reminder marker (idempotent — only when still null).</summary>
+        public void MarkTaskEscalated(string taskId, DateTime escalatedAtUtc)
+        {
+            if (string.IsNullOrWhiteSpace(taskId)) return;
+            using (var conn = OpenConnection())
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = @"
+UPDATE [dbo].[MF_WorkflowTasks]
+   SET [EscalatedAtUtc] = @EscalatedAtUtc
+ WHERE [TaskId] = @TaskId
+   AND [EscalatedAtUtc] IS NULL;";
+                AddParam(cmd, "@EscalatedAtUtc", escalatedAtUtc);
+                AddParam(cmd, "@TaskId", taskId);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
         private static SqlConnection OpenConnection()
         {
             var conn = new SqlConnection(ConnectionString);
@@ -467,9 +548,13 @@ BEGIN
         [CompletedAt] datetime2 NULL,
         [CurrentNodeId] nvarchar(200) NOT NULL DEFAULT '',
         [ContextJson] nvarchar(max) NOT NULL DEFAULT '',
-        [ErrorMessage] nvarchar(max) NOT NULL DEFAULT ''
+        [ErrorMessage] nvarchar(max) NOT NULL DEFAULT '',
+        [WaitUntilUtc] datetime2 NULL,
+        [LeaseOwner] nvarchar(64) NULL,
+        [LeaseUntilUtc] datetime2 NULL
     );
     CREATE INDEX [IX_MF_WorkflowExecutions_FormStarted] ON [dbo].[MF_WorkflowExecutions]([FormId], [StartedAt]);
+    CREATE INDEX [IX_MF_WorkflowExecutions_Status_WaitUntilUtc] ON [dbo].[MF_WorkflowExecutions]([Status], [WaitUntilUtc]);
 END;
 
 IF OBJECT_ID(N'[dbo].[MF_WorkflowCases]', N'U') IS NULL
@@ -522,7 +607,8 @@ BEGIN
         [CreatedAt] datetime2 NOT NULL,
         [ClaimedAt] datetime2 NULL,
         [DueAt] datetime2 NULL,
-        [CompletedAt] datetime2 NULL
+        [CompletedAt] datetime2 NULL,
+        [EscalatedAtUtc] datetime2 NULL
     );
     CREATE INDEX [IX_MF_WorkflowTasks_CaseStatus] ON [dbo].[MF_WorkflowTasks]([CaseId], [Status]);
     CREATE INDEX [IX_MF_WorkflowTasks_ExecutionNodeStatus] ON [dbo].[MF_WorkflowTasks]([ExecutionId], [NodeId], [Status]);
@@ -566,6 +652,19 @@ END;");
                     return;
 
                 Execute(conn, @"
+IF OBJECT_ID(N'[dbo].[MF_WorkflowExecutions]', N'U') IS NOT NULL
+BEGIN
+    -- [CloudReady A2 v20260806] Durable timer columns for Delay + scanner lease.
+    IF COL_LENGTH('dbo.MF_WorkflowExecutions', 'WaitUntilUtc') IS NULL
+        ALTER TABLE [dbo].[MF_WorkflowExecutions] ADD [WaitUntilUtc] datetime2 NULL;
+    IF COL_LENGTH('dbo.MF_WorkflowExecutions', 'LeaseOwner') IS NULL
+        ALTER TABLE [dbo].[MF_WorkflowExecutions] ADD [LeaseOwner] nvarchar(64) NULL;
+    IF COL_LENGTH('dbo.MF_WorkflowExecutions', 'LeaseUntilUtc') IS NULL
+        ALTER TABLE [dbo].[MF_WorkflowExecutions] ADD [LeaseUntilUtc] datetime2 NULL;
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_MF_WorkflowExecutions_Status_WaitUntilUtc' AND object_id = OBJECT_ID(N'dbo.MF_WorkflowExecutions'))
+        CREATE INDEX [IX_MF_WorkflowExecutions_Status_WaitUntilUtc] ON [dbo].[MF_WorkflowExecutions]([Status], [WaitUntilUtc]);
+END;
+
 IF OBJECT_ID(N'[dbo].[MF_WorkflowCases]', N'U') IS NOT NULL
 BEGIN
     IF COL_LENGTH('dbo.MF_WorkflowCases', 'WorkflowId') IS NULL
@@ -614,6 +713,9 @@ BEGIN
         ALTER TABLE [dbo].[MF_WorkflowTasks] ADD [DueAt] datetime2 NULL;
     IF COL_LENGTH('dbo.MF_WorkflowTasks', 'CompletedAt') IS NULL
         ALTER TABLE [dbo].[MF_WorkflowTasks] ADD [CompletedAt] datetime2 NULL;
+    -- [CloudReady A2 v20260806] One-shot overdue reminder marker.
+    IF COL_LENGTH('dbo.MF_WorkflowTasks', 'EscalatedAtUtc') IS NULL
+        ALTER TABLE [dbo].[MF_WorkflowTasks] ADD [EscalatedAtUtc] datetime2 NULL;
 END;
 
 IF OBJECT_ID(N'[dbo].[MF_WorkflowTaskActions]', N'U') IS NOT NULL
@@ -727,6 +829,7 @@ IF COL_LENGTH('dbo.MF_Forms', 'WorkflowJson') IS NULL
             AddParam(cmd, "@ClaimedAt", (object)task.ClaimedAt ?? DBNull.Value);
             AddParam(cmd, "@DueAt", (object)task.DueAt ?? DBNull.Value);
             AddParam(cmd, "@CompletedAt", (object)task.CompletedAt ?? DBNull.Value);
+            AddParam(cmd, "@EscalatedAtUtc", (object)task.EscalatedAtUtc ?? DBNull.Value);
         }
 
         private static void AddParam(SqlCommand cmd, string name, object value)
@@ -845,7 +948,8 @@ IF COL_LENGTH('dbo.MF_Forms', 'WorkflowJson') IS NULL
                 CreatedAt = GetDateTime(row, "CreatedAt"),
                 ClaimedAt = GetNullableDateTime(row, "ClaimedAt"),
                 DueAt = GetNullableDateTime(row, "DueAt"),
-                CompletedAt = GetNullableDateTime(row, "CompletedAt")
+                CompletedAt = GetNullableDateTime(row, "CompletedAt"),
+                EscalatedAtUtc = GetNullableDateTime(row, "EscalatedAtUtc")
             };
         }
 

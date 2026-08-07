@@ -241,6 +241,20 @@ function normalizeMyInbox(raw: unknown): MyInboxResult {
       title: readString(f, 'title', 'Title'),
     };
   });
+  // [Submitter fix 2026-07-13] The submitters map (submissionId → real submitter)
+  // was the ONE MyInbox field this normalizer dropped, so load() always saw
+  // undefined and every card fell back to "Unknown" — the server payload was
+  // correct the whole time. Keys stay as-is (stringified submission ids).
+  const submittersRaw = toRecord(source.submitters ?? source.Submitters);
+  const submitters: Record<string, { userId?: number; userName?: string; displayName?: string }> = {};
+  Object.keys(submittersRaw).forEach((key) => {
+    const s = toRecord(submittersRaw[key]);
+    submitters[key] = {
+      userId: readNumber(s, 'userId', 'UserId'),
+      userName: readString(s, 'userName', 'UserName'),
+      displayName: readString(s, 'displayName', 'DisplayName'),
+    };
+  });
   return {
     user: {
       userId: readNumber(user, 'userId', 'UserId'),
@@ -258,6 +272,7 @@ function normalizeMyInbox(raw: unknown): MyInboxResult {
     inProgress: toArray(source.inProgress ?? source.InProgress).map(normalizeTask),
     completed: toArray(source.completed ?? source.Completed).map(normalizeTask),
     forms,
+    submitters,
     generatedAt: readString(source, 'generatedAt', 'GeneratedAt'),
   };
 }

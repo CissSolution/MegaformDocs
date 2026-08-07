@@ -14,6 +14,7 @@ export var NODE_META: AnyObj = {
   SendEmail:    { icon: '✉',  label: 'Send Task',            zone: 'action', accent: '#10b981', bg: '#ecfdf5', border: '#6ee7b7' },
   Calculate:    { icon: 'Σ',  label: 'Business Rule Task',   zone: 'action', accent: '#ec4899', bg: '#fdf2f8', border: '#f9a8d4' },
   Approval:     { icon: 'UT', label: 'User Task',            zone: 'action', accent: '#ca8a04', bg: '#fefce8', border: '#fde047' },
+  Delay:        { icon: '⏱', label: 'Timer Catch Event',    zone: 'action', accent: '#0d9488', bg: '#f0fdfa', border: '#5eead4' },
   Database:     { icon: 'DB', label: 'Service Task (DB)',    zone: 'action', accent: '#0f766e', bg: '#f0fdfa', border: '#99f6e4' },
   GoogleSheets: { icon: 'GS', label: 'Service Task (Sheet)', zone: 'action', accent: '#16a34a', bg: '#ecfdf5', border: '#86efac' },
   End:          { icon: '◉',  label: 'End Event',            zone: 'action', accent: '#ef4444', bg: '#fee2e2', border: '#fca5a5' },
@@ -34,7 +35,7 @@ export var NODE_META: AnyObj = {
 // Only supported nodes (with real executors) appear on the palette.
 export var TRIGGER_TYPES: string[] = [];
 export var NAV_TYPES: string[] = ['Condition'];
-export var LOGIC_TYPES: string[] = ['Calculate', 'SetVariable'];
+export var LOGIC_TYPES: string[] = ['Calculate', 'SetVariable', 'Delay'];
 export var ACTION_TYPES: string[] = ['Approval', 'SendEmail', 'Webhook', 'Database', 'GoogleSheets', 'End'];
 export var INTEGRATION_TYPES: string[] = [];
 

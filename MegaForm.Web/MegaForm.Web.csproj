@@ -50,5 +50,8 @@
     <Compile Remove="Program.cs" />
     <EmbeddedResource Include="..\MegaForm.Core\Seed\ai-knowledge-seed.json" LogicalName="MegaForm.Web.Seed.ai-knowledge-seed.json" />
     <Content Include="license.lic" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <!-- [CloudReady A4 v20260804] Versioned schema scripts for SchemaMigrationRunner.
+         Content (not EmbeddedResource) so they flow to consuming hosts' output dirs. -->
+    <Content Include="Data\Schema\Scripts\**\*.sql" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

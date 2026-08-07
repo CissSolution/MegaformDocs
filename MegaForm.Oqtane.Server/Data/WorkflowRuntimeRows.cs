@@ -13,6 +13,10 @@ namespace MegaForm.Oqtane.Server.Data
         public string CurrentNodeId { get; set; }
         public string ContextJson { get; set; }
         public string ErrorMessage { get; set; }
+        // [CloudReady A2 v20260806] Durable timer: Delay wake time + timer-scanner lease.
+        public DateTime? WaitUntilUtc { get; set; }
+        public string LeaseOwner { get; set; }
+        public DateTime? LeaseUntilUtc { get; set; }
     }
 
     public class WorkflowCaseRow
@@ -61,6 +65,8 @@ namespace MegaForm.Oqtane.Server.Data
         public DateTime? ClaimedAt { get; set; }
         public DateTime? DueAt { get; set; }
         public DateTime? CompletedAt { get; set; }
+        // [CloudReady A2 v20260806] One-shot overdue reminder marker.
+        public DateTime? EscalatedAtUtc { get; set; }
     }
 
     public class WorkflowTaskActionRow
@@ -79,5 +85,25 @@ namespace MegaForm.Oqtane.Server.Data
         public string Outcome { get; set; }
         public string Comment { get; set; }
         public DateTime CreatedAt { get; set; }
+    }
+
+    /// <summary>
+    /// [CloudReady A1 v20260804] Row for MF_WorkflowQueue — DB-backed async workflow
+    /// execution queue. Same shape as MegaForm.Web's WorkflowQueueRow; the table is
+    /// created from this EF model on fresh installs (InstallSchemaFromModel) and by
+    /// migration 01060040 for EF/DNN completeness.
+    /// </summary>
+    public class WorkflowQueueRow
+    {
+        public int QueueId { get; set; }
+        public int FormId { get; set; }
+        public int SubmissionId { get; set; }
+        public string PayloadJson { get; set; }
+        public string Status { get; set; }
+        public int AttemptCount { get; set; }
+        public string LeasedBy { get; set; }
+        public DateTime? LeaseUntilUtc { get; set; }
+        public DateTime CreatedAtUtc { get; set; }
+        public DateTime? ProcessedAtUtc { get; set; }
     }
 }

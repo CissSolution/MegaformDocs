@@ -190,6 +190,9 @@ namespace MegaForm.DNN.Services
                 new GoogleSheetsNodeExecutor(WorkflowEvaluator),
                 new SwitchNodeExecutor(),
                 new LoopNodeExecutor(),
+                // [CloudReady A2 v20260806] Durable timer node (Delay). DNN stays
+                // sync-mode; due waits are resumed by WorkflowTimerScheduleItem.
+                new DelayNodeExecutor(WorkflowEvaluator),
                 new AddRoleNodeExecutor(WorkflowIdentityProvisioning, WorkflowEvaluator),
                 new AddUserNodeExecutor(WorkflowIdentityProvisioning, WorkflowEvaluator),
                 new AddUserToRoleNodeExecutor(WorkflowIdentityProvisioning, WorkflowEvaluator)

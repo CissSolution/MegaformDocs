@@ -524,6 +524,47 @@ export function createSetVariableConfigPanel(ctx: WfCtx): any {
 }
 
 
+// ─── DelayConfigPanel ────────────────────────────────────────────────────────
+// [CloudReady A2 v20260806] Timer Catch Event (Delay node). The execution parks
+// until the wake time; the server timer scanner resumes it via the default edge.
+export function createDelayConfigPanel(ctx: WfCtx): any {
+  var h = ctx.h;
+  return function DelayConfigPanel(props: any): any {
+    var config: any  = props.config || {};
+    var setConfig    = props.setConfig;
+    function patch(next: any): void { setConfig(Object.assign({}, config, next)); }
+
+    return h('div', null,
+      h('div', { className: 'mf-rf-cfg-field nodrag nopan nowheel' },
+        h('label', { className: 'mf-rf-cfg-label' }, 'Delay (seconds)'),
+        h('input', {
+          className: 'mf-rf-cfg-input',
+          type: 'number',
+          placeholder: 'e.g. 300',
+          value: config.DelaySeconds || '',
+          onChange: function(e: any){ patch({ DelaySeconds: parseInt(e.target.value, 10) || 0 }); }
+        }),
+        h('div', { style: { fontSize: 10, color: '#94a3b8', marginTop: 3 } },
+          'Used when the expression below is empty or cannot be parsed.'
+        )
+      ),
+      h('div', { className: 'mf-rf-cfg-field nodrag nopan nowheel' },
+        h('label', { className: 'mf-rf-cfg-label' }, 'Wait until (expression)'),
+        h('input', {
+          className: 'mf-rf-cfg-input',
+          placeholder: '{{field.due_date}} or PT5M',
+          value: config.UntilExpression || '',
+          onChange: function(e: any){ patch({ UntilExpression: e.target.value }); }
+        }),
+        h('div', { style: { fontSize: 10, color: '#94a3b8', marginTop: 3 } },
+          'Resolves to a date/time (ISO-8601) or a duration like PT5M / PT1H30M. A past time continues immediately.'
+        )
+      )
+    );
+  };
+}
+
+
 // ─── IssuesPanel ──────────────────────────────────────────────────────────────
 // Persistent docked panel showing save/apply/validate issues.
 // Issues stay visible until the user clears them or a new action runs.

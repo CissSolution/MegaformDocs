@@ -34,6 +34,8 @@ namespace MegaForm.Oqtane.Server.Data
         public virtual DbSet<WorkflowTemplateInfo> WorkflowTemplates { get; set; }
         public virtual DbSet<WorkflowTemplateVersionInfo> WorkflowTemplateVersions { get; set; }
         public virtual DbSet<FormWorkflowMappingInfo> FormWorkflowMappings { get; set; }
+        // [CloudReady A1 v20260804] Async workflow execution queue (see WorkflowQueueRow).
+        public virtual DbSet<WorkflowQueueRow> WorkflowQueue { get; set; }
 
         // [v20260530-20] AI Knowledge Base — Oqtane parity with the 5 DNN tables.
         public virtual DbSet<AiKnowledgeEntry>   AiKnowledgeEntries { get; set; }
@@ -316,6 +318,10 @@ namespace MegaForm.Oqtane.Server.Data
                 e.ToTable("MF_WorkflowExecutions");
                 e.HasKey(x => x.ExecutionId);
                 e.HasIndex(x => new { x.FormId, x.StartedAt });
+                // [CloudReady A2 v20260806] Timer columns + scanner index. Oqtane builds
+                // schema from THIS model — this is what creates them on fresh installs.
+                e.Property(x => x.LeaseOwner).HasMaxLength(64);
+                e.HasIndex(x => new { x.Status, x.WaitUntilUtc }).HasDatabaseName("IX_MF_WorkflowExecutions_Status_WaitUntilUtc");
             });
 
             modelBuilder.Entity<WorkflowCaseRow>(e =>
@@ -373,6 +379,18 @@ namespace MegaForm.Oqtane.Server.Data
                 e.HasIndex(x => new { x.WorkflowTemplateId, x.IsActive });
                 e.Property(x => x.TriggerType).HasMaxLength(40);
                 e.Property(x => x.AppliedBy).HasMaxLength(200);
+            });
+
+            // [CloudReady A1 v20260804] MF_WorkflowQueue — same shape as the Web host's
+            // script 0002_workflow_queue.sql. Oqtane builds schema from this model, so
+            // THIS mapping is what creates the table on fresh installs / version bumps.
+            modelBuilder.Entity<WorkflowQueueRow>(e =>
+            {
+                e.ToTable("MF_WorkflowQueue");
+                e.HasKey(x => x.QueueId);
+                e.Property(x => x.Status).HasMaxLength(16);
+                e.Property(x => x.LeasedBy).HasMaxLength(64);
+                e.HasIndex(x => new { x.Status, x.LeaseUntilUtc }).HasDatabaseName("IX_MF_WorkflowQueue_Status_LeaseUntilUtc");
             });
 
             // [v20260530-20] AI Knowledge Base — 5 sibling tables.

@@ -58,6 +58,12 @@ namespace MegaForm.Core.Services
         // storage (Google Drive / S3 / Azure Blob) per schema.settings.cloudStorage. Null when
         // the host has not registered the storage stack — submissions then stay local-only.
         private readonly SubmissionCloudStorageUploader _cloudStorageUploader;
+        // [CloudReady A1 v20260804] Optional async execution decoupling. Both must be
+        // registered AND the mode provider must return Queued for the submit pipeline to
+        // enqueue instead of executing inline; any null stays on the byte-for-byte sync
+        // path below (DNN / Umbraco / unconfigured hosts never register these).
+        private readonly IWorkflowExecutionQueue _workflowQueue;
+        private readonly IWorkflowExecutionModeProvider _workflowModeProvider;
 
         public SubmissionProcessor(
             IFormRepository formRepo,
@@ -74,7 +80,9 @@ namespace MegaForm.Core.Services
             SubmissionIndexerService reportingIndexer = null,
             PaymentSubmissionVerifier paymentVerifier = null,
             ISubmissionDataStore typedStore = null,
-            SubmissionCloudStorageUploader cloudStorageUploader = null)
+            SubmissionCloudStorageUploader cloudStorageUploader = null,
+            IWorkflowExecutionQueue workflowQueue = null,
+            IWorkflowExecutionModeProvider workflowModeProvider = null)
         {
             _formRepo = formRepo ?? throw new ArgumentNullException(nameof(formRepo));
             _subRepo = subRepo ?? throw new ArgumentNullException(nameof(subRepo));
@@ -91,6 +99,8 @@ namespace MegaForm.Core.Services
             _paymentVerifier = paymentVerifier;
             _typedStore = typedStore;
             _cloudStorageUploader = cloudStorageUploader;
+            _workflowQueue = workflowQueue;
+            _workflowModeProvider = workflowModeProvider;
         }
 
         public SubmissionProcessor(
@@ -560,15 +570,41 @@ namespace MegaForm.Core.Services
                         _log?.LogInfo(nameof(SubmissionProcessor),
                             "Starting applied workflow for form " + formId + " submission " + submissionId + ".");
 
-                        using (var cts = new System.Threading.CancellationTokenSource(
-                            System.TimeSpan.FromSeconds(300)))
+                        // [CloudReady A1 v20260804] Queued mode: persist the exact
+                        // ExecuteAsync arguments (formId, submissionId, workflowData —
+                        // which already carries __portalId/__actor*) and return; the
+                        // background worker calls IWorkflowEngine.ExecuteAsync with
+                        // them. Anything else (both deps null, or mode Sync) keeps the
+                        // original inline path, 300s CTS included.
+                        var executionMode = _workflowModeProvider != null
+                            ? _workflowModeProvider.GetMode(form.PortalId)
+                            : WorkflowExecutionMode.Sync;
+
+                        if (_workflowQueue != null && executionMode == WorkflowExecutionMode.Queued)
                         {
-                            var ctx = await _workflowEngine.ExecuteAsync(formId, submissionId, workflowData, cts.Token);
+                            var queueId = _workflowQueue.Enqueue(new WorkflowExecutionRequest
+                            {
+                                FormId         = formId,
+                                SubmissionId   = submissionId,
+                                FormData       = workflowData,
+                                EnqueuedAtUtc  = DateTime.UtcNow
+                            });
                             _log?.LogInfo(nameof(SubmissionProcessor),
-                                "Workflow finished for form " + formId + " submission " + submissionId +
-                                ". ExecutionId=" + (ctx?.ExecutionId ?? "") +
-                                ", Status=" + (ctx != null ? ctx.Status.ToString() : "unknown") +
-                                ", Error=" + (ctx?.ErrorMessage ?? ""));
+                                "Workflow queued for form " + formId + " submission " + submissionId +
+                                ". QueueId=" + (queueId ?? ""));
+                        }
+                        else
+                        {
+                            using (var cts = new System.Threading.CancellationTokenSource(
+                                System.TimeSpan.FromSeconds(300)))
+                            {
+                                var ctx = await _workflowEngine.ExecuteAsync(formId, submissionId, workflowData, cts.Token);
+                                _log?.LogInfo(nameof(SubmissionProcessor),
+                                    "Workflow finished for form " + formId + " submission " + submissionId +
+                                    ". ExecutionId=" + (ctx?.ExecutionId ?? "") +
+                                    ", Status=" + (ctx != null ? ctx.Status.ToString() : "unknown") +
+                                    ", Error=" + (ctx?.ErrorMessage ?? ""));
+                            }
                         }
                     }
                     catch (Exception ex)

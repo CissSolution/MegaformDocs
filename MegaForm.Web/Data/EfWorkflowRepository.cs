@@ -105,6 +105,7 @@ namespace MegaForm.Web.Data
                 CurrentNodeId = ctx.CurrentNodeId ?? "",
                 ContextJson   = Serialize(ctx),
                 ErrorMessage  = ctx.ErrorMessage ?? "",
+                WaitUntilUtc  = ctx.WaitUntilUtc,
             };
             _db.Set<WorkflowExecutionRow>().Add(row);
             _db.SaveChanges();
@@ -121,6 +122,10 @@ namespace MegaForm.Web.Data
             row.CompletedAt   = ctx.CompletedAt;
             row.ContextJson   = Serialize(ctx);
             row.ErrorMessage  = ctx.ErrorMessage ?? "";
+            // [CloudReady A2] The engine owns WaitUntilUtc; the scanner owns the
+            // Lease* columns — UpdateExecution must NOT touch LeaseOwner/LeaseUntilUtc
+            // or it would stomp an in-flight claim.
+            row.WaitUntilUtc  = ctx.WaitUntilUtc;
             _db.SaveChanges();
         }
 
@@ -260,6 +265,7 @@ namespace MegaForm.Web.Data
             row.ClaimedAt               = task.ClaimedAt;
             row.DueAt                   = task.DueAt;
             row.CompletedAt             = task.CompletedAt;
+            row.EscalatedAtUtc          = task.EscalatedAtUtc;
             _db.SaveChanges();
         }
 
@@ -365,6 +371,7 @@ namespace MegaForm.Web.Data
                 ClaimedAt               = r.ClaimedAt,
                 DueAt                   = r.DueAt,
                 CompletedAt             = r.CompletedAt,
+                EscalatedAtUtc          = r.EscalatedAtUtc,
             };
         }
 
@@ -403,5 +410,10 @@ namespace MegaForm.Web.Data
         public string    CurrentNodeId { get; set; }
         public string    ContextJson   { get; set; }
         public string    ErrorMessage  { get; set; }
+        // [CloudReady A2 v20260806] Durable timer: wake time for Delay waits, and the
+        // timer-scanner lease (multi-instance claim). Schema: script 0003_delay_timer.sql.
+        public DateTime? WaitUntilUtc  { get; set; }
+        public string    LeaseOwner    { get; set; }
+        public DateTime? LeaseUntilUtc { get; set; }
     }
 }

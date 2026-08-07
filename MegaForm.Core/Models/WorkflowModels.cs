@@ -82,6 +82,9 @@ namespace MegaForm.Core.Workflow
             WorkflowNodeType.Switch,
             WorkflowNodeType.Loop,
             WorkflowNodeType.Approval,
+            // [CloudReady A2 v20260806] Durable timer node — parks the execution
+            // (status=waiting + WaitUntilUtc) until a timer scanner resumes it.
+            WorkflowNodeType.Delay,
         };
     }
 
@@ -880,6 +883,16 @@ namespace MegaForm.Core.Workflow
         public DateTime? CompletedAt { get; set; }
 
         /// <summary>
+        /// [CloudReady A2 v20260806] Wake time khi execution đang "park" ở một
+        /// Delay node (Status = Waiting). Null với mọi trạng thái khác và với
+        /// human-task waits (Approval) — những wait đó do user resume, không
+        /// phải timer scanner. Serialize sẵn trong ContextJson (Newtonsoft
+        /// backward compatible: property mới default null khi đọc JSON cũ);
+        /// cột MF_WorkflowExecutions.WaitUntilUtc là bản query được cho scanner.
+        /// </summary>
+        public DateTime? WaitUntilUtc { get; set; }
+
+        /// <summary>
         /// Nếu true: không thực sự execute actions (Webhook, Email).
         /// Chỉ log — dùng trong Test Run mode.
         /// </summary>
@@ -973,6 +986,19 @@ namespace MegaForm.Core.Workflow
             {
                 Status = "waiting",
                 OutputData = output
+            };
+        }
+
+        // [CloudReady A2 v20260806] Timer waiting result — parks the run until
+        // wakeUtc. The engine reads the DateTime straight out of OutputData and
+        // stamps it onto ctx.WaitUntilUtc; a host timer scanner later resumes
+        // the execution with the "default" outcome handle.
+        public static WorkflowNodeResult WaitUntil(DateTime wakeUtc)
+        {
+            return new WorkflowNodeResult
+            {
+                Status     = "waiting",
+                OutputData = wakeUtc
             };
         }
 
@@ -1371,6 +1397,28 @@ namespace MegaForm.Core.Workflow
 
         /// <summary>Value or template expression (e.g. "{{field.email}}").</summary>
         public string Value { get; set; }
+    }
+
+    /// <summary>
+    /// [CloudReady A2 v20260806] Configuration for Delay node (durable timer).
+    /// The executor parks the workflow (status=waiting) until the wake time; a
+    /// timer scanner on each host resumes it through IWorkflowEngine.ResumeAsync
+    /// with the "default" outcome handle.
+    /// </summary>
+    public class DelayNodeConfig
+    {
+        /// <summary>
+        /// Fixed delay in seconds. Used when UntilExpression is empty or cannot
+        /// be resolved/parsed at runtime.
+        /// </summary>
+        public int DelaySeconds { get; set; }
+
+        /// <summary>
+        /// Template that resolves to the wake time — e.g. "{{field.due_date}}".
+        /// Resolved via IWorkflowEvaluator.ResolveTemplate, then parsed as a
+        /// datetime (ISO-8601 date/datetime) or an ISO-8601 duration ("PT5M").
+        /// </summary>
+        public string UntilExpression { get; set; }
     }
 
 

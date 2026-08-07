@@ -71,6 +71,8 @@ namespace MegaForm.Web.Data
         public DateTime? ClaimedAt      { get; set; }
         public DateTime? DueAt          { get; set; }
         public DateTime? CompletedAt    { get; set; }
+        // [CloudReady A2 v20260806] One-shot overdue reminder marker (script 0003).
+        public DateTime? EscalatedAtUtc { get; set; }
     }
 
     public class WorkflowTaskActionRow

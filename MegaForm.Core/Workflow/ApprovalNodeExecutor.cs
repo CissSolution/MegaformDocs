@@ -368,37 +368,10 @@ namespace MegaForm.Core.Services.Workflow
 
         private List<string> ResolveTaskRecipients(WorkflowTaskInstance task, WorkflowExecutionContext ctx)
         {
-            var emails = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var portalId = GetPortalId(ctx);
-
-            foreach (var userRef in task.CandidateUsers ?? new List<string>())
-            {
-                var value = (userRef ?? string.Empty).Trim();
-                if (string.IsNullOrWhiteSpace(value)) continue;
-
-                if (value.IndexOf('@') >= 0)
-                {
-                    emails.Add(value);
-                }
-                else if (_principalResolver != null)
-                {
-                    var user = _principalResolver.ResolveUser(value, portalId);
-                    if (user != null && !string.IsNullOrWhiteSpace(user.Email))
-                        emails.Add(user.Email);
-                }
-            }
-
-            foreach (var roleName in task.CandidateRoles ?? new List<string>())
-            {
-                if (_principalResolver == null) continue;
-                foreach (var user in _principalResolver.ResolveRoleMembers(roleName, portalId))
-                {
-                    if (!string.IsNullOrWhiteSpace(user.Email))
-                        emails.Add(user.Email);
-                }
-            }
-
-            return emails.ToList();
+            // [CloudReady A2 v20260806] Logic moved to the shared
+            // WorkflowTaskRecipientResolver so the timer scanner's overdue
+            // reminder resolves the same recipients. Behaviour unchanged.
+            return WorkflowTaskRecipientResolver.ResolveTaskRecipients(task, _principalResolver, GetPortalId(ctx));
         }
 
         private async Task SendToRecipientsAsync(List<string> recipients, string subject, string body, CancellationToken ct)

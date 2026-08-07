@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using MegaForm.Core.Models;
 using MegaForm.Core.Interfaces;
+using MegaForm.Core.Services.TypedSubmission;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -23,8 +24,10 @@ namespace MegaForm.Core.Services
         private readonly EmailNotificationService _emailService;
         private readonly WebhookService _webhookService;
         private readonly ILogService _log;
+        private readonly SubmissionDataResolver _dataResolver;
+        private readonly TypedSubmissionResyncService _typedResync;
 
-        public WorkflowEngine(IPhase2Repository repo, IFormRepository formRepo, ISubmissionRepository subRepo, EmailNotificationService emailService, WebhookService webhookService, ILogService log)
+        public WorkflowEngine(IPhase2Repository repo, IFormRepository formRepo, ISubmissionRepository subRepo, EmailNotificationService emailService, WebhookService webhookService, ILogService log, SubmissionDataResolver dataResolver = null, TypedSubmissionResyncService typedResync = null)
         {
             _repo = repo;
             _formRepo = formRepo;
@@ -32,6 +35,8 @@ namespace MegaForm.Core.Services
             _emailService = emailService;
             _webhookService = webhookService;
             _log = log;
+            _dataResolver = dataResolver ?? new SubmissionDataResolver(null);
+            _typedResync = typedResync;
         }
 
         // ============================================================
@@ -286,7 +291,7 @@ namespace MegaForm.Core.Services
             if (submission == null)
                 return new StepResult { Status = "failed", Error = "Submission not found" };
 
-            var data = JsonConvert.DeserializeObject<Dictionary<string, object>>(submission.DataJson ?? "{}");
+            var data = _dataResolver.GetData(submissionId, submission.DataJson);
 
             foreach (var update in updates)
             {
@@ -298,6 +303,7 @@ namespace MegaForm.Core.Services
             // Save back
             submission.DataJson = JsonConvert.SerializeObject(data);
             _subRepo.UpdateData(submissionId, submission.DataJson);
+            _typedResync?.Resync(submissionId, formId, submission.DataJson);
 
             return new StepResult
             {
@@ -435,9 +441,11 @@ namespace MegaForm.Core.Services
             var submission = _subRepo.Get(subId);
             if (submission != null)
             {
-                var data = JsonConvert.DeserializeObject<Dictionary<string, object>>(submission.DataJson ?? "{}");
+                var data = _dataResolver.GetData(subId, submission.DataJson);
                 data[field] = assignee;
-                _subRepo.UpdateData(subId, JsonConvert.SerializeObject(data));
+                var updatedJson = JsonConvert.SerializeObject(data);
+                _subRepo.UpdateData(subId, updatedJson);
+                _typedResync?.Resync(subId, formId, updatedJson);
             }
 
             return new StepResult

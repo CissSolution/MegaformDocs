@@ -30,6 +30,9 @@ namespace MegaForm.Web.Data
         public DbSet<WebhookLogInfo>      WebhookLogs      { get; set; }
         public DbSet<ModuleSettingRow>    ModuleSettings   { get; set; }
         public DbSet<WorkflowExecutionRow> WorkflowExecutions { get; set; }
+        // [CloudReady A1 v20260804] Async workflow execution queue (table also delivered
+        // to existing DBs by Data/Schema/Scripts/*/0002_workflow_queue.sql — idempotent).
+        public DbSet<WorkflowQueueRow>     WorkflowQueue   { get; set; }
         public DbSet<WebUserRow>          WebUsers         { get; set; }
         public DbSet<WebRoleRow>          WebRoles         { get; set; }
         public DbSet<WebUserRoleRow>      WebUserRoles     { get; set; }
@@ -46,6 +49,17 @@ namespace MegaForm.Web.Data
         public DbSet<KbRule>              KbRules          { get; set; }
         public DbSet<KbFeedback>          KbFeedbacks      { get; set; }
         public DbSet<ReportDefinitionInfo> ReportDefinitions { get; set; }
+
+        // [TypedStorage 2026-07-18] Umbraco Forms-style typed submission storage.
+        // Written in parallel with MF_Submissions.DataJson; DataJson remains the
+        // runtime source of truth on this host (SupportsDataJsonCollapse=false).
+        public DbSet<SubmissionFieldRecord> SubmissionFields { get; set; }
+        public DbSet<SubmissionValueStringRecord> SubmissionValueString { get; set; }
+        public DbSet<SubmissionValueLongTextRecord> SubmissionValueLongText { get; set; }
+        public DbSet<SubmissionValueNumberRecord> SubmissionValueNumber { get; set; }
+        public DbSet<SubmissionValueDateRecord> SubmissionValueDate { get; set; }
+        public DbSet<SubmissionValueBooleanRecord> SubmissionValueBoolean { get; set; }
+        public DbSet<SubmissionValueJsonRecord> SubmissionValueJson { get; set; }
 
         protected override void OnModelCreating(ModelBuilder b)
         {
@@ -96,6 +110,65 @@ namespace MegaForm.Web.Data
                 e.Property(x => x.FieldValue) .HasColumnType(TextType).IsRequired(false);
                 e.Property(x => x.ValueText)  .HasColumnType(TextType).IsRequired(false);
                 e.Property(x => x.ValueNumber).HasColumnType("DECIMAL(18,6)");
+            });
+
+            // [TypedStorage 2026-07-18] Typed submission storage mappings.
+            b.Entity<SubmissionFieldRecord>(e => {
+                e.ToTable("MF_SubmissionFields"); e.HasKey(x => x.SubmissionFieldId);
+                e.Property(x => x.FieldKey).HasMaxLength(256);
+                e.Property(x => x.FieldId).HasMaxLength(256);
+                e.Property(x => x.FieldAlias).HasMaxLength(256);
+                e.Property(x => x.FieldType).HasMaxLength(128);
+                e.Property(x => x.DataType).HasMaxLength(64);
+                e.Property(x => x.LabelSnapshot).HasMaxLength(512);
+                e.HasIndex(x => new { x.SubmissionId, x.FieldKey }).HasDatabaseName("IX_MF_SubmissionFields_Submission_FieldKey");
+                e.HasIndex(x => new { x.FormId, x.FieldKey }).HasDatabaseName("IX_MF_SubmissionFields_Form_FieldKey");
+                e.HasIndex(x => x.SubmissionId).HasDatabaseName("IX_MF_SubmissionFields_SubmissionId");
+                e.HasIndex(x => new { x.FormId, x.DataType }).HasDatabaseName("IX_MF_SubmissionFields_Form_DataType");
+            });
+            b.Entity<SubmissionValueStringRecord>(e => {
+                e.ToTable("MF_SubmissionValueString"); e.HasKey(x => x.Id);
+                e.Property(x => x.FieldKey).HasMaxLength(256);
+                e.Property(x => x.Value).HasMaxLength(1024);
+                e.HasIndex(x => x.SubmissionFieldId).HasDatabaseName("IX_MF_SubmissionValueString_FieldId");
+                e.HasIndex(x => x.SubmissionId).HasDatabaseName("IX_MF_SubmissionValueString_SubmissionId");
+                e.HasIndex(x => new { x.FormId, x.FieldKey }).HasDatabaseName("IX_MF_SubmissionValueString_Form_Field");
+            });
+            b.Entity<SubmissionValueLongTextRecord>(e => {
+                e.ToTable("MF_SubmissionValueLongText"); e.HasKey(x => x.Id);
+                e.Property(x => x.FieldKey).HasMaxLength(256);
+                e.HasIndex(x => x.SubmissionFieldId).HasDatabaseName("IX_MF_SubmissionValueLongText_FieldId");
+                e.HasIndex(x => x.SubmissionId).HasDatabaseName("IX_MF_SubmissionValueLongText_SubmissionId");
+                e.HasIndex(x => new { x.FormId, x.FieldKey }).HasDatabaseName("IX_MF_SubmissionValueLongText_Form_Field");
+            });
+            b.Entity<SubmissionValueNumberRecord>(e => {
+                e.ToTable("MF_SubmissionValueNumber"); e.HasKey(x => x.Id);
+                e.Property(x => x.FieldKey).HasMaxLength(256);
+                e.Property(x => x.Value).HasPrecision(18, 6);
+                e.HasIndex(x => x.SubmissionFieldId).HasDatabaseName("IX_MF_SubmissionValueNumber_FieldId");
+                e.HasIndex(x => x.SubmissionId).HasDatabaseName("IX_MF_SubmissionValueNumber_SubmissionId");
+                e.HasIndex(x => new { x.FormId, x.FieldKey, x.Value }).HasDatabaseName("IX_MF_SubmissionValueNumber_Form_Field_Value");
+            });
+            b.Entity<SubmissionValueDateRecord>(e => {
+                e.ToTable("MF_SubmissionValueDate"); e.HasKey(x => x.Id);
+                e.Property(x => x.FieldKey).HasMaxLength(256);
+                e.HasIndex(x => x.SubmissionFieldId).HasDatabaseName("IX_MF_SubmissionValueDate_FieldId");
+                e.HasIndex(x => x.SubmissionId).HasDatabaseName("IX_MF_SubmissionValueDate_SubmissionId");
+                e.HasIndex(x => new { x.FormId, x.FieldKey, x.Value }).HasDatabaseName("IX_MF_SubmissionValueDate_Form_Field_Value");
+            });
+            b.Entity<SubmissionValueBooleanRecord>(e => {
+                e.ToTable("MF_SubmissionValueBoolean"); e.HasKey(x => x.Id);
+                e.Property(x => x.FieldKey).HasMaxLength(256);
+                e.HasIndex(x => x.SubmissionFieldId).HasDatabaseName("IX_MF_SubmissionValueBoolean_FieldId");
+                e.HasIndex(x => x.SubmissionId).HasDatabaseName("IX_MF_SubmissionValueBoolean_SubmissionId");
+                e.HasIndex(x => new { x.FormId, x.FieldKey, x.Value }).HasDatabaseName("IX_MF_SubmissionValueBoolean_Form_Field_Value");
+            });
+            b.Entity<SubmissionValueJsonRecord>(e => {
+                e.ToTable("MF_SubmissionValueJson"); e.HasKey(x => x.Id);
+                e.Property(x => x.FieldKey).HasMaxLength(256);
+                e.HasIndex(x => x.SubmissionFieldId).HasDatabaseName("IX_MF_SubmissionValueJson_FieldId");
+                e.HasIndex(x => x.SubmissionId).HasDatabaseName("IX_MF_SubmissionValueJson_SubmissionId");
+                e.HasIndex(x => new { x.FormId, x.FieldKey }).HasDatabaseName("IX_MF_SubmissionValueJson_Form_Field");
             });
             b.Entity<Core.Models.FileInfo>(e => {
                 e.ToTable("MF_Files"); e.HasKey(x => x.FileId);
@@ -186,6 +259,20 @@ namespace MegaForm.Web.Data
                 e.Property(x => x.Status)       .HasDefaultValue("running");
                 e.Property(x => x.CurrentNodeId).HasDefaultValue("");
                 e.Property(x => x.ErrorMessage) .HasDefaultValue("");
+                // [CloudReady A2 v20260806] Mirror of script 0003_delay_timer.sql so fresh
+                // installs (EnsureCreated/CreateTables) get the timer columns + scanner index.
+                e.Property(x => x.LeaseOwner)   .HasMaxLength(64).IsRequired(false);
+                e.HasIndex(x => new { x.Status, x.WaitUntilUtc }).HasDatabaseName("IX_MF_WorkflowExecutions_Status_WaitUntilUtc");
+            });
+            // [CloudReady A1 v20260804] MF_WorkflowQueue — mirror of script 0002_workflow_queue.sql
+            // so fresh installs (EnsureCreated/CreateTables) get the same shape existing DBs
+            // get from the schema runner.
+            b.Entity<WorkflowQueueRow>(e => {
+                e.ToTable("MF_WorkflowQueue"); e.HasKey(x => x.QueueId);
+                e.Property(x => x.PayloadJson).HasColumnType(TextType);
+                e.Property(x => x.Status).HasMaxLength(16).HasDefaultValue("queued");
+                e.Property(x => x.LeasedBy).HasMaxLength(64).IsRequired(false);
+                e.HasIndex(x => new { x.Status, x.LeaseUntilUtc }).HasDatabaseName("IX_MF_WorkflowQueue_Status_LeaseUntilUtc");
             });
             // Web identity provisioning
             b.Entity<WebUserRow>(e => {

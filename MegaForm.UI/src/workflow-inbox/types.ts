@@ -55,6 +55,11 @@ export interface WorkflowInboxTask {
   // anonymous submissions and on older payloads.
   submittedByUserName?: string;
   submittedByDisplayName?: string;
+  // [AssignedBadge fix 2026-07-13] Stamped client-side from the MyInbox bucket the
+  // task arrived in (inProgress = assigned to me). Ad-hoc Send-to-Inbox tasks can
+  // carry AssignedUserId=NULL (matched server-side by UserName only), so the badge
+  // must not depend on assignedUserId alone.
+  assignedToMe?: boolean;
 }
 
 export interface WorkflowInboxTaskAction {

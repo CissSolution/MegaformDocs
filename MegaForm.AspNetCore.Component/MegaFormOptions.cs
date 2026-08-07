@@ -52,6 +52,10 @@ namespace MegaForm.AspNetCore.Component
         public bool UseSwagger { get; set; } = false;
         public bool AutoEnsureDatabase { get; set; } = true;
 
+        // [CloudReady A1 v20260804] "sync" (default) | "queue" — post-submit workflow
+        // execution inline vs. via MF_WorkflowQueue + WorkflowQueueWorkerService.
+        public string WorkflowExecutionMode { get; set; } = "sync";
+
         // ── Host / URLs ──────────────────────────────────────────────────────
         public string BaseUrl { get; set; }
 

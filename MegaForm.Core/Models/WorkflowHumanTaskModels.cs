@@ -125,6 +125,13 @@ namespace MegaForm.Core.Workflow
         public DateTime? DueAt { get; set; }
         public DateTime? CompletedAt { get; set; }
 
+        /// <summary>
+        /// [CloudReady A2 v20260806] Set by the host timer scanner after it has sent
+        /// the ONE overdue reminder email for this task. Null = reminder not sent yet;
+        /// the scanner only picks tasks where DueAt passed AND this is still null.
+        /// </summary>
+        public DateTime? EscalatedAtUtc { get; set; }
+
         public WorkflowTaskInstance()
         {
             TaskId = Guid.NewGuid().ToString("N");

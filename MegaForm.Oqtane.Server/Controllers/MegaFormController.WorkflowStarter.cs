@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Text.Json;
@@ -746,6 +747,59 @@ namespace MegaForm.Oqtane.Server.Controllers
                 || string.Equals(role, "Administrators", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase));
             return actor;
+        }
+
+        // [SecFix Phase0-2 v20260722] Parse "form-{id}" from the first path segment of a
+        // PrivateUploads relative path (e.g. "form-12/field-avatar/abc123.pdf"). Returns 0
+        // when the path does not follow the upload layout — DownloadFile keeps the legacy
+        // capability-URL behavior for those.
+        private static int TryParseUploadFormId(string relativePath)
+        {
+            if (string.IsNullOrWhiteSpace(relativePath)) return 0;
+            var firstSegment = relativePath.Split(Path.DirectorySeparatorChar)[0];
+            if (!firstSegment.StartsWith("form-", StringComparison.OrdinalIgnoreCase)) return 0;
+            int formId;
+            return int.TryParse(firstSegment.Substring(5), out formId) ? formId : 0;
+        }
+
+        // [SecFix Phase0-2 v20260722] See DownloadFile for the (a)/(b)/(c) authorization model.
+        private bool CanDownloadPrivateUpload(int formId, string fullPath)
+        {
+            var actor = GetCurrentUserContextWithRoles();
+            var permissions = new PermissionService(_phase2Repo);
+
+            // (a) staff: module admin or a holder of the form's view/manage rule.
+            if (CanUseSubmissionManagement(formId, actor, permissions)) return true;
+
+            // Find submissions referencing this file (search matches DataJson and the typed
+            // DisplayValue). Newest first; 200 rows bound the scan.
+            var fileToken = Path.GetFileNameWithoutExtension(fullPath);
+            if (string.IsNullOrWhiteSpace(fileToken)) return false;
+            List<SubmissionInfo> referencing;
+            try
+            {
+                referencing = _subRepo.List(formId, null, fileToken, null, null, 0, 200).Items;
+            }
+            catch
+            {
+                referencing = null; // fail-closed below for referenced files; see (c)
+            }
+
+            // (c) unreferenced upload (not yet submitted) → legacy capability-URL behavior.
+            // If the lookup itself failed we cannot prove (c), so treat as referenced and
+            // require (b) — fail closed.
+            if (referencing != null && referencing.Count == 0) return true;
+
+            // (b) caller may view at least one submission that references the file.
+            if (referencing != null)
+            {
+                foreach (var sub in referencing)
+                {
+                    if (sub != null && CanViewSubmissionRow(formId, sub, actor, permissions))
+                        return true;
+                }
+            }
+            return false;
         }
 
         private string GetCurrentPageBaseUrl()

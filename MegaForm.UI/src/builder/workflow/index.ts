@@ -19,7 +19,7 @@ import { normalizeFieldOptions, normalizeWorkflowDef, normalizeWebhookMethod, no
 // Import node meta
 import { NODE_META, TRIGGER_TYPES, NAV_TYPES, LOGIC_TYPES, ACTION_TYPES, INTEGRATION_TYPES, WORKFLOW_BUILD_TAG as WORKFLOW_META_BUILD_TAG, WORKFLOW_VERSION_TAG as WORKFLOW_META_VERSION_TAG } from './wf-meta';
 import { getStyles } from './wf-styles';
-import { createMFNode, createCustomMiniMap, createZoneBackground, createNodePalette, createFieldInsertButton, createConditionGroupEditor, createVariablesPanel, createSetVariableConfigPanel, createIssuesPanel, createToast } from './wf-components';
+import { createMFNode, createCustomMiniMap, createZoneBackground, createNodePalette, createFieldInsertButton, createConditionGroupEditor, createVariablesPanel, createSetVariableConfigPanel, createDelayConfigPanel, createIssuesPanel, createToast } from './wf-components';
 import { swallowWorkflowPanelEvent, buttonProps } from './wf-dom-guards';
 import { normalizeUiOptions, useDatabaseNodeEffects, applyDatabaseConfigResets, resolveDatabaseSchemaOptions, resolveDatabaseItemKeyOptions, renderDatabaseConnectionAssistant, renderDatabaseMappingField, createDatabaseConfigPanel } from './wf-database';
 import { renderSendEmailConfig } from './wf-email';
@@ -964,6 +964,7 @@ import { SAMPLE_PRESETS, buildSamplePreset, getSampleMeta, reconcileWorkflowToSc
     var VariablesPanel       = createVariablesPanel(_ctx);
     var DatabaseConfigPanel  = createDatabaseConfigPanel(_ctx);
     var SetVariableConfigPanel = createSetVariableConfigPanel(_ctx);
+    var DelayConfigPanel       = createDelayConfigPanel(_ctx);
     var IssuesPanel          = createIssuesPanel(_ctx);
 
 
@@ -1656,6 +1657,11 @@ import { SAMPLE_PRESETS, buildSamplePreset, getSampleMeta, reconcileWorkflowToSc
           });
         if (node.data.nodeType === 'SetVariable')
           return h(SetVariableConfigPanel, {
+            config:    config,
+            setConfig: setConfig,
+          });
+        if (node.data.nodeType === 'Delay')
+          return h(DelayConfigPanel, {
             config:    config,
             setConfig: setConfig,
           });

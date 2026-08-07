@@ -100,6 +100,7 @@ namespace MegaForm.Umbraco.Data
                 CurrentNodeId = ctx.CurrentNodeId ?? "",
                 ContextJson = Serialize(ctx),
                 ErrorMessage = ctx.ErrorMessage ?? "",
+                WaitUntilUtc = ctx.WaitUntilUtc,
             };
             _db.WorkflowExecutions.Add(row);
             _db.SaveChanges();
@@ -115,6 +116,8 @@ namespace MegaForm.Umbraco.Data
             row.CompletedAt = ctx.CompletedAt;
             row.ContextJson = Serialize(ctx);
             row.ErrorMessage = ctx.ErrorMessage ?? "";
+            // [CloudReady A2] Engine owns WaitUntilUtc; the scanner owns Lease* — untouched here.
+            row.WaitUntilUtc = ctx.WaitUntilUtc;
             _db.SaveChanges();
         }
 
@@ -250,6 +253,7 @@ namespace MegaForm.Umbraco.Data
             row.ClaimedAt = task.ClaimedAt;
             row.DueAt = task.DueAt;
             row.CompletedAt = task.CompletedAt;
+            row.EscalatedAtUtc = task.EscalatedAtUtc;
             _db.SaveChanges();
         }
 
@@ -355,6 +359,7 @@ namespace MegaForm.Umbraco.Data
                 ClaimedAt = r.ClaimedAt,
                 DueAt = r.DueAt,
                 CompletedAt = r.CompletedAt,
+                EscalatedAtUtc = r.EscalatedAtUtc,
             };
         }
 
