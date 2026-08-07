@@ -1,0 +1,152 @@
+{
+  "version": "1.0",
+  "slug": "terracotta-product-feedback",
+  "title": "Terracotta Product Feedback",
+  "description": "Warm editorial feedback form with star rating, topic chips, response opt-in, and a photo-led shell.",
+  "category": "feedback",
+  "categories": [
+    "feedback",
+    "premium",
+    "survey"
+  ],
+  "icon": "message-square",
+  "theme": "system",
+  "templateGuideSlug": "tpl-terracotta-product-feedback",
+  "submitButtonText": "Send feedback",
+  "successMessage": "Thank you. Your feedback has been received and will guide what we build next.",
+  "fields": [
+    {
+      "key": "full_name",
+      "type": "Text",
+      "label": "Your name",
+      "placeholder": "Jordan Kim",
+      "required": true
+    },
+    {
+      "key": "email",
+      "type": "Email",
+      "label": "Email",
+      "placeholder": "you@example.com",
+      "required": true
+    },
+    {
+      "key": "overall_rating",
+      "type": "Rating",
+      "label": "Overall rating",
+      "required": true,
+      "defaultValue": "5",
+      "properties": {
+        "ratingStyle": "star"
+      },
+      "widgetProps": {
+        "ratingStyle": "star"
+      }
+    },
+    {
+      "key": "topic",
+      "type": "Radio",
+      "label": "Topic",
+      "required": true,
+      "options": [
+        {
+          "label": "Product quality",
+          "value": "product-quality"
+        },
+        {
+          "label": "Customer service",
+          "value": "customer-service"
+        },
+        {
+          "label": "Website experience",
+          "value": "website-experience"
+        },
+        {
+          "label": "Shipping & delivery",
+          "value": "shipping-delivery"
+        },
+        {
+          "label": "Other",
+          "value": "other"
+        }
+      ],
+      "optionDisplay": "chips",
+      "choiceDisplay": "chips",
+      "optionVariant": "chips",
+      "optionColumns": 5,
+      "properties": {
+        "optionDisplay": "chips",
+        "optionColumns": 5
+      },
+      "widgetProps": {
+        "optionDisplay": "chips",
+        "optionColumns": 5
+      }
+    },
+    {
+      "key": "message",
+      "type": "Textarea",
+      "label": "Your message",
+      "placeholder": "Share your experience in detail...",
+      "required": true,
+      "validation": {
+        "maxLength": 800
+      },
+      "properties": {
+        "rows": 4
+      }
+    },
+    {
+      "key": "notify_response",
+      "type": "Checkbox",
+      "label": "Response notification",
+      "options": [
+        {
+          "label": "Notify me when you respond to my feedback",
+          "value": "yes"
+        }
+      ]
+    },
+    {
+      "key": "utm_source",
+      "type": "Hidden",
+      "label": "UTM source"
+    },
+    {
+      "key": "utm_campaign",
+      "type": "Hidden",
+      "label": "UTM campaign"
+    }
+  ],
+  "settings": {
+    "multiPage": false,
+    "premiumGeneratedShell": true,
+    "premiumNativeMigrationBadge": "form-builder-controls-10/terracotta-feedback",
+    "showProgressBar": false,
+    "themeSelector": {
+      "enabled": false
+    },
+    "customHtml": "<div class=\"mfp mfp-terracotta-product-feedback mfp-native-generated\" data-mf-flexgrid=\"locked\">\n  <div class=\"mfp-stage\">\n    <div class=\"mfp-card\">\n      <aside class=\"mfp-hero\">\n        <div class=\"mfp-hero-image\" role=\"img\" aria-label=\"Your voice shapes everything we build next.\"></div>\n        <div class=\"mfp-hero-overlay\"></div>\n        <div class=\"mfp-brand\"><span class=\"mfp-brand-mark\">T</span><span class=\"mfp-brand-name\">TERRA</span></div>\n        <div class=\"mfp-hero-copy\">\n          <h2 class=\"mfp-hero-title\">Your voice shapes everything we build next.</h2>\n          <p class=\"mfp-hero-sub\">Every piece of feedback is read by our team.</p>\n          <div class=\"mfp-hero-rule\" aria-hidden=\"true\"></div>\n        </div>\n      </aside>\n      <section class=\"mfp-form-pane\">\n        <span class=\"mfp-back-label\" aria-hidden=\"true\">&#8592; Back to Forms</span>\n        <p class=\"mfp-eyebrow\">Share your thoughts</p>\n        <h1 class=\"mfp-form-title\">Your feedback</h1>\n        <p class=\"mfp-form-subtitle\">Tell us what you think. Honest opinions help us improve.</p>\n        <div class=\"mfp-stack\">\n          <div class=\"mfp-field-row\"><div>{{field:full_name}}</div><div>{{field:email}}</div></div>\n          {{field:overall_rating}}\n          <div class=\"mfp-chip-field\">{{field:topic}}</div>\n          {{field:message}}\n          <p class=\"mfp-char-hint\">Up to 800 characters</p>\n          <div class=\"mfp-check-field\">{{field:notify_response}}</div>\n        </div>\n        <div class=\"mfp-hidden-fields\">{{field:utm_source}}{{field:utm_campaign}}</div>\n        <div class=\"mfp-actions\"><button type=\"submit\" class=\"mfp-btn mfp-btn-primary mfp-btn-submit\" data-mf-native-submit>Send feedback <span aria-hidden=\"true\">&#8594;</span></button></div>\n      </section>\n    </div>\n  </div>\n</div>",
+    "customCss": "/* MegaForm Gen-3 split-photo shell. Scope: .mfp.mfp-terracotta-product-feedback */\n.mfp.mfp-terracotta-product-feedback{\n  --tc-bg:#1e110a;\n  --tc-card:var(--mf-page-surface,var(--mf-preset-surface,#fdf8f3));\n  --tc-ink:var(--mf-page-text,var(--mf-preset-text,#241507));\n  --tc-heading:var(--mf-page-heading,var(--mf-preset-text,#241507));\n  --tc-muted:var(--mf-page-muted,color-mix(in srgb,var(--tc-ink) 58%,transparent));\n  --tc-line:var(--mf-page-border,var(--mf-preset-border,#ecddd0));\n  --tc-input:var(--mf-page-input-bg,var(--mf-preset-surface,#ffffff));\n  --tc-primary:var(--mf-page-primary,var(--mf-preset-primary,#c45c2a));\n  --tc-primary-hover:color-mix(in srgb,var(--tc-primary) 82%,#000000);\n  --tc-soft:color-mix(in srgb,var(--tc-primary) 10%,var(--tc-card));\n  --tc-on-primary:var(--mf-preset-on-primary,#ffffff);\n  --tc-error:#c0392b;\n  --tc-font:var(--mf-page-font-family,Inter,system-ui,-apple-system,\"Segoe UI\",Roboto,sans-serif);\n  --tc-display:Georgia,\"Times New Roman\",serif;\n  width:100%;\n  max-width:1152px;\n  margin:0 auto;\n  color:var(--tc-ink);\n  font-family:var(--tc-font);\n}\n.mfp.mfp-terracotta-product-feedback,.mfp.mfp-terracotta-product-feedback *,.mfp.mfp-terracotta-product-feedback *::before,.mfp.mfp-terracotta-product-feedback *::after{box-sizing:border-box}\n.mfp-terracotta-product-feedback .mfp-stage{width:100%;padding:32px;border-radius:24px;background:var(--tc-bg)}\n.mfp-terracotta-product-feedback .mfp-card{\n  display:grid;\n  grid-template-columns:minmax(280px,5fr) minmax(430px,7fr);\n  width:min(100%,896px);\n  min-height:650px;\n  margin:0 auto;\n  overflow:hidden;\n  border:1px solid color-mix(in srgb,var(--tc-line) 62%,transparent);\n  border-radius:24px;\n  background:var(--tc-card);\n  box-shadow:0 32px 80px rgba(0,0,0,.48);\n}\n.mfp-terracotta-product-feedback .mfp-hero{position:relative;min-height:100%;overflow:hidden;color:#ffffff}\n.mfp-terracotta-product-feedback .mfp-hero-image{\n  position:absolute;\n  inset:0;\n  background-image:url('/Modules/MegaForm/img/terracotta-product-feedback/hero.jpg');\n  background-position:center;\n  background-size:cover;\n}\n.DnnModule .mfp-terracotta-product-feedback .mfp-hero-image{background-image:url('/DesktopModules/MegaForm/Assets/img/terracotta-product-feedback/hero.jpg')}\n.mfp-terracotta-product-feedback .mfp-hero-overlay{\n  position:absolute;\n  inset:0;\n  background:linear-gradient(160deg,rgba(10,10,10,.68) 0%,rgba(10,10,10,.20) 54%,color-mix(in srgb,var(--tc-primary) 18%,transparent) 100%);\n}\n.mfp-terracotta-product-feedback .mfp-brand{position:absolute;z-index:2;top:32px;left:32px;display:flex;align-items:center;gap:10px}\n.mfp-terracotta-product-feedback .mfp-brand-mark{\n  display:grid;\n  place-items:center;\n  width:32px;\n  height:32px;\n  border-radius:8px;\n  background:var(--tc-primary);\n  color:#ffffff;\n  font-size:14px;\n  font-weight:800;\n}\n.mfp-terracotta-product-feedback .mfp-brand-name{color:#ffffff;font-size:13px;font-weight:800;letter-spacing:.16em}\n.mfp-terracotta-product-feedback .mfp-hero-copy{position:absolute;z-index:2;right:0;bottom:0;left:0;padding:40px}\n.mfp-terracotta-product-feedback .mfp-hero-title{\n  max-width:13ch;\n  margin:0;\n  color:#ffffff;\n  font-family:var(--tc-display);\n  font-size:clamp(26px,3vw,34px);\n  font-weight:700;\n  line-height:1.22;\n}\n.mfp-terracotta-product-feedback .mfp-hero-sub{margin:14px 0 0;color:rgba(255,255,255,.72);font-size:14px;line-height:1.55}\n.mfp-terracotta-product-feedback .mfp-hero-rule{width:40px;height:2px;margin-top:20px;border-radius:999px;background:var(--tc-primary)}\n.mfp-terracotta-product-feedback .mfp-form-pane{display:flex;min-width:0;flex-direction:column;justify-content:center;padding:44px 48px;background:var(--tc-card)}\n.mfp-terracotta-product-feedback .mfp-back-label{display:inline-flex;align-items:center;gap:7px;margin:0 0 28px;color:var(--tc-muted);font-size:12px;font-weight:600}\n.mfp-terracotta-product-feedback .mfp-eyebrow{margin:0 0 7px;color:var(--tc-primary);font-size:10px;font-weight:800;letter-spacing:.34em;text-transform:uppercase}\n.mfp-terracotta-product-feedback .mfp-form-title{margin:0;color:var(--tc-heading);font-family:var(--tc-display);font-size:clamp(32px,4vw,42px);font-weight:700;line-height:1.08}\n.mfp-terracotta-product-feedback .mfp-form-subtitle{max-width:46ch;margin:10px 0 28px;color:var(--tc-muted);font-size:14px;line-height:1.6}\n.mfp-terracotta-product-feedback .mfp-stack{display:grid;gap:16px}\n.mfp-terracotta-product-feedback .mfp-field-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}\n.mfp-terracotta-product-feedback .mf-field-group{min-width:0;margin:0}\n.mfp-terracotta-product-feedback .mf-field-label{display:block;margin:0 0 7px;color:var(--tc-heading);font-size:12px;font-weight:800;letter-spacing:.035em;text-transform:uppercase}\n.mfp-terracotta-product-feedback .mf-required{color:var(--tc-error)}\n.mfp-terracotta-product-feedback .mf-input,.mfp-terracotta-product-feedback .mf-select,.mfp-terracotta-product-feedback .mf-textarea,\n.mfp-terracotta-product-feedback input:not([type='checkbox']):not([type='radio']),.mfp-terracotta-product-feedback select,.mfp-terracotta-product-feedback textarea{\n  width:100%!important;\n  min-height:46px!important;\n  padding:11px 15px!important;\n  border:1px solid var(--tc-line)!important;\n  border-radius:12px!important;\n  outline:0!important;\n  background:var(--tc-input)!important;\n  color:var(--tc-ink)!important;\n  box-shadow:none!important;\n  font:inherit!important;\n  font-size:14px!important;\n  transition:border-color .16s ease,box-shadow .16s ease!important;\n}\n.mfp-terracotta-product-feedback .mf-textarea,.mfp-terracotta-product-feedback textarea{min-height:106px!important;resize:vertical!important}\n.mfp-terracotta-product-feedback .mf-input:focus,.mfp-terracotta-product-feedback .mf-select:focus,.mfp-terracotta-product-feedback .mf-textarea:focus,\n.mfp-terracotta-product-feedback input:focus,.mfp-terracotta-product-feedback select:focus,.mfp-terracotta-product-feedback textarea:focus{\n  border-color:var(--tc-primary)!important;\n  box-shadow:0 0 0 3px color-mix(in srgb,var(--tc-primary) 16%,transparent)!important;\n}\n.mfp-terracotta-product-feedback input::placeholder,.mfp-terracotta-product-feedback textarea::placeholder{color:color-mix(in srgb,var(--tc-muted) 56%,transparent)}\n.mfp-terracotta-product-feedback .mf-field-help,.mfp-terracotta-product-feedback .mf-field-error{margin-top:5px;font-size:12px;line-height:1.4}\n.mfp-terracotta-product-feedback .mf-field-error{color:var(--tc-error)}\n.mfp-terracotta-product-feedback .mfp-chip-field .mf-option-group{display:flex!important;flex-wrap:wrap!important;gap:8px!important;grid-template-columns:none!important}\n.mfp-terracotta-product-feedback .mfp-chip-field .mf-option-item{display:inline-flex!important;width:auto!important;margin:0!important;padding:0!important}\n.mfp-terracotta-product-feedback .mfp-chip-field .mf-option-control{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;clip-path:inset(50%)!important}\n.mfp-terracotta-product-feedback .mfp-chip-field .mf-option-ui{\n  display:inline-flex!important;\n  align-items:center!important;\n  min-height:32px!important;\n  padding:7px 13px!important;\n  border:1px solid var(--tc-line)!important;\n  border-radius:999px!important;\n  background:var(--tc-input)!important;\n  color:var(--tc-muted)!important;\n  box-shadow:none!important;\n  transition:all .16s ease!important;\n}\n.mfp-terracotta-product-feedback .mfp-chip-field .mf-option-label{color:inherit!important;font-size:12px!important;font-weight:600!important}\n.mfp-terracotta-product-feedback .mfp-chip-field .mf-option-control:checked + .mf-option-ui{border-color:var(--tc-primary)!important;background:var(--tc-soft)!important;color:var(--tc-primary)!important}\n.mfp-terracotta-product-feedback .mfp-chip-field .mf-option-control:focus-visible + .mf-option-ui{outline:2px solid var(--tc-primary)!important;outline-offset:2px!important}\n.mfp-terracotta-product-feedback .mfp-check-field .mf-option-group{display:block!important}\n.mfp-terracotta-product-feedback .mfp-check-field .mf-option-item{display:flex!important;align-items:flex-start!important;gap:10px!important;margin:0!important;padding:0!important}\n.mfp-terracotta-product-feedback .mfp-check-field .mf-option-control{position:static!important;width:17px!important;height:17px!important;margin:3px 0 0!important;accent-color:var(--tc-primary)!important;opacity:1!important}\n.mfp-terracotta-product-feedback .mfp-check-field .mf-option-ui{display:block!important;padding:0!important;border:0!important;background:transparent!important;color:var(--tc-muted)!important}\n.mfp-terracotta-product-feedback .mfp-check-field .mf-option-label{color:inherit!important;font-size:14px!important;line-height:1.55!important}\n.mfp-terracotta-product-feedback .mfp-actions{display:flex;align-items:center;gap:12px;margin-top:22px}\n.mfp-terracotta-product-feedback .mfp-btn{\n  display:inline-flex;\n  min-height:48px;\n  align-items:center;\n  justify-content:center;\n  gap:10px;\n  border:1px solid transparent;\n  border-radius:12px;\n  padding:12px 22px;\n  font:inherit;\n  font-size:14px;\n  font-weight:800;\n  text-decoration:none;\n  cursor:pointer;\n  transition:transform .12s ease,background .16s ease,border-color .16s ease,opacity .16s ease;\n}\n.mfp-terracotta-product-feedback .mfp-btn:hover{transform:translateY(-1px)}\n.mfp-terracotta-product-feedback .mfp-btn-primary{flex:1;background:var(--tc-ink);color:var(--tc-on-primary)}\n.mfp-terracotta-product-feedback .mfp-btn-primary:hover{background:color-mix(in srgb,var(--tc-ink) 86%,var(--tc-primary))}\n.mfp-terracotta-product-feedback .mfp-btn-secondary{border-color:var(--tc-line);background:transparent;color:var(--tc-muted)}\n.mfp-terracotta-product-feedback .mfp-divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--tc-muted);font-size:12px}\n.mfp-terracotta-product-feedback .mfp-divider::before,.mfp-terracotta-product-feedback .mfp-divider::after{content:\"\";height:1px;flex:1;background:var(--tc-line)}\n.mfp-terracotta-product-feedback .mfp-provider-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}\n.mfp-terracotta-product-feedback .mfp-provider{border-color:var(--tc-line);background:transparent;color:var(--tc-ink)}\n.mfp-terracotta-product-feedback .mfp-provider:hover{border-color:var(--tc-primary);color:var(--tc-primary)}\n.mfp-terracotta-product-feedback .mfp-footnote{margin:24px 0 0;text-align:center;color:var(--tc-muted);font-size:14px}\n.mfp-terracotta-product-feedback .mfp-footnote a{color:var(--tc-primary);font-weight:800;text-decoration:none}\n.mfp-terracotta-product-feedback .mfp-hidden-fields{display:none!important}\n.mfp-terracotta-product-feedback .mf-form-title,.mfp-terracotta-product-feedback .mf-form-description,.mfp-terracotta-product-feedback .mf-success-message,.mfp-terracotta-product-feedback .mf-form-actions{display:none!important}\n.mf-form-wrapper:has(.mfp-terracotta-product-feedback)>.mf-form-inner{width:100%!important;max-width:1152px!important}\n.mf-form-wrapper:has(.mfp-terracotta-product-feedback) .mf-form-actions{display:none!important}\n@media(max-width:760px){\n  .mfp-terracotta-product-feedback .mfp-stage{padding:14px}\n  .mfp-terracotta-product-feedback .mfp-card{grid-template-columns:1fr;min-height:0;border-radius:20px}\n  .mfp-terracotta-product-feedback .mfp-hero{min-height:190px}\n  .mfp-terracotta-product-feedback .mfp-brand{top:20px;left:20px}\n  .mfp-terracotta-product-feedback .mfp-hero-copy{display:none}\n  .mfp-terracotta-product-feedback .mfp-form-pane{padding:28px 24px 32px}\n  .mfp-terracotta-product-feedback .mfp-back-label{margin-bottom:22px}\n}\n@media(max-width:520px){\n  .mfp-terracotta-product-feedback .mfp-stage{padding:0;border-radius:20px}\n  .mfp-terracotta-product-feedback .mfp-field-row,.mfp-terracotta-product-feedback .mfp-provider-row{grid-template-columns:1fr}\n  .mfp-terracotta-product-feedback .mfp-form-pane{padding:26px 20px 30px}\n  .mfp-terracotta-product-feedback .mfp-form-title{font-size:32px}\n  .mfp-terracotta-product-feedback .mfp-actions{align-items:stretch;flex-direction:column-reverse}\n  .mfp-terracotta-product-feedback .mfp-btn{width:100%}\n}\n\n.mfp-terracotta-product-feedback .mf-rating{display:flex;align-items:center;gap:12px}\n.mfp-terracotta-product-feedback .mf-rating-items{display:flex;gap:3px}\n.mfp-terracotta-product-feedback .mf-rating-item,.mfp-terracotta-product-feedback .mf-star{padding:0;border:0;background:transparent;color:var(--tc-line);font-size:30px;line-height:1;cursor:pointer}\n.mfp-terracotta-product-feedback .mf-rating-item.is-active,.mfp-terracotta-product-feedback .mf-star.is-active{color:var(--tc-primary)}\n.mfp-terracotta-product-feedback .mf-rating-on{color:var(--tc-primary)}\n.mfp-terracotta-product-feedback .mf-rating-value{color:var(--tc-muted);font-size:13px;font-weight:700}\n.mfp-terracotta-product-feedback .mfp-char-hint{margin:-7px 0 0;text-align:right;color:var(--tc-muted);font-size:11px}\n",
+    "customScripts": {},
+    "themeCompatibility": {
+      "policy": "hybrid",
+      "supportsPageColors": true,
+      "supportsPageTypography": true,
+      "supportsDarkHost": true,
+      "prefixes": [
+        "tc"
+      ],
+      "immutable": [
+        "terracotta interior hero image",
+        "deep-brown stage and warm overlay",
+        "white hero typography",
+        "--tc-error semantic red #c0392b"
+      ]
+    }
+  },
+  "rules": [],
+  "workflow": {
+    "notifications": []
+  },
+  "manifestVersion": 2
+}

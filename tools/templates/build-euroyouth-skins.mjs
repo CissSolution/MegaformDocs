@@ -135,11 +135,49 @@ export function buildFields(spec) {
 
   (spec.extraFields || []).forEach((f) => list.push(f));
 
+  // [Wizard v20260807] A stepped form needs one leading Section per step, because the runtime
+  // derives pages FROM THE FIELDS (Section.properties.pageBreak), not from a page count. Deleting
+  // a step in the builder therefore means deleting its page-break Section.
+  // premiumStepIndex is 1-BASED here while the rail's data-step attributes are 0-based —
+  // reconcilePremiumNativeStepper shifts them as a set, so both conventions must be kept exactly.
   // Order the emitted fields the way the shell reads them, so a human diffing the JSON against
   // the design walks them top to bottom.
   if (spec.fieldOrder) {
     const rank = new Map(spec.fieldOrder.map((k, i) => [k, i]));
     list.sort((a, b) => (rank.has(a.key) ? rank.get(a.key) : 999) - (rank.has(b.key) ? rank.get(b.key) : 999));
+  }
+
+  if (spec.wizard) {
+    // The step's Section must LEAD its page, and the fields of each step must follow it in order,
+    // because the runtime derives pages by walking the field list and splitting at every
+    // Section.properties.pageBreak — there is no page count anywhere to disagree with.
+    // Interleaving is driven by the SAME sections array the shell is built from, so the JSON and
+    // the markup can never claim different steps for a field.
+    // premiumStepIndex is 1-BASED while the rail's data-step attributes are 0-based;
+    // reconcilePremiumNativeStepper shifts them as a set, so keep both conventions exactly.
+    const declared = spec.sections(spec);
+    const byKey = new Map(list.map((f) => [f.key, f]));
+    const used = new Set();
+    const out = [];
+    (spec.wizard.steps || []).forEach((st, i) => {
+      out.push(field(`step_${i + 1}`, 'Section', st.label, {
+        properties: {
+          pageBreak: i > 0,
+          premiumNativeStep: true,
+          generatedPremiumStep: true,
+          premiumStepIndex: i + 1,
+        },
+      }));
+      declared.filter((s) => (s.step || 0) === i).forEach((s) => {
+        [...(s.grid || []), ...(s.slots || []), ...(s.consent || [])].forEach(([, key]) => {
+          const f = byKey.get(key);
+          if (f && !used.has(key)) { used.add(key); out.push(f); }
+        });
+      });
+    });
+    // A field the shell never places would otherwise vanish from the schema entirely.
+    list.forEach((f) => { if (!used.has(f.key)) out.push(f); });
+    return out;
   }
   return list;
 }
@@ -232,36 +270,84 @@ export function defaultSections(spec) {
   ];
 }
 
+/** One section of the body. Shared by the flat shell and by each wizard page so a section means
+ *  the same thing in both. */
+export function renderSection(spec, s, cap) {
+  const p = spec.prefix;
+  if (s.html) return s.html;
+  // {{script:KEY}} becomes a hidden anchor; the renderer executes settings.customScripts[KEY]
+  // next to it with __mfCurrentScriptRoot resolved. This is how a template gets live behaviour
+  // without an engine change.
+  if (s.script) return `{{script:${s.script}}}`;
+  if (s.consent) {
+    return `<div class='${p}-consent'>`
+      + s.consent.map(([label, key]) => slot(p, label, key, `${p}-consent-item`)).join('')
+      + `</div>`;
+  }
+  const out = [];
+  if (s.caption) out.push(cap(s.caption));
+  if (s.grid && s.grid.length) {
+    out.push(`<div class='${p}-grid ${p}-2'>`);
+    s.grid.forEach(([label, key]) => out.push(slot(p, label, key)));
+    out.push(`</div>`);
+  }
+  (s.slots || []).forEach(([label, key]) => out.push(slot(p, label, key)));
+  return out.join('');
+}
+
 export function buildShell(spec) {
   const p = spec.prefix;
   const cap = (t) => caption(p, t, spec.sectionCaptionStyle);
   const sections = spec.sections ? spec.sections(spec) : defaultSections(spec);
+
+  // [Wizard v20260807] Stepped shell. The renderer finds the rail through
+  // STEP_SELECTOR ([data-mf-native-step]) and the pages through PAGE_SELECTOR
+  // ([data-mf-native-page]), both keyed by a 0-BASED data-step. Fields are authored inside their
+  // own page container, so reconcilePremiumNativePageFields has nothing left to move — it only
+  // repairs shells whose markup and schema disagree.
+  if (spec.wizard) {
+    const steps = spec.wizard.steps || [];
+    const rail = steps.map((st, i) =>
+      `<div class='${p}-step' data-mf-native-step='1' data-step='${i}'>`
+      + `<span class='${p}-step-num'>${esc(st.num || String(i + 1).padStart(2, '0'))}</span>`
+      + `<span class='${p}-step-text'><span class='${p}-step-label'>${esc(st.label)}</span>`
+      + (st.sub ? `<span class='${p}-step-sub'>${esc(st.sub)}</span>` : '')
+      + `</span></div>`).join(`<i class='${p}-step-line'></i>`);
+
+    const pages = steps.map((st, i) => {
+      const body = sections.filter((s) => (s.step || 0) === i)
+        .map((s) => renderSection(spec, s, cap)).join('');
+      const isLast = i === steps.length - 1;
+      const nav = `<div class='${p}-nav'>`
+        + (i > 0 ? `<button type='button' class='${p}-back' data-mf-native-back='1'>${esc(spec.wizard.backLabel || 'Back')}</button>` : `<span></span>`)
+        + (isLast
+          ? `<button type='submit' class='${p}-submit' data-mf-native-submit='1'>${esc(spec.submitLabel)}</button>`
+          : `<button type='button' class='${p}-next' data-mf-native-next='1'>${esc(spec.wizard.nextLabel || 'Continue')}</button>`)
+        + `</div>`;
+      return `<div class='${p}-page' data-mf-native-page='1' data-step='${i}'>`
+        + `{{field:step_${i + 1}}}${body}${nav}</div>`;
+    }).join('');
+
+    const shell = `<div class='mfp mfp-${p} mfp-native-generated' data-mf-flexgrid="locked"`
+      + ` style="background:transparent!important;border:0!important;border-radius:0!important;`
+      + `padding:0!important;box-shadow:none!important">`
+      + `<div class='${p}-card'>${buildHero(spec)}${buildStrips(spec)}`
+      + `<div class='${p}-rail'>${rail}</div>`
+      // The anchor sits OUTSIDE the pages on purpose. The renderer marks the active rail item but
+      // does NOT hide [data-mf-native-page] containers — the shipped tabbed-account-setup template
+      // carries its own script for exactly this reason. Ours mirrors the rail's is-active onto page
+      // visibility; anchored inside a page it would be hidden along with it.
+      + `{{script:wizard_pages}}`
+      + `<div class='${p}-body'>${pages}</div></div></div>`;
+    return shell;
+  }
 
   const chunks = [buildStrips(spec)];
   // A design with a live sidebar (a booking summary, an order total) splits the body so the aside
   // can be sticky. The aside is markup only — a {{script:…}} section is what makes it live.
   if (spec.asideHtml) chunks.push(`<div class='${p}-split'><div class='${p}-main'>`);
   chunks.push(`<div class='${p}-body'>`);
-  sections.forEach((s) => {
-    if (s.html) { chunks.push(s.html); return; }
-    // {{script:KEY}} becomes a hidden anchor; the renderer executes settings.customScripts[KEY]
-    // next to it with __mfCurrentScriptRoot resolved. This is how a template gets live behaviour
-    // without an engine change.
-    if (s.script) { chunks.push(`{{script:${s.script}}}`); return; }
-    if (s.consent) {
-      chunks.push(`<div class='${p}-consent'>`);
-      s.consent.forEach(([label, key]) => chunks.push(slot(p, label, key, `${p}-consent-item`)));
-      chunks.push(`</div>`);
-      return;
-    }
-    if (s.caption) chunks.push(cap(s.caption));
-    if (s.grid && s.grid.length) {
-      chunks.push(`<div class='${p}-grid ${p}-2'>`);
-      s.grid.forEach(([label, key]) => chunks.push(slot(p, label, key)));
-      chunks.push(`</div>`);
-    }
-    (s.slots || []).forEach(([label, key]) => chunks.push(slot(p, label, key)));
-  });
+  sections.forEach((s) => { chunks.push(renderSection(spec, s, cap)); });
   chunks.push(`<button class='${p}-submit' type='submit'>${esc(spec.submitLabel)}</button>`);
   chunks.push(`</div>`);
   if (spec.asideHtml) chunks.push(`</div><aside class='${p}-aside'>${spec.asideHtml}</aside></div>`);
@@ -595,6 +681,46 @@ export function buildCss(spec) {
     + `${S}.${p}-hero-display{font-size:34px}`
     + `${S}.mf-option-group--cards{grid-template-columns:1fr!important}}`);
 
+  // [Wizard v20260807] Rail, pages and per-step nav.
+  if (spec.wizard) {
+    parts.push(`${S}.${p}-rail{display:flex;align-items:center;gap:10px;padding:18px 26px;`
+      + `background:color-mix(in srgb, ${v('primary')} 5%, ${v('surface')});`
+      + `border-bottom:1px solid ${v('border')}}`);
+    parts.push(`${S}.${p}-step{display:flex;align-items:center;gap:9px;opacity:.45;`
+      + `transition:opacity .15s ease}`);
+    // The renderer marks the live step with is-active; without an opacity/colour change the rail
+    // renders identically on every page and the wizard looks broken.
+    parts.push(`${S}.${p}-step.is-active,${S}.${p}-step.done{opacity:1}`);
+    parts.push(`${S}.${p}-step-num{display:flex;align-items:center;justify-content:center;`
+      + `width:26px;height:26px;border-radius:999px;border:1.5px solid ${v('border')};`
+      + `font-size:11px;font-weight:800;color:${v('muted')};flex:0 0 auto}`);
+    parts.push(`${S}.${p}-step.is-active .${p}-step-num,${S}.${p}-step.done .${p}-step-num`
+      + `{background:${v('primary')};border-color:${v('primary')};color:${v('on-primary')}}`);
+    parts.push(`${S}.${p}-step-text{display:flex;flex-direction:column;line-height:1.2}`);
+    parts.push(`${S}.${p}-step-label{font-size:12px;font-weight:800;color:${v('text')}}`);
+    parts.push(`${S}.${p}-step-sub{font-size:10px;color:${v('muted')}}`);
+    parts.push(`${S}.${p}-step-line{flex:1;height:1px;background:${v('border')};min-width:12px}`);
+    parts.push(`${S}.${p}-page{display:flex;flex-direction:column;gap:16px}`);
+    parts.push(`${S}.${p}-nav{display:flex;align-items:center;justify-content:space-between;`
+      + `gap:12px;margin-top:8px;padding-top:16px;border-top:1px solid ${v('hairline')}}`);
+    const btn = `border:0!important;border-radius:${spec.submitRadius || '10px'}!important;`
+      + `padding:12px 22px!important;font-family:inherit!important;font-size:13px!important;`
+      + `font-weight:800!important;line-height:20px!important;cursor:pointer!important;`
+      + `box-shadow:none!important`;
+    parts.push(`${S}button.${p}-next[data-mf-native-next]{${btn};`
+      + `background:${spec.submitBackground || v('primary')}!important;color:${v('on-primary')}!important}`);
+    parts.push(`${S}button.${p}-back[data-mf-native-back]{${btn};`
+      + `background:transparent!important;color:${v('muted')}!important;`
+      + `border:1px solid ${v('border')}!important}`);
+    // In a wizard the submit button is the LAST page's action, so it sits in the nav row rather
+    // than spanning the card.
+    parts.push(`${S}button.${p}-submit[data-mf-native-submit]{width:auto!important}`);
+    parts.push(`${S}button.${p}-next.mf-nav-blocked,${S}button.${p}-next[disabled]`
+      + `{background:${v('border')}!important;cursor:not-allowed!important;filter:none!important}`);
+    parts.push(`@media (max-width:640px){${S}.${p}-rail{flex-wrap:wrap;gap:8px}`
+      + `${S}.${p}-step-line{display:none}}`);
+  }
+
   if (spec.extraCss) parts.push(spec.extraCss.replace(/@S@/g, S));
 
   return parts.join('');
@@ -620,7 +746,11 @@ export function buildTemplate(spec) {
     successMessage: spec.successMessage,
     settings: {
       theme: spec.theme || 'custom',
-      multiPage: !!spec.multiPage,
+      multiPage: !!spec.multiPage || !!spec.wizard,
+      // isPremiumNativeCustomHtmlMode() needs BOTH multi-step custom HTML and this flag; without
+      // it the shell's own rail and nav buttons are never bound and the form renders as one long
+      // page with the generic Next/Previous rail underneath.
+      premiumNativePageBreak: spec.wizard ? true : undefined,
       showProgressBar: false,
       customContent: spec.customContent || {},
       customScripts: spec.customScripts || {},
@@ -692,9 +822,19 @@ export function validate(tpl) {
     const n = (html.match(new RegExp(`\\{\\{field:${k}\\}\\}`, 'g')) || []).length;
     if (n !== 1) errs.push(`field '${k}' appears ${n}x in customHtml (need exactly 1)`);
   });
+  // Structural fields (Section/Html/Row) MAY be placed — a wizard puts each step's Section at the
+  // head of its page, which is where the runtime expects it — but are not REQUIRED to be, so they
+  // are legal slot targets without joining the exactly-once check above.
+  const structural = [];
+  const walkStructural = (arr) => arr.forEach((f) => {
+    if (['Section', 'Html', 'Row'].includes(f.type)) structural.push(f.key);
+    if (f.columns) f.columns.forEach((c) => walkStructural(c.fields || []));
+  });
+  walkStructural(tpl.fields);
+  const placeable = flat.concat(structural);
   const slots = (html.match(/\{\{field:([A-Za-z0-9_]+)\}\}/g) || [])
     .map((m) => m.slice(8, -2));
-  slots.forEach((k) => { if (!flat.includes(k)) errs.push(`customHtml references unknown field '${k}'`); });
+  slots.forEach((k) => { if (!placeable.includes(k)) errs.push(`customHtml references unknown field '${k}'`); });
 
   // A data URI whose "</" survived would be a silently broken image.
   if (/data:image\/svg\+xml,[^"]*<\//.test(css)) {

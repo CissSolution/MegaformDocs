@@ -1,0 +1,523 @@
+{
+  "version": "1.0",
+  "slug": "golden-pro-agent-registration",
+  "title": "Golden Pro — Real Estate Agent Registration",
+  "description": "Three-step gold and olive agent registration: personal details, agency and licence, then a review-and-sign step that lists back only the fields the design chose. Continue and Submit stay locked until each step is valid.",
+  "category": "registration",
+  "categories": [
+    "registration",
+    "premium",
+    "real-estate"
+  ],
+  "icon": "building",
+  "submitButtonText": "Complete Registration",
+  "successMessage": "Registration complete.",
+  "settings": {
+    "theme": "custom",
+    "multiPage": true,
+    "premiumNativePageBreak": true,
+    "showProgressBar": false,
+    "customContent": {},
+    "customScripts": {
+      "wizard_pages": "(function(){\n  var root = (typeof __mfCurrentScriptRoot !== 'undefined' && __mfCurrentScriptRoot) || document;\n  var scope = (root && root.closest) ? (root.closest('.mfp') || document) : document;\n  function pages() { return scope.querySelectorAll('[data-mf-native-page]'); }\n  function steps() { return scope.querySelectorAll('[data-mf-native-step]'); }\n  function activeStep() {\n    var s = steps();\n    for (var i = 0; i < s.length; i++) if (s[i].classList.contains('is-active')) return s[i].getAttribute('data-step') || String(i);\n    return '0';\n  }\n  function apply() {\n    var want = String(activeStep());\n    var p = pages();\n    for (var i = 0; i < p.length; i++) {\n      var mine = String(p[i].getAttribute('data-step') || i);\n      var on = mine === want;\n      p[i].style.display = on ? '' : 'none';\n      p[i].setAttribute('aria-hidden', on ? 'false' : 'true');\n    }\n  }\n  try {\n    var mo = new MutationObserver(function(){ apply(); });\n    var s = steps();\n    for (var i = 0; i < s.length; i++) mo.observe(s[i], { attributes: true, attributeFilter: ['class'] });\n  } catch (e) { /* no observer: the timers below still cover Back/Next */ }\n  scope.addEventListener('click', function(){ setTimeout(apply, 40); setTimeout(apply, 160); }, true);\n  setTimeout(apply, 60); setTimeout(apply, 400); apply();\n})();",
+      "agent_recap": "(function(){\n  var root = (typeof __mfCurrentScriptRoot !== 'undefined' && __mfCurrentScriptRoot) || document;\n  var scope = (root && root.closest) ? (root.closest('.mfp') || document) : document;\n  function labelFor(input) {\n    var ui = input.nextElementSibling;\n    var lab = ui && ui.querySelector ? ui.querySelector('.mf-option-label') : null;\n    return lab ? lab.textContent.trim() : String(input.value || '');\n  }\n  function val(key) {\n    var els = scope.querySelectorAll('[name=\"' + key + '\"]');\n    if (!els.length) return '';\n    var f = els[0];\n    if (f.type === 'checkbox' || f.type === 'radio') {\n      var picked = [];\n      for (var i = 0; i < els.length; i++) if (els[i].checked) picked.push(labelFor(els[i]));\n      return picked.join(', ');\n    }\n    if (f.tagName === 'SELECT') { var o = f.options[f.selectedIndex]; return o && o.value ? o.textContent.trim() : ''; }\n    return String(f.value || '').trim();\n  }\n  function paint() {\n    var nodes = scope.querySelectorAll('[data-mf-echo]');\n    for (var i = 0; i < nodes.length; i++) {\n      var k = nodes[i].getAttribute('data-mf-echo');\n      if (k.indexOf('__') === 0) continue;\n      var v = val(k);\n      nodes[i].textContent = v || '—';\n      nodes[i].classList.toggle('is-empty', !v);\n    }\n  }\n  scope.addEventListener('input', paint, true);\n  scope.addEventListener('change', paint, true);\n  scope.addEventListener('click', function(){ setTimeout(paint, 60); }, true);\n  setTimeout(paint, 150); setTimeout(paint, 700); paint();\n})();"
+    },
+    "customHtml": "<div class='mfp mfp-gpr mfp-native-generated' data-mf-flexgrid=\"locked\" style=\"background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;box-shadow:none!important\"><div class='gpr-card'><div class='gpr-hero'><div class='gpr-hero-inner'><div class='gpr-hero-emblem'><i class='fa fa-building'></i></div><div class='gpr-hero-eyebrow'>Golden Pro · Real Estate</div><h1 class='gpr-hero-display'>Agent Registration</h1><div class='gpr-hero-hairline'><span class='gpr-hr'></span><span class='gpr-hr-word'>premium partner</span><span class='gpr-hr'></span></div><div class='gpr-hero-sub'>Your Area Managing Director</div></div></div><div class='gpr-tagline'><span class='gpr-dot'></span><span class='gpr-tagline-text'>Premium Real Estate Partner</span><span class='gpr-dot'></span></div><div class='gpr-rail'><div class='gpr-step' data-mf-native-step='1' data-step='0'><span class='gpr-step-num'>01</span><span class='gpr-step-text'><span class='gpr-step-label'>Personal</span><span class='gpr-step-sub'>Basic info</span></span></div><i class='gpr-step-line'></i><div class='gpr-step' data-mf-native-step='1' data-step='1'><span class='gpr-step-num'>02</span><span class='gpr-step-text'><span class='gpr-step-label'>Agency</span><span class='gpr-step-sub'>Work details</span></span></div><i class='gpr-step-line'></i><div class='gpr-step' data-mf-native-step='1' data-step='2'><span class='gpr-step-num'>03</span><span class='gpr-step-text'><span class='gpr-step-label'>Confirm</span><span class='gpr-step-sub'>Review &amp; sign</span></span></div></div>{{script:wizard_pages}}<div class='gpr-body'><div class='gpr-page' data-mf-native-page='1' data-step='0'>{{field:step_1}}<div class='gpr-rule'><span>Personal</span><i></i></div><div class='gpr-grid gpr-2'><label class='gpr-field'><span>First Name *</span>{{field:first_name}}</label><label class='gpr-field'><span>Last Name *</span>{{field:last_name}}</label><label class='gpr-field'><span>Email Address *</span>{{field:email}}</label><label class='gpr-field'><span>Phone Number</span>{{field:phone}}</label><label class='gpr-field'><span>Street Address</span>{{field:address}}</label><label class='gpr-field'><span>City</span>{{field:city}}</label></div><label class='gpr-field'><span>Country *</span>{{field:country}}</label><div class='gpr-nav'><span></span><button type='button' class='gpr-next' data-mf-native-next='1'>Continue</button></div></div><div class='gpr-page' data-mf-native-page='1' data-step='1'>{{field:step_2}}<div class='gpr-rule'><span>Membership</span><i></i></div><label class='gpr-field'><span>Membership Type *</span>{{field:member_type}}</label><div class='gpr-rule'><span>Agency</span><i></i></div><div class='gpr-grid gpr-2'><label class='gpr-field'><span>Agency / Brokerage *</span>{{field:agency}}</label><label class='gpr-field'><span>Licence number *</span>{{field:license_no}}</label><label class='gpr-field'><span>Years in real estate *</span>{{field:experience}}</label><label class='gpr-field'><span>Preferred start date</span>{{field:start_date}}</label><label class='gpr-field'><span>Referred by</span>{{field:referral}}</label></div><div class='gpr-nav'><button type='button' class='gpr-back' data-mf-native-back='1'>Back</button><button type='button' class='gpr-next' data-mf-native-next='1'>Continue</button></div></div><div class='gpr-page' data-mf-native-page='1' data-step='2'>{{field:step_3}}<div class='gpr-rc'><div class='gpr-rc-row'><span class='gpr-rc-k'>Name</span><span class='gpr-rc-v' data-mf-echo='first_name'>—</span></div><div class='gpr-rc-row'><span class='gpr-rc-k'>Email</span><span class='gpr-rc-v' data-mf-echo='email'>—</span></div><div class='gpr-rc-row'><span class='gpr-rc-k'>Phone</span><span class='gpr-rc-v' data-mf-echo='phone'>—</span></div><div class='gpr-rc-row'><span class='gpr-rc-k'>Membership</span><span class='gpr-rc-v' data-mf-echo='member_type'>—</span></div><div class='gpr-rc-row'><span class='gpr-rc-k'>Agency</span><span class='gpr-rc-v' data-mf-echo='agency'>—</span></div><div class='gpr-rc-row'><span class='gpr-rc-k'>Licence</span><span class='gpr-rc-v' data-mf-echo='license_no'>—</span></div><div class='gpr-rc-row'><span class='gpr-rc-k'>Experience</span><span class='gpr-rc-v' data-mf-echo='experience'>—</span></div></div><p class='gpr-note'>Only the fields this design chose are listed, in this order.</p>{{script:agent_recap}}<div class='gpr-consent'><label class='gpr-field gpr-consent-item'><span>Newsletter</span>{{field:newsletter}}</label><label class='gpr-field gpr-consent-item'><span>Signature</span>{{field:terms}}</label></div><div class='gpr-nav'><button type='button' class='gpr-back' data-mf-native-back='1'>Back</button><button type='submit' class='gpr-submit' data-mf-native-submit='1'>Complete Registration</button></div></div></div></div></div>",
+    "customCss": ".mfp.mfp-gpr {--gpr-primary:#C9A84C;--gpr-accent:#4A5E3A;--gpr-surface:var(--mf-page-surface,var(--mf-preset-surface,#FFFFFF));--gpr-text:var(--mf-page-text,var(--mf-preset-text,#1C1C1C));--gpr-muted:var(--mf-page-muted,var(--mf-preset-muted,#6B7280));--gpr-border:var(--mf-page-border,var(--mf-preset-border,#D4C89A));--gpr-on-primary:var(--mf-preset-on-primary,#1C1C1C);--gpr-deco:#9B7B2A;--gpr-page:#F9F6EE;--gpr-fill:#FDFBF5;--gpr-fill-strong:color-mix(in srgb, var(--gpr-text) 9%, var(--gpr-surface));--gpr-soft:color-mix(in srgb, var(--gpr-primary) 12%, var(--gpr-surface));--gpr-hairline:color-mix(in srgb, var(--gpr-text) 12%, var(--gpr-surface));}.mfp.mfp-gpr {background:transparent!important;border:0!important;padding:0!important;font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif}.mfp.mfp-gpr .gpr-card{overflow:hidden;border-radius:6px;max-width:760px;margin:0 auto;background:var(--gpr-surface);box-shadow:0 2px 14px color-mix(in srgb, var(--gpr-text) 10%, transparent)}.mfp.mfp-gpr .gpr-hero{position:relative;overflow:hidden;text-align:center;padding:40px 30px 32px;background:linear-gradient(150deg,#4A5E3A 0%,#2f3d25 55%,#1C1C1C 100%)}.mfp.mfp-gpr .gpr-hero-inner{position:relative}.mfp.mfp-gpr .gpr-hero-emblem{width:44px;height:44px;margin:0 auto 18px;border-radius:999px;display:flex;align-items:center;justify-content:center;border:1px solid var(--gpr-deco);background:rgba(255,255,255,.07);color:var(--gpr-deco);font-size:18px}.mfp.mfp-gpr .gpr-hero-eyebrow{margin:0 0 12px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4em;color:rgba(245,233,196,.66)}.mfp.mfp-gpr .gpr-hero h1.gpr-hero-display{margin:0;font-family:'Cormorant Garamond','Playfair Display',Georgia,'Times New Roman',serif;font-size:40px;line-height:1!important;font-weight:500;font-style:italic;color:#F5E9C4!important;font-weight:500!important;letter-spacing:-.01em}.mfp.mfp-gpr .gpr-hero-hairline{display:flex;align-items:center;justify-content:center;gap:12px;margin:16px 0}.mfp.mfp-gpr .gpr-hr{height:1px;width:40px;background:var(--gpr-deco);opacity:.7}.mfp.mfp-gpr .gpr-hr-word{font-size:10px;font-weight:400;text-transform:uppercase;letter-spacing:.3em;color:rgba(245,233,196,.66)}.mfp.mfp-gpr .gpr-hero-sub{font-family:'Cormorant Garamond','Playfair Display',Georgia,'Times New Roman',serif;font-size:18px;font-weight:400;font-style:italic;color:rgba(255,255,255,.88)}.mfp.mfp-gpr .gpr-tagline{display:flex;align-items:center;justify-content:center;gap:12px;padding:13px 16px;background:var(--gpr-surface);border-top:1px solid var(--gpr-border);border-bottom:1px solid var(--gpr-border)}.mfp.mfp-gpr .gpr-dot{width:4px;height:4px;border-radius:999px;background:var(--gpr-deco)}.mfp.mfp-gpr .gpr-tagline-text{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.32em;color:var(--gpr-primary)}.mfp.mfp-gpr .gpr-promo{padding:24px 30px;text-align:center;background:var(--gpr-surface);border-bottom:1px solid var(--gpr-border)}.mfp.mfp-gpr .gpr-promo-kicker{margin:0 0 4px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.3em;color:var(--gpr-deco)}.mfp.mfp-gpr .gpr-promo-headline{font-family:'Cormorant Garamond','Playfair Display',Georgia,'Times New Roman',serif;font-size:36px;font-weight:500;line-height:1.1!important;letter-spacing:-.02em;color:var(--gpr-text)}.mfp.mfp-gpr .gpr-promo-hr{width:48px;height:1px;margin:12px auto;background:var(--gpr-deco)}.mfp.mfp-gpr .gpr-promo-body{margin:0;font-size:12px;line-height:1.6;color:var(--gpr-muted)}.mfp.mfp-gpr .gpr-body{padding:24px 30px 30px;display:flex;flex-direction:column;gap:16px}.mfp.mfp-gpr .gpr-caption{margin:6px 0 0;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.16em;text-align:center;color:var(--gpr-primary)}.mfp.mfp-gpr .gpr-rule{display:flex;align-items:center;gap:12px;padding-top:6px}.mfp.mfp-gpr .gpr-rule span{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gpr-muted)}.mfp.mfp-gpr .gpr-rule i{flex:1;height:1px;background:var(--gpr-hairline)}.mfp.mfp-gpr .gpr-grid{display:grid;gap:12px}.mfp.mfp-gpr .gpr-2{grid-template-columns:1fr 1fr}.mfp.mfp-gpr .gpr-consent{display:flex;flex-direction:column;gap:8px}.mfp.mfp-gpr .gpr-field{display:block;margin:0}.mfp.mfp-gpr .gpr-field>span{display:block;margin:0 0 6px!important;color:var(--gpr-muted);font-size:10px;line-height:15px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.mfp.mfp-gpr .gpr-field .mf-field-label{display:none!important}.mfp.mfp-gpr .mf-field-group{margin:0!important;width:100%}.mfp.mfp-gpr .mf-form-title,.mfp.mfp-gpr .mf-form-description{display:none!important}.mfp.mfp-gpr .mf-input[class],.mfp.mfp-gpr .mf-select[class],.mfp.mfp-gpr .mf-textarea[class]{width:100%!important;box-sizing:border-box!important;border:1px solid var(--gpr-border)!important;border-radius:8px!important;background:var(--gpr-fill)!important;padding:9px 12px!important;color:var(--gpr-text)!important;font-family:inherit!important;font-size:14px!important;font-weight:400!important;line-height:20px!important;min-height:42px!important;outline:0!important;box-shadow:none!important;transition:border-color .15s ease,background .15s ease!important}.mfp.mfp-gpr .mf-input[class]:focus,.mfp.mfp-gpr .mf-select[class]:focus,.mfp.mfp-gpr .mf-textarea[class]:focus{border-color:var(--gpr-primary)!important;background:var(--gpr-surface)!important}.mfp.mfp-gpr .mf-textarea[class]{min-height:92px!important;height:auto!important;resize:vertical}.mfp.mfp-gpr .mf-input[class]::placeholder,.mfp.mfp-gpr .mf-textarea[class]::placeholder{color:color-mix(in srgb, var(--gpr-text) 40%, transparent)!important;opacity:1}.mfp.mfp-gpr .mf-field-error{color:#dc2626;font-size:11px;margin-top:4px}.mfp.mfp-gpr .mf-option-group--cards{display:grid;gap:8px;align-items:stretch}.mfp.mfp-gpr .mf-option-item{margin:0!important}.mfp.mfp-gpr .mf-option-group--cards .mf-option-item{display:flex}.mfp.mfp-gpr .mf-option-group--cards .mf-option-ui{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:100%;height:100%;box-sizing:border-box;padding:12px 34px 12px 14px;border:2px solid var(--gpr-border);border-radius:12px;background:transparent;cursor:pointer;transition:all .15s ease}.mfp.mfp-gpr .mf-option-group--cards .mf-option-check,.mfp.mfp-gpr .mf-option-group--chips .mf-option-check{display:none!important}.mfp.mfp-gpr .mf-option-group--cards .mf-option-item.is-selected .mf-option-ui,.mfp.mfp-gpr .mf-option-group--cards input:checked+.mf-option-ui{border-color:var(--gpr-primary);background:var(--gpr-soft)}.mfp.mfp-gpr .mf-option-group--cards .mf-option-item.is-selected .mf-option-ui::after,.mfp.mfp-gpr .mf-option-group--cards input:checked+.mf-option-ui::after{content:'';position:absolute;top:15px;right:15px;width:11px;height:6px;border-left:2.5px solid var(--gpr-primary);border-bottom:2.5px solid var(--gpr-primary);transform:rotate(-45deg);border-radius:1px}.mfp.mfp-gpr .mf-option-label{color:var(--gpr-text);font-size:13px;font-weight:700}.mfp.mfp-gpr .mf-option-desc{color:var(--gpr-muted);font-size:11px;font-weight:400}.mfp.mfp-gpr .mf-option-group--chips{display:flex;flex-wrap:wrap;gap:6px}.mfp.mfp-gpr .mf-option-group--chips .mf-option-ui{padding:6px 13px;border-radius:999px;border:1px solid var(--gpr-border);background:transparent;color:var(--gpr-muted);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s ease}.mfp.mfp-gpr .mf-option-group--chips .mf-option-label{font-size:12px;font-weight:600;color:inherit}.mfp.mfp-gpr .mf-option-group--chips .mf-option-item.is-selected .mf-option-label,.mfp.mfp-gpr .mf-option-group--chips input:checked+.mf-option-ui .mf-option-label{color:inherit}.mfp.mfp-gpr .mf-option-group--chips .mf-option-item.is-selected .mf-option-ui,.mfp.mfp-gpr .mf-option-group--chips input:checked+.mf-option-ui{background:var(--gpr-primary);border-color:var(--gpr-primary);color:var(--gpr-on-primary)}.mfp.mfp-gpr .mf-field-group[data-key='member_type'] .mf-option-group--cards{grid-template-columns:repeat(3,1fr)!important}.mfp.mfp-gpr .gpr-consent-item>span{display:none!important}.mfp.mfp-gpr .gpr-consent-item .mf-field-label{display:none!important}.mfp.mfp-gpr .gpr-consent-item .mf-option-group{display:block}.mfp.mfp-gpr .gpr-consent-item .mf-option-ui{border:0!important;background:none!important;padding:0!important;color:var(--gpr-muted)!important;font-weight:400!important;font-size:12px!important;line-height:18px!important}.mf-form-wrapper:has(.mfp-gpr) .mf-form-actions{display:none!important}.mfp.mfp-gpr button.gpr-submit[type=\"submit\"]{width:100%!important;border:0!important;border-radius:4px!important;padding:14px 20px!important;background:var(--gpr-primary)!important;color:var(--gpr-on-primary)!important;font-family:inherit!important;font-size:14px!important;font-weight:900!important;line-height:20px!important;text-transform:uppercase!important;letter-spacing:.14em!important;cursor:pointer!important;box-shadow:none!important;transition:filter .15s ease,opacity .15s ease}.mfp.mfp-gpr button.gpr-submit[type=\"submit\"]:hover{filter:brightness(1.06)}.mfp.mfp-gpr button.gpr-submit.mf-nav-blocked,.mfp.mfp-gpr button.gpr-submit[disabled]{background:var(--gpr-border)!important;cursor:not-allowed!important;filter:none!important}.mfp.mfp-gpr .mf-form-actions button,.mfp.mfp-gpr .mf-btn-submit{background:var(--gpr-primary)!important}@media (max-width:640px){.mfp.mfp-gpr .gpr-2{grid-template-columns:1fr}.mfp.mfp-gpr .gpr-hero-display{font-size:34px}.mfp.mfp-gpr .mf-option-group--cards{grid-template-columns:1fr!important}}.mfp.mfp-gpr .gpr-rail{display:flex;align-items:center;gap:10px;padding:18px 26px;background:color-mix(in srgb, var(--gpr-primary) 5%, var(--gpr-surface));border-bottom:1px solid var(--gpr-border)}.mfp.mfp-gpr .gpr-step{display:flex;align-items:center;gap:9px;opacity:.45;transition:opacity .15s ease}.mfp.mfp-gpr .gpr-step.is-active,.mfp.mfp-gpr .gpr-step.done{opacity:1}.mfp.mfp-gpr .gpr-step-num{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:999px;border:1.5px solid var(--gpr-border);font-size:11px;font-weight:800;color:var(--gpr-muted);flex:0 0 auto}.mfp.mfp-gpr .gpr-step.is-active .gpr-step-num,.mfp.mfp-gpr .gpr-step.done .gpr-step-num{background:var(--gpr-primary);border-color:var(--gpr-primary);color:var(--gpr-on-primary)}.mfp.mfp-gpr .gpr-step-text{display:flex;flex-direction:column;line-height:1.2}.mfp.mfp-gpr .gpr-step-label{font-size:12px;font-weight:800;color:var(--gpr-text)}.mfp.mfp-gpr .gpr-step-sub{font-size:10px;color:var(--gpr-muted)}.mfp.mfp-gpr .gpr-step-line{flex:1;height:1px;background:var(--gpr-border);min-width:12px}.mfp.mfp-gpr .gpr-page{display:flex;flex-direction:column;gap:16px}.mfp.mfp-gpr .gpr-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;padding-top:16px;border-top:1px solid var(--gpr-hairline)}.mfp.mfp-gpr button.gpr-next[data-mf-native-next]{border:0!important;border-radius:4px!important;padding:12px 22px!important;font-family:inherit!important;font-size:13px!important;font-weight:800!important;line-height:20px!important;cursor:pointer!important;box-shadow:none!important;background:var(--gpr-primary)!important;color:var(--gpr-on-primary)!important}.mfp.mfp-gpr button.gpr-back[data-mf-native-back]{border:0!important;border-radius:4px!important;padding:12px 22px!important;font-family:inherit!important;font-size:13px!important;font-weight:800!important;line-height:20px!important;cursor:pointer!important;box-shadow:none!important;background:transparent!important;color:var(--gpr-muted)!important;border:1px solid var(--gpr-border)!important}.mfp.mfp-gpr button.gpr-submit[data-mf-native-submit]{width:auto!important}.mfp.mfp-gpr button.gpr-next.mf-nav-blocked,.mfp.mfp-gpr button.gpr-next[disabled]{background:var(--gpr-border)!important;cursor:not-allowed!important;filter:none!important}@media (max-width:640px){.mfp.mfp-gpr .gpr-rail{flex-wrap:wrap;gap:8px}.mfp.mfp-gpr .gpr-step-line{display:none}}\n.mfp.mfp-gpr .gpr-totals{margin-top:8px;padding:14px 16px;border:1px solid var(--gpr-border);border-radius:8px;background:color-mix(in srgb, var(--gpr-primary) 4%, var(--gpr-surface))}\n.mfp.mfp-gpr .gpr-tot-row{display:flex;justify-content:space-between;gap:12px;padding:5px 0;font-size:13px;color:var(--gpr-muted)}\n.mfp.mfp-gpr .gpr-tot-row span:last-child{color:var(--gpr-text);font-weight:700}\n.mfp.mfp-gpr .gpr-tot-grand{display:flex;justify-content:space-between;gap:12px;margin-top:8px;padding-top:10px;border-top:2px solid var(--gpr-primary);font-size:16px;font-weight:900;color:var(--gpr-text)}\n.mfp.mfp-gpr .gpr-rc{margin:0;padding:14px 16px;border:1px solid var(--gpr-border);border-radius:8px;background:color-mix(in srgb, var(--gpr-text) 3%, var(--gpr-surface))}\n.mfp.mfp-gpr .gpr-rc-row{display:flex;justify-content:space-between;gap:14px;padding:7px 0;border-bottom:1px solid var(--gpr-hairline);font-size:13px}\n.mfp.mfp-gpr .gpr-rc-row:last-child{border-bottom:0}\n.mfp.mfp-gpr .gpr-rc-k{color:var(--gpr-muted)}\n.mfp.mfp-gpr .gpr-rc-v{color:var(--gpr-text);font-weight:700;text-align:right;word-break:break-word}\n.mfp.mfp-gpr .gpr-rc-v.is-empty{color:var(--gpr-muted);font-weight:400}\n.mfp.mfp-gpr .gpr-note{margin:10px 0 0;font-size:11px;line-height:1.5;color:var(--gpr-muted)}\n",
+    "themeSelector": false,
+    "premiumGeneratedShell": true,
+    "gateNavigationUntilValid": true,
+    "postSubmitExperience": {
+      "enabled": true,
+      "mode": "rich",
+      "title": "Registration complete",
+      "message": "Welcome {{field:first_name}}. Your Golden Pro registration for {{field:agency}} is complete; the agreement has gone to {{field:email}}.",
+      "showSubmissionId": true,
+      "submissionIdLabel": "Reference:",
+      "showAnswerSummary": false,
+      "allowFillAgain": true,
+      "fillAgainLabel": "Submit another",
+      "doneLabel": "Done"
+    },
+    "themeCompatibility": {
+      "policy": "hybrid",
+      "supportsPageColors": false,
+      "supportsPageTypography": true,
+      "supportsDarkHost": true,
+      "prefixes": [
+        "gpr"
+      ],
+      "immutable": [
+        "primary",
+        "accent",
+        "deco"
+      ]
+    }
+  },
+  "fields": [
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "pageBreak": false,
+        "premiumNativeStep": true,
+        "generatedPremiumStep": true,
+        "premiumStepIndex": 1
+      },
+      "key": "step_1",
+      "type": "Section",
+      "label": "Personal",
+      "required": false
+    },
+    {
+      "placeholder": "Alex",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "first_name",
+      "type": "Text",
+      "label": "First Name",
+      "required": true
+    },
+    {
+      "placeholder": "Morgan",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "last_name",
+      "type": "Text",
+      "label": "Last Name",
+      "required": true
+    },
+    {
+      "placeholder": "alex@agency.com",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "email",
+      "type": "Email",
+      "label": "Email Address",
+      "required": true
+    },
+    {
+      "placeholder": "(555) 010-2233",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "phone",
+      "type": "Phone",
+      "label": "Phone Number",
+      "required": false
+    },
+    {
+      "placeholder": "123 Main Street",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "address",
+      "type": "Text",
+      "label": "Street Address",
+      "required": false
+    },
+    {
+      "placeholder": "Portland",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "city",
+      "type": "Text",
+      "label": "City",
+      "required": false
+    },
+    {
+      "placeholder": "Select country",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "United States",
+          "value": "United States"
+        },
+        {
+          "label": "Canada",
+          "value": "Canada"
+        },
+        {
+          "label": "United Kingdom",
+          "value": "United Kingdom"
+        },
+        {
+          "label": "Australia",
+          "value": "Australia"
+        },
+        {
+          "label": "Other",
+          "value": "Other"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "country",
+      "type": "Select",
+      "label": "Country",
+      "required": true,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "pageBreak": true,
+        "premiumNativeStep": true,
+        "generatedPremiumStep": true,
+        "premiumStepIndex": 2
+      },
+      "key": "step_2",
+      "type": "Section",
+      "label": "Agency",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Agent",
+          "value": "agent",
+          "description": "Individual licence"
+        },
+        {
+          "label": "Broker",
+          "value": "broker",
+          "description": "Manages agents"
+        },
+        {
+          "label": "Team Lead",
+          "value": "team",
+          "description": "Runs a team"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "cards",
+        "optionColumns": 3
+      },
+      "key": "member_type",
+      "type": "Radio",
+      "label": "Membership Type",
+      "required": true,
+      "optionDisplay": "cards",
+      "choiceDisplay": "cards",
+      "optionVariant": "cards",
+      "widgetProps": {
+        "optionDisplay": "cards",
+        "optionColumns": 3
+      },
+      "allowOptionHtml": true,
+      "optionColumns": 3
+    },
+    {
+      "placeholder": "Golden Pro Realty",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "agency",
+      "type": "Text",
+      "label": "Agency / Brokerage",
+      "required": true
+    },
+    {
+      "placeholder": "RE-2026-00841",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "license_no",
+      "type": "Text",
+      "label": "Licence number",
+      "required": true
+    },
+    {
+      "placeholder": "Select…",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Less than 1",
+          "value": "Less than 1"
+        },
+        {
+          "label": "1–3",
+          "value": "1–3"
+        },
+        {
+          "label": "3–5",
+          "value": "3–5"
+        },
+        {
+          "label": "5–10",
+          "value": "5–10"
+        },
+        {
+          "label": "10+",
+          "value": "10+"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "experience",
+      "type": "Select",
+      "label": "Years in real estate",
+      "required": true,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "start_date",
+      "type": "Date",
+      "label": "Preferred start date",
+      "required": false
+    },
+    {
+      "placeholder": "Name or office",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "referral",
+      "type": "Text",
+      "label": "Referred by",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "pageBreak": true,
+        "premiumNativeStep": true,
+        "generatedPremiumStep": true,
+        "premiumStepIndex": 3
+      },
+      "key": "step_3",
+      "type": "Section",
+      "label": "Confirm",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Send me market reports and listings",
+          "value": "yes"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "list"
+      },
+      "key": "newsletter",
+      "type": "Checkbox",
+      "label": "Newsletter",
+      "required": false,
+      "optionDisplay": "list",
+      "choiceDisplay": "list",
+      "optionVariant": "list",
+      "widgetProps": {
+        "optionDisplay": "list"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "I have read the partner agreement and sign it electronically",
+          "value": "yes"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "list"
+      },
+      "key": "terms",
+      "type": "Checkbox",
+      "label": "Signature",
+      "required": true,
+      "optionDisplay": "list",
+      "choiceDisplay": "list",
+      "optionVariant": "list",
+      "widgetProps": {
+        "optionDisplay": "list"
+      },
+      "allowOptionHtml": true
+    }
+  ],
+  "rules": [],
+  "workflow": {
+    "notifications": []
+  }
+}
