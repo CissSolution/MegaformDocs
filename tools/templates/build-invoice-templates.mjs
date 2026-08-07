@@ -74,6 +74,31 @@ const PALETTES = {
     // (page.tsx:106). Without this the title rendered #888 on #888.
     docInk: '#1A1A1A', docSize: '30px', docWeight: 700,
   },
+  // ── blue: painted header band, section tags as pills on a tinted strip ──
+  // Colours are the B constants from the mock (page.tsx:10-20).
+  'invoice-blue': {
+    slug: 'invoice-blue-application',
+    title: 'Invoice Blue — Programme Application',
+    description: 'Corporate invoice-styled application form: painted blue header band, pill section tags, live line-item table with totals.',
+    icon: 'receipt',
+    themeName: 'invoice-blue-premium',
+    accent: '#1B4F9B', accentSoft: '#2563C8', pageBg: '#EBF1FA', ink: '#1A2333',
+    muted: '#6B7A94', line: '#D4DCE8', rowAlt: '#F6F8FC', card: '#FFFFFF',
+    headBg: '#1B4F9B', blob: 'none',
+    submitBg: '#1B4F9B', submitInk: '#FFFFFF',
+    totalBg: '#1B4F9B', totalInk: '#FFFFFF', theadBg: '#EBF1FA', theadInk: '#1B4F9B',
+    docTitle: 'INVOICE', chipOnBg: '#1B4F9B', chipOnInk: '#FFFFFF', cardOnBg: '#EBF1FA',
+    inputInk: '#1A2333', placeholder: '#9AA8BF', currency: '€', taxRate: 0,
+    theadStyle: 'bar', blobOn: false, cardBorder: 'none', cardShadow: '0 25px 50px -12px rgba(27,79,155,.18)',
+    optionBg: '#FFFFFF', optionInk: '#1A2333',
+    // The document title sits on the painted band, so it takes the band's ink rather than the
+    // accent the 'bar' thead style would otherwise give it — accent here IS the band colour.
+    docInk: '#FFFFFF', docSize: '30px', docWeight: 900,
+    headBand: '#1B4F9B', headInk: '#FFFFFF', headMutedInk: 'rgba(255,255,255,.82)',
+    headLogoBg: 'rgba(255,255,255,.18)',
+    addrLabels: ['From', 'Email', 'Phone'],
+    sectionPill: true, sectionBandBg: '#EBF1FA', sectionPillBg: '#1B4F9B', sectionPillInk: '#FFFFFF',
+  },
 };
 
 // ── fields (identical across the three skins — only the shell differs) ─────
@@ -147,16 +172,28 @@ function buildFields() {
 
 // ── shell markup ──────────────────────────────────────────────────────────
 function buildHtml(p, slugClass) {
-  const eyebrow = (t) => `<div class='io-eyebrow'>${t}</div>`;
+  // The pill skin needs an inner element to paint the tag against the band behind it. Emitted
+  // ONLY for that skin, so the three original templates keep byte-identical markup.
+  const eyebrow = (t) => p.sectionPill
+    ? `<div class='io-eyebrow'><span>${t}</span></div>`
+    : `<div class='io-eyebrow'>${t}</div>`;
   return [
     `<div class='mfp mfp-${slugClass}'>`,
     `<div class='io-page'><div class='io-card mfp-card'>`,
     // header
     `<div class='io-head'>`,
     p.blobOn ? `<div class='io-blob'></div>` : '',
+    // The banded skin needs the address on its own row under both columns. Wrapping the two
+    // columns in .io-head-top makes that plain nesting, rather than a display:contents trick
+    // that the host's theme bridge gets a vote on.
+    p.headBand ? `<div class='io-head-top'>` : '',
     `<div class='io-head-left'>`,
     `<div class='io-brand'><span class='io-logo'>EY</span><span class='io-brandname'>{{content:brand}}</span></div>`,
-    `<div class='io-addr'><div>{{content:addr1}}</div><div>{{content:addr2}}</div><div>{{content:addr3}}</div></div>`,
+    // With addrLabels the three address lines become a labelled row (From / Email / Phone), which
+    // is what a banded header shows. Without it they stay the stacked block the other skins use.
+    p.headBand
+      ? ''
+      : `<div class='io-addr'><div>{{content:addr1}}</div><div>{{content:addr2}}</div><div>{{content:addr3}}</div></div>`,
     `</div>`,
     `<div class='io-head-right'>`,
     `<div class='io-kicker'>{{content:kicker}}</div>`,
@@ -167,6 +204,11 @@ function buildHtml(p, slugClass) {
     `<div class='io-doctitle'>{{content:doctitle}}</div>`,
     `<div class='io-meta'><div><b>No:</b> {{content:invno}}</div><div><b>Date:</b> {{content:invdate}}</div></div>`,
     `</div>`,
+    p.headBand ? `</div>` : '',
+    p.headBand && p.addrLabels
+      ? `<div class='io-addr io-addr-cols'>` + [1, 2, 3].map((i) =>
+          `<div><span class='io-addr-k'>${p.addrLabels[i - 1]}</span><span class='io-addr-v'>{{content:addr${i}}}</span></div>`).join('') + `</div>`
+      : '',
     `</div>`,
     // decorative QR block — <i> cells, no text, aria-hidden so screen readers skip the ornament
     p.qrOn ? `<div class='io-qrwrap'><div class='io-qr' aria-hidden='true'>`
@@ -269,7 +311,25 @@ ${R} .io-col{display:flex;flex-direction:column;gap:12px;}
 ${R} .io-sec{display:block;}
 ${R} .io-eyebrow{margin-bottom:8px;font-size:10px;font-weight:900!important;text-transform:uppercase;letter-spacing:.18em;color:${p.eyebrowInk || 'var(--io-accent)'}!important;}
 ${p.eyebrowRule ? `${R} .io-eyebrow{display:flex!important;align-items:center!important;gap:12px!important;}
-${R} .io-eyebrow::after{content:'';flex:1 1 auto;height:1px;background:var(--io-line);}` : ''}
+${R} .io-eyebrow::after{content:'';flex:1 1 auto;height:1px;background:var(--io-line);}` : ''}${p.sectionPill ? `
+/* Section tag: a solid pill sitting on a full-width tinted band. Numbers come from the mock —
+   the band is h-7 (28px) and the tag is px-4 py-1.5 at 10px font-black tracking-widest, so the
+   pill is 28px tall and the band shows only beside it. */
+${R} .io-eyebrow{display:flex!important;align-items:stretch!important;height:28px!important;margin-bottom:14px!important;padding:0!important;background:${p.sectionBandBg}!important;letter-spacing:0!important;}
+${R} .io-eyebrow span{display:flex!important;align-items:center!important;padding:0 16px!important;background:${p.sectionPillBg}!important;color:${p.sectionPillInk}!important;font-size:10px!important;font-weight:900!important;text-transform:uppercase!important;letter-spacing:.1em!important;}` : ''}${p.headBand ? `
+/* Banded header: the whole block is painted, so every glyph inside it must be re-inked — the
+   theme bridge ships !important, and anything left unset falls back to page ink. The markup puts
+   the two columns in .io-head-top and the address after it, so plain block flow stacks them. */
+${R} .io-head{display:block!important;background:${p.headBand}!important;padding:26px 32px 22px!important;}
+${R} .io-head-top{display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:16px!important;margin-bottom:18px!important;}
+${R} .io-head-right{text-align:right!important;position:relative;z-index:1;}
+${R} .io-brand{margin-bottom:0!important;}
+${R} .io-brandname,${R} .io-doctitle,${R} .io-kicker,${R} .io-meta,${R} .io-meta b{color:${p.headInk}!important;}
+${R} .io-logo{background:${p.headLogoBg || 'rgba(255,255,255,.18)'}!important;color:${p.headInk}!important;}
+${R} .io-addr-cols{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px!important;}
+${R} .io-addr-k{display:block!important;font-size:11px!important;font-weight:700!important;color:${p.headInk}!important;margin-bottom:3px!important;}
+${R} .io-addr-v{display:block!important;font-size:12px!important;color:${p.headMutedInk || p.headInk}!important;}
+${R} .io-rule{display:none!important;}` : ''}
 /* [pitfall 8 — NEW] .mf-field-group ships flex-basis:100%. Inside a flex-direction:column shell that is
    the MAIN size, so every field stretched to the full column height (measured 283px for a 53px field).
    Pin the basis back to content for every field inside this shell. */
@@ -489,6 +549,17 @@ for (const key of Object.keys(PALETTES)) {
   const css = tpl.settings.customCss;
   const open = (css.match(/\{/g) || []).length, close = (css.match(/\}/g) || []).length;
   console.log(`${tpl.slug}: fields=${tpl.fields.length} html=${tpl.settings.customHtml.length}b css=${css.length}b braces ${open}/${close} ${open === close ? 'OK' : '*** UNBALANCED ***'}`);
+
+  // Comment balance, checked because an unbalanced one cost hours: a stray */ left behind while
+  // editing a comment is not a formatting nit — the CSS parser hits the garbage, resyncs at the
+  // next }, and SWALLOWS THE RULE THAT FOLLOWS. The stylesheet still contains the rule, the
+  // browser still shows it in the source, and it simply never applies. Braces stayed balanced
+  // throughout, so the existing check said OK.
+  const cOpen = (css.match(/\/\*/g) || []).length, cClose = (css.match(/\*\//g) || []).length;
+  if (cOpen !== cClose) {
+    console.log(`  *** CSS COMMENTS UNBALANCED: ${cOpen} /* vs ${cClose} */ — a rule after the stray marker will be silently dropped`);
+    process.exitCode = 1;
+  }
   const missing = tpl.fields.map(f => f.key).filter(k => !tpl.settings.customHtml.includes('{{field:' + k + '}}'));
   console.log('  fields without a placeholder:', missing.join(', ') || '(none)');
 }
