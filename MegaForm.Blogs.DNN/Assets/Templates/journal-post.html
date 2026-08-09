@@ -1,0 +1,122 @@
+<style>
+/* Journal article: one measure, a drop cap, and the thread read as a conversation. */
+.mfb-tpl .jra { --jr-ink: #1b1a17; --jr-dim: #7a756c; --jr-line: #e6e2d9; --jr-paper: #fbfaf7; --jr-accent: #8a6b3d;
+  padding: 8px 0 0; background: var(--jr-paper); color: var(--jr-ink);
+  font-family: Georgia, "Iowan Old Style", "Times New Roman", serif; }
+.mfb-tpl .jra * { box-sizing: border-box; }
+/* A DNN skin styles h1..h6 (and often a, p) directly, and a direct rule beats an inherited
+   value - without these two lines the design renders in the skin's font, not its own. */
+.mfb-tpl .jra h1, .mfb-tpl .jra h2, .mfb-tpl .jra h3, .mfb-tpl .jra p, .mfb-tpl .jra a { font-family: inherit; }
+.mfb-tpl .jra a { color: inherit; text-decoration: none; }
+.mfb-tpl .jra-wrap { width: min(720px, calc(100% - 40px)); margin: 0 auto; }
+
+.mfb-tpl .jra-crumb { padding: 22px 0 0; color: var(--jr-dim);
+  font-family: "Inter", system-ui, sans-serif; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
+.mfb-tpl .jra-head { padding: 26px 0 22px; text-align: center; }
+.mfb-tpl .jra-head h1 { margin: 0 0 14px; font-size: clamp(30px, 4.6vw, 44px); font-weight: 400; line-height: 1.15; }
+.mfb-tpl .jra-head p { margin: 0 auto; max-width: 48ch; color: var(--jr-dim); font-size: 18px; font-style: italic; line-height: 1.55; }
+.mfb-tpl .jra-byline { margin-top: 20px; color: var(--jr-dim);
+  font-family: "Inter", system-ui, sans-serif; font-size: 12px; letter-spacing: .04em; }
+.mfb-tpl .jra-rule { width: 60px; height: 1px; margin: 22px auto; background: var(--jr-accent); }
+
+.mfb-tpl .jra-hero { margin: 0 0 30px; }
+.mfb-tpl .jra-hero img { width: 100%; height: clamp(200px, 34vw, 380px); object-fit: cover; }
+.mfb-tpl .jra-hero figcaption { padding-top: 8px; color: var(--jr-dim); font-size: 13px; font-style: italic; text-align: center; }
+
+.mfb-tpl .jra-prose { font-size: 19px; line-height: 1.8; }
+.mfb-tpl .jra-prose > p:first-of-type::first-letter { float: left; margin: 6px 10px 0 0; color: var(--jr-accent);
+  font-size: 62px; line-height: .8; }
+.mfb-tpl .jra-prose h2 { margin: 36px 0 12px; font-size: 26px; font-weight: 400; }
+.mfb-tpl .jra-prose h3 { margin: 28px 0 10px; font-size: 21px; font-weight: 400; }
+.mfb-tpl .jra-prose p { margin: 0 0 20px; }
+.mfb-tpl .jra-prose img { max-width: 100%; height: auto; }
+.mfb-tpl .jra-prose blockquote { margin: 28px 0; padding-left: 22px; border-left: 2px solid var(--jr-accent);
+  color: #4a463f; font-style: italic; }
+
+.mfb-tpl .jra-contents { margin: 0 0 28px; padding: 16px 20px; border: 1px solid var(--jr-line); background: #fff; }
+.mfb-tpl .jra-contents b { display: block; margin-bottom: 8px; color: var(--jr-accent);
+  font-family: "Inter", system-ui, sans-serif; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
+/* The headings often number themselves, so the list must not. */
+.mfb-tpl .jra-contents ol { margin: 0; padding-left: 0; list-style: none; }
+.mfb-tpl .jra-contents li { margin-bottom: 6px; font-size: 16px; }
+
+.mfb-tpl .jra-author { display: flex; gap: 16px; margin: 36px 0; padding: 20px; border-top: 1px solid var(--jr-line); border-bottom: 1px solid var(--jr-line); }
+.mfb-tpl .jra-author img { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; }
+.mfb-tpl .jra-author b { display: block; font-size: 17px; font-weight: 400; }
+.mfb-tpl .jra-author small { color: var(--jr-dim); font-family: "Inter", system-ui, sans-serif; font-size: 12px; }
+.mfb-tpl .jra-author p { margin: 8px 0 0; color: #4a463f; font-size: 15px; line-height: 1.6; }
+
+.mfb-tpl .jra-more { margin: 0 0 40px; }
+.mfb-tpl .jra-more b { display: block; margin-bottom: 12px; color: var(--jr-accent);
+  font-family: "Inter", system-ui, sans-serif; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
+.mfb-tpl .jra-more a { display: block; padding: 12px 0; border-bottom: 1px solid var(--jr-line); font-size: 18px; }
+.mfb-tpl .jra-more a:hover { color: var(--jr-accent); }
+.mfb-tpl .jra-more small { display: block; color: var(--jr-dim); font-family: "Inter", system-ui, sans-serif; font-size: 12px; }
+
+.mfb-tpl .jra-thread { padding-bottom: 70px; }
+.mfb-tpl .jra-thread b.jra-label { display: block; margin-bottom: 14px; color: var(--jr-accent);
+  font-family: "Inter", system-ui, sans-serif; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
+.mfb-tpl .jra-said { margin-bottom: 20px; padding-left: 18px; border-left: 2px solid var(--jr-line); }
+.mfb-tpl .jra-said b { font-size: 16px; font-weight: 400; }
+.mfb-tpl .jra-said small { margin-left: 8px; color: var(--jr-dim); font-family: "Inter", system-ui, sans-serif; font-size: 12px; }
+.mfb-tpl .jra-said p { margin: 6px 0 0; font-size: 16px; line-height: 1.65; }
+</style>
+
+<article class="jra">
+  <div class="jra-wrap">
+    <nav class="jra-crumb"><a href="{{site.url}}">{{site.title}}</a> &middot; {{post.category}}</nav>
+
+    <header class="jra-head">
+      <h1>{{post.title}}</h1>
+      <p>{{post.excerpt}}</p>
+      <div class="jra-byline">{{post.author}} &middot; {{post.date}} &middot; {{post.readingTime}} min read</div>
+      <div class="jra-rule"></div>
+    </header>
+
+    {{#if post.image}}
+    <figure class="jra-hero">
+      <img src="{{post.image}}" alt="{{post.title}}" />
+      <figcaption>{{post.category}}</figcaption>
+    </figure>
+    {{/if}}
+
+    {{#if toc}}
+    <nav class="jra-contents">
+      <b>Contents</b>
+      <ol>{{#each toc}}<li><a href="#{{id}}">{{text}}</a></li>{{/each}}</ol>
+    </nav>
+    {{/if}}
+
+    <div class="jra-prose">{{{post.body}}}</div>
+
+    <section class="jra-author">
+      {{#if post.authorAvatar}}<img src="{{post.authorAvatar}}" alt="{{post.author}}" />{{/if}}
+      <div>
+        <b>{{post.author}}</b>
+        <small>{{post.authorRole}}</small>
+        <p>{{post.authorBio}}</p>
+      </div>
+    </section>
+
+    {{#if related}}
+    <section class="jra-more">
+      <b>Read next</b>
+      {{#each related}}
+      <a href="{{url}}">{{title}}<small>{{category}} &middot; {{date}}</small></a>
+      {{/each}}
+    </section>
+    {{/if}}
+
+    <section class="jra-thread">
+      <b class="jra-label">{{post.commentsLabel}}</b>
+      {{#each comments}}
+      <div class="jra-said">
+        <b>{{name}}</b><small>{{date}}</small>
+        <p>{{body}}</p>
+      </div>
+      {{else}}
+      <p>The thread is empty. Be the first to write something.</p>
+      {{/each}}
+    </section>
+  </div>
+</article>

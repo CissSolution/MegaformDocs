@@ -1,0 +1,128 @@
+<style>
+/* Newsroom article. Same prefix rules as the home template. */
+.mfb-tpl .nra { --nr-ink: #0b1220; --nr-dim: #5b6577; --nr-line: #dfe3ea; --nr-accent: #d21f2b;
+  color: var(--nr-ink); font-family: "Inter", "Segoe UI", system-ui, sans-serif; }
+.mfb-tpl .nra * { box-sizing: border-box; }
+/* A DNN skin styles h1..h6 (and often a, p) directly, and a direct rule beats an inherited
+   value - without these two lines the design renders in the skin's font, not its own. */
+.mfb-tpl .nra h1, .mfb-tpl .nra h2, .mfb-tpl .nra h3, .mfb-tpl .nra h4,
+.mfb-tpl .nra p, .mfb-tpl .nra a, .mfb-tpl .nra span, .mfb-tpl .nra small, .mfb-tpl .nra b { font-family: inherit; }
+.mfb-tpl .nra a { color: inherit; text-decoration: none; }
+.mfb-tpl .nra-wrap { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
+
+.mfb-tpl .nra-crumb { padding: 18px 0; color: var(--nr-dim); font-size: 13px; }
+.mfb-tpl .nra-crumb a:hover { color: var(--nr-accent); }
+.mfb-tpl .nra-kicker { display: inline-block; margin-bottom: 10px; color: var(--nr-accent);
+  font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.mfb-tpl .nra-head h1 { max-width: 20ch; margin: 0 0 12px; font-size: clamp(32px, 5vw, 56px); line-height: 1.05; letter-spacing: -.03em; }
+.mfb-tpl .nra-head p { max-width: 62ch; margin: 0 0 18px; color: var(--nr-dim); font-size: 19px; line-height: 1.5; }
+.mfb-tpl .nra-byline { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-top: 1px solid var(--nr-line); border-bottom: 1px solid var(--nr-line); }
+.mfb-tpl .nra-byline img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+.mfb-tpl .nra-byline b { display: block; font-size: 15px; }
+.mfb-tpl .nra-byline small { color: var(--nr-dim); font-size: 13px; }
+
+.mfb-tpl .nra-hero { margin: 22px 0; }
+.mfb-tpl .nra-hero img { width: 100%; height: clamp(240px, 42vw, 480px); border-radius: 2px; object-fit: cover; }
+
+.mfb-tpl .nra-body { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 48px; padding-bottom: 40px; }
+.mfb-tpl .nra-toc { position: sticky; top: 20px; align-self: start; }
+.mfb-tpl .nra-toc h4 { margin: 0 0 10px; padding-bottom: 8px; border-bottom: 2px solid var(--nr-ink);
+  font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
+/* The headings often number themselves ("1. Where DNN wins"), so the list must not. */
+.mfb-tpl .nra-toc ol { margin: 0; padding-left: 0; list-style: none; }
+.mfb-tpl .nra-toc li { margin-bottom: 8px; font-size: 14px; line-height: 1.4; }
+.mfb-tpl .nra-toc a:hover { color: var(--nr-accent); }
+.mfb-tpl .nra-prose { font-size: 18px; line-height: 1.75; }
+.mfb-tpl .nra-prose h2 { margin: 34px 0 12px; font-size: 26px; letter-spacing: -.02em; }
+.mfb-tpl .nra-prose h3 { margin: 26px 0 10px; font-size: 21px; }
+.mfb-tpl .nra-prose p { margin: 0 0 18px; }
+.mfb-tpl .nra-prose img { max-width: 100%; height: auto; border-radius: 2px; }
+.mfb-tpl .nra-prose blockquote { margin: 26px 0; padding-left: 20px; border-left: 4px solid var(--nr-accent); color: var(--nr-dim); }
+
+.mfb-tpl .nra-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 26px 0; }
+.mfb-tpl .nra-tags a { padding: 6px 12px; border: 1px solid var(--nr-line); border-radius: 2px; color: var(--nr-dim); font-size: 13px; }
+.mfb-tpl .nra-tags a:hover { border-color: var(--nr-ink); color: var(--nr-ink); }
+
+.mfb-tpl .nra-related { padding: 26px 0 10px; border-top: 3px solid var(--nr-ink); }
+.mfb-tpl .nra-related h4 { margin: 0 0 16px; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; }
+.mfb-tpl .nra-related-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+.mfb-tpl .nra-related-grid img { width: 100%; height: 130px; border-radius: 2px; object-fit: cover; }
+.mfb-tpl .nra-related-grid strong { display: block; margin-top: 8px; font-size: 16px; line-height: 1.3; }
+.mfb-tpl .nra-related-grid small { color: var(--nr-dim); font-size: 12px; }
+
+.mfb-tpl .nra-comments { padding: 30px 0 60px; border-top: 1px solid var(--nr-line); }
+.mfb-tpl .nra-comments h4 { margin: 0 0 16px; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; }
+.mfb-tpl .nra-comment { padding: 14px 0; border-bottom: 1px solid var(--nr-line); }
+.mfb-tpl .nra-comment b { font-size: 14px; }
+.mfb-tpl .nra-comment small { margin-left: 8px; color: var(--nr-dim); font-size: 12px; }
+.mfb-tpl .nra-comment p { margin: 6px 0 0; font-size: 15px; line-height: 1.55; }
+
+@media (max-width: 900px) { .mfb-tpl .nra-body { grid-template-columns: 1fr; } .mfb-tpl .nra-toc { position: static; } }
+</style>
+
+<article class="nra">
+  <div class="nra-wrap">
+    <nav class="nra-crumb"><a href="{{site.url}}">{{site.title}}</a> / {{post.category}}</nav>
+
+    <header class="nra-head">
+      <span class="nra-kicker">{{post.category}}</span>
+      <h1>{{post.title}}</h1>
+      <p>{{post.excerpt}}</p>
+      <div class="nra-byline">
+        {{#if post.authorAvatar}}<img src="{{post.authorAvatar}}" alt="{{post.author}}" />{{/if}}
+        <div>
+          <b>{{post.author}}</b>
+          <small>{{post.date}} &middot; {{post.readingTime}} min read &middot; {{post.readsLabel}}</small>
+        </div>
+      </div>
+    </header>
+
+    {{#if post.image}}
+    <figure class="nra-hero"><img src="{{post.image}}" alt="{{post.title}}" /></figure>
+    {{/if}}
+
+    <div class="nra-body">
+      <aside class="nra-toc">
+        {{#if toc}}
+        <h4>In this story</h4>
+        <ol>{{#each toc}}<li><a href="#{{id}}">{{text}}</a></li>{{/each}}</ol>
+        {{/if}}
+      </aside>
+
+      <div>
+        <div class="nra-prose">{{{post.body}}}</div>
+
+        {{#if tags}}
+        <div class="nra-tags">{{#each tags}}<a href="{{url}}">#{{name}}</a>{{/each}}</div>
+        {{/if}}
+      </div>
+    </div>
+
+    {{#if related}}
+    <section class="nra-related">
+      <h4>More from the desk</h4>
+      <div class="nra-related-grid">
+        {{#each related}}
+        <a href="{{url}}">
+          <img src="{{image}}" alt="{{title}}" loading="lazy" />
+          <strong>{{title}}</strong>
+          <small>{{category}} &middot; {{date}}</small>
+        </a>
+        {{/each}}
+      </div>
+    </section>
+    {{/if}}
+
+    <section class="nra-comments">
+      <h4>{{post.commentsLabel}}</h4>
+      {{#each comments}}
+      <div class="nra-comment">
+        <b>{{name}}</b><small>{{date}}</small>
+        <p>{{body}}</p>
+      </div>
+      {{else}}
+      <p class="nra-comment">No comments yet.</p>
+      {{/each}}
+    </section>
+  </div>
+</article>

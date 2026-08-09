@@ -70,7 +70,34 @@ The worktree contains unrelated user changes. Do not reset, clean, overwrite, or
 
 - MegaForm live version: `2.0.14` (2026-08-09 — blog analytics rollup fix, below. The
   `_02.00.012` and `_02.00.013` zips in `MegaForm.DNN/Install` are older, do not deploy them)
-- MegaForm Blogs live version: `1.15.5` (2026-08-09)
+- MegaForm Blogs live version: `1.16.3` (2026-08-09)
+- Template gallery files: `MegaForm.Blogs.DNN/Assets/Templates/` (catalog.json + 4 designs),
+  packaged to `/DesktopModules/MegaFormBlogs/Assets/Templates/`
+- Live state: **the switch is OFF**, so /Blogs uses the built-in design. Newsroom is marked Active
+  for both targets, so turning the switch on in Settings is the only step left.
+
+### 2026-08-09k — template gallery + templates that render (1.16.x)
+
+`/BlogAdmin?view=templates` gained a gallery of prebuilt designs, import and export, and the
+templates it holds can now RENDER the blog.
+
+- **Gallery** = real files in the package. `Assets/Templates/catalog.json` is the only list of
+  them; a filename never comes from the browser and still has to match `[a-z0-9-]+\.html`.
+  Thumbnails render the design with the same interpreter, scaled - never a stale screenshot.
+- **Two themes**: Newsroom (news desk) and Journal (serif, one column), each with a Blog Home and
+  an article template.
+- **Import/export happen in the browser**: FileReader posts the text, a Blob writes the .json.
+  No upload endpoint exists, which is the point.
+- **Server engine** in `MegaFormBlogs.cshtml` is a twin of the editor's JS interpreter. If you
+  change one, change the other in the same commit, or the live preview stops being a preview.
+- **The switch**: Settings → "Let the active template render the blog" (portal setting
+  `MegaFormBlogs_TemplatesRender`, default false). Off = built-in design. A template that throws
+  or renders empty falls back to the built-in design; Hosts see a stamp naming the template.
+  The active template is cached 60s per portal+target.
+
+Two traps: a DNN skin styles `h1..h6` directly, so a design must declare `font-family` on its
+elements (inheritance loses to any direct rule); and the context carries pre-pluralised
+`readsLabel`/`commentsLabel` because a template cannot count.
 - Blog Gallery Images form: FormId `383` · Blog Live Updates form: FormId `384`
   (both created from `/BlogAdmin?view=formats`, not by the installer)
 - Demo content on the live portal: post **291** is a Gallery (4 images), post **290** is a

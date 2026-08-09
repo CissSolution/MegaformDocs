@@ -1,0 +1,101 @@
+<style>
+/* Journal. Writing first: serif, one column, numbered entries, almost no images. */
+.mfb-tpl .jr { --jr-ink: #1b1a17; --jr-dim: #7a756c; --jr-line: #e6e2d9; --jr-paper: #fbfaf7; --jr-accent: #8a6b3d;
+  padding: 8px 0 0; background: var(--jr-paper); color: var(--jr-ink);
+  font-family: Georgia, "Iowan Old Style", "Times New Roman", serif; }
+.mfb-tpl .jr * { box-sizing: border-box; }
+/* A DNN skin styles h1..h6 (and often a, p) directly, and a direct rule beats an inherited
+   value - without these two lines the design renders in the skin's font, not its own. */
+.mfb-tpl .jr h1, .mfb-tpl .jr h2, .mfb-tpl .jr h3, .mfb-tpl .jr p, .mfb-tpl .jr a { font-family: inherit; }
+.mfb-tpl .jr a { color: inherit; text-decoration: none; }
+.mfb-tpl .jr-wrap { width: min(760px, calc(100% - 40px)); margin: 0 auto; }
+
+.mfb-tpl .jr-head { padding: 60px 0 34px; text-align: center; }
+.mfb-tpl .jr-head h1 { margin: 0; font-size: clamp(34px, 5vw, 52px); font-weight: 400; letter-spacing: -.01em; }
+.mfb-tpl .jr-head p { margin: 12px auto 0; max-width: 46ch; color: var(--jr-dim); font-size: 17px; font-style: italic; line-height: 1.5; }
+.mfb-tpl .jr-rule { width: 60px; height: 1px; margin: 26px auto 0; background: var(--jr-accent); }
+
+.mfb-tpl .jr-note { margin: 0 0 30px; padding: 14px 18px; border-left: 3px solid var(--jr-accent);
+  background: #fff; font-size: 15px; }
+.mfb-tpl .jr-note b { display: block; margin-bottom: 3px; color: var(--jr-accent);
+  font-family: "Inter", system-ui, sans-serif; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
+
+.mfb-tpl .jr-lead { padding: 0 0 34px; border-bottom: 1px solid var(--jr-line); }
+.mfb-tpl .jr-lead span { color: var(--jr-accent); font-family: "Inter", system-ui, sans-serif;
+  font-size: 11px; letter-spacing: .14em; text-transform: uppercase; }
+.mfb-tpl .jr-lead h2 { margin: 10px 0 12px; font-size: clamp(26px, 3.6vw, 36px); font-weight: 400; line-height: 1.2; }
+.mfb-tpl .jr-lead p { margin: 0 0 14px; color: #3d3a34; font-size: 18px; line-height: 1.7; }
+
+.mfb-tpl .jr-index { margin: 0; padding: 26px 0 0; list-style: none; counter-reset: jr; }
+.mfb-tpl .jr-entry { display: grid; grid-template-columns: 48px 1fr; gap: 18px; padding: 26px 0; border-bottom: 1px solid var(--jr-line); }
+.mfb-tpl .jr-entry::before { counter-increment: jr; content: counter(jr, decimal-leading-zero);
+  color: var(--jr-accent); font-family: "Inter", system-ui, sans-serif; font-size: 13px; letter-spacing: .05em; }
+.mfb-tpl .jr-entry h3 { margin: 0 0 8px; font-size: 23px; font-weight: 400; line-height: 1.25; }
+.mfb-tpl .jr-entry h3 a:hover { color: var(--jr-accent); }
+.mfb-tpl .jr-entry p { margin: 0 0 10px; color: #4a463f; font-size: 16px; line-height: 1.65; }
+.mfb-tpl .jr-byline { color: var(--jr-dim); font-family: "Inter", system-ui, sans-serif; font-size: 12px; letter-spacing: .02em; }
+
+.mfb-tpl .jr-topics { display: flex; flex-wrap: wrap; gap: 10px 18px; padding: 28px 0; border-bottom: 1px solid var(--jr-line); }
+.mfb-tpl .jr-topics a { color: var(--jr-dim); font-family: "Inter", system-ui, sans-serif; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
+.mfb-tpl .jr-topics a:hover { color: var(--jr-accent); }
+
+.mfb-tpl .jr-pager { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 34px 0 70px;
+  font-family: "Inter", system-ui, sans-serif; font-size: 13px; }
+.mfb-tpl .jr-pager a { color: var(--jr-accent); }
+.mfb-tpl .jr-pager a:hover { text-decoration: underline; }
+.mfb-tpl .jr-pager em { color: var(--jr-dim); font-style: normal; }
+
+@media (max-width: 620px) { .mfb-tpl .jr-entry { grid-template-columns: 1fr; gap: 4px; } }
+</style>
+
+<div class="jr">
+  <div class="jr-wrap">
+    <header class="jr-head">
+      <h1>{{site.title}}</h1>
+      <p>{{site.tagline}}</p>
+      <div class="jr-rule"></div>
+    </header>
+
+    {{#if breaking.text}}
+    <div class="jr-note">
+      <b>From the desk</b>
+      {{#if breaking.url}}<a href="{{breaking.url}}">{{breaking.text}}</a>{{else}}{{breaking.text}}{{/if}}
+    </div>
+    {{/if}}
+
+    {{#if featured.title}}
+    <article class="jr-lead">
+      <span>Featured &middot; {{featured.category}}</span>
+      <h2><a href="{{featured.url}}">{{featured.title}}</a></h2>
+      <p>{{featured.excerpt}}</p>
+      <div class="jr-byline">{{featured.author}} &middot; {{featured.date}} &middot; {{featured.readingTime}} min read</div>
+    </article>
+    {{/if}}
+
+    <ol class="jr-index">
+      {{#each posts}}
+      <li class="jr-entry">
+        <div>
+          <h3><a href="{{url}}">{{title}}</a></h3>
+          <p>{{excerpt}}</p>
+          <div class="jr-byline">{{author}} &middot; {{date}} &middot; {{category}} &middot; {{readsLabel}}</div>
+        </div>
+      </li>
+      {{else}}
+      <li class="jr-entry"><div><p>Nothing published yet.</p></div></li>
+      {{/each}}
+    </ol>
+
+    {{#if categories}}
+    <nav class="jr-topics">
+      {{#each categories}}<a href="{{url}}">{{name}}</a>{{/each}}
+    </nav>
+    {{/if}}
+
+    <nav class="jr-pager">
+      {{#if pager.hasPrev}}<a href="{{pager.prevUrl}}">&larr; Newer entries</a>{{else}}<em>&nbsp;</em>{{/if}}
+      <em>{{pager.page}} / {{pager.pages}}</em>
+      {{#if pager.hasNext}}<a href="{{pager.nextUrl}}">Older entries &rarr;</a>{{else}}<em>&nbsp;</em>{{/if}}
+    </nav>
+  </div>
+</div>

@@ -1,0 +1,38 @@
+{
+  "note": "The prebuilt template gallery. Each entry is a file in this folder; the console reads THIS list and never a path from the browser. Add a design by adding its file and one entry here.",
+  "contract": "blog-home: site.title site.tagline heading total breaking.text breaking.url featured.* posts[].* categories[].name/url pager.page/pages/hasPrev/hasNext/prevUrl/nextUrl | blog-post: post.* toc[].id/text related[].* tags[].name/url comments[].name/date/body | {{{triple}}} emits raw HTML (post.body)",
+  "templates": [
+    {
+      "key": "newsroom-home",
+      "file": "newsroom-home.html",
+      "name": "Newsroom — blog home",
+      "group": "blog-home",
+      "theme": "Newsroom",
+      "description": "Dense news desk: a lead story with a big image, a ranked most-read rail, a category strip and compact rows underneath. Dark masthead, tight type."
+    },
+    {
+      "key": "newsroom-post",
+      "file": "newsroom-post.html",
+      "name": "Newsroom — article",
+      "group": "blog-post",
+      "theme": "Newsroom",
+      "description": "Matching article page: kicker, wide hero, a sticky contents rail on the left and the story on the right, related stories as a strip."
+    },
+    {
+      "key": "journal-home",
+      "file": "journal-home.html",
+      "name": "Journal — blog home",
+      "group": "blog-home",
+      "theme": "Journal",
+      "description": "Quiet, serif, one column. No cards and almost no images: numbered entries, generous whitespace, the kind of index a writing-first blog wants."
+    },
+    {
+      "key": "journal-post",
+      "file": "journal-post.html",
+      "name": "Journal — article",
+      "group": "blog-post",
+      "theme": "Journal",
+      "description": "Matching article page: centred measure, drop-cap opening, footnote-style byline, and the comment thread rendered as a conversation rather than a form."
+    }
+  ]
+}

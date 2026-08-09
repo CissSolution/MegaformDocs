@@ -984,3 +984,33 @@ html.mf-host-editmode .mf-fs-toggle.mf-fs-floating:hover { background: #6366f1; 
   border: 1px solid var(--mfba-line); background: var(--mfba-card); color: var(--mfba-dim); font-weight: 500;
 }
 .mfba-btn.ghost:hover { border-color: var(--mfba-dim); background: var(--mfba-muted-soft); color: var(--mfba-ink); filter: none; }
+
+/* ── prebuilt template gallery ─────────────────────────────────────────── */
+
+.mfba-gal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+.mfba-gal-card {
+  display: flex; flex-direction: column; overflow: hidden;
+  border: 1px solid var(--mfba-line); border-radius: var(--mfba-r-card); background: var(--mfba-card);
+}
+/* The thumbnail is the design itself, rendered by the same interpreter and scaled down - a
+   screenshot would go stale the first time a template changed. */
+.mfba-gal-shot {
+  position: relative; height: 200px; overflow: hidden;
+  border-bottom: 1px solid var(--mfba-line); background: var(--mfba-muted-soft);
+}
+.mfba-gal-page {
+  /* 1400px scaled to a 200px-tall card: wide enough that the thumbnail shows the LAYOUT and not
+     just the lead image. */
+  position: absolute; top: 0; left: 0; width: 1400px;
+  transform: scale(.21); transform-origin: top left; pointer-events: none;
+}
+.mfba-gal-shot.empty::after {
+  content: "preview unavailable"; position: absolute; inset: 0;
+  display: grid; place-items: center; color: var(--mfba-dim); font-size: 12px;
+}
+.mfba-gal-copy { display: flex; flex: 1; flex-direction: column; gap: 4px; padding: 14px 16px 6px; }
+.mfba-gal-copy strong { font-size: 15px; }
+.mfba-gal-copy small { color: var(--mfba-dim); font-size: 12px; }
+.mfba-gal-copy p { margin: 6px 0 0; color: var(--mfba-dim); font-size: 13px; line-height: 1.5; }
+.mfba-gal-copy .mfba-pill { align-self: flex-start; }
+.mfba-gal-acts { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 12px 16px 16px; }

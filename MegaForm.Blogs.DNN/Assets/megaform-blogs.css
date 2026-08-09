@@ -351,3 +351,12 @@
   .mfb-live-feed li { grid-template-columns: 1fr; gap: 4px; }
   .mfb-gallery-item img { height: 180px; }
 }
+
+/* A rendered template owns the surface; .mfb-tpl exists so a template can scope its own CSS and
+   so the built-in look does not bleed into it. Only the reset stays. */
+.mfb-tpl { padding: 0; }
+.mfb-tpl-stamp {
+  width: min(1180px, calc(100% - 36px)); margin: 8px auto 24px; padding: 8px 12px;
+  border: 1px dashed #cbd5e1; border-radius: 8px; background: #f8fafc;
+  color: #64748b; font-family: Inter, "Segoe UI", system-ui, sans-serif; font-size: 12px;
+}

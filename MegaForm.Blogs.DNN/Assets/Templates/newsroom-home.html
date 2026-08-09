@@ -1,0 +1,132 @@
+<style>
+/* Newsroom. Every selector is prefixed .nr- and lives inside .mfb-tpl, so nothing here can
+   reach the skin or the built-in blog design. */
+.mfb-tpl .nr { --nr-ink: #0b1220; --nr-dim: #5b6577; --nr-line: #dfe3ea; --nr-accent: #d21f2b;
+  color: var(--nr-ink); font-family: "Inter", "Segoe UI", system-ui, sans-serif; }
+.mfb-tpl .nr * { box-sizing: border-box; }
+/* A DNN skin styles h1..h6 (and often a, p) directly, and a direct rule beats an inherited
+   value - without these two lines the design renders in the skin's font, not its own. */
+.mfb-tpl .nr h1, .mfb-tpl .nr h2, .mfb-tpl .nr h3, .mfb-tpl .nr h4,
+.mfb-tpl .nr p, .mfb-tpl .nr a, .mfb-tpl .nr span, .mfb-tpl .nr small, .mfb-tpl .nr b { font-family: inherit; }
+.mfb-tpl .nr a { color: inherit; text-decoration: none; }
+.mfb-tpl .nr-wrap { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
+
+.mfb-tpl .nr-masthead { padding: 22px 0 16px; border-bottom: 3px solid var(--nr-ink); }
+.mfb-tpl .nr-masthead h1 { margin: 0; font-size: clamp(30px, 5vw, 46px); font-weight: 800; letter-spacing: -.03em; }
+.mfb-tpl .nr-masthead p { margin: 4px 0 0; color: var(--nr-dim); font-size: 15px; }
+
+.mfb-tpl .nr-breaking { display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 10px 14px;
+  border-radius: 4px; background: var(--nr-ink); color: #fff; }
+.mfb-tpl .nr-breaking b { padding: 2px 8px; border-radius: 2px; background: var(--nr-accent);
+  font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+.mfb-tpl .nr-breaking a, .mfb-tpl .nr-breaking span { color: #fff; font-size: 15px; }
+
+.mfb-tpl .nr-strip { display: flex; flex-wrap: wrap; gap: 18px; padding: 12px 0; border-bottom: 1px solid var(--nr-line); }
+.mfb-tpl .nr-strip a { color: var(--nr-dim); font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.mfb-tpl .nr-strip a:hover { color: var(--nr-accent); }
+
+.mfb-tpl .nr-top { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 40px; padding: 28px 0; border-bottom: 1px solid var(--nr-line); }
+.mfb-tpl .nr-lead img { width: 100%; height: 380px; border-radius: 2px; object-fit: cover; }
+.mfb-tpl .nr-kicker { display: inline-block; margin: 16px 0 8px; color: var(--nr-accent);
+  font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.mfb-tpl .nr-lead h2 { margin: 0 0 10px; font-size: clamp(26px, 3.4vw, 40px); line-height: 1.1; letter-spacing: -.02em; }
+.mfb-tpl .nr-lead p { margin: 0 0 12px; color: var(--nr-dim); font-size: 17px; line-height: 1.55; }
+.mfb-tpl .nr-meta { color: var(--nr-dim); font-size: 13px; }
+.mfb-tpl .nr-meta b { color: var(--nr-ink); }
+
+.mfb-tpl .nr-rail h3 { margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid var(--nr-ink);
+  font-size: 13px; letter-spacing: .1em; text-transform: uppercase; }
+.mfb-tpl .nr-rail ol { margin: 0; padding: 0; list-style: none; counter-reset: nr; }
+.mfb-tpl .nr-rail li { display: grid; grid-template-columns: 34px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--nr-line); }
+.mfb-tpl .nr-rail li::before { counter-increment: nr; content: counter(nr); color: var(--nr-line);
+  font-size: 26px; font-weight: 800; line-height: 1; }
+.mfb-tpl .nr-rail strong { display: block; font-size: 15px; line-height: 1.3; }
+.mfb-tpl .nr-rail small { color: var(--nr-dim); font-size: 12px; }
+
+.mfb-tpl .nr-rows { padding: 24px 0 8px; }
+.mfb-tpl .nr-row { display: grid; grid-template-columns: 210px 1fr; gap: 22px; padding: 22px 0; border-bottom: 1px solid var(--nr-line); }
+.mfb-tpl .nr-row img { width: 100%; height: 130px; border-radius: 2px; object-fit: cover; }
+.mfb-tpl .nr-row h3 { margin: 6px 0 8px; font-size: 21px; line-height: 1.25; }
+.mfb-tpl .nr-row p { margin: 0 0 10px; color: var(--nr-dim); font-size: 15px; line-height: 1.5; }
+
+.mfb-tpl .nr-pager { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 26px 0 40px; }
+.mfb-tpl .nr-pager a { padding: 10px 18px; border: 1px solid var(--nr-ink); border-radius: 2px; font-size: 14px; font-weight: 600; }
+.mfb-tpl .nr-pager a:hover { background: var(--nr-ink); color: #fff; }
+.mfb-tpl .nr-pager span { color: var(--nr-dim); font-size: 13px; }
+
+@media (max-width: 900px) {
+  .mfb-tpl .nr-top, .mfb-tpl .nr-row { grid-template-columns: 1fr; }
+  .mfb-tpl .nr-lead img { height: 240px; }
+}
+</style>
+
+<div class="nr">
+  <div class="nr-wrap">
+    <header class="nr-masthead">
+      <h1>{{site.title}}</h1>
+      <p>{{site.tagline}}</p>
+      {{#if breaking.text}}
+      <div class="nr-breaking">
+        <b>Breaking</b>
+        {{#if breaking.url}}<a href="{{breaking.url}}">{{breaking.text}}</a>{{else}}<span>{{breaking.text}}</span>{{/if}}
+      </div>
+      {{/if}}
+    </header>
+
+    {{#if categories}}
+    <nav class="nr-strip">
+      {{#each categories}}<a href="{{url}}">{{name}}</a>{{/each}}
+    </nav>
+    {{/if}}
+
+    <section class="nr-top">
+      <article class="nr-lead">
+        {{#if featured.title}}
+        <a href="{{featured.url}}"><img src="{{featured.image}}" alt="{{featured.title}}" /></a>
+        <span class="nr-kicker">{{featured.category}}</span>
+        <h2><a href="{{featured.url}}">{{featured.title}}</a></h2>
+        <p>{{featured.excerpt}}</p>
+        <div class="nr-meta"><b>{{featured.author}}</b> &middot; {{featured.date}} &middot; {{featured.readsLabel}} &middot; {{featured.commentsLabel}}</div>
+        {{else}}
+        <span class="nr-kicker">{{heading}}</span>
+        <h2>{{total}} stories</h2>
+        <p>Nothing is featured right now, so the desk is showing the latest instead.</p>
+        {{/if}}
+      </article>
+
+      <aside class="nr-rail">
+        <h3>Most read</h3>
+        <ol>
+          {{#each posts}}
+          <li>
+            <div>
+              <strong><a href="{{url}}">{{title}}</a></strong>
+              <small>{{category}} &middot; {{readsLabel}}</small>
+            </div>
+          </li>
+          {{/each}}
+        </ol>
+      </aside>
+    </section>
+
+    <section class="nr-rows">
+      {{#each posts}}
+      <article class="nr-row">
+        <a href="{{url}}"><img src="{{image}}" alt="{{title}}" loading="lazy" /></a>
+        <div>
+          <span class="nr-kicker">{{category}}</span>
+          <h3><a href="{{url}}">{{title}}</a></h3>
+          <p>{{excerpt}}</p>
+          <div class="nr-meta"><b>{{author}}</b> &middot; {{date}} &middot; {{readingTime}} min read</div>
+        </div>
+      </article>
+      {{/each}}
+    </section>
+
+    <nav class="nr-pager">
+      {{#if pager.hasPrev}}<a href="{{pager.prevUrl}}">&larr; Newer</a>{{else}}<span></span>{{/if}}
+      <span>Page {{pager.page}} of {{pager.pages}} &middot; {{total}} stories</span>
+      {{#if pager.hasNext}}<a href="{{pager.nextUrl}}">Older &rarr;</a>{{else}}<span></span>{{/if}}
+    </nav>
+  </div>
+</div>

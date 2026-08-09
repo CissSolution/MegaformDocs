@@ -215,6 +215,9 @@
                 }
                 breakingUntil = parsedUntil.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
             }
+            Save(portalId, "TemplatesRender", Posted("templates_render") ? "true" : "false");
+            Save(portalId, "SiteTitle", (Request.Form["site_title"] ?? "").Trim());
+            Save(portalId, "SiteTagline", (Request.Form["site_tagline"] ?? "").Trim());
             Save(portalId, "BreakingText", breakingText);
             Save(portalId, "BreakingUrl", breakingUrl);
             Save(portalId, "BreakingUntil", breakingUntil);
@@ -242,6 +245,9 @@
     var showAuthorCard = Flag(portalId, "ShowAuthorCard", true);
     var commentsEnabled = Flag(portalId, "CommentsEnabled", true);
     var commentsRequireEmail = Flag(portalId, "CommentsRequireEmail", false);
+    var templatesRender = Flag(portalId, "TemplatesRender", false);
+    var currentSiteTitle = Setting(portalId, "SiteTitle", "");
+    var currentSiteTagline = Setting(portalId, "SiteTagline", "");
     var currentBreakingText = Setting(portalId, "BreakingText", "");
     var currentBreakingUrl = Setting(portalId, "BreakingUrl", "");
     var currentBreakingUntil = Setting(portalId, "BreakingUntil", "");
@@ -275,7 +281,7 @@
     var manifestForms = app == null || app.Forms == null ? 0 : app.Forms.Count;
 }
 
-<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs-admin.css?v=20260809h" />
+<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs-admin.css?v=20260809j" />
 
 <div class="mfba">
     @if (!allowed)
@@ -360,6 +366,22 @@
                     shows the comments it already has, and the article says why it closed. Per-post control
                     stays where it was: the editor's <em>Allow comments on this post</em> checkbox.
                 </p>
+                <div class="mfba-subhead">Templates</div>
+                @Check("templates_render", templatesRender, "Let the active template render the blog",
+                       "Off = the built-in design, exactly as it is today. On = whatever is marked Active for Blog Home and Blog Post takes over, and a template that errors quietly hands the page back to the built-in design. Changes appear within a minute.")
+                <div class="mfba-form-grid mfba-grid-even">
+                    <label>Blog title for templates
+                        <input name="site_title" maxlength="120" value="@currentSiteTitle" placeholder="Insights and Ideas" />
+                    </label>
+                    <label>Tagline for templates
+                        <input name="site_tagline" maxlength="200" value="@currentSiteTagline" placeholder="Stories, notes and releases" />
+                    </label>
+                </div>
+                <p class="mfba-hint">
+                    A template asks for <code>{{site.title}}</code> and <code>{{site.tagline}}</code>; the built-in
+                    design never showed them, so they had nowhere to come from until now.
+                </p>
+
                 <div class="mfba-subhead">Breaking bar</div>
                 <div class="mfba-form-grid mfba-grid-even">
                     <label class="wide">Breaking headline

@@ -76,9 +76,17 @@ try {
         'MegaFormBlogsAdminFormats.cshtml' = Join-Path $PSScriptRoot 'Scripts\MegaFormBlogsAdminFormats.cshtml'
         'MegaFormBlogsAdminHost.cshtml' = Join-Path $PSScriptRoot 'Scripts\MegaFormBlogsAdminHost.cshtml'
     }
+    # Zip entry names may carry a folder; DNN's resource unpacker keeps it, so the prebuilt
+    # template gallery ships as real .html files under Assets/Templates rather than as strings
+    # embedded in a .cshtml. The console reads catalog.json and never a path from the browser.
     $assetFiles = @{
         'megaform-blogs.css' = Join-Path $PSScriptRoot 'Assets\megaform-blogs.css'
         'megaform-blogs-admin.css' = Join-Path $PSScriptRoot 'Assets\megaform-blogs-admin.css'
+        'Templates/catalog.json' = Join-Path $PSScriptRoot 'Assets\Templates\catalog.json'
+        'Templates/newsroom-home.html' = Join-Path $PSScriptRoot 'Assets\Templates\newsroom-home.html'
+        'Templates/newsroom-post.html' = Join-Path $PSScriptRoot 'Assets\Templates\newsroom-post.html'
+        'Templates/journal-home.html' = Join-Path $PSScriptRoot 'Assets\Templates\journal-home.html'
+        'Templates/journal-post.html' = Join-Path $PSScriptRoot 'Assets\Templates\journal-post.html'
     }
 
     # Fail loudly when a declared payload file is missing. A clean clone that silently

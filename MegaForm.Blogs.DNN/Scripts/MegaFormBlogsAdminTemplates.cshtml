@@ -73,6 +73,16 @@
         return string.IsNullOrWhiteSpace(hit.Value) ? "Unassigned" : hit.Value;
     }
 
+    /// The switch that decides whether an active template actually renders the blog. It lives in
+    /// Settings; this screen only reports it, because a screen that lies about what is live is
+    /// worse than one that says nothing.
+    static bool TemplatesRenderOn(int portalId)
+    {
+        var value = DotNetNuke.Entities.Portals.PortalController.GetPortalSetting(
+            "MegaFormBlogs_TemplatesRender", portalId, "false");
+        return string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
+    }
+
     static bool CanManage(DotNetNuke.Entities.Users.UserInfo user)
     {
         if (user == null || user.UserID < 0) return false;
@@ -226,6 +236,68 @@
         return seeded;
     }
 
+    /// The prebuilt gallery. The designs are real files shipped in the package
+    /// (Assets/Templates/*.html) and catalog.json is the only list of them: a filename never
+    /// comes from the browser, and it still has to match [a-z0-9-]+\.html before anything is read.
+    class CatalogEntry
+    {
+        public string Key; public string File; public string Name;
+        public string Group; public string Theme; public string Description;
+    }
+
+    static List<CatalogEntry> _catalog;
+    static List<CatalogEntry> Catalog()
+    {
+        if (_catalog != null) { return _catalog; }
+        var list = new List<CatalogEntry>();
+        try
+        {
+            var path = System.Web.HttpContext.Current.Server.MapPath(
+                "~/DesktopModules/MegaFormBlogs/Assets/Templates/catalog.json");
+            if (System.IO.File.Exists(path))
+            {
+                var parsed = Newtonsoft.Json.Linq.JObject.Parse(System.IO.File.ReadAllText(path));
+                var items = parsed["templates"] as Newtonsoft.Json.Linq.JArray;
+                if (items != null)
+                {
+                    foreach (var item in items)
+                    {
+                        list.Add(new CatalogEntry
+                        {
+                            Key = (string)item["key"] ?? "",
+                            File = (string)item["file"] ?? "",
+                            Name = (string)item["name"] ?? "",
+                            Group = (string)item["group"] ?? "",
+                            Theme = (string)item["theme"] ?? "",
+                            Description = (string)item["description"] ?? ""
+                        });
+                    }
+                }
+            }
+        }
+        catch (Exception)
+        {
+            // A missing or broken catalog means "no prebuilt designs", never a broken screen.
+        }
+        _catalog = list;
+        return list;
+    }
+
+    static string CatalogBody(string fileName)
+    {
+        if (!System.Text.RegularExpressions.Regex.IsMatch(fileName ?? "", "^[a-z0-9-]+\\.html$"))
+        {
+            throw new InvalidOperationException("That is not a gallery template.");
+        }
+        var path = System.Web.HttpContext.Current.Server.MapPath(
+            "~/DesktopModules/MegaFormBlogs/Assets/Templates/" + fileName);
+        if (!System.IO.File.Exists(path))
+        {
+            throw new InvalidOperationException("That gallery template is not installed on this site.");
+        }
+        return System.IO.File.ReadAllText(path);
+    }
+
     static System.Web.IHtmlString Icon(string name, string cssClass = "mfba-icon")
     {
         string body;
@@ -241,6 +313,7 @@
             case "eye": body = "<path d='M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0'/><circle cx='12' cy='12' r='3'/>"; break;
             case "pencil": body = "<path d='M21.17 6.81a1 1 0 0 0-3.98-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.63l4.35-1.33a2 2 0 0 0 .83-.5z'/>"; break;
             case "code": body = "<polyline points='16 18 22 12 16 6'/><polyline points='8 6 2 12 8 18'/>"; break;
+            case "download": body = "<path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/><polyline points='7 10 12 15 17 10'/><line x1='12' y1='15' x2='12' y2='3'/>"; break;
             default: body = ""; break;
         }
         return new System.Web.HtmlString("<svg class='" + cssClass + "' viewBox='0 0 24 24' aria-hidden='true'>" + body + "</svg>");
@@ -336,6 +409,129 @@
                 message = added == 0
                     ? "Every starter template is already installed."
                     : added + " starter template(s) added.";
+            }
+            else if (action == "gallery-install" && templatesFormId > 0)
+            {
+                var key = (Request.Form["catalog_key"] ?? "").Trim();
+                var entry = Catalog().FirstOrDefault(c => string.Equals(c.Key, key, StringComparison.OrdinalIgnoreCase));
+                if (entry == null)
+                {
+                    throw new InvalidOperationException("That gallery template no longer exists.");
+                }
+                var uid = "TPL-GAL-" + entry.Key.ToUpperInvariant();
+                var body = CatalogBody(entry.File);
+                var notes = entry.Theme + " \u2014 from the gallery. " + entry.Description;
+
+                // Already here? Refresh it in place. The packaged design moves on with the module,
+                // and an admin who changed theirs should have pressed Duplicate - that copy has a
+                // different uid and is never touched.
+                var existingId = 0;
+                var known = Run(c => c.SubmissionDashboard.SearchAsync(
+                    new SubmissionSearchQuery { FormId = templatesFormId, Page = 1, PageSize = 200 }, scope));
+                if (known != null && known.Items != null)
+                {
+                    foreach (var row in known.Items)
+                    {
+                        var typed = Run(c => c.Records.GetRecordAsync(row.SubmissionId, scope));
+                        if (typed == null) { continue; }
+                        if (!string.Equals(Text(typed, "template_uid", ""), uid, StringComparison.OrdinalIgnoreCase)) { continue; }
+                        existingId = row.SubmissionId;
+                        break;
+                    }
+                }
+
+                if (existingId > 0)
+                {
+                    var refreshId = existingId;
+                    Run(c => c.Records.PatchRecordAsync(refreshId, new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        ["template_name"] = entry.Name,
+                        ["template_group"] = entry.Group,
+                        ["template_body"] = body,
+                        ["notes"] = notes
+                    }, scope));
+                    message = entry.Name + " updated from the gallery.";
+                }
+                else
+                {
+                    var values = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        ["template_uid"] = uid,
+                        ["template_name"] = entry.Name,
+                        ["template_group"] = entry.Group,
+                        ["template_body"] = body,
+                        ["is_active"] = "false",
+                        ["notes"] = notes
+                    };
+                    var created = Run(c => c.Submissions.SubmitAsync(templatesFormId, values, scope));
+                    if (created == null || !created.Success)
+                    {
+                        throw new InvalidOperationException("That template could not be installed.");
+                    }
+                    message = entry.Name + " installed. Use Set active to make it render this target.";
+                }
+            }
+            else if (action == "import" && templatesFormId > 0)
+            {
+                // The browser read the file and posted its text; the server validates it like any
+                // other string. .json carries name/group/body, anything else is treated as a body.
+                var fileName = (Request.Form["import_name"] ?? "").Trim();
+                var payload = Request.Form["import_body"] ?? "";
+                if (payload.Trim().Length == 0)
+                {
+                    throw new InvalidOperationException("Choose a template file first.");
+                }
+                if (payload.Length > 200000)
+                {
+                    throw new InvalidOperationException("That file is larger than 200,000 characters.");
+                }
+
+                var importedName = fileName.Length > 0 ? fileName : "Imported template";
+                var importedGroup = (Request.Form["import_group"] ?? "blog-home").Trim().ToLowerInvariant();
+                var importedNotes = "Imported on " + DateTime.UtcNow.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + ".";
+                var importedBody = payload;
+
+                var trimmed = payload.TrimStart();
+                if (trimmed.StartsWith("{", StringComparison.Ordinal))
+                {
+                    var parsed = Newtonsoft.Json.Linq.JObject.Parse(payload);
+                    var bodyValue = (string)parsed["template_body"] ?? (string)parsed["body"];
+                    if (string.IsNullOrWhiteSpace(bodyValue))
+                    {
+                        throw new InvalidOperationException("That JSON has no template_body.");
+                    }
+                    importedBody = bodyValue;
+                    var nameValue = (string)parsed["template_name"] ?? (string)parsed["name"];
+                    if (!string.IsNullOrWhiteSpace(nameValue)) { importedName = nameValue; }
+                    var groupValue = (string)parsed["template_group"] ?? (string)parsed["group"];
+                    if (!string.IsNullOrWhiteSpace(groupValue)) { importedGroup = groupValue.Trim().ToLowerInvariant(); }
+                    var noteValue = (string)parsed["notes"];
+                    if (!string.IsNullOrWhiteSpace(noteValue)) { importedNotes = noteValue; }
+                }
+
+                if (!Groups.Any(g => g.Key == importedGroup)) { importedGroup = "blog-home"; }
+                if (importedName.Length > 120) { importedName = importedName.Substring(0, 120); }
+                if (importedBody.Length > 60000)
+                {
+                    throw new InvalidOperationException("That template body is too large (60,000 characters maximum).");
+                }
+                if (importedNotes.Length > 500) { importedNotes = importedNotes.Substring(0, 500); }
+
+                var values = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["template_uid"] = "TPL-" + DateTime.UtcNow.Ticks.ToString(CultureInfo.InvariantCulture),
+                    ["template_name"] = importedName,
+                    ["template_group"] = importedGroup,
+                    ["template_body"] = importedBody,
+                    ["is_active"] = "false",
+                    ["notes"] = importedNotes
+                };
+                var saved = Run(c => c.Submissions.SubmitAsync(templatesFormId, values, scope));
+                if (saved == null || !saved.Success)
+                {
+                    throw new InvalidOperationException("That template could not be imported.");
+                }
+                message = "\"" + importedName + "\" imported into " + GroupLabel(importedGroup) + ". It is not active yet.";
             }
             else if (action == "save" && templatesFormId > 0)
             {
@@ -487,7 +683,7 @@
         : Starters().Count(st => !storedUids.Contains(st[1], StringComparer.OrdinalIgnoreCase));
 }
 
-<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs-admin.css?v=20260809h" />
+<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs-admin.css?v=20260809j" />
 
 <div class="mfba">
     @if (!allowed)
@@ -533,12 +729,33 @@
             <div style="padding:16px 24px 0"><div class="mfba-notice @(messageError ? "err" : "ok")">@message</div></div>
         }
 
+        // Code context already: no `@{`, the fourth time that rule has cost a deploy.
+        var renderingOn = TemplatesRenderOn(portalId);
+            var liveHome = templates.FirstOrDefault(t => IsActive(t)
+                && string.Equals(Text(t, "template_group", ""), "blog-home", StringComparison.OrdinalIgnoreCase));
+            var livePost = templates.FirstOrDefault(t => IsActive(t)
+                && string.Equals(Text(t, "template_group", ""), "blog-post", StringComparison.OrdinalIgnoreCase));
+            var settingsUrl = adminBaseUrl + "?view=settings";
         <div style="padding:16px 24px 0">
-            <div class="mfba-notice ok" style="background:#eef2ff;color:#3730a3">
-                These templates do not render the blog yet. /Blogs, the article page and every lens keep
-                their fixed design; this screen is the authoring workflow, and a future release decides
-                when a template takes over a target.
-            </div>
+            @if (renderingOn)
+            {
+                <div class="mfba-notice ok">
+                    <strong>Templates are rendering the blog.</strong>
+                    /Blogs uses @(liveHome == null ? "the built-in design (nothing active for Blog Home)" : "“" + Text(liveHome, "template_name", "") + "”")
+                    and an article uses @(livePost == null ? "the built-in design (nothing active for Blog Post)" : "“" + Text(livePost, "template_name", "") + "”").
+                    A change here reaches readers within a minute; a template that errors hands the page
+                    back to the built-in design. <a href="@settingsUrl">Turn it off in Settings</a>.
+                </div>
+            }
+            else
+            {
+                <div class="mfba-notice ok" style="background:#eef2ff;color:#3730a3">
+                    <strong>Templates are not rendering the blog right now.</strong>
+                    /Blogs and the article page use the built-in design. Mark a template
+                    <em>Active</em> for its target, then switch on <em>Let the active template render the
+                    blog</em> in <a href="@settingsUrl">Settings</a> — two clicks, and reversible with one.
+                </div>
+            }
         </div>
 
         if (templatesFormId == 0)
@@ -611,9 +828,15 @@
                         </div>
                     </div>
 
-                    <button class="mfba-btn" type="submit" name="mfb_tpl_action" value="save">
-                        @Icon("save", "mfba-icon mfba-icon-md") @(editing == null ? "Create template" : "Save template")
-                    </button>
+                    <div class="mfba-actions">
+                        <button class="mfba-btn" type="submit" name="mfb_tpl_action" value="save">
+                            @Icon("save", "mfba-icon mfba-icon-md") @(editing == null ? "Create template" : "Save template")
+                        </button>
+                        <button class="mfba-btn ghost" type="button" id="mfba-download"
+                                title="Saves a .json this screen can import back">
+                            @Icon("download", "mfba-icon mfba-icon-md") Download
+                        </button>
+                    </div>
                 </div>
             </section>
         }
@@ -645,6 +868,96 @@
                     <p class="mfba-stat-sub">records of the Blog Templates form</p>
                 </div>
             </section>
+
+            var installedUids = templates.Select(t => Text(t, "template_uid", "")).ToList();
+            var catalog = Catalog();
+            if (catalog.Count > 0)
+            {
+                <section class="mfba-panel">
+                    <div class="mfba-panel-head">
+                        <h2>@Icon("layout", "mfba-icon mfba-icon-lg") Prebuilt designs</h2>
+                        <span class="mfba-panel-link">@catalog.Count in the gallery</span>
+                    </div>
+                    <div class="mfba-panel-body">
+                        <div class="mfba-gal-grid">
+                            @foreach (var item in catalog)
+                            {
+                                var installed = installedUids.Contains("TPL-GAL-" + item.Key.ToUpperInvariant(),
+                                                                       StringComparer.OrdinalIgnoreCase);
+                                var previewId = "gal-" + item.Key;
+                                <article class="mfba-gal-card">
+                                    <div class="mfba-gal-shot" id="@previewId" data-file="@item.File"></div>
+                                    <div class="mfba-gal-copy">
+                                        <span class="mfba-pill mfba-st-draft">@item.Theme</span>
+                                        <strong>@item.Name</strong>
+                                        <small>@GroupLabel(item.Group)</small>
+                                        <p>@item.Description</p>
+                                    </div>
+                                    <div class="mfba-gal-acts">
+                                        @if (installed)
+                                        {
+                                            <span class="mfba-pill mfba-st-published">Installed</span>
+                                            <button class="mfba-btn ghost" type="submit" name="mfb_tpl_action" value="gallery-install"
+                                                    title="Replaces this portal's copy with the version shipped in the module"
+                                                    onclick="document.getElementById('mfba-catalog-key').value='@item.Key';">
+                                                @Icon("download", "mfba-icon mfba-icon-md") Update
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button class="mfba-btn" type="submit" name="mfb_tpl_action" value="gallery-install"
+                                                    onclick="document.getElementById('mfba-catalog-key').value='@item.Key';">
+                                                @Icon("plus", "mfba-icon mfba-icon-md") Install
+                                            </button>
+                                        }
+                                    </div>
+                                </article>
+                            }
+                        </div>
+                        <input type="hidden" name="catalog_key" id="mfba-catalog-key" value="" />
+                        <p class="mfba-hint">
+                            These are complete designs, shipped as files with the module. Installing copies one into
+                            this portal as a normal template you can edit; it renders the blog only once you press
+                            <strong>Set active</strong> and the switch in Settings is on.
+                        </p>
+                    </div>
+                </section>
+
+                <section class="mfba-panel">
+                    <div class="mfba-panel-head">
+                        <h2>@Icon("copy", "mfba-icon mfba-icon-lg") Import a template file</h2>
+                    </div>
+                    <div class="mfba-panel-body">
+                        <div class="mfba-form-grid mfba-grid-even">
+                            <label>Template file
+                                <input type="file" id="mfba-import-file" accept=".html,.htm,.hbs,.txt,.json" />
+                            </label>
+                            <label>Render target
+                                <select id="mfba-import-group">
+                                    @foreach (var group in Groups)
+                                    {
+                                        <option value="@group.Key">@group.Value</option>
+                                    }
+                                </select>
+                            </label>
+                        </div>
+                        <input type="hidden" name="import_name" id="mfba-import-name" value="" />
+                        <input type="hidden" name="import_group" id="mfba-import-group-value" value="blog-home" />
+                        <textarea name="import_body" id="mfba-import-body" hidden></textarea>
+                        <div class="mfba-actions">
+                            <button class="mfba-btn" type="submit" name="mfb_tpl_action" value="import" id="mfba-import-go" disabled>
+                                @Icon("save", "mfba-icon mfba-icon-md") Import
+                            </button>
+                            <span class="mfba-hint" id="mfba-import-note">No file chosen.</span>
+                        </div>
+                        <p class="mfba-hint">
+                            A <strong>.json</strong> exported from this screen keeps its name, target and notes; any
+                            other file is taken as the template body. The browser reads the file and posts its text,
+                            so nothing is uploaded to the server as a file.
+                        </p>
+                    </div>
+                </section>
+            }
 
             foreach (var group in Groups)
             {
@@ -681,6 +994,7 @@
                                         <div class="mfba-tpl-acts">
                                             <a class="mfba-iconbtn" title="Edit" href="@editUrl">@Icon("pencil", "mfba-icon mfba-icon-md")</a>
                                             <a class="mfba-iconbtn" title="Preview" href="@(editUrl + "#mfba-preview")">@Icon("eye", "mfba-icon mfba-icon-md")</a>
+                                            <a class="mfba-iconbtn" title="Download as .json" href="@(editUrl + "&download=1")">@Icon("download", "mfba-icon mfba-icon-md")</a>
                                             <button class="mfba-iconbtn" type="submit" name="mfb_tpl_action" value="duplicate" title="Duplicate"
                                                     onclick="document.getElementsByName('tpl_id')[0].value='@template.SubmissionId';">@Icon("copy", "mfba-icon mfba-icon-md")</button>
                                             @if (!IsActive(template))
@@ -702,7 +1016,7 @@
     }
 </div>
 
-@if (allowed && templatesFormId > 0 && (editing != null || creating))
+@if (allowed && templatesFormId > 0)
 {
     <script>
     // ---------------------------------------------------------------------------------------
@@ -722,49 +1036,66 @@
         var note = document.getElementById("mfba-preview-note");
         var cheat = document.getElementById("mfba-cheat-body");
         var groupBox = document.getElementById("mfba-tpl-group");
-        if (!code || !preview) { return; }
 
-        // ---- mock data per render target ---------------------------------------------------
+        // ---- the RENDER CONTRACT ------------------------------------------------------------
+        // These are the exact keys the server hands a template (MegaFormBlogs.cshtml, TplPost and
+        // the context builder). This mock exists so the preview is truthful; if the server gains a
+        // key, it belongs here the same day, and catalog.json documents the contract in one line.
         var POSTS = [
             { title: "The Future of Design Systems", excerpt: "Why tokens outlive components.", category: "Design",
-              author: "Sarah Chen", date: "Jul 29, 2026", reads: 1420, url: "/Blogs?slug=future-of-design-systems",
-              image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&h=400&fit=crop" },
+              author: "Sarah Chen", authorAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop",
+              authorRole: "Design lead", authorBio: "Writes about systems that survive their authors.",
+              date: "Jul 29, 2026", readingTime: 6, reads: 1420, comments: 12, format: "Blog Post",
+              readsLabel: "1420 reads", commentsLabel: "12 comments",
+              url: "/Blogs?slug=future-of-design-systems", slug: "future-of-design-systems",
+              image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=900&h=600&fit=crop" },
             { title: "DNN and Oqtane", excerpt: "A practical comparison of the two platforms.", category: "Development",
-              author: "DNN Defender Team", date: "Jul 29, 2026", reads: 980, url: "/Blogs?slug=dnn-and-oqtane",
-              image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&h=400&fit=crop" },
+              author: "DNN Defender Team", authorAvatar: "", authorRole: "Editorial", authorBio: "The team behind the module.",
+              date: "Jul 29, 2026", readingTime: 5, reads: 980, comments: 3, format: "Blog Post",
+              readsLabel: "980 reads", commentsLabel: "3 comments",
+              url: "/Blogs?slug=dnn-and-oqtane", slug: "dnn-and-oqtane",
+              image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=900&h=600&fit=crop" },
             { title: "Why Bots Target Forms", excerpt: "What a form endpoint looks like to a crawler.", category: "Security",
-              author: "SuperUser Account", date: "Feb 12, 2026", reads: 640, url: "/Blogs?slug=why-bots-target-forms",
-              image: "https://images.unsplash.com/photo-1510511459019-5dda7724fd87?w=600&h=400&fit=crop" }
+              author: "SuperUser Account", authorAvatar: "", authorRole: "Contributor", authorBio: "Security notes.",
+              date: "Feb 12, 2026", readingTime: 4, reads: 640, comments: 0, format: "Blog Post",
+              readsLabel: "640 reads", commentsLabel: "no comments",
+              url: "/Blogs?slug=why-bots-target-forms", slug: "why-bots-target-forms",
+              image: "https://images.unsplash.com/photo-1510511459019-5dda7724fd87?w=900&h=600&fit=crop" }
         ];
+        var SITE = { title: "Insights and Ideas", tagline: "Design, development and product thinking.", url: "/Blogs" };
+        var CATEGORIES = [
+            { name: "Design", url: "/Blogs?category=Design" },
+            { name: "Development", url: "/Blogs?category=Development" },
+            { name: "Security", url: "/Blogs?category=Security" }
+        ];
+        var HOME = {
+            site: SITE, heading: "Popular this week", search: "", total: 24,
+            breaking: { text: "Reader analytics ship this week", url: "/Blogs?slug=dnn-and-oqtane" },
+            featured: POSTS[0], posts: POSTS, categories: CATEGORIES,
+            pager: { page: 1, pages: 3, hasPrev: false, hasNext: true, prevUrl: "/Blogs", nextUrl: "/Blogs?page=2" }
+        };
+        var ARTICLE = {
+            site: SITE,
+            post: Object.assign({}, POSTS[1], {
+                body: "<p>Two platforms, one team, and a migration that does not have to be a rewrite.</p>" +
+                      "<h2 id=\"s1\">Where DNN still wins</h2><p>Modules, skins and fifteen years of content.</p>" +
+                      "<h2 id=\"s2\">Where Oqtane wins</h2><p>A modern runtime and a much smaller install.</p>"
+            }),
+            toc: [ { id: "s1", text: "Where DNN still wins" }, { id: "s2", text: "Where Oqtane wins" } ],
+            related: [ POSTS[0], POSTS[2] ],
+            tags: [ { name: "DNN", url: "/Blogs?tag=DNN" }, { name: "Oqtane", url: "/Blogs?tag=Oqtane" } ],
+            comments: [
+                { name: "Priya Nair", date: "2 hours ago", body: "The migration section matches what we saw." },
+                { name: "Amy Zhang", date: "yesterday", body: "Would like a follow-up on theming." }
+            ]
+        };
         var MOCK = {
-            "blog-home": {
-                site: { title: "Insights and Ideas", tagline: "Design, development and product thinking." },
-                featured: POSTS[0], posts: POSTS
-            },
-            "blog-archive": { total: POSTS.length, posts: POSTS },
-            "blog-post": {
-                post: {
-                    title: POSTS[1].title, excerpt: POSTS[1].excerpt, category: POSTS[1].category,
-                    author: POSTS[1].author, authorAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop",
-                    date: POSTS[1].date, readingTime: 5, image: POSTS[1].image,
-                    body: "Two platforms, one team, and a migration that does not have to be a rewrite."
-                },
-                toc: [ { id: "s1", text: "Where DNN still wins" }, { id: "s2", text: "Where Oqtane wins" } ],
-                related: [ POSTS[0], POSTS[2] ]
-            },
-            "news-home": {
-                breaking: { title: "Platform update ships ahead of schedule" },
-                topStories: [
-                    { section: "Technology", title: "Reader analytics land in the blog module", author: "Priya Nair", time: "12 minutes ago", url: "#" },
-                    { section: "Product", title: "Comment moderation gets bulk actions", author: "Amy Zhang", time: "1 hour ago", url: "#" }
-                ]
-            },
-            "news-article": {
-                article: { section: "Technology", title: "Reader analytics land in the blog module",
-                           author: "Priya Nair", time: "12 minutes ago", isLive: true, updated: "just now",
-                           body: "Counters are written by a scheduled rollup every five minutes." },
-                stats: [ { label: "Reads", value: 1420 }, { label: "Comments", value: 12 } ]
-            }
+            "blog-home": HOME,
+            "blog-archive": { site: SITE, heading: "Archive", total: 24, posts: POSTS, categories: CATEGORIES,
+                              pager: HOME.pager },
+            "blog-post": ARTICLE,
+            "news-home": HOME,
+            "news-article": ARTICLE
         };
 
         function currentData() {
@@ -815,10 +1146,16 @@
         }
 
         function tokenize(source) {
-            var tokens = [], re = /\{\{\s*([#\/]?)([^}]+?)\s*\}\}/g, last = 0, m;
+            // {{{raw}}} first, or the double-stache pattern would eat its braces.
+            var tokens = [], re = /\{\{\{\s*([^}]+?)\s*\}\}\}|\{\{\s*([#\/]?)([^}]+?)\s*\}\}/g, last = 0, m;
             while ((m = re.exec(source)) !== null) {
                 if (m.index > last) { tokens.push({ type: "text", value: source.slice(last, m.index) }); }
-                var marker = m[1], body = m[2].trim();
+                if (m[1] !== undefined) {
+                    tokens.push({ type: "raw", name: m[1].trim() });
+                    last = re.lastIndex;
+                    continue;
+                }
+                var marker = m[2], body = m[3].trim();
                 if (marker === "#") {
                     var space = body.indexOf(" ");
                     tokens.push({ type: "open", name: space < 0 ? body : body.slice(0, space),
@@ -847,26 +1184,37 @@
                     out += esc(value);
                     i++; continue;
                 }
+                if (t.type === "raw") {
+                    var rawValue = resolve(t.name, scope, root);
+                    if (rawValue === undefined) { errors.push(t.name); }
+                    out += (rawValue === null || rawValue === undefined) ? "" : String(rawValue);
+                    i++; continue;
+                }
                 if (t.type === "open") {
                     var end = findClose(tokens, i, t.name);
                     if (end < 0) { errors.push("unclosed {{#" + t.name + "}}"); return out; }
                     var inner = tokens.slice(i + 1, end);
                     var target = resolve(t.arg, scope, root);
+                    // {{else}} splits BOTH helpers: an empty list renders the else branch, the
+                    // way Handlebars does it, so a template never has to guard a loop with an if.
+                    var elseAt = -1, d = 0, x;
+                    for (x = 0; x < inner.length; x++) {
+                        if (inner[x].type === "open") { d++; }
+                        else if (inner[x].type === "close") { d--; }
+                        else if (inner[x].type === "else" && d === 0) { elseAt = x; break; }
+                    }
+                    var yes = elseAt < 0 ? inner : inner.slice(0, elseAt);
+                    var no = elseAt < 0 ? [] : inner.slice(elseAt + 1);
+
                     if (t.name === "each") {
-                        if (Array.isArray(target)) {
-                            for (var k = 0; k < target.length; k++) { out += render(inner, target[k], root, errors); }
-                        } else if (target !== undefined && target !== null) {
-                            out += render(inner, target, root, errors);
+                        if (Array.isArray(target) && target.length) {
+                            for (var k = 0; k < target.length; k++) { out += render(yes, target[k], root, errors); }
+                        } else if (!Array.isArray(target) && target !== undefined && target !== null) {
+                            out += render(yes, target, root, errors);
+                        } else {
+                            out += render(no, scope, root, errors);
                         }
                     } else if (t.name === "if") {
-                        var elseAt = -1, d = 0, x;
-                        for (x = 0; x < inner.length; x++) {
-                            if (inner[x].type === "open") { d++; }
-                            else if (inner[x].type === "close") { d--; }
-                            else if (inner[x].type === "else" && d === 0) { elseAt = x; break; }
-                        }
-                        var yes = elseAt < 0 ? inner : inner.slice(0, elseAt);
-                        var no = elseAt < 0 ? [] : inner.slice(elseAt + 1);
                         out += render(truthy(target) ? yes : no, scope, root, errors);
                     } else {
                         errors.push("unknown helper {{#" + t.name + "}}");
@@ -881,13 +1229,21 @@
         // ---- highlighter ---------------------------------------------------------------------
         function highlight(source) {
             var html = esc(source);
-            html = html.replace(/\{\{[^}]*\}\}/g, function (token) {
+            html = html.replace(/\{\{\{?[^}]*\}?\}\}/g, function (token) {
                 var kind = /\{\{\s*[#\/]/.test(token) ? "blk" : "var";
                 return '<span class="tpl-' + kind + '">' + token + "</span>";
             });
             html = html.replace(/(&lt;\/?[a-zA-Z][^&]*?&gt;)/g, '<span class="tpl-tag">$1</span>');
             return html + "\n";
         }
+
+        // The thumbnails on the list page render with this very interpreter - one implementation,
+        // so a gallery card cannot look different from what the editor and the server produce.
+        window.mfbaRenderTemplate = function (source, group) {
+            var data = MOCK[group] || MOCK["blog-home"];
+            try { return render(tokenize(source), data, data, []); }
+            catch (e) { return ""; }
+        };
 
         function paint() {
             var source = code.value;
@@ -930,7 +1286,30 @@
             return "<code>" + rows.join("</code><code>") + "</code>";
         }
 
+        if (!code || !preview) { return; }   // list page: the interpreter is exposed, the editor is not here
+
         code.addEventListener("input", paint);
+        // Download the open template as the .json this screen can import back.
+        var download = document.getElementById("mfba-download");
+        if (download) {
+            download.addEventListener("click", function (e) {
+                e.preventDefault();
+                mfbaSaveFile(
+                    (document.getElementsByName("template_name")[0] || {}).value || "template",
+                    (groupBox || {}).value || "blog-home",
+                    code.value,
+                    (document.getElementsByName("notes")[0] || {}).value || "");
+            });
+        }
+        if (/[?&]download=1/.test(window.location.search)) {
+            window.setTimeout(function () {
+                mfbaSaveFile(
+                    (document.getElementsByName("template_name")[0] || {}).value || "template",
+                    (groupBox || {}).value || "blog-home",
+                    code.value,
+                    (document.getElementsByName("notes")[0] || {}).value || "");
+            }, 400);
+        }
         code.addEventListener("scroll", function () {
             if (!mirror) { return; }
             mirror.scrollTop = code.scrollTop;
@@ -947,6 +1326,85 @@
             paint();
         });
         paint();
+    })();
+
+    // ---- download: a Blob, not a server round trip -----------------------------------------
+    function mfbaSaveFile(name, group, body, notes) {
+        var payload = JSON.stringify({
+            megaformBlogsTemplate: 1,
+            template_name: name,
+            template_group: group,
+            notes: notes,
+            template_body: body
+        }, null, 2);
+        var slug = String(name).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "template";
+        var url = URL.createObjectURL(new Blob([payload], { type: "application/json" }));
+        var link = document.createElement("a");
+        link.href = url;
+        link.download = slug + ".json";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+    }
+
+    // ---- import: the browser reads the file, the server only sees a string --------------------
+    (function () {
+        "use strict";
+        var picker = document.getElementById("mfba-import-file");
+        if (!picker) { return; }
+        var body = document.getElementById("mfba-import-body");
+        var nameField = document.getElementById("mfba-import-name");
+        var groupField = document.getElementById("mfba-import-group-value");
+        var groupBox = document.getElementById("mfba-import-group");
+        var button = document.getElementById("mfba-import-go");
+        var note = document.getElementById("mfba-import-note");
+
+        if (groupBox) {
+            groupBox.addEventListener("change", function () { groupField.value = groupBox.value; });
+        }
+        picker.addEventListener("change", function () {
+            var file = picker.files && picker.files[0];
+            if (!file) { return; }
+            if (file.size > 200000) {
+                note.textContent = "That file is larger than 200 KB.";
+                button.disabled = true;
+                return;
+            }
+            var reader = new FileReader();
+            reader.onload = function () {
+                body.value = String(reader.result || "");
+                nameField.value = file.name.replace(/\.[a-z0-9]+$/i, "");
+                groupField.value = groupBox ? groupBox.value : "blog-home";
+                button.disabled = body.value.trim().length === 0;
+                note.textContent = file.name + " \u2014 " + Math.round(file.size / 102.4) / 10 + " KB read. Press Import.";
+            };
+            reader.onerror = function () { note.textContent = "That file could not be read."; };
+            reader.readAsText(file);
+        });
+    })();
+
+    // ---- gallery thumbnails: the same interpreter, scaled down --------------------------------
+    (function () {
+        "use strict";
+        var shots = document.querySelectorAll(".mfba-gal-shot");
+        if (!shots.length || typeof mfbaRenderTemplate !== "function") { return; }
+        for (var i = 0; i < shots.length; i++) {
+            (function (shot) {
+                var file = shot.getAttribute("data-file");
+                fetch("/DesktopModules/MegaFormBlogs/Assets/Templates/" + file, { credentials: "same-origin" })
+                    .then(function (r) { return r.ok ? r.text() : null; })
+                    .then(function (text) {
+                        if (!text) { shot.classList.add("empty"); return; }
+                        var group = /post\.html$/.test(file) || /article/.test(file) ? "blog-post" : "blog-home";
+                        var inner = document.createElement("div");
+                        inner.className = "mfba-gal-page";
+                        inner.innerHTML = mfbaRenderTemplate(text, group);
+                        shot.appendChild(inner);
+                    })
+                    .catch(function () { shot.classList.add("empty"); });
+            })(shots[i]);
+        }
     })();
     </script>
 }

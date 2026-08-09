@@ -475,6 +475,286 @@
     // Submissions.SubmitAsync, which runs the full public pipeline (validation, anti-spam,
     // honeypot) and lands every new comment as moderation_status = pending.
 
+    // =====================================================================================
+    // TEMPLATE ENGINE. The server twin of the interpreter in the templates console, and it has
+    // to STAY a twin: what an editor sees in the live preview is what a reader gets. Supported,
+    // and nothing else: {{var}} {{a.b}} {{{raw}}} {{#each list}}…{{else}}…{{/each}}
+    // {{#if value}}…{{else}}…{{/if}}. Values are HTML-encoded on substitution; the triple form
+    // is the one escape hatch, and it exists for post.body, which is already HTML.
+    // =====================================================================================
+    /// One post as a template sees it. The SAME keys the editor's mock offers - if these two ever
+    /// drift, the live preview stops being a preview.
+    static Dictionary<string, object> TplPost(AppRecordDto post, string baseUrl)
+    {
+        if (post == null) { return null; }
+        var slug = Text(post, "slug", "");
+        return new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["title"] = Text(post, "title", "Untitled story"),
+            ["excerpt"] = Text(post, "excerpt", ""),
+            ["category"] = Text(post, "category", "Insights"),
+            ["author"] = Text(post, "author_name", "MegaForm Editorial"),
+            ["authorAvatar"] = Text(post, "author_avatar_url", ""),
+            ["authorRole"] = Text(post, "author_role", "Contributor"),
+            ["authorBio"] = Text(post, "author_bio", ""),
+            ["date"] = DateLabel(post, "publish_date"),
+            ["readingTime"] = ReadingMinutes(post),
+            ["reads"] = Number(post, "view_count"),
+            ["comments"] = Number(post, "comment_count"),
+            // Pre-pluralised, because a template cannot count: "1 comments" is what you get
+            // otherwise, and every design would have to work around it.
+            ["readsLabel"] = Plural(Number(post, "view_count"), "read", "reads"),
+            ["commentsLabel"] = Plural(Number(post, "comment_count"), "comment", "comments"),
+            ["image"] = ImageUrl(post),
+            ["format"] = Text(post, "content_type", "Blog Post"),
+            ["url"] = baseUrl + "?slug=" + HttpUtility.UrlEncode(slug),
+            ["slug"] = slug
+        };
+    }
+
+    class TplToken
+    {
+        public string Kind;      // text | var | raw | open | close | else
+        public string Value;     // text, or the path / helper name
+        public string Arg;       // the argument of an open tag
+    }
+
+    static List<TplToken> TplTokenize(string source)
+    {
+        var tokens = new List<TplToken>();
+        var pattern = new System.Text.RegularExpressions.Regex(
+            @"\{\{\{\s*([^}]+?)\s*\}\}\}|\{\{\s*([#/]?)([^}]+?)\s*\}\}");
+        var last = 0;
+        foreach (System.Text.RegularExpressions.Match m in pattern.Matches(source))
+        {
+            if (m.Index > last)
+            {
+                tokens.Add(new TplToken { Kind = "text", Value = source.Substring(last, m.Index - last) });
+            }
+            if (m.Groups[1].Success)
+            {
+                tokens.Add(new TplToken { Kind = "raw", Value = m.Groups[1].Value.Trim() });
+            }
+            else
+            {
+                var marker = m.Groups[2].Value;
+                var body = m.Groups[3].Value.Trim();
+                if (marker == "#")
+                {
+                    var space = body.IndexOf(' ');
+                    tokens.Add(new TplToken
+                    {
+                        Kind = "open",
+                        Value = space < 0 ? body : body.Substring(0, space),
+                        Arg = space < 0 ? "" : body.Substring(space + 1).Trim()
+                    });
+                }
+                else if (marker == "/") { tokens.Add(new TplToken { Kind = "close", Value = body }); }
+                else if (string.Equals(body, "else", StringComparison.Ordinal)) { tokens.Add(new TplToken { Kind = "else" }); }
+                else { tokens.Add(new TplToken { Kind = "var", Value = body }); }
+            }
+            last = m.Index + m.Length;
+        }
+        if (last < source.Length) { tokens.Add(new TplToken { Kind = "text", Value = source.Substring(last) }); }
+        return tokens;
+    }
+
+    /// Resolves "a.b.c" against the current scope first, then the root - so a field inside
+    /// {{#each}} wins and anything outside the loop is still reachable.
+    static object TplResolve(string path, object scope, object root)
+    {
+        path = (path ?? "").Trim();
+        if (path.Length == 0) return null;
+        if (path == "." || path == "this") return scope;
+
+        foreach (var start in new[] { scope, root })
+        {
+            var value = start;
+            var found = true;
+            foreach (var part in path.Split('.'))
+            {
+                var map = value as IDictionary<string, object>;
+                if (map == null || !map.ContainsKey(part)) { found = false; break; }
+                value = map[part];
+            }
+            if (found && value != null) return value;
+        }
+        return null;
+    }
+
+    static bool TplTruthy(object value)
+    {
+        if (value == null) return false;
+        var list = value as System.Collections.IList;
+        if (list != null) return list.Count > 0;
+        if (value is bool) return (bool)value;
+        var text = Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture);
+        return !string.IsNullOrWhiteSpace(text)
+            && !string.Equals(text, "false", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(text, "0", StringComparison.Ordinal);
+    }
+
+    static string TplText(object value)
+    {
+        if (value == null) return "";
+        if (value is bool) return (bool)value ? "true" : "false";
+        return Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    static int TplFindClose(List<TplToken> tokens, int from, string name)
+    {
+        var depth = 1;
+        for (var i = from + 1; i < tokens.Count; i++)
+        {
+            if (tokens[i].Kind == "open" && tokens[i].Value == name) { depth++; }
+            else if (tokens[i].Kind == "close" && tokens[i].Value == name)
+            {
+                depth--;
+                if (depth == 0) return i;
+            }
+        }
+        return -1;
+    }
+
+    /// Splits a block at its top-level {{else}}, if it has one.
+    static int TplElseAt(List<TplToken> inner)
+    {
+        var depth = 0;
+        for (var i = 0; i < inner.Count; i++)
+        {
+            if (inner[i].Kind == "open") { depth++; }
+            else if (inner[i].Kind == "close") { depth--; }
+            else if (inner[i].Kind == "else" && depth == 0) { return i; }
+        }
+        return -1;
+    }
+
+    static string TplRender(List<TplToken> tokens, object scope, object root, List<string> problems)
+    {
+        var out_ = new System.Text.StringBuilder();
+        var i = 0;
+        while (i < tokens.Count)
+        {
+            var token = tokens[i];
+            if (token.Kind == "text") { out_.Append(token.Value); i++; continue; }
+            if (token.Kind == "var")
+            {
+                out_.Append(HttpUtility.HtmlEncode(TplText(TplResolve(token.Value, scope, root))));
+                i++; continue;
+            }
+            if (token.Kind == "raw")
+            {
+                out_.Append(TplText(TplResolve(token.Value, scope, root)));
+                i++; continue;
+            }
+            if (token.Kind == "open")
+            {
+                var end = TplFindClose(tokens, i, token.Value);
+                if (end < 0)
+                {
+                    problems.Add("unclosed {{#" + token.Value + "}}");
+                    return out_.ToString();
+                }
+                var inner = tokens.GetRange(i + 1, end - i - 1);
+                var elseAt = TplElseAt(inner);
+                var yes = elseAt < 0 ? inner : inner.GetRange(0, elseAt);
+                var no = elseAt < 0 ? new List<TplToken>() : inner.GetRange(elseAt + 1, inner.Count - elseAt - 1);
+                var target = TplResolve(token.Arg, scope, root);
+
+                if (token.Value == "each")
+                {
+                    var list = target as System.Collections.IList;
+                    if (list != null && list.Count > 0)
+                    {
+                        foreach (var item in list) { out_.Append(TplRender(yes, item, root, problems)); }
+                    }
+                    else if (list == null && target != null)
+                    {
+                        out_.Append(TplRender(yes, target, root, problems));
+                    }
+                    else
+                    {
+                        out_.Append(TplRender(no, scope, root, problems));
+                    }
+                }
+                else if (token.Value == "if")
+                {
+                    out_.Append(TplRender(TplTruthy(target) ? yes : no, scope, root, problems));
+                }
+                else
+                {
+                    problems.Add("unknown helper {{#" + token.Value + "}}");
+                }
+                i = end + 1; continue;
+            }
+            i++;   // a stray {{else}} or {{/x}}
+        }
+        return out_.ToString();
+    }
+
+    /// A template body is admin-authored HTML, so it may carry its own <style>. Defence in depth
+    /// all the same: nothing in a style block may break out of it or run script.
+    static string TplNeutralizeStyles(string html)
+    {
+        if (string.IsNullOrEmpty(html)) return html;
+        return System.Text.RegularExpressions.Regex.Replace(
+            html,
+            @"<style\b[^>]*>(.*?)</style>",
+            match =>
+            {
+                var css = match.Groups[1].Value;
+                css = System.Text.RegularExpressions.Regex.Replace(css, @"(?i)expression\s*\(", "void(");
+                css = System.Text.RegularExpressions.Regex.Replace(css, @"(?i)javascript\s*:", "about:");
+                css = System.Text.RegularExpressions.Regex.Replace(css, @"(?i)@import", "/*import*/");
+                css = css.Replace("</style", "<\\/style");
+                return "<style>" + css + "</style>";
+            },
+            System.Text.RegularExpressions.RegexOptions.Singleline
+            | System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+    }
+
+    /// The active template of a render target, cached for a minute. Without the cache every
+    /// anonymous page view would walk the forms list and read a dozen records; with it, a change
+    /// in the console shows up within a minute, which is the deal the console states.
+    class TplCacheEntry { public string Body; public string Name; public DateTime ReadAtUtc; }
+    static readonly System.Collections.Concurrent.ConcurrentDictionary<string, TplCacheEntry> ActiveTemplates =
+        new System.Collections.Concurrent.ConcurrentDictionary<string, TplCacheEntry>(StringComparer.OrdinalIgnoreCase);
+
+    static TplCacheEntry ActiveTemplate(MegaFormScope scope, string group)
+    {
+        var key = scope.PortalId + "|" + group;
+        TplCacheEntry cached;
+        if (ActiveTemplates.TryGetValue(key, out cached)
+            && (DateTime.UtcNow - cached.ReadAtUtc).TotalSeconds < 60)
+        {
+            return cached;
+        }
+
+        var entry = new TplCacheEntry { Body = "", Name = "", ReadAtUtc = DateTime.UtcNow };
+        var formId = ResolveChildFormId(scope, "MegaFormBlogs.TemplatesFormId", "template",
+            new[] { "template_body", "template_group" });
+        if (formId > 0)
+        {
+            var scan = Run(c => c.SubmissionDashboard.SearchAsync(
+                new SubmissionSearchQuery { FormId = formId, Page = 1, PageSize = 100 }, scope));
+            if (scan != null && scan.Items != null)
+            {
+                foreach (var row in scan.Items)
+                {
+                    var typed = Run(c => c.Records.GetRecordAsync(row.SubmissionId, scope));
+                    if (typed == null) continue;
+                    if (!string.Equals(Text(typed, "template_group", ""), group, StringComparison.OrdinalIgnoreCase)) continue;
+                    if (!string.Equals(Text(typed, "is_active", "false"), "true", StringComparison.OrdinalIgnoreCase)) continue;
+                    entry.Body = Text(typed, "template_body", "");
+                    entry.Name = Text(typed, "template_name", "");
+                    break;
+                }
+            }
+        }
+        ActiveTemplates[key] = entry;
+        return entry;
+    }
+
     static readonly System.Collections.Concurrent.ConcurrentDictionary<string, int> ChildFormIds =
         new System.Collections.Concurrent.ConcurrentDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
@@ -1231,12 +1511,158 @@
         : categoryResult.Items.Select(x => Text(x, "category", "Insights"))
             .Where(x => !string.IsNullOrWhiteSpace(x))
             .Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(x => x).ToList();
+
+    // ---- template rendering ---------------------------------------------------------------
+    // An active template only takes over when the owner has switched it on, and a template that
+    // throws or renders nothing hands the page straight back to the built-in design. A blog that
+    // goes blank because someone mistyped a {{#each}} is not an acceptable failure mode.
+    var templateHtml = "";
+    var templateName = "";
+    var templateNote = "";
+    if (Flag(portalId, "TemplatesRender", false) && app != null && string.IsNullOrWhiteSpace(loadError))
+    {
+        try
+        {
+            var target = detail != null ? "blog-post" : "blog-home";
+            var active = ActiveTemplate(scope, target);
+            if (!string.IsNullOrWhiteSpace(active.Body))
+            {
+                var site = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["title"] = Setting(portalId, "SiteTitle", sectionTitle),
+                    ["tagline"] = Setting(portalId, "SiteTagline", "Stories, notes and releases"),
+                    ["url"] = baseUrl
+                };
+                var context = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["site"] = site,
+                    ["heading"] = ListHeading(sectionTitle, search, authorFilter, tagFilter, lens),
+                    ["search"] = search,
+                    ["total"] = totalPosts
+                };
+                if (breakingLive)
+                {
+                    context["breaking"] = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        ["text"] = breakingText, ["url"] = breakingUrl
+                    };
+                }
+
+                if (detail == null)
+                {
+                    context["featured"] = TplPost(featured, baseUrl) ?? new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+                    var list = new List<object>();
+                    foreach (var post in posts)
+                    {
+                        if (featured != null && post.SubmissionId == featured.SubmissionId) { continue; }
+                        list.Add(TplPost(post, baseUrl));
+                    }
+                    context["posts"] = list;
+                    var categoryList = new List<object>();
+                    foreach (var name in categories)
+                    {
+                        categoryList.Add(new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                        {
+                            ["name"] = name,
+                            ["url"] = baseUrl + "?category=" + HttpUtility.UrlEncode(name)
+                        });
+                    }
+                    context["categories"] = categoryList;
+                    context["pager"] = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        ["page"] = pageNumber,
+                        ["pages"] = totalPages,
+                        ["hasPrev"] = pageNumber > 1,
+                        ["hasNext"] = pageNumber < totalPages,
+                        ["prevUrl"] = pageUrl(pageNumber - 1),
+                        ["nextUrl"] = pageUrl(pageNumber + 1)
+                    };
+                }
+                else
+                {
+                    var article = TplPost(detail, baseUrl);
+                    article["body"] = articleBody;
+                    context["post"] = article;
+
+                    var toc = new List<object>();
+                    foreach (var heading in articleToc)
+                    {
+                        toc.Add(new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                        {
+                            ["id"] = heading.Key, ["text"] = heading.Value.Trim()
+                        });
+                    }
+                    context["toc"] = toc;
+
+                    var related = new List<object>();
+                    foreach (var item in relatedPosts) { related.Add(TplPost(item, baseUrl)); }
+                    context["related"] = related;
+
+                    var tags = new List<object>();
+                    foreach (var tag in Text(detail, "tags", "").Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        var name = tag.Trim();
+                        if (name.Length == 0) { continue; }
+                        tags.Add(new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                        {
+                            ["name"] = name, ["url"] = baseUrl + "?tag=" + HttpUtility.UrlEncode(name)
+                        });
+                    }
+                    context["tags"] = tags;
+
+                    var thread = new List<object>();
+                    foreach (var comment in approvedComments)
+                    {
+                        thread.Add(new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                        {
+                            ["name"] = Text(comment, "commenter_name", "Reader"),
+                            ["date"] = AgoLabel(comment.SubmittedOnUtc),
+                            ["body"] = Text(comment, "comment_body", "")
+                        });
+                    }
+                    context["comments"] = thread;
+                }
+
+                var problems = new List<string>();
+                var rendered = TplRender(TplTokenize(active.Body), context, context, problems);
+                if (!string.IsNullOrWhiteSpace(rendered))
+                {
+                    templateHtml = TplNeutralizeStyles(rendered);
+                    templateName = active.Name;
+                    templateNote = problems.Count == 0
+                        ? ""
+                        : string.Join(", ", problems.Distinct().Take(4));
+                }
+            }
+        }
+        catch (Exception templateEx)
+        {
+            DotNetNuke.Services.Exceptions.Exceptions.LogException(templateEx);
+            templateHtml = "";
+            templateNote = templateEx.Message;
+        }
+    }
 }
 
-<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs.css?v=20260809d" />
+<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs.css?v=20260809e" />
 
-<main class="mfb" aria-labelledby="mfb-title">
-    @if (!string.IsNullOrWhiteSpace(loadError))
+@{
+    // A rendered template owns the whole surface, so it gets its own class to scope its CSS with.
+    var mainClass = templateHtml.Length > 0 ? "mfb mfb-tpl" : "mfb";
+}
+<main class="@mainClass" aria-labelledby="mfb-title">
+    @if (templateHtml.Length > 0)
+    {
+        @Html.Raw(templateHtml)
+        if (isHostViewer)
+        {
+            var tplStamp = templateNote.Length > 0
+                ? "Template \"" + templateName + "\" rendered this page. Unresolved: " + templateNote
+                : "Template \"" + templateName + "\" rendered this page.";
+            <p class="mfb-tpl-stamp">@tplStamp</p>
+        }
+    }
+    else if (!string.IsNullOrWhiteSpace(loadError))
     {
         <section class="mfb-state mfb-state-error">
             <strong>Blog is being prepared.</strong>

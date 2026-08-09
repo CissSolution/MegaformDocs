@@ -1,3 +1,40 @@
+1.16.3
+
+- TEMPLATE GALLERY, AND TEMPLATES THAT ACTUALLY RENDER. Until now the templates screen was an
+  authoring workflow with no consumer. It has one now, and the boundary moved on purpose:
+  - A gallery of complete prebuilt designs, shipped as real files in the package
+    (Assets/Templates/*.html + catalog.json) rather than strings inside a .cshtml. Each card
+    previews the design by RENDERING it - the same interpreter, scaled down - so a thumbnail can
+    never go stale the way a screenshot does. Install copies one into the portal; Update pulls the
+    packaged version again after the module improves it.
+  - Two complete themes, four templates: **Newsroom** (dense news desk: lead story, ranked
+    most-read rail, category strip, compact rows) and **Journal** (serif, one column, numbered
+    index, drop cap, no cards). Each covers Blog Home and the article page.
+  - Upload and download. Download writes the .json this screen can import back; import reads the
+    file IN THE BROWSER and posts its text, so there is no upload endpoint, no temp file and no
+    content-disposition to get wrong. A .json keeps name/target/notes; any other file is taken as
+    a body.
+  - A server-side engine that is a TWIN of the editor's preview interpreter: {{var}} {{a.b}}
+    {{{raw}}} {{#each}}…{{else}}…{{/each}} {{#if}}…{{else}}…{{/if}}, values HTML-encoded, the
+    triple form reserved for post.body. Both engines grew {{{raw}}} and each/else in this release
+    so they stay identical.
+  - The render contract is written down in catalog.json and mirrored by the editor's mock, so the
+    live preview is a preview: site.*, heading, total, breaking.*, featured.*, posts[].*,
+    categories[].*, pager.* / post.*, toc[], related[], tags[], comments[].
+- 🔴 SAFETY, because this is the public blog: rendering happens only when the owner switches on
+  "Let the active template render the blog" (Settings, default OFF) AND a template is Active for
+  that target. A template that throws, or renders nothing, hands the page straight back to the
+  built-in design - a mistyped {{#each}} must not blank a live blog. The active template is cached
+  for 60 seconds, so a console change reaches readers within a minute instead of costing every
+  anonymous request a dozen record reads. <style> inside a template is neutralised
+  (expression(), javascript:, @import, </style breakouts) even though only admins can author one.
+- 🔴 Two more lessons, both measured on the live site: a DNN skin styles h1..h6 DIRECTLY, and a
+  direct rule beats an inherited one - a design must declare font-family on its elements, not only
+  on its root, or it renders in the skin's font. And a template cannot count, so the context now
+  carries pre-pluralised readsLabel / commentsLabel; "1 comments" was what the first version shipped.
+- The templates screen now states what is actually live (which template renders /Blogs and the
+  article page, or that the built-in design does) instead of claiming templates never render.
+
 1.15.5
 
 - GALLERY, LIVEBLOG AND VIDEO (audit item 4) — the three formats the mock had and the module did
