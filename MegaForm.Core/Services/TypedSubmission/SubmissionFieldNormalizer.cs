@@ -308,7 +308,15 @@ namespace MegaForm.Core.Services.TypedSubmission
                 return list.Where(x => x != null).ToList();
             }
 
-            var str = raw.ToString();
+            // 🔴 StringifyItem, NOT raw.ToString(): the scalar tail of this method is what a
+            // DateTime coming back out of DataJson lands on, and DateTime.ToString() formats with
+            // the CURRENT culture. The typed date parser two hundred lines up is InvariantCulture
+            // only, so on a non-en server the value it produced ("29/07/2026 0:00:00") failed to
+            // re-parse and fell into the string table — which is how an Oqtane box running vi-VN
+            // blanked a whole blog once every query that sorts on publish_date stopped matching.
+            // Background writers make this reachable in a way requests do not: a scheduler thread
+            // has no portal locale, it runs on the machine's.
+            var str = StringifyItem(raw);
             if (string.IsNullOrWhiteSpace(str)) return new List<string>();
             return new List<string> { str };
         }

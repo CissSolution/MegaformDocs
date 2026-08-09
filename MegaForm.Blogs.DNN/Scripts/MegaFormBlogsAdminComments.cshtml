@@ -78,10 +78,16 @@
     {
         var span = DateTime.UtcNow - utc;
         if (span.TotalMinutes < 1) return "just now";
-        if (span.TotalMinutes < 60) return (int)span.TotalMinutes + " minutes ago";
-        if (span.TotalHours < 24) return (int)span.TotalHours + " hours ago";
-        if (span.TotalDays < 30) return (int)span.TotalDays + " days ago";
+        // "1 hours ago" — same singular rule as the public surface.
+        if (span.TotalMinutes < 60) return AgoUnit((int)span.TotalMinutes, "minute");
+        if (span.TotalHours < 24) return AgoUnit((int)span.TotalHours, "hour");
+        if (span.TotalDays < 30) return AgoUnit((int)span.TotalDays, "day");
         return utc.ToString("MMM d, yyyy", CultureInfo.InvariantCulture);
+    }
+
+    static string AgoUnit(int count, string unit)
+    {
+        return count + " " + unit + (count == 1 ? "" : "s") + " ago";
     }
 
     // The persisted app manifest does not carry form bindings on every install (a seeded
@@ -342,7 +348,7 @@
         .Where(g => g.Key > 0).ToDictionary(g => g.Key, g => g.Count());
 }
 
-<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs-admin.css?v=20260731a" />
+<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs-admin.css?v=20260809h" />
 
 <div class="mfba mfba-comments-page">
     @if (!allowed)

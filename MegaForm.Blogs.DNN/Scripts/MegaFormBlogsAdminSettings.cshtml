@@ -1,0 +1,432 @@
+@*
+    MegaForm Blogs - settings (screen 6).
+
+    Storage is DNN portal settings under the MegaFormBlogs_ prefix — the same mechanism
+    MegaForm's own Settings.ascx uses for MegaForm_*. The blog owns no settings table and
+    should not grow one: the public surface reads these keys with defaults that reproduce
+    today's behaviour exactly, so an unset portal behaves as it always did.
+
+    Every value written here is validated server-side (numbers clamped, booleans normalised,
+    free text length-capped and HTML-encoded on output). The screen is inside the Host guard
+    (MegaFormBlogsAdminHost.cshtml) and additionally checks the editorial roles.
+*@
+@inherits DotNetNuke.Web.Razor.DotNetNukeWebPage<dynamic>
+@using System
+@using System.Linq
+@using System.Globalization
+@using System.Collections.Generic
+@using System.Security.Cryptography
+@using DotNetNuke.Entities.Portals
+@using MegaForm.Sdk
+
+@functions {
+    /// Prefix shared with the public surface. Change it in both or neither.
+    const string SettingPrefix = "MegaFormBlogs_";
+
+    static T Run<T>(System.Func<IMegaFormClient, System.Threading.Tasks.Task<T>> action)
+    {
+        var initializeMegaForm = MegaForm.DNN.Services.DnnServiceLocator.Instance;
+        return System.Threading.Tasks.Task.Run(() => MegaFormSdk.RunAsync(action)).GetAwaiter().GetResult();
+    }
+
+    static string Setting(int portalId, string key, string fallback)
+    {
+        var value = PortalController.GetPortalSetting(SettingPrefix + key, portalId, fallback);
+        return string.IsNullOrWhiteSpace(value) ? fallback : value;
+    }
+
+    static bool Flag(int portalId, string key, bool fallback)
+    {
+        var raw = Setting(portalId, key, fallback ? "true" : "false").Trim().ToLowerInvariant();
+        return raw != "false" && raw != "0" && raw != "no" && raw != "off";
+    }
+
+    static void Save(int portalId, string key, string value)
+    {
+        PortalController.UpdatePortalSetting(portalId, SettingPrefix + key, value ?? string.Empty, true);
+    }
+
+    static bool Posted(string name)
+    {
+        return string.Equals(System.Web.HttpContext.Current.Request.Form[name], "true",
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    static bool CanManage(DotNetNuke.Entities.Users.UserInfo user)
+    {
+        if (user == null || user.UserID < 0) return false;
+        if (user.IsSuperUser) return true;
+        var allowed = new[] { "Administrators", "Blog Publishers" };
+        return user.Roles != null && user.Roles.Any(role => allowed.Contains(role, StringComparer.OrdinalIgnoreCase));
+    }
+
+    static string EnsureCsrfToken()
+    {
+        const string key = "MegaFormBlogs.CsrfToken";
+        var session = System.Web.HttpContext.Current.Session;
+        var token = session[key] as string;
+        if (!string.IsNullOrWhiteSpace(token)) return token;
+        var bytes = new byte[32];
+        using (var random = RandomNumberGenerator.Create()) { random.GetBytes(bytes); }
+        token = Convert.ToBase64String(bytes);
+        session[key] = token;
+        return token;
+    }
+
+    static void ValidateCsrfToken(string posted)
+    {
+        const string key = "MegaFormBlogs.CsrfToken";
+        var expected = System.Web.HttpContext.Current.Session[key] as string;
+        var valid = !string.IsNullOrWhiteSpace(expected) && !string.IsNullOrWhiteSpace(posted) && expected.Length == posted.Length;
+        var difference = valid ? 0 : 1;
+        var length = valid ? expected.Length : 0;
+        for (var index = 0; index < length; index++) { difference |= expected[index] ^ posted[index]; }
+        if (difference != 0)
+            throw new InvalidOperationException("The settings session expired. Reload this page and try again.");
+    }
+
+    /// Comma list in, cleaned comma list out. Caps the count and the length of each entry so a
+    /// paste accident cannot put a wall of text in the public sidebar.
+    static string CleanTagList(string raw)
+    {
+        var parts = (raw ?? "").Split(new[] { ',', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(x => x.Trim())
+            .Where(x => x.Length > 0 && x.Length <= 40)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(12)
+            .ToList();
+        return string.Join(", ", parts);
+    }
+
+    /// One checkbox row. Eight hand-written @if/else pairs is how a settings screen turns into a
+    /// wall of markup nobody edits again.
+    /// `help` is trusted markup FROM THIS FILE (it carries entities like &amp;middot;); `title`
+    /// and `name` are encoded. Never pass stored or posted data as `help`.
+    static System.Web.IHtmlString Check(string name, bool on, string title, string help)
+    {
+        var builder = new System.Text.StringBuilder();
+        builder.Append("<label class=\"mfba-check\"><input type=\"checkbox\" name=\"")
+               .Append(System.Web.HttpUtility.HtmlAttributeEncode(name))
+               .Append("\" value=\"true\"")
+               .Append(on ? " checked=\"checked\"" : "")
+               .Append(" /><span>")
+               .Append(System.Web.HttpUtility.HtmlEncode(title))
+               .Append("<small>").Append(help).Append("</small></span></label>");
+        return new System.Web.HtmlString(builder.ToString());
+    }
+
+    static System.Web.IHtmlString Icon(string name, string cssClass = "mfba-icon")
+    {
+        string body;
+        switch (name)
+        {
+            case "chevron-right": body = "<path d='m9 18 6-6-6-6'/>"; break;
+            case "settings": body = "<path d='M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z'/><circle cx='12' cy='12' r='3'/>"; break;
+            case "save": body = "<path d='M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z'/><path d='M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7'/><path d='M7 3v4a1 1 0 0 0 1 1h7'/>"; break;
+            case "link": body = "<path d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'/><path d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'/>"; break;
+            default: body = ""; break;
+        }
+        return new System.Web.HtmlString("<svg class='" + cssClass + "' viewBox='0 0 24 24' aria-hidden='true'>" + body + "</svg>");
+    }
+}
+
+@{
+    var portalId = PortalSettings.Current == null ? 0 : PortalSettings.Current.PortalId;
+    var activeTab = PortalSettings.Current == null ? null : PortalSettings.Current.ActiveTab;
+    var adminBaseUrl = activeTab == null ? Request.RawUrl : DotNetNuke.Common.Globals.NavigateURL(activeTab.TabID);
+    var user = DotNetNuke.Entities.Users.UserController.Instance.GetCurrentUserInfo();
+    var scope = new MegaFormScope
+    {
+        PortalId = portalId,
+        UserId = user == null ? 0 : user.UserID,
+        UserName = user == null ? "" : user.Username,
+        IsAuthenticated = user != null && user.UserID >= 0,
+        IsAdmin = user != null && (user.IsSuperUser || user.IsInRole("Administrators")),
+        IsSuperUser = user != null && user.IsSuperUser,
+        Roles = user == null || user.Roles == null ? new List<string>() : user.Roles.ToList(),
+        IpAddress = Request.UserHostAddress ?? ""
+    };
+    var allowed = CanManage(user);
+    var csrfToken = allowed ? EnsureCsrfToken() : "";
+    var message = "";
+    var messageError = false;
+
+    if (allowed && string.Equals(Request.HttpMethod, "POST", StringComparison.OrdinalIgnoreCase)
+        && string.Equals(Request.Form["mfb_settings_save"], "1", StringComparison.Ordinal))
+    {
+        try
+        {
+            ValidateCsrfToken(Request.Form["mfb_csrf"]);
+
+            int pageSize;
+            if (!int.TryParse((Request.Form["page_size"] ?? "").Trim(), NumberStyles.Integer,
+                              CultureInfo.InvariantCulture, out pageSize))
+            {
+                pageSize = 12;
+            }
+            pageSize = Math.Max(3, Math.Min(24, pageSize));   // clamp server-side, never trust the box
+
+            int autoCloseDays;
+            if (!int.TryParse((Request.Form["comments_autoclose"] ?? "").Trim(), NumberStyles.Integer,
+                              CultureInfo.InvariantCulture, out autoCloseDays))
+            {
+                autoCloseDays = 0;
+            }
+            autoCloseDays = Math.Max(0, Math.Min(3650, autoCloseDays));   // 0 = never, cap at 10 years
+
+            var heading = (Request.Form["section_title"] ?? "").Trim();
+            if (heading.Length > 80) { heading = heading.Substring(0, 80); }
+            if (heading.Length == 0) { heading = "Popular this week"; }
+
+            Save(portalId, "PageSize", pageSize.ToString(CultureInfo.InvariantCulture));
+            Save(portalId, "SectionTitle", heading);
+            Save(portalId, "ShowFeatured", Posted("show_featured") ? "true" : "false");
+            Save(portalId, "ShowReadCounts", Posted("show_read_counts") ? "true" : "false");
+            Save(portalId, "ShowNewsletter", Posted("show_newsletter") ? "true" : "false");
+            Save(portalId, "ShowSearch", Posted("show_search") ? "true" : "false");
+            Save(portalId, "ShowCategories", Posted("show_categories") ? "true" : "false");
+            Save(portalId, "ShowReadingTime", Posted("show_reading_time") ? "true" : "false");
+            Save(portalId, "ShowAuthorCard", Posted("show_author_card") ? "true" : "false");
+            Save(portalId, "CommentsEnabled", Posted("comments_enabled") ? "true" : "false");
+            Save(portalId, "CommentsRequireEmail", Posted("comments_require_email") ? "true" : "false");
+            Save(portalId, "CommentsAutoCloseDays", autoCloseDays.ToString(CultureInfo.InvariantCulture));
+            Save(portalId, "TrendingTags", CleanTagList(Request.Form["trending_tags"]));
+
+            // Breaking ticker. The URL is validated here rather than at render time as well,
+            // because a stored setting is still input: an owner could paste javascript: into it.
+            var breakingText = (Request.Form["breaking_text"] ?? "").Trim();
+            if (breakingText.Length > 300) { breakingText = breakingText.Substring(0, 300); }
+            var breakingUrl = (Request.Form["breaking_url"] ?? "").Trim();
+            if (breakingUrl.Length > 400) { breakingUrl = breakingUrl.Substring(0, 400); }
+            if (breakingUrl.Length > 0
+                && !breakingUrl.StartsWith("/", StringComparison.Ordinal)
+                && !breakingUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+                && !breakingUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("The breaking link must be a path starting with / or an http(s) URL.");
+            }
+            var breakingUntil = (Request.Form["breaking_until"] ?? "").Trim();
+            if (breakingUntil.Length > 0)
+            {
+                DateTime parsedUntil;
+                if (!DateTime.TryParse(breakingUntil, CultureInfo.InvariantCulture, DateTimeStyles.None, out parsedUntil))
+                {
+                    throw new InvalidOperationException("The breaking end date is not a date.");
+                }
+                breakingUntil = parsedUntil.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+            }
+            Save(portalId, "BreakingText", breakingText);
+            Save(portalId, "BreakingUrl", breakingUrl);
+            Save(portalId, "BreakingUntil", breakingUntil);
+
+            message = "Settings saved. The public blog picks them up on its next render.";
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            messageError = true;
+        }
+    }
+
+    // Current values (post-save, so the form always shows what is actually stored).
+    var currentPageSize = Setting(portalId, "PageSize", "12");
+    var currentTags = Setting(portalId, "TrendingTags", "Design Systems, Accessibility, AI, Performance, Product");
+    var currentHeading = Setting(portalId, "SectionTitle", "Popular this week");
+    var currentAutoClose = Setting(portalId, "CommentsAutoCloseDays", "0");
+    var showFeatured = Flag(portalId, "ShowFeatured", true);
+    var showReadCounts = Flag(portalId, "ShowReadCounts", true);
+    var showNewsletter = Flag(portalId, "ShowNewsletter", true);
+    var showSearch = Flag(portalId, "ShowSearch", true);
+    var showCategories = Flag(portalId, "ShowCategories", true);
+    var showReadingTime = Flag(portalId, "ShowReadingTime", true);
+    var showAuthorCard = Flag(portalId, "ShowAuthorCard", true);
+    var commentsEnabled = Flag(portalId, "CommentsEnabled", true);
+    var commentsRequireEmail = Flag(portalId, "CommentsRequireEmail", false);
+    var currentBreakingText = Setting(portalId, "BreakingText", "");
+    var currentBreakingUrl = Setting(portalId, "BreakingUrl", "");
+    var currentBreakingUntil = Setting(portalId, "BreakingUntil", "");
+
+    // ---- wiring panel: answers "is this blog actually connected?" ----
+    AppDto app = null;
+    var formSummary = new List<Tuple<string, string>>();
+    if (allowed)
+    {
+        try
+        {
+            app = Run(c => c.Apps.GetAppAsync("blog-starter", scope));
+            var forms = Run(c => c.Forms.ListFormsAsync(new FormQuery { Page = 1, PageSize = 200 }, scope));
+            var items = forms == null || forms.Items == null ? new List<FormDto>() : forms.Items.ToList();
+            Func<string, string> byTitle = fragment =>
+            {
+                var hit = items.FirstOrDefault(f => (f.Title ?? "").IndexOf(fragment, StringComparison.OrdinalIgnoreCase) >= 0);
+                return hit == null ? "not found" : ("#" + hit.FormId + " " + hit.Title);
+            };
+            formSummary.Add(Tuple.Create("Posts", byTitle("Blog Publishing")));
+            formSummary.Add(Tuple.Create("Categories", byTitle("Blog Categories")));
+            formSummary.Add(Tuple.Create("Comments", byTitle("Blog Comments")));
+            formSummary.Add(Tuple.Create("Reader events", byTitle("Blog Reader")));
+        }
+        catch (Exception ex)
+        {
+            message = string.IsNullOrWhiteSpace(message) ? ex.Message : message;
+            messageError = true;
+        }
+    }
+    var manifestForms = app == null || app.Forms == null ? 0 : app.Forms.Count;
+}
+
+<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs-admin.css?v=20260809h" />
+
+<div class="mfba">
+    @if (!allowed)
+    {
+        <header class="mfba-head">
+            <div class="mfba-head-row"><div><h1>Administrator access required</h1><p>Blog configuration is limited to Administrators and Blog Publishers.</p></div></div>
+        </header>
+    }
+    else
+    {
+        <header class="mfba-head">
+            <nav class="mfba-crumb" aria-label="Breadcrumb">
+                <a href="/Blogs">Blog</a>@Icon("chevron-right", "mfba-icon mfba-icon-md")
+                <a href="@adminBaseUrl">Admin</a>@Icon("chevron-right", "mfba-icon mfba-icon-md")
+                <strong>Settings</strong>
+            </nav>
+            <div class="mfba-head-row">
+                <div>
+                    <h1>Blog configuration</h1>
+                    <p>What the public blog shows. Stored as portal settings, applied on the next page render.</p>
+                </div>
+            </div>
+        </header>
+
+        <input type="hidden" name="mfb_csrf" value="@csrfToken" />
+
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            <div style="padding:16px 24px 0"><div class="mfba-notice @(messageError ? "err" : "ok")">@message</div></div>
+        }
+
+        <section class="mfba-panel">
+            <div class="mfba-panel-head"><h2>@Icon("settings", "mfba-icon mfba-icon-lg") Article list</h2></div>
+            <div class="mfba-editor">
+                <div class="mfba-form-grid">
+                    <label>Posts per page
+                        <input name="page_size" type="number" min="3" max="24" value="@currentPageSize" />
+                    </label>
+                    <label>Heading above the list
+                        <input name="section_title" maxlength="80" value="@currentHeading" />
+                    </label>
+                    @Check("show_featured", showFeatured, "Show the featured story",
+                           "The large hero card above the list. It appears on page one only.")
+                    @Check("show_search", showSearch, "Show the search box",
+                           "Readers search titles, excerpts, authors and tags.")
+                    @Check("show_categories", showCategories, "Show the category filter",
+                           "The pill row built from the categories your posts actually use.")
+                    @Check("show_read_counts", showReadCounts, "Show read and comment counts",
+                           "The &quot;14 reads &middot; 1 comment&quot; line on each card and in the byline.")
+                    @Check("show_reading_time", showReadingTime, "Show reading time",
+                           "The &quot;5 min read&quot; label. Uses reading_time when a post sets it, otherwise counts words.")
+                    @Check("show_author_card", showAuthorCard, "Show the author card",
+                           "The name, role and bio box beside an article.")
+                    @Check("show_newsletter", showNewsletter, "Show the newsletter box",
+                           "Demo UI &mdash; it is not wired to a form, so leave it off unless you have connected one.")
+                    <label class="wide">Trending topics in the sidebar
+                        <input name="trending_tags" maxlength="400" value="@currentTags" />
+                    </label>
+                </div>
+                <p class="mfba-hint">
+                    Topics are a comma-separated list (max 12, 40 characters each) and each one links to a
+                    search of the blog. Leave it empty to hide the box entirely — until now this list was
+                    hardcoded in the module and no site owner could change it.
+                </p>
+            </div>
+        </section>
+
+        <section class="mfba-panel">
+            <div class="mfba-panel-head"><h2>@Icon("message-circle", "mfba-icon mfba-icon-lg") Comments</h2></div>
+            <div class="mfba-editor">
+                <div class="mfba-form-grid">
+                    @Check("comments_enabled", commentsEnabled, "Comments enabled site-wide",
+                           "Off closes every thread, whatever each post says. Approved comments stay visible.")
+                    @Check("comments_require_email", commentsRequireEmail, "Require an email address",
+                           "The address is never published; it only helps you recognise a commenter.")
+                    <label>Close threads automatically after
+                        <input name="comments_autoclose" type="number" min="0" max="3650" value="@currentAutoClose" />
+                    </label>
+                </div>
+                <p class="mfba-hint">
+                    Days since the post's publish date; <strong>0 means never</strong>. A closed thread still
+                    shows the comments it already has, and the article says why it closed. Per-post control
+                    stays where it was: the editor's <em>Allow comments on this post</em> checkbox.
+                </p>
+                <div class="mfba-subhead">Breaking bar</div>
+                <div class="mfba-form-grid mfba-grid-even">
+                    <label class="wide">Breaking headline
+                        <input name="breaking_text" maxlength="300" value="@currentBreakingText" placeholder="Leave empty to hide the bar" />
+                    </label>
+                    <label>Link (optional)
+                        <input name="breaking_url" maxlength="400" value="@currentBreakingUrl" placeholder="/Blogs?slug=... or https://..." />
+                    </label>
+                    <label>Show until (optional)
+                        <input name="breaking_until" type="date" value="@currentBreakingUntil" />
+                    </label>
+                </div>
+                <p class="mfba-hint">
+                    The bar sits above the blog list and disappears on its own after that date &mdash; nobody has
+                    to remember to take it down. It is a setting rather than a flag on a post, so it can point at
+                    anything, including a page that is not a blog post at all.
+                </p>
+                <button class="mfba-btn" type="submit" name="mfb_settings_save" value="1">
+                    @Icon("save", "mfba-icon mfba-icon-md") Save settings
+                </button>
+                <p class="mfba-hint">One button saves every panel on this screen.</p>
+            </div>
+        </section>
+
+        <section class="mfba-panel">
+            <div class="mfba-panel-head"><h2>@Icon("link", "mfba-icon mfba-icon-lg") Wiring</h2></div>
+            <div class="mfba-panel-body">
+                <div class="mfba-rows">
+                    <div class="mfba-wirerow">
+                        <div style="min-width:0">
+                            <p class="mfba-post-title">Application</p>
+                            <div class="mfba-post-meta"><span>@(app == null ? "blog-starter — NOT FOUND on this portal" : app.AppKey + " — " + app.AppName)</span></div>
+                        </div>
+                        <span class="@(app == null ? "bad" : "ok")">@(app == null ? "missing" : "ok")</span>
+                    </div>
+                    @foreach (var entry in formSummary)
+                    {
+                        <div class="mfba-wirerow">
+                            <div style="min-width:0">
+                                <p class="mfba-post-title">@entry.Item1 form</p>
+                                <div class="mfba-post-meta"><span>@entry.Item2</span></div>
+                            </div>
+                            <span class="@(entry.Item2 == "not found" ? "bad" : "ok")">@(entry.Item2 == "not found" ? "missing" : "ok")</span>
+                        </div>
+                    }
+                    <div class="mfba-wirerow">
+                        <div style="min-width:0">
+                            <p class="mfba-post-title">Forms attached to the app</p>
+                            <div class="mfba-post-meta"><span>
+                                @manifestForms resolved. This is the hydrated view, so it does not tell you whether
+                                the PERSISTED manifest carries the binding — a seeded app stores "Forms": [] and
+                                attaches its forms through AppScope instead. Either way MegaForm 2.0.14 resolves
+                                them; on an older MegaForm the empty array is exactly what made every post read
+                                "0 reads".
+                            </span></div>
+                        </div>
+                        <span class="@(manifestForms == 0 ? "bad" : "ok")">@(manifestForms == 0 ? "none" : "ok")</span>
+                    </div>
+                    <div class="mfba-wirerow">
+                        <div style="min-width:0">
+                            <p class="mfba-post-title">Counters</p>
+                            <div class="mfba-post-meta"><span>Written by the "MegaForm Blog Publish &amp; Analytics" scheduled job, every 5 minutes (Host &gt; Schedule).</span></div>
+                        </div>
+                        <span class="ok">job</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    }
+</div>

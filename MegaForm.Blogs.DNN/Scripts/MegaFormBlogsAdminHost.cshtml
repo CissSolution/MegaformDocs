@@ -19,6 +19,58 @@
     var screen = "MegaFormBlogsAdmin.cshtml";
     if (requestedView == "editorial") { screen = "MegaFormBlogsAdminEditorial.cshtml"; }
     else if (requestedView == "comments") { screen = "MegaFormBlogsAdminComments.cshtml"; }
+    else if (requestedView == "analytics") { screen = "MegaFormBlogsAdminAnalytics.cshtml"; }
+    else if (requestedView == "authors") { screen = "MegaFormBlogsAdminAuthors.cshtml"; }
+    else if (requestedView == "settings") { screen = "MegaFormBlogsAdminSettings.cshtml"; }
+    else if (requestedView == "categories") { screen = "MegaFormBlogsAdminCategories.cshtml"; }
+    else if (requestedView == "media") { screen = "MegaFormBlogsAdminMedia.cshtml"; }
+    // ?view=public renders the PUBLIC script through the same try/catch as the admin screens.
+    // /Blogs itself has no error surface for a COMPILE error — it just comes back empty with a
+    // 200 — so this is where a Host finds out which line the compiler objected to.
+    else if (requestedView == "templates") { screen = "MegaFormBlogsAdminTemplates.cshtml"; }
+    else if (requestedView == "formats") { screen = "MegaFormBlogsAdminFormats.cshtml"; }
+    else if (requestedView == "public") { screen = "MegaFormBlogs.cshtml"; }
+}
+@*
+    🔴 The screen is rendered into a STRING first, on purpose.
+
+    A RazorHost script that fails to compile — or throws while rendering — produces NOTHING:
+    no error box, no entry a reader can see, and the page still returns HTTP 200. Twice in one
+    day (2026-08-09) that turned a one-character mistake into "the whole screen is blank" with
+    nothing to debug: a missing `@using System.Globalization` took down the public blog, and an
+    attribute mixing literal text with a quoted-argument expression took down ?view=authors.
+
+    `RenderPage(...)` returns a HelperResult that executes lazily when it is written, so wrapping
+    the @RenderPage call in a try/catch catches nothing. Forcing it through ToString() runs the
+    page inside the try, where the real exception — including the compiler's line and message —
+    can be shown. Only SuperUsers ever reach this script, so printing it here leaks nothing.
+*@
+@{
+    string screenHtml = null;
+    string screenError = null;
+    if (hostAllowed)
+    {
+        try
+        {
+            screenHtml = RenderPage("~/DesktopModules/RazorModules/RazorHost/Scripts/" + screen).ToString();
+        }
+        catch (System.Threading.ThreadAbortException)
+        {
+            throw;   // a screen that ended the response on purpose (redirect) is not an error
+        }
+        catch (Exception renderEx)
+        {
+            // HttpParseException.ToString() prints the message and a stack of BuildManager frames
+            // but NOT the file and line the compiler actually objected to — which is the only part
+            // that matters when a screen fails to compile. Pull them out by hand.
+            var parseEx = renderEx as System.Web.HttpParseException;
+            var where = parseEx == null
+                ? ""
+                : "FILE: " + parseEx.VirtualPath + "  LINE: " + parseEx.Line + Environment.NewLine + Environment.NewLine;
+            screenError = where + renderEx.ToString();
+            DotNetNuke.Services.Exceptions.Exceptions.LogException(renderEx);
+        }
+    }
 }
 @if (!hostAllowed)
 {
@@ -29,7 +81,17 @@
         </div>
     </section>
 }
+else if (screenError != null)
+{
+    <section class="mfb-shell">
+        <div class="mfb-notice">
+            <h1>@screen could not be rendered</h1>
+            <p>The screen threw while rendering. The full exception is below and in the DNN event log.</p>
+            <pre style="max-width:100%;overflow:auto;white-space:pre-wrap;padding:12px;border:1px solid #fda29b;border-radius:8px;background:#fff1f0;color:#b42318;font-size:12px">@screenError</pre>
+        </div>
+    </section>
+}
 else
 {
-    @RenderPage("~/DesktopModules/RazorModules/RazorHost/Scripts/" + screen)
+    @Html.Raw(screenHtml)
 }

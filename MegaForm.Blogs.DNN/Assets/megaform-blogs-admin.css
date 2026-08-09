@@ -782,3 +782,205 @@ html.mf-host-editmode .mf-fs-toggle.mf-fs-floating:hover { background: #6366f1; 
 .mfba-newform-foot { flex-wrap: wrap; }
 .mfba-newform-foot .mfba-panel-link { margin-left: 4px; }
 .mfba-newform-foot .mfba-hint { margin-left: auto; }
+
+/* [MFB-ALLOWCOMMENTS-20260809] Per-post "Allow comments" switch in the editor.
+   `.mfba-form-grid input { width: 100% }` above is written for text boxes; without this
+   override the checkbox stretches across half the editor and the label sits under it. */
+.mfba-form-grid label.mfba-check { display: flex; align-items: center; gap: 10px; align-self: end;
+  padding: 9px 0; font-weight: 600; }
+.mfba-form-grid label.mfba-check input[type="checkbox"] { width: 16px; height: 16px; margin: 0;
+  flex: 0 0 auto; padding: 0; accent-color: var(--mfba-primary); }
+.mfba-form-grid label.mfba-check small { display: block; margin-top: 2px; color: var(--mfba-dim);
+  font-weight: 400; }
+
+/* [MFB-CONSOLE-SCREENS-20260809] Analytics / Authors / Settings.
+   `.mfba-grid` is the dashboard's 2:1 main+sidebar split; the analytics pair is two peers.
+   `.mfba-wirerow` is a 2-column row for the settings wiring table — reusing `.mfba-trow`
+   there would squeeze its status word into the 96px status column of a 4-column grid. */
+.mfba-grid-even { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.mfba-wirerow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px;
+  align-items: center; padding: 14px 24px; }
+.mfba-wirerow:hover { background: rgba(236, 235, 231, .3); }
+.mfba-wirerow .ok { color: #009966; font-size: 12px; font-weight: 650; text-transform: uppercase; }
+.mfba-wirerow .bad { color: var(--mfba-primary); font-size: 12px; font-weight: 650; text-transform: uppercase; }
+.mfba-sortbar { display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
+  color: var(--mfba-dim); font-size: 12px; }
+.mfba-sortbar a { color: var(--mfba-dim); text-decoration: none; }
+.mfba-sortbar a.on { color: var(--mfba-ink); font-weight: 700; text-decoration: underline; }
+@media (max-width: 900px) { .mfba-grid-even { grid-template-columns: minmax(0, 1fr); } }
+
+/* [MFB-AVATARFIELD-20260809] Avatar field on the author profile: URL box + live preview +
+   a strip of the author images already used on this blog. `.mfba-form-grid input{width:100%}`
+   is written for text boxes, so the preview and its Clear button sit outside the label. */
+.mfba-form-grid .mfba-avatar-field { display: flex; align-items: flex-end; gap: 12px; min-width: 0; }
+.mfba-avatar-field > label { flex: 1; min-width: 0; }
+.mfba-avatar-preview { display: flex; align-items: center; gap: 8px; padding-bottom: 1px; }
+.mfba-avatar-preview img { width: 40px; height: 40px; flex: 0 0 auto; border: 1px solid var(--mfba-line);
+  border-radius: 50%; object-fit: cover; background: var(--mfba-muted); }
+.mfba-avatar-preview .mfba-avatar { width: 40px; height: 40px; }
+.mfba-avatar-preview .mfba-btn-outline { padding: 8px 10px; font-size: 12px; }
+.mfba-avatar-pick { display: flex; align-items: flex-start; flex-direction: column; gap: 8px;
+  margin: -6px 0 14px; }
+.mfba-avatar-strip { display: flex; flex-wrap: wrap; gap: 8px; }
+.mfba-avatar-choice { width: 44px; height: 44px; padding: 0; overflow: hidden; border: 2px solid transparent;
+  border-radius: 50%; background: var(--mfba-muted); cursor: pointer; transition: border-color .15s, transform .15s; }
+.mfba-avatar-choice img { width: 100%; height: 100%; object-fit: cover; }
+.mfba-avatar-choice:hover { transform: translateY(-1px); border-color: var(--mfba-line); }
+.mfba-avatar-choice.on { border-color: var(--mfba-primary); }
+@media (max-width: 640px) { .mfba-form-grid .mfba-avatar-field { align-items: stretch; flex-direction: column; } }
+
+/* 🔴 `hidden` is only `display:none` in the UA stylesheet, so ANY author `display` rule beats it —
+   `.mfba-avatar{display:inline-flex}` kept the initials bubble visible next to the avatar preview
+   it was supposed to replace. Scoped to the console so it cannot surprise the host theme. */
+.mfba [hidden] { display: none !important; }
+
+/* [MFB-CATEGORIES-20260809] Colour swatch in the category table, same footprint as the avatar
+   so the two tables line up. */
+.mfba-swatch { width: 32px; height: 32px; flex: 0 0 auto; border: 1px solid var(--mfba-line);
+  border-radius: 8px; }
+
+/* [MFB-MEDIA-20260809] Media library grid. Cards are fixed-ratio so a mixed bag of hero images,
+   avatars and uploads still lines up. */
+.mfba-media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(13rem, 100%), 1fr));
+  gap: 14px; }
+.mfba-media-card { display: flex; overflow: hidden; margin: 0; flex-direction: column;
+  border: 1px solid var(--mfba-line); border-radius: var(--mfba-r-panel); background: var(--mfba-card); }
+.mfba-media-card > a { display: block; aspect-ratio: 4 / 3; overflow: hidden; background: var(--mfba-muted); }
+.mfba-media-card img { width: 100%; height: 100%; object-fit: cover; }
+.mfba-media-card figcaption { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px 12px; }
+.mfba-media-card small { color: var(--mfba-dim); font-size: 12px; }
+.mfba-media-acts { display: flex; justify-content: flex-end; gap: 4px; margin-top: 6px; }
+.mfba-iconbtn.ok { color: #009966; }
+.mfba-trow > .mfba-post > img { width: 40px; height: 40px; flex: 0 0 auto; border-radius: 8px; object-fit: cover; }
+.mfba-media-file { display: flex; align-items: center; justify-content: center; flex-direction: column;
+  gap: 6px; width: 100%; height: 100%; color: var(--mfba-dim); background: var(--mfba-muted-soft); }
+.mfba-media-file em { max-width: 90%; font-size: 12px; font-style: normal; }
+
+/* [MFB-SEO-20260809] Editor: section sub-heading, and the search-result preview.
+   The preview deliberately borrows Google's shape (url / blue title / grey snippet) because that
+   is the thing being previewed; it is not meant to match the console's own type scale. */
+.mfba-subhead { display: flex; align-items: center; gap: 8px; margin: 20px 0 12px;
+  padding-top: 16px; border-top: 1px solid var(--mfba-line);
+  color: var(--mfba-dim); font-size: 12px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; }
+.mfba-serp { display: flex; flex-direction: column; gap: 2px; margin-bottom: 16px; padding: 14px 16px;
+  border: 1px solid var(--mfba-line); border-radius: var(--mfba-r-panel); background: var(--mfba-card); }
+.mfba-serp-label { margin-bottom: 6px; color: var(--mfba-dim); font-size: 11px; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase; }
+.mfba-serp-url { overflow: hidden; color: #0b6623; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.mfba-serp-title { color: #1a0dab; font-size: 18px; line-height: 1.3; }
+.mfba-serp-desc { color: #4d5156; font-size: 13px; line-height: 1.45; }
+.mfba-serp-note { margin-top: 8px; color: var(--mfba-dim); font-size: 11px; }
+.mfba-form-grid label small.mfba-over { color: var(--mfba-primary); font-weight: 700; }
+
+/* [MFB-TEMPLATES-20260809] Template manager: cards per render target, and the split editor.
+   The code pane is a transparent textarea over a highlighted <pre> mirror — the two MUST share
+   font, size, padding and line-height or the colours drift off the characters. */
+.mfba-tpl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(19rem, 100%), 1fr)); gap: 14px; }
+.mfba-tpl-card { display: flex; flex-direction: column; gap: 8px; padding: 14px;
+  border: 1px solid var(--mfba-line); border-radius: var(--mfba-r-panel); background: var(--mfba-card); }
+.mfba-tpl-card header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.mfba-tpl-snippet { max-height: 92px; overflow: hidden; margin: 0; padding: 10px;
+  border-radius: 8px; background: var(--mfba-muted-soft); color: var(--mfba-dim);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; line-height: 1.45;
+  white-space: pre-wrap; word-break: break-word; }
+.mfba-tpl-card small { color: var(--mfba-dim); font-size: 12px; }
+.mfba-tpl-acts { display: flex; justify-content: flex-end; gap: 4px; }
+
+.mfba-split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin: 4px 0 18px; }
+.mfba-split-code, .mfba-split-preview { min-width: 0; }
+.mfba-code-wrap { position: relative; height: 460px; overflow: hidden;
+  border: 1px solid var(--mfba-line); border-radius: var(--mfba-r-panel); background: #0f172a; }
+.mfba-code-wrap > pre, .mfba-code-wrap > textarea {
+  position: absolute; inset: 0; margin: 0; padding: 14px; overflow: auto; border: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px;
+  line-height: 1.55; tab-size: 2; white-space: pre; word-wrap: normal;
+}
+.mfba-code-hl { color: #e2e8f0; pointer-events: none; }
+.mfba-code-wrap > textarea { background: transparent; color: transparent; caret-color: #fff; resize: none; outline: none; }
+.mfba-code-wrap > textarea::selection { background: #38bdf855; }
+.tpl-var { color: #7dd3fc; }
+.tpl-blk { color: #fbbf24; font-weight: 600; }
+.tpl-tag { color: #94a3b8; }
+.mfba-preview { height: 460px; overflow: auto; padding: 16px;
+  border: 1px solid var(--mfba-line); border-radius: var(--mfba-r-panel); background: #fff; color: #0f172a; }
+.mfba-preview img { max-width: 100%; height: auto; border-radius: 8px; }
+.mfba-preview h1 { font-size: 24px; margin: 0 0 8px; }
+.mfba-preview h2 { font-size: 19px; margin: 14px 0 6px; }
+.mfba-preview h3 { font-size: 16px; margin: 10px 0 4px; }
+.mfba-preview .grid, .mfba-preview .top { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(12rem,100%),1fr)); gap: 12px; }
+.mfba-preview .card, .mfba-preview .story, .mfba-preview .hero { border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px; }
+.mfba-preview .chip, .mfba-preview .section { display: inline-block; padding: 2px 8px; border-radius: 999px;
+  background: #eef2ff; color: #4338ca; font-size: 11px; font-weight: 700; }
+.mfba-preview .ticker, .mfba-preview .live { padding: 8px 12px; border-radius: 8px; background: #fee2e2; color: #b42318; font-weight: 700; }
+.mfba-preview .toc { padding: 10px 14px; border: 1px solid #e5e7eb; border-radius: 8px; background: #f8fafc; }
+.mfba-cheat { margin-top: 10px; font-size: 12px; }
+.mfba-cheat summary { color: var(--mfba-dim); cursor: pointer; }
+.mfba-cheat code { display: block; padding: 2px 0; color: var(--mfba-ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11.5px; }
+.mfba-cheat em { color: var(--mfba-dim); font-style: normal; }
+@media (max-width: 1100px) { .mfba-split { grid-template-columns: minmax(0, 1fr); } }
+
+/* 🔴 The host skin styles bare `pre` and `textarea` (a DNN skin usually does it from an ID
+   selector, which outranks anything this sheet can say politely). The mirror sat on the theme's
+   grey instead of the editor's dark surface, so the two panes of the split editor looked like
+   different products. These four declarations are the only !important in the editor. */
+.mfba .mfba-code-wrap { background: #0f172a !important; }
+.mfba .mfba-code-hl { background: transparent !important; color: #e2e8f0 !important; }
+.mfba .mfba-code-wrap > textarea { background: transparent !important; color: transparent !important; }
+.mfba .mfba-tpl-snippet { background: var(--mfba-muted-soft) !important; }
+
+/* ── formats desk: post picker, gallery grid, live timeline ───────────── */
+
+.mfba-pickrow { display: flex; flex-wrap: wrap; gap: 8px; }
+.mfba-pick {
+  display: flex; flex-direction: column; gap: 2px; max-width: 260px;
+  padding: 8px 12px; border: 1px solid var(--mfba-line); border-radius: var(--mfba-r-ctl);
+  background: var(--mfba-card); color: var(--mfba-ink); text-decoration: none;
+}
+.mfba-pick strong { overflow: hidden; font-size: 13px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.mfba-pick small { color: var(--mfba-dim); font-size: 11px; }
+.mfba-pick:hover { border-color: var(--mfba-dim); }
+/* A post whose content type already matches the tab reads as the intended target. */
+.mfba-pick.match { border-color: #8e51ff; }
+.mfba-pick.on { border-color: var(--mfba-primary); background: rgba(223, 0, 0, .06); }
+
+.mfba-media-item {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 8px; border: 1px solid var(--mfba-line); border-radius: var(--mfba-r-ctl); background: var(--mfba-card);
+}
+.mfba-media-item > img { width: 100%; height: 130px; border-radius: var(--mfba-r-ctl); object-fit: cover; background: var(--mfba-muted-soft); }
+.mfba-media-item input { width: 100%; padding: 6px 8px; border: 1px solid var(--mfba-line); border-radius: var(--mfba-r-ctl); font-size: 12px; }
+.mfba-media-row { display: flex; align-items: center; gap: 6px; }
+.mfba-media-row input { width: 64px; }
+
+.mfba-live { display: flex; flex-direction: column; gap: 0; margin: 0; padding: 0; list-style: none; }
+.mfba-live li {
+  display: grid; grid-template-columns: 130px 1fr auto; gap: 12px; align-items: start;
+  padding: 14px 0; border-bottom: 1px solid var(--mfba-line);
+}
+.mfba-live li:last-child { border-bottom: 0; }
+.mfba-live time { color: var(--mfba-dim); font-size: 12px; font-variant-numeric: tabular-nums; }
+.mfba-live strong { display: block; margin-bottom: 2px; font-size: 14px; }
+.mfba-live p { margin: 0 0 4px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
+.mfba-live small { color: var(--mfba-dim); font-size: 12px; }
+/* A key moment is what the public rail summarises, so it is marked, not merely coloured. */
+.mfba-live li.key { border-left: 3px solid #fe9a00; padding-left: 12px; }
+.mfba-live li.closing { border-left: 3px solid #62748e; padding-left: 12px; background: var(--mfba-muted-soft); }
+.mfba-live-actions { display: flex; gap: 4px; }
+.mfba-iconbtn.on { color: #e17100; }
+
+.mfba label.mfba-full { display: block; margin-bottom: 12px; font-size: 13px; font-weight: 500; }
+.mfba label.mfba-full input,
+.mfba label.mfba-full textarea {
+  display: block; width: 100%; margin-top: 4px; padding: 8px 10px;
+  border: 1px solid var(--mfba-line); border-radius: var(--mfba-r-ctl); font-size: 14px;
+}
+
+/* `.mfba-btn ghost` was used by the templates and formats screens before it existed, so a
+   maintenance action ("clean unattached rows") rendered as a full red primary button and shouted
+   over the thing the screen is actually for. */
+.mfba-btn.ghost {
+  border: 1px solid var(--mfba-line); background: var(--mfba-card); color: var(--mfba-dim); font-weight: 500;
+}
+.mfba-btn.ghost:hover { border-color: var(--mfba-dim); background: var(--mfba-muted-soft); color: var(--mfba-ink); filter: none; }

@@ -1,3 +1,330 @@
+1.15.5
+
+- GALLERY, LIVEBLOG AND VIDEO (audit item 4) — the three formats the mock had and the module did
+  not. content_type gains Gallery / Liveblog / Video, and the public renderer BRANCHES on them:
+  - Gallery: an image grid under the hero with captions and credits, and a lightbox (one overlay,
+    no library, Escape closes it).
+  - Liveblog: a LIVE badge that turns into "Coverage ended", a newest-first feed with key-moment
+    flags, a "Key moments" rail in the sidebar, and a refresh that re-fetches THIS page every 45s
+    and swaps the feed — no API endpoint to secure and no second read path to keep in step.
+    It stops while the tab is hidden and stops for good once coverage is closed.
+  - Video: a play badge on the card. The card badges are read off content_type, which the list
+    already has, so no extra query per card.
+- 🔴 NO CHANGE TO THE POSTS FORM. Images and updates are one-to-many; they live in two child
+  forms created on demand from the new console screen (live: Blog Gallery Images #383, Blog Live
+  Updates #384), exactly like the comments and templates forms. Altering form 378 — the form that
+  already holds this portal's content — is the one change here that reinstalling cannot undo.
+- New console screen: /BlogAdmin?view=formats, two tabs. Gallery: add / caption / re-order /
+  delete images. Live: post an update, flag a key moment, close and reopen coverage. Closing
+  writes a final entry (is_closing) instead of a flag, so the timeline says coverage ended and
+  reopening is deleting that one entry.
+- Breaking bar: three owner settings (headline, optional link, show-until date) in Settings. It
+  disappears on its own at the date, and the link is validated on save AND on render — a stored
+  setting is still input.
+- 🔴 The bug worth remembering: every image tile rendered <input name="caption">, and so did
+  the add form. On a DNN page they are all in ONE form, and ASP.NET MERGES same-named fields into
+  "a,b,c" — so adding the second image stored four captions joined by commas in one record.
+  Fixed with names that cannot collide: new_* on the add form, caption_<id> / sort_<id> per row.
+  That also makes the row buttons correct without JavaScript.
+- 🔴 The all-posts query does NOT project post_uid. The first build keyed the picker off it and
+  wrote every child row with an empty key ("choose a post first" on every save). The picker now
+  carries the submission id (numeric, which also survives DNN rewriting a query value into a path
+  segment) and the screen reads post_uid from the typed record. Both sides of the join use the
+  same rule — post_uid, or the slug when a post predates it.
+- Storage maintenance: "Clean unattached rows" deletes child records with no post, bounded by the
+  same caps as the reads (200 images, 300 updates).
+
+1.14.3
+
+- TEMPLATE MANAGER (admin item 5). /BlogAdmin?view=templates lists Handlebars-like templates in
+  the five render targets the mock names — Blog Home, Blog Archive, Blog Post, News Home,
+  News Article — with 2–3 starter templates per target, an Active badge, and Edit / Preview /
+  Duplicate / Set active / Delete on every card. "Set active" stands the other templates of that
+  target down, so a group can never have two.
+- The editor is a split view: on the left a textarea over a highlighted mirror (the tokens colour
+  as you type, Tab indents instead of leaving the field), on the right a live preview rendered by
+  a ~120-line interpreter that understands exactly what the templates use: {{var}}, {{a.b}},
+  {{#each list}}, {{#if value}}{{else}}, and nothing more. Values are HTML-escaped when
+  substituted; the template's own markup is not, because emitting markup is the point.
+  The variable cheat-sheet is GENERATED from the mock object, so it can never drift from what the
+  preview actually offers, and the note under the preview names any key the mock does not have.
+- 🔴 What this screen is NOT: it does not change how the blog renders. /Blogs, the article page and
+  every lens keep their fixed design; the screen says so in a banner rather than implying
+  otherwise. Wiring a template into a real target is a separate, later decision.
+- Storage is a "Blog Templates" form created on demand from the screen (live: FormId 382). A DNN
+  portal setting was the obvious alternative and is the wrong one — 2,000 characters, which one
+  template body exceeds. Seeding is idempotent by template_uid: the header button offers only the
+  starters this portal is missing, and disappears when there are none.
+- 🔴 Two more RazorHost lessons, both cost a deploy: a method that page code calls must live INSIDE
+  the @functions block (dropped after its closing brace it compiles to nothing and you get
+  CS0103 at the call site, not at the method); and the DNN skin styles bare `pre`/`textarea` from
+  a selector this sheet cannot outrank politely, so the editor's dark surface needs !important —
+  without it the mirror sat on the theme's grey and the two panes looked like different products.
+
+1.13.2
+
+- The public surface grew the pages the mock had and this module did not — as LENSES over one
+  renderer, because this is one DNN page, not fifteen:
+  - ?author=<name>  profile header (avatar, role, bio, totals) + that author's stories
+  - ?tag=<tag>      tag header + related tags, matched whole ("AI" never matches "AIOps")
+  - ?view=trending  most-read first, with a rank badge on each card
+  - ?view=archive   grouped by month as a scannable list rather than a wall of cards
+  - ?category=<x>   already existed; it now shares the same header treatment
+  One card design, one pager, one place to fix a bug. Each lens reads the capped page (100) and
+  pages the filtered result in memory — bounded, and honest about it: past 100 published posts
+  these need a server-side filter the named queries do not have yet.
+- Article: a table of contents built from the h2/h3 the author actually wrote (ids are INSERTED
+  into the body, never re-encoding their markup, and an existing id is kept so a hand-made anchor
+  still works), and a "Keep reading" strip scored by shared category first, then shared tags.
+- 🔴 The SEO fields from 1.11.0 are EMITTED now. Timing was the whole problem: setting
+  CDefault.Title / .Description / .KeyWords from a RazorHost module does nothing, because DNN
+  fills the head long before a module renders. What works is the head control itself —
+  HtmlHead renders its Title and children at render time. Measured on the live article: the
+  <title>, meta description, meta keywords, canonical and the OpenGraph/Twitter block all come
+  from the post now. DNN's own meta controls are reused when the tab has them, so no page ends
+  up with two description tags.
+- 🔴 Two Razor lessons, both blank-page class, both fixed: inside a code block (`else { }`,
+  `if { }`) you write `if`, never `@if` — the @ is only for a markup context; and a heading's
+  text carries HTML ENTITIES, so a TOC built by stripping tags must HtmlDecode before handing
+  the text back to Razor or "&quot;" is what the reader sees.
+- The admin console gained ?view=public: it renders the PUBLIC script through the host guard's
+  try/catch, which is the only way to see a compile error on /Blogs — that page has no error
+  surface of its own and simply comes back empty with a 200.
+
+1.11.0
+
+- The editor stopped hiding two thirds of the post. Sixteen fields the posts schema has always
+  declared were unreachable from the console; these are now edited where they belong:
+  - Publishing: publish_date (a real date box — the create handler used to hard-code today),
+    embargo_until (what MegaForm.Core ScheduledPublishService waits for), expiry_date, plus the
+    Featured / Newsletter pick / Include in RSS flags.
+  - SEO and social: seo_title, seo_description, meta_keywords, canonical_url, social_title,
+    social_description, og_image_url.
+- A live search-result preview above them, rendered client-side: the green URL line (canonical
+  when set, otherwise the real article URL), the blue title and the grey snippet, each clipped
+  where a search engine clips it, with 47/60 and 102/160 counters that turn red past the limit.
+  It shows the fallbacks too — an empty SEO title previews the post title, an empty description
+  previews the excerpt — because that is what would actually be indexed.
+- 🔴 An empty publish_date is never written back on save. Every public list sorts on it, so
+  blanking it would drop the post off the blog; clearing an embargo or an expiry is a real intent,
+  clearing the publication date is not.
+- canonical_url and og_image_url are validated like the avatar: site-relative or http(s) only.
+- These fields are stored, not yet emitted: the public page does not render meta tags today, and
+  the editor says so rather than implying the SEO work is live.
+
+1.10.5
+
+- Two console screens the mock set had and this module did not:
+  - Categories & tags (?view=categories). Categories are records of the Blog Categories form
+    (#379 here), which the console had never touched — the only way to add one was the raw
+    MegaForm submission grid. Create/edit/delete, colour swatch, slug derived from the name,
+    sort order, public flag, and the number of posts actually using each one. Delete is offered
+    only for a category no post uses, and it is a HARD delete, which the screen says.
+    Tags are not records — they are text in each post's `tags` field — so they are counted from
+    the posts (105 distinct here) and shown as a ranked list. The screen also names categories
+    that posts use but no record declares.
+  - Media library (?view=media). Every image the blog references, grid or list, filtered by kind
+    (featured / social / avatar / upload), searchable, each with copy-URL and open-the-post.
+    It is a BROWSER, not an uploader, and says so: MegaForm.Sdk exposes no upload endpoint, so a
+    button here would have been a lie. Uploads still happen on the post form.
+  - Both are in the dashboard's quick tiles and Admin Sections nav.
+- 🔴 An uploaded file cannot be embedded: its URL is the Files/Download API, which answers 401 to
+  a plain <img> (measured). Those cards render a file chip with the filename instead of the
+  broken-image glyph they showed at first.
+- 🔴🔴 `@layout` IS A RAZOR DIRECTIVE (same family as @functions / @section / @inherits). A local
+  called `layout` written as "@layout" inside a script block is parsed as that directive, swallows
+  the rest of the line, and reports "Unterminated string literal" — screen blank. Renamed to
+  mediaLayout. Also: a multi-line C# expression inside a @foreach that sits in MARKUP context is
+  not read as C# — keep those to one line or move them into @functions.
+- The host guard now prints the compiler's FILE and LINE for a parse error (HttpParseException
+  carries them but ToString() does not), which is what finally made the two traps above findable.
+
+1.9.1
+
+- The Avatar URL box on an author profile is a real field now, not a place to paste a URL and hope:
+  - a live preview beside it (initials bubble when there is no avatar, and it falls back to the
+    bubble if the URL 404s rather than leaving a broken-image glyph in the form);
+  - a Clear button;
+  - a strip of every author image already used on this blog — one click fills the box. The images
+    come from the typed gallery API (IGalleryApi over author_avatar_url), the same source the post
+    editor's "Author" picker uses, deduplicated by URL and capped at 24.
+- The profile also says when the posts disagree: "N of M post(s) currently carry a different role,
+  avatar or bio". The form shows the NEWEST post's values, so that sentence is the difference
+  between "nothing will change" and "this save rewrites four posts".
+- 🔴 `hidden` is only `display:none` in the UA stylesheet, so any author `display` rule beats it —
+  `.mfba-avatar{display:inline-flex}` kept the initials bubble sitting next to the avatar it was
+  supposed to replace. `.mfba [hidden] { display:none !important }` now settles it console-wide.
+
+1.8.1
+
+- A load failure on the public page now prints the exception FOR SUPERUSERS ONLY (readers still get
+  the neutral "the blog could not be loaded" sentence — rule 10 stands). Without it the only signal
+  a Host gets is the same sentence a reader sees, and the DNN log is not reachable from the page.
+
+1.8.0
+
+- Comments no longer disappear past the hundredth comment on the blog. The article page scanned ONE
+  page of 100 rows of the comment form and filtered it in memory, so once the blog passed 100
+  comments, older posts silently lost theirs. The scan is now driven by the post's rollup-maintained
+  comment_count: 0 means peek at the newest 25 rows only (cheap, and still catches a comment
+  approved since the last 5-minute tick), and >0 pages through — hard-capped at 5 pages — until
+  that many approved comments have been found. An article with no comments now costs a quarter of
+  what it used to; an article with old comments finally shows them.
+- Buttons that went nowhere, all of the same family the six dashboard tiles came from:
+  - the notification bell was a <button type="button"> with no handler — it opens the pending
+    comment queue now;
+  - "View All" over Recent Posts opened the kanban; it opens the analytics register sorted by date;
+  - "Post Archive" and "Recent Posts" in Admin Sections pointed at the public blog and at the
+    dashboard you were already on — replaced with Analytics, Authors and Blog Settings;
+  - the editorial board's "New Post" button and each column's "+" opened the dashboard instead of
+    an editor. They open ?edit=0 now, and the column's + carries its status, which the editor
+    preselects (unknown values fall back to draft).
+
+1.7.1
+
+- 🔴 HOTFIX for 1.7.0: ?view=authors rendered blank. An attribute that mixes literal text with an
+  implicit expression whose ARGUMENTS contain double quotes —
+  href="/Blogs?slug=@Server.UrlEncode(Text(post, "slug", ""))" — closes the attribute at that inner
+  quote, and the RazorHost compile error that follows is reported nowhere. Second time this class
+  of silent failure cost a deploy in one day. Rule: in an attribute, either hoist the value into a
+  local first, or wrap the whole expression in @( ).
+
+1.7.0
+
+- Authors is a working screen, not a report. Clicking a name opens that contributor:
+  - an editable profile (display name, role, email, avatar URL, bio) that writes the five byline
+    fields across ALL of that author's posts through the Records API. A byline is not a separate
+    record — those fields live on each post — so this is the only honest way to "edit an author",
+    and the screen says so, including that renaming to an existing name merges the two.
+  - their posts listed with status, reads, comments and publish date, each with Edit (opens the
+    post editor) and View (opens the article).
+  - Validation is server-side: name required and <=100 chars, role <=100, email format checked,
+    bio <=2000, and the avatar must be a site-relative path or an http(s) URL — it goes straight
+    into an <img src> on a public page, so javascript:/data: URLs are refused.
+  - The row action used to run a dashboard SEARCH for the author's name; it opens the author now.
+- Settings covers the whole public surface instead of six switches, split into "Article list" and
+  "Comments":
+  - list: posts per page, the heading above the list (was hardcoded "Popular this week"), featured
+    hero, search box, category filter, read/comment counts, reading time, author card, newsletter
+    box, trending topics.
+  - comments: site-wide switch, require an email address, and close threads automatically N days
+    after publication (0 = never). A thread closed by age says so on the article instead of the
+    generic "comments are closed".
+- The public page honours every one of them, with defaults that reproduce the previous hardcoded
+  behaviour exactly.
+
+1.6.2
+
+- The featured hero no longer repeats above page 2 and later. Its query ignores paging, so with
+  the new pager the same story sat on top of every page of the archive.
+
+1.6.1
+
+- 🔴 HOTFIX for 1.6.0: /Blogs rendered EMPTY. The page-size setting added in 1.6.0 used a bare
+  `NumberStyles.Integer` and MegaFormBlogs.cshtml does not `@using System.Globalization`. A
+  RazorHost compile error is not shown anywhere — the module simply renders nothing and the page
+  still returns 200 — so the whole public blog disappeared with no error to find. The reference
+  is fully qualified now. Rule for this file: qualify anything outside System / System.Linq /
+  System.Collections.Generic / System.Text.RegularExpressions / MegaForm.Sdk, and always load
+  /Blogs after deploying it.
+- Analytics: the fourth tile counts shares only. The starter's posts form declares no
+  like_count / bookmark_count field, so those counters can never be anything but 0 there and
+  printing "0 likes" was a claim about data the form cannot hold.
+- Authors: an author with nothing published no longer shows a green "0 published" pill.
+
+1.6.0
+
+- The admin console's six tiles all open something now. Three of them were decorative:
+  Analytics opened the PUBLIC blog, Authors opened the kanban, and Settings linked back to the
+  page you were already on. (The header's red "New Post" button also opened the comment queue —
+  the tile was fixed in 1.3.0, the button was not.)
+  - Analytics (?view=analytics): reads, unique readers, return rate, average reads per post,
+    approved comments and share/like/bookmark totals; most-read and by-category bars; and every
+    post in one sortable table (reads / unique / comments / date / title). Read-only, one bounded
+    query, typed values only.
+  - Authors (?view=authors): every byline on the blog with posts, published vs in progress,
+    reads earned, comments received and last publish date. Contributors are derived from the
+    typed author_name on the posts — the blog has no author entity and should not grow a second
+    source of truth for a name that already lives on every post.
+  - Settings (?view=settings): posts per page, show/hide the featured hero, show/hide read and
+    comment counts, a site-wide comments switch, show/hide the newsletter box, and the sidebar's
+    "Trending topics" list. Stored as DNN portal settings under the MegaFormBlogs_ prefix (the
+    same mechanism MegaForm's own settings use); every default reproduces the previous behaviour
+    exactly, so a portal that never opens the screen renders as it always did. Values are
+    validated server-side (page size clamped 3-24, at most 12 topics of 40 characters).
+    The screen also reports the wiring: which app and forms resolved, and whether the manifest
+    binds them or the 2.0.14 scope fallback is doing it.
+- Two things the sidebar hardcoded are now the owner's: the five invented "Trending topics"
+  (Design Systems, Accessibility, AI, ...) that no site could change, and the newsletter box that
+  is wired to nothing. Clearing the topic list hides the card.
+- The public list finally has a PAGER. It has always read one bounded page at a time, but nothing
+  rendered navigation — so on a blog with more posts than the page size, everything after the
+  first page existed and was unreachable.
+
+1.5.1
+
+- The editor's Status and Content type boxes told the truth for the first time. The posts form
+  declares eight statuses and six content types; the editor offered four and two, and marked none
+  of them selected — so record #288 (published, "Opinion") displayed as Draft / Blog Post. Both
+  lists are now complete and preselected from the record, a value the list does not know is
+  appended rather than dropped, and Save writes both fields. Writing them is only safe BECAUSE
+  they are preselected: a save that touches neither box now rewrites the value the post already
+  had, where a blind write would have demoted every published post to Draft.
+- "1 hours ago" under the first comment of a fresh thread is "1 hour ago" (public article page,
+  comment moderation and editorial console).
+
+1.5.0
+
+- Comments are per-post switchable, and the box on the article page is no longer unstyled.
+  - The editor gained an "Allow comments on this post" checkbox. The posts form declares
+    allow_comments as a Select("true"/"false") whose DEFAULT IS "false" and no console screen
+    had ever written it, so a post created from the console came out with its thread shut and
+    no editor had any way to open it. Create and Save now both write the field, and Create also
+    opens the thread state (moderation_status = Open).
+  - 🔴 The comment form is a <div>, not a <form>. A DNN page is already one big
+    <form runat="server"> and HTML forbids nesting: the browser DROPS the inner <form> tag and
+    keeps its children. Measured on dnndefender.com with 1.4.0 live —
+    document.querySelector('form.mfb-comment-form') returned null while the inputs were there,
+    so every `.mfb-comment-form …` rule matched nothing and the box rendered as bare inputs
+    stacked on the page. Posting still worked, which is why it read as "comments look broken"
+    rather than "comments are dead". The submit gate is now the BUTTON's own name/value, which
+    a browser sends only for the button actually clicked — a hidden marker input would have
+    fired on any unrelated postback of the page.
+  - Every card in the list shows its comment count next to its read count, not just the
+    featured one.
+
+- Read counts. The counter itself was never the problem: reader events were being recorded
+  correctly (244 of them on the live blog) but nothing added them up, because
+  MegaForm.Core's BlogAnalyticsRollupService reads its form ids out of ManifestJson.Forms and a
+  seeded blog-starter persists that array EMPTY — the service returned 0 on its second line
+  every five minutes without logging anything. Fixed in Core 2.0.14 (BlogManifestHelper falls
+  back to the app's own AppScope-bound forms), so no manifest repair script is needed any more.
+  Requires MegaForm 2.0.14; on an older Core the counters stay at whatever they are today.
+
+1.4.0
+
+- Article pages now show comments. Approved comments render under the article (newest scan of
+  the comment child form, resolved as typed records - DataJson is never parsed), and readers can
+  post from the page itself: the form goes through the same public submission pipeline as any
+  MegaForm form (validation, anti-spam, the schema's honeypot field), every new comment lands as
+  moderation_status = pending, and the admin moderation console (?view=comments) approves it.
+  - CSRF: the public form carries a per-session token, verified with a constant-time compare.
+  - A post can close its own thread via allow_comments = false or moderation state
+    Locked/Closed; the form then renders as "Comments are closed for this article."
+  - The header counts the approved comments actually loaded, not the seeded comment_count
+    field, so the number is never stale.
+  - After posting, the browser is redirected back to the article (PRG) so a refresh can never
+    double-submit. Spam submissions are silently accepted-looking: a spammer must not learn
+    they were flagged.
+- The article byline now shows the read count next to the date and reading time. The number is
+  the rollup-managed view_count; if it stays 0 on a seeded install, run
+  Tools\Bind-BlogAppForms.sql (dry-run first) and restart the site - the analytics rollup
+  silently does nothing until the app manifest binds its forms.
+
+1.3.2
+
+- (deployed 2026-08-07) Parallel SDK reads on the public surface; supersedes 1.3.1.
+
 1.3.0
 
 - You can now WRITE a post from DNN. Until this release the admin could only edit posts that

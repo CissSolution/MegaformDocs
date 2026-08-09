@@ -67,6 +67,13 @@ try {
         'MegaFormBlogsAdmin.cshtml' = Join-Path $PSScriptRoot 'Scripts\MegaFormBlogsAdmin.cshtml'
         'MegaFormBlogsAdminEditorial.cshtml' = Join-Path $PSScriptRoot 'Scripts\MegaFormBlogsAdminEditorial.cshtml'
         'MegaFormBlogsAdminComments.cshtml' = Join-Path $PSScriptRoot 'Scripts\MegaFormBlogsAdminComments.cshtml'
+        'MegaFormBlogsAdminAnalytics.cshtml' = Join-Path $PSScriptRoot 'Scripts\MegaFormBlogsAdminAnalytics.cshtml'
+        'MegaFormBlogsAdminAuthors.cshtml' = Join-Path $PSScriptRoot 'Scripts\MegaFormBlogsAdminAuthors.cshtml'
+        'MegaFormBlogsAdminSettings.cshtml' = Join-Path $PSScriptRoot 'Scripts\MegaFormBlogsAdminSettings.cshtml'
+        'MegaFormBlogsAdminCategories.cshtml' = Join-Path $PSScriptRoot 'Scripts\MegaFormBlogsAdminCategories.cshtml'
+        'MegaFormBlogsAdminMedia.cshtml' = Join-Path $PSScriptRoot 'Scripts\MegaFormBlogsAdminMedia.cshtml'
+        'MegaFormBlogsAdminTemplates.cshtml' = Join-Path $PSScriptRoot 'Scripts\MegaFormBlogsAdminTemplates.cshtml'
+        'MegaFormBlogsAdminFormats.cshtml' = Join-Path $PSScriptRoot 'Scripts\MegaFormBlogsAdminFormats.cshtml'
         'MegaFormBlogsAdminHost.cshtml' = Join-Path $PSScriptRoot 'Scripts\MegaFormBlogsAdminHost.cshtml'
     }
     $assetFiles = @{

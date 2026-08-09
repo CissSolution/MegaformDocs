@@ -70,10 +70,16 @@
     {
         var span = DateTime.UtcNow - utc;
         if (span.TotalMinutes < 1) return "just now";
-        if (span.TotalMinutes < 60) return (int)span.TotalMinutes + " minutes ago";
-        if (span.TotalHours < 24) return (int)span.TotalHours + " hours ago";
-        if (span.TotalDays < 30) return (int)span.TotalDays + " days ago";
+        // "1 hours ago" — same singular rule as the public surface.
+        if (span.TotalMinutes < 60) return AgoUnit((int)span.TotalMinutes, "minute");
+        if (span.TotalHours < 24) return AgoUnit((int)span.TotalHours, "hour");
+        if (span.TotalDays < 30) return AgoUnit((int)span.TotalDays, "day");
         return utc.ToString("MMM d, yyyy", CultureInfo.InvariantCulture);
+    }
+
+    static string AgoUnit(int count, string unit)
+    {
+        return count + " " + unit + (count == 1 ? "" : "s") + " ago";
     }
 
     static string StatusKey(AppRecordDto record)
@@ -215,7 +221,7 @@
     ).ToList();
 }
 
-<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs-admin.css?v=20260731a" />
+<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs-admin.css?v=20260809h" />
 
 <div class="mfba">
     @if (!allowed)
@@ -260,7 +266,10 @@
                             <option value="@priority" @(string.Equals(priority, priorityFilter, StringComparison.OrdinalIgnoreCase) ? "selected" : "")>@priority</option>
                         }
                     </select>
-                    <a class="mfba-btn" href="@adminBaseUrl">@Icon("plus") New Post</a>
+                    @* "New Post" opened the dashboard, not an editor. ?edit=0 is the create trigger — it must be
+       "0" and not "new": DNN rewrites the value into a path segment and a non-numeric one does not
+       survive the form POST that follows. *@
+                    <a class="mfba-btn" href="@(adminBaseUrl + "?edit=0")">@Icon("plus") New Post</a>
                 </div>
             </div>
         </header>
@@ -293,7 +302,7 @@
                                 <h3>@column.Item2</h3>
                                 <span class="mfba-kcount">@cards.Count</span>
                             </div>
-                            <a class="mfba-iconbtn" href="@adminBaseUrl" title="New post in @column.Item2">@Icon("plus", "mfba-icon mfba-icon-md")</a>
+                            <a class="mfba-iconbtn" href="@(adminBaseUrl + "?edit=0&status=" + column.Item1)" title="New post in @column.Item2">@Icon("plus", "mfba-icon mfba-icon-md")</a>
                         </div>
                         <div class="mfba-klist" data-mfba-drop="@column.Item1">
                             @foreach (var post in cards)

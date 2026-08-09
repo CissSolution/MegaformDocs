@@ -176,3 +176,178 @@
    first story — which is exactly what it looked like. The negative top margin also goes: it was
    there to pull the hero band under the page chrome, and a bare hero is not a band. */
 .mfb-hero-bare{margin-top:0;padding-top:20px;padding-bottom:28px;background:none;border-bottom:0}
+
+/* ============================================================================
+   [MFB-COMMENTS-20260808] Public article comments (1.4.0): approved list +
+   submit form on the article detail page. Same house rules as above: scoped
+   under .mfb, colours from the token chain, appended at end-of-file so equal
+   specificity resolves by source order.
+   ============================================================================ */
+.mfb-comments{margin-top:44px;padding-top:26px;border-top:1px solid var(--mfb-line)}
+.mfb-comments h2{margin:0 0 14px;font-size:26px;letter-spacing:-.02em}
+.mfb-comments .mfb-notice{margin:0 0 14px;padding:12px 16px;border-radius:10px;font-size:14px}
+.mfb-comment{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid var(--mfb-line)}
+.mfb-comment:last-of-type{border-bottom:0}
+.mfb-comment .mfb-avatar{flex:0 0 auto}
+.mfb-comment-body{min-width:0}
+.mfb-comment-body>header{display:flex;align-items:baseline;gap:10px}
+.mfb-comment-body>header small{color:var(--mfb-muted)}
+.mfb-comment-body p{margin:4px 0 0;overflow-wrap:anywhere}
+.mfb-comment-form{margin-top:22px;padding:20px;border:1px solid var(--mfb-line);border-radius:14px;
+  background:var(--mfb-surface)}
+.mfb-comment-form h3{margin:0 0 14px;font-size:18px}
+.mfb-comment-form label{display:block;margin:10px 0 5px;font-size:13px;font-weight:700}
+.mfb-comment-form label em{color:#b42318;font-style:normal}
+.mfb-comment-form label small{color:var(--mfb-muted);font-weight:400}
+.mfb-comment-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.mfb-comment-form input[type=text],.mfb-comment-form input[type=email],
+.mfb-comment-form textarea{width:100%;padding:.6rem .75rem;border:1px solid var(--mfb-line);
+  border-radius:8px;background:var(--mfb-surface);color:var(--mfb-ink);font:inherit}
+.mfb-comment-form input:focus,.mfb-comment-form textarea:focus{outline:2px solid var(--mfb-accent);
+  outline-offset:0;border-color:var(--mfb-accent)}
+.mfb-comment-form .mfb-btn{margin-top:14px;border:0;cursor:pointer}
+.mfb-comment-form>small{display:block;margin-top:8px}
+.mfb-hp{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
+@media(max-width:620px){.mfb-comment-grid{grid-template-columns:1fr}}
+
+/* ============================================================================
+   [MFB-LENSES-20260809] author / tag / trending / archive views. They reuse the
+   card grid and pager; only the header above them changes.
+   ============================================================================ */
+.mfb-lens{padding:26px 0 6px}
+.mfb-lens-title{margin:10px 0 6px;font-size:clamp(30px,5vw,44px);line-height:1.05;letter-spacing:-.03em}
+.mfb-lens-author{display:flex;align-items:flex-start;gap:18px;margin-top:12px}
+.mfb-lens-author>img,.mfb-lens-author .mfb-avatar-lg{width:84px;height:84px;flex:0 0 auto;border-radius:50%;object-fit:cover}
+.mfb-lens-author h1{margin:0 0 4px;font-size:clamp(26px,4vw,38px);line-height:1.1;letter-spacing:-.02em}
+.mfb-lens-author p{margin:0 0 4px}
+.mfb-lens .mfb-tags{margin-top:12px}
+.mfb-rank{position:absolute;left:18px;top:18px;display:inline-grid;min-width:28px;height:28px;
+  place-items:center;padding:0 8px;border-radius:999px;background:var(--mfb-ink);color:var(--mfb-surface);
+  font-size:13px;font-weight:800}
+.mfb-archive-month{margin:26px 0 10px;font-size:18px;letter-spacing:-.01em}
+.mfb-archive-list{margin:0;padding:0;list-style:none}
+.mfb-archive-list li{display:flex;align-items:baseline;gap:12px;padding:10px 0;border-top:1px solid var(--mfb-line)}
+.mfb-archive-list a{flex:1;min-width:0;color:var(--mfb-ink);font-weight:600}
+.mfb-archive-list a:hover{color:var(--mfb-accent)}
+.mfb-archive-list span{color:var(--mfb-accent);font-size:12px;white-space:nowrap}
+.mfb-archive-list time{color:var(--mfb-muted);font-size:12px;white-space:nowrap}
+@media(max-width:620px){.mfb-lens-author{flex-direction:column}.mfb-archive-list li{flex-wrap:wrap;gap:6px}}
+
+/* [MFB-TOC-20260809] Article table of contents and the related-stories strip. */
+/* Not floated: the article layout is already prose + aside, and a 260px float inside the prose
+   left a 370px column of body text. Full width above the article reads far better. */
+.mfb-toc{width:100%;margin:0 0 22px;padding:16px 18px;
+  border:1px solid var(--mfb-line);border-radius:14px;background:var(--mfb-fill);
+  font-family:Inter,"Segoe UI",system-ui,sans-serif;font-size:14px}
+.mfb-toc strong{display:block;margin-bottom:8px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mfb-muted)}
+.mfb-toc ol{margin:0;padding-left:18px}
+.mfb-toc li{margin:4px 0;line-height:1.35}
+.mfb-toc li.sub{margin-left:12px;list-style:circle;font-size:13px}
+.mfb-toc a{color:var(--mfb-ink)}
+.mfb-toc a:hover{color:var(--mfb-accent);text-decoration:underline}
+.mfb-related{clear:both;margin-top:44px;padding-top:26px;border-top:1px solid var(--mfb-line)}
+.mfb-related h2{margin:0 0 16px;font-size:22px;letter-spacing:-.02em}
+.mfb-related-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(15rem,100%),1fr));gap:18px}
+.mfb-related-card{display:flex;overflow:hidden;flex-direction:column;gap:6px;padding-bottom:12px;
+  border:1px solid var(--mfb-line);border-radius:14px;background:var(--mfb-card);transition:transform .2s,box-shadow .2s}
+.mfb-related-card:hover{transform:translateY(-2px);box-shadow:0 14px 30px #10182814}
+.mfb-related-card img{width:100%;aspect-ratio:16/9;object-fit:cover}
+.mfb-related-card .mfb-chip{align-self:flex-start;margin:10px 14px 0}
+.mfb-related-card strong{padding:0 14px;font-size:15px;line-height:1.3}
+.mfb-related-card small{padding:0 14px;color:var(--mfb-muted);font-size:12px}
+.mfb-toc ol{columns:2;column-gap:24px}
+@media(max-width:620px){.mfb-toc ol{columns:1}}
+
+/* ── formats: breaking ticker, gallery, live coverage ─────────────────── */
+
+.mfb-breaking { background: #0f172a; color: #fff; }
+.mfb-breaking .mfb-shell { display: flex; align-items: center; gap: 12px; padding-top: 12px; padding-bottom: 12px; }
+.mfb-breaking-tag {
+  flex: none; padding: 3px 10px; border-radius: 999px; background: #e7000b;
+  font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+}
+.mfb-breaking a, .mfb-breaking span:not(.mfb-breaking-tag) { color: #fff; font-size: 15px; font-weight: 500; }
+.mfb-breaking a:hover { text-decoration: underline; }
+
+/* The badge that says a card is not a plain article. It sits on the image, like "Featured". */
+.mfb-format {
+  position: absolute; bottom: 12px; left: 12px; z-index: 2;
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px;
+  background: rgba(15, 23, 42, .85); color: #fff; font-size: 11px; font-weight: 600;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.mfb-format.live { background: #e7000b; }
+.mfb-format.live::before {
+  content: ""; width: 7px; height: 7px; border-radius: 50%; background: #fff;
+  animation: mfb-pulse 1.6s ease-in-out infinite;
+}
+.mfb-format.gallery::before { content: "\25A6"; font-size: 12px; }
+.mfb-format.video::before { content: "\25B6"; font-size: 10px; }
+@keyframes mfb-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+@media (prefers-reduced-motion: reduce) { .mfb-format.live::before { animation: none; } }
+
+.mfb-live-badge {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px;
+  background: #e7000b; color: #fff; font-size: 12px; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase;
+}
+.mfb-live-badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #fff; animation: mfb-pulse 1.6s ease-in-out infinite; }
+.mfb-live-badge.ended { background: #62748e; }
+.mfb-live-badge.ended::before, .mfb-live-badge.gallery::before { animation: none; }
+.mfb-live-badge.gallery { background: #7f22fe; }
+
+.mfb-gallery {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px;
+  margin: 0 0 32px;
+}
+.mfb-gallery-item { margin: 0; cursor: zoom-in; }
+.mfb-gallery-item img {
+  display: block; width: 100%; height: 220px; border-radius: 12px;
+  background: #f1f5f9; object-fit: cover; transition: transform .2s;
+}
+.mfb-gallery-item:hover img { transform: scale(1.01); }
+.mfb-gallery-item figcaption { padding: 8px 2px 0; color: #475569; font-size: 13px; line-height: 1.45; }
+.mfb-gallery-item figcaption small { display: block; margin-top: 2px; color: #94a3b8; font-size: 11px; }
+
+.mfb-lightbox {
+  position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px; padding: 32px;
+  background: rgba(2, 6, 23, .92); cursor: zoom-out;
+}
+.mfb-lightbox[hidden] { display: none; }
+.mfb-lightbox img { max-width: min(1100px, 92vw); max-height: 82vh; border-radius: 8px; object-fit: contain; }
+.mfb-lightbox p { max-width: 720px; margin: 0; color: #e2e8f0; font-size: 14px; text-align: center; }
+.mfb-lightbox-close {
+  position: absolute; top: 20px; right: 24px; width: 40px; height: 40px; border: 0; border-radius: 50%;
+  background: rgba(255, 255, 255, .12); color: #fff; font-size: 24px; line-height: 1; cursor: pointer;
+}
+
+.mfb-live { margin: 40px 0; }
+.mfb-live-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 16px; }
+.mfb-live-head h2 { margin: 0; font-size: 22px; }
+.mfb-live-head p { margin: 0; color: #64748b; font-size: 13px; }
+.mfb-live-feed { margin: 0; padding: 0; list-style: none; border-left: 2px solid #e2e8f0; }
+.mfb-live-feed li { position: relative; display: grid; grid-template-columns: 110px 1fr; gap: 16px; padding: 0 0 24px 24px; }
+.mfb-live-feed li::before {
+  content: ""; position: absolute; top: 6px; left: -7px; width: 12px; height: 12px;
+  border: 2px solid #fff; border-radius: 50%; background: #94a3b8;
+}
+.mfb-live-feed li.key::before { background: #e17100; }
+.mfb-live-feed li.closing::before { background: #62748e; }
+.mfb-live-feed time { color: #64748b; font-size: 13px; font-variant-numeric: tabular-nums; }
+.mfb-live-feed h3 { margin: 0 0 4px; font-size: 17px; }
+.mfb-live-feed p { margin: 0 0 6px; font-size: 15px; line-height: 1.6; white-space: pre-wrap; }
+.mfb-live-feed small { color: #94a3b8; font-size: 12px; }
+.mfb-key-flag {
+  display: inline-block; margin-bottom: 6px; padding: 2px 8px; border-radius: 999px;
+  background: #fffbeb; color: #e17100; font-size: 11px; font-weight: 700;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.mfb-keymoments ol { margin: 0; padding-left: 18px; }
+.mfb-keymoments li { margin-bottom: 10px; font-size: 14px; line-height: 1.45; }
+.mfb-keymoments small { display: block; color: #94a3b8; font-size: 12px; }
+
+@media (max-width: 640px) {
+  .mfb-live-feed li { grid-template-columns: 1fr; gap: 4px; }
+  .mfb-gallery-item img { height: 180px; }
+}

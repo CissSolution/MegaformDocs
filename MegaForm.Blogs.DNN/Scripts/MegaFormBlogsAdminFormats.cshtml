@@ -1,0 +1,904 @@
+@*
+    MegaForm Blogs - formats desk (screen 10): gallery posts and live coverage.
+
+    WHY TWO NEW FORMS AND NOT NEW FIELDS. A gallery has many images and a liveblog has many
+    updates; both are one-to-many against a post, which a field on the posts form cannot hold
+    without stuffing a list into a string. They are also the only part of the blog that would
+    have needed the LIVE posts form (378) altered, and altering a form that already holds the
+    portal's content is the one change in this module that cannot be rolled back by reinstalling
+    a package. So: two child forms, created on demand from this screen, exactly the way the
+    comments form and the templates form are created. Form 378 is never touched.
+
+    STATE THAT IS NOT A FIELD. "Is this liveblog still running" is stored as a normal update with
+    is_closing = true - the entry that says coverage ended. It reads correctly in the timeline,
+    it needs no extra field on the post, and reopening is deleting that one entry.
+
+    CSHTML rules obeyed here (each cost a deploy on 2026-08-09): braces on every control-flow
+    statement in the page block; `if` not `@if` in code context; no attribute mixing literal text
+    with a quoted-argument expression; no local called `layout`; no multi-line C# inside a
+    markup-context loop.
+*@
+@inherits DotNetNuke.Web.Razor.DotNetNukeWebPage<dynamic>
+@using System
+@using System.Linq
+@using System.Globalization
+@using System.Collections.Generic
+@using System.Security.Cryptography
+@using MegaForm.Sdk
+
+@functions {
+    const string GalleryFormTitle = "Blog Gallery Images";
+    const string LiveFormTitle = "Blog Live Updates";
+
+    /// One image of one post. sort_order is a plain number the editor types; ties fall back to
+    /// the order the rows came back in, which is creation order.
+    const string GallerySchemaJson = "{\"version\":1,\"fields\":[" +
+        "{\"key\":\"image_uid\",\"type\":\"Text\",\"label\":\"Image UID\"}," +
+        "{\"key\":\"post_uid\",\"type\":\"Text\",\"label\":\"Post UID\",\"required\":true}," +
+        "{\"key\":\"image_url\",\"type\":\"Text\",\"label\":\"Image URL\",\"required\":true}," +
+        "{\"key\":\"caption\",\"type\":\"Textarea\",\"label\":\"Caption\"}," +
+        "{\"key\":\"credit\",\"type\":\"Text\",\"label\":\"Credit\"}," +
+        "{\"key\":\"sort_order\",\"type\":\"Text\",\"label\":\"Sort order\"}]}";
+
+    /// One update of one liveblog. happened_at is stored as an invariant round-trip string so the
+    /// host's culture can never reinterpret it (the vi-VN trap that blanked typed values once).
+    const string LiveSchemaJson = "{\"version\":1,\"fields\":[" +
+        "{\"key\":\"update_uid\",\"type\":\"Text\",\"label\":\"Update UID\"}," +
+        "{\"key\":\"post_uid\",\"type\":\"Text\",\"label\":\"Post UID\",\"required\":true}," +
+        "{\"key\":\"headline\",\"type\":\"Text\",\"label\":\"Headline\"}," +
+        "{\"key\":\"body\",\"type\":\"Textarea\",\"label\":\"Update\",\"required\":true}," +
+        "{\"key\":\"happened_at\",\"type\":\"Text\",\"label\":\"Timestamp (UTC)\"}," +
+        "{\"key\":\"author_name\",\"type\":\"Text\",\"label\":\"Reporter\"}," +
+        "{\"key\":\"is_key_moment\",\"type\":\"Text\",\"label\":\"Key moment\"}," +
+        "{\"key\":\"is_closing\",\"type\":\"Text\",\"label\":\"Closes coverage\"}]}";
+
+    const int ImageCap = 200;
+    const int UpdateCap = 300;
+
+    static T Run<T>(System.Func<IMegaFormClient, System.Threading.Tasks.Task<T>> action)
+    {
+        var initializeMegaForm = MegaForm.DNN.Services.DnnServiceLocator.Instance;
+        return System.Threading.Tasks.Task.Run(() => MegaFormSdk.RunAsync(action)).GetAwaiter().GetResult();
+    }
+
+    static string Text(AppRecordDto record, string key, string fallback)
+    {
+        if (record == null || record.Data == null || !record.Data.ContainsKey(key) || record.Data[key] == null)
+            return fallback;
+        var value = Convert.ToString(record.Data[key]);
+        return string.IsNullOrWhiteSpace(value) ? fallback : value;
+    }
+
+    /// The key every child record joins on. post_uid is what the rollup and the public renderer
+    /// use; a post that predates it falls back to its slug, which is unique per portal too. Both
+    /// sides of the join must agree, so the public script has the same two lines.
+    static string PostKey(AppRecordDto post)
+    {
+        var uid = Text(post, "post_uid", "");
+        return uid.Length > 0 ? uid : Text(post, "slug", "");
+    }
+
+    static bool Flag(AppRecordDto record, string key)
+    {
+        var value = Text(record, key, "false");
+        return string.Equals(value, "true", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(value, "1", StringComparison.Ordinal)
+            || string.Equals(value, "yes", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// `Flag(record, "is_closing")` as a method group, so the LINQ below reads plainly.
+    static bool Flag2Closing(AppRecordDto record) { return Flag(record, "is_closing"); }
+
+    static int Sort(AppRecordDto record)
+    {
+        var parsed = 0;
+        int.TryParse(Text(record, "sort_order", "0"), NumberStyles.Integer, CultureInfo.InvariantCulture, out parsed);
+        return parsed;
+    }
+
+    static DateTime Happened(AppRecordDto record)
+    {
+        var raw = Text(record, "happened_at", "");
+        var parsed = DateTime.MinValue;
+        if (DateTime.TryParse(raw, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out parsed))
+        {
+            return parsed;
+        }
+        return DateTime.MinValue;
+    }
+
+    static string Stamp(DateTime value)
+    {
+        if (value == DateTime.MinValue) { return "unscheduled"; }
+        return value.ToString("MMM d, HH:mm", CultureInfo.InvariantCulture) + " UTC";
+    }
+
+    /// Same guard the author screen uses: relative paths and http(s) only, 500 characters at most.
+    static bool IsSafeImageUrl(string url)
+    {
+        var value = (url ?? "").Trim();
+        if (value.Length == 0) { return false; }
+        if (value.Length > 500) { return false; }
+        if (value.StartsWith("/", StringComparison.Ordinal) && !value.StartsWith("//", StringComparison.Ordinal))
+        {
+            return true;
+        }
+        return value.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+            || value.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+    }
+
+    static bool CanManage(DotNetNuke.Entities.Users.UserInfo user)
+    {
+        if (user == null || user.UserID < 0) { return false; }
+        if (user.IsSuperUser) { return true; }
+        var allowed = new[] { "Administrators", "Blog Publishers" };
+        return user.Roles != null && user.Roles.Any(role => allowed.Contains(role, StringComparer.OrdinalIgnoreCase));
+    }
+
+    static string EnsureCsrfToken()
+    {
+        const string key = "MegaFormBlogs.CsrfToken";
+        var session = System.Web.HttpContext.Current.Session;
+        var token = session[key] as string;
+        if (!string.IsNullOrWhiteSpace(token)) { return token; }
+        var bytes = new byte[32];
+        using (var random = RandomNumberGenerator.Create()) { random.GetBytes(bytes); }
+        token = Convert.ToBase64String(bytes);
+        session[key] = token;
+        return token;
+    }
+
+    static void ValidateCsrfToken(string posted)
+    {
+        const string key = "MegaFormBlogs.CsrfToken";
+        var expected = System.Web.HttpContext.Current.Session[key] as string;
+        var valid = !string.IsNullOrWhiteSpace(expected) && !string.IsNullOrWhiteSpace(posted) && expected.Length == posted.Length;
+        var difference = valid ? 0 : 1;
+        var length = valid ? expected.Length : 0;
+        for (var index = 0; index < length; index++) { difference |= expected[index] ^ posted[index]; }
+        if (difference != 0)
+        {
+            throw new InvalidOperationException("The session expired. Reload this page and try again.");
+        }
+    }
+
+    /// Finds a child form by the fields it declares, not by its title - a portal is free to rename
+    /// it. Cached per request in HttpContext.Items because resolving walks every form on the site.
+    static int ResolveChildFormId(MegaFormScope scope, string cacheKey, string titleHint, string[] fingerprint)
+    {
+        var items = System.Web.HttpContext.Current == null ? null : System.Web.HttpContext.Current.Items;
+        if (items != null && items.Contains(cacheKey)) { return (int)items[cacheKey]; }
+
+        var resolved = Run(async c =>
+        {
+            var forms = await c.Forms.ListFormsAsync(new FormQuery { Page = 1, PageSize = 200 }, scope);
+            if (forms == null || forms.Items == null) { return 0; }
+            var ordered = forms.Items
+                .OrderByDescending(f => (f.Title ?? "").IndexOf(titleHint, StringComparison.OrdinalIgnoreCase) >= 0)
+                .ToList();
+            foreach (var form in ordered)
+            {
+                var candidate = form;
+                if (string.IsNullOrWhiteSpace(candidate.SchemaJson))
+                {
+                    candidate = await c.Forms.GetFormAsync(form.FormId, scope) ?? form;
+                }
+                if (string.IsNullOrWhiteSpace(candidate.SchemaJson)) { continue; }
+                var keys = c.Schema.ParseForm(candidate).Fields.Select(x => x.Key ?? "").ToList();
+                var matches = fingerprint.All(f => keys.Contains(f, StringComparer.OrdinalIgnoreCase));
+                if (matches) { return candidate.FormId; }
+            }
+            return 0;
+        });
+
+        if (items != null) { items[cacheKey] = resolved; }
+        return resolved;
+    }
+
+    /// Reads every record of a child form that belongs to one post. The cap is the honest part:
+    /// a liveblog with more than 300 updates shows the newest 300 and says so.
+    static List<AppRecordDto> LoadChildren(MegaFormScope scope, int formId, string postUid, int cap, out bool truncated)
+    {
+        truncated = false;
+        var rows = new List<AppRecordDto>();
+        if (formId <= 0 || string.IsNullOrWhiteSpace(postUid)) { return rows; }
+
+        var scan = Run(c => c.SubmissionDashboard.SearchAsync(
+            new SubmissionSearchQuery { FormId = formId, Page = 1, PageSize = cap }, scope));
+        if (scan == null || scan.Items == null) { return rows; }
+        truncated = scan.TotalCount > scan.Items.Count;
+
+        var reads = scan.Items.Select(row => System.Threading.Tasks.Task.Run(() =>
+            MegaFormSdk.RunAsync(c => c.Records.GetRecordAsync(row.SubmissionId, scope)))).ToArray();
+        System.Threading.Tasks.Task.WaitAll(reads);
+        foreach (var read in reads)
+        {
+            var typed = read.Result;
+            if (typed == null) { continue; }
+            if (!string.Equals(Text(typed, "post_uid", ""), postUid, StringComparison.OrdinalIgnoreCase)) { continue; }
+            rows.Add(typed);
+        }
+        return rows;
+    }
+
+    static System.Web.IHtmlString Icon(string name, string cssClass = "mfba-icon")
+    {
+        string body;
+        switch (name)
+        {
+            case "chevron-right": body = "<path d='m9 18 6-6-6-6'/>"; break;
+            case "image": body = "<rect width='18' height='18' x='3' y='3' rx='2'/><circle cx='9' cy='9' r='2'/><path d='m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21'/>"; break;
+            case "radio": body = "<path d='M4.9 19.1C1 15.2 1 8.8 4.9 4.9'/><path d='M7.8 16.2a5.9 5.9 0 0 1 0-8.4'/><circle cx='12' cy='12' r='2'/><path d='M16.2 7.8a5.9 5.9 0 0 1 0 8.4'/><path d='M19.1 4.9C23 8.8 23 15.1 19.1 19'/>"; break;
+            case "plus": body = "<path d='M5 12h14'/><path d='M12 5v14'/>"; break;
+            case "trash": body = "<path d='M3 6h18'/><path d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6'/><path d='M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/>"; break;
+            case "star": body = "<path d='M11.5 3.1a.6.6 0 0 1 1 0l2.2 4.5 5 .7a.6.6 0 0 1 .3 1l-3.6 3.5.9 5a.6.6 0 0 1-.9.6L12 16.1l-4.4 2.3a.6.6 0 0 1-.9-.6l.9-5-3.6-3.5a.6.6 0 0 1 .3-1l5-.7z'/>"; break;
+            case "save": body = "<path d='M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z'/><path d='M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7'/><path d='M7 3v4a1 1 0 0 0 1 1h7'/>"; break;
+            case "stop": body = "<circle cx='12' cy='12' r='10'/><rect width='6' height='6' x='9' y='9' rx='1'/>"; break;
+            case "play": body = "<polygon points='6 3 20 12 6 21 6 3'/>"; break;
+            case "eye": body = "<path d='M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0'/><circle cx='12' cy='12' r='3'/>"; break;
+            default: body = ""; break;
+        }
+        return new System.Web.HtmlString("<svg class='" + cssClass + "' viewBox='0 0 24 24' aria-hidden='true'>" + body + "</svg>");
+    }
+}
+
+@{
+    var portalId = DotNetNuke.Entities.Portals.PortalSettings.Current == null
+        ? 0 : DotNetNuke.Entities.Portals.PortalSettings.Current.PortalId;
+    var activeTab = DotNetNuke.Entities.Portals.PortalSettings.Current == null
+        ? null : DotNetNuke.Entities.Portals.PortalSettings.Current.ActiveTab;
+    var adminBaseUrl = activeTab == null ? Request.RawUrl : DotNetNuke.Common.Globals.NavigateURL(activeTab.TabID);
+    var formatsUrl = adminBaseUrl + "?view=formats";
+    var user = DotNetNuke.Entities.Users.UserController.Instance.GetCurrentUserInfo();
+    var scope = new MegaFormScope
+    {
+        PortalId = portalId,
+        UserId = user == null ? 0 : user.UserID,
+        UserName = user == null ? "" : user.Username,
+        IsAuthenticated = user != null && user.UserID >= 0,
+        IsAdmin = user != null && (user.IsSuperUser || user.IsInRole("Administrators")),
+        IsSuperUser = user != null && user.IsSuperUser,
+        Roles = user == null || user.Roles == null ? new List<string>() : user.Roles.ToList(),
+        IpAddress = Request.UserHostAddress ?? ""
+    };
+    var allowed = CanManage(user);
+    var csrfToken = allowed ? EnsureCsrfToken() : "";
+    var message = "";
+    var messageError = false;
+
+    var tab = (Request.QueryString["tab"] ?? "gallery").Trim().ToLowerInvariant();
+    if (tab != "live") { tab = "gallery"; }
+    var selectedPostId = 0;
+    int.TryParse((Request.QueryString["post"] ?? "").Trim(), out selectedPostId);
+    var selectedUid = "";
+
+    var galleryFormId = allowed
+        ? ResolveChildFormId(scope, "MegaFormBlogs.GalleryFormId", "gallery", new[] { "image_url", "post_uid" }) : 0;
+    var liveFormId = allowed
+        ? ResolveChildFormId(scope, "MegaFormBlogs.LiveFormId", "live", new[] { "is_key_moment", "post_uid" }) : 0;
+
+    // ---- writes ---------------------------------------------------------------------------
+    if (allowed && string.Equals(Request.HttpMethod, "POST", StringComparison.OrdinalIgnoreCase))
+    {
+        try
+        {
+            var action = (Request.Form["mfb_fmt_action"] ?? "").Trim().ToLowerInvariant();
+            if (action.Length > 0)
+            {
+                ValidateCsrfToken(Request.Form["mfb_csrf"]);
+            }
+            var postedPostId = 0;
+            int.TryParse((Request.Form["post_id"] ?? "").Trim(), out postedPostId);
+            if (postedPostId > 0) { selectedPostId = postedPostId; }
+            // The typed record is the only place post_uid is guaranteed to be: the all-posts query
+            // does not project it, which is why an earlier build wrote every child with an empty key.
+            if (selectedPostId > 0)
+            {
+                var selectedRecord = Run(c => c.Records.GetRecordAsync(selectedPostId, scope));
+                selectedUid = selectedRecord == null ? "" : PostKey(selectedRecord);
+            }
+
+            if (action == "install-gallery" || action == "install-live")
+            {
+                var gallery = action == "install-gallery";
+                if ((gallery ? galleryFormId : liveFormId) > 0)
+                {
+                    throw new InvalidOperationException("That form already exists.");
+                }
+                var created = Run(c => c.Forms.CreateFormAsync(new CreateFormRequest
+                {
+                    Title = gallery ? GalleryFormTitle : LiveFormTitle,
+                    Description = gallery
+                        ? "Images of gallery posts, managed by the MegaForm Blogs console."
+                        : "Live coverage updates, managed by the MegaForm Blogs console.",
+                    SchemaJson = gallery ? GallerySchemaJson : LiveSchemaJson,
+                    Status = "published",
+                    RequireAuth = true
+                }, scope));
+                if (created == null || created.FormId <= 0)
+                {
+                    throw new InvalidOperationException("The form could not be created.");
+                }
+                if (gallery)
+                {
+                    galleryFormId = created.FormId;
+                    System.Web.HttpContext.Current.Items["MegaFormBlogs.GalleryFormId"] = galleryFormId;
+                    message = "Gallery storage created (form #" + galleryFormId + ").";
+                }
+                else
+                {
+                    liveFormId = created.FormId;
+                    System.Web.HttpContext.Current.Items["MegaFormBlogs.LiveFormId"] = liveFormId;
+                    message = "Live coverage storage created (form #" + liveFormId + ").";
+                }
+            }
+            else if (action == "image-add" && galleryFormId > 0)
+            {
+                // new_* so these can never be merged with the per-row inputs below them.
+                var url = (Request.Form["new_image_url"] ?? "").Trim();
+                var caption = (Request.Form["new_caption"] ?? "").Trim();
+                var credit = (Request.Form["new_credit"] ?? "").Trim();
+                var sortRaw = (Request.Form["new_sort_order"] ?? "").Trim();
+                if (selectedUid.Length == 0)
+                {
+                    throw new InvalidOperationException("Choose a post first.");
+                }
+                if (!IsSafeImageUrl(url))
+                {
+                    throw new InvalidOperationException("Give a relative path or an http(s) image URL, 500 characters at most.");
+                }
+                if (caption.Length > 500) { caption = caption.Substring(0, 500); }
+                if (credit.Length > 200) { credit = credit.Substring(0, 200); }
+                var sortValue = 0;
+                int.TryParse(sortRaw, NumberStyles.Integer, CultureInfo.InvariantCulture, out sortValue);
+
+                var values = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["image_uid"] = "IMG-" + DateTime.UtcNow.Ticks.ToString(CultureInfo.InvariantCulture),
+                    ["post_uid"] = selectedUid,
+                    ["image_url"] = url,
+                    ["caption"] = caption,
+                    ["credit"] = credit,
+                    ["sort_order"] = sortValue.ToString(CultureInfo.InvariantCulture)
+                };
+                var saved = Run(c => c.Submissions.SubmitAsync(galleryFormId, values, scope));
+                if (saved == null || !saved.Success)
+                {
+                    throw new InvalidOperationException("The image could not be added.");
+                }
+                message = "Image added.";
+            }
+            else if (action == "image-save" && galleryFormId > 0)
+            {
+                var targetId = 0;
+                int.TryParse(Request.Form["row_id"], out targetId);
+                var target = targetId > 0 ? Run(c => c.Records.GetRecordAsync(targetId, scope)) : null;
+                if (target == null || target.FormId != galleryFormId)
+                {
+                    throw new InvalidOperationException("That record does not belong to the gallery form.");
+                }
+                var caption = (Request.Form["caption_" + targetId] ?? "").Trim();
+                var sortValue = 0;
+                int.TryParse((Request.Form["sort_" + targetId] ?? "").Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out sortValue);
+                if (caption.Length > 500) { caption = caption.Substring(0, 500); }
+                Run(c => c.Records.PatchRecordAsync(targetId, new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["caption"] = caption,
+                    ["sort_order"] = sortValue.ToString(CultureInfo.InvariantCulture)
+                }, scope));
+                message = "Image updated.";
+            }
+            else if (action == "image-delete" && galleryFormId > 0)
+            {
+                var targetId = 0;
+                int.TryParse(Request.Form["row_id"], out targetId);
+                var target = targetId > 0 ? Run(c => c.Records.GetRecordAsync(targetId, scope)) : null;
+                if (target == null || target.FormId != galleryFormId)
+                {
+                    throw new InvalidOperationException("That record does not belong to the gallery form.");
+                }
+                Run(async c => { await c.Submissions.DeleteAsync(targetId, scope); return true; });
+                message = "Image removed.";
+            }
+            else if (action == "update-add" && liveFormId > 0)
+            {
+                var headline = (Request.Form["headline"] ?? "").Trim();
+                var bodyText = (Request.Form["body"] ?? "").Trim();
+                var keyMoment = string.Equals((Request.Form["is_key_moment"] ?? "").Trim(), "on", StringComparison.OrdinalIgnoreCase);
+                if (selectedUid.Length == 0)
+                {
+                    throw new InvalidOperationException("Choose a post first.");
+                }
+                if (bodyText.Length == 0)
+                {
+                    throw new InvalidOperationException("An update needs something to say.");
+                }
+                if (bodyText.Length > 4000) { bodyText = bodyText.Substring(0, 4000); }
+                if (headline.Length > 200) { headline = headline.Substring(0, 200); }
+
+                var values = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["update_uid"] = "UPD-" + DateTime.UtcNow.Ticks.ToString(CultureInfo.InvariantCulture),
+                    ["post_uid"] = selectedUid,
+                    ["headline"] = headline,
+                    ["body"] = bodyText,
+                    // Invariant round-trip: the host culture must not get a vote on what this means.
+                    ["happened_at"] = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture),
+                    ["author_name"] = user == null ? "" : user.DisplayName,
+                    ["is_key_moment"] = keyMoment ? "true" : "false",
+                    ["is_closing"] = "false"
+                };
+                var saved = Run(c => c.Submissions.SubmitAsync(liveFormId, values, scope));
+                if (saved == null || !saved.Success)
+                {
+                    throw new InvalidOperationException("The update could not be posted.");
+                }
+                message = "Update posted.";
+            }
+            else if ((action == "update-key" || action == "update-delete") && liveFormId > 0)
+            {
+                var targetId = 0;
+                int.TryParse(Request.Form["row_id"], out targetId);
+                var target = targetId > 0 ? Run(c => c.Records.GetRecordAsync(targetId, scope)) : null;
+                if (target == null || target.FormId != liveFormId)
+                {
+                    throw new InvalidOperationException("That record does not belong to the live updates form.");
+                }
+                if (action == "update-key")
+                {
+                    var wanted = Flag(target, "is_key_moment") ? "false" : "true";
+                    Run(c => c.Records.PatchRecordAsync(targetId, new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        ["is_key_moment"] = wanted
+                    }, scope));
+                    message = wanted == "true" ? "Marked as a key moment." : "No longer a key moment.";
+                }
+                else
+                {
+                    Run(async c => { await c.Submissions.DeleteAsync(targetId, scope); return true; });
+                    message = "Update deleted.";
+                }
+            }
+            else if (action == "live-close" && liveFormId > 0)
+            {
+                if (selectedUid.Length == 0)
+                {
+                    throw new InvalidOperationException("Choose a post first.");
+                }
+                var closingText = (Request.Form["closing_note"] ?? "").Trim();
+                if (closingText.Length == 0) { closingText = "Coverage has ended. Thank you for following along."; }
+                if (closingText.Length > 1000) { closingText = closingText.Substring(0, 1000); }
+                var values = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["update_uid"] = "UPD-" + DateTime.UtcNow.Ticks.ToString(CultureInfo.InvariantCulture),
+                    ["post_uid"] = selectedUid,
+                    ["headline"] = "Coverage ended",
+                    ["body"] = closingText,
+                    ["happened_at"] = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture),
+                    ["author_name"] = user == null ? "" : user.DisplayName,
+                    ["is_key_moment"] = "false",
+                    ["is_closing"] = "true"
+                };
+                var saved = Run(c => c.Submissions.SubmitAsync(liveFormId, values, scope));
+                if (saved == null || !saved.Success)
+                {
+                    throw new InvalidOperationException("Coverage could not be closed.");
+                }
+                message = "Coverage closed. The public page shows ENDED instead of LIVE.";
+            }
+            else if (action == "sweep")
+            {
+                var sweepFormId = tab == "gallery" ? galleryFormId : liveFormId;
+                if (sweepFormId <= 0)
+                {
+                    throw new InvalidOperationException("That storage form does not exist yet.");
+                }
+                var cap = tab == "gallery" ? ImageCap : UpdateCap;
+                var scan = Run(c => c.SubmissionDashboard.SearchAsync(
+                    new SubmissionSearchQuery { FormId = sweepFormId, Page = 1, PageSize = cap }, scope));
+                var swept = 0;
+                if (scan != null && scan.Items != null)
+                {
+                    foreach (var row in scan.Items)
+                    {
+                        var typed = Run(c => c.Records.GetRecordAsync(row.SubmissionId, scope));
+                        if (typed == null) { continue; }
+                        if (Text(typed, "post_uid", "").Length > 0) { continue; }
+                        var id = row.SubmissionId;
+                        Run(async c => { await c.Submissions.DeleteAsync(id, scope); return true; });
+                        swept++;
+                    }
+                }
+                message = swept == 0
+                    ? "No unattached rows in this storage form."
+                    : swept + " unattached row(s) deleted.";
+            }
+            else if (action == "live-reopen" && liveFormId > 0)
+            {
+                // Reopening is deleting the entry that closed it - there is no separate state to
+                // get out of step with the timeline.
+                var truncatedScan = false;
+                var rows = LoadChildren(scope, liveFormId, selectedUid, UpdateCap, out truncatedScan);
+                var removed = 0;
+                foreach (var row in rows.Where(Flag2Closing).ToList())
+                {
+                    var id = row.SubmissionId;
+                    Run(async c => { await c.Submissions.DeleteAsync(id, scope); return true; });
+                    removed++;
+                }
+                message = removed == 0 ? "This coverage was not closed." : "Coverage reopened.";
+            }
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            messageError = true;
+        }
+    }
+
+    // ---- reads ----------------------------------------------------------------------------
+    var posts = new List<AppRecordDto>();
+    AppRecordDto selectedPost = null;
+    var images = new List<AppRecordDto>();
+    var updates = new List<AppRecordDto>();
+    var imagesTruncated = false;
+    var updatesTruncated = false;
+
+    if (allowed)
+    {
+        try
+        {
+            var queue = Run(c => c.Queries.ExecuteAsync("blog-starter", "all-posts",
+                new AppQueryRequest { Page = 1, PageSize = 100 }, scope));
+            if (queue != null && queue.Items != null) { posts = queue.Items.ToList(); }
+        }
+        catch (Exception ex)
+        {
+            message = string.IsNullOrWhiteSpace(message) ? ex.Message : message;
+            messageError = true;
+        }
+
+        // Ownership: the id has to be one of the posts this app returned, not any record on the
+        // portal. Then the typed read supplies the key the query does not project.
+        if (selectedPostId > 0 && posts.Any(p => p.SubmissionId == selectedPostId))
+        {
+            selectedPost = Run(c => c.Records.GetRecordAsync(selectedPostId, scope));
+        }
+        selectedUid = selectedPost == null ? "" : PostKey(selectedPost);
+        if (selectedUid.Length == 0) { selectedPost = null; }
+
+        if (selectedUid.Length > 0 && tab == "gallery" && galleryFormId > 0)
+        {
+            images = LoadChildren(scope, galleryFormId, selectedUid, ImageCap, out imagesTruncated)
+                .OrderBy(Sort).ToList();
+        }
+        if (selectedUid.Length > 0 && tab == "live" && liveFormId > 0)
+        {
+            updates = LoadChildren(scope, liveFormId, selectedUid, UpdateCap, out updatesTruncated)
+                .OrderByDescending(Happened).ToList();
+        }
+    }
+
+    var closed = updates.Any(Flag2Closing);
+    var keyMoments = updates.Count(u => Flag(u, "is_key_moment"));
+    var galleryPosts = posts.Count(p => string.Equals(Text(p, "content_type", ""), "Gallery", StringComparison.OrdinalIgnoreCase));
+    var livePosts = posts.Count(p => string.Equals(Text(p, "content_type", ""), "Liveblog", StringComparison.OrdinalIgnoreCase));
+}
+
+<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs-admin.css?v=20260809h" />
+
+<div class="mfba">
+    @if (!allowed)
+    {
+        <header class="mfba-head">
+            <div class="mfba-head-row"><div><h1>Administrator access required</h1><p>Gallery and live coverage are limited to Administrators and Blog Publishers.</p></div></div>
+        </header>
+    }
+    else
+    {
+        <header class="mfba-head">
+            <nav class="mfba-crumb" aria-label="Breadcrumb">
+                <a href="/Blogs">Blog</a>@Icon("chevron-right", "mfba-icon mfba-icon-md")
+                <a href="@adminBaseUrl">Admin</a>@Icon("chevron-right", "mfba-icon mfba-icon-md")
+                <strong>Formats</strong>
+            </nav>
+            <div class="mfba-head-row">
+                <div>
+                    <h1>Gallery and live coverage</h1>
+                    <p>The two post formats that hold more than one thing: a set of images, or a running feed</p>
+                </div>
+            </div>
+            <nav class="mfba-tabs">
+                @{
+                    var postQuery = selectedPostId > 0 ? "&post=" + selectedPostId : "";
+                    var galleryTabUrl = formatsUrl + "&tab=gallery" + postQuery;
+                    var liveTabUrl = formatsUrl + "&tab=live" + postQuery;
+                }
+                <a class="@(tab == "gallery" ? "on" : "")" href="@galleryTabUrl">@Icon("image", "mfba-icon mfba-icon-md") Gallery posts</a>
+                <a class="@(tab == "live" ? "on" : "")" href="@liveTabUrl">@Icon("radio", "mfba-icon mfba-icon-md") Live coverage</a>
+            </nav>
+        </header>
+
+        <input type="hidden" name="mfb_csrf" value="@csrfToken" />
+        <input type="hidden" name="post_id" value="@selectedPostId" />
+
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            <div style="padding:16px 24px 0"><div class="mfba-notice @(messageError ? "err" : "ok")">@message</div></div>
+        }
+
+        <section class="mfba-stats" aria-label="Format figures">
+            <div class="mfba-stat">
+                <div class="mfba-stat-top"><span class="mfba-stat-chip mfba-c-violet">@Icon("image")</span></div>
+                <p class="mfba-stat-value">@galleryPosts</p>
+                <p class="mfba-stat-label">Gallery posts</p>
+                <p class="mfba-stat-sub">content type Gallery</p>
+            </div>
+            <div class="mfba-stat">
+                <div class="mfba-stat-top"><span class="mfba-stat-chip mfba-c-amber">@Icon("radio")</span></div>
+                <p class="mfba-stat-value">@livePosts</p>
+                <p class="mfba-stat-label">Liveblogs</p>
+                <p class="mfba-stat-sub">content type Liveblog</p>
+            </div>
+            <div class="mfba-stat">
+                <div class="mfba-stat-top"><span class="mfba-stat-chip mfba-c-blue">@Icon("image")</span></div>
+                <p class="mfba-stat-value">@(galleryFormId > 0 ? "#" + galleryFormId : "none")</p>
+                <p class="mfba-stat-label">Gallery storage</p>
+                <p class="mfba-stat-sub">Blog Gallery Images</p>
+            </div>
+            <div class="mfba-stat">
+                <div class="mfba-stat-top"><span class="mfba-stat-chip mfba-c-emerald">@Icon("radio")</span></div>
+                <p class="mfba-stat-value">@(liveFormId > 0 ? "#" + liveFormId : "none")</p>
+                <p class="mfba-stat-label">Live storage</p>
+                <p class="mfba-stat-sub">Blog Live Updates</p>
+            </div>
+        </section>
+
+        // ---- storage setup ----------------------------------------------------------------
+        if (tab == "gallery" && galleryFormId == 0)
+        {
+            <section class="mfba-panel">
+                <div class="mfba-panel-head"><h2>@Icon("image", "mfba-icon mfba-icon-lg") Set up gallery storage</h2></div>
+                <div class="mfba-editor">
+                    <p class="mfba-hint">
+                        A gallery post keeps its images in a <strong>Blog Gallery Images</strong> form, one record
+                        per image. The live posts form is not altered: adding a field to a form that already holds
+                        this portal's content is the one change here that reinstalling a package cannot undo.
+                    </p>
+                    <button class="mfba-btn" type="submit" name="mfb_fmt_action" value="install-gallery">
+                        @Icon("plus", "mfba-icon mfba-icon-md") Create the gallery form
+                    </button>
+                </div>
+            </section>
+        }
+        if (tab == "live" && liveFormId == 0)
+        {
+            <section class="mfba-panel">
+                <div class="mfba-panel-head"><h2>@Icon("radio", "mfba-icon mfba-icon-lg") Set up live coverage storage</h2></div>
+                <div class="mfba-editor">
+                    <p class="mfba-hint">
+                        Live coverage keeps its updates in a <strong>Blog Live Updates</strong> form, one record per
+                        update, with a key-moment flag and the entry that closes the coverage. Same reasoning as the
+                        gallery: no change to the posts form.
+                    </p>
+                    <button class="mfba-btn" type="submit" name="mfb_fmt_action" value="install-live">
+                        @Icon("plus", "mfba-icon mfba-icon-md") Create the live updates form
+                    </button>
+                </div>
+            </section>
+        }
+
+        // ---- post picker ------------------------------------------------------------------
+        <section class="mfba-panel">
+            <div class="mfba-panel-head">
+                <h2>@Icon("eye", "mfba-icon mfba-icon-lg") Choose the post</h2>
+                @if ((tab == "gallery" ? galleryFormId : liveFormId) > 0)
+                {
+                    <button class="mfba-btn ghost" type="submit" name="mfb_fmt_action" value="sweep"
+                            title="Deletes rows in this storage form that are not attached to any post">
+                        @Icon("trash", "mfba-icon mfba-icon-md") Clean unattached rows
+                    </button>
+                }
+                @if (selectedPost != null)
+                {
+                    var selectedSlugUrl = "/Blogs?slug=" + Server.UrlEncode(Text(selectedPost, "slug", ""));
+                    <a class="mfba-panel-link" href="@selectedSlugUrl">View it</a>
+                }
+            </div>
+            <div class="mfba-editor">
+                <div class="mfba-pickrow">
+                    @foreach (var post in posts.OrderByDescending(p => Text(p, "publish_date", "")).Take(60))
+                    {
+                        var kind = Text(post, "content_type", "Blog Post");
+                        var isOn = post.SubmissionId == selectedPostId;
+                        var href = formatsUrl + "&tab=" + tab + "&post=" + post.SubmissionId;
+                        var wanted = tab == "gallery" ? "Gallery" : "Liveblog";
+                        var matches = string.Equals(kind, wanted, StringComparison.OrdinalIgnoreCase);
+                        <a class="mfba-pick @(isOn ? "on" : "") @(matches ? "match" : "")" href="@href">
+                            <strong>@Text(post, "title", "Untitled")</strong>
+                            <small>@kind</small>
+                        </a>
+                    }
+                </div>
+                <p class="mfba-hint">
+                    Posts whose content type already matches this tab are outlined. Any post can hold images or
+                    updates &mdash; the content type is what makes the public page render them.
+                </p>
+            </div>
+        </section>
+
+        // ---- gallery -----------------------------------------------------------------------
+        if (tab == "gallery" && galleryFormId > 0 && selectedPost != null)
+        {
+            <section class="mfba-panel">
+                <div class="mfba-panel-head">
+                    <h2>@Icon("plus", "mfba-icon mfba-icon-lg") Add an image</h2>
+                </div>
+                <div class="mfba-editor">
+                    <div class="mfba-form-grid">
+                        <label>Image URL<input name="new_image_url" maxlength="500" placeholder="https://... or /Portals/0/..." /></label>
+                        <label>Sort order<input name="new_sort_order" maxlength="6" placeholder="10" /></label>
+                    </div>
+                    <label class="mfba-full">Caption<input name="new_caption" maxlength="500" /></label>
+                    <label class="mfba-full">Credit<input name="new_credit" maxlength="200" /></label>
+                    <div class="mfba-actions">
+                        <button class="mfba-btn" type="submit" name="mfb_fmt_action" value="image-add">
+                            @Icon("plus", "mfba-icon mfba-icon-md") Add image
+                        </button>
+                        <a class="mfba-btn ghost" href="@(adminBaseUrl + "?view=media")">@Icon("image", "mfba-icon mfba-icon-md") Media library</a>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mfba-panel">
+                <div class="mfba-panel-head">
+                    <h2>@Icon("image", "mfba-icon mfba-icon-lg") @images.Count image@(images.Count == 1 ? "" : "s")</h2>
+                    <span class="mfba-panel-link">@Text(selectedPost, "title", "Untitled")</span>
+                </div>
+                @if (imagesTruncated)
+                {
+                    <div style="padding:0 24px"><div class="mfba-notice err">More than @ImageCap images are stored; only the first @ImageCap are listed.</div></div>
+                }
+                <div class="mfba-editor">
+                    @if (images.Count == 0)
+                    {
+                        <p class="mfba-hint">No images yet. Add the first one above; the public page shows a gallery once this post's content type is <strong>Gallery</strong>.</p>
+                    }
+                    else
+                    {
+                        <div class="mfba-media-grid">
+                            @foreach (var image in images)
+                            {
+                                var url = Text(image, "image_url", "");
+                                var rowId = image.SubmissionId;
+                                var captionField = "caption_" + rowId;
+                                var sortField = "sort_" + rowId;
+                                <div class="mfba-media-item">
+                                    <img src="@url" alt="" loading="lazy" />
+                                    <input name="@captionField" value="@Text(image, "caption", "")" maxlength="500" placeholder="Caption" />
+                                    <div class="mfba-media-row">
+                                        <input name="@sortField" value="@Sort(image)" maxlength="6" />
+                                        <button class="mfba-iconbtn" type="submit" name="mfb_fmt_action" value="image-save" title="Save" onclick="mfbaRow(this,@rowId)">@Icon("save", "mfba-icon mfba-icon-md")</button>
+                                        <button class="mfba-iconbtn danger" type="submit" name="mfb_fmt_action" value="image-delete" title="Remove" onclick="mfbaRow(this,@rowId)">@Icon("trash", "mfba-icon mfba-icon-md")</button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </section>
+        }
+
+        // ---- live coverage ------------------------------------------------------------------
+        if (tab == "live" && liveFormId > 0 && selectedPost != null)
+        {
+            <section class="mfba-panel">
+                <div class="mfba-panel-head">
+                    <h2>@Icon("radio", "mfba-icon mfba-icon-lg") Post an update</h2>
+                    @if (closed)
+                    {
+                        <span class="mfba-st mfba-st-archived">Coverage ended</span>
+                    }
+                    else
+                    {
+                        <span class="mfba-st mfba-st-published">Live</span>
+                    }
+                </div>
+                <div class="mfba-editor">
+                    <label class="mfba-full">Headline (optional)<input name="headline" maxlength="200" /></label>
+                    <label class="mfba-full">Update<textarea name="body" rows="3" maxlength="4000"></textarea></label>
+                    <label class="mfba-check"><input type="checkbox" name="is_key_moment" /><span>Key moment &mdash; it also appears in the summary rail</span></label>
+                    <div class="mfba-actions">
+                        <button class="mfba-btn" type="submit" name="mfb_fmt_action" value="update-add">
+                            @Icon("plus", "mfba-icon mfba-icon-md") Post update
+                        </button>
+                        @if (closed)
+                        {
+                            <button class="mfba-btn ghost" type="submit" name="mfb_fmt_action" value="live-reopen">
+                                @Icon("play", "mfba-icon mfba-icon-md") Reopen coverage
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="mfba-btn ghost" type="submit" name="mfb_fmt_action" value="live-close">
+                                @Icon("stop", "mfba-icon mfba-icon-md") Close coverage
+                            </button>
+                        }
+                    </div>
+                    <p class="mfba-hint">
+                        Closing writes a final entry rather than a flag: the timeline says coverage ended, the public
+                        badge turns from LIVE to ENDED, and reopening deletes that one entry.
+                        @keyMoments key moment@(keyMoments == 1 ? "" : "s") so far.
+                    </p>
+                </div>
+            </section>
+
+            <section class="mfba-panel">
+                <div class="mfba-panel-head">
+                    <h2>@Icon("radio", "mfba-icon mfba-icon-lg") @updates.Count update@(updates.Count == 1 ? "" : "s")</h2>
+                    <span class="mfba-panel-link">@Text(selectedPost, "title", "Untitled")</span>
+                </div>
+                @if (updatesTruncated)
+                {
+                    <div style="padding:0 24px"><div class="mfba-notice err">More than @UpdateCap updates are stored; only the newest @UpdateCap are listed.</div></div>
+                }
+                <div class="mfba-editor">
+                    @if (updates.Count == 0)
+                    {
+                        <p class="mfba-hint">Nothing posted yet. The public page shows the feed once this post's content type is <strong>Liveblog</strong>.</p>
+                    }
+                    else
+                    {
+                        <ol class="mfba-live">
+                            @foreach (var update in updates)
+                            {
+                                var rowId = update.SubmissionId;
+                                var isKey = Flag(update, "is_key_moment");
+                                var isClosing = Flag(update, "is_closing");
+                                <li class="@(isClosing ? "closing" : "") @(isKey ? "key" : "")">
+                                    <time>@Stamp(Happened(update))</time>
+                                    <div>
+                                        @if (Text(update, "headline", "").Length > 0)
+                                        {
+                                            <strong>@Text(update, "headline", "")</strong>
+                                        }
+                                        <p>@Text(update, "body", "")</p>
+                                        <small>@Text(update, "author_name", "Editorial")</small>
+                                    </div>
+                                    <div class="mfba-live-actions">
+                                        <button class="mfba-iconbtn @(isKey ? "on" : "")" type="submit" name="mfb_fmt_action" value="update-key" title="Key moment" onclick="mfbaRow(this,@rowId)">@Icon("star", "mfba-icon mfba-icon-md")</button>
+                                        <button class="mfba-iconbtn danger" type="submit" name="mfb_fmt_action" value="update-delete" title="Delete" onclick="mfbaRow(this,@rowId)">@Icon("trash", "mfba-icon mfba-icon-md")</button>
+                                    </div>
+                                </li>
+                            }
+                        </ol>
+                    }
+                </div>
+            </section>
+        }
+    }
+</div>
+
+@if (allowed)
+{
+    <script>
+    // Every row posts the same form, so the row id has to travel with the click. A hidden input is
+    // created once and rewritten per click - simpler than a form per row, and it keeps one CSRF
+    // token on the page.
+    function mfbaRow(button, id) {
+        var form = button.form;
+        if (!form) { return; }
+        var field = form.querySelector('input[name="row_id"]');
+        if (!field) {
+            field = document.createElement('input');
+            field.type = 'hidden';
+            field.name = 'row_id';
+            form.appendChild(field);
+        }
+        field.value = id;
+        // Nothing else to do: every row's inputs are named caption_<id> / sort_<id>, so the server
+        // reads the pair that belongs to this id. (They used to share one name, and ASP.NET merged
+        // them into "a,b,c" - which is how four captions ended up in one image.)
+    }
+    </script>
+}

@@ -1,0 +1,633 @@
+﻿@*
+    MegaForm Blogs - authors (screen 5).
+    Read-only. Contributors are derived from the typed `author_name` field of the posts
+    themselves â€” the blog has no separate author entity, and inventing one would be a second
+    source of truth for a name that already lives on every post.
+*@
+@inherits DotNetNuke.Web.Razor.DotNetNukeWebPage<dynamic>
+@using System
+@using System.Linq
+@using System.Globalization
+@using System.Collections.Generic
+@using System.Security.Cryptography
+@using System.Text.RegularExpressions
+@using MegaForm.Sdk
+
+@functions {
+    /// The five fields a byline is made of. They live on every post, so "editing an author"
+    /// means rewriting them across that author's posts â€” there is no author entity to edit.
+    static readonly string[] ProfileKeys = new[]
+    {
+        "author_name", "author_role", "author_email", "author_avatar_url", "author_bio"
+    };
+
+    static string EnsureCsrfToken()
+    {
+        const string key = "MegaFormBlogs.CsrfToken";
+        var session = System.Web.HttpContext.Current.Session;
+        var token = session[key] as string;
+        if (!string.IsNullOrWhiteSpace(token)) return token;
+        var bytes = new byte[32];
+        using (var random = RandomNumberGenerator.Create()) { random.GetBytes(bytes); }
+        token = Convert.ToBase64String(bytes);
+        session[key] = token;
+        return token;
+    }
+
+    static void ValidateCsrfToken(string posted)
+    {
+        const string key = "MegaFormBlogs.CsrfToken";
+        var expected = System.Web.HttpContext.Current.Session[key] as string;
+        var valid = !string.IsNullOrWhiteSpace(expected) && !string.IsNullOrWhiteSpace(posted) && expected.Length == posted.Length;
+        var difference = valid ? 0 : 1;
+        var length = valid ? expected.Length : 0;
+        for (var index = 0; index < length; index++) { difference |= expected[index] ^ posted[index]; }
+        if (difference != 0)
+            throw new InvalidOperationException("The editorial session expired. Reload this page and try again.");
+    }
+
+    /// An avatar URL is written straight into an &lt;img src&gt; on a PUBLIC page, so only a
+    /// site-relative path or an absolute http(s) URL is accepted â€” never javascript:, never data:.
+    static bool IsSafeImageUrl(string url)
+    {
+        var value = (url ?? "").Trim();
+        if (value.Length == 0) return true;                      // clearing the avatar is fine
+        if (value.Length > 500) return false;
+        if (value.StartsWith("/", StringComparison.Ordinal) && !value.StartsWith("//", StringComparison.Ordinal))
+            return true;
+        return value.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+            || value.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+    }
+    static T Run<T>(System.Func<IMegaFormClient, System.Threading.Tasks.Task<T>> action)
+    {
+        var initializeMegaForm = MegaForm.DNN.Services.DnnServiceLocator.Instance;
+        return System.Threading.Tasks.Task.Run(() => MegaFormSdk.RunAsync(action)).GetAwaiter().GetResult();
+    }
+
+    static string Text(AppRecordDto record, string key, string fallback)
+    {
+        if (record == null || record.Data == null || !record.Data.ContainsKey(key) || record.Data[key] == null)
+            return fallback;
+        var value = Convert.ToString(record.Data[key]);
+        return string.IsNullOrWhiteSpace(value) ? fallback : value;
+    }
+
+    static int Num(AppRecordDto record, string key)
+    {
+        int value;
+        return int.TryParse(Text(record, key, "0"), NumberStyles.Any, CultureInfo.InvariantCulture, out value) ? value : 0;
+    }
+
+    static string Compact(int value)
+    {
+        if (value >= 1000000) return (value / 1000000d).ToString("0.#", CultureInfo.InvariantCulture) + "m";
+        if (value >= 1000) return (value / 1000d).ToString("0.#", CultureInfo.InvariantCulture) + "k";
+        return value.ToString(CultureInfo.InvariantCulture);
+    }
+
+    static bool CanManage(DotNetNuke.Entities.Users.UserInfo user)
+    {
+        if (user == null || user.UserID < 0) return false;
+        if (user.IsSuperUser) return true;
+        var allowed = new[] { "Administrators", "Blog Editors", "Blog Publishers" };
+        return user.Roles != null && user.Roles.Any(role => allowed.Contains(role, StringComparer.OrdinalIgnoreCase));
+    }
+
+    static string Initials(string name)
+    {
+        var parts = (name ?? "").Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0) return "MF";
+        return string.Concat(parts.Take(2).Select(x => char.ToUpperInvariant(x[0])));
+    }
+
+    static DateTime? PublishedOn(AppRecordDto record)
+    {
+        DateTime when;
+        return DateTime.TryParse(Text(record, "publish_date", ""), CultureInfo.InvariantCulture,
+            DateTimeStyles.None, out when) ? when : (DateTime?)null;
+    }
+
+    static System.Web.IHtmlString Icon(string name, string cssClass = "mfba-icon")
+    {
+        string body;
+        switch (name)
+        {
+            case "chevron-right": body = "<path d='m9 18 6-6-6-6'/>"; break;
+            case "users": body = "<path d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/><circle cx='9' cy='7' r='4'/><path d='M22 21v-2a4 4 0 0 0-3-3.87'/>"; break;
+            case "file-text": body = "<path d='M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z'/><path d='M14 2v4a2 2 0 0 0 2 2h4'/><path d='M10 9H8'/><path d='M16 13H8'/><path d='M16 17H8'/>"; break;
+            case "eye": body = "<path d='M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0'/><circle cx='12' cy='12' r='3'/>"; break;
+            case "message-circle": body = "<path d='M7.9 20A9 9 0 1 0 4 16.1L2 22Z'/>"; break;
+            case "pencil": body = "<path d='M21.17 6.81a1 1 0 0 0-3.98-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.63l4.35-1.33a2 2 0 0 0 .83-.5z'/>"; break;
+            case "calendar": body = "<path d='M8 2v4'/><path d='M16 2v4'/><rect width='18' height='18' x='3' y='4' rx='2'/><path d='M3 10h18'/>"; break;
+            default: body = ""; break;
+        }
+        return new System.Web.HtmlString("<svg class='" + cssClass + "' viewBox='0 0 24 24' aria-hidden='true'>" + body + "</svg>");
+    }
+}
+
+@{
+    var portalId = DotNetNuke.Entities.Portals.PortalSettings.Current == null
+        ? 0 : DotNetNuke.Entities.Portals.PortalSettings.Current.PortalId;
+    var activeTab = DotNetNuke.Entities.Portals.PortalSettings.Current == null
+        ? null : DotNetNuke.Entities.Portals.PortalSettings.Current.ActiveTab;
+    var adminBaseUrl = activeTab == null ? Request.RawUrl : DotNetNuke.Common.Globals.NavigateURL(activeTab.TabID);
+    var user = DotNetNuke.Entities.Users.UserController.Instance.GetCurrentUserInfo();
+    var scope = new MegaFormScope
+    {
+        PortalId = portalId,
+        UserId = user == null ? 0 : user.UserID,
+        UserName = user == null ? "" : user.Username,
+        DisplayName = user == null ? "" : user.DisplayName,
+        UserEmail = user == null ? "" : user.Email,
+        IsAuthenticated = user != null && user.UserID >= 0,
+        IsAdmin = user != null && (user.IsSuperUser || user.IsInRole("Administrators")),
+        IsSuperUser = user != null && user.IsSuperUser,
+        Roles = user == null || user.Roles == null ? new List<string>() : user.Roles.ToList(),
+        IpAddress = Request.UserHostAddress ?? ""
+    };
+    var allowed = CanManage(user);
+    var csrfToken = allowed ? EnsureCsrfToken() : "";
+    var message = "";
+    var messageError = false;
+    var posts = new List<AppRecordDto>();
+
+    // ---- profile save -------------------------------------------------------------------
+    // Rewrites the five byline fields on every post the author owns. Bounded to the same
+    // capped page the screen reads, CSRF-checked, and validated field by field.
+    var selected = (Request.QueryString["author"] ?? "").Trim();
+    if (allowed && string.Equals(Request.HttpMethod, "POST", StringComparison.OrdinalIgnoreCase)
+        && string.Equals(Request.Form["mfb_author_save"], "1", StringComparison.Ordinal))
+    {
+        try
+        {
+            ValidateCsrfToken(Request.Form["mfb_csrf"]);
+
+            var original = (Request.Form["author_original"] ?? "").Trim();
+            var newName = (Request.Form["author_name"] ?? "").Trim();
+            var newRole = (Request.Form["author_role"] ?? "").Trim();
+            var newEmail = (Request.Form["author_email"] ?? "").Trim();
+            var newAvatar = (Request.Form["author_avatar_url"] ?? "").Trim();
+            var newBio = (Request.Form["author_bio"] ?? "").Trim();
+
+            if (original.Length == 0) { throw new InvalidOperationException("No author was selected."); }
+            if (newName.Length == 0 || newName.Length > 100)
+            {
+                throw new InvalidOperationException("The display name is required and must be 100 characters or fewer.");
+            }
+            if (newRole.Length > 100) { throw new InvalidOperationException("The role must be 100 characters or fewer."); }
+            if (newEmail.Length > 200) { throw new InvalidOperationException("That email address is too long."); }
+            if (newEmail.Length > 0 && !Regex.IsMatch(newEmail, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+            {
+                throw new InvalidOperationException("That email address does not look right.");
+            }
+            if (!IsSafeImageUrl(newAvatar))
+            {
+                throw new InvalidOperationException("The avatar must be a site-relative path or an http(s) URL, up to 500 characters.");
+            }
+            if (newBio.Length > 2000) { throw new InvalidOperationException("The bio must be 2000 characters or fewer."); }
+
+            var owned = Run(c => c.Queries.ExecuteAsync("blog-starter", "all-posts",
+                new AppQueryRequest { Page = 1, PageSize = 100 }, scope));
+            var targets = owned == null || owned.Items == null
+                ? new List<AppRecordDto>()
+                : owned.Items.Where(p => string.Equals(Text(p, "author_name", ""), original,
+                                                       StringComparison.OrdinalIgnoreCase)).ToList();
+
+            var values = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["author_name"] = newName,
+                ["author_role"] = newRole,
+                ["author_email"] = newEmail,
+                ["author_avatar_url"] = newAvatar,
+                ["author_bio"] = newBio
+            };
+            var changed = 0;
+            foreach (var target in targets)
+            {
+                var id = target.SubmissionId;
+                if (Run(c => c.Records.PatchRecordAsync(id, values, scope)) != null) { changed++; }
+            }
+
+            message = changed == 0
+                ? "Nothing was updated: that author has no posts on this page of the register."
+                : changed + " post(s) updated."
+                  + (string.Equals(newName, original, StringComparison.OrdinalIgnoreCase)
+                     ? "" : " The byline was renamed from \"" + original + "\" to \"" + newName + "\".");
+            messageError = changed == 0;
+            selected = newName;   // follow the rename instead of landing on a name nobody has
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            messageError = true;
+        }
+    }
+
+    if (allowed)
+    {
+        try
+        {
+            var result = Run(c => c.Queries.ExecuteAsync("blog-starter", "all-posts",
+                new AppQueryRequest { Page = 1, PageSize = 100 }, scope));
+            if (result != null && result.Items != null) { posts = result.Items.ToList(); }
+        }
+        catch (Exception ex)
+        {
+            message = string.IsNullOrWhiteSpace(message) ? ex.Message : message;
+            messageError = true;
+        }
+    }
+
+    var search = (Request.QueryString["q"] ?? "").Trim();
+
+    var allAuthors = posts
+        .Where(p => !string.IsNullOrWhiteSpace(Text(p, "author_name", "")))
+        .GroupBy(p => Text(p, "author_name", ""), StringComparer.OrdinalIgnoreCase)
+        .Select(g => new
+        {
+            Name = g.Key,
+            // The newest post wins for the profile fields: an author who changed their avatar or
+            // role should not be shown by whatever the oldest post happened to carry.
+            Profile = g.OrderByDescending(p => PublishedOn(p) ?? p.SubmittedOnUtc).First(),
+            Posts = g.Count(),
+            Published = g.Count(p => string.Equals(Text(p, "status", ""), "published", StringComparison.OrdinalIgnoreCase)),
+            Drafts = g.Count(p => !string.Equals(Text(p, "status", ""), "published", StringComparison.OrdinalIgnoreCase)),
+            Reads = g.Sum(p => Num(p, "view_count")),
+            Comments = g.Sum(p => Num(p, "comment_count")),
+            Last = g.Max(p => PublishedOn(p) ?? p.SubmittedOnUtc)
+        })
+        .OrderByDescending(a => a.Reads).ThenByDescending(a => a.Posts)
+        .ToList();
+
+    var authors = allAuthors
+        .Where(a => search.Length == 0
+                 || a.Name.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0
+                 || Text(a.Profile, "author_email", "").IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0)
+        .ToList();
+
+    var topReads = authors.Count == 0 ? 1 : Math.Max(1, authors[0].Reads);
+    var totalReads = authors.Sum(a => a.Reads);
+    var activeThisMonth = authors.Count(a => a.Last.Year == DateTime.UtcNow.Year && a.Last.Month == DateTime.UtcNow.Month);
+
+    // ---- detail view --------------------------------------------------------------------
+    // Looked up in the UNFILTERED list: an active search must not make the open profile vanish.
+    var detail = allAuthors.FirstOrDefault(a => string.Equals(a.Name, selected, StringComparison.OrdinalIgnoreCase));
+    var detailPosts = detail == null
+        ? new List<AppRecordDto>()
+        : posts.Where(p => string.Equals(Text(p, "author_name", ""), detail.Name, StringComparison.OrdinalIgnoreCase))
+               .OrderByDescending(p => PublishedOn(p) ?? p.SubmittedOnUtc).ToList();
+
+    // Avatar picker: every author image already used anywhere on this blog, through the typed
+    // gallery API â€” the same source the post editor's "Author" button uses. Pasting a URL by hand
+    // still works; this just means you rarely have to.
+    var avatarChoices = new List<GalleryItemDto>();
+    var currentAvatar = detail == null ? "" : Text(detail.Profile, "author_avatar_url", "");
+    if (detail != null)
+    {
+        try
+        {
+            var gallery = Run(c => c.Gallery.QueryGalleryAsync(new GalleryQueryRequest
+            {
+                AppKey = "blog-starter",
+                QueryKey = "all-posts",
+                Query = new AppQueryRequest { Page = 1, PageSize = 100 },
+                ImageFieldKeys = new List<string> { "author_avatar_url" },
+                TitleFieldKey = "author_name",
+                AltTextFieldKey = "author_name",
+                CaptionFieldKey = "author_role",
+                IncludeUploadedImages = false
+            }, scope));
+            if (gallery != null && gallery.Items != null)
+            {
+                avatarChoices = gallery.Items
+                    .Where(i => !string.IsNullOrWhiteSpace(i.Url))
+                    .GroupBy(i => i.Url, StringComparer.OrdinalIgnoreCase)
+                    .Select(g => g.First())
+                    .Take(24)
+                    .ToList();
+            }
+        }
+        catch (Exception)
+        {
+            // A gallery that cannot be read must not cost the editor its form.
+            avatarChoices = new List<GalleryItemDto>();
+        }
+    }
+
+    // The profile shows the NEWEST post's values, so posts that disagree are worth naming before
+    // someone presses Save and quietly rewrites them.
+    var inconsistent = detail == null ? 0 : detailPosts.Count(p =>
+        !string.Equals(Text(p, "author_role", ""), Text(detail.Profile, "author_role", ""), StringComparison.Ordinal)
+        || !string.Equals(Text(p, "author_avatar_url", ""), currentAvatar, StringComparison.Ordinal)
+        || !string.Equals(Text(p, "author_bio", ""), Text(detail.Profile, "author_bio", ""), StringComparison.Ordinal));
+}
+
+<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs-admin.css?v=20260809h" />
+
+<div class="mfba">
+    @if (!allowed)
+    {
+        <header class="mfba-head">
+            <div class="mfba-head-row"><div><h1>Editorial access required</h1><p>Sign in with a Blog or Administrator role to view contributors.</p></div></div>
+        </header>
+    }
+    else
+    {
+        <header class="mfba-head">
+            <nav class="mfba-crumb" aria-label="Breadcrumb">
+                <a href="/Blogs">Blog</a>@Icon("chevron-right", "mfba-icon mfba-icon-md")
+                <a href="@adminBaseUrl">Admin</a>@Icon("chevron-right", "mfba-icon mfba-icon-md")
+                <strong>Authors</strong>
+            </nav>
+            <div class="mfba-head-row">
+                <div>
+                    <h1>Authors</h1>
+                    <p>Everyone with a byline on this blog, and what their posts have earned</p>
+                </div>
+                <div class="mfba-head-actions">
+                    <label class="mfba-sr" for="mfba-aq">Search authors</label>
+                    <span class="mfba-field">
+                        <input id="mfba-aq" value="@search" placeholder="Search authors..." style="width:220px"
+                               onkeydown="if(event.key==='Enter'){event.preventDefault();mfbaAuthorSearch();}" />
+                    </span>
+                </div>
+            </div>
+        </header>
+
+        <input type="hidden" name="mfb_csrf" value="@csrfToken" />
+
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            <div style="padding:16px 24px 0"><div class="mfba-notice @(messageError ? "err" : "ok")">@message</div></div>
+        }
+
+        if (detail != null)
+        {
+            <section class="mfba-panel">
+                <div class="mfba-panel-head">
+                    <h2>@Icon("pencil", "mfba-icon mfba-icon-lg") @detail.Name</h2>
+                    <a class="mfba-panel-link" href="@(adminBaseUrl + "?view=authors")">All authors</a>
+                </div>
+                <div class="mfba-editor">
+                    <input type="hidden" name="author_original" value="@detail.Name" />
+                    <div class="mfba-form-grid">
+                        <label>Display name
+                            <input name="author_name" maxlength="100" required value="@detail.Name" />
+                        </label>
+                        <label>Role
+                            <input name="author_role" maxlength="100" value="@Text(detail.Profile, "author_role", "")" />
+                        </label>
+                        <label>Email
+                            <input name="author_email" type="email" maxlength="200" value="@Text(detail.Profile, "author_email", "")" />
+                        </label>
+                        <div class="mfba-avatar-field">
+                            <label for="mfba-avatar-url">Avatar URL
+                                <input id="mfba-avatar-url" name="author_avatar_url" maxlength="500"
+                                       placeholder="https://â€¦ or /Portals/0/â€¦" value="@currentAvatar" />
+                            </label>
+                            @* ðŸ”´ Explicit branches, not `@(cond ? "hidden=\"hidden\"" : "")`: Razor
+                               HTML-ENCODES a string expression, so that would emit
+                               hidden=&quot;hidden&quot; and the element would stay visible. *@
+                            <div class="mfba-avatar-preview">
+                                @if (string.IsNullOrWhiteSpace(currentAvatar))
+                                {
+                                    @* No src at all: src="" makes the browser re-request the page. *@
+                                    <img id="mfba-avatar-img" alt="" hidden />
+                                    <span id="mfba-avatar-none" class="mfba-avatar">@Initials(detail.Name)</span>
+                                }
+                                else
+                                {
+                                    <img id="mfba-avatar-img" src="@currentAvatar" alt="" />
+                                    <span id="mfba-avatar-none" class="mfba-avatar" hidden>@Initials(detail.Name)</span>
+                                }
+                                <button type="button" class="mfba-btn-outline" id="mfba-avatar-clear">Clear</button>
+                            </div>
+                        </div>
+                        <label class="wide">Bio
+                            <textarea name="author_bio" rows="3" maxlength="2000">@Text(detail.Profile, "author_bio", "")</textarea>
+                        </label>
+                    </div>
+                    @if (avatarChoices.Count > 0)
+                    {
+                        <div class="mfba-avatar-pick">
+                            <span class="mfba-hint">Or pick an avatar already used on this blog:</span>
+                            <div class="mfba-avatar-strip">
+                                @foreach (var choice in avatarChoices)
+                                {
+                                    var who = string.IsNullOrWhiteSpace(choice.Title) ? "Author image" : choice.Title;
+                                    <button type="button" class="mfba-avatar-choice" data-mfba-avatar="@choice.Url" title="@who">
+                                        <img src="@choice.Url" alt="@who" loading="lazy" />
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    }
+                    <p class="mfba-hint">
+                        A byline is not a separate record â€” these five fields live on each post. Saving rewrites
+                        them on all <strong>@detail.Posts post(s)</strong> by this author, through the Records API.
+                        Changing the display name renames the byline; if you type a name that already exists the
+                        two are merged. The avatar must be a site-relative path or an http(s) URL.
+                        @if (inconsistent > 0)
+                        {
+                            <text>
+                            <strong>@inconsistent of @detail.Posts post(s) currently carry a different role, avatar
+                            or bio</strong> â€” the form shows the newest one, and saving will make them all match.
+                            </text>
+                        }
+                    </p>
+                    <button class="mfba-btn" type="submit" name="mfb_author_save" value="1">
+                        @Icon("save", "mfba-icon mfba-icon-md") Save profile on @detail.Posts post(s)
+                    </button>
+                </div>
+            </section>
+
+            <section class="mfba-panel">
+                <div class="mfba-panel-head"><h2>Posts by @detail.Name</h2></div>
+                <div class="mfba-panel-body">
+                    <div class="mfba-thead">
+                        <span>Post</span><span class="st">Status</span><span class="vw r">Reads</span><span class="ac r">Actions</span>
+                    </div>
+                    <div class="mfba-rows">
+                        @foreach (var post in detailPosts)
+                        {
+                            var status = Text(post, "status", "draft").Trim().ToLowerInvariant();
+                            var when = PublishedOn(post);
+                            // ðŸ”´ Hoisted deliberately. An attribute that mixes literal text with an
+                            // implicit expression whose ARGUMENTS contain double quotes â€”
+                            // href="/Blogs?slug=@@Server.UrlEncode(Text(post, "slug", ""))" â€” ends the
+                            // attribute at that inner quote and takes the whole screen down with a
+                            // RazorHost compile error that is reported nowhere (1.7.0 shipped it and
+                            // ?view=authors rendered blank). Either hoist the value like this, or wrap
+                            // the whole thing in @@( ).
+                            var postSlug = Text(post, "slug", "");
+                            <div class="mfba-trow">
+                                <div class="mfba-post">
+                                    <div style="min-width:0">
+                                        <p class="mfba-post-title mfba-clamp1">@Text(post, "title", "Untitled story")</p>
+                                        <div class="mfba-post-meta">
+                                            <span>@Text(post, "category", "Insights")</span>
+                                            <span class="sep">&middot;</span>
+                                            <span>@Icon("calendar", "mfba-icon mfba-icon-sm")@(when.HasValue ? when.Value.ToString("MMM d, yyyy", CultureInfo.InvariantCulture) : "unscheduled")</span>
+                                            <span class="sep">&middot;</span>
+                                            <span>@Num(post, "comment_count") comment(s)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="st"><span class="mfba-pill mfba-st-@(status == "in_review" ? "in" : status)">@status</span></div>
+                                <div class="vw r">@Icon("eye", "mfba-icon mfba-icon-sm") @Num(post, "view_count")</div>
+                                <div class="ac r">
+                                    <a class="mfba-iconbtn" title="Edit this post" href="@(adminBaseUrl + "?edit=" + post.SubmissionId)">@Icon("pencil", "mfba-icon mfba-icon-md")</a>
+                                    <a class="mfba-iconbtn" title="View on the blog" href="/Blogs?slug=@Server.UrlEncode(postSlug)">@Icon("eye", "mfba-icon mfba-icon-md")</a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </section>
+        }
+
+        <section class="mfba-stats" aria-label="Contributor figures">
+            <div class="mfba-stat">
+                <div class="mfba-stat-top"><span class="mfba-stat-chip mfba-c-amber">@Icon("users")</span></div>
+                <p class="mfba-stat-value">@authors.Count</p>
+                <p class="mfba-stat-label">Contributors</p>
+                <p class="mfba-stat-sub">@activeThisMonth active this month</p>
+            </div>
+            <div class="mfba-stat">
+                <div class="mfba-stat-top"><span class="mfba-stat-chip mfba-c-blue">@Icon("file-text")</span></div>
+                <p class="mfba-stat-value">@posts.Count</p>
+                <p class="mfba-stat-label">Posts with a byline</p>
+                <p class="mfba-stat-sub">@(authors.Sum(a => a.Published)) published</p>
+            </div>
+            <div class="mfba-stat">
+                <div class="mfba-stat-top"><span class="mfba-stat-chip mfba-c-emerald">@Icon("eye")</span></div>
+                <p class="mfba-stat-value">@Compact(totalReads)</p>
+                <p class="mfba-stat-label">Reads earned</p>
+                <p class="mfba-stat-sub">@(Compact(authors.Count == 0 ? 0 : totalReads / authors.Count)) per contributor</p>
+            </div>
+            <div class="mfba-stat">
+                <div class="mfba-stat-top"><span class="mfba-stat-chip mfba-c-violet">@Icon("message-circle")</span></div>
+                <p class="mfba-stat-value">@(authors.Sum(a => a.Comments))</p>
+                <p class="mfba-stat-label">Comments received</p>
+                <p class="mfba-stat-sub">approved comments across their posts</p>
+            </div>
+        </section>
+
+        <section class="mfba-panel">
+            <div class="mfba-panel-head"><h2>Contributors</h2></div>
+            <div class="mfba-panel-body">
+                @if (authors.Count == 0)
+                {
+                    <div class="mfba-empty">@Icon("users", "mfba-icon mfba-icon-lg") No author has a byline on a post yet.</div>
+                }
+                @foreach (var author in authors)
+                {
+                    var avatar = Text(author.Profile, "author_avatar_url", "");
+                    var share = (int)Math.Round(100d * author.Reads / topReads);
+                    <div class="mfba-trow">
+                        <div class="mfba-post">
+                            @if (!string.IsNullOrWhiteSpace(avatar))
+                            {
+                                <img src="@avatar" alt="" loading="lazy" />
+                            }
+                            else
+                            {
+                                <span class="mfba-avatar">@Initials(author.Name)</span>
+                            }
+                            <div style="min-width:0">
+                                @* The class goes ON the anchor, never on a <p> wrapping one: this
+                                   sheet leaves `a` out of its colour re-assertion, so a nested link
+                                   would take the host theme's link blue on a white card. *@
+                                <a class="mfba-post-title mfba-clamp1"
+                                   href="@(adminBaseUrl + "?view=authors&author=" + Server.UrlEncode(author.Name))">@author.Name</a>
+                                <div class="mfba-post-meta">
+                                    <span>@Text(author.Profile, "author_role", "Contributor")</span>
+                                    @if (!string.IsNullOrWhiteSpace(Text(author.Profile, "author_email", "")))
+                                    {
+                                        <span class="sep">&middot;</span>
+                                        <span>@Text(author.Profile, "author_email", "")</span>
+                                    }
+                                    <span class="sep">&middot;</span>
+                                    <span>@Icon("calendar", "mfba-icon mfba-icon-sm")last @author.Last.ToString("MMM d, yyyy", CultureInfo.InvariantCulture)</span>
+                                </div>
+                                <div class="mfba-bar-row" style="max-width:320px">
+                                    <span class="mfba-bar"><i style="width:@(share)%"></i></span>
+                                    <span class="mfba-bar-val">@Compact(author.Reads)</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="st">
+                            @if (author.Published > 0)
+                            {
+                                <span class="mfba-pill mfba-st-published">@author.Published published</span>
+                            }
+                            @if (author.Drafts > 0)
+                            {
+                                <span class="mfba-pill mfba-st-draft">@author.Drafts in progress</span>
+                            }
+                        </div>
+                        <div class="vw r">@Icon("eye", "mfba-icon mfba-icon-sm") @(author.Reads.ToString("N0", CultureInfo.InvariantCulture))</div>
+                        <div class="ac r">
+                            @* Was a dashboard search for the name, which is not "open this author". *@
+                            <a class="mfba-iconbtn" title="Open @author.Name"
+                               href="@(adminBaseUrl + "?view=authors&author=" + Server.UrlEncode(author.Name))">@Icon("pencil", "mfba-icon mfba-icon-md")</a>
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+    }
+</div>
+
+@if (allowed)
+{
+    <script>
+    (function () {
+        "use strict";
+        var base = "@(adminBaseUrl)";
+        window.mfbaAuthorSearch = function () {
+            var q = (document.getElementById("mfba-aq").value || "").trim();
+            window.location.href = base + "?view=authors" + (q ? "&q=" + encodeURIComponent(q) : "");
+        };
+
+        // Avatar field: live preview, gallery pick, clear. Nothing here validates â€” the server
+        // does that on save; this only saves the editor from pasting a URL to find out.
+        var url = document.getElementById("mfba-avatar-url");
+        var img = document.getElementById("mfba-avatar-img");
+        var none = document.getElementById("mfba-avatar-none");
+        if (!url || !img || !none) { return; }
+
+        function paint() {
+            var value = (url.value || "").trim();
+            if (value) {
+                img.src = value;
+                img.hidden = false;
+                none.hidden = true;
+            } else {
+                img.removeAttribute("src");
+                img.hidden = true;
+                none.hidden = false;
+            }
+        }
+        // A URL that 404s should not leave a broken-image glyph sitting in the form.
+        img.addEventListener("error", function () { img.hidden = true; none.hidden = false; });
+        url.addEventListener("input", paint);
+        url.addEventListener("change", paint);
+
+        var clear = document.getElementById("mfba-avatar-clear");
+        if (clear) { clear.addEventListener("click", function () { url.value = ""; paint(); }); }
+
+        Array.prototype.forEach.call(document.querySelectorAll("[data-mfba-avatar]"), function (button) {
+            button.addEventListener("click", function () {
+                url.value = button.getAttribute("data-mfba-avatar") || "";
+                paint();
+                Array.prototype.forEach.call(document.querySelectorAll(".mfba-avatar-choice"), function (other) {
+                    other.classList.toggle("on", other === button);
+                });
+                url.focus();
+            });
+        });
+    })();
+    </script>
+}
+

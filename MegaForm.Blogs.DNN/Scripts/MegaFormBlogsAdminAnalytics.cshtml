@@ -1,0 +1,370 @@
+@*
+    MegaForm Blogs - analytics (screen 4).
+    Read-only. Every number comes from the typed post record through the `all-posts` named
+    query; nothing is recomputed here and DataJson is never parsed. The counters themselves are
+    written by MegaForm.Core's BlogAnalyticsRollupService on the "MegaForm Blog Publish &
+    Analytics" schedule (every 5 minutes), so a read taken seconds ago may not be in yet.
+*@
+@inherits DotNetNuke.Web.Razor.DotNetNukeWebPage<dynamic>
+@using System
+@using System.Linq
+@using System.Globalization
+@using System.Collections.Generic
+@using MegaForm.Sdk
+
+@functions {
+    static T Run<T>(System.Func<IMegaFormClient, System.Threading.Tasks.Task<T>> action)
+    {
+        var initializeMegaForm = MegaForm.DNN.Services.DnnServiceLocator.Instance;
+        return System.Threading.Tasks.Task.Run(() => MegaFormSdk.RunAsync(action)).GetAwaiter().GetResult();
+    }
+
+    static string Text(AppRecordDto record, string key, string fallback)
+    {
+        if (record == null || record.Data == null || !record.Data.ContainsKey(key) || record.Data[key] == null)
+            return fallback;
+        var value = Convert.ToString(record.Data[key]);
+        return string.IsNullOrWhiteSpace(value) ? fallback : value;
+    }
+
+    /// NumberStyles.Any is load-bearing: typed storage hands a Number back as a decimal, so
+    /// Convert.ToString gives "2.000000" and the plain int.TryParse overload returns false —
+    /// which is how every counter on the public blog once read zero.
+    static int Num(AppRecordDto record, string key)
+    {
+        int value;
+        return int.TryParse(Text(record, key, "0"), NumberStyles.Any, CultureInfo.InvariantCulture, out value) ? value : 0;
+    }
+
+    static string Compact(int value)
+    {
+        if (value >= 1000000) return (value / 1000000d).ToString("0.#", CultureInfo.InvariantCulture) + "m";
+        if (value >= 1000) return (value / 1000d).ToString("0.#", CultureInfo.InvariantCulture) + "k";
+        return value.ToString(CultureInfo.InvariantCulture);
+    }
+
+    static bool CanManage(DotNetNuke.Entities.Users.UserInfo user)
+    {
+        if (user == null || user.UserID < 0) return false;
+        if (user.IsSuperUser) return true;
+        var allowed = new[] { "Administrators", "Blog Editors", "Blog Publishers" };
+        return user.Roles != null && user.Roles.Any(role => allowed.Contains(role, StringComparer.OrdinalIgnoreCase));
+    }
+
+    static string Initials(string name)
+    {
+        var parts = (name ?? "").Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0) return "MF";
+        return string.Concat(parts.Take(2).Select(x => char.ToUpperInvariant(x[0])));
+    }
+
+    static DateTime? PublishedOn(AppRecordDto record)
+    {
+        DateTime when;
+        return DateTime.TryParse(Text(record, "publish_date", ""), CultureInfo.InvariantCulture,
+            DateTimeStyles.None, out when) ? when : (DateTime?)null;
+    }
+
+    static System.Web.IHtmlString Icon(string name, string cssClass = "mfba-icon")
+    {
+        string body;
+        switch (name)
+        {
+            case "chevron-right": body = "<path d='m9 18 6-6-6-6'/>"; break;
+            case "eye": body = "<path d='M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0'/><circle cx='12' cy='12' r='3'/>"; break;
+            case "users": body = "<path d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/><circle cx='9' cy='7' r='4'/><path d='M22 21v-2a4 4 0 0 0-3-3.87'/>"; break;
+            case "message-circle": body = "<path d='M7.9 20A9 9 0 1 0 4 16.1L2 22Z'/>"; break;
+            case "share": body = "<path d='M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8'/><polyline points='16 6 12 2 8 6'/><line x1='12' x2='12' y1='2' y2='15'/>"; break;
+            case "file-text": body = "<path d='M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z'/><path d='M14 2v4a2 2 0 0 0 2 2h4'/><path d='M10 9H8'/><path d='M16 13H8'/><path d='M16 17H8'/>"; break;
+            case "trending-up": body = "<polyline points='22 7 13.5 15.5 8.5 10.5 2 17'/><polyline points='16 7 22 7 22 13'/>"; break;
+            case "tag": body = "<path d='M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.42l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42z'/><circle cx='7.5' cy='7.5' r='.75' fill='currentColor'/>"; break;
+            case "calendar": body = "<path d='M8 2v4'/><path d='M16 2v4'/><rect width='18' height='18' x='3' y='4' rx='2'/><path d='M3 10h18'/>"; break;
+            default: body = ""; break;
+        }
+        return new System.Web.HtmlString("<svg class='" + cssClass + "' viewBox='0 0 24 24' aria-hidden='true'>" + body + "</svg>");
+    }
+}
+
+@{
+    var portalId = DotNetNuke.Entities.Portals.PortalSettings.Current == null
+        ? 0 : DotNetNuke.Entities.Portals.PortalSettings.Current.PortalId;
+    var activeTab = DotNetNuke.Entities.Portals.PortalSettings.Current == null
+        ? null : DotNetNuke.Entities.Portals.PortalSettings.Current.ActiveTab;
+    var adminBaseUrl = activeTab == null ? Request.RawUrl : DotNetNuke.Common.Globals.NavigateURL(activeTab.TabID);
+    var user = DotNetNuke.Entities.Users.UserController.Instance.GetCurrentUserInfo();
+    var scope = new MegaFormScope
+    {
+        PortalId = portalId,
+        UserId = user == null ? 0 : user.UserID,
+        UserName = user == null ? "" : user.Username,
+        DisplayName = user == null ? "" : user.DisplayName,
+        UserEmail = user == null ? "" : user.Email,
+        IsAuthenticated = user != null && user.UserID >= 0,
+        IsAdmin = user != null && (user.IsSuperUser || user.IsInRole("Administrators")),
+        IsSuperUser = user != null && user.IsSuperUser,
+        Roles = user == null || user.Roles == null ? new List<string>() : user.Roles.ToList(),
+        IpAddress = Request.UserHostAddress ?? ""
+    };
+    var allowed = CanManage(user);
+    var message = "";
+    var posts = new List<AppRecordDto>();
+
+    if (allowed)
+    {
+        try
+        {
+            // Bounded: one capped page, exactly like every other console screen.
+            var result = Run(c => c.Queries.ExecuteAsync("blog-starter", "all-posts",
+                new AppQueryRequest { Page = 1, PageSize = 100 }, scope));
+            if (result != null && result.Items != null) { posts = result.Items.ToList(); }
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+        }
+    }
+
+    // "published" is the typed content status, not the submission transport status.
+    var published = posts.Where(p => string.Equals(Text(p, "status", ""), "published", StringComparison.OrdinalIgnoreCase)).ToList();
+    var totalReads = posts.Sum(p => Num(p, "view_count"));
+    var uniqueReaders = posts.Sum(p => Num(p, "unique_readers"));
+    var totalComments = posts.Sum(p => Num(p, "comment_count"));
+    var totalShares = posts.Sum(p => Num(p, "share_count"));
+    var totalLikes = posts.Sum(p => Num(p, "like_count"));
+    var totalBookmarks = posts.Sum(p => Num(p, "bookmark_count"));
+    var read = posts.Where(p => Num(p, "view_count") > 0).ToList();
+    var averageReads = read.Count == 0 ? 0 : (int)Math.Round(read.Sum(p => (double)Num(p, "view_count")) / read.Count);
+    var returnRate = totalReads == 0 ? 0 : (int)Math.Round(100d * (totalReads - uniqueReaders) / totalReads);
+
+    var sort = (Request.QueryString["sort"] ?? "reads").Trim().ToLowerInvariant();
+    var known = new[] { "reads", "unique", "comments", "date", "title" };
+    if (!known.Contains(sort)) { sort = "reads"; }
+    IEnumerable<AppRecordDto> ordered;
+    switch (sort)
+    {
+        case "unique": ordered = posts.OrderByDescending(p => Num(p, "unique_readers")); break;
+        case "comments": ordered = posts.OrderByDescending(p => Num(p, "comment_count")); break;
+        case "date": ordered = posts.OrderByDescending(p => PublishedOn(p) ?? p.SubmittedOnUtc); break;
+        case "title": ordered = posts.OrderBy(p => Text(p, "title", ""), StringComparer.OrdinalIgnoreCase); break;
+        default: ordered = posts.OrderByDescending(p => Num(p, "view_count")); break;
+    }
+    var rows = ordered.ToList();
+    var topPosts = posts.OrderByDescending(p => Num(p, "view_count")).Take(8).ToList();
+    var topMax = topPosts.Count == 0 ? 1 : Math.Max(1, Num(topPosts[0], "view_count"));
+
+    var categories = posts
+        .GroupBy(p => Text(p, "category", "Uncategorised"), StringComparer.OrdinalIgnoreCase)
+        .Select(g => new
+        {
+            Name = g.Key,
+            Posts = g.Count(),
+            Reads = g.Sum(p => Num(p, "view_count")),
+            Comments = g.Sum(p => Num(p, "comment_count"))
+        })
+        .OrderByDescending(x => x.Reads).ToList();
+    var categoryMax = categories.Count == 0 ? 1 : Math.Max(1, categories[0].Reads);
+
+    var quiet = published.Count(p => Num(p, "view_count") == 0);
+}
+
+<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs-admin.css?v=20260809h" />
+
+<div class="mfba">
+    @if (!allowed)
+    {
+        <header class="mfba-head">
+            <div class="mfba-head-row"><div><h1>Editorial access required</h1><p>Sign in with a Blog or Administrator role to view analytics.</p></div></div>
+        </header>
+    }
+    else
+    {
+        <header class="mfba-head">
+            <nav class="mfba-crumb" aria-label="Breadcrumb">
+                <a href="/Blogs">Blog</a>@Icon("chevron-right", "mfba-icon mfba-icon-md")
+                <a href="@adminBaseUrl">Admin</a>@Icon("chevron-right", "mfba-icon mfba-icon-md")
+                <strong>Analytics</strong>
+            </nav>
+            <div class="mfba-head-row">
+                <div>
+                    <h1>Analytics</h1>
+                    <p>Reader activity per post, rolled up every 5 minutes from recorded reader events</p>
+                </div>
+            </div>
+        </header>
+
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            <div style="padding:16px 24px 0"><div class="mfba-notice err">@message</div></div>
+        }
+
+        <section class="mfba-stats" aria-label="Reader figures">
+            <div class="mfba-stat">
+                <div class="mfba-stat-top">
+                    <span class="mfba-stat-chip mfba-c-emerald">@Icon("eye")</span>
+                    <span class="mfba-trend up">@Icon("trending-up", "mfba-icon mfba-icon-sm")@Compact(uniqueReaders)</span>
+                </div>
+                <p class="mfba-stat-value">@Compact(totalReads)</p>
+                <p class="mfba-stat-label">Total reads</p>
+                <p class="mfba-stat-sub">@Compact(uniqueReaders) unique readers &middot; @returnRate% returning</p>
+            </div>
+            <div class="mfba-stat">
+                <div class="mfba-stat-top">
+                    <span class="mfba-stat-chip mfba-c-blue">@Icon("file-text")</span>
+                </div>
+                <p class="mfba-stat-value">@Compact(averageReads)</p>
+                <p class="mfba-stat-label">Average reads per post</p>
+                <p class="mfba-stat-sub">across @read.Count post(s) with at least one read</p>
+            </div>
+            <div class="mfba-stat">
+                <div class="mfba-stat-top">
+                    <span class="mfba-stat-chip mfba-c-violet">@Icon("message-circle")</span>
+                </div>
+                <p class="mfba-stat-value">@totalComments.ToString("N0", CultureInfo.InvariantCulture)</p>
+                <p class="mfba-stat-label">Approved comments</p>
+                <p class="mfba-stat-sub">counted from the comment form, not a seeded field</p>
+            </div>
+            @* Likes and bookmarks are counted by the rollup but the starter's posts form declares
+               no like_count / bookmark_count field, so the typed record has nowhere to keep them
+               and they read 0 forever. Showing "0 likes" on a form that cannot hold likes is a
+               lie about the data, so they only appear on a form that actually has the fields. *@
+            <div class="mfba-stat">
+                <div class="mfba-stat-top">
+                    <span class="mfba-stat-chip mfba-c-amber">@Icon("share")</span>
+                </div>
+                <p class="mfba-stat-value">@Compact(totalShares)</p>
+                <p class="mfba-stat-label">Shares</p>
+                <p class="mfba-stat-sub">
+                    @if (totalLikes > 0 || totalBookmarks > 0)
+                    {
+                        <text>@Compact(totalLikes) likes &middot; @Compact(totalBookmarks) saved</text>
+                    }
+                    else
+                    {
+                        <text>recorded as share events by the reader tracker</text>
+                    }
+                </p>
+            </div>
+        </section>
+
+        <div class="mfba-grid mfba-grid-even">
+            <section class="mfba-panel">
+                <div class="mfba-panel-head">
+                    <h2>Most read</h2>
+                    <a class="mfba-panel-link" href="@(adminBaseUrl + "?view=analytics&sort=reads")">By reads @Icon("chevron-right", "mfba-icon mfba-icon-md")</a>
+                </div>
+                <div class="mfba-panel-body">
+                    @if (topPosts.Count == 0)
+                    {
+                        <div class="mfba-empty">No posts yet.</div>
+                    }
+                    else
+                    {
+                        <div class="mfba-top">
+                            @for (var index = 0; index < topPosts.Count; index++)
+                            {
+                                var post = topPosts[index];
+                                var views = Num(post, "view_count");
+                                var share = (int)Math.Round(100d * views / topMax);
+                                <div class="mfba-top-row">
+                                    <span class="mfba-top-rank">@(index + 1)</span>
+                                    <div class="mfba-top-main">
+                                        <p class="mfba-clamp1">@Text(post, "title", "Untitled story")</p>
+                                        <div class="mfba-bar-row">
+                                            <span class="mfba-bar"><i style="width:@(share)%"></i></span>
+                                            <span class="mfba-bar-val">@Compact(views)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </section>
+
+            <section class="mfba-panel">
+                <div class="mfba-panel-head"><h2>By category</h2></div>
+                <div class="mfba-panel-body">
+                    @if (categories.Count == 0)
+                    {
+                        <div class="mfba-empty">No posts yet.</div>
+                    }
+                    else
+                    {
+                        <div class="mfba-top">
+                            @foreach (var category in categories.Take(8))
+                            {
+                                var share = (int)Math.Round(100d * category.Reads / categoryMax);
+                                <div class="mfba-top-row">
+                                    <span class="mfba-top-rank">@category.Posts</span>
+                                    <div class="mfba-top-main">
+                                        <p class="mfba-clamp1">@category.Name</p>
+                                        <div class="mfba-bar-row">
+                                            <span class="mfba-bar"><i style="width:@(share)%"></i></span>
+                                            <span class="mfba-bar-val">@Compact(category.Reads)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <p class="mfba-hint">The rank column is the number of posts in that category.</p>
+                    }
+                </div>
+            </section>
+        </div>
+
+        <section class="mfba-panel">
+            <div class="mfba-panel-head">
+                <h2>Every post</h2>
+                <span class="mfba-sortbar">
+                    Sort by
+                    @foreach (var option in new[] { "reads", "unique", "comments", "date", "title" })
+                    {
+                        <a class="@(sort == option ? "on" : "")"
+                           href="@(adminBaseUrl + "?view=analytics&sort=" + option)">@option</a>
+                    }
+                </span>
+            </div>
+            <div class="mfba-panel-body">
+                <div class="mfba-thead">
+                    <span>Post</span><span class="st">Status</span><span class="vw r">Reads</span><span class="ac r">Comments</span>
+                </div>
+                <div class="mfba-rows">
+                    @if (rows.Count == 0)
+                    {
+                        <div class="mfba-empty">No posts yet.</div>
+                    }
+                    @foreach (var post in rows)
+                    {
+                        var status = Text(post, "status", "draft").Trim().ToLowerInvariant();
+                        var when = PublishedOn(post);
+                        <div class="mfba-trow">
+                            <div class="mfba-post">
+                                <span class="mfba-avatar">@Initials(Text(post, "author_name", "MegaForm"))</span>
+                                <div style="min-width:0">
+                                    <p class="mfba-post-title mfba-clamp1">@Text(post, "title", "Untitled story")</p>
+                                    <div class="mfba-post-meta">
+                                        <span>@Text(post, "author_name", "MegaForm Editorial")</span>
+                                        <span class="sep">&middot;</span>
+                                        <span>@Icon("tag", "mfba-icon mfba-icon-sm")@Text(post, "category", "Insights")</span>
+                                        <span class="sep">&middot;</span>
+                                        <span>@Icon("calendar", "mfba-icon mfba-icon-sm")@(when.HasValue ? when.Value.ToString("MMM d, yyyy", CultureInfo.InvariantCulture) : "unscheduled")</span>
+                                        <span class="sep">&middot;</span>
+                                        <span>@Num(post, "unique_readers") unique</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="st"><span class="mfba-pill mfba-st-@(status == "in_review" ? "in" : status)">@status</span></div>
+                            <div class="vw r">@Icon("eye", "mfba-icon mfba-icon-sm") @(Num(post, "view_count").ToString("N0", CultureInfo.InvariantCulture))</div>
+                            <div class="ac r">@(Num(post, "comment_count").ToString("N0", CultureInfo.InvariantCulture))</div>
+                        </div>
+                    }
+                </div>
+                <p class="mfba-hint">
+                    Counters are written by the "MegaForm Blog Publish &amp; Analytics" scheduled job every
+                    5 minutes from rows in the Blog Reader Events form; a read from the last few minutes is
+                    not in yet. @quiet published post(s) have no recorded read at all.
+                </p>
+            </div>
+        </section>
+    }
+</div>

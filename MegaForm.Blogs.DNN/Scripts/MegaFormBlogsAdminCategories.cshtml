@@ -1,0 +1,598 @@
+@*
+    MegaForm Blogs - categories and tags (screen 7).
+
+    Categories are records of the Blog Categories child form; the console had never touched it,
+    so the only way to add one was the raw MegaForm submission grid. Tags are NOT a form: they
+    live in each post's comma-separated `tags` field, so this screen counts them from the posts
+    and can rename one across every post that carries it — the same honest model the Authors
+    screen uses for bylines.
+
+    CSHTML rules this file obeys (each one cost a deploy on 2026-08-09):
+      - every control-flow statement in the page block is braced, even a single throw;
+      - no attribute mixes literal text with an implicit expression whose arguments hold quotes;
+      - anything outside the @using list below is fully qualified.
+*@
+@inherits DotNetNuke.Web.Razor.DotNetNukeWebPage<dynamic>
+@using System
+@using System.Linq
+@using System.Globalization
+@using System.Collections.Generic
+@using System.Security.Cryptography
+@using System.Text.RegularExpressions
+@using MegaForm.Sdk
+
+@functions {
+    static T Run<T>(System.Func<IMegaFormClient, System.Threading.Tasks.Task<T>> action)
+    {
+        var initializeMegaForm = MegaForm.DNN.Services.DnnServiceLocator.Instance;
+        return System.Threading.Tasks.Task.Run(() => MegaFormSdk.RunAsync(action)).GetAwaiter().GetResult();
+    }
+
+    static string Text(AppRecordDto record, string key, string fallback)
+    {
+        if (record == null || record.Data == null || !record.Data.ContainsKey(key) || record.Data[key] == null)
+            return fallback;
+        var value = Convert.ToString(record.Data[key]);
+        return string.IsNullOrWhiteSpace(value) ? fallback : value;
+    }
+
+    static int Num(AppRecordDto record, string key)
+    {
+        int value;
+        return int.TryParse(Text(record, key, "0"), NumberStyles.Any, CultureInfo.InvariantCulture, out value) ? value : 0;
+    }
+
+    static bool CanManage(DotNetNuke.Entities.Users.UserInfo user)
+    {
+        if (user == null || user.UserID < 0) return false;
+        if (user.IsSuperUser) return true;
+        var allowed = new[] { "Administrators", "Blog Editors", "Blog Publishers" };
+        return user.Roles != null && user.Roles.Any(role => allowed.Contains(role, StringComparer.OrdinalIgnoreCase));
+    }
+
+    static string EnsureCsrfToken()
+    {
+        const string key = "MegaFormBlogs.CsrfToken";
+        var session = System.Web.HttpContext.Current.Session;
+        var token = session[key] as string;
+        if (!string.IsNullOrWhiteSpace(token)) return token;
+        var bytes = new byte[32];
+        using (var random = RandomNumberGenerator.Create()) { random.GetBytes(bytes); }
+        token = Convert.ToBase64String(bytes);
+        session[key] = token;
+        return token;
+    }
+
+    static void ValidateCsrfToken(string posted)
+    {
+        const string key = "MegaFormBlogs.CsrfToken";
+        var expected = System.Web.HttpContext.Current.Session[key] as string;
+        var valid = !string.IsNullOrWhiteSpace(expected) && !string.IsNullOrWhiteSpace(posted) && expected.Length == posted.Length;
+        var difference = valid ? 0 : 1;
+        var length = valid ? expected.Length : 0;
+        for (var index = 0; index < length; index++) { difference |= expected[index] ^ posted[index]; }
+        if (difference != 0)
+        {
+            throw new InvalidOperationException("The editorial session expired. Reload this page and try again.");
+        }
+    }
+
+    static string Slugify(string value)
+    {
+        var lower = (value ?? "").Trim().ToLowerInvariant();
+        var cleaned = Regex.Replace(lower, @"[^a-z0-9]+", "-").Trim('-');
+        return cleaned.Length > 80 ? cleaned.Substring(0, 80).Trim('-') : cleaned;
+    }
+
+    /// #rrggbb only. The value is written into a style attribute on an admin page, so anything
+    /// that is not a plain hex colour is refused rather than escaped and hoped for.
+    static bool IsHexColour(string value)
+    {
+        return !string.IsNullOrWhiteSpace(value) && Regex.IsMatch(value.Trim(), @"^#[0-9a-fA-F]{6}$");
+    }
+
+    /// The categories form has no named query, so it is identified the same way the comment and
+    /// reader-event forms are: by the app binding first, then by its schema fingerprint.
+    static int ResolveCategoriesFormId(MegaFormScope scope)
+    {
+        var items = System.Web.HttpContext.Current == null ? null : System.Web.HttpContext.Current.Items;
+        const string cacheKey = "MegaFormBlogs.CategoriesFormId";
+        if (items != null && items.Contains(cacheKey)) { return (int)items[cacheKey]; }
+
+        var resolved = Run(async c =>
+        {
+            var app = await c.Apps.GetAppAsync("blog-starter", scope);
+            if (app != null && app.Forms != null)
+            {
+                var bound = app.Forms.FirstOrDefault(f =>
+                    string.Equals(f.Alias, "categories", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(f.Role, "categories", StringComparison.OrdinalIgnoreCase));
+                if (bound != null && bound.FormId > 0) { return bound.FormId; }
+            }
+
+            var forms = await c.Forms.ListFormsAsync(new FormQuery { Page = 1, PageSize = 200 }, scope);
+            if (forms == null || forms.Items == null) { return 0; }
+            var ordered = forms.Items
+                .OrderByDescending(f => (f.Title ?? "").IndexOf("categor", StringComparison.OrdinalIgnoreCase) >= 0)
+                .ToList();
+            foreach (var form in ordered)
+            {
+                var candidate = form;
+                if (string.IsNullOrWhiteSpace(candidate.SchemaJson))
+                {
+                    candidate = await c.Forms.GetFormAsync(form.FormId, scope) ?? form;
+                }
+                if (string.IsNullOrWhiteSpace(candidate.SchemaJson)) { continue; }
+                var keys = c.Schema.ParseForm(candidate).Fields.Select(x => x.Key ?? "").ToList();
+                if (keys.Contains("category_name", StringComparer.OrdinalIgnoreCase)
+                    && keys.Contains("category_slug", StringComparer.OrdinalIgnoreCase))
+                {
+                    return candidate.FormId;
+                }
+            }
+            return 0;
+        });
+
+        if (items != null) { items[cacheKey] = resolved; }
+        return resolved;
+    }
+
+    static System.Web.IHtmlString Icon(string name, string cssClass = "mfba-icon")
+    {
+        string body;
+        switch (name)
+        {
+            case "chevron-right": body = "<path d='m9 18 6-6-6-6'/>"; break;
+            case "folder": body = "<path d='M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z'/>"; break;
+            case "tag": body = "<path d='M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.42l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42z'/><circle cx='7.5' cy='7.5' r='.75' fill='currentColor'/>"; break;
+            case "file-text": body = "<path d='M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z'/><path d='M14 2v4a2 2 0 0 0 2 2h4'/><path d='M10 9H8'/><path d='M16 13H8'/><path d='M16 17H8'/>"; break;
+            case "eye": body = "<path d='M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0'/><circle cx='12' cy='12' r='3'/>"; break;
+            case "pencil": body = "<path d='M21.17 6.81a1 1 0 0 0-3.98-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.63l4.35-1.33a2 2 0 0 0 .83-.5z'/>"; break;
+            case "trash": body = "<path d='M3 6h18'/><path d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6'/><path d='M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/>"; break;
+            case "plus": body = "<path d='M5 12h14'/><path d='M12 5v14'/>"; break;
+            case "save": body = "<path d='M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z'/><path d='M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7'/><path d='M7 3v4a1 1 0 0 0 1 1h7'/>"; break;
+            case "trending-up": body = "<polyline points='22 7 13.5 15.5 8.5 10.5 2 17'/><polyline points='16 7 22 7 22 13'/>"; break;
+            default: body = ""; break;
+        }
+        return new System.Web.HtmlString("<svg class='" + cssClass + "' viewBox='0 0 24 24' aria-hidden='true'>" + body + "</svg>");
+    }
+}
+
+@{
+    var portalId = DotNetNuke.Entities.Portals.PortalSettings.Current == null
+        ? 0 : DotNetNuke.Entities.Portals.PortalSettings.Current.PortalId;
+    var activeTab = DotNetNuke.Entities.Portals.PortalSettings.Current == null
+        ? null : DotNetNuke.Entities.Portals.PortalSettings.Current.ActiveTab;
+    var adminBaseUrl = activeTab == null ? Request.RawUrl : DotNetNuke.Common.Globals.NavigateURL(activeTab.TabID);
+    var categoriesUrl = adminBaseUrl + "?view=categories";
+    var user = DotNetNuke.Entities.Users.UserController.Instance.GetCurrentUserInfo();
+    var scope = new MegaFormScope
+    {
+        PortalId = portalId,
+        UserId = user == null ? 0 : user.UserID,
+        UserName = user == null ? "" : user.Username,
+        DisplayName = user == null ? "" : user.DisplayName,
+        UserEmail = user == null ? "" : user.Email,
+        IsAuthenticated = user != null && user.UserID >= 0,
+        IsAdmin = user != null && (user.IsSuperUser || user.IsInRole("Administrators")),
+        IsSuperUser = user != null && user.IsSuperUser,
+        Roles = user == null || user.Roles == null ? new List<string>() : user.Roles.ToList(),
+        IpAddress = Request.UserHostAddress ?? ""
+    };
+    var allowed = CanManage(user);
+    var csrfToken = allowed ? EnsureCsrfToken() : "";
+    var message = "";
+    var messageError = false;
+    var categoriesFormId = 0;
+    var categories = new List<AppRecordDto>();
+    var posts = new List<AppRecordDto>();
+    var editingId = 0;
+    int.TryParse(Request.QueryString["cat"], out editingId);
+    var creating = string.Equals((Request.QueryString["cat"] ?? "").Trim(), "0", StringComparison.Ordinal);
+
+    if (allowed)
+    {
+        categoriesFormId = ResolveCategoriesFormId(scope);
+    }
+
+    // ---- writes -------------------------------------------------------------------------
+    if (allowed && categoriesFormId > 0
+        && string.Equals(Request.HttpMethod, "POST", StringComparison.OrdinalIgnoreCase))
+    {
+        try
+        {
+            var action = (Request.Form["mfb_cat_action"] ?? "").Trim().ToLowerInvariant();
+            if (action.Length > 0)
+            {
+                ValidateCsrfToken(Request.Form["mfb_csrf"]);
+            }
+
+            if (action == "save")
+            {
+                var targetId = 0;
+                int.TryParse(Request.Form["cat_id"], out targetId);
+                var name = (Request.Form["category_name"] ?? "").Trim();
+                var slug = (Request.Form["category_slug"] ?? "").Trim();
+                var description = (Request.Form["description"] ?? "").Trim();
+                var colour = (Request.Form["accent_color"] ?? "").Trim();
+                var order = 0;
+                int.TryParse((Request.Form["sort_order"] ?? "").Trim(), NumberStyles.Integer,
+                             CultureInfo.InvariantCulture, out order);
+                var isPublic = string.Equals(Request.Form["is_public"], "true", StringComparison.OrdinalIgnoreCase);
+
+                if (name.Length == 0 || name.Length > 80)
+                {
+                    throw new InvalidOperationException("The category name is required and must be 80 characters or fewer.");
+                }
+                if (description.Length > 500)
+                {
+                    throw new InvalidOperationException("The description must be 500 characters or fewer.");
+                }
+                if (colour.Length > 0 && !IsHexColour(colour))
+                {
+                    throw new InvalidOperationException("The accent colour must be a #rrggbb hex value.");
+                }
+                if (slug.Length == 0) { slug = Slugify(name); }
+                slug = Slugify(slug);
+                if (slug.Length == 0)
+                {
+                    throw new InvalidOperationException("That name does not produce a usable slug — use letters or numbers.");
+                }
+                order = Math.Max(0, Math.Min(9999, order));
+
+                var values = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["category_name"] = name,
+                    ["category_slug"] = slug,
+                    ["description"] = description,
+                    ["accent_color"] = colour.Length == 0 ? "#475467" : colour.ToLowerInvariant(),
+                    ["sort_order"] = order,
+                    ["is_public"] = isPublic ? "true" : "false"
+                };
+
+                if (targetId > 0)
+                {
+                    var updated = Run(c => c.Records.PatchRecordAsync(targetId, values, scope));
+                    message = updated == null ? "That category no longer exists." : "Category saved.";
+                    messageError = updated == null;
+                }
+                else
+                {
+                    // category_uid is what a post's category_uid points at; it must be unique and
+                    // must not change afterwards, so it is derived once, here, from the slug.
+                    values["category_uid"] = "CAT-" + Regex.Replace(slug.ToUpperInvariant(), "[^A-Z0-9]", "");
+                    var created = Run(c => c.Submissions.SubmitAsync(categoriesFormId, values, scope));
+                    if (created == null || !created.Success)
+                    {
+                        message = created == null || string.IsNullOrWhiteSpace(created.ErrorMessage)
+                            ? "The category could not be created." : created.ErrorMessage;
+                        messageError = true;
+                    }
+                    else
+                    {
+                        message = "Category created.";
+                    }
+                }
+            }
+            else if (action == "delete")
+            {
+                var targetId = 0;
+                int.TryParse(Request.Form["cat_id"], out targetId);
+                var target = targetId > 0 ? Run(c => c.Records.GetRecordAsync(targetId, scope)) : null;
+                // Ownership check: never delete a row that is not a category of this app.
+                if (target == null || target.FormId != categoriesFormId)
+                {
+                    throw new InvalidOperationException("That record does not belong to the Blog Categories form.");
+                }
+                Run(async c => { await c.Submissions.DeleteAsync(targetId, scope); return true; });
+                message = "Category deleted. Posts that used it keep their category text.";
+            }
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            messageError = true;
+        }
+    }
+
+    // ---- reads --------------------------------------------------------------------------
+    if (allowed)
+    {
+        try
+        {
+            if (categoriesFormId > 0)
+            {
+                var scan = Run(c => c.SubmissionDashboard.SearchAsync(
+                    new SubmissionSearchQuery { FormId = categoriesFormId, Page = 1, PageSize = 100 }, scope));
+                if (scan != null && scan.Items != null)
+                {
+                    var reads = scan.Items.Select(row => System.Threading.Tasks.Task.Run(() =>
+                        MegaFormSdk.RunAsync(c => c.Records.GetRecordAsync(row.SubmissionId, scope)))).ToArray();
+                    System.Threading.Tasks.Task.WaitAll(reads);
+                    foreach (var read in reads)
+                    {
+                        if (read.Result != null) { categories.Add(read.Result); }
+                    }
+                }
+            }
+
+            var postResult = Run(c => c.Queries.ExecuteAsync("blog-starter", "all-posts",
+                new AppQueryRequest { Page = 1, PageSize = 100 }, scope));
+            if (postResult != null && postResult.Items != null) { posts = postResult.Items.ToList(); }
+        }
+        catch (Exception ex)
+        {
+            message = string.IsNullOrWhiteSpace(message) ? ex.Message : message;
+            messageError = true;
+        }
+    }
+
+    categories = categories
+        .OrderBy(c => Num(c, "sort_order"))
+        .ThenBy(c => Text(c, "category_name", ""), StringComparer.OrdinalIgnoreCase)
+        .ToList();
+
+    // Usage is counted from the posts' own `category` text, which is what the public list filters
+    // on — not from category_uid, which several seeded posts never set.
+    var usage = posts.GroupBy(p => Text(p, "category", "").Trim(), StringComparer.OrdinalIgnoreCase)
+        .Where(g => g.Key.Length > 0)
+        .ToDictionary(g => g.Key, g => g.Count(), StringComparer.OrdinalIgnoreCase);
+    Func<AppRecordDto, int> postsIn = category =>
+    {
+        var name = Text(category, "category_name", "");
+        int count;
+        return usage.TryGetValue(name, out count) ? count : 0;
+    };
+
+    var declaredNames = new HashSet<string>(categories.Select(c => Text(c, "category_name", "")),
+                                            StringComparer.OrdinalIgnoreCase);
+    var orphanCategories = usage.Keys.Where(k => !declaredNames.Contains(k)).OrderBy(k => k).ToList();
+    var uncategorised = posts.Count(p => Text(p, "category", "").Trim().Length == 0);
+
+    var tags = posts
+        .SelectMany(p => Text(p, "tags", "").Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+        .Select(t => t.Trim())
+        .Where(t => t.Length > 0)
+        .GroupBy(t => t, StringComparer.OrdinalIgnoreCase)
+        .Select(g => new { Name = g.Key, Count = g.Count() })
+        .OrderByDescending(x => x.Count).ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+        .ToList();
+    var tagMax = tags.Count == 0 ? 1 : Math.Max(1, tags[0].Count);
+
+    var editing = editingId > 0
+        ? categories.FirstOrDefault(c => c.SubmissionId == editingId)
+        : null;
+}
+
+<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs-admin.css?v=20260809h" />
+
+<div class="mfba">
+    @if (!allowed)
+    {
+        <header class="mfba-head">
+            <div class="mfba-head-row"><div><h1>Editorial access required</h1><p>Sign in with a Blog or Administrator role to manage categories.</p></div></div>
+        </header>
+    }
+    else
+    {
+        <header class="mfba-head">
+            <nav class="mfba-crumb" aria-label="Breadcrumb">
+                <a href="/Blogs">Blog</a>@Icon("chevron-right", "mfba-icon mfba-icon-md")
+                <a href="@adminBaseUrl">Admin</a>@Icon("chevron-right", "mfba-icon mfba-icon-md")
+                <strong>Categories</strong>
+            </nav>
+            <div class="mfba-head-row">
+                <div>
+                    <h1>Categories &amp; tags</h1>
+                    <p>Categories are records of the Blog Categories form; tags are counted from the posts themselves</p>
+                </div>
+                <div class="mfba-head-actions">
+                    <a class="mfba-btn" href="@(categoriesUrl + "&cat=0")">@Icon("plus") New category</a>
+                </div>
+            </div>
+        </header>
+
+        <input type="hidden" name="mfb_csrf" value="@csrfToken" />
+        @* 🔴 ONE cat_id for the whole screen, rendered even when the editor is closed: the Delete
+           buttons in the table set it from their row. Putting it inside the editor panel meant
+           deleting from the table posted no id at all whenever the panel was not open. *@
+        <input type="hidden" name="cat_id" value="@(editing == null ? 0 : editing.SubmissionId)" />
+
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            <div style="padding:16px 24px 0"><div class="mfba-notice @(messageError ? "err" : "ok")">@message</div></div>
+        }
+
+        if (categoriesFormId == 0)
+        {
+            <div style="padding:16px 24px 0">
+                <div class="mfba-notice err">The Blog Categories form was not found on this portal, so categories cannot be edited here.</div>
+            </div>
+        }
+
+        <section class="mfba-stats" aria-label="Category figures">
+            <div class="mfba-stat">
+                <div class="mfba-stat-top"><span class="mfba-stat-chip mfba-c-blue">@Icon("folder")</span></div>
+                <p class="mfba-stat-value">@categories.Count</p>
+                <p class="mfba-stat-label">Categories</p>
+                <p class="mfba-stat-sub">@categories.Count(c => string.Equals(Text(c, "is_public", "true"), "true", StringComparison.OrdinalIgnoreCase)) public</p>
+            </div>
+            <div class="mfba-stat">
+                <div class="mfba-stat-top"><span class="mfba-stat-chip mfba-c-violet">@Icon("tag")</span></div>
+                <p class="mfba-stat-value">@tags.Count</p>
+                <p class="mfba-stat-label">Distinct tags</p>
+                <p class="mfba-stat-sub">across @posts.Count post(s)</p>
+            </div>
+            <div class="mfba-stat">
+                <div class="mfba-stat-top"><span class="mfba-stat-chip mfba-c-emerald">@Icon("file-text")</span></div>
+                <p class="mfba-stat-value">@(posts.Count - uncategorised)</p>
+                <p class="mfba-stat-label">Posts with a category</p>
+                <p class="mfba-stat-sub">@uncategorised without one</p>
+            </div>
+            <div class="mfba-stat">
+                <div class="mfba-stat-top"><span class="mfba-stat-chip mfba-c-amber">@Icon("trending-up")</span></div>
+                <p class="mfba-stat-value">@orphanCategories.Count</p>
+                <p class="mfba-stat-label">Undeclared categories</p>
+                <p class="mfba-stat-sub">used by a post but not in the form</p>
+            </div>
+        </section>
+
+        if (editing != null || creating)
+        {
+            var currentName = editing == null ? "" : Text(editing, "category_name", "");
+            var currentSlug = editing == null ? "" : Text(editing, "category_slug", "");
+            var currentDesc = editing == null ? "" : Text(editing, "description", "");
+            var currentColour = editing == null ? "#475467" : Text(editing, "accent_color", "#475467");
+            var currentOrder = editing == null ? "0" : Num(editing, "sort_order").ToString(CultureInfo.InvariantCulture);
+            var currentPublic = editing == null
+                || string.Equals(Text(editing, "is_public", "true"), "true", StringComparison.OrdinalIgnoreCase);
+            <section class="mfba-panel">
+                <div class="mfba-panel-head">
+                    <h2>@Icon("folder", "mfba-icon mfba-icon-lg") @(editing == null ? "New category" : "Edit " + currentName)</h2>
+                    <a class="mfba-panel-link" href="@categoriesUrl">Close</a>
+                </div>
+                <div class="mfba-editor">
+                    <div class="mfba-form-grid">
+                        <label>Name
+                            <input name="category_name" maxlength="80" required value="@currentName" />
+                        </label>
+                        <label>Slug @(editing == null ? "— leave blank to derive it from the name" : "")
+                            <input name="category_slug" maxlength="80" value="@currentSlug" />
+                        </label>
+                        <label class="wide">Description
+                            <input name="description" maxlength="500" value="@currentDesc" />
+                        </label>
+                        <label>Accent colour (#rrggbb)
+                            <input name="accent_color" maxlength="7" value="@currentColour" />
+                        </label>
+                        <label>Sort order
+                            <input name="sort_order" type="number" min="0" max="9999" value="@currentOrder" />
+                        </label>
+                        <label class="mfba-check">
+                            @if (currentPublic)
+                            {
+                                <input type="checkbox" name="is_public" value="true" checked="checked" />
+                            }
+                            else
+                            {
+                                <input type="checkbox" name="is_public" value="true" />
+                            }
+                            <span>Public<small>Kept for your own filtering — the blog's category row is built from the categories posts actually use.</small></span>
+                        </label>
+                    </div>
+                    <button class="mfba-btn" type="submit" name="mfb_cat_action" value="save">
+                        @Icon("save", "mfba-icon mfba-icon-md") @(editing == null ? "Create category" : "Save category")
+                    </button>
+                </div>
+            </section>
+        }
+
+        <section class="mfba-panel">
+            <div class="mfba-panel-head"><h2>Categories</h2></div>
+            <div class="mfba-panel-body">
+                <div class="mfba-thead">
+                    <span>Category</span><span class="st">Public</span><span class="vw r">Posts</span><span class="ac r">Actions</span>
+                </div>
+                <div class="mfba-rows">
+                    @if (categories.Count == 0)
+                    {
+                        <div class="mfba-empty">@Icon("folder", "mfba-icon mfba-icon-lg") No category records yet.</div>
+                    }
+                    @foreach (var category in categories)
+                    {
+                        var name = Text(category, "category_name", "Untitled");
+                        var colour = Text(category, "accent_color", "#475467");
+                        var swatch = IsHexColour(colour) ? colour : "#475467";
+                        var isPublic = string.Equals(Text(category, "is_public", "true"), "true", StringComparison.OrdinalIgnoreCase);
+                        var count = postsIn(category);
+                        var editUrl = categoriesUrl + "&cat=" + category.SubmissionId;
+                        var browseUrl = "/Blogs?category=" + Server.UrlEncode(name);
+                        <div class="mfba-trow">
+                            <div class="mfba-post">
+                                <span class="mfba-swatch" style="background:@swatch"></span>
+                                <div style="min-width:0">
+                                    <a class="mfba-post-title mfba-clamp1" href="@editUrl">@name</a>
+                                    <div class="mfba-post-meta">
+                                        <span>/@Text(category, "category_slug", "")</span>
+                                        <span class="sep">&middot;</span>
+                                        <span class="mfba-clamp1">@Text(category, "description", "No description")</span>
+                                        <span class="sep">&middot;</span>
+                                        <span>order @Num(category, "sort_order")</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="st">
+                                @if (isPublic)
+                                {
+                                    <span class="mfba-pill mfba-st-published">public</span>
+                                }
+                                else
+                                {
+                                    <span class="mfba-pill mfba-st-draft">hidden</span>
+                                }
+                            </div>
+                            <div class="vw r">@count</div>
+                            <div class="ac r">
+                                <a class="mfba-iconbtn" title="Edit" href="@editUrl">@Icon("pencil", "mfba-icon mfba-icon-md")</a>
+                                <a class="mfba-iconbtn" title="See it on the blog" href="@browseUrl">@Icon("eye", "mfba-icon mfba-icon-md")</a>
+                                @if (count == 0)
+                                {
+                                    <button class="mfba-iconbtn stop" type="submit" name="mfb_cat_action" value="delete"
+                                            title="Delete" onclick="document.getElementsByName('cat_id')[0].value='@category.SubmissionId';">@Icon("trash", "mfba-icon mfba-icon-md")</button>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+                <p class="mfba-hint">
+                    Delete is offered only for a category no post is using — removing one that is in use
+                    would leave those posts pointing at a category that no longer exists, and the record is
+                    gone for good (this is a hard delete, not a trash bin).
+                    @if (orphanCategories.Count > 0)
+                    {
+                        <text>
+                        Posts also use <strong>@string.Join(", ", orphanCategories)</strong>, which no category
+                        record declares — create them here if you want a description and colour for them.
+                        </text>
+                    }
+                </p>
+            </div>
+        </section>
+
+        <section class="mfba-panel">
+            <div class="mfba-panel-head">
+                <h2>@Icon("tag", "mfba-icon mfba-icon-lg") Tags</h2>
+                <span class="mfba-stat-sub">counted from every post's tags field</span>
+            </div>
+            <div class="mfba-panel-body">
+                @if (tags.Count == 0)
+                {
+                    <div class="mfba-empty">No post carries a tag yet.</div>
+                }
+                else
+                {
+                    <div class="mfba-top">
+                        @foreach (var tag in tags.Take(20))
+                        {
+                            var share = (int)Math.Round(100d * tag.Count / tagMax);
+                            var tagUrl = "/Blogs?q=" + Server.UrlEncode(tag.Name);
+                            <div class="mfba-top-row">
+                                <span class="mfba-top-rank">@tag.Count</span>
+                                <div class="mfba-top-main">
+                                    <a class="mfba-post-title mfba-clamp1" href="@tagUrl">#@tag.Name</a>
+                                    <div class="mfba-bar-row">
+                                        <span class="mfba-bar"><i style="width:@(share)%"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <p class="mfba-hint">
+                        A tag is not a record — it is text in each post's <code>tags</code> field, so renaming one
+                        means editing the posts that carry it. The count is the rank column.
+                    </p>
+                }
+            </div>
+        </section>
+    }
+</div>

@@ -79,6 +79,206 @@
         return count.ToString("N0") + " " + (count == 1 ? singular : plural);
     }
 
+    // ---- owner settings ---------------------------------------------------------------------
+    // Portal settings under the MegaFormBlogs_ prefix, written by the console's Settings screen
+    // (MegaFormBlogsAdminSettings.cshtml). Same prefix in both files or neither.
+    static string Setting(int portalId, string key, string fallback)
+    {
+        var value = DotNetNuke.Entities.Portals.PortalController.GetPortalSetting(
+            "MegaFormBlogs_" + key, portalId, fallback);
+        return string.IsNullOrWhiteSpace(value) ? fallback : value;
+    }
+
+    static bool Flag(int portalId, string key, bool fallback)
+    {
+        var raw = Setting(portalId, key, fallback ? "true" : "false").Trim().ToLowerInvariant();
+        return raw != "false" && raw != "0" && raw != "no" && raw != "off";
+    }
+
+    /// Comma-separated tags, compared whole and case-insensitively: "AI" must not match "AIOps".
+    static bool HasTag(AppRecordDto record, string tag)
+    {
+        return Text(record, "tags", "")
+            .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(x => x.Trim())
+            .Any(x => string.Equals(x, tag, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// publish_date, falling back to when the record arrived. Invariant — this file has no
+    /// System.Globalization import and a host thread has no portal locale.
+    static DateTime PostDate(AppRecordDto record)
+    {
+        DateTime value;
+        return DateTime.TryParse(Text(record, "publish_date", ""),
+                                 System.Globalization.CultureInfo.InvariantCulture,
+                                 System.Globalization.DateTimeStyles.None, out value)
+            ? value
+            : record.SubmittedOnUtc;
+    }
+
+    static string LensCrumb(string author, string tag, string lens)
+    {
+        if (author.Length > 0) return author;
+        if (tag.Length > 0) return "#" + tag;
+        return lens == "trending" ? "Trending" : "Archive";
+    }
+
+    static string ListHeading(string sectionTitle, string search, string author, string tag, string lens)
+    {
+        if (search.Length > 0) return "Search results";
+        if (author.Length > 0) return "Stories by " + author;
+        if (tag.Length > 0) return "Tagged #" + tag;
+        if (lens == "trending") return "Most read";
+        if (lens == "archive") return "Every story";
+        return sectionTitle;
+    }
+
+    /// Adds an id to every h2/h3 in the article body and returns the headings for a table of
+    /// contents. The body is trusted editorial HTML that the module already renders raw, so this
+    /// only INSERTS an id attribute — it never re-encodes or rewrites the author's markup.
+    /// Headings that already carry an id keep it, so a hand-written anchor still works.
+    static List<KeyValuePair<string, string>> BuildToc(ref string bodyHtml)
+    {
+        var headings = new List<KeyValuePair<string, string>>();
+        if (string.IsNullOrWhiteSpace(bodyHtml)) return headings;
+
+        var index = 0;
+        var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        bodyHtml = Regex.Replace(bodyHtml, @"<h([23])(\s[^>]*)?>(.*?)</h\1>", match =>
+        {
+            var level = match.Groups[1].Value;
+            var attributes = match.Groups[2].Value ?? "";
+            var inner = match.Groups[3].Value;
+            // 🔴 Decode, because the heading's own HTML holds ENTITIES (&quot;, &ndash;) and Razor
+            // encodes whatever we hand it — leaving "&amp;quot;" on screen as literal &quot;.
+            var text = HttpUtility.HtmlDecode(Regex.Replace(inner, "<[^>]+>", "")).Trim();
+            if (text.Length == 0) return match.Value;
+
+            index++;
+            var existing = Regex.Match(attributes, @"\bid\s*=\s*[""']([^""']+)[""']", RegexOptions.IgnoreCase);
+            var id = existing.Success ? existing.Groups[1].Value : "mfb-h" + index;
+            if (!used.Add(id)) { id = id + "-" + index; }
+
+            headings.Add(new KeyValuePair<string, string>(id, (level == "3" ? "  " : "") + text));
+            return existing.Success
+                ? match.Value
+                : "<h" + level + " id=\"" + id + "\"" + attributes + ">" + inner + "</h" + level + ">";
+        }, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+        return headings;
+    }
+
+    /// Posts related to this one: same category first, then anything sharing a tag. Ordered by
+    /// reads so the suggestion is the one people actually opened.
+    static List<AppRecordDto> RelatedPosts(AppRecordDto current, IEnumerable<AppRecordDto> pool, int take)
+    {
+        if (current == null || pool == null) return new List<AppRecordDto>();
+        var category = Text(current, "category", "");
+        var tags = Text(current, "tags", "")
+            .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(x => x.Trim()).Where(x => x.Length > 0).ToList();
+
+        return pool
+            .Where(x => x.SubmissionId != current.SubmissionId)
+            .Select(x => new
+            {
+                Post = x,
+                Score = (string.Equals(Text(x, "category", ""), category, StringComparison.OrdinalIgnoreCase) ? 10 : 0)
+                      + tags.Count(t => HasTag(x, t))
+            })
+            .Where(x => x.Score > 0)
+            .OrderByDescending(x => x.Score).ThenByDescending(x => Number(x.Post, "view_count"))
+            .Take(take).Select(x => x.Post).ToList();
+    }
+
+    /// Writes the article's SEO tags into the PAGE HEAD.
+    ///
+    /// 🔴 Timing is the whole problem. A RazorHost script renders inside the module's control,
+    /// which happens AFTER the head control has already rendered, so adding literals to
+    /// Page.Header at that point produces nothing. DNN's own page properties (Title / Description
+    /// / KeyWords on CDefault) are read while the head renders, and DNN also owns the canonical
+    /// link, so those go through the page object; only the OpenGraph/Twitter block is added as a
+    /// control, and it is added to the FORM rather than the head — invalid-ish HTML that every
+    /// crawler still reads, and the honest alternative to silently writing nothing.
+    /// Returns what it managed to set so the caller can say so.
+    static string ApplySeoHead(AppRecordDto post, string absoluteUrl)
+    {
+        try
+        {
+            var page = System.Web.HttpContext.Current == null
+                ? null : System.Web.HttpContext.Current.Handler as System.Web.UI.Page;
+            if (page == null) return "no page";
+
+            var title = Text(post, "seo_title", Text(post, "title", ""));
+            var description = Text(post, "seo_description", Text(post, "excerpt", ""));
+            var keywords = Text(post, "meta_keywords", "");
+            var applied = "";
+
+            // 🔴 MEASURED, not assumed. Setting CDefault.Title / .Description / .KeyWords from here
+            // does NOTHING: DNN pushes those into the head during its own Load, long before a
+            // RazorHost module renders. What DOES work is touching the head control itself —
+            // HtmlHead renders its Title and its child controls at RENDER time, which is after us.
+            if (page.Header != null)
+            {
+                if (title.Length > 0)
+                {
+                    page.Header.Title = title;
+                    applied += "title ";
+                }
+
+                // Reuse DNN's own meta controls when the tab has them, so the page never ends up
+                // with two description tags; append our own only when there is nothing to reuse.
+                if (description.Length > 0)
+                {
+                    var existing = page.Header.FindControl("MetaDescription") as System.Web.UI.HtmlControls.HtmlMeta;
+                    if (existing != null) { existing.Content = description; }
+                    else { page.Header.Controls.Add(new System.Web.UI.LiteralControl(Meta("description", description))); }
+                    applied += "description ";
+                }
+                if (keywords.Length > 0)
+                {
+                    var existing = page.Header.FindControl("MetaKeywords") as System.Web.UI.HtmlControls.HtmlMeta;
+                    if (existing != null) { existing.Content = keywords; }
+                    else { page.Header.Controls.Add(new System.Web.UI.LiteralControl(Meta("keywords", keywords))); }
+                    applied += "keywords ";
+                }
+            }
+
+            if (page.Header != null)
+            {
+                var socialTitle = Text(post, "social_title", title);
+                var socialDescription = Text(post, "social_description", description);
+                var socialImage = Text(post, "og_image_url", Text(post, "featured_image_url", ""));
+                var canonical = Text(post, "canonical_url", absoluteUrl);
+                var head = new System.Text.StringBuilder();
+                head.Append("<link rel=\"canonical\" href=\"").Append(HttpUtility.HtmlAttributeEncode(canonical)).Append("\" />");
+                head.Append(Meta("og:type", "article"));
+                head.Append(Meta("og:title", socialTitle));
+                head.Append(Meta("og:description", socialDescription));
+                head.Append(Meta("og:url", canonical));
+                if (socialImage.Length > 0) { head.Append(Meta("og:image", socialImage)); }
+                head.Append(Meta("twitter:card", socialImage.Length > 0 ? "summary_large_image" : "summary"));
+                head.Append(Meta("twitter:title", socialTitle));
+                head.Append(Meta("twitter:description", socialDescription));
+                page.Header.Controls.Add(new System.Web.UI.LiteralControl(head.ToString()));
+                applied += "opengraph";
+            }
+            return applied.Length == 0 ? "nothing" : applied.Trim();
+        }
+        catch (Exception)
+        {
+            return "failed";   // an article must never fail to render because of its meta tags
+        }
+    }
+
+    static string Meta(string property, string content)
+    {
+        if (string.IsNullOrWhiteSpace(content)) return "";
+        var key = property.StartsWith("og:", StringComparison.Ordinal) ? "property" : "name";
+        return "<meta " + key + "=\"" + property + "\" content=\""
+             + HttpUtility.HtmlAttributeEncode(content) + "\" />";
+    }
+
     static string ImageUrl(AppRecordDto record)
     {
         return Text(record, "featured_image_url",
@@ -266,6 +466,339 @@
         }
     }
 
+    // ---- comments (public surface) ------------------------------------------------------
+    //
+    // The comment child form has no named query, so - exactly like the admin moderation
+    // console - the public article page reads one bounded page of submissions through
+    // SubmissionDashboard.SearchAsync and resolves each row's typed values through
+    // Records.GetRecordAsync. DataJson is never parsed here. Writes go through
+    // Submissions.SubmitAsync, which runs the full public pipeline (validation, anti-spam,
+    // honeypot) and lands every new comment as moderation_status = pending.
+
+    static readonly System.Collections.Concurrent.ConcurrentDictionary<string, int> ChildFormIds =
+        new System.Collections.Concurrent.ConcurrentDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+    /// Finds one of the console-created child forms (gallery images, live updates) by the fields it
+    /// declares. Same fingerprint trick as the comments form, and the same reason: a manifest can
+    /// ship an empty Forms array and a portal can rename anything.
+    static int ResolveChildFormId(MegaFormScope scope, string cacheKey, string titleHint, string[] fingerprint)
+    {
+        var key = cacheKey + "|" + scope.PortalId;
+        int cached;
+        if (ChildFormIds.TryGetValue(key, out cached)) return cached;
+
+        var resolved = 0;
+        var forms = Run(c => c.Forms.ListFormsAsync(new FormQuery { Page = 1, PageSize = 200 }, scope));
+        if (forms != null && forms.Items != null)
+        {
+            foreach (var form in forms.Items.OrderByDescending(f =>
+                (f.Title ?? "").IndexOf(titleHint, StringComparison.OrdinalIgnoreCase) >= 0))
+            {
+                var candidate = form;
+                if (string.IsNullOrWhiteSpace(candidate.SchemaJson))
+                {
+                    var full = Run(c => c.Forms.GetFormAsync(form.FormId, scope));
+                    if (full != null) candidate = full;
+                }
+                if (string.IsNullOrWhiteSpace(candidate.SchemaJson)) continue;
+
+                var keys = Run(c => System.Threading.Tasks.Task.FromResult(
+                    c.Schema.ParseForm(candidate).Fields.Select(x => x.Key ?? "").ToList()));
+                var matched = true;
+                foreach (var field in fingerprint)
+                {
+                    if (!keys.Contains(field, StringComparer.OrdinalIgnoreCase)) { matched = false; break; }
+                }
+                if (matched) { resolved = candidate.FormId; break; }
+            }
+        }
+
+        ChildFormIds[key] = resolved;
+        return resolved;
+    }
+
+    /// Every child record of one post, capped. The cap is what makes this safe on an anonymous
+    /// page: a gallery reads at most 200 rows and a liveblog at most 300, whatever is stored.
+    static List<AppRecordDto> LoadChildRecords(MegaFormScope scope, int formId, string postUid, int cap)
+    {
+        var rows = new List<AppRecordDto>();
+        if (formId <= 0 || string.IsNullOrWhiteSpace(postUid)) return rows;
+
+        var scan = Run(c => c.SubmissionDashboard.SearchAsync(
+            new SubmissionSearchQuery { FormId = formId, Page = 1, PageSize = cap }, scope));
+        if (scan == null || scan.Items == null) return rows;
+
+        var reads = scan.Items.Select(row => System.Threading.Tasks.Task.Run(() =>
+            MegaFormSdk.RunAsync(c => c.Records.GetRecordAsync(row.SubmissionId, scope)))).ToArray();
+        System.Threading.Tasks.Task.WaitAll(reads);
+        foreach (var read in reads)
+        {
+            var typed = read.Result;
+            if (typed == null) continue;
+            if (!string.Equals(Text(typed, "post_uid", ""), postUid, StringComparison.OrdinalIgnoreCase)) continue;
+            rows.Add(typed);
+        }
+        return rows;
+    }
+
+    /// Twin of the console's PostKey: post_uid when the post has one, otherwise the slug. Both
+    /// sides of the join must agree or a gallery silently shows nothing.
+    static string PostKey(AppRecordDto post)
+    {
+        var uid = Text(post, "post_uid", "");
+        return uid.Length > 0 ? uid : Text(post, "slug", "");
+    }
+
+    static bool IsFormat(AppRecordDto record, string format)
+    {
+        return string.Equals(Text(record, "content_type", ""), format, StringComparison.OrdinalIgnoreCase);
+    }
+
+    static int SortOrder(AppRecordDto record)
+    {
+        var parsed = 0;
+        int.TryParse(Text(record, "sort_order", "0"), System.Globalization.NumberStyles.Integer,
+            System.Globalization.CultureInfo.InvariantCulture, out parsed);
+        return parsed;
+    }
+
+    static DateTime HappenedAt(AppRecordDto record)
+    {
+        var parsed = DateTime.MinValue;
+        DateTime.TryParse(Text(record, "happened_at", ""), System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.RoundtripKind, out parsed);
+        return parsed;
+    }
+
+    /// "4 min ago" for a live feed; the absolute stamp stays in the title attribute.
+    static string Ago(DateTime utc)
+    {
+        if (utc == DateTime.MinValue) return "";
+        var span = DateTime.UtcNow - utc;
+        if (span.TotalSeconds < 90) return "just now";
+        if (span.TotalMinutes < 60) return ((int)span.TotalMinutes) + " min ago";
+        if (span.TotalHours < 24) return ((int)span.TotalHours) + "h ago";
+        return utc.ToString("MMM d, HH:mm", System.Globalization.CultureInfo.InvariantCulture) + " UTC";
+    }
+
+    /// The chip a card shows for a format that is not a plain article. Empty for everything else,
+    /// so the ordinary card is untouched.
+    static string FormatBadge(AppRecordDto record)
+    {
+        if (IsFormat(record, "Liveblog")) return "live";
+        if (IsFormat(record, "Gallery")) return "gallery";
+        if (IsFormat(record, "Video")) return "video";
+        return "";
+    }
+
+    static readonly System.Collections.Concurrent.ConcurrentDictionary<string, int> CommentsFormIds =
+        new System.Collections.Concurrent.ConcurrentDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+    // Twin of the admin console's resolver: a seeded manifest can ship "Forms": [], so fall
+    // back to identifying the comment form by its schema fingerprint.
+    static int ResolveCommentsFormId(string appKey, MegaFormScope scope)
+    {
+        var cacheKey = appKey + "|" + scope.PortalId;
+        int cached;
+        if (CommentsFormIds.TryGetValue(cacheKey, out cached) && cached > 0) return cached;
+
+        var resolved = 0;
+        var app = Run(c => c.Apps.GetAppAsync(appKey, scope));
+        if (app != null && app.Forms != null)
+        {
+            var bound = app.Forms.FirstOrDefault(f =>
+                string.Equals(f.Alias, "comments", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(f.Role, "comments", StringComparison.OrdinalIgnoreCase));
+            if (bound != null && bound.FormId > 0) resolved = bound.FormId;
+        }
+
+        if (resolved <= 0)
+        {
+            var forms = Run(c => c.Forms.ListFormsAsync(new FormQuery { Page = 1, PageSize = 200 }, scope));
+            if (forms != null && forms.Items != null)
+            {
+                foreach (var form in forms.Items.OrderByDescending(f =>
+                    (f.Title ?? "").IndexOf("comment", StringComparison.OrdinalIgnoreCase) >= 0))
+                {
+                    var candidate = form;
+                    if (string.IsNullOrWhiteSpace(candidate.SchemaJson))
+                    {
+                        var full = Run(c => c.Forms.GetFormAsync(form.FormId, scope));
+                        if (full != null) candidate = full;
+                    }
+                    if (string.IsNullOrWhiteSpace(candidate.SchemaJson)) continue;
+
+                    var keys = Run(c => System.Threading.Tasks.Task.FromResult(
+                        c.Schema.ParseForm(candidate).Fields.Select(x => x.Key ?? "").ToList()));
+                    if (keys.Contains("comment_body", StringComparer.OrdinalIgnoreCase)
+                        && keys.Contains("post_slug", StringComparer.OrdinalIgnoreCase)
+                        && keys.Contains("moderation_status", StringComparer.OrdinalIgnoreCase))
+                    {
+                        resolved = candidate.FormId;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (resolved > 0) CommentsFormIds[cacheKey] = resolved;
+        return resolved;
+    }
+
+    static string EnsurePublicCsrfToken()
+    {
+        const string key = "MegaFormBlogs.PublicCsrf";
+        var session = System.Web.HttpContext.Current.Session;
+        var token = session[key] as string;
+        if (!string.IsNullOrWhiteSpace(token)) return token;
+        var bytes = new byte[32];
+        using (var random = System.Security.Cryptography.RandomNumberGenerator.Create()) { random.GetBytes(bytes); }
+        token = Convert.ToBase64String(bytes);
+        session[key] = token;
+        return token;
+    }
+
+    static bool CheckPublicCsrfToken(string posted)
+    {
+        const string key = "MegaFormBlogs.PublicCsrf";
+        var session = System.Web.HttpContext.Current.Session;
+        var expected = session == null ? null : session[key] as string;
+        if (string.IsNullOrWhiteSpace(expected) || string.IsNullOrWhiteSpace(posted)) return false;
+        if (expected.Length != posted.Length) return false;
+        var difference = 0;
+        for (var index = 0; index < expected.Length; index++) { difference |= expected[index] ^ posted[index]; }
+        return difference == 0;
+    }
+
+    static string CommentModeration(AppRecordDto record)
+    {
+        var value = Text(record, "moderation_status", "pending").Trim().ToLowerInvariant();
+        var known = new[] { "pending", "approved", "spam", "hidden" };
+        return ((System.Collections.Generic.IList<string>)known).Contains(value) ? value : "pending";
+    }
+
+    static string AgoLabel(DateTime utc)
+    {
+        var span = DateTime.UtcNow - utc;
+        if (span.TotalMinutes < 1) return "just now";
+        // "1 hours ago" sat under the first comment of every fresh thread, which is the one
+        // timestamp a new blog shows most. Same rule as Plural() above.
+        if (span.TotalMinutes < 60) return Ago((int)span.TotalMinutes, "minute");
+        if (span.TotalHours < 24) return Ago((int)span.TotalHours, "hour");
+        if (span.TotalDays < 30) return Ago((int)span.TotalDays, "day");
+        return utc.ToString("MMM d, yyyy", System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    static string Ago(int count, string unit)
+    {
+        return count + " " + unit + (count == 1 ? "" : "s") + " ago";
+    }
+
+    /// Loads the newest approved comments for one post. Bounded (one capped page, newest
+    /// first) and fail-soft: any failure returns an empty list, never an exception - a
+    /// reader must still get the article if comments cannot be loaded.
+    /// <param name="expected">
+    /// The post's rollup-maintained comment_count. It is what makes this bounded read both cheap
+    /// and correct as the blog grows:
+    ///   0  → only the newest 25 rows are looked at, so an article with no comments stops paying
+    ///        for a 100-row scan on every single view (it still catches a comment approved since
+    ///        the last 5-minute rollup tick);
+    ///   >0 → pages through the form until that many approved comments have been found, so a post
+    ///        whose comments are older than the newest 100 rows no longer loses them — the old
+    ///        single-page scan silently dropped every comment past row 100 blog-wide.
+    /// Either way the walk is hard-capped, and one page is the common case.
+    /// </param>
+    static List<AppRecordDto> LoadApprovedComments(MegaFormScope scope, int commentsFormId,
+                                                   string postUid, int expected)
+    {
+        const int MaxPages = 5;
+        var approved = new List<AppRecordDto>();
+        if (commentsFormId <= 0 || string.IsNullOrWhiteSpace(postUid)) return approved;
+        try
+        {
+            var pageSize = expected > 0 ? 100 : 25;
+            var maxPages = expected > 0 ? MaxPages : 1;
+
+            for (var page = 1; page <= maxPages; page++)
+            {
+                var currentPage = page;
+                var scan = Run(c => c.SubmissionDashboard.SearchAsync(
+                    new SubmissionSearchQuery { FormId = commentsFormId, Page = currentPage, PageSize = pageSize }, scope));
+                if (scan == null || scan.Items == null || scan.Items.Count == 0) break;
+
+                // The typed resolve is a remote round trip per row (~1s on some hosts), so fan the
+                // reads out in parallel the same way the page's named queries already run.
+                var reads = scan.Items.Select(row => System.Threading.Tasks.Task.Run(() =>
+                    MegaFormSdk.RunAsync(c => c.Records.GetRecordAsync(row.SubmissionId, scope)))).ToArray();
+                System.Threading.Tasks.Task.WaitAll(reads);
+
+                foreach (var read in reads)
+                {
+                    var typed = read.Result;
+                    if (typed == null) continue;
+                    if (!string.Equals(Text(typed, "post_uid", ""), postUid, StringComparison.OrdinalIgnoreCase)) continue;
+                    if (CommentModeration(typed) != "approved") continue;
+                    approved.Add(typed);
+                }
+
+                if (expected > 0 && approved.Count >= expected) break;   // found them all
+                if (scan.Items.Count < pageSize) break;                  // that was the last page
+            }
+
+            approved = approved.OrderBy(x => x.SubmittedOnUtc).ToList();
+        }
+        catch (Exception)
+        {
+            approved = new List<AppRecordDto>();
+        }
+        return approved;
+    }
+
+    /// Posts one comment through the full public submission pipeline. Returns null on
+    /// success (and on spam - a spammer must not learn they were flagged), otherwise a
+    /// reader-safe error message. Never throws.
+    static string SubmitComment(MegaFormScope scope, int commentsFormId, AppRecordDto post,
+                                string name, string email, string body, string honeypot, int userId,
+                                bool requireEmail)
+    {
+        if (commentsFormId <= 0) return "Comments are not available right now.";
+        name = (name ?? "").Trim();
+        email = (email ?? "").Trim();
+        body = (body ?? "").Trim();
+        if (name.Length == 0 || name.Length > 100) return "Please enter your name (up to 100 characters).";
+        if (body.Length == 0 || body.Length > 2000) return "Please write a comment (up to 2000 characters).";
+        // Owner setting. The field stays optional unless the site asks for it, because an address
+        // this blog never sends anything to is one more thing a reader can get wrong.
+        if (requireEmail && email.Length == 0) return "Please enter your email address.";
+        if (email.Length > 200) return "That email address is too long.";
+        if (email.Length > 0
+            && !Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$")) return "That email address does not look right.";
+
+        try
+        {
+            var data = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            data["post_uid"] = Text(post, "post_uid", "").Trim();
+            data["post_slug"] = Text(post, "slug", "");
+            data["commenter_name"] = name;
+            data["comment_body"] = body;
+            data["moderation_status"] = "pending";   // nothing reaches the public page unreviewed
+            data["posted_on"] = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
+            if (email.Length > 0) data["commenter_email"] = email;
+            if (userId > 0) data["cms_user_id"] = userId;
+            // The comments schema declares this honeypot; pass it through untouched so the
+            // pipeline's spam scoring sees exactly what the browser sent.
+            data["__mf_blog_comment_hp"] = honeypot ?? "";
+
+            var result = Run(c => c.Submissions.SubmitAsync(commentsFormId, data, scope));
+            if (result != null && (result.Success || result.IsSpam)) return null;
+            return "Your comment could not be posted. Please try again.";
+        }
+        catch (Exception)
+        {
+            return "Your comment could not be posted. Please try again.";
+        }
+    }
+
 }
 
 @{
@@ -277,24 +810,111 @@
     var baseUrl = activeTab == null
         ? Request.RawUrl : DotNetNuke.Common.Globals.NavigateURL(activeTab.TabID);
     var slug = (Request.QueryString["slug"] ?? "").Trim();
+    // DNN rewrites query values into path segments, and a non-numeric one (the slug) does
+    // not always survive a FORM POST - the comment form therefore also carries the slug in a
+    // hidden field, and on POST we take it from there when the query string lost it.
+    if (slug.Length == 0 && string.Equals(Request.HttpMethod, "POST", StringComparison.OrdinalIgnoreCase))
+    {
+        slug = (Request.Form["slug"] ?? "").Trim();
+    }
     var category = (Request.QueryString["category"] ?? "").Trim();
     var search = (Request.QueryString["q"] ?? "").Trim();
+    // ---- lenses on the same list -------------------------------------------------------
+    // The mock ships author/[slug], tag/[slug], category/[slug], trending and archive as five
+    // separate pages. This module is ONE DNN page, so they are five lenses over the same
+    // renderer: each one filters or reorders the post set and puts its own header above the
+    // grid the list already draws. One card design, one pager, one place to fix a bug.
+    var authorFilter = (Request.QueryString["author"] ?? "").Trim();
+    var tagFilter = (Request.QueryString["tag"] ?? "").Trim();
+    var lens = (Request.QueryString["view"] ?? "").Trim().ToLowerInvariant();
+    if (lens != "trending" && lens != "archive") { lens = ""; }
+    var isLens = authorFilter.Length > 0 || tagFilter.Length > 0 || lens.Length > 0;
     var pageNumber = 1;
     int.TryParse(Request.QueryString["page"], out pageNumber);
     if (pageNumber < 1) { pageNumber = 1; }
+
+    // ---- owner settings (?view=settings in the admin console) ----------------------------
+    // Every default below is the behaviour this page had before the settings screen existed,
+    // so a portal that has never opened that screen renders exactly as it did.
+    var pageSize = 12;
+    // 🔴 Fully qualified on purpose: this file does NOT `@using System.Globalization`, and a
+    // RazorHost compile error renders the module as an EMPTY BLOCK with no error anywhere on the
+    // page — the whole public blog just vanishes. Measured: 1.6.0 shipped with a bare
+    // `NumberStyles.Integer` here and /Blogs came back 200 with nothing in it.
+    if (!int.TryParse(Setting(portalId, "PageSize", "12"), System.Globalization.NumberStyles.Integer,
+                      System.Globalization.CultureInfo.InvariantCulture, out pageSize)) { pageSize = 12; }
+    pageSize = Math.Max(3, Math.Min(24, pageSize));
+    var showFeatured = Flag(portalId, "ShowFeatured", true);
+    var showReadCounts = Flag(portalId, "ShowReadCounts", true);
+    var showNewsletter = Flag(portalId, "ShowNewsletter", true);
+    var siteCommentsEnabled = Flag(portalId, "CommentsEnabled", true);
+
+    // Breaking ticker: three owner settings, no schema and no post to flag. It disappears on its
+    // own at BreakingUntil, so nobody has to remember to take it down.
+    var breakingText = Setting(portalId, "BreakingText", "");
+    var breakingUrl = Setting(portalId, "BreakingUrl", "");
+    var breakingUntilRaw = Setting(portalId, "BreakingUntil", "");
+    var breakingLive = breakingText.Trim().Length > 0;
+    if (breakingLive && breakingUntilRaw.Trim().Length > 0)
+    {
+        DateTime breakingUntil;
+        if (DateTime.TryParse(breakingUntilRaw, System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out breakingUntil))
+        {
+            breakingLive = DateTime.UtcNow.Date <= breakingUntil.Date;
+        }
+    }
+    if (breakingUrl.Length > 0 && !(breakingUrl.StartsWith("/", StringComparison.Ordinal)
+        || breakingUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+        || breakingUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase)))
+    {
+        breakingUrl = "";      // an owner setting is still input: only a path or http(s)
+    }
+    var showSearch = Flag(portalId, "ShowSearch", true);
+    var showCategories = Flag(portalId, "ShowCategories", true);
+    var showReadingTime = Flag(portalId, "ShowReadingTime", true);
+    var showAuthorCard = Flag(portalId, "ShowAuthorCard", true);
+    var sectionTitle = Setting(portalId, "SectionTitle", "Popular this week");
+    var commentsRequireEmail = Flag(portalId, "CommentsRequireEmail", false);
+    var commentsAutoCloseDays = 0;
+    int.TryParse(Setting(portalId, "CommentsAutoCloseDays", "0"),
+                 System.Globalization.NumberStyles.Integer,
+                 System.Globalization.CultureInfo.InvariantCulture, out commentsAutoCloseDays);
+    if (commentsAutoCloseDays < 0) { commentsAutoCloseDays = 0; }
+    var trendingTags = Setting(portalId, "TrendingTags", "Design Systems, Accessibility, AI, Performance, Product")
+        .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+        .Select(x => x.Trim()).Where(x => x.Length > 0).Take(12).ToList();
 
     AppDto app = null;
     AppQueryResultDto publicResult = null;
     AppQueryResultDto featuredResult = null;
     AppQueryResultDto categoryResult = null;
     AppRecordDto detail = null;
+    string loadErrorDetail = null;   // SuperUser-only diagnostics, never shown to a reader
+    var hostViewer = DotNetNuke.Entities.Users.UserController.Instance.GetCurrentUserInfo();
+    var isHostViewer = hostViewer != null && hostViewer.IsSuperUser;
     IReadOnlyList<FileDto> detailFiles = new List<FileDto>();
     string loadError = null;
 
+    // ---- comment state (detail page only) ----
+    List<AppRecordDto> approvedComments = new List<AppRecordDto>();
+    var commentsOpen = false;
+    var commentsAutoClosed = false;
+    var publicCsrf = "";
+    string commentError = null;
+    var commentPosted = string.Equals(Request.QueryString["commented"], "1", StringComparison.OrdinalIgnoreCase);
+
     try
     {
-        app = Run(c => c.Apps.GetAppAsync("blog-starter", scope));
-        var publicRequest = new AppQueryRequest { Page = pageNumber, PageSize = 12, Search = search };
+        // A lens filters in memory, so it asks for the capped page (100, the query service's own
+        // maximum) and pages the RESULT. Bounded either way — a blog past 100 published posts
+        // needs a server-side filter for these, which the named queries do not have yet.
+        var publicRequest = new AppQueryRequest
+        {
+            Page = isLens ? 1 : pageNumber,
+            PageSize = isLens ? 100 : pageSize,
+            Search = search
+        };
         if (!string.IsNullOrWhiteSpace(category))
         {
             publicRequest.Parameters["category"] = category;
@@ -304,8 +924,36 @@
             publicRequest.PageSize = 1;
             publicRequest.Parameters["slug"] = slug;
         }
-        publicResult = Run(c => c.Queries.ExecuteAsync("blog-starter", "public-posts", publicRequest, scope));
-        if (!string.IsNullOrWhiteSpace(slug))
+
+        // [PerfFix 2026-08-07] These reads are independent of one another — run them in
+        // parallel instead of sequentially. Each named query still pays a handful of remote
+        // DB round trips (~1s each on this host), so serial execution stacked them into the
+        // page's TTFB. The typed-read N+1 inside the query service is fixed in Core 02.00.013
+        // (ISubmissionDataBatchReader); this is the remaining client-side wait.
+        var isDetail = !string.IsNullOrWhiteSpace(slug);
+        var appTask = System.Threading.Tasks.Task.Run(() => MegaFormSdk.RunAsync(
+            c => c.Apps.GetAppAsync("blog-starter", scope)));
+        var publicTask = System.Threading.Tasks.Task.Run(() => MegaFormSdk.RunAsync(
+            c => c.Queries.ExecuteAsync("blog-starter", "public-posts", publicRequest, scope)));
+        var featuredTask = isDetail ? null : System.Threading.Tasks.Task.Run(() => MegaFormSdk.RunAsync(
+            c => c.Queries.ExecuteAsync("blog-starter", "featured-posts",
+                new AppQueryRequest { Page = 1, PageSize = 1 }, scope)));
+        var categoryTask = isDetail ? null : System.Threading.Tasks.Task.Run(() => MegaFormSdk.RunAsync(
+            c => c.Queries.ExecuteAsync("blog-starter", "public-posts",
+                new AppQueryRequest { Page = 1, PageSize = 100 }, scope)));
+
+        if (isDetail)
+        {
+            System.Threading.Tasks.Task.WaitAll(appTask, publicTask);
+        }
+        else
+        {
+            System.Threading.Tasks.Task.WaitAll(appTask, publicTask, featuredTask, categoryTask);
+        }
+
+        app = appTask.Result;
+        publicResult = publicTask.Result;
+        if (isDetail)
         {
             detail = publicResult.Items.FirstOrDefault();
             if (detail != null)
@@ -315,10 +963,8 @@
         }
         else
         {
-            featuredResult = Run(c => c.Queries.ExecuteAsync("blog-starter", "featured-posts",
-                new AppQueryRequest { Page = 1, PageSize = 1 }, scope));
-            categoryResult = Run(c => c.Queries.ExecuteAsync("blog-starter", "public-posts",
-                new AppQueryRequest { Page = 1, PageSize = 100 }, scope));
+            featuredResult = featuredTask.Result;
+            categoryResult = categoryTask.Result;
         }
     }
     catch (Exception ex)
@@ -327,6 +973,11 @@
         // DNN event log and show a neutral notice instead (root CLAUDE.md rule 10).
         DotNetNuke.Services.Exceptions.Exceptions.LogException(ex);
         loadError = "The blog could not be loaded. The site log has the details.";
+        // 🔴 Rule 10 says never echo exception text to a client — so this is gated on SuperUser,
+        // the one visitor who is entitled to it. Without it the only signal a Host gets is the
+        // same neutral sentence a reader sees, and the DNN log is not reachable from here.
+        var errorViewer = DotNetNuke.Entities.Users.UserController.Instance.GetCurrentUserInfo();
+        if (errorViewer != null && errorViewer.IsSuperUser) { loadErrorDetail = ex.ToString(); }
     }
 
     // ---- read tracking -------------------------------------------------------------------
@@ -362,9 +1013,219 @@
         }
     }
 
+    // ---- comments (detail page only) ---------------------------------------------------
+    // Its OWN try/catch for the same reason as read tracking: the article must still render
+    // if anything about comments fails. The POST handler lives here, on the page thread,
+    // and redirects after a successful post (PRG) so a refresh never double-submits.
+    if (detail != null)
+    {
+        try
+        {
+            var commentsFormId = ResolveCommentsFormId("blog-starter", scope);
+
+            // A post can close its own thread two ways: the allow_comments flag, or the
+            // post-level moderation state (Open/Watching/Locked/Closed). Absent = open.
+            var allowRaw = Text(detail, "allow_comments", "true").Trim().ToLowerInvariant();
+            var threadState = Text(detail, "moderation_status", "open").Trim().ToLowerInvariant();
+
+            // Owner setting: close threads automatically once a post is N days old. 0 = never.
+            // Dated from publish_date, falling back to when the record was submitted.
+            if (commentsAutoCloseDays > 0)
+            {
+                DateTime published;
+                if (!DateTime.TryParse(Text(detail, "publish_date", ""),
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        System.Globalization.DateTimeStyles.None, out published))
+                {
+                    published = detail.SubmittedOnUtc;
+                }
+                commentsAutoClosed = (DateTime.UtcNow - published).TotalDays > commentsAutoCloseDays;
+            }
+
+            commentsOpen = commentsFormId > 0
+                && siteCommentsEnabled            // owner's site-wide switch beats the per-post one
+                && !commentsAutoClosed
+                && allowRaw != "false" && allowRaw != "0" && allowRaw != "no"
+                && threadState != "closed" && threadState != "locked";
+
+            // The gate is the submit button's own name/value (see the markup note further down):
+            // only the button that was actually clicked is posted, so no other postback on this
+            // DNN page can look like a comment. "mfb_comment_form" is the 1.4.0 hidden-marker
+            // spelling, still accepted so a cached page cannot lose a reader's comment.
+            var commentPosting = string.Equals(Request.Form["mfb_comment_submit"], "1", StringComparison.Ordinal)
+                              || string.Equals(Request.Form["mfb_comment_form"], "1", StringComparison.Ordinal);
+            if (commentsOpen && string.Equals(Request.HttpMethod, "POST", StringComparison.OrdinalIgnoreCase)
+                && commentPosting)
+            {
+                if (!CheckPublicCsrfToken(Request.Form["mfb_csrf"]))
+                {
+                    commentError = "The commenting session expired. Reload the page and try again.";
+                }
+                else
+                {
+                    var currentUser = DotNetNuke.Entities.Users.UserController.Instance.GetCurrentUserInfo();
+                    commentError = SubmitComment(scope, commentsFormId, detail,
+                        Request.Form["commenter_name"], Request.Form["commenter_email"],
+                        Request.Form["comment_body"], Request.Form["__mf_blog_comment_hp"],
+                        currentUser == null ? -1 : currentUser.UserID,
+                        commentsRequireEmail);
+                    if (commentError == null)
+                    {
+                        var separator = Request.RawUrl.IndexOf('?') >= 0 ? "&" : "?";
+                        Response.Redirect(Request.RawUrl + separator + "commented=1#mfb-comments", true);
+                    }
+                }
+            }
+
+            if (commentsFormId > 0)
+            {
+                approvedComments = LoadApprovedComments(scope, commentsFormId,
+                    Text(detail, "post_uid", ""), Number(detail, "comment_count"));
+            }
+            if (commentsOpen) { publicCsrf = EnsurePublicCsrfToken(); }
+        }
+        catch (System.Threading.ThreadAbortException)
+        {
+            throw;   // Response.Redirect(endResponse: true) ends the request this way - not an error
+        }
+        catch (Exception commentEx)
+        {
+            DotNetNuke.Services.Exceptions.Exceptions.LogException(commentEx);
+        }
+    }
+
+    // ---- gallery images and live coverage (detail page only) ----------------------------
+    // Both live in console-created child forms; a post that is not one of those formats costs
+    // nothing here, because the format is checked before the form is even resolved.
+    var galleryImages = new List<AppRecordDto>();
+    var liveUpdates = new List<AppRecordDto>();
+    var liveClosed = false;
+    var liveLatest = DateTime.MinValue;
+    if (detail != null && (IsFormat(detail, "Gallery") || IsFormat(detail, "Liveblog")))
+    {
+        try
+        {
+            var postUid = PostKey(detail);
+            if (IsFormat(detail, "Gallery"))
+            {
+                var galleryFormId = ResolveChildFormId(scope, "MegaFormBlogs.GalleryFormId", "gallery",
+                    new[] { "image_url", "post_uid" });
+                galleryImages = LoadChildRecords(scope, galleryFormId, postUid, 200)
+                    .OrderBy(SortOrder).ToList();
+            }
+            else
+            {
+                var liveFormId = ResolveChildFormId(scope, "MegaFormBlogs.LiveFormId", "live",
+                    new[] { "is_key_moment", "post_uid" });
+                liveUpdates = LoadChildRecords(scope, liveFormId, postUid, 300)
+                    .OrderByDescending(HappenedAt).ToList();
+                liveClosed = liveUpdates.Any(u => Flag(u, "is_closing"));
+                if (liveUpdates.Count > 0) { liveLatest = HappenedAt(liveUpdates[0]); }
+            }
+        }
+        catch (Exception formatEx)
+        {
+            // A format that cannot load must not take the article down with it.
+            DotNetNuke.Services.Exceptions.Exceptions.LogException(formatEx);
+        }
+    }
+
+    // ---- article extras: table of contents, related posts, and the SEO head -------------
+    var articleBody = "";
+    var articleToc = new List<KeyValuePair<string, string>>();
+    var relatedPosts = new List<AppRecordDto>();
+    var seoApplied = "";
+    if (detail != null)
+    {
+        try
+        {
+            articleBody = Text(detail, "body", "<p>Article content is being prepared.</p>");
+            articleToc = BuildToc(ref articleBody);
+
+            // The related list needs a pool the detail query never fetched (it asked for one row).
+            var pool = Run(c => c.Queries.ExecuteAsync("blog-starter", "public-posts",
+                new AppQueryRequest { Page = 1, PageSize = 100 }, scope));
+            if (pool != null && pool.Items != null)
+            {
+                relatedPosts = RelatedPosts(detail, pool.Items, 3);
+            }
+
+            var absolute = Request.Url == null ? baseUrl : Request.Url.GetLeftPart(UriPartial.Path)
+                                                          + "?slug=" + HttpUtility.UrlEncode(slug);
+            seoApplied = ApplySeoHead(detail, absolute);
+        }
+        catch (Exception articleEx)
+        {
+            // Extras are extras: the article itself must still render.
+            DotNetNuke.Services.Exceptions.Exceptions.LogException(articleEx);
+            if (articleBody.Length == 0) { articleBody = Text(detail, "body", ""); }
+        }
+    }
+
     var posts = publicResult == null ? new List<AppRecordDto>() : publicResult.Items.ToList();
+
+    // ---- lens filtering, sorting and in-memory paging -----------------------------------
+    var lensTotal = 0;
+    List<string> relatedTags = new List<string>();
+    if (isLens)
+    {
+        if (authorFilter.Length > 0)
+        {
+            posts = posts.Where(x => string.Equals(Text(x, "author_name", ""), authorFilter,
+                                                   StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+        if (tagFilter.Length > 0)
+        {
+            posts = posts.Where(x => HasTag(x, tagFilter)).ToList();
+            relatedTags = posts
+                .SelectMany(x => Text(x, "tags", "").Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                .Select(t => t.Trim())
+                .Where(t => t.Length > 0 && !string.Equals(t, tagFilter, StringComparison.OrdinalIgnoreCase))
+                .GroupBy(t => t, StringComparer.OrdinalIgnoreCase)
+                .OrderByDescending(g => g.Count())
+                .Select(g => g.Key).Take(8).ToList();
+        }
+        if (lens == "trending")
+        {
+            posts = posts.OrderByDescending(x => Number(x, "view_count"))
+                         .ThenByDescending(x => Number(x, "comment_count")).ToList();
+        }
+        else if (lens == "archive")
+        {
+            posts = posts.OrderByDescending(x => PostDate(x)).ToList();
+        }
+
+        lensTotal = posts.Count;
+        posts = posts.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+    }
+
     var featured = featuredResult == null ? null : featuredResult.Items.FirstOrDefault();
     if (featured == null && posts.Count > 0) { featured = posts[0]; }
+    // A lens has its own header; the hero belongs to the blog home only.
+    if (isLens) { featured = null; }
+    // Hiding the hero must also stop the grid from skipping that post, or the story simply
+    // disappears from the page. Page 2 and later never get a hero: it is the same story every
+    // time (its own query ignores paging), so it would repeat above every page of the archive.
+    if (!showFeatured || pageNumber > 1) { featured = null; }
+
+    var totalPosts = isLens
+        ? lensTotal
+        : (publicResult == null ? posts.Count : publicResult.TotalCount);
+    var totalPages = pageSize <= 0 ? 1 : (int)Math.Ceiling(totalPosts / (double)pageSize);
+    if (totalPages < 1) { totalPages = 1; }
+    // The list has always been read one bounded page at a time, but nothing rendered a pager —
+    // so on a blog with more posts than the page size the rest were simply unreachable.
+    Func<int, string> pageUrl = target =>
+    {
+        var query = new List<string>();
+        if (!string.IsNullOrWhiteSpace(category)) { query.Add("category=" + HttpUtility.UrlEncode(category)); }
+        if (!string.IsNullOrWhiteSpace(search)) { query.Add("q=" + HttpUtility.UrlEncode(search)); }
+        if (!string.IsNullOrWhiteSpace(authorFilter)) { query.Add("author=" + HttpUtility.UrlEncode(authorFilter)); }
+        if (!string.IsNullOrWhiteSpace(tagFilter)) { query.Add("tag=" + HttpUtility.UrlEncode(tagFilter)); }
+        if (!string.IsNullOrWhiteSpace(lens)) { query.Add("view=" + HttpUtility.UrlEncode(lens)); }
+        if (target > 1) { query.Add("page=" + target); }
+        return query.Count == 0 ? baseUrl : baseUrl + "?" + string.Join("&", query);
+    };
     var categories = categoryResult == null
         ? new List<string>()
         : categoryResult.Items.Select(x => Text(x, "category", "Insights"))
@@ -372,7 +1233,7 @@
             .Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(x => x).ToList();
 }
 
-<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs.css?v=20260731a" />
+<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs.css?v=20260809d" />
 
 <main class="mfb" aria-labelledby="mfb-title">
     @if (!string.IsNullOrWhiteSpace(loadError))
@@ -380,6 +1241,10 @@
         <section class="mfb-state mfb-state-error">
             <strong>Blog is being prepared.</strong>
             <span>@loadError</span>
+            @if (!string.IsNullOrWhiteSpace(loadErrorDetail))
+            {
+                <pre style="max-width:100%;overflow:auto;white-space:pre-wrap;margin-top:12px;padding:12px;border-radius:8px;background:#fff;color:#b42318;font-size:12px;text-align:left">@loadErrorDetail</pre>
+            }
         </section>
     }
     else if (app == null)
@@ -407,6 +1272,21 @@
                 </nav>
                 <header class="mfb-article-head">
                     <span class="mfb-chip">@Text(detail, "content_type", "Article")</span>
+                    @if (IsFormat(detail, "Liveblog"))
+                    {
+                        if (liveClosed)
+                        {
+                            <span class="mfb-live-badge ended">Coverage ended</span>
+                        }
+                        else
+                        {
+                            <span class="mfb-live-badge">Live</span>
+                        }
+                    }
+                    @if (IsFormat(detail, "Gallery") && galleryImages.Count > 0)
+                    {
+                        <span class="mfb-live-badge gallery">@galleryImages.Count photos</span>
+                    }
                     <h1 id="mfb-title">@Text(detail, "title", "Untitled story")</h1>
                     <p class="mfb-lead">@Text(detail, "subtitle", Text(detail, "excerpt", ""))</p>
                     <div class="mfb-byline">
@@ -418,7 +1298,7 @@
                         {
                             <span class="mfb-avatar">@Initials(author)</span>
                         }
-                        <span><strong>@author</strong><small>@DateLabel(detail, "publish_date") · @ReadingMinutes(detail) min read</small></span>
+                        <span><strong>@author</strong><small>@DateLabel(detail, "publish_date")@if (showReadingTime) { <text> · @ReadingMinutes(detail) min read</text> }@if (showReadCounts) { <text> · @Plural(Number(detail, "view_count"), "read", "reads")</text> }</small></span>
                     </div>
                 </header>
                 <figure class="mfb-article-hero">
@@ -428,15 +1308,75 @@
                         <figcaption>@Text(detail, "media_caption", "")</figcaption>
                     }
                 </figure>
+                @if (IsFormat(detail, "Gallery") && galleryImages.Count > 0)
+                {
+                    <section class="mfb-gallery" aria-label="Photo gallery">
+                        @foreach (var image in galleryImages)
+                        {
+                            var imageUrl = Text(image, "image_url", "");
+                            var imageCaption = Text(image, "caption", "");
+                            var imageCredit = Text(image, "credit", "");
+                            <figure class="mfb-gallery-item" data-full="@imageUrl">
+                                <img src="@imageUrl" alt="@imageCaption" loading="lazy" />
+                                @if (imageCaption.Length > 0 || imageCredit.Length > 0)
+                                {
+                                    <figcaption>
+                                        <span>@imageCaption</span>
+                                        @if (imageCredit.Length > 0)
+                                        {
+                                            <small>@imageCredit</small>
+                                        }
+                                    </figcaption>
+                                }
+                            </figure>
+                        }
+                    </section>
+                }
                 <div class="mfb-article-layout">
-                    <div class="mfb-prose">@Html.Raw(Text(detail, "body", "<p>Article content is being prepared.</p>"))</div>
+                    <div class="mfb-prose">
+                        @if (articleToc.Count > 2)
+                        {
+                            <nav class="mfb-toc" aria-label="On this page">
+                                <strong>On this page</strong>
+                                <ol>
+                                    @foreach (var heading in articleToc)
+                                    {
+                                        <li class="@(heading.Value.StartsWith("  ", StringComparison.Ordinal) ? "sub" : "")">
+                                            <a href="#@heading.Key">@heading.Value.Trim()</a>
+                                        </li>
+                                    }
+                                </ol>
+                            </nav>
+                        }
+                        @Html.Raw(articleBody)
+                    </div>
                     <aside>
-                        <section class="mfb-author-card">
-                            <span class="mfb-avatar mfb-avatar-lg">@Initials(author)</span>
-                            <h2>@author</h2>
-                            <p class="mfb-muted">@Text(detail, "author_role", "Contributor")</p>
-                            <p>@Text(detail, "author_bio", "A member of the MegaForm editorial team.")</p>
-                        </section>
+                        @if (IsFormat(detail, "Liveblog") && liveUpdates.Any(u => Flag(u, "is_key_moment")))
+                        {
+                            <section class="mfb-side-card mfb-keymoments">
+                                <h2>Key moments</h2>
+                                <ol>
+                                    @foreach (var moment in liveUpdates.Where(u => Flag(u, "is_key_moment")).Take(12))
+                                    {
+                                        var momentText = Text(moment, "headline", Text(moment, "body", ""));
+                                        var momentAnchor = "#live-" + moment.SubmissionId;
+                                        <li>
+                                            <a href="@momentAnchor">@momentText</a>
+                                            <small>@Ago(HappenedAt(moment))</small>
+                                        </li>
+                                    }
+                                </ol>
+                            </section>
+                        }
+                        @if (showAuthorCard)
+                        {
+                            <section class="mfb-author-card">
+                                <span class="mfb-avatar mfb-avatar-lg">@Initials(author)</span>
+                                <h2>@author</h2>
+                                <p class="mfb-muted">@Text(detail, "author_role", "Contributor")</p>
+                                <p>@Text(detail, "author_bio", "A member of the MegaForm editorial team.")</p>
+                            </section>
+                        }
                         @if (tags.Length > 0)
                         {
                             <section class="mfb-side-card">
@@ -463,6 +1403,165 @@
                         }
                     </aside>
                 </div>
+                @if (IsFormat(detail, "Liveblog"))
+                {
+                    var liveState = liveClosed ? "closed" : "open";
+                    <section class="mfb-live" id="mfb-live" data-live="@liveState" aria-label="Live coverage">
+                        <div class="mfb-live-head">
+                            <h2>Live coverage</h2>
+                            <p id="mfb-live-stamp">@(liveUpdates.Count == 0 ? "No updates yet" : "Updated " + Ago(liveLatest)) &middot; @liveUpdates.Count update@(liveUpdates.Count == 1 ? "" : "s")</p>
+                        </div>
+                        <ol class="mfb-live-feed" id="mfb-live-feed">
+                            @foreach (var update in liveUpdates)
+                            {
+                                var updateId = "live-" + update.SubmissionId;
+                                var updateHead = Text(update, "headline", "");
+                                var isKey = Flag(update, "is_key_moment");
+                                var isClosing = Flag(update, "is_closing");
+                                var stampTitle = HappenedAt(update).ToString("u");
+                                <li id="@updateId" class="@(isKey ? "key" : "") @(isClosing ? "closing" : "")">
+                                    <time title="@stampTitle">@Ago(HappenedAt(update))</time>
+                                    <div>
+                                        @if (isKey)
+                                        {
+                                            <span class="mfb-key-flag">Key moment</span>
+                                        }
+                                        @if (updateHead.Length > 0)
+                                        {
+                                            <h3>@updateHead</h3>
+                                        }
+                                        <p>@Text(update, "body", "")</p>
+                                        <small>@Text(update, "author_name", "Editorial")</small>
+                                    </div>
+                                </li>
+                            }
+                        </ol>
+                        @if (liveUpdates.Count == 0)
+                        {
+                            <p class="mfb-muted">Coverage starts shortly.</p>
+                        }
+                    </section>
+                }
+                @if (relatedPosts.Count > 0)
+                {
+                    <section class="mfb-related" aria-label="Related stories">
+                        <h2>Keep reading</h2>
+                        <div class="mfb-related-grid">
+                            @foreach (var related in relatedPosts)
+                            {
+                                <a class="mfb-related-card" href="@baseUrl?slug=@HttpUtility.UrlEncode(Text(related, "slug", ""))">
+                                    <img src="@ImageUrl(related)" alt="" loading="lazy" />
+                                    <span class="mfb-chip">@Text(related, "category", "Insights")</span>
+                                    <strong>@Text(related, "title", "Untitled story")</strong>
+                                    <small>@DateLabel(related, "publish_date")</small>
+                                </a>
+                            }
+                        </div>
+                    </section>
+                }
+
+                <section class="mfb-comments" id="mfb-comments" aria-label="Comments">
+                    <h2>@Plural(approvedComments.Count, "comment", "comments")</h2>
+
+                    @if (commentPosted)
+                    {
+                        <p class="mfb-notice success">Thank you! Your comment was received and is awaiting moderation.</p>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(commentError))
+                    {
+                        <p class="mfb-notice error">@commentError</p>
+                    }
+
+                    @if (approvedComments.Count == 0)
+                    {
+                        <p class="mfb-muted">No comments yet. Be the first to share your thoughts.</p>
+                    }
+                    else
+                    {
+                        foreach (var comment in approvedComments)
+                        {
+                            var commenterName = Text(comment, "commenter_name", "Reader");
+                            <article class="mfb-comment">
+                                <span class="mfb-avatar">@Initials(commenterName)</span>
+                                <div class="mfb-comment-body">
+                                    <header><strong>@commenterName</strong><small>@AgoLabel(comment.SubmittedOnUtc)</small></header>
+                                    <p>@Html.Raw(HttpUtility.HtmlEncode(Text(comment, "comment_body", "")).Replace("\r\n", "\n").Replace("\n", "<br/>"))</p>
+                                </div>
+                            </article>
+                        }
+                    }
+
+                    @if (commentsOpen)
+                    {
+                        @* 🔴 THIS IS A <div>, NOT A <form>, AND IT MUST STAY ONE.
+                           A DNN page is already one big `<form id="Form" runat="server">`, and HTML
+                           forbids nested forms: the parser DROPS the inner <form> tag and keeps its
+                           children. Measured on dnndefender.com 2026-08-09 with 1.4.0 live —
+                           `document.querySelector('form.mfb-comment-form')` returned NULL while the
+                           inputs were there, so every `.mfb-comment-form …` rule in
+                           megaform-blogs.css matched nothing and the box rendered as bare unstyled
+                           inputs stacked on the page. The POST still worked (the fields ride the
+                           DNN form), which is why it looked "broken" rather than dead.
+                           The admin console screens already use this pattern.
+                           Gate: the submit BUTTON's own name/value. A browser only posts those for
+                           the button actually clicked, so an unrelated DNN postback on this page
+                           cannot be mistaken for a comment submission — which a hidden
+                           `mfb_comment_form=1` marker would have been. *@
+                        <div class="mfb-comment-form">
+                            <h3>Leave a comment</h3>
+                            <input type="hidden" name="mfb_csrf" value="@publicCsrf" />
+                            <input type="hidden" name="slug" value="@slug" />
+                            @* Honeypot: declared by the comments schema, invisible to humans.
+                               A bot that fills it flags its own submission as spam. *@
+                            <input type="text" name="__mf_blog_comment_hp" value="" tabindex="-1"
+                                   autocomplete="off" class="mfb-hp" aria-hidden="true" />
+                            <div class="mfb-comment-grid">
+                                <div>
+                                    <label for="mfb-commenter-name">Name <em>*</em></label>
+                                    <input id="mfb-commenter-name" name="commenter_name" type="text"
+                                           maxlength="100" required value="@(Request.Form["commenter_name"] ?? "")" />
+                                </div>
+                                <div>
+                                    <label for="mfb-commenter-email">Email @if (commentsRequireEmail) { <em>*</em> } <small>(not published)</small></label>
+                                    @if (commentsRequireEmail)
+                                    {
+                                        <input id="mfb-commenter-email" name="commenter_email" type="email"
+                                               maxlength="200" required value="@(Request.Form["commenter_email"] ?? "")" />
+                                    }
+                                    else
+                                    {
+                                        <input id="mfb-commenter-email" name="commenter_email" type="email"
+                                               maxlength="200" value="@(Request.Form["commenter_email"] ?? "")" />
+                                    }
+                                </div>
+                            </div>
+                            <label for="mfb-comment-body">Comment <em>*</em></label>
+                            <textarea id="mfb-comment-body" name="comment_body" rows="4" maxlength="2000"
+                                      required>@(Request.Form["comment_body"] ?? "")</textarea>
+                            <button type="submit" class="mfb-btn" name="mfb_comment_submit" value="1">Post comment</button>
+                            <small class="mfb-muted">Comments are reviewed before they appear.</small>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="mfb-muted">
+                            @if (commentsAutoClosed)
+                            {
+                                <text>Comments closed automatically @commentsAutoCloseDays days after this article was published.</text>
+                            }
+                            else
+                            {
+                                <text>Comments are closed for this article.</text>
+                            }
+                        </p>
+                    }
+                </section>
+                @if (isHostViewer && seoApplied.Length > 0)
+                {
+                    <p class="mfb-muted" style="margin-top:18px;font-size:12px">
+                        SEO head (visible to Hosts only): @seoApplied
+                    </p>
+                }
             </article>
         }
     }
@@ -478,8 +1577,27 @@
            most of a screen down. The skin owns the page identity; this module owns the content.
 
            The search box stays: it is functionality, not chrome. *@
+        @* Code context: `if`, never `@if` - the third time this rule has cost a deploy. *@
+        if (breakingLive)
+        {
+            <section class="mfb-breaking" aria-label="Breaking news">
+                <div class="mfb-shell">
+                    <span class="mfb-breaking-tag">Breaking</span>
+                    @if (breakingUrl.Length > 0)
+                    {
+                        <a href="@breakingUrl">@breakingText</a>
+                    }
+                    else
+                    {
+                        <span>@breakingText</span>
+                    }
+                </div>
+            </section>
+        }
         <section class="mfb-hero mfb-hero-bare">
             <div class="mfb-shell">
+                @if (showSearch)
+                {
                 <div class="mfb-search" role="search">
                     <label class="sr-only" for="mfb-q">Search articles</label>
                     <input id="mfb-q" name="q" value="@search" placeholder="Search articles, topics, authors..."
@@ -487,6 +1605,7 @@
                     <button id="mfb-search-go" type="button"
                             onclick="var q=document.getElementById('mfb-q').value.trim();window.location.href='@baseUrl'+(q?'?q='+encodeURIComponent(q):'');">Search</button>
                 </div>
+                }
 
                 @if (featured != null)
                 {
@@ -494,14 +1613,29 @@
                         <a class="mfb-feature-image" href="@baseUrl?slug=@HttpUtility.UrlEncode(Text(featured, "slug", ""))">
                             <img src="@ImageUrl(featured)" alt="@Text(featured, "image_alt_text", "")" />
                             <span>Featured</span>
+                            @if (FormatBadge(featured) == "live")
+                            {
+                                <span class="mfb-format live">Liveblog</span>
+                            }
+                            else if (FormatBadge(featured) == "gallery")
+                            {
+                                <span class="mfb-format gallery">Gallery</span>
+                            }
+                            else if (FormatBadge(featured) == "video")
+                            {
+                                <span class="mfb-format video">Video</span>
+                            }
                         </a>
                         <div class="mfb-feature-copy">
-                            <div><span class="mfb-chip">@Text(featured, "category", "Insights")</span> <small>@ReadingMinutes(featured) min read</small></div>
+                            <div><span class="mfb-chip">@Text(featured, "category", "Insights")</span>@if (showReadingTime) { <small>@ReadingMinutes(featured) min read</small> }</div>
                             <h2><a href="@baseUrl?slug=@HttpUtility.UrlEncode(Text(featured, "slug", ""))">@Text(featured, "title", "Untitled story")</a></h2>
                             <p>@Text(featured, "excerpt", "")</p>
                             <div class="mfb-card-foot">
                                 <span><strong>@Text(featured, "author_name", "MegaForm Editorial")</strong><small>@DateLabel(featured, "publish_date")</small></span>
-                                <span>@Plural(Number(featured, "view_count"), "read", "reads") · @Plural(Number(featured, "comment_count"), "comment", "comments")</span>
+                                @if (showReadCounts)
+                                {
+                                    <span>@Plural(Number(featured, "view_count"), "read", "reads") · @Plural(Number(featured, "comment_count"), "comment", "comments")</span>
+                                }
                             </div>
                         </div>
                     </article>
@@ -509,66 +1643,323 @@
             </div>
         </section>
 
-        <section class="mfb-shell mfb-content">
-            <div class="mfb-main">
-                <header class="mfb-section-head">
-                    <div><span class="mfb-trend">↗</span><h2>@(string.IsNullOrWhiteSpace(search) ? "Popular this week" : "Search results")</h2></div>
-                    <span>@(publicResult == null ? 0 : publicResult.TotalCount) stories</span>
-                </header>
-                <nav class="mfb-categories" aria-label="Blog categories">
-                    <a class="@(string.IsNullOrWhiteSpace(category) ? "active" : "")" href="@baseUrl">All</a>
-                    @foreach (var item in categories)
-                    {
-                        <a class="@(string.Equals(item, category, StringComparison.OrdinalIgnoreCase) ? "active" : "")"
-                           href="@baseUrl?category=@HttpUtility.UrlEncode(item)">@item</a>
-                    }
+        @* 🔴 No @ here. Inside the else block we are in CODE context (the markup above closed
+           itself), and `@if` there is a parse error that renders the whole page as an empty
+           module — the public page has no error box to tell you. Same rule the admin screens
+           already carry: markup context -> @if, code context -> if. *@
+        if (isLens)
+        {
+            <section class="mfb-shell mfb-lens">
+                <nav class="mfb-breadcrumb" aria-label="Breadcrumb">
+                    <a href="@baseUrl">Blog</a><span>/</span>
+                    <span>@LensCrumb(authorFilter, tagFilter, lens)</span>
                 </nav>
-                @if (posts.Count == 0)
+                @if (authorFilter.Length > 0)
                 {
-                    <div class="mfb-state">No published stories match this filter.</div>
+                    var profile = posts.FirstOrDefault();
+                    var authorAvatar = profile == null ? "" : Text(profile, "author_avatar_url", "");
+                    <div class="mfb-lens-author">
+                        @if (!string.IsNullOrWhiteSpace(authorAvatar))
+                        {
+                            <img src="@authorAvatar" alt="" />
+                        }
+                        else
+                        {
+                            <span class="mfb-avatar mfb-avatar-lg">@Initials(authorFilter)</span>
+                        }
+                        <div>
+                            <h1>@authorFilter</h1>
+                            @if (profile != null)
+                            {
+                                <p class="mfb-lead">@Text(profile, "author_role", "Contributor")</p>
+                                <p>@Text(profile, "author_bio", "")</p>
+                            }
+                            <p class="mfb-muted">
+                                @Plural(totalPosts, "story", "stories") ·
+                                @Plural(posts.Sum(x => Number(x, "view_count")), "read", "reads") on this page
+                            </p>
+                        </div>
+                    </div>
+                }
+                else if (tagFilter.Length > 0)
+                {
+                    <h1 class="mfb-lens-title">#@tagFilter</h1>
+                    <p class="mfb-lead">@Plural(totalPosts, "story tagged", "stories tagged") #@tagFilter.</p>
+                    @* code context again after that </p>, so no @ on the if *@
+                    if (relatedTags.Count > 0)
+                    {
+                        <div class="mfb-tags">
+                            @foreach (var related in relatedTags)
+                            {
+                                <a href="@baseUrl?tag=@HttpUtility.UrlEncode(related)">#@related</a>
+                            }
+                        </div>
+                    }
+                }
+                else if (lens == "trending")
+                {
+                    <h1 class="mfb-lens-title">Trending</h1>
+                    <p class="mfb-lead">The most-read stories on this blog, counted from real reader events.</p>
                 }
                 else
                 {
+                    <h1 class="mfb-lens-title">Archive</h1>
+                    <p class="mfb-lead">@Plural(totalPosts, "story", "stories"), newest first.</p>
+                }
+            </section>
+        }
+
+        <section class="mfb-shell mfb-content">
+            <div class="mfb-main">
+                <header class="mfb-section-head">
+                    <div><span class="mfb-trend">↗</span><h2>@ListHeading(sectionTitle, search, authorFilter, tagFilter, lens)</h2></div>
+                    <span>@(publicResult == null ? 0 : publicResult.TotalCount) stories</span>
+                </header>
+                @if (showCategories)
+                {
+                    <nav class="mfb-categories" aria-label="Blog categories">
+                        <a class="@(string.IsNullOrWhiteSpace(category) ? "active" : "")" href="@baseUrl">All</a>
+                        @foreach (var item in categories)
+                        {
+                            <a class="@(string.Equals(item, category, StringComparison.OrdinalIgnoreCase) ? "active" : "")"
+                               href="@baseUrl?category=@HttpUtility.UrlEncode(item)">@item</a>
+                        }
+                    </nav>
+                }
+                @if (posts.Count == 0)
+                {
+                    <div class="mfb-state">
+                        <strong>Nothing here yet.</strong>
+                        <span>No published story matches this filter.</span>
+                        <a class="mfb-button" href="@baseUrl">Back to all stories</a>
+                    </div>
+                }
+                else
+                {
+                    if (lens == "archive")
+                    {
+                        @* The archive is the one lens that is not a wall of cards: it is a list you
+                           scan by date, so it groups by month and drops the images. *@
+                        foreach (var group in posts.GroupBy(x => PostDate(x).ToString("MMMM yyyy",
+                                     System.Globalization.CultureInfo.InvariantCulture)))
+                        {
+                            <h3 class="mfb-archive-month">@group.Key</h3>
+                            <ul class="mfb-archive-list">
+                                @foreach (var post in group)
+                                {
+                                    <li>
+                                        <a href="@baseUrl?slug=@HttpUtility.UrlEncode(Text(post, "slug", ""))">@Text(post, "title", "Untitled story")</a>
+                                        <span>@Text(post, "category", "Insights")</span>
+                                        <time>@DateLabel(post, "publish_date")</time>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    }
                     <div class="mfb-grid">
-                        @foreach (var post in posts.Where(x => featured == null || x.SubmissionId != featured.SubmissionId))
+                        @foreach (var post in posts.Where(x => lens != "archive" && (featured == null || x.SubmissionId != featured.SubmissionId)))
                         {
                             <article class="mfb-card">
                                 <a class="mfb-card-image" href="@baseUrl?slug=@HttpUtility.UrlEncode(Text(post, "slug", ""))">
                                     <img src="@ImageUrl(post)" alt="@Text(post, "image_alt_text", "")" />
-                                    @if (Flag(post, "is_featured")) { <span>Featured</span> }
+                                    @if (lens == "trending")
+                                    {
+                                        <span class="mfb-rank">@(((pageNumber - 1) * pageSize) + posts.IndexOf(post) + 1)</span>
+                                    }
+                                    else if (Flag(post, "is_featured"))
+                                    {
+                                        <span>Featured</span>
+                                    }
+                                    @* The format badge is read off content_type, which the list
+                                       already has - no second query to tell a gallery from an
+                                       article. Whether a liveblog is still running is NOT shown
+                                       here: that answer costs one read per card. *@
+                                    @if (FormatBadge(post) == "live")
+                                    {
+                                        <span class="mfb-format live">Liveblog</span>
+                                    }
+                                    else if (FormatBadge(post) == "gallery")
+                                    {
+                                        <span class="mfb-format gallery">Gallery</span>
+                                    }
+                                    else if (FormatBadge(post) == "video")
+                                    {
+                                        <span class="mfb-format video">Video</span>
+                                    }
                                 </a>
                                 <div class="mfb-card-body">
-                                    <div><span class="mfb-chip">@Text(post, "category", "Insights")</span><small>@ReadingMinutes(post) min</small></div>
+                                    <div><span class="mfb-chip">@Text(post, "category", "Insights")</span>@if (showReadingTime) { <small>@ReadingMinutes(post) min</small> }</div>
                                     <h3><a href="@baseUrl?slug=@HttpUtility.UrlEncode(Text(post, "slug", ""))">@Text(post, "title", "Untitled story")</a></h3>
                                     <p>@Text(post, "excerpt", "")</p>
                                     <div class="mfb-card-foot">
-                                        <span><strong>@Text(post, "author_name", "MegaForm Editorial")</strong><small>@DateLabel(post, "publish_date")</small></span>
-                                        <span>@Plural(Number(post, "view_count"), "read", "reads")</span>
+                                        <span><a href="@baseUrl?author=@HttpUtility.UrlEncode(Text(post, "author_name", ""))"><strong>@Text(post, "author_name", "MegaForm Editorial")</strong></a><small>@DateLabel(post, "publish_date")</small></span>
+                                        @* Reads AND comments, like the featured card. A card that
+                                           only ever showed reads is why the blog looked like it had
+                                           no comments at all. Both numbers are rollup-maintained
+                                           (MegaForm.Core BlogAnalyticsRollupService). *@
+                                        @if (showReadCounts)
+                                        {
+                                            <span>@Plural(Number(post, "view_count"), "read", "reads") · @Plural(Number(post, "comment_count"), "comment", "comments")</span>
+                                        }
                                     </div>
                                 </div>
                             </article>
                         }
                     </div>
                 }
+
+                @* Pager. The list was always read one bounded page at a time (page size is an
+                   owner setting now), but nothing ever rendered the navigation — so post 13
+                   onwards existed and was unreachable. *@
+                @if (totalPages > 1)
+                {
+                    <nav class="mfb-pager" aria-label="Blog pages">
+                        @if (pageNumber > 1)
+                        {
+                            <a href="@pageUrl(pageNumber - 1)" rel="prev">&larr; Newer</a>
+                        }
+                        <div class="mfb-pager-pages">
+                            @for (var number = 1; number <= totalPages; number++)
+                            {
+                                if (number == pageNumber)
+                                {
+                                    <strong aria-current="page">@number</strong>
+                                }
+                                else
+                                {
+                                    <a href="@pageUrl(number)">@number</a>
+                                }
+                            }
+                        </div>
+                        @if (pageNumber < totalPages)
+                        {
+                            <a href="@pageUrl(pageNumber + 1)" rel="next">Older &rarr;</a>
+                        }
+                        <span class="mfb-pager-of">Page @pageNumber of @totalPages</span>
+                    </nav>
+                }
             </div>
             <aside class="mfb-sidebar">
+                @* Both of these were hardcoded: five invented topics no site owner could change,
+                   and a newsletter box wired to nothing. They are settings now
+                   (admin console → Settings), and an empty topic list hides the card. *@
                 <section class="mfb-side-card">
-                    <h2>Trending topics</h2>
+                    <h2>Browse</h2>
                     <div class="mfb-tags">
-                        @foreach (var tag in new[] { "Design Systems", "Accessibility", "AI", "Performance", "Product" })
-                        {
-                            <a href="@baseUrl?q=@HttpUtility.UrlEncode(tag)">#@tag</a>
-                        }
+                        <a href="@(baseUrl + "?view=trending")">Trending</a>
+                        <a href="@(baseUrl + "?view=archive")">Archive</a>
+                        <a href="@baseUrl">All stories</a>
                     </div>
                 </section>
-                <section class="mfb-newsletter">
-                    <h2>Stay updated</h2>
-                    <p>New insights delivered to your inbox.</p>
-                    <input type="email" aria-label="Email address" placeholder="Your email" />
-                    <button type="button">Subscribe</button>
-                    <small>Demo UI — connect this to a MegaForm newsletter form when required.</small>
-                </section>
+                @if (trendingTags.Count > 0)
+                {
+                    <section class="mfb-side-card">
+                        <h2>Trending topics</h2>
+                        <div class="mfb-tags">
+                            @* A topic is a TAG lens now, not a full-text search for the word. *@
+                            @foreach (var tag in trendingTags)
+                            {
+                                <a href="@baseUrl?tag=@HttpUtility.UrlEncode(tag)">#@tag</a>
+                            }
+                        </div>
+                    </section>
+                }
+                @if (showNewsletter)
+                {
+                    <section class="mfb-newsletter">
+                        <h2>Stay updated</h2>
+                        <p>New insights delivered to your inbox.</p>
+                        <input type="email" aria-label="Email address" placeholder="Your email" />
+                        <button type="button">Subscribe</button>
+                        <small>Demo UI — connect this to a MegaForm newsletter form when required.</small>
+                    </section>
+                }
             </aside>
         </section>
     }
 </main>
+
+@if (detail != null && IsFormat(detail, "Gallery") && galleryImages.Count > 0)
+{
+    <script>
+    // Lightbox: one overlay, built once, reused. No library, no dependency on the skin's jQuery.
+    (function () {
+        "use strict";
+        var items = document.querySelectorAll(".mfb-gallery-item");
+        if (!items.length) { return; }
+        var box = document.createElement("div");
+        box.className = "mfb-lightbox";
+        box.setAttribute("hidden", "hidden");
+        box.innerHTML = '<button type="button" class="mfb-lightbox-close" aria-label="Close">&times;</button>' +
+                        '<img alt="" /><p></p>';
+        document.body.appendChild(box);
+        var picture = box.querySelector("img");
+        var caption = box.querySelector("p");
+
+        function show(source, text) {
+            picture.src = source;
+            caption.textContent = text || "";
+            box.removeAttribute("hidden");
+            document.body.style.overflow = "hidden";
+        }
+        function hide() {
+            box.setAttribute("hidden", "hidden");
+            picture.src = "";
+            document.body.style.overflow = "";
+        }
+        for (var i = 0; i < items.length; i++) {
+            (function (item) {
+                item.addEventListener("click", function () {
+                    var text = item.querySelector("figcaption span");
+                    show(item.getAttribute("data-full"), text ? text.textContent : "");
+                });
+            })(items[i]);
+        }
+        box.addEventListener("click", hide);
+        document.addEventListener("keydown", function (e) { if (e.key === "Escape") { hide(); } });
+    })();
+    </script>
+}
+
+@if (detail != null && IsFormat(detail, "Liveblog") && !liveClosed)
+{
+    <script>
+    // Live coverage refresh. It re-fetches THIS page and swaps the feed - no API endpoint to
+    // secure, no second read path to keep in step with the renderer, and a reader who has
+    // scrolled keeps their place because only the list is replaced.
+    // It stops when the tab is hidden (a background tab polling every 45s is a battery bug) and
+    // stops for good once the coverage is closed.
+    (function () {
+        "use strict";
+        var section = document.getElementById("mfb-live");
+        var feed = document.getElementById("mfb-live-feed");
+        var stamp = document.getElementById("mfb-live-stamp");
+        if (!section || !feed) { return; }
+        var busy = false;
+
+        function refresh() {
+            if (busy || document.hidden || section.getAttribute("data-live") !== "open") { return; }
+            busy = true;
+            fetch(window.location.href, { credentials: "same-origin", headers: { "X-Requested-With": "mfb-live" } })
+                .then(function (response) { return response.ok ? response.text() : null; })
+                .then(function (html) {
+                    if (!html) { return; }
+                    var parsed = new DOMParser().parseFromString(html, "text/html");
+                    var fresh = parsed.getElementById("mfb-live-feed");
+                    var freshStamp = parsed.getElementById("mfb-live-stamp");
+                    var freshSection = parsed.getElementById("mfb-live");
+                    if (fresh && fresh.innerHTML !== feed.innerHTML) { feed.innerHTML = fresh.innerHTML; }
+                    if (freshStamp && stamp) { stamp.textContent = freshStamp.textContent; }
+                    if (freshSection && freshSection.getAttribute("data-live") === "closed") {
+                        section.setAttribute("data-live", "closed");
+                    }
+                })
+                .catch(function () { /* a dropped poll is not an error the reader needs */ })
+                .then(function () { busy = false; });
+        }
+
+        window.setInterval(refresh, 45000);
+        document.addEventListener("visibilitychange", function () { if (!document.hidden) { refresh(); } });
+    })();
+    </script>
+}

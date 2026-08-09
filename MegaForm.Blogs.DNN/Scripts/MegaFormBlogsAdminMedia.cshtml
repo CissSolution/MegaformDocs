@@ -1,0 +1,384 @@
+@*
+    MegaForm Blogs - media library (screen 8).
+
+    A BROWSER, not an uploader, and the screen says so. Every image the blog uses is either a
+    typed URL on a post (featured / social / avatar) or a MegaForm-managed upload; both come back
+    through IGalleryApi, which is the only image surface the SDK exposes. There is no upload
+    endpoint in MegaForm.Sdk, so pretending to offer one here would be a button that lies —
+    uploads happen where they always did, through the post form's own file field.
+
+    The value this adds over the picker inside the editor: you can see EVERY image at once, search
+    them, and find out which post each one belongs to.
+*@
+@inherits DotNetNuke.Web.Razor.DotNetNukeWebPage<dynamic>
+@using System
+@using System.Linq
+@using System.Globalization
+@using System.Collections.Generic
+@using MegaForm.Sdk
+
+@functions {
+    static T Run<T>(System.Func<IMegaFormClient, System.Threading.Tasks.Task<T>> action)
+    {
+        var initializeMegaForm = MegaForm.DNN.Services.DnnServiceLocator.Instance;
+        return System.Threading.Tasks.Task.Run(() => MegaFormSdk.RunAsync(action)).GetAwaiter().GetResult();
+    }
+
+    static bool CanManage(DotNetNuke.Entities.Users.UserInfo user)
+    {
+        if (user == null || user.UserID < 0) return false;
+        if (user.IsSuperUser) return true;
+        var allowed = new[] { "Administrators", "Blog Editors", "Blog Publishers" };
+        return user.Roles != null && user.Roles.Any(role => allowed.Contains(role, StringComparer.OrdinalIgnoreCase));
+    }
+
+    /// Field key -> the words an editor would use for it.
+    static string KindLabel(string fieldKey, int? fileId)
+    {
+        if (fileId.HasValue && fileId.Value > 0) return "Uploaded file";
+        switch ((fieldKey ?? "").ToLowerInvariant())
+        {
+            case "featured_image_url": return "Featured image";
+            case "og_image_url": return "Social image";
+            case "author_avatar_url": return "Author avatar";
+            default: return string.IsNullOrWhiteSpace(fieldKey) ? "Image" : fieldKey;
+        }
+    }
+
+    static string KindKey(string fieldKey, int? fileId)
+    {
+        if (fileId.HasValue && fileId.Value > 0) return "uploads";
+        switch ((fieldKey ?? "").ToLowerInvariant())
+        {
+            case "author_avatar_url": return "authors";
+            case "og_image_url": return "social";
+            default: return "posts";
+        }
+    }
+
+    /// 🔴 Lives here, not in the markup loop. A multi-line C# expression inside a @foreach that
+    /// sits in MARKUP context makes the CSHTML parser report "Unterminated string literal" and
+    /// take the whole screen down — the continuation line is not read as C#. Keep statements
+    /// inside markup loops to one line, or move them up here.
+    static string KindTabLabel(string key)
+    {
+        switch (key)
+        {
+            case "all": return "All";
+            case "posts": return "Featured";
+            case "social": return "Social";
+            case "authors": return "Avatars";
+            default: return "Uploads";
+        }
+    }
+
+    static System.Web.IHtmlString Icon(string name, string cssClass = "mfba-icon")
+    {
+        string body;
+        switch (name)
+        {
+            case "chevron-right": body = "<path d='m9 18 6-6-6-6'/>"; break;
+            case "image": body = "<rect width='18' height='18' x='3' y='3' rx='2'/><circle cx='9' cy='9' r='2'/><path d='m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21'/>"; break;
+            case "grid": body = "<rect width='7' height='7' x='3' y='3' rx='1'/><rect width='7' height='7' x='14' y='3' rx='1'/><rect width='7' height='7' x='14' y='14' rx='1'/><rect width='7' height='7' x='3' y='14' rx='1'/>"; break;
+            case "list": body = "<path d='M3 12h.01'/><path d='M3 18h.01'/><path d='M3 6h.01'/><path d='M8 12h13'/><path d='M8 18h13'/><path d='M8 6h13'/>"; break;
+            case "search": body = "<circle cx='11' cy='11' r='8'/><path d='m21 21-4.3-4.3'/>"; break;
+            case "pencil": body = "<path d='M21.17 6.81a1 1 0 0 0-3.98-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.63l4.35-1.33a2 2 0 0 0 .83-.5z'/>"; break;
+            case "link": body = "<path d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'/><path d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'/>"; break;
+            case "users": body = "<path d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/><circle cx='9' cy='7' r='4'/><path d='M22 21v-2a4 4 0 0 0-3-3.87'/>"; break;
+            case "upload": body = "<path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/><polyline points='17 8 12 3 7 8'/><line x1='12' x2='12' y1='3' y2='15'/>"; break;
+            default: body = ""; break;
+        }
+        return new System.Web.HtmlString("<svg class='" + cssClass + "' viewBox='0 0 24 24' aria-hidden='true'>" + body + "</svg>");
+    }
+}
+
+@{
+    var portalId = DotNetNuke.Entities.Portals.PortalSettings.Current == null
+        ? 0 : DotNetNuke.Entities.Portals.PortalSettings.Current.PortalId;
+    var activeTab = DotNetNuke.Entities.Portals.PortalSettings.Current == null
+        ? null : DotNetNuke.Entities.Portals.PortalSettings.Current.ActiveTab;
+    var adminBaseUrl = activeTab == null ? Request.RawUrl : DotNetNuke.Common.Globals.NavigateURL(activeTab.TabID);
+    var mediaUrl = adminBaseUrl + "?view=media";
+    var user = DotNetNuke.Entities.Users.UserController.Instance.GetCurrentUserInfo();
+    var scope = new MegaFormScope
+    {
+        PortalId = portalId,
+        UserId = user == null ? 0 : user.UserID,
+        UserName = user == null ? "" : user.Username,
+        IsAuthenticated = user != null && user.UserID >= 0,
+        IsAdmin = user != null && (user.IsSuperUser || user.IsInRole("Administrators")),
+        IsSuperUser = user != null && user.IsSuperUser,
+        Roles = user == null || user.Roles == null ? new List<string>() : user.Roles.ToList(),
+        IpAddress = Request.UserHostAddress ?? ""
+    };
+    var allowed = CanManage(user);
+    var message = "";
+    var items = new List<GalleryItemDto>();
+
+    if (allowed)
+    {
+        try
+        {
+            var gallery = Run(c => c.Gallery.QueryGalleryAsync(new GalleryQueryRequest
+            {
+                AppKey = "blog-starter",
+                QueryKey = "all-posts",
+                Query = new AppQueryRequest { Page = 1, PageSize = 100 },
+                ImageFieldKeys = new List<string> { "featured_image_url", "og_image_url", "author_avatar_url" },
+                TitleFieldKey = "title",
+                AltTextFieldKey = "image_alt_text",
+                CaptionFieldKey = "excerpt",
+                // Uploads included here, unlike the editor's picker: this screen is the place to
+                // see what actually exists, not a shortlist to insert from.
+                IncludeUploadedImages = true
+            }, scope));
+            if (gallery != null && gallery.Items != null) { items = gallery.Items.ToList(); }
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+        }
+    }
+
+    var mediaLayout = (Request.QueryString["layout"] ?? "grid").Trim().ToLowerInvariant();
+    if (mediaLayout != "list") { mediaLayout = "grid"; }
+    var kind = (Request.QueryString["kind"] ?? "all").Trim().ToLowerInvariant();
+    var kinds = new[] { "all", "posts", "social", "authors", "uploads" };
+    if (!kinds.Contains(kind)) { kind = "all"; }
+    var search = (Request.QueryString["q"] ?? "").Trim();
+
+    Func<string, int> countOf = key => key == "all"
+        ? items.Count
+        : items.Count(i => KindKey(i.FieldKey, i.FileId) == key);
+
+    var filtered = items.Where(i =>
+    {
+        if (kind != "all" && KindKey(i.FieldKey, i.FileId) != kind) { return false; }
+        if (search.Length > 0)
+        {
+            var haystack = (i.Title ?? "") + " " + (i.FileName ?? "") + " " + (i.Url ?? "") + " " + (i.AltText ?? "");
+            if (haystack.IndexOf(search, StringComparison.OrdinalIgnoreCase) < 0) { return false; }
+        }
+        return true;
+    }).ToList();
+
+    var distinctPosts = items.Select(i => i.SubmissionId).Distinct().Count();
+    var uploads = countOf("uploads");
+}
+
+<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs-admin.css?v=20260809h" />
+
+<div class="mfba">
+    @if (!allowed)
+    {
+        <header class="mfba-head">
+            <div class="mfba-head-row"><div><h1>Editorial access required</h1><p>Sign in with a Blog or Administrator role to browse media.</p></div></div>
+        </header>
+    }
+    else
+    {
+        <header class="mfba-head">
+            <nav class="mfba-crumb" aria-label="Breadcrumb">
+                <a href="/Blogs">Blog</a>@Icon("chevron-right", "mfba-icon mfba-icon-md")
+                <a href="@adminBaseUrl">Admin</a>@Icon("chevron-right", "mfba-icon mfba-icon-md")
+                <strong>Media</strong>
+            </nav>
+            <div class="mfba-head-row">
+                <div>
+                    <h1>Media library</h1>
+                    <p>Every image this blog references, and the post it belongs to</p>
+                </div>
+                <div class="mfba-head-actions">
+                    <label class="mfba-sr" for="mfba-mq">Search media</label>
+                    <span class="mfba-field">
+                        @Icon("search")
+                        <input id="mfba-mq" value="@search" placeholder="Search title, file, URL..." style="width:240px"
+                               onkeydown="if(event.key==='Enter'){event.preventDefault();mfbaMediaSearch();}" />
+                    </span>
+                    <a class="mfba-iconbtn" title="Grid" href="@(mediaUrl + "&layout=grid&kind=" + kind)">@Icon("grid", "mfba-icon mfba-icon-md")</a>
+                    <a class="mfba-iconbtn" title="List" href="@(mediaUrl + "&layout=list&kind=" + kind)">@Icon("list", "mfba-icon mfba-icon-md")</a>
+                </div>
+            </div>
+            <nav class="mfba-tabs" aria-label="Media kind">
+                @foreach (var item in kinds)
+                {
+                    var href = mediaUrl + "&layout=" + mediaLayout + "&kind=" + item;
+                    var label = KindTabLabel(item);
+                    <a class="@(kind == item ? "on" : "")" href="@href">@label<em>@countOf(item)</em></a>
+                }
+            </nav>
+        </header>
+
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            <div style="padding:16px 24px 0"><div class="mfba-notice err">@message</div></div>
+        }
+
+        <section class="mfba-stats" aria-label="Media figures">
+            <div class="mfba-stat">
+                <div class="mfba-stat-top"><span class="mfba-stat-chip mfba-c-blue">@Icon("image")</span></div>
+                <p class="mfba-stat-value">@items.Count</p>
+                <p class="mfba-stat-label">Images referenced</p>
+                <p class="mfba-stat-sub">across @distinctPosts post(s)</p>
+            </div>
+            <div class="mfba-stat">
+                <div class="mfba-stat-top"><span class="mfba-stat-chip mfba-c-emerald">@Icon("image")</span></div>
+                <p class="mfba-stat-value">@countOf("posts")</p>
+                <p class="mfba-stat-label">Featured images</p>
+                <p class="mfba-stat-sub">@countOf("social") social image(s)</p>
+            </div>
+            <div class="mfba-stat">
+                <div class="mfba-stat-top"><span class="mfba-stat-chip mfba-c-amber">@Icon("users")</span></div>
+                <p class="mfba-stat-value">@countOf("authors")</p>
+                <p class="mfba-stat-label">Author avatars</p>
+                <p class="mfba-stat-sub">deduplicated by URL</p>
+            </div>
+            <div class="mfba-stat">
+                <div class="mfba-stat-top"><span class="mfba-stat-chip mfba-c-violet">@Icon("upload")</span></div>
+                <p class="mfba-stat-value">@uploads</p>
+                <p class="mfba-stat-label">MegaForm uploads</p>
+                <p class="mfba-stat-sub">files stored by the form pipeline</p>
+            </div>
+        </section>
+
+        <section class="mfba-panel">
+            <div class="mfba-panel-head">
+                <h2>@filtered.Count of @items.Count</h2>
+                <span class="mfba-stat-sub">Read-only: uploading happens on the post form, not here</span>
+            </div>
+            <div class="mfba-panel-body">
+                @if (filtered.Count == 0)
+                {
+                    <div class="mfba-empty">@Icon("image", "mfba-icon mfba-icon-lg") No image matches this filter.</div>
+                }
+                else if (mediaLayout == "grid")
+                {
+                    <div class="mfba-media-grid">
+                        @foreach (var item in filtered)
+                        {
+                            var caption = string.IsNullOrWhiteSpace(item.Title) ? "Untitled post" : item.Title;
+                            var editUrl = adminBaseUrl + "?edit=" + item.SubmissionId;
+                            @* 🔴 An uploaded file is NOT embeddable. Its URL is the MegaForm
+                               Files/Download API, which answers 401 to a plain <img> request
+                               (measured on dnndefender.com) — so those cards showed broken-image
+                               glyphs. They get a file chip and a link instead of a lie. *@
+                            var uploaded = item.FileId.HasValue && item.FileId.Value > 0;
+                            <figure class="mfba-media-card">
+                                <a href="@item.Url" target="_blank" rel="noopener" title="Open the file">
+                                    @if (uploaded)
+                                    {
+                                        <span class="mfba-media-file">@Icon("upload", "mfba-icon mfba-icon-lg")<em class="mfba-clamp1">@item.FileName</em></span>
+                                    }
+                                    else
+                                    {
+                                        <img src="@item.Url" alt="@item.AltText" loading="lazy" />
+                                    }
+                                </a>
+                                <figcaption>
+                                    <strong class="mfba-clamp1">@caption</strong>
+                                    <small>@KindLabel(item.FieldKey, item.FileId)</small>
+                                    <div class="mfba-media-acts">
+                                        <button type="button" class="mfba-iconbtn" title="Copy the URL"
+                                                data-mfba-copy="@item.Url">@Icon("link", "mfba-icon mfba-icon-md")</button>
+                                        <a class="mfba-iconbtn" title="Open the post editor" href="@editUrl">@Icon("pencil", "mfba-icon mfba-icon-md")</a>
+                                    </div>
+                                </figcaption>
+                            </figure>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="mfba-rows">
+                        @foreach (var item in filtered)
+                        {
+                            var caption = string.IsNullOrWhiteSpace(item.Title) ? "Untitled post" : item.Title;
+                            var editUrl = adminBaseUrl + "?edit=" + item.SubmissionId;
+                            var uploadedRow = item.FileId.HasValue && item.FileId.Value > 0;
+                            <div class="mfba-trow">
+                                <div class="mfba-post">
+                                    @if (uploadedRow)
+                                    {
+                                        <span class="mfba-avatar">@Icon("upload", "mfba-icon mfba-icon-sm")</span>
+                                    }
+                                    else
+                                    {
+                                        <img src="@item.Url" alt="" loading="lazy" />
+                                    }
+                                    <div style="min-width:0">
+                                        <p class="mfba-post-title mfba-clamp1">@caption</p>
+                                        <div class="mfba-post-meta">
+                                            <span>@KindLabel(item.FieldKey, item.FileId)</span>
+                                            <span class="sep">&middot;</span>
+                                            <span class="mfba-clamp1">@item.Url</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="st">
+                                    @if (!string.IsNullOrWhiteSpace(item.FileName))
+                                    {
+                                        <span class="mfba-pill mfba-st-scheduled">@item.FileName</span>
+                                    }
+                                </div>
+                                <div class="vw r">#@item.SubmissionId</div>
+                                <div class="ac r">
+                                    <button type="button" class="mfba-iconbtn" title="Copy the URL"
+                                            data-mfba-copy="@item.Url">@Icon("link", "mfba-icon mfba-icon-md")</button>
+                                    <a class="mfba-iconbtn" title="Open the post editor" href="@editUrl">@Icon("pencil", "mfba-icon mfba-icon-md")</a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                <p class="mfba-hint">
+                    Images are collected from the posts' typed URL fields plus any MegaForm-managed upload,
+                    deduplicated by URL and bounded to the same capped page of posts every console screen
+                    reads. An image nothing references cannot appear here — there is no orphan store to scan.
+                </p>
+            </div>
+        </section>
+    }
+</div>
+
+@if (allowed)
+{
+    <script>
+    (function () {
+        "use strict";
+        var base = "@(adminBaseUrl)";
+        var mediaLayout = "@(mediaLayout)";
+        var kind = "@kind";
+        window.mfbaMediaSearch = function () {
+            var q = (document.getElementById("mfba-mq").value || "").trim();
+            window.location.href = base + "?view=media&layout=" + mediaLayout + "&kind=" + kind
+                + (q ? "&q=" + encodeURIComponent(q) : "");
+        };
+        Array.prototype.forEach.call(document.querySelectorAll("[data-mfba-copy]"), function (button) {
+            button.addEventListener("click", function () {
+                var value = button.getAttribute("data-mfba-copy") || "";
+                var done = function () {
+                    var was = button.getAttribute("title");
+                    button.setAttribute("title", "Copied");
+                    button.classList.add("ok");
+                    setTimeout(function () { button.setAttribute("title", was); button.classList.remove("ok"); }, 1200);
+                };
+                // clipboard.writeText needs a secure context; the textarea fallback is for the
+                // http sites this module also runs on.
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(value).then(done, function () { });
+                    return;
+                }
+                var box = document.createElement("textarea");
+                box.value = value;
+                box.setAttribute("readonly", "readonly");
+                box.style.position = "fixed";
+                box.style.left = "-9999px";
+                document.body.appendChild(box);
+                box.select();
+                try { document.execCommand("copy"); done(); } catch (e) { }
+                document.body.removeChild(box);
+            });
+        });
+    })();
+    </script>
+}

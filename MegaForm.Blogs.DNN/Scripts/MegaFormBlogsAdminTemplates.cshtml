@@ -1,0 +1,952 @@
+@*
+    MegaForm Blogs - template manager (screen 9).
+
+    WHAT THIS IS, AND WHAT IT IS NOT. This is the workflow UI for authoring Handlebars-like
+    templates: list them by render target, edit one with a live preview, mark one active. It does
+    NOT change how the blog renders. /Blogs, the article page and every lens keep the fixed design
+    they have today; a template becomes the renderer only when a future release wires one in, and
+    the screen says so rather than implying the blog already obeys these files.
+
+    STORAGE. Templates are records of a "Blog Templates" form, created on demand by the button on
+    this screen. A DNN portal setting was the obvious alternative and is the wrong one: that column
+    holds 2000 characters, which one template body would blow through immediately.
+
+    CSHTML rules obeyed here (each cost a deploy on 2026-08-09): braces on every control-flow
+    statement in the page block; `if` not `@if` in code context; no attribute mixing literal text
+    with a quoted-argument expression; no local called `layout` (that is a Razor directive);
+    no multi-line C# inside a markup-context loop.
+*@
+@inherits DotNetNuke.Web.Razor.DotNetNukeWebPage<dynamic>
+@using System
+@using System.Linq
+@using System.Globalization
+@using System.Collections.Generic
+@using System.Security.Cryptography
+@using System.Text.RegularExpressions
+@using MegaForm.Sdk
+
+@functions {
+    /// The five render targets the owner asked for. The key is stored; the label is shown.
+    static readonly List<KeyValuePair<string, string>> Groups = new List<KeyValuePair<string, string>>
+    {
+        new KeyValuePair<string, string>("blog-home", "Blog Home"),
+        new KeyValuePair<string, string>("blog-archive", "Blog Archive"),
+        new KeyValuePair<string, string>("blog-post", "Blog Post"),
+        new KeyValuePair<string, string>("news-home", "News Home"),
+        new KeyValuePair<string, string>("news-article", "News Article")
+    };
+
+    const string TemplatesFormTitle = "Blog Templates";
+
+    /// Minimal schema: six typed fields, no layout, no validation beyond what the console does.
+    /// Written as JSON because that is what IFormApi.CreateFormAsync takes.
+    const string TemplatesSchemaJson = "{\"version\":1,\"fields\":[" +
+        "{\"key\":\"template_uid\",\"type\":\"Text\",\"label\":\"Template UID\"}," +
+        "{\"key\":\"template_name\",\"type\":\"Text\",\"label\":\"Name\",\"required\":true}," +
+        "{\"key\":\"template_group\",\"type\":\"Text\",\"label\":\"Render target\"}," +
+        "{\"key\":\"template_body\",\"type\":\"Textarea\",\"label\":\"Template body\"}," +
+        "{\"key\":\"is_active\",\"type\":\"Text\",\"label\":\"Active\"}," +
+        "{\"key\":\"notes\",\"type\":\"Textarea\",\"label\":\"Notes\"}]}";
+
+    static T Run<T>(System.Func<IMegaFormClient, System.Threading.Tasks.Task<T>> action)
+    {
+        var initializeMegaForm = MegaForm.DNN.Services.DnnServiceLocator.Instance;
+        return System.Threading.Tasks.Task.Run(() => MegaFormSdk.RunAsync(action)).GetAwaiter().GetResult();
+    }
+
+    static string Text(AppRecordDto record, string key, string fallback)
+    {
+        if (record == null || record.Data == null || !record.Data.ContainsKey(key) || record.Data[key] == null)
+            return fallback;
+        var value = Convert.ToString(record.Data[key]);
+        return string.IsNullOrWhiteSpace(value) ? fallback : value;
+    }
+
+    static bool IsActive(AppRecordDto record)
+    {
+        return string.Equals(Text(record, "is_active", "false"), "true", StringComparison.OrdinalIgnoreCase);
+    }
+
+    static string GroupLabel(string key)
+    {
+        var hit = Groups.FirstOrDefault(g => string.Equals(g.Key, key, StringComparison.OrdinalIgnoreCase));
+        return string.IsNullOrWhiteSpace(hit.Value) ? "Unassigned" : hit.Value;
+    }
+
+    static bool CanManage(DotNetNuke.Entities.Users.UserInfo user)
+    {
+        if (user == null || user.UserID < 0) return false;
+        if (user.IsSuperUser) return true;
+        var allowed = new[] { "Administrators", "Blog Publishers" };
+        return user.Roles != null && user.Roles.Any(role => allowed.Contains(role, StringComparer.OrdinalIgnoreCase));
+    }
+
+    static string EnsureCsrfToken()
+    {
+        const string key = "MegaFormBlogs.CsrfToken";
+        var session = System.Web.HttpContext.Current.Session;
+        var token = session[key] as string;
+        if (!string.IsNullOrWhiteSpace(token)) return token;
+        var bytes = new byte[32];
+        using (var random = RandomNumberGenerator.Create()) { random.GetBytes(bytes); }
+        token = Convert.ToBase64String(bytes);
+        session[key] = token;
+        return token;
+    }
+
+    static void ValidateCsrfToken(string posted)
+    {
+        const string key = "MegaFormBlogs.CsrfToken";
+        var expected = System.Web.HttpContext.Current.Session[key] as string;
+        var valid = !string.IsNullOrWhiteSpace(expected) && !string.IsNullOrWhiteSpace(posted) && expected.Length == posted.Length;
+        var difference = valid ? 0 : 1;
+        var length = valid ? expected.Length : 0;
+        for (var index = 0; index < length; index++) { difference |= expected[index] ^ posted[index]; }
+        if (difference != 0)
+        {
+            throw new InvalidOperationException("The session expired. Reload this page and try again.");
+        }
+    }
+
+    /// Finds the templates form by its schema fingerprint, the same way every other child form in
+    /// this module is resolved. Returns 0 when it has not been created yet.
+    static int ResolveTemplatesFormId(MegaFormScope scope)
+    {
+        var items = System.Web.HttpContext.Current == null ? null : System.Web.HttpContext.Current.Items;
+        const string cacheKey = "MegaFormBlogs.TemplatesFormId";
+        if (items != null && items.Contains(cacheKey)) { return (int)items[cacheKey]; }
+
+        var resolved = Run(async c =>
+        {
+            var forms = await c.Forms.ListFormsAsync(new FormQuery { Page = 1, PageSize = 200 }, scope);
+            if (forms == null || forms.Items == null) { return 0; }
+            var ordered = forms.Items
+                .OrderByDescending(f => (f.Title ?? "").IndexOf("template", StringComparison.OrdinalIgnoreCase) >= 0)
+                .ToList();
+            foreach (var form in ordered)
+            {
+                var candidate = form;
+                if (string.IsNullOrWhiteSpace(candidate.SchemaJson))
+                {
+                    candidate = await c.Forms.GetFormAsync(form.FormId, scope) ?? form;
+                }
+                if (string.IsNullOrWhiteSpace(candidate.SchemaJson)) { continue; }
+                var keys = c.Schema.ParseForm(candidate).Fields.Select(x => x.Key ?? "").ToList();
+                if (keys.Contains("template_body", StringComparer.OrdinalIgnoreCase)
+                    && keys.Contains("template_group", StringComparer.OrdinalIgnoreCase))
+                {
+                    return candidate.FormId;
+                }
+            }
+            return 0;
+        });
+
+        if (items != null) { items[cacheKey] = resolved; }
+        return resolved;
+    }
+
+    /// The starter set: two or three per render target, so a group opens with real choices rather
+    /// than a single card. Every variant names ONLY keys the preview's mock data has, which is why
+    /// a freshly seeded template previews clean instead of reporting a missing field. The first
+    /// variant of each group keeps the uid it shipped with, so re-seeding never duplicates it.
+    static List<string[]> _starters;
+    static List<string[]> Starters()
+    {
+        if (_starters != null) { return _starters; }
+        var list = new List<string[]>();
+        Action<string, string, string, string> Add = (group, uid, name, body) =>
+            list.Add(new[] { group, uid, name, body });
+        Add("blog-home", "TPL-BLOGHOME", "Blog Home \u2014 starter",
+            "<section class=\"home\">\n  <h1>{{site.title}}</h1>\n  <p>{{site.tagline}}</p>\n\n  {{#if featured}}\n  <article class=\"hero\">\n    <img src=\"{{featured.image}}\" alt=\"\">\n    <h2>{{featured.title}}</h2>\n    <p>{{featured.excerpt}}</p>\n  </article>\n  {{/if}}\n\n  <div class=\"grid\">\n    {{#each posts}}\n    <article class=\"card\">\n      <a href=\"{{url}}\"><img src=\"{{image}}\" alt=\"\"></a>\n      <span class=\"chip\">{{category}}</span>\n      <h3><a href=\"{{url}}\">{{title}}</a></h3>\n      <p>{{excerpt}}</p>\n      <small>{{author}} \u00b7 {{date}} \u00b7 {{reads}} reads</small>\n    </article>\n    {{/each}}\n  </div>\n</section>");
+        Add("blog-home", "TPL-BLOGHOME-EDITORIAL", "Blog Home \u2014 editorial two-column",
+            "<section class=\"editorial\">\n  <header>\n    <h1>{{site.title}}</h1>\n    <p>{{site.tagline}}</p>\n  </header>\n\n  <div class=\"columns\">\n    <main>\n      {{#if featured}}\n      <article class=\"lead\">\n        <img src=\"{{featured.image}}\" alt=\"\">\n        <span class=\"chip\">{{featured.category}}</span>\n        <h2><a href=\"{{featured.url}}\">{{featured.title}}</a></h2>\n        <p>{{featured.excerpt}}</p>\n        <small>{{featured.author}} \u00b7 {{featured.date}}</small>\n      </article>\n      {{else}}\n      <p class=\"empty\">Nothing is featured yet.</p>\n      {{/if}}\n\n      {{#each posts}}\n      <article class=\"row\">\n        <div>\n          <h3><a href=\"{{url}}\">{{title}}</a></h3>\n          <p>{{excerpt}}</p>\n          <small>{{author}} \u00b7 {{date}}</small>\n        </div>\n        <a href=\"{{url}}\"><img src=\"{{image}}\" alt=\"\"></a>\n      </article>\n      {{/each}}\n    </main>\n\n    <aside>\n      <h4>Most read</h4>\n      <ol>\n        {{#each posts}}\n        <li><a href=\"{{url}}\">{{title}}</a> <span>{{reads}}</span></li>\n        {{/each}}\n      </ol>\n    </aside>\n  </div>\n</section>");
+        Add("blog-home", "TPL-BLOGHOME-TEXT", "Blog Home \u2014 headlines only",
+            "<section class=\"plain\">\n  <h1>{{site.title}}</h1>\n  <ul class=\"headlines\">\n    {{#each posts}}\n    <li>\n      <a href=\"{{url}}\">{{title}}</a>\n      <em>{{category}}</em>\n      <time>{{date}}</time>\n    </li>\n    {{/each}}\n  </ul>\n</section>");
+        Add("blog-archive", "TPL-BLOGARCHIVE", "Blog Archive \u2014 starter",
+            "<section class=\"archive\">\n  <h1>Archive</h1>\n  <p>{{total}} stories</p>\n  <ul>\n    {{#each posts}}\n    <li>\n      <a href=\"{{url}}\">{{title}}</a>\n      <span>{{category}}</span>\n      <time>{{date}}</time>\n    </li>\n    {{/each}}\n  </ul>\n</section>");
+        Add("blog-archive", "TPL-BLOGARCHIVE-TABLE", "Blog Archive \u2014 table",
+            "<section class=\"archive-table\">\n  <h1>Archive</h1>\n  <p>{{total}} stories</p>\n  <table>\n    <thead>\n      <tr><th>Story</th><th>Category</th><th>Author</th><th>Published</th><th>Reads</th></tr>\n    </thead>\n    <tbody>\n      {{#each posts}}\n      <tr>\n        <td><a href=\"{{url}}\">{{title}}</a></td>\n        <td>{{category}}</td>\n        <td>{{author}}</td>\n        <td>{{date}}</td>\n        <td>{{reads}}</td>\n      </tr>\n      {{/each}}\n    </tbody>\n  </table>\n</section>");
+        Add("blog-post", "TPL-BLOGPOST", "Blog Post \u2014 starter",
+            "<article class=\"post\">\n  <nav class=\"crumb\"><a href=\"/\">Blog</a> / <span>{{post.category}}</span></nav>\n  <h1>{{post.title}}</h1>\n  <p class=\"lead\">{{post.excerpt}}</p>\n  <div class=\"byline\">\n    <img src=\"{{post.authorAvatar}}\" alt=\"\">\n    <span>{{post.author}} \u00b7 {{post.date}} \u00b7 {{post.readingTime}} min</span>\n  </div>\n  <img class=\"hero\" src=\"{{post.image}}\" alt=\"\">\n\n  {{#if toc}}\n  <nav class=\"toc\">\n    <strong>On this page</strong>\n    <ol>{{#each toc}}<li><a href=\"#{{id}}\">{{text}}</a></li>{{/each}}</ol>\n  </nav>\n  {{/if}}\n\n  <div class=\"prose\">{{post.body}}</div>\n\n  <section class=\"related\">\n    <h2>Keep reading</h2>\n    {{#each related}}<a href=\"{{url}}\">{{title}}</a>{{/each}}\n  </section>\n</article>");
+        Add("blog-post", "TPL-BLOGPOST-WIDE", "Blog Post \u2014 wide read",
+            "<article class=\"post-wide\">\n  <figure class=\"cover\">\n    <img src=\"{{post.image}}\" alt=\"\">\n    <figcaption>{{post.category}}</figcaption>\n  </figure>\n\n  <header>\n    <h1>{{post.title}}</h1>\n    <p class=\"lead\">{{post.excerpt}}</p>\n    <small>{{post.author}} \u00b7 {{post.date}} \u00b7 {{post.readingTime}} min read</small>\n  </header>\n\n  <div class=\"prose\">{{post.body}}</div>\n\n  <footer class=\"author\">\n    <img src=\"{{post.authorAvatar}}\" alt=\"\">\n    <div><strong>{{post.author}}</strong><span>Written {{post.date}}</span></div>\n  </footer>\n</article>");
+        Add("blog-post", "TPL-BLOGPOST-SIDEBAR", "Blog Post \u2014 rail with contents",
+            "<div class=\"post-split\">\n  <aside class=\"rail\">\n    <div class=\"who\">\n      <img src=\"{{post.authorAvatar}}\" alt=\"\">\n      <strong>{{post.author}}</strong>\n      <span>{{post.date}} \u00b7 {{post.readingTime}} min</span>\n    </div>\n    {{#if toc}}\n    <nav class=\"toc\">\n      <strong>Contents</strong>\n      <ol>{{#each toc}}<li><a href=\"#{{id}}\">{{text}}</a></li>{{/each}}</ol>\n    </nav>\n    {{else}}\n    <p class=\"hint\">This story has no headings to link.</p>\n    {{/if}}\n  </aside>\n\n  <article>\n    <span class=\"chip\">{{post.category}}</span>\n    <h1>{{post.title}}</h1>\n    <div class=\"prose\">{{post.body}}</div>\n    <section class=\"related\">\n      <h2>Related</h2>\n      {{#each related}}\n      <a href=\"{{url}}\"><strong>{{title}}</strong><span>{{category}}</span></a>\n      {{/each}}\n    </section>\n  </article>\n</div>");
+        Add("news-home", "TPL-NEWSHOME", "News Home \u2014 starter",
+            "<section class=\"newsdesk\">\n  {{#if breaking}}\n  <div class=\"ticker\"><strong>BREAKING</strong> <span>{{breaking.title}}</span></div>\n  {{/if}}\n\n  <div class=\"top\">\n    {{#each topStories}}\n    <article class=\"story\">\n      <span class=\"section\">{{section}}</span>\n      <h2><a href=\"{{url}}\">{{title}}</a></h2>\n      <small>{{author}} \u00b7 {{time}}</small>\n    </article>\n    {{/each}}\n  </div>\n</section>");
+        Add("news-home", "TPL-NEWSHOME-RAIL", "News Home \u2014 lead and wire",
+            "<section class=\"newsdesk-rail\">\n  {{#if breaking}}\n  <div class=\"ticker\"><strong>BREAKING</strong> <span>{{breaking.title}}</span></div>\n  {{else}}\n  <div class=\"ticker quiet\"><strong>LATEST</strong> <span>No breaking story right now.</span></div>\n  {{/if}}\n\n  <div class=\"split\">\n    <main>\n      {{#each topStories}}\n      <article class=\"lead\">\n        <span class=\"section\">{{section}}</span>\n        <h2><a href=\"{{url}}\">{{title}}</a></h2>\n        <small>{{author}} \u00b7 {{time}}</small>\n      </article>\n      {{/each}}\n    </main>\n    <aside>\n      <h4>On the wire</h4>\n      <ul>\n        {{#each topStories}}\n        <li><a href=\"{{url}}\">{{title}}</a><time>{{time}}</time></li>\n        {{/each}}\n      </ul>\n    </aside>\n  </div>\n</section>");
+        Add("news-article", "TPL-NEWSARTICLE", "News Article \u2014 starter",
+            "<article class=\"news\">\n  <span class=\"section\">{{article.section}}</span>\n  <h1>{{article.title}}</h1>\n  <div class=\"byline\">{{article.author}} \u00b7 {{article.time}}</div>\n\n  {{#if article.isLive}}\n  <div class=\"live\">LIVE \u2014 updated {{article.updated}}</div>\n  {{/if}}\n\n  <div class=\"prose\">{{article.body}}</div>\n\n  <aside class=\"stats\">\n    {{#each stats}}<span>{{label}}: {{value}}</span>{{/each}}\n  </aside>\n</article>");
+        Add("news-article", "TPL-NEWSARTICLE-LIVE", "News Article \u2014 liveblog",
+            "<article class=\"liveblog\">\n  <header>\n    {{#if article.isLive}}\n    <span class=\"live-dot\">LIVE</span>\n    {{else}}\n    <span class=\"live-dot ended\">ENDED</span>\n    {{/if}}\n    <span class=\"section\">{{article.section}}</span>\n    <h1>{{article.title}}</h1>\n    <p class=\"updated\">Updated {{article.updated}} \u00b7 {{article.author}}</p>\n  </header>\n\n  <div class=\"statbar\">\n    {{#each stats}}<div><strong>{{value}}</strong><span>{{label}}</span></div>{{/each}}\n  </div>\n\n  <ol class=\"entries\">\n    <li>\n      <time>{{article.time}}</time>\n      <div>{{article.body}}</div>\n    </li>\n  </ol>\n</article>");
+        _starters = list;
+        return list;
+    }
+
+    static List<string[]> StartersFor(string group)
+    {
+        return Starters().Where(s => string.Equals(s[0], group, StringComparison.OrdinalIgnoreCase)).ToList();
+    }
+
+    /// The body a brand-new template opens with: the first starter of that target.
+    static string StarterBody(string group)
+    {
+        var first = StartersFor(group).FirstOrDefault();
+        return first == null ? "" : first[3];
+    }
+
+    /// Writes the starter templates this portal does not have yet. `have` is the list of uids
+    /// already stored; the first variant of a group is the one seeded active, the rest arrive
+    /// switched off so nothing silently changes which template a target would use.
+    static int SeedStarters(int formId, List<string> have, MegaFormScope scope)
+    {
+        var seeded = 0;
+        var activeGroups = new List<string>();
+        foreach (var starter in Starters())
+        {
+            var group = starter[0];
+            var isFirst = !activeGroups.Contains(group);
+            if (isFirst) { activeGroups.Add(group); }
+            if (have.Contains(starter[1], StringComparer.OrdinalIgnoreCase)) { continue; }
+
+            var values = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["template_uid"] = starter[1],
+                ["template_name"] = starter[2],
+                ["template_group"] = group,
+                ["template_body"] = starter[3],
+                ["is_active"] = isFirst && !have.Any(h => h.StartsWith("TPL-" + group.ToUpperInvariant().Replace("-", ""), StringComparison.OrdinalIgnoreCase))
+                    ? "true" : "false",
+                ["notes"] = "Created with the templates form. Edit freely; nothing renders from it yet."
+            };
+            var result = Run(c => c.Submissions.SubmitAsync(formId, values, scope));
+            if (result != null && result.Success) { seeded++; }
+        }
+        return seeded;
+    }
+
+    static System.Web.IHtmlString Icon(string name, string cssClass = "mfba-icon")
+    {
+        string body;
+        switch (name)
+        {
+            case "chevron-right": body = "<path d='m9 18 6-6-6-6'/>"; break;
+            case "layout": body = "<rect width='18' height='18' x='3' y='3' rx='2'/><path d='M3 9h18'/><path d='M9 21V9'/>"; break;
+            case "plus": body = "<path d='M5 12h14'/><path d='M12 5v14'/>"; break;
+            case "save": body = "<path d='M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z'/><path d='M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7'/><path d='M7 3v4a1 1 0 0 0 1 1h7'/>"; break;
+            case "copy": body = "<rect width='14' height='14' x='8' y='8' rx='2'/><path d='M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2'/>"; break;
+            case "trash": body = "<path d='M3 6h18'/><path d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6'/><path d='M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/>"; break;
+            case "check": body = "<path d='M20 6 9 17l-5-5'/>"; break;
+            case "eye": body = "<path d='M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0'/><circle cx='12' cy='12' r='3'/>"; break;
+            case "pencil": body = "<path d='M21.17 6.81a1 1 0 0 0-3.98-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.63l4.35-1.33a2 2 0 0 0 .83-.5z'/>"; break;
+            case "code": body = "<polyline points='16 18 22 12 16 6'/><polyline points='8 6 2 12 8 18'/>"; break;
+            default: body = ""; break;
+        }
+        return new System.Web.HtmlString("<svg class='" + cssClass + "' viewBox='0 0 24 24' aria-hidden='true'>" + body + "</svg>");
+    }
+}
+
+@{
+    var portalId = DotNetNuke.Entities.Portals.PortalSettings.Current == null
+        ? 0 : DotNetNuke.Entities.Portals.PortalSettings.Current.PortalId;
+    var activeTab = DotNetNuke.Entities.Portals.PortalSettings.Current == null
+        ? null : DotNetNuke.Entities.Portals.PortalSettings.Current.ActiveTab;
+    var adminBaseUrl = activeTab == null ? Request.RawUrl : DotNetNuke.Common.Globals.NavigateURL(activeTab.TabID);
+    var templatesUrl = adminBaseUrl + "?view=templates";
+    var user = DotNetNuke.Entities.Users.UserController.Instance.GetCurrentUserInfo();
+    var scope = new MegaFormScope
+    {
+        PortalId = portalId,
+        UserId = user == null ? 0 : user.UserID,
+        UserName = user == null ? "" : user.Username,
+        IsAuthenticated = user != null && user.UserID >= 0,
+        IsAdmin = user != null && (user.IsSuperUser || user.IsInRole("Administrators")),
+        IsSuperUser = user != null && user.IsSuperUser,
+        Roles = user == null || user.Roles == null ? new List<string>() : user.Roles.ToList(),
+        IpAddress = Request.UserHostAddress ?? ""
+    };
+    var allowed = CanManage(user);
+    var csrfToken = allowed ? EnsureCsrfToken() : "";
+    var message = "";
+    var messageError = false;
+    var templatesFormId = allowed ? ResolveTemplatesFormId(scope) : 0;
+    var templates = new List<AppRecordDto>();
+
+    var editId = 0;
+    int.TryParse(Request.QueryString["edit"], out editId);
+    var creating = string.Equals((Request.QueryString["edit"] ?? "").Trim(), "0", StringComparison.Ordinal);
+    var newGroup = (Request.QueryString["group"] ?? "blog-home").Trim().ToLowerInvariant();
+    if (!Groups.Any(g => g.Key == newGroup)) { newGroup = "blog-home"; }
+
+    // ---- writes -------------------------------------------------------------------------
+    if (allowed && string.Equals(Request.HttpMethod, "POST", StringComparison.OrdinalIgnoreCase))
+    {
+        try
+        {
+            var action = (Request.Form["mfb_tpl_action"] ?? "").Trim().ToLowerInvariant();
+            if (action.Length > 0)
+            {
+                ValidateCsrfToken(Request.Form["mfb_csrf"]);
+            }
+
+            if (action == "install")
+            {
+                if (templatesFormId > 0)
+                {
+                    throw new InvalidOperationException("The templates form already exists.");
+                }
+                var created = Run(c => c.Forms.CreateFormAsync(new CreateFormRequest
+                {
+                    Title = TemplatesFormTitle,
+                    Description = "Handlebars-like templates managed by the MegaForm Blogs console.",
+                    SchemaJson = TemplatesSchemaJson,
+                    Status = "published",
+                    RequireAuth = true
+                }, scope));
+                if (created == null || created.FormId <= 0)
+                {
+                    throw new InvalidOperationException("The templates form could not be created.");
+                }
+                templatesFormId = created.FormId;
+                if (System.Web.HttpContext.Current != null)
+                {
+                    System.Web.HttpContext.Current.Items["MegaFormBlogs.TemplatesFormId"] = templatesFormId;
+                }
+
+                var seeded = SeedStarters(templatesFormId, new List<string>(), scope);
+                message = "Templates form created (#" + templatesFormId + ") with " + seeded + " starter template(s).";
+            }
+            else if (action == "seed" && templatesFormId > 0)
+            {
+                // Idempotent by template_uid: only the starters this portal is missing are written,
+                // so pressing it twice costs two reads and no duplicate cards.
+                var have = new List<string>();
+                var known = Run(c => c.SubmissionDashboard.SearchAsync(
+                    new SubmissionSearchQuery { FormId = templatesFormId, Page = 1, PageSize = 200 }, scope));
+                if (known != null && known.Items != null)
+                {
+                    foreach (var row in known.Items)
+                    {
+                        var typed = Run(c => c.Records.GetRecordAsync(row.SubmissionId, scope));
+                        if (typed != null) { have.Add(Text(typed, "template_uid", "")); }
+                    }
+                }
+                var added = SeedStarters(templatesFormId, have, scope);
+                message = added == 0
+                    ? "Every starter template is already installed."
+                    : added + " starter template(s) added.";
+            }
+            else if (action == "save" && templatesFormId > 0)
+            {
+                var targetId = 0;
+                int.TryParse(Request.Form["tpl_id"], out targetId);
+                var name = (Request.Form["template_name"] ?? "").Trim();
+                var group = (Request.Form["template_group"] ?? "").Trim().ToLowerInvariant();
+                var bodyText = Request.Form["template_body"] ?? "";
+                var notes = (Request.Form["notes"] ?? "").Trim();
+
+                if (name.Length == 0 || name.Length > 120)
+                {
+                    throw new InvalidOperationException("The template name is required and must be 120 characters or fewer.");
+                }
+                if (!Groups.Any(g => g.Key == group))
+                {
+                    throw new InvalidOperationException("Pick one of the five render targets.");
+                }
+                if (bodyText.Length > 60000)
+                {
+                    throw new InvalidOperationException("That template body is too large (60,000 characters maximum).");
+                }
+                if (notes.Length > 500) { notes = notes.Substring(0, 500); }
+
+                var values = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["template_name"] = name,
+                    ["template_group"] = group,
+                    ["template_body"] = bodyText,
+                    ["notes"] = notes
+                };
+
+                if (targetId > 0)
+                {
+                    var updated = Run(c => c.Records.PatchRecordAsync(targetId, values, scope));
+                    message = updated == null ? "That template no longer exists." : "Template saved.";
+                    messageError = updated == null;
+                }
+                else
+                {
+                    values["template_uid"] = "TPL-" + DateTime.UtcNow.Ticks.ToString(CultureInfo.InvariantCulture);
+                    values["is_active"] = "false";
+                    var created = Run(c => c.Submissions.SubmitAsync(templatesFormId, values, scope));
+                    if (created == null || !created.Success)
+                    {
+                        throw new InvalidOperationException(created == null || string.IsNullOrWhiteSpace(created.ErrorMessage)
+                            ? "The template could not be created." : created.ErrorMessage);
+                    }
+                    message = "Template created. It is not active yet — use Set active when you want it to be the one.";
+                }
+            }
+            else if ((action == "duplicate" || action == "activate" || action == "delete") && templatesFormId > 0)
+            {
+                var targetId = 0;
+                int.TryParse(Request.Form["tpl_id"], out targetId);
+                var target = targetId > 0 ? Run(c => c.Records.GetRecordAsync(targetId, scope)) : null;
+                // Ownership: never touch a record that is not a template of this app.
+                if (target == null || target.FormId != templatesFormId)
+                {
+                    throw new InvalidOperationException("That record does not belong to the Blog Templates form.");
+                }
+
+                if (action == "duplicate")
+                {
+                    var values = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        ["template_uid"] = "TPL-" + DateTime.UtcNow.Ticks.ToString(CultureInfo.InvariantCulture),
+                        ["template_name"] = Text(target, "template_name", "Template") + " (copy)",
+                        ["template_group"] = Text(target, "template_group", "blog-home"),
+                        ["template_body"] = Text(target, "template_body", ""),
+                        ["is_active"] = "false",
+                        ["notes"] = Text(target, "notes", "")
+                    };
+                    var copy = Run(c => c.Submissions.SubmitAsync(templatesFormId, values, scope));
+                    message = copy != null && copy.Success ? "Template duplicated." : "The copy could not be created.";
+                    messageError = copy == null || !copy.Success;
+                }
+                else if (action == "activate")
+                {
+                    // One active template per group: activating this one stands the others down.
+                    var group = Text(target, "template_group", "");
+                    var scan = Run(c => c.SubmissionDashboard.SearchAsync(
+                        new SubmissionSearchQuery { FormId = templatesFormId, Page = 1, PageSize = 100 }, scope));
+                    var switched = 0;
+                    if (scan != null && scan.Items != null)
+                    {
+                        foreach (var row in scan.Items)
+                        {
+                            var typed = Run(c => c.Records.GetRecordAsync(row.SubmissionId, scope));
+                            if (typed == null) { continue; }
+                            if (!string.Equals(Text(typed, "template_group", ""), group, StringComparison.OrdinalIgnoreCase)) { continue; }
+                            var wanted = row.SubmissionId == targetId ? "true" : "false";
+                            if (string.Equals(Text(typed, "is_active", "false"), wanted, StringComparison.OrdinalIgnoreCase)) { continue; }
+                            var id = row.SubmissionId;
+                            Run(c => c.Records.PatchRecordAsync(id, new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                            {
+                                ["is_active"] = wanted
+                            }, scope));
+                            switched++;
+                        }
+                    }
+                    message = "Active template for " + GroupLabel(group) + " set (" + switched + " record(s) changed).";
+                }
+                else
+                {
+                    Run(async c => { await c.Submissions.DeleteAsync(targetId, scope); return true; });
+                    message = "Template deleted.";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            messageError = true;
+        }
+    }
+
+    // ---- reads --------------------------------------------------------------------------
+    if (allowed && templatesFormId > 0)
+    {
+        try
+        {
+            var scan = Run(c => c.SubmissionDashboard.SearchAsync(
+                new SubmissionSearchQuery { FormId = templatesFormId, Page = 1, PageSize = 100 }, scope));
+            if (scan != null && scan.Items != null)
+            {
+                var reads = scan.Items.Select(row => System.Threading.Tasks.Task.Run(() =>
+                    MegaFormSdk.RunAsync(c => c.Records.GetRecordAsync(row.SubmissionId, scope)))).ToArray();
+                System.Threading.Tasks.Task.WaitAll(reads);
+                foreach (var read in reads)
+                {
+                    if (read.Result != null) { templates.Add(read.Result); }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            message = string.IsNullOrWhiteSpace(message) ? ex.Message : message;
+            messageError = true;
+        }
+    }
+
+    templates = templates.OrderBy(t => Text(t, "template_name", ""), StringComparer.OrdinalIgnoreCase).ToList();
+    var editing = editId > 0 ? templates.FirstOrDefault(t => t.SubmissionId == editId) : null;
+    var activeCount = templates.Count(IsActive);
+    var groupsCovered = templates.Select(t => Text(t, "template_group", "")).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+    var storedUids = templates.Select(t => Text(t, "template_uid", "")).ToList();
+    var missingStarters = templatesFormId == 0 ? 0
+        : Starters().Count(st => !storedUids.Contains(st[1], StringComparer.OrdinalIgnoreCase));
+}
+
+<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs-admin.css?v=20260809h" />
+
+<div class="mfba">
+    @if (!allowed)
+    {
+        <header class="mfba-head">
+            <div class="mfba-head-row"><div><h1>Administrator access required</h1><p>Template management is limited to Administrators and Blog Publishers.</p></div></div>
+        </header>
+    }
+    else
+    {
+        <header class="mfba-head">
+            <nav class="mfba-crumb" aria-label="Breadcrumb">
+                <a href="/Blogs">Blog</a>@Icon("chevron-right", "mfba-icon mfba-icon-md")
+                <a href="@adminBaseUrl">Admin</a>@Icon("chevron-right", "mfba-icon mfba-icon-md")
+                <strong>Templates</strong>
+            </nav>
+            <div class="mfba-head-row">
+                <div>
+                    <h1>Templates</h1>
+                    <p>Handlebars-like templates per render target, with a live preview</p>
+                </div>
+                @if (templatesFormId > 0 && editing == null && !creating)
+                {
+                    <div class="mfba-head-actions">
+                        @if (missingStarters > 0)
+                        {
+                            <button class="mfba-btn ghost" type="submit" name="mfb_tpl_action" value="seed"
+                                    title="Adds the starter templates this portal does not have yet">
+                                @Icon("copy", "mfba-icon mfba-icon-md") Add @missingStarters starter@(missingStarters == 1 ? "" : "s")
+                            </button>
+                        }
+                        <a class="mfba-btn" href="@(templatesUrl + "&edit=0")">@Icon("plus") New template</a>
+                    </div>
+                }
+            </div>
+        </header>
+
+        <input type="hidden" name="mfb_csrf" value="@csrfToken" />
+        <input type="hidden" name="tpl_id" value="@(editing == null ? 0 : editing.SubmissionId)" />
+
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            <div style="padding:16px 24px 0"><div class="mfba-notice @(messageError ? "err" : "ok")">@message</div></div>
+        }
+
+        <div style="padding:16px 24px 0">
+            <div class="mfba-notice ok" style="background:#eef2ff;color:#3730a3">
+                These templates do not render the blog yet. /Blogs, the article page and every lens keep
+                their fixed design; this screen is the authoring workflow, and a future release decides
+                when a template takes over a target.
+            </div>
+        </div>
+
+        if (templatesFormId == 0)
+        {
+            <section class="mfba-panel">
+                <div class="mfba-panel-head"><h2>@Icon("layout", "mfba-icon mfba-icon-lg") Set up template storage</h2></div>
+                <div class="mfba-editor">
+                    <p class="mfba-hint">
+                        Templates are stored as records of a <strong>Blog Templates</strong> form, created
+                        once, here. A DNN portal setting was the obvious alternative and is the wrong one:
+                        it holds 2,000 characters, which a single template body would exceed.
+                        Creating it also seeds the starter set — two or three per render target.
+                    </p>
+                    <button class="mfba-btn" type="submit" name="mfb_tpl_action" value="install">
+                        @Icon("plus", "mfba-icon mfba-icon-md") Create the templates form
+                    </button>
+                </div>
+            </section>
+        }
+        else if (editing != null || creating)
+        {
+            var currentName = editing == null ? "" : Text(editing, "template_name", "");
+            var currentGroup = editing == null ? newGroup : Text(editing, "template_group", "blog-home");
+            var currentBody = editing == null ? StarterBody(newGroup) : Text(editing, "template_body", "");
+            var currentNotes = editing == null ? "" : Text(editing, "notes", "");
+            <section class="mfba-panel">
+                <div class="mfba-panel-head">
+                    <h2>@Icon("code", "mfba-icon mfba-icon-lg") @(editing == null ? "New template" : currentName)</h2>
+                    <a class="mfba-panel-link" href="@templatesUrl">All templates</a>
+                </div>
+                <div class="mfba-editor">
+                    <div class="mfba-form-grid">
+                        <label>Name<input name="template_name" maxlength="120" required value="@currentName" /></label>
+                        <label>Render target
+                            <select name="template_group" id="mfba-tpl-group">
+                                @foreach (var group in Groups)
+                                {
+                                    if (string.Equals(group.Key, currentGroup, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <option value="@group.Key" selected="selected">@group.Value</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@group.Key">@group.Value</option>
+                                    }
+                                }
+                            </select>
+                        </label>
+                        <label class="wide">Notes<input name="notes" maxlength="500" value="@currentNotes" /></label>
+                    </div>
+
+                    <div class="mfba-split">
+                        <div class="mfba-split-code">
+                            <div class="mfba-subhead">@Icon("code", "mfba-icon mfba-icon-md") Template</div>
+                            @* The highlighter is a <pre> mirror sitting behind a transparent textarea:
+                               the textarea keeps every native editing behaviour (undo, spellcheck,
+                               selection) and the colours are painted underneath in exact lockstep. *@
+                            <div class="mfba-code-wrap">
+                                <pre class="mfba-code-hl" id="mfba-code-hl" aria-hidden="true"></pre>
+                                <textarea id="mfba-code" name="template_body" spellcheck="false" wrap="off">@currentBody</textarea>
+                            </div>
+                            <details class="mfba-cheat">
+                                <summary>Variable reference</summary>
+                                <div id="mfba-cheat-body"></div>
+                            </details>
+                        </div>
+                        <div class="mfba-split-preview">
+                            <div class="mfba-subhead">@Icon("eye", "mfba-icon mfba-icon-md") Live preview <small id="mfba-preview-note"></small></div>
+                            <div class="mfba-preview" id="mfba-preview"></div>
+                        </div>
+                    </div>
+
+                    <button class="mfba-btn" type="submit" name="mfb_tpl_action" value="save">
+                        @Icon("save", "mfba-icon mfba-icon-md") @(editing == null ? "Create template" : "Save template")
+                    </button>
+                </div>
+            </section>
+        }
+        else
+        {
+            <section class="mfba-stats" aria-label="Template figures">
+                <div class="mfba-stat">
+                    <div class="mfba-stat-top"><span class="mfba-stat-chip mfba-c-blue">@Icon("layout")</span></div>
+                    <p class="mfba-stat-value">@templates.Count</p>
+                    <p class="mfba-stat-label">Templates</p>
+                    <p class="mfba-stat-sub">across @groupsCovered of @Groups.Count render targets</p>
+                </div>
+                <div class="mfba-stat">
+                    <div class="mfba-stat-top"><span class="mfba-stat-chip mfba-c-emerald">@Icon("check")</span></div>
+                    <p class="mfba-stat-value">@activeCount</p>
+                    <p class="mfba-stat-label">Marked active</p>
+                    <p class="mfba-stat-sub">one per target at most</p>
+                </div>
+                <div class="mfba-stat">
+                    <div class="mfba-stat-top"><span class="mfba-stat-chip mfba-c-violet">@Icon("code")</span></div>
+                    <p class="mfba-stat-value">{{ }}</p>
+                    <p class="mfba-stat-label">Syntax</p>
+                    <p class="mfba-stat-sub">{{var}}, {{#each}}, {{#if}}</p>
+                </div>
+                <div class="mfba-stat">
+                    <div class="mfba-stat-top"><span class="mfba-stat-chip mfba-c-amber">@Icon("eye")</span></div>
+                    <p class="mfba-stat-value">form #@templatesFormId</p>
+                    <p class="mfba-stat-label">Storage</p>
+                    <p class="mfba-stat-sub">records of the Blog Templates form</p>
+                </div>
+            </section>
+
+            foreach (var group in Groups)
+            {
+                var inGroup = templates.Where(t => string.Equals(Text(t, "template_group", ""), group.Key,
+                                                                 StringComparison.OrdinalIgnoreCase)).ToList();
+                <section class="mfba-panel">
+                    <div class="mfba-panel-head">
+                        <h2>@group.Value <span class="mfba-pill mfba-st-draft">@inGroup.Count</span></h2>
+                        <a class="mfba-panel-link" href="@(templatesUrl + "&edit=0&group=" + group.Key)">New for this target @Icon("chevron-right", "mfba-icon mfba-icon-md")</a>
+                    </div>
+                    <div class="mfba-panel-body">
+                        @if (inGroup.Count == 0)
+                        {
+                            <div class="mfba-empty">No template for this target yet.</div>
+                        }
+                        else
+                        {
+                            <div class="mfba-tpl-grid">
+                                @foreach (var template in inGroup)
+                                {
+                                    var body = Text(template, "template_body", "");
+                                    var snippet = body.Length > 220 ? body.Substring(0, 220) + "…" : body;
+                                    var editUrl = templatesUrl + "&edit=" + template.SubmissionId;
+                                    <article class="mfba-tpl-card">
+                                        <header>
+                                            <strong class="mfba-clamp1">@Text(template, "template_name", "Untitled")</strong>
+                                            @if (IsActive(template))
+                                            {
+                                                <span class="mfba-pill mfba-st-published">Active</span>
+                                            }
+                                        </header>
+                                        <pre class="mfba-tpl-snippet">@snippet</pre>
+                                        <small>@Text(template, "notes", "No notes") · updated @template.SubmittedOnUtc.ToString("MMM d, yyyy", CultureInfo.InvariantCulture)</small>
+                                        <div class="mfba-tpl-acts">
+                                            <a class="mfba-iconbtn" title="Edit" href="@editUrl">@Icon("pencil", "mfba-icon mfba-icon-md")</a>
+                                            <a class="mfba-iconbtn" title="Preview" href="@(editUrl + "#mfba-preview")">@Icon("eye", "mfba-icon mfba-icon-md")</a>
+                                            <button class="mfba-iconbtn" type="submit" name="mfb_tpl_action" value="duplicate" title="Duplicate"
+                                                    onclick="document.getElementsByName('tpl_id')[0].value='@template.SubmissionId';">@Icon("copy", "mfba-icon mfba-icon-md")</button>
+                                            @if (!IsActive(template))
+                                            {
+                                                <button class="mfba-iconbtn ok" type="submit" name="mfb_tpl_action" value="activate" title="Set active"
+                                                        onclick="document.getElementsByName('tpl_id')[0].value='@template.SubmissionId';">@Icon("check", "mfba-icon mfba-icon-md")</button>
+                                            }
+                                            <button class="mfba-iconbtn stop" type="submit" name="mfb_tpl_action" value="delete" title="Delete"
+                                                    onclick="document.getElementsByName('tpl_id')[0].value='@template.SubmissionId';">@Icon("trash", "mfba-icon mfba-icon-md")</button>
+                                        </div>
+                                    </article>
+                                }
+                            </div>
+                        }
+                    </div>
+                </section>
+            }
+        }
+    }
+</div>
+
+@if (allowed && templatesFormId > 0 && (editing != null || creating))
+{
+    <script>
+    // ---------------------------------------------------------------------------------------
+    // Template editor: a Handlebars-LIKE interpreter, a mirror highlighter and a live preview.
+    //
+    // "Like", not "compatible": it understands {{var}}, {{a.b}}, {{#each list}}…{{/each}} and
+    // {{#if value}}…{{else}}…{{/if}}, and nothing else. That is exactly the subset the templates
+    // are written in, and a small honest parser beats pulling a 20 KB library into a DNN page.
+    // Values are HTML-escaped when substituted; the TEMPLATE's own markup is not, because
+    // producing markup is the whole point of a template.
+    // ---------------------------------------------------------------------------------------
+    (function () {
+        "use strict";
+        var code = document.getElementById("mfba-code");
+        var mirror = document.getElementById("mfba-code-hl");
+        var preview = document.getElementById("mfba-preview");
+        var note = document.getElementById("mfba-preview-note");
+        var cheat = document.getElementById("mfba-cheat-body");
+        var groupBox = document.getElementById("mfba-tpl-group");
+        if (!code || !preview) { return; }
+
+        // ---- mock data per render target ---------------------------------------------------
+        var POSTS = [
+            { title: "The Future of Design Systems", excerpt: "Why tokens outlive components.", category: "Design",
+              author: "Sarah Chen", date: "Jul 29, 2026", reads: 1420, url: "/Blogs?slug=future-of-design-systems",
+              image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&h=400&fit=crop" },
+            { title: "DNN and Oqtane", excerpt: "A practical comparison of the two platforms.", category: "Development",
+              author: "DNN Defender Team", date: "Jul 29, 2026", reads: 980, url: "/Blogs?slug=dnn-and-oqtane",
+              image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&h=400&fit=crop" },
+            { title: "Why Bots Target Forms", excerpt: "What a form endpoint looks like to a crawler.", category: "Security",
+              author: "SuperUser Account", date: "Feb 12, 2026", reads: 640, url: "/Blogs?slug=why-bots-target-forms",
+              image: "https://images.unsplash.com/photo-1510511459019-5dda7724fd87?w=600&h=400&fit=crop" }
+        ];
+        var MOCK = {
+            "blog-home": {
+                site: { title: "Insights and Ideas", tagline: "Design, development and product thinking." },
+                featured: POSTS[0], posts: POSTS
+            },
+            "blog-archive": { total: POSTS.length, posts: POSTS },
+            "blog-post": {
+                post: {
+                    title: POSTS[1].title, excerpt: POSTS[1].excerpt, category: POSTS[1].category,
+                    author: POSTS[1].author, authorAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop",
+                    date: POSTS[1].date, readingTime: 5, image: POSTS[1].image,
+                    body: "Two platforms, one team, and a migration that does not have to be a rewrite."
+                },
+                toc: [ { id: "s1", text: "Where DNN still wins" }, { id: "s2", text: "Where Oqtane wins" } ],
+                related: [ POSTS[0], POSTS[2] ]
+            },
+            "news-home": {
+                breaking: { title: "Platform update ships ahead of schedule" },
+                topStories: [
+                    { section: "Technology", title: "Reader analytics land in the blog module", author: "Priya Nair", time: "12 minutes ago", url: "#" },
+                    { section: "Product", title: "Comment moderation gets bulk actions", author: "Amy Zhang", time: "1 hour ago", url: "#" }
+                ]
+            },
+            "news-article": {
+                article: { section: "Technology", title: "Reader analytics land in the blog module",
+                           author: "Priya Nair", time: "12 minutes ago", isLive: true, updated: "just now",
+                           body: "Counters are written by a scheduled rollup every five minutes." },
+                stats: [ { label: "Reads", value: 1420 }, { label: "Comments", value: 12 } ]
+            }
+        };
+
+        function currentData() {
+            var group = groupBox ? groupBox.value : "blog-home";
+            return { group: group, data: MOCK[group] || {} };
+        }
+
+        // ---- interpreter --------------------------------------------------------------------
+        function esc(value) {
+            return String(value === null || value === undefined ? "" : value)
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        // Resolve "a.b.c" against the current scope, then the root — so a field inside {{#each}}
+        // wins, and anything outside the loop is still reachable.
+        function resolve(path, scope, root) {
+            path = String(path || "").trim();
+            if (path === "." || path === "this") { return scope; }
+            var from = [scope, root], i, j, value, parts;
+            for (i = 0; i < from.length; i++) {
+                value = from[i];
+                if (value === null || value === undefined) { continue; }
+                parts = path.split(".");
+                for (j = 0; j < parts.length; j++) {
+                    if (value === null || value === undefined) { break; }
+                    value = value[parts[j]];
+                }
+                if (value !== undefined) { return value; }
+            }
+            return undefined;
+        }
+
+        function truthy(value) {
+            if (Array.isArray(value)) { return value.length > 0; }
+            return !!value;
+        }
+
+        // Finds the {{/name}} that closes the block opened at `from`, counting nested opens.
+        function findClose(tokens, from, name) {
+            var depth = 1, i;
+            for (i = from + 1; i < tokens.length; i++) {
+                var t = tokens[i];
+                if (t.type === "open" && t.name === name) { depth++; }
+                else if (t.type === "close" && t.name === name) { depth--; if (depth === 0) { return i; } }
+            }
+            return -1;
+        }
+
+        function tokenize(source) {
+            var tokens = [], re = /\{\{\s*([#\/]?)([^}]+?)\s*\}\}/g, last = 0, m;
+            while ((m = re.exec(source)) !== null) {
+                if (m.index > last) { tokens.push({ type: "text", value: source.slice(last, m.index) }); }
+                var marker = m[1], body = m[2].trim();
+                if (marker === "#") {
+                    var space = body.indexOf(" ");
+                    tokens.push({ type: "open", name: space < 0 ? body : body.slice(0, space),
+                                  arg: space < 0 ? "" : body.slice(space + 1).trim() });
+                } else if (marker === "/") {
+                    tokens.push({ type: "close", name: body });
+                } else if (body === "else") {
+                    tokens.push({ type: "else" });
+                } else {
+                    tokens.push({ type: "var", name: body });
+                }
+                last = re.lastIndex;
+            }
+            if (last < source.length) { tokens.push({ type: "text", value: source.slice(last) }); }
+            return tokens;
+        }
+
+        function render(tokens, scope, root, errors) {
+            var out = "", i = 0;
+            while (i < tokens.length) {
+                var t = tokens[i];
+                if (t.type === "text") { out += t.value; i++; continue; }
+                if (t.type === "var") {
+                    var value = resolve(t.name, scope, root);
+                    if (value === undefined) { errors.push(t.name); }
+                    out += esc(value);
+                    i++; continue;
+                }
+                if (t.type === "open") {
+                    var end = findClose(tokens, i, t.name);
+                    if (end < 0) { errors.push("unclosed {{#" + t.name + "}}"); return out; }
+                    var inner = tokens.slice(i + 1, end);
+                    var target = resolve(t.arg, scope, root);
+                    if (t.name === "each") {
+                        if (Array.isArray(target)) {
+                            for (var k = 0; k < target.length; k++) { out += render(inner, target[k], root, errors); }
+                        } else if (target !== undefined && target !== null) {
+                            out += render(inner, target, root, errors);
+                        }
+                    } else if (t.name === "if") {
+                        var elseAt = -1, d = 0, x;
+                        for (x = 0; x < inner.length; x++) {
+                            if (inner[x].type === "open") { d++; }
+                            else if (inner[x].type === "close") { d--; }
+                            else if (inner[x].type === "else" && d === 0) { elseAt = x; break; }
+                        }
+                        var yes = elseAt < 0 ? inner : inner.slice(0, elseAt);
+                        var no = elseAt < 0 ? [] : inner.slice(elseAt + 1);
+                        out += render(truthy(target) ? yes : no, scope, root, errors);
+                    } else {
+                        errors.push("unknown helper {{#" + t.name + "}}");
+                    }
+                    i = end + 1; continue;
+                }
+                i++;   // stray {{else}} or {{/x}}
+            }
+            return out;
+        }
+
+        // ---- highlighter ---------------------------------------------------------------------
+        function highlight(source) {
+            var html = esc(source);
+            html = html.replace(/\{\{[^}]*\}\}/g, function (token) {
+                var kind = /\{\{\s*[#\/]/.test(token) ? "blk" : "var";
+                return '<span class="tpl-' + kind + '">' + token + "</span>";
+            });
+            html = html.replace(/(&lt;\/?[a-zA-Z][^&]*?&gt;)/g, '<span class="tpl-tag">$1</span>');
+            return html + "\n";
+        }
+
+        function paint() {
+            var source = code.value;
+            if (mirror) { mirror.innerHTML = highlight(source); }
+            var context = currentData();
+            var errors = [];
+            var html;
+            try { html = render(tokenize(source), context.data, context.data, errors); }
+            catch (e) { html = ""; errors.push(String(e.message || e)); }
+            preview.innerHTML = html;
+            if (note) {
+                var unique = errors.filter(function (v, i, a) { return a.indexOf(v) === i; });
+                note.textContent = unique.length
+                    ? "mock data has no " + unique.slice(0, 3).join(", ")
+                    : "rendered against " + context.group + " mock data";
+                note.className = unique.length ? "mfba-over" : "";
+            }
+            if (cheat) { cheat.innerHTML = cheatFor(context.data); }
+        }
+
+        // Reads the mock object and lists what a template can actually say — no hand-kept list to
+        // drift out of date.
+        function cheatFor(data) {
+            var rows = [];
+            function walk(prefix, value) {
+                if (Array.isArray(value)) {
+                    rows.push("{{#each " + prefix + "}}…{{/each}}");
+                    if (value.length && typeof value[0] === "object") {
+                        Object.keys(value[0]).forEach(function (k) { rows.push("&nbsp;&nbsp;{{" + k + "}} <em>inside each</em>"); });
+                    }
+                    return;
+                }
+                if (value && typeof value === "object") {
+                    Object.keys(value).forEach(function (k) { walk(prefix ? prefix + "." + k : k, value[k]); });
+                    return;
+                }
+                rows.push("{{" + prefix + "}}");
+            }
+            Object.keys(data).forEach(function (k) { walk(k, data[k]); });
+            return "<code>" + rows.join("</code><code>") + "</code>";
+        }
+
+        code.addEventListener("input", paint);
+        code.addEventListener("scroll", function () {
+            if (!mirror) { return; }
+            mirror.scrollTop = code.scrollTop;
+            mirror.scrollLeft = code.scrollLeft;
+        });
+        if (groupBox) { groupBox.addEventListener("change", paint); }
+        // Tab should indent, not jump out of the editor.
+        code.addEventListener("keydown", function (e) {
+            if (e.key !== "Tab") { return; }
+            e.preventDefault();
+            var start = code.selectionStart, end = code.selectionEnd;
+            code.value = code.value.slice(0, start) + "  " + code.value.slice(end);
+            code.selectionStart = code.selectionEnd = start + 2;
+            paint();
+        });
+        paint();
+    })();
+    </script>
+}

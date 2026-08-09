@@ -299,8 +299,10 @@ namespace MegaForm.DNN.Services
                 AppDefinitions, AppQueries,
                 WorkflowIdentityProvisioning, StarterPlatform, LogService, DataResolver, TypedResync);
 
-            ScheduledPublish = new ScheduledPublishService(SubmissionRepo, Phase2Repo, DataResolver);
-            AnalyticsRollup = new BlogAnalyticsRollupService(SubmissionRepo, Phase2Repo, DataResolver, TypedResync);
+            // FormRepo is not optional in practice: a seeded blog-starter persists "Forms": [] in
+            // its manifest, so without it both services resolve no forms and silently do nothing.
+            ScheduledPublish = new ScheduledPublishService(SubmissionRepo, Phase2Repo, DataResolver, FormRepo);
+            AnalyticsRollup = new BlogAnalyticsRollupService(SubmissionRepo, Phase2Repo, DataResolver, TypedResync, FormRepo);
 
             // Wire the public MegaForm.Sdk facade so external Razor/Blazor apps
             // can call IMegaFormClient through MegaFormSdk.RunAsync.
