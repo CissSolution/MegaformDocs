@@ -567,7 +567,13 @@
    remaining height and let IT scroll, so the panel does not end up with two nested scrollbars
    racing each other. */
 .mf-pb-dashhost {
-    margin: -10px -10px 0;
+    /* [PbNoRightClip v20260810-F550d] NOT negative horizontal margins. DNN's own .socialpanelbody
+       carries overflow-x:hidden, so a host 20px wider than its parent does not bleed to the panel
+       edge - it gets its right 20px CUT OFF, which is exactly what the owner photographed
+       (measured: body clientWidth 1219 vs host width 1239). The body has no horizontal padding to
+       bleed past anyway, so full width is all that was ever needed. */
+    margin: -10px 0 0;
+    width: 100%;
     min-height: 420px;
     height: calc(100vh - 150px);
     overflow: auto;
