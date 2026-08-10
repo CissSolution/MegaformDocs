@@ -377,7 +377,29 @@ megaform-renderer -> megaform-rule-engine -> `js/bundles/megaform-builder.js` ->
 template-gallery-search** + 4 stylesheet, DUNG THU TU. Nap moi `megaform-builder-loader.js` thi
 `initBuilder` khong bao gio xuat hien. Moi surface giu URL cu lam **duong lui**.
 
-### 3e-6. 🔴🔴 P0 AN NINH — `ModuleConfigController` mo cho MOI USER DA DANG NHAP (CHUA VA)
+### 3e-7. ✅ P0 DA VA CA 3 PLATFORM (commit `d54f6d7` + `565766c`) — do lai sau khi deploy
+
+| phep do | truoc | sau |
+|---|---|---|
+| user thuong -> moi endpoint ModuleConfig | 200 (7 GET) + POST toi duoc handler (400) | **401 tat ca** |
+| admin -> 9 endpoint ModuleConfig | 200 | **200** (khong regress) |
+| anonymous `Submit/Schema` / `Submit/Post` / `Upload/File` | 200 / 400 / 500 | **y nguyen, 0 bi khoa** |
+| trang form cong khai | 8 field, 0 goi ModuleConfig | **y nguyen** |
+| dashboard trang cu `/mfqa-admin` | ALIVE, 109 dong | **ALIVE, 109 dong** |
+| panel 6 surface (nguoi) | 6/6 xanh | **6/6 xanh** |
+
+Pham vi: **DNN** class gate `[DnnAuthorize(StaticRoles="Administrators")]` · **Oqtane** 21+1 route ·
+**Web** 15 route. DLL da deploy len megaclean008 (`MegaForm.DNN.dll` 13:40), goi cai mang dung DLL do.
+
+⭐⭐⭐**BAY khi siet quyen Oqtane**: `[Authorize(Roles="Administrators")]` **HEP HON** than ham —
+`CanUseAdminPopup()` (`MegaFormController.cs:271`) = `RoleNames.Admin || RoleNames.Host`. Viet
+literal la **khoa mat user Host**, ke ca man `ModuleConfig/DatabaseSettings` dung de tro DB luc cai
+moi. Dung phai la `RoleNames.Admin + "," + RoleNames.Host`.
+⭐Regex `ModuleConfig/` **bo sot route `POST ModuleConfig`** (khong co dau gach cheo).
+⭐`MegaForm.Web` **khong build duoc** — 8 loi o `Data/EfSubmissionDataStore.cs`, file **chua git add**
+cua viec typed-storage dang do; chung minh bang cach stash ban va ra van 8 loi ⇒ va Web moi o muc source.
+
+### 3e-6. Boi canh (DA VA) — `ModuleConfigController` tung mo cho MOI USER DA DANG NHAP
 
 Phat hien khi tra loi cau hoi "user thuong co vao duoc panel khong". **Panel thi an toan** (401),
 **nhung `/DesktopModules/MegaForm/API/ModuleConfig/*` thi khong.**
