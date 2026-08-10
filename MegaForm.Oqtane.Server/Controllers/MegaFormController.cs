@@ -3455,7 +3455,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         // ══════════════════════════════════════════════════════
 
         [HttpGet("ModuleConfig/{moduleId}")]
-        [Authorize(Roles = "Administrators")]
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Host)]
         public IActionResult GetModuleConfig(int moduleId)
         {
             if (!CanUseAdminPopup()) return Forbid();
@@ -3558,7 +3558,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         }
 
         [HttpPost("ModuleConfig/SaveStyle")]
-        [Authorize(Roles = "Administrators")]
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Host)]
         [ValidateAntiForgeryToken] // [SecFix 2026-07-04 P1-1/Chain-C] CSRF: overrides class [IgnoreAntiforgeryToken]; blocks CSRF→stored-CSS/XSS on cssOverride
         public IActionResult SaveStyle([FromBody] JsonElement bodyElement)
         {
@@ -3587,7 +3587,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         // render overlays it onto the form's settings (module-setting-wins). When the module binds
         // a DIFFERENT form, GetModuleStyle reseeds from the new form's CSS.
         [HttpGet("ModuleConfig/ModuleStyle")]
-        [Authorize(Roles = "Administrators")]
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Host)]
         public IActionResult GetModuleStyle([FromQuery] int moduleId, [FromQuery] int formId)
         {
             if (!CanUseAdminPopup()) return Forbid();
@@ -3617,7 +3617,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         }
 
         [HttpPost("ModuleConfig/SaveModuleStyle")]
-        [Authorize(Roles = "Administrators")]
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Host)]
         [ValidateAntiForgeryToken] // [SecFix 2026-07-05 SEC-B1] CSRF: overrides class [IgnoreAntiforgeryToken]; blocks CSRF→stored module CSS/XSS. Matches sibling SaveStyle. Client sends X-XSRF-TOKEN-HEADER via shared/antiforgery.ts chokepoint.
         public IActionResult SaveModuleStyle([FromBody] JsonElement bodyElement)
         {
@@ -3681,7 +3681,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         }
 
         [HttpPost("ModuleConfig")]
-        [Authorize]
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Host)]
         public IActionResult SaveModuleConfig([FromBody] ModuleConfigDto config)
         {
             if (!CanUseAdminPopup()) return Forbid();

@@ -43,7 +43,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         private const string GsRangeKey = "MegaForm_Google_DefaultRange";
 
         [HttpGet("ModuleConfig/GoogleSheetsSettings")]
-        [Authorize(Roles = "Administrators")]
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Host)]
         public IActionResult GetGoogleSheetsSettings()
         {
             if (!CanUseAdminPopup()) return Forbid();
@@ -69,7 +69,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         }
 
         [HttpPost("ModuleConfig/GoogleSheetsSettings")]
-        [Authorize(Roles = "Administrators")]
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Host)]
         public IActionResult SaveGoogleSheetsSettings([FromBody] MegaFormGoogleSheetsSettingsRequest req)
         {
             if (!CanUseAdminPopup()) return Forbid();
@@ -104,7 +104,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         }
 
         [HttpPost("ModuleConfig/GoogleSheetsSettings/Test")]
-        [Authorize(Roles = "Administrators")]
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Host)]
         public async Task<IActionResult> TestGoogleSheetsSettings([FromBody] MegaFormGoogleSheetsSettingsRequest req)
         {
             if (!CanUseAdminPopup()) return Forbid();
@@ -153,7 +153,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         // ACCESS a specific spreadsheet id (i.e. the sheet was shared with its client_email).
         // POST ModuleConfig/GoogleSheetsTestSheet { defaultSpreadsheetId } → { success, message, clientEmail, title }
         [HttpPost("ModuleConfig/GoogleSheetsTestSheet")]
-        [Authorize(Roles = "Administrators")]
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Host)]
         public async Task<IActionResult> TestGoogleSheetAccess([FromBody] MegaFormGoogleSheetsSettingsRequest req)
         {
             if (!CanUseAdminPopup()) return Forbid();

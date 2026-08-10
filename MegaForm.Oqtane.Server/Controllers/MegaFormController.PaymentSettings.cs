@@ -20,7 +20,7 @@ namespace MegaForm.Oqtane.Server.Controllers
     public partial class MegaFormController
     {
         [HttpGet("ModuleConfig/PaymentSettings")]
-        [Authorize(Roles = "Administrators")]
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Host)]
         public IActionResult GetPaymentSettings()
         {
             if (!IsPaymentSettingsAdmin()) return Forbid();
@@ -52,7 +52,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         }
 
         [HttpPost("ModuleConfig/PaymentSettings")]
-        [Authorize(Roles = "Administrators")]
+        [Authorize(Roles = RoleNames.Admin + "," + RoleNames.Host)]
         public IActionResult SavePaymentSettings([FromBody] JsonElement bodyElement)
         {
             if (!IsPaymentSettingsAdmin()) return Forbid();
