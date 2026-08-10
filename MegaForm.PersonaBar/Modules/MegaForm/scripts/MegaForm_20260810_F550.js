@@ -230,30 +230,130 @@ define(['jquery'], function ($) {
     //
     // Every one of them keeps the old URL as a fallback: if a bundle does not load, or does not
     // register its init, the panel opens the page it used to open instead of showing nothing.
-    // The builder is not one file: FormView.ascx.cs registers Sortable, the widget registry, the
-    // renderer and the rule engine BEFORE js/bundles/megaform-builder.js, and four stylesheets
-    // with it. Order matters - the bundle expects those globals to exist - so these load in
-    // sequence, not in parallel. (Plugin widget scripts are not in this list; the palette will be
-    // the built-in set until they are.)
+    // ── the admin asset set ─────────────────────────────────────────────────
+    // MEASURED, not guessed (tools/browser-qa/pb-page-asset-truth.mjs, 2026-08-10): the DNN admin
+    // page does NOT register a per-surface asset set. It registers ONE set - 33 stylesheets and
+    // ~48 scripts - and every admin surface renders inside it. Believing otherwise is what shipped
+    // a submissions screen with no CSS at all: the panel mounted the bundle and loaded nothing
+    // else, so the surface came up as raw HTML (default link blue rgb(0,0,238), sidebar 1320px
+    // wide instead of 256). The bug hid from QA because the harness clicked "Open dashboard"
+    // first, and THAT path did load megaform-admin-shell.css.
+    //
+    // This list mirrors FormView.ascx.cs. It is hand-maintained, so
+    // tools/browser-qa/pb-surface-visual-qa.mjs proves each surface is STYLED from a COLD panel, and
+    // real page loads and fails on any sheet the panel is missing - drift becomes a test failure
+    // rather than a screenshot nobody opened.
+    var FONT_AWESOME = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css';
+
+    var ADMIN_CSS = [
+        'css/megaform.css', 'css/megaform-themes.css', 'css/megaform-widgets.css', 'css/megaform-views.css',
+        'css/megaform-admin-shell.css', 'css/megaform-builder-shell.css', 'css/megaform-builder.css',
+        'css/megaform-builder-ts.css', 'css/megaform-submissions-ts.css', 'css/megaform-my-inbox-ts.css',
+        'css/plugins/megaform-widgets-builtin.css',
+        'css/plugins/megaform-widget-advanced-file.css', 'css/plugins/megaform-widget-calculator.css',
+        'css/plugins/megaform-widget-data-repeater.css', 'css/plugins/megaform-widget-draw-on-image.css',
+        'css/plugins/megaform-widget-dynamic-label.css', 'css/plugins/megaform-widget-golf-scorecard.css',
+        'css/plugins/megaform-widget-grid-repeater.css', 'css/plugins/megaform-widget-infinite-list.css',
+        'css/plugins/megaform-widget-payment.css', 'css/plugins/megaform-widget-paypal.css',
+        'css/plugins/megaform-widget-pdf-form.css', 'css/plugins/megaform-widget-phone-pro.css',
+        'css/plugins/megaform-widget-product-line-items.css', 'css/plugins/megaform-widget-rating-suite.css',
+        'css/plugins/megaform-widget-razor.css', 'css/plugins/megaform-widget-repeater.css',
+        'css/plugins/megaform-widget-rich-text.css', 'css/plugins/megaform-widget-signature.css',
+        'css/plugins/megaform-widget-stripe.css', 'css/plugins/megaform-widget-subform.css',
+        'css/plugins/megaform-widget-video-embed.css'
+    ];
+
+    // Order matters for these: the widget registry and the renderer publish globals the surface
+    // bundles expect to already exist.
+    var ADMIN_JS_CORE = [
+        'js/megaform-i18n.js', 'js/megaform-widgets.js', 'js/plugins/types.js',
+        'js/megaform-renderer.js', 'js/megaform-rule-engine.js', 'js/megaform-views.js',
+        'js/Sortable.min.js'
+    ];
+
+    var ADMIN_JS_PLUGINS = [
+        'js/plugins/megaform-razor-studio.js', 'js/plugins/megaform-widget-advanced-file.js',
+        'js/plugins/megaform-widget-appointment.js', 'js/plugins/megaform-widget-calculator.js',
+        'js/plugins/megaform-widget-captcha.js', 'js/plugins/megaform-widget-qrcode.js',
+        'js/plugins/megaform-widget-content-slider.js', 'js/plugins/megaform-widget-datagrid.js',
+        'js/plugins/megaform-widget-datagrid-sql.js', 'js/plugins/megaform-widget-datagrid-studio.js',
+        'js/plugins/megaform-widget-data-repeater.js', 'js/plugins/megaform-widget-draw-on-image.js',
+        'js/plugins/megaform-widget-dynamic-label.js', 'js/plugins/megaform-widget-geolocation.js',
+        'js/plugins/megaform-widget-golf-scorecard.js', 'js/plugins/megaform-widget-grid-repeater.js',
+        'js/plugins/megaform-widget-image-choice.js', 'js/plugins/megaform-widget-infinite-list.js',
+        'js/plugins/megaform-widget-map.js', 'js/plugins/megaform-widget-payment-unified.js',
+        'js/plugins/megaform-widget-paypal.js', 'js/plugins/megaform-widget-pdf-form.js',
+        'js/plugins/megaform-widget-phone-pro.js', 'js/plugins/megaform-widget-rating-suite.js',
+        'js/plugins/megaform-widget-razor.js', 'js/plugins/megaform-widget-repeater.js',
+        'js/plugins/megaform-widget-rich-text.js', 'js/plugins/megaform-widget-signature.js',
+        'js/plugins/megaform-widget-stripe.js', 'js/plugins/megaform-widget-terms-privacy.js',
+        'js/plugins/megaform-widget-video-embed.js', 'js/plugins/widget-advanced-file.js',
+        'js/plugins/widget-repeater.js', 'js/plugins/widget-signature.js'
+    ];
+
     var SURFACES = {
-        builder: {
-            css: ['css/megaform-builder.css', 'css/megaform-builder-ts.css', 'css/megaform-themes.css', 'css/megaform-widgets.css'],
-            js: ['js/Sortable.min.js', 'js/megaform-widgets.js', 'js/megaform-renderer.js',
-                 'js/megaform-rule-engine.js', 'js/bundles/megaform-builder.js', 'js/megaform-template-gallery-search.js'],
-            init: 'initBuilder', rootId: 'mf-builder-root'
-        },
-        submissions: { css: [], js: ['js/megaform-submissions.js'], init: 'initSubmissions', rootId: 'mf-submissions-root' },
-        myinbox:     { css: [], js: ['js/megaform-my-inbox.js'],    init: 'initMyInbox',     rootId: 'mf-myinbox-root' },
-        languages:   { css: [], js: ['js/megaform-languages.js'],   init: 'initLanguages',   rootId: 'mf-languages-root' }
+        dashboard:   { js: ['js/megaform-dashboard.js'],   init: 'initDashboard',   rootId: 'mf-dashboard-root' },
+        submissions: { js: ['js/megaform-submissions.js'], init: 'initSubmissions', rootId: 'mf-submissions-root' },
+        myinbox:     { js: ['js/megaform-my-inbox.js'],    init: 'initMyInbox',     rootId: 'mf-myinbox-root' },
+        languages:   { js: ['js/megaform-languages.js'],   init: 'initLanguages',   rootId: 'mf-languages-root' },
+        // ReactFlow FIRST: dnn-host injects it ahead of the builder bundle with async=false because
+        // the bundle expects its globals to already be there. Getting this backwards is a race that
+        // only shows up on a cold cache.
+        builder:     { js: ['js/builder/megaform-workflow-reactflow.js', 'js/bundles/megaform-builder.js',
+                            'js/megaform-template-gallery-search.js'],
+                       init: 'initBuilder', rootId: 'mf-builder-root' }
     };
 
-    function loadCssOnce(file) {
-        var id = 'mf-pb-css-' + file.replace(/[^a-z0-9]/gi, '');
+    // Cache stamps as the DNN page uses them. Stamping everything with the panel's own version
+    // forks the cache and re-downloads ~3 MB the page already holds.
+    var V_DEFAULT = '?v=20260729-B417';
+    var V_ADMIN   = '?v=20260809-B421';
+    var V_BUILDER = '?v=20260726-B416-StepCanvasActions';
+    var VERSION_OF = {
+        'css/megaform-admin-shell.css': V_ADMIN,
+        'js/megaform-dashboard.js': V_ADMIN,
+        'js/bundles/megaform-builder.js': V_BUILDER,
+        'js/builder/megaform-workflow-reactflow.js': V_BUILDER,
+        'js/Sortable.min.js': ''     // DNN registers it bare; keep the same cache key
+    };
+    function stampFor(file) {
+        return VERSION_OF.hasOwnProperty(file) ? VERSION_OF[file] : V_DEFAULT;
+    }
+
+    // Stylesheets go in on the FIRST surface open and stay: they are what makes any of this look
+    // like MegaForm rather than a 1995 document.
+    var adminCssLoaded = false;
+    function ensureAdminCss() {
+        if (adminCssLoaded) { return; }
+        adminCssLoaded = true;
+        loadCssHref('mf-pb-css-fa', FONT_AWESOME);
+        ADMIN_CSS.forEach(loadCssOnce);
+    }
+
+    function loadCssHref(id, href) {
         if (document.getElementById(id)) { return; }
         var link = document.createElement('link');
         link.id = id; link.rel = 'stylesheet';
-        link.href = ASSETS + file + DASH_V;
+        link.href = href;
         document.head.appendChild(link);
+    }
+
+    function loadCssOnce(file) {
+        loadCssHref('mf-pb-css-' + file.replace(/[^a-z0-9]/gi, ''), ASSETS + file + stampFor(file));
+    }
+
+    // Every admin surface needs the same stylesheets and the same core/plugin scripts, so this
+    // runs once and every surface after the first is just its own bundle.
+    var adminJsLoaded = false;
+    function ensureAdminAssets(done) {
+        ensureAdminCss();
+        if (adminJsLoaded) { done(); return; }
+        loadChain(ADMIN_JS_CORE.concat(ADMIN_JS_PLUGINS), function (err) {
+            // A missing widget plugin is not worth blocking a screen for; the surface bundles do
+            // not depend on any single one. Anything fatal shows up in the surface's own init.
+            adminJsLoaded = true;
+            done(err && /megaform-i18n|megaform-widgets\.js|megaform-renderer|Sortable/.test(String(err.message)) ? err : undefined);
+        });
     }
 
     function loadScriptOnce(file, done) {
@@ -270,10 +370,19 @@ define(['jquery'], function ($) {
         }
         var s = document.createElement('script');
         s.id = id;
-        s.src = ASSETS + file + DASH_V;
+        s.src = ASSETS + file + stampFor(file);
         s.onload = function () { s.setAttribute('data-loaded', '1'); done(); };
         s.onerror = function () { done(new Error('failed to load ' + s.src)); };
         document.head.appendChild(s);
+    }
+
+    // Surface bundles can register their init a tick or two after onload (the builder is the worst
+    // offender - dnn-host polls it 80 times at 150ms). Waiting is cheaper than a false fallback.
+    function whenInitReady(name, tries, done) {
+        var fn = window.MegaForm && window.MegaForm[name];
+        if (typeof fn === 'function') { done(fn); return; }
+        if (tries <= 0) { done(null); return; }
+        window.setTimeout(function () { whenInitReady(name, tries - 1, done); }, 150);
     }
 
     function loadChain(files, done) {
@@ -310,24 +419,27 @@ define(['jquery'], function ($) {
         $host[0].appendChild(root);
         dash.mounted = false;    // the dashboard is no longer what is in the host
 
-        (spec.css || []).forEach(loadCssOnce);
-        loadChain(spec.js, function (err) {
-            var init = window.MegaForm && window.MegaForm[spec.init];
-            if (err || typeof init !== 'function') {
-                setListVisible(true);
-                if (fallbackUrl) { window.top.location.href = fallbackUrl; return; }
-                showAlert(t('SurfaceUnavailable', 'That screen could not be opened inside the panel.'));
-                return;
-            }
-            try {
-                $(root).find('.mf-pb-dashboot').remove();
-                init(root);
-                wireDashboardChrome();
-            } catch (e) {
-                setListVisible(true);
-                if (fallbackUrl) window.top.location.href = fallbackUrl;
-            }
+        ensureAdminAssets(function (assetErr) {
+        loadChain(assetErr ? [] : spec.js, function (err) {
+            if (err || assetErr) { surfaceFailed(fallbackUrl); return; }
+            whenInitReady(spec.init, 40, function (init) {
+                if (!init) { surfaceFailed(fallbackUrl); return; }
+                try {
+                    $(root).find('.mf-pb-dashboot').remove();
+                    init(root);
+                    wireDashboardChrome();
+                } catch (e) {
+                    surfaceFailed(fallbackUrl);
+                }
+            });
         });
+        });
+    }
+
+    function surfaceFailed(fallbackUrl) {
+        setListVisible(true);
+        if (fallbackUrl) { window.top.location.href = fallbackUrl; return; }
+        showAlert(t('SurfaceUnavailable', 'That screen could not be opened inside the panel.'));
     }
 
     // The dashboard's own links are page urls. Inside the panel they are intercepted and turned
@@ -344,33 +456,15 @@ define(['jquery'], function ($) {
         return { kind: kind, formId: m ? parseInt(m[1], 10) : 0 };
     }
 
+    // The dashboard goes through the same asset path as every other surface now. It used to load
+    // megaform-admin-shell.css on its own, which is precisely why the missing-CSS bug on the OTHER
+    // surfaces stayed invisible whenever the dashboard had been opened first.
     function loadDashboardAssets(done) {
-        if (!document.getElementById('mf-pb-dash-css')) {
-            var link = document.createElement('link');
-            link.id = 'mf-pb-dash-css';
-            link.rel = 'stylesheet';
-            link.href = ASSETS + 'css/megaform-admin-shell.css' + DASH_V;
-            document.head.appendChild(link);
-        }
-        if (window.MegaForm && typeof window.MegaForm.initDashboard === 'function') { done(); return; }
-        if (document.getElementById('mf-pb-dash-js')) {
-            // Already in flight from an earlier click: wait for it rather than adding a second tag.
-            var waited = 0;
-            var poll = window.setInterval(function () {
-                if (window.MegaForm && typeof window.MegaForm.initDashboard === 'function') {
-                    window.clearInterval(poll); done();
-                } else if ((waited += 200) > 20000) {
-                    window.clearInterval(poll); done(new Error('timeout'));
-                }
-            }, 200);
-            return;
-        }
-        var s = document.createElement('script');
-        s.id = 'mf-pb-dash-js';
-        s.src = ASSETS + 'js/megaform-dashboard.js' + DASH_V;
-        s.onload = function () { done(); };
-        s.onerror = function () { done(new Error('failed to load ' + s.src)); };
-        document.head.appendChild(s);
+        ensureAdminAssets(function (assetErr) {
+            if (assetErr) { done(assetErr); return; }
+            if (window.MegaForm && typeof window.MegaForm.initDashboard === 'function') { done(); return; }
+            loadChain(SURFACES.dashboard.js, done);
+        });
     }
 
     // Hides the form list without destroying it: coming back is instant and keeps the page,
@@ -421,7 +515,10 @@ define(['jquery'], function ($) {
             var init = window.MegaForm && window.MegaForm.initDashboard;
             if (err || typeof init !== 'function') {
                 // Never leave the admin looking at an empty panel: hand off to the page-hosted
-                // dashboard, which is exactly what this panel did before F550.
+                // dashboard, which is exactly what this panel did before F550. Logged loudly:
+                // a silent hand-off looks identical to "the panel decided to navigate for no
+                // reason", which cost a whole QA round to diagnose.
+                try { console.error('[mf-pb] dashboard fallback err=' + (err && err.message) + ' init=' + (typeof init)); } catch (ignore) { }
                 setListVisible(true);
                 fallbackToTab(withWizard);
                 return;
@@ -433,6 +530,7 @@ define(['jquery'], function ($) {
                 wireDashboardChrome();
                 if (withWizard) openWizard(10);
             } catch (e) {
+                try { console.error('[mf-pb] initDashboard threw: ' + (e && e.message) + '\n' + (e && e.stack)); } catch (ignore) { }
                 setListVisible(true);
                 fallbackToTab(withWizard);
             }
@@ -447,17 +545,6 @@ define(['jquery'], function ($) {
         $host.off('click.mfdash').on('click.mfdash', '.mf-hd-close', function (e) {
             e.preventDefault();
             showList();
-        });
-        // [PbNoPopOut v20260810-F550b] Any link that would take the admin to one of MegaForm's own
-        // page-hosted screens is served here instead. Anything else (a live form preview, a real
-        // site page) still opens in the top window, because that is genuinely somewhere else.
-        $host.on('click.mfdash', 'a[href]', function (e) {
-            var target = surfaceFromHref($(this).attr('href'));
-            if (!target) { return; }
-            e.preventDefault();
-            e.stopPropagation();
-            if (target.kind === 'dashboard') { dash.mounted = false; showDashboard(false); return; }
-            openSurfaceInPanel(target.kind, target.formId, null);
         });
         $host.on('click.mfdash', '.mf-hd-refresh', function (e) {
             e.preventDefault();
@@ -474,6 +561,40 @@ define(['jquery'], function ($) {
                 wireDashboardChrome();
             });
         });
+        wireSurfaceLinkInterceptor();
+    }
+
+    // [PbCaptureLinks v20260810-F550c] Any link that would take the admin to one of MegaForm's own
+    // page-hosted screens is served here instead. Anything else (a live form preview, a real site
+    // page) still opens in the top window, because that is genuinely somewhere else.
+    //
+    // CAPTURE phase, deliberately. A delegated jQuery handler on the host is a BUBBLE handler and
+    // it never fired: the dashboard attaches its own listener to those sidebar links and calls
+    // stopPropagation(), so the event died before it reached the host - while the browser still
+    // performed the default navigation. Measured: clicking "My Inbox" navigated the panel iframe to
+    // /DesktopModules/admin/Dnn.PersonaBar/index.html#mf-myinbox (the SPA builds that href from
+    // location.pathname, which inside the panel IS the Persona Bar shell), reloading the entire
+    // Persona Bar and dumping the admin back at an empty panel. Capture runs before any of that.
+    function wireSurfaceLinkInterceptor() {
+        var host = $panel.find('.mf-pb-dashhost')[0];
+        if (!host || host.getAttribute('data-mf-intercept') === '1') { return; }
+        host.setAttribute('data-mf-intercept', '1');
+        host.addEventListener('click', function (e) {
+            var node = e.target;
+            var a = null;
+            while (node && node !== host) {
+                if (node.tagName === 'A' && node.getAttribute('href')) { a = node; break; }
+                node = node.parentNode;
+            }
+            if (!a) { return; }
+            var target = surfaceFromHref(a.getAttribute('href'));
+            if (!target) { return; }
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.stopImmediatePropagation) { e.stopImmediatePropagation(); }
+            if (target.kind === 'dashboard') { dash.mounted = false; showDashboard(false); return; }
+            openSurfaceInPanel(target.kind, target.formId, null);
+        }, true);
     }
 
     function fallbackToTab(withWizard) {
