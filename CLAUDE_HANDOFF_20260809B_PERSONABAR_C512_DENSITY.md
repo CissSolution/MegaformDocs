@@ -377,6 +377,25 @@ megaform-renderer -> megaform-rule-engine -> `js/bundles/megaform-builder.js` ->
 template-gallery-search** + 4 stylesheet, DUNG THU TU. Nap moi `megaform-builder-loader.js` thi
 `initBuilder` khong bao gio xuat hien. Moi surface giu URL cu lam **duong lui**.
 
+### 3e-4. F550c — MAT SACH CSS tren surface, va bai hoc QA (commit `9c1a880`)
+
+Owner mo Submissions tu panel -> **HTML tran**. QA truoc do bao XANH. Ca hai deu sai.
+
+- ⭐⭐⭐**DNN KHONG nap asset theo tung surface**: mot bo chung **33 stylesheet + ~48 script** cho
+  moi man admin. Cong cu lay su that: `tools/browser-qa/pb-page-asset-truth.mjs`. Font Awesome
+  **chi co tren CDN**.
+- ⭐⭐⭐**QA cu do sai thu**: "root ton tai + co con" khong chung minh co CSS; va **thu tu buoc che
+  loi** (bam Open dashboard truoc thi moi surface sau deu thua huong shell CSS). Harness moi
+  `tools/browser-qa/pb-surface-visual-qa.mjs`: **moi surface mot trang NGUOI** + khang dinh bang
+  `getComputedStyle` (link != `rgb(0,0,238)`, sidebar ~256px, shell sheet trong `document.styleSheets`,
+  khong ket o boot placeholder). **Va phai MO ANH RA XEM.**
+- ⭐⭐**Chan link phai o pha CAPTURE**: SPA goi `stopPropagation` tren link cua no nen handler
+  delegate (bubble) khong bao gio chay, trinh duyet van di theo href -> nap lai ca Persona Bar.
+- ⭐**Builder**: `js/builder/megaform-workflow-reactflow.js` phai TRUOC `js/bundles/megaform-builder.js`.
+- ⭐**Cache stamp** phai trung DNN, khong dung stamp rieng (tai lai ~3MB).
+
+Ket qua sau khi CAI LAI BANG GOI: **6/6 surface xanh**, anh o `qa-out/pb-final-visual/`.
+
 ⭐⭐⭐**BAY TU GAY — sua `.resx` bang XML DOM lam CHET CA PERSONA BAR.**
 `SetAttribute('space','...XML/1998/namespace','preserve')` ghi ra `d2p1:space="preserve"` +
 `xmlns:d2p1` = **XML khong hop le** (cam anh xa prefix vao namespace `xml`). Persona Bar doc resx
