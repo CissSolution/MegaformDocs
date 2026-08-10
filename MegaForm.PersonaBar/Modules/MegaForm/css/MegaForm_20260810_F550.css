@@ -601,3 +601,243 @@
     .mf-pb-dashhost .mf-sidebar { width: 56px; }
     .mf-pb-dashhost .mf-sidebar .mf-sb-label { display: none; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════════════════════
+   [PbPremiumChrome v20260810-F550e] Persona Bar ONLY. Owner: header more balanced, left pane
+   narrower as an icon-over-label rail with a premium finish, and the panel's close control in the
+   top-right corner instead of floating mid-header.
+
+   Everything here is scoped to #megaform-headerPanel / .mf-pb-dashhost, so the page-hosted
+   dashboard at /mfqa-admin renders exactly as before - that surface is the parallel path the owner
+   asked to keep, and it must not inherit any of this.
+   ══════════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* ── header ───────────────────────────────────────────────────────────────────────────────────
+   DNN ships .socialpanelheader at 103px tall with a 30px caption and 28px of top padding, which
+   at full width reads as a banner rather than a toolbar (measured before: 1359x103, caption 30px).
+   The id beats DNN's class on specificity, so none of this needs !important. */
+#megaform-headerPanel {
+    height: 60px;
+    min-height: 60px;
+    padding: 0 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    border-bottom: 1px solid #e7e7ea;
+    background: #fff;
+}
+#megaform-headerPanel .caption {
+    font-size: 17px;
+    line-height: 1.2;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #18181b;
+    margin: 0;
+}
+#megaform-headerPanel .actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+#megaform-headerPanel .actions .dnn-ui-common-button {
+    height: 32px;
+    line-height: 30px;
+    padding: 0 14px;
+    font-size: 12.5px;
+    border-radius: 8px;
+}
+
+/* ── the panel's close control, top-right ─────────────────────────────────────────────────────
+   It is DNN's own li#showsite ("View Site"), position:absolute inside the Persona Bar frame. It
+   is authored for the default ~500px panel, so widening the panel to full width stranded it at
+   x=921 - the middle of our header, which is the X the owner circled. Scoped to body.mf-pb-open,
+   set by the panel controller, so other DNN panels keep DNN's placement. */
+body.mf-pb-open #showsite {
+    left: auto;
+    right: 20px;
+    top: 20px;
+    width: 22px;
+    height: 22px;
+    line-height: 22px;
+    text-align: center;
+    border-radius: 6px;
+    opacity: 0.55;
+    transition: opacity 120ms ease, background-color 120ms ease;
+}
+body.mf-pb-open #showsite:hover {
+    opacity: 1;
+    background: #f4f4f5;
+}
+
+/* ── left rail: icon over label ───────────────────────────────────────────────────────────────
+   Was a 256px list of 30px rows with a 16px icon beside the text. Now an 88px rail: 22px icon,
+   label underneath, the whole item a tap target. */
+.mf-pb-dashhost .mf-sidebar {
+    width: 88px;
+    min-width: 88px;
+    background: #fff;
+    border-right: 1px solid #ececef;
+}
+.mf-pb-dashhost .mf-sb-hd {
+    padding: 14px 8px 10px;
+    display: flex;
+    justify-content: center;
+}
+.mf-pb-dashhost .mf-sb-logo { flex-direction: column; gap: 0; }
+.mf-pb-dashhost .mf-sb-logo-copy { display: none; }          /* the wordmark does not fit a rail */
+.mf-pb-dashhost .mf-sb-logo-icon {
+    width: 38px; height: 38px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 11px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(99, 102, 241, 0.35);
+}
+.mf-pb-dashhost .mf-sb-grp-lbl {
+    font-size: 9px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 10px 4px 4px;
+    color: #a1a1aa;
+}
+.mf-pb-dashhost .mf-sb-menu { padding: 0 6px; }
+.mf-pb-dashhost .mf-sb-lk {
+    position: relative;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    height: auto;
+    min-height: 60px;
+    padding: 9px 4px 8px;
+    margin-bottom: 3px;
+    border-radius: 10px;
+    text-align: center;
+    transition: background-color 120ms ease, color 120ms ease;
+}
+.mf-pb-dashhost .mf-sb-lk svg { width: 22px; height: 22px; flex: none; }
+.mf-pb-dashhost .mf-sb-lk-lbl {
+    font-size: 10.5px;
+    line-height: 1.25;
+    font-weight: 500;
+    max-width: 100%;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    word-break: break-word;
+}
+/* The count stops being a right-aligned column and becomes a pip on the icon. */
+.mf-pb-dashhost .mf-sb-lk-cnt {
+    position: absolute;
+    top: 5px;
+    right: 9px;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    border-radius: 9px;
+    background: #6366f1;
+    color: #fff;
+    font-size: 9.5px;
+    font-weight: 600;
+    line-height: 17px;
+    text-align: center;
+}
+.mf-pb-dashhost .mf-sb-lk:hover { background: #f4f4f5; }
+.mf-pb-dashhost .mf-sb-lk.is-active {
+    background: #eef2ff;
+    color: #4f46e5;
+    font-weight: 600;
+    box-shadow: inset 2px 0 0 #6366f1;
+}
+/* Footer collapses to the avatar; the name/role need a row they do not have. */
+.mf-pb-dashhost .mf-sb-ft { padding: 8px 6px 12px; }
+.mf-pb-dashhost .mf-sb-ub { flex-direction: column; gap: 4px; justify-content: center; }
+.mf-pb-dashhost .mf-sb-ui,
+.mf-pb-dashhost .mf-sb-ch { display: none; }
+.mf-pb-dashhost .mf-sb-av { margin: 0 auto; }
+
+/* ── [PbPremiumChrome v20260810-F550e-2] corrections from the first visual pass ────────────────
+   Screenshot review of qa-out/pb-chrome1 found four things the numbers did not: */
+
+/* 1. The close control did not move. DNN styles it as #personabar #showsite - two ids, (2,0,0) -
+      which outranks body.mf-pb-open #showsite (1,1,1). Match its id count and win on the class. */
+body.mf-pb-open #personabar #showsite {
+    left: auto;
+    right: 20px;
+    top: 18px;
+}
+
+/* 2. Labels were ellipsising after one line ("Trình tạo …"): the flex item never got a width to
+      wrap inside, so the clamp had nothing to clamp. 88px was also simply too tight for
+      "Quản lý biểu mẫu". */
+.mf-pb-dashhost .mf-sidebar { width: 102px; min-width: 102px; }
+.mf-pb-dashhost .mf-sb-lk { min-height: 66px; padding: 9px 6px 8px; }
+.mf-pb-dashhost .mf-sb-lk-lbl {
+    width: 100%;
+    white-space: normal;
+    text-overflow: clip;
+    hyphens: auto;
+}
+
+/* 3. The count pip sat on top of the icon. Move it to the corner of the tile, clear of the glyph. */
+.mf-pb-dashhost .mf-sb-lk-cnt { top: 4px; right: 4px; }
+
+/* 4. A grey band sat between the 60px header and the content: the body keeps DNN's top padding
+      and the host still carried a -10px margin from when the header was 103px tall. */
+#megaform-bodyPanel { padding-top: 0; }
+.mf-pb-dashhost { margin-top: 0; height: calc(100vh - 60px); border-top: 0; }
+
+/* ── [PbPremiumChrome v20260810-F550e-3] the two that a screenshot caught and the numbers explain ──
+
+   1. `right: 20px` on #showsite put it at x=38 - ON the rail, not in the panel's corner. Its
+      containing block is .personabar, which is position:fixed and 80px wide, so `right` measures
+      from x=80. Measured: box "38,18". It has to be positioned from the LEFT against the viewport.
+      Specificity also has to clear core's iPad variants
+      (#personabar.view-ipad.landscape .personabarnav>li#showsite:not(.full-width-mode) = 2 ids,
+      4 classes), so this selector carries three ids.
+      The <li> holds a <span>Site</span> that core hides with a 12px background glyph; font-size:0
+      keeps the word from appearing when the hit area grows.
+
+   2. The grey band under the header was DNN's own .socialpanelbody{margin-top:103px} - authored
+      for the 103px header we just replaced with 60px. Measured: margin "103px 0px 0px" against a
+      60px header = a 43px strip. Three more places hardcode the same 103/150 constant. */
+
+body.mf-pb-open #personabar-wrap #personabar .personabarnav > li#showsite {
+    left: calc(100vw - 34px);
+    right: auto;
+    top: 14px;
+    width: 24px;
+    height: 24px;
+    background-size: 12px 12px;
+    background-position: center;
+    font-size: 0;
+    border-radius: 6px;
+    opacity: 0.55;
+    transition: opacity 120ms ease, background-color 120ms ease;
+}
+body.mf-pb-open #personabar-wrap #personabar .personabarnav > li#showsite:hover {
+    opacity: 1;
+    background-color: #f4f4f5;
+}
+
+#megaform-bodyPanel { margin-top: 60px; }
+#megaform-headerPanel .caption { min-height: 0; }
+.mf-pb-body { height: calc(100vh - 60px); }
+.mf-pb-dashhost { height: calc(100vh - 60px); }
+
+/* [PbPremiumChrome v20260810-F550e-4] The X now lands in the corner, but the corner is where the
+   action buttons end - a 2x crop showed it sitting on top of "New form". Reserve the corner. */
+#megaform-headerPanel { padding-right: 52px; }
+
+/* [PbPremiumChrome v20260810-F550e-5] The stray X in the dashboard state sits at x=926, which is
+   15px inside the right edge of div.socialpanel-placeholder (80 + 861 = 941). The placeholder is
+   DNN's layout spacer sized for the DEFAULT panel; widenPanelForDashboard sets it at init, but by
+   the time the dashboard mounts DNN has re-rendered it back to 861. Pin it to the panel width so
+   nothing is drawn against a stale edge. */
+body.mf-pb-open .socialpanel-placeholder {
+    width: calc(100vw - 80px);
+}

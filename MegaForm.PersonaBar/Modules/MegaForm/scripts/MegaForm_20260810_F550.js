@@ -655,6 +655,34 @@ define(['jquery'], function ($) {
         }
     }
 
+    // [PbPremiumChrome v20260810-F550e] The panel's close control is DNN's own li#showsite, which
+    // is position:absolute and authored for the default ~500px panel - widening the panel to full
+    // width strands it at x=921, in the middle of our header. The CSS that moves it to the
+    // top-right corner is scoped to body.mf-pb-open so DNN's OTHER panels keep DNN's placement;
+    // this is what puts that class on and takes it off again. The Persona Bar keeps this module
+    // resident, so "the panel is open" has to be observed rather than assumed.
+    function trackPanelOpenState() {
+        var host = $panel.closest('.socialpanel')[0] || $panel[0];
+        if (!host) { return; }
+        var sync = function () {
+            document.body.classList.toggle('mf-pb-open', host.getClientRects().length > 0);
+        };
+        sync();
+        try {
+            new MutationObserver(sync).observe(host, { attributes: true, attributeFilter: ['class', 'style'] });
+            if (host.parentNode && host.parentNode.nodeType === 1) {
+                new MutationObserver(sync).observe(host.parentNode,
+                    { attributes: true, attributeFilter: ['class', 'style'], childList: true });
+            }
+            // And the body itself: the dashboard shell ASSIGNS document.body.className when it
+            // mounts, which wiped mf-pb-open and snapped DNN's X back to its stock x=921 - measured,
+            // the class was present in the list view and gone in the dashboard view. Re-asserting
+            // from the same sync is safe: classList.toggle(force) does not touch the attribute when
+            // the value is already correct, so this cannot loop.
+            new MutationObserver(sync).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+        } catch (e) { /* no observer: the class stays as init left it, which is the open state */ }
+    }
+
     function fitPanelWidth() {
         var host = $panel.closest('.socialpanel')[0] || $panel.find('.socialpanel')[0];
         if (!host) { return; }
@@ -1063,6 +1091,7 @@ define(['jquery'], function ($) {
         wireEvents();
         wireSorting();
         widenPanelForDashboard(true);   // full screen from the first paint, list included
+        trackPanelOpenState();
         watchDensity();
         $(window).on('resize.megaformwide', function () { widenPanelForDashboard(true); });
         $panel.find('.mf-pb-back').on('click', function (e) { e.preventDefault(); showList(); });
