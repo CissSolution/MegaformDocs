@@ -377,6 +377,29 @@ megaform-renderer -> megaform-rule-engine -> `js/bundles/megaform-builder.js` ->
 template-gallery-search** + 4 stylesheet, DUNG THU TU. Nap moi `megaform-builder-loader.js` thi
 `initBuilder` khong bao gio xuat hien. Moi surface giu URL cu lam **duong lui**.
 
+### 3e-5. F550d — quyen / cat le phai / icon, va 1 LOI SAN PHAM (commit `9fa2a12`)
+
+**User thuong KHONG vao duoc panel** — do bang tai khoan Registered that
+(`tools/browser-qa/pb-access-control-qa.mjs`, tao roi xoa): anonymous + registered deu KHONG thay
+thanh Persona Bar, khong co muc MegaForm, ca 3 endpoint panel tra **401**; admin 200.
+
+🟠**AN NINH (CHUA VA)**: `ModuleConfig/EmailSettings` tra **200 cho MOI user da dang nhap**
+(provider/host/port/from/username...). Gate `[DnnAuthorize]` **tron** = trai rule 3. Va phai quet
+ca 3 platform twin. `AiAssistant/DefaultConfig` va `Workflow/MyInbox` la **dung thiet ke**.
+
+⭐**Cat le phai**: `.mf-pb-dashhost{margin:-10px -10px 0}` + `.socialpanelbody{overflow-x:hidden}`
+cua DNN ⇒ host rong hon cha 20px bi CAT (body 1219 vs host 1239). Sua: `margin:-10px 0 0;width:100%`.
+
+⭐**Icon**: panel == trang that (6/6 muc deu `svg 16x16`, cung class).
+
+🔴⭐⭐⭐**HAI MODULE MEGAFORM TREN MOT TRANG = TRANG ADMIN CHET.** `/mfqa-admin` ket
+"Loading dashboard…": trang co 2 module (10599 + **10654 do nut "Add to current page" them**) ⇒
+**14 overlay, 34 id `mf-*` TRUNG** ⇒ app mount vao ban AN trong `form#Form` (display:none), ban
+`is-open` giu placeholder mai mai (bay da ghi o `dnn-host/index.ts:607`). Doi chung:
+**megaclean007 (khong dung toi) ALIVE=true, 7 overlay, 0 trung** vs 008 ALIVE=false. Go module
+10654 ⇒ 008 ALIVE=true, 109 dong. Canh bang `tools/browser-qa/page-dashboard-health.mjs` (bao cai
+NHIN THAY DUOC — `getElementById` tra ban an nen kiem DOM kieu cu bao "khoe" luc man hinh trang).
+
 ### 3e-4. F550c — MAT SACH CSS tren surface, va bai hoc QA (commit `9c1a880`)
 
 Owner mo Submissions tu panel -> **HTML tran**. QA truoc do bao XANH. Ca hai deu sai.
