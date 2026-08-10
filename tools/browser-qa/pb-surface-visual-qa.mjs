@@ -120,7 +120,9 @@ async function coldPanel(label) {
   await pb.locator('li#Content').first().click();
   await pb.waitForTimeout(600);
   await pb.locator('li#MegaForm').first().click();
-  await pb.waitForSelector('.mf-pb-table tbody tr', { timeout: 45000 });
+    // A CLEAN install has no forms at all, which is the headline scenario: the panel must work with
+  // no module and no data. Wait for the table OR the empty state, never only for rows.
+  await pb.waitForSelector('.mf-pb-table tbody tr, .mf-pb-empty:not(.mf-pb-hidden)', { timeout: 45000 });
   await page.mouse.move(900, 500);
   await page.waitForTimeout(1200);
   return { page, pb, net, consoleErrors };
