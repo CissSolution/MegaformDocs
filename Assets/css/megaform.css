@@ -1710,6 +1710,17 @@ body > div[style*="display:none"]:has(.megaform-module) {
 }
 .mf-option-group--cards.mf-option-group--cols {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    /* [CardsEqualHeight v20260810] The cards variant also carries --cols, and --cols sets
+       `align-items: start` (line ~1556). That is right for one-line radios and wrong here: each
+       card then shrinks to its own content, so a card with a badge and two lines of copy stands
+       taller than its neighbour. Measured on a real form: Starter 92px, Professional 108px,
+       Enterprise 92px - a 16px step in the same row. Grid's own default is stretch; this restores
+       it for cards only. */
+    align-items: stretch;
+    /* stretch alone only equalises WITHIN a row: with three cards, the one that wraps onto row two
+       sits alone and keeps its own height (measured: 108/108 on row one, 92 on row two). The mock
+       shows one uniform card size across the whole grid, so every row gets the same height. */
+    grid-auto-rows: 1fr;
 }
 .mf-option-group--cards .mf-option-item {
     position: relative;
@@ -1717,6 +1728,9 @@ body > div[style*="display:none"]:has(.megaform-module) {
     min-width: 0;
     margin: 0;
     color: var(--mf-color-text);
+    /* Stretching the grid row is only half of it - the label and the painted surface inside it
+       have to fill that row too, or the card keeps its old height inside a taller cell. */
+    height: 100%;
 }
 .mf-option-group--cards .mf-option-control {
     position: absolute;
@@ -1732,11 +1746,13 @@ body > div[style*="display:none"]:has(.megaform-module) {
     min-width: 0;
     width: 100%;
     min-height: 72px;
+    /* Fills the stretched row so every card in a row ends on the same line. */
+    height: 100%;
     border: 2px solid var(--mf-input-border-color, #e2e8f0);
-    border-radius: 8px;
+    border-radius: 10px;
     padding: 16px;
     background: var(--mf-input-bg, #fff);
-    box-shadow: none;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
     transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
 }
 .mf-option-group--cards .mf-option-icon {

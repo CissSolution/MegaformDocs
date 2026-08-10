@@ -104,6 +104,7 @@ define(['jquery'], function ($) {
             state.hasHostPage = !!data.hasHostPage;
             dash.portalId = Number(data.portalId) || 0;
             dash.dashboardUrl = data.dashboardUrl || '';
+            dash.pageUrl = data.pageUrl || '';
             dash.newFormUrl = data.newFormUrl || '';
             dash.summary = data;
 
@@ -129,6 +130,30 @@ define(['jquery'], function ($) {
     // Loading order matters: megaform-dashboard.js reads window.__MF_PLATFORM__ as it parses
     // (that is why FormView.ascx emits it inline instead of via ClientResourceManager), so the
     // config is published BEFORE the <script> tag is appended.
+    // The page the admin is standing on behind the panel - a real site URL, unlike this frame's.
+    function topPagePath() {
+        try {
+            var t = window.top;
+            if (t && t.location && t.location.pathname && t.location.pathname.indexOf('/Dnn.PersonaBar/') < 0) {
+                return t.location.pathname;
+            }
+        } catch (e) { /* different origin: fall through */ }
+        return '/';
+    }
+
+    // Any href still pointing at the Persona Bar shell is wrong by construction - the shell is not
+    // a site page. Rewrite it onto the site and open it there.
+    function repointShellUrl(href) {
+        var h = String(href || '');
+        if (h.indexOf('/Dnn.PersonaBar/index.html') < 0) { return null; }
+        var q = h.indexOf('?') >= 0 ? h.slice(h.indexOf('?')) : '';
+        var hash = '';
+        var hi = q.indexOf('#');
+        if (hi >= 0) { hash = q.slice(hi); q = q.slice(0, hi); }
+        try { return new URL(topPagePath() + q + hash, window.top.location.origin).href; }
+        catch (e) { return topPagePath() + q + hash; }
+    }
+
     function publishPlatformConfig() {
         var cfg = {
             platform: 'dnn',
@@ -142,7 +167,18 @@ define(['jquery'], function ($) {
             moduleId: 0,
             instanceId: 0,
             tabId: 0,
-            returnUrl: ''
+            // [PbRealBaseUrl v20260810-F550f] The SPA composes its links from
+            // `cfg.dashboardUrl || cfg.returnUrl || window.location.pathname`. Inside the panel
+            // that last fallback is the Persona Bar SHELL, which is how "View live form" produced
+            // /DesktopModules/admin/Dnn.PersonaBar/index.html?formid=1 - a URL that cannot exist.
+            // Give it a real page of the site instead: the module page when the portal has one,
+            // otherwise the page the admin is standing on behind the panel.
+            dashboardUrl: dash.dashboardUrl || dash.pageUrl || topPagePath(),
+            // returnUrl is the base every public-form link is built on, so it must be a page that
+            // HAS a MegaForm module - ?formid=N renders nothing anywhere else. pageUrl comes from
+            // the server's own host-page resolver; the page the admin happens to be standing on is
+            // only the last resort.
+            returnUrl: dash.pageUrl || topPagePath()
         };
         try { window.__MF_PLATFORM__ = $.extend({}, window.__MF_PLATFORM__ || {}, cfg); }
         catch (e) { window.__MF_PLATFORM__ = cfg; }
@@ -587,8 +623,21 @@ define(['jquery'], function ($) {
                 node = node.parentNode;
             }
             if (!a) { return; }
-            var target = surfaceFromHref(a.getAttribute('href'));
-            if (!target) { return; }
+            var raw = a.getAttribute('href');
+            var target = surfaceFromHref(raw);
+            if (!target) {
+                // Not one of our surfaces. If it still points at the Persona Bar shell it is a
+                // broken link the SPA composed from this frame's pathname - "View live form" was
+                // landing on /Dnn.PersonaBar/index.html?formid=1. Send it to the site instead, in
+                // a new tab, so the admin does not lose the panel.
+                var fixed = repointShellUrl(raw);
+                if (fixed) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    try { window.top.open(fixed, '_blank'); } catch (err) { window.top.location.href = fixed; }
+                }
+                return;
+            }
             e.preventDefault();
             e.stopPropagation();
             if (e.stopImmediatePropagation) { e.stopImmediatePropagation(); }

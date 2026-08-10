@@ -84,7 +84,14 @@ namespace MegaForm.PersonaBar.Services
                     // allowed to nominate one. Nothing else about the module context is sent -
                     // measured, a tabid of 0 makes DNN 404 the call and a ModuleId/TabId header
                     // pair of 0 makes it 400 (tools/browser-qa/pb-module-context-probe.mjs).
-                    portalId = PortalId
+                    portalId = PortalId,
+                    // [PbRealBaseUrl v20260810-F550f] The PLAIN page url of a page that actually
+                    // carries a MegaForm module. The hosted SPA composes its public-form links as
+                    // <base>?formid=N, and `?formid=` only renders on such a page - so neither
+                    // dashboardUrl (which carries ?ctl=FormList) nor "whatever page the admin is
+                    // standing on" will do. Null when the portal has no module anywhere, which the
+                    // panel then falls back from.
+                    pageUrl = MegaFormHostPageResolver.BuildPageUrl(host)
                 });
             }
             catch (Exception ex)
