@@ -13,7 +13,8 @@
 define(['jquery'], function ($) {
 
     var utility, $panel;
-    var state = { pageIndex: 0, pageSize: 20, search: '', status: '', hasMore: false, hasHostPage: false };
+    var state = { pageIndex: 0, pageSize: 20, search: '', status: '', hasMore: false, hasHostPage: false,
+                  sortBy: null, sortDir: 'desc' };
     var searchTimer = null;
 
     function t(key, fallback) {
@@ -104,18 +105,80 @@ define(['jquery'], function ($) {
         }
     }
 
+    // ── panel-width density ──────────────────────────────────────────────────
+    // The Persona Bar host sets the panel width (about 860 desktop, 700 tablet), so a viewport
+    // media query answers the wrong question - which is how a 720px table ended up scrolling
+    // 22px inside a 698px wrapper. Measure the wrapper.
+    // DNN gives a panel 500px in its view-ipad mode, which a 390px phone cannot hold next to the
+    // 80px rail. Shrink our own panel to what is actually available; never widen it, so a desktop
+    // panel keeps exactly the width DNN chose.
+    function fitPanelWidth() {
+        var host = $panel.closest('.socialpanel')[0] || $panel.find('.socialpanel')[0];
+        if (!host) { return; }
+        var available = document.documentElement.clientWidth || 0;
+        var rail = document.getElementById('personabar');
+        var railWidth = rail ? rail.offsetWidth : 80;
+        if (!available) { return; }
+        var room = Math.max(280, available - railWidth);
+        // The header is position:absolute at 500px and the placeholder DNN puts next to the panel
+        // is 501px, so shrinking the panel alone still left the document 580px wide on a phone.
+        var header = $panel.find('.socialpanelheader')[0];
+        var placeholder = host.parentNode ? host.parentNode.querySelector('.socialpanel-placeholder') : null;
+
+        if (host.offsetWidth > room) {
+            host.style.width = room + 'px';
+            host.style.right = '0px';
+            host.classList.add('mf-pb-fitted');
+            if (header) { header.style.width = 'auto'; header.style.left = '0px'; header.style.right = '0px'; }
+            if (placeholder) { placeholder.style.width = room + 'px'; }
+        } else if (host.classList.contains('mf-pb-fitted') && room >= 500) {
+            host.style.width = '';
+            host.style.right = '';
+            host.classList.remove('mf-pb-fitted');
+            if (header) { header.style.width = ''; header.style.left = ''; header.style.right = ''; }
+            if (placeholder) { placeholder.style.width = ''; }
+        }
+    }
+
+    function applyDensity() {
+        fitPanelWidth();
+        var wrap = $panel.find('.mf-pb-table-wrap')[0];
+        var body = $panel.find('#megaform-bodyPanel')[0] || $panel.find('.mf-pb-body')[0];
+        if (!wrap || !body) { return; }
+        var w = wrap.clientWidth || 0;
+        var name = w >= 780 ? 'mf-pb-w-lg' : (w >= 620 ? 'mf-pb-w-md' : 'mf-pb-w-sm');
+        if (body.getAttribute('data-mf-w') === name) { return; }
+        body.setAttribute('data-mf-w', name);
+        body.className = body.className.replace(/\s*mf-pb-w-(lg|md|sm)/g, '') + ' ' + name;
+    }
+
+    function watchDensity() {
+        applyDensity();
+        var wrap = $panel.find('.mf-pb-table-wrap')[0];
+        if (wrap && typeof ResizeObserver === 'function') {
+            new ResizeObserver(applyDensity).observe(wrap);
+        }
+        $(window).on('resize.megaform', applyDensity);
+    }
+
     function loadForms() {
         service('GetForms', {
             searchTerm: state.search,
             status: state.status,
             pageIndex: state.pageIndex,
-            pageSize: state.pageSize
+            pageSize: state.pageSize,
+            sortBy: state.sortBy || '',
+            sortDir: state.sortBy ? state.sortDir : ''
         }, function (data) {
             clearAlert();
             state.hasMore = !!data.hasMore;
+            // Paint the arrows from what the server echoed, not from what we asked for: if a
+            // sort was rejected, the header must say so by going back to neutral.
+            paintSortHeaders(data.sortBy || null, data.sortDir || 'desc');
             renderRows(data.items || []);
             renderPager(data.items ? data.items.length : 0);
             $panel.find('.mf-pb-table-wrap').scrollTop(0);
+            applyDensity();   // a scrollbar appearing changes the wrapper's clientWidth
         });
     }
 
@@ -133,6 +196,16 @@ define(['jquery'], function ($) {
                 .addClass('mf-pb-badge-' + String(item.status).toLowerCase())
                 .text(item.status).appendTo($title);
             $('<span class="mf-pb-formid" />').text('#' + item.formId).appendTo($title);
+
+            // The meta line carries whatever the current width has dropped from the row. It is
+            // always rendered and CSS decides whether it shows, so no re-render is needed when
+            // the panel is resized.
+            var meta = [];
+            meta.push(item.fields + ' ' + t('MetaFields', 'fields'));
+            meta.push(item.submissions + ' ' + t('MetaSubmissions', 'subs'));
+            var when = formatDate(item.modifiedUtc);
+            if (when) { meta.push(when); }
+            $('<span class="mf-pb-meta" />').text(meta.join(' \u00b7 ')).appendTo($title);
             $title.appendTo($tr);
 
             $('<td class="mf-pb-num" />').text(item.fields).appendTo($tr);
@@ -143,7 +216,9 @@ define(['jquery'], function ($) {
             appendAction($actions, t('Edit', 'Edit'), item.builderUrl);
             appendAction($actions, t('Submissions', 'Submissions'), item.submissionsUrl);
             $('<a href="#" class="mf-pb-action mf-pb-addto" />')
-                .text(t('AddToPage', 'Add to page'))
+                .text(currentTabId() > 0
+                    ? t('AddToCurrentPage', 'Add to current page')
+                    : t('AddToPage', 'Add to page'))
                 .on('click', function (e) { e.preventDefault(); openDropPicker(item, $(this)); })
                 .appendTo($actions);
             $actions.appendTo($tr);
@@ -163,6 +238,34 @@ define(['jquery'], function ($) {
     // covers the page while it is open, and DNN's drag-to-pane lives in the Edit Bar. Picking
     // the page and letting the server place the module reaches the same end state.
     var pageCache = null;
+
+    /// The page behind the panel. DNN publishes it on the host page as sf_tabId (the same value
+    /// the services framework sends), so no guessing and no extra request. Returns 0 when it
+    /// cannot be read - callers must then keep the old "pick a page" behaviour.
+    function currentTabId() {
+        try {
+            var top = window.top;
+            if (top && top.dnn && typeof top.dnn.getVar === 'function') {
+                var fromVar = parseInt(top.dnn.getVar('sf_tabId'), 10);
+                if (fromVar > 0) { return fromVar; }
+            }
+            if (top && top.location && top.location.search) {
+                var m = /[?&]tabid=(\d+)/i.exec(top.location.search);
+                if (m) { return parseInt(m[1], 10) || 0; }
+            }
+        } catch (e) { /* different origin or no host page: fall back to the picker */ }
+        return 0;
+    }
+
+    function currentPageFallback(tabId) {
+        var name = t('CurrentPage', 'Current page');
+        var path = '';
+        try {
+            name = (window.top.document.title || name).replace(/\s*\|.*$/, '').trim() || name;
+            path = window.top.location.pathname || '';
+        } catch (e) { /* keep the generic label */ }
+        return { tabId: tabId, name: name, path: path };
+    }
 
     function closeDropPicker() {
         $(document.body).find('.mf-pb-drop').remove();
@@ -191,7 +294,10 @@ define(['jquery'], function ($) {
             '  </div>' +
             '</div>');
 
-        $box.find('h4').text(t('AddToPageTitle', 'Add this form to a page'));
+        var here = currentTabId();
+        $box.find('h4').text(here > 0
+            ? t('AddToCurrentPageTitle', 'Add this form to the page you are on')
+            : t('AddToPageTitle', 'Add this form to a page'));
         $box.find('p').text(item.title);
         $box.find('.mf-pb-drop-label').eq(0).text(t('TargetPage', 'Target page'));
         $box.find('.mf-pb-drop-label').eq(1).text(t('TargetPane', 'Target pane'));
@@ -222,9 +328,28 @@ define(['jquery'], function ($) {
                 positionDropPicker($box, $anchor);
                 return;
             }
-            list.forEach(function (p) {
+            // The current page goes first and starts selected, so "Add to current page" is one
+            // click. It is still only a default: every other page is right underneath it.
+            var ordered = list.slice();
+            if (here > 0) {
+                var atIndex = -1;
+                for (var i = 0; i < ordered.length; i++) {
+                    if (Number(ordered[i].tabId) === here) { atIndex = i; break; }
+                }
+                // Not in the list means the page list was capped or filtered - synthesise the
+                // entry rather than silently dropping the current page.
+                var currentEntry = atIndex >= 0 ? ordered.splice(atIndex, 1)[0] : currentPageFallback(here);
+                ordered.unshift(currentEntry);
+            }
+
+            ordered.forEach(function (p) {
+                var isHere = here > 0 && Number(p.tabId) === here;
                 var $b = $('<button type="button" />');
+                if (isHere) { $b.addClass('is-current'); }
                 $('<span />').text(p.name).appendTo($b);
+                if (isHere) {
+                    $('<span class="mf-pb-here" />').text(t('CurrentPageBadge', 'you are here')).appendTo($b);
+                }
                 if (p.path && p.path !== p.name) $('<span class="mf-pb-pagepath" />').text(p.path).appendTo($b);
                 $b.on('click', function () {
                     selectPage(p, $b);
@@ -314,6 +439,34 @@ define(['jquery'], function ($) {
         $panel.find('.mf-pb-next').prop('disabled', !state.hasMore);
     }
 
+    // ── sorting ──────────────────────────────────────────────────────────────
+    // Server-side, because the panel holds 20 rows of a portal that has hundreds: sorting what
+    // is on screen would reorder one page and call the job done.
+    function paintSortHeaders(sortBy, sortDir) {
+        $panel.find('.mf-pb-table th[data-mf-sort]').each(function () {
+            var th = $(this);
+            var key = th.attr('data-mf-sort');
+            var on = sortBy && key === sortBy;
+            th.attr('aria-sort', on ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none');
+        });
+    }
+
+    function wireSorting() {
+        $panel.find('.mf-pb-table th[data-mf-sort] .mf-pb-sort').on('click', function () {
+            var key = $(this).closest('th').attr('data-mf-sort');
+            if (!key) { return; }
+            if (state.sortBy === key) {
+                state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                state.sortBy = key;
+                // Text reads best A->Z; a date or a count reads best largest/newest first.
+                state.sortDir = key === 'title' ? 'asc' : 'desc';
+            }
+            state.pageIndex = 0;     // a new order means page 1, or the rows make no sense
+            loadForms();
+        });
+    }
+
     function wireEvents() {
         $panel.find('.mf-pb-search').on('input', function () {
             var value = $(this).val();
@@ -352,6 +505,8 @@ define(['jquery'], function ($) {
 
         localise();
         wireEvents();
+        wireSorting();
+        watchDensity();
         loadSummary();
         loadForms();
 

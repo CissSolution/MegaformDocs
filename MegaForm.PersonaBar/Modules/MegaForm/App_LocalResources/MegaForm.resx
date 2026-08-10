@@ -195,11 +195,29 @@
   <data name="AddToPageTitle.Text" xml:space="preserve">
     <value>Add this form to a page</value>
   </data>
+  <data name="AddToCurrentPage.Text" xml:space="preserve">
+    <value>Add to current page</value>
+  </data>
+  <data name="AddToCurrentPageTitle.Text" xml:space="preserve">
+    <value>Add this form to the page you are on</value>
+  </data>
+  <data name="CurrentPage.Text" xml:space="preserve">
+    <value>Current page</value>
+  </data>
+  <data name="CurrentPageBadge.Text" xml:space="preserve">
+    <value>you are here</value>
+  </data>
   <data name="SearchPages.Text" xml:space="preserve">
     <value>Search pages</value>
   </data>
   <data name="NoPages.Text" xml:space="preserve">
     <value>No pages match.</value>
+  </data>
+  <data name="TargetPage.Text" xml:space="preserve">
+    <value>Target page</value>
+  </data>
+  <data name="TargetPane.Text" xml:space="preserve">
+    <value>Target pane</value>
   </data>
   <data name="Cancel.Text" xml:space="preserve">
     <value>Cancel</value>
@@ -215,5 +233,8 @@
   </data>
   <data name="AddFailed.Text" xml:space="preserve">
     <value>MegaForm could not add the form to that page.</value>
+  </data>
+  <data name="NotAllowed.Text" xml:space="preserve">
+    <value>You are not allowed to use MegaForm here. Sign in as an administrator and try again.</value>
   </data>
 </root>

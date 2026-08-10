@@ -354,7 +354,10 @@
     outline: 2px solid var(--mf-pb-primary);
     outline-offset: 2px;
 }
-.mf-pb-table { min-width: 720px; }
+/* 🔴 `min-width: 720px` was the 22px horizontal scroll: the tablet panel is 698px wide, and no
+   viewport media query fires at a 1024px browser because the PANEL, not the browser, is narrow.
+   The table now fits whatever the wrapper gives it and drops columns by panel width instead. */
+.mf-pb-table { min-width: 0; table-layout: auto; }
 .mf-pb-table th,
 .mf-pb-table td { padding: 9px 10px; }
 .mf-pb-table th {
@@ -414,7 +417,7 @@
     .mf-pb-toolbar { flex-wrap: wrap; }
     .mf-pb-toolbar .mf-pb-search { flex-basis: 100%; }
     .mf-pb-toolbar .mf-pb-status { flex: 1 1 auto; }
-    .mf-pb-table { min-width: 470px; }
+    /* min-width removed: the density classes size the table by the PANEL, not the browser. */
     .mf-pb-table .mf-pb-num,
     .mf-pb-table .mf-pb-modified { display: none; }
     .mf-pb-table .mf-pb-actions-col { width: 190px; }
@@ -426,6 +429,118 @@
     .mf-pb-body { min-height: 300px; padding-bottom: 8px; }
     .mf-pb-stats li { min-height: 56px; padding: 8px 10px 8px 13px; }
     .mf-pb-stat-value { font-size: 18px; }
-    .mf-pb-table { min-width: 420px; }
+    /* min-width removed: it was the 420px table inside a 308px panel on a phone. */
     .mf-pb-pager .dnn-ui-common-button { min-width: 74px; }
 }
+
+/* ── panel-width density (set by ResizeObserver in scripts/MegaForm_*.js) ─────────────────
+   mf-pb-w-lg  wrapper >= 780px : every column
+   mf-pb-w-md  wrapper >= 620px : Modified moves into the title cell
+   mf-pb-w-sm  wrapper <  620px : Fields/Submissions/Modified all move into the title cell
+   Nothing here scales or zooms: hit targets and popup geometry must stay honest. */
+
+.mf-pb-meta {
+    display: none;
+    margin-top: 2px;
+    color: var(--mf-pb-muted);
+    font-size: 11px;
+    line-height: 1.35;
+    white-space: nowrap;
+}
+
+.mf-pb-w-md .mf-pb-table .mf-pb-modified,
+.mf-pb-w-md .mf-pb-table .mf-pb-modified-col,
+.mf-pb-w-sm .mf-pb-table .mf-pb-modified,
+.mf-pb-w-sm .mf-pb-table .mf-pb-modified-col,
+.mf-pb-w-sm .mf-pb-table .mf-pb-num,
+.mf-pb-w-sm .mf-pb-table .mf-pb-fields-col,
+.mf-pb-w-sm .mf-pb-table .mf-pb-subs-col { display: none; }
+
+.mf-pb-w-md .mf-pb-meta,
+.mf-pb-w-sm .mf-pb-meta { display: block; }
+
+/* Denser rows once a column has gone: the point is a panel that feels compact, not merely one
+   that has stopped overflowing. */
+.mf-pb-w-md .mf-pb-table th,
+.mf-pb-w-md .mf-pb-table td { padding: 7px 9px; }
+.mf-pb-w-sm .mf-pb-table th,
+.mf-pb-w-sm .mf-pb-table td { padding: 6px 8px; }
+.mf-pb-w-sm .mf-pb-table { font-size: 12px; }
+.mf-pb-w-sm .mf-pb-table .mf-pb-actions-col { width: auto; }
+.mf-pb-w-sm .mf-pb-action { margin-right: 8px; }
+.mf-pb-w-sm .mf-pb-formid { display: none; }
+.mf-pb-w-sm .mf-pb-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+/* An action row is a tap target before it is a link: 40px is the floor on touch widths. */
+.mf-pb-w-sm .mf-pb-action,
+.mf-pb-w-sm .mf-pb-table td { min-height: 0; }
+.mf-pb-w-sm .mf-pb-table tbody td { padding-top: 9px; padding-bottom: 9px; }
+
+/* ── phone ───────────────────────────────────────────────────────────────────────────────
+   Actions stop being a single nowrap line here: on a 310px panel they must wrap, and each one
+   has to be a tap target (>= 40px) rather than a 13px link in a row of three. */
+.mf-pb-w-sm .mf-pb-table .mf-pb-actions-col { white-space: normal; width: 128px; }
+.mf-pb-w-sm .mf-pb-action {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    margin: 0 10px 0 0;
+    padding: 0;
+}
+.mf-pb-w-sm .mf-pb-table tbody td { padding-top: 6px; padding-bottom: 6px; vertical-align: top; }
+.mf-pb-w-sm .mf-pb-formtitle { display: block; }
+.mf-pb-w-sm .mf-pb-badge { margin-left: 0; }
+
+/* A fitted panel is one this script narrowed to the space the host actually left it. */
+/* The fitted width is the OUTER width: DNN's panel carries a 1px border, which was the last
+   pixel of document overflow on the phone (391 in a 390 viewport). */
+.socialpanel.mf-pb-fitted { min-width: 0; box-sizing: border-box; }
+.socialpanel.mf-pb-fitted #megaform-headerPanel .caption { max-width: calc(100% - 210px); }
+
+/* The meta line was nowrap - on a 308px panel that alone demanded 180px and kept the table at
+   420px. Everything in a phone-width row wraps. */
+.mf-pb-w-sm .mf-pb-meta { white-space: normal; }
+.mf-pb-w-sm .mf-pb-table .mf-pb-actions-col { width: 96px; }
+.mf-pb-w-sm .mf-pb-title { word-break: break-word; }
+.mf-pb-w-sm .mf-pb-formtitle { overflow-wrap: anywhere; }
+
+/* A caption clipped to "M..." is worse than no caption: the rail already says which panel this
+   is, and the two buttons are what the header is for on a phone. */
+.socialpanel.mf-pb-fitted #megaform-headerPanel .caption { display: none; }
+.socialpanel.mf-pb-fitted #megaform-headerPanel .actions { float: none; text-align: left; }
+/* Two actions per line instead of three stacked - the row was 133px tall. */
+.mf-pb-w-sm .mf-pb-table .mf-pb-actions-col { width: 124px; }
+
+/* ── sortable headers ────────────────────────────────────────────────────────────────────
+   The arrow is drawn from aria-sort, which the panel sets from what the SERVER echoed back -
+   so the arrow can never disagree with the order on screen. */
+.mf-pb-table th[data-mf-sort] { padding: 0; }
+.mf-pb-sort {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    height: 100%;
+    padding: 9px 10px;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-weight: 600;
+    text-align: inherit;
+    cursor: pointer;
+}
+.mf-pb-num .mf-pb-sort { justify-content: flex-end; }
+.mf-pb-sort:hover { color: var(--mf-pb-primary); }
+.mf-pb-sort:focus-visible { outline: 2px solid var(--mf-pb-primary); outline-offset: -2px; }
+.mf-pb-sort::after {
+    content: "\2195";                 /* both arrows: sortable but not sorted */
+    opacity: .35;
+    font-size: 11px;
+}
+.mf-pb-table th[aria-sort="ascending"] .mf-pb-sort::after { content: "\2191"; opacity: 1; }
+.mf-pb-table th[aria-sort="descending"] .mf-pb-sort::after { content: "\2193"; opacity: 1; }
+.mf-pb-table th[aria-sort="ascending"] .mf-pb-sort,
+.mf-pb-table th[aria-sort="descending"] .mf-pb-sort { color: var(--mf-pb-primary); }
+.mf-pb-w-md .mf-pb-sort,
+.mf-pb-w-sm .mf-pb-sort { padding: 7px 9px; }

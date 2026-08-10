@@ -42,7 +42,7 @@
       href: ai-prompts-form-design.md
 - name: Using MegaForm on DNN
   items:
-    - name: Creating a Form from the Persona Bar
+    - name: Managing MegaForm from the Persona Bar
       href: dnn-persona-bar.md
 - name: Programming
   items:

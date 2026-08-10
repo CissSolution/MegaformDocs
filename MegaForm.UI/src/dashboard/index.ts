@@ -75,6 +75,7 @@ function makeAiCreateBtn(): HTMLButtonElement {
   btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px;font-weight:600;">' + glyph + T('dash.create_with_ai', 'Create with AI') + '</span>';
   btn.style.cssText = 'background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:0;cursor:pointer;' + (trial ? 'opacity:.78;' : '');
   btn.title = trial ? T('trial.ai_msg', 'AI form building is a premium feature. Upgrade to use it.') : T('dash.ai_create_hint', 'Describe a form in plain language — AI builds it for you');
+  btn.setAttribute('aria-label', T('dash.create_with_ai', 'Create with AI'));
   btn.addEventListener('click', () => {
     if (isTrialMode()) { showTrialUpgrade({ title: T('trial.ai_title', 'AI is a premium feature'), message: T('trial.ai_msg', 'AI form building is a premium feature. Upgrade to use it.') }); return; }
     openAiFormCreator();
@@ -684,7 +685,7 @@ async function openGoogleSheetsSettings(targetBody?: HTMLElement): Promise<void>
 // uses. This pane is the GLOBAL management surface (list/add/edit/delete/test);
 // the per-form mapping (which upload fields go to which connection/folder) stays
 // in Form Builder → Settings → Cloud Storage.
-const CS_PROVIDERS = ['GoogleDrive', 'AmazonS3', 'AzureBlob'];
+const CS_PROVIDERS = ['GoogleDrive', 'AmazonS3'];  // [AzureBlobRemoved v20260726] Azure Blob dropped (Azure.Core net472 crash risk)
 const CS_SECRET_MASK = '***';
 const CS_NAME_RE = /^[A-Za-z][A-Za-z0-9_-]{0,63}$/;
 
@@ -1541,9 +1542,25 @@ async function openDatabaseSettings(targetBody?: HTMLElement) {
                 const provSel = document.getElementById('db-conn-provider') as HTMLSelectElement;
                 const opt = Array.from(provSel.options).find(o => o.value.toLowerCase() === prov.toLowerCase());
                 if (opt) provSel.value = opt.value;
-                (document.getElementById('db-conn-cs') as HTMLTextAreaElement).value = '';
-                (document.getElementById('db-conn-cs') as HTMLTextAreaElement).placeholder = 'Paste the full connection string again to update "' + name + '" (secrets are never echoed back).';
-                (document.getElementById('db-conn-cs') as HTMLTextAreaElement).focus();
+                // [ConnEditPrefill v20260726] Edit used to CLEAR the box and demand the whole
+                // string be retyped from memory — so fixing a typo in the server name meant
+                // rebuilding the connection blind. Prefill the string the row already shows: only
+                // password=/pwd= comes back masked (server-side MaskSecrets), and the server puts
+                // the stored secret back when a save still carries the *** mask, so an admin can
+                // edit the host/database without knowing the password.
+                const csBox = document.getElementById('db-conn-cs') as HTMLTextAreaElement;
+                csBox.value = cs;
+                const masked = /(password|pwd)\s*=\s*\*{3,}/i.test(cs);
+                csBox.placeholder = 'Paste the full connection string for "' + name + '".';
+                const hint = document.getElementById('db-conn-cs-hint');
+                if (hint) {
+                  hint.textContent = masked
+                    ? 'Editing "' + name + '" — the password stays hidden as ***. Leave it as-is to keep the saved password, or type a new one to replace it.'
+                    : 'Editing "' + name + '" — change what you need and press Save Connection.';
+                  hint.style.display = '';
+                }
+                csBox.focus();
+                csBox.setSelectionRange(csBox.value.length, csBox.value.length);
               };
               const delBtn = el('button','mf-btn mf-btn-outline mf-btn-sm') as HTMLButtonElement; delBtn.type='button';
               delBtn.innerHTML = ic('trash',12) + ' Delete';
@@ -1576,6 +1593,12 @@ async function openDatabaseSettings(targetBody?: HTMLElement) {
         field('Provider', addProv, 'Database engine of this connection.')
       ));
       c.appendChild(field('Connection String', addCs, 'Stored server-side only; passwords are never shown back to the browser.'));
+      // [ConnEditPrefill v20260726] Inline status line the Edit button writes into, so it is clear
+      // WHICH connection the form is editing and what happens to the masked password.
+      const csHint = div('mf-conn-cs-hint');
+      csHint.id = 'db-conn-cs-hint';
+      csHint.style.cssText = 'display:none;font-size:12px;color:#b45309;background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:6px 10px;margin:-6px 0 10px;';
+      c.appendChild(csHint);
 
       const addStatus = div('mf-test-result');
       const addTestBtn = el('button','mf-btn mf-btn-outline mf-btn-sm') as HTMLButtonElement; addTestBtn.type='button';
@@ -1609,6 +1632,8 @@ async function openDatabaseSettings(targetBody?: HTMLElement) {
             toast(res.message || 'Connection saved', 'success');
             addName.value = ''; addCs.value = '';
             addStatus.className='mf-test-result'; addStatus.textContent='';
+            const hint = document.getElementById('db-conn-cs-hint');
+            if (hint) { hint.textContent = ''; hint.style.display = 'none'; }
             renderConnList();
           } else {
             const m = (res && res.message) || (res && res.error) || ('HTTP ' + r.status);
@@ -2795,12 +2820,18 @@ function buildHeader(sb: HTMLElement, counts?: DashboardData['counts']): HTMLEle
   const ac = div('mf-hd-ac');
   const hostCfg = getPlatformHostConfig();
   const closeHref = String(hostCfg.returnUrl || '/').trim() || '/';
-  const cb = el('a','mf-btn mf-btn-ghost mf-btn-sm');
+  const cb = el('a','mf-btn mf-btn-ghost mf-btn-sm mf-hd-close');
   cb.href = closeHref;
+  cb.title = T('dash.close','Close');
+  cb.setAttribute('aria-label', T('dash.close','Close'));
   cb.innerHTML = ic('close',14)+' '+T('dash.close','Close');
-  const rb = el('button','mf-btn mf-btn-outline mf-btn-sm'); rb.type='button';
+  const rb = el('button','mf-btn mf-btn-outline mf-btn-sm mf-hd-refresh'); rb.type='button';
+  rb.title = T('dash.refresh','Refresh');
+  rb.setAttribute('aria-label', T('dash.refresh','Refresh'));
   rb.innerHTML=ic('refresh',14)+' '+T('dash.refresh','Refresh'); rb.onclick=()=>location.reload();
-  const nb = el('a','mf-btn mf-btn-primary mf-btn-sm');
+  const nb = el('a','mf-btn mf-btn-primary mf-btn-sm mf-hd-new');
+  nb.title = T('dash.new_form','New Form');
+  nb.setAttribute('aria-label', T('dash.new_form','New Form'));
   nb.innerHTML=ic('plus',14)+' '+T('dash.new_form','New Form');
   // [WizardEntry 2026-06-27] Open the 5-step creation wizard. NO href → a hrefless anchor
   // never navigates (and Blazor enhanced-nav skips it), so the click reliably opens the
@@ -2811,7 +2842,9 @@ function buildHeader(sb: HTMLElement, counts?: DashboardData['counts']): HTMLEle
   // 3 cards Oqtane Index.razor renders on its "Business Starters" panel.
   // Calls window.MFStarter.launch (DNN shim emitted by dnn-host/index.ts)
   // which POSTs Starter/Launch and redirects.
-  const sb2 = el('button','mf-btn mf-btn-outline mf-btn-sm'); sb2.type='button';
+  const sb2 = el('button','mf-btn mf-btn-outline mf-btn-sm mf-hd-starters'); sb2.type='button';
+  sb2.title = T('dash.business_starters', 'Business Starters');
+  sb2.setAttribute('aria-label', T('dash.business_starters', 'Business Starters'));
   sb2.innerHTML = ic('zap',14) + ' ' + T('dash.business_starters', 'Business Starters');
   sb2.onclick = () => openBusinessStartersModal();
   const aib1 = makeAiCreateBtn();
@@ -3934,7 +3967,9 @@ function openAppAdminPanel(group: DashboardAppGroup): void {
     const tr = el('tr', 'mf-tr');
     const name = el('td', 'mf-td-n mf-td-name');
     const a = el('a', 'mf-form-name-link', f.title || `Form #${f.formId}`) as HTMLAnchorElement;
-    a.href = getDashboardShellRoute('builder', f.formId);
+    // [FormNameToSubmissions v20260726] Clicking a form NAME drills into that form's SUBMISSIONS
+    // (its data) — the builder stays one click away via the pencil icon in Actions. Owner request.
+    a.href = getDashboardShellRoute('submissions', f.formId);
     const id = span('');
     id.style.cssText = 'display:block;margin-top:2px;font-size:11px;color:#94a3b8';
     id.textContent = `#${f.formId}`;
@@ -4219,7 +4254,8 @@ function buildAppGroupedFormsCard(forms: DashboardData['recentForms'], totalAll:
 
       const tdN = el('td', 'mf-td-n mf-td-name');
       const nameLink = el('a', 'mf-form-name-link', f.title || `Form #${f.formId}`);
-      nameLink.href = getDashboardShellRoute('builder', f.formId);
+      // [FormNameToSubmissions v20260726] Form name → submissions (data), not builder. Owner request.
+      nameLink.href = getDashboardShellRoute('submissions', f.formId);
       const idHint = span('');
       idHint.style.cssText = 'display:block;margin-top:2px;font-size:11px;color:#94a3b8';
       idHint.textContent = `#${f.formId}`;
@@ -4516,7 +4552,8 @@ function buildNormalFormsCard(forms: DashboardData['recentForms'], totalAll: num
 
       const tdN=el('td','mf-td-n mf-td-name');
       const nameLink=el('a','mf-form-name-link',f.title||`Form #${f.formId}`);
-      nameLink.href=URLS.builder(f.formId);
+      // [FormNameToSubmissions v20260726] Form name → submissions (data), not builder. Owner request.
+      nameLink.href=URLS.submissions(f.formId);
       tdN.appendChild(nameLink); tr.appendChild(tdN);
 
       const ts=el('td','mf-td-status'); ts.appendChild(badge(f.status||'draft')); tr.appendChild(ts);
@@ -4862,6 +4899,14 @@ function render(root: HTMLElement, data: DashboardData) {
     };
     const tab = settingsHash[location.hash];
     if (tab) openSettingsPane(tab);
+
+    // [PbNewFormWizard v20260810] Deep link for "New form" in the DNN Persona Bar. The panel used
+    // to send the admin to ctl=Edit, which is the legacy "Create a New Form" template chooser -
+    // a different screen from the 5-step wizard the dashboard's own New Form button opens. The
+    // panel now links here instead, and this is where that link lands.
+    if (location.hash === '#mf-new-form') {
+      window.setTimeout(() => openFormCreationWizard(), 350);
+    }
   })();
 }
 

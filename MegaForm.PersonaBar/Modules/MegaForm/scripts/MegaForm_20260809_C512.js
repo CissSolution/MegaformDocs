@@ -104,6 +104,62 @@ define(['jquery'], function ($) {
         }
     }
 
+    // ── panel-width density ──────────────────────────────────────────────────
+    // The Persona Bar host sets the panel width (about 860 desktop, 700 tablet), so a viewport
+    // media query answers the wrong question - which is how a 720px table ended up scrolling
+    // 22px inside a 698px wrapper. Measure the wrapper.
+    // DNN gives a panel 500px in its view-ipad mode, which a 390px phone cannot hold next to the
+    // 80px rail. Shrink our own panel to what is actually available; never widen it, so a desktop
+    // panel keeps exactly the width DNN chose.
+    function fitPanelWidth() {
+        var host = $panel.closest('.socialpanel')[0] || $panel.find('.socialpanel')[0];
+        if (!host) { return; }
+        var available = document.documentElement.clientWidth || 0;
+        var rail = document.getElementById('personabar');
+        var railWidth = rail ? rail.offsetWidth : 80;
+        if (!available) { return; }
+        var room = Math.max(280, available - railWidth);
+        // The header is position:absolute at 500px and the placeholder DNN puts next to the panel
+        // is 501px, so shrinking the panel alone still left the document 580px wide on a phone.
+        var header = $panel.find('.socialpanelheader')[0];
+        var placeholder = host.parentNode ? host.parentNode.querySelector('.socialpanel-placeholder') : null;
+
+        if (host.offsetWidth > room) {
+            host.style.width = room + 'px';
+            host.style.right = '0px';
+            host.classList.add('mf-pb-fitted');
+            if (header) { header.style.width = 'auto'; header.style.left = '0px'; header.style.right = '0px'; }
+            if (placeholder) { placeholder.style.width = room + 'px'; }
+        } else if (host.classList.contains('mf-pb-fitted') && room >= 500) {
+            host.style.width = '';
+            host.style.right = '';
+            host.classList.remove('mf-pb-fitted');
+            if (header) { header.style.width = ''; header.style.left = ''; header.style.right = ''; }
+            if (placeholder) { placeholder.style.width = ''; }
+        }
+    }
+
+    function applyDensity() {
+        fitPanelWidth();
+        var wrap = $panel.find('.mf-pb-table-wrap')[0];
+        var body = $panel.find('#megaform-bodyPanel')[0] || $panel.find('.mf-pb-body')[0];
+        if (!wrap || !body) { return; }
+        var w = wrap.clientWidth || 0;
+        var name = w >= 780 ? 'mf-pb-w-lg' : (w >= 620 ? 'mf-pb-w-md' : 'mf-pb-w-sm');
+        if (body.getAttribute('data-mf-w') === name) { return; }
+        body.setAttribute('data-mf-w', name);
+        body.className = body.className.replace(/\s*mf-pb-w-(lg|md|sm)/g, '') + ' ' + name;
+    }
+
+    function watchDensity() {
+        applyDensity();
+        var wrap = $panel.find('.mf-pb-table-wrap')[0];
+        if (wrap && typeof ResizeObserver === 'function') {
+            new ResizeObserver(applyDensity).observe(wrap);
+        }
+        $(window).on('resize.megaform', applyDensity);
+    }
+
     function loadForms() {
         service('GetForms', {
             searchTerm: state.search,
@@ -116,6 +172,7 @@ define(['jquery'], function ($) {
             renderRows(data.items || []);
             renderPager(data.items ? data.items.length : 0);
             $panel.find('.mf-pb-table-wrap').scrollTop(0);
+            applyDensity();   // a scrollbar appearing changes the wrapper's clientWidth
         });
     }
 
@@ -133,6 +190,16 @@ define(['jquery'], function ($) {
                 .addClass('mf-pb-badge-' + String(item.status).toLowerCase())
                 .text(item.status).appendTo($title);
             $('<span class="mf-pb-formid" />').text('#' + item.formId).appendTo($title);
+
+            // The meta line carries whatever the current width has dropped from the row. It is
+            // always rendered and CSS decides whether it shows, so no re-render is needed when
+            // the panel is resized.
+            var meta = [];
+            meta.push(item.fields + ' ' + t('MetaFields', 'fields'));
+            meta.push(item.submissions + ' ' + t('MetaSubmissions', 'subs'));
+            var when = formatDate(item.modifiedUtc);
+            if (when) { meta.push(when); }
+            $('<span class="mf-pb-meta" />').text(meta.join(' \u00b7 ')).appendTo($title);
             $title.appendTo($tr);
 
             $('<td class="mf-pb-num" />').text(item.fields).appendTo($tr);
@@ -352,6 +419,7 @@ define(['jquery'], function ($) {
 
         localise();
         wireEvents();
+        watchDensity();
         loadSummary();
         loadForms();
 

@@ -76,7 +76,7 @@ namespace MegaForm.PersonaBar.Services
                     lastSubmissionUtc = summary.LastSubmissionUtc,
                     hasHostPage = host != null,
                     dashboardUrl = MegaFormHostPageResolver.BuildDashboardUrl(host),
-                    newFormUrl = MegaFormHostPageResolver.BuildControlUrl(host, "Edit", 0),
+                    newFormUrl = MegaFormHostPageResolver.BuildNewFormUrl(host),
                     maxPageSize = MaxPageSize
                 });
             }
@@ -94,7 +94,7 @@ namespace MegaForm.PersonaBar.Services
         /// </summary>
         [HttpGet]
         public HttpResponseMessage GetForms(string searchTerm = null, string status = null,
-            int pageIndex = 0, int pageSize = DefaultPageSize)
+            int pageIndex = 0, int pageSize = DefaultPageSize, string sortBy = null, string sortDir = null)
         {
             try
             {
@@ -102,12 +102,21 @@ namespace MegaForm.PersonaBar.Services
                 if (pageSize <= 0) pageSize = DefaultPageSize;
                 if (pageSize > MaxPageSize) pageSize = MaxPageSize;
 
+                // Whitelisted here as well as in the proc: two cheap checks are worth more than
+                // an argument about which layer owns the rule.
+                var sort = (sortBy ?? string.Empty).Trim().ToLowerInvariant();
+                if (sort != "title" && sort != "status" && sort != "submissions"
+                    && sort != "modified" && sort != "created") sort = null;
+                var direction = string.Equals((sortDir ?? string.Empty).Trim(), "asc",
+                    StringComparison.OrdinalIgnoreCase) ? "asc" : "desc";
+
                 var search = string.IsNullOrWhiteSpace(searchTerm) ? null : searchTerm.Trim();
                 var statusFilter = string.IsNullOrWhiteSpace(status) ? null : status.Trim();
 
                 // Asks for one row more than the page so the panel knows whether a "next"
                 // page exists without a second COUNT(*) over the filtered set.
-                var forms = FormRepository.ListForms(PortalId, statusFilter, search, pageIndex, pageSize + 1)
+                var forms = FormRepository.ListForms(PortalId, statusFilter, search, pageIndex, pageSize + 1,
+                                sort, sort == null ? null : direction)
                             ?? new List<FormInfo>();
 
                 var hasMore = forms.Count > pageSize;
@@ -133,7 +142,11 @@ namespace MegaForm.PersonaBar.Services
                     items,
                     pageIndex,
                     pageSize,
-                    hasMore
+                    hasMore,
+                    // Echoed so the panel can render the arrow from what the SERVER actually did,
+                    // not from what it thinks it asked for.
+                    sortBy = sort,
+                    sortDir = sort == null ? null : direction
                 });
             }
             catch (Exception ex)

@@ -40,8 +40,8 @@ button{font-family:inherit;cursor:pointer}
 svg{display:inline-block;vertical-align:middle;flex-shrink:0}
 
 /* ── Layout ─────────────────────────────── */
-.mf-layout{display:flex;min-height:100vh}
-.mf-inset{flex:1;min-width:0;display:flex;flex-direction:column}
+.mf-layout{display:flex;width:100%;max-width:100%;min-height:100vh;overflow-x:hidden}
+.mf-inset{flex:1;min-width:0;max-width:100%;display:flex;flex-direction:column;overflow-x:hidden}
 .mf-flex1{flex:1}
 
 /* ── Sidebar ─────────────────────────────── */
@@ -98,7 +98,7 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
 .mf-hd-sep{width:1px;height:1rem;background:var(--border);flex-shrink:0}
 .mf-bc .mf-bc-list{list-style:none;margin:0;padding:0;display:flex;align-items:center;gap:.375rem}
 .mf-bc-page{font-size:.875rem;font-weight:500}
-.mf-hd-ac{display:flex;align-items:center;gap:.5rem}
+.mf-hd-ac{display:flex;align-items:center;justify-content:flex-end;gap:.5rem;min-width:0}
 .mf-hd{backdrop-filter:saturate(180%) blur(10px);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 8px 24px rgba(15,23,42,.04)}
 .mf-hd-badges{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
 .mf-hd-badge{display:inline-flex;align-items:center;gap:.375rem;padding:.34rem .72rem;border-radius:9999px;border:1px solid #dbe1ea;background:linear-gradient(180deg,#ffffff,#f8fafc);color:#334155;font-size:.72rem;font-weight:700;letter-spacing:.01em;box-shadow:0 2px 8px rgba(15,23,42,.04)}
@@ -123,7 +123,7 @@ a.mf-btn-primary,a.mf-btn-primary:link,a.mf-btn-primary:visited,a.mf-btn-primary
 .mf-btn:disabled{opacity:.6;cursor:not-allowed}
 
 /* ── Main ─────────────────────────────────── */
-.mf-main{flex:1;padding:1.5rem;display:flex;flex-direction:column;gap:1.5rem;overflow:auto}
+.mf-main{flex:1;min-width:0;max-width:100%;padding:1.5rem;display:flex;flex-direction:column;gap:1.5rem;overflow:auto}
 
 /* ── Stats Grid ─────────────────────────── */
 .mf-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem}
@@ -269,7 +269,12 @@ a.mf-sub-it{text-decoration:none;display:flex;color:inherit}
 .mf-modal-hd-title{font-size:.9375rem;font-weight:600;flex:1}
 .mf-modal-close{display:inline-flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;border-radius:var(--radius-sm);border:none;background:transparent;color:var(--muted-fg);cursor:pointer;padding:0;transition:background .12s,color .12s}
 .mf-modal-close:hover{background:var(--muted);color:var(--fg)}
-.mf-modal-body{flex:1;overflow-y:auto;padding:0}
+.mf-modal-body{flex:1;overflow-y:auto;overflow-x:hidden;padding:0;min-width:0}
+/* A grid item defaults to min-width:auto, so the longest card in a modal grid sets the
+   grid width: measured on a 390px phone, the Business Starters grid was 472px inside a
+   362px modal and the text was simply cut off. Grid children must be allowed to shrink. */
+.mf-modal-body>*,.mf-modal-body>*>*{min-width:0}
+.mf-modal-body div,.mf-modal-body p,.mf-modal-body span,.mf-modal-body strong{overflow-wrap:anywhere}
 .mf-modal-inner{padding:1.25rem;display:flex;flex-direction:column;gap:.875rem}
 .mf-modal-loading{display:flex;align-items:center;gap:.75rem;padding:2rem 1.5rem;color:var(--muted-fg);font-size:.875rem}
 .mf-modal-err{color:#dc2626;font-size:.875rem;background:#fef2f2;border:1px solid #fecaca;border-radius:var(--radius-sm);padding:.75rem 1rem;margin:1rem}
@@ -367,9 +372,19 @@ select.mf-input{cursor:pointer;appearance:none;background-image:url("data:image/
 @keyframes mf-spin-kf{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 
 /* ── Responsive ─────────────────────────── */
-@media(max-width:1200px){.mf-stats{grid-template-columns:repeat(2,1fr)}.mf-g21{grid-template-columns:1fr}}
+@media(max-width:1600px){
+  .mf-hd-close,.mf-hd-refresh,.mf-hd-starters,.mf-btn-ai-create,.mf-hd-new{width:2.25rem;min-width:2.25rem;padding:0;justify-content:center;gap:0;font-size:0}
+  .mf-btn-ai-create>span{gap:0!important;font-size:0}
+}
+@media(max-width:1200px){.mf-stats{grid-template-columns:repeat(2,1fr)}.mf-g21{grid-template-columns:1fr}.mf-hd-close{display:none}}
 @media(max-width:900px){.mf-upload-grid{grid-template-columns:1fr}.mf-upload-hero-meta{flex-direction:column}}
-@media(max-width:768px){.mf-sidebar{display:none}.mf-stats{grid-template-columns:1fr}.mf-g2,.mf-qa-g,.mf-row2{grid-template-columns:1fr}.mf-main{padding:1rem}.mf-hd{padding:0 .875rem}.mf-hd-badges{display:none}}
+@media(max-width:768px){
+  .mf-sidebar{display:none}.mf-stats{grid-template-columns:1fr}.mf-g2,.mf-qa-g,.mf-row2{grid-template-columns:1fr}.mf-main{padding:1rem}.mf-hd-badges{display:none}
+  .mf-hd{height:auto;min-height:56px;padding:.5rem .75rem;flex-wrap:wrap;overflow:hidden}
+  .mf-hd-sep,.mf-bc,.mf-hd>.mf-flex1{display:none}
+  .mf-hd-ac{margin-left:auto;flex:0 1 auto;max-width:calc(100% - 42px);gap:.375rem}
+  .mf-hd-ac .mf-btn{width:2.25rem;min-width:2.25rem;padding:0;justify-content:center;gap:0;font-size:0}
+}
 
 /* ── Embed Modal ──────────────────────────────────────────────── */
 .mf-embed-pill{display:inline-flex;align-items:center;gap:.5rem;padding:.375rem .75rem;background:var(--muted);border:1px solid var(--border);border-radius:9999px;font-size:.8125rem;color:var(--fg);margin-bottom:.75rem}

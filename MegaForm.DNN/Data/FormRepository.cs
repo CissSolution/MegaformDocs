@@ -54,7 +54,13 @@ namespace MegaForm.DNN.Data
             return list;
         }
 
-        public static List<FormInfo> ListForms(int portalId, string status = null, string search = null, int pageIndex = 0, int pageSize = 20)
+        /// <summary>
+        /// One page of forms. sortBy/sortDir are optional and OPTIONAL ON PURPOSE: every existing
+        /// caller keeps the order it has always had. They are passed as parameters, never
+        /// concatenated, and the proc ignores anything outside its whitelist.
+        /// </summary>
+        public static List<FormInfo> ListForms(int portalId, string status = null, string search = null,
+            int pageIndex = 0, int pageSize = 20, string sortBy = null, string sortDir = null)
         {
             var list = new List<FormInfo>();
             using (var conn = new SqlConnection(ConnectionString))
@@ -66,6 +72,8 @@ namespace MegaForm.DNN.Data
                 cmd.Parameters.AddWithValue("@Search", (object)search ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@PageIndex", pageIndex);
                 cmd.Parameters.AddWithValue("@PageSize", pageSize);
+                cmd.Parameters.AddWithValue("@SortBy", (object)sortBy ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@SortDir", (object)sortDir ?? DBNull.Value);
                 conn.Open();
                 using (var reader = cmd.ExecuteReader())
                 {

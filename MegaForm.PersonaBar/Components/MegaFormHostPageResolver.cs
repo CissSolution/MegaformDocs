@@ -93,6 +93,32 @@ namespace MegaForm.PersonaBar.Components
             return Globals.NavigateURL(host.TabId, controlKey, parameters);
         }
 
+        /// <summary>
+        /// Where "New form" must go.
+        ///
+        /// [PbNewFormUrl v20260810] It used to be BuildControlUrl(host, "Edit", 0), which is
+        /// ~/Default.aspx?ctl=Edit&amp;mid=.. with no formId - and FormEdit.ascx.cs treats "no
+        /// formId and no new=1" as "edit whatever this module already renders"
+        /// (GetFormsByModule(ModuleId).First()). So "New form" opened the CURRENT form's builder,
+        /// which is what the owner reported. The builder already has the right switch: new=1
+        /// starts blank. Nothing else needed changing.
+        /// </summary>
+        public static string BuildNewFormUrl(MegaFormHostPage host)
+        {
+            if (host == null) return null;
+
+            // [PbNewFormWizard v20260810] ctl=Edit&new=1 does start a NEW form, but it starts it on
+            // the legacy "Create a New Form" template chooser - not the 5-step wizard the dashboard's
+            // own New Form button opens. Send the admin to the dashboard with #mf-new-form, which
+            // MegaForm.UI/src/dashboard/index.ts turns into openFormCreationWizard().
+            var dashboard = BuildDashboardUrl(host);
+            if (string.IsNullOrEmpty(dashboard))
+            {
+                return Globals.NavigateURL(host.TabId, "Edit", "mid=" + host.ModuleId, "new=1");
+            }
+            return dashboard + "#mf-new-form";
+        }
+
         /// <summary>The plain page URL.</summary>
         public static string BuildPageUrl(MegaFormHostPage host)
         {

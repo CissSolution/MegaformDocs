@@ -1,6 +1,6 @@
-<dotnetnuke type="Package" version="5.0">
+﻿<dotnetnuke type="Package" version="5.0">
   <packages>
-    <package name="MegaForm" type="Module" version="02.00.012">
+    <package name="MegaForm" type="Module" version="02.00.015">
       <friendlyName>MegaForm</friendlyName>
       <description>Dynamic Form Builder Module for DNN - drag-and-drop builder, conditional logic, webhooks, anti-spam, email notifications, workflows, Save and Continue, Row/Column layout.</description>
       <iconFile>~/DesktopModules/MegaForm/Images/module-icon.png</iconFile>
@@ -18,7 +18,7 @@
         <!-- [PersonaBarMerge 2026-08-01] The Content > MegaForm panel used to ship as a separate
              MegaForm.PersonaBar package; it is now part of this one so a site gets the module and
              its admin panel from a single install. The <component type="PersonaBarMenu"> below is
-             installed by Dnn.PersonaBar.UI, NOT by DotNetNuke.dll — without this dependency the
+             installed by Dnn.PersonaBar.UI, NOT by DotNetNuke.dll â€” without this dependency the
              component is skipped SILENTLY and the extension installs with no menu entry. -->
         <dependency type="ManagedPackage" version="01.00.00">Dnn.PersonaBar.UI</dependency>
       </dependencies>
@@ -279,6 +279,11 @@
               <name>02.00.012.SqlDataProvider</name>
               <version>02.00.012</version>
             </script>
+            <script type="Install">
+              <path>SqlScripts</path>
+              <name>02.00.015.SqlDataProvider</name>
+              <version>02.00.015</version>
+            </script>
             <script type="UnInstall">
               <path>SqlScripts</path>
               <name>Uninstall.SqlDataProvider</name>
@@ -309,9 +314,9 @@
             <!-- [CloudStorage v20260723-01] Cloud file mirror: Google Drive rides on MegaForm.Core
                  + the framework HttpClient, so it needs no assembly of its own.
                  [AzureBlobRemoved v20260726] Azure Blob provider DROPPED. Azure.Storage.Blobs pulled
-                 Azure.Core 1.55 → System.ClientModel + .NET 10 System.* transitively; Azure.Core has an
+                 Azure.Core 1.55 â†’ System.ClientModel + .NET 10 System.* transitively; Azure.Core has an
                  assembly-level attribute whose type lives in System.ClientModel, and DNN scans EVERY
-                 bin assembly's attributes at startup (MEF SafeDirectoryCatalog) → a missing
+                 bin assembly's attributes at startup (MEF SafeDirectoryCatalog) â†’ a missing
                  System.ClientModel.dll crashed the WHOLE site (TypeInitializationException).
                  [S3AddOn 2026-07-28] Amazon S3 moved OUT of this package into
                  MegaForm.CloudStorageS3_<version>_Install.zip: MegaForm.Integrations.CloudStorage.dll
@@ -340,7 +345,7 @@
              install gives a site both the module and its portal-wide admin panel.
 
              PersonaBar.zip carries the panel's SPA and unpacks into the Persona Bar's own
-             Modules folder — that path is fixed by the loader, which resolves
+             Modules folder â€” that path is fixed by the loader, which resolves
              Modules/<folderName>/<path>.{html,js,css} from the menu row below.
              ============================================================ -->
         <component type="ResourceFile">
@@ -372,7 +377,7 @@
             <moduleName>MegaForm</moduleName>
             <folderName>MegaForm</folderName>
             <resourceKey>nav_MegaForm</resourceKey>
-            <path>MegaForm_20260802</path>
+            <path>MegaForm_20260809_E541</path>
             <parent>Content</parent>
             <order>25</order>
             <defaultPermissions>Administrators</defaultPermissions>
@@ -382,3 +387,5 @@
     </package>
   </packages>
 </dotnetnuke>
+
+

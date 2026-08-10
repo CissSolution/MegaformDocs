@@ -1,4 +1,4 @@
-<!-- [PersonaBar v20260809-B421] Compact, viewport-safe MegaForm panel.
+<!-- [PersonaBar v20260809-E541] Compact, responsive, sortable, adds to the CURRENT page.
      Markup only: every value is filled in by scripts/MegaForm.js from
      /API/personaBar/MegaForm/*. Class names follow the Persona Bar's own panels
      (socialpanelheader / socialpanelbody / dnn-ui-common-button) so the panel
@@ -41,10 +41,22 @@
         <table class="mf-pb-table">
             <thead>
                 <tr>
-                    <th data-mf-resx="ColForm">Form</th>
-                    <th class="mf-pb-num" data-mf-resx="ColFields">Fields</th>
-                    <th class="mf-pb-num" data-mf-resx="ColSubmissions">Submissions</th>
-                    <th data-mf-resx="ColModified">Modified</th>
+                    <!-- A sortable header is a real <button>: keyboard reaches it, screen readers
+                         announce aria-sort, and the click target is the whole cell. Fields has no
+                         button because the count is parsed from the schema after SQL has already
+                         paged the rows - the server cannot order by it, so the panel does not
+                         pretend it can. -->
+                    <th data-mf-sort="title" aria-sort="none">
+                        <button type="button" class="mf-pb-sort" data-mf-resx="ColForm">Form</button>
+                    </th>
+                    <th class="mf-pb-num mf-pb-fields-col" data-mf-resx="ColFields"
+                        title="Counted from the form schema after the page is read, so this column cannot be sorted server-side.">Fields</th>
+                    <th class="mf-pb-num mf-pb-subs-col" data-mf-sort="submissions" aria-sort="none">
+                        <button type="button" class="mf-pb-sort" data-mf-resx="ColSubmissions">Submissions</button>
+                    </th>
+                    <th class="mf-pb-modified-col" data-mf-sort="modified" aria-sort="none">
+                        <button type="button" class="mf-pb-sort" data-mf-resx="ColModified">Modified</button>
+                    </th>
                     <th class="mf-pb-actions-col" data-mf-resx="ColActions">Actions</th>
                 </tr>
             </thead>
