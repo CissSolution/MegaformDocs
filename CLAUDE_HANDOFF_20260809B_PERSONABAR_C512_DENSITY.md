@@ -377,6 +377,40 @@ megaform-renderer -> megaform-rule-engine -> `js/bundles/megaform-builder.js` ->
 template-gallery-search** + 4 stylesheet, DUNG THU TU. Nap moi `megaform-builder-loader.js` thi
 `initBuilder` khong bao gio xuat hien. Moi surface giu URL cu lam **duong lui**.
 
+### 3e-6. 🔴🔴 P0 AN NINH — `ModuleConfigController` mo cho MOI USER DA DANG NHAP (CHUA VA)
+
+Phat hien khi tra loi cau hoi "user thuong co vao duoc panel khong". **Panel thi an toan** (401),
+**nhung `/DesktopModules/MegaForm/API/ModuleConfig/*` thi khong.**
+
+`MegaFormApiController.cs:3922` = **`[DnnAuthorize]` TRON** tren `ModuleConfigController`. Chinh
+comment trong file, `:3951-3954`, da noi ra: *"ModuleConfigController is [DnnAuthorize] = ANY
+authenticated user, so any Registered User could POST here and repoint the PORTAL-WIDE renderer
+host"* — ho xoa MOT endpoint (RendererHost) nhung **de nguyen gate cua class**.
+
+**Do that bang tai khoan Registered that** (`tools/browser-qa/pb-moduleconfig-authz-probe.mjs`,
+tao roi xoa; khong ghi mot setting nao):
+
+- `POST ModuleConfig/DatabaseSettings/Test` voi body `{}` -> **400 "Database provider is required."**
+  = dong validate CUA CHINH HANDLER (`:4867`) ⇒ **da qua uy quyen**. Cac POST anh em cung class:
+  `SaveDatabaseSettings` (`:4846`, ghi `Database_ConnectionString`), `SaveEmailSettings`,
+  `SavePaymentSettings`, `SaveCaptchaSettings`, `SaveUploadSettings` — deu chi co
+  `[ValidateAntiForgeryToken]`, **khong phai** kiem soat quyen. `SetPortalSetting` goi
+  `HostController.Instance.Update` ⇒ pham vi la **TOAN HOST**, khong phai 1 portal.
+- GET lo ra cho user thuong: `DefaultConnectionString` -> **chuoi ket noi that**
+  (`Data Source=WINDOWS-11\SQLEXPRESS;Initial Catalog=DNN_MegaClean008;...` — mask chi phu
+  `password|pwd=`) · `PaymentSettings` -> **paypalClientId ro** · `EmailSettings` · `CaptchaSettings`
+  · `UploadSettings` (dung danh sach ma duong upload **anonymous** doc) · `Get?moduleId=0` -> **moi
+  form trong portal** · `Fields?formId=N` -> **so do truong cua BAT KY form nao**.
+- Anonymous thi 401 tren toan bo ModuleConfig (tot). `DataRepeater/Query` 404 (route khong ton tai)
+  va `Submissions/List?queryKey=all-posts` 400 "formId is required" — 2 muc nay trong ban audit la
+  **noi qua**, da kiem lai.
+
+**Cach va (chua lam, can quyet dinh):** dat `[DnnAuthorize(StaticRoles = "Administrators")]` len
+class `:3922`, xoa attribute per-action thua o `:4767`, roi ra soat tung action xem co cai nao
+that su phai mo cho non-admin (viet ly do theo rule 3). **Phai quet ca 3 platform twin**
+(`MegaForm.Web/Controllers`, `MegaForm.Oqtane.Server/Controllers`) va QA lai luong public form
++ upload truoc khi ship.
+
 ### 3e-5. F550d — quyen / cat le phai / icon, va 1 LOI SAN PHAM (commit `9fa2a12`)
 
 **User thuong KHONG vao duoc panel** — do bang tai khoan Registered that
