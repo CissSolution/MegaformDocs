@@ -377,6 +377,39 @@ megaform-renderer -> megaform-rule-engine -> `js/bundles/megaform-builder.js` ->
 template-gallery-search** + 4 stylesheet, DUNG THU TU. Nap moi `megaform-builder-loader.js` thi
 `initBuilder` khong bao gio xuat hien. Moi surface giu URL cu lam **duong lui**.
 
+### 3e-9. 🆕 SITE DNN SACH DE OWNER KIEM TRA — `http://dnn_megafresh.ai`
+
+| | |
+|---|---|
+| URL | `http://dnn_megafresh.ai` (hosts entry da them) |
+| Dang nhap | **host / Dnn@Host2026** |
+| DNN | 10.3.0, cai tu `E:\DNN\DNN_Platform_10.3.0_Install.zip` (auto-install qua `Install/DotNetNuke.install.config`) |
+| IIS | site+pool `DNN_MegaFresh`, `E:\DNN_SITES\DNN_MegaFresh\Website` |
+| DB | `WINDOWS-11\SQLEXPRESS` / `DNN_MegaFresh` (191 bang) |
+| MegaForm | **2.0.15**, cai bang GOI qua `tools/dnn_live_install_megaform.mjs install` |
+
+⭐**DNN 10 BAT DOI MAT KHAU lan dau**: `host/dnnhost` (mat khau trong install config) bi chuyen sang
+`?ctl=PasswordReset&resetToken=...&forced=true`. DNN dua thang resetToken ra URL nen doi duoc bang
+chinh luong do, khong can email — xem `qa-out/fresh-set-password.mjs`.
+🔴Mat khau portal admin (`admin`) **chua dung duoc** (seed khong an); QA bang `host`.
+
+**Da chung minh tren site sach**: khong co module MegaForm o BAT KY trang nao, khong co form nao,
+panel van chay day du — list (empty state), dashboard, My Inbox, wizard 5 buoc deu dat visual QA
+nguoi (`qa-out/fresh-visual/`). Submissions/Builder chua do duoc vi chua co form de bam.
+
+### 3e-8. UI panel: header gon, rail icon, X ve goc phai (commit `0f2b7e8`)
+
+Header 103px/caption 30px -> **60px/17px**. Sidebar 256px hang ngang -> **rail 102px**, icon 22px
+tren, nhan 10.5px duoi (2 dong), brand thanh o gradient, badge thanh pip goc. X ve goc phai tren.
+Cach ly da do: cung viewport, trang `/mfqa-admin` van sidebar **256px**, panel **102px**.
+
+⭐⭐⭐**3 bay khi dich cai X** (`li#showsite` — DNN's "View Site", core hardcode `left:921px`):
+`right:20px` day no ve **x=38 TREN RAIL** vi containing block la `.personabar` (fixed, 80px) ·
+`body.mf-pb-open #showsite` (1,1,1) **thua** bien the iPad cua core (2,4,1) ⇒ phai dung 3 id ·
+no dich o list nhung **bat lai o dashboard** vi shell **GAN de** `document.body.className` khi mount
+⇒ observer phai theo doi ca `document.body` va tu dat lai.
+⭐Dai xam 43px duoi header = `.socialpanelbody{margin-top:103px}` cua DNN, viet cho header cu.
+
 ### 3e-7. ✅ P0 DA VA CA 3 PLATFORM (commit `d54f6d7` + `565766c`) — do lai sau khi deploy
 
 | phep do | truoc | sau |
