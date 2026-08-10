@@ -51,13 +51,26 @@ namespace MegaForm.Oqtane.Server.Controllers
 
     public partial class MegaFormController
     {
+        // [ModuleConfigAdminGate v20260810] Every ModuleConfig route below carried a bare
+        // [Authorize], which in ASP.NET Core means ANY authenticated user - not an administrator.
+        // The bodies here do call CanUseAdminPopup(), so Oqtane was defended one layer deep; the
+        // attribute now says the same thing, so the guard is not the only thing standing between a
+        // Registered user and a connection string. The DNN twin had no such body guard and was
+        // genuinely open: measured, a real Registered-Users-only account reached
+        // POST ModuleConfig/DatabaseSettings/Test and got the handler's own 400
+        // ("Database provider is required."), i.e. it had already cleared authorization.
+        //
+        // Public form rendering, Submit/Post and Upload/File live on other controllers and are
+        // untouched - verified with tools/browser-qa/public-form-flow-qa.mjs (zero ModuleConfig
+        // calls from a public page) and tools/browser-qa/anon-public-endpoints-probe.mjs.
+
         // ──────────────────────────────────────────────────────────────────
         //  GET /api/MegaForm/ModuleConfig/DefaultConnectionString
         //  Returns Oqtane's default connection string (sanitized) so the
         //  Database Settings popup can prefill the Connection String input.
         // ──────────────────────────────────────────────────────────────────
         [HttpGet("ModuleConfig/DefaultConnectionString")]
-        [Authorize]
+        [Authorize(Roles = "Administrators")]
         public IActionResult GetDefaultConnectionString()
         {
             if (!CanUseAdminPopup()) return Forbid();
@@ -111,7 +124,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         //  shape as GetDefaultConnectionString so dashboard/index.ts reuses it.
         // ──────────────────────────────────────────────────────────────────
         [HttpGet("ModuleConfig/DatabaseSettings")]
-        [Authorize]
+        [Authorize(Roles = "Administrators")]
         public IActionResult GetDatabaseSettings()
         {
             if (!CanUseAdminPopup()) return Forbid();
@@ -157,7 +170,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         //  Returns {success, message, databaseName, serverVersion}.
         // ──────────────────────────────────────────────────────────────────
         [HttpPost("ModuleConfig/DatabaseSettings/Test")]
-        [Authorize]
+        [Authorize(Roles = "Administrators")]
         public IActionResult TestDatabaseSettings([FromBody] MegaFormDbSettingsRequest req)
         {
             if (!CanUseAdminPopup()) return Forbid();
@@ -196,7 +209,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         //  registry to consume this saved override is a documented follow-up.
         // ──────────────────────────────────────────────────────────────────
         [HttpPost("ModuleConfig/DatabaseSettings")]
-        [Authorize]
+        [Authorize(Roles = "Administrators")]
         public IActionResult SaveDatabaseSettings([FromBody] MegaFormDbSettingsRequest req)
         {
             if (!CanUseAdminPopup()) return Forbid();
@@ -239,7 +252,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         }
 
         [HttpGet("ModuleConfig/ConnectionsList")]
-        [Authorize]
+        [Authorize(Roles = "Administrators")]
         public IActionResult ListNamedConnections()
         {
             if (!CanUseAdminPopup()) return Forbid();
@@ -292,7 +305,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         }
 
         [HttpPost("ModuleConfig/ConnectionsSave")]
-        [Authorize]
+        [Authorize(Roles = "Administrators")]
         public IActionResult SaveNamedConnection([FromBody] MegaFormNamedConnectionRequest req)
         {
             if (!CanUseAdminPopup()) return Forbid();
@@ -307,13 +320,19 @@ namespace MegaForm.Oqtane.Server.Controllers
             {
                 var siteId = ResolveSiteIdForConnectionCatalog();
                 if (siteId <= 0) return Ok(new { success = false, message = "Could not resolve the site for this request." });
+                var existingJson = ReadNamedConnectionsSetting();
+                // [MaskRoundTrip v20260726] The editor prefills the MASKED string, so a save that
+                // only changed the server/database still carries password=***. Put the stored
+                // secret back instead of persisting the mask. (DNN twin: MegaFormApiController.)
+                var prior = MegaForm.Core.Services.NamedConnectionCatalog.Parse(existingJson)
+                    .FirstOrDefault(c => string.Equals(c.Name?.Trim(), (req.Name ?? string.Empty).Trim(), System.StringComparison.OrdinalIgnoreCase));
                 var next = MegaForm.Core.Services.NamedConnectionCatalog.Upsert(
-                    ReadNamedConnectionsSetting(),
+                    existingJson,
                     new MegaForm.Core.Services.NamedConnectionInfo
                     {
                         Name = req.Name,
                         Provider = req.Provider,
-                        ConnectionString = req.ConnectionString,
+                        ConnectionString = MegaForm.Core.Services.NamedConnectionCatalog.RestoreMaskedSecrets(req.ConnectionString, prior?.ConnectionString),
                     });
                 UpsertSetting(EntityNames.Site, siteId, MegaForm.Core.Services.NamedConnectionCatalog.SettingKey, next, true);
                 return Ok(new { success = true, message = "Connection '" + req.Name.Trim() + "' saved." });
@@ -326,7 +345,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         }
 
         [HttpPost("ModuleConfig/ConnectionsDelete")]
-        [Authorize]
+        [Authorize(Roles = "Administrators")]
         public IActionResult DeleteNamedConnection([FromBody] MegaFormNamedConnectionRequest req)
         {
             if (!CanUseAdminPopup()) return Forbid();
@@ -386,7 +405,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         }
 
         [HttpGet("ModuleConfig/CloudStorageConnectionsList")]
-        [Authorize]
+        [Authorize(Roles = "Administrators")]
         public async Task<IActionResult> ListCloudStorageConnections()
         {
             if (!CanUseAdminPopup()) return Forbid();
@@ -398,7 +417,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         }
 
         [HttpPost("ModuleConfig/CloudStorageConnectionSave")]
-        [Authorize]
+        [Authorize(Roles = "Administrators")]
         public async Task<IActionResult> SaveCloudStorageConnection([FromBody] MegaFormCloudStorageConnectionRequest req)
         {
             if (!CanUseAdminPopup()) return Forbid();
@@ -430,7 +449,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         }
 
         [HttpPost("ModuleConfig/CloudStorageConnectionDelete")]
-        [Authorize]
+        [Authorize(Roles = "Administrators")]
         public IActionResult DeleteCloudStorageConnection([FromBody] MegaFormCloudStorageConnectionRequest req)
         {
             if (!CanUseAdminPopup()) return Forbid();
@@ -456,7 +475,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         }
 
         [HttpPost("ModuleConfig/CloudStorageConnectionTest")]
-        [Authorize]
+        [Authorize(Roles = "Administrators")]
         public async Task<IActionResult> TestCloudStorageConnection([FromBody] MegaFormCloudStorageConnectionRequest req)
         {
             if (!CanUseAdminPopup()) return Forbid();

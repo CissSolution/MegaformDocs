@@ -3919,7 +3919,34 @@ VALUES
     // ============================================================
     // MODULE VIEW CONFIGURATION API
     // ============================================================
-    [DnnAuthorize]
+    // [ModuleConfigAdminGate v20260810] This class was [DnnAuthorize] - ANY authenticated user.
+    // The comment 30 lines below has said so since v20260714, when ONE endpoint was deleted to
+    // close the hole without touching the gate that opened it. Everything else stayed open.
+    //
+    // Measured 2026-08-10 on megaclean008 with a real Registered-Users-only account
+    // (tools/browser-qa/pb-moduleconfig-authz-probe.mjs): POST ModuleConfig/DatabaseSettings/Test
+    // with an empty body answered 400 "Database provider is required." - the handler's OWN
+    // validation line, so the request had already cleared authorization. Its siblings
+    // (SaveDatabaseSettings, SaveEmailSettings, SavePaymentSettings, SaveCaptchaSettings,
+    // SaveUploadSettings) carry only [ValidateAntiForgeryToken], which is a CSRF control and not
+    // an authorization one, and SetPortalSetting writes through HostController - so the blast
+    // radius was the whole installation, not one portal. The GETs handed the same caller the real
+    // connection string (the mask only covers password=), the PayPal client id in clear, the SMTP
+    // settings, the upload allow/block lists the ANONYMOUS upload path reads, every form title in
+    // the portal, and the field map of any form by id.
+    //
+    // Safe to gate, measured rather than assumed: a public form page makes ZERO ModuleConfig calls
+    // (tools/browser-qa/public-form-flow-qa.mjs), and the two endpoints an anonymous visitor does
+    // need - Submit/Post and Upload/File - live on SubmitController and UploadFileController,
+    // both [AllowAnonymous], both untouched here. All nine client files that call ModuleConfig/*
+    // are admin surfaces (dashboard, builder, view-designer, listview designer, admin-live, the
+    // platform adapters, the DNN host bundle).
+    //
+    // Anything that ever needs to be reachable by a non-admin opts out per-action with a written
+    // reason (SECURITY rule 3). The redundant per-action gate on GetDatabaseSettings stays: it is
+    // defence in depth, and it is the reason that one GET was already returning 401 while every
+    // other GET on this controller was answering 200.
+    [DnnAuthorize(StaticRoles = "Administrators")]
     public class ModuleConfigController : DnnApiController
     {
         /// <summary>
@@ -4301,8 +4328,15 @@ VALUES
 
             try
             {
+                var existingJson = DnnConnectionRegistry.ReadNamedConnectionsJson();
+                // [MaskRoundTrip v20260726] The editor prefills the MASKED string, so a save that
+                // only changed the server/database still carries password=***. Put the stored
+                // secret back instead of persisting the mask.
+                var prior = MegaForm.Core.Services.NamedConnectionCatalog.Parse(existingJson)
+                    .FirstOrDefault(c => string.Equals(c.Name?.Trim(), name, StringComparison.OrdinalIgnoreCase));
+                cs = MegaForm.Core.Services.NamedConnectionCatalog.RestoreMaskedSecrets(cs, prior?.ConnectionString);
                 var next = MegaForm.Core.Services.NamedConnectionCatalog.Upsert(
-                    DnnConnectionRegistry.ReadNamedConnectionsJson(),
+                    existingJson,
                     new MegaForm.Core.Services.NamedConnectionInfo { Name = name, Provider = provider, ConnectionString = cs });
                 DotNetNuke.Entities.Portals.PortalController.UpdatePortalSetting(
                     PortalSettings.PortalId, MegaForm.Core.Services.NamedConnectionCatalog.SettingKey, next, true);

@@ -1203,7 +1203,7 @@ namespace MegaForm.Web.Controllers
         // ── MODULE CONFIG / STYLE ─────────────────────────────
 
         [HttpGet("ModuleConfig/Get")]
-        [Authorize]
+        [Authorize(Roles = "Administrator")]
         public IActionResult GetModuleConfig(int moduleId)
         {
             // Thêm system info cho dashboard
@@ -1264,7 +1264,7 @@ namespace MegaForm.Web.Controllers
         // ══════════════════════════════════════════════════════════════════
 
         [HttpGet("ModuleConfig/DatabaseSettings")]
-        [Authorize]
+        [Authorize(Roles = "Administrator")]
         public IActionResult GetDatabaseSettings()
         {
             var provider = _moduleSettings.GetSetting(0, "Database_Provider", "");
@@ -1290,7 +1290,7 @@ namespace MegaForm.Web.Controllers
         }
 
         [HttpPost("ModuleConfig/DatabaseSettings")]
-        [Authorize]
+        [Authorize(Roles = "Administrator")]
         public IActionResult SaveDatabaseSettings([FromBody] JObject body)
         {
             if (HasDemoLock()) return DemoLockedResponse("Database Settings");
@@ -1304,7 +1304,7 @@ namespace MegaForm.Web.Controllers
         }
 
         [HttpPost("ModuleConfig/DatabaseSettings/Test")]
-        [Authorize]
+        [Authorize(Roles = "Administrator")]
         public IActionResult TestDatabaseSettings([FromBody] JObject body)
         {
             if (HasDemoLock()) return DemoLockedResponse("Database Settings");
@@ -1380,9 +1380,15 @@ namespace MegaForm.Web.Controllers
             if (string.IsNullOrWhiteSpace(connectionString)) return Ok(new { success = false, message = "Connection string is required." });
             try
             {
+                var existingJson = _moduleSettings.GetSetting(0, MegaForm.Core.Services.NamedConnectionCatalog.SettingKey, "");
+                // [MaskRoundTrip v20260726] The editor prefills the MASKED string, so a save that
+                // only changed the server/database still carries password=***. Put the stored
+                // secret back instead of persisting the mask. (DNN twin: MegaFormApiController.)
+                var prior = MegaForm.Core.Services.NamedConnectionCatalog.Parse(existingJson)
+                    .FirstOrDefault(c => string.Equals(c.Name?.Trim(), (name ?? string.Empty).Trim(), System.StringComparison.OrdinalIgnoreCase));
                 var next = MegaForm.Core.Services.NamedConnectionCatalog.Upsert(
-                    _moduleSettings.GetSetting(0, MegaForm.Core.Services.NamedConnectionCatalog.SettingKey, ""),
-                    new MegaForm.Core.Services.NamedConnectionInfo { Name = name, Provider = provider, ConnectionString = connectionString });
+                    existingJson,
+                    new MegaForm.Core.Services.NamedConnectionInfo { Name = name, Provider = provider, ConnectionString = MegaForm.Core.Services.NamedConnectionCatalog.RestoreMaskedSecrets(connectionString, prior?.ConnectionString) });
                 _moduleSettings.SetSetting(0, MegaForm.Core.Services.NamedConnectionCatalog.SettingKey, next);
                 return Ok(new { success = true, message = "Connection '" + name.Trim() + "' saved." });
             }
@@ -1552,7 +1558,7 @@ namespace MegaForm.Web.Controllers
         // ══════════════════════════════════════════════════════════════════
 
         [HttpGet("ModuleConfig/PaymentSettings")]
-        [Authorize]
+        [Authorize(Roles = "Administrator")]
         public IActionResult GetPaymentSettings()
         {
             // Mask secret keys — return only first 8 chars + "..." for display
@@ -1574,7 +1580,7 @@ namespace MegaForm.Web.Controllers
         }
 
         [HttpPost("ModuleConfig/PaymentSettings")]
-        [Authorize]
+        [Authorize(Roles = "Administrator")]
         public IActionResult SavePaymentSettings([FromBody] JObject body)
         {
             if (HasDemoLock()) return DemoLockedResponse("Payment Settings");
@@ -1607,7 +1613,7 @@ namespace MegaForm.Web.Controllers
         }
 
         [HttpGet("ModuleConfig/CaptchaSettings")]
-        [Authorize]
+        [Authorize(Roles = "Administrator")]
         public IActionResult GetCaptchaSettings()
         {
             string Mask(string v) => string.IsNullOrWhiteSpace(v) ? "" : (v.Length > 8 ? v.Substring(0, 8) + "…" : "****");
@@ -1625,7 +1631,7 @@ namespace MegaForm.Web.Controllers
         }
 
         [HttpPost("ModuleConfig/CaptchaSettings")]
-        [Authorize]
+        [Authorize(Roles = "Administrator")]
         public IActionResult SaveCaptchaSettings([FromBody] JObject body)
         {
             if (HasDemoLock()) return DemoLockedResponse("Captcha Settings");
@@ -1650,7 +1656,7 @@ namespace MegaForm.Web.Controllers
         }
 
         [HttpGet("ModuleConfig/EmailSettings")]
-        [Authorize]
+        [Authorize(Roles = "Administrator")]
         public IActionResult GetEmailSettings()
         {
             string provider = _moduleSettings.GetSetting(0, "Email_Provider", _cfg["Email:Provider"] ?? "generic");
@@ -1678,7 +1684,7 @@ namespace MegaForm.Web.Controllers
         }
 
         [HttpPost("ModuleConfig/EmailSettings")]
-        [Authorize]
+        [Authorize(Roles = "Administrator")]
         public IActionResult SaveEmailSettings([FromBody] JObject body)
         {
             if (HasDemoLock()) return DemoLockedResponse("Email Settings");
@@ -1706,7 +1712,7 @@ namespace MegaForm.Web.Controllers
         }
 
         [HttpPost("ModuleConfig/EmailSettings/Test")]
-        [Authorize]
+        [Authorize(Roles = "Administrator")]
         public IActionResult TestEmailSettings([FromBody] JObject body, [FromServices] SmtpEmailSender emailSender)
         {
             if (HasDemoLock()) return DemoLockedResponse("Email Settings");
@@ -1849,7 +1855,7 @@ namespace MegaForm.Web.Controllers
         }
 
         [HttpGet("ModuleConfig/UploadSettings")]
-        [Authorize]
+        [Authorize(Roles = "Administrator")]
         public IActionResult GetUploadSettings()
         {
             var policy = GetUploadPolicy();
@@ -1869,7 +1875,7 @@ namespace MegaForm.Web.Controllers
         }
 
         [HttpPost("ModuleConfig/UploadSettings")]
-        [Authorize]
+        [Authorize(Roles = "Administrator")]
         public IActionResult SaveUploadSettings([FromBody] JObject body)
         {
             if (HasDemoLock()) return DemoLockedResponse("Upload Settings");
@@ -1886,7 +1892,7 @@ namespace MegaForm.Web.Controllers
         }
 
         [HttpPost("ModuleConfig/Save")]
-        [Authorize]
+        [Authorize(Roles = "Administrator")]
         public IActionResult SaveModuleConfig([FromBody] JObject body)
         {
             int moduleId = body.Value<int>("moduleId");
@@ -1988,7 +1994,7 @@ namespace MegaForm.Web.Controllers
 
         /// <summary>GET api/MegaForm/ModuleConfig/Fields?formId=X</summary>
         [HttpGet("ModuleConfig/Fields")]
-        [Authorize]
+        [Authorize(Roles = "Administrator")]
         public IActionResult GetFields(int formId)
         {
             var form = _formRepo.GetForm(formId);
