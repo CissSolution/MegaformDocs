@@ -62,6 +62,17 @@ await page.waitForTimeout(1200);
 const steps = {};
 const shot = async (name) => page.screenshot({ path: path.join(outDir, name + '.png') });
 
+// 0. The Persona Bar's own localization table. It reads the resx of EVERY panel, so one malformed
+// resx takes the whole Persona Bar down with a 404 here - which is exactly what a scripted edit to
+// MegaForm.resx did on 2026-08-10 (it serialised xml:space as `d2p1:space`, invalid XML). Cheap to
+// check, and the failure is otherwise reported far from its cause.
+steps.personaBarLocalization = await pb.evaluate(async () => {
+  try {
+    const r = await fetch('/API/personaBar/localization/gettable?culture=en-US', { credentials: 'include' });
+    return { status: r.status, bytes: (await r.text()).length };
+  } catch (e) { return { status: -1, bytes: 0, error: String(e && e.message) }; }
+});
+
 // 1. the list
 steps.listRows = await pb.locator('.mf-pb-table tbody tr').count();
 await shot('1-list');
@@ -125,6 +136,66 @@ steps.wizard = await pb.evaluate(() => {
 });
 steps.apiDuringWizard = api.slice(apiBeforeWizard);
 await shot('4-wizard');
+
+// 5. Full screen: the MegaForm panel must fill the width beside the rail, not sit in a ~860px
+// strip with dead page showing next to it (owner, 2026-08-10).
+steps.fullWidth = await pb.evaluate(() => {
+  const host = document.querySelector('.socialpanel');
+  const rail = document.getElementById('personabar');
+  const avail = (document.documentElement.clientWidth || 0) - (rail ? rail.offsetWidth : 80);
+  return {
+    panelWidth: host ? Math.round(host.getBoundingClientRect().width) : 0,
+    available: Math.round(avail),
+    gap: host ? Math.round(avail - host.getBoundingClientRect().width) : null,
+  };
+});
+
+// 6. Edit / Submissions must open INSIDE the panel, not throw the admin out to a module page.
+// The wizard from step 4 is a fixed full-viewport overlay at z-index 2147483600, so it has to go
+// first or every click below lands on it.
+// Wrapped: if a surface falls back to opening its old page, the Persona Bar iframe is detached and
+// every later evaluate throws. That is a RESULT, not a crash - record it and still write the report.
+try {
+await pb.evaluate(() => { const w = document.getElementById('mf-wizard-root'); if (w) w.remove(); });
+await pb.locator('.mf-pb-back').click().catch(() => {});
+await page.waitForTimeout(2500);
+const topBefore = page.url();
+await pb.locator('.mf-pb-rows tr:first-child .mf-pb-action', { hasText: /Submissions|Bài gửi/ }).first().click()
+  .catch(async () => { await pb.locator('.mf-pb-rows tr:first-child .mf-pb-action').nth(1).click(); });
+await pb.waitForSelector('#mf-submissions-root', { timeout: 45000 }).catch(() => {});
+await page.waitForTimeout(6000);
+steps.submissionsInPanel = await pb.evaluate(() => {
+  const r = document.getElementById('mf-submissions-root');
+  return {
+    rootExists: !!r,
+    childCount: r ? r.children.length : 0,
+    stillBooting: !!(r && r.querySelector('.mf-pb-dashboot')),
+    text: (r ? (r.innerText || '') : '').replace(/\s+/g, ' ').trim().slice(0, 140),
+  };
+});
+steps.submissionsKeptTopPage = page.url() === topBefore;
+await shot('5-submissions');
+
+await pb.locator('.mf-pb-back').click().catch(() => {});
+await page.waitForTimeout(2000);
+await pb.locator('.mf-pb-rows tr:first-child .mf-pb-action').first().click().catch(() => {});
+await pb.waitForSelector('#mf-builder-root', { timeout: 45000 }).catch(() => {});
+await page.waitForTimeout(8000);
+steps.builderInPanel = await pb.evaluate(() => {
+  const r = document.getElementById('mf-builder-root');
+  return {
+    rootExists: !!r,
+    childCount: r ? r.children.length : 0,
+    stillBooting: !!(r && r.querySelector('.mf-pb-dashboot')),
+    text: (r ? (r.innerText || '') : '').replace(/\s+/g, ' ').trim().slice(0, 140),
+  };
+});
+steps.builderKeptTopPage = page.url() === topBefore;
+await shot('6-builder');
+} catch (e) {
+  steps.surfaceProbeError = String(e && e.message).slice(0, 200);
+  steps.topUrlAfterProbe = page.url();
+}
 
 const failed = api.filter((r) => r.status >= 400);
 const report = { site, viewport: { width, height }, steps, apiCalls: api.length, failedApi: failed, consoleErrors };

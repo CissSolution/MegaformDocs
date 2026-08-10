@@ -220,6 +220,130 @@ define(['jquery'], function ($) {
             function (data) { next((data && data.items) || []); });
     }
 
+    // ── the other MegaForm surfaces, also hosted in the panel ────────────────
+    // [PbNoPopOut v20260810-F550b] Owner: stop popping out MegaForm's separate screens. On DNN the
+    // dashboard's own links (getDashboardShellRouteScoped) are PAGE urls - `?mfFormId=N#mf-builder`
+    // against the module's page - so inside the panel they would either navigate the iframe to
+    // nowhere or throw the admin back out to a page. Each surface is its own bundle with the same
+    // mount contract the DNN host uses (dnn-host/index.ts bootSubmissions/bootMyInbox): a root
+    // carrying data-platform + data-mf-api-base, then window.MegaForm.init<Surface>(root).
+    //
+    // Every one of them keeps the old URL as a fallback: if a bundle does not load, or does not
+    // register its init, the panel opens the page it used to open instead of showing nothing.
+    // The builder is not one file: FormView.ascx.cs registers Sortable, the widget registry, the
+    // renderer and the rule engine BEFORE js/bundles/megaform-builder.js, and four stylesheets
+    // with it. Order matters - the bundle expects those globals to exist - so these load in
+    // sequence, not in parallel. (Plugin widget scripts are not in this list; the palette will be
+    // the built-in set until they are.)
+    var SURFACES = {
+        builder: {
+            css: ['css/megaform-builder.css', 'css/megaform-builder-ts.css', 'css/megaform-themes.css', 'css/megaform-widgets.css'],
+            js: ['js/Sortable.min.js', 'js/megaform-widgets.js', 'js/megaform-renderer.js',
+                 'js/megaform-rule-engine.js', 'js/bundles/megaform-builder.js', 'js/megaform-template-gallery-search.js'],
+            init: 'initBuilder', rootId: 'mf-builder-root'
+        },
+        submissions: { css: [], js: ['js/megaform-submissions.js'], init: 'initSubmissions', rootId: 'mf-submissions-root' },
+        myinbox:     { css: [], js: ['js/megaform-my-inbox.js'],    init: 'initMyInbox',     rootId: 'mf-myinbox-root' },
+        languages:   { css: [], js: ['js/megaform-languages.js'],   init: 'initLanguages',   rootId: 'mf-languages-root' }
+    };
+
+    function loadCssOnce(file) {
+        var id = 'mf-pb-css-' + file.replace(/[^a-z0-9]/gi, '');
+        if (document.getElementById(id)) { return; }
+        var link = document.createElement('link');
+        link.id = id; link.rel = 'stylesheet';
+        link.href = ASSETS + file + DASH_V;
+        document.head.appendChild(link);
+    }
+
+    function loadScriptOnce(file, done) {
+        var id = 'mf-pb-js-' + file.replace(/[^a-z0-9]/gi, '');
+        var existing = document.getElementById(id);
+        if (existing) {
+            if (existing.getAttribute('data-loaded') === '1') { done(); return; }
+            var waited = 0;
+            var poll = window.setInterval(function () {
+                if (existing.getAttribute('data-loaded') === '1') { window.clearInterval(poll); done(); }
+                else if ((waited += 200) > 30000) { window.clearInterval(poll); done(new Error('timeout ' + file)); }
+            }, 200);
+            return;
+        }
+        var s = document.createElement('script');
+        s.id = id;
+        s.src = ASSETS + file + DASH_V;
+        s.onload = function () { s.setAttribute('data-loaded', '1'); done(); };
+        s.onerror = function () { done(new Error('failed to load ' + s.src)); };
+        document.head.appendChild(s);
+    }
+
+    function loadChain(files, done) {
+        var i = 0;
+        (function next(err) {
+            if (err) { done(err); return; }
+            if (i >= files.length) { done(); return; }
+            loadScriptOnce(files[i++], next);
+        })();
+    }
+
+    function openSurfaceInPanel(kind, formId, fallbackUrl) {
+        var spec = SURFACES[kind];
+        if (!spec) { if (fallbackUrl) window.top.location.href = fallbackUrl; return; }
+        clearAlert();
+        setListVisible(false);
+        publishPlatformConfig();
+
+        var $host = $panel.find('.mf-pb-dashhost');
+        $host.empty();
+        var root = document.createElement('div');
+        root.id = spec.rootId;
+        root.setAttribute('data-platform', 'dnn');
+        root.setAttribute('data-mf-api-base', API_BASE);
+        root.setAttribute('data-api-base', API_BASE);
+        root.setAttribute('data-assets-base', ASSETS);
+        root.setAttribute('data-portal-id', String(dash.portalId));
+        root.setAttribute('data-form-id', String(formId || 0));
+        root.setAttribute('data-is-new', 'false');
+        var boot = document.createElement('div');
+        boot.className = 'mf-pb-dashboot';
+        boot.textContent = t('LoadingDashboard', 'Loading the dashboard…');
+        root.appendChild(boot);
+        $host[0].appendChild(root);
+        dash.mounted = false;    // the dashboard is no longer what is in the host
+
+        (spec.css || []).forEach(loadCssOnce);
+        loadChain(spec.js, function (err) {
+            var init = window.MegaForm && window.MegaForm[spec.init];
+            if (err || typeof init !== 'function') {
+                setListVisible(true);
+                if (fallbackUrl) { window.top.location.href = fallbackUrl; return; }
+                showAlert(t('SurfaceUnavailable', 'That screen could not be opened inside the panel.'));
+                return;
+            }
+            try {
+                $(root).find('.mf-pb-dashboot').remove();
+                init(root);
+                wireDashboardChrome();
+            } catch (e) {
+                setListVisible(true);
+                if (fallbackUrl) window.top.location.href = fallbackUrl;
+            }
+        });
+    }
+
+    // The dashboard's own links are page urls. Inside the panel they are intercepted and turned
+    // into an in-panel mount, so nothing ever leaves the Persona Bar.
+    function surfaceFromHref(href) {
+        var h = String(href || '');
+        var kind = h.indexOf('#mf-builder') >= 0 ? 'builder'
+                 : h.indexOf('#mf-submissions') >= 0 ? 'submissions'
+                 : h.indexOf('#mf-myinbox') >= 0 ? 'myinbox'
+                 : h.indexOf('#mf-languages') >= 0 ? 'languages'
+                 : h.indexOf('#mf-dashboard') >= 0 ? 'dashboard' : null;
+        if (!kind) return null;
+        var m = /[?&]mfFormId=(\d+)/i.exec(h);
+        return { kind: kind, formId: m ? parseInt(m[1], 10) : 0 };
+    }
+
     function loadDashboardAssets(done) {
         if (!document.getElementById('mf-pb-dash-css')) {
             var link = document.createElement('link');
@@ -258,8 +382,7 @@ define(['jquery'], function ($) {
         $panel.find('.mf-pb-back').toggleClass('mf-pb-hidden', on);
         $panel.find('.mf-pb-dashboard').toggleClass('mf-pb-hidden', !on);
         dash.shown = !on;
-        widenPanelForDashboard(!on);
-        if (on) { applyDensity(); }   // back to the list: re-measure at the restored width
+        if (on) { applyDensity(); }   // back to the list: re-measure the columns at this width
     }
 
     function showList() {
@@ -325,6 +448,17 @@ define(['jquery'], function ($) {
             e.preventDefault();
             showList();
         });
+        // [PbNoPopOut v20260810-F550b] Any link that would take the admin to one of MegaForm's own
+        // page-hosted screens is served here instead. Anything else (a live form preview, a real
+        // site page) still opens in the top window, because that is genuinely somewhere else.
+        $host.on('click.mfdash', 'a[href]', function (e) {
+            var target = surfaceFromHref($(this).attr('href'));
+            if (!target) { return; }
+            e.preventDefault();
+            e.stopPropagation();
+            if (target.kind === 'dashboard') { dash.mounted = false; showDashboard(false); return; }
+            openSurfaceInPanel(target.kind, target.formId, null);
+        });
         $host.on('click.mfdash', '.mf-hd-refresh', function (e) {
             e.preventDefault();
             // initDashboard renames the element to #mf-dash-root, so a re-mount has to look for
@@ -373,11 +507,11 @@ define(['jquery'], function ($) {
     // DNN gives a panel 500px in its view-ipad mode, which a 390px phone cannot hold next to the
     // 80px rail. Shrink our own panel to what is actually available; never widen it, so a desktop
     // panel keeps exactly the width DNN chose.
-    // [PbWideForDashboard v20260810-F550] The panel DNN hands us is about 860px. The form list was
-    // built for that; the dashboard shell was built for a page, and at 860 its forms table
-    // collapses - the name column overlaps its own header (measured, screenshot qa-out/pb-dash).
-    // So the dashboard view takes the whole width beside the rail and gives it back on the way
-    // out. Nothing is scaled or zoomed: it is the same panel, just not artificially narrow.
+    // [PbFullWidth v20260810-F550b] The panel DNN hands us is about 860px, which left a dead strip
+    // of page showing beside it and collapsed the dashboard's forms table (the name column
+    // overlapped its own header). Owner: make it full screen. So the MegaForm panel takes the
+    // whole width beside the rail from the moment it opens - list AND dashboard - and stays there.
+    // Nothing is scaled or zoomed; it is the same panel, just not artificially narrow.
     function widenPanelForDashboard(on) {
         var host = $panel.closest('.socialpanel')[0] || $panel.find('.socialpanel')[0];
         if (!host) { return; }
@@ -503,8 +637,11 @@ define(['jquery'], function ($) {
             $('<td class="mf-pb-modified" />').text(formatDate(item.modifiedUtc)).appendTo($tr);
 
             var $actions = $('<td class="mf-pb-actions-col" />');
-            appendAction($actions, t('Edit', 'Edit'), item.builderUrl);
-            appendAction($actions, t('Submissions', 'Submissions'), item.submissionsUrl);
+            // [PbNoPopOut v20260810-F550b] Edit and Submissions used to send the admin to a DNN
+            // page carrying the module. They now open inside the panel; the old URL is passed
+            // along only as the fallback for when the bundle cannot mount.
+            appendSurfaceAction($actions, t('Edit', 'Edit'), 'builder', item.formId, item.builderUrl);
+            appendSurfaceAction($actions, t('Submissions', 'Submissions'), 'submissions', item.formId, item.submissionsUrl);
             $('<a href="#" class="mf-pb-action mf-pb-addto" />')
                 .text(currentTabId() > 0
                     ? t('AddToCurrentPage', 'Add to current page')
@@ -520,6 +657,14 @@ define(['jquery'], function ($) {
     function appendAction($cell, label, url) {
         var $a = $('<a href="#" class="mf-pb-action" />').text(label).appendTo($cell);
         bindJump($a, url, t('NoHostPage', 'Add a MegaForm module to a page first - the builder opens inside it.'));
+    }
+
+    // Opens the surface inside the panel. No longer disabled when the portal has no page with a
+    // MegaForm module: not needing one is the whole point.
+    function appendSurfaceAction($cell, label, kind, formId, fallbackUrl) {
+        $('<a href="#" class="mf-pb-action" />').text(label)
+            .on('click', function (e) { e.preventDefault(); openSurfaceInPanel(kind, formId, fallbackUrl || null); })
+            .appendTo($cell);
     }
 
 
@@ -796,7 +941,9 @@ define(['jquery'], function ($) {
         localise();
         wireEvents();
         wireSorting();
+        widenPanelForDashboard(true);   // full screen from the first paint, list included
         watchDensity();
+        $(window).on('resize.megaformwide', function () { widenPanelForDashboard(true); });
         $panel.find('.mf-pb-back').on('click', function (e) { e.preventDefault(); showList(); });
         loadSummary();
         loadForms();
