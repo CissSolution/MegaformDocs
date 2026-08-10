@@ -129,6 +129,18 @@
   <data name="OpenDashboard.Text" xml:space="preserve">
     <value>Open dashboard</value>
   </data>
+  <data name="BackToForms.Text" xml:space="preserve">
+    <value>Back to forms</value>
+  </data>
+  <data name="LoadingDashboard.Text" xml:space="preserve">
+    <value>Loading the dashboard…</value>
+  </data>
+  <data name="WizardMissing.Text" xml:space="preserve">
+    <value>The form wizard did not load. Open the dashboard in its own tab and try again.</value>
+  </data>
+  <data name="DashboardUnavailable.Text" xml:space="preserve">
+    <value>The dashboard could not be loaded here, and this portal has no page with a MegaForm module to fall back to.</value>
+  </data>
   <data name="StatForms.Text" xml:space="preserve">
     <value>Forms</value>
   </data>
@@ -236,5 +248,20 @@
   </data>
   <data name="NotAllowed.Text" xml:space="preserve">
     <value>You are not allowed to use MegaForm here. Sign in as an administrator and try again.</value>
+  </data>
+  <data name="StatPlatform.Text" d2p1:space="preserve" xmlns:d2p1="http://www.w3.org/XML/1998/namespace">
+    <value>Platform</value>
+  </data>
+  <data name="MetaPublished.Text" d2p1:space="preserve" xmlns:d2p1="http://www.w3.org/XML/1998/namespace">
+    <value>published</value>
+  </data>
+  <data name="StatShowing.Text" d2p1:space="preserve" xmlns:d2p1="http://www.w3.org/XML/1998/namespace">
+    <value>Showing</value>
+  </data>
+  <data name="MetaPersonaBar.Text" d2p1:space="preserve" xmlns:d2p1="http://www.w3.org/XML/1998/namespace">
+    <value>Persona Bar</value>
+  </data>
+  <data name="MetaFirstPage.Text" d2p1:space="preserve" xmlns:d2p1="http://www.w3.org/XML/1998/namespace">
+    <value>first page of the list</value>
   </data>
 </root>

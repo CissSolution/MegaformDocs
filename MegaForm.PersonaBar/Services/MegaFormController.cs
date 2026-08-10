@@ -77,7 +77,14 @@ namespace MegaForm.PersonaBar.Services
                     hasHostPage = host != null,
                     dashboardUrl = MegaFormHostPageResolver.BuildDashboardUrl(host),
                     newFormUrl = MegaFormHostPageResolver.BuildNewFormUrl(host),
-                    maxPageSize = MaxPageSize
+                    maxPageSize = MaxPageSize,
+                    // [PbHostsDashboard v20260810-F550] The panel now mounts the dashboard SPA
+                    // itself, and the SPA needs to know which portal it is looking at. It comes
+                    // from the server for the same reason PortalId always does: the panel is not
+                    // allowed to nominate one. Nothing else about the module context is sent -
+                    // measured, a tabid of 0 makes DNN 404 the call and a ModuleId/TabId header
+                    // pair of 0 makes it 400 (tools/browser-qa/pb-module-context-probe.mjs).
+                    portalId = PortalId
                 });
             }
             catch (Exception ex)

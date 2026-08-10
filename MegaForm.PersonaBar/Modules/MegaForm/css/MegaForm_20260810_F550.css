@@ -1,0 +1,597 @@
+/* [PersonaBar v20260801-02] MegaForm panel.
+   Scoped under .mf-pb-* only. The panel frame, header bar and button chrome come from the
+   Persona Bar's own stylesheet (socialpanelheader / socialpanelbody / dnn-ui-common-button) —
+   restyling those would fight the host on every DNN upgrade.
+
+   Colours come from DNN's own custom properties with the stock Persona Bar values as
+   fallbacks, so the panel follows a re-skinned Persona Bar instead of hardcoding blue. */
+
+.mf-pb-body {
+    --mf-pb-primary: var(--dnn-color-primary, #1e88c3);
+    --mf-pb-on-primary: var(--dnn-color-primary-contrast, #fff);
+    --mf-pb-surface: var(--dnn-color-background, #fff);
+    --mf-pb-ink: var(--dnn-color-foreground, #1e2b3c);
+    --mf-pb-muted: var(--dnn-color-neutral-dark, #6b7684);
+    --mf-pb-line: var(--dnn-color-neutral, #e4e7eb);
+    --mf-pb-wash: color-mix(in srgb, var(--mf-pb-ink) 3%, var(--mf-pb-surface));
+    --mf-pb-radius: var(--dnn-controls-radius, 4px);
+}
+
+.mf-pb-hidden { display: none !important; }
+
+/* .socialpanelheader is position:absolute with height:72px while .socialpanelbody only
+   reserves margin-top:103px. Buttons on their own line push the header past that and it
+   covers the first stat tile — so the actions have to float onto the title's line. */
+#megaform-headerPanel .actions { float: right; margin-top: 2px; }
+#megaform-headerPanel .actions .dnn-ui-common-button + .dnn-ui-common-button { margin-left: 8px; }
+
+.mf-pb-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0 0 16px;
+    padding: 11px 14px;
+    border: 1px solid #e3b100;
+    border-left-width: 3px;
+    border-radius: var(--mf-pb-radius);
+    background: #fdf6e0;
+    color: #6b5200;
+    font-size: 13px;
+}
+.mf-pb-alert.is-success { border-color: #2e9e5b; background: #eaf7ef; color: #1d6b3d; }
+
+/* ── Stat tiles ─────────────────────────────────────────────────────────── */
+.mf-pb-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+    margin: 0 0 20px;
+    padding: 0;
+    list-style: none;
+}
+
+.mf-pb-stats li {
+    position: relative;
+    min-width: 0;
+    padding: 14px 16px 14px 18px;
+    border: 1px solid var(--mf-pb-line);
+    border-radius: var(--mf-pb-radius);
+    background: var(--mf-pb-surface);
+    overflow: hidden;
+}
+
+/* A 3px spine instead of a full coloured tile: reads as a group without shouting. */
+.mf-pb-stats li::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: var(--mf-pb-primary);
+    opacity: .85;
+}
+.mf-pb-stats li:nth-child(2)::before { opacity: .6; }
+.mf-pb-stats li:nth-child(3)::before { opacity: .4; }
+.mf-pb-stats li:nth-child(4)::before { opacity: .25; }
+
+.mf-pb-stat-value {
+    display: block;
+    font-size: 25px;
+    line-height: 1.15;
+    font-weight: 600;
+    color: var(--mf-pb-ink);
+    /* A long timestamp must not push the tile wider than its share of the row. */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mf-pb-stat-label {
+    display: block;
+    margin-top: 5px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--mf-pb-muted);
+}
+
+/* ── Toolbar ────────────────────────────────────────────────────────────── */
+.mf-pb-toolbar { display: flex; gap: 10px; margin: 0 0 14px; }
+.mf-pb-toolbar .mf-pb-search { flex: 1 1 auto; min-width: 0; }
+.mf-pb-toolbar .mf-pb-search,
+.mf-pb-toolbar .mf-pb-status {
+    height: 34px;
+    padding: 0 12px;
+    border: 1px solid var(--mf-pb-line);
+    border-radius: var(--mf-pb-radius);
+    background: var(--mf-pb-surface);
+    color: var(--mf-pb-ink);
+    font-size: 13px;
+}
+.mf-pb-toolbar .mf-pb-search:focus,
+.mf-pb-toolbar .mf-pb-status:focus {
+    outline: 0;
+    border-color: var(--mf-pb-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mf-pb-primary) 18%, transparent);
+}
+
+/* ── Table ──────────────────────────────────────────────────────────────── */
+.mf-pb-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.mf-pb-table th,
+.mf-pb-table td {
+    padding: 11px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--mf-pb-line);
+    vertical-align: middle;
+}
+
+.mf-pb-table th {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--mf-pb-muted);
+    background: var(--mf-pb-wash);
+    border-bottom-color: var(--mf-pb-line);
+}
+.mf-pb-table th:first-child { border-top-left-radius: var(--mf-pb-radius); }
+.mf-pb-table th:last-child { border-top-right-radius: var(--mf-pb-radius); }
+
+.mf-pb-table tbody tr:hover { background: var(--mf-pb-wash); }
+
+.mf-pb-table .mf-pb-num { text-align: right; width: 96px; font-variant-numeric: tabular-nums; }
+.mf-pb-table .mf-pb-actions-col { width: 210px; white-space: nowrap; }
+/* A timestamp that wraps doubles every row's height; the title column absorbs long content. */
+.mf-pb-table .mf-pb-modified { white-space: nowrap; width: 165px; color: var(--mf-pb-muted); }
+
+.mf-pb-formtitle { font-weight: 600; color: var(--mf-pb-ink); }
+.mf-pb-formid { margin-left: 8px; color: var(--mf-pb-muted); font-size: 11px; white-space: nowrap; opacity: .8; }
+
+.mf-pb-badge {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    background: color-mix(in srgb, var(--mf-pb-ink) 8%, var(--mf-pb-surface));
+    color: var(--mf-pb-muted);
+}
+.mf-pb-badge-published { background: #e2f4e8; color: #1f7a43; }
+.mf-pb-badge-draft { background: #f3f0e2; color: #7a651f; }
+
+.mf-pb-action {
+    margin-right: 12px;
+    color: var(--mf-pb-primary);
+    text-decoration: none;
+    cursor: pointer;
+}
+.mf-pb-action:hover { text-decoration: underline; }
+/* A disabled jump is still a link element, so the cue has to be explicit. */
+.mf-pb-disabled { opacity: .45; cursor: not-allowed; text-decoration: none !important; }
+
+.mf-pb-empty { margin: 26px 0; color: var(--mf-pb-muted); font-size: 13px; }
+
+.mf-pb-pager { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+.mf-pb-pager .mf-pb-pageinfo { font-size: 12px; color: var(--mf-pb-muted); }
+.mf-pb-pager button[disabled] { opacity: .45; cursor: not-allowed; }
+
+/* ── Add-to-page popover ────────────────────────────────────────────────────
+   The Persona Bar panel is an iframe overlay covering the page, so a form cannot be
+   dragged onto a pane — DNN's drag-to-pane lives in the Edit Bar. This picker is the
+   one-click equivalent: choose page + pane, the server places the module. */
+.mf-pb-drop {
+    --mf-pb-primary: var(--dnn-color-primary, #1e88c3);
+    --mf-pb-surface: var(--dnn-color-background, #fff);
+    --mf-pb-ink: var(--dnn-color-foreground, #1e2b3c);
+    --mf-pb-muted: var(--dnn-color-neutral-dark, #6b7684);
+    --mf-pb-line: var(--dnn-color-neutral, #d7dde5);
+    --mf-pb-radius: var(--dnn-controls-radius, 4px);
+    position: fixed !important;
+    top: max(76px, min(30vh, calc(100vh - 380px))) !important;
+    right: 24px !important;
+    left: auto !important;
+    z-index: 2147483000;
+    isolation: isolate;
+    box-sizing: border-box;
+    width: 360px;
+    max-width: calc(100vw - 16px);
+    max-height: calc(100vh - 96px);
+    overflow: auto;
+    pointer-events: auto;
+    padding: 12px;
+    border: 1px solid var(--mf-pb-line);
+    border-radius: var(--mf-pb-radius);
+    background: var(--mf-pb-surface);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, .16);
+}
+.mf-pb-drop h4 { margin: 0 0 4px; font-size: 13px; line-height: 1.25; font-weight: 600; color: var(--mf-pb-ink); }
+.mf-pb-drop p { margin: 0 0 8px; font-size: 11px; line-height: 1.25; color: var(--mf-pb-muted); }
+.mf-pb-drop-label {
+    display: block;
+    margin: 8px 0 4px;
+    color: var(--mf-pb-muted);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+.mf-pb-drop input,
+.mf-pb-drop select {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    height: 32px;
+    margin-bottom: 8px;
+    padding: 0 10px;
+    border: 1px solid var(--mf-pb-line);
+    border-radius: var(--mf-pb-radius);
+    font-size: 13px;
+}
+.mf-pb-drop .mf-pb-pagelist {
+    max-height: 166px;
+    overflow-y: auto;
+    margin: 0 0 8px;
+    border: 1px solid var(--mf-pb-line);
+    border-radius: var(--mf-pb-radius);
+    background: var(--mf-pb-surface);
+}
+.mf-pb-drop .mf-pb-pagelist button {
+    display: block;
+    width: 100%;
+    min-height: 46px;
+    box-sizing: border-box;
+    padding: 7px 10px;
+    border: 0;
+    border-bottom: 1px solid var(--mf-pb-line);
+    background: var(--mf-pb-surface);
+    text-align: left;
+    font-size: 12px;
+    line-height: 1.25;
+    color: var(--mf-pb-ink);
+    cursor: pointer;
+}
+.mf-pb-drop .mf-pb-pagelist button span { display: block; line-height: 1.3; }
+.mf-pb-drop .mf-pb-pagelist button:last-child { border-bottom: 0; }
+.mf-pb-drop .mf-pb-pagelist button:hover,
+.mf-pb-drop .mf-pb-pagelist button.is-active {
+    background: color-mix(in srgb, var(--mf-pb-primary) 12%, var(--mf-pb-surface));
+}
+.mf-pb-drop .mf-pb-pagepath { margin-top: 2px; font-size: 10px; line-height: 1.25; color: var(--mf-pb-muted); }
+.mf-pb-drop-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.mf-pb-drop-actions button { min-width: 88px; }
+
+@media (max-width: 720px) {
+    .mf-pb-drop {
+        top: 72px !important;
+        right: 12px !important;
+        left: 12px !important;
+        width: auto;
+        max-width: none;
+        max-height: calc(100vh - 96px);
+    }
+}
+
+/* [PersonaBar B421] Premium compact shell. Keep the DNN frame, constrain the
+   working area to the iframe viewport, and scroll only the data region. */
+#megaform-headerPanel {
+    box-sizing: border-box;
+    overflow: hidden;
+}
+#megaform-headerPanel .caption {
+    max-width: calc(100% - 292px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 30px;
+    line-height: 1.2;
+}
+#megaform-headerPanel .actions .dnn-ui-common-button {
+    box-sizing: border-box;
+    min-width: 0;
+    height: 38px;
+    padding: 0 18px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.mf-pb-body {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    height: calc(100vh - 103px);
+    min-height: 360px;
+    padding-bottom: 14px;
+    overflow: hidden;
+}
+.mf-pb-alert { flex: 0 0 auto; margin-bottom: 10px; }
+.mf-pb-stats {
+    flex: 0 0 auto;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.mf-pb-stats li {
+    min-height: 62px;
+    box-sizing: border-box;
+    padding: 10px 12px 9px 15px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+.mf-pb-stats li:nth-child(2)::before { background: #16a34a; opacity: .8; }
+.mf-pb-stats li:nth-child(3)::before { background: #7c3aed; opacity: .75; }
+.mf-pb-stats li:nth-child(4)::before { background: #d97706; opacity: .75; }
+.mf-pb-stat-value { font-size: 21px; line-height: 1.1; }
+.mf-pb-stat-label { margin-top: 4px; font-size: 10px; }
+
+.mf-pb-toolbar {
+    flex: 0 0 auto;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding: 8px;
+    border: 1px solid var(--mf-pb-line);
+    border-radius: 6px;
+    background: var(--mf-pb-wash);
+}
+.mf-pb-toolbar .mf-pb-search,
+.mf-pb-toolbar .mf-pb-status {
+    height: 32px;
+    border-radius: 4px;
+    background: var(--mf-pb-surface);
+}
+.mf-pb-toolbar .mf-pb-status { flex: 0 0 136px; }
+
+.mf-pb-table-wrap {
+    flex: 1 1 auto;
+    min-height: 170px;
+    overflow: auto;
+    overscroll-behavior: contain;
+    border: 1px solid var(--mf-pb-line);
+    border-radius: 6px;
+    background: var(--mf-pb-surface);
+    scrollbar-width: thin;
+}
+.mf-pb-table-wrap:focus-visible {
+    outline: 2px solid var(--mf-pb-primary);
+    outline-offset: 2px;
+}
+/* 🔴 `min-width: 720px` was the 22px horizontal scroll: the tablet panel is 698px wide, and no
+   viewport media query fires at a 1024px browser because the PANEL, not the browser, is narrow.
+   The table now fits whatever the wrapper gives it and drops columns by panel width instead. */
+.mf-pb-table { min-width: 0; table-layout: auto; }
+.mf-pb-table th,
+.mf-pb-table td { padding: 9px 10px; }
+.mf-pb-table th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    height: 34px;
+    box-sizing: border-box;
+    background: #f7f8fa;
+}
+.mf-pb-table .mf-pb-num { width: 76px; }
+.mf-pb-table .mf-pb-actions-col { width: 196px; }
+.mf-pb-table .mf-pb-modified { width: 150px; }
+.mf-pb-formtitle { line-height: 1.25; }
+.mf-pb-action { margin-right: 10px; font-weight: 500; }
+.mf-pb-empty { margin: 32px 16px; text-align: center; }
+
+.mf-pb-pager {
+    flex: 0 0 auto;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 10px;
+    min-height: 42px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--mf-pb-line);
+}
+.mf-pb-pager .mf-pb-pageinfo {
+    justify-self: center;
+    color: var(--mf-pb-ink);
+    font-weight: 600;
+}
+.mf-pb-pager .dnn-ui-common-button {
+    box-sizing: border-box;
+    min-width: 88px;
+    height: 32px;
+    margin: 0;
+    padding: 0 12px;
+    font-size: 12px;
+}
+#megaform-bodyPanel > .mf-pb-toolbar { padding: 8px !important; }
+#megaform-bodyPanel > .mf-pb-table-wrap { padding: 0 !important; }
+#megaform-bodyPanel > .mf-pb-pager {
+    box-sizing: border-box;
+    min-height: 50px;
+    padding: 8px 30px 0 !important;
+}
+
+@media (max-width: 760px) {
+    #megaform-headerPanel .caption {
+        max-width: calc(100% - 228px);
+        font-size: 25px;
+    }
+    #megaform-headerPanel .actions .dnn-ui-common-button { padding: 0 12px; }
+    .mf-pb-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .mf-pb-toolbar { flex-wrap: wrap; }
+    .mf-pb-toolbar .mf-pb-search { flex-basis: 100%; }
+    .mf-pb-toolbar .mf-pb-status { flex: 1 1 auto; }
+    /* min-width removed: the density classes size the table by the PANEL, not the browser. */
+    .mf-pb-table .mf-pb-num,
+    .mf-pb-table .mf-pb-modified { display: none; }
+    .mf-pb-table .mf-pb-actions-col { width: 190px; }
+}
+
+@media (max-width: 480px) {
+    #megaform-headerPanel .caption { max-width: 110px; font-size: 22px; }
+    #megaform-headerPanel .actions .dnn-ui-common-button { padding: 0 9px; font-size: 11px; }
+    .mf-pb-body { min-height: 300px; padding-bottom: 8px; }
+    .mf-pb-stats li { min-height: 56px; padding: 8px 10px 8px 13px; }
+    .mf-pb-stat-value { font-size: 18px; }
+    /* min-width removed: it was the 420px table inside a 308px panel on a phone. */
+    .mf-pb-pager .dnn-ui-common-button { min-width: 74px; }
+}
+
+/* ── panel-width density (set by ResizeObserver in scripts/MegaForm_*.js) ─────────────────
+   mf-pb-w-lg  wrapper >= 780px : every column
+   mf-pb-w-md  wrapper >= 620px : Modified moves into the title cell
+   mf-pb-w-sm  wrapper <  620px : Fields/Submissions/Modified all move into the title cell
+   Nothing here scales or zooms: hit targets and popup geometry must stay honest. */
+
+.mf-pb-meta {
+    display: none;
+    margin-top: 2px;
+    color: var(--mf-pb-muted);
+    font-size: 11px;
+    line-height: 1.35;
+    white-space: nowrap;
+}
+
+.mf-pb-w-md .mf-pb-table .mf-pb-modified,
+.mf-pb-w-md .mf-pb-table .mf-pb-modified-col,
+.mf-pb-w-sm .mf-pb-table .mf-pb-modified,
+.mf-pb-w-sm .mf-pb-table .mf-pb-modified-col,
+.mf-pb-w-sm .mf-pb-table .mf-pb-num,
+.mf-pb-w-sm .mf-pb-table .mf-pb-fields-col,
+.mf-pb-w-sm .mf-pb-table .mf-pb-subs-col { display: none; }
+
+.mf-pb-w-md .mf-pb-meta,
+.mf-pb-w-sm .mf-pb-meta { display: block; }
+
+/* Denser rows once a column has gone: the point is a panel that feels compact, not merely one
+   that has stopped overflowing. */
+.mf-pb-w-md .mf-pb-table th,
+.mf-pb-w-md .mf-pb-table td { padding: 7px 9px; }
+.mf-pb-w-sm .mf-pb-table th,
+.mf-pb-w-sm .mf-pb-table td { padding: 6px 8px; }
+.mf-pb-w-sm .mf-pb-table { font-size: 12px; }
+.mf-pb-w-sm .mf-pb-table .mf-pb-actions-col { width: auto; }
+.mf-pb-w-sm .mf-pb-action { margin-right: 8px; }
+.mf-pb-w-sm .mf-pb-formid { display: none; }
+.mf-pb-w-sm .mf-pb-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+/* An action row is a tap target before it is a link: 40px is the floor on touch widths. */
+.mf-pb-w-sm .mf-pb-action,
+.mf-pb-w-sm .mf-pb-table td { min-height: 0; }
+.mf-pb-w-sm .mf-pb-table tbody td { padding-top: 9px; padding-bottom: 9px; }
+
+/* ── phone ───────────────────────────────────────────────────────────────────────────────
+   Actions stop being a single nowrap line here: on a 310px panel they must wrap, and each one
+   has to be a tap target (>= 40px) rather than a 13px link in a row of three. */
+.mf-pb-w-sm .mf-pb-table .mf-pb-actions-col { white-space: normal; width: 128px; }
+.mf-pb-w-sm .mf-pb-action {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    margin: 0 10px 0 0;
+    padding: 0;
+}
+.mf-pb-w-sm .mf-pb-table tbody td { padding-top: 6px; padding-bottom: 6px; vertical-align: top; }
+.mf-pb-w-sm .mf-pb-formtitle { display: block; }
+.mf-pb-w-sm .mf-pb-badge { margin-left: 0; }
+
+/* A fitted panel is one this script narrowed to the space the host actually left it. */
+/* The fitted width is the OUTER width: DNN's panel carries a 1px border, which was the last
+   pixel of document overflow on the phone (391 in a 390 viewport). */
+.socialpanel.mf-pb-fitted { min-width: 0; box-sizing: border-box; }
+.socialpanel.mf-pb-fitted #megaform-headerPanel .caption { max-width: calc(100% - 210px); }
+
+/* The meta line was nowrap - on a 308px panel that alone demanded 180px and kept the table at
+   420px. Everything in a phone-width row wraps. */
+.mf-pb-w-sm .mf-pb-meta { white-space: normal; }
+.mf-pb-w-sm .mf-pb-table .mf-pb-actions-col { width: 96px; }
+.mf-pb-w-sm .mf-pb-title { word-break: break-word; }
+.mf-pb-w-sm .mf-pb-formtitle { overflow-wrap: anywhere; }
+
+/* A caption clipped to "M..." is worse than no caption: the rail already says which panel this
+   is, and the two buttons are what the header is for on a phone. */
+.socialpanel.mf-pb-fitted #megaform-headerPanel .caption { display: none; }
+.socialpanel.mf-pb-fitted #megaform-headerPanel .actions { float: none; text-align: left; }
+/* Two actions per line instead of three stacked - the row was 133px tall. */
+.mf-pb-w-sm .mf-pb-table .mf-pb-actions-col { width: 124px; }
+
+/* ── sortable headers ────────────────────────────────────────────────────────────────────
+   The arrow is drawn from aria-sort, which the panel sets from what the SERVER echoed back -
+   so the arrow can never disagree with the order on screen. */
+.mf-pb-table th[data-mf-sort] { padding: 0; }
+.mf-pb-sort {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    height: 100%;
+    padding: 9px 10px;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-weight: 600;
+    text-align: inherit;
+    cursor: pointer;
+}
+.mf-pb-num .mf-pb-sort { justify-content: flex-end; }
+.mf-pb-sort:hover { color: var(--mf-pb-primary); }
+.mf-pb-sort:focus-visible { outline: 2px solid var(--mf-pb-primary); outline-offset: -2px; }
+.mf-pb-sort::after {
+    content: "\2195";                 /* both arrows: sortable but not sorted */
+    opacity: .35;
+    font-size: 11px;
+}
+.mf-pb-table th[aria-sort="ascending"] .mf-pb-sort::after { content: "\2191"; opacity: 1; }
+.mf-pb-table th[aria-sort="descending"] .mf-pb-sort::after { content: "\2193"; opacity: 1; }
+.mf-pb-table th[aria-sort="ascending"] .mf-pb-sort,
+.mf-pb-table th[aria-sort="descending"] .mf-pb-sort { color: var(--mf-pb-primary); }
+.mf-pb-w-md .mf-pb-sort,
+.mf-pb-w-sm .mf-pb-sort { padding: 7px 9px; }
+
+/* The current page sits at the top of the picker and says so - without the badge, a
+   pre-selected first row is indistinguishable from "whatever happened to sort first". */
+.mf-pb-drop .mf-pb-pagelist button.is-current { background: var(--mf-pb-wash); }
+.mf-pb-here {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: var(--mf-pb-primary);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    vertical-align: 1px;
+}
+
+/* ── [PbHostsDashboard v20260810-F550] the dashboard SPA, mounted in the panel ──────────────
+   The panel body is a fixed-height scroll region; the SPA expects a page. Give it the full
+   remaining height and let IT scroll, so the panel does not end up with two nested scrollbars
+   racing each other. */
+.mf-pb-dashhost {
+    margin: -10px -10px 0;
+    min-height: 420px;
+    height: calc(100vh - 150px);
+    overflow: auto;
+    background: #fff;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* The admin shell paints its own page background and gutters; inside a panel that reads as a
+   second frame around the first. Flatten it. */
+.mf-pb-dashhost #mf-dashboard-root {
+    min-height: 100%;
+    background: transparent;
+}
+
+.mf-pb-dashboot {
+    padding: 28px 16px;
+    font-size: 13px;
+    color: #64748b;
+    text-align: center;
+}
+
+/* The SPA sidebar is 256px, which eats a 700px tablet panel. Below that width it collapses to
+   its icon rail - the same state its own toggle produces, so nothing about it is novel. */
+@media (max-width: 780px) {
+    .mf-pb-dashhost .mf-sidebar { width: 56px; }
+    .mf-pb-dashhost .mf-sidebar .mf-sb-label { display: none; }
+}

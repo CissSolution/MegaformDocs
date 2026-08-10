@@ -328,7 +328,43 @@ he co. My Inbox tren DNN di bang `Workflow/MyInbox` (200). Va `Form/List?portalI
 tra ve **669 KB cho 5 dong** (moi dong keo ca `SchemaJson`), `Form/ListAll` **4.3 MB**,
 `BuilderTemplates/List` **6.0 MB** — nhoi ca dong nay vao panel la mot van de rieng.
 
-Chua dung toi UI. Buoc ke tiep la dung ban panel moi (F5xx) theo dung 3 ket luan tren.
+### 3e-2. 🟢 DA DUNG XONG — ban **F550**, dang chay live tren megaclean008.ai
+
+`MegaForm_20260810_F550.{html,css,js}`, `PersonaBarMenu.Path = MegaForm_20260810_F550`, manifest
+`<path>` -> F550, `MegaForm.PersonaBar.dll` da deploy (pool recycle qua `Deploy-CoreDll.ps1`).
+
+**Do bang `tools/browser-qa/personalbar-dashboard-qa.mjs`** (anh: `qa-out/pb-dash2/`):
+
+| viec | ket qua do duoc |
+|---|---|
+| Panel mo, danh sach form | 20 dong |
+| **Open dashboard** | dashboard SPA **mount trong panel**: sidebar + header + **Forms 109 · 106 da xuat ban · Bai gui 288**, bang **50 form co ten that** |
+| Trang nen | `topUrl` van la `/mf-templates/mf-xmas-sale` — **khong con nhay trang** |
+| Back to forms | quay lai danh sach 20 dong, giu nguyen trang thai |
+| **New form** | `#mf-wizard-root` hien, dung wizard 5 buoc ("Thiet lap bieu mau cua ban") |
+| API loi | **1**: `Permissions/Catalog?formId=0` 400 (co san tu truoc, wizard goi khi chua co form) |
+
+⭐⭐⭐**3 bay da tra gia de biet:**
+
+1. **`initDashboard` DOI ID cua root**: `root.id = 'mf-dash-root'` (dashboard/index.ts, nut delete tham
+   chieu theo id do). Moi selector `#mf-dashboard-root` sau khi mount deu **null** — lan do dau
+   bao "rootExists: false" lam tuong mount hong, that ra no chay.
+2. **SPA KHONG tu fetch du lieu trang chu.** No doc payload dau tien tu `data-dashboard` ma
+   `FormView.ascx` bake san (`BuildDashboardJson`). Mount tran ⇒ vo dep, nav du, **trang chu
+   RONG** (statTiles 0, tableRows 0). F550 dung payload tu chinh 2 API cua panel
+   (`GetDashboard` + `GetForms` pageSize 50) roi set `data-dashboard` truoc khi init.
+3. **Panel 860px lam bang cua dashboard chong chu** — cot ten form de len chinh header cua no.
+   Che do dashboard nay chiem het be ngang canh rail (`widenPanelForDashboard`), tra lai khi Back.
+
+**Con thieu (biet ro, khong phai bug an):**
+
+- **Gom theo AppScope mat**: `GetForms` cua panel khong tra `appScope` ⇒ moi form vao nhom
+  "Bieu mau doc lap". Tren trang DNN thi gom theo app.
+- **The "bai gui gan day" rong**: panel API khong co du lieu do ⇒ gui mang rong chu khong bia.
+- **Workflow designer** van can module (`[DnnModuleAuthorize]` -> 401), nen van mo o tab rieng.
+- **Cach sua that**: nhac `BuildDashboardJson` ra khoi `FormView.ascx.cs` (no dang phu thuoc
+  `EditUrl()` cua module control) thanh mot service ma **ca hai host cung goi**. PersonaBar **da**
+  `ProjectReference` sang MegaForm.DNN nen khong can DLL moi, chi can go phu thuoc control.
 
 ## 4. Con lai cho nguoi tiep theo
 
