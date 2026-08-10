@@ -356,6 +356,34 @@ tra ve **669 KB cho 5 dong** (moi dong keo ca `SchemaJson`), `Form/ListAll` **4.
 3. **Panel 860px lam bang cua dashboard chong chu** — cot ten form de len chinh header cua no.
    Che do dashboard nay chiem het be ngang canh rail (`widenPanelForDashboard`), tra lai khi Back.
 
+### 3e-3. Ban **F550b** — full man + khong bat man rieng (commit `ae03dd1`, CAI BANG GOI THAT)
+
+Goi `MegaForm_02.00.015_Install.zip` build lai va cai qua
+`node tools/dnn_live_install_megaform.mjs install` (file tren site mang moc cua goi 10:56:44,
+khong con la copy tay). Do lai bang `personalbar-dashboard-qa.mjs` -> `qa-out/pb-final/`:
+
+| viec | ket qua |
+|---|---|
+| Persona Bar localization | **200** (xem bay duoi) |
+| Full man | panel **1360** / kha dung **1360** / **gap 0** |
+| Open dashboard | mount trong panel, 50 dong, Forms 109 · 288 bai gui |
+| New form | wizard 5 buoc trong panel |
+| **Submissions** | mount trong panel, `topUrl` KHONG doi |
+| **Edit (builder)** | mount trong panel (palette + canvas + inspector), `topUrl` KHONG doi |
+| API loi | van dung **1**: `Permissions/Catalog?formId=0` 400 (co san) |
+
+⭐⭐⭐**Builder KHONG phai mot file**: `FormView.ascx.cs` nap **Sortable -> megaform-widgets ->
+megaform-renderer -> megaform-rule-engine -> `js/bundles/megaform-builder.js` ->
+template-gallery-search** + 4 stylesheet, DUNG THU TU. Nap moi `megaform-builder-loader.js` thi
+`initBuilder` khong bao gio xuat hien. Moi surface giu URL cu lam **duong lui**.
+
+⭐⭐⭐**BAY TU GAY — sua `.resx` bang XML DOM lam CHET CA PERSONA BAR.**
+`SetAttribute('space','...XML/1998/namespace','preserve')` ghi ra `d2p1:space="preserve"` +
+`xmlns:d2p1` = **XML khong hop le** (cam anh xa prefix vao namespace `xml`). Persona Bar doc resx
+cua MOI panel ⇒ `/API/personaBar/localization/gettable` **404**, ca thanh Persona Bar hong, trieu
+chung o rat xa nguyen nhan. **Luat: sua .resx bang chen VAN BAN, khong dung XmlDocument.**
+Harness nay kiem endpoint do DAU TIEN.
+
 **Con thieu (biet ro, khong phai bug an):**
 
 - **Gom theo AppScope mat**: `GetForms` cua panel khong tra `appScope` ⇒ moi form vao nhom
