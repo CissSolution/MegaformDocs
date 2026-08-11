@@ -41,9 +41,21 @@
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\MegaForm.Integrations.CloudStorage.dll" target="lib\net9.0" />
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\AWSSDK.Core.dll" target="lib\net9.0" />
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\AWSSDK.S3.dll" target="lib\net9.0" />
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Azure.Core.dll" target="lib\net9.0" />
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Azure.Storage.Blobs.dll" target="lib\net9.0" />
-    <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Azure.Storage.Common.dll" target="lib\net9.0" />
+    <!-- [AzureBlobRemoved v20260726 / AzureResidue 2026-08-11] The three Azure.* entries were
+         deleted here, matching the same removal already made in MegaForm.Oqtane.nuspec:80-83.
+         This file was the LAST git-tracked place in the repo naming Azure.Core.dll,
+         Azure.Storage.Blobs.dll or Azure.Storage.Common.dll as files to stage.
+
+         It was not shipping them: the Azure Blob provider went away on 2026-07-26, so
+         bin\Release\net9.0 no longer contains those DLLs and `nuget pack` aborted with NU5019
+         before producing anything - the Oqtane 6.x packaging line was simply dead.
+
+         The danger was the obvious repair. Faced with NU5019 the natural move is to restore the
+         Azure.Storage.Blobs PackageReference to MegaForm.Integrations.CloudStorage - whose
+         TargetFrameworks are net472;net8.0;net9.0;net10.0. The net472 leg is exactly the bin that
+         DNN attribute-scans at startup, so an "Oqtane 6" fix would silently re-crash every DNN
+         site's Control Bar. Deleting these lines removes the residue and the pressure together.
+         Full rationale: MegaForm.DNN/MegaForm.dnn, the [AzureResidue 2026-08-11] block. -->
     <!-- [OqtaneLicensing v20260723] Oqtane Marketplace licensing (LicenseView + offline key validation);
          Client/Shared also declared in ModuleInfo.Dependencies (required for Blazor WebAssembly). -->
     <file src="..\MegaForm.Oqtane.Server\bin\Release\net9.0\Oqtane.Licensing.Client.Oqtane.dll" target="lib\net9.0" />

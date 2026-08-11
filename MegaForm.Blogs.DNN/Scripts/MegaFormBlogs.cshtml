@@ -1,4 +1,4 @@
-@*
+﻿@*
     MegaForm Blogs - public DNN Razor Host surface.
     Data contract: IMegaFormClient.Apps / Queries / Records / Files only.
     No DataJson parsing and no direct database access.
@@ -17,6 +17,28 @@
         return System.Threading.Tasks.Task.Run(() => MegaFormSdk.RunAsync(action)).GetAwaiter().GetResult();
     }
 
+    // Same contract as Run, but hands back the Task so callers can fan several reads out at once.
+    //
+    // Touching DnnServiceLocator.Instance is not decoration: that property is what calls
+    // MegaFormSdk.Initialize (see DnnServiceLocator.cs). Every parallel read on this page used to
+    // call MegaFormSdk.RunAsync directly inside Task.Run and skip it, which worked only because
+    // some earlier request had already warmed the locator. On a COLD app domain - exactly what a
+    // deploy, an extension install, or any write to bin produces - the first visitor to reach this
+    // page got "MegaFormSdk is not initialized" and the whole blog rendered as an error box. It
+    // looked like a broken site rather than a race, because the second visitor saw a fine page.
+    //
+    // Initializing here, before Task.Run, is also the only correct place: HttpContext.Current is
+    // null on pool threads (see the note further down about reading portal settings early), so a
+    // locator first built inside one of those threads would come up without portal context.
+    //
+    // Route every parallel SDK read through this helper. A raw Task.Run(() => MegaFormSdk.RunAsync)
+    // is the bug, and it is invisible in testing on any server that has been up for a while.
+    static System.Threading.Tasks.Task<T> RunTask<T>(System.Func<IMegaFormClient, System.Threading.Tasks.Task<T>> action)
+    {
+        var initializeMegaForm = MegaForm.DNN.Services.DnnServiceLocator.Instance;
+        return System.Threading.Tasks.Task.Run(() => MegaFormSdk.RunAsync(action));
+    }
+
     static string Text(AppRecordDto record, string key, string fallback)
     {
         if (record == null || record.Data == null || !record.Data.ContainsKey(key) || record.Data[key] == null)
@@ -27,11 +49,11 @@
 
     static int Number(AppRecordDto record, string key)
     {
-        // 🔴 NumberStyles.Any is load-bearing, and the plain int.TryParse overload that used to be
+        // ðŸ”´ NumberStyles.Any is load-bearing, and the plain int.TryParse overload that used to be
         // here made every counter on the public blog read ZERO.
         //
         // Typed storage hands a Number field back as a decimal, so Convert.ToString gives
-        // "2.000000" — and int.TryParse("2.000000") is FALSE, which fell through to 0. Every card
+        // "2.000000" â€” and int.TryParse("2.000000") is FALSE, which fell through to 0. Every card
         // showed "0 reads" while the database held the right value, including seeded posts with
         // 15,420 views. The two admin scripts already had the correct overload; only this one, the
         // surface readers actually see, did not.
@@ -80,19 +102,343 @@
     }
 
     // ---- owner settings ---------------------------------------------------------------------
-    // Portal settings under the MegaFormBlogs_ prefix, written by the console's Settings screen
+    // Settings under the MegaFormBlogs_ prefix, written by the console's Settings screen
     // (MegaFormBlogsAdminSettings.cshtml). Same prefix in both files or neither.
-    static string Setting(int portalId, string key, string fallback)
+    //
+    // ðŸ”µ CHANNEL-AWARE since 1.17.0. One instance of this module IS one channel: /Docs, /News,
+    // /ThoiSu each carry their own copy of this module and must be able to differ. DNN already
+    // hands a Razor Host script its own ModuleInfo through Dnn.Module, with ModuleSettings
+    // preloaded, so reading a per-instance value costs nothing extra.
+    //
+    // Order is module-first, portal-fallback, and that order is what keeps the existing /Blogs
+    // byte-identical: it has no module settings at all, so every lookup falls straight through to
+    // the portal value it already used.
+    //
+    // NOT static, on purpose. A Razor page class is instantiated once per request, so an INSTANCE
+    // member can safely touch Dnn.Module; a static one is shared across requests and would hand
+    // one channel's settings to another. Every existing call site keeps its signature.
+    const string SettingPrefix = "MegaFormBlogs_";
+
+    string Setting(int portalId, string key, string fallback)
     {
-        var value = DotNetNuke.Entities.Portals.PortalController.GetPortalSetting(
-            "MegaFormBlogs_" + key, portalId, fallback);
+        var name = SettingPrefix + key;
+        try
+        {
+            var module = Dnn == null ? null : Dnn.Module;
+            if (module != null && module.ModuleSettings != null && module.ModuleSettings.ContainsKey(name))
+            {
+                var scoped = Convert.ToString(module.ModuleSettings[name]);
+                // An empty module setting means "not set for this channel", never "set to blank" -
+                // otherwise clearing a box on one channel would silently blank the portal default.
+                if (!string.IsNullOrWhiteSpace(scoped)) return scoped;
+            }
+        }
+        catch
+        {
+            // Rendered outside a module context (preview, tooling): fall through to the portal.
+        }
+
+        var value = DotNetNuke.Entities.Portals.PortalController.GetPortalSetting(name, portalId, fallback);
         return string.IsNullOrWhiteSpace(value) ? fallback : value;
     }
 
-    static bool Flag(int portalId, string key, bool fallback)
+    bool Flag(int portalId, string key, bool fallback)
     {
         var raw = Setting(portalId, key, fallback ? "true" : "false").Trim().ToLowerInvariant();
         return raw != "false" && raw != "0" && raw != "no" && raw != "off";
+    }
+
+    /// The channel this instance serves. Empty = the original, unnamed blog channel, which is what
+    /// every module installed before 1.17.0 reports - so their templates keep matching.
+    /// Read from the MODULE only: a channel is a property of this instance by definition, and a
+    /// portal-level fallback here would quietly make every module on the site the same channel.
+    string ChannelKey()
+    {
+        return ModuleSetting("Channel");
+    }
+
+    /// The form this channel reads. Empty = the classic blog channel, which reads the blog-starter
+    /// named queries instead. Accepts a form id or an exact form title, because an id is what an
+    /// admin can copy off the console and a title is what survives being described in a handoff.
+    string SourceFormSetting()
+    {
+        return ModuleSetting("SourceForm");
+    }
+
+    string ModuleSetting(string key)
+    {
+        try
+        {
+            var module = Dnn == null ? null : Dnn.Module;
+            if (module != null && module.ModuleSettings != null)
+            {
+                var value = Convert.ToString(module.ModuleSettings[SettingPrefix + key]);
+                return (value ?? "").Trim();
+            }
+        }
+        catch { }
+        return "";
+    }
+
+    // ---- article tree ---------------------------------------------------------------------
+    // A channel whose source form carries tree fields renders as a TREE on the left and the open
+    // article on the right, on one page. The field names below are a CONVENTION, not configuration:
+    // one more settings box per field is four more ways to typo a channel into blankness.
+    class TreeNode
+    {
+        public int SubmissionId;
+        public string Key, ParentKey, SortKey, NavTitle, Title, Excerpt, Body, Headings, Status;
+        public int Depth;
+        public int Views, RatingSum, RatingCount;
+    }
+
+    class TreeCacheEntry { public List<TreeNode> Nodes; public DateTime ReadAtUtc; public bool Bounded; }
+
+    // ---- Per-article metrics on a channel -------------------------------------------------------
+    //
+    // The classic blog reads view_count and comment_count straight off the post record, because
+    // MegaForm.Core's BlogAnalyticsRollupService maintains them there. A channel form is an ordinary
+    // form with none of that machinery, so these counters are the module's own: it adds the fields
+    // to the source form the first time it needs them, and writes them back through the SDK.
+    //
+    // Self-provisioning rather than a documented setup step, for the same reason the tree field
+    // names are a convention: a channel that silently shows zeros because someone skipped a manual
+    // schema edit is worse than one extra write on first use.
+
+    const string ViewedSessionKey = "mfb-viewed";
+    const string RatedSessionKey = "mfb-rated";
+
+    static bool EnsureDocMetricFields(int formId, MegaFormScope scope)
+    {
+        if (formId <= 0) return false;
+        try
+        {
+            var form = Run(c => c.Forms.GetFormAsync(formId, scope));
+            if (form == null || string.IsNullOrWhiteSpace(form.SchemaJson)) return false;
+
+            var missing = new List<string>();
+            foreach (var key in new[] { "view_count", "rating_sum", "rating_count" })
+            {
+                if (form.SchemaJson.IndexOf("\"" + key + "\"", StringComparison.OrdinalIgnoreCase) < 0)
+                    missing.Add(key);
+            }
+            if (missing.Count == 0) return false;
+
+            var at = form.SchemaJson.IndexOf("{\"key\":", StringComparison.Ordinal);
+            if (at < 0) return false;
+            var add = "";
+            foreach (var key in missing)
+                add += "{\"key\":\"" + key + "\",\"type\":\"Number\",\"label\":\"" + key + "\"},";
+
+            Run(c => c.Forms.UpdateFormAsync(formId,
+                new UpdateFormRequest { SchemaJson = form.SchemaJson.Substring(0, at) + add + form.SchemaJson.Substring(at) },
+                scope));
+            return true;
+        }
+        catch { return false; }   // a missing counter must never cost the reader the page
+    }
+
+    /// One visitor, counted once per article per session. Returns null when there is no session to
+    /// remember with, and the caller then simply does not count - inflating a number is worse than
+    /// missing one.
+    static HashSet<string> SessionSet(string key)
+    {
+        try
+        {
+            var ctx = System.Web.HttpContext.Current;
+            if (ctx == null || ctx.Session == null) return null;
+            var set = ctx.Session[key] as HashSet<string>;
+            if (set == null) { set = new HashSet<string>(StringComparer.Ordinal); ctx.Session[key] = set; }
+            return set;
+        }
+        catch { return null; }
+    }
+
+    static void RegisterView(MegaFormScope scope, TreeNode node)
+    {
+        if (node == null || node.SubmissionId <= 0) return;
+        var seen = SessionSet(ViewedSessionKey);
+        if (seen == null) return;
+        if (!seen.Add(scope.PortalId + "|" + node.SubmissionId)) return;   // this reader already counted
+        var next = node.Views + 1;
+        try
+        {
+            Run(c => c.Records.PatchRecordAsync(node.SubmissionId,
+                new Dictionary<string, object> { { "view_count", next } }, scope));
+            node.Views = next;
+        }
+        catch { /* never let a counter take the article down */ }
+    }
+
+    /// Returns null on success, otherwise a reader-safe message. One rating per article per session:
+    /// this is an anonymous public page, so the honest claim is "not trivially repeatable", not
+    /// "one vote per person".
+    static string RegisterRating(MegaFormScope scope, TreeNode node, int stars)
+    {
+        if (node == null || node.SubmissionId <= 0) return null;
+        if (stars < 1 || stars > 5) return null;
+        var rated = SessionSet(RatedSessionKey);
+        if (rated != null && !rated.Add(scope.PortalId + "|" + node.SubmissionId))
+            return "Thanks - you have already rated this page.";
+        try
+        {
+            Run(c => c.Records.PatchRecordAsync(node.SubmissionId,
+                new Dictionary<string, object> {
+                    { "rating_sum", node.RatingSum + stars },
+                    { "rating_count", node.RatingCount + 1 }
+                }, scope));
+            node.RatingSum += stars;
+            node.RatingCount += 1;
+            return null;
+        }
+        catch { return "Sorry, that rating could not be saved."; }
+    }
+
+    static double AverageStars(TreeNode node)
+    {
+        if (node == null || node.RatingCount <= 0) return 0;
+        return Math.Round((double)node.RatingSum / node.RatingCount, 1);
+    }
+
+    /// Five glyphs, filled by rounding to the nearest whole star. Deliberately not half-stars: at
+    /// the 13px this renders in the article list a half glyph is indistinguishable from a full one.
+    static string StarBar(double average)
+    {
+        var filled = (int)Math.Round(average, MidpointRounding.AwayFromZero);
+        if (filled < 0) filled = 0;
+        if (filled > 5) filled = 5;
+        return new string('★', filled) + new string('☆', 5 - filled);
+    }
+
+    // One read serves every visitor for a minute. The source form belongs to no app (a form created
+    // through Forms.CreateFormAsync gets no AppScope), so there is no named query to call and the
+    // only route is SearchAsync + a GetRecordAsync per row. Without this cache a 57-page channel
+    // would cost 57 SDK calls PER VIEW.
+    const int TreeCacheSeconds = 60;
+    const int MaxTreeRows = 250;
+
+    static readonly System.Collections.Concurrent.ConcurrentDictionary<string, TreeCacheEntry> Trees =
+        new System.Collections.Concurrent.ConcurrentDictionary<string, TreeCacheEntry>(StringComparer.OrdinalIgnoreCase);
+    static readonly System.Collections.Concurrent.ConcurrentDictionary<string, int> SourceFormIds =
+        new System.Collections.Concurrent.ConcurrentDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+    static int ResolveSourceFormId(MegaFormScope scope, string setting)
+    {
+        setting = (setting ?? "").Trim();
+        if (setting.Length == 0) return 0;
+
+        var cacheKey = scope.PortalId + "|" + setting;
+        int cached;
+        if (SourceFormIds.TryGetValue(cacheKey, out cached)) return cached;
+
+        var resolved = 0;
+        int byId;
+        if (int.TryParse(setting, System.Globalization.NumberStyles.Integer,
+                         System.Globalization.CultureInfo.InvariantCulture, out byId) && byId > 0)
+        {
+            // Still verified through the SDK so a wrong id cannot reach across portals.
+            var form = Run(c => c.Forms.GetFormAsync(byId, scope));
+            if (form != null) resolved = form.FormId;
+        }
+        else
+        {
+            var forms = Run(c => c.Forms.ListFormsAsync(new FormQuery { Page = 1, PageSize = 200 }, scope));
+            if (forms != null && forms.Items != null)
+            {
+                foreach (var form in forms.Items)
+                {
+                    if (string.Equals((form.Title ?? "").Trim(), setting, StringComparison.OrdinalIgnoreCase))
+                    {
+                        resolved = form.FormId;
+                        break;
+                    }
+                }
+            }
+        }
+
+        SourceFormIds[cacheKey] = resolved;
+        return resolved;
+    }
+
+    static TreeCacheEntry ArticleTree(MegaFormScope scope, int formId)
+    {
+        var key = scope.PortalId + "|" + formId;
+        TreeCacheEntry cached;
+        if (Trees.TryGetValue(key, out cached)
+            && (DateTime.UtcNow - cached.ReadAtUtc).TotalSeconds < TreeCacheSeconds)
+        {
+            return cached;
+        }
+
+        var entry = new TreeCacheEntry { Nodes = new List<TreeNode>(), ReadAtUtc = DateTime.UtcNow };
+        if (formId <= 0) { Trees[key] = entry; return entry; }
+
+        var scan = Run(c => c.SubmissionDashboard.SearchAsync(
+            new SubmissionSearchQuery { FormId = formId, Page = 1, PageSize = MaxTreeRows }, scope));
+        if (scan == null || scan.Items == null) { Trees[key] = entry; return entry; }
+
+        // Said out loud rather than drawing a tree that is quietly missing branches.
+        entry.Bounded = scan.TotalCount > MaxTreeRows;
+
+        var reads = scan.Items.Select(row =>
+            RunTask(c => c.Records.GetRecordAsync(row.SubmissionId, scope))).ToArray();
+        System.Threading.Tasks.Task.WaitAll(reads);
+
+        foreach (var read in reads)
+        {
+            var record = read.Result;
+            if (record == null) continue;
+            var nodeKey = Text(record, "doc_key", Text(record, "slug", ""));
+            if (nodeKey.Length == 0) continue;
+            entry.Nodes.Add(new TreeNode
+            {
+                SubmissionId = record.SubmissionId,
+                Key = nodeKey,
+                ParentKey = Text(record, "parent_key", ""),
+                SortKey = Text(record, "doc_sort_key", Text(record, "sort_order", "")),
+                Depth = Number(record, "doc_depth"),
+                NavTitle = Text(record, "nav_title", Text(record, "title", nodeKey)),
+                Title = Text(record, "title", nodeKey),
+                Excerpt = Text(record, "excerpt", ""),
+                Body = Text(record, "body", ""),
+                Headings = Text(record, "headings_json", "[]"),
+                Status = Text(record, "status", "published"),
+                Views = Number(record, "view_count"),
+                RatingSum = Number(record, "rating_sum"),
+                RatingCount = Number(record, "rating_count")
+            });
+        }
+
+        // ðŸ”´ Ordinal, and only ordinal. doc_sort_key is "0010/0020" - a STRING that looks numeric,
+        // and any comparer that sniffs the type first turns it into a number and throws on the
+        // three-level form. Ordinal over zero-padded segments IS reading order, so the flat list,
+        // prev/next and "next sibling" all fall out of this one sort.
+        entry.Nodes = entry.Nodes.OrderBy(n => n.SortKey, StringComparer.Ordinal).ToList();
+        Trees[key] = entry;
+        return entry;
+    }
+
+    /// Heading list frozen at import time. Parsed WITHOUT a JSON library on purpose: a Razor Host
+    /// script compiles at runtime against whatever the host references, and naming Newtonsoft here
+    /// compiled to nothing - the page rendered blank with HTTP 200 and no error anywhere.
+    static List<object> ParseHeadings(string json)
+    {
+        var list = new List<object>();
+        if (string.IsNullOrWhiteSpace(json)) return list;
+        foreach (Match item in Regex.Matches(json, @"\{[^{}]*\}"))
+        {
+            var id = Regex.Match(item.Value, "\"id\"\\s*:\\s*\"(.*?)(?<!\\\\)\"");
+            var text = Regex.Match(item.Value, "\"text\"\\s*:\\s*\"(.*?)(?<!\\\\)\"");
+            if (!id.Success || !text.Success) continue;
+            var level = Regex.Match(item.Value, "\"level\"\\s*:\\s*(\\d+)");
+            list.Add(new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["id"] = id.Groups[1].Value,
+                ["text"] = text.Groups[1].Value.Replace("\\\"", "\"").Replace("\\\\", "\\"),
+                ["sub"] = level.Success && level.Groups[1].Value != "2"
+            });
+        }
+        return list;
     }
 
     /// Comma-separated tags, compared whole and case-insensitively: "AI" must not match "AIOps".
@@ -104,7 +450,7 @@
             .Any(x => string.Equals(x, tag, StringComparison.OrdinalIgnoreCase));
     }
 
-    /// publish_date, falling back to when the record arrived. Invariant — this file has no
+    /// publish_date, falling back to when the record arrived. Invariant â€” this file has no
     /// System.Globalization import and a host thread has no portal locale.
     static DateTime PostDate(AppRecordDto record)
     {
@@ -133,33 +479,144 @@
         return sectionTitle;
     }
 
-    /// Adds an id to every h2/h3 in the article body and returns the headings for a table of
-    /// contents. The body is trusted editorial HTML that the module already renders raw, so this
-    /// only INSERTS an id attribute — it never re-encodes or rewrites the author's markup.
-    /// Headings that already carry an id keep it, so a hand-written anchor still works.
-    static List<KeyValuePair<string, string>> BuildToc(ref string bodyHtml)
+    /// The two public named-query reads that carry NO visitor input: the wide published list
+    /// (page 1, 100 rows) and the hero. Every anonymous reader gets byte-identical rows from
+    /// them, and each one costs ~9 DB round trips and up to 500 rows materialised server-side,
+    /// so before this the blog paid that bill once per page view.
+    ///
+    /// ðŸ”´ Nothing keyed by ?q=, ?category= or ?slug= is ever cached here. A dictionary whose keys
+    /// come from the query string of an anonymous page is a memory-exhaustion vector, not a
+    /// cache â€” one visitor with a loop of random search terms would grow it without bound.
+    /// The cost of that decision is that a filtered list stays uncached; the cost of the other
+    /// decision is the site.
+    ///
+    /// The deal for the editor is the same one the template cache already states: a change is
+    /// live within a minute.
+    class QueryCacheEntry { public AppQueryResultDto Result; public DateTime ReadAtUtc; }
+    const int PublicQueryCacheSeconds = 45;
+    static readonly System.Collections.Concurrent.ConcurrentDictionary<string, QueryCacheEntry> PublicQueries =
+        new System.Collections.Concurrent.ConcurrentDictionary<string, QueryCacheEntry>(StringComparer.OrdinalIgnoreCase);
+
+    static AppQueryResultDto CachedPublicQuery(MegaFormScope scope, string queryKey, int pageSize)
     {
-        var headings = new List<KeyValuePair<string, string>>();
+        var key = scope.PortalId + "|" + queryKey + "|" + pageSize;
+        QueryCacheEntry cached;
+        if (PublicQueries.TryGetValue(key, out cached)
+            && (DateTime.UtcNow - cached.ReadAtUtc).TotalSeconds < PublicQueryCacheSeconds)
+        {
+            return cached.Result;
+        }
+
+        var fresh = Run(c => c.Queries.ExecuteAsync("blog-starter", queryKey,
+            new AppQueryRequest { Page = 1, PageSize = pageSize }, scope));
+        // A failed read is not cached: the next visitor retries instead of inheriting a blank
+        // blog for the next 45 seconds.
+        if (fresh != null) { PublicQueries[key] = new QueryCacheEntry { Result = fresh, ReadAtUtc = DateTime.UtcNow }; }
+        return fresh;
+    }
+
+    /// One page taken out of a wider result the caller already paid for. The named query sorts
+    /// the same snapshot the same way on every call, so row 13-24 of a 100-row read is the same
+    /// set the server would have returned for page 2 of 12 â€” minus a second round of ~9 DB round
+    /// trips and up to 500 rows materialised server-side.
+    static AppQueryResultDto SliceResult(AppQueryResultDto wide, int page, int size)
+    {
+        if (wide == null) return null;
+        return new AppQueryResultDto
+        {
+            AppKey = wide.AppKey,
+            QueryKey = wide.QueryKey,
+            FormId = wide.FormId,
+            Items = wide.Items.Skip((page - 1) * size).Take(size).ToList(),
+            TotalCount = wide.TotalCount,
+            Page = page,
+            PageSize = size,
+            IsBounded = wide.IsBounded
+        };
+    }
+
+    /// One row of the "On this page" list. Carries the real heading level instead of encoding it
+    /// as leading spaces in the text, so a template can nest without string-sniffing.
+    class TocEntry { public string Id; public string Text; public int Level; }
+
+    /// Turns heading text into a stable anchor: lowercase ASCII, diacritics folded, everything
+    /// else collapsed to a single dash. Vietnamese "CÃ i Ä‘áº·t" and "Cai dat" land on the same slug,
+    /// which is what a reader typing a URL by hand expects.
+    static string SlugifyHeading(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return "";
+
+        var lowered = text.Trim().ToLowerInvariant().Replace("Ä‘", "d").Replace("Ä", "d");
+        var decomposed = lowered.Normalize(System.Text.NormalizationForm.FormD);
+
+        var builder = new System.Text.StringBuilder(decomposed.Length);
+        foreach (var ch in decomposed)
+        {
+            if (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(ch)
+                == System.Globalization.UnicodeCategory.NonSpacingMark)
+                continue;
+            if ((ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')) builder.Append(ch);
+            else if (builder.Length > 0 && builder[builder.Length - 1] != '-') builder.Append('-');
+        }
+
+        var slug = builder.ToString().Trim('-');
+        if (slug.Length > 60) slug = slug.Substring(0, 60).TrimEnd('-');
+        return slug;
+    }
+
+    /// Adds an id to every h2/h3/h4 in the article body and returns the headings for a table of
+    /// contents. The body is trusted editorial HTML that the module already renders raw, so this
+    /// only INSERTS an id attribute â€” it never re-encodes or rewrites the author's markup.
+    /// Headings that already carry an id keep it, so a hand-written anchor still works.
+    ///
+    /// ðŸ”´ The id is derived from the heading TEXT, never from its position. The old scheme
+    /// ("mfb-h" + running index) meant that inserting one &lt;h2&gt; mid-article silently
+    /// repointed every anchor below it: HTTP 200, wrong place, and every link ever shared or
+    /// indexed for that article broke at once. Text-derived slugs only change when the heading
+    /// itself is rewritten.
+    static List<TocEntry> BuildToc(ref string bodyHtml)
+    {
+        var headings = new List<TocEntry>();
         if (string.IsNullOrWhiteSpace(bodyHtml)) return headings;
 
-        var index = 0;
+        // Seed with the ids ALREADY in the body â€” including ones on elements that are not
+        // headings â€” so a generated slug can never collide with a hand-written anchor that
+        // happens to sit further down the document.
         var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        bodyHtml = Regex.Replace(bodyHtml, @"<h([23])(\s[^>]*)?>(.*?)</h\1>", match =>
+        foreach (Match existingId in Regex.Matches(bodyHtml, @"\bid\s*=\s*[""']([^""']+)[""']", RegexOptions.IgnoreCase))
+            used.Add(existingId.Groups[1].Value);
+
+        var index = 0;
+        bodyHtml = Regex.Replace(bodyHtml, @"<h([234])(\s[^>]*)?>(.*?)</h\1>", match =>
         {
             var level = match.Groups[1].Value;
             var attributes = match.Groups[2].Value ?? "";
             var inner = match.Groups[3].Value;
-            // 🔴 Decode, because the heading's own HTML holds ENTITIES (&quot;, &ndash;) and Razor
-            // encodes whatever we hand it — leaving "&amp;quot;" on screen as literal &quot;.
+            // ðŸ”´ Decode, because the heading's own HTML holds ENTITIES (&quot;, &ndash;) and Razor
+            // encodes whatever we hand it â€” leaving "&amp;quot;" on screen as literal &quot;.
             var text = HttpUtility.HtmlDecode(Regex.Replace(inner, "<[^>]+>", "")).Trim();
             if (text.Length == 0) return match.Value;
 
             index++;
             var existing = Regex.Match(attributes, @"\bid\s*=\s*[""']([^""']+)[""']", RegexOptions.IgnoreCase);
-            var id = existing.Success ? existing.Groups[1].Value : "mfb-h" + index;
-            if (!used.Add(id)) { id = id + "-" + index; }
+            string id;
+            if (existing.Success)
+            {
+                id = existing.Groups[1].Value;
+            }
+            else
+            {
+                var slug = SlugifyHeading(text);
+                // A heading of pure punctuation or CJK folds to nothing; only then does position
+                // decide, and only for that one heading.
+                id = "mfb-" + (slug.Length > 0 ? slug : "h" + index);
+                var candidate = id;
+                var suffix = 2;
+                while (!used.Add(candidate)) { candidate = id + "-" + suffix; suffix++; }
+                id = candidate;
+            }
 
-            headings.Add(new KeyValuePair<string, string>(id, (level == "3" ? "  " : "") + text));
+            headings.Add(new TocEntry { Id = id, Text = text, Level = int.Parse(level) });
             return existing.Success
                 ? match.Value
                 : "<h" + level + " id=\"" + id + "\"" + attributes + ">" + inner + "</h" + level + ">";
@@ -193,12 +650,12 @@
 
     /// Writes the article's SEO tags into the PAGE HEAD.
     ///
-    /// 🔴 Timing is the whole problem. A RazorHost script renders inside the module's control,
+    /// ðŸ”´ Timing is the whole problem. A RazorHost script renders inside the module's control,
     /// which happens AFTER the head control has already rendered, so adding literals to
     /// Page.Header at that point produces nothing. DNN's own page properties (Title / Description
     /// / KeyWords on CDefault) are read while the head renders, and DNN also owns the canonical
     /// link, so those go through the page object; only the OpenGraph/Twitter block is added as a
-    /// control, and it is added to the FORM rather than the head — invalid-ish HTML that every
+    /// control, and it is added to the FORM rather than the head â€” invalid-ish HTML that every
     /// crawler still reads, and the honest alternative to silently writing nothing.
     /// Returns what it managed to set so the caller can say so.
     static string ApplySeoHead(AppRecordDto post, string absoluteUrl)
@@ -214,9 +671,9 @@
             var keywords = Text(post, "meta_keywords", "");
             var applied = "";
 
-            // 🔴 MEASURED, not assumed. Setting CDefault.Title / .Description / .KeyWords from here
+            // ðŸ”´ MEASURED, not assumed. Setting CDefault.Title / .Description / .KeyWords from here
             // does NOTHING: DNN pushes those into the head during its own Load, long before a
-            // RazorHost module renders. What DOES work is touching the head control itself —
+            // RazorHost module renders. What DOES work is touching the head control itself â€”
             // HtmlHead renders its Title and its child controls at RENDER time, which is after us.
             if (page.Header != null)
             {
@@ -287,13 +744,13 @@
 
     // ---- read tracking ---------------------------------------------------------------------
     //
-    // ⭐ TWIN OF MegaForm.Blogs.Oqtane/BlogReadTracker.cs. Keep the two in step: the whole point is
+    // â­ TWIN OF MegaForm.Blogs.Oqtane/BlogReadTracker.cs. Keep the two in step: the whole point is
     // that a read counts the same on both platforms.
     //
     // WHAT THIS DOES NOT DO: it does not touch view_count. MegaForm.Core's
     // BlogAnalyticsRollupService already ASSIGNS view_count / unique_readers / share_count / ... to
     // every post by counting rows in the blog app's `reader-events` form and grouping them on
-    // post_uid, and DnnServiceLocator already schedules it. The counter was never missing — only
+    // post_uid, and DnnServiceLocator already schedules it. The counter was never missing â€” only
     // the events were. Appending an event also avoids the lost-update race an increment would have
     // had, and cannot damage the post it is counting.
     //
@@ -341,7 +798,7 @@
     }
 
     /// Claims this (post, visitor) pair for the dedupe window. Atomic: two concurrent requests
-    /// must not both win. This is a rate limiter, never a correctness mechanism — it lives in
+    /// must not both win. This is a rate limiter, never a correctness mechanism â€” it lives in
     /// process memory and an app-pool recycle empties it.
     static bool ClaimFirstRead(string key)
     {
@@ -420,7 +877,7 @@
 
     /// Records one read. Every failure path returns false rather than throwing: a reader's page
     /// must never fail because analytics did.
-    /// NOTE: ip / userAgent / referrer MUST be captured on the page thread by the caller —
+    /// NOTE: ip / userAgent / referrer MUST be captured on the page thread by the caller â€”
     /// Run<T> hops onto a threadpool thread where HttpContext.Current is null.
     static bool TrackRead(string appKey, MegaFormScope scope, AppRecordDto post,
                           string ip, string userAgent, string referrer)
@@ -478,8 +935,8 @@
     // =====================================================================================
     // TEMPLATE ENGINE. The server twin of the interpreter in the templates console, and it has
     // to STAY a twin: what an editor sees in the live preview is what a reader gets. Supported,
-    // and nothing else: {{var}} {{a.b}} {{{raw}}} {{#each list}}…{{else}}…{{/each}}
-    // {{#if value}}…{{else}}…{{/if}}. Values are HTML-encoded on substitution; the triple form
+    // and nothing else: {{var}} {{a.b}} {{{raw}}} {{#each list}}â€¦{{else}}â€¦{{/each}}
+    // {{#if value}}â€¦{{else}}â€¦{{/if}}. Values are HTML-encoded on substitution; the triple form
     // is the one escape hatch, and it exists for post.body, which is already HTML.
     // =====================================================================================
     /// One post as a template sees it. The SAME keys the editor's mock offers - if these two ever
@@ -491,6 +948,16 @@
         return new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
         {
             ["title"] = Text(post, "title", "Untitled story"),
+            // The posts schema has carried these since the starter shipped
+            // (ConfiguredAppStarterDefinitions.cs:347/:363/:372/:387) and nothing mapped them, so
+            // a template asking for {{post.subtitle}} printed NOTHING and said nothing about it â€”
+            // the server renderer never reports an unresolved variable.
+            ["subtitle"] = Text(post, "subtitle", ""),
+            ["imageAlt"] = Text(post, "image_alt_text", Text(post, "title", "")),
+            ["mediaCaption"] = Text(post, "media_caption", ""),
+            ["shares"] = Number(post, "share_count"),
+            ["sharesLabel"] = Plural(Number(post, "share_count"), "share", "shares"),
+            ["authorFollowers"] = Number(post, "author_followers"),
             ["excerpt"] = Text(post, "excerpt", ""),
             ["category"] = Text(post, "category", "Insights"),
             ["author"] = Text(post, "author_name", "MegaForm Editorial"),
@@ -720,9 +1187,18 @@
     static readonly System.Collections.Concurrent.ConcurrentDictionary<string, TplCacheEntry> ActiveTemplates =
         new System.Collections.Concurrent.ConcurrentDictionary<string, TplCacheEntry>(StringComparer.OrdinalIgnoreCase);
 
-    static TplCacheEntry ActiveTemplate(MegaFormScope scope, string group)
+    /// ðŸ”µ CHANNEL-AWARE since 1.17.0. The cache key used to be portal + target, which meant every
+    /// module on the portal was forced to share one design: turning News into a newsroom layout
+    /// also repainted Docs, with nothing on screen to say why. Channel is now part of the key.
+    ///
+    /// Matching is two-tier and deliberately forgiving: a template naming THIS channel wins; a
+    /// template with a blank channel is the site-wide default and is used when the channel has no
+    /// template of its own. That second tier is what keeps every existing install working - their
+    /// template rows have no channel value at all, so they stay the default for everything.
+    static TplCacheEntry ActiveTemplate(MegaFormScope scope, string channel, string group)
     {
-        var key = scope.PortalId + "|" + group;
+        channel = (channel ?? "").Trim();
+        var key = scope.PortalId + "|" + channel + "|" + group;
         TplCacheEntry cached;
         if (ActiveTemplates.TryGetValue(key, out cached)
             && (DateTime.UtcNow - cached.ReadAtUtc).TotalSeconds < 60)
@@ -739,15 +1215,30 @@
                 new SubmissionSearchQuery { FormId = formId, Page = 1, PageSize = 100 }, scope));
             if (scan != null && scan.Items != null)
             {
+                AppRecordDto fallbackRow = null;
                 foreach (var row in scan.Items)
                 {
                     var typed = Run(c => c.Records.GetRecordAsync(row.SubmissionId, scope));
                     if (typed == null) continue;
                     if (!string.Equals(Text(typed, "template_group", ""), group, StringComparison.OrdinalIgnoreCase)) continue;
                     if (!string.Equals(Text(typed, "is_active", "false"), "true", StringComparison.OrdinalIgnoreCase)) continue;
-                    entry.Body = Text(typed, "template_body", "");
-                    entry.Name = Text(typed, "template_name", "");
+
+                    // Missing field on an older templates form reads as "" - the site-wide default.
+                    var rowChannel = Text(typed, "template_channel", "").Trim();
+                    if (rowChannel.Length == 0)
+                    {
+                        if (fallbackRow == null) { fallbackRow = typed; }
+                        continue;
+                    }
+                    if (!string.Equals(rowChannel, channel, StringComparison.OrdinalIgnoreCase)) continue;
+
+                    fallbackRow = typed;   // exact channel match: stop looking
                     break;
+                }
+                if (fallbackRow != null)
+                {
+                    entry.Body = Text(fallbackRow, "template_body", "");
+                    entry.Name = Text(fallbackRow, "template_name", "");
                 }
             }
         }
@@ -808,8 +1299,8 @@
             new SubmissionSearchQuery { FormId = formId, Page = 1, PageSize = cap }, scope));
         if (scan == null || scan.Items == null) return rows;
 
-        var reads = scan.Items.Select(row => System.Threading.Tasks.Task.Run(() =>
-            MegaFormSdk.RunAsync(c => c.Records.GetRecordAsync(row.SubmissionId, scope)))).ToArray();
+        var reads = scan.Items.Select(row =>
+            RunTask(c => c.Records.GetRecordAsync(row.SubmissionId, scope))).ToArray();
         System.Threading.Tasks.Task.WaitAll(reads);
         foreach (var read in reads)
         {
@@ -980,11 +1471,11 @@
     /// <param name="expected">
     /// The post's rollup-maintained comment_count. It is what makes this bounded read both cheap
     /// and correct as the blog grows:
-    ///   0  → only the newest 25 rows are looked at, so an article with no comments stops paying
+    ///   0  â†’ only the newest 25 rows are looked at, so an article with no comments stops paying
     ///        for a 100-row scan on every single view (it still catches a comment approved since
     ///        the last 5-minute rollup tick);
-    ///   >0 → pages through the form until that many approved comments have been found, so a post
-    ///        whose comments are older than the newest 100 rows no longer loses them — the old
+    ///   >0 â†’ pages through the form until that many approved comments have been found, so a post
+    ///        whose comments are older than the newest 100 rows no longer loses them â€” the old
     ///        single-page scan silently dropped every comment past row 100 blog-wide.
     /// Either way the walk is hard-capped, and one page is the common case.
     /// </param>
@@ -1008,8 +1499,8 @@
 
                 // The typed resolve is a remote round trip per row (~1s on some hosts), so fan the
                 // reads out in parallel the same way the page's named queries already run.
-                var reads = scan.Items.Select(row => System.Threading.Tasks.Task.Run(() =>
-                    MegaFormSdk.RunAsync(c => c.Records.GetRecordAsync(row.SubmissionId, scope)))).ToArray();
+                var reads = scan.Items.Select(row =>
+                    RunTask(c => c.Records.GetRecordAsync(row.SubmissionId, scope))).ToArray();
                 System.Threading.Tasks.Task.WaitAll(reads);
 
                 foreach (var read in reads)
@@ -1089,6 +1580,14 @@
         ? null : DotNetNuke.Entities.Portals.PortalSettings.Current.ActiveTab;
     var baseUrl = activeTab == null
         ? Request.RawUrl : DotNetNuke.Common.Globals.NavigateURL(activeTab.TabID);
+    // ---- channel: does this instance read a tree instead of the blog? ----------------------
+    // A Blogs module IS a channel. Point it at a source form and it stops being a blog and becomes
+    // an article tree: nav on the left, the open article on the right, one page. Leave the setting
+    // empty and nothing below changes - that is the classic blog channel, reading blog-starter.
+    var sourceFormId = ResolveSourceFormId(scope, SourceFormSetting());
+    var treeMode = sourceFormId > 0;
+    var docKey = (Request.QueryString["doc"] ?? "").Trim();
+
     var slug = (Request.QueryString["slug"] ?? "").Trim();
     // DNN rewrites query values into path segments, and a non-numeric one (the slug) does
     // not always survive a FORM POST - the comment form therefore also carries the slug in a
@@ -1117,9 +1616,9 @@
     // Every default below is the behaviour this page had before the settings screen existed,
     // so a portal that has never opened that screen renders exactly as it did.
     var pageSize = 12;
-    // 🔴 Fully qualified on purpose: this file does NOT `@using System.Globalization`, and a
+    // ðŸ”´ Fully qualified on purpose: this file does NOT `@using System.Globalization`, and a
     // RazorHost compile error renders the module as an EMPTY BLOCK with no error anywhere on the
-    // page — the whole public blog just vanishes. Measured: 1.6.0 shipped with a bare
+    // page â€” the whole public blog just vanishes. Measured: 1.6.0 shipped with a bare
     // `NumberStyles.Integer` here and /Blogs came back 200 with nothing in it.
     if (!int.TryParse(Setting(portalId, "PageSize", "12"), System.Globalization.NumberStyles.Integer,
                       System.Globalization.CultureInfo.InvariantCulture, out pageSize)) { pageSize = 12; }
@@ -1184,10 +1683,84 @@
     string commentError = null;
     var commentPosted = string.Equals(Request.QueryString["commented"], "1", StringComparison.OrdinalIgnoreCase);
 
+    // ---- tree channel state ----------------------------------------------------------------
+    List<TreeNode> treeNodes = new List<TreeNode>();
+    string rateMessage = null;   // shown once, next to the stars, after a rating postback
+    TreeNode openNode = null, prevNode = null, nextNode = null;
+    var treeBounded = false;
+
+    if (treeMode)
+    {
+        try
+        {
+            var tree = ArticleTree(scope, sourceFormId);
+            treeBounded = tree.Bounded;
+            // Only published rows reach a reader. The import leaves MF_Submissions.Status at its
+            // transport default, so the typed field is the only gate there is.
+            treeNodes = tree.Nodes
+                .Where(n => string.Equals(n.Status, "published", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (docKey.Length > 0)
+            {
+                openNode = treeNodes.FirstOrDefault(n => string.Equals(n.Key, docKey, StringComparison.OrdinalIgnoreCase));
+            }
+            if (openNode == null)
+            {
+                // No ?doc= (or a key that no longer exists): open the first leaf so the right-hand
+                // pane is never an empty box on a first visit.
+                openNode = treeNodes.FirstOrDefault(n => n.Depth > 0 && n.Body.Length > 0);
+            }
+            if (openNode != null)
+            {
+                var leaves = treeNodes.Where(n => n.Depth > 0).ToList();
+                var at = leaves.FindIndex(n => n.SubmissionId == openNode.SubmissionId);
+                if (at > 0) { prevNode = leaves[at - 1]; }
+                if (at >= 0 && at < leaves.Count - 1) { nextNode = leaves[at + 1]; }
+
+                // Counters live on the source form, so make sure it can hold them before writing.
+                // Cheap after the first request: the check is a string search on a schema already in
+                // hand, and it only ever patches once.
+                EnsureDocMetricFields(sourceFormId, scope);
+
+                // A rating arrives as a normal postback on the DNN page form. It cannot be its own
+                // <form> - a nested form is deleted outright by the browser, which is how an earlier
+                // comment box on this module silently stopped submitting.
+                var ratePost = Request.Form["mfb_rate"];
+                if (!string.IsNullOrWhiteSpace(ratePost))
+                {
+                    var ratedKey = Request.Form["mfb_rate_doc"] ?? "";
+                    var target = treeNodes.FirstOrDefault(n =>
+                        string.Equals(n.Key, ratedKey, StringComparison.OrdinalIgnoreCase)) ?? openNode;
+                    int stars;
+                    if (int.TryParse(ratePost, System.Globalization.NumberStyles.Integer,
+                                     System.Globalization.CultureInfo.InvariantCulture, out stars))
+                    {
+                        rateMessage = RegisterRating(scope, target, stars);
+                        if (rateMessage == null) { rateMessage = "Thanks for rating this page."; }
+                    }
+                }
+
+                RegisterView(scope, openNode);
+            }
+        }
+        catch (Exception treeEx)
+        {
+            DotNetNuke.Services.Exceptions.Exceptions.LogException(treeEx);
+            loadError = "This channel could not be loaded. The site log has the details.";
+            if (isHostViewer) { loadErrorDetail = treeEx.ToString(); }
+        }
+    }
+
+    // A tree channel does not read the blog app at all: its content lives in its own form, and
+    // asking blog-starter for posts it does not have is a round trip that can only fail. The brace
+    // below closes right after this block's catch.
+    if (!treeMode)
+    {
     try
     {
         // A lens filters in memory, so it asks for the capped page (100, the query service's own
-        // maximum) and pages the RESULT. Bounded either way — a blog past 100 published posts
+        // maximum) and pages the RESULT. Bounded either way â€” a blog past 100 published posts
         // needs a server-side filter for these, which the named queries do not have yet.
         var publicRequest = new AppQueryRequest
         {
@@ -1205,34 +1778,59 @@
             publicRequest.Parameters["slug"] = slug;
         }
 
-        // [PerfFix 2026-08-07] These reads are independent of one another — run them in
+        // [PerfFix 2026-08-07] These reads are independent of one another â€” run them in
         // parallel instead of sequentially. Each named query still pays a handful of remote
         // DB round trips (~1s each on this host), so serial execution stacked them into the
         // page's TTFB. The typed-read N+1 inside the query service is fixed in Core 02.00.013
         // (ISubmissionDataBatchReader); this is the remaining client-side wait.
+        //
+        // [PerfFix 2026-08-10] The chip strip asks for the whole published set (page 1, 100) and
+        // the grid asks for its own page of the SAME unfiltered set. Whenever the grid's last row
+        // still falls inside those first 100 â€” every lens, and every home page up to page
+        // 100/pageSize â€” the two calls are the same query run twice. On this host one named query
+        // costs ~9 DB round trips and materialises up to 500 rows server-side regardless of
+        // PageSize, so the duplicate was the most expensive line on the page. Now the wide read
+        // serves both and the grid takes its slice. Anything filtered (category or ?q=) still
+        // needs its own query, because the chips must keep listing every category, not just the
+        // ones surviving the filter.
         var isDetail = !string.IsNullOrWhiteSpace(slug);
-        var appTask = System.Threading.Tasks.Task.Run(() => MegaFormSdk.RunAsync(
-            c => c.Apps.GetAppAsync("blog-starter", scope)));
-        var publicTask = System.Threading.Tasks.Task.Run(() => MegaFormSdk.RunAsync(
-            c => c.Queries.ExecuteAsync("blog-starter", "public-posts", publicRequest, scope)));
-        var featuredTask = isDetail ? null : System.Threading.Tasks.Task.Run(() => MegaFormSdk.RunAsync(
-            c => c.Queries.ExecuteAsync("blog-starter", "featured-posts",
-                new AppQueryRequest { Page = 1, PageSize = 1 }, scope)));
-        var categoryTask = isDetail ? null : System.Threading.Tasks.Task.Run(() => MegaFormSdk.RunAsync(
-            c => c.Queries.ExecuteAsync("blog-starter", "public-posts",
-                new AppQueryRequest { Page = 1, PageSize = 100 }, scope)));
+        var unfiltered = string.IsNullOrWhiteSpace(search) && string.IsNullOrWhiteSpace(category);
+        var shareWideList = !isDetail && unfiltered && (isLens || pageNumber * pageSize <= 100);
 
-        if (isDetail)
+        // These two are the FIRST SDK calls a classic blog page makes, so they are where a cold app
+        // domain used to fail. RunTask initializes the locator on this thread before spawning.
+        var appTask = RunTask(c => c.Apps.GetAppAsync("blog-starter", scope));
+        var publicTask = shareWideList ? null : RunTask(
+            c => c.Queries.ExecuteAsync("blog-starter", "public-posts", publicRequest, scope));
+        var featuredTask = isDetail ? null : System.Threading.Tasks.Task.Run(
+            () => CachedPublicQuery(scope, "featured-posts", 1));
+        var wideTask = isDetail ? null : System.Threading.Tasks.Task.Run(
+            () => CachedPublicQuery(scope, "public-posts", 100));
+
+        var pending = new List<System.Threading.Tasks.Task> { appTask };
+        if (publicTask != null) { pending.Add(publicTask); }
+        if (featuredTask != null) { pending.Add(featuredTask); }
+        if (wideTask != null) { pending.Add(wideTask); }
+        System.Threading.Tasks.Task.WaitAll(pending.ToArray());
+
+        app = appTask.Result;
+        if (!isDetail)
         {
-            System.Threading.Tasks.Task.WaitAll(appTask, publicTask);
+            featuredResult = featuredTask.Result;
+            categoryResult = wideTask.Result;
+        }
+
+        if (publicTask != null)
+        {
+            publicResult = publicTask.Result;
         }
         else
         {
-            System.Threading.Tasks.Task.WaitAll(appTask, publicTask, featuredTask, categoryTask);
+            // A lens asks for exactly the wide page (1, 100) and does its own filtering and
+            // paging further down, so it takes the result as-is; the home grid takes its slice.
+            publicResult = isLens ? wideTask.Result : SliceResult(wideTask.Result, pageNumber, pageSize);
         }
 
-        app = appTask.Result;
-        publicResult = publicTask.Result;
         if (isDetail)
         {
             detail = publicResult.Items.FirstOrDefault();
@@ -1241,11 +1839,6 @@
                 detailFiles = Run(c => c.Files.ListForSubmissionAsync(detail.SubmissionId, scope));
             }
         }
-        else
-        {
-            featuredResult = featuredTask.Result;
-            categoryResult = categoryTask.Result;
-        }
     }
     catch (Exception ex)
     {
@@ -1253,18 +1846,19 @@
         // DNN event log and show a neutral notice instead (root CLAUDE.md rule 10).
         DotNetNuke.Services.Exceptions.Exceptions.LogException(ex);
         loadError = "The blog could not be loaded. The site log has the details.";
-        // 🔴 Rule 10 says never echo exception text to a client — so this is gated on SuperUser,
+        // ðŸ”´ Rule 10 says never echo exception text to a client â€” so this is gated on SuperUser,
         // the one visitor who is entitled to it. Without it the only signal a Host gets is the
         // same neutral sentence a reader sees, and the DNN log is not reachable from here.
         var errorViewer = DotNetNuke.Entities.Users.UserController.Instance.GetCurrentUserInfo();
         if (errorViewer != null && errorViewer.IsSuperUser) { loadErrorDetail = ex.ToString(); }
     }
+    }   // closes `if (!treeMode)`
 
     // ---- read tracking -------------------------------------------------------------------
     // Its OWN try/catch, deliberately outside the block above and deliberately never assigning
     // loadError: a reader must not see "the blog could not be loaded" because analytics failed.
     //
-    // ⚠️ The three request values are read HERE, on the page thread. Run<T> hops onto a threadpool
+    // âš ï¸ The three request values are read HERE, on the page thread. Run<T> hops onto a threadpool
     // thread via Task.Run where HttpContext.Current is null, so reading them any later yields
     // nothing and every visitor would hash to the same key.
     if (detail != null)
@@ -1412,7 +2006,7 @@
 
     // ---- article extras: table of contents, related posts, and the SEO head -------------
     var articleBody = "";
-    var articleToc = new List<KeyValuePair<string, string>>();
+    var articleToc = new List<TocEntry>();
     var relatedPosts = new List<AppRecordDto>();
     var seoApplied = "";
     if (detail != null)
@@ -1493,7 +2087,7 @@
         : (publicResult == null ? posts.Count : publicResult.TotalCount);
     var totalPages = pageSize <= 0 ? 1 : (int)Math.Ceiling(totalPosts / (double)pageSize);
     if (totalPages < 1) { totalPages = 1; }
-    // The list has always been read one bounded page at a time, but nothing rendered a pager —
+    // The list has always been read one bounded page at a time, but nothing rendered a pager â€”
     // so on a blog with more posts than the page size the rest were simply unreachable.
     Func<int, string> pageUrl = target =>
     {
@@ -1512,6 +2106,15 @@
             .Where(x => !string.IsNullOrWhiteSpace(x))
             .Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(x => x).ToList();
 
+    // ðŸ”´ A named query reads at most AppRecordQueryService.MaxSourceRecords (500) rows from the
+    // form before it filters, sorts and pages IN MEMORY. Past that line the older posts stop
+    // existing as far as this page is concerned, the category strip loses whole categories, and
+    // the story count silently becomes a floor instead of a total â€” all with HTTP 200. The flag
+    // that says so has been on the result object all along and no consumer in this module ever
+    // read it. Readers get one honest sentence; a Host gets the number and the cause.
+    var boundedRead = (publicResult != null && publicResult.IsBounded)
+                   || (categoryResult != null && categoryResult.IsBounded);
+
     // ---- template rendering ---------------------------------------------------------------
     // An active template only takes over when the owner has switched it on, and a template that
     // throws or renders nothing hands the page straight back to the built-in design. A blog that
@@ -1519,12 +2122,15 @@
     var templateHtml = "";
     var templateName = "";
     var templateNote = "";
-    if (Flag(portalId, "TemplatesRender", false) && app != null && string.IsNullOrWhiteSpace(loadError))
+    // A tree channel has no blog app to check, so `app != null` cannot be the gate for it.
+    if (Flag(portalId, "TemplatesRender", false) && (app != null || treeMode) && string.IsNullOrWhiteSpace(loadError))
     {
         try
         {
-            var target = detail != null ? "blog-post" : "blog-home";
-            var active = ActiveTemplate(scope, target);
+            // ðŸ”µ 1.17.0: this used to be a two-way expression, which is why the three other render
+            // targets declared in the console were dead letters - the renderer never asked for them.
+            var target = treeMode ? "article-list" : (detail != null ? "blog-post" : "blog-home");
+            var active = ActiveTemplate(scope, ChannelKey(), target);
             if (!string.IsNullOrWhiteSpace(active.Body))
             {
                 var site = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
@@ -1548,7 +2154,65 @@
                     };
                 }
 
-                if (detail == null)
+                if (treeMode)
+                {
+                    // The interpreter has {{#each}} and {{#if}} but no recursion into a shape it
+                    // does not already hold, no {{@index}} and no comparison - so the tree arrives
+                    // FLAT, in reading order, with every decision already made here: depth for the
+                    // indent, and three booleans the template can test directly.
+                    var branch = new List<object>();
+                    foreach (var node in treeNodes)
+                    {
+                        var isOpen = openNode != null && node.SubmissionId == openNode.SubmissionId;
+                        branch.Add(new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                        {
+                            ["key"] = node.Key,
+                            ["title"] = node.NavTitle,
+                            ["excerpt"] = node.Excerpt,
+                            ["url"] = baseUrl + "?doc=" + HttpUtility.UrlEncode(node.Key),
+                            ["depth"] = node.Depth,
+                            ["isOpen"] = isOpen,
+                            ["isSection"] = node.Depth == 0,
+                            // Precomputed because a template cannot ask "is depth 2?".
+                            ["isChild"] = node.Depth > 0
+                        });
+                    }
+                    context["tree"] = branch;
+                    context["total"] = treeNodes.Count(n => n.Depth > 0);
+
+                    // Only SET when there is one: a key that is present but empty reads as TRUE to
+                    // the interpreter, which is the trap `featured` still carries on the blog side.
+                    if (openNode != null)
+                    {
+                        context["article"] = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                        {
+                            ["key"] = openNode.Key,
+                            ["title"] = openNode.Title,
+                            ["excerpt"] = openNode.Excerpt,
+                            ["body"] = openNode.Body,
+                            ["url"] = baseUrl + "?doc=" + HttpUtility.UrlEncode(openNode.Key)
+                        };
+                        context["toc"] = ParseHeadings(openNode.Headings);
+                    }
+                    if (prevNode != null)
+                    {
+                        context["prev"] = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                        {
+                            ["title"] = prevNode.NavTitle,
+                            ["url"] = baseUrl + "?doc=" + HttpUtility.UrlEncode(prevNode.Key)
+                        };
+                    }
+                    if (nextNode != null)
+                    {
+                        context["next"] = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                        {
+                            ["title"] = nextNode.NavTitle,
+                            ["url"] = baseUrl + "?doc=" + HttpUtility.UrlEncode(nextNode.Key)
+                        };
+                    }
+                    if (treeBounded) { context["bounded"] = true; }
+                }
+                else if (detail == null)
                 {
                     context["featured"] = TplPost(featured, baseUrl) ?? new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
                     var list = new List<object>();
@@ -1589,7 +2253,13 @@
                     {
                         toc.Add(new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
                         {
-                            ["id"] = heading.Key, ["text"] = heading.Value.Trim()
+                            ["id"] = heading.Id,
+                            ["text"] = heading.Text,
+                            ["level"] = heading.Level,
+                            // The interpreter has {{#if}} but no comparison, so a template cannot
+                            // ask "is this level 3?". `level` alone is truthy for every heading.
+                            // This pre-computed flag is the only way a design can indent sub-headings.
+                            ["sub"] = heading.Level > 2
                         });
                     }
                     context["toc"] = toc;
@@ -1621,6 +2291,27 @@
                         });
                     }
                     context["comments"] = thread;
+
+                    // ðŸ”´ An active template takes over the WHOLE <main>, comment box included. The
+                    // box cannot be rebuilt from static markup: the CSRF token is minted per request
+                    // and the POST handler rejects anything without it, so before this key existed,
+                    // switching a design on quietly switched COMMENTING OFF â€” readers could read the
+                    // thread and had nowhere to reply, with no error anywhere.
+                    // Field NAMES are fixed and a template hardcodes them (mfb_csrf, slug,
+                    // commenter_name, commenter_email, comment_body, the __mf_blog_comment_hp
+                    // honeypot, and the mfb_comment_submit button); only the values below change.
+                    // And it must stay a <div>, never a <form>: the box already rides the DNN page
+                    // form, and a nested form tag is DROPPED by the browser.
+                    context["commentForm"] = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        ["open"] = commentsOpen,
+                        ["csrf"] = publicCsrf,
+                        ["slug"] = slug,
+                        ["requireEmail"] = commentsRequireEmail,
+                        ["autoClosed"] = commentsAutoClosed,
+                        ["posted"] = commentPosted,
+                        ["error"] = commentError ?? ""
+                    };
                 }
 
                 var problems = new List<string>();
@@ -1644,7 +2335,12 @@
     }
 }
 
-<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs.css?v=20260809e" />
+@* ðŸ”´ BUMP THIS WHENEVER megaform-blogs.css CHANGES. The file is overwritten in place, so a browser
+   that already has it keeps serving the old bytes under the same URL - and the page then looks
+   broken in a way nothing on the server can explain. That is exactly what happened when the
+   article-list styles landed: measured in the browser the rules WERE applied, while a screenshot
+   taken with a warm profile showed an unstyled stack. *@
+<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs.css?v=20260811g" />
 
 @{
     // A rendered template owns the whole surface, so it gets its own class to scope its CSS with.
@@ -1673,6 +2369,156 @@
             }
         </section>
     }
+    else if (treeMode)
+    {
+        @* Built-in design for the article-list target: the tree on the left, the open article on
+           the right. A channel must be readable the moment its source form is set - before anyone
+           has written a template for it - and a template that renders nothing has to have
+           something to fall back TO. *@
+        <div class="mfb-tree-shell">
+            @* The left pane is the module's ARTICLE LIST, not a slim nav: the same archive markup
+               the blog already renders for ?view=archive (mfb-archive-month + mfb-archive-list, a
+               row per article with its title, section and date), grouped by branch instead of by
+               month. Reusing those two classes means the list inherits the styling the blog
+               already ships, and the only thing added here is the "open" state. *@
+            <nav class="mfb-tree-nav" aria-label="Articles">
+                @* 🔴 The loop variable is NOT called `section`. "@@section" is a Razor directive, so
+                   "@@section.NavTitle" does not compile - and RazorHost turns that into a blank page
+                   with HTTP 200. It cost a deploy here. *@
+                @foreach (var branch in treeNodes.Where(n => n.Depth == 0))
+                {
+                    <h3 class="mfb-archive-month">@branch.NavTitle</h3>
+                    <ul class="mfb-archive-list">
+                        @foreach (var node in treeNodes.Where(n => n.Depth > 0
+                                    && string.Equals(n.ParentKey, branch.Key, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            var isOpen = openNode != null && node.SubmissionId == openNode.SubmissionId;
+                            @* Title AND description live INSIDE the link, so the whole row is the
+                               click target. With the description outside it, half of every row
+                               looked clickable and did nothing. *@
+                            <li class="@(isOpen ? "on" : "")">
+                                <a href="@(baseUrl + "?doc=" + HttpUtility.UrlEncode(node.Key))">
+                                    <strong>@node.NavTitle</strong>
+                                    @if (!string.IsNullOrWhiteSpace(node.Excerpt))
+                                    {
+                                        <small>@node.Excerpt</small>
+                                    }
+                                    @if (node.Views > 0 || node.RatingCount > 0)
+                                    {
+                                        <small class="mfb-nodemeta">@if (node.Views > 0)
+                                            {<text>@Plural(node.Views, "view", "views")</text>}@if (node.Views > 0 && node.RatingCount > 0)
+                                            {<text> &#183; </text>}@if (node.RatingCount > 0)
+                                            {<text><span class="mfb-stars">@StarBar(AverageStars(node))</span> @AverageStars(node).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)</text>}</small>
+                                    }
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                }
+                @* Anything whose parent_key points nowhere would otherwise vanish from the list
+                   without a word - the classic silent data loss. It gets its own group.
+                   ⚠️ These DO need the "@@": we are inside the children of <nav>, which is MARKUP
+                   context, so a bare statement is emitted as text and the variable never exists.
+                   (Different rule from the body of a { } block, where the "@@" must be dropped -
+                   getting the two backwards is what produced "the name 'orphans' does not exist".) *@
+                @{
+                    var orphans = treeNodes.Where(n => n.Depth > 0
+                        && !treeNodes.Any(s => s.Depth == 0 && string.Equals(s.Key, n.ParentKey, StringComparison.OrdinalIgnoreCase))).ToList();
+                }
+                @if (orphans.Count > 0)
+                {
+                    <h3 class="mfb-archive-month">Other</h3>
+                    <ul class="mfb-archive-list">
+                        @foreach (var node in orphans)
+                        {
+                            var isOpen = openNode != null && node.SubmissionId == openNode.SubmissionId;
+                            <li class="@(isOpen ? "on" : "")">
+                                <a href="@(baseUrl + "?doc=" + HttpUtility.UrlEncode(node.Key))">@node.NavTitle</a>
+                            </li>
+                        }
+                    </ul>
+                }
+            </nav>
+
+            <main class="mfb-tree-main">
+                @if (treeBounded)
+                {
+                    <p class="mfb-muted">This channel has more articles than the page reads in one pass, so some are not listed.</p>
+                }
+                @if (openNode == null)
+                {
+                    <div class="mfb-state"><strong>Nothing published in this channel yet.</strong></div>
+                }
+                else
+                {
+                    @* A body imported from markdown carries its OWN h1 and its own opening
+                       paragraph. Printing the stored title and excerpt above it then says the same
+                       heading twice and the same sentence twice - which is exactly how it looked
+                       on screen. When the body introduces itself, let it. *@
+                    var bodyLeadsWithTitle = Regex.IsMatch(openNode.Body ?? "", @"^\s*<h1[\s>]", RegexOptions.IgnoreCase);
+                    if (!bodyLeadsWithTitle)
+                    {
+                        <h1>@openNode.Title</h1>
+                        if (!string.IsNullOrWhiteSpace(openNode.Excerpt))
+                        {
+                            <p class="mfb-lead">@openNode.Excerpt</p>
+                        }
+                    }
+                    <p class="mfb-docmeta">
+                        <span>@Plural(openNode.Views, "view", "views")</span>
+                        @if (openNode.RatingCount > 0)
+                        {
+                            <span><span class="mfb-stars">@StarBar(AverageStars(openNode))</span> @AverageStars(openNode).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) <small>(@Plural(openNode.RatingCount, "rating", "ratings"))</small></span>
+                        }
+                        else
+                        {
+                            <span class="mfb-muted">Not rated yet</span>
+                        }
+                    </p>
+
+                    @* Editorial HTML this module stored; the same posture the blog takes with an
+                       article body. Nothing a visitor supplies ever reaches it. *@
+                    <div class="mfb-prose">@Html.Raw(openNode.Body)</div>
+
+                    @* The stars post on the page's OWN form. A <form> of our own here would be a
+                       nested form and the browser deletes the inner tag outright - the trap that
+                       once made this module's comment box submit nothing at all. *@
+                    <div class="mfb-rate">
+                        <span class="mfb-rate-q">Was this page helpful?</span>
+                        <input type="hidden" name="mfb_rate_doc" value="@openNode.Key" />
+                        @for (var star = 1; star <= 5; star++)
+                        {
+                            <button type="submit" name="mfb_rate" value="@star"
+                                    title="@(star + " out of 5")" aria-label="@(star + " out of 5")">&#9733;</button>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(rateMessage))
+                        {
+                            <em class="mfb-rate-msg">@rateMessage</em>
+                        }
+                    </div>
+
+                    <nav class="mfb-tree-pager">
+                        @if (prevNode != null)
+                        {
+                            <a href="@(baseUrl + "?doc=" + HttpUtility.UrlEncode(prevNode.Key))"><small>Previous</small>@prevNode.NavTitle</a>
+                        }
+                        else
+                        {
+                            <span></span>
+                        }
+                        @if (nextNode != null)
+                        {
+                            <a href="@(baseUrl + "?doc=" + HttpUtility.UrlEncode(nextNode.Key))" style="text-align:right"><small>Next</small>@nextNode.NavTitle</a>
+                        }
+                        else
+                        {
+                            <span></span>
+                        }
+                    </nav>
+                }
+            </main>
+        </div>
+    }
     else if (app == null)
     {
         <section class="mfb-state">The Blog Publishing app has not been installed for this portal.</section>
@@ -1683,6 +2529,16 @@
         {
             <section class="mfb-state">
                 <h1>Article not found</h1>
+                @if (boundedRead && isHostViewer)
+                {
+                    @* The one case where "not found" is a lie: the slug filter runs AFTER the
+                       query service has already stopped reading at 500 source rows, so a post
+                       older than that line is unreachable by URL even though it is published. *@
+                    <p class="mfb-muted">
+                        Host only: this query hit the 500-row source cap, so a published post past
+                        that line cannot be reached by slug. Archive older posts or raise the cap.
+                    </p>
+                }
                 <a class="mfb-button" href="@baseUrl">Back to all stories</a>
             </section>
         }
@@ -1724,7 +2580,7 @@
                         {
                             <span class="mfb-avatar">@Initials(author)</span>
                         }
-                        <span><strong>@author</strong><small>@DateLabel(detail, "publish_date")@if (showReadingTime) { <text> · @ReadingMinutes(detail) min read</text> }@if (showReadCounts) { <text> · @Plural(Number(detail, "view_count"), "read", "reads")</text> }</small></span>
+                        <span><strong>@author</strong><small>@DateLabel(detail, "publish_date")@if (showReadingTime) { <text> Â· @ReadingMinutes(detail) min read</text> }@if (showReadCounts) { <text> Â· @Plural(Number(detail, "view_count"), "read", "reads")</text> }</small></span>
                     </div>
                 </header>
                 <figure class="mfb-article-hero">
@@ -1767,8 +2623,8 @@
                                 <ol>
                                     @foreach (var heading in articleToc)
                                     {
-                                        <li class="@(heading.Value.StartsWith("  ", StringComparison.Ordinal) ? "sub" : "")">
-                                            <a href="#@heading.Key">@heading.Value.Trim()</a>
+                                        <li class="@(heading.Level > 2 ? "sub" : "")">
+                                            <a href="#@heading.Id">@heading.Text</a>
                                         </li>
                                     }
                                 </ol>
@@ -1822,7 +2678,7 @@
                                 @foreach (var file in detailFiles)
                                 {
                                     <a class="mfb-attachment" href="/DesktopModules/MegaForm/API/SdkDemo/Download?submissionId=@detail.SubmissionId&amp;fileId=@file.FileId">
-                                        <span>↓</span> @file.FileName
+                                        <span>â†“</span> @file.FileName
                                     </a>
                                 }
                             </section>
@@ -1919,19 +2775,19 @@
 
                     @if (commentsOpen)
                     {
-                        @* 🔴 THIS IS A <div>, NOT A <form>, AND IT MUST STAY ONE.
+                        @* ðŸ”´ THIS IS A <div>, NOT A <form>, AND IT MUST STAY ONE.
                            A DNN page is already one big `<form id="Form" runat="server">`, and HTML
                            forbids nested forms: the parser DROPS the inner <form> tag and keeps its
-                           children. Measured on dnndefender.com 2026-08-09 with 1.4.0 live —
+                           children. Measured on dnndefender.com 2026-08-09 with 1.4.0 live â€”
                            `document.querySelector('form.mfb-comment-form')` returned NULL while the
-                           inputs were there, so every `.mfb-comment-form …` rule in
+                           inputs were there, so every `.mfb-comment-form â€¦` rule in
                            megaform-blogs.css matched nothing and the box rendered as bare unstyled
                            inputs stacked on the page. The POST still worked (the fields ride the
                            DNN form), which is why it looked "broken" rather than dead.
                            The admin console screens already use this pattern.
                            Gate: the submit BUTTON's own name/value. A browser only posts those for
                            the button actually clicked, so an unrelated DNN postback on this page
-                           cannot be mistaken for a comment submission — which a hidden
+                           cannot be mistaken for a comment submission â€” which a hidden
                            `mfb_comment_form=1` marker would have been. *@
                         <div class="mfb-comment-form">
                             <h3>Leave a comment</h3>
@@ -1996,10 +2852,10 @@
         @* The module's own eyebrow, display title and strapline are GONE as of 1.2.2, matching
            MegaForm.Blogs.Oqtane 1.4.0.
 
-           They were hardcoded English marketing copy ("◆ Featured stories" / "Insights & Ideas" /
+           They were hardcoded English marketing copy ("â—† Featured stories" / "Insights & Ideas" /
            "Design, development and product thinking from the MegaForm community") that no site
            owner could change, stacked directly under the skin's own page heading. Two titles for
-           one page is not a style choice, it is duplicated chrome — and it pushed the first story
+           one page is not a style choice, it is duplicated chrome â€” and it pushed the first story
            most of a screen down. The skin owns the page identity; this module owns the content.
 
            The search box stays: it is functionality, not chrome. *@
@@ -2060,7 +2916,7 @@
                                 <span><strong>@Text(featured, "author_name", "MegaForm Editorial")</strong><small>@DateLabel(featured, "publish_date")</small></span>
                                 @if (showReadCounts)
                                 {
-                                    <span>@Plural(Number(featured, "view_count"), "read", "reads") · @Plural(Number(featured, "comment_count"), "comment", "comments")</span>
+                                    <span>@Plural(Number(featured, "view_count"), "read", "reads") Â· @Plural(Number(featured, "comment_count"), "comment", "comments")</span>
                                 }
                             </div>
                         </div>
@@ -2069,9 +2925,9 @@
             </div>
         </section>
 
-        @* 🔴 No @ here. Inside the else block we are in CODE context (the markup above closed
+        @* ðŸ”´ No @ here. Inside the else block we are in CODE context (the markup above closed
            itself), and `@if` there is a parse error that renders the whole page as an empty
-           module — the public page has no error box to tell you. Same rule the admin screens
+           module â€” the public page has no error box to tell you. Same rule the admin screens
            already carry: markup context -> @if, code context -> if. *@
         if (isLens)
         {
@@ -2101,7 +2957,7 @@
                                 <p>@Text(profile, "author_bio", "")</p>
                             }
                             <p class="mfb-muted">
-                                @Plural(totalPosts, "story", "stories") ·
+                                @Plural(totalPosts, "story", "stories") Â·
                                 @Plural(posts.Sum(x => Number(x, "view_count")), "read", "reads") on this page
                             </p>
                         </div>
@@ -2138,9 +2994,27 @@
         <section class="mfb-shell mfb-content">
             <div class="mfb-main">
                 <header class="mfb-section-head">
-                    <div><span class="mfb-trend">↗</span><h2>@ListHeading(sectionTitle, search, authorFilter, tagFilter, lens)</h2></div>
-                    <span>@(publicResult == null ? 0 : publicResult.TotalCount) stories</span>
+                    <div><span class="mfb-trend">â†—</span><h2>@ListHeading(sectionTitle, search, authorFilter, tagFilter, lens)</h2></div>
+                    <span>@(publicResult == null ? 0 : publicResult.TotalCount)@(boundedRead ? "+" : "") stories</span>
                 </header>
+                @if (boundedRead)
+                {
+                    <p class="mfb-muted mfb-bounded-note" role="status">
+                        Showing the most recent stories. This blog has more than the list can read
+                        in one pass â€” use search or a category to reach the rest.
+                        @if (isHostViewer)
+                        {
+                            @* The number is written out, not read from MegaForm.Core: this module
+                               may only bind to the MegaForm.Sdk facade, and naming a Core type here
+                               would be a compile error the RazorHost swallows into a blank page. *@
+                            <text>
+                                (Host only: the named query stops at 500 source rows
+                                â€” AppRecordQueryService.MaxSourceRecords â€” so the count above is a
+                                floor and the category strip is incomplete.)
+                            </text>
+                        }
+                    </p>
+                }
                 @if (showCategories)
                 {
                     <nav class="mfb-categories" aria-label="Blog categories">
@@ -2225,7 +3099,7 @@
                                            (MegaForm.Core BlogAnalyticsRollupService). *@
                                         @if (showReadCounts)
                                         {
-                                            <span>@Plural(Number(post, "view_count"), "read", "reads") · @Plural(Number(post, "comment_count"), "comment", "comments")</span>
+                                            <span>@Plural(Number(post, "view_count"), "read", "reads") Â· @Plural(Number(post, "comment_count"), "comment", "comments")</span>
                                         }
                                     </div>
                                 </div>
@@ -2235,7 +3109,7 @@
                 }
 
                 @* Pager. The list was always read one bounded page at a time (page size is an
-                   owner setting now), but nothing ever rendered the navigation — so post 13
+                   owner setting now), but nothing ever rendered the navigation â€” so post 13
                    onwards existed and was unreachable. *@
                 @if (totalPages > 1)
                 {
@@ -2268,7 +3142,7 @@
             <aside class="mfb-sidebar">
                 @* Both of these were hardcoded: five invented topics no site owner could change,
                    and a newsletter box wired to nothing. They are settings now
-                   (admin console → Settings), and an empty topic list hides the card. *@
+                   (admin console â†’ Settings), and an empty topic list hides the card. *@
                 <section class="mfb-side-card">
                     <h2>Browse</h2>
                     <div class="mfb-tags">
@@ -2297,7 +3171,7 @@
                         <p>New insights delivered to your inbox.</p>
                         <input type="email" aria-label="Email address" placeholder="Your email" />
                         <button type="button">Subscribe</button>
-                        <small>Demo UI — connect this to a MegaForm newsletter form when required.</small>
+                        <small>Demo UI â€” connect this to a MegaForm newsletter form when required.</small>
                     </section>
                 }
             </aside>

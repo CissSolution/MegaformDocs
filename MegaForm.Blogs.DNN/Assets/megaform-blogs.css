@@ -360,3 +360,120 @@
   border: 1px dashed #cbd5e1; border-radius: 8px; background: #f8fafc;
   color: #64748b; font-family: Inter, "Segoe UI", system-ui, sans-serif; font-size: 12px;
 }
+
+/* ---- article-list: the built-in face of a TREE channel (1.17.0) ------------------------
+   Tree on the left, the open article on the right, one page. This is the fallback a channel
+   gets before anyone writes a template for it, and the design a broken template falls back to.
+   A DNN skin styles h1..h6 and a/p DIRECTLY and a direct rule beats an inherited one, so the
+   font is declared on the elements, not only on the wrapper. */
+.mfb-tree-shell {
+  /* Wide enough for the left pane to be a real ARTICLE LIST - title, section and a line of
+     description - rather than a strip of nav links. */
+  display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 44px; align-items: start;
+  width: min(1280px, calc(100% - 32px)); margin: 0 auto; padding: 24px 0 56px;
+  font-family: Inter, "Segoe UI", system-ui, -apple-system, sans-serif; color: #0f172a;
+}
+.mfb-tree-shell h1, .mfb-tree-shell h2, .mfb-tree-shell h3, .mfb-tree-shell h4,
+.mfb-tree-shell p, .mfb-tree-shell a, .mfb-tree-shell li, .mfb-tree-shell small,
+.mfb-tree-shell strong, .mfb-tree-shell td, .mfb-tree-shell th { font-family: inherit; }
+.mfb-tree-shell a { color: inherit; text-decoration: none; }
+
+.mfb-tree-nav { position: sticky; top: 16px; max-height: calc(100vh - 40px); overflow: auto; padding-right: 10px; }
+/* The list itself is the blog's own archive markup, so only the parts that differ in this
+   two-pane context are restated: a tighter section heading, and a row that can be "open". */
+.mfb-tree-nav .mfb-archive-month {
+  margin: 22px 0 6px; color: #64748b; font-size: 11px; font-weight: 800;
+  letter-spacing: .1em; text-transform: uppercase; font-family: inherit;
+}
+.mfb-tree-nav .mfb-archive-month:first-child { margin-top: 0; }
+.mfb-tree-nav .mfb-archive-list li {
+  display: block; padding: 0; border-top: 1px solid #e2e8f0; border-radius: 8px;
+}
+.mfb-tree-nav .mfb-archive-list li:hover { background: #f6f8fb; }
+/* The whole row is one link — padding lives on the anchor so the click target covers the
+   description too, not just the line of title text. */
+.mfb-tree-nav .mfb-archive-list a { display: block; padding: 9px 12px; color: #0f172a; }
+.mfb-tree-nav .mfb-archive-list a strong {
+  display: block; color: inherit; font-family: inherit; font-size: 14.5px;
+  font-weight: 600; line-height: 1.35;
+}
+.mfb-tree-nav .mfb-archive-list small {
+  display: block; margin-top: 3px; color: #5b6577; font-family: inherit;
+  font-size: 12.5px; line-height: 1.45;
+}
+/* The selected row, and the only state this list has that the blog's archive does not. */
+.mfb-tree-nav .mfb-archive-list li.on { background: rgba(37, 99, 235, .10); border-top-color: transparent; }
+.mfb-tree-nav .mfb-archive-list li.on a { color: #2563eb; }
+.mfb-tree-nav .mfb-archive-list li.on small { color: #4b6ab0; }
+
+.mfb-tree-main h1,
+.mfb-tree-main .mfb-prose h1 { margin: 0 0 10px; font-size: clamp(27px, 3.4vw, 40px); font-weight: 800; letter-spacing: -.025em; line-height: 1.12; }
+.mfb-tree-main .mfb-lead { margin: 0 0 24px; color: #5b6577; font-size: 17px; line-height: 1.6; }
+/* 🔴 The body copy needs its own font declaration at TWO class levels deep, not the inherited one
+   from .mfb-tree-shell. A DNN skin styles p / h2 / li DIRECTLY, and its rule can carry the same
+   specificity as a single-class ancestor selector and simply come later in the cascade. Measured:
+   the headline was Inter while every paragraph, heading and list item inside the article fell back
+   to the skin's serif — which also broke Vietnamese diacritics, because that serif face composes
+   them badly ("tuyê´n" instead of "tuyến"). */
+.mfb-tree-main .mfb-prose,
+.mfb-tree-main .mfb-prose h1, .mfb-tree-main .mfb-prose h2, .mfb-tree-main .mfb-prose h3,
+.mfb-tree-main .mfb-prose h4, .mfb-tree-main .mfb-prose h5, .mfb-tree-main .mfb-prose h6,
+.mfb-tree-main .mfb-prose p, .mfb-tree-main .mfb-prose li, .mfb-tree-main .mfb-prose a,
+.mfb-tree-main .mfb-prose td, .mfb-tree-main .mfb-prose th, .mfb-tree-main .mfb-prose strong,
+.mfb-tree-main .mfb-prose em, .mfb-tree-main .mfb-prose blockquote, .mfb-tree-main .mfb-prose span,
+.mfb-tree-main .mfb-prose small, .mfb-tree-main .mfb-prose figcaption {
+  font-family: Inter, "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+.mfb-tree-main .mfb-prose { font-size: 16px; line-height: 1.72; }
+.mfb-tree-main .mfb-prose h2 { margin: 38px 0 12px; font-size: 25px; font-weight: 700; letter-spacing: -.015em; }
+.mfb-tree-main .mfb-prose h3 { margin: 28px 0 8px; font-size: 19px; font-weight: 700; }
+.mfb-tree-main .mfb-prose p { margin: 0 0 18px; }
+.mfb-tree-main .mfb-prose a { color: #2563eb; text-decoration: underline; text-underline-offset: 2px; }
+.mfb-tree-main .mfb-prose ul, .mfb-tree-main .mfb-prose ol { margin: 0 0 18px; padding-left: 22px; }
+.mfb-tree-main .mfb-prose li { margin-bottom: 7px; }
+.mfb-tree-main .mfb-prose img { max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 10px; }
+/* A screenshot or screen recording sits alone in its own paragraph, and max-width alone left those
+   stranded: the capture is narrower than the reading column, so the rule above caps a size it never
+   reaches and the figure renders as a small island with a wide empty gutter beside it. Give a
+   standalone figure the full column. Scoped to `p > img:only-child` on purpose - an image sharing a
+   paragraph with text is an inline badge or icon, and stretching one of those to 100% would be
+   absurd. width beats max-width here because the point is to scale UP as well as down. */
+.mfb-tree-main .mfb-prose p > img:only-child { display: block; width: 100%; margin: 4px 0 6px; }
+
+/* Per-article metrics and the rating control. */
+.mfb-tree-main .mfb-docmeta { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin: 0 0 20px; padding-bottom: 14px; border-bottom: 1px solid #eef1f5; color: #5b6577; font-size: 13.5px; }
+.mfb-tree-main .mfb-docmeta .mfb-stars { color: #f59e0b; letter-spacing: 1px; }
+.mfb-tree-main .mfb-docmeta small { color: #8a94a6; }
+.mfb-rate { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 26px 0 4px; padding-top: 18px; border-top: 1px solid #eef1f5; }
+.mfb-rate .mfb-rate-q { margin-right: 4px; color: #26303d; font-size: 14.5px; font-weight: 600; }
+/* The stars are submit buttons on the DNN page form, so every skin rule for `button` has to be
+   undone here or they arrive as grey chrome boxes. */
+.mfb-rate button { padding: 2px 4px; border: 0; background: none; color: #cbd3de; font-size: 22px; line-height: 1; cursor: pointer; transition: color .12s, transform .12s; }
+.mfb-rate button:hover, .mfb-rate button:focus { color: #f59e0b; transform: scale(1.12); outline: none; }
+.mfb-rate .mfb-rate-msg { margin-left: 8px; color: #16794c; font-size: 13.5px; font-style: normal; }
+.mfb-tree-nav .mfb-archive-list .mfb-nodemeta { display: block; margin-top: 3px; color: #8a94a6; font-size: 12px; }
+.mfb-tree-nav .mfb-archive-list .mfb-nodemeta .mfb-stars { color: #f59e0b; }
+.mfb-tree-main .mfb-prose blockquote { margin: 22px 0; padding: 2px 0 2px 18px; border-left: 3px solid #2563eb; color: #5b6577; }
+.mfb-tree-main .mfb-prose pre { margin: 0 0 20px; padding: 16px; overflow-x: auto; border-radius: 10px; background: #0f172a; color: #e2e8f0; font-size: 13.5px; line-height: 1.6; }
+.mfb-tree-main .mfb-prose code { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: .93em; }
+.mfb-tree-main .mfb-prose :not(pre) > code { padding: 2px 6px; border-radius: 5px; background: #f6f8fb; }
+.mfb-tree-main .mfb-prose table { width: 100%; margin: 0 0 20px; border-collapse: collapse; font-size: 14.5px; }
+.mfb-tree-main .mfb-prose th, .mfb-tree-main .mfb-prose td { padding: 9px 11px; border: 1px solid #e2e8f0; text-align: left; vertical-align: top; }
+.mfb-tree-main .mfb-prose th { background: #f6f8fb; font-weight: 700; }
+/* Markdig emits these for the DocFX "> [!NOTE]" syntax. */
+.mfb-tree-main .mfb-prose .markdown-alert { margin: 0 0 20px; padding: 12px 16px; border-left: 4px solid #2563eb; border-radius: 0 8px 8px 0; background: #f6f8fb; }
+.mfb-tree-main .mfb-prose .markdown-alert p:last-child { margin-bottom: 0; }
+.mfb-tree-main .mfb-prose .markdown-alert-title { display: flex; align-items: center; gap: 7px; font-weight: 700; }
+.mfb-tree-main .mfb-prose .markdown-alert-warning { border-left-color: #d97706; }
+.mfb-tree-main .mfb-prose .markdown-alert-important { border-left-color: #7c3aed; }
+.mfb-tree-main .mfb-prose .markdown-alert-caution { border-left-color: #dc2626; }
+
+.mfb-tree-pager { display: flex; justify-content: space-between; gap: 14px; margin-top: 34px; padding-top: 20px; border-top: 1px solid #e2e8f0; }
+.mfb-tree-pager a { max-width: 46%; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px; }
+.mfb-tree-pager a:hover { border-color: #2563eb; color: #2563eb; }
+.mfb-tree-pager small { display: block; color: #5b6577; font-size: 12px; }
+
+@media (max-width: 900px) {
+  .mfb-tree-shell { grid-template-columns: 1fr; gap: 28px; }
+  .mfb-tree-nav { position: static; max-height: none; }
+}

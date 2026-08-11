@@ -1,6 +1,6 @@
 ﻿<dotnetnuke type="Package" version="5.0">
   <packages>
-    <package name="MegaForm" type="Module" version="02.00.015">
+    <package name="MegaForm" type="Module" version="02.00.016">
       <friendlyName>MegaForm</friendlyName>
       <description>Dynamic Form Builder Module for DNN - drag-and-drop builder, conditional logic, webhooks, anti-spam, email notifications, workflows, Save and Continue, Row/Column layout.</description>
       <iconFile>~/DesktopModules/MegaForm/Images/module-icon.png</iconFile>
@@ -23,6 +23,35 @@
         <dependency type="ManagedPackage" version="01.00.00">Dnn.PersonaBar.UI</dependency>
       </dependencies>
       <components>
+        <!-- ============================================================
+             [AzureResidue 2026-08-11] Delete the Azure DLLs that MegaForm packages built before
+             2026-07-26 dropped into bin. The code that used them is long gone (see
+             [AzureBlobRemoved v20260726] in the Assembly component below), but a DNN install
+             never deletes a bin DLL, so on every site that ever ran an older build the three
+             files just sit there — and they are not inert. Azure.Core 1.55 carries an
+             assembly-level custom attribute whose type lives in System.ClientModel, which we do
+             not ship; DNN attribute-scans EVERY assembly in bin at startup (MEF
+             SafeDirectoryCatalog inside ExtensionPointManager), so the scan throws and
+             ExtensionPointManager stays faulted for the life of the app domain. Every Control Bar
+             / Edit Bar request then returns 500: the administrator cannot enter Edit mode or add
+             a module to a page, and on some skins the failure reaches the front end as a
+             site-wide 500. Measured on two infected sites: removing exactly these three files
+             took ToggleUserMode from 500 back to 405, the same answer a healthy site gives.
+
+             All three must go together. Azure.Storage.Blobs and Azure.Storage.Common reference
+             Azure.Core, so deleting Azure.Core alone leaves the scan failing on the survivors.
+
+             Deliberately NOT listed: Dnn.AzureConnector.dll is DNN's own and rides on the older
+             Microsoft.WindowsAzure.Storage 9.3.2, an unrelated assembly. And the stale
+             MegaForm.Integrations.CloudStorage.dll may still reference Azure — harmless, because
+             DnnServiceLocator asks for the S3 type by name through
+             Type.GetType(throwOnError: false), so the dead Azure reference is never resolved.
+
+             Cleanup runs only when this version is newer than the installed one, which is why
+             the package version moved to 02.00.016 in the same edit. A file that is not there is
+             skipped, so this is safe on a clean install.
+             ============================================================ -->
+        <component type="Cleanup" version="02.00.016" fileName="02.00.016.txt" />
         <component type="Module">
           <desktopModule>
             <moduleName>MegaForm</moduleName>

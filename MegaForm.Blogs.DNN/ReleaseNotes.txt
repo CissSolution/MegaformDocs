@@ -1,3 +1,203 @@
+1.17.4
+
+- Article channels now carry their own read count and star rating, shown on the article and beside
+  every title in the list.
+  The classic blog gets view_count and comment_count for free: MegaForm.Core's rollup service
+  maintains them on the post record. A channel form is an ordinary form with none of that, so these
+  counters are the module's own. It adds view_count / rating_sum / rating_count to the source form
+  the first time it needs them rather than making that a manual setup step - a channel quietly
+  showing zeros because someone skipped a schema edit is the worse failure.
+  A read is counted once per article per session, and a rating once per article per session. On an
+  anonymous public page the honest claim is "not trivially repeatable", not "one vote per person".
+  Both writes are wrapped: a counter must never be able to take the article down.
+  The stars submit on the DNN page's own form. A <form> of our own would be a nested form and the
+  browser deletes the inner tag outright - the same trap that once made this module's comment box
+  post nothing at all.
+  NOT in this build: the per-article comment count. It needs the blog's comment form wired to the
+  channel so counts can be grouped by doc key, and shipping a hard zero would have read as "nobody
+  commented" rather than "not connected yet".
+
+1.17.3
+
+- Screenshots and screen recordings now fill the reading column. `max-width: 100%` only ever caps a
+  size; a capture narrower than the column stayed at its own pixel width and rendered as a small
+  island with a wide empty gutter beside it. A figure alone in its paragraph now gets `width: 100%`,
+  scoped to `p > img:only-child` so an inline badge or icon is left at its natural size.
+  CSS cache-buster moved to `?v=20260811f` in the same edit - overwriting the file without changing
+  the query string leaves every returning visitor on the cached copy.
+
+1.17.2
+
+- FIXED: on a cold app domain the blog rendered as an error box reading "MegaFormSdk is not
+  initialized. Call MegaFormSdk.Initialize(serviceProvider) at host startup."
+  What actually initializes the SDK on DNN is touching `DnnServiceLocator.Instance` — that property
+  is where `MegaFormSdk.Initialize` gets called (DnnServiceLocator.cs). The `Run<T>` helper did it;
+  the page's parallel reads did not. They called `MegaFormSdk.RunAsync` straight inside `Task.Run`,
+  which works right up until nothing else has warmed the locator yet.
+  So the failure needed a cold app domain AND this page to be the first request into it — which is
+  precisely what a deploy, an extension install, or any write to bin produces. It was found the hard
+  way: three Azure DLLs were deleted from bin on a live site, IIS recycled, and the first visitor got
+  an error box instead of a blog. Reloading "fixed" it, which is what made it look like a broken
+  site rather than a race.
+  All parallel SDK reads now go through a new `RunTask<T>` helper that initializes the locator on the
+  REQUEST thread before spawning. That thread matters: `HttpContext.Current` is null on pool threads,
+  so a locator first constructed inside one would come up with no portal context.
+
+1.17.1
+
+- THE MEDIA SCREEN UPLOADS NOW. It was a browser only, on the reasoning that MegaForm.Sdk exposes no
+  upload endpoint — true, and irrelevant: the console runs SERVER-SIDE inside DNN, so it can use
+  DNN's own FolderManager/FileManager directly. An article channel whose pictures have to be placed
+  by hand over FTP is not a finished module.
+  Files land in `/Portals/<id>/MegaFormBlogs/<folder>/`, the folder chain is created a segment at a
+  time (AddFolder does not make parents), and the extension whitelist is a security boundary, not a
+  convenience: png, jpg, jpeg, gif, webp, svg, avif.
+  MegaForm's own upload path could not stand in for this: it requires a published form with a File
+  field, refuses .gif outright, and caps at 8 MB — which rules out every screen recording.
+  Two traps this had to survive, both measured on a live site:
+  - The file input rides the DNN page form, because a `<form>` of our own is a nested form and the
+    browser deletes the inner tag. The page form is not multipart by default, so the screen sets
+    `Page.Form.Enctype` itself — without that the file posts as a name with no bytes.
+  - ASP.NET joins two inputs of the same name with a comma. A caller that posts `folder` twice
+    arrived as "docs,docs", and stripping the comma produced a folder literally named "docsdocs".
+    The handler now takes the first segment only.
+  Why this matters beyond convenience: on a remote site there may be no other way in. dnndefender.com
+  has no Persona Bar "Assets" service at all (every route answers 404 "Unable to locate a
+  controller"), and `/API/internalservices/fileupload/postfile` accepts the POST and then stores
+  nothing, returning `{"FileId":null,"FilePath":null}`.
+
+1.17.0
+
+- CHANNELS. One instance of this module is now one CHANNEL. Put the module on /Docs and it is the
+  documentation channel; put another on /News, /ThoiSu, /KinhTe and each is its own. Three changes
+  make that possible, and all three are backward-compatible by construction — an existing blog has
+  no module settings and no channel on its templates, so every lookup lands on exactly the value it
+  used before:
+  - **Settings are read module-first, portal-fallback.** They were portal-wide, which meant two
+    Blogs modules on one portal were forced to share PageSize, the site title, the breaking ticker
+    and the template switch. `Setting`/`Flag` are instance members now (a Razor page class is built
+    once per request, so an instance member can safely read `Dnn.Module`; a static one is shared
+    across requests and would hand one channel's settings to another). Not one call site changed.
+  - **The active-template cache is keyed by channel.** It was portal + render target, so turning
+    News into a newsroom layout also repainted Docs, with nothing on screen to say why.
+  - **Templates carry a channel.** New `template_channel` field, blank meaning "site-wide default".
+    Matching is two-tier: a template naming this channel wins, otherwise the blank-channel template
+    is used — which is why every template written before this release keeps applying everywhere.
+    A form created before 1.17.0 has a schema without the field, and a value written against a field
+    the schema does not declare is dropped SILENTLY, so the console upgrades such a form in place
+    (`EnsureChannelField`) before the first save that carries a channel.
+  Verified on a live blog after the change: /Blogs home, an article page (contents rail, comment box
+  and its CSRF token) and the archive lens all render exactly as before, with zero template tokens
+  left unresolved.
+- A CHANNEL CAN NOW BE AN ARTICLE TREE. Point a module at a source form (Settings → Channels) and it
+  stops being a blog: nav on the left, the open article on the right, one page, `?doc=` choosing the
+  article. The tree comes out of the form's own fields — doc_key, parent_key, doc_sort_key,
+  doc_depth, nav_title, title, body, status — which is a convention, not seven more settings boxes
+  to typo a channel into blankness. Sorted ordinal on doc_sort_key, because that key is a string
+  that only looks numeric ("0010/0020") and any comparer that sniffs the type first throws on the
+  three-level form; ordinal over zero-padded segments IS reading order, so the flat list, prev/next
+  and "next sibling" all fall out of one sort.
+- NEW RENDER TARGET `article-list`, and the line that picks a target is no longer a two-way
+  expression — which is why the three other targets the console has always offered
+  (blog-archive, news-home, news-article) were dead letters: the renderer never asked for them.
+  The tree reaches a template FLAT and in reading order, carrying `depth` plus `isOpen`,
+  `isSection` and `isChild` already decided, because the interpreter has no comparison and no index
+  token. `article`, `prev`, `next` and `toc` are ABSENT rather than empty when there is nothing to
+  show — a key that exists but is empty reads as TRUE to {{#if}}, which is the trap `featured`
+  still carries on the blog side.
+- A built-in two-pane design ships with it, so a channel is readable the moment its source form is
+  set — before anyone writes a template for it, and as the thing a broken template falls back to.
+  The left pane is the module's ARTICLE LIST, not a strip of nav links: the same
+  `mfb-archive-month` + `mfb-archive-list` markup the blog already renders for `?view=archive`,
+  grouped by branch instead of by month, each row carrying its title and description, with the
+  open row marked. Reusing those two classes means the list inherits the styling the blog ships
+  and only the "open" state is new. Anything whose parent_key resolves to nothing gets an "Other"
+  group rather than disappearing from the list without a word.
+- The detail pane no longer repeats itself. A body imported from markdown carries its own h1 and
+  its own opening paragraph, so printing the stored title and excerpt above it said the same
+  heading twice and the same sentence twice. When the body leads with an h1, it introduces itself.
+- Settings gains a CHANNELS panel: it lists every public Blogs module on the portal (matched by the
+  script it runs, not by title — a title is the one thing an admin renames) and writes each one's
+  channel and source form as MODULE settings, on its own save button.
+  Measured on a live site: THREE channels on one portal, all anonymous — /Blogs still the classic
+  blog under its ACME template, /MegaFormDocs a 57-page documentation tree, /News an 8-item news
+  tree in two sections — each reading its own form, none aware of the others.
+- Two things the screenshots caught that the HTML did not:
+  - The article body fell back to the SKIN'S SERIF while the headline was already Inter, and that
+    serif composes Vietnamese diacritics badly ("tuyê´n" instead of "tuyến"). A DNN skin styles
+    p / h2 / li directly, and a single-class ancestor rule can tie it on specificity and lose on
+    order — so the body copy now declares its font at two class levels deep, not by inheritance.
+  - The stylesheet is overwritten in place under a fixed `?v=`, so a browser that already had it
+    kept serving the OLD bytes: measured in the browser the new rules were applied, while a
+    screenshot taken with a warm profile showed an unstyled stack. Bump the `?v=` whenever
+    megaform-blogs.css changes — there is now a comment at the link saying so.
+
+1.16.4
+
+- A THIRD THEME IN THE GALLERY: **ACME**, both faces, converted from the product mock. Blog home is a
+  centred hero, a wide featured card carrying author and metrics, rounded cards two-up with the first
+  spanning the row, and a side rail; the article page is a breadcrumb, an oversized headline with the
+  subtitle, an author row, a rounded hero with its caption, a sticky contents rail, full editorial
+  typography (code, tables, quotes, lists) and a working comment box. Both were rendered on a live
+  blog and looked at, not just diffed.
+  Three things the mock has and these DELIBERATELY do not, because inventing them would be worse than
+  leaving them out: the search box (a <form> here would be a form inside the DNN page form, and the
+  browser deletes the inner tag), category counts (the strip is built from the categories present in
+  the posts and carries name + url only), and share/view splits, trending tags, top authors and the
+  newsletter (no key in the context holds them).
+- 🔴 TEMPLATES CAN REBUILD THE COMMENT BOX AGAIN — new `commentForm.*` context
+  (open, csrf, slug, requireEmail, autoClosed, posted, error). An active template takes over the
+  whole <main>, comment box included, and the box cannot be rebuilt from static markup because the
+  CSRF token is minted per request and the POST handler rejects anything without it. So until now,
+  switching a design on quietly switched COMMENTING OFF: readers could read the thread and had
+  nowhere to reply, with no error anywhere. It must stay a <div>, never a <form>.
+- `post.subtitle`, `post.imageAlt`, `post.mediaCaption`, `post.shares`, `post.sharesLabel` and
+  `post.authorFollowers` reach templates at last. The posts schema has carried all six since the
+  starter shipped and nothing mapped them, so a template asking for `{{post.subtitle}}` printed
+  nothing and said nothing — the server renderer never reports an unresolved variable, only the
+  console's live preview does.
+- `toc[].sub` is precomputed, because the interpreter has `{{#if}}` but no comparison: a template
+  cannot ask "is this heading level 3?", and `level` alone is truthy for every heading.
+- The packager now fails on a template file that is NOT declared, not just on a declared file that is
+  missing. The old check only saw what someone remembered to list, so a new design would ship as a
+  catalog entry with no file behind it and the console would answer "That gallery template is not
+  installed on this site." Live proof the trap is real: `Assets/megaform-blogs-read.js` is on disk,
+  undeclared and unreferenced — it has never been installed anywhere.
+
+- 🔴 ARTICLE ANCHORS NO LONGER DEPEND ON POSITION. Every h2/h3 in a post got its id from a running
+  counter ("mfb-h1", "mfb-h2", …), so inserting one heading in the middle of an article
+  REPOINTED every anchor below it: the page still returned 200, the table of contents still
+  looked right, and every link anyone had shared or indexed into that article now landed
+  somewhere else. Ids are derived from the heading TEXT now (diacritics folded, so "Cài đặt" and
+  "Cai dat" agree), deduplicated against the ids already present in the body — including
+  non-heading ones — and h4 is picked up alongside h2/h3. A heading that already carries a
+  hand-written id keeps it. The table of contents carries the real heading level instead of
+  signalling depth with two leading spaces, and templates receive it as toc[].level.
+  Measured on the live blog: the same three headings in two different posts now produce the same
+  three anchors, where before both posts answered to mfb-h1..mfb-h3 for different text.
+- The blog home ran the SAME named query twice: once for the grid, once again (page 1, 100 rows)
+  only to collect the category chips. On this host one named query is ~9 DB round trips and
+  materialises up to 500 source rows regardless of PageSize, so the duplicate was the most
+  expensive line on the page. The wide read now serves both and the grid takes its slice —
+  whenever the grid is unfiltered and its last row still falls inside those 100, which covers
+  every lens and every home page up to 100/PageSize. A category or ?q= filter still gets its own
+  query, because the chips must keep listing every category, not only the ones that survive the
+  filter.
+- The two public reads that carry no visitor input — the wide published list and the hero — are
+  cached for 45 seconds per portal, the same deal the active template already states: an
+  editorial change is live within a minute. Nothing keyed by ?q=, ?category= or ?slug= is ever
+  cached: a dictionary whose keys come from the query string of an anonymous page is a
+  memory-exhaustion vector, not a cache.
+  Measured on megaclean008 (11 posts, warm): /Blogs median 1219 ms → 808 ms, ?view=trending
+  ~700-965 ms → 443-490 ms, with the rendered HTML identical across /Blogs, ?page=2,
+  ?view=trending, ?view=archive, ?category=, ?q= and ?tag=.
+- IsBounded is finally read. A named query stops at 500 source rows before it filters, sorts and
+  pages in memory; past that line older posts stopped existing as far as this page was concerned,
+  the category strip lost whole categories and the story count silently became a floor — all with
+  HTTP 200 and no consumer in this module ever looking at the flag that said so. Readers now get
+  one honest sentence and a "500+" style count; a Host also gets the cause. On the article page,
+  "Article not found" tells a Host when the slug is simply past the cap rather than missing.
+
 1.16.3
 
 - TEMPLATE GALLERY, AND TEMPLATES THAT ACTUALLY RENDER. Until now the templates screen was an

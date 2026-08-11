@@ -273,6 +273,23 @@ Write-Host '[3/7] Copy files...' -ForegroundColor Yellow
 Copy-Item "$PROJECT_DIR\MegaForm.dnn" "$STAGING\" -Force
 Write-Host '  + MegaForm.dnn'
 
+# [AzureResidue 2026-08-11] <component type="Cleanup" fileName="..."> names a file that has to sit
+# at the package ROOT. When it is absent DNN skips the cleanup SILENTLY — the install still reports
+# success while the stale Azure DLLs stay in bin and keep the Control Bar returning 500, which is
+# the worst possible failure mode for a fix whose whole job is deleting them. Read the name out of
+# the manifest instead of hard-coding it (same single-source rule as $VERSION and the SQL scripts)
+# and fail the build when the list file is missing.
+$cleanupNames = ([regex]::Matches((Get-Content $MANIFEST -Raw), '<component\s+type="Cleanup"[^>]*\bfileName="([^"]+)"') |
+    ForEach-Object { $_.Groups[1].Value }) | Sort-Object -Unique
+foreach ($cleanupName in $cleanupNames) {
+    $cleanupSrc = Join-Path "$PROJECT_DIR\Cleanup" $cleanupName
+    if (-not (Test-Path $cleanupSrc)) {
+        throw ('MegaForm.dnn declares <component type="Cleanup" fileName="{0}"> but Cleanup\{0} does not exist.' -f $cleanupName)
+    }
+    Copy-Item $cleanupSrc "$STAGING\" -Force
+    Write-Host "  + $cleanupName (danh sach file can xoa khoi bin)"
+}
+
 # [DNN sync 2026-06-22] icon.gif is declared in the manifest's <component type="File"> at the
 # package root but was never copied/zipped — add it so the install matches the manifest.
 $iconSrc = @("$PROJECT_DIR\Images\icon.gif", "$PROJECT_DIR\Install\icon.gif", "$PROJECT_DIR\icon.gif") |
@@ -673,8 +690,21 @@ if (Test-Path $tplSrc) {
 $samplesDir = "$SOLUTION_DIR\Samples"
 if (-not (Test-Path $samplesDir)) { $samplesDir = "$PROJECT_DIR\Samples" }
 if (Test-Path $samplesDir) {
-    Copy-Item "$samplesDir\*" "$RESOURCES\Samples\" -Force -ErrorAction SilentlyContinue
-    Write-Host '  + Samples\*'
+    # [AzureResidue 2026-08-11] Top-level FILES only, deliberately. Do NOT add -Recurse here.
+    #
+    # Samples\AspNetCoreHost\bin\{Debug,Release}\net9.0 contains Azure.Core.dll, Azure.Identity.dll
+    # and System.ClientModel.dll (they arrive legitimately, via Microsoft.Data.SqlClient ->
+    # Azure.Identity). A recursive copy would sweep them into Resources.zip and put the exact
+    # assembly that kills DNN's startup attribute scan onto every customer's disk, one manual copy
+    # away from bin. See the [AzureResidue 2026-08-11] block in MegaForm.dnn for what that costs.
+    #
+    # The old form, Copy-Item "$samplesDir\*", also CREATED the sample subdirectories empty, which
+    # looked like a packaging bug and invited exactly the -Recurse "fix" this comment is warning
+    # against. Enumerating files removes the bait: no empty folders ship, and the package contents
+    # are unchanged otherwise. The staging guard further down is the backstop if this ever slips.
+    $sampleFiles = @(Get-ChildItem $samplesDir -File -ErrorAction SilentlyContinue)
+    foreach ($sample in $sampleFiles) { Copy-Item $sample.FullName "$RESOURCES\Samples\" -Force }
+    Write-Host ("  + Samples\* ({0} file(s), khong de quy)" -f $sampleFiles.Count)
 }
 
 if ($Trial) {
@@ -770,9 +800,42 @@ if (Test-Path $OUTPUT_ZIP) {
     }
 }
 
+# ============================================================
+# [AzureResidue 2026-08-11] Last line of defence before anything is zipped.
+#
+# Shipping Azure.Core.dll once already cost a fleet of customer sites their Control Bar: DNN
+# attribute-scans EVERY assembly in bin at startup, Azure.Core 1.55 carries an assembly-level
+# attribute whose type lives in System.ClientModel, and with that assembly absent the scan throws
+# and ExtensionPointManager stays faulted for the life of the app domain. The install reports
+# success; the site just quietly loses Edit mode. Measured recovery: deleting the three files took
+# ToggleUserMode from 500 back to 405.
+#
+# Every known route is closed by construction - the PackageReference is gone, $cloudDllNames is an
+# allow-list, and the Samples copy is not recursive. This guard exists because those are three
+# separate places, each one edit away from reopening the hole, and because the failure is invisible
+# at build time and expensive at the customer's. Fail the build instead.
+#
+# Scoped to the crash set only. AWSSDK.* is the supported S3 add-on and must pass. On .NET 8/9/10
+# hosts Azure.Core arrives legitimately through Microsoft.Data.SqlClient -> Azure.Identity, but no
+# such payload belongs in a net472 DNN package, so an unqualified block is right HERE and would be
+# wrong in the Oqtane/Umbraco scripts.
+$forbiddenInPackage = @('Azure.Core.dll', 'Azure.Storage.Blobs.dll', 'Azure.Storage.Common.dll',
+                        'Azure.Identity.dll', 'System.ClientModel.dll')
+$staged = @(Get-ChildItem $STAGING -Recurse -File -ErrorAction SilentlyContinue |
+            Where-Object { $forbiddenInPackage -contains $_.Name })
+if ($staged.Count -gt 0) {
+    $where = ($staged | ForEach-Object { $_.FullName.Substring($STAGING.Length).TrimStart('\') }) -join ', '
+    throw ("Package staging chua {0} assembly Azure/ClientModel: {1}. Chung phai KHONG BAO GIO co " -f $staged.Count, $where) +
+          "trong goi DNN: mot ban cai mang Azure.Core ma thieu System.ClientModel se lam chet " +
+          "Control Bar cua site (500) suot doi app domain. Xem khoi [AzureResidue 2026-08-11] " +
+          "trong MegaForm.dnn."
+}
+Write-Host ("  [OK] khong co assembly Azure/ClientModel nao trong staging ({0} ten bi cam)" -f $forbiddenInPackage.Count) -ForegroundColor Green
+
 $zip = [System.IO.Compression.ZipFile]::Open($OUTPUT_ZIP, 'Create')
 
-@('MegaForm.dnn', 'License.txt', 'ReleaseNotes.txt', 'icon.gif', 'Resources.zip', 'PersonaBar.zip') | ForEach-Object {
+@('MegaForm.dnn', 'License.txt', 'ReleaseNotes.txt', 'icon.gif', 'Resources.zip', 'PersonaBar.zip') +
+    @($cleanupNames | Where-Object { $_ }) | ForEach-Object {
     $fp = Join-Path $STAGING $_
     if (Test-Path $fp) {
         [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $fp, $_) | Out-Null

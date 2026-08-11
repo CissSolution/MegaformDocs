@@ -1,0 +1,3 @@
+bin\Azure.Storage.Blobs.dll
+bin\Azure.Storage.Common.dll
+bin\Azure.Core.dll

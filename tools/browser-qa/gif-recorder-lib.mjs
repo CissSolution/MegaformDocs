@@ -63,6 +63,73 @@ export async function clickAt(frame, selector, { pause = 900, nth = 0 } = {}) {
 }
 
 /**
+ * Find the time ranges where something actually happens, so a GIF can skip the dead air.
+ *
+ * Passing no `segments` to toGif keeps EVERY frame, and that is how three Persona Bar demos came
+ * out at ~70 MB each: the scenarios run about 150 seconds, most of it a still page waiting on a
+ * navigation or an animation, and a 150-second GIF is enormous no matter how far you drop the fps
+ * or the width. Trimming is the only lever that matters; the rest is rounding.
+ *
+ * Rather than have a human scrub three videos, sample one small frame a second and keep the
+ * seconds that differ from their predecessor. Rounding the samples to 1 fps is deliberate - the
+ * cursor blinking or a spinner turning should not count as activity, and at this resolution they
+ * do not move enough to clear the threshold.
+ *
+ * Returns [[startSec, endSec], ...], already merged and padded, capped at `maxSeconds` total, with
+ * the busiest ranges kept first. Returns null when nothing stands out, which makes toGif fall back
+ * to its keep-everything behaviour rather than silently emitting an empty GIF.
+ */
+export function pickSegments(webm, { threshold = 1.6, pad = 1, gap = 2, maxSeconds = 24 } = {}) {
+  const ff = ffmpegPath();
+  const work = fs.mkdtempSync(path.join(path.dirname(webm), 'probe-'));
+  try {
+    execFileSync(ff, ['-i', webm, '-vf', 'scale=160:-1', '-r', '1', path.join(work, 'p-%05d.png')],
+                 { stdio: 'ignore' });
+    const shots = fs.readdirSync(work).filter((f) => f.endsWith('.png')).sort();
+    if (shots.length < 3) return null;
+
+    // Mean absolute difference against the previous second, as a percentage of full scale.
+    const busy = [];
+    let prev = null;
+    shots.forEach((f, i) => {
+      const px = PNG.sync.read(fs.readFileSync(path.join(work, f))).data;
+      if (prev) {
+        let sum = 0;
+        for (let p = 0; p < px.length; p += 4) {
+          sum += Math.abs(px[p] - prev[p]) + Math.abs(px[p + 1] - prev[p + 1]) + Math.abs(px[p + 2] - prev[p + 2]);
+        }
+        const score = (sum / (px.length / 4) / 3) / 255 * 100;
+        if (score >= threshold) busy.push({ t: i, score });
+      }
+      prev = px;
+    });
+    if (!busy.length) return null;
+
+    // Merge seconds that are close enough to read as one continuous action.
+    const merged = [];
+    for (const b of busy) {
+      const last = merged[merged.length - 1];
+      if (last && b.t - last.end <= gap) { last.end = b.t; last.score += b.score; }
+      else merged.push({ start: b.t, end: b.t, score: b.score });
+    }
+
+    // Keep the most eventful ranges until the budget runs out, then restore chronological order -
+    // a demo that jumps backwards in time is worse than one that is slightly too long.
+    const dur = (r) => (r.end + pad) - Math.max(0, r.start - pad);
+    const kept = [];
+    let total = 0;
+    for (const r of [...merged].sort((a, b) => b.score - a.score)) {
+      if (total + dur(r) > maxSeconds && kept.length) continue;
+      kept.push(r); total += dur(r);
+    }
+    return kept.sort((a, b) => a.start - b.start)
+               .map((r) => [Math.max(0, r.start - pad), r.end + pad]);
+  } finally {
+    fs.rmSync(work, { recursive: true, force: true });
+  }
+}
+
+/**
  * webm -> GIF. `segments` keeps only the interesting time ranges, so a 40s recording with a
  * 20s "saving…" gap still becomes a short GIF.
  */

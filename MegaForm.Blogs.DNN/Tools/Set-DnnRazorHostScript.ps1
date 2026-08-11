@@ -13,7 +13,20 @@ param(
     [int]$ModuleId,
 
     [Parameter(Mandatory)]
-    [string]$ScriptFile
+    [string]$ScriptFile,
+
+    # Tick "Inherit View permissions from Page" in the same postback.
+    #
+    # controlbar/AddModule creates a module that does NOT inherit page permissions — with either
+    # Visibility 0 or 1 — so a freshly added module is invisible to anonymous visitors no matter
+    # how public the page is. The obvious repair, UPDATE dbo.Modules SET InheritViewPermissions,
+    # only works where we can reach SQL Server; on a hosted site we cannot, and DNN caches the
+    # module anyway so a direct write is not picked up. Posting the checkbox that the Settings page
+    # already renders works everywhere and goes through DNN's own cache invalidation.
+    #
+    # Left off by default: this script's contract is "set the script file", and silently changing
+    # who can see a module would be a surprise. Callers that just created a module should pass it.
+    [switch]$InheritViewPermissions
 )
 
 $ErrorActionPreference = 'Stop'
@@ -171,6 +184,20 @@ try {
         throw "Razor script '$ScriptFile' is not installed on the site."
     }
 
+    # An unchecked checkbox is not posted by a browser and Get-DnnInputFields mirrors that, so the
+    # inherit box survives a round trip only when it was already ticked. Read what it is now — the
+    # value is reported either way, so a caller can never be left guessing whether this script
+    # changed who can see the module.
+    $inheritName = 'dnn$ctr' + $ModuleId + '$ModuleSettings$chkInheritPermissions'
+    $inheritBefore = $settingsHtml -match
+        ('<input\b(?=[^>]*\bname="' + [regex]::Escape($inheritName) + '")(?=[^>]*\bchecked)[^>]*>')
+
+    if ($InheritViewPermissions) {
+        # ASP.NET reads a CheckBox as "checked" from the mere presence of its key; "on" is what a
+        # browser sends. Assigning it here ticks a box the page rendered unticked.
+        $fields[$inheritName] = 'on'
+    }
+
     $fields[$scriptField] = $ScriptFile
     $fields['__EVENTTARGET'] = 'dnn$ctr' + $ModuleId + '$ModuleSettings$cmdUpdate'
     $fields['__EVENTARGUMENT'] = ''
@@ -211,10 +238,26 @@ try {
         throw "Razor Host script setting did not persist for module $ModuleId."
     }
 
+    $inheritAfter = $verifyHtml -match
+        ('<input\b(?=[^>]*\bname="' + [regex]::Escape($inheritName) + '")(?=[^>]*\bchecked)[^>]*>')
+
+    if ($InheritViewPermissions -and -not $inheritAfter) {
+        throw ("Module $ModuleId still does not inherit View permissions from its page, so it " +
+               'stays invisible to anonymous visitors. Tick "Inherit View permissions from Page" ' +
+               "on $settingsUrl by hand.")
+    }
+    if (-not $InheritViewPermissions -and $inheritBefore -and -not $inheritAfter) {
+        throw ("Module $ModuleId inherited View permissions before this update and no longer " +
+               'does — the module has just become invisible to anonymous visitors. Re-run with ' +
+               '-InheritViewPermissions.')
+    }
+
     [pscustomobject]@{
         ModuleId = $ModuleId
         PagePath = '/' + $pagePathValue
         ScriptFile = $ScriptFile
+        InheritViewPermissionsBefore = [bool]$inheritBefore
+        InheritViewPermissionsAfter  = [bool]$inheritAfter
         Verified = $true
     }
 }

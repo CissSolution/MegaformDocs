@@ -10,7 +10,17 @@ const width = parseInt(process.argv[3], 10) || 1440;
 const site = process.argv[4].replace(/\/$/, '');
 const user = process.argv[5];
 const pass = process.argv[6];
-const jobs = process.argv.slice(7).map((s) => { const i = s.indexOf('='); return { name: s.slice(0, i), url: site + s.slice(i + 1) }; });
+// name=path            -> navigate + screenshot
+// name=path#create=T|C|S -> navigate, drive the New-post editor, submit, then screenshot
+const jobs = process.argv.slice(7).map((s) => {
+  const i = s.indexOf('=');
+  const name = s.slice(0, i);
+  let rest = s.slice(i + 1);
+  let action = null;
+  const hash = rest.indexOf('#');
+  if (hash >= 0) { action = rest.slice(hash + 1); rest = rest.slice(0, hash); }
+  return { name, url: site + rest, action };
+});
 fs.mkdirSync(outDir, { recursive: true });
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const DBG = 9381;
@@ -33,13 +43,35 @@ function wsConnect(wsUrl) {
     req.on('error', reject); req.end();
   });
 }
+// The QA hosts live only in the Windows hosts file, so Chrome's async DNS / DoH would NXDOMAIN them
+// and every shot would come back as an error page. Mapping the hostname to 127.0.0.1 fixes that -
+// but it was applied unconditionally, which silently broke the moment the target was a REAL site:
+// Chrome dialled 127.0.0.1, got ERR_CONNECTION_REFUSED, and wrote a "This site can't be reached"
+// PNG. That failure is easy to misread as "the page is broken" when the page is fine, so decide per
+// host: map only names that actually resolve to this machine.
+function resolvesLocally(host) {
+  if (/^(localhost|127\.\d+\.\d+\.\d+|::1)$/i.test(host)) return true;
+  try {
+    const hostsFile = path.join(process.env.WINDIR || 'C:/Windows', 'System32/drivers/etc/hosts');
+    const text = fs.readFileSync(hostsFile, 'utf8');
+    for (const raw of text.split(/\r?\n/)) {
+      const line = raw.replace(/#.*$/, '').trim();
+      if (!line) continue;
+      const parts = line.split(/\s+/);
+      if (parts.slice(1).some((n) => n.toLowerCase() === host.toLowerCase())) return true;
+    }
+  } catch { /* no hosts file readable - treat the host as remote */ }
+  return false;
+}
+
 async function main() {
   const host = new URL(site).hostname;
+  const local = resolvesLocally(host);
+  if (!local) console.log(`host ${host} is not in the hosts file - letting DNS resolve it normally`);
   const chrome = spawn(CHROME, [
     `--remote-debugging-port=${DBG}`, '--headless=new', '--disable-gpu',
     `--user-data-dir=${path.join(outDir, '.p')}`, `--window-size=${width},1000`, '--hide-scrollbars',
-    // The QA hosts live only in the Windows hosts file; DoH/async DNS would NXDOMAIN them.
-    `--host-resolver-rules=MAP ${host} 127.0.0.1`,
+    ...(local ? [`--host-resolver-rules=MAP ${host} 127.0.0.1`] : []),
     '--disable-features=DnsOverHttps',
     'about:blank'], { stdio: 'ignore' });
   try {
@@ -80,6 +112,52 @@ async function main() {
         await sleep(2000);
       }
       await sleep(1800);
+
+      // create=<title>|<category>|<status>  fills the New-post editor and submits it.
+      // The DNN admin screens post back through the page form with an mfb_csrf token, so driving
+      // the real controls is the only way to exercise the same path a human takes.
+      if (j.action && (j.action.startsWith('create=') || j.action.startsWith('save='))) {
+        const isSave = j.action.startsWith('save=');
+        const [title, category, status] = j.action.slice(isSave ? 5 : 7).split('|');
+        const filledForm = await ev(`(() => {
+          const set = (name, value) => {
+            const el = document.querySelector('[name="' + name + '"]');
+            if (!el) return name + ':missing';
+            el.focus(); el.value = value;
+            el.dispatchEvent(new Event('input', {bubbles:true}));
+            el.dispatchEvent(new Event('change', {bubbles:true}));
+            return name + ':ok';
+          };
+          return [set('title', ${JSON.stringify(title)}),
+                  set('excerpt', 'Created through the DNN blog admin to verify the create path.'),
+                  set('body', '<p>This post was authored from the DNN Blog Admin screen.</p>'),
+                  set('category', ${JSON.stringify(category || 'Development')}),
+                  set('status', ${JSON.stringify(status || 'draft')})].join(' ');
+        })()`);
+        const clicked = await ev(`(() => {
+          const b = Array.from(document.querySelectorAll('button'))
+            .find(x => (x.value||'') === ${JSON.stringify(isSave ? 'save' : 'create')});
+          if (!b) return 'no-button';
+          const f = b.form;
+          const invalid = f ? Array.from(f.elements).filter(e => e.willValidate && !e.checkValidity())
+                                  .map(e => (e.name || e.id) + ':' + e.validationMessage).slice(0, 6) : [];
+          const info = { formValid: f ? f.checkValidity() : null, invalid: invalid,
+                         type: b.type, name: b.name, value: b.value,
+                         hasForm: !!f, formId: f ? (f.id || f.name) : null,
+                         csrf: !!document.querySelector('[name=mfb_csrf]'),
+                         method: f ? f.method : null };
+          b.click();
+          return 'clicked ' + JSON.stringify(info);
+        })()`);
+        await sleep(9000);
+        const outcome = await ev(`(() => {
+          const n = document.querySelector('.mfba-notice');
+          return JSON.stringify({ notice: n ? n.textContent.trim().slice(0,180) : null,
+                                  href: location.href });
+        })()`);
+        console.log('CREATE', j.name, filledForm, '->', clicked, outcome);
+      }
+
       const h = Math.min(Math.max(await ev('document.body.scrollHeight') || 1000, 900), 9000);
       await cdp.call('Emulation.setDeviceMetricsOverride', { width, height: h, deviceScaleFactor: 1, mobile: width < 700 });
       await sleep(800);
