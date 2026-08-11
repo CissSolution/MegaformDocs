@@ -235,11 +235,25 @@
             }
             if (missing.Count == 0) return false;
 
-            var at = form.SchemaJson.IndexOf("{\"key\":", StringComparison.Ordinal);
-            if (at < 0) return false;
-            var add = "";
-            foreach (var key in missing)
-                add += "{\"key\":\"" + key + "\",\"type\":\"Number\",\"label\":\"" + key + "\"},";
+            // 🔴 Anchor on the OPENING BRACKET of "fields", not on the literal {"key": .
+            // The old anchor assumed every field object starts with its key. The docs form was
+            // written label-first - {"label":"Doc UID","key":"doc_uid",...} - so IndexOf found
+            // nothing, this returned false without a word, and the three counter fields were never
+            // added. RegisterView then patched view_count into a form that had no such field:
+            // SubmissionFieldNormalizer only walks schema fields, so the write was dropped and
+            // every documentation page has been reading a permanent "0 views".
+            var anchor = form.SchemaJson.IndexOf("\"fields\"", StringComparison.OrdinalIgnoreCase);
+            if (anchor < 0) return false;
+            var open = form.SchemaJson.IndexOf('[', anchor);
+            if (open < 0) return false;
+            var at = open + 1;
+
+            var add = string.Join(",", missing.Select(key =>
+                "{\"key\":\"" + key + "\",\"type\":\"Number\",\"label\":\"" + key + "\"}"));
+            // Only separate from what follows when something follows: on "fields":[] the trailing
+            // comma would produce invalid JSON and take the whole form down, not just the counter.
+            if (form.SchemaJson.Substring(at).TrimStart().StartsWith("]", StringComparison.Ordinal) == false)
+                add += ",";
 
             Run(c => c.Forms.UpdateFormAsync(formId,
                 new UpdateFormRequest { SchemaJson = form.SchemaJson.Substring(0, at) + add + form.SchemaJson.Substring(at) },

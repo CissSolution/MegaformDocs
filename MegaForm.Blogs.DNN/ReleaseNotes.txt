@@ -1,3 +1,25 @@
+1.17.8
+
+- Documentation pages show their read count again - they have never shown one. EnsureDocMetricFields
+  looked for the literal {"key": to find where to splice the three counter fields in, and the docs
+  form is written label-first: {"label":"Doc UID","key":"doc_uid"}. IndexOf found nothing, the
+  method returned false without a word, and view_count was never a field on that form. RegisterView
+  then patched a key the schema did not declare - SubmissionFieldNormalizer only walks schema fields,
+  so the write was dropped every time and every page read a permanent "0 views".
+  Now anchored on the opening bracket of "fields", which does not care what order a field object
+  writes its properties in, and it refuses to leave a trailing comma on an empty field list.
+  Counts start from zero: the views were never recorded anywhere, so there is nothing to recover.
+
+Two things 1.17.7 listed as KNOWN, NOT FIXED did not reproduce when measured on the 1.17.7 install,
+and the notes below are left as they were written rather than quietly corrected:
+- view_count did not reset. 24 before the install, 24 immediately after with no page load, 24 after
+  the first cold render, 24 after the scheduler tick. Reader events for that post: 24 throughout.
+- content_type saved. Gallery -> Blog Post through the console reached both typed storage and the
+  DataJson mirror, and view_count on the same record was untouched by the patch.
+Neither is declared fixed - neither was reproduced. What the digging did find is the real bug above,
+which is the same family: a value written for a key the schema does not declare goes nowhere, and
+nothing anywhere says so.
+
 1.17.7
 
 - The article page no longer leaves a 560px white gutter down its right side. Measured, not guessed:

@@ -108,6 +108,24 @@ rỗng và trông như "không có dữ liệu"), `tools/dnn_live_install_megafo
 
 ---
 
+## 4b. Trang tài liệu luôn hiện "0 views" — đã sửa, Blogs **01.17.008**
+
+Owner phát hiện `/MegaFormDocsT` mọi mục đều `0 views`. Không phải chưa ai đọc — **chưa bao giờ đếm được**.
+
+`EnsureDocMetricFields` tìm chỗ chèn 3 trường đếm bằng chuỗi **`{"key":`**, mà form 385 viết
+**label trước**: `{"label":"Doc UID","key":"doc_uid",...}` ⇒ `IndexOf` trả -1 ⇒ hàm `return false`
+**không nói một lời**. `view_count` vì thế chưa từng là field của form 385, và `RegisterView` patch
+một key mà schema không khai báo ⇒ `SubmissionFieldNormalizer` chỉ duyệt field trong schema nên
+**write bị bỏ mỗi lần**, đọc lại luôn ra 0. Đúng họ lỗi với §3.
+
+Sửa: neo vào **dấu `[` mở của `"fields"`** (không quan tâm thứ tự thuộc tính), và không để lại dấu
+phẩy thừa khi `"fields":[]` (dấu phẩy đó làm hỏng JSON ⇒ chết cả form, không chỉ bộ đếm).
+
+Đã kiểm trước khi ship: 23 bản ghi docs dùng 19 key, **không key nào nằm ngoài schema** — nên lần
+`ReplaceFields` đầu tiên sau khi vá không xoá mất gì. Sau khi cài: schema 385 có `view_count`,
+`ISJSON = hợp lệ`, trang mở ra hiện **"4 views"** ở đầu bài và trên dòng cây; các mục chưa ai mở vẫn 0.
+**Số cũ không khôi phục được** — chưa từng ghi xuống đâu cả.
+
 ## 5. Việc chưa xong
 
 - [ ] **Chụp lại ảnh trong bài** (§1.3/1.4/1.5): ảnh hiện vẫn là ảnh chụp **cả khung trình duyệt**,
