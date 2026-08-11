@@ -391,8 +391,10 @@
 }
 .mfb-tree-nav .mfb-archive-list li:hover { background: #f6f8fb; }
 /* The whole row is one link — padding lives on the anchor so the click target covers the
-   description too, not just the line of title text. */
-.mfb-tree-nav .mfb-archive-list a { display: block; padding: 9px 12px; color: #0f172a; }
+   metrics line too, not just the line of title text.
+   [MFB-TREE-DENSITY-20260811] Tightened once the description moved to title=: a row is now two
+   short lines, and 9px of padding around them left the list looking half empty. */
+.mfb-tree-nav .mfb-archive-list a { display: block; padding: 7px 12px; color: #0f172a; }
 .mfb-tree-nav .mfb-archive-list a strong {
   display: block; color: inherit; font-family: inherit; font-size: 14.5px;
   font-weight: 600; line-height: 1.35;

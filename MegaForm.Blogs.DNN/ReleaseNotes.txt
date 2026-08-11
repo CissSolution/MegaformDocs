@@ -1,3 +1,22 @@
+1.17.10
+
+- FIX for 1.17.9, which shipped an article tree with no article titles in it. Moving the
+  description into title= took the <strong>nav title</strong> line out with it, so every row read
+  "2 views - 0 comments" and nothing else. The list was denser and completely useless.
+  Caught by the owner on the live site, not by me: I measured the tree with a DOM count and
+  shipped without opening the screenshot of the thing I had just changed.
+
+1.17.9
+
+- The article tree is a list again. Each entry printed its description in full, three to five
+  lines of it, so a 22-page channel needed several screens of scrolling just to see its own table
+  of contents and the reader could not compare two titles without scrolling between them.
+  The description is now the row title= tooltip: still one hover away, no longer occupying the
+  page. Row padding came down with it, because two short lines inside 9px of padding read as a
+  half-empty list.
+  A CSS tooltip would have looked better and been wrong: .mfb-tree-nav is overflow:auto, which
+  clips any absolutely-positioned child of a row.
+
 1.17.8
 
 - Documentation pages show their read count again - they have never shown one. EnsureDocMetricFields

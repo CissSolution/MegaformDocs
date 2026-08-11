@@ -95,6 +95,17 @@ namespace MegaForm.Core.Services
                .Append("margin-right:0!important;")
                .Append("}\n");
 
+            // Invoice application shells already render their own centered .io-card.
+            // Keep .io-page as a transparent layout wrapper so SSR cannot paint a
+            // second full-width card behind the authored invoice.
+            css.Append(scoped).Append(" .mfp.mfp-invoice-orange .io-page,\n")
+               .Append(scoped).Append(" .mfp.mfp-invoice-dark .io-page,\n")
+               .Append(scoped).Append(" .mfp.mfp-invoice-minimal .io-page{")
+               .Append("background:transparent!important;")
+               .Append("padding:0!important;")
+               .Append("min-height:0!important;")
+               .Append("}\n");
+
             css.Append(scoped).Append(" .mfp[class*=\"mfp-\"]{")
                .Append("--background:var(--mf-page-bg,var(--mf-form-bg,var(--background,#ffffff)));")
                .Append("--foreground:var(--mf-text,var(--mf-color-text,var(--foreground,#0f172a)));")
@@ -195,6 +206,22 @@ namespace MegaForm.Core.Services
                .Append(scoped).Append(" .mfp[class*=\"mfp-\"] [class*=\"title\"]{")
                .Append("color:var(--mf-title-color,var(--mf-text,var(--mf-color-text,var(--foreground,#0f172a))))!important;")
                .Append("font-family:var(--mf-heading-font,var(--mf-font-family,inherit))!important;")
+               .Append("}\n");
+
+            // 🔴 Give the hero its own colour back. The bridge above paints EVERY h1/h2/h3 and every
+            // [class*="title"] with the theme's title colour !important, which is right for a form
+            // card on a light surface and wrong for a hero panel: those sit on a dark photo with a
+            // dark gradient over it, and the template sets white text on purpose. Measured on
+            // dnndefender.com/MegaForm/Verdant-Member-Registration: the template asked for #fff at
+            // (0,2,0), the bridge answered #1a1a2e at (0,3,0) !important, and the headline rendered
+            // near-black on near-black - read as "the hero image is missing".
+            // (0,4,0) so it outranks the bridge, and `inherit` rather than a literal so the colour
+            // still comes from the template's own hero rule instead of a second hard-coded value.
+            css.Append(scoped).Append(" .mfp[class*=\"mfp-\"] [class*=\"hero\"] h1,")
+               .Append(scoped).Append(" .mfp[class*=\"mfp-\"] [class*=\"hero\"] h2,")
+               .Append(scoped).Append(" .mfp[class*=\"mfp-\"] [class*=\"hero\"] h3,")
+               .Append(scoped).Append(" .mfp[class*=\"mfp-\"] [class*=\"hero\"] [class*=\"title\"]{")
+               .Append("color:inherit!important;")
                .Append("}\n");
 
             css.Append(scoped).Append(" .mfp[class*=\"mfp-\"] .mf-field-label,")

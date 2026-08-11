@@ -2500,7 +2500,7 @@
    broken in a way nothing on the server can explain. That is exactly what happened when the
    article-list styles landed: measured in the browser the rules WERE applied, while a screenshot
    taken with a warm profile showed an unstyled stack. *@
-<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs.css?v=20260811h" />
+<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs.css?v=20260811i" />
 
 @{
     // A rendered template owns the whole surface, so it gets its own class to scope its CSS with.
@@ -2553,16 +2553,17 @@
                                     && string.Equals(n.ParentKey, branch.Key, StringComparison.OrdinalIgnoreCase)))
                         {
                             var isOpen = openNode != null && node.SubmissionId == openNode.SubmissionId;
-                            @* Title AND description live INSIDE the link, so the whole row is the
-                               click target. With the description outside it, half of every row
-                               looked clickable and did nothing. *@
+                            @* The whole row is the click target: with anything outside the link, half
+                               of every row looked clickable and did nothing.
+                               The description is a TOOLTIP, not a line of the row. Printed inline it
+                               cost three to five lines per entry, so a 22-page channel needed several
+                               screens of scrolling to see its own table of contents. As title= it is
+                               still there for whoever wants it, and the list is readable as a list.
+                               A CSS tooltip would have been prettier and wrong: .mfb-tree-nav has
+                               overflow:auto, which clips any absolutely-positioned child. *@
                             <li class="@(isOpen ? "on" : "")">
-                                <a href="@(baseUrl + "?doc=" + HttpUtility.UrlEncode(node.Key))">
+                                <a href="@(baseUrl + "?doc=" + HttpUtility.UrlEncode(node.Key))" title="@node.Excerpt">
                                     <strong>@node.NavTitle</strong>
-                                    @if (!string.IsNullOrWhiteSpace(node.Excerpt))
-                                    {
-                                        <small>@node.Excerpt</small>
-                                    }
                                     @* Shown on every row, zeros included. Hiding zeros meant 21 of 22
                                        articles carried no line at all, which reads as "the counters
                                        are broken" rather than "nobody has been here yet". *@
