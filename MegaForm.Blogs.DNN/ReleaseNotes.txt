@@ -1,3 +1,18 @@
+1.17.5
+
+- Comment counts for article channels, beside the read count and the stars.
+  Comments are NOT given their own form per channel. A reader commenting on a documentation page
+  and a reader commenting on a blog post are doing the same thing, and one moderation queue is one
+  place to look - so a channel points at the blog's existing comment form, and rows are matched on
+  post_uid, which for a channel article is its doc key. Set it per module in Settings > Channels.
+  The count is one bounded walk of that form grouped by post_uid, cached for a minute. Doing it the
+  obvious way - reuse the per-article loader - would have meant 22 walks of the same form to draw a
+  22-row list, each resolving every row it read.
+  Two deliberate refusals to guess: a channel with no comment form wired shows NO count rather than
+  a column of zeros, which would read as "nobody commented" instead of "not connected"; and when
+  the walk hits its 1000-row cap the number is shown as a floor ("12+"), because a count that
+  silently stops growing is worse than one that admits it stopped.
+
 1.17.4
 
 - Article channels now carry their own read count and star rating, shown on the article and beside

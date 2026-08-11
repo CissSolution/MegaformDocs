@@ -46,6 +46,42 @@
         PortalController.UpdatePortalSetting(portalId, SettingPrefix + key, value ?? string.Empty, true);
     }
 
+    // ---- channels (per module, not per portal) ---------------------------------------------
+    // Every other setting on this screen is portal-wide. A CHANNEL is not: one instance of the
+    // public Blogs module is one channel, so /Docs and /News can differ. Modules are matched by
+    // the script they run rather than by title, because a title is the one thing an admin renames.
+    static List<DotNetNuke.Entities.Modules.ModuleInfo> ChannelModules(int portalId)
+    {
+        var list = new List<DotNetNuke.Entities.Modules.ModuleInfo>();
+        try
+        {
+            var all = DotNetNuke.Entities.Modules.ModuleController.Instance.GetModules(portalId);
+            foreach (DotNetNuke.Entities.Modules.ModuleInfo mod in all)
+            {
+                if (mod == null || mod.IsDeleted || mod.ModuleSettings == null) continue;
+                var script = Convert.ToString(mod.ModuleSettings["ScriptFile"]);
+                if (string.Equals(script, "MegaFormBlogs.cshtml", StringComparison.OrdinalIgnoreCase))
+                {
+                    list.Add(mod);
+                }
+            }
+        }
+        catch { }
+        return list.OrderBy(m => m.ModuleID).ToList();
+    }
+
+    static string ModuleValue(DotNetNuke.Entities.Modules.ModuleInfo mod, string key)
+    {
+        if (mod == null || mod.ModuleSettings == null) return "";
+        return (Convert.ToString(mod.ModuleSettings[SettingPrefix + key]) ?? "").Trim();
+    }
+
+    static void SaveModuleValue(int moduleId, string key, string value)
+    {
+        DotNetNuke.Entities.Modules.ModuleController.Instance.UpdateModuleSetting(
+            moduleId, SettingPrefix + key, value ?? string.Empty);
+    }
+
     static bool Posted(string name)
     {
         return string.Equals(System.Web.HttpContext.Current.Request.Form[name], "true",
@@ -231,6 +267,41 @@
         }
     }
 
+    // Channels save on their own button: they write MODULE settings, not portal settings, and
+    // mixing them into the panel above would mean one mistyped channel rewrites the whole screen.
+    if (allowed && string.Equals(Request.HttpMethod, "POST", StringComparison.OrdinalIgnoreCase)
+        && string.Equals(Request.Form["mfb_channels_save"], "1", StringComparison.Ordinal))
+    {
+        try
+        {
+            ValidateCsrfToken(Request.Form["mfb_csrf"]);
+            var saved = 0;
+            foreach (var mod in ChannelModules(portalId))
+            {
+                var channel = (Request.Form["channel_key_" + mod.ModuleID] ?? "").Trim().ToLowerInvariant();
+                var sourceForm = (Request.Form["channel_form_" + mod.ModuleID] ?? "").Trim();
+                var commentsForm = (Request.Form["channel_comments_" + mod.ModuleID] ?? "").Trim();
+                if (channel.Length > 60) { channel = channel.Substring(0, 60); }
+                if (sourceForm.Length > 120) { sourceForm = sourceForm.Substring(0, 120); }
+                if (commentsForm.Length > 120) { commentsForm = commentsForm.Substring(0, 120); }
+                SaveModuleValue(mod.ModuleID, "Channel", channel);
+                SaveModuleValue(mod.ModuleID, "SourceForm", sourceForm);
+                SaveModuleValue(mod.ModuleID, "CommentsForm", commentsForm);
+                saved++;
+            }
+            message = saved == 0
+                ? "No Blogs module found to configure."
+                : "Channels saved for " + saved + " module(s). A tree channel caches its content for a minute.";
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            messageError = true;
+        }
+    }
+
+    var channelModules = allowed ? ChannelModules(portalId) : new List<DotNetNuke.Entities.Modules.ModuleInfo>();
+
     // Current values (post-save, so the form always shows what is actually stored).
     var currentPageSize = Setting(portalId, "PageSize", "12");
     var currentTags = Setting(portalId, "TrendingTags", "Design Systems, Accessibility, AI, Performance, Product");
@@ -403,6 +474,59 @@
                     @Icon("save", "mfba-icon mfba-icon-md") Save settings
                 </button>
                 <p class="mfba-hint">One button saves every panel on this screen.</p>
+            </div>
+        </section>
+
+        @* ---- channels -------------------------------------------------------------------
+           Every setting above is portal-wide. THESE are per module, because one instance of the
+           Blogs module IS one channel: /Docs, /News, /ThoiSu each carry their own copy and each
+           reads its own source form. Leave a row blank and that module stays the classic blog. *@
+        <section class="mfba-panel">
+            <div class="mfba-panel-head"><h2>@Icon("layers", "mfba-icon mfba-icon-lg") Channels</h2></div>
+            <div class="mfba-panel-body">
+                @if (channelModules.Count == 0)
+                {
+                    <p class="mfba-hint">No public Blogs module found on this portal yet.</p>
+                }
+                else
+                {
+                    <div class="mfba-rows">
+                        @foreach (var mod in channelModules)
+                        {
+                            <div class="mfba-wirerow">
+                                <div style="min-width:0">
+                                    <p class="mfba-post-title">@mod.ModuleTitle</p>
+                                    <div class="mfba-post-meta"><span>module @mod.ModuleID &middot; page @mod.TabID</span></div>
+                                </div>
+                                <div class="mfba-form-grid">
+                                    <label>Channel
+                                        <input name="channel_key_@mod.ModuleID" maxlength="60"
+                                               value="@ModuleValue(mod, "Channel")" placeholder="blank = classic blog" />
+                                    </label>
+                                    <label>Source form
+                                        <input name="channel_form_@mod.ModuleID" maxlength="120"
+                                               value="@ModuleValue(mod, "SourceForm")" placeholder="form id or exact title" />
+                                    </label>
+                                    <label>Comment form
+                                        <input name="channel_comments_@mod.ModuleID" maxlength="120"
+                                               value="@ModuleValue(mod, "CommentsForm")" placeholder="blank = no comment counts" />
+                                    </label>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <p class="mfba-hint">
+                        A source form turns that module into an <strong>article tree</strong>: nav on the left,
+                        the open article on the right. The form supplies the tree through its own fields &mdash;
+                        <code>doc_key</code>, <code>parent_key</code>, <code>doc_sort_key</code>,
+                        <code>doc_depth</code>, <code>nav_title</code>, <code>title</code>, <code>body</code>,
+                        <code>status</code>. Channel is what lets the same render target carry a different
+                        template per channel.
+                    </p>
+                    <button class="mfba-btn" type="submit" name="mfb_channels_save" value="1">
+                        @Icon("save", "mfba-icon mfba-icon-md") Save channels
+                    </button>
+                }
             </div>
         </section>
 

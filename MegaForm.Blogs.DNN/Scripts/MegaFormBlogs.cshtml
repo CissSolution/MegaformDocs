@@ -165,6 +165,16 @@
         return ModuleSetting("SourceForm");
     }
 
+    /// The comment form this channel counts against. Deliberately the blog's OWN comment form by
+    /// default rather than a second one per channel: a reader who comments on a documentation page
+    /// and a reader who comments on a blog post are doing the same thing, and one moderation queue
+    /// is one place to look. Comments are matched on post_uid, which for a channel article is its
+    /// doc key - the same anchor the article list already uses.
+    string CommentsFormSetting()
+    {
+        return ModuleSetting("CommentsForm");
+    }
+
     string ModuleSetting(string key)
     {
         try
@@ -190,6 +200,7 @@
         public string Key, ParentKey, SortKey, NavTitle, Title, Excerpt, Body, Headings, Status;
         public int Depth;
         public int Views, RatingSum, RatingCount;
+        public int Comments;   // approved comments on the shared blog comment form, matched on post_uid
     }
 
     class TreeCacheEntry { public List<TreeNode> Nodes; public DateTime ReadAtUtc; public bool Bounded; }
@@ -298,6 +309,77 @@
     {
         if (node == null || node.RatingCount <= 0) return 0;
         return Math.Round((double)node.RatingSum / node.RatingCount, 1);
+    }
+
+    class CommentCountCache { public Dictionary<string, int> Counts; public DateTime ReadAtUtc; public bool Bounded; }
+
+    static readonly System.Collections.Concurrent.ConcurrentDictionary<string, CommentCountCache> CommentCounts =
+        new System.Collections.Concurrent.ConcurrentDictionary<string, CommentCountCache>(StringComparer.OrdinalIgnoreCase);
+
+    const int CommentCountCacheSeconds = 60;
+    const int MaxCommentRows = 1000;
+
+    /// Approved comments per post_uid, for a WHOLE channel, in one bounded walk.
+    ///
+    /// The per-article LoadApprovedComments is the wrong shape here: an article list of 22 rows
+    /// would make 22 walks of the same form, and each walk resolves every row it reads. One pass
+    /// grouped by post_uid answers the entire page instead.
+    ///
+    /// Hard-capped at MaxCommentRows and cached for a minute, because this runs on an anonymous
+    /// public page. When the cap is hit the count is reported as bounded rather than as fact - a
+    /// number that silently stops growing at 1000 is worse than one that says it stopped.
+    static CommentCountCache ApprovedCommentCounts(MegaFormScope scope, int commentsFormId)
+    {
+        var key = scope.PortalId + "|" + commentsFormId;
+        CommentCountCache cached;
+        if (CommentCounts.TryGetValue(key, out cached)
+            && (DateTime.UtcNow - cached.ReadAtUtc).TotalSeconds < CommentCountCacheSeconds)
+        {
+            return cached;
+        }
+
+        var entry = new CommentCountCache
+        {
+            Counts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase),
+            ReadAtUtc = DateTime.UtcNow
+        };
+        if (commentsFormId <= 0) { CommentCounts[key] = entry; return entry; }
+
+        try
+        {
+            const int PageSize = 200;
+            var read = 0;
+            for (var page = 1; read < MaxCommentRows; page++)
+            {
+                var currentPage = page;
+                var scan = Run(c => c.SubmissionDashboard.SearchAsync(
+                    new SubmissionSearchQuery { FormId = commentsFormId, Page = currentPage, PageSize = PageSize }, scope));
+                if (scan == null || scan.Items == null || scan.Items.Count == 0) break;
+
+                var reads = scan.Items.Select(row =>
+                    RunTask(c => c.Records.GetRecordAsync(row.SubmissionId, scope))).ToArray();
+                System.Threading.Tasks.Task.WaitAll(reads);
+
+                foreach (var one in reads)
+                {
+                    var typed = one.Result;
+                    if (typed == null) continue;
+                    if (CommentModeration(typed) != "approved") continue;
+                    var uid = Text(typed, "post_uid", "");
+                    if (uid.Length == 0) continue;
+                    int now;
+                    entry.Counts[uid] = entry.Counts.TryGetValue(uid, out now) ? now + 1 : 1;
+                }
+
+                read += scan.Items.Count;
+                if (scan.Items.Count < PageSize) break;
+                if (scan.TotalCount > MaxCommentRows) entry.Bounded = true;
+            }
+        }
+        catch (Exception) { /* a count must never cost the reader the page */ }
+
+        CommentCounts[key] = entry;
+        return entry;
     }
 
     /// Five glyphs, filled by rounding to the nearest whole star. Deliberately not half-stars: at
@@ -1686,6 +1768,8 @@
     // ---- tree channel state ----------------------------------------------------------------
     List<TreeNode> treeNodes = new List<TreeNode>();
     string rateMessage = null;   // shown once, next to the stars, after a rating postback
+    bool hasCommentCounts = false;        // false = no comment form wired, so show no count at all
+    bool commentCountsBounded = false;    // the walk hit its cap, so the numbers are a floor
     TreeNode openNode = null, prevNode = null, nextNode = null;
     var treeBounded = false;
 
@@ -1700,6 +1784,22 @@
             treeNodes = tree.Nodes
                 .Where(n => string.Equals(n.Status, "published", StringComparison.OrdinalIgnoreCase))
                 .ToList();
+
+            // One walk of the comment form answers every row in the list. Skipped entirely when the
+            // channel has no comment form configured, so an unwired channel shows no comment counts
+            // rather than a column of zeros that reads as "nobody commented".
+            var commentsFormId = ResolveSourceFormId(scope, CommentsFormSetting());
+            if (commentsFormId > 0)
+            {
+                var counts = ApprovedCommentCounts(scope, commentsFormId);
+                commentCountsBounded = counts.Bounded;
+                foreach (var node in treeNodes)
+                {
+                    int found;
+                    if (counts.Counts.TryGetValue(node.Key, out found)) { node.Comments = found; }
+                }
+                hasCommentCounts = true;
+            }
 
             if (docKey.Length > 0)
             {
@@ -2403,10 +2503,12 @@
                                     {
                                         <small>@node.Excerpt</small>
                                     }
-                                    @if (node.Views > 0 || node.RatingCount > 0)
+                                    @if (node.Views > 0 || node.RatingCount > 0 || node.Comments > 0)
                                     {
                                         <small class="mfb-nodemeta">@if (node.Views > 0)
-                                            {<text>@Plural(node.Views, "view", "views")</text>}@if (node.Views > 0 && node.RatingCount > 0)
+                                            {<text>@Plural(node.Views, "view", "views")</text>}@if (node.Views > 0 && node.Comments > 0)
+                                            {<text> &#183; </text>}@if (node.Comments > 0)
+                                            {<text>@Plural(node.Comments, "comment", "comments")</text>}@if ((node.Views > 0 || node.Comments > 0) && node.RatingCount > 0)
                                             {<text> &#183; </text>}@if (node.RatingCount > 0)
                                             {<text><span class="mfb-stars">@StarBar(AverageStars(node))</span> @AverageStars(node).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)</text>}</small>
                                     }
@@ -2466,6 +2568,10 @@
                     }
                     <p class="mfb-docmeta">
                         <span>@Plural(openNode.Views, "view", "views")</span>
+                        @if (hasCommentCounts)
+                        {
+                            <span>@Plural(openNode.Comments, "comment", "comments")@if (commentCountsBounded) { <text>+</text> }</span>
+                        }
                         @if (openNode.RatingCount > 0)
                         {
                             <span><span class="mfb-stars">@StarBar(AverageStars(openNode))</span> @AverageStars(openNode).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) <small>(@Plural(openNode.RatingCount, "rating", "ratings"))</small></span>
