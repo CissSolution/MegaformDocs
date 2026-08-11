@@ -1,3 +1,38 @@
+1.17.7
+
+- The article page no longer leaves a 560px white gutter down its right side. Measured, not guessed:
+  the grid ran 220..1220 inside a skin whose own content band runs 130..1310, so the prose column
+  was 658px. The gutter was never a centring mistake - it is the second grid column, which holds the
+  author card and Topics, runs out of widgets after ~430px, and then keeps its reserved space for
+  the remaining 12,000px of article. The grid now matches the skin's band and the rail is sticky, so
+  the column stays occupied instead of being taken away. Verified at 1440 / 860 / 420.
+- Article body type is the site's sans at a 740px measure, not Georgia at 658px. Body copy was the
+  only serif on a page whose nav, headings and sidebar are all sans.
+- New body classes for editorial blocks: .mfb-blocks / .mfb-block / .mfb-block-tag / .mfb-block-num.
+  The launch post's body was authored as bare <div><span>Payment</span><h3>..</h3><p>..</p> with no
+  class on anything, so twelve labels floated in body type, equally far from the heading above and
+  the one below. That reads as a rendering failure and was first misdiagnosed as missing icons - the
+  DOM count settled it: 53 classless <div> and 8 classless <span> in one post body. CSS now has
+  something to attach to; an article body has to use the classes for it to take effect.
+- Byline and attachment characters render again: the source carried double-encoded text, so the
+  public byline printed "Jul 29, 2026 A. 7 min read" and the attachment arrow printed as three
+  letters. Fixed at the five places that reach a page, as entities or C# escapes so a future
+  encoding accident cannot reintroduce it.
+
+KNOWN, NOT FIXED, but narrowed: view_count returns to 1 after each module upgrade (1.17.4, 1.17.5,
+1.17.6). This module does not write view_count for the classic blog at all - MegaForm.Core's
+BlogAnalyticsRollupService ASSIGNS it, by counting rows in the reader-events form grouped on
+post_uid, and a post it has no events for is deliberately left alone. So a value of exactly 1 means
+exactly one matching event row existed when the rollup ran, which puts the cause upstream of this
+package. Measure it at install time: read view_count and the reader-events row count immediately
+before and immediately after the install, with no page load in between.
+
+KNOWN, NOT FIXED: the console does not persist content_type. The write itself is present and correct
+in this build. Note for whoever picks it up: MegaFormClient.PatchRecordAsync normalizes against the
+form schema and then calls ReplaceFields, so any key that is not a schema field of the posts form is
+both dropped and erased from typed storage - silently, with a 200. Confirm against form 378's
+SchemaJson before looking anywhere else.
+
 1.17.6
 
 - Article channels can now actually be commented on, not just counted. 1.17.5 shipped the count and

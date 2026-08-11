@@ -477,3 +477,42 @@
   .mfb-tree-shell { grid-template-columns: 1fr; gap: 28px; }
   .mfb-tree-nav { position: static; max-height: none; }
 }
+
+/* ── [MFB-ARTICLE-COLUMN-20260811] article width, sticky rail, body type ──────────────── */
+/* Measured on the live article, not inferred: the grid ran 220..1220 inside a skin whose own
+   content band runs 130..1310, so the prose column was 658px and the page read as a 560px white
+   gutter down the right of 12 of 15 screens.
+   That gutter is NOT a centring mistake — it is the second grid column. It holds the author card
+   and Topics, runs out of widgets after ~430px, and then keeps its 290px of reserved space for the
+   remaining 12,000px of article. Widening the grid to the skin's band and sticking the rail keeps
+   the column occupied instead of removing it: a 13,000px article wants the author and topics in
+   view, not only at the top.
+   Kept inside min-width:901px so the earlier single-column @media rules still win on narrow
+   screens — these declarations sit later in the file and would otherwise override them. */
+@media (min-width: 901px) {
+  .mfb-article-layout { max-width: 1180px; grid-template-columns: minmax(0, 1fr) 340px; gap: 64px; }
+  /* 176px clears the skin's fixed masthead: 40px utility bar + 120px header + 16px of air. */
+  .mfb-article-layout > aside { position: sticky; top: 176px; align-self: start; max-height: calc(100vh - 200px); overflow: auto; }
+}
+/* Scoped to the article layout on purpose: the docs tree page reuses .mfb-prose at a different
+   measure, and a bare .mfb-prose rule here would narrow that page too. */
+.mfb-article-layout > .mfb-prose { max-width: 740px; font-family: Inter, "Segoe UI", system-ui, sans-serif; font-size: 17px; }
+
+/* ── [MFB-PROSE-BLOCKS-20260811] editorial blocks inside a post body ──────────────────── */
+/* The classes an article body can use for a card row or a numbered sequence. They exist because
+   the body of the launch post was authored as bare <div><span>Payment</span><h3>..</h3><p>..</p>,
+   with no class on anything: the reader saw twelve labels floating in body type, equally far from
+   the heading above and the one below, which reads as a rendering failure rather than a label.
+   Diagnosed by counting the DOM, not by looking: 53 classless <div> and 8 classless <span> in one
+   post body. Nothing was failing to load - there was simply nothing for CSS to attach to. */
+.mfb-prose .mfb-blocks { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr)); gap: 16px; margin: 28px 0; }
+.mfb-prose .mfb-block { padding: 18px 20px; border: 1px solid var(--mfb-line); border-radius: 14px; background: var(--mfb-card, #fff); }
+.mfb-prose .mfb-block h3 { margin: 0 0 6px; font-size: 18px; line-height: 1.3; }
+.mfb-prose .mfb-block p { margin: 0; color: var(--mfb-muted); font-size: 15px; line-height: 1.6; }
+/* The label. A chip, so it belongs to the card it sits in and stops competing with the heading. */
+.mfb-prose .mfb-block-tag { display: inline-block; margin-bottom: 9px; padding: 4px 10px; border-radius: 999px;
+  background: var(--mfb-soft); color: var(--mfb-accent); font-size: 12px; font-weight: 800; letter-spacing: .02em; }
+/* The step number. Given weight of its own so "1" outranks the sentence under it rather than
+   sitting smaller and paler than the body copy, which is how it shipped. */
+.mfb-prose .mfb-block-num { display: inline-grid; width: 30px; height: 30px; margin-bottom: 10px; place-items: center;
+  border-radius: 999px; background: var(--mfb-accent); color: #fff; font-size: 14px; font-weight: 800; }

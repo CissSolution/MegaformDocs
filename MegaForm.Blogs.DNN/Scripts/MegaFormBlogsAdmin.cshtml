@@ -888,7 +888,7 @@
                         <input type="hidden" name="submission_id" value="@(editing == null ? 0 : editing.SubmissionId)" />
                         <div class="mfba-form-grid">
                             <label>Title<input name="title" value="@(editing == null ? "" : Text(editing, "title", ""))" required /></label>
-                            <label>Slug@(editing == null ? " â€” leave blank to derive it from the title" : "")<input name="slug" value="@(editing == null ? "" : Text(editing, "slug", ""))" @(editing == null ? "" : "required") /></label>
+                            <label>Slug@(editing == null ? " — leave blank to derive it from the title" : "")<input name="slug" value="@(editing == null ? "" : Text(editing, "slug", ""))" @(editing == null ? "" : "required") /></label>
                             <label>Category<input name="category" value="@(editing == null ? "" : Text(editing, "category", ""))" /></label>
                             <label>Author<input name="author_name" value="@(editing == null ? "" : Text(editing, "author_name", ""))" /></label>
                             <label class="wide">Excerpt<textarea name="excerpt" rows="3">@(editing == null ? "" : Text(editing, "excerpt", ""))</textarea></label>
@@ -1165,7 +1165,7 @@
                                         </div>
                                     </div>
                                     <span class="mfba-pill mfba-st-@statusKey">@StatusLabel(statusKey)</span>
-                                    <span class="mfba-views">@Icon("eye", "mfba-icon mfba-icon-md")@(views > 0 ? Compact(views) : "â€”")</span>
+                                    <span class="mfba-views">@Icon("eye", "mfba-icon mfba-icon-md")@(views > 0 ? Compact(views) : "—")</span>
                                     <div class="mfba-actions">
                                         <a class="mfba-iconbtn" href="@adminBaseUrl?edit=@post.SubmissionId" title="Edit">@Icon("pencil", "mfba-icon mfba-icon-md")</a>
                                         <a class="mfba-iconbtn" href="@editorialUrl" title="Move to another editorial column">@Icon("layout", "mfba-icon mfba-icon-md")</a>

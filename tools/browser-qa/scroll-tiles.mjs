@@ -12,15 +12,30 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { chromium } from 'playwright';
 
+// Tham so thu 6 (tuy chon): duong dan mot file CSS ung vien. No duoc tiem vao trang THAT truoc khi
+// chup, nen mot sua doi bo cuc co the nhin thay tren noi dung that ma KHONG phai dong goi va cai
+// module len site. Rat dang tien voi site production: moi lan cai module la mot lan tra gia.
 const url = process.argv[2];
 const outDir = path.resolve(process.argv[3] || 'tiles');
 const W = parseInt(process.argv[4], 10) || 1440;
 const H = parseInt(process.argv[5], 10) || 900;
+const cssFile = process.argv[6];
 fs.mkdirSync(outDir, { recursive: true });
 
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: W, height: H } });
 await page.goto(url, { waitUntil: 'networkidle', timeout: 120000 });
+if (cssFile) {
+  // Phai chen vao CUOI BODY, khong dung addStyleTag (no chen vao <head>). DNN dang ky CSS cua
+  // module bang the <link> nam TRONG FORM, tuc sau <head>, nen mot rule tiem o head thua moi khi
+  // do dac hieu bang nhau - va the la ung vien "khong an" trong khi ban ship se an.
+  await page.evaluate((css) => {
+    const tag = document.createElement('style');
+    tag.textContent = css;
+    document.body.appendChild(tag);
+  }, fs.readFileSync(cssFile, 'utf8'));
+  console.log('da tiem CSS ung vien (cuoi body): ' + cssFile);
+}
 await page.waitForTimeout(2000);
 
 const total = await page.evaluate(() => document.documentElement.scrollHeight);

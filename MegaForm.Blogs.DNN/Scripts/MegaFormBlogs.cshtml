@@ -2486,7 +2486,7 @@
    broken in a way nothing on the server can explain. That is exactly what happened when the
    article-list styles landed: measured in the browser the rules WERE applied, while a screenshot
    taken with a warm profile showed an unstyled stack. *@
-<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs.css?v=20260811g" />
+<link rel="stylesheet" href="/DesktopModules/MegaFormBlogs/Assets/megaform-blogs.css?v=20260811h" />
 
 @{
     // A rendered template owns the whole surface, so it gets its own class to scope its CSS with.
@@ -2777,7 +2777,7 @@
                         {
                             <span class="mfb-avatar">@Initials(author)</span>
                         }
-                        <span><strong>@author</strong><small>@DateLabel(detail, "publish_date")@if (showReadingTime) { <text> Â· @ReadingMinutes(detail) min read</text> }@if (showReadCounts) { <text> Â· @Plural(Number(detail, "view_count"), "read", "reads")</text> }</small></span>
+                        <span><strong>@author</strong><small>@DateLabel(detail, "publish_date")@if (showReadingTime) { <text> &middot; @ReadingMinutes(detail) min read</text> }@if (showReadCounts) { <text> &middot; @Plural(Number(detail, "view_count"), "read", "reads")</text> }</small></span>
                     </div>
                 </header>
                 <figure class="mfb-article-hero">
@@ -2875,7 +2875,7 @@
                                 @foreach (var file in detailFiles)
                                 {
                                     <a class="mfb-attachment" href="/DesktopModules/MegaForm/API/SdkDemo/Download?submissionId=@detail.SubmissionId&amp;fileId=@file.FileId">
-                                        <span>â†“</span> @file.FileName
+                                        <span>&darr;</span> @file.FileName
                                     </a>
                                 }
                             </section>
@@ -3113,7 +3113,7 @@
                                 <span><strong>@Text(featured, "author_name", "MegaForm Editorial")</strong><small>@DateLabel(featured, "publish_date")</small></span>
                                 @if (showReadCounts)
                                 {
-                                    <span>@Plural(Number(featured, "view_count"), "read", "reads") Â· @Plural(Number(featured, "comment_count"), "comment", "comments")</span>
+                                    <span>@Plural(Number(featured, "view_count"), "read", "reads") &middot; @Plural(Number(featured, "comment_count"), "comment", "comments")</span>
                                 }
                             </div>
                         </div>
@@ -3154,7 +3154,7 @@
                                 <p>@Text(profile, "author_bio", "")</p>
                             }
                             <p class="mfb-muted">
-                                @Plural(totalPosts, "story", "stories") Â·
+                                @Plural(totalPosts, "story", "stories") &middot;
                                 @Plural(posts.Sum(x => Number(x, "view_count")), "read", "reads") on this page
                             </p>
                         </div>
@@ -3296,7 +3296,7 @@
                                            (MegaForm.Core BlogAnalyticsRollupService). *@
                                         @if (showReadCounts)
                                         {
-                                            <span>@Plural(Number(post, "view_count"), "read", "reads") Â· @Plural(Number(post, "comment_count"), "comment", "comments")</span>
+                                            <span>@Plural(Number(post, "view_count"), "read", "reads") &middot; @Plural(Number(post, "comment_count"), "comment", "comments")</span>
                                         }
                                     </div>
                                 </div>
@@ -3368,7 +3368,7 @@
                         <p>New insights delivered to your inbox.</p>
                         <input type="email" aria-label="Email address" placeholder="Your email" />
                         <button type="button">Subscribe</button>
-                        <small>Demo UI â€” connect this to a MegaForm newsletter form when required.</small>
+                        <small>Demo UI &mdash; connect this to a MegaForm newsletter form when required.</small>
                     </section>
                 }
             </aside>
