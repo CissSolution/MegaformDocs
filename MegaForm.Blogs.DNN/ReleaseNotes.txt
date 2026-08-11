@@ -1,3 +1,18 @@
+1.17.6
+
+- Article channels can now actually be commented on, not just counted. 1.17.5 shipped the count and
+  no way to leave a comment - the number was real and the box was missing.
+  Comments go through the blog's existing form, moderation queue, honeypot and spam scoring;
+  SubmitComment gained an overload taking post_uid/post_slug as strings so a channel article (whose
+  uid is its doc key) and a blog post share one submit path rather than two that drift apart.
+  The fields ride the DNN page form. A <form> here would be a nested form and the browser deletes
+  the inner tag - the trap that once made this module post nothing at all.
+- The article list shows its metrics on EVERY row, zeros included. Hiding zeros meant 21 of 22
+  articles carried no line, which reads as "the counters are broken" rather than "nobody has been
+  here yet".
+
+KNOWN, NOT FIXED: view_count returns to 1 after each module upgrade. Reproduced across the 1.17.4,
+1.17.5 and 1.17.6 installs, so it is not coincidence. Root cause not yet found.
 1.17.5
 
 - Comment counts for article channels, beside the read count and the stars.

@@ -1610,7 +1610,19 @@
     /// Posts one comment through the full public submission pipeline. Returns null on
     /// success (and on spam - a spammer must not learn they were flagged), otherwise a
     /// reader-safe error message. Never throws.
+    /// A blog post carries its uid on the record; a channel article carries it as the doc key. The
+    /// post overload just reads those two strings off the record and hands over - one submit path,
+    /// so the moderation queue, the honeypot and the spam scoring behave identically on both.
     static string SubmitComment(MegaFormScope scope, int commentsFormId, AppRecordDto post,
+                                string name, string email, string body, string honeypot, int userId,
+                                bool requireEmail)
+    {
+        return SubmitComment(scope, commentsFormId,
+                             Text(post, "post_uid", "").Trim(), Text(post, "slug", ""),
+                             name, email, body, honeypot, userId, requireEmail);
+    }
+
+    static string SubmitComment(MegaFormScope scope, int commentsFormId, string postUid, string postSlug,
                                 string name, string email, string body, string honeypot, int userId,
                                 bool requireEmail)
     {
@@ -1630,8 +1642,8 @@
         try
         {
             var data = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
-            data["post_uid"] = Text(post, "post_uid", "").Trim();
-            data["post_slug"] = Text(post, "slug", "");
+            data["post_uid"] = (postUid ?? "").Trim();
+            data["post_slug"] = postSlug ?? "";
             data["commenter_name"] = name;
             data["comment_body"] = body;
             data["moderation_status"] = "pending";   // nothing reaches the public page unreviewed
@@ -1770,6 +1782,10 @@
     string rateMessage = null;   // shown once, next to the stars, after a rating postback
     bool hasCommentCounts = false;        // false = no comment form wired, so show no count at all
     bool commentCountsBounded = false;    // the walk hit its cap, so the numbers are a floor
+    int treeCommentsFormId = 0;
+    List<AppRecordDto> treeComments = new List<AppRecordDto>();
+    string treeCommentError = null;
+    bool treeCommentPosted = (Request.QueryString["commented"] ?? "") == "1";
     TreeNode openNode = null, prevNode = null, nextNode = null;
     var treeBounded = false;
 
@@ -1789,6 +1805,7 @@
             // channel has no comment form configured, so an unwired channel shows no comment counts
             // rather than a column of zeros that reads as "nobody commented".
             var commentsFormId = ResolveSourceFormId(scope, CommentsFormSetting());
+            treeCommentsFormId = commentsFormId;
             if (commentsFormId > 0)
             {
                 var counts = ApprovedCommentCounts(scope, commentsFormId);
@@ -1842,6 +1859,35 @@
                 }
 
                 RegisterView(scope, openNode);
+
+                // Comments on a channel article ride the blog's own comment form and moderation
+                // queue; post_uid is the doc key. Submit first, then read, so a comment that is
+                // approved on arrival shows up in the same response.
+                if (treeCommentsFormId > 0)
+                {
+                    if (string.Equals(Request.HttpMethod, "POST", StringComparison.OrdinalIgnoreCase)
+                        && !string.IsNullOrWhiteSpace(Request.Form["comment_body"]))
+                    {
+                        // Resolved inline rather than reused from the classic path's variables:
+                        // those are declared further down the page, and a channel must not depend
+                        // on the order two unrelated blocks happen to sit in.
+                        var treeUser = DotNetNuke.Entities.Users.UserController.Instance.GetCurrentUserInfo();
+                        treeCommentError = SubmitComment(scope, treeCommentsFormId,
+                            openNode.Key, openNode.Key,
+                            Request.Form["commenter_name"], Request.Form["commenter_email"],
+                            Request.Form["comment_body"], Request.Form["__mf_blog_comment_hp"],
+                            treeUser == null ? -1 : treeUser.UserID,
+                            Flag(portalId, "CommentsRequireEmail", false));
+                        if (treeCommentError == null)
+                        {
+                            // Redirect after post so a refresh does not re-submit, and land the
+                            // reader on the thread rather than back at the top of the article.
+                            var sep = Request.RawUrl.IndexOf('?') >= 0 ? "&" : "?";
+                            Response.Redirect(Request.RawUrl + sep + "commented=1#mfb-comments", true);
+                        }
+                    }
+                    treeComments = LoadApprovedComments(scope, treeCommentsFormId, openNode.Key, openNode.Comments);
+                }
             }
         }
         catch (Exception treeEx)
@@ -2503,15 +2549,12 @@
                                     {
                                         <small>@node.Excerpt</small>
                                     }
-                                    @if (node.Views > 0 || node.RatingCount > 0 || node.Comments > 0)
-                                    {
-                                        <small class="mfb-nodemeta">@if (node.Views > 0)
-                                            {<text>@Plural(node.Views, "view", "views")</text>}@if (node.Views > 0 && node.Comments > 0)
-                                            {<text> &#183; </text>}@if (node.Comments > 0)
-                                            {<text>@Plural(node.Comments, "comment", "comments")</text>}@if ((node.Views > 0 || node.Comments > 0) && node.RatingCount > 0)
-                                            {<text> &#183; </text>}@if (node.RatingCount > 0)
-                                            {<text><span class="mfb-stars">@StarBar(AverageStars(node))</span> @AverageStars(node).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)</text>}</small>
-                                    }
+                                    @* Shown on every row, zeros included. Hiding zeros meant 21 of 22
+                                       articles carried no line at all, which reads as "the counters
+                                       are broken" rather than "nobody has been here yet". *@
+                                    <small class="mfb-nodemeta">@Plural(node.Views, "view", "views")@if (hasCommentCounts)
+                                        {<text> &#183; @Plural(node.Comments, "comment", "comments")</text>}@if (node.RatingCount > 0)
+                                        {<text> &#183; <span class="mfb-stars">@StarBar(AverageStars(node))</span> @AverageStars(node).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)</text>}</small>
                                 </a>
                             </li>
                         }
@@ -2602,6 +2645,54 @@
                             <em class="mfb-rate-msg">@rateMessage</em>
                         }
                     </div>
+
+                    @* Statement level inside the else block is CODE context - a bare `if`. An `@if`
+                       here is the "Unexpected keyword after @" error, and RazorHost swallows it into
+                       a blank page with HTTP 200. *@
+                    if (treeCommentsFormId > 0)
+                    {
+                        <section class="mfb-comments" id="mfb-comments" aria-label="Comments">
+                            <h2>@Plural(treeComments.Count, "comment", "comments")</h2>
+                            @if (treeCommentPosted)
+                            {
+                                <p class="mfb-note">Thanks. Your comment is waiting for review.</p>
+                            }
+                            @foreach (var comment in treeComments)
+                            {
+                                <article class="mfb-comment">
+                                    <div class="mfb-comment-body">
+                                        <strong>@Text(comment, "commenter_name", "Reader")</strong>
+                                        <p>@Html.Raw(HttpUtility.HtmlEncode(Text(comment, "comment_body", "")).Replace("\r\n", "\n").Replace("\n", "<br/>"))</p>
+                                    </div>
+                                </article>
+                            }
+                            @* Fields ride the DNN page form. A <form> here would be a nested form and
+                               the browser deletes the inner tag, which is how this module's comment
+                               box once posted nothing at all. *@
+                            <div class="mfb-comment-form">
+                                @if (!string.IsNullOrWhiteSpace(treeCommentError))
+                                {
+                                    <p class="mfb-note mfb-note-bad">@treeCommentError</p>
+                                }
+                                <div class="mfb-comment-grid">
+                                    <label>Name <em>*</em>
+                                        <input name="commenter_name" type="text" maxlength="100" />
+                                    </label>
+                                    <label>Email <small>(not published)</small>
+                                        <input name="commenter_email" type="email" maxlength="200" />
+                                    </label>
+                                </div>
+                                <label for="mfb-tree-comment-body">Comment <em>*</em></label>
+                                <textarea id="mfb-tree-comment-body" name="comment_body" rows="4" maxlength="2000"></textarea>
+                                @* Honeypot: the comments schema declares it and the spam scoring
+                                   reads it, so it must be posted even when empty. *@
+                                <input type="text" name="__mf_blog_comment_hp" value="" tabindex="-1"
+                                       autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px" />
+                                <button type="submit" class="mfb-btn">Post comment</button>
+                                <p class="mfb-muted">Comments are reviewed before they appear.</p>
+                            </div>
+                        </section>
+                    }
 
                     <nav class="mfb-tree-pager">
                         @if (prevNode != null)
