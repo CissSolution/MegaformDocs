@@ -180,6 +180,25 @@ generic lồng nhau** (`Task<PagedResult<FormDto>>`). Đo công cụ đo trướ
 lên `/Portals/0/MegaFormDocs/images/`** (thư mục đó trả 404). Upload xong thì sửa `linkMap` trong
 `build-sdk-docs-plan.mjs` trả về đường dẫn thay vì `null` rồi chạy lại.
 
+## 4e. Đếm view/comment thành CHỈ ADMIN (owner đổi quyết định 2026-08-12) — code xong, CHƯA kiểm chứng được
+
+`MegaFormBlogs.cshtml`: thêm `canSeeMetrics` = **SuperUser HOẶC vai trò Administrator của portal**
+(chỉ `IsSuperUser` thì giấu mất số của chính admin). Gộp vào `showReadCounts` sẵn có nên mọi bề mặt
+blog theo cùng một công tắc, và chặn thêm 3 chỗ **trước giờ không hề qua công tắc đó** (thẻ featured,
+thẻ bài, tổng "reads on this page" ở trang tác giả). Kênh docs: chặn ở dòng meta của hàng cây và ở
+`.mfb-docmeta` đầu bài. **Sao vẫn giữ công khai** — trang tự hỏi người đọc chấm điểm thì kết quả
+thuộc về họ. Với admin vẫn hiện **mọi hàng kể cả 0**. Đã dựng **1.17.11**.
+
+⚠️ **Chưa nghiệm thu được, và đừng tin con số 0 tôi đo lúc đầu.** Đã cài 1.17.11 lên
+`megaclean008.ai`, đo ẩn danh: 0 chuỗi reads/views/comments — nhưng đo tiếp mới thấy trang đó
+**không có nội dung Blogs nào cả** (`.mfb-card` = 0, `.mfb-archive-list` = 0, `.mfb-docmeta` = 0).
+Đo trên một trang rỗng thì kết quả 0 **không chứng minh gì** — lại đúng cái bẫy "đếm phần tử không
+phải kiểm chứng", lần này đội lốt khác. Muốn nghiệm thu phải **cài lên `dnndefender.com`** (đang bị
+chặn quyền, §0) hoặc dựng nội dung blog/docs trên một site local.
+
+ℹ️ **`megaclean008.ai` lúc đầu chết** (curl 000, timeout 45 s) dù IIS báo Started và binding đúng —
+**app pool treo**. `Restart-WebAppPool -Name DNN_MegaClean008` là chạy lại được (lần tải đầu 29 s).
+
 ---
 
 # ⭐ ĐỀ BÀI CHO PHIÊN SAU (owner chốt 2026-08-12): KB đi theo TEMPLATE, không nằm trong gói

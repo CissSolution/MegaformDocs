@@ -1732,7 +1732,22 @@
                       System.Globalization.CultureInfo.InvariantCulture, out pageSize)) { pageSize = 12; }
     pageSize = Math.Max(3, Math.Min(24, pageSize));
     var showFeatured = Flag(portalId, "ShowFeatured", true);
-    var showReadCounts = Flag(portalId, "ShowReadCounts", true);
+
+    // [MetricsAdminOnly 20260812] Owner decision: read and comment counts are for the people who
+    // run the site, not for its readers. A visitor learning that an article has been read twice
+    // tells them nothing they wanted and something the owner did not choose to publish.
+    // SuperUser OR the portal's administrator role - checking only IsSuperUser would hide the
+    // numbers from the very administrators who need them.
+    var metricsViewer = DotNetNuke.Entities.Users.UserController.Instance.GetCurrentUserInfo();
+    var adminRoleName = DotNetNuke.Entities.Portals.PortalSettings.Current != null
+        ? DotNetNuke.Entities.Portals.PortalSettings.Current.AdministratorRoleName : "Administrators";
+    var canSeeMetrics = metricsViewer != null && metricsViewer.UserID > 0
+        && (metricsViewer.IsSuperUser
+            || (!string.IsNullOrWhiteSpace(adminRoleName) && metricsViewer.IsInRole(adminRoleName)));
+
+    // Folded into the existing owner setting rather than checked at each call site: every blog
+    // surface already honours this flag, so one AND keeps them all consistent.
+    var showReadCounts = Flag(portalId, "ShowReadCounts", true) && canSeeMetrics;
     var showNewsletter = Flag(portalId, "ShowNewsletter", true);
     var siteCommentsEnabled = Flag(portalId, "CommentsEnabled", true);
 
@@ -2564,12 +2579,19 @@
                             <li class="@(isOpen ? "on" : "")">
                                 <a href="@(baseUrl + "?doc=" + HttpUtility.UrlEncode(node.Key))" title="@node.Excerpt">
                                     <strong>@node.NavTitle</strong>
-                                    @* Shown on every row, zeros included. Hiding zeros meant 21 of 22
-                                       articles carried no line at all, which reads as "the counters
-                                       are broken" rather than "nobody has been here yet". *@
-                                    <small class="mfb-nodemeta">@Plural(node.Views, "view", "views")@if (hasCommentCounts)
-                                        {<text> &#183; @Plural(node.Comments, "comment", "comments")</text>}@if (node.RatingCount > 0)
-                                        {<text> &#183; <span class="mfb-stars">@StarBar(AverageStars(node))</span> @AverageStars(node).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)</text>}</small>
+                                    @* Counts are ADMIN-ONLY (owner, 2026-08-12). For an administrator
+                                       they are shown on every row, zeros included: hiding zeros meant
+                                       21 of 22 articles carried no line at all, which reads as "the
+                                       counters are broken" rather than "nobody has been here yet".
+                                       The star rating stays public - a reader's own rating is
+                                       something the page asks for, so its result belongs to them. *@
+                                    @if (canSeeMetrics || node.RatingCount > 0)
+                                    {
+                                        <small class="mfb-nodemeta">@if (canSeeMetrics)
+                                            {<text>@Plural(node.Views, "view", "views")</text>}@if (canSeeMetrics && hasCommentCounts)
+                                            {<text> &#183; @Plural(node.Comments, "comment", "comments")</text>}@if (node.RatingCount > 0)
+                                            {<text>@(canSeeMetrics ? " · " : "")<span class="mfb-stars">@StarBar(AverageStars(node))</span> @AverageStars(node).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)</text>}</small>
+                                    }
                                 </a>
                             </li>
                         }
@@ -2625,8 +2647,12 @@
                         }
                     }
                     <p class="mfb-docmeta">
-                        <span>@Plural(openNode.Views, "view", "views")</span>
-                        @if (hasCommentCounts)
+                        @* Counts are ADMIN-ONLY (owner, 2026-08-12); the rating below stays public. *@
+                        @if (canSeeMetrics)
+                        {
+                            <span>@Plural(openNode.Views, "view", "views")</span>
+                        }
+                        @if (canSeeMetrics && hasCommentCounts)
                         {
                             <span>@Plural(openNode.Comments, "comment", "comments")@if (commentCountsBounded) { <text>+</text> }</span>
                         }
@@ -3128,7 +3154,10 @@
                                 <span><strong>@Text(featured, "author_name", "MegaForm Editorial")</strong><small>@DateLabel(featured, "publish_date")</small></span>
                                 @if (showReadCounts)
                                 {
-                                    <span>@Plural(Number(featured, "view_count"), "read", "reads") &middot; @Plural(Number(featured, "comment_count"), "comment", "comments")</span>
+                                    @if (showReadCounts)
+                                    {
+                                        <span>@Plural(Number(featured, "view_count"), "read", "reads") &middot; @Plural(Number(featured, "comment_count"), "comment", "comments")</span>
+                                    }
                                 }
                             </div>
                         </div>
@@ -3169,8 +3198,10 @@
                                 <p>@Text(profile, "author_bio", "")</p>
                             }
                             <p class="mfb-muted">
-                                @Plural(totalPosts, "story", "stories") &middot;
-                                @Plural(posts.Sum(x => Number(x, "view_count")), "read", "reads") on this page
+                                @Plural(totalPosts, "story", "stories")@if (showReadCounts)
+                                {
+                                    <text> &middot; @Plural(posts.Sum(x => Number(x, "view_count")), "read", "reads") on this page</text>
+                                }
                             </p>
                         </div>
                     </div>
@@ -3311,7 +3342,10 @@
                                            (MegaForm.Core BlogAnalyticsRollupService). *@
                                         @if (showReadCounts)
                                         {
-                                            <span>@Plural(Number(post, "view_count"), "read", "reads") &middot; @Plural(Number(post, "comment_count"), "comment", "comments")</span>
+                                            @if (showReadCounts)
+                                            {
+                                                <span>@Plural(Number(post, "view_count"), "read", "reads") &middot; @Plural(Number(post, "comment_count"), "comment", "comments")</span>
+                                            }
                                         }
                                     </div>
                                 </div>

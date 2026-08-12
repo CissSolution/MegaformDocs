@@ -1,3 +1,15 @@
+1.17.11
+
+- Read counts and comment counts are ADMIN-ONLY now (owner decision). A visitor learning that an
+  article has been read twice learns nothing they wanted and something the owner did not choose
+  to publish. SuperUser OR the portal administrator role - checking IsSuperUser alone would have
+  hidden the numbers from the administrators who need them.
+  Applies to every surface this module renders: the article tree rows, the open article header,
+  the blog byline, the featured card, the post cards and the author page total.
+  The star rating stays public: the page asks a reader for it, so its result belongs to them.
+  For an administrator the counts still show on EVERY row including zeros - hiding zeros once
+  meant 21 of 22 articles carried no line, which reads as broken counters rather than an empty one.
+
 1.17.10
 
 - FIX for 1.17.9, which shipped an article tree with no article titles in it. Moving the
