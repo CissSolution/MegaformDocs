@@ -149,6 +149,97 @@ due to spam filter`. Nghĩa là **địa chỉ gửi của site bị máy chủ 
 của MegaForm (và của DNN) sẽ không tới nơi, kể cả khi form cấu hình đúng. Đúng tình huống bài
 `dnn-email-notifications` vừa viết mô tả: hộp thư im lặng nhưng submission vẫn được lưu.
 
+## 4d. Nhánh SDK đã lên site (2026-08-12)
+
+`/MegaFormDocsT` trước chỉ có **một** nhánh. `Docs/docfx/articles/toc.yml` có ba, và cả mục
+**"Programming" — 12 bài SDK — chưa từng được đăng ở đâu người đọc tới được.**
+
+**Kiểm tra trước khi đăng** (owner yêu cầu "kiểm tra từng bài SDK cho đúng"): rà **mọi** lời gọi
+API trong 12 bài với bề mặt `MegaForm.Sdk` thật — **tất cả đều tồn tại**, không bài nào sai API.
+⚠️ Bộ kiểm đầu tiên báo 8 phương thức "không có" — sai, vì regex `Task<[^>]*>` **không nhìn xuyên
+generic lồng nhau** (`Task<PagedResult<FormDto>>`). Đo công cụ đo trước khi tin nó.
+
+**Đã đăng:** nhánh `sdk-programming` (sort `0030`) + 12 bài `sdk-*` theo đúng thứ tự toc.yml, từ
+`sdk-overview` đến `sdk-api-stability`. Cây nay: **2 nhánh / 23 + 12 mục**. Bài dài nhất
+`sdk-reference` 44.964 ký tự vẫn lưu trọn.
+
+- `tools/browser-qa/md-to-docs-html.mjs` — bộ chuyển Markdown **hẹp có chủ đích** (heading + id,
+  code fence, bảng, danh sách, blockquote, `> [!NOTE]` → `.markdown-alert` mà CSS kênh đã có sẵn).
+  Máy không có `marked`/`markdown-it`; cú pháp lạ thì để nguyên chứ không đoán.
+- `tools/browser-qa/build-sdk-docs-plan.mjs` — dựng plan từ toc.yml, đổi link `.md` → `?doc=<key>`,
+  **bao gồm 13 link chéo sang nhánh DNN** (nếu không sẽ bị bỏ oan). Link tới bài không có trên kênh
+  thì **bỏ thẻ `<a>`, giữ chữ**. Ảnh `../images/...` không có trên site ⇒ hiện thành chú thích, và
+  công cụ **liệt kê ra** chứ không im lặng.
+- Sửa nốt link chết cuối cùng: `doc=dnn-razor-host` (trong `dnn-erp-demo`) → `sdk-dnn-razor-host`.
+
+**Kiểm chứng:** 37 bài / 37 doc key / **106 link nội bộ, 0 link chết**, 0 chỗ còn `/Docs?doc=`.
+Ảnh chụp cây cho thấy đủ 2 nhánh, 12 mục SDK đúng thứ tự.
+
+**Còn nợ:** 4 ảnh của tài liệu SDK (`oqtane-sdk-download.png`, `oqtane-sdk-listview.png`,
+`oqtane-dashboard.png`, + 1 trong file-download) — có trong `Docs/docfx/images/` nhưng **chưa upload
+lên `/Portals/0/MegaFormDocs/images/`** (thư mục đó trả 404). Upload xong thì sửa `linkMap` trong
+`build-sdk-docs-plan.mjs` trả về đường dẫn thay vì `null` rồi chạy lại.
+
+---
+
+# ⭐ ĐỀ BÀI CHO PHIÊN SAU (owner chốt 2026-08-12): KB đi theo TEMPLATE, không nằm trong gói
+
+**Mục tiêu owner nêu:** online gallery chứa **form template + file KB tương ứng cho từng template**,
+**không ship kèm package**. MegaForm tải template nào thì **tải luôn file KB của template đó** để AI
+làm việc hiệu quả, **đúng như quảng cáo**, và về sau dễ sửa/cập nhật.
+
+## Đã có sẵn (đừng dựng lại)
+
+`MegaForm.Core/Services/GalleryRepo/GalleryRepositoryService.cs` — `[GalleryRepo v20260723]` đã có
+**hai kênh**: `templates` (manifest.json + templates/*.json + *-assets.zip) và **`kb`**
+(`kb/manifest.json` + `kb/ai-knowledge-seed.json` + kb resource files). Đã cứng cáp sẵn: **chỉ fetch
+phía server** (trình duyệt không chạm repo), **mọi file verify sha256** ghim trong manifest, chặn
+`..`/đường tuyệt đối/backslash, cap dung lượng + timeout, **fail-soft** (Offline chứ không ném).
+Repo: `https://CissSolution.github.io/megaform-gallery/` (⚠️ **phân biệt hoa thường** — chữ thường
+trả 404). `AiKnowledgeSeedMerger.Merge` đã upsert theo `slug` / `(knowledgeId,templateKey)` /
+`ruleId` nên nạp lại vô hại.
+
+## Đo thật hôm nay — khoảng cách còn lại
+
+| | số đo |
+|---|---|
+| Template trên gallery | **68** (`manifest.json` → 200) |
+| `kb/manifest.json` trên gallery | **404 — kênh KB chưa từng được publish** |
+| Trường KB trong entry template | **KHÔNG CÓ** (slug, title, …, file, assets, sha256, premium, minModuleVersion, fieldCount, sourceFile) |
+| `form_template` trong seed đóng gói | **178** |
+| Khớp slug giữa 68 template và 178 KB | **13** |
+| `form_template` trên site production | **0** |
+
+⇒ Khả năng "template mang theo KB" **chưa chạy được đầu-cuối**: code có kênh KB, nhưng gallery không
+có nội dung KB, template không trỏ tới KB nào, và 165/178 entry KB trong seed **không ứng với
+template nào đang bán**. Đây đúng là chỗ "quảng cáo có mà thực tế chưa có".
+
+## Việc cần làm
+
+1. **Thêm con trỏ KB vào từng template** trong `GalleryRepoTemplateInfo` + `manifest.json`:
+   `kb` (đường dẫn, vd `kb/templates/<slug>.json`) + `kbSha256` + `kbSizeBytes`, để template và KB
+   **cùng version, cùng sha256** — sửa KB là bump version template.
+2. **Tách 178 entry `form_template` khỏi `ai-knowledge-seed.json`** thành từng file
+   `kb/templates/<slug>.json`, publish lên gallery. Gói chỉ giữ KB lõi (widget / pattern / rule);
+   KB của template **đi theo template**. Đây chính là "không ship kèm package".
+3. **Đường cài template phải nạp KB kèm theo**: sau khi cài template, fetch file KB của nó, verify
+   sha256, rồi `AiKnowledgeSeedMerger.Merge`. Nạp lại template = nạp lại KB (idempotent).
+4. **Đối soát 68 ↔ 178**: 55 template chưa có KB, 165 KB mồ côi. Quyết định từng cái: viết KB mới,
+   đổi tên slug cho khớp, hay bỏ.
+5. **Publish tooling** (`tools/gallery/build-gallery.mjs`, `Publish-Gallery.ps1`) phải sinh
+   `kb/manifest.json` + `kb/templates/*.json` + sha256 trong cùng một lần push.
+6. ⚠️ **Sửa chỗ nuốt lỗi trước khi làm bước 3.** `DnnKbSeeder.EnsureSeeded` nuốt mọi exception, và
+   hôm nay nó đang **lỗi im lặng trên production** (§4b). Nếu đường KB-theo-template cũng fail-soft
+   y hệt thì lỗi sẽ lặp lại và vẫn không ai biết: tối thiểu phải log một dòng phân biệt được, và
+   có chỗ trong UI cho admin thấy "KB của template X chưa nạp được".
+
+## Mốc kiểm chứng (đừng tin "đã xong" nếu chưa có)
+
+- `kb/manifest.json` trả 200 và liệt kê đủ file KB, mỗi file có sha256.
+- Cài một template sạch trên site sạch ⇒ `MF_AI_Knowledge` **tăng đúng 1 entry `form_template`**
+  đúng slug đó, không phải 0 và không phải 178.
+- Gỡ mạng giữa chừng ⇒ template vẫn cài được, KB báo "chưa nạp" **rõ ràng**, không im lặng.
+
 ## 5. Việc chưa xong
 
 - [ ] Cài 2.0.16 (§0) → QA Persona Bar 3 mục.
