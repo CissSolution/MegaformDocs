@@ -3154,10 +3154,7 @@
                                 <span><strong>@Text(featured, "author_name", "MegaForm Editorial")</strong><small>@DateLabel(featured, "publish_date")</small></span>
                                 @if (showReadCounts)
                                 {
-                                    @if (showReadCounts)
-                                    {
                                         <span>@Plural(Number(featured, "view_count"), "read", "reads") &middot; @Plural(Number(featured, "comment_count"), "comment", "comments")</span>
-                                    }
                                 }
                             </div>
                         </div>
@@ -3342,10 +3339,7 @@
                                            (MegaForm.Core BlogAnalyticsRollupService). *@
                                         @if (showReadCounts)
                                         {
-                                            @if (showReadCounts)
-                                            {
                                                 <span>@Plural(Number(post, "view_count"), "read", "reads") &middot; @Plural(Number(post, "comment_count"), "comment", "comments")</span>
-                                            }
                                         }
                                     </div>
                                 </div>

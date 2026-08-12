@@ -189,12 +189,9 @@ thẻ bài, tổng "reads on this page" ở trang tác giả). Kênh docs: chặ
 `.mfb-docmeta` đầu bài. **Sao vẫn giữ công khai** — trang tự hỏi người đọc chấm điểm thì kết quả
 thuộc về họ. Với admin vẫn hiện **mọi hàng kể cả 0**. Đã dựng **1.17.11**.
 
-⚠️ **Chưa nghiệm thu được, và đừng tin con số 0 tôi đo lúc đầu.** Đã cài 1.17.11 lên
-`megaclean008.ai`, đo ẩn danh: 0 chuỗi reads/views/comments — nhưng đo tiếp mới thấy trang đó
-**không có nội dung Blogs nào cả** (`.mfb-card` = 0, `.mfb-archive-list` = 0, `.mfb-docmeta` = 0).
-Đo trên một trang rỗng thì kết quả 0 **không chứng minh gì** — lại đúng cái bẫy "đếm phần tử không
-phải kiểm chứng", lần này đội lốt khác. Muốn nghiệm thu phải **cài lên `dnndefender.com`** (đang bị
-chặn quyền, §0) hoặc dựng nội dung blog/docs trên một site local.
+✅ **Đã nghiệm thu bằng ảnh trên  (1.17.12).** Cùng một URL, hai phiên: **ẩn danh** — hàng cây chỉ còn tiêu đề, đầu bài chỉ còn "Not rated yet", 0 chuỗi views/comments; **host** — "5 views · 0 comments" ở đầu bài và "12 views · 0 comments · ★5.0" trên từng hàng (35 ).
+
+⚠️ **1.17.11 đã ship HỎNG và phải vá bằng 1.17.12.** Khi chặn số trên thẻ blog, tôi bọc  quanh markup **đã nằm trong một khối  khác** — trong khối  Razor ở **ngữ cảnh CODE**,  là lỗi cú pháp, và **RazorHost nuốt lỗi biên dịch rồi trả HTTP 200 với trang rỗng**. Trang blog và kênh docs trắng hoàn toàn cho tới khi vá. Hai chỗ đó **vốn đã được chặn sẵn**, lớp bọc của tôi vừa thừa vừa chết người.
 
 ℹ️ **`megaclean008.ai` lúc đầu chết** (curl 000, timeout 45 s) dù IIS báo Started và binding đúng —
 **app pool treo**. `Restart-WebAppPool -Name DNN_MegaClean008` là chạy lại được (lần tải đầu 29 s).

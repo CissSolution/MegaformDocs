@@ -1,3 +1,11 @@
+1.17.12
+
+- FIX for 1.17.11, which rendered the blog and the article channel as an EMPTY PAGE. Guarding the
+  card counts, I wrapped an @if around markup that was already inside another @if block - and
+  inside a { } block Razor is in CODE context, where @if is a syntax error. RazorHost swallows a
+  compile error and answers HTTP 200 with nothing, so the page looked merely empty rather than
+  broken. The spans were already guarded; the second wrapper was redundant as well as fatal.
+
 1.17.11
 
 - Read counts and comment counts are ADMIN-ONLY now (owner decision). A visitor learning that an
