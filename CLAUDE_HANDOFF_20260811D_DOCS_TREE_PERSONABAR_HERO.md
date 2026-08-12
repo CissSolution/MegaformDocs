@@ -103,6 +103,52 @@ tràn viền?
 
 ---
 
+## 4b. KB cho AI: mỗi template một entry — cơ chế đúng, nhưng trên site KHÔNG chạy
+
+**Cơ chế** (`MegaForm.DNN/Services/DnnKbSeeder.cs`, `[KbSeedParity 2026-07-29]`, có từ **02.00.008**):
+`ai-knowledge-seed.json` (1,42 MB) **nằm trong gói**, giải nén ra `DesktopModules/MegaForm/Seed/`,
+và được **merge vào lần ĐỌC KB đầu tiên** — một lần mỗi app domain, upsert theo `slug` /
+`(knowledgeId,templateKey)` / `ruleId` nên chạy lại vô hại, và **fail-soft**: mọi lỗi bị nuốt.
+Trước bản này, DNN là platform DUY NHẤT lấy KB từ `SqlScripts\01.06.*` — một tập con đóng băng.
+`MF_AI_Knowledge` = khái niệm (kind `form_template`, `widget`, `form_pattern`…);
+`MF_AI_KB_Templates` = nhiều mẫu cụ thể cho mỗi entry (preset/pattern/success/failure);
+`MF_AI_KB_Rules` = luật. Toàn bộ AI chạy **browser → nhà cung cấp AI**; server chỉ cấp config + KB.
+
+**Đo trên `dnndefender.com`:**
+
+| | seed trong gói | trên site |
+|---|---|---|
+| `MF_AI_Knowledge` | **329** | **61** |
+| trong đó `form_template` | **178** | **0** |
+| `template_guide` | 27 | 0 |
+| `MF_AI_KB_Templates` | 34 | 17 |
+| `MF_AI_KB_Rules` | 61 | 40 |
+
+61 / 17 / 40 **đúng bằng tập con SqlScripts** mà comment trong code mô tả.
+
+⛔ **Không phải chỉ do site cũ.** Site chạy 2.0.14 > 02.00.008 nên **đã có** seeder, và **file seed
+CÓ trên server** (`/DesktopModules/MegaForm/Seed/ai-knowledge-seed.json` trả **HTTP 200,
+1.490.428 byte** — tiện thể: file này **tải công khai không cần đăng nhập**, 1,4 MB tài sản KB).
+Tôi gọi `GET /DesktopModules/MegaForm/API/AiKnowledge/Kinds` (trả 200, 9 kind, **không có
+`form_template`**) để kích hoạt seeder — **số liệu không đổi**, và DNN ghi **GENERAL_EXCEPTION đúng
+request đó** (`ExceptionGUID 5df6a136…` và `71f2ab9f…`, 21:24:49). Trong bảng `Exceptions` có một
+`Object reference not set to an instance of an object.` không Source/StackTrace.
+
+⇒ **Trả lời: các template CHƯA có KB trên site này, và cơ chế tự nạp đang lỗi im lặng.**
+Trong repo thì đủ: cả 178 entry `form_template` đều có `Body` (trung bình 2.713 ký tự) và `Examples`.
+
+**Bước tiếp theo để chốt:** seeder chỉ thử **một lần mỗi app domain** (`_attempted`), nên phải
+recycle app domain rồi gọi lại KB và bắt exception — hoặc tạm bỏ `catch` nuốt lỗi trong
+`DnnKbSeeder.EnsureSeeded` để nó nói ra lý do. Nghi can: `AiKnowledgeSeedMerger.Merge` ném
+NullReference trên một entry của seed.
+
+## 4c. Ngoài lề nhưng quan trọng: SMTP của site đang bị từ chối
+
+Trong bảng `Exceptions`: `Transaction failed. The server response was: Sending address not accepted
+due to spam filter`. Nghĩa là **địa chỉ gửi của site bị máy chủ mail chặn** — mọi thông báo email
+của MegaForm (và của DNN) sẽ không tới nơi, kể cả khi form cấu hình đúng. Đúng tình huống bài
+`dnn-email-notifications` vừa viết mô tả: hộp thư im lặng nhưng submission vẫn được lưu.
+
 ## 5. Việc chưa xong
 
 - [ ] Cài 2.0.16 (§0) → QA Persona Bar 3 mục.
