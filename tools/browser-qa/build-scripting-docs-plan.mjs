@@ -48,6 +48,9 @@ const PAGES = [
   ['automation-notifications.md',     'auto-notifications',     'Email and messaging',         '0045/0120', 1, 'automation', PARENT_NAV,  'automation'],
   ['automation-user-provisioning.md', 'auto-user-provisioning', 'Create users and grant roles','0045/0160', 1, 'automation', PARENT_NAV,  'automation'],
   ['scripting-safety.md',             'auto-safety',            'Safety and responsibility',   '0045/0240', 1, 'automation', PARENT_NAV,  'automation'],
+  // The reference page. It sits in the integrations branch because that is where a reader arrives
+  // from "how do I connect this to my systems", and it links out to the recipes above.
+  ['after-submit-script.md',          'int-csharp-script',      'Run your own C# after a submission', '0040/0080', 1, 'integrations', 'Integrating MegaForm with your systems', 'integrations'],
   // Not scripting. It belongs with the rest of the DNN form-building guides.
   ['recaptcha-setup.md',              'dnn-recaptcha',          'Spam protection & reCAPTCHA', '0020/0460', 1, 'dnn-guides', 'Using MegaForm on DNN', 'dnn'],
 ];

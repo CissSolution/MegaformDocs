@@ -1,31 +1,310 @@
 # Run your own C# after a submission
 
-Sometimes what has to happen after a submission is not one email, one webhook or one `INSERT` — it
-is a decision followed by several of those. Score the lead, then write it to the CRM database and
-tell the sales API about it. Work out which branch office owns this postcode, then route the
-approval there. Round a total the way your finance team rounds it, then push the corrected figure
-into the ERP.
+MegaForm can compile and run **C# you write yourself**, on the server, immediately after a
+submission is saved. This page is the reference: when to reach for it, what the script is handed,
+and what the language and the runtime will and will not accept. The worked recipes live on their own
+pages and are linked at the end.
 
-MegaForm can run a piece of **C# you write yourself**, on the server, immediately after the
-submission is saved. You write statements; MegaForm compiles them when you press Save and runs the
-compiled code on every submission after that. Scripts can write to your databases
-([`ctx.Db`](#5-writing-to-a-database-and-calling-an-api)) and call your APIs
-([`ctx.Http`](#5-writing-to-a-database-and-calling-an-api)).
-
-![The Server Script panel in Form Settings](../images/40-script-panel.png)
-
-> **This is remote code execution, on purpose.** A script runs inside your website's own process,
-> with your website's own permissions. Read [§1](#1-who-can-do-this) before you switch it on —
-> especially the part about who *cannot*.
+> [!IMPORTANT]
+> If you arrived from an older version of this page describing `ctx.Db` or `ctx.Http`: those no
+> longer exist. A script now calls platform APIs directly — `SqlConnection`, `HttpClient`,
+> `UserController` — with an ordinary `using`.
 
 ---
 
-## 1. Who can do this
+## 1. Why, and when
 
-Two separate things must both be true. Neither has a shortcut.
+Start by not writing a script. Most of what has to happen after a submission is already
+configuration, and configuration survives an export, needs nobody to enable scripting, and cannot
+stop compiling after an upgrade.
 
-**The installation must allow scripting.** It is off on every install. A host turns it on by editing
-`web.config` on the server:
+| If the requirement is | Use |
+|---|---|
+| every submission goes to one endpoint | [Webhook / API service task](integration-webhook.md) |
+| every submission is mirrored into one table | [Form Settings → Database](integration-sql-insert.md) |
+| email, approval, create user, add role, branch on a value | workflow nodes |
+
+What no node expresses is a **decision with shape**. A node does one thing to every submission.
+These are the shapes that keep arriving, and none of them is a node with more checkboxes:
+
+- **The write is more than one row, and the second depends on the first.** An order header whose
+  generated key the line items need. No node holds a value between two writes.
+- **The destination depends on the answer.** Enterprise enquiries to one CRM, everyone else to the
+  internal queue, with a different payload shape for each.
+- **The number has to be right, not close.** Tax by country and product class, a rate rounded the
+  way your finance team rounds it, a discount table that lives in another system.
+- **The rule is a lookup, not a value on the form.** Whether this class code is still open, whether
+  this account is past due, whether this postcode is inside the service area.
+- **Two systems have to agree.** Write locally, call the remote API, and record what the remote one
+  answered so a person can reconcile it later.
+
+The honest test: if you can describe the requirement as *"for every submission, do X"*, a node
+already does it, and the node is the better answer — one fewer thing to read at review time. If the
+requirement is *"it depends"*, this is the tool.
+
+The trade is real. A script is code, running in your website's process under your website's
+identity, with no sandbox. [Safety and responsibility](scripting-safety.md) sets out what a host is
+agreeing to before switching it on.
+
+---
+
+## 2. A first script
+
+You write the body. `ctx` is the submission; there is no boilerplate to type.
+
+```csharp
+var name    = ctx.GetString("full_name");
+var country = ctx.GetString("country", "GB");
+var rate    = country == "DE" ? 0.19m : 0.20m;
+var total   = ctx.GetDecimal("order_total", 0m) * (1m + rate);
+
+ctx.Log($"country={country} rate={rate} total={total:0.00}");
+ctx.SetVariable("totalIncVat", total);
+
+if (total > 1000m)
+{
+    ctx.Response.SuccessMessage = "Thank you " + name + ". An account manager will call you today.";
+}
+```
+
+That script reads two answers, computes a third, records it on the run, and changes what this one
+visitor sees on the thank-you screen. Everything past that — writing a row, calling an API, sending
+a message, creating an account — is ordinary C# with a `using`, and is covered by the recipe pages.
+
+### Where the editor is
+
+**Builder → Design → Form Settings → Server Script.** Save the form once first: a script belongs to
+a form, so there has to be a form to attach it to.
+
+![The Server Script panel in Form Settings](../images/40-script-panel.png)
+
+The panel lists the current form's field keys above the editor, so you do not have to remember
+whether it was `full_name` or `fullname`. It also holds the enable switch for this form, what
+happens when a run fails, the run timeout, and **Save script**, **Check syntax** and **Test run**.
+Compilation happens at Save, so mistakes come back on your own line numbers while you are still
+looking at the editor rather than on a visitor's submission.
+
+The script is not part of the form's schema and does not travel with it. Saving the form does not
+save the script, and saving the script does not save the form. They are separate because they carry
+different authority — see [§6](#6-the-three-gates).
+
+---
+
+## 3. What `ctx` holds
+
+This is the whole surface. Nothing else exists on it.
+
+### Reading the submission
+
+| Member | What it is |
+|---|---|
+| `ctx.Data` | `IDictionary<string, object>` of the submitted values; keys are case-insensitive |
+| `ctx.Has(fieldKey)` | `bool` — whether the field was submitted at all |
+| `ctx.GetString(key, fallback = "")` | value as text |
+| `ctx.GetDecimal(key, fallback = 0m)` | parsed decimal |
+| `ctx.GetInt(key, fallback = 0)` | parsed integer |
+| `ctx.GetBool(key, fallback = false)` | parsed boolean |
+| `ctx.GetDate(key)` | `DateTime?` — `null` when absent or unparseable |
+
+`Has` and a fallback answer different questions. `GetDecimal("discount", 0m)` returns `0` both for
+"the visitor typed 0" and for "the field was never on the form"; `Has("discount")` tells them apart.
+
+### Which submission, and whose
+
+| Member | What it is |
+|---|---|
+| `ctx.FormId`, `ctx.SubmissionId`, `ctx.PortalId`, `ctx.FormTitle` | which form, which stored row |
+| `ctx.UserId`, `ctx.UserName`, `ctx.UserEmail` | the signed-in submitter — `0` and empty strings for an anonymous submission |
+| `ctx.IpAddress` | the caller's address |
+| `ctx.UtcNow` | the run's timestamp |
+
+Public forms are the normal case, so treat `UserId == 0` as expected input rather than as an error.
+
+### Recording what happened
+
+| Member | What it is |
+|---|---|
+| `ctx.Log(string)` | one line in the run record |
+| `ctx.Logs` | the lines logged so far |
+| `ctx.SetVariable(key, value)` | a value carried onto the run record |
+| `ctx.Variables` | the variables set so far |
+| `ctx.Fail(string)` | marks the run failed |
+
+### Changing the submission, and the visitor's experience
+
+| Member | What it is |
+|---|---|
+| `ctx.SetValue(key, value)` | queues a change to a stored value — **refused after the commit**, see [§5](#5-stages-and-what-they-stop-you-doing) |
+| `ctx.PendingChanges` | what `SetValue` has queued |
+| `ctx.Response.SuccessMessage` | replaces the thank-you text for this submission |
+| `ctx.Response.RedirectUrl` | sends this visitor somewhere else |
+| `ctx.Response.CustomData` | extra data returned with this submit response |
+
+`ctx.Response` affects **this submission only**. It is not a form setting and it does not persist.
+
+### Where in the pipeline you are
+
+| Member | What it is |
+|---|---|
+| `ctx.Stage` | which stage is running |
+| `ctx.CanAbort` | whether the current stage can still refuse the submission |
+
+---
+
+## 4. What is supported
+
+### The shape your body is compiled into
+
+The body you type is spliced into this method:
+
+```csharp
+// SIGNATURE ONLY — this is generated around your body; you never type it.
+async Task RunAsync(SubmissionScriptContext ctx, CancellationToken ct)
+```
+
+So `await` works directly, `ct` is in scope, and a bare `return;` is a valid way to stop early. You
+never write the signature.
+
+Pass `ct` to the calls you await. Cancellation is cooperative — a token you do not pass is a timeout
+that cannot fire.
+
+### Language version: C# 7.3
+
+The compiler is pinned to **C# 7.3**. Modern syntax you may be used to is a compile error at Save:
+
+```csharp
+// FRAGMENT — none of these lines compile in a script.
+using var cn = new SqlConnection(cs);   // no using declarations; use using (…) { }
+List<string> names = new();             // no target-typed new
+var text = """raw""";                   // no raw string literals
+```
+
+Interpolated strings, `nameof`, tuples, pattern matching as of 7.3, `async`/`await`, expression-bodied
+members and **local functions** are all available. Top-level statements are not a thing here — your
+body already is a method body.
+
+```csharp
+using System.Globalization;
+
+// Local functions are allowed, which is usually enough to keep a longer script readable.
+decimal Net(decimal gross, decimal rate)
+{
+    return decimal.Round(gross / (1m + rate), 2);
+}
+
+var net = Net(ctx.GetDecimal("order_total", 0m), 0.20m);
+ctx.Log("net=" + net.ToString("0.00", CultureInfo.InvariantCulture));
+```
+
+### Namespaces already in scope
+
+Do not repeat these — they are imported for you:
+
+```text
+System
+System.Collections.Generic
+System.Linq
+System.Text
+System.Threading
+System.Threading.Tasks
+MegaForm.Core.Scripting
+```
+
+A script may begin with its own `using` directives. They are lifted above the generated wrapper, so
+they belong at the very top of the body, and a trailing comment after the semicolon is fine:
+
+```csharp
+using System.Net.Http;              // the CRM call below
+using Newtonsoft.Json;
+
+var payload = JsonConvert.SerializeObject(new
+{
+    name  = ctx.GetString("full_name"),
+    email = ctx.GetString("email")
+});
+
+using (var http = new HttpClient())
+using (var body = new StringContent(payload, Encoding.UTF8, "application/json"))
+{
+    var reply = await http.PostAsync("https://crm.contoso.com/api/leads", body, ct);
+    ctx.Log($"crm status={(int)reply.StatusCode}");
+    if (!reply.IsSuccessStatusCode) ctx.Fail("CRM rejected the lead");
+}
+```
+
+### Which libraries you can name
+
+The reference set is **every assembly the site has loaded**. Anything a DNN module can name, a
+script can name — including:
+
+| Namespace | For |
+|---|---|
+| `DotNetNuke.*` | users, roles, mail, config, the platform's own services |
+| `System.Data.SqlClient` | your own tables, with parameters |
+| `System.Net.Http` | REST, SOAP, anything over HTTP |
+| `Newtonsoft.Json` | serialising and parsing payloads |
+
+Two limits sit on top of that:
+
+- **`unsafe` code is refused** — pointers and `stackalloc` — in every configuration.
+- **An optional strict mode exists and is off by default.** Turned on, it restores an older
+  namespace deny-list that refuses most of the table above. It is a process-wide startup flag, not a
+  per-form setting. [Safety and responsibility](scripting-safety.md) is where it is documented; do
+  not assume it is on.
+
+### Size and time
+
+| Limit | Value |
+|---|---|
+| Source length | 64 KB |
+| Run timeout | 10 seconds by default, 60 seconds maximum |
+
+> [!WARNING]
+> The timeout bounds **what the visitor waits for**, not what the script does. .NET has no safe way
+> to abort work already running, so on expiry the request stops waiting and the submission
+> completes, while the script keeps its thread until it finishes or the application recycles. Treat
+> the timeout as a seatbelt, not a brake: bound your own loops, and pass `ct` to every call you
+> await.
+
+---
+
+## 5. Stages, and what they stop you doing
+
+Four stages exist in the engine. They differ in where they sit relative to the database commit,
+which decides everything else.
+
+| Stage | Runs | Can refuse the submission | Can change stored values | Configurable today |
+|---|---|---|---|---|
+| PreValidate | before validation finishes | yes | yes | **no** |
+| PreInsert | inside the submit transaction | yes | yes | **no** |
+| PostCommit | after the row is committed | no | no | **yes** |
+| AsyncWorker | later, off a queue | no | no | **no** |
+
+> [!IMPORTANT]
+> **Only PostCommit can be configured.** The script you write and approve is stored as the form's
+> after-submit hook, and the engine runs that hook as PostCommit. Nothing in the product writes a
+> script into the other three stages — no editor, no API, no import path.
+
+Two consequences, stated plainly because they are the biggest constraint on this page:
+
+- **A script cannot refuse a submission.** Refusing needs PreInsert. `ctx.Fail("…")` at PostCommit
+  records the run as failed; the row is already stored. To turn away unwelcome-but-valid input, use
+  the anti-spam settings and workflow rules.
+- **A script cannot rewrite a stored value.** `ctx.SetValue` is *refused* after the commit rather
+  than quietly ignored, on purpose: a script that believes it corrected a stored value and did not
+  is a data bug that surfaces months later in a report.
+
+What a PostCommit script can do is compute a value and send it onward — into your own table, to an
+API, into an email, onto the run record, into `ctx.Response`. It just does not go back into the
+submission.
+
+---
+
+## 6. The three gates
+
+A script does not run until all three hold. There is no fallback path and no per-site override.
+
+**1 — a config file switch.** In `web.config` appSettings:
 
 ```xml
 <appSettings>
@@ -33,271 +312,71 @@ Two separate things must both be true. Neither has a shortcut.
 </appSettings>
 ```
 
-On Oqtane the same key goes in `appsettings.json`. Saving the file restarts the application, so the
-switch takes effect at a moment you chose.
+Off on every install. Anything other than `true` means off. It is a file rather than a settings
+screen on purpose: turning this on means *people may run code on this server*, and the right bar for
+that is **can edit files on this server** — a smaller group than *knows the superuser password*. It
+also means a site restored from a backup and a fresh config file comes back with the feature off.
 
-It is a config file rather than a settings screen deliberately. Turning this on means "people may
-run code on this server", and the right bar for that is *can edit files on the server* — a smaller
-group than *knows the superuser password*.
+**2 — a host account saves the script.** Host / SuperUser only. Not a site Administrator, not
+someone with Edit permission on the module. "Edit module" is a content-editor permission several
+people usually hold, and an Administrator's reach stops at one site while a script runs in the
+process shared by the whole installation.
 
-**The person must be a host (superuser).** Not a site administrator. Not someone with Edit
-permission on the module. On DNN, "edit module" is a content-editor permission that several people
-usually hold; on Oqtane, Admin is scoped to one site while a script runs in the process shared by
-every site on the installation. Only Host/SuperUser can open, change or save a script, and anyone
-else gets a plain refusal instead of a disabled-looking editor.
+**3 — an approval hash over the source.** Saving stores a hash of the exact source the server
+accepted, with who approved it and when. Before every run the server re-hashes and compares.
+Mismatch, no run.
 
-There is a third guard you never interact with, and it is the one that matters most. When a host
-saves a script, MegaForm stores a **hash of the exact source it approved**, together with who
-approved it and when. Before running anything, the server re-hashes the stored source and compares.
-If the two do not match, the script does not run.
-
-That makes every other route into your form inert by construction. A form export, a template
-install, a gallery download, a restored backup, a hand-crafted save request from someone with Edit
-permission — all of them can carry a `source` field, and none of them can produce a matching
-approval, because the approval is written server-side at the moment a host pressed Save. The
-ordinary form Save endpoint goes further: it discards whatever the caller sent for this block and
-puts the stored copy back, so a content editor cannot introduce a script, edit one, or quietly
-switch one off.
+That third gate is what makes every other route into your forms inert. A form export, a template
+install, a gallery download, a restored backup, a hand-built save request — all of them can carry a
+script's source, and none of them can carry a valid approval, because an approval is written
+server-side at the instant a host pressed Save on **that** site. The ordinary form Save path goes
+further: it discards the caller's copy of this block and writes back the one the server already had.
+A content editor saving a form cannot introduce a script, alter an approved one, or switch one off.
 
 ---
 
-## 2. Where the editor is
+## 7. What is recorded when it runs
 
-**Builder → Design → Form Settings → Server Script (host only).**
+Every run is written down, and so is every approval. Between them they answer the two questions that
+only have answers if something wrote them at the time: *what did this script do on that submission*,
+and *who put this code on the server*.
 
-Save the form once first — a script belongs to a form, so there has to be a form to attach it to.
+A run keeps the form, the submission, the stage, the hash of the source that ran, success or
+failure, the duration, the error if there was one, and everything the script logged. A **skipped**
+run is not a failed one — disabled, empty, not approved on this site, or a hash mismatch each record
+a reason rather than an error.
 
-The panel is not part of the form's schema and does not travel with it. Saving the form does not
-save the script, and **Save script** does not save the form. They are separate on purpose: they have
-different authority.
+This is what one measured run looks like from the log side. On a DNN 10.3 site, an anonymous
+submission ran a PostCommit script that did four things in 927 ms: a parameterised `INSERT` through
+`SqlConnection`, an `HttpClient` POST to an external endpoint, a message handed to DNN's own sender,
+and an account created with a role granted.
 
-If you are signed in as a site administrator rather than a host, or the installation switch is off,
-the panel tells you which of the two it is instead of failing silently.
-
----
-
-## 3. Writing the script
-
-You write the *body*. `ctx` is the submission; there is no boilerplate to type.
-
-```csharp
-// Score the lead and record how it should be routed.
-var name  = ctx.GetString("full_name");
-var email = ctx.GetString("email");
-var note  = ctx.GetString("message");
-
-var score = 0;
-if (email.IndexOf("@", StringComparison.Ordinal) > 0)                  score += 10;
-if (!string.IsNullOrWhiteSpace(ctx.GetString("phone")))                score += 20;
-if (note.IndexOf("pricing", StringComparison.OrdinalIgnoreCase) >= 0)  score += 40;
-
-var tier = score >= 60 ? "hot" : (score >= 30 ? "warm" : "cold");
-
-ctx.SetVariable("leadScore", score);
-ctx.SetVariable("leadTier", tier);
-ctx.Log("Scored " + name + " -> " + score + " points, tier " + tier);
+```text
+country=DE rate=0.19 total=892.50
+insert rowsAffected=1
+crm status=200
+mail handed to DNN's sender for jane.carter@example.com
 ```
 
-The field keys of the current form are listed above the editor, so you do not have to remember
-whether it was `full_name` or `fullname`.
+Four `ctx.Log` lines, one per effect, is a good habit: a script that catches everything and logs
+nothing will fail for months without anyone noticing. The tables, their columns, and the host-only
+endpoint that reads them are documented in
+[Safety and responsibility](scripting-safety.md).
 
-### What `ctx` gives you
+---
 
-| Reading the submission | |
+## 8. Where to go next
+
+[Writing your own C# after a submission](automation-overview.md) is the branch overview. Each recipe
+below is one job, with the script and what the run record shows afterwards.
+
+| Recipe | What it covers |
 |---|---|
-| `ctx.GetString(key, fallback)` | value as text |
-| `ctx.GetDecimal(key, fallback)` · `ctx.GetInt` · `ctx.GetBool` | parsed, with a fallback when absent or unparseable |
-| `ctx.GetDate(key)` | `DateTime?` |
-| `ctx.Has(key)` · `ctx.Data` | presence, and the whole map (field keys are case-insensitive) |
-
-| Who submitted it | |
-|---|---|
-| `ctx.UserId` | `0` for an anonymous submission |
-| `ctx.UserName` · `ctx.UserEmail` · `ctx.IpAddress` | |
-| `ctx.FormId` · `ctx.SubmissionId` · `ctx.PortalId` · `ctx.FormTitle` · `ctx.UtcNow` | |
-
-| Writing a result | |
-|---|---|
-| `ctx.Log("…")` | one line in the run record (capped at 200 lines) |
-| `ctx.SetVariable("key", value)` | a value stored on the run record |
-| `ctx.Fail("why")` | marks the run failed — see [§6](#6-when-a-script-fails) |
-
-| Acting on other systems | |
-|---|---|
-| `ctx.Db` | parameterised SQL against a named connection — [§5](#5-writing-to-a-database-and-calling-an-api) |
-| `ctx.Http` | outbound HTTP with the site's URL guard — [§5](#5-writing-to-a-database-and-calling-an-api) |
-
-If you need private helper methods, write the whole class instead and MegaForm compiles it as-is:
-
-```csharp
-public sealed class MyScript : ISubmissionScript
-{
-    public void Run(SubmissionScriptContext ctx)
-    {
-        ctx.SetVariable("net", WithoutVat(ctx.GetDecimal("total")));
-    }
-
-    private decimal WithoutVat(decimal gross) => decimal.Round(gross / 1.2m, 2);
-}
-```
-
----
-
-## 4. Try it before a visitor does
-
-**Test run** compiles the script and runs it against sample values, right there in the panel. No
-submission is created and nothing is stored — you are watching the same compiled code the pipeline
-would call, against made-up input.
-
-The output pane shows what the script logged and every variable it set.
-
-![Test run output](../images/41-script-testrun.png)
-
-**Check syntax** compiles without running, which is the quicker loop while you are still typing.
-
-Both report errors on **your** line numbers, not on some line inside a wrapper you never saw.
-
----
-
-## 5. Writing to a database and calling an API
-
-A hook that could only do arithmetic would not be worth having — the Calculate field already does
-arithmetic. Scripts write to databases and call APIs. They do it through two capabilities on `ctx`
-rather than by opening a connection or an HTTP client themselves.
-
-### `ctx.Db` — parameterised SQL against a named connection
-
-```csharp
-var leadId = ctx.Db.Scalar("CustomerCrm",
-    "SELECT LeadId FROM CRM_Leads WHERE Email = @email", new { email = ctx.GetString("email") });
-
-if (leadId == null)
-{
-    ctx.Db.Execute("CustomerCrm",
-        "INSERT INTO CRM_Leads (FullName, Email, Score) VALUES (@name, @email, @score)",
-        new { name = ctx.GetString("full_name"), email = ctx.GetString("email"), score = 70 });
-}
-
-foreach (var row in ctx.Db.Query("CustomerCrm",
-             "SELECT LeadId, FullName FROM CRM_Leads WHERE Score > @min", new { min = 50 }))
-    ctx.Log(row.Str("FullName"));
-```
-
-The first argument is the **name** of a connection an administrator registered in
-[Database Settings](integration-sql-insert.md) — the same catalog Form Settings → Database and the
-workflow Database node resolve from. A script therefore never carries a connection string, so
-rotating a password stays one change in one place, and an exported form cannot leak a credential.
-
-Values are bound as real parameters; they are never concatenated into the statement. `Query` is
-capped server-side, so a forgotten `WHERE` returns a bounded page instead of pulling a table into the
-submit request.
-
-### `ctx.Http` — outbound calls with the site's URL guard
-
-```csharp
-var reply = ctx.Http.PostJson("https://crm.example.com/api/leads",
-    new { name = ctx.GetString("full_name"), email = ctx.GetString("email") },
-    new Dictionary<string, string> { { "Authorization", "Bearer " + apiToken } });
-
-if (!reply.Ok) ctx.Fail("CRM refused the lead: HTTP " + reply.Status);
-```
-
-`Get`, `PostJson` and `Send` (for SOAP, PUT, or anything else) all run the URL through the same
-outbound-address guard the Webhook node uses, with a timeout and a response-size cap. Every call
-adds a line to the run record.
-
-That guard matters most when any part of a URL came from the submission itself: without it, an
-anonymous public form becomes a way to make the server issue requests against its own network.
-
-### What stays closed
-
-`System.Net`, `System.Data`, `System.IO`, `System.Reflection`, `System.Diagnostics`,
-`System.Threading` and friends are refused at compile time — you find out while you are looking at
-the editor, not on a visitor's submission:
-
-![A refused namespace](../images/42-script-denied.png)
-
-The check runs on what the compiler *resolved*, not on the text you typed, so it is not fooled by
-aliases, fully-qualified names, `global::`, generic arguments or `var`.
-
-This is capability injection, not a smaller feature. `new SqlConnection(…)` and `new HttpClient()`
-would give the same power while losing the properties that make it safe to run on a customer's
-server: a named connection instead of an embedded credential, a guarded URL instead of an
-unchecked one, and a record of what the script actually did.
-
-Some jobs still belong to a purpose-built surface rather than to a script:
-
-| You wanted to | Use instead |
-|---|---|
-| A retrying, authenticated call as part of a flow | a [Webhook / API service task](integration-webhook.md) node |
-| Mirror every submission into one table | [Form Settings → Database](integration-sql-insert.md) — no code at all |
-| Send an email | the workflow **Email** node, which holds the credentials |
-| Normalise or encrypt a value **before** it is stored | a pre-insert lifecycle hook — by the time a script runs, the row exists |
-| Stop a submission from being saved | the same pre-insert hook |
-
-A script **can** still loop forever. See the timeout in [§6](#6-when-a-script-fails).
-
----
-
-## 6. When a script fails
-
-The submission has already been committed by the time your script runs. Nothing a script does can
-undo it. If you need to *veto* a submission, that is a pre-insert lifecycle hook, which runs inside
-the same database transaction as the insert.
-
-Given that, `ctx.Fail("…")` and an unhandled exception both mean the same thing: this run failed, it
-is recorded, and the row stays. **If the script fails** decides what the visitor sees:
-
-- **Log it — visitor still sees the thank-you** (default). The failure is in the run record and the
-  site event log.
-- **Also report the message to the caller.** Use this while you are rolling a script out.
-
-**Timeout** (1–60s, default 10) bounds how long the submit waits. It does not bound the script: .NET
-has no safe way to stop a thread that has already started, so a script stuck in a loop keeps running
-until the application recycles — it just stops holding up the visitor. Treat the timeout as a
-seatbelt, not a brake, and do not write unbounded loops.
-
----
-
-## 7. What is recorded
-
-Every approval and every run is written down.
-
-**Approvals** — who saved which script, when, and its hash. This is the record that answers "who put
-code on this server", and it can only be answered later if it was written at the time.
-
-**Runs** — one row per submission: success or failure, duration, error, and everything the script
-logged.
-
----
-
-## 8. Performance
-
-Compilation happens when you press **Save**, not on submissions. That is why syntax errors appear
-while you are still in the editor, and why a submission on a warm site costs a delegate call —
-single-digit milliseconds for the sample above.
-
-The first submission after an application restart pays one compile (roughly 100–300 ms, once).
-Identical source is recognised by its hash and never recompiled.
-
-Editing a script produces a new compiled assembly each time. On .NET-based hosts (Oqtane) those are
-loaded so they can be reclaimed. On .NET Framework (DNN) they cannot be unloaded and stay until the
-application recycles — which is fine for authoring, and worth knowing if you sit and edit a script
-fifty times in one afternoon.
-
----
-
-## 9. Before you switch it on
-
-- Turn it on only on installations where you are comfortable with anyone holding the host password
-  running code on the server.
-- Read a script before approving it, especially one that arrived with an imported form. Your Save is
-  the approval.
-- Reach for a node first. A single webhook or a single table mirror needs no code, and a
-  no-code integration is one fewer thing to read at review time. Scripts earn their place when the
-  logic decides *which* of those happens.
-- Watch the run records after a change. A script that stopped compiling after an upgrade reports
-  itself there instead of failing quietly.
+| [Write to your own database](automation-custom-db.md) | `SqlConnection`, parameters, several tables in one run |
+| [CRM, ERP, REST and SOAP](automation-rest-crm.md) | `HttpClient`, payload shape, what to do with the reply |
+| [Email and messaging](automation-notifications.md) | DNN's own sender, and calling a provider's API |
+| [Create users and grant roles](automation-user-provisioning.md) | `UserController`, `RoleController`, and what to check first |
+| [Safety and responsibility](scripting-safety.md) | the gates in detail, strict mode, and reviewing a script before you approve it |
 
 ## Related
 

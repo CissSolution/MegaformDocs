@@ -24,6 +24,7 @@ const DOCS = process.env.DOCS_DIR;
 const FORM_ID = Number(process.env.FORM_ID || 235);
 
 const PAGES = [
+  "after-submit-script.md",
   "automation-overview.md",
   "automation-custom-db.md",
   "automation-rest-crm.md",
