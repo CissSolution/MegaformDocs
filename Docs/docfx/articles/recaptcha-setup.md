@@ -82,6 +82,15 @@ form a token. Measured on a live public page, the widget host element for v3 ren
 the form reserves no space at all. The only visible artefact is Google's own badge in the page
 corner, measured at **256 × 60**.
 
+![A live public form protected by reCAPTCHA v3: two fields and the submit button, with no CAPTCHA
+box and no gap between the last field and the button — the protection is there, and it takes no
+layout space](/Portals/0/MegaFormBlogs/docs/megaform-recaptcha-v3-form.png)
+
+Nothing on that form announces the check. The whole of it is the badge, bottom right of the page:
+
+![Google's reCAPTCHA badge in the page corner, the only visible sign that v3 is
+active](/Portals/0/MegaFormBlogs/docs/megaform-recaptcha-v3-badge.png)
+
 > [!NOTE]
 > That badge is not decoration. Google's terms require either the badge or a visible notice telling
 > visitors that reCAPTCHA is in use, with links to Google's privacy policy and terms. If you hide

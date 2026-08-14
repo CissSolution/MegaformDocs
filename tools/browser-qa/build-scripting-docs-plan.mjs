@@ -34,7 +34,13 @@ const rows = (raw.Data && raw.Data[0]) || [];
 const byKey = Object.fromEntries(rows.map((r) => [r.doc_key, r]));
 
 // file, doc_key, nav label, sort key, depth, parent key, parent path, space
-const PARENT_NAV = 'Automating what happens after a submission';
+// [2026-08-14] Renamed from "Automating what happens after a submission". That title described what
+// the whole product does after a submission — the webhook node, the database node and workflow all
+// automate after a submission — so it claimed territory this branch does not own, and a reader
+// looking for "email someone on submit" landed here instead of on workflow. It also never said the
+// section is about writing code. The new name matches its siblings (Using / Integrating /
+// Programming / Writing) and "your own" signals that this is the escape hatch, not the default path.
+const PARENT_NAV = 'Writing your own C#';
 const PAGES = [
   ['automation-overview.md',          'automation',             PARENT_NAV,                    '0045',      0, null,         null,        'automation'],
   ['automation-custom-db.md',         'auto-custom-db',         'Write to your own database',  '0045/0020', 1, 'automation', PARENT_NAV,  'automation'],
@@ -81,7 +87,11 @@ const STAY_HIDDEN = ['auto-fraud-check', 'auto-field-encryption', 'auto-realtime
 
 const dropped = [];
 function linkMap(href, isImage) {
-  if (isImage) return null;
+  // Images are allowed when they already point at a served path. The earlier automation pages set
+  // this to always drop, on the reasoning that a reference page needs no screenshots — true of a
+  // code page, false of one describing what a visitor sees on screen. A relative image name would
+  // still be dropped: it has to be uploaded and addressed as /Portals/... to survive on the channel.
+  if (isImage) return /^https?:|^\/Portals\//.test(href) ? href : null;
   if (/^https?:|^mailto:|^#|^\//.test(href)) return href;
   const file = href.split('#')[0].split('/').pop();
   const anchor = href.includes('#') ? '#' + href.split('#')[1] : '';

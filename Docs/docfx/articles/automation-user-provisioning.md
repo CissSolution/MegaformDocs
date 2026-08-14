@@ -48,8 +48,8 @@ check, not one you type twice.
 
 There is no membership expiry date on the node. If you need one, use a script.
 
-Each platform implements these nodes against its own membership API, so the same form works on DNN,
-Oqtane and Umbraco. The measurements further down this page are from the script route on DNN.
+The nodes are configuration, so a form that uses them carries its identity behaviour with it when
+you export it. The measurements further down this page are from the script route.
 
 ---
 

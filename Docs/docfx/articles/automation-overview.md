@@ -1,11 +1,13 @@
-# Automation: your own C# after a submission
+# Writing your own C# after a submission
 
-A form that only stores answers is a filing cabinet. The forms that earn their place do something
-when an answer arrives: write the lead into the CRM database, work out the tax for the customer's
-country, create the account the applicant just asked for, tell three other systems.
+MegaForm compiles and runs C# you write, on the server, when a form is submitted.
 
-Most of that needs no code. Before reading further, check whether one of these already covers the
-job:
+## Why this exists
+
+Most of what a form needs to do after a submission is already configuration. The webhook node posts
+to an endpoint. The database node mirrors a submission into a table. Workflow sends the email, asks
+for the approval, creates the user, branches on a value. **Start there.** Configuration survives an
+export, needs no one to enable scripting, and cannot be broken by a change to an API you do not own.
 
 | If the requirement is | Use |
 |---|---|
@@ -13,10 +15,27 @@ job:
 | every submission is mirrored into one table | [Form Settings → Database](integration-sql-insert.md) |
 | email, approval, add-user, add-role, branch on a value | workflow nodes |
 
-This section is for what is left: when the *shape* of the logic is the hard part. A parent row whose
-generated key the child rows need. A different system depending on what was answered. A number your
-finance team rounds their own way. For those, MegaForm compiles and runs **C# you write**, on the
-server, after the submission is stored.
+What those cannot express is a **decision with shape**. A node does one thing to every submission.
+The cases below are the ones that keep arriving, and none of them is a node with more checkboxes:
+
+- **The write is more than one row, and the second depends on the first.** An order header whose
+  generated key its line items need. No node can hold a value between two writes.
+- **The destination depends on the answer.** Enterprise enquiries to Salesforce, everyone else to
+  the internal queue, and a different payload shape for each.
+- **The number has to be right, not close.** Tax by country and product class, a rate your finance
+  team rounds their own way, a discount table that lives in another system.
+- **The rule is a lookup, not a value on the form.** Whether this class code is still open, whether
+  this account is past due, whether this postcode is in the service area.
+- **Two systems have to agree.** Write locally, call the remote API, and record what the remote one
+  answered so a human can reconcile it later.
+
+The honest test: if you can describe the requirement as *"for every submission, do X"*, a node
+already does it and you should use the node. If it is *"it depends"*, that is what this section is
+for.
+
+The trade you are making is real. A script is code your team owns, on a server you own, with no
+sandbox — [Safety and responsibility](scripting-safety.md) is the page that spells out what a host
+is agreeing to before switching it on.
 
 ---
 

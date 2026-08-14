@@ -35,8 +35,7 @@ Off on every install. A host turns it on by editing the config file on the serve
 </appSettings>
 ```
 
-On Oqtane the same key goes in `appsettings.json`. Anything other than `true` (case-insensitive) —
-including a missing or unreadable entry — means off.
+Anything other than `true` (case-insensitive) — including a missing or unreadable entry — means off.
 
 It is a config file rather than a settings screen on purpose. Turning this on means *people may run
 code on this server*, and the right bar for that is **can edit files on this server** — a
@@ -51,10 +50,10 @@ a fresh config file brings the feature back **off**. A settings-table switch wou
 Only a Host / SuperUser can open the editor, change a script, or save one. Not a site
 administrator. Not someone with Edit permission on the module.
 
-That distinction matters more than it looks. On DNN, "edit module" is a content-editor permission
-several people usually hold; on Oqtane, Admin is scoped to one site, while a script runs in the
-process shared by every site on the installation. Anyone below Host gets a plain refusal rather than
-an editor that looks enabled and then does nothing.
+That distinction matters more than it looks. "Edit module" is a content-editor permission several
+people usually hold, and a site Administrator's reach stops at their own portal — while a script
+runs in the process shared by every portal on the installation. Anyone below Host gets a plain
+refusal rather than an editor that looks enabled and then does nothing.
 
 ### Gate 3 — the approval hash
 
@@ -121,7 +120,7 @@ The product ships with an older enforcement pass still in the box, switched off.
 Turned on, it runs a semantic check over the compiled script and refuses whole namespaces:
 `System.IO`, `System.Net`, `System.Data`, `System.Reflection`, `System.Diagnostics`,
 `System.Threading` (except `Tasks`), `System.Security`, `System.Xml`, `Microsoft.Win32`,
-`Microsoft.CodeAnalysis`, and the platform's own namespaces — `DotNetNuke`, `Oqtane`, `Umbraco`.
+`Microsoft.CodeAnalysis`, and the platform's own namespace, `DotNetNuke`.
 Individual types in otherwise-open namespaces go too: `System.Type`, `System.Activator`,
 `System.Environment`, `System.AppDomain`, `System.Console`, `dynamic`. Violations come back as
 `MF1001` at save time, on the author's own line numbers:
