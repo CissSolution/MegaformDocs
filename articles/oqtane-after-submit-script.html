@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Run your own C# after a submission (Oqtane) | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Run your own C# after a submission (Oqtane) | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feature/typed-submission-storage-core/Docs/docfx/articles/oqtane-after-submit-script.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="run-your-own-c-after-a-submission-oqtane">Run your own C# after a submission (Oqtane)</h1>
+
+<p>MegaForm can run C# that you write on the server, once a submission has been saved. It is the
+escape hatch for the work the webhook step, the database step and workflow cannot express — a second
+write that depends on the first, a destination chosen by an answer, a total your finance team rounds
+their own way.</p>
+<p>The code is ordinary C#. You open a <code>SqlConnection</code>, you <code>new HttpClient()</code>, you call Oqtane's own
+services with a normal <code>using</code>. There is no MegaForm-specific object model to learn beyond one
+parameter, <code>ctx</code>, which carries the submission.</p>
+<div class="IMPORTANT">
+<h5>Important</h5>
+<p>Saving a script means running code inside the Oqtane server process. On Oqtane that process is
+shared by <strong>every site on the installation</strong>, which is why authoring is restricted to a <strong>Host</strong>
+account and not to a site Administrator. Read <a href="scripting-safety.html">Safety and responsibility</a>
+before you switch this on.</p>
+</div>
+<h2 id="1-turning-it-on">1. Turning it on</h2>
+<p>Two things must be true, and neither one alone is enough.</p>
+<p><strong>a. The installation-level switch.</strong> Add this to <code>appsettings.json</code> next to <code>Oqtane.Server.dll</code>,
+then restart the site:</p>
+<pre><code class="lang-json">{
+  &quot;MegaForm&quot;: {
+    &quot;AfterSubmitScriptEnabled&quot;: true
+  }
+}
+</code></pre>
+<p>Off by default, and an absent or unreadable value stays off. Without it every authoring call is
+refused with <code>feature_disabled</code> and a message naming the setting.</p>
+<p><strong>b. A Host account.</strong> Site Administrator is deliberately not enough — see the note above. A site
+Admin authoring a script gets <code>host_only</code>.</p>
+<p>The compiler itself ships inside the module package as <code>MegaForm.Scripting.dll</code>. If it is missing,
+every call is refused with <code>compiler_missing</code> rather than falling back to some other way of running
+the source.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>Packages before 2.0.21 did not carry <code>MegaForm.Scripting.dll</code> on Oqtane at all, so this feature
+could not run on any Oqtane site regardless of the switch. If you see <code>compiler_missing</code> on a
+current package, the file did not survive the install — check the site root.</p>
+</div>
+<h2 id="2-where-the-editor-is">2. Where the editor is</h2>
+<p>Open the form in the builder, go to <strong>Settings</strong>, and find <strong>Server Script (host only)</strong>.</p>
+<p><img src="../images/41-oqtane-script-panel.png" alt="The Server Script panel in the Oqtane builder: an enable switch, the form's field keys as
+copyable chips, the C# editor, a failure-handling choice, a timeout, and Save / Check syntax /
+Test run buttons, with the status line reading &quot;Active. Approved by host&quot;"></p>
+<p>The panel shows the form's <strong>field keys</strong> as chips — these are the leaf keys <code>ctx.GetString</code> and its
+siblings resolve. Layout containers are not listed, because a script never reads a row.</p>
+<p>Three buttons, and the difference between them matters:</p>
+<table>
+<thead>
+<tr>
+<th>Button</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Check syntax</strong></td>
+<td>Compiles the source and shows diagnostics. Nothing is stored and nothing runs.</td>
+</tr>
+<tr>
+<td><strong>Test run</strong></td>
+<td>Compiles <strong>and executes</strong> against sample data you supply. Side effects are real — a script that writes a row writes one.</td>
+</tr>
+<tr>
+<td><strong>Save script</strong></td>
+<td>Compiles, then stores the source with an approval record. Refuses to save source that does not build.</td>
+</tr>
+</tbody>
+</table>
+<div class="NOTE">
+<h5>Note</h5>
+<p>Saving the script is independent of the builder's own Save button. Saving the form does not save
+the script, and saving the script does not save the form. The two have different authority.</p>
+</div>
+<h2 id="3-a-first-script">3. A first script</h2>
+<pre><code class="lang-csharp">// Runs on the server after the submission is saved.
+var email = ctx.GetString(&quot;email&quot;);
+var subject = ctx.GetString(&quot;subject&quot;);
+
+ctx.Log(&quot;submission &quot; + ctx.SubmissionId + &quot; from &quot; + email + &quot;: &quot; + subject);
+ctx.SetVariable(&quot;handled&quot;, true);
+</code></pre>
+<p><code>ctx.Log</code> writes to the run record; <code>ctx.SetVariable</code> records a named result. Both are visible in
+<strong>Test run</strong> output, which is the quickest way to see what your script saw.</p>
+<h2 id="4-what-ctx-holds">4. What <code>ctx</code> holds</h2>
+<p><code>ctx</code> is data about this submission. It is deliberately <strong>not</strong> a service locator — there is no
+<code>ctx.Db</code>, no <code>ctx.Http</code>, no <code>ctx.Notify</code>. Anything you want to reach, you reach the way any other
+C# in this process would.</p>
+<h3 id="reading-the-submitted-values">Reading the submitted values</h3>
+<pre><code class="lang-csharp">var name = ctx.GetString(&quot;first_name&quot;);          // &quot;&quot; when absent
+var qty = ctx.GetInt(&quot;quantity&quot;, 1);             // fallback when absent or unparseable
+var total = ctx.GetDecimal(&quot;order_total&quot;);
+var optedIn = ctx.GetBool(&quot;newsletter&quot;);
+var when = ctx.GetDate(&quot;preferred_date&quot;);        // DateTime?, null when absent
+
+if (ctx.Has(&quot;phone&quot;)) ctx.Log(&quot;phone supplied&quot;);
+
+foreach (var pair in ctx.Data) ctx.Log(pair.Key + &quot; = &quot; + pair.Value);
+</code></pre>
+<p>A key that is not in the submission reads as empty rather than throwing — which also means a
+<strong>mistyped key is silent</strong>. Copy keys from the chips in the panel.</p>
+<h3 id="which-submission-and-whose">Which submission, and whose</h3>
+<table>
+<thead>
+<tr>
+<th>Member</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ctx.FormId</code>, <code>ctx.SubmissionId</code></td>
+<td><code>SubmissionId</code> is <code>0</code> during <strong>Test run</strong> — the row does not exist yet.</td>
+</tr>
+<tr>
+<td><code>ctx.FormTitle</code>, <code>ctx.PortalId</code></td>
+<td>On Oqtane <code>PortalId</code> carries the site id.</td>
+</tr>
+<tr>
+<td><code>ctx.UserId</code>, <code>ctx.UserName</code>, <code>ctx.UserEmail</code></td>
+<td>Empty / <code>0</code> for an anonymous visitor.</td>
+</tr>
+<tr>
+<td><code>ctx.IpAddress</code></td>
+<td>The caller's address as the server saw it.</td>
+</tr>
+<tr>
+<td><code>ctx.UtcNow</code></td>
+<td>One timestamp for the whole run, so two writes agree.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="recording-changing-failing">Recording, changing, failing</h3>
+<pre><code class="lang-csharp">ctx.Log(&quot;looked up the customer&quot;);        // run record
+ctx.SetVariable(&quot;crmId&quot;, 4192);           // named result, visible in Test run
+
+ctx.SetValue(&quot;status&quot;, &quot;reviewed&quot;);       // queued into ctx.PendingChanges
+
+if (string.IsNullOrEmpty(ctx.GetString(&quot;email&quot;)))
+    ctx.Fail(&quot;No email address supplied.&quot;);
+</code></pre>
+<p>After the row is committed — which is when this script runs — <code>ctx.CanAbort</code> is <code>false</code>. <code>ctx.Fail</code>
+therefore records a failure; it does not un-save the submission. Whether the visitor is told depends
+on the <strong>If the script fails</strong> choice in the panel: <em>Log it</em> keeps the thank-you, <em>Report it</em>
+surfaces the message.</p>
+<h2 id="5-what-is-supported">5. What is supported</h2>
+<h3 id="the-language-is-c-73">The language is C# 7.3</h3>
+<p>Not the version Oqtane itself is built with. Measured against a live Oqtane 10.2.1 site, these are
+rejected with <code>CS8370</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Version</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>switch expressions / recursive patterns</td>
+<td>C# 8</td>
+</tr>
+<tr>
+<td><code>using</code> declarations (without a block)</td>
+<td>C# 8</td>
+</tr>
+<tr>
+<td>target-typed <code>new()</code></td>
+<td>C# 9</td>
+</tr>
+</tbody>
+</table>
+<p>So write <code>using (var x = ...) { }</code> with a block, and <code>new StringBuilder()</code> in full. <code>out var</code>,
+tuples, pattern matching with <code>is</code>, local functions and expression-bodied members are all available.</p>
+<h3 id="which-libraries-you-can-name">Which libraries you can name</h3>
+<p>Everything the site has already loaded, plus the framework. That includes the Oqtane assemblies, so
+a script can name what a module in the same site can name.</p>
+<p>Both SQL client namespaces bind on Oqtane — measured, both compile:</p>
+<pre><code class="lang-csharp">using System;
+using Microsoft.Data.SqlClient;
+
+const string cs = &quot;Server=.;Database=MySite;Trusted_Connection=True;TrustServerCertificate=True;&quot;;
+
+using (var cn = new SqlConnection(cs))
+{
+    cn.Open();
+    using (var cmd = cn.CreateCommand())
+    {
+        cmd.CommandText = &quot;INSERT INTO CrmLead (Email, Subject, CreatedUtc) VALUES (@e, @s, @t)&quot;;
+        cmd.Parameters.AddWithValue(&quot;@e&quot;, ctx.GetString(&quot;email&quot;));
+        cmd.Parameters.AddWithValue(&quot;@s&quot;, ctx.GetString(&quot;subject&quot;));
+        cmd.Parameters.AddWithValue(&quot;@t&quot;, ctx.UtcNow);
+        cmd.ExecuteNonQuery();
+    }
+}
+
+ctx.Log(&quot;wrote CRM lead for submission &quot; + ctx.SubmissionId);
+</code></pre>
+<p><code>Microsoft.Data.SqlClient</code> is the one the Oqtane server already uses; prefer it.</p>
+<p>The connection string is yours to supply. <code>ctx</code> carries the submission, not a database handle, so
+there is nothing to inherit — put the string in the script, or read it from your own configuration.</p>
+<h3 id="calling-an-http-service">Calling an HTTP service</h3>
+<pre><code class="lang-csharp">using System;
+using System.Net.Http;
+using System.Text;
+
+var payload = &quot;{\&quot;email\&quot;:\&quot;&quot; + ctx.GetString(&quot;email&quot;) + &quot;\&quot;}&quot;;
+
+using (var http = new HttpClient())
+{
+    http.Timeout = TimeSpan.FromSeconds(5);
+    var content = new StringContent(payload, Encoding.UTF8, &quot;application/json&quot;);
+    var reply = http.PostAsync(&quot;https://crm.example.com/api/leads&quot;, content).GetAwaiter().GetResult();
+    ctx.Log(&quot;CRM replied &quot; + (int)reply.StatusCode);
+}
+</code></pre>
+<p>Keep the timeout well under the script timeout, and remember that a slow call here is time the
+visitor spends waiting for their thank-you.</p>
+<h3 id="size-and-time">Size and time</h3>
+<table>
+<thead>
+<tr>
+<th>Limit</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Source length</td>
+<td>65,536 characters</td>
+</tr>
+<tr>
+<td>Timeout</td>
+<td>10 seconds by default, set per form in the panel</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6-the-three-gates">6. The three gates</h2>
+<p>A script runs only when all three agree:</p>
+<ol>
+<li><strong>The installation switch</strong> — <code>MegaForm:AfterSubmitScriptEnabled</code> in <code>appsettings.json</code>.</li>
+<li><strong>The author</strong> — a Host account saved it.</li>
+<li><strong>The approval hash</strong> — a SHA-256 over the source, recorded at save time.</li>
+</ol>
+<p>The third gate is the one worth understanding. The hash means source that arrives by some route
+other than a Host pressing Save — an imported form, a restored template, a database edit — <strong>is
+inert</strong>. It is stored, it is visible, and it does not run until a Host on that site opens the panel
+and saves it. Changing one character invalidates the approval.</p>
+<h2 id="7-why-a-script-did-not-run">7. Why a script did not run</h2>
+<p>Work down this list; the first three are silent by design.</p>
+<p><strong>The submission was scored as spam.</strong> This catches people out more than anything else. A submission
+the anti-spam heuristic flags is still <strong>inserted</strong>, and the visitor still receives the thank-you and
+an HTTP 200 — but the whole post-commit branch is skipped, script included. Submissions posted by a
+test harness are the usual victims, because filling a form in zero seconds is exactly what a bot
+does. Check <code>IsSpam</code> and <code>SpamScore</code> on the row:</p>
+<pre><code class="lang-sql">SELECT SubmissionId, IsSpam, SpamScore
+FROM   MF_Submissions
+WHERE  FormId = 1
+ORDER  BY SubmissionId DESC;
+</code></pre>
+<p>If you are driving the submit endpoint directly, send a realistic <code>submissionTime</code> (seconds spent on
+the form). On a live Oqtane site the same submission scored <strong>55 with <code>submissionTime</code> omitted</strong> —
+flagged — and <strong>25 with <code>submissionTime: 32.5</code></strong> — accepted and the script ran.</p>
+<p><strong>The switch is off in the panel.</strong> <em>Run this script after every submission</em> has to be ticked. The
+panel's status line says <code>Active. Approved by host</code> when everything is in order.</p>
+<p><strong>The approval no longer matches.</strong> Edit the source anywhere other than the panel and it stops
+running. Re-save from the panel.</p>
+<p><strong>The compiler is missing.</strong> The panel reports <code>compiler_missing</code>. <code>MegaForm.Scripting.dll</code> is not
+in the site root.</p>
+<p><strong>&quot;Could not reach the server.&quot;</strong> The panel's catch-all for a failed request. Open the browser's
+network tab: the calls should go to <code>/api/MegaFormPopup/FormScript/*</code>. A 403 is an authority answer
+(<code>host_only</code> or <code>feature_disabled</code>) rather than a network problem.</p>
+<h2 id="8-what-is-recorded-when-it-runs">8. What is recorded when it runs</h2>
+<p>Each run records the form and submission, the approved hash, success or failure, duration, any error
+message, and everything <code>ctx.Log</code> wrote. <strong>Test run</strong> shows the same information immediately, which
+is the fastest loop while you are writing.</p>
+<h2 id="related">Related</h2>
+<ul>
+<li><a href="scripting-safety.html">Safety and responsibility</a> — what this feature does and does not protect
+you from. Read it before switching the setting on.</li>
+<li><a href="after-submission.md">After Submission</a> — the notification, webhook and database steps to try
+before reaching for code.</li>
+<li><a href="integration-sql-insert.html">Integration: Write to an existing SQL table</a> — the no-code path for a
+plain INSERT.</li>
+<li><a href="workflow.html">Workflow</a> — approvals, delays and branching, which do not need a script.</li>
+</ul>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Write a submission into your own tables | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Write a submission into your own tables | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feature/typed-submission-storage-core/Docs/docfx/articles/automation-custom-db.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="write-a-submission-into-your-own-tables">Write a submission into your own tables</h1>
+
+<p><a href="integration-sql-insert.html">Form Settings → Database</a> mirrors each submission into one table with no
+code, and that covers most forms. This page is for the ones it does not:</p>
+<ul>
+<li>a parent row whose generated key the child rows need</li>
+<li>a write that happens only when the answers say so</li>
+<li>a lookup that decides which table the row belongs in</li>
+</ul>
+<p>For those you write C#. There is no catalog and no mediated database object — a script is ordinary
+C#, so you open a <code>SqlConnection</code> and run a command, the same way you would in a module.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>If you arrived from an older page: the capability rail (<code>ctx.Actions</code> and the automation catalog)
+was removed. Scripts call platform APIs directly.</p>
+</div>
+<hr>
+<h2 id="before-you-start">Before you start</h2>
+<p>Three gates have to be open, and they are covered in
+<a href="after-submit-script.html">Run your own C# after a submission</a>:</p>
+<ol>
+<li><code>&lt;add key=&quot;MegaForm:AfterSubmitScriptEnabled&quot; value=&quot;true&quot; /&gt;</code> in <code>web.config</code> — off on every
+install.</li>
+<li>A <strong>host (superuser)</strong> account saves the script. A site administrator cannot.</li>
+<li>The stored approval hash must match the source, so a script arriving inside imported data cannot
+run until a host on that site approves it.</li>
+</ol>
+<p>Ordinary form saves cannot introduce, alter or enable a script.</p>
+<hr>
+<h2 id="where-in-the-lifecycle-this-runs">Where in the lifecycle this runs</h2>
+<p>The only stage you can configure today is <strong>PostCommit</strong>: the submission row is already written and
+committed before your first line executes.</p>
+<p>That decides how you write the rest:</p>
+<ul>
+<li><strong>A failure here does not lose the submission.</strong> If the connection is refused or the INSERT
+violates a constraint, the answers are still stored and the visitor still gets the success page.
+What you lose is your copy of the row — which is a repairable problem, not a lost enquiry.</li>
+<li><strong><code>ctx.SetValue</code> is refused.</strong> You cannot write a computed value back into the stored submission
+at this stage. Compute it and send it onward — into your table, an API, an email.</li>
+<li><strong>You cannot refuse the submission.</strong> That needs PreInsert, which nothing in the product can
+configure yet.</li>
+<li><strong>Assume someone is waiting.</strong> AsyncWorker — the stage that would run this later, off a queue —
+is not configurable either, so keep the work short and set an explicit <code>CommandTimeout</code> rather
+than inheriting the 30 second default on a table that might be locked.</li>
+</ul>
+<hr>
+<h2 id="one-table-parameterised">One table, parameterised</h2>
+<p>The site's own database needs no configuration: <code>Config.GetConnectionString()</code> returns the same
+connection string DNN itself uses.</p>
+<pre><code class="lang-csharp">using System;
+using System.Data;
+using System.Data.SqlClient;
+using DotNetNuke.Common.Utilities;
+
+var sql =
+    &quot;INSERT INTO dbo.AcmeEnquiries &quot; +
+    &quot;  (SubmissionId, FullName, Email, Country, Total, CreatedUtc) &quot; +
+    &quot;VALUES (@submissionId, @fullName, @email, @country, @total, @createdUtc)&quot;;
+
+using (var cn = new SqlConnection(Config.GetConnectionString()))
+using (var cmd = new SqlCommand(sql, cn))
+{
+    cmd.CommandTimeout = 15;
+
+    cmd.Parameters.Add(&quot;@submissionId&quot;, SqlDbType.Int).Value      = ctx.SubmissionId;
+    cmd.Parameters.Add(&quot;@fullName&quot;,     SqlDbType.NVarChar, 200).Value = ctx.GetString(&quot;full_name&quot;);
+    cmd.Parameters.Add(&quot;@email&quot;,        SqlDbType.NVarChar, 256).Value = ctx.GetString(&quot;email&quot;);
+    cmd.Parameters.Add(&quot;@country&quot;,      SqlDbType.NVarChar, 2).Value   = ctx.GetString(&quot;country&quot;, &quot;&quot;);
+    cmd.Parameters.Add(&quot;@total&quot;,        SqlDbType.Decimal).Value       = ctx.GetDecimal(&quot;total&quot;, 0m);
+    cmd.Parameters.Add(&quot;@createdUtc&quot;,   SqlDbType.DateTime2).Value     = ctx.UtcNow;
+
+    await cn.OpenAsync(ct);
+    var rows = await cmd.ExecuteNonQueryAsync(ct);
+    ctx.Log(&quot;insert rowsAffected=&quot; + rows);
+}
+</code></pre>
+<p>A script body may start with <code>using</code> directives — they are lifted above the generated wrapper. The
+body is async, so <code>await</code> works directly, and <code>ct</code> is the <code>CancellationToken</code> you were handed; pass
+it to the ADO calls so a shutdown or an aborted request does not leave a command running.</p>
+<p>For a column that may legitimately be empty, send <code>DBNull.Value</code> rather than an empty string:</p>
+<pre><code class="lang-csharp">// continues the example above — inside the same using (var cmd = new SqlCommand(...)) block
+var phone = ctx.GetString(&quot;phone&quot;, &quot;&quot;);
+cmd.Parameters.Add(&quot;@phone&quot;, SqlDbType.NVarChar, 40).Value =
+    string.IsNullOrWhiteSpace(phone) ? (object)DBNull.Value : phone;
+</code></pre>
+<h3 id="why-parameters-and-not-string-concatenation">Why parameters and not string concatenation</h3>
+<p>Every value above came from a visitor. Concatenating them into the statement means the visitor is
+writing part of your SQL:</p>
+<ul>
+<li><code>O'Brien</code> in a name field ends the string literal early and the statement fails to parse. This one
+is not hypothetical; it is the first support ticket every concatenated insert gets.</li>
+<li>A value ending <code>'; UPDATE dbo.Users SET ...</code> is parsed and executed, because at that point it <em>is</em>
+the statement. The script runs with the website's own database permissions, which on most DNN
+installs is <code>db_owner</code>.</li>
+<li>Types stop being types. A decimal concatenated into text is formatted with the thread's culture,
+so <code>892.50</code> becomes <code>892,50</code> on a server set to a European locale and SQL Server reads it as a
+different number or refuses it.</li>
+</ul>
+<p>A parameter travels beside the statement as data. It is never parsed as SQL, <code>O'Brien</code> needs no
+escaping, and the decimal and the date arrive as a decimal and a date.</p>
+<p>Use <code>Parameters.Add(name, type, length)</code> rather than <code>AddWithValue</code>. <code>AddWithValue</code> infers the type
+and the length from the value, which is how a 6-character <code>nvarchar(6)</code> parameter ends up unable to
+use the index on an <code>nvarchar(256)</code> column.</p>
+<div class="WARNING">
+<h5>Warning</h5>
+<p>Write to tables your site owns. MegaForm's own tables — the <code>MF_</code> prefix — are internal and change
+between releases; inserting into them is not supported and will break on upgrade. To read
+submissions, use the <a href="sdk-reference.html">SDK</a>.</p>
+</div>
+<h3 id="a-different-database">A different database</h3>
+<p>For a database that is not the DNN one, add a named connection string to <code>web.config</code> and read it by
+name:</p>
+<pre><code class="lang-csharp">using System.Configuration;
+
+var cs = ConfigurationManager.ConnectionStrings[&quot;AcmeCrm&quot;].ConnectionString;
+</code></pre>
+<p>Keeping it in <code>web.config</code> keeps the credentials out of the script, which matters because a script is
+plain text you may well want to export, diff or paste into a review.</p>
+<hr>
+<h2 id="a-parent-row-its-generated-key-and-child-rows">A parent row, its generated key, and child rows</h2>
+<p>This is the case the no-code insert cannot express: one order row, then one line row per item, each
+carrying the order's generated <code>Id</code>.</p>
+<p><code>OUTPUT INSERTED.Id</code> returns the key from the INSERT itself, in the same round trip. Prefer it to
+<code>@@IDENTITY</code>, which returns the wrong value when a trigger on the table inserts elsewhere.
+<code>SCOPE_IDENTITY()</code> is correct too, but <code>OUTPUT</code> also works when the key comes from a sequence or a
+<code>newid()</code> default, and it can return keys for a multi-row insert.</p>
+<p>Both statements run on <strong>one</strong> connection inside <strong>one</strong> transaction, so a failure on the third line
+does not leave an order with two of its five lines.</p>
+<pre><code class="lang-csharp">using System;
+using System.Data;
+using System.Data.SqlClient;
+using DotNetNuke.Common.Utilities;
+
+var orderSql =
+    &quot;INSERT INTO dbo.AcmeOrders (SubmissionId, CustomerEmail, Country, Total, CreatedUtc) &quot; +
+    &quot;OUTPUT INSERTED.Id &quot; +
+    &quot;VALUES (@submissionId, @email, @country, @total, @createdUtc)&quot;;
+
+var lineSql =
+    &quot;INSERT INTO dbo.AcmeOrderLines (OrderId, Sku, Qty) VALUES (@orderId, @sku, @qty)&quot;;
+
+var skus = ctx.GetString(&quot;skus&quot;, &quot;&quot;)
+              .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+int orderId = 0;
+
+using (var cn = new SqlConnection(Config.GetConnectionString()))
+{
+    await cn.OpenAsync(ct);
+
+    using (var tx = cn.BeginTransaction())
+    {
+        using (var cmd = new SqlCommand(orderSql, cn, tx))
+        {
+            cmd.Parameters.Add(&quot;@submissionId&quot;, SqlDbType.Int).Value          = ctx.SubmissionId;
+            cmd.Parameters.Add(&quot;@email&quot;, SqlDbType.NVarChar, 256).Value       = ctx.GetString(&quot;email&quot;);
+            cmd.Parameters.Add(&quot;@country&quot;, SqlDbType.NVarChar, 2).Value       = ctx.GetString(&quot;country&quot;, &quot;&quot;);
+            cmd.Parameters.Add(&quot;@total&quot;, SqlDbType.Decimal).Value             = ctx.GetDecimal(&quot;total&quot;, 0m);
+            cmd.Parameters.Add(&quot;@createdUtc&quot;, SqlDbType.DateTime2).Value      = ctx.UtcNow;
+
+            orderId = Convert.ToInt32(await cmd.ExecuteScalarAsync(ct));
+        }
+
+        foreach (var raw in skus)
+        {
+            var sku = raw.Trim();
+            if (sku.Length == 0) continue;
+
+            using (var cmd = new SqlCommand(lineSql, cn, tx))
+            {
+                cmd.Parameters.Add(&quot;@orderId&quot;, SqlDbType.Int).Value      = orderId;
+                cmd.Parameters.Add(&quot;@sku&quot;, SqlDbType.NVarChar, 40).Value = sku;
+                cmd.Parameters.Add(&quot;@qty&quot;, SqlDbType.Int).Value          = 1;
+                await cmd.ExecuteNonQueryAsync(ct);
+            }
+        }
+
+        tx.Commit();
+        ctx.Log(&quot;order=&quot; + orderId + &quot; lines=&quot; + skus.Length);
+    }
+}
+
+ctx.SetVariable(&quot;orderId&quot;, orderId);
+</code></pre>
+<p>Two details that are easy to get wrong:</p>
+<ul>
+<li>Every <code>SqlCommand</code> in a transaction must be given the transaction (<code>new SqlCommand(sql, cn, tx)</code>).
+A command created without it throws <em>&quot;ExecuteNonQuery requires the command to have a transaction
+when the connection assigned to the command is in a pending local transaction&quot;</em> — a clear error,
+but only at runtime, on the first real submission.</li>
+<li><code>ExecuteScalarAsync</code> returns <code>object</code>, and it is <code>null</code> if the INSERT matched no <code>OUTPUT</code> row.
+<code>Convert.ToInt32(null)</code> returns 0, so if a 0 order id could be silently wrong for you, check for
+<code>null</code> explicitly before converting.</li>
+</ul>
+<p><code>orderId</code> is declared before the connection block, not inside it, which is the only reason the last
+line still compiles — a variable declared inside the <code>using</code> is gone once the block closes. It starts
+at 0 so the compiler can see it assigned on every path; if a 0 order id would be wrong for you, test
+for it before you use it. <code>ctx.SetVariable</code> puts it in the run record, where it is visible next to
+the submission.</p>
+<hr>
+<h2 id="a-write-that-only-happens-when-the-answers-say-so">A write that only happens when the answers say so</h2>
+<p>Ordinary <code>if</code>. There is no rule syntax to learn.</p>
+<pre><code class="lang-csharp">using System.Data;
+using System.Data.SqlClient;
+using DotNetNuke.Common.Utilities;
+
+// continues the order example above — orderId is the key its INSERT returned
+if (ctx.GetBool(&quot;needs_installation&quot;, false))
+{
+    var sql = &quot;INSERT INTO dbo.AcmeInstallJobs (OrderId, Postcode, RequestedUtc) &quot; +
+              &quot;VALUES (@orderId, @postcode, @requestedUtc)&quot;;
+
+    using (var cn = new SqlConnection(Config.GetConnectionString()))
+    using (var cmd = new SqlCommand(sql, cn))
+    {
+        cmd.Parameters.Add(&quot;@orderId&quot;, SqlDbType.Int).Value             = orderId;
+        cmd.Parameters.Add(&quot;@postcode&quot;, SqlDbType.NVarChar, 12).Value   = ctx.GetString(&quot;postcode&quot;, &quot;&quot;);
+        cmd.Parameters.Add(&quot;@requestedUtc&quot;, SqlDbType.DateTime2).Value  = ctx.UtcNow;
+
+        await cn.OpenAsync(ct);
+        await cmd.ExecuteNonQueryAsync(ct);
+        ctx.Log(&quot;install job queued for &quot; + ctx.GetString(&quot;postcode&quot;, &quot;&quot;));
+    }
+}
+else
+{
+    ctx.Log(&quot;no installation requested&quot;);
+}
+</code></pre>
+<p>Log the branch you did not take as well as the one you did. When someone asks in three weeks why an
+install job is missing, <code>no installation requested</code> in the run record answers it without a debugger.</p>
+<hr>
+<h2 id="when-it-fails">When it fails</h2>
+<p>Catch it, say what happened, and mark the run:</p>
+<pre><code class="lang-csharp">using System.Data.SqlClient;
+
+try
+{
+    // … the insert above …
+}
+catch (SqlException ex)
+{
+    ctx.Fail(&quot;enquiry insert failed: &quot; + ex.Number + &quot; &quot; + ex.Message);
+}
+</code></pre>
+<p><code>ctx.Fail</code> records the run as failed with your message. The submission stays exactly where it is —
+committed, complete, visible in the submissions grid. So the run record becomes the worklist: every
+failed run names a submission whose row never reached your table, and you can replay it by hand or
+with a job.</p>
+<p>Two things to get right if you plan to replay:</p>
+<ul>
+<li>Put a <strong>unique index on <code>SubmissionId</code></strong> in your table. Then a replay that runs twice cannot
+double-insert; the second attempt fails on the constraint instead of quietly duplicating an order.</li>
+<li>Do not put the exception text into <code>ctx.Response.SuccessMessage</code>. The visitor gets a database error
+string, including your schema, on the thank-you page.</li>
+</ul>
+<p>An unhandled exception also ends the run, but with the framework's message rather than yours.
+<code>ctx.Fail</code> with a string you can search for is worth the three lines.</p>
+<hr>
+<h2 id="what-was-measured">What was measured</h2>
+<p>On a DNN 10.3 site, one anonymous submission ran a PostCommit script that opened a <code>SqlConnection</code>
+with <code>Config.GetConnectionString()</code> and ran a parameterised INSERT into a table the site owns:</p>
+<pre><code class="lang-text">country=DE rate=0.19 total=892.50
+insert rowsAffected=1
+</code></pre>
+<p>The same run also called an external endpoint over <code>HttpClient</code> (HTTP 200), sent mail through the
+site's SMTP settings, and created a user and granted a role. Total run duration 927 ms.</p>
+<hr>
+<h2 id="what-this-page-cannot-do-for-you">What this page cannot do for you</h2>
+<ul>
+<li><strong>Refuse a submission when the database rejects it.</strong> PostCommit is after the commit; refusing
+needs PreInsert, which is not configurable in this release.</li>
+<li><strong>Write a value back into the stored submission.</strong> <code>ctx.SetValue</code> is refused at PostCommit by
+design — a script that believes it rewrote a stored value and did not is a data bug that surfaces
+months later in a report.</li>
+<li><strong>Retry for you.</strong> There is no queue and no backoff. A failed insert is a line in the run record
+until someone acts on it.</li>
+</ul>
+<hr>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="after-submit-script.html">Run your own C# after a submission</a> — the gates, the editor, <code>ctx</code></li>
+<li><a href="integration-sql-insert.html">Database settings and the built-in insert</a> — the no-code path this
+page replaces only when it has to</li>
+<li><a href="reading-data.html">Reading submission data</a> — for reporting, rather than mirroring on write</li>
+</ul>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

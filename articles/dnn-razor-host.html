@@ -16,7 +16,7 @@
       <meta name="docfx:rel" content="../">
       
       
-      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/Docs/docfx/articles/dnn-razor-host.md/#L1">
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feature/typed-submission-storage-core/Docs/docfx/articles/dnn-razor-host.md/#L1">
       <meta name="loc:inThisArticle" content="In this article">
       <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
       <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
@@ -87,13 +87,8 @@
         <article data-uid="">
 <h1 id="consumer--dnn-razor-host">Consumer — DNN Razor Host</h1>
 
-<p>DNN does not use Microsoft DI for module code, so the SDK is consumed in one of two ways:</p>
-<ol>
-<li><strong>Direct singleton</strong> — <code>DnnServiceLocator.Instance.Mega</code> (an <code>IMegaFormClient</code>). This is the
-idiomatic DNN pattern and the one the shipped demos use.</li>
-<li><strong>Ambient accessor</strong> — <code>MegaFormSdk.RunAsync(...)</code>, wired at module startup. Use this if you
-prefer the same call shape as other hosts.</li>
-</ol>
+<p>DNN does not use Microsoft DI for module code, so the SDK is consumed through the <strong>ambient
+accessor</strong> <code>MegaFormSdk.RunAsync(...)</code>, wired once when <code>DnnServiceLocator</code> is first touched.</p>
 <p>Both read MegaForm data through only <code>IMegaFormClient</code>. This page documents the two shipped Razor
 Host samples and the DNN download endpoint.</p>
 <blockquote>
@@ -105,13 +100,17 @@ solution.</p>
 accessor so <code>MegaFormSdk.RunAsync</code> works without a real DI container:</p>
 <pre><code class="lang-csharp">// From MegaForm.DNN.Services.DnnServiceLocator
 var sdkClient = new MegaFormClient(
-    FormRepo, SubmissionRepo, null, null, null, SubmissionProcessor);
+    FormRepo, SubmissionRepo, null,
+    new DnnFileRepository(), new DnnDiskStorageService(),
+    SubmissionProcessor, WorkflowTasks, WorkflowRepo);
 
 MegaFormSdk.Initialize(new SingleClientServiceProvider(sdkClient));
 </code></pre>
 <p><code>SingleClientServiceProvider</code> is a tiny <code>IServiceProvider</code> that serves exactly one service
 (<code>IMegaFormClient</code>) plus a no-op scope factory, so <code>MegaFormSdk.RunAsync</code>'s
-<code>CreateScope()</code> / <code>GetRequiredService&lt;IMegaFormClient&gt;()</code> calls work.</p>
+<code>CreateScope()</code> / <code>GetRequiredService&lt;IMegaFormClient&gt;()</code> calls work. Because the client is built
+with the 8-argument constructor, the Files, Dashboard, SubmissionDashboard, and Inbox APIs all work
+on DNN, not just Forms and Submissions.</p>
 <h2 id="razor-host-helper-pattern">Razor Host helper pattern</h2>
 <p>Both samples use the same synchronous wrapper because Razor Host pages are synchronous while the
 SDK is async:</p>
@@ -209,8 +208,8 @@ public class SdkDemoController : DnnApiController
     public async Task&lt;HttpResponseMessage&gt; Download(int submissionId, int fileId)
     {
         var scope   = new MegaFormScope { PortalId = PortalSettings.PortalId };
-        var content = await DnnServiceLocator.Instance.Mega.Files
-            .OpenAsync(submissionId, fileId, scope);
+        var content = await MegaFormSdk.RunAsync(c =&gt;
+            c.Files.OpenAsync(submissionId, fileId, scope));
         if (content is null) return Request.CreateResponse(HttpStatusCode.NotFound);
 
         var resp = new HttpResponseMessage(HttpStatusCode.OK)

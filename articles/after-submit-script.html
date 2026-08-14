@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Run your own C# after a submission | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Run your own C# after a submission | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feature/typed-submission-storage-core/Docs/docfx/articles/after-submit-script.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="run-your-own-c-after-a-submission">Run your own C# after a submission</h1>
+
+<p>MegaForm can compile and run <strong>C# you write yourself</strong>, on the server, immediately after a
+submission is saved. This page is the reference: when to reach for it, what the script is handed,
+and what the language and the runtime will and will not accept. The worked recipes live on their own
+pages and are linked at the end.</p>
+<div class="IMPORTANT">
+<h5>Important</h5>
+<p>If you arrived from an older version of this page describing <code>ctx.Db</code> or <code>ctx.Http</code>: those no
+longer exist. A script now calls platform APIs directly — <code>SqlConnection</code>, <code>HttpClient</code>,
+<code>UserController</code> — with an ordinary <code>using</code>.</p>
+</div>
+<hr>
+<h2 id="1-why-and-when">1. Why, and when</h2>
+<p>Start by not writing a script. Most of what has to happen after a submission is already
+configuration, and configuration survives an export, needs nobody to enable scripting, and cannot
+stop compiling after an upgrade.</p>
+<table>
+<thead>
+<tr>
+<th>If the requirement is</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>every submission goes to one endpoint</td>
+<td><a href="integration-webhook.html">Webhook / API service task</a></td>
+</tr>
+<tr>
+<td>every submission is mirrored into one table</td>
+<td><a href="integration-sql-insert.html">Form Settings → Database</a></td>
+</tr>
+<tr>
+<td>email, approval, create user, add role, branch on a value</td>
+<td>workflow nodes</td>
+</tr>
+</tbody>
+</table>
+<p>What no node expresses is a <strong>decision with shape</strong>. A node does one thing to every submission.
+These are the shapes that keep arriving, and none of them is a node with more checkboxes:</p>
+<ul>
+<li><strong>The write is more than one row, and the second depends on the first.</strong> An order header whose
+generated key the line items need. No node holds a value between two writes.</li>
+<li><strong>The destination depends on the answer.</strong> Enterprise enquiries to one CRM, everyone else to the
+internal queue, with a different payload shape for each.</li>
+<li><strong>The number has to be right, not close.</strong> Tax by country and product class, a rate rounded the
+way your finance team rounds it, a discount table that lives in another system.</li>
+<li><strong>The rule is a lookup, not a value on the form.</strong> Whether this class code is still open, whether
+this account is past due, whether this postcode is inside the service area.</li>
+<li><strong>Two systems have to agree.</strong> Write locally, call the remote API, and record what the remote one
+answered so a person can reconcile it later.</li>
+</ul>
+<p>The honest test: if you can describe the requirement as <em>&quot;for every submission, do X&quot;</em>, a node
+already does it, and the node is the better answer — one fewer thing to read at review time. If the
+requirement is <em>&quot;it depends&quot;</em>, this is the tool.</p>
+<p>The trade is real. A script is code, running in your website's process under your website's
+identity, with no sandbox. <a href="scripting-safety.html">Safety and responsibility</a> sets out what a host is
+agreeing to before switching it on.</p>
+<hr>
+<h2 id="2-a-first-script">2. A first script</h2>
+<p>You write the body. <code>ctx</code> is the submission; there is no boilerplate to type.</p>
+<pre><code class="lang-csharp">var name    = ctx.GetString(&quot;full_name&quot;);
+var country = ctx.GetString(&quot;country&quot;, &quot;GB&quot;);
+var rate    = country == &quot;DE&quot; ? 0.19m : 0.20m;
+var total   = ctx.GetDecimal(&quot;order_total&quot;, 0m) * (1m + rate);
+
+ctx.Log($&quot;country={country} rate={rate} total={total:0.00}&quot;);
+ctx.SetVariable(&quot;totalIncVat&quot;, total);
+
+if (total &gt; 1000m)
+{
+    ctx.Response.SuccessMessage = &quot;Thank you &quot; + name + &quot;. An account manager will call you today.&quot;;
+}
+</code></pre>
+<p>That script reads two answers, computes a third, records it on the run, and changes what this one
+visitor sees on the thank-you screen. Everything past that — writing a row, calling an API, sending
+a message, creating an account — is ordinary C# with a <code>using</code>, and is covered by the recipe pages.</p>
+<h3 id="where-the-editor-is">Where the editor is</h3>
+<p><strong>Builder → Design → Form Settings → Server Script.</strong> Save the form once first: a script belongs to
+a form, so there has to be a form to attach it to.</p>
+<p><img src="../images/40-script-panel.png" alt="The Server Script panel in Form Settings"></p>
+<p>The panel lists the current form's field keys above the editor, so you do not have to remember
+whether it was <code>full_name</code> or <code>fullname</code>. It also holds the enable switch for this form, what
+happens when a run fails, the run timeout, and <strong>Save script</strong>, <strong>Check syntax</strong> and <strong>Test run</strong>.
+Compilation happens at Save, so mistakes come back on your own line numbers while you are still
+looking at the editor rather than on a visitor's submission.</p>
+<p>The script is not part of the form's schema and does not travel with it. Saving the form does not
+save the script, and saving the script does not save the form. They are separate because they carry
+different authority — see <a href="#6-the-three-gates">§6</a>.</p>
+<hr>
+<h2 id="3-what-ctx-holds">3. What <code>ctx</code> holds</h2>
+<p>This is the whole surface. Nothing else exists on it.</p>
+<h3 id="reading-the-submission">Reading the submission</h3>
+<table>
+<thead>
+<tr>
+<th>Member</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ctx.Data</code></td>
+<td><code>IDictionary&lt;string, object&gt;</code> of the submitted values; keys are case-insensitive</td>
+</tr>
+<tr>
+<td><code>ctx.Has(fieldKey)</code></td>
+<td><code>bool</code> — whether the field was submitted at all</td>
+</tr>
+<tr>
+<td><code>ctx.GetString(key, fallback = &quot;&quot;)</code></td>
+<td>value as text</td>
+</tr>
+<tr>
+<td><code>ctx.GetDecimal(key, fallback = 0m)</code></td>
+<td>parsed decimal</td>
+</tr>
+<tr>
+<td><code>ctx.GetInt(key, fallback = 0)</code></td>
+<td>parsed integer</td>
+</tr>
+<tr>
+<td><code>ctx.GetBool(key, fallback = false)</code></td>
+<td>parsed boolean</td>
+</tr>
+<tr>
+<td><code>ctx.GetDate(key)</code></td>
+<td><code>DateTime?</code> — <code>null</code> when absent or unparseable</td>
+</tr>
+</tbody>
+</table>
+<p><code>Has</code> and a fallback answer different questions. <code>GetDecimal(&quot;discount&quot;, 0m)</code> returns <code>0</code> both for
+&quot;the visitor typed 0&quot; and for &quot;the field was never on the form&quot;; <code>Has(&quot;discount&quot;)</code> tells them apart.</p>
+<h3 id="which-submission-and-whose">Which submission, and whose</h3>
+<table>
+<thead>
+<tr>
+<th>Member</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ctx.FormId</code>, <code>ctx.SubmissionId</code>, <code>ctx.PortalId</code>, <code>ctx.FormTitle</code></td>
+<td>which form, which stored row</td>
+</tr>
+<tr>
+<td><code>ctx.UserId</code>, <code>ctx.UserName</code>, <code>ctx.UserEmail</code></td>
+<td>the signed-in submitter — <code>0</code> and empty strings for an anonymous submission</td>
+</tr>
+<tr>
+<td><code>ctx.IpAddress</code></td>
+<td>the caller's address</td>
+</tr>
+<tr>
+<td><code>ctx.UtcNow</code></td>
+<td>the run's timestamp</td>
+</tr>
+</tbody>
+</table>
+<p>Public forms are the normal case, so treat <code>UserId == 0</code> as expected input rather than as an error.</p>
+<h3 id="recording-what-happened">Recording what happened</h3>
+<table>
+<thead>
+<tr>
+<th>Member</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ctx.Log(string)</code></td>
+<td>one line in the run record</td>
+</tr>
+<tr>
+<td><code>ctx.Logs</code></td>
+<td>the lines logged so far</td>
+</tr>
+<tr>
+<td><code>ctx.SetVariable(key, value)</code></td>
+<td>a value carried onto the run record</td>
+</tr>
+<tr>
+<td><code>ctx.Variables</code></td>
+<td>the variables set so far</td>
+</tr>
+<tr>
+<td><code>ctx.Fail(string)</code></td>
+<td>marks the run failed</td>
+</tr>
+</tbody>
+</table>
+<h3 id="changing-the-submission-and-the-visitors-experience">Changing the submission, and the visitor's experience</h3>
+<table>
+<thead>
+<tr>
+<th>Member</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ctx.SetValue(key, value)</code></td>
+<td>queues a change to a stored value — <strong>refused after the commit</strong>, see <a href="#5-stages-and-what-they-stop-you-doing">§5</a></td>
+</tr>
+<tr>
+<td><code>ctx.PendingChanges</code></td>
+<td>what <code>SetValue</code> has queued</td>
+</tr>
+<tr>
+<td><code>ctx.Response.SuccessMessage</code></td>
+<td>replaces the thank-you text for this submission</td>
+</tr>
+<tr>
+<td><code>ctx.Response.RedirectUrl</code></td>
+<td>sends this visitor somewhere else</td>
+</tr>
+<tr>
+<td><code>ctx.Response.CustomData</code></td>
+<td>extra data returned with this submit response</td>
+</tr>
+</tbody>
+</table>
+<p><code>ctx.Response</code> affects <strong>this submission only</strong>. It is not a form setting and it does not persist.</p>
+<h3 id="where-in-the-pipeline-you-are">Where in the pipeline you are</h3>
+<table>
+<thead>
+<tr>
+<th>Member</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ctx.Stage</code></td>
+<td>which stage is running</td>
+</tr>
+<tr>
+<td><code>ctx.CanAbort</code></td>
+<td>whether the current stage can still refuse the submission</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="4-what-is-supported">4. What is supported</h2>
+<h3 id="the-shape-your-body-is-compiled-into">The shape your body is compiled into</h3>
+<p>The body you type is spliced into this method:</p>
+<pre><code class="lang-csharp">// SIGNATURE ONLY — this is generated around your body; you never type it.
+async Task RunAsync(SubmissionScriptContext ctx, CancellationToken ct)
+</code></pre>
+<p>So <code>await</code> works directly, <code>ct</code> is in scope, and a bare <code>return;</code> is a valid way to stop early. You
+never write the signature.</p>
+<p>Pass <code>ct</code> to the calls you await. Cancellation is cooperative — a token you do not pass is a timeout
+that cannot fire.</p>
+<h3 id="language-version-c-73">Language version: C# 7.3</h3>
+<p>The compiler is pinned to <strong>C# 7.3</strong>. Modern syntax you may be used to is a compile error at Save:</p>
+<pre><code class="lang-csharp">// FRAGMENT — none of these lines compile in a script.
+using var cn = new SqlConnection(cs);   // no using declarations; use using (…) { }
+List&lt;string&gt; names = new();             // no target-typed new
+var text = &quot;&quot;&quot;raw&quot;&quot;&quot;;                   // no raw string literals
+</code></pre>
+<p>Interpolated strings, <code>nameof</code>, tuples, pattern matching as of 7.3, <code>async</code>/<code>await</code>, expression-bodied
+members and <strong>local functions</strong> are all available. Top-level statements are not a thing here — your
+body already is a method body.</p>
+<pre><code class="lang-csharp">using System.Globalization;
+
+// Local functions are allowed, which is usually enough to keep a longer script readable.
+decimal Net(decimal gross, decimal rate)
+{
+    return decimal.Round(gross / (1m + rate), 2);
+}
+
+var net = Net(ctx.GetDecimal(&quot;order_total&quot;, 0m), 0.20m);
+ctx.Log(&quot;net=&quot; + net.ToString(&quot;0.00&quot;, CultureInfo.InvariantCulture));
+</code></pre>
+<h3 id="namespaces-already-in-scope">Namespaces already in scope</h3>
+<p>Do not repeat these — they are imported for you:</p>
+<pre><code class="lang-text">System
+System.Collections.Generic
+System.Linq
+System.Text
+System.Threading
+System.Threading.Tasks
+MegaForm.Core.Scripting
+</code></pre>
+<p>A script may begin with its own <code>using</code> directives. They are lifted above the generated wrapper, so
+they belong at the very top of the body, and a trailing comment after the semicolon is fine:</p>
+<pre><code class="lang-csharp">using System.Net.Http;              // the CRM call below
+using Newtonsoft.Json;
+
+var payload = JsonConvert.SerializeObject(new
+{
+    name  = ctx.GetString(&quot;full_name&quot;),
+    email = ctx.GetString(&quot;email&quot;)
+});
+
+using (var http = new HttpClient())
+using (var body = new StringContent(payload, Encoding.UTF8, &quot;application/json&quot;))
+{
+    var reply = await http.PostAsync(&quot;https://crm.contoso.com/api/leads&quot;, body, ct);
+    ctx.Log($&quot;crm status={(int)reply.StatusCode}&quot;);
+    if (!reply.IsSuccessStatusCode) ctx.Fail(&quot;CRM rejected the lead&quot;);
+}
+</code></pre>
+<h3 id="which-libraries-you-can-name">Which libraries you can name</h3>
+<p>The reference set is <strong>every assembly the site has loaded</strong>. Anything a DNN module can name, a
+script can name — including:</p>
+<table>
+<thead>
+<tr>
+<th>Namespace</th>
+<th>For</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DotNetNuke.*</code></td>
+<td>users, roles, mail, config, the platform's own services</td>
+</tr>
+<tr>
+<td><code>System.Data.SqlClient</code></td>
+<td>your own tables, with parameters</td>
+</tr>
+<tr>
+<td><code>System.Net.Http</code></td>
+<td>REST, SOAP, anything over HTTP</td>
+</tr>
+<tr>
+<td><code>Newtonsoft.Json</code></td>
+<td>serialising and parsing payloads</td>
+</tr>
+</tbody>
+</table>
+<p>Two limits sit on top of that:</p>
+<ul>
+<li><strong><code>unsafe</code> code is refused</strong> — pointers and <code>stackalloc</code> — in every configuration.</li>
+<li><strong>An optional strict mode exists and is off by default.</strong> Turned on, it restores an older
+namespace deny-list that refuses most of the table above. It is a process-wide startup flag, not a
+per-form setting. <a href="scripting-safety.html">Safety and responsibility</a> is where it is documented; do
+not assume it is on.</li>
+</ul>
+<h3 id="size-and-time">Size and time</h3>
+<table>
+<thead>
+<tr>
+<th>Limit</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Source length</td>
+<td>64 KB</td>
+</tr>
+<tr>
+<td>Run timeout</td>
+<td>10 seconds by default, 60 seconds maximum</td>
+</tr>
+</tbody>
+</table>
+<div class="WARNING">
+<h5>Warning</h5>
+<p>The timeout bounds <strong>what the visitor waits for</strong>, not what the script does. .NET has no safe way
+to abort work already running, so on expiry the request stops waiting and the submission
+completes, while the script keeps its thread until it finishes or the application recycles. Treat
+the timeout as a seatbelt, not a brake: bound your own loops, and pass <code>ct</code> to every call you
+await.</p>
+</div>
+<hr>
+<h2 id="5-stages-and-what-they-stop-you-doing">5. Stages, and what they stop you doing</h2>
+<p>Four stages exist in the engine. They differ in where they sit relative to the database commit,
+which decides everything else.</p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Runs</th>
+<th>Can refuse the submission</th>
+<th>Can change stored values</th>
+<th>Configurable today</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PreValidate</td>
+<td>before validation finishes</td>
+<td>yes</td>
+<td>yes</td>
+<td><strong>no</strong></td>
+</tr>
+<tr>
+<td>PreInsert</td>
+<td>inside the submit transaction</td>
+<td>yes</td>
+<td>yes</td>
+<td><strong>no</strong></td>
+</tr>
+<tr>
+<td>PostCommit</td>
+<td>after the row is committed</td>
+<td>no</td>
+<td>no</td>
+<td><strong>yes</strong></td>
+</tr>
+<tr>
+<td>AsyncWorker</td>
+<td>later, off a queue</td>
+<td>no</td>
+<td>no</td>
+<td><strong>no</strong></td>
+</tr>
+</tbody>
+</table>
+<div class="IMPORTANT">
+<h5>Important</h5>
+<p><strong>Only PostCommit can be configured.</strong> The script you write and approve is stored as the form's
+after-submit hook, and the engine runs that hook as PostCommit. Nothing in the product writes a
+script into the other three stages — no editor, no API, no import path.</p>
+</div>
+<p>Two consequences, stated plainly because they are the biggest constraint on this page:</p>
+<ul>
+<li><strong>A script cannot refuse a submission.</strong> Refusing needs PreInsert. <code>ctx.Fail(&quot;…&quot;)</code> at PostCommit
+records the run as failed; the row is already stored. To turn away unwelcome-but-valid input, use
+the anti-spam settings and workflow rules.</li>
+<li><strong>A script cannot rewrite a stored value.</strong> <code>ctx.SetValue</code> is <em>refused</em> after the commit rather
+than quietly ignored, on purpose: a script that believes it corrected a stored value and did not
+is a data bug that surfaces months later in a report.</li>
+</ul>
+<p>What a PostCommit script can do is compute a value and send it onward — into your own table, to an
+API, into an email, onto the run record, into <code>ctx.Response</code>. It just does not go back into the
+submission.</p>
+<hr>
+<h2 id="6-the-three-gates">6. The three gates</h2>
+<p>A script does not run until all three hold. There is no fallback path and no per-site override.</p>
+<p><strong>1 — a config file switch.</strong> In <code>web.config</code> appSettings:</p>
+<pre><code class="lang-xml">&lt;appSettings&gt;
+  &lt;add key=&quot;MegaForm:AfterSubmitScriptEnabled&quot; value=&quot;true&quot; /&gt;
+&lt;/appSettings&gt;
+</code></pre>
+<p>Off on every install. Anything other than <code>true</code> means off. It is a file rather than a settings
+screen on purpose: turning this on means <em>people may run code on this server</em>, and the right bar for
+that is <strong>can edit files on this server</strong> — a smaller group than <em>knows the superuser password</em>. It
+also means a site restored from a backup and a fresh config file comes back with the feature off.</p>
+<p><strong>2 — a host account saves the script.</strong> Host / SuperUser only. Not a site Administrator, not
+someone with Edit permission on the module. &quot;Edit module&quot; is a content-editor permission several
+people usually hold, and an Administrator's reach stops at one site while a script runs in the
+process shared by the whole installation.</p>
+<p><strong>3 — an approval hash over the source.</strong> Saving stores a hash of the exact source the server
+accepted, with who approved it and when. Before every run the server re-hashes and compares.
+Mismatch, no run.</p>
+<p>That third gate is what makes every other route into your forms inert. A form export, a template
+install, a gallery download, a restored backup, a hand-built save request — all of them can carry a
+script's source, and none of them can carry a valid approval, because an approval is written
+server-side at the instant a host pressed Save on <strong>that</strong> site. The ordinary form Save path goes
+further: it discards the caller's copy of this block and writes back the one the server already had.
+A content editor saving a form cannot introduce a script, alter an approved one, or switch one off.</p>
+<hr>
+<h2 id="7-what-is-recorded-when-it-runs">7. What is recorded when it runs</h2>
+<p>Every run is written down, and so is every approval. Between them they answer the two questions that
+only have answers if something wrote them at the time: <em>what did this script do on that submission</em>,
+and <em>who put this code on the server</em>.</p>
+<p>A run keeps the form, the submission, the stage, the hash of the source that ran, success or
+failure, the duration, the error if there was one, and everything the script logged. A <strong>skipped</strong>
+run is not a failed one — disabled, empty, not approved on this site, or a hash mismatch each record
+a reason rather than an error.</p>
+<p>This is what one measured run looks like from the log side. On a DNN 10.3 site, an anonymous
+submission ran a PostCommit script that did four things in 927 ms: a parameterised <code>INSERT</code> through
+<code>SqlConnection</code>, an <code>HttpClient</code> POST to an external endpoint, a message handed to DNN's own sender,
+and an account created with a role granted.</p>
+<pre><code class="lang-text">country=DE rate=0.19 total=892.50
+insert rowsAffected=1
+crm status=200
+mail handed to DNN's sender for jane.carter@example.com
+</code></pre>
+<p>Four <code>ctx.Log</code> lines, one per effect, is a good habit: a script that catches everything and logs
+nothing will fail for months without anyone noticing. The tables, their columns, and the host-only
+endpoint that reads them are documented in
+<a href="scripting-safety.html">Safety and responsibility</a>.</p>
+<hr>
+<h2 id="8-where-to-go-next">8. Where to go next</h2>
+<p><a href="automation-overview.html">Writing your own C# after a submission</a> is the branch overview. Each recipe
+below is one job, with the script and what the run record shows afterwards.</p>
+<table>
+<thead>
+<tr>
+<th>Recipe</th>
+<th>What it covers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="automation-custom-db.html">Write to your own database</a></td>
+<td><code>SqlConnection</code>, parameters, several tables in one run</td>
+</tr>
+<tr>
+<td><a href="automation-rest-crm.html">CRM, ERP, REST and SOAP</a></td>
+<td><code>HttpClient</code>, payload shape, what to do with the reply</td>
+</tr>
+<tr>
+<td><a href="automation-notifications.html">Email and messaging</a></td>
+<td>DNN's own sender, and calling a provider's API</td>
+</tr>
+<tr>
+<td><a href="automation-user-provisioning.html">Create users and grant roles</a></td>
+<td><code>UserController</code>, <code>RoleController</code>, and what to check first</td>
+</tr>
+<tr>
+<td><a href="scripting-safety.html">Safety and responsibility</a></td>
+<td>the gates in detail, strict mode, and reviewing a script before you approve it</td>
+</tr>
+</tbody>
+</table>
+<h2 id="related">Related</h2>
+<ul>
+<li><a href="integration-webhook.html">Push submissions to a CRM or ERP over HTTP</a></li>
+<li><a href="integration-sql-insert.html">Write submissions into an existing SQL table</a></li>
+<li><a href="integration-bpmn-api-task.html">Four fields → BPMN → an API service task</a></li>
+</ul>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

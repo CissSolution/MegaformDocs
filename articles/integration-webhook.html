@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Push submissions to a CRM or ERP over HTTP | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Push submissions to a CRM or ERP over HTTP | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feature/typed-submission-storage-core/Docs/docfx/articles/integration-webhook.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="push-submissions-to-a-crm-or-erp-over-http">Push submissions to a CRM or ERP over HTTP</h1>
+
+<p>A <strong>Webhook</strong> node sends the submission to another system as an HTTP request the moment the form is
+submitted. It is the right tool when the other system speaks HTTP — Salesforce, HubSpot, Dynamics,
+Odoo, an internal API gateway, an iPaaS such as Zapier or Make, or a bespoke intake endpoint. When
+the other system is a <strong>database</strong> rather than an API, use
+<a href="integration-sql-insert.html">Write submissions into an existing SQL table</a> instead.</p>
+<p>Everything below is configured in the builder — no code, no deployment.</p>
+<p><img src="../images/31-webhook-crm.gif" alt="Webhook to CRM"></p>
+<hr>
+<h2 id="1-where-the-node-lives">1. Where the node lives</h2>
+<ol>
+<li>Open the form in the builder.</li>
+<li>Right rail → <strong>BPMN</strong> tab. The workflow canvas opens.</li>
+<li>From the palette, under <em>User and Service Tasks</em>, drag <strong>Service Task</strong> (the one badged <code>API</code>)
+onto the canvas and connect it after <strong>Form submitted</strong>.</li>
+<li>Click the node to open its configuration.</li>
+</ol>
+<blockquote>
+<p>The palette label is <em>Service Task</em>, because that is the BPMN name for it. Its internal node type
+is <code>Webhook</code> — the name that appears in exported JSON and in messages such as
+<em>&quot;No executor registered for node type 'Webhook'&quot;</em>.</p>
+</blockquote>
+<p>The panel is titled <em>&quot;Webhook = send this submission to another system&quot;</em> and is organised as
+<strong>Destination → Payload → Advanced options</strong>.</p>
+<hr>
+<h2 id="2-destination">2. Destination</h2>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Webhook URL</strong></td>
+<td>Absolute <code>http://</code> or <code>https://</code> URL. Supports tokens, so <code>https://crm.example.com/api/leads/{{field.region}}</code> resolves per submission.</td>
+</tr>
+<tr>
+<td><strong>Method</strong></td>
+<td><code>POST</code> (default), <code>PUT</code>, <code>PATCH</code>, <code>GET</code>, <code>DELETE</code>. A body is only sent for POST/PUT/PATCH.</td>
+</tr>
+</tbody>
+</table>
+<p>Tokens available in the URL, headers, body template and fixed values:</p>
+<ul>
+<li><code>{{field.&lt;key&gt;}}</code> — a form field, by key</li>
+<li><code>{{form.id}}</code> — the form id</li>
+<li>workflow variables set by earlier nodes</li>
+</ul>
+<hr>
+<h2 id="3-payload--three-modes">3. Payload — three modes</h2>
+<p><strong>Send all form fields</strong> (default). Every field goes out as one flat JSON object, keyed by field key.
+Nothing to configure; the panel shows a live preview.</p>
+<pre><code class="lang-json">{ &quot;full_name&quot;: &quot;Nguyen Van A&quot;, &quot;email&quot;: &quot;a@example.com&quot;, &quot;phone&quot;: &quot;0900000000&quot;, &quot;message&quot;: &quot;Xin chào&quot; }
+</code></pre>
+<p><strong>Map selected fields.</strong> Pick exactly which fields leave the building and what each is called on the
+other side. The <strong>JSON key / path</strong> accepts dot notation, which builds nested objects — this is how
+you match a CRM's expected shape:</p>
+<table>
+<thead>
+<tr>
+<th>Form field</th>
+<th>JSON key / path</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>full_name</code></td>
+<td><code>customer.name</code></td>
+</tr>
+<tr>
+<td><code>email</code></td>
+<td><code>customer.email</code></td>
+</tr>
+<tr>
+<td><code>phone</code></td>
+<td><code>customer.phone</code></td>
+</tr>
+</tbody>
+</table>
+<pre><code class="lang-json">{ &quot;customer&quot;: { &quot;name&quot;: &quot;Nguyen Van A&quot;, &quot;email&quot;: &quot;a@example.com&quot;, &quot;phone&quot;: &quot;0900000000&quot; } }
+</code></pre>
+<p>Three shortcuts sit above the table: <strong>Auto-map fields</strong> (one row per field, same names),
+<strong>Preset: CRM lead</strong> (matches name/email/phone keys into <code>customer.*</code>), and <strong>Add row</strong>.
+<strong>Fixed value</strong> overrides the selected field with a constant or a token — use it to stamp
+<code>source: &quot;website&quot;</code> or <code>tenant: &quot;{{form.id}}&quot;</code>.</p>
+<p><strong>Use raw JSON template.</strong> Handcraft the body. Anything not valid JSON is sent verbatim as the request
+body, so this mode also covers XML or form-encoded targets.</p>
+<pre><code class="lang-json">{
+  &quot;event&quot;: &quot;megaform.submission&quot;,
+  &quot;formId&quot;: &quot;{{form.id}}&quot;,
+  &quot;lead&quot;: { &quot;name&quot;: &quot;{{field.full_name}}&quot;, &quot;email&quot;: &quot;{{field.email}}&quot; }
+}
+</code></pre>
+<blockquote>
+<p>Field mappings win over the template when both are present.</p>
+</blockquote>
+<hr>
+<h2 id="4-authentication">4. Authentication</h2>
+<p>Open <strong>Advanced options</strong> → <strong>Auth type</strong>. Four choices, and MegaForm adds the header for you.</p>
+<h3 id="no-authentication">No authentication</h3>
+<p>Leave <strong>Auth type</strong> = <code>None</code>. The panel confirms <em>&quot;No auth header will be added.&quot;</em> Suitable when the
+endpoint is a signed one-off URL — Zapier catch hooks, Make webhooks, Slack incoming webhooks — where
+the secret is the URL itself.</p>
+<blockquote>
+<p>Then treat the URL as a credential: anyone who can read the workflow can replay it.</p>
+</blockquote>
+<h3 id="bearer-token">Bearer token</h3>
+<p><strong>Auth type</strong> = <code>BearerToken</code>, paste the token into <strong>Bearer token</strong>. Sends:</p>
+<pre><code class="lang-http">Authorization: Bearer &lt;token&gt;
+</code></pre>
+<h3 id="api-key-header">API key header</h3>
+<p><strong>Auth type</strong> = <code>ApiKey</code>, set <strong>Header name</strong> (default <code>X-Api-Key</code>) and <strong>API key value</strong>. Sends:</p>
+<pre><code class="lang-http">X-Api-Key: &lt;value&gt;
+</code></pre>
+<p>Use this for the many CRMs that want a non-standard header — <code>apikey</code>, <code>X-Auth-Token</code>,
+<code>X-HubSpot-Signature</code> and friends: just change the header name.</p>
+<h3 id="http-basic">HTTP Basic</h3>
+<p><strong>Auth type</strong> = <code>BasicAuth</code>, fill <strong>Username</strong> and <strong>Password / token</strong>. MegaForm base64-encodes the
+pair and sends:</p>
+<pre><code class="lang-http">Authorization: Basic &lt;base64(user:pass)&gt;
+</code></pre>
+<h3 id="anything-else--custom-headers">Anything else — custom headers</h3>
+<p><strong>Advanced options → Headers → + Add Header</strong> takes any number of name/value pairs, and the values
+accept tokens. This covers OAuth2 where you already hold a long-lived token, tenant headers,
+<code>X-Correlation-Id</code>, and signature headers computed by an earlier node into a workflow variable:</p>
+<table>
+<thead>
+<tr>
+<th>Header name</th>
+<th>Header value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>X-Tenant</code></td>
+<td><code>acme</code></td>
+</tr>
+<tr>
+<td><code>X-Correlation-Id</code></td>
+<td><code>{{form.id}}-{{field.email}}</code></td>
+</tr>
+<tr>
+<td><code>Authorization</code></td>
+<td><code>Bearer {{var.oauthToken}}</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>OAuth2 client-credentials:</strong> MegaForm does not fetch tokens for you. Put a first Webhook node that
+POSTs to the token endpoint, store the reply with <strong>Response variable</strong> (<code>oauthToken</code>), then read
+<code>{{var.oauthToken}}</code> in the second node's header. Two nodes, no code.</p>
+</blockquote>
+<h3 id="where-the-secret-is-stored">Where the secret is stored</h3>
+<p>Auth values live in the workflow definition on the server. They are <strong>not</strong> part of the anonymous form
+schema the public page downloads. They are, however, readable and exportable by anyone with builder
+access — so use a dedicated integration account with least privilege, and rotate it like any other
+stored credential.</p>
+<hr>
+<h2 id="5-reliability--timeout-and-retry">5. Reliability — timeout and retry</h2>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Timeout (seconds)</strong></td>
+<td>30</td>
+<td>Clamped to 1–120.</td>
+</tr>
+<tr>
+<td><strong>Retry attempts</strong></td>
+<td>3</td>
+<td>Total attempts, not extra attempts. <code>1</code> = try once.</td>
+</tr>
+<tr>
+<td><strong>Delay seconds</strong></td>
+<td>5</td>
+<td>First wait; each retry doubles it, capped at 60s per wait.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Retries only fire on HTTP 5xx, timeouts and connection errors.</strong> A <code>4xx</code> is treated as a decision
+by the other system, not a glitch, and is never retried — so a wrong token or a rejected payload
+fails immediately rather than four minutes later. Design the endpoint accordingly: return <code>503</code>
+when you want MegaForm to come back, <code>400</code> when you do not.</p>
+</blockquote>
+<hr>
+<h2 id="6-reading-the-answer-back">6. Reading the answer back</h2>
+<p><strong>Response variable</strong> stores the raw response body under a name later nodes can read as
+<code>{{var.&lt;name&gt;}}</code> — the CRM's new record id, for example, which a follow-on Database node can write
+back into your own table.</p>
+<p><strong>Response routes</strong> branch the workflow on a value inside the JSON response. Each route is
+<em>JSON path → operator → value → next node id</em>, evaluated top to bottom; the first match wins and the
+workflow continues at that node. Nothing matching falls through to the default edge.</p>
+<table>
+<thead>
+<tr>
+<th>JSON path</th>
+<th>Operator</th>
+<th>Value</th>
+<th>Next node id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$.status</code></td>
+<td>Equals</td>
+<td><code>needs_approval</code></td>
+<td><code>node-approval</code></td>
+</tr>
+<tr>
+<td><code>$.status</code></td>
+<td>Equals</td>
+<td><code>approved</code></td>
+<td><code>node-notify</code></td>
+</tr>
+</tbody>
+</table>
+<p>The path is simple dot notation (<code>$.status</code>, <code>data.code</code>); array indexing is not supported.
+Operators: <code>Equals</code>, <code>NotEquals</code>, <code>Contains</code>, <code>GreaterThan</code>, <code>LessThan</code>, <code>Exists</code>, <code>NotExists</code>.</p>
+<hr>
+<h2 id="7-calling-a-crm-that-is-on-your-own-network">7. Calling a CRM that is on your own network</h2>
+<p>MegaForm refuses webhook URLs that resolve to loopback, private, link-local, carrier-grade-NAT or
+cloud-metadata addresses. That guard exists because the URL can contain <code>{{field.*}}</code> tokens filled in
+by an anonymous visitor, which would otherwise turn a public form into a probe of your internal
+network. A blocked call fails the node with:</p>
+<pre><code>Blocked webhook URL: URL targets a blocked (private/loopback/metadata) address
+</code></pre>
+<p><strong>On-premises CRMs and ERPs live at exactly those addresses.</strong> To allow them, set an environment
+variable on the MegaForm host and restart it:</p>
+<pre><code>MEGAFORM_ALLOW_PRIVATE_WEBHOOKS=1
+</code></pre>
+<p>Scheme validation (<code>http</code>/<code>https</code> only) still applies. Turn it on deliberately: with it on, a webhook
+URL built from an untrusted field can reach anything the server can reach. Prefer to keep it off and
+expose the CRM through a reverse proxy on a public hostname; use the flag when that is not an option.</p>
+<hr>
+<h2 id="8-testing-before-you-trust-it">8. Testing before you trust it</h2>
+<p>A local mock endpoint ships with the repo so you can watch the traffic and try each auth mode without
+touching the real CRM:</p>
+<pre><code class="lang-bash">node tools/mock-crm/mock-crm-server.mjs        # http://localhost:5199
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Authentication</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>POST /crm/leads</code></td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>POST /crm/leads-secure</code></td>
+<td><code>Authorization: Bearer demo-bearer-token-2026</code></td>
+</tr>
+<tr>
+<td><code>POST /crm/leads-apikey</code></td>
+<td><code>X-Api-Key: demo-api-key-2026</code></td>
+</tr>
+<tr>
+<td><code>POST /crm/leads-basic</code></td>
+<td>Basic <code>megaform:demo-pass-2026</code></td>
+</tr>
+<tr>
+<td><code>POST /erp/orders</code></td>
+<td>none — replies with <code>orderNo</code> and a <code>status</code> you can route on</td>
+</tr>
+</tbody>
+</table>
+<p>Open <code>http://localhost:5199/</code> in a second tab: it lists every request received, refreshes itself, and
+marks rejected ones in red, so a wrong token is obvious. Because it is on loopback, the host needs
+<code>MEGAFORM_ALLOW_PRIVATE_WEBHOOKS=1</code> (§7).</p>
+<hr>
+<h2 id="9-node-json-for-reference">9. Node JSON, for reference</h2>
+<p>The builder writes this; you rarely type it. Useful when reviewing an exported workflow.</p>
+<pre><code class="lang-json">{
+  &quot;type&quot;: &quot;webhook&quot;,
+  &quot;config&quot;: {
+    &quot;url&quot;: &quot;https://crm.example.com/api/leads&quot;,
+    &quot;method&quot;: &quot;POST&quot;,
+    &quot;payloadMode&quot;: &quot;mappedFields&quot;,
+    &quot;bodyMappings&quot;: [
+      { &quot;formFieldKey&quot;: &quot;full_name&quot;, &quot;bodyPath&quot;: &quot;customer.name&quot; },
+      { &quot;formFieldKey&quot;: &quot;email&quot;,     &quot;bodyPath&quot;: &quot;customer.email&quot; },
+      { &quot;formFieldKey&quot;: &quot;phone&quot;,     &quot;bodyPath&quot;: &quot;customer.phone&quot; },
+      { &quot;bodyPath&quot;: &quot;source&quot;, &quot;staticValue&quot;: &quot;website&quot; }
+    ],
+    &quot;headers&quot;: { &quot;X-Tenant&quot;: &quot;acme&quot; },
+    &quot;auth&quot;: { &quot;type&quot;: &quot;BearerToken&quot;, &quot;value&quot;: &quot;&lt;token&gt;&quot; },
+    &quot;timeoutSeconds&quot;: 30,
+    &quot;retry&quot;: { &quot;maxAttempts&quot;: 3, &quot;delaySeconds&quot;: 5, &quot;backoffMultiplier&quot;: 2 },
+    &quot;responseVariableKey&quot;: &quot;crmResult&quot;,
+    &quot;responseRoutes&quot;: [
+      { &quot;jsonPath&quot;: &quot;$.status&quot;, &quot;operator&quot;: &quot;Equals&quot;, &quot;value&quot;: &quot;needs_approval&quot;, &quot;nextNodeId&quot;: &quot;node-approval&quot; }
+    ]
+  }
+}
+</code></pre>
+<p><code>auth.type</code> is one of <code>None</code>, <code>BearerToken</code>, <code>BasicAuth</code>, <code>ApiKey</code>. For <code>ApiKey</code> add
+<code>&quot;headerName&quot;: &quot;X-Api-Key&quot;</code>; for <code>BasicAuth</code> add <code>&quot;username&quot;: &quot;...&quot;</code>.</p>
+<hr>
+<h2 id="10-troubleshooting">10. Troubleshooting</h2>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Cause</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Blocked webhook URL: … blocked (private/loopback/metadata) address</code></td>
+<td>Target is on a private network — see §7.</td>
+</tr>
+<tr>
+<td><code>Blocked webhook URL: only http/https URLs are allowed</code></td>
+<td>Scheme is not <code>http</code>/<code>https</code>.</td>
+</tr>
+<tr>
+<td><code>Webhook HTTP 401</code> / <code>403</code></td>
+<td>Auth type or value wrong. Check §4 against what the endpoint expects — and remember 4xx is never retried.</td>
+</tr>
+<tr>
+<td><code>Webhook HTTP 0: Request timed out.</code></td>
+<td>Endpoint slower than <strong>Timeout</strong>; raise it (max 120s) or make the endpoint async.</td>
+</tr>
+<tr>
+<td><code>Webhook URL is empty after template resolution.</code></td>
+<td>The URL is only tokens and the tokens resolved to nothing — usually a field key that does not exist.</td>
+</tr>
+<tr>
+<td>Node never runs</td>
+<td>It is not connected to the path being taken, or the node is disabled.</td>
+</tr>
+<tr>
+<td>Body arrives empty</td>
+<td>Method is <code>GET</code> or <code>DELETE</code>; MegaForm sends no body on either.</td>
+</tr>
+</tbody>
+</table>
+<p>See also: <a href="workflow.html">Workflow</a> · <a href="integration-sql-insert.html">Write submissions into an existing SQL table</a></p>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Four fields → BPMN → an API service task | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Four fields → BPMN → an API service task | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feature/typed-submission-storage-core/Docs/docfx/articles/integration-bpmn-api-task.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="four-fields--bpmn--an-api-service-task">Four fields → BPMN → an API service task</h1>
+
+<p>A complete walkthrough: build a four-field form, open its BPMN workflow, drop in one API service
+task, point it at an endpoint, and watch the four answers arrive on the other side. About ten
+minutes, no code.</p>
+<p>In BPMN terms the node is a <strong>service task</strong> — an automated step that calls out to a system. The
+palette lists it under <em>User and Service Tasks</em> as <strong>Service Task</strong>, with an <code>API</code> badge; its
+internal type is <code>Webhook</code>, which is the name you will see in exported JSON and in error messages.
+Everything on <a href="integration-webhook.html">Push submissions to a CRM or ERP over HTTP</a> applies to it.</p>
+<p><img src="../images/33-bpmn-api-task.gif" alt="BPMN API service task"></p>
+<hr>
+<h2 id="1-the-form">1. The form</h2>
+<p>Builder → <strong>New form</strong> → add four fields and set their keys. Keys are what the service task maps, so
+name them deliberately:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Key</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Customer code</td>
+<td>Text</td>
+<td><code>customer_code</code></td>
+</tr>
+<tr>
+<td>Contact name</td>
+<td>Text</td>
+<td><code>contact_name</code></td>
+</tr>
+<tr>
+<td>Contact email</td>
+<td>Email</td>
+<td><code>contact_email</code></td>
+</tr>
+<tr>
+<td>Order amount</td>
+<td>Number</td>
+<td><code>amount</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Save the form before opening the workflow.</strong> A workflow attaches to a form id, and an unsaved form
+has none — the designer will say <em>&quot;Save the form first so the workflow can be attached to a real form
+ID.&quot;</em></p>
+<hr>
+<h2 id="2-open-the-workflow-canvas">2. Open the workflow canvas</h2>
+<p>Right rail → <strong>BPMN</strong> tab. The full-screen BPMN 2.0 canvas opens with the palette on the left.</p>
+<p>A new workflow starts with a trigger node — <strong>Form submitted</strong> — which is the BPMN start event. It
+anchors on the form's first field and never branches on it.</p>
+<hr>
+<h2 id="3-add-the-api-service-task">3. Add the API service task</h2>
+<ol>
+<li>Drag <strong>Service Task</strong> (the <code>API</code> one, under <em>User and Service Tasks</em>) onto the canvas.</li>
+<li>Connect <strong>Form submitted → Service Task</strong>, and <strong>Service Task → End Event</strong>.</li>
+<li>Click the node to configure it.</li>
+</ol>
+<blockquote>
+<p>The palette also offers <strong>Service Task (DB)</strong> and <strong>Service Task (Sheet)</strong> — the Database and
+Google Sheets nodes. Neither runs on Oqtane yet; see §7.</p>
+</blockquote>
+<h3 id="destination">Destination</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Webhook URL</td>
+<td><code>https://erp.example.com/api/orders</code></td>
+</tr>
+<tr>
+<td>Method</td>
+<td><code>POST</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="payload--map-the-four-fields">Payload — map the four fields</h3>
+<p>Set <strong>Payload mode</strong> to <strong>Map selected fields</strong>, then <strong>Auto-map fields</strong> and adjust the JSON paths.
+Dot notation nests, which is usually what an ERP wants:</p>
+<table>
+<thead>
+<tr>
+<th>Form field</th>
+<th>JSON key / path</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>customer_code</code></td>
+<td><code>customerCode</code></td>
+</tr>
+<tr>
+<td><code>contact_name</code></td>
+<td><code>contact.name</code></td>
+</tr>
+<tr>
+<td><code>contact_email</code></td>
+<td><code>contact.email</code></td>
+</tr>
+<tr>
+<td><code>amount</code></td>
+<td><code>amount</code></td>
+</tr>
+</tbody>
+</table>
+<p>The panel previews the exact body:</p>
+<pre><code class="lang-json">{
+  &quot;customerCode&quot;: &quot;{{field.customer_code}}&quot;,
+  &quot;contact&quot;: { &quot;name&quot;: &quot;{{field.contact_name}}&quot;, &quot;email&quot;: &quot;{{field.contact_email}}&quot; },
+  &quot;amount&quot;: &quot;{{field.amount}}&quot;
+}
+</code></pre>
+<blockquote>
+<p>Leave <strong>Fixed value</strong> empty on every row. It is only for stamping a constant, and a row with a
+fixed value ignores the form field you selected.</p>
+</blockquote>
+<h3 id="authentication">Authentication</h3>
+<p><strong>Advanced options → Auth type.</strong> Leave <code>None</code> for an open intake endpoint; pick <code>BearerToken</code>,
+<code>ApiKey</code> or <code>BasicAuth</code> otherwise. See
+<a href="integration-webhook.html#4-authentication">the authentication section</a> for what each one puts on the
+wire.</p>
+<hr>
+<h2 id="4-use-the-reply">4. Use the reply</h2>
+<p>An ERP usually answers with an order number and a status. Two settings turn that into workflow state:</p>
+<p><strong>Response variable</strong> — set it to <code>erpResult</code>. The whole response body is then readable by later
+nodes as <code>{{var.erpResult}}</code>.</p>
+<p><strong>Response routes</strong> — branch on a value inside the reply:</p>
+<table>
+<thead>
+<tr>
+<th>JSON path</th>
+<th>Operator</th>
+<th>Value</th>
+<th>Next node id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$.status</code></td>
+<td>Equals</td>
+<td><code>needs_approval</code></td>
+<td><code>node-approval</code></td>
+</tr>
+</tbody>
+</table>
+<p>Anything that matches no route continues along the default edge.</p>
+<hr>
+<h2 id="5-apply-it">5. Apply it</h2>
+<p><strong>Apply</strong> publishes the workflow. <strong>Save draft</strong> only stores it; a draft never runs, and the log will
+say so:</p>
+<pre><code>Form 13 has a workflow draft but no applied workflow. Submission 9 will use legacy post-submit actions
+until the workflow is applied.
+</code></pre>
+<p>Apply-mode validation is strict — a Webhook node with no URL blocks the publish with <em>&quot;Webhook 'x':
+URL is required.&quot;</em>, which is the intended behaviour: a node that cannot run should not be live.</p>
+<hr>
+<h2 id="6-try-it-end-to-end">6. Try it end to end</h2>
+<p>The repo ships a mock ERP so this is testable without a real system:</p>
+<pre><code class="lang-bash">node tools/mock-crm/mock-crm-server.mjs          # http://localhost:5199
+</code></pre>
+<p>Point the node at <code>http://localhost:5199/erp/orders</code>. It replies with an order number and a status
+(<code>approved</code> under 10,000, <code>needs_approval</code> above), which is exactly the shape the response routes in
+§4 branch on. Open <code>http://localhost:5199/</code> to watch requests land.</p>
+<p>Loopback is blocked by the SSRF guard, so the host needs <code>MEGAFORM_ALLOW_PRIVATE_WEBHOOKS=1</code> —
+see <a href="integration-webhook.html#7-calling-a-crm-that-is-on-your-own-network">Calling a CRM on your own network</a>.</p>
+<p>A ready-made version of this form is seeded by:</p>
+<pre><code class="lang-bash">node tools/samples/seed-integration-demos.mjs
+</code></pre>
+<p>which creates <em>Demo 3 — Order intake (BPMN API task)</em> alongside the two CRM demos.</p>
+<hr>
+<h2 id="7-when-the-task-does-not-fire">7. When the task does not fire</h2>
+<p>Work down this list; each item is something that has actually happened.</p>
+<p><strong>The submission was scored as spam.</strong> The anti-spam gate skips the entire workflow — no webhook, no
+notification emails — and only says so in the host log:</p>
+<pre><code>[SubmissionProcessor] Submission 5 for form 12 marked as spam (score=55). Workflow and notifications skipped.
+</code></pre>
+<p>The threshold is 50. A form of more than two fields completed in under three seconds scores 30, and a
+bot-like User-Agent another 25 — which is 55, and is why automated smoke tests trip it while humans do
+not. Sign in as a trusted user, or fill the form at human speed.</p>
+<p><strong>The workflow was saved but not applied.</strong> See §5.</p>
+<p><strong>The node type is not registered on the host.</strong> The workflow fails at that node with:</p>
+<pre><code>No executor registered for node type 'Database' (node: n-db 'Write order').
+</code></pre>
+<p>Oqtane enables a reviewed subset of node executors. <strong>Webhook is enabled</strong> (MegaForm 2.0.30 and
+later); <strong>Database and Google Sheets are not</strong> — for those, see
+<a href="integration-sql-insert.html#5-the-other-route-a-database-node-in-the-workflow">Write submissions into an existing SQL table</a>.</p>
+<p><strong>The body arrived with the right shape but empty values.</strong> Fixed in MegaForm 2.0.31. Before that,
+every &quot;Map selected fields&quot; row was treated as a fixed value, so the payload went out with the keys
+present and the values blank. Upgrade, or switch the node to <strong>Send all form fields</strong> as a workaround.</p>
+<p><strong>The URL was rejected.</strong> <code>Blocked webhook URL: …</code> means the SSRF guard stopped it — §6.</p>
+<hr>
+<h2 id="8-what-the-saved-workflow-looks-like">8. What the saved workflow looks like</h2>
+<pre><code class="lang-json">{
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;startNodeId&quot;: &quot;n-start&quot;,
+  &quot;nodes&quot;: [
+    { &quot;id&quot;: &quot;n-start&quot;, &quot;type&quot;: &quot;FormField&quot;, &quot;label&quot;: &quot;Form submitted&quot;,
+      &quot;config&quot;: { &quot;FieldKey&quot;: &quot;customer_code&quot;, &quot;IsPageNode&quot;: false } },
+    { &quot;id&quot;: &quot;n-api&quot;, &quot;type&quot;: &quot;Webhook&quot;, &quot;label&quot;: &quot;API service task — create ERP order&quot;,
+      &quot;config&quot;: {
+        &quot;Url&quot;: &quot;https://erp.example.com/api/orders&quot;,
+        &quot;Method&quot;: &quot;POST&quot;,
+        &quot;Auth&quot;: { &quot;Type&quot;: &quot;None&quot; },
+        &quot;BodyMappings&quot;: [
+          { &quot;FormFieldKey&quot;: &quot;customer_code&quot;,  &quot;BodyPath&quot;: &quot;customerCode&quot; },
+          { &quot;FormFieldKey&quot;: &quot;contact_name&quot;,   &quot;BodyPath&quot;: &quot;contact.name&quot; },
+          { &quot;FormFieldKey&quot;: &quot;contact_email&quot;,  &quot;BodyPath&quot;: &quot;contact.email&quot; },
+          { &quot;FormFieldKey&quot;: &quot;amount&quot;,         &quot;BodyPath&quot;: &quot;amount&quot; }
+        ],
+        &quot;TimeoutSeconds&quot;: 15,
+        &quot;Retry&quot;: { &quot;MaxAttempts&quot;: 2, &quot;DelaySeconds&quot;: 3, &quot;BackoffMultiplier&quot;: 2 },
+        &quot;ResponseVariableKey&quot;: &quot;erpResult&quot;
+      } },
+    { &quot;id&quot;: &quot;n-end&quot;, &quot;type&quot;: &quot;End&quot;, &quot;label&quot;: &quot;Done&quot;, &quot;config&quot;: { &quot;EndType&quot;: &quot;Success&quot; } }
+  ],
+  &quot;edges&quot;: [
+    { &quot;id&quot;: &quot;e1&quot;, &quot;sourceNodeId&quot;: &quot;n-start&quot;, &quot;targetNodeId&quot;: &quot;n-api&quot;, &quot;sourceHandle&quot;: &quot;default&quot;, &quot;targetHandle&quot;: &quot;in&quot; },
+    { &quot;id&quot;: &quot;e2&quot;, &quot;sourceNodeId&quot;: &quot;n-api&quot;,   &quot;targetNodeId&quot;: &quot;n-end&quot;, &quot;sourceHandle&quot;: &quot;default&quot;, &quot;targetHandle&quot;: &quot;in&quot; }
+  ]
+}
+</code></pre>
+<blockquote>
+<p><strong>Config keys are PascalCase.</strong> The builder writes them that way, and Apply-mode validation reads
+them out of a plain dictionary with a case-sensitive lookup — a hand-written workflow using <code>url</code>
+instead of <code>Url</code> is rejected with &quot;URL is required&quot; even though the URL is right there. This only
+matters when posting a workflow to the API by hand; the builder never gets it wrong.</p>
+</blockquote>
+<hr>
+<h2 id="9-importing-a-real-bpmn-file">9. Importing a real BPMN file</h2>
+<p>A <code>.bpmn</code> file exported from Camunda or bpmn.io can be imported instead of drawn: service tasks
+become Webhook nodes, user tasks become Approval nodes, exclusive gateways become Conditions, and
+sequence-flow conditions are translated into MegaForm expressions. See
+<a href="workflow.html">Workflow</a> for the mapping table and its limits.</p>
+<p>See also: <a href="integration-webhook.html">Push submissions to a CRM or ERP over HTTP</a> ·
+<a href="integration-sql-insert.html">Write submissions into an existing SQL table</a> · <a href="workflow.html">Workflow</a></p>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

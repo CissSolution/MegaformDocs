@@ -16,7 +16,7 @@
       <meta name="docfx:rel" content="../">
       
       
-      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/Docs/docfx/articles/overview.md/#L1">
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feature/typed-submission-storage-core/Docs/docfx/articles/overview.md/#L1">
       <meta name="loc:inThisArticle" content="In this article">
       <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
       <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
@@ -107,18 +107,34 @@ API over the MegaForm engine. Consumers depend only on a handful of interfaces a
 on MegaForm's internal storage models, repositories, or rendering pipeline.</p>
 <h2 id="the-object-model">The object model</h2>
 <pre><code>IMegaFormClient                 ← the single entry point
- ├─ Forms        : IFormApi        create / get / list / update / delete forms
- ├─ Submissions  : ISubmissionApi  find (FindData) / get / submit / update / delete
- ├─ Files        : IFileApi        list / open (download) uploaded files
- └─ Schema       : ISchemaApi      parse form schema JSON into typed field metadata
+ ├─ Forms              : IFormApi               create / get / list / update / delete forms
+ ├─ Submissions        : ISubmissionApi         find (FindData) / get / submit / update / delete
+ ├─ Dashboard          : IDashboardApi          per-form counts and recent-submission totals
+ ├─ SubmissionDashboard: ISubmissionDashboardApi  rich search, detail, and status operations
+ ├─ Inbox              : IInboxApi              human-task inbox (claim, approve, reject, forward)
+ ├─ Files              : IFileApi               list / open (download) uploaded files
+ └─ Schema             : ISchemaApi             parse form schema JSON into typed field metadata
 </code></pre>
 <p>Every call takes an optional <a href="../api/MegaForm.Sdk.MegaFormScope.html"><code>MegaFormScope</code></a> that
-identifies the <strong>portal/site</strong> and <strong>acting user</strong>:</p>
-<pre><code class="lang-csharp">var scope = new MegaFormScope { PortalId = 1, UserId = 0 };
+identifies the <strong>portal/site</strong> and the <strong>acting user</strong>:</p>
+<pre><code class="lang-csharp">var scope = new MegaFormScope
+{
+    PortalId = 1,
+    UserId   = 0,          // 0 = anonymous / system
+    UserName = &quot;jane&quot;,     // used by workflow inbox matching
+    Roles    = new List&lt;string&gt; { &quot;Managers&quot; }
+};
 </code></pre>
 <p>When omitted, the SDK falls back to the host's ambient platform context (the current request's
-portal). Pass an explicit scope from background jobs, schedulers, or any code running outside a
-MegaForm request.</p>
+portal/user). Pass an explicit scope from background jobs, schedulers, external modules, or any
+code running outside a MegaForm request.</p>
+<blockquote>
+<p><strong>Scope boundary:</strong> The SDK is a stable <strong>data + workflow-inbox</strong> facade. It does <strong>not</strong> cover
+builder/designer APIs, AI, payments, reports, external-table administration, app builder, module
+configuration, file uploads, or user/permission management. For those features, call the
+platform-specific MegaForm HTTP endpoints directly. See the runtime boundary audit in
+<a href="AUDIT_API_SDK_VS_CODE_2026-07-19.md"><code>AUDIT_API_SDK_VS_CODE_2026-07-19.md</code></a>.</p>
+</blockquote>
 <h2 id="data-transfer-objects">Data Transfer Objects</h2>
 <p>The SDK never returns internal entities. It returns purpose-built DTOs:</p>
 <table>
@@ -179,7 +195,12 @@ call <a href="../api/MegaForm.Sdk.MegaFormSdk.html"><code>MegaFormSdk.RunAsync(.
 <tr>
 <td><strong>DNN</strong> (WebForms / Razor Host)</td>
 <td>✅ Live-proven</td>
-<td><code>DnnServiceLocator.Instance.Mega</code> or <code>MegaFormSdk.RunAsync</code> — see <a href="dnn-razor-host.html">DNN Razor Host</a></td>
+<td><code>DnnServiceLocator.Instance</code> wires the SDK; use <code>MegaFormSdk.RunAsync</code> from Razor — see <a href="dnn-razor-host.html">DNN Razor Host</a></td>
+</tr>
+<tr>
+<td><strong>Umbraco</strong> 14+</td>
+<td>✅ Supported</td>
+<td><code>MegaFormComposer</code> registers the SDK; inject <code>IMegaFormClient</code> into controllers, SurfaceControllers, or views</td>
 </tr>
 <tr>
 <td><strong>ASP.NET Core / worker</strong></td>
@@ -188,7 +209,10 @@ call <a href="../api/MegaForm.Sdk.MegaFormSdk.html"><code>MegaFormSdk.RunAsync(.
 </tr>
 </tbody>
 </table>
-<h2 id="target-frameworks">Target frameworks</h2>
+<blockquote>
+<p>DNN does not register an <code>IPlatformContext</code>, so DNN callers must pass an explicit
+<code>MegaFormScope</code>. All other hosts can omit it when running inside a request.</p>
+</blockquote>
 <p><code>MegaForm.Sdk</code> multi-targets <strong>net472</strong>, <strong>net8.0</strong>, <strong>net9.0</strong>, and <strong>net10.0</strong>, so the same
 package works on classic DNN (net472) and modern Oqtane (net10.0).</p>
 <h2 id="product-capability-walkthroughs">Product capability walkthroughs</h2>

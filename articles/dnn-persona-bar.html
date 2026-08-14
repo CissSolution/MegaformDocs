@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Managing MegaForm from the Persona Bar (DNN) | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Managing MegaForm from the Persona Bar (DNN) | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feature/typed-submission-storage-core/Docs/docfx/articles/dnn-persona-bar.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="managing-megaform-from-the-persona-bar-dnn">Managing MegaForm from the Persona Bar (DNN)</h1>
+
+<p>On DNN, MegaForm adds its own panel to the Persona Bar. It gives an administrator the portal's
+form activity and the three things they usually came for — start a new form, look at a form's
+submissions, put a form on the page they are already on — without first hunting for a page that
+happens to host the module.</p>
+<p>The panel is a <strong>console</strong>, not a second builder. Everything it offers hands off to the real
+MegaForm screens.</p>
+<h2 id="where-it-is">Where it is</h2>
+<p>Persona Bar → <strong>Content</strong> → <strong>MegaForm</strong>.</p>
+<p>It appears once the MegaForm module package is installed; the menu entry ships inside the package
+itself, so there is nothing extra to install.</p>
+<h2 id="who-can-open-it">Who can open it</h2>
+<p>The panel is administrator-only and enforced on the server, not by hiding the menu. An anonymous
+request to its API answers <strong>401</strong>. The menu is registered with the standard DNN permissions, so
+access follows the roles you grant it in <strong>Settings → Security → Persona Bar</strong>.</p>
+<h2 id="what-the-panel-shows">What the panel shows</h2>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Header</td>
+<td><strong>Open dashboard</strong> and <strong>New form</strong></td>
+</tr>
+<tr>
+<td>Stats</td>
+<td>Forms · Published · Submissions · Last submission</td>
+</tr>
+<tr>
+<td>List</td>
+<td>Every form with its status, id, field count, submission count and last-modified date</td>
+</tr>
+<tr>
+<td>Row actions</td>
+<td><strong>Edit</strong> (builder), <strong>Submissions</strong>, <strong>Add to current page</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="sorting">Sorting</h3>
+<p><strong>Form</strong>, <strong>Submissions</strong> and <strong>Modified</strong> are buttons: click to sort, click again to reverse. The
+arrow shows the direction, and changing the sort returns you to page 1.</p>
+<p>The sort is done by the <strong>server</strong>, over every form in the portal — not over the twenty rows the
+panel happens to be holding. Page 2 continues where page 1 left off.</p>
+<p><strong>Fields</strong> is deliberately not sortable. That number is counted from each form's schema <em>after</em> the
+database has already paged the rows, so there is nothing for SQL to order by; a header button
+there would only pretend.</p>
+<h3 id="narrow-screens">Narrow screens</h3>
+<p>The panel keeps its columns while there is room for them and drops the least important first —
+Modified, then Fields and Submissions — folding what it removed into a second line under the form
+name. The table never scrolls sideways inside the panel, and the pager stays visible at the bottom.</p>
+<h2 id="create-a-form">Create a form</h2>
+<p><img src="../images/21-personabar-new-form.gif" alt="Opening the MegaForm panel from the Persona Bar and pressing New form, which opens the five-step form wizard with its live preview"></p>
+<ol>
+<li>Open <strong>Persona Bar → Content → MegaForm</strong>.</li>
+<li>Click <strong>New form</strong>. The panel opens the dashboard on the <strong>form wizard</strong> — the same five steps
+the dashboard's own <em>New Form</em> button opens: <strong>Setup · Fields · Workflow · Design · Publish</strong>,
+with a live preview beside them.</li>
+<li>On <strong>Setup</strong>, name the form and choose how to start: from the <strong>template library</strong>, from a
+<strong>JSON import</strong>, or from nothing at all.</li>
+<li>Walk the steps and finish on <strong>Publish</strong> — or jump into the full builder at any point. See
+<a href="form-builder.html">Form Builder</a> and <a href="creating-forms.html">Creating Forms</a>.</li>
+</ol>
+<div class="NOTE">
+<h5>Note</h5>
+<p>Two things about this button changed in 02.00.015. It used to open the builder on <strong>whatever
+form the host module already rendered</strong> (the URL carried no form id, and the builder reads &quot;no
+id&quot; as &quot;edit this module's form&quot;). Pointing it at a blank builder fixed that but landed on the
+older <em>Create a New Form</em> template chooser, which is not the screen the dashboard uses. It now
+links to <code>&lt;dashboard&gt;#mf-new-form</code>, and the dashboard opens the wizard there.</p>
+</div>
+<p>The template library inside the wizard is the online gallery — <strong>68 designs</strong> as of 9 August 2026,
+and the list is fetched every time, so a design published after your install shows up without an
+upgrade. See <a href="form-templates.html">Form Templates</a>.</p>
+<h2 id="open-a-forms-submissions">Open a form's submissions</h2>
+<p><img src="../images/22-personabar-submissions.gif" alt="Sorting the panel by Submissions and opening the submissions list for the busiest form"></p>
+<p>Click <strong>Submissions</strong> in a form's row. It opens the submission dashboard already filtered to that
+form — the same screen as <a href="submissions-inbox.md">Submissions &amp; My Inbox</a>, with the filters, column
+manager, export and Google Sheet connection.</p>
+<p>A useful habit: sort by <strong>Submissions</strong> first, so the forms that actually have data are at the top.</p>
+<h2 id="add-a-form-to-the-page-you-are-on">Add a form to the page you are on</h2>
+<p><img src="../images/23-personabar-add-to-current-page.gif" alt="Adding a form to the current page from the panel: the picker pre-selects the page you are on and confirms with a link to it"></p>
+<p>A form is not visible to visitors until a MegaForm module instance points at it on some page. The
+panel puts one there without leaving the page.</p>
+<ol>
+<li>Open the page you want the form on, then open the panel.</li>
+<li>In the form's row, click <strong>Add to current page</strong>. The picker opens with <strong>the page you are on
+already selected</strong> and marked <em>you are here</em>.</li>
+<li>Choose a <strong>target pane</strong> if the default <code>ContentPane</code> is not where you want it.</li>
+<li>Click <strong>Add</strong>.</li>
+</ol>
+<p>MegaForm adds a module instance to that page, titles it after the form, and configures it to render
+that form — the same three settings the module's own <em>Manage module</em> screen writes. The
+confirmation links straight to the page so you can check it.</p>
+<p>You are not limited to the current page: every page you can edit is listed underneath, so the
+picker is still a picker. If MegaForm cannot tell which page you are on — a host that does not
+publish it, or the panel opened outside a page — the action falls back to its old name, <strong>Add to
+page</strong>, and nothing is pre-selected.</p>
+<div class="WARNING">
+<h5>Warning</h5>
+<p>The list includes system pages such as <strong>404 Error Page</strong>. Read the page name before confirming;
+undoing it means deleting the module from that page.</p>
+</div>
+<h2 id="open-dashboard">Open dashboard</h2>
+<p><strong>Open dashboard</strong> goes to the full MegaForm admin screen — the portal-wide form list with its
+stats, submissions, workflow inbox and settings.</p>
+<h2 id="notes-for-administrators">Notes for administrators</h2>
+<ul>
+<li>The list is paged and the page size is clamped on the server (ask for 9999 and you get 50), so
+the panel cannot be used to pull the whole table in one call.</li>
+<li>Sorting, paging and the search box all go back to the server; nothing is filtered in the browser.</li>
+<li>Every string in the panel comes from <code>App_LocalResources/MegaForm.resx</code>, so a translated resource
+file localises it without touching code.</li>
+</ul>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

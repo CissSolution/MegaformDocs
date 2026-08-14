@@ -16,7 +16,7 @@
       <meta name="docfx:rel" content="../">
       
       
-      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/Docs/docfx/articles/sdk-reference.md/#L1">
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feature/typed-submission-storage-core/Docs/docfx/articles/sdk-reference.md/#L1">
       <meta name="loc:inThisArticle" content="In this article">
       <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
       <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
@@ -97,6 +97,14 @@ platform-specific wiring see <a href="oqtane-consumer.html">Oqtane consumer</a> 
 analyzers (<code>RS0016</code>/<code>RS0017</code> as build errors), contract tests, and package validation. See
 <a href="api-stability.html">API Stability</a>.</p>
 </div>
+<div class="IMPORTANT">
+<h5>Important</h5>
+<p><strong>What the SDK does not cover:</strong> the SDK is intentionally a <strong>data + workflow-inbox</strong> facade.
+It does <strong>not</strong> expose builder/designer APIs, AI, payments, reports, external-table administration,
+app builder, module configuration, file uploads, or user/permission management. For those
+features, call the platform-specific MegaForm HTTP endpoints directly. See the runtime boundary
+audit in <a href="../../AUDIT_API_SDK_VS_CODE_2026-07-19.md"><code>AUDIT_API_SDK_VS_CODE_2026-07-19.md</code></a>.</p>
+</div>
 <h2 id="entry-points">Entry points</h2>
 <p>There are two ways to obtain a client:</p>
 <h3 id="1-dependency-injection-recommended-for-oqtane--aspnet-core">1. Dependency injection (recommended for Oqtane / ASP.NET Core)</h3>
@@ -144,12 +152,21 @@ explicit scope from background jobs, schedulers, external modules, or anywhere t
 is missing or wrong.</p>
 <pre><code class="lang-csharp">var scope = new MegaFormScope
 {
-    PortalId = 1,   // site / portal
-    UserId   = 0    // acting user (0 = anonymous / system)
+    PortalId        = 1,                       // site / portal (required when no ambient context)
+    UserId          = 0,                       // acting user (0 = anonymous / system)
+    UserName        = &quot;jane.doe&quot;,              // used by workflow inbox matching
+    DisplayName     = &quot;Jane Doe&quot;,              // shown in audit / inbox UIs
+    UserEmail       = &quot;jane@example.com&quot;,      // used by workflow notifications
+    IsAuthenticated = true,
+    IsAdmin         = false,
+    IsSuperUser     = false,
+    Roles           = new List&lt;string&gt; { &quot;Managers&quot;, &quot;Finance&quot; },
+    IpAddress       = &quot;198.51.100.10&quot;
 };
 </code></pre>
 <p>If neither a scope nor an ambient <code>IPlatformContext</code> is available, the call throws
-<code>InvalidOperationException</code>.</p>
+<code>InvalidOperationException</code>. DNN does not register an <code>IPlatformContext</code>, so DNN callers must always
+pass an explicit scope.</p>
 <h2 id="forms-api--iformapi">Forms API — <code>IFormApi</code></h2>
 <p>Source reference: <a href="../api/MegaForm.Sdk.IFormApi.html"><code>IFormApi</code></a><br>
 Implementation: <code>MegaFormClient</code> maps directly to <code>IFormRepository</code>.</p>
@@ -738,6 +755,159 @@ public async Task Demo(IMegaFormClient client)
         Console.WriteLine($&quot;Field: {f.Key} ({f.Type})&quot;);
 }
 </code></pre>
+<h2 id="sample-load-a-form-by-id-or-name-and-render-its-data">Sample: load a form by id or name and render its data</h2>
+<p>This sample resolves a form by id (fastest) or by exact title, then prints a simple table of its
+submissions. It uses the schema to discover display labels, so the output stays readable even when
+the <code>DataJson</code> keys are machine names like <code>email_address</code>.</p>
+<pre><code class="lang-csharp">using System;
+using System.Linq;
+using System.Text.Json;
+using MegaForm.Sdk;
+
+public async Task PrintFormDataAsync(IMegaFormClient client, MegaFormScope scope,
+    int? formId = null, string? formName = null)
+{
+    // Resolve by id, or search by name.
+    FormDto? form = formId.HasValue
+        ? await client.Forms.GetFormAsync(formId.Value, scope)
+        : (await client.Forms.ListFormsAsync(
+            new FormQuery { Search = formName, PageSize = 20 }, scope))
+            .Items.FirstOrDefault(f =&gt;
+                string.Equals(f.Title, formName, StringComparison.OrdinalIgnoreCase));
+
+    if (form is null)
+    {
+        Console.WriteLine(&quot;Form not found.&quot;);
+        return;
+    }
+
+    var schema = client.Schema.ParseForm(form);
+    var fields = schema.Fields.Where(f =&gt; f.IsInputField &amp;&amp; !f.Hidden).ToList();
+
+    var page = await client.Submissions.FindAsync(
+        new SubmissionQuery { FormId = form.FormId, PageSize = 100 }, scope);
+
+    Console.WriteLine($&quot;{form.Title} (#{form.FormId}) — {page.TotalCount} submissions&quot;);
+    Console.WriteLine($&quot;Columns: {string.Join(&quot;, &quot;, fields.Select(f =&gt; f.Label ?? f.Key))}&quot;);
+
+    foreach (var submission in page.Items)
+    {
+        Console.WriteLine($&quot;\n#{submission.SubmissionId} — {submission.SubmittedOnUtc:yyyy-MM-dd HH:mm} — {submission.Status}&quot;);
+        using var doc = JsonDocument.Parse(submission.DataJson ?? &quot;{}&quot;);
+        foreach (var field in fields)
+        {
+            if (doc.RootElement.TryGetProperty(field.Key ?? string.Empty, out var element))
+            {
+                var value = element.ValueKind == JsonValueKind.String
+                    ? element.GetString()
+                    : element.GetRawText();
+                Console.WriteLine($&quot;  {field.Label ?? field.Key}: {value}&quot;);
+            }
+        }
+    }
+}
+</code></pre>
+<p>Call it either way:</p>
+<pre><code class="lang-csharp">await PrintFormDataAsync(client, scope, formId: 42);
+await PrintFormDataAsync(client, scope, formName: &quot;Contact Us&quot;);
+</code></pre>
+<p>On DNN (net472) replace <code>System.Text.Json.JsonDocument</code> with <code>Newtonsoft.Json.Linq.JObject</code>.</p>
+<h2 id="sample-render-a-forms-data-as-a-grid-html-table">Sample: render a form's data as a grid (HTML table)</h2>
+<p>This sample turns any form's submissions into a <strong>grid view</strong>: one column per input field, one
+row per submission. Column headers come from the schema labels, and every cell value is
+HTML-encoded (submission data is untrusted user input). The helper returns an HTML string, so it
+drops into an ASP.NET Core Razor page/view, a Blazor component (<code>MarkupString</code>), an MVC view, or a
+DNN Razor Host script unchanged.</p>
+<pre><code class="lang-csharp">using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+using MegaForm.Sdk;
+
+public static class MegaFormGrid
+{
+    /// &lt;summary&gt;
+    /// Render a form's submissions as an HTML table. Resolve the form by &lt;paramref name=&quot;formId&quot;/&gt;
+    /// (fastest) or by exact &lt;paramref name=&quot;formName&quot;/&gt;.
+    /// &lt;/summary&gt;
+    public static async Task&lt;string&gt; RenderGridAsync(
+        IMegaFormClient client, MegaFormScope scope,
+        int? formId = null, string? formName = null, int pageSize = 100)
+    {
+        // 1. Resolve the form by id, or search by exact title.
+        FormDto? form = formId.HasValue
+            ? await client.Forms.GetFormAsync(formId.Value, scope)
+            : (await client.Forms.ListFormsAsync(
+                new FormQuery { Search = formName, PageSize = 20 }, scope))
+                .Items.FirstOrDefault(f =&gt;
+                    string.Equals(f.Title, formName, StringComparison.OrdinalIgnoreCase));
+
+        if (form is null)
+            return &quot;&lt;p&gt;Form not found.&lt;/p&gt;&quot;;
+
+        // 2. Columns = the schema's input fields (layout/hidden fields are skipped).
+        var columns = client.Schema.ParseForm(form).Fields
+            .Where(f =&gt; f.IsInputField &amp;&amp; !f.Hidden)
+            .ToList();
+
+        // 3. Rows = submissions for this form.
+        var page = await client.Submissions.FindAsync(
+            new SubmissionQuery { FormId = form.FormId, PageSize = pageSize }, scope);
+
+        // 4. Build the table. Enc() HTML-encodes EVERY value — DataJson is user input.
+        var sb = new StringBuilder();
+        sb.Append($&quot;&lt;h3&gt;{Enc(form.Title)} — {page.TotalCount} submission(s)&lt;/h3&gt;&quot;);
+        sb.Append(&quot;&lt;table class=\&quot;mf-grid\&quot;&gt;&lt;thead&gt;&lt;tr&gt;&quot;);
+        sb.Append(&quot;&lt;th&gt;#&lt;/th&gt;&lt;th&gt;Submitted&lt;/th&gt;&lt;th&gt;Status&lt;/th&gt;&quot;);
+        foreach (var col in columns)
+            sb.Append($&quot;&lt;th&gt;{Enc(col.Label ?? col.Key)}&lt;/th&gt;&quot;);
+        sb.Append(&quot;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&quot;);
+
+        foreach (var s in page.Items)
+        {
+            using var doc = JsonDocument.Parse(s.DataJson ?? &quot;{}&quot;);
+            sb.Append(&quot;&lt;tr&gt;&quot;);
+            sb.Append($&quot;&lt;td&gt;{s.SubmissionId}&lt;/td&gt;&quot;);
+            sb.Append($&quot;&lt;td&gt;{s.SubmittedOnUtc:yyyy-MM-dd HH:mm}&lt;/td&gt;&quot;);
+            sb.Append($&quot;&lt;td&gt;{Enc(s.Status)}&lt;/td&gt;&quot;);
+            foreach (var col in columns)
+            {
+                string? cell = doc.RootElement.TryGetProperty(col.Key ?? string.Empty, out var el)
+                    ? (el.ValueKind == JsonValueKind.String ? el.GetString() : el.GetRawText())
+                    : null;
+                sb.Append($&quot;&lt;td&gt;{Enc(cell)}&lt;/td&gt;&quot;);
+            }
+            sb.Append(&quot;&lt;/tr&gt;&quot;);
+        }
+
+        sb.Append(&quot;&lt;/tbody&gt;&lt;/table&gt;&quot;);
+        return sb.ToString();
+    }
+
+    // WebUtility.HtmlEncode exists on both .NET (Oqtane/Web) and .NET Framework 4.7.2 (DNN).
+    private static string Enc(string? value) =&gt; WebUtility.HtmlEncode(value ?? string.Empty);
+}
+</code></pre>
+<p>Use it from the host of your choice:</p>
+<pre><code class="lang-csharp">// ASP.NET Core Razor page / MVC view (inject IMegaFormClient):
+@Html.Raw(await MegaFormGrid.RenderGridAsync(client, scope, formName: &quot;Contact Us&quot;))
+
+// Blazor component:
+@((MarkupString)(await MegaFormGrid.RenderGridAsync(Client, scope, formId: 42)))
+
+// DNN Razor Host (no DI — use the ambient accessor):
+@Html.Raw(MegaFormSdk.RunAsync(c =&gt;
+    MegaFormGrid.RenderGridAsync(c, new MegaFormScope { PortalId = portalId }, formId: 42))
+    .GetAwaiter().GetResult())
+</code></pre>
+<p>Style the table with your own CSS (the sample tags it <code>class=&quot;mf-grid&quot;</code>). For a larger grid with
+server-side filtering, sorting, and file-download links wired end-to-end, see the shipped
+<code>MegaFormSdkListView.cshtml</code> walkthrough in <a href="dnn-razor-host.html">DNN Razor Host</a>.</p>
+<p>On DNN (net472) replace <code>System.Text.Json.JsonDocument</code> with <code>Newtonsoft.Json.Linq.JObject</code> (see
+the note under the previous sample).</p>
 <h2 id="sample-read-the-country-form-submissions">Sample: read the &quot;Country&quot; form submissions</h2>
 <p>This sample finds a form by title, reads its submissions using both the legacy and the new
 dashboard search surface, and prints each row's country value.</p>

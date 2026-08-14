@@ -717,6 +717,16 @@
     },
     {
       "type": "Conceptual",
+      "source_relative_path": "articles/after-submit-script.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/after-submit-script.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
       "source_relative_path": "articles/ai-form-designer.md",
       "output": {
         ".html": {
@@ -747,10 +757,70 @@
     },
     {
       "type": "Conceptual",
+      "source_relative_path": "articles/automation-custom-db.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/automation-custom-db.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/automation-notifications.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/automation-notifications.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/automation-overview.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/automation-overview.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/automation-rest-crm.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/automation-rest-crm.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/automation-user-provisioning.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/automation-user-provisioning.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
       "source_relative_path": "articles/creating-forms.md",
       "output": {
         ".html": {
           "relative_path": "articles/creating-forms.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/dnn-persona-bar.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/dnn-persona-bar.html"
         }
       },
       "version": ""
@@ -837,6 +907,46 @@
     },
     {
       "type": "Conceptual",
+      "source_relative_path": "articles/integration-bpmn-api-task.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/integration-bpmn-api-task.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/integration-sql-insert.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/integration-sql-insert.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/integration-webhook.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/integration-webhook.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/oqtane-after-submit-script.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/oqtane-after-submit-script.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
       "source_relative_path": "articles/oqtane-consumer.md",
       "output": {
         ".html": {
@@ -881,6 +991,26 @@
       "output": {
         ".html": {
           "relative_path": "articles/reading-data.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/recaptcha-setup.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/recaptcha-setup.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/scripting-safety.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/scripting-safety.html"
         }
       },
       "version": ""
@@ -1064,6 +1194,146 @@
       "output": {
         "resource": {
           "relative_path": "images/14-erp-demo.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/21-personabar-new-form.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/21-personabar-new-form.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/22-personabar-submissions.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/22-personabar-submissions.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/23-personabar-add-to-current-page.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/23-personabar-add-to-current-page.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/30-db-pane-groups.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/30-db-pane-groups.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/31-webhook-crm.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/31-webhook-crm.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/32-sql-insert-lead.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/32-sql-insert-lead.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/33-bpmn-api-task.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/33-bpmn-api-task.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/34-db-insert-settings.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/34-db-insert-settings.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/35-bpmn-api-task-canvas.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/35-bpmn-api-task-canvas.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/36-webhook-node-config.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/36-webhook-node-config.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/40-script-panel.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/40-script-panel.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/41-oqtane-script-panel.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/41-oqtane-script-panel.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/41-script-testrun.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/41-script-testrun.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/42-script-denied.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/42-script-denied.png"
         }
       },
       "version": ""

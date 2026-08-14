@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Scripting: what the host is agreeing to | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Scripting: what the host is agreeing to | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feature/typed-submission-storage-core/Docs/docfx/articles/scripting-safety.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="scripting-what-the-host-is-agreeing-to">Scripting: what the host is agreeing to</h1>
+
+<p>A MegaForm server script is ordinary C# running inside your website's own process, under your
+website's own identity. It can open your database with your connection string, call out to the
+internet, read anything the worker process can read, and create user accounts. There is no sandbox
+and no reduced privilege set.</p>
+<p>That is the same bargain you already accept every time you install a third-party module. A module
+you install gets the process; a script a host saves gets the process. The difference is only that a
+script is smaller, is written by you, and takes effect without a restart.</p>
+<p>This page is about the three things that stand between &quot;a form exists&quot; and &quot;code runs on your
+server&quot;, what each one is actually for, and how to keep the arrangement sane once more than one
+person is involved.</p>
+<div class="IMPORTANT">
+<h5>Important</h5>
+<p>If you are arriving from an older page that described a mediated capability object — a catalog of
+named actions and endpoints a script asked for by name — that layer has been removed. Scripts now
+call platform APIs directly.</p>
+</div>
+<hr>
+<h2 id="1-the-three-gates-in-order">1. The three gates, in order</h2>
+<p>All three must hold. There is no fallback path, no per-site override, and no way for a request to
+talk the server into skipping one.</p>
+<h3 id="gate-1--the-installation-switch">Gate 1 — the installation switch</h3>
+<p>Off on every install. A host turns it on by editing the config file on the server:</p>
+<pre><code class="lang-xml">&lt;appSettings&gt;
+  &lt;add key=&quot;MegaForm:AfterSubmitScriptEnabled&quot; value=&quot;true&quot; /&gt;
+&lt;/appSettings&gt;
+</code></pre>
+<p>Anything other than <code>true</code> (case-insensitive) — including a missing or unreadable entry — means off.</p>
+<p>It is a config file rather than a settings screen on purpose. Turning this on means <em>people may run
+code on this server</em>, and the right bar for that is <strong>can edit files on this server</strong> — a
+meaningfully smaller group than <em>knows the superuser password</em>. Editing the file also recycles the
+application, so the change lands at a moment you picked rather than mid-afternoon on a Tuesday.</p>
+<p>There is a second, quieter benefit. Any recovery procedure that restores your site from a backup and
+a fresh config file brings the feature back <strong>off</strong>. A settings-table switch would come back on.</p>
+<h3 id="gate-2--a-host-account-saves-the-script">Gate 2 — a host account saves the script</h3>
+<p>Only a Host / SuperUser can open the editor, change a script, or save one. Not a site
+administrator. Not someone with Edit permission on the module.</p>
+<p>That distinction matters more than it looks. &quot;Edit module&quot; is a content-editor permission several
+people usually hold, and a site Administrator's reach stops at their own portal — while a script
+runs in the process shared by every portal on the installation. Anyone below Host gets a plain
+refusal rather than an editor that looks enabled and then does nothing.</p>
+<h3 id="gate-3--the-approval-hash">Gate 3 — the approval hash</h3>
+<p>When a host saves a script, the server computes a SHA-256 of the exact source it accepted — after
+its own normalisation, from the copy the server holds, not from anything the client sent alongside
+it — and stores that hash with the approver's user id, name and UTC timestamp.</p>
+<p>Before every run, the server re-hashes the stored source and compares. Mismatch, no run.</p>
+<p>That makes every other route into your forms inert by construction. A form export, a template
+install, a gallery download, a restored backup, a hand-built save request — all of them can carry a
+<code>source</code> string. None of them can carry a valid approval, because an approval is written
+server-side at the instant a host pressed Save on <strong>that</strong> site.</p>
+<p>The messages an administrator sees when this bites are deliberately specific, because &quot;nothing
+happened&quot; is the failure mode this feature had to avoid:</p>
+<pre><code class="lang-text">Script has no host approval on this site. A host/superuser must open it and press Save.
+Script source does not match the approved version — it was changed outside the host-only editor.
+After-submit script is disabled for this form.
+</code></pre>
+<p>The first one is the import case. It is not a bug report — it is the gate doing its job. Someone on
+your site has to read the script and approve it before it becomes code.</p>
+<h3 id="ordinary-form-saves-cannot-touch-any-of-this">Ordinary form saves cannot touch any of this</h3>
+<p>The normal form Save path does not merge the client's version of the script block. It discards it
+and writes back the copy the server already had. A content editor saving a form cannot introduce a
+script, edit an approved one, or switch one off.</p>
+<p>Switching one <em>off</em> is included on purpose. It sounds harmless, and it is not: anyone who can toggle
+<code>Enabled</code> off can toggle it back on after a host disabled it.</p>
+<hr>
+<h2 id="2-what-the-gates-do-not-do">2. What the gates do not do</h2>
+<p>Being straight about the limits is the point of having them:</p>
+<ul>
+<li><strong>A script is not sandboxed.</strong> Once approved, it has the process. The gates control <em>who can put
+code there</em>, not <em>what the code may reach</em>.</li>
+<li><strong>The run timeout bounds the visitor, not the server.</strong> The run is awaited with a timeout
+(1–60 seconds, default 10). .NET has no safe way to abort a foreign thread, so on expiry the
+request stops waiting and the submission completes, with
+<code>Script did not finish within 10s. Cancellation was requested and the run was abandoned.</code> in the
+run record. A script stuck in a tight loop keeps a thread-pool thread until the process recycles.
+Cancellation is cooperative: your script receives a <code>CancellationToken</code> named <code>ct</code>, and passing it
+to your <code>await</code> calls is what makes the timeout real.</li>
+<li><strong>Script source lives in the form record.</strong> It is in your database, in every backup, and in any
+export taken by someone with export rights. A connection string or an API key pasted into a script
+is a credential in all of those places.</li>
+<li><strong>The audit write is fail-soft.</strong> An audit failure never fails a submission — losing an audit row
+is bad, losing a customer's submission is worse. So an empty run list is weak evidence. The same
+facts also go to the platform event log.</li>
+</ul>
+<hr>
+<h2 id="3-strict-mode">3. Strict mode</h2>
+<p>The product ships with an older enforcement pass still in the box, switched off.</p>
+<p>Turned on, it runs a semantic check over the compiled script and refuses whole namespaces:
+<code>System.IO</code>, <code>System.Net</code>, <code>System.Data</code>, <code>System.Reflection</code>, <code>System.Diagnostics</code>,
+<code>System.Threading</code> (except <code>Tasks</code>), <code>System.Security</code>, <code>System.Xml</code>, <code>Microsoft.Win32</code>,
+<code>Microsoft.CodeAnalysis</code>, and the platform's own namespace, <code>DotNetNuke</code>.
+Individual types in otherwise-open namespaces go too: <code>System.Type</code>, <code>System.Activator</code>,
+<code>System.Environment</code>, <code>System.AppDomain</code>, <code>System.Console</code>, <code>dynamic</code>. Violations come back as
+<code>MF1001</code> at save time, on the author's own line numbers:</p>
+<pre><code class="lang-text">MF1001  Namespace 'System.IO' is not available to scripts (used here: System.IO.File).
+</code></pre>
+<p>The check works on <strong>bound symbols</strong>, not on text, so it is not fooled by <code>using F = System.IO.File;</code>,
+by fully-qualified names, by <code>global::</code>, by generic arguments, or by an inferred <code>var</code>.</p>
+<p>It is off by default because the reasoning behind it assumed something that is no longer true here:
+that the list protects the site from the script's author. It does not. The only account that can
+save a script is a superuser who can already install a module, edit config and run SQL. There is no
+privilege left to hold back.</p>
+<div class="WARNING">
+<h5>Warning</h5>
+<p>Strict mode denies <code>DotNetNuke</code>, <code>System.Data</code> and <code>System.Net</code> outright. Every example in the
+scripting documentation — <code>UserController</code>, <code>RoleController</code>, <code>Mail.SendEmail</code>, <code>SqlConnection</code>,
+<code>HttpClient</code> — stops compiling. Turning it on is not a hardening tweak you apply to a working
+site; it is a decision to write a different, much smaller kind of script.</p>
+</div>
+<p><strong>When it is the right call:</strong> an installation where the person writing scripts and the person
+answering for the server are not the same person, and the scripts are genuinely only computation —
+scoring, rounding, formatting, deriving a value to log. If your scripts write to a database or call
+an API, strict mode is not for you.</p>
+<p>The switch is a process-wide flag set at startup, not a per-form or per-site setting, and there is
+no screen for it. Unsafe code — pointers and <code>stackalloc</code> — is refused in both modes.</p>
+<hr>
+<h2 id="4-reviewing-a-script-before-you-approve-it">4. Reviewing a script before you approve it</h2>
+<p>You are the third gate. If the script came from a template, a partner, a contractor or an older
+site, read it as code you are about to install, because that is what it is.</p>
+<p>What is worth the minutes:</p>
+<p><strong>Credentials.</strong> Any literal connection string, bearer token, API key or password. On DNN,
+<code>Config.GetConnectionString()</code> already gives you the site's own connection — a script that carries
+its own is either talking to something else (fine, but you should know about it) or duplicating a
+secret into your form table.</p>
+<p><strong>SQL built by concatenation.</strong> <code>&quot;... WHERE Email = '&quot; + ctx.GetString(&quot;email&quot;, &quot;&quot;) + &quot;'&quot;</code> is an
+injection hole with a submitted value on the wrong side of it. Parameters, always.</p>
+<p><strong>Outbound URLs built from submitted data.</strong> A script's <code>HttpClient</code> is a plain <code>HttpClient</code>. There
+is no guard between it and your internal network, so a URL that comes even partly from <code>ctx.Data</code> is
+a request an anonymous visitor gets to aim. Hard-code the host; take only the path or the payload
+from the form.</p>
+<p><strong>What it does with identity.</strong> <code>UserController.CreateUser</code> and <code>RoleController</code> calls on a public
+form mean an anonymous submission creates accounts and grants roles. Check which role, and check the
+conditions under which it happens.</p>
+<p><strong>Work inside a loop.</strong> Every HTTP call and every query is paid inside the submit request, with the
+visitor watching a spinner. Count the calls in the worst case, not the typical one.</p>
+<p><strong>Silence.</strong> A script that catches everything and logs nothing will fail for months without anyone
+noticing. Look for a <code>ctx.Log</code> line on the paths that matter and a <code>ctx.Fail</code> on the ones that
+should count as failures.</p>
+<p><strong>Anything that reads like infrastructure.</strong> Reading or writing files, starting processes, touching
+the registry, loading assemblies, compiling more code. A form hook has no business doing any of it.
+If you see one and cannot explain why it is there, do not approve it.</p>
+<p>Two habits that cost nothing: keep a copy of what you approved outside the site, and re-read the
+diff — not the whole script — every time someone asks you to press Save again. The approval hash
+tells you the source changed; it cannot tell you whether the change was the one you were promised.</p>
+<hr>
+<h2 id="5-the-run-record">5. The run record</h2>
+<p>Every attempted run is written down, including the ones that did not happen.</p>
+<p><strong>Runs</strong> capture the form, the submission, the stage, the hash of the source that ran, success or
+failure, whether the run aborted, the duration in milliseconds, the acting user id, the error
+message, the full <code>ctx.Log</code> output as text, and the UTC timestamp. On SQL Server these are the
+<code>MF_AutomationRuns</code> rows, indexed by form and date.</p>
+<p><strong>Approvals</strong> capture the form, the stage, the hash, the action, the user id and name, the source
+length and the UTC timestamp — <code>MF_AutomationScriptApprovals</code>. This is the table that answers &quot;who
+put code on this server, and when&quot; after an incident. It is only able to answer because the endpoint
+wrote it at the moment it happened, from the server's own idea of who the caller was.</p>
+<p>Read both through the host-only endpoint, newest first:</p>
+<pre><code class="lang-text">GET /DesktopModules/MegaForm/API/FormScript/Runs?formId=12&amp;take=25
+</code></pre>
+<p><code>take</code> defaults to 25 and is clamped to 200. The response carries <code>runs</code> and <code>approvals</code> side by
+side, which is usually how you want them: a run that failed right after an approval row is a
+different story from one that has been failing since last quarter.</p>
+<p>There is no runs screen in the builder today. The endpoint and the tables are the interface.</p>
+<p>A useful detail when reading them: a <strong>skipped</strong> run is not a failed one. Disabled, empty, not
+approved on this site, hash mismatch, or the scripting assembly missing from <code>bin</code> all record a
+reason rather than an error, so &quot;did not run&quot; and &quot;ran and broke&quot; stay tellable apart.</p>
+<hr>
+<h2 id="6-one-more-thing-about-stages">6. One more thing about stages</h2>
+<p>Four stages exist in the engine — PreValidate, PreInsert, PostCommit, AsyncWorker — and only
+<strong>PostCommit</strong> can be configured. Nothing in the product writes a script into the other three: no
+editor, no API, no import path.</p>
+<p>For this page that has one consequence worth stating plainly. A script cannot refuse a submission,
+and it cannot rewrite a stored value; <code>ctx.SetValue</code> is refused after the commit by design. So the
+review question is never &quot;could this script silently corrupt what we stored&quot; — it is &quot;what does this
+script reach <strong>outside</strong> the submission&quot;, which is exactly the list in <a href="#4-reviewing-a-script-before-you-approve-it">§4</a>.</p>
+<hr>
+<h2 id="related">Related</h2>
+<ul>
+<li><a href="after-submit-script.html">Run your own C# after a submission</a> — the editor, the <code>ctx</code> surface, and
+worked examples.</li>
+</ul>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

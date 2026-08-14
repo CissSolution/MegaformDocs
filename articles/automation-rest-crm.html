@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Push a submission to a CRM, ERP or any REST endpoint | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Push a submission to a CRM, ERP or any REST endpoint | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feature/typed-submission-storage-core/Docs/docfx/articles/automation-rest-crm.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="push-a-submission-to-a-crm-erp-or-any-rest-endpoint">Push a submission to a CRM, ERP or any REST endpoint</h1>
+
+<p>The <a href="integration-webhook.html">Webhook node</a> sends every submission to one URL, with one payload shape,
+with retries, and with no code. When that is the requirement, use it and stop reading.</p>
+<p>This page is for the cases it does not cover:</p>
+<ul>
+<li>the payload has to be assembled — a field renamed, a total computed, a lookup value attached</li>
+<li><strong>which</strong> system gets told depends on the answers: EU orders to one endpoint, US orders to another</li>
+<li>the reply matters, because the order number it returns has to reach the visitor</li>
+<li>the destination speaks something other than the node's JSON body — SOAP, form-encoded, XML</li>
+</ul>
+<p>For those, write C#. A script is ordinary C# — <code>using System.Net.Http;</code> and a <code>HttpClient</code>, the same
+code you would write in a module on the same site.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>If you arrived from an older page describing named endpoints and a catalog (<code>ctx.Api</code>), that layer
+was removed. Scripts call platform APIs directly now.</p>
+</div>
+<hr>
+<h2 id="1-before-anything-runs-the-three-gates">1. Before anything runs: the three gates</h2>
+<ol>
+<li><code>&lt;add key=&quot;MegaForm:AfterSubmitScriptEnabled&quot; value=&quot;true&quot; /&gt;</code> in <code>web.config</code> <code>&lt;appSettings&gt;</code>.
+Off on every install.</li>
+<li>A <strong>host (superuser)</strong> account saves the script. A site administrator cannot, and neither can
+module-edit rights.</li>
+<li>An approval hash over the source. The stored hash must match the source, so a script that arrived
+inside imported data does not run until a host on <strong>that</strong> site approves it.</li>
+</ol>
+<p>See <a href="automation-overview.html">Automation overview</a> for the reasoning.</p>
+<hr>
+<h2 id="2-the-stage-and-what-it-costs-the-visitor">2. The stage, and what it costs the visitor</h2>
+<p>Only <strong>PostCommit</strong> can be configured today. The submission row is already committed when your code
+starts, which decides three things:</p>
+<ul>
+<li><strong>The call cannot refuse the submission.</strong> A 400 from the CRM does not roll anything back.</li>
+<li><strong>The reply cannot be written back into the submission.</strong> <code>ctx.SetValue</code> is refused after the
+commit. Send the value onward instead — §6.</li>
+<li><strong>The visitor is waiting.</strong> A PostCommit script runs on the request that renders the thank-you
+page. Two seconds of CRM latency is two seconds of spinner.</li>
+</ul>
+<p>The script's run timeout defaults to <strong>10 seconds</strong> and is capped at 60. Set the <code>HttpClient</code> timeout
+<em>below</em> it, so a slow endpoint produces your own logged failure rather than the engine's generic
+timeout.</p>
+<hr>
+<h2 id="3-a-post-with-a-timeout-awaiting-the-token-you-were-given">3. A POST, with a timeout, awaiting the token you were given</h2>
+<p>Script bodies are async and receive a <code>CancellationToken</code> named <code>ct</code>. Pass it to every await: it is
+cancelled when the run timeout expires, which is what stops a hung request from holding the visitor's
+thread.</p>
+<pre><code class="lang-csharp">using System.Net.Http;
+using System.Text;
+using Newtonsoft.Json;
+
+var payload = new
+{
+    email      = ctx.GetString(&quot;email&quot;),
+    firstName  = ctx.GetString(&quot;first_name&quot;),
+    lastName   = ctx.GetString(&quot;last_name&quot;),
+    company    = ctx.GetString(&quot;company&quot;),
+    source     = &quot;web-form-&quot; + ctx.FormId,
+    leadStatus = ctx.GetDecimal(&quot;budget&quot;) &gt;= 50000m ? &quot;OPEN_DEAL&quot; : &quot;NEW&quot;
+};
+
+using (var http = new HttpClient { Timeout = TimeSpan.FromSeconds(8) })
+using (var body = new StringContent(JsonConvert.SerializeObject(payload), Encoding.UTF8, &quot;application/json&quot;))
+{
+    var reply = await http.PostAsync(&quot;https://crm.contoso.com/api/v3/leads&quot;, body, ct);
+    var text  = await reply.Content.ReadAsStringAsync();
+
+    ctx.Log(&quot;crm status=&quot; + (int)reply.StatusCode);
+
+    if (!reply.IsSuccessStatusCode)
+        ctx.Log(&quot;crm body=&quot; + (text.Length &gt; 400 ? text.Substring(0, 400) : text));
+}
+</code></pre>
+<p><code>Newtonsoft.Json</code> is referenced by the script compiler, so <code>JsonConvert</code> is available without any
+setup. So is everything else already loaded in the site's <code>bin</code>.</p>
+<p><strong>Verified live</strong>, anonymously, on a DNN 10.3 site: this <code>HttpClient.PostAsync</code> returned <strong>HTTP 200</strong>
+inside a run that finished in <strong>927 ms</strong> and wrote <code>crm status=200</code> into the run record.</p>
+<h3 id="reusing-the-client">Reusing the client</h3>
+<p>The snippet above creates a client per submission. At form-submission rates that is fine. On a form
+taking sustained traffic, each disposed client leaves a socket in <code>TIME_WAIT</code>; hold one static
+instance instead by writing the script as a full class:</p>
+<pre><code class="lang-csharp">using System.Net.Http;
+
+public sealed class PushLeadToCrm : ISubmissionAsyncScript
+{
+    static readonly HttpClient Http = new HttpClient { Timeout = TimeSpan.FromSeconds(8) };
+
+    public async Task RunAsync(SubmissionScriptContext ctx, CancellationToken ct)
+    {
+        // ... same body, using Http
+    }
+}
+</code></pre>
+<p>A source that declares a type implementing <code>ISubmissionAsyncScript</code> is compiled as written. A bare
+statement body is spliced into a method, which is why it cannot hold a static field.</p>
+<hr>
+<h2 id="4-authentication-headers">4. Authentication headers</h2>
+<pre><code class="lang-csharp">using System.Net.Http;
+using System.Text;
+using DotNetNuke.Entities.Controllers;
+using Newtonsoft.Json;
+
+// the token is a host setting, not a literal — §5 explains why
+var token = HostController.Instance.GetString(&quot;Acme_CrmToken&quot;, string.Empty);
+var json  = JsonConvert.SerializeObject(new { email = ctx.GetString(&quot;email&quot;) });
+
+using (var http = new HttpClient { Timeout = TimeSpan.FromSeconds(8) })
+using (var request = new HttpRequestMessage(HttpMethod.Post, &quot;https://crm.contoso.com/api/v3/leads&quot;))
+{
+    request.Headers.Authorization =
+        new System.Net.Http.Headers.AuthenticationHeaderValue(&quot;Bearer&quot;, token);
+
+    // or a vendor-specific key header
+    request.Headers.Add(&quot;X-Api-Key&quot;, token);
+
+    request.Content = new StringContent(json, Encoding.UTF8, &quot;application/json&quot;);
+
+    var reply = await http.SendAsync(request, ct);
+    ctx.Log(&quot;crm status=&quot; + (int)reply.StatusCode);
+}
+</code></pre>
+<p>Basic auth is the same shape:</p>
+<pre><code class="lang-csharp">// continues the example above — inside the same using block, replacing the Bearer line
+var user     = HostController.Instance.GetString(&quot;Acme_CrmUser&quot;, string.Empty);
+var password = HostController.Instance.GetString(&quot;Acme_CrmPassword&quot;, string.Empty);
+
+var pair = Convert.ToBase64String(Encoding.UTF8.GetBytes(user + &quot;:&quot; + password));
+request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(&quot;Basic&quot;, pair);
+</code></pre>
+<hr>
+<h2 id="5-where-the-credential-lives--read-this-before-you-paste-a-token">5. Where the credential lives — read this before you paste a token</h2>
+<div class="WARNING">
+<h5>Warning</h5>
+<p>A token typed into a script is <strong>stored with the form</strong>. It goes into the form's settings JSON, so
+it travels in every form export, every template, every database backup, and it is readable by
+anyone who can read that record. Rotating it means editing every form that carries it.</p>
+</div>
+<p>Put it in a <strong>host setting</strong> and read it at run time. Host settings are installation-scoped, are not
+part of a form, and do not travel with an export.</p>
+<pre><code class="lang-csharp">using DotNetNuke.Entities.Controllers;
+
+var token = HostController.Instance.GetString(&quot;Acme_CrmToken&quot;, string.Empty);
+
+if (string.IsNullOrEmpty(token))
+{
+    ctx.Log(&quot;Acme_CrmToken is not set on this installation — lead not pushed.&quot;);
+    ctx.Fail(&quot;CRM credential missing&quot;);
+    return;
+}
+</code></pre>
+<p>There is no dictionary accessor to reach for. A script that reads several settings makes the same
+call once per key:</p>
+<pre><code class="lang-csharp">using DotNetNuke.Entities.Controllers;
+
+var crmToken = HostController.Instance.GetString(&quot;Acme_CrmToken&quot;, string.Empty);
+var erpToken = HostController.Instance.GetString(&quot;Acme_ErpToken&quot;, string.Empty);
+var crmUrl   = HostController.Instance.GetString(&quot;Acme_CrmUrl&quot;, &quot;https://crm.contoso.com/api/v3/leads&quot;);
+
+ctx.Log(&quot;crm url=&quot; + crmUrl + &quot; token=&quot; + (string.IsNullOrEmpty(crmToken) ? &quot;missing&quot; : &quot;present&quot;));
+</code></pre>
+<p>For a value you would rather not have sitting in plain text in the host settings table, DNN encrypts
+it with the machine key:</p>
+<pre><code class="lang-csharp">using DotNetNuke.Entities.Controllers;
+using DotNetNuke.Common.Utilities;
+
+var token = HostController.Instance.GetEncryptedString(&quot;Acme_CrmToken&quot;, Config.GetDecryptionkey());
+</code></pre>
+<p>Write the setting once, from a host account — <code>HostController.Instance.Update(...)</code> or
+<code>UpdateEncryptedString(...)</code> — rather than from a submission script.</p>
+<p>The point is not that the host settings table is a vault. It is that the credential stops being part
+of the form: one place to rotate it, and an exported form is safe to send to a colleague.</p>
+<div class="IMPORTANT">
+<h5>Important</h5>
+<p>Nothing filters the URL when you call <code>HttpClient</code> yourself. The webhook node's outbound guard is
+not in this path. Keep the URL a literal or a host setting; never assemble it from a submitted
+answer, or a public form becomes a request generator aimed at your own network.</p>
+</div>
+<hr>
+<h2 id="6-when-the-destination-depends-on-the-answers">6. When the destination depends on the answers</h2>
+<p>This is the reason the page exists. The node sends everything to one place; a script chooses.</p>
+<pre><code class="lang-csharp">using System.Net.Http;
+using System.Text;
+using DotNetNuke.Entities.Controllers;
+using Newtonsoft.Json;
+
+var region  = ctx.GetString(&quot;region&quot;);            // &quot;eu&quot; | &quot;us&quot;
+var isTrade = ctx.GetBool(&quot;trade_account&quot;);
+
+var url = isTrade
+    ? &quot;https://erp.contoso.com/api/orders&quot;                       // trade orders go to the ERP
+    : (region == &quot;eu&quot; ? &quot;https://crm.contoso.com/eu/api/v3/leads&quot;
+                      : &quot;https://crm.contoso.com/us/api/v3/leads&quot;);
+
+object payload = isTrade
+    ? (object)new { account = ctx.GetString(&quot;account_code&quot;),
+                    total   = ctx.GetDecimal(&quot;order_total&quot;),
+                    lines   = ctx.GetInt(&quot;line_count&quot;) }
+    : (object)new { email   = ctx.GetString(&quot;email&quot;),
+                    company = ctx.GetString(&quot;company&quot;) };
+
+var token = HostController.Instance.GetString(isTrade ? &quot;Acme_ErpToken&quot; : &quot;Acme_CrmToken&quot;, string.Empty);
+
+using (var http = new HttpClient { Timeout = TimeSpan.FromSeconds(8) })
+using (var request = new HttpRequestMessage(HttpMethod.Post, url))
+{
+    request.Headers.Authorization =
+        new System.Net.Http.Headers.AuthenticationHeaderValue(&quot;Bearer&quot;, token);
+    request.Content = new StringContent(JsonConvert.SerializeObject(payload), Encoding.UTF8, &quot;application/json&quot;);
+
+    var reply = await http.SendAsync(request, ct);
+    var text  = await reply.Content.ReadAsStringAsync();
+
+    ctx.Log(&quot;crm status=&quot; + (int)reply.StatusCode);
+
+    if (reply.IsSuccessStatusCode)
+    {
+        var orderNumber = (string)JsonConvert.DeserializeObject&lt;Newtonsoft.Json.Linq.JObject&gt;(text)[&quot;orderNumber&quot;];
+
+        ctx.SetVariable(&quot;erpOrderNumber&quot;, orderNumber);
+        ctx.Response.SuccessMessage = &quot;Thank you — your reference is &quot; + orderNumber + &quot;.&quot;;
+        ctx.Response.RedirectUrl = &quot;/order-confirmed?ref=&quot; + Uri.EscapeDataString(orderNumber);
+    }
+}
+</code></pre>
+<p><code>ctx.SetVariable</code> puts the value on the run record. <code>ctx.Response.SuccessMessage</code> and
+<code>RedirectUrl</code> override the post-submit experience for this submission only.</p>
+<p>What you <strong>cannot</strong> do is put the order number back into the stored submission: <code>ctx.SetValue</code> is
+refused at PostCommit, because a script that believes it rewrote a stored value and did not is a data
+bug that surfaces months later in a report. If the number has to be queryable later, write it to a
+table you own in the same script — see <a href="automation-custom-db.html">Write to your own database</a>.</p>
+<hr>
+<h2 id="7-failure-honestly">7. Failure, honestly</h2>
+<p>The row is committed before your code runs, so a dead CRM never loses a submission. It does mean the
+script is the only thing that knows the push failed.</p>
+<pre><code class="lang-csharp">// continues the example above — http and request are the ones created there,
+// and System.Net.Http is already in that fence's usings
+try
+{
+    var reply = await http.SendAsync(request, ct);
+    ctx.Log(&quot;crm status=&quot; + (int)reply.StatusCode);
+
+    if (!reply.IsSuccessStatusCode)
+        ctx.Fail(&quot;CRM returned &quot; + (int)reply.StatusCode);
+}
+catch (TaskCanceledException)
+{
+    // HttpClient reports its own timeout and a cancelled ct the same way.
+    ctx.Log(&quot;crm timed out after 8s&quot;);
+    ctx.Fail(&quot;CRM timeout&quot;);
+}
+catch (HttpRequestException ex)
+{
+    ctx.Log(&quot;crm transport failure: &quot; + ex.Message);
+    ctx.Fail(&quot;CRM unreachable&quot;);
+}
+</code></pre>
+<p><code>ctx.Fail</code> records the run as failed. Whether the visitor sees anything depends on the script's
+failure setting: <strong>continue</strong> (the default) shows the normal thank-you, <strong>report</strong> returns the message
+to the caller. Neither undoes the submission.</p>
+<p>There is <strong>no retry and no queue</strong>. The webhook node retries; a script gets one attempt unless you
+loop yourself — and the visitor waits for every attempt you make, inside a 10-second run timeout. If
+the destination is unreliable, the durable pattern is: log the failure, write a row into your own
+&quot;pending sync&quot; table, and reconcile from a scheduled job. Retrying later from inside the submission
+request is not available (that would need the AsyncWorker stage, which cannot be configured today).</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>On .NET Framework, a TLS handshake failure against a modern endpoint surfaces as
+<code>HttpRequestException: The request was aborted: Could not create SSL/TLS secure channel</code>. Fix that
+at the server — framework/OS TLS configuration — not by setting <code>ServicePointManager.SecurityProtocol</code>
+in a script, which mutates process-wide state for every other component on the site.</p>
+</div>
+<hr>
+<h2 id="8-soap-and-other-content-types">8. SOAP, and other content types</h2>
+<p>There is nothing special about SOAP here. It is a POST with an XML body and a <code>SOAPAction</code> header.</p>
+<pre><code class="lang-csharp">using System.Net.Http;
+using System.Text;
+
+var envelope =
+    &quot;&lt;soap:Envelope xmlns:soap=\&quot;http://schemas.xmlsoap.org/soap/envelope/\&quot;&gt;&quot; +
+      &quot;&lt;soap:Body&gt;&lt;CreateLead xmlns=\&quot;urn:contoso:crm\&quot;&gt;&quot; +
+        &quot;&lt;Email&gt;&quot; + System.Security.SecurityElement.Escape(ctx.GetString(&quot;email&quot;)) + &quot;&lt;/Email&gt;&quot; +
+        &quot;&lt;Company&gt;&quot; + System.Security.SecurityElement.Escape(ctx.GetString(&quot;company&quot;)) + &quot;&lt;/Company&gt;&quot; +
+      &quot;&lt;/CreateLead&gt;&lt;/soap:Body&gt;&quot; +
+    &quot;&lt;/soap:Envelope&gt;&quot;;
+
+using (var http = new HttpClient { Timeout = TimeSpan.FromSeconds(8) })
+using (var request = new HttpRequestMessage(HttpMethod.Post, &quot;https://legacy.contoso.com/crm.asmx&quot;))
+{
+    request.Headers.Add(&quot;SOAPAction&quot;, &quot;urn:contoso:crm/CreateLead&quot;);
+    request.Content = new StringContent(envelope, Encoding.UTF8, &quot;text/xml&quot;);
+
+    var reply = await http.SendAsync(request, ct);
+    ctx.Log(&quot;soap status=&quot; + (int)reply.StatusCode);
+}
+</code></pre>
+<p>Escape every submitted value you interpolate into XML. On a public form, treat all of them as
+hostile. Form-encoded endpoints are the same pattern with <code>FormUrlEncodedContent</code>.</p>
+<p>There is no WSDL tooling and no generated proxy: you build the envelope, you read the response.</p>
+<hr>
+<h2 id="9-what-this-page-does-not-give-you">9. What this page does not give you</h2>
+<table>
+<thead>
+<tr>
+<th>Wanted</th>
+<th>Today</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reject the submission when the API says no</td>
+<td>Not configurable — needs the PreInsert stage</td>
+</tr>
+<tr>
+<td>Write the API's answer back into the stored submission</td>
+<td>Refused at PostCommit by design (§6)</td>
+</tr>
+<tr>
+<td>Automatic retry / backoff</td>
+<td>Only the <a href="integration-webhook.html">webhook node</a> has it</td>
+</tr>
+<tr>
+<td>Hand a slow call to a background worker</td>
+<td>AsyncWorker exists in the engine, not configurable</td>
+</tr>
+<tr>
+<td>Generate a PDF from the reply, move an uploaded file</td>
+<td>Not implemented</td>
+</tr>
+</tbody>
+</table>
+<div class="IMPORTANT">
+<h5>Important</h5>
+<p>There is an opt-in strict mode that restores an older namespace deny-list. It is off by default; if
+a host has turned it on, <code>System.Net.Http</code> is refused at compile time and none of this page applies.</p>
+</div>
+<h2 id="related">Related</h2>
+<ul>
+<li><a href="integration-webhook.html">Integration: CRM/ERP over HTTP</a> — the no-code node, and when it is enough</li>
+<li><a href="automation-custom-db.html">Write to your own database</a> — where a returned reference number should land</li>
+<li><a href="automation-overview.html">Automation overview</a> — stages, gates, and the run record</li>
+<li><a href="after-submission.md">After Submission</a> — the no-code post-submit settings</li>
+</ul>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

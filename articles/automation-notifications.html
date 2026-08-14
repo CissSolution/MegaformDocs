@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Notifications: send a message the answers decide | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Notifications: send a message the answers decide | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feature/typed-submission-storage-core/Docs/docfx/articles/automation-notifications.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="notifications-send-a-message-the-answers-decide">Notifications: send a message the answers decide</h1>
+
+<p>Most of this needs no code. The workflow <strong>Email</strong> node sends mail when a form is submitted, holds
+its own subject and body with <code>{{field:key}}</code> tokens, and a <strong>Condition</strong> node in front of two Email
+nodes covers branching:</p>
+<pre><code>Form submitted → Condition (total &gt; 5000) ─ yes → Email &quot;Director approval&quot;
+                                           └ no  → Email &quot;Team lead approval&quot;
+</code></pre>
+<p>Build that first. It is configuration, it survives an export, and nobody has to enable scripting for
+it.</p>
+<p>This page is for the case the node cannot express: when <strong>the decision is the hard part</strong> — the
+recipient has to be looked up, the subject changes shape on a value, one message goes to the
+regional queue and a copy goes to whoever owns that account. Then you write the decision in C# and
+send with DNN's own mail API.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>An earlier version of this page described a <code>ctx.Notify</code> capability with a template catalog. That
+was removed. A script is ordinary C# now and calls platform APIs directly.</p>
+</div>
+<hr>
+<h2 id="1-sending-mailsendemail">1. Sending: <code>Mail.SendEmail</code></h2>
+<pre><code class="lang-csharp">// shape only — `from`, `to`, `subject` and `body` come from the sections below
+using DotNetNuke.Services.Mail;
+
+Mail.SendEmail(from, to, subject, body);
+</code></pre>
+<p>That is the same code path DNN uses for its own password-reset and notification mail, so it reads
+the same SMTP configuration — host, port, credentials, SSL — that an administrator already set under
+<strong>Settings → Servers → SMTP Server</strong> (with a site-level override on the DNN versions that offer
+one). There is no second place to configure mail for MegaForm, and no SMTP password in a script.</p>
+<p>On this DNN version <code>SendEmail</code> returns nothing. There is no status string to test, so do not write
+code that reads one — the call either completes or it throws. If the page needs a failure path, put
+the call in a <code>try</code>/<code>catch</code> and fail the run on the exception:</p>
+<pre><code class="lang-csharp">using DotNetNuke.Services.Mail;
+
+var to      = &quot;sales@contoso.com&quot;;
+var from    = &quot;no-reply@contoso.com&quot;;
+var subject = &quot;Enquiry &quot; + ctx.SubmissionId;
+var body    = &quot;&lt;p&gt;See the submission for details.&lt;/p&gt;&quot;;
+
+try
+{
+    Mail.SendEmail(from, to, subject, body);
+    ctx.Log(&quot;mail handed to DNN's sender for &quot; + to);
+}
+catch (Exception ex)
+{
+    ctx.Log(&quot;mail failed for &quot; + to + &quot;: &quot; + ex.Message);
+    ctx.Fail(&quot;Notification not sent&quot;);
+}
+</code></pre>
+<p>Handing the message to DNN's sender is the boundary the script can see. What happens after that —
+whether SMTP accepted it, whether the recipient's server took it — is not observable from here.</p>
+<p>For cc, bcc, reply-to, an explicit body format or attachments, <code>Mail.SendMail</code> carries longer
+overloads. Those signatures have changed across DNN versions, so read the one your site's
+<code>DotNetNuke.dll</code> actually exposes rather than copying a signature from anywhere — including this
+page. If all you need is a copy to a manager, the reliable version is a second <code>SendEmail</code> call: one
+message per recipient, one log line per recipient, and no guessing about how a given DNN build
+splits a recipient list.</p>
+<div class="WARNING">
+<h5>Warning</h5>
+<p>A PostCommit script runs inside the submission request. SMTP is the slowest thing on this page —
+an unreachable mail host does not fail fast, it hangs until the connection times out, and the
+visitor sits on the form waiting for the thank-you message. Keep it to a couple of sends. If a
+notification has to fan out to twenty people, write one row to your own table and let a scheduled
+job drain it.</p>
+</div>
+<hr>
+<h2 id="2-the-from-address-ask-the-portal">2. The from-address: ask the portal</h2>
+<p>Do not hard-code a sender. Read the portal's own address:</p>
+<pre><code class="lang-csharp">using DotNetNuke.Entities.Portals;
+
+var portal = PortalController.Instance.GetPortal(ctx.PortalId);
+var from   = portal.Email;
+</code></pre>
+<p>Two reasons this matters more than it looks. On a multi-portal install the same form template can be
+running on three sites, and <code>ctx.PortalId</code> is the only thing that knows which one just submitted.
+And mail sent from an address on a domain whose SPF and DMARC records do not cover your server gets
+filed as spam or rejected outright — the portal address is the one the administrator already
+aligned.</p>
+<hr>
+<h2 id="3-building-the-body-and-encoding-what-came-from-the-submitter">3. Building the body, and encoding what came from the submitter</h2>
+<p>Every value you interpolate into an HTML body arrived from a stranger over the internet. Encode it.</p>
+<pre><code class="lang-csharp">using System;
+using System.Net;
+using DotNetNuke.Entities.Portals;
+using DotNetNuke.Services.Mail;
+
+Func&lt;string, string&gt; h = s =&gt; WebUtility.HtmlEncode(s ?? &quot;&quot;);
+
+var name    = ctx.GetString(&quot;full_name&quot;, &quot;&quot;);
+var company = ctx.GetString(&quot;company&quot;, &quot;&quot;);
+var message = ctx.GetString(&quot;message&quot;, &quot;&quot;);
+var total   = ctx.GetDecimal(&quot;total_amount&quot;, 0m);
+
+var body =
+    &quot;&lt;p&gt;&lt;strong&gt;&quot; + h(name) + &quot;&lt;/strong&gt; (&quot; + h(company) + &quot;) submitted &quot;
+  + ctx.FormTitle + &quot; #&quot; + ctx.SubmissionId + &quot;.&lt;/p&gt;&quot;
+  + &quot;&lt;p&gt;Value: &quot; + total.ToString(&quot;N2&quot;) + &quot;&lt;/p&gt;&quot;
+  + &quot;&lt;blockquote&gt;&quot; + h(message) + &quot;&lt;/blockquote&gt;&quot;
+  + &quot;&lt;p&gt;Received &quot; + ctx.UtcNow.ToString(&quot;u&quot;) + &quot; from &quot; + h(ctx.IpAddress) + &quot;&lt;/p&gt;&quot;;
+</code></pre>
+<p><code>total</code> is a <code>decimal</code> — it came out of <code>GetDecimal</code>, it cannot carry markup, so it does not need
+encoding. Everything that is still a string does.</p>
+<p>What goes wrong without it is not theoretical. A company name of <code>Smith &amp; Sons</code> renders as garbage
+in some clients and correctly in others, which is the confusing case. A message body containing
+<code>&lt;div style=&quot;display:none&quot;&gt;</code> swallows the rest of your email. And an alert that lands in a
+colleague's inbox, from your site, carrying an attacker's markup, is a phishing email you sent
+yourself — the reader trusts it precisely because it came from the form they were expecting.</p>
+<p>The subject needs different treatment. A carriage return or line feed in a subject is a header
+injection attempt, and it belongs on one line anyway:</p>
+<pre><code class="lang-csharp">// continues the example above — `company` is the value read there
+var safeCompany = company.Replace(&quot;\r&quot;, &quot; &quot;).Replace(&quot;\n&quot;, &quot; &quot;).Trim();
+if (safeCompany.Length &gt; 60) safeCompany = safeCompany.Substring(0, 60);
+
+var subject = &quot;New enquiry from &quot; + safeCompany;
+</code></pre>
+<hr>
+<h2 id="4-the-decision-route-escalate-copy">4. The decision: route, escalate, copy</h2>
+<p>This is the whole point of doing it in code. Region picks the queue, the value escalates, and a
+manager gets a copy when the account is one we care about.</p>
+<pre><code class="lang-csharp">using System;
+using System.Net;
+using DotNetNuke.Entities.Portals;
+using DotNetNuke.Services.Mail;
+
+Func&lt;string, string&gt; h = s =&gt; WebUtility.HtmlEncode(s ?? &quot;&quot;);
+
+var portal = PortalController.Instance.GetPortal(ctx.PortalId);
+var from   = portal.Email;
+
+var region = ctx.GetString(&quot;region&quot;, &quot;&quot;).Trim().ToUpperInvariant();
+var total  = ctx.GetDecimal(&quot;total_amount&quot;, 0m);
+var name   = ctx.GetString(&quot;full_name&quot;, &quot;&quot;);
+
+// 1. route
+string to;
+if (region == &quot;EMEA&quot;)      to = &quot;emea.sales@contoso.com&quot;;
+else if (region == &quot;APAC&quot;) to = &quot;apac.sales@contoso.com&quot;;
+else if (region == &quot;AMER&quot;) to = &quot;amer.sales@contoso.com&quot;;
+else
+{
+    to = &quot;sales@contoso.com&quot;;
+    ctx.Log(&quot;unmapped region '&quot; + region + &quot;' — sent to the central queue&quot;);
+}
+
+// 2. escalate
+var urgent  = total &gt;= 25000m;
+var subject = (urgent ? &quot;[Escalation] &quot; : &quot;&quot;) + &quot;Enquiry &quot; + ctx.SubmissionId
+            + &quot; — &quot; + total.ToString(&quot;N0&quot;);
+
+var body = &quot;&lt;p&gt;&quot; + h(name) + &quot; — &quot; + h(region) + &quot; — &quot; + total.ToString(&quot;N2&quot;) + &quot;&lt;/p&gt;&quot;
+         + &quot;&lt;blockquote&gt;&quot; + h(ctx.GetString(&quot;message&quot;, &quot;&quot;)) + &quot;&lt;/blockquote&gt;&quot;;
+
+try
+{
+    Mail.SendEmail(from, to, subject, body);
+    ctx.Log(&quot;primary=&quot; + to + &quot; urgent=&quot; + urgent + &quot; handed to DNN's sender&quot;);
+}
+catch (Exception ex)
+{
+    ctx.Log(&quot;primary=&quot; + to + &quot; FAILED: &quot; + ex.Message);
+    ctx.Fail(&quot;Primary notification not sent&quot;);
+    return;
+}
+
+// 3. copy the manager, as a separate message
+if (urgent)
+{
+    try
+    {
+        Mail.SendEmail(from, &quot;sales.director@contoso.com&quot;, subject, body);
+        ctx.Log(&quot;manager copy handed to DNN's sender&quot;);
+    }
+    catch (Exception ex)
+    {
+        ctx.Log(&quot;manager copy FAILED: &quot; + ex.Message);
+    }
+}
+
+ctx.SetVariable(&quot;notifiedQueue&quot;, to);
+</code></pre>
+<p><code>ctx.Log</code> lines land in the run record, in order, with the run's duration. That is what answers
+<em>&quot;was the director told about #4187&quot;</em> three weeks later, so log the address you actually used, not
+the branch you think you took.</p>
+<p><code>ctx.SetVariable</code> puts a value on the run record too. Use it when a later reader — a workflow node,
+a report — needs to know which way the decision went.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p><code>ctx.Fail</code> records the run as failed. It does not undo the submission: at PostCommit the row is
+already committed and the visitor already has their thank-you message. Refusing a submission needs
+PreInsert, which is not configurable today. A failed notification is a failed notification, not a
+lost enquiry — and the run record is where you find it.</p>
+</div>
+<hr>
+<h2 id="5-when-the-recipient-has-to-be-looked-up">5. When the recipient has to be looked up</h2>
+<p>The address often is not in the form at all. It is in a table: account owners, cost-centre
+approvers, the on-call rota. That is a plain <code>SqlConnection</code> against the site's own database — the
+<a href="automation-custom-db.html">write to your own database</a> page covers the connection and the
+parameterisation; the only new part here is the fallback.</p>
+<pre><code class="lang-csharp">using System.Data;
+using System.Data.SqlClient;
+using DotNetNuke.Common.Utilities;
+using DotNetNuke.Entities.Portals;
+using DotNetNuke.Services.Mail;
+
+// the lookup, as a local function — replace the table and column with your own
+string LookupOwner(string code)
+{
+    if (string.IsNullOrEmpty(code)) return null;
+    using (var cn = new SqlConnection(Config.GetConnectionString()))
+    using (var cmd = new SqlCommand(
+        &quot;SELECT TOP 1 OwnerEmail FROM dbo.AccountOwners WHERE AccountCode = @code&quot;, cn))
+    {
+        cmd.Parameters.Add(&quot;@code&quot;, SqlDbType.NVarChar, 32).Value = code;
+        cn.Open();
+        return cmd.ExecuteScalar() as string;
+    }
+}
+
+var portal  = PortalController.Instance.GetPortal(ctx.PortalId);
+var from    = portal.Email;
+var subject = &quot;Enquiry &quot; + ctx.SubmissionId;
+var body    = &quot;&lt;p&gt;See submission #&quot; + ctx.SubmissionId + &quot;.&lt;/p&gt;&quot;;
+
+var accountCode = ctx.GetString(&quot;account_code&quot;, &quot;&quot;);
+var owner = LookupOwner(accountCode);
+if (string.IsNullOrEmpty(owner))
+{
+    owner = &quot;sales@contoso.com&quot;;
+    ctx.Log(&quot;no owner for account &quot; + accountCode + &quot; — central queue&quot;);
+}
+
+try
+{
+    Mail.SendEmail(from, owner, subject, body);
+    ctx.Log(&quot;mail handed to DNN's sender for &quot; + owner);
+}
+catch (Exception ex)
+{
+    ctx.Log(&quot;mail failed for &quot; + owner + &quot;: &quot; + ex.Message);
+    ctx.Fail(&quot;Notification not sent&quot;);
+}
+</code></pre>
+<p>Always have the else branch. A lookup that returns nothing and a script that then sends nothing is
+the failure mode nobody notices, because the form still says thank you.</p>
+<hr>
+<h2 id="6-sms-telegram-slack-teams">6. SMS, Telegram, Slack, Teams</h2>
+<p>There is no separate mechanism for these. Every one of them is an HTTP POST to the provider's API
+with a token in a header, which means the <a href="automation-rest-crm.html">REST integration page</a> is the
+page you want — same <code>HttpClient</code>, same handling of a non-2xx response.</p>
+<p>Two practical notes carried over from mail. Encode or escape anything the submitter typed before it
+goes into a chat message, because chat clients render markup too. And keep the token out of the
+script body where you can: the URL and the token belong in the same kind of server-side
+configuration as everything else you would not put in a form export.</p>
+<hr>
+<h2 id="7-what-this-cannot-do">7. What this cannot do</h2>
+<ul>
+<li><strong>Refuse the submission</strong> because the notification failed. That needs PreInsert; nothing in the
+product writes a script into that stage today.</li>
+<li><strong>Write the chosen recipient back into the stored submission.</strong> <code>ctx.SetValue</code> is refused at
+PostCommit, deliberately — a script that believes it changed a stored value and did not is a data
+bug that surfaces months later in a report. Send the value onward, or write it to your own table.</li>
+<li><strong>Attach a generated PDF.</strong> Document generation is not implemented.</li>
+</ul>
+<hr>
+<h2 id="before-any-script-runs">Before any script runs</h2>
+<p>Three gates, in order:</p>
+<ol>
+<li><code>&lt;add key=&quot;MegaForm:AfterSubmitScriptEnabled&quot; value=&quot;true&quot; /&gt;</code> in the server's <code>web.config</code>
+appSettings. Off on every install, and a file rather than a settings screen on purpose: the right
+bar for <em>people may run code on this server</em> is <em>can edit files on this server</em>.</li>
+<li>A <strong>host</strong> (superuser) account saves the script. Not a site administrator, not module-edit
+rights.</li>
+<li>An approval hash over the source. The stored hash must match the source, so a script that arrives
+inside an imported form or a gallery template is inert until a host on <strong>that</strong> site approves it.</li>
+</ol>
+<p>Ordinary form saves cannot introduce, alter or enable a script.</p>
+<hr>
+<h2 id="measured">Measured</h2>
+<p>On a DNN 10.3 site, one anonymous submission ran a single PostCommit script that sent mail through
+the site's own SMTP settings alongside a parameterised INSERT, an outbound HTTP POST and a user
+creation. Total run duration 927 ms. The mail line in the run log:</p>
+<pre><code>mail handed to DNN's sender for jane.carter@example.com
+</code></pre>
+<p>&quot;Handed to DNN's sender&quot; is the honest boundary, and it is as far as the log line can go. The call
+returns nothing, so the script knows only that it completed without throwing. Whether SMTP delivered
+the message, and whether the recipient's server accepted it, is between the two mail servers — the
+answer to that is in your SMTP logs, not in the run record.</p>
+<h2 id="related">Related</h2>
+<ul>
+<li><a href="automation-rest-crm.html">Push a submission to a CRM, ERP or any REST/SOAP API</a> — and every SMS or
+chat provider</li>
+<li><a href="automation-custom-db.html">Write to your own database</a> — for recipient lookups</li>
+<li><a href="automation-user-provisioning.html">Create a user and grant a role</a></li>
+<li><a href="automation-overview.html">Automation overview</a></li>
+</ul>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

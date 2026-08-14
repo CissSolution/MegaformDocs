@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>reCAPTCHA and the other CAPTCHA providers | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="reCAPTCHA and the other CAPTCHA providers | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feature/typed-submission-storage-core/Docs/docfx/articles/recaptcha-setup.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="recaptcha-and-the-other-captcha-providers">reCAPTCHA and the other CAPTCHA providers</h1>
+
+<p>MegaForm can put a Google reCAPTCHA, hCaptcha or Cloudflare Turnstile challenge on a public form.
+The part worth understanding before you configure anything: <strong>the challenge in the browser is not
+what protects the form.</strong> The browser produces a token; the server takes that token, asks the
+provider whether it is genuine, and refuses the submission if the answer is no. A client that
+simply never renders the widget does not get past this — it gets an HTTP 400.</p>
+<h2 id="two-things-have-to-be-true">Two things have to be true</h2>
+<p>Protection needs both of these, and neither one alone does anything:</p>
+<ol>
+<li><strong>Keys are stored on the site.</strong> A site key and a secret key, saved once at host level.</li>
+<li><strong>The form has a Captcha field.</strong> Verification is keyed off the <strong>Captcha field in that form's
+schema</strong>. The server looks for a field of type <code>Captcha</code> with a key; if the form has none, the
+submission is accepted without any CAPTCHA check, no matter what keys are configured.</li>
+</ol>
+<p>The reverse also holds: a form with a Captcha field but no site key renders a visible warning
+instead of a challenge, and a form with a Captcha field but no secret key refuses every submission.
+Both cases are covered under <a href="#what-can-go-wrong">What can go wrong</a>.</p>
+<h2 id="step-1--get-a-key-pair-from-the-provider">Step 1 — Get a key pair from the provider</h2>
+<p>For Google reCAPTCHA, register the site at Google's reCAPTCHA admin console and choose <strong>v2
+(&quot;I'm not a robot&quot; checkbox)</strong> or <strong>v3</strong>. You get two strings:</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Where it goes</th>
+<th>Who sees it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Site key</strong> (public)</td>
+<td>Rendered into the public form page</td>
+<td>Everyone. It is meant to be public.</td>
+</tr>
+<tr>
+<td><strong>Secret key</strong> (private)</td>
+<td>Stored server-side only</td>
+<td>Nobody. It never appears in any response to a browser.</td>
+</tr>
+</tbody>
+</table>
+<p>Register the hostname the form is actually served from. A key registered for <code>www.contoso.com</code>
+will fail verification on <code>staging.contoso.com</code>, and the failure looks identical to a bot being
+blocked.</p>
+<h2 id="step-2--store-the-keys-once-at-host-level">Step 2 — Store the keys once, at host level</h2>
+<p>Open the MegaForm dashboard and go to <strong>Captcha Settings</strong>. There are separate <strong>Site Key</strong> and
+<strong>Secret Key</strong> boxes for reCAPTCHA and for hCaptcha. Paste and <strong>Save Captcha Settings</strong>.</p>
+<p>That is the whole configuration, and it is done once per site. On a live DNN 10.3 site the site key
+saved here reaches the <strong>public form page</strong> on its own — the form itself does not have to be edited
+per page, and the page does not have to be re-published. Google's script then loads on the public
+page and <code>window.grecaptcha</code> becomes available to the widget.</p>
+<p>Reopen the pane after saving and the secret key box does not show the secret back to you: it shows
+a truncated mask and a <strong>Secret saved</strong> marker. Saving again without retyping it keeps the stored
+value; a masked value is recognised and ignored rather than written back. The secret is used only
+in the server-to-provider verification call.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>The Captcha Settings pane holds the reCAPTCHA and hCaptcha key pairs. Cloudflare Turnstile is
+supported by the same verification path and is configured the same way — public site key on the
+page, secret key held server-side — with its keys supplied through the host's MegaForm
+configuration.</p>
+</div>
+<h2 id="step-3--add-the-captcha-field-to-the-form">Step 3 — Add the Captcha field to the form</h2>
+<p>In the builder, drag the <strong>CAPTCHA</strong> control onto the form and set its properties:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Mode</strong></td>
+<td><code>reCAPTCHA v2</code>, <code>reCAPTCHA v3</code> or <code>hCaptcha</code>. Determines which script loads and which provider is asked to verify.</td>
+</tr>
+<tr>
+<td><strong>Theme</strong></td>
+<td>Light or dark, passed to the provider's widget.</td>
+</tr>
+<tr>
+<td><strong>Site Key</strong></td>
+<td>Leave blank to use the site-wide key. A value here overrides <strong>only the public site key</strong> for this field — there is deliberately no per-field secret key.</td>
+</tr>
+<tr>
+<td><strong>Action Name (v3)</strong></td>
+<td>reCAPTCHA v3 action label, default <code>submit</code>. Only letters, digits, <code>_</code>, <code>/</code> and <code>-</code> survive; anything else is stripped.</td>
+</tr>
+<tr>
+<td><strong>Min Score (v3)</strong></td>
+<td><code>0.3</code> lenient, <code>0.5</code> balanced (default), <code>0.7</code> strict.</td>
+</tr>
+</tbody>
+</table>
+<p>Save the form. Nothing else on the page needs changing.</p>
+<h2 id="v2-checkbox-versus-v3-invisible">v2 checkbox versus v3 invisible</h2>
+<p>This is a layout decision as much as a security one.</p>
+<p><strong>reCAPTCHA v2</strong> shows the familiar <em>I'm not a robot</em> checkbox. The visitor has to tick it, and may
+be handed an image challenge. MegaForm renders it inside a bordered box capped at 340 px wide that
+reserves at least 78 px of height for the provider's widget, so the field occupies real space in
+the form flow — plan the layout around it the way you would around any other field.</p>
+<p><strong>reCAPTCHA v3</strong> shows the visitor nothing. It scores the session in the background and hands the
+form a token. Measured on a live public page, the widget host element for v3 renders <strong>0 px high</strong> —
+the form reserves no space at all. The only visible artefact is Google's own badge in the page
+corner, measured at <strong>256 × 60</strong>.</p>
+<p><img src="/Portals/0/MegaFormBlogs/docs/megaform-recaptcha-v3-form.png" alt="A live public form protected by reCAPTCHA v3: two fields and the submit button, with no CAPTCHA
+box and no gap between the last field and the button — the protection is there, and it takes no
+layout space"></p>
+<p>Nothing on that form announces the check. The whole of it is the badge, bottom right of the page:</p>
+<p><img src="/Portals/0/MegaFormBlogs/docs/megaform-recaptcha-v3-badge.png" alt="Google's reCAPTCHA badge in the page corner, the only visible sign that v3 is
+active"></p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>That badge is not decoration. Google's terms require either the badge or a visible notice telling
+visitors that reCAPTCHA is in use, with links to Google's privacy policy and terms. If you hide
+the badge with site CSS, add the notice.</p>
+</div>
+<p>The practical trade: v2 costs layout space and one click but tells the visitor plainly what happened
+when it fails. v3 costs nothing visually, and a visitor blocked by a low score has no way to prove
+otherwise — there is nothing to re-solve.</p>
+<h2 id="what-happens-when-the-form-is-submitted">What happens when the form is submitted</h2>
+<p>The server runs this before the submission is stored, before workflow, before notifications:</p>
+<ol>
+<li>Load the form's schema and find the Captcha field. <strong>No Captcha field → no check.</strong></li>
+<li>Read the token the browser posted under that field's key.</li>
+<li><strong>No token</strong> → refuse.</li>
+<li><strong>No secret key configured</strong> → refuse, with a message naming the missing configuration.</li>
+<li>POST the secret, the token and the caller's IP to the provider's verify endpoint
+(<code>https://www.google.com/recaptcha/api/siteverify</code> for reCAPTCHA,
+<code>https://hcaptcha.com/siteverify</code> for hCaptcha).</li>
+<li><strong>Provider says <code>success: false</code></strong> → refuse.</li>
+<li><strong>reCAPTCHA v3 only</strong> — the returned action must match the configured action exactly, and the
+returned score must be at or above the minimum. Either check failing → refuse.</li>
+<li>On success the token in the submitted data is replaced with a fixed verified marker before the
+data is stored, so no reusable provider token is written into the submission record.</li>
+</ol>
+<p>Refusals are HTTP 400 with the message on both <code>error</code> and <code>validationErrors[&lt;captcha field key&gt;]</code>,
+so a form can show it inline against the field.</p>
+<p><strong>Submitting with no token at all:</strong></p>
+<pre><code class="lang-json">{&quot;success&quot;:false,&quot;error&quot;:&quot;Please complete the CAPTCHA verification.&quot;,&quot;validationErrors&quot;:{&quot;captcha&quot;:&quot;Please complete the CAPTCHA verification.&quot;}}
+</code></pre>
+<p><strong>Submitting with a token that is not genuine:</strong></p>
+<pre><code class="lang-json">{&quot;success&quot;:false,&quot;error&quot;:&quot;CAPTCHA verification failed. Please try again.&quot;,&quot;validationErrors&quot;:{&quot;captcha&quot;:&quot;CAPTCHA verification failed. Please try again.&quot;}}
+</code></pre>
+<p>The two messages are different on purpose, and the difference is the whole point of the feature.
+The first is the form noticing that nothing was solved. The second is the server having asked
+Google and been told no. Both were produced against a live site by an anonymous caller posting
+directly to the submit endpoint — a browser cannot skip verification by declining to send the
+field.</p>
+<p>The remaining refusal messages, in the same shape:</p>
+<table>
+<thead>
+<tr>
+<th>Situation</th>
+<th>Message</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Secret key not saved</td>
+<td><code>Captcha secret key is not configured in Dashboard settings.</code></td>
+</tr>
+<tr>
+<td>Provider unreachable or the call threw</td>
+<td><code>Could not verify CAPTCHA right now. Please try again.</code></td>
+</tr>
+<tr>
+<td>v3 action did not match</td>
+<td><code>CAPTCHA action mismatch. Please try again.</code></td>
+</tr>
+<tr>
+<td>v3 score below the minimum</td>
+<td><code>CAPTCHA score was too low. Please try again.</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="what-a-visitor-sees-and-what-an-administrator-sees">What a visitor sees, and what an administrator sees</h2>
+<p><strong>Visitor, normal failure.</strong> With v2 or hCaptcha, leaving the box unticked is caught in the browser
+first: the field shows <em>Please complete the security check</em> and no request is sent. If the token has
+expired between solving and submitting, the widget clears itself and says so
+(<em>reCAPTCHA expired — please verify again.</em>), and the visitor solves it again.</p>
+<p><strong>Visitor, server refusal.</strong> The 400 message above lands on the Captcha field. With v3 the visitor
+sees a failure they cannot act on — this is the honest cost of an invisible challenge.</p>
+<p><strong>Administrator, keys missing.</strong> A form whose mode has no site key does not fail silently. It
+renders an orange notice <strong>in the form, visible to the public</strong>:</p>
+<blockquote>
+<p>reCAPTCHA v2 requires a site key — configure it in Dashboard → Captcha Settings or override it in
+the field settings.</p>
+</blockquote>
+<p>Load the public page as an anonymous visitor after configuring; that notice is the fastest way to
+find out the key never arrived.</p>
+<p><strong>Administrator, submissions.</strong> Verified submissions store the fixed marker in the Captcha field,
+not the provider token. The grid column for that field is therefore uninformative by design — see
+<a href="submissions-grid.html">Submissions Grid</a>. Refused submissions are not stored at all, so a spike in
+blocked traffic is visible in the web server log rather than in MegaForm.</p>
+<h2 id="the-four-providers">The four providers</h2>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>Visitor experience</th>
+<th>Verified endpoint</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>reCAPTCHA v2</td>
+<td>Checkbox, sometimes an image challenge</td>
+<td><code>www.google.com/recaptcha/api/siteverify</code></td>
+</tr>
+<tr>
+<td>reCAPTCHA v3</td>
+<td>Nothing visible except the badge</td>
+<td><code>www.google.com/recaptcha/api/siteverify</code></td>
+</tr>
+<tr>
+<td>hCaptcha</td>
+<td>Checkbox, sometimes an image challenge</td>
+<td><code>hcaptcha.com/siteverify</code></td>
+</tr>
+<tr>
+<td>Cloudflare Turnstile</td>
+<td>Usually a non-interactive widget</td>
+<td><code>challenges.cloudflare.com/turnstile/v0/siteverify</code></td>
+</tr>
+</tbody>
+</table>
+<div class="IMPORTANT">
+<h5>Important</h5>
+<p>The behaviour described in this page — the layout measurements, the two distinct refusal messages,
+the site key reaching the public page — was measured with reCAPTCHA. hCaptcha and Turnstile are
+wired the same way through the same server-side verification step, but their measured behaviour is
+not documented here. Test the one you choose on a public page before you rely on it.</p>
+</div>
+<h2 id="what-recaptcha-does-not-do">What reCAPTCHA does not do</h2>
+<p>Be clear about what you are buying:</p>
+<ul>
+<li><strong>It scores traffic; it does not decide anything on its own.</strong> v3 returns a number. You choose the
+threshold, and every threshold is a trade between blocking bots and blocking real people. There is
+no setting at which both are zero.</li>
+<li><strong>It puts a third party in your submit path.</strong> If the provider is unreachable, MegaForm refuses the
+submission (<code>Could not verify CAPTCHA right now.</code>) rather than letting it through unchecked. That
+is the safe default, but it means the provider's availability is now your form's availability.</li>
+<li><strong>It does nothing about the rest of the spam problem</strong> — duplicate submissions, a script hammering
+one form, a real person submitting nonsense.</li>
+</ul>
+<p>MegaForm's other anti-spam layers run on your server with <strong>no third-party dependency</strong>, and are
+worth keeping switched on alongside a CAPTCHA — or instead of one, on forms where a visible
+challenge is not acceptable:</p>
+<ul>
+<li><strong>Honeypot field</strong> — a decoy input (<code>__mf_hp</code> by default) that a human never fills in and many
+bots do. It is stripped from the data before storage.</li>
+<li><strong>IP rate limiting</strong> — per form, per IP, defaulting to <strong>3 submissions per 5-minute window</strong>. Both
+numbers are per-form settings.</li>
+<li><strong>Heuristic scoring</strong> — suspiciously fast submissions and similar signals contribute to a spam
+score. Submissions from signed-in staff skip the browser heuristics but keep the honeypot and rate
+limit, so internal forms do not accumulate false positives.</li>
+</ul>
+<p>A public contact form generally wants reCAPTCHA v3 plus honeypot plus rate limiting. An internal
+approval form usually wants the honeypot and rate limit only.</p>
+<h2 id="checklist-before-you-call-it-done">Checklist before you call it done</h2>
+<ol>
+<li>Keys saved in <strong>Captcha Settings</strong>; reopening the pane shows <strong>Secret saved</strong>.</li>
+<li>The form has a Captcha field, and the mode matches the key type you registered (a v3 key does not
+work in v2 mode).</li>
+<li>The public page, loaded signed out, shows the checkbox (v2) or the badge (v3) — and no orange
+<em>requires a site key</em> notice.</li>
+<li>A normal submission succeeds.</li>
+<li>A submission with the CAPTCHA left unsolved is refused with
+<em>Please complete the CAPTCHA verification.</em></li>
+</ol>
+<h2 id="next-steps">Next steps</h2>
+<ul>
+<li><a href="form-builder.html">Form Builder</a> — the rest of the field property panel.</li>
+<li><a href="creating-forms.html">Creating Forms</a> — where the per-form anti-spam settings live.</li>
+<li><a href="submissions-grid.html">Submissions Grid</a> — what the stored Captcha field looks like afterwards.</li>
+</ul>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

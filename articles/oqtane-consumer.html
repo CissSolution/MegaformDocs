@@ -16,7 +16,7 @@
       <meta name="docfx:rel" content="../">
       
       
-      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/Docs/docfx/articles/oqtane-consumer.md/#L1">
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feature/typed-submission-storage-core/Docs/docfx/articles/oqtane-consumer.md/#L1">
       <meta name="loc:inThisArticle" content="In this article">
       <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
       <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
@@ -100,7 +100,7 @@ links. It opens by URL at <strong><code>/?mfpanel=sdkdemo&amp;formId=N</code></s
 services.AddScoped&lt;ISubmissionRepository, EfSubmissionRepository&gt;();
 services.AddScoped&lt;MegaForm.Core.Interfaces.IFileRepository, EfFileRepository&gt;();
 services.AddScoped&lt;IStorageService, OqtaneStorageService&gt;();
-MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk(services);
+services.AddMegaFormSdk();
 </code></pre>
 <h2 id="2-inject-it-into-a-component">2. Inject it into a component</h2>
 <pre><code class="lang-razor">@inject MegaForm.Sdk.IMegaFormClient Mega

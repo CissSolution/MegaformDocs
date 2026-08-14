@@ -16,7 +16,7 @@
       <meta name="docfx:rel" content="../">
       
       
-      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feat/theme-designer-picker-wizard-gallery-1.7.45/Docs/docfx/articles/reading-data.md/#L1">
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feature/typed-submission-storage-core/Docs/docfx/articles/reading-data.md/#L1">
       <meta name="loc:inThisArticle" content="In this article">
       <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
       <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
@@ -93,14 +93,18 @@
 <pre><code class="lang-csharp">var scope = new MegaFormScope
 {
     PortalId = 1,   // the site/portal to read from
-    UserId   = 0    // acting user (0 = anonymous/system)
+    UserId   = 0,   // acting user (0 = anonymous/system)
+    UserName = &quot;jane&quot;,
+    DisplayName = &quot;Jane Doe&quot;,
+    Roles = new List&lt;string&gt; { &quot;Managers&quot; }
 };
 </code></pre>
 <ul>
 <li><strong>Inside a MegaForm request</strong> you can usually omit it — the ambient platform context supplies
-the current portal.</li>
+the current portal and user.</li>
 <li><strong>Outside a request</strong> (a scheduled job, a different module, a CLI) you <strong>must</strong> pass it, or the
 call cannot know which tenant to read.</li>
+<li><strong>DNN</strong> does not register an <code>IPlatformContext</code>, so always pass an explicit scope on DNN.</li>
 </ul>
 <h2 id="listing-forms">Listing forms</h2>
 <p><a href="../api/MegaForm.Sdk.IFormApi.html"><code>IFormApi.ListFormsAsync</code></a> returns a paged result:</p>
@@ -171,7 +175,9 @@ while (true)
     pageNo++;
 }
 </code></pre>
-<p>Next: <a href="file-download.html">download the files</a> attached to those submissions.</p>
+<p>Next: <a href="file-download.html">download the files</a> attached to those submissions, or see the
+<a href="../../../Docs/SDK_SAMPLE_READ_FORM_DATA.md">read-form-data sample</a> for a complete example
+that resolves a form by id or name and renders its submissions.</p>
 
 </article>
 

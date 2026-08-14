@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Create a user and grant a role | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Create a user and grant a role | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feature/typed-submission-storage-core/Docs/docfx/articles/automation-user-provisioning.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="create-a-user-and-grant-a-role">Create a user and grant a role</h1>
+
+<p>A student enters a class code on a form and should end up with an account that can open the course
+materials. A partner completes a registration form and should land in the <code>Resellers</code> role.</p>
+<p>There are two routes. The workflow nodes cover the plain case with no code. A script covers the case
+where eligibility is a lookup, or the role depends on data the form does not carry.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>If you arrived from an older page: scripts no longer go through a mediated identity object. A
+script is ordinary C# and calls the platform's own membership API directly.</p>
+</div>
+<hr>
+<h2 id="1-no-code-the-three-identity-nodes">1. No code: the three identity nodes</h2>
+<p><strong>Builder → Workflow.</strong></p>
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Add User</strong></td>
+<td>creates an account from submitted fields</td>
+</tr>
+<tr>
+<td><strong>Add Role</strong></td>
+<td>creates a role if the site does not already have it</td>
+</tr>
+<tr>
+<td><strong>Add User To Role</strong></td>
+<td>puts a user into a role</td>
+</tr>
+</tbody>
+</table>
+<p>The class-code scenario is then configuration, not code:</p>
+<pre><code>Form submitted
+   └─ Condition  class_code == &quot;IT-2026&quot; ── yes ─→ Add User ─→ Add User To Role (IT_Student) ─→ Done
+                                          └─ no ─→ End: &quot;That class code was not recognised.&quot;
+</code></pre>
+<p><strong>Add User</strong> takes <code>UserName</code>, <code>Email</code>, <code>DisplayName</code>, <code>FirstName</code>, <code>LastName</code> and <code>Password</code>, and
+three switches that matter more than they look:</p>
+<ul>
+<li><code>GeneratePasswordIfEmpty</code> (default <strong>on</strong>) — leave <code>Password</code> blank and the node makes one.</li>
+<li><code>ApproveUser</code> (default <strong>on</strong>) — the account can sign in immediately rather than waiting for an
+administrator.</li>
+<li><code>UpdateIfExists</code> (default <strong>on</strong>) — a second submission from the same person updates the existing
+account instead of failing. Turn it off if you would rather the run fail loudly on a duplicate.</li>
+</ul>
+<p>The node writes its results into workflow variables — <code>provisioned.userId</code>, <code>provisioned.userName</code>,
+<code>provisioned.email</code>, <code>provisioned.password</code> — so a later node can read <code>{{var.provisioned.userId}}</code>
+or mail the generated password out. <strong>Add User To Role</strong> takes <code>UserIdentifier</code>, <code>RoleName</code>, a
+<code>LookupMode</code> (auto, by id, by name, by email) and <code>AutoCreateRole</code>, which is on by default: a typo in
+<code>RoleName</code> creates a role rather than reporting one missing, so treat the role name as a value you
+check, not one you type twice.</p>
+<p>There is no membership expiry date on the node. If you need one, use a script.</p>
+<p>The nodes are configuration, so a form that uses them carries its identity behaviour with it when
+you export it. The measurements further down this page are from the script route.</p>
+<hr>
+<h2 id="2-where-a-script-earns-its-place">2. Where a script earns its place</h2>
+<p>When the answer to &quot;is this person allowed, and as what&quot; lives somewhere the form cannot see — an
+enrolment table, a licence server, a list of class codes with expiry dates.</p>
+<p>This script runs at <strong>PostCommit</strong>: the submission row is already stored when it starts.</p>
+<pre><code class="lang-csharp">using DotNetNuke.Entities.Users;
+using DotNetNuke.Security.Roles;
+using DotNetNuke.Security.Membership;
+using DotNetNuke.Services.Mail;
+
+var email = ctx.GetString(&quot;email&quot;).Trim();
+var name  = ctx.GetString(&quot;full_name&quot;).Trim();
+var code  = ctx.GetString(&quot;class_code&quot;).Trim().ToUpperInvariant();
+
+// The role this submission earns. In a real install this is a lookup —
+// a SELECT against your own enrolment table, keyed on the class code.
+var roleName = code == &quot;IT-2026&quot; ? &quot;IT_Student&quot; : null;
+if (roleName == null)
+{
+    ctx.Log(&quot;class code not recognised: &quot; + code);
+    ctx.Response.SuccessMessage =
+        &quot;Thanks. We could not match that class code, so a coordinator will contact you.&quot;;
+    return;
+}
+
+// Check first. A second submission from the same student is normal, not an error.
+var user = UserController.GetUserByEmail(ctx.PortalId, email);
+string tempPassword = null;
+
+if (user == null)
+{
+    tempPassword = System.Guid.NewGuid().ToString(&quot;N&quot;).Substring(0, 12) + &quot;aA1!&quot;;
+
+    user = new UserInfo();
+    user.PortalID = ctx.PortalId;
+    user.Email = email;
+    user.Username = email;
+    user.DisplayName = string.IsNullOrEmpty(name) ? email : name;
+    user.FirstName = name;
+    user.Membership.Password = tempPassword;
+    user.Membership.Approved = true;
+    user.Membership.UpdatePassword = true;   // force a change at first sign-in
+
+    var status = UserController.CreateUser(ref user);
+    ctx.Log(&quot;CreateUser -&gt; &quot; + status + &quot; id=&quot; + user.UserID);
+
+    if (status != UserCreateStatus.Success)
+    {
+        ctx.Fail(&quot;Could not create the account for &quot; + email + &quot;: &quot; + status);
+        return;
+    }
+}
+else
+{
+    ctx.Log(&quot;account already exists, id=&quot; + user.UserID);
+}
+
+var role = RoleController.Instance.GetRoleByName(ctx.PortalId, roleName);
+if (role == null)
+{
+    ctx.Fail(&quot;Role not found on this site: &quot; + roleName);
+    return;
+}
+
+RoleController.Instance.AddUserRole(ctx.PortalId, user.UserID, role.RoleID,
+    RoleStatus.Approved, false, System.DateTime.MinValue, System.DateTime.MinValue);
+ctx.Log(&quot;granted &quot; + role.RoleName + &quot; to &quot; + user.UserID);
+
+if (tempPassword != null)
+{
+    var body = &quot;&lt;p&gt;Hello &quot; + user.DisplayName + &quot;,&lt;/p&gt;&quot; +
+               &quot;&lt;p&gt;Your account is ready. Sign in with &lt;strong&gt;&quot; + email + &quot;&lt;/strong&gt; &quot; +
+               &quot;and the temporary password &lt;strong&gt;&quot; + tempPassword + &quot;&lt;/strong&gt;. &quot; +
+               &quot;You will be asked to change it.&lt;/p&gt;&quot;;
+    Mail.SendEmail(&quot;registrar@contoso.com&quot;, email, &quot;Your course account&quot;, body);
+    ctx.Log(&quot;mail handed to DNN's sender for &quot; + email);
+}
+
+ctx.SetVariable(&quot;provisionedUserId&quot;, user.UserID);
+ctx.Response.RedirectUrl = &quot;/course-materials&quot;;
+</code></pre>
+<p><code>using</code> directives at the top of a script body are lifted above the generated wrapper for you.
+Script bodies are async, so you can <code>await</code> directly, and a <code>CancellationToken</code> named <code>ct</code> is in
+scope for anything that takes one.</p>
+<h3 id="read-the-status-do-not-assume-success">Read the status, do not assume success</h3>
+<p><code>UserController.CreateUser</code> returns a <code>UserCreateStatus</code> and does <strong>not</strong> throw when it refuses. The
+returns you will actually hit on a live site:</p>
+<table>
+<thead>
+<tr>
+<th>Status</th>
+<th>Cause</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Success</code></td>
+<td>account created; <code>user.UserID</code> is now set</td>
+</tr>
+<tr>
+<td><code>DuplicateEmail</code></td>
+<td>the site forbids duplicate emails and one exists</td>
+</tr>
+<tr>
+<td><code>UsernameAlreadyExists</code></td>
+<td>the username is taken, often by a user in another portal</td>
+</tr>
+<tr>
+<td><code>InvalidPassword</code></td>
+<td>your generated password does not meet the site's password policy</td>
+</tr>
+<tr>
+<td><code>BannedPasswordUsed</code></td>
+<td>the password is on the site's banned list</td>
+</tr>
+<tr>
+<td><code>InvalidQuestion</code> / <code>InvalidAnswer</code></td>
+<td>the site requires a password question and answer</td>
+</tr>
+</tbody>
+</table>
+<p>The enum has more members than these. Treat anything that is not <code>Success</code> as a failure worth
+recording — a script that ignores the return value silently produces submissions with no account
+behind them, and nobody notices until a student cannot sign in.</p>
+<p>Note the shape of the code above: <strong>check, then create</strong>. <code>GetUserByEmail</code> returning <code>null</code> is the
+only reliable way to tell &quot;new student&quot; from &quot;student submitting the form twice&quot;, and getting that
+wrong turns a duplicate submission into a failed run.</p>
+<h3 id="what-the-run-record-shows">What the run record shows</h3>
+<p>A single script doing this work on a DNN 10.3 site, from an anonymous submission, logged:</p>
+<pre><code>class code IT-2026 accepted
+CreateUser -&gt; Success id=1042
+granted IT_Student to 1042
+mail handed to DNN's sender for jane.carter@example.com
+</code></pre>
+<p>The same run also wrote a row into a table the site owns with <code>SqlConnection</code> and a parameterised
+<code>INSERT</code>, and posted the submission to an external endpoint with <code>HttpClient</code> (HTTP 200). Total run
+duration 927 ms.</p>
+<hr>
+<h2 id="3-the-judgement-the-host-is-making">3. The judgement the host is making</h2>
+<p>This is the script surface with the widest consequences, and it is worth being blunt about it.</p>
+<p><strong>A script that can call <code>RoleController.AddUserRole</code> can add anybody to <code>Administrators</code>.</strong> Nothing
+in MegaForm inspects the role name and refuses. Neither route constrains it — the <strong>Add User To
+Role</strong> node will grant <code>Administrators</code> too, and will create the role if it is misspelled. The
+protection is not a filter on the API; it is who is allowed to put the code there in the first place.</p>
+<p>Three gates stand in front of a script, in this order:</p>
+<ol>
+<li><strong><code>MegaForm:AfterSubmitScriptEnabled</code> in <code>web.config</code>.</strong> Off on every install. A file rather than
+a settings screen on purpose: the right bar for &quot;people may run code on this server&quot; is <em>can edit
+files on this server</em>.</li>
+<li><strong>A host (superuser) account saves it.</strong> Not a site administrator, not module-edit rights.</li>
+<li><strong>An approval hash over the source.</strong> The stored hash must match the source for the script to run,
+so a script that arrives inside an imported form, a backup or a gallery template is inert until a
+host on <em>that</em> site opens it and saves it. Ordinary form saves cannot introduce, alter or enable a
+script.</li>
+</ol>
+<p>So the security question is not &quot;what can the script reach&quot; — it is <strong>what did you approve</strong>. That is
+the same trust you extend to any third-party module you install on a DNN site: once it is in the
+<code>bin</code> folder it runs as your application. Read the role names in a provisioning script the way you
+would read a module's installer, and reject one whose role names are assembled from submitted data
+rather than written out in the source.</p>
+<div class="IMPORTANT">
+<h5>Important</h5>
+<p>A role name built from <code>ctx.GetString(...)</code> means the visitor picks their own role. If you need the
+role to depend on the submission, resolve it through your own lookup — a table you control, keyed
+on the submitted value — and fail closed when the lookup returns nothing, as the script above does.</p>
+</div>
+<hr>
+<h2 id="4-what-this-cannot-do-yet">4. What this cannot do yet</h2>
+<p>Four stages exist in the engine — PreValidate, PreInsert, PostCommit, AsyncWorker — but only
+<strong>PostCommit</strong> can be configured today. Nothing in the product writes a script into the other three:
+no editor, no API, no import path. Two consequences apply here:</p>
+<ul>
+<li><strong>A script cannot refuse the submission.</strong> You cannot reject an unrecognised class code before the
+row is stored; you can only decline to provision an account and change the message the visitor
+sees. Refusing needs PreInsert.</li>
+<li><strong>A script cannot write the new user id back into the stored submission.</strong> <code>ctx.SetValue</code> is
+refused at PostCommit rather than quietly ignored, because a script that believes it rewrote a
+stored value and did not is a data bug that surfaces months later in a report. Use
+<code>ctx.SetVariable</code> to carry the id into the run record, or write it into your own table.</li>
+</ul>
+<h2 id="related">Related</h2>
+<ul>
+<li><a href="automation-overview.html">Automation overview</a> — the stages, and the three gates in full</li>
+<li><a href="automation-custom-db.html">Write to your own database</a> — the enrolment lookup this page assumes</li>
+<li><a href="automation-notifications.html">Send email based on what was answered</a></li>
+</ul>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
