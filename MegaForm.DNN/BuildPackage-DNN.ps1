@@ -394,6 +394,10 @@ $cloudDllNames = @(
 # *.SqlDataProvider file — not a single plain .sql is declared. The 14 plain .sql files (the
 # 01.06.28*-seed.sql set, 160 KB compressed) therefore shipped to every customer and were never
 # executed by anything. Package the declared extension only.
+# [SqlMerge 2026-08-14] Those 14 .sql files have since been deleted from SqlScripts\ outright, and
+# the 40 per-version .SqlDataProvider scripts were merged into two. The folder now contains only
+# what DNN runs: 01.06.42, 02.00.018, Uninstall. Keep the -Include filter anyway - it is what stops
+# a stray .sql from silently rejoining the package.
 Get-ChildItem "$PROJECT_DIR\SqlScripts\*" -Include *.SqlDataProvider -ErrorAction SilentlyContinue | ForEach-Object {
     Copy-Item $_.FullName "$STAGING\SqlScripts\" -Force
     Write-Host "  + SqlScripts\$($_.Name)"
@@ -521,7 +525,13 @@ if (Test-Path "$assetsDir\js\locales") {
 # MegaForm.LanguagePacks add-on. Deliberately an ADD-ON, not a CDN fetch: on a public form the
 # request is an anonymous browser GET of a static file, so a remote base would send every
 # non-English visitor to a third-party host and break air-gapped/intranet DNN installs outright.
-$I18N_KEEP = @('en-US.json', 'vi-VN.json', 'index.json')
+# [LocaleSwap 2026-08-13] The bundled pair used to be en-US + vi-VN. vi-VN left the product, and
+# the six languages the owner requires in the shipped package (Dutch, Urdu, Spanish, British
+# English, French, Italian) must work with NO add-on installed — an add-on the customer has to
+# find and install is not "in the package". So the bundle is now en-US plus those six; the other
+# 30 still ride in the Language Packs add-on. Cost is ~700 KB, which is what shipping the
+# requested languages actually weighs.
+$I18N_KEEP = @('en-US.json', 'en-GB.json', 'es-ES.json', 'fr-FR.json', 'it-IT.json', 'nl-NL.json', 'ur-PK.json', 'index.json')
 $script:I18nAddOnFiles = @()
 foreach ($i18nSub in @('builder\i18n')) {
     $i18nSrc = Join-Path "$assetsDir\js" $i18nSub
@@ -730,7 +740,11 @@ Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\builder\reactf
 Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\builder\reactflow.min.css') -Label 'Packaged ReactFlow CSS'
 Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\builder\i18n\index.json') -Label 'Packaged i18n locale index'
 Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\builder\i18n\en-US.json') -Label 'Packaged English locale'
-Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES 'Assets\js\builder\i18n\vi-VN.json') -Label 'Packaged Vietnamese locale'
+# [LocaleSwap 2026-08-13] Guard every language the owner requires in the package, not just one.
+# This assert is what caught the swap: it still demanded vi-VN.json and failed the pack.
+foreach ($reqLoc in @('en-GB', 'es-ES', 'fr-FR', 'it-IT', 'nl-NL', 'ur-PK')) {
+    Assert-RequiredFile -PathToCheck (Join-Path $RESOURCES "Assets\js\builder\i18n\$reqLoc.json") -Label "Packaged $reqLoc locale"
+}
 # [PkgSlim 2026-07-28] The locale files ship ONCE, in Assets\js\builder\i18n — the folder the
 # browser fetches on DNN and the one ResolveI18nFolders()/ResolveWritableI18nFolder() land on.
 # The guard moved with them; it still fails the build if a fresh install would ship no languages.
@@ -851,6 +865,42 @@ Get-ChildItem "$STAGING\SqlScripts" -File | ForEach-Object {
 }
 
 $zip.Dispose()
+
+# [ManifestZipParity 2026-08-14] Every <file>/<assembly> the manifest declares must actually BE in
+# the zip. Both staging copies above are best-effort — a missing icon.gif is skipped without a
+# word, and a missing MegaForm.PersonaBar.dll only prints a Write-Warning that scrolls past in a
+# long build. 02.00.019 shipped that way (4.2 MB instead of 7.5 MB) and DNN refused it at install:
+#   Failure File specified in the dnn could not be found in the zip file: ...\icon.gif
+#   Failure File specified in the dnn could not be found in the zip file: ...\bin\MegaForm.PersonaBar.dll
+# The install log is the WRONG place to learn this. Check it here, where the build can still fail.
+$manifestXml = [xml](Get-Content $MANIFEST -Raw)
+$declaredEntries = @()
+foreach ($node in $manifestXml.SelectNodes('//component[@type="File"]/files/file')) {
+    $base = ''
+    if ($node.ParentNode.basePath) { $base = ($node.ParentNode.basePath -replace '\\', '/').Trim('/') + '/' }
+    $declaredEntries += ($base + $node.name)
+}
+foreach ($node in $manifestXml.SelectNodes('//component[@type="Assembly"]/assemblies/assembly')) {
+    $base = ''
+    if ($node.path) { $base = ($node.path -replace '\\', '/').Trim('/') + '/' }
+    $declaredEntries += ($base + $node.name)
+}
+$declaredEntries = @($declaredEntries | Where-Object { $_ } | Sort-Object -Unique)
+
+$verifyZip = [System.IO.Compression.ZipFile]::OpenRead($OUTPUT_ZIP)
+try {
+    $zipEntryNames = @($verifyZip.Entries | ForEach-Object { $_.FullName })
+} finally {
+    $verifyZip.Dispose()
+}
+$missingEntries = @($declaredEntries | Where-Object { $zipEntryNames -notcontains $_ })
+if ($missingEntries.Count -gt 0) {
+    Remove-Item $OUTPUT_ZIP -Force -ErrorAction SilentlyContinue
+    throw ("MegaForm.dnn khai {0} file KHONG co trong zip: {1}. DNN se tu choi cai goi nay. " -f $missingEntries.Count, ($missingEntries -join ', ')) +
+          "MegaForm.PersonaBar.dll thieu => build no truoc: dotnet build MegaForm.PersonaBar\MegaForm.PersonaBar.csproj -c Release. " +
+          "Goi hong da bi xoa de khong ai cai nham."
+}
+Write-Host ("  [OK] {0} file manifest khai deu co trong zip" -f $declaredEntries.Count) -ForegroundColor Green
 
 # ------------------------------------------------------------
 # [S3AddOn 2026-07-28] Optional add-on: Amazon S3 storage provider.
@@ -977,7 +1027,8 @@ if (Test-Path $editorSrc) {
 # Same ResourceFile shape as the code editor: DNN unzips them straight back into
 # DesktopModules/MegaForm/Assets/js/builder/i18n - the exact folder the browser fetches and the
 # Languages panel writes to - so no application code changes once it is installed. Without it a
-# site runs English + Vietnamese, and loadLocale() already falls back to en-US on a 404.
+# site runs the seven bundled locales (see $I18N_KEEP), and loadLocale() already falls back to
+# en-US on a 404.
 # ------------------------------------------------------------
 if ($script:I18nAddOnFiles.Count -gt 0) {
     $lpDir = Join-Path $OUTPUT_DIR '_langpacks'
@@ -992,7 +1043,7 @@ if ($script:I18nAddOnFiles.Count -gt 0) {
   <packages>
     <package name="MegaForm.LanguagePacks" type="Library" version="$VERSION">
       <friendlyName>MegaForm Language Packs</friendlyName>
-      <description>Optional add-on for MegaForm: $($script:I18nAddOnFiles.Count) extra admin-UI languages. The module itself ships English and Vietnamese; install this to offer the rest. Nothing else changes - the files land in the folder MegaForm already reads.</description>
+      <description>Optional add-on for MegaForm: $($script:I18nAddOnFiles.Count) extra admin-UI languages. The module itself ships English (US and UK), Spanish, French, Italian, Dutch and Urdu; install this to offer the rest. Nothing else changes - the files land in the folder MegaForm already reads.</description>
       <iconFile></iconFile>
       <owner>
         <name>CISS Solution</name>
@@ -1050,7 +1101,7 @@ Write-Host '  Package chua:' -ForegroundColor Gray
 Write-Host "    MegaForm.dnn               (manifest v$VERSION)" -ForegroundColor Gray
 Write-Host '    bin\MegaForm.DNN.dll       (DNN module)' -ForegroundColor Cyan
 Write-Host '    bin\MegaForm.Core.dll      (Core shared library)' -ForegroundColor Cyan
-Write-Host '    SqlScripts\*.sql' -ForegroundColor Gray
+Write-Host '    SqlScripts\*.SqlDataProvider' -ForegroundColor Gray
 Write-Host '    Resources.zip              (Views + Assets)' -ForegroundColor Gray
 Write-Host ''
 Write-Host '  Cai dat: DNN -> Host -> Extensions -> Install Extension' -ForegroundColor Yellow
