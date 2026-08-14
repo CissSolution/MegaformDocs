@@ -218,6 +218,28 @@ namespace MegaForm.Oqtane.Server.Services
             // outbound-call/SQL surfaces have not been reviewed for this host.
             services.AddScoped<INodeExecutor, EmailNodeExecutor>();
             services.AddScoped<INodeExecutor, EndNodeExecutor>();
+            // [WebhookNodeOnOqtane v20260813] Webhook graduates from the opt-in list. Until now an
+            // Oqtane workflow containing one died at the first node with "No executor registered for
+            // node type 'Webhook'" — the palette offered it, the config panel saved it, Apply
+            // validated it, and only the submission failed, in a log line the admin never sees. The
+            // other three hosts (MegaForm.Web, MegaForm.Umbraco, MegaForm.AspNetCore.Component) have
+            // registered it all along, so Oqtane was the odd one out rather than the careful one.
+            //
+            // The review the comment above was waiting for is the outbound-call guard, and it is
+            // inside the executor, not the host: WebhookNodeExecutor.ExecuteAsync runs every resolved
+            // URL through SsrfGuard.IsUrlAllowed before the first byte leaves, rejecting non-http(s)
+            // schemes and any host resolving to loopback/private/link-local/CGNAT/metadata — the
+            // reason it matters being that the URL template can interpolate {{field.*}} from an
+            // anonymous submission. On-prem targets need MEGAFORM_ALLOW_PRIVATE_WEBHOOKS=1, a
+            // deliberate host-level opt-in.
+            //
+            // Database and GoogleSheets stay opt-in. Database is NOT merely an outbound call: its
+            // config accepts ConnectionMode="External" with a raw connection string, so a module
+            // editor — not necessarily a site admin — could point the server at any reachable
+            // database. Writing a submission into a customer table on Oqtane is already served by
+            // Form Settings → Database (FormDatabaseInsertService), which resolves the connection
+            // server-side from the admin allow-list.
+            services.AddScoped<INodeExecutor, WebhookNodeExecutor>();
             // [CloudReady A2 v20260806] Durable timer node (Delay). The matching scanner
             // (WorkflowTimerScannerHostedService below) is always on — Delay does not
             // resume without it.
@@ -316,6 +338,61 @@ namespace MegaForm.Oqtane.Server.Services
             });
             services.AddScoped<MegaForm.Core.Integrations.Storage.ISubmissionFileBlobReader, OqtaneSubmissionFileBlobReader>();
             services.AddScoped<MegaForm.Core.Integrations.Storage.SubmissionCloudStorageUploader>();
+
+            // [AfterSubmitScript v20260813-01] Host-authored C# hook. The Roslyn compiler is an
+            // optional add-on assembly (MegaForm.Scripting.dll) resolved by reflection — Roslyn is
+            // ~15 MB and most installs never author a script. A missing add-on registers a service
+            // whose compiler is null, and that service refuses to run anything and says why; it
+            // does not quietly fall back to some other way of executing the source.
+            //
+            // Registered explicitly rather than relying on SubmissionProcessor's optional ctor
+            // parameter, so the wiring is visible here next to every other post-submit service.
+            services.AddSingleton<AfterSubmitScriptService>(sp =>
+            {
+                var log = sp.GetService<MegaForm.Core.Interfaces.ILogService>();
+                var audit = sp.GetService<IAfterSubmitScriptAuditStore>();
+                MegaForm.Core.Interfaces.IMegaFormScriptCompiler compiler = null;
+                try
+                {
+                    var type = Type.GetType("MegaForm.Scripting.RoslynScriptCompiler, MegaForm.Scripting", throwOnError: false);
+                    if (type != null)
+                        compiler = Activator.CreateInstance(type) as MegaForm.Core.Interfaces.IMegaFormScriptCompiler;
+                }
+                catch { compiler = null; }
+                // Singleton service, SCOPED registry: open a fresh scope per ctx.Db use instead of
+                // capturing one registry here, which would pin a disposed scope's connection.
+                var scopes = sp.GetService<IServiceScopeFactory>();
+                Func<MegaForm.Core.Interfaces.IConnectionRegistry> connections = () =>
+                {
+                    if (scopes == null) return null;
+                    var scope = scopes.CreateScope();
+                    return scope.ServiceProvider.GetService<MegaForm.Core.Interfaces.IConnectionRegistry>();
+                };
+                // [Automation v2] Named actions/endpoints live in the same Site-settings seam the
+                // SQL and cloud connection catalogs use, so an admin edits one kind of thing.
+                var settingsRepo = sp.GetService<global::Oqtane.Repository.ISettingRepository>();
+                var tenantMgr = sp.GetService<global::Oqtane.Infrastructure.ITenantManager>();
+                var catalog = new MegaForm.Core.Automation.DelegateAutomationCatalogProvider(() =>
+                {
+                    try
+                    {
+                        if (settingsRepo == null || tenantMgr == null) return string.Empty;
+                        var alias = tenantMgr.GetAlias();
+                        var siteId = alias != null ? alias.SiteId : 0;
+                        if (siteId <= 0) return string.Empty;
+                        var all = settingsRepo.GetSettings(global::Oqtane.Shared.EntityNames.Site, siteId);
+                        if (all == null) return string.Empty;
+                        foreach (var s in all)
+                            if (string.Equals(s.SettingName, MegaForm.Core.Automation.AutomationCatalog.SettingKey,
+                                              StringComparison.OrdinalIgnoreCase))
+                                return s.SettingValue ?? string.Empty;
+                    }
+                    catch { }
+                    return string.Empty;
+                });
+
+                return new AfterSubmitScriptService(compiler, log, audit, connections, catalog);
+            });
 
             services.AddScoped<SubmissionProcessor>();
 

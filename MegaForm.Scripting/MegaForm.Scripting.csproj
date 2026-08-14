@@ -1,0 +1,61 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    [AfterSubmitScript v20260813-01] The Roslyn half of the after-submit C# hook.
+
+    Why a separate assembly rather than a few files in MegaForm.Core:
+    Microsoft.CodeAnalysis.CSharp plus its closure is ~15 MB on disk. The DNN install
+    package has a hard size ceiling (the same one that pushed the Amazon S3 storage
+    provider out into MegaForm.Integrations.CloudStorage), and the large majority of
+    installs never author a script. Core therefore declares only the contract
+    (MegaForm.Core.Interfaces.IMegaFormScriptCompiler) and every host resolves this
+    assembly BY REFLECTION — absent assembly means no compiler, which means the runner
+    refuses to execute anything. Fail-closed, not fail-quiet.
+
+    Roslyn 4.10.0 matches the version MegaForm.Oqtane.Server already carries for the
+    Razor widget compiler, so a host that installs both does not end up loading two
+    Microsoft.CodeAnalysis versions side by side.
+  -->
+  <PropertyGroup>
+    <TargetFrameworks>net472;net8.0;net9.0;net10.0</TargetFrameworks>
+    <AssemblyName>MegaForm.Scripting</AssemblyName>
+    <RootNamespace>MegaForm.Scripting</RootNamespace>
+    <Description>MegaForm after-submit C# script compiler (Roslyn) — optional add-on for MegaForm.Core.</Description>
+    <IsPackable>true</IsPackable>
+    <PackageId>MegaForm.Scripting</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>MegaForm Team</Authors>
+    <Company>MegaForm</Company>
+    <Copyright>© 2026 MegaForm. All rights reserved.</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://megaform.github.io/MegaFormSolution</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/megaform/MegaFormSolution.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>megaform;forms;scripting;roslyn;csharp</PackageTags>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <!-- A script is never compiled unsafe; see RoslynScriptCompiler.CompilationOptions. -->
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <!-- Match MegaForm.Core: the net472 leg is locked to C# 7.3. -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net472'">
+    <LangVersion>7.3</LangVersion>
+    <DefineConstants>$(DefineConstants);MEGAFORM_NETFX</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0' OR '$(TargetFramework)' == 'net9.0'">
+    <LangVersion>12</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <LangVersion>13</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MegaForm.Core\MegaForm.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.10.0" />
+  </ItemGroup>
+
+</Project>

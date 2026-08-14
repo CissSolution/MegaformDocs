@@ -88,6 +88,13 @@ namespace MegaForm.DNN.Services
         public IStorageIntegrationService StorageIntegration { get; }
         public SubmissionCloudStorageUploader CloudStorageUploader { get; }
         public SubmissionProcessor SubmissionProcessor { get; }
+        /// <summary>
+        /// [AfterSubmitScript v20260813-01] Never null; its compiler may be. Ask
+        /// IsCompilerAvailable before telling a host the feature is usable.
+        /// </summary>
+        public AfterSubmitScriptService AfterSubmitScript { get; }
+        public DnnAutomationExecutionQueue AutomationQueue { get; }
+        public MegaForm.Core.Automation.AutomationAsyncWorker AutomationWorker { get; }
 
         // [DnnStarterApps v20260518-01] App Builder primitives. DNN now exposes
         // the same Business Starter services that Oqtane has (Leave Request,
@@ -250,6 +257,37 @@ namespace MegaForm.DNN.Services
             CloudStorageUploader = new SubmissionCloudStorageUploader(
                 StorageIntegration, cloudConnections, new DnnSubmissionFileBlobReader(), LogService);
 
+            // [AfterSubmitScript v20260813-01] The Roslyn compiler is resolved BY REFLECTION,
+            // same as the S3 storage provider above and for the same reason: Roslyn is ~15 MB
+            // and the DNN package has a size ceiling, so MegaForm.Scripting.dll ships as an
+            // add-on. Absent add-on = null compiler = the service refuses every script and says
+            // so. It never degrades into running the code some other way.
+            // The same connection registry the workflow Database node and Form Settings → Database
+            // resolve from, handed to ctx.Db. A script therefore names a connection an admin
+            // registered and never carries a connection string of its own.
+            AfterSubmitScript = new AfterSubmitScriptService(
+                TryLoadOptionalScriptCompiler("MegaForm.Scripting.RoslynScriptCompiler, MegaForm.Scripting"),
+                LogService,
+                new DnnAutomationAuditStore(),
+                () => connectionRegistry,
+                // [Automation v2] Named actions and endpoints live in a per-portal settings blob,
+                // read the same way every other MegaForm server-side catalog is read. It holds
+                // bearer tokens, so it is never shipped to a browser unmasked.
+                new MegaForm.Core.Automation.DelegateAutomationCatalogProvider(
+                    () => ReadPortalSetting("AutomationCatalog", string.Empty)),
+                // DNN already owns these reviewed host adapters. Automation receives the
+                // abstractions, never DotNetNuke types, SMTP credentials, or a service locator.
+                () => new MegaForm.Core.Automation.AutomationCapabilityServices
+                {
+                    EmailSender = EmailSender,
+                    IdentityProvisioning = WorkflowIdentityProvisioning,
+                    PrincipalResolver = WorkflowPrincipals
+                });
+
+            AutomationQueue = new DnnAutomationExecutionQueue();
+            AutomationWorker = new MegaForm.Core.Automation.AutomationAsyncWorker(
+                FormRepo, SubmissionRepo, AfterSubmitScript, LogService);
+
             SubmissionProcessor = new SubmissionProcessor(
                 FormRepo, SubmissionRepo, DraftRepo, Phase2Repo,
                 EmailNotification, Webhook, UniqueId, LogService, WorkflowRuntime,
@@ -257,7 +295,9 @@ namespace MegaForm.DNN.Services
                 reportingIndexer: ReportingIndexer,
                 paymentVerifier: PaymentVerifier,
                 typedStore: TypedStore,
-                cloudStorageUploader: CloudStorageUploader);
+                cloudStorageUploader: CloudStorageUploader,
+                afterSubmitScript: AfterSubmitScript,
+                automationQueue: AutomationQueue);
 
             // [DnnStarterApps v20260518-01] Construct the App Builder graph
             // and the Leave Request starter wired to the DNN platform
@@ -329,6 +369,28 @@ namespace MegaForm.DNN.Services
         /// cloud target. Everything is caught, including the type-load failures the CLR raises when
         /// the provider's own dependencies (AWSSDK.*) are missing from bin.
         /// </summary>
+        /// <summary>
+        /// [AfterSubmitScript v20260813-01] Resolve the optional Roslyn compiler add-on.
+        /// Returns null when MegaForm.Scripting.dll is not in the site's bin — which is the
+        /// normal state of most installs, so this logs at Info and not as an error.
+        /// </summary>
+        private static MegaForm.Core.Interfaces.IMegaFormScriptCompiler TryLoadOptionalScriptCompiler(
+            string assemblyQualifiedName)
+        {
+            try
+            {
+                var type = Type.GetType(assemblyQualifiedName, throwOnError: false);
+                if (type == null) return null;
+                return Activator.CreateInstance(type) as MegaForm.Core.Interfaces.IMegaFormScriptCompiler;
+            }
+            catch (Exception ex)
+            {
+                DotNetNuke.Instrumentation.LoggerSource.Instance.GetLogger(typeof(DnnServiceLocator))
+                    .Info("MegaForm script compiler not available (" + assemblyQualifiedName + "): " + ex.Message);
+                return null;
+            }
+        }
+
         private static IStorageProvider TryLoadOptionalStorageProvider(string assemblyQualifiedName)
         {
             try

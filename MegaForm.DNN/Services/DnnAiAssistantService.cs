@@ -24,6 +24,16 @@ namespace MegaForm.DNN.Services
                 // never saved → controller falls back to the dev.lock default.
                 Enabled = string.Equals(host.GetString(AiSettingKeys.Enabled, string.Empty), "true", System.StringComparison.OrdinalIgnoreCase),
             };
+            // [AiConfigCoherence v20260812] Parity with Oqtane/Web. The settings panel saves the
+            // four fields independently, so picking a real provider while baseUrl still points at
+            // the built-in KB mock ("/api/MegaFormAi") produced a config that silently answered
+            // from the knowledge base instead of calling the provider. Heal it on read as well as
+            // on save, so a site already in that state recovers without re-saving.
+            var baseUrl = cfg.BaseUrl;
+            var model = cfg.Model;
+            AiProviderEndpoints.Coerce(cfg.Provider, ref baseUrl, ref model);
+            cfg.BaseUrl = baseUrl;
+            cfg.Model = model;
             return cfg;
         }
 
@@ -31,9 +41,13 @@ namespace MegaForm.DNN.Services
         {
             if (config == null) return;
             var host = HostController.Instance;
-            host.Update(AiSettingKeys.Provider, config.Provider ?? "openai");
-            host.Update(AiSettingKeys.BaseUrl, config.BaseUrl ?? string.Empty);
-            host.Update(AiSettingKeys.Model, config.Model ?? string.Empty);
+            var provider = config.Provider ?? "openai";
+            var baseUrl = config.BaseUrl ?? string.Empty;
+            var model = config.Model ?? string.Empty;
+            AiProviderEndpoints.Coerce(provider, ref baseUrl, ref model);
+            host.Update(AiSettingKeys.Provider, provider);
+            host.Update(AiSettingKeys.BaseUrl, baseUrl);
+            host.Update(AiSettingKeys.Model, model);
             host.Update(AiSettingKeys.Enabled, config.Enabled ? "true" : "false");
             // [v20260527-04] API key is stored encrypted via HostController.Update
             // overload that takes (key, value, isSecure) — same pattern DNN uses

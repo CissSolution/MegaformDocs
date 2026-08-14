@@ -64,6 +64,11 @@ namespace MegaForm.Core.Services
         // path below (DNN / Umbraco / unconfigured hosts never register these).
         private readonly IWorkflowExecutionQueue _workflowQueue;
         private readonly IWorkflowExecutionModeProvider _workflowModeProvider;
+        // [AfterSubmitScript v20260813-01] Optional host-authored C# hook. Null on any host
+        // that has not registered it, and null-safe everywhere below, so a site that never
+        // turns the feature on runs byte-for-byte the pipeline it ran before.
+        private readonly AfterSubmitScriptService _afterSubmitScript;
+        private readonly MegaForm.Core.Automation.IAutomationExecutionQueue _automationQueue;
 
         public SubmissionProcessor(
             IFormRepository formRepo,
@@ -82,7 +87,9 @@ namespace MegaForm.Core.Services
             ISubmissionDataStore typedStore = null,
             SubmissionCloudStorageUploader cloudStorageUploader = null,
             IWorkflowExecutionQueue workflowQueue = null,
-            IWorkflowExecutionModeProvider workflowModeProvider = null)
+            IWorkflowExecutionModeProvider workflowModeProvider = null,
+            AfterSubmitScriptService afterSubmitScript = null,
+            MegaForm.Core.Automation.IAutomationExecutionQueue automationQueue = null)
         {
             _formRepo = formRepo ?? throw new ArgumentNullException(nameof(formRepo));
             _subRepo = subRepo ?? throw new ArgumentNullException(nameof(subRepo));
@@ -101,6 +108,8 @@ namespace MegaForm.Core.Services
             _cloudStorageUploader = cloudStorageUploader;
             _workflowQueue = workflowQueue;
             _workflowModeProvider = workflowModeProvider;
+            _afterSubmitScript = afterSubmitScript;
+            _automationQueue = automationQueue;
         }
 
         public SubmissionProcessor(
@@ -231,6 +240,25 @@ namespace MegaForm.Core.Services
 
             formData = enforcement.Data ?? new Dictionary<string, object>();
 
+            // [Automation v2] PRE-VALIDATE runs after permission enforcement has produced the
+            // authoritative input dictionary, but before normal field validation. It is the rail
+            // for blacklist/fraud/eligibility checks and may normalise values that validators then
+            // inspect. A failure here is a real veto: no submission row exists yet.
+            var preValidate = RunAutomationStage(
+                MegaForm.Core.Automation.AutomationStage.PreValidate,
+                schema, form, 0, formData, ipAddress, userId, actor, result);
+
+            if (preValidate != null && preValidate.Aborted)
+            {
+                result.Success = false;
+                result.ErrorMessage = string.IsNullOrWhiteSpace(preValidate.ErrorMessage)
+                    ? _loc.L("form.validation_failed")
+                    : preValidate.ErrorMessage;
+                _log?.LogInfo(nameof(SubmissionProcessor),
+                    "Pre-validate automation aborted the submission for form " + formId + ": " + result.ErrorMessage);
+                return result;
+            }
+
             var validation = FormValidationService.Validate(schema, formData, _loc, enforcement.RuleContext);
             if (!validation.IsValid)
             {
@@ -342,6 +370,28 @@ namespace MegaForm.Core.Services
                         formData[field.Key] = SanitiseRichTextHtml(formData[field.Key]?.ToString() ?? "");
                     }
                 }
+            }
+
+            // [Automation v2 20260813-01] PRE-INSERT stage. The last point at which refusing costs
+            // nothing: no row exists, so an abort here is a real veto rather than a note about one.
+            //
+            // It also runs BEFORE dataJson is serialised, which is what lets this stage do the job
+            // it exists for — normalising, encrypting or deriving a value and having the stored row
+            // carry the changed version. A post-commit script mutating formData would change
+            // nothing that anyone reads.
+            var preInsert = RunAutomationStage(
+                MegaForm.Core.Automation.AutomationStage.PreInsert,
+                schema, form, 0, formData, ipAddress, userId, actor, result);
+
+            if (preInsert != null && preInsert.Aborted)
+            {
+                result.Success = false;
+                result.ErrorMessage = string.IsNullOrWhiteSpace(preInsert.ErrorMessage)
+                    ? _loc.L("form.invalid_config")
+                    : preInsert.ErrorMessage;
+                _log?.LogInfo(nameof(SubmissionProcessor),
+                    "Pre-insert automation aborted the submission for form " + formId + ": " + result.ErrorMessage);
+                return result;
             }
 
             // 11. Save submission
@@ -613,6 +663,34 @@ namespace MegaForm.Core.Services
                             "Workflow execution failed for form " + formId + " submission " + submissionId + ": " + ex.Message, ex);
                     }
                 }
+
+                // [AfterSubmitScript v20260813-01] The host-authored C# hook. Runs LAST, after
+                // the workflow, so a script can read what the workflow already wrote and cannot
+                // change what it saw. It runs on the non-spam path only, alongside every other
+                // post-submit action — a submission the spam filter rejected must not execute
+                // server code, which is exactly the shape of hole an attacker would look for.
+                //
+                // Fail-soft by construction: the row is committed, the visitor is owed a
+                // thank-you, and RunAfterSubmitScript never throws.
+                // [Automation v2] PostCommit stage. Reads settings.automation.postCommit, falling
+                // back to settings.afterSubmitScript for forms configured before the stages existed.
+                var postCommit = RunAutomationStage(
+                    MegaForm.Core.Automation.AutomationStage.PostCommit,
+                    schema, form, submissionId, formData, ipAddress, userId, actor, result);
+
+                // An abort here is impossible by construction (CanAbort is false post-commit), so a
+                // failure only reaches the visitor when the hook asked for it.
+                if (postCommit != null && !postCommit.Skipped && !postCommit.Success)
+                {
+                    var block = schema?.Settings?.Automation?.PostCommit ?? schema?.Settings?.AfterSubmitScript;
+                    if (AfterSubmitScriptGuard.ShouldReportFailure(block))
+                        result.ScriptError = postCommit.ErrorMessage;
+                }
+
+                // AsyncWorker never runs inline: doing so would put slow CRM/document/job work
+                // back on the visitor request and make the stage name a lie. The queue stores only
+                // identifiers; its worker reloads the current script and approval before running.
+                TryEnqueueAsyncAutomation(schema, form, submissionId, ipAddress, userId, actor);
             }
 
             // 13. Delete draft if Save & Continue was used
@@ -624,6 +702,54 @@ namespace MegaForm.Core.Services
             }
 
             return result;
+        }
+
+        private void TryEnqueueAsyncAutomation(FormSchema schema, FormInfo form, int submissionId,
+            string ipAddress, int? userId, UserContext actor)
+        {
+            var block = schema?.Settings?.Automation?.AsyncWorker;
+            if (block == null || !block.Enabled) return;
+
+            string reason;
+            if (!AfterSubmitScriptGuard.IsRunnable(block, out reason))
+            {
+                _log?.LogWarning(nameof(SubmissionProcessor),
+                    "AsyncWorker automation for form " + form.FormId + " was not queued: " + reason);
+                return;
+            }
+            if (_automationQueue == null)
+            {
+                _log?.LogWarning(nameof(SubmissionProcessor),
+                    "AsyncWorker automation is enabled for form " + form.FormId +
+                    " but this host has no durable automation queue registered.");
+                return;
+            }
+
+            try
+            {
+                var queueId = _automationQueue.Enqueue(new MegaForm.Core.Automation.AutomationExecutionRequest
+                {
+                    FormId = form.FormId,
+                    SubmissionId = submissionId,
+                    PortalId = form.PortalId,
+                    UserId = userId.HasValue ? userId.Value : 0,
+                    UserName = actor?.UserName ?? string.Empty,
+                    UserEmail = actor?.Email ?? string.Empty,
+                    IpAddress = ipAddress ?? string.Empty,
+                    EnqueuedAtUtc = DateTime.UtcNow
+                });
+                _log?.LogInfo(nameof(SubmissionProcessor),
+                    "AsyncWorker automation queued for form " + form.FormId + " submission " +
+                    submissionId + ". QueueId=" + (queueId ?? string.Empty));
+            }
+            catch (Exception ex)
+            {
+                // The submission is already committed. Queue failure belongs in operations/audit,
+                // not as a false claim that the visitor's saved row disappeared.
+                _log?.LogError(nameof(SubmissionProcessor),
+                    "AsyncWorker automation enqueue failed for form " + form.FormId +
+                    " submission " + submissionId + ": " + ex.Message, ex);
+            }
         }
 
         private static UserContext BuildSubmissionActor(UserContext actor, int? userId, string ipAddress)
@@ -732,6 +858,104 @@ namespace MegaForm.Core.Services
             return false;
         }
 
+        /// <summary>
+        /// [Automation v2 20260813-01] Run one automation stage.
+        ///
+        /// Returns null when there is nothing to run — no service, no config, or a stage this form
+        /// does not use — so the caller can treat "nothing configured" and "ran fine" identically
+        /// without a second flag.
+        ///
+        /// Never throws. A broken script is a script problem; turning it into a 500 on a public
+        /// form would make it everyone's problem.
+        /// </summary>
+        private AfterSubmitScriptRunResult RunAutomationStage(
+            MegaForm.Core.Automation.AutomationStage stage,
+            FormSchema schema,
+            FormInfo form,
+            int submissionId,
+            Dictionary<string, object> formData,
+            string ipAddress,
+            int? userId,
+            UserContext actor,
+            SubmissionResult result)
+        {
+            if (_afterSubmitScript == null) return null;
+
+            var settings = schema?.Settings;
+            if (settings == null) return null;
+
+            // settings.automation.<stage> is the v2 home. settings.afterSubmitScript is where a form
+            // configured before the stages existed keeps its post-commit script, so it is read as
+            // the PostCommit alias — silently dropping those would break every form already using
+            // the feature.
+            var block = settings.Automation != null ? settings.Automation.ForStage(stage) : null;
+            if (block == null && stage == MegaForm.Core.Automation.AutomationStage.PostCommit)
+                block = settings.AfterSubmitScript;
+            if (block == null || !block.Enabled) return null;
+
+            try
+            {
+                var ctx = new Scripting.SubmissionScriptContext(formData)
+                {
+                    FormId       = form.FormId,
+                    SubmissionId = submissionId,
+                    PortalId     = form.PortalId,
+                    FormTitle    = form.Title,
+                    UserId       = userId.HasValue ? userId.Value : 0,
+                    UserName     = actor?.UserName ?? string.Empty,
+                    UserEmail    = actor?.Email ?? string.Empty,
+                    IpAddress    = ipAddress ?? string.Empty,
+                    UtcNow       = DateTime.UtcNow
+                };
+
+                var run = _afterSubmitScript.RunStage(stage, block, ctx);
+
+                if (run.Skipped)
+                {
+                    _log?.LogWarning(nameof(SubmissionProcessor),
+                        stage + " automation for form " + form.FormId + " did not run: " + run.SkipReason);
+                    return run;
+                }
+
+                // Apply value changes a pre-commit stage made, so the row that gets written is the
+                // one the script produced.
+                if (ctx.CanAbort && ctx.PendingChanges.Count > 0 && formData != null)
+                {
+                    foreach (var kv in ctx.PendingChanges) formData[kv.Key] = kv.Value;
+                    _log?.LogInfo(nameof(SubmissionProcessor),
+                        stage + " automation for form " + form.FormId + " changed " +
+                        ctx.PendingChanges.Count + " field value(s) before the row was written.");
+                }
+
+                // A script's message beats the form's configured one for this submission only.
+                if (!string.IsNullOrWhiteSpace(run.ResponseSuccessMessage))
+                    result.SuccessMessage = run.ResponseSuccessMessage;
+                if (!string.IsNullOrWhiteSpace(run.ResponseRedirectUrl))
+                    result.RedirectUrl = run.ResponseRedirectUrl;
+
+                if (run.Success)
+                {
+                    _log?.LogInfo(nameof(SubmissionProcessor),
+                        stage + " automation ran for form " + form.FormId + " submission " + submissionId +
+                        " in " + run.DurationMs + "ms.");
+                }
+                else
+                {
+                    _log?.LogError(nameof(SubmissionProcessor),
+                        stage + " automation failed for form " + form.FormId + " submission " +
+                        submissionId + ": " + run.ErrorMessage, null);
+                }
+                return run;
+            }
+            catch (Exception ex)
+            {
+                _log?.LogError(nameof(SubmissionProcessor),
+                    stage + " automation host failed for form " + form.FormId + ": " + ex.Message, ex);
+                return null;
+            }
+        }
+
+
         private static SubmissionWorkflowState GetWorkflowState(string workflowJson)
         {
             if (string.IsNullOrWhiteSpace(workflowJson))
@@ -792,5 +1016,14 @@ namespace MegaForm.Core.Services
         public bool IsSpam { get; set; }
         public double SpamScore { get; set; }
         public Dictionary<string, string> ValidationErrors { get; set; }
+
+        /// <summary>
+        /// [AfterSubmitScript v20260813-01] Set only when the form's C# hook failed AND the
+        /// hook is configured onFailure="report". Success stays true and the submission stays
+        /// saved — this is a note for the caller, not a submit failure. Callers that surface it
+        /// to an anonymous visitor should show the configured message, not this string, which
+        /// is written by a host and can name internal systems.
+        /// </summary>
+        public string ScriptError { get; set; }
     }
 }
