@@ -1,0 +1,11 @@
+{
+  "Group": "MegaForm",
+  "FriendlyName": "MegaForm",
+  "SystemName": "MegaForm.NopCommerce.Plugin",
+  "Version": "1.0.0",
+  "SupportedVersions": [ "4.70", "4.80" ],
+  "Author": "MegaForm",
+  "DisplayOrder": 1,
+  "FileName": "MegaForm.NopCommerce.Plugin.dll",
+  "Description": "Form builder, submissions, and workflow widgets for nopCommerce."
+}

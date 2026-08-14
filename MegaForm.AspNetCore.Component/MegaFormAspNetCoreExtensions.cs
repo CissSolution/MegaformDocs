@@ -2,7 +2,9 @@ using System;
 using System.Text;
 using MegaForm.Core.Interfaces;
 using MegaForm.Core.Services;
+using MegaForm.Core.Services.Blog;
 using MegaForm.Core.Services.Starters;
+using MegaForm.Core.Services.TypedSubmission;
 using MegaForm.Core.Services.Workflow;
 using MegaForm.Core.Services.AiKnowledge;
 using MegaForm.Core.i18n;
@@ -193,6 +195,13 @@ namespace MegaForm.AspNetCore.Component
             services.AddScoped<IFileRepository, EfFileRepository>();
             services.AddScoped<IDocumentRepository, EfDocumentRepository>();
 
+            // Typed submission storage (mirrors MegaForm.Web/Program.cs)
+            services.AddScoped<ISubmissionDataStore, EfSubmissionDataStore>();
+            services.AddScoped<ISubmissionDataBatchReader>(sp =>
+                (EfSubmissionDataStore)sp.GetRequiredService<ISubmissionDataStore>());
+            services.AddScoped<SubmissionDataResolver>();
+            services.AddScoped<TypedSubmissionResyncService>();
+
             // Platform services
             services.AddHttpContextAccessor();
             services.AddScoped<IModuleSettingsService, WebModuleSettingsService>();
@@ -241,9 +250,19 @@ namespace MegaForm.AspNetCore.Component
             services.AddScoped<SubmissionWorkflowDetailService>();
             services.AddScoped<SubmissionQueryService>();
             services.AddScoped<AdminRecordShellService>();
+            services.AddScoped<IScheduledPublishService, ScheduledPublishService>();
+            services.AddScoped<IAnalyticsRollupService, BlogAnalyticsRollupService>();
             services.AddSingleton<IWebhookWorkflowNodeUiService, WebhookWorkflowNodeUiService>();
             services.AddSingleton<IEmailWorkflowNodeUiService, EmailWorkflowNodeUiService>();
             services.AddSingleton<IWorkflowNodeUiSchemaProvider, WorkflowNodeUiSchemaProvider>();
+
+            // Payment verifier stack (mirrors MegaForm.Web/Program.cs)
+            services.AddSingleton<MegaForm.Core.Payments.PaymentGatewayClient>();
+            services.AddScoped<MegaForm.Core.Payments.IPaymentGatewayStore>(sp =>
+                new MegaForm.Core.Payments.ModuleSettingsPaymentGatewayStore(
+                    sp.GetRequiredService<IModuleSettingsService>(),
+                    key => sp.GetService<IConfiguration>()?[key] ?? string.Empty));
+            services.AddScoped<MegaForm.Core.Payments.PaymentSubmissionVerifier>();
 
             // Workflow node executors
             services.AddScoped<INodeExecutor, FormFieldNodeExecutor>();

@@ -1,0 +1,728 @@
+{
+  "version": "1.0",
+  "slug": "dance-competition-registration",
+  "title": "Dance Competition Registration",
+  "description": "A bold pink-to-blue competition entry form: hero banner, JotForm-style fields, category and level pickers, logistics and consent.",
+  "category": "event-registration",
+  "categories": [
+    "event-registration",
+    "premium",
+    "arts"
+  ],
+  "icon": "music",
+  "submitButtonText": "Submit Registration",
+  "successMessage": "Registration complete. Your entry has been received.",
+  "fields": [
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "first_name",
+      "type": "Text",
+      "label": "First name",
+      "required": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "last_name",
+      "type": "Text",
+      "label": "Last name",
+      "required": true
+    },
+    {
+      "placeholder": "example@example.com",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "email",
+      "type": "Email",
+      "label": "E-mail",
+      "required": true
+    },
+    {
+      "placeholder": "(888) 000-0000",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "phone",
+      "type": "Phone",
+      "label": "Phone",
+      "required": false
+    },
+    {
+      "placeholder": "2004",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "birth_year",
+      "type": "Text",
+      "label": "Year of birth",
+      "required": false
+    },
+    {
+      "placeholder": "Select country",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Germany",
+          "value": "Germany"
+        },
+        {
+          "label": "France",
+          "value": "France"
+        },
+        {
+          "label": "Spain",
+          "value": "Spain"
+        },
+        {
+          "label": "Italy",
+          "value": "Italy"
+        },
+        {
+          "label": "Portugal",
+          "value": "Portugal"
+        },
+        {
+          "label": "Netherlands",
+          "value": "Netherlands"
+        },
+        {
+          "label": "Austria",
+          "value": "Austria"
+        },
+        {
+          "label": "Belgium",
+          "value": "Belgium"
+        },
+        {
+          "label": "Greece",
+          "value": "Greece"
+        },
+        {
+          "label": "Poland",
+          "value": "Poland"
+        },
+        {
+          "label": "Sweden",
+          "value": "Sweden"
+        },
+        {
+          "label": "Ireland",
+          "value": "Ireland"
+        },
+        {
+          "label": "Other",
+          "value": "Other"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "country",
+      "type": "Select",
+      "label": "Country",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Solo",
+          "value": "Solo"
+        },
+        {
+          "label": "Duo",
+          "value": "Duo"
+        },
+        {
+          "label": "Group (3–5)",
+          "value": "Group (3–5)"
+        },
+        {
+          "label": "Crew (6+)",
+          "value": "Crew (6+)"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "chips"
+      },
+      "key": "category",
+      "type": "Radio",
+      "label": "Category",
+      "required": true,
+      "optionDisplay": "chips",
+      "choiceDisplay": "chips",
+      "optionVariant": "chips",
+      "widgetProps": {
+        "optionDisplay": "chips"
+      }
+    },
+    {
+      "placeholder": "Select style",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Hip-Hop",
+          "value": "Hip-Hop"
+        },
+        {
+          "label": "Contemporary",
+          "value": "Contemporary"
+        },
+        {
+          "label": "Ballet",
+          "value": "Ballet"
+        },
+        {
+          "label": "Breakdance",
+          "value": "Breakdance"
+        },
+        {
+          "label": "Salsa",
+          "value": "Salsa"
+        },
+        {
+          "label": "Jazz",
+          "value": "Jazz"
+        },
+        {
+          "label": "Tap",
+          "value": "Tap"
+        },
+        {
+          "label": "K-Pop",
+          "value": "K-Pop"
+        },
+        {
+          "label": "Ballroom",
+          "value": "Ballroom"
+        },
+        {
+          "label": "Freestyle",
+          "value": "Freestyle"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "style",
+      "type": "Select",
+      "label": "Dance style",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Beginner",
+          "value": "Beginner"
+        },
+        {
+          "label": "Intermediate",
+          "value": "Intermediate"
+        },
+        {
+          "label": "Advanced",
+          "value": "Advanced"
+        },
+        {
+          "label": "Professional",
+          "value": "Professional"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "chips"
+      },
+      "key": "level",
+      "type": "Radio",
+      "label": "Experience level",
+      "required": false,
+      "optionDisplay": "chips",
+      "choiceDisplay": "chips",
+      "optionVariant": "chips",
+      "widgetProps": {
+        "optionDisplay": "chips"
+      }
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Erasmus Exchange",
+          "value": "erasmus",
+          "description": "Berlin · Paris · Madrid"
+        },
+        {
+          "label": "Language Immersion",
+          "value": "language",
+          "description": "Florence · Lisbon · Vienna"
+        },
+        {
+          "label": "Performing Arts",
+          "value": "arts",
+          "description": "Amsterdam · Prague · Athens"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "cards",
+        "optionColumns": 1
+      },
+      "key": "programme",
+      "type": "Radio",
+      "label": "Programme",
+      "required": false,
+      "optionDisplay": "cards",
+      "choiceDisplay": "cards",
+      "optionVariant": "cards",
+      "optionColumns": 1,
+      "widgetProps": {
+        "optionDisplay": "cards",
+        "optionColumns": 1
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Select month",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "January 2026",
+          "value": "January"
+        },
+        {
+          "label": "February 2026",
+          "value": "February"
+        },
+        {
+          "label": "March 2026",
+          "value": "March"
+        },
+        {
+          "label": "April 2026",
+          "value": "April"
+        },
+        {
+          "label": "May 2026",
+          "value": "May"
+        },
+        {
+          "label": "June 2026",
+          "value": "June"
+        },
+        {
+          "label": "July 2026",
+          "value": "July"
+        },
+        {
+          "label": "August 2026",
+          "value": "August"
+        },
+        {
+          "label": "September 2026",
+          "value": "September"
+        },
+        {
+          "label": "October 2026",
+          "value": "October"
+        },
+        {
+          "label": "November 2026",
+          "value": "November"
+        },
+        {
+          "label": "December 2026",
+          "value": "December"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "start_month",
+      "type": "Select",
+      "label": "Preferred start",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "3",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "1 months",
+          "value": "1"
+        },
+        {
+          "label": "3 months",
+          "value": "3"
+        },
+        {
+          "label": "6 months",
+          "value": "6"
+        },
+        {
+          "label": "12 months",
+          "value": "12"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "duration",
+      "type": "Select",
+      "label": "Duration (months)",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Host family",
+          "value": "host",
+          "description": "Live with locals"
+        },
+        {
+          "label": "Student dorm",
+          "value": "dorm",
+          "description": "On campus"
+        },
+        {
+          "label": "Shared flat",
+          "value": "shared",
+          "description": "With peers"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "cards",
+        "optionColumns": 3
+      },
+      "key": "accommodation",
+      "type": "Radio",
+      "label": "Accommodation",
+      "required": false,
+      "optionDisplay": "cards",
+      "choiceDisplay": "cards",
+      "optionVariant": "cards",
+      "optionColumns": 3,
+      "widgetProps": {
+        "optionDisplay": "cards",
+        "optionColumns": 3
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Select level",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "A1 — Beginner",
+          "value": "A1 — Beginner"
+        },
+        {
+          "label": "A2 — Elementary",
+          "value": "A2 — Elementary"
+        },
+        {
+          "label": "B1 — Intermediate",
+          "value": "B1 — Intermediate"
+        },
+        {
+          "label": "B2 — Upper-intermediate",
+          "value": "B2 — Upper-intermediate"
+        },
+        {
+          "label": "C1 — Advanced",
+          "value": "C1 — Advanced"
+        },
+        {
+          "label": "C2 — Fluent",
+          "value": "C2 — Fluent"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "language_level",
+      "type": "Select",
+      "label": "Language level",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Art & Design",
+          "value": "Art & Design"
+        },
+        {
+          "label": "Technology",
+          "value": "Technology"
+        },
+        {
+          "label": "Sustainability",
+          "value": "Sustainability"
+        },
+        {
+          "label": "Music",
+          "value": "Music"
+        },
+        {
+          "label": "Sports",
+          "value": "Sports"
+        },
+        {
+          "label": "Cuisine",
+          "value": "Cuisine"
+        },
+        {
+          "label": "History",
+          "value": "History"
+        },
+        {
+          "label": "Entrepreneurship",
+          "value": "Entrepreneurship"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "chips"
+      },
+      "key": "interests",
+      "type": "Checkbox",
+      "label": "Interests",
+      "required": false,
+      "optionDisplay": "chips",
+      "choiceDisplay": "chips",
+      "optionVariant": "chips",
+      "widgetProps": {
+        "optionDisplay": "chips"
+      }
+    },
+    {
+      "placeholder": "Tell us about your goals…",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "motivation",
+      "type": "Textarea",
+      "label": "Why do you want to join?",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Send me updates about upcoming competitions and events",
+          "value": "yes"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "newsletter",
+      "type": "Checkbox",
+      "label": "Send me updates about upcoming competitions and events",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "I agree to the terms and conditions",
+          "value": "yes"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "terms",
+      "type": "Checkbox",
+      "label": "I agree to the terms and conditions",
+      "required": true
+    }
+  ],
+  "settings": {
+    "theme": "dance-competition-premium",
+    "multiPage": false,
+    "customContent": {},
+    "customScripts": {},
+    "customHtml": "<div class='mfp mfp-dcp mfp-native-generated' data-mf-flexgrid=\"locked\" style=\"background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;box-shadow:none!important\"><div class='dcp-card'><div class='dcp-hero'><div class='dcp-hero-photo' role='presentation'></div><div class='dcp-hero-wash'></div><div class='dcp-hero-text'>DANCE COMPETITION</div></div><div class='dcp-body'><div class='dcp-title'><h1>Dance Registration</h1><p>Fill the registration form below keenly to enter the dancing competition.</p></div><div class='dcp-block'><p class='dcp-group'>Name</p><div class='dcp-grid dcp-2'><label class='dcp-field'><span>First name</span>{{field:first_name}}</label><label class='dcp-field'><span>Last name</span>{{field:last_name}}</label></div></div><label class='dcp-field'><span>E-mail *</span>{{field:email}}</label><div class='dcp-grid dcp-2'><label class='dcp-field'><span>Phone</span>{{field:phone}}</label><label class='dcp-field'><span>Year of birth</span>{{field:birth_year}}</label></div><label class='dcp-field'><span>Country</span>{{field:country}}</label><div class='dcp-rule'><span>Competition details</span><i></i></div><label class='dcp-field'><span>Category *</span>{{field:category}}</label><label class='dcp-field'><span>Dance style</span>{{field:style}}</label><label class='dcp-field'><span>Experience level</span>{{field:level}}</label><div class='dcp-rule'><span>Programme &amp; logistics</span><i></i></div><label class='dcp-field'><span>Programme</span>{{field:programme}}</label><div class='dcp-grid dcp-2'><label class='dcp-field'><span>Preferred start</span>{{field:start_month}}</label><label class='dcp-field'><span>Duration</span>{{field:duration}}</label></div><label class='dcp-field'><span>Accommodation</span>{{field:accommodation}}</label><label class='dcp-field'><span>Language level</span>{{field:language_level}}</label><div class='dcp-rule'><span>Interests &amp; motivation</span><i></i></div><label class='dcp-field'><span>Interests</span>{{field:interests}}</label><label class='dcp-field'><span>Why do you want to join?</span>{{field:motivation}}</label><div class='dcp-rule'><span>Consent</span><i></i></div><div class='dcp-consent'><label class='dcp-field dcp-consent-item'><span>Newsletter</span>{{field:newsletter}}</label><label class='dcp-field dcp-consent-item'><span>Terms</span>{{field:terms}}</label></div><button class='dcp-submit' type='submit' style=\"background:linear-gradient(135deg,var(--dcp-primary),var(--dcp-accent))!important;color:var(--dcp-on-primary)!important;border:0!important;border-radius:12px!important;padding:13px 20px!important;width:100%!important;font-weight:700!important;box-shadow:none!important;cursor:pointer!important\">Submit Registration</button></div></div></div>",
+    "customCss": ".mfp.mfp-dcp{--dcp-primary:var(--mf-page-primary,var(--mf-preset-primary,#E040A0));--dcp-surface:var(--mf-page-surface,var(--mf-preset-surface,#ffffff));--dcp-text:var(--mf-page-text,var(--mf-preset-text,#1A1A2E));--dcp-muted:var(--mf-page-muted,var(--mf-preset-muted,#9CA3AF));--dcp-border:var(--mf-page-border,var(--mf-preset-border,#D1D5DB));--dcp-on-primary:var(--mf-preset-on-primary,#fff);--dcp-accent:var(--mf-page-primary,var(--mf-preset-primary,#3B9EE8));--dcp-fill:color-mix(in srgb, var(--dcp-text) 5%, var(--dcp-surface));--dcp-fill-strong:color-mix(in srgb, var(--dcp-text) 9%, var(--dcp-surface));--dcp-soft:color-mix(in srgb, var(--dcp-primary) 12%, var(--dcp-surface));--dcp-hairline:color-mix(in srgb, var(--dcp-text) 12%, var(--dcp-surface));--dcp-page:color-mix(in srgb, var(--dcp-text) 4%, var(--dcp-surface));--dcp-input-bg:var(--mf-page-input-bg,var(--dcp-fill));}.mfp.mfp-dcp{background:transparent!important;border:0!important;padding:0!important;font-family:'Inter',system-ui,-apple-system,sans-serif}.mfp-dcp .dcp-card{overflow:hidden;border-radius:14px;background:var(--dcp-surface);box-shadow:0 2px 12px color-mix(in srgb, var(--dcp-text) 9%, transparent)}.mfp-dcp .dcp-hero{position:relative;height:210px;overflow:hidden;background:linear-gradient(135deg,var(--dcp-primary) 0%,color-mix(in srgb, var(--dcp-primary) 45%, var(--dcp-accent)) 50%,var(--dcp-accent) 100%)}.mfp-dcp .dcp-hero-photo{position:absolute;inset:0;background-repeat:no-repeat;background-position:center 30%;background-size:cover}.mfp-dcp .dcp-hero-photo{background-image:url('/Modules/MegaForm/img/dance-competition-registration/dance-hero.png');}.DnnModule .mfp-dcp .dcp-hero-photo{background-image:url('/DesktopModules/MegaForm/Assets/img/dance-competition-registration/dance-hero.png')}.mfp-dcp .dcp-hero-wash{mix-blend-mode:multiply}.mfp-dcp .dcp-hero-wash{position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 20%, transparent 0%, rgba(0,0,0,.28) 100%)}.mfp-dcp .dcp-hero-text{position:absolute;left:24px;right:24px;bottom:20px;color:#fff;font-size:40px;line-height:1;font-weight:900;letter-spacing:-.02em;text-transform:uppercase;text-shadow:0 2px 12px rgba(0,0,0,.4)}.mfp-dcp .dcp-body{padding:24px 28px 28px;display:flex;flex-direction:column;gap:18px}.mfp-dcp .dcp-title h1{margin:0;font-size:20px;font-weight:700;color:var(--dcp-text)}.mfp-dcp .dcp-title p{margin:3px 0 0;font-size:13px;color:var(--dcp-muted)}.mfp-dcp .dcp-group{margin:0 0 8px;font-size:14px;font-weight:600;color:var(--dcp-text)}.mfp-dcp .dcp-grid{display:grid;gap:12px}.mfp-dcp .dcp-2{grid-template-columns:1fr 1fr}.mfp-dcp .dcp-rule{display:flex;align-items:center;gap:12px;padding-top:6px}.mfp-dcp .dcp-rule span{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--dcp-muted)}.mfp-dcp .dcp-rule i{flex:1;height:1px;background:var(--dcp-hairline)}.mfp-dcp .dcp-consent{display:flex;flex-direction:column;gap:8px}.mfp-dcp .dcp-field{display:block;margin:0}.mfp-dcp .dcp-field>span{display:block;margin:0 0 6px!important;color:var(--dcp-muted);font-size:11px;line-height:16px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}.mfp-dcp .dcp-field .mf-field-label{display:none!important}.mfp-dcp .mf-field-group{margin:0!important;width:100%}.mfp-dcp .mf-input,.mfp-dcp .mf-select,.mfp-dcp .mf-textarea{width:100%!important;box-sizing:border-box!important;border:1px solid var(--dcp-border)!important;border-radius:6px!important;background:var(--dcp-surface)!important;padding:9px 12px!important;color:var(--dcp-text)!important;font:500 14px/20px inherit!important;min-height:42px!important;outline:0!important;box-shadow:none!important;transition:border-color .15s ease,background .15s ease!important}.mfp-dcp .mf-textarea{min-height:96px!important;height:auto!important;resize:vertical}.mfp-dcp .mf-input::placeholder,.mfp-dcp .mf-textarea::placeholder{color:color-mix(in srgb, var(--dcp-text) 42%, transparent)!important;opacity:1}.mfp-dcp .mf-input:focus,.mfp-dcp .mf-select:focus,.mfp-dcp .mf-textarea:focus{border-color:var(--dcp-primary)!important;background:var(--dcp-fill-strong)!important}.mfp-dcp .mf-field-error{color:#dc2626;font-size:11px;margin-top:4px}.mfp-dcp .mf-option-group--cards{display:grid;gap:8px}.mfp-dcp .mf-option-item{margin:0!important}.mfp-dcp .mf-option-group--cards{align-items:stretch}.mfp-dcp .mf-option-group--cards .mf-option-item{display:flex}.mfp-dcp .mf-option-group--cards .mf-option-ui{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%;height:100%;box-sizing:border-box;padding:12px;border:1.5px solid var(--dcp-hairline);border-radius:12px;background:var(--dcp-fill);cursor:pointer;transition:all .15s ease}.mfp-dcp .mf-option-group--cards .mf-option-check,.mfp-dcp .mf-option-group--chips .mf-option-check{display:none!important}.mfp-dcp .mf-option-group--cards .mf-option-ui{position:relative;padding-right:34px}.mfp-dcp .mf-option-group--cards .mf-option-item.is-selected .mf-option-ui::after,.mfp-dcp .mf-option-group--cards input:checked+.mf-option-ui::after{content:'';position:absolute;top:14px;right:14px;width:11px;height:6px;border-left:2.5px solid var(--dcp-primary);border-bottom:2.5px solid var(--dcp-primary);transform:rotate(-45deg);border-radius:1px}.mfp-dcp .mf-option-group--cards .mf-option-item.is-selected .mf-option-ui,.mfp-dcp .mf-option-group--cards input:checked+.mf-option-ui{border-color:var(--dcp-primary);background:var(--dcp-soft)}.mfp-dcp .mf-option-label{color:var(--dcp-text);font-size:13px;font-weight:600}.mfp-dcp .mf-option-desc{color:var(--dcp-muted);font-size:11px;margin-top:2px}.mfp-dcp .mf-option-group--chips{display:flex;flex-wrap:wrap;gap:8px}.mfp-dcp .mf-option-group--chips .mf-option-ui{padding:7px 14px;border-radius:999px;border:1.5px solid var(--dcp-hairline);background:var(--dcp-fill);color:var(--dcp-muted);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s ease}.mfp-dcp .mf-option-group--chips .mf-option-item.is-selected .mf-option-ui,.mfp-dcp .mf-option-group--chips input:checked+.mf-option-ui{background:var(--dcp-primary);border-color:var(--dcp-primary);color:var(--dcp-on-primary)}.mf-form-wrapper:has(.mfp-dcp) .mf-form-actions{display:none!important}.mfp-dcp .dcp-submit{width:100%!important;border:0!important;border-radius:12px!important;padding:13px 20px!important;background:var(--dcp-primary)!important;color:var(--dcp-on-primary)!important;font:700 14px/20px inherit!important;cursor:pointer!important;box-shadow:none!important}.mfp-dcp .dcp-submit:hover{filter:brightness(1.05)}.mfp-dcp .dcp-consent-item{display:block}.mfp-dcp .dcp-consent-item>span{display:none!important}.mfp-dcp .dcp-consent-item .mf-field-label{display:none!important}.mfp-dcp .dcp-consent-item .mf-option-group{display:block}.mfp-dcp .dcp-consent-item .mf-option-ui{border:0!important;background:none!important;padding:0!important;color:var(--dcp-muted)!important;font-weight:400!important;font-size:12px!important;line-height:18px!important}.mfp-dcp .mf-form-title,.mfp-dcp .mf-form-description{display:none!important}.mfp-dcp .dcp-field>span{text-transform:none;letter-spacing:0;font-size:13px;font-weight:500;color:color-mix(in srgb, var(--dcp-text) 78%, var(--dcp-surface))}.mfp-dcp .mf-option-group--chips .mf-option-ui{border-radius:6px;padding:9px 14px;background:var(--dcp-surface);border-color:var(--dcp-border);color:color-mix(in srgb, var(--dcp-text) 78%, var(--dcp-surface))}.mfp-dcp .mf-option-group--chips .mf-option-item.is-selected .mf-option-ui,.mfp-dcp .mf-option-group--chips input:checked+.mf-option-ui{background:linear-gradient(135deg,var(--dcp-primary),var(--dcp-accent));border-color:transparent;color:#fff}.mfp-dcp .mf-field-group[data-key='interests'] .mf-option-ui{border-radius:999px}.mfp-dcp .mf-field-group[data-key='programme'] .mf-option-group{grid-template-columns:1fr!important}.mfp-dcp .mf-field-group[data-key='accommodation'] .mf-option-group{grid-template-columns:repeat(3,1fr)!important}.mfp-dcp .mf-form-actions button,.mfp-dcp .mf-btn-submit{background:linear-gradient(135deg,var(--dcp-primary),var(--dcp-accent))!important}@media (max-width:640px){.mfp-dcp .dcp-2{grid-template-columns:1fr}.mfp-dcp .dcp-hero-text{font-size:30px}.mfp-dcp .mf-option-group{grid-template-columns:1fr!important}}",
+    "themeSelector": {
+      "enabled": true
+    },
+    "premiumGeneratedShell": true,
+    "showProgressBar": false,
+    "themeCompatibility": {
+      "policy": "hybrid",
+      "supportsPageColors": true,
+      "supportsPageTypography": true,
+      "supportsDarkHost": true,
+      "prefixes": [
+        "dcp"
+      ],
+      "immutable": []
+    }
+  },
+  "rules": [],
+  "workflow": {
+    "notifications": []
+  }
+}

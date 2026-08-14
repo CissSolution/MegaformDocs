@@ -1,0 +1,40 @@
+{
+  "url": "http://megaclean008.ai/?mfFormId=231&qa=insurance-datagrid-20260813b",
+  "screenshotPath": "E:\\DNNDEFENDER AND AI DESIGNES\\AI DESIGNES\\MegaFormSolution_280_Oqtane_um\\artifacts\\visual-qa\\insurance-datagrid\\insurance-datagrid-live.png",
+  "pass": true,
+  "metricsBefore": {
+    "hasRoot": true,
+    "hasDataGrid": true,
+    "hiddenValueLength": 220,
+    "hiddenPreview": "[{\"name\":\"\",\"ssn\":\"\",\"relationship\":\"\",\"birth_date\":\"\",\"age\":\"\",\"sex\":\"\"},{\"name\":\"\",\"ssn\":\"\",\"relationship\":\"\",\"birth_date\":\"\",\"age\":\"\",\"sex\":\"\"},{\"name\":\"\",\"ssn\":\"\",\"relationship",
+    "rowCount": 3,
+    "inputCount": 18,
+    "fakeTableCount": 0,
+    "ariaHiddenFakeCount": 0,
+    "gridBorder": "none",
+    "headBackground": "rgb(234, 248, 255)",
+    "headColor": "rgb(22, 79, 115)",
+    "headFontSize": "11px",
+    "headerLabels": [
+      "Name",
+      "SSN No.",
+      "Relationship",
+      "Birth Date",
+      "Age",
+      "Sex",
+      ""
+    ]
+  },
+  "metricsAfter": {
+    "hiddenValue": "[{\"name\":\"Avery Stone\",\"ssn\":\"\",\"relationship\":\"Child\",\"birth_date\":\"\",\"age\":\"\",\"sex\":\"\"},{\"name\":\"\",\"ssn\":\"\",\"relationship\":\"\",\"birth_date\":\"\",\"age\":\"\",\"sex\":\"\"},{\"name\":\"\",\"ssn\":\"\",\"relationship\":\"\",\"birth_date\":\"\",\"age\":\"\",\"sex\":\"\"}]",
+    "parsedRows": 3,
+    "firstRow": {
+      "name": "Avery Stone",
+      "ssn": "",
+      "relationship": "Child",
+      "birth_date": "",
+      "age": "",
+      "sex": ""
+    }
+  }
+}

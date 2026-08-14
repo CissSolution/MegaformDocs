@@ -1,0 +1,406 @@
+{
+  "version": "1.0",
+  "slug": "invoice-blue-application",
+  "title": "Invoice Blue — Programme Application",
+  "description": "Corporate invoice-styled application form: painted blue header band, pill section tags, live line-item table with totals.",
+  "category": "event-registration",
+  "categories": [
+    "event-registration",
+    "premium",
+    "invoice"
+  ],
+  "icon": "receipt",
+  "submitButtonText": "Submit Application",
+  "successMessage": "Application received. We will be in touch by email.",
+  "fields": [
+    {
+      "key": "first_name",
+      "type": "Text",
+      "label": "First name",
+      "required": true,
+      "placeholder": "Anna"
+    },
+    {
+      "key": "last_name",
+      "type": "Text",
+      "label": "Last name",
+      "required": true,
+      "placeholder": "Müller"
+    },
+    {
+      "key": "email",
+      "type": "Email",
+      "label": "Email",
+      "required": true,
+      "placeholder": "anna@email.eu"
+    },
+    {
+      "key": "phone",
+      "type": "Text",
+      "label": "Phone",
+      "placeholder": "+49 170 1234567"
+    },
+    {
+      "key": "birth_year",
+      "type": "Text",
+      "label": "Year of birth",
+      "placeholder": "2004"
+    },
+    {
+      "key": "country",
+      "type": "Select",
+      "label": "Country of residence",
+      "required": true,
+      "placeholder": "Select country",
+      "options": [
+        {
+          "label": "Germany",
+          "value": "Germany"
+        },
+        {
+          "label": "France",
+          "value": "France"
+        },
+        {
+          "label": "Spain",
+          "value": "Spain"
+        },
+        {
+          "label": "Italy",
+          "value": "Italy"
+        },
+        {
+          "label": "Portugal",
+          "value": "Portugal"
+        },
+        {
+          "label": "Netherlands",
+          "value": "Netherlands"
+        },
+        {
+          "label": "Austria",
+          "value": "Austria"
+        },
+        {
+          "label": "Belgium",
+          "value": "Belgium"
+        },
+        {
+          "label": "Greece",
+          "value": "Greece"
+        },
+        {
+          "label": "Poland",
+          "value": "Poland"
+        },
+        {
+          "label": "Sweden",
+          "value": "Sweden"
+        },
+        {
+          "label": "Ireland",
+          "value": "Ireland"
+        },
+        {
+          "label": "Other",
+          "value": "Other"
+        }
+      ]
+    },
+    {
+      "key": "start_month",
+      "type": "Select",
+      "label": "Start month",
+      "placeholder": "Select month",
+      "options": [
+        {
+          "label": "January",
+          "value": "January"
+        },
+        {
+          "label": "February",
+          "value": "February"
+        },
+        {
+          "label": "March",
+          "value": "March"
+        },
+        {
+          "label": "April",
+          "value": "April"
+        },
+        {
+          "label": "May",
+          "value": "May"
+        },
+        {
+          "label": "June",
+          "value": "June"
+        },
+        {
+          "label": "July",
+          "value": "July"
+        },
+        {
+          "label": "August",
+          "value": "August"
+        },
+        {
+          "label": "September",
+          "value": "September"
+        },
+        {
+          "label": "October",
+          "value": "October"
+        },
+        {
+          "label": "November",
+          "value": "November"
+        },
+        {
+          "label": "December",
+          "value": "December"
+        }
+      ]
+    },
+    {
+      "key": "duration",
+      "type": "Number",
+      "label": "Duration (months)",
+      "defaultValue": "3",
+      "validation": {
+        "min": 1,
+        "max": 12
+      }
+    },
+    {
+      "key": "programme",
+      "type": "Radio",
+      "label": "Programme selection",
+      "required": true,
+      "optionDisplay": "cards",
+      "properties": {
+        "optionDisplay": "cards",
+        "optionColumns": 3
+      },
+      "options": [
+        {
+          "label": "Erasmus Exchange",
+          "value": "erasmus",
+          "description": "Berlin · Paris · Madrid"
+        },
+        {
+          "label": "Language Immersion",
+          "value": "language",
+          "description": "Florence · Lisbon · Vienna"
+        },
+        {
+          "label": "Solidarity Corps",
+          "value": "volunteer",
+          "description": "Amsterdam · Prague · Athens"
+        }
+      ]
+    },
+    {
+      "key": "items",
+      "type": "DataGrid",
+      "label": "Service description",
+      "defaultValue": "[{\"description\":\"Programme registration fee\",\"qty\":1,\"price\":0},{\"description\":\"Accommodation (per month)\",\"qty\":3,\"price\":350}]",
+      "widgetProps": {
+        "editMode": "inline",
+        "allowAdd": true,
+        "allowDelete": true,
+        "stickyHeader": false,
+        "emptyMessage": "No items yet — click + Add item.",
+        "totalFormula": "Sum(\"qty * price\")",
+        "totalField": "grand_total",
+        "columns": [
+          {
+            "key": "description",
+            "label": "Description",
+            "type": "text",
+            "placeholder": "Item description",
+            "width": "minmax(80px,1fr)"
+          },
+          {
+            "key": "qty",
+            "label": "Qty",
+            "type": "number",
+            "decimals": 0,
+            "width": "minmax(0,64px)"
+          },
+          {
+            "key": "price",
+            "label": "Unit price",
+            "type": "currency",
+            "decimals": 2,
+            "width": "minmax(0,104px)"
+          },
+          {
+            "key": "line_total",
+            "label": "Total",
+            "type": "computed",
+            "decimals": 2,
+            "width": "minmax(0,104px)",
+            "computeFormula": "qty * price"
+          }
+        ]
+      }
+    },
+    {
+      "key": "grand_total",
+      "type": "Number",
+      "label": "Total",
+      "properties": {
+        "readOnly": true
+      }
+    },
+    {
+      "key": "interests",
+      "type": "Checkbox",
+      "label": "Interests",
+      "optionDisplay": "chips",
+      "properties": {
+        "optionDisplay": "chips"
+      },
+      "options": [
+        {
+          "label": "Art & Design",
+          "value": "Art & Design"
+        },
+        {
+          "label": "Technology",
+          "value": "Technology"
+        },
+        {
+          "label": "Sustainability",
+          "value": "Sustainability"
+        },
+        {
+          "label": "Music",
+          "value": "Music"
+        },
+        {
+          "label": "Sports",
+          "value": "Sports"
+        },
+        {
+          "label": "Cuisine",
+          "value": "Cuisine"
+        },
+        {
+          "label": "History",
+          "value": "History"
+        },
+        {
+          "label": "Entrepreneurship",
+          "value": "Entrepreneurship"
+        }
+      ]
+    },
+    {
+      "key": "accommodation",
+      "type": "Radio",
+      "label": "Accommodation preference",
+      "optionDisplay": "cards",
+      "properties": {
+        "optionDisplay": "cards",
+        "optionColumns": 3
+      },
+      "options": [
+        {
+          "label": "Host family",
+          "value": "Host family"
+        },
+        {
+          "label": "Student residence",
+          "value": "Student residence"
+        },
+        {
+          "label": "Private apartment",
+          "value": "Private apartment"
+        }
+      ]
+    },
+    {
+      "key": "motivation",
+      "type": "Textarea",
+      "label": "Motivation statement",
+      "placeholder": "Tell us why you want to join EuroYouth 2026…",
+      "rows": 3
+    },
+    {
+      "key": "newsletter",
+      "type": "Checkbox",
+      "label": "Newsletter",
+      "options": [
+        {
+          "label": "Subscribe to programme updates and newsletters",
+          "value": "yes"
+        }
+      ]
+    },
+    {
+      "key": "terms",
+      "type": "Checkbox",
+      "label": "Terms",
+      "required": true,
+      "options": [
+        {
+          "label": "I agree to the EuroYouth Terms & Conditions and Privacy Policy",
+          "value": "yes"
+        }
+      ]
+    }
+  ],
+  "settings": {
+    "theme": "invoice-blue-premium",
+    "multiPage": false,
+    "customContent": {
+      "brand": "EUROYOUTH",
+      "addr1": "Erasmus House, 12 Exchange Square",
+      "addr2": "Brussels, BE 1000",
+      "addr3": "info@euroyouth.eu",
+      "kicker": "Application Form",
+      "doctitle": "INVOICE",
+      "invno": "INV-466487",
+      "invdate": "26 Jul 2026",
+      "backlabel": "← Back",
+      "currency": "€",
+      "tax_rate": "0",
+      "subtotal_label": "Subtotal",
+      "tax_label": "Tax (0%)",
+      "total_label": "TOTAL",
+      "footer": "EuroYouth Exchange · Registered charity No. 8821034 · info@euroyouth.eu"
+    },
+    "customScripts": {
+      "invoice_totals": "(function(){\n  var root = (typeof __mfCurrentScriptRoot !== 'undefined' && __mfCurrentScriptRoot) || document;\n  var scope = root.closest ? (root.closest('.mfp') || document) : document;\n  var box = scope.querySelector('[data-io-currency]');\n  var CUR = (box && box.getAttribute('data-io-currency')) || '';\n  var TAX = parseFloat((box && box.getAttribute('data-io-taxrate')) || '0') || 0;\n  var fmt = function (n) { return CUR + (Math.round(n * 100) / 100).toFixed(2); };\n  function paint() {\n    var el = scope.querySelector('[name=\"grand_total\"]');\n    var sub = el ? (parseFloat(el.value) || 0) : 0;\n    var tax = sub * TAX, tot = sub + tax;\n    var s = scope.querySelector('[data-io-sub]'), t = scope.querySelector('[data-io-tax]'), g = scope.querySelector('[data-io-total]');\n    if (s) s.textContent = fmt(sub);\n    if (t) t.textContent = fmt(tax);\n    if (g) g.textContent = fmt(tot);\n  }\n  scope.addEventListener('input', paint, true);\n  scope.addEventListener('change', paint, true);\n  scope.addEventListener('click', function () { setTimeout(paint, 60); }, true);\n  setTimeout(paint, 120); setTimeout(paint, 600); paint();\n})();"
+    },
+    "customHtml": "<div class='mfp mfp-invoice-blue'><div class='io-page'><div class='io-card mfp-card'><div class='io-head'><div class='io-head-top'><div class='io-head-left'><div class='io-brand'><span class='io-logo'>EY</span><span class='io-brandname'>{{content:brand}}</span></div></div><div class='io-head-right'><div class='io-kicker'>{{content:kicker}}</div><div class='io-doctitle'>{{content:doctitle}}</div><div class='io-meta'><div><b>No:</b> {{content:invno}}</div><div><b>Date:</b> {{content:invdate}}</div></div></div></div><div class='io-addr io-addr-cols'><div><span class='io-addr-k'>From</span><span class='io-addr-v'>{{content:addr1}}</span></div><div><span class='io-addr-k'>Email</span><span class='io-addr-v'>{{content:addr2}}</span></div><div><span class='io-addr-k'>Phone</span><span class='io-addr-v'>{{content:addr3}}</span></div></div></div><div class='io-rule'></div><div class='io-body'><div class='ey-grid io-two'><div class='ey-stack io-col'><div class='io-eyebrow'><span>Bill To</span></div>{{field:first_name}}{{field:last_name}}{{field:email}}{{field:phone}}</div><div class='ey-stack io-col'><div class='io-eyebrow'><span>Applicant Details</span></div>{{field:birth_year}}{{field:country}}{{field:start_month}}{{field:duration}}</div></div><div class='io-sec'><div class='io-eyebrow'><span>Programme Selection</span></div>{{field:programme}}</div><div class='io-sec io-items'><div class='io-eyebrow'><span>Service Description</span></div>{{field:items}}<div class='io-totals'><div class='io-totbox' data-io-currency='{{content:currency}}' data-io-taxrate='{{content:tax_rate}}'><div class='io-totrow'><span>{{content:subtotal_label}}</span><span class='io-totval' data-io-sub>—</span></div><div class='io-totrow'><span>{{content:tax_label}}</span><span class='io-totval' data-io-tax>—</span></div><div class='io-total-line'><span>{{content:total_label}}</span><span class='io-totnum' data-io-total>—</span></div><span class='io-hidden-field'>{{field:grand_total}}</span>{{script:invoice_totals}}</div></div></div><div class='io-sec'><div class='io-eyebrow'><span>Interests</span></div>{{field:interests}}</div><div class='io-sec'><div class='io-eyebrow'><span>Accommodation Preference</span></div>{{field:accommodation}}</div><div class='io-sec'><div class='io-eyebrow'><span>Motivation Statement</span></div>{{field:motivation}}</div><div class='io-terms'>{{field:newsletter}}{{field:terms}}</div><div class='io-actions'><span class='io-back'>{{content:backlabel}}</span><button type='submit' class='io-submit'>{{form:submit}}</button></div></div></div><p class='io-foot'>{{content:footer}}</p></div></div>",
+    "customCss": ".mfp.mfp-invoice-blue.mfp-invoice-blue{--io-accent:#1B4F9B;--io-accent-soft:#2563C8;--io-page:#EBF1FA;--io-ink:#1A2333;--io-muted:#6B7A94;--io-line:#D4DCE8;--io-row:#F6F8FC;--io-card:#FFFFFF;\n  width:100%;max-width:100%;box-sizing:border-box;font-family:Inter,'Segoe UI',system-ui,-apple-system,sans-serif!important;color:var(--io-ink)!important;font-weight:400!important;}\n/* [pitfall 6] the DNN skin inherits font-weight:200 into the shell — every text element must state its own weight */\n.mfp.mfp-invoice-blue.mfp-invoice-blue.mfp-invoice-blue{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;margin:0!important;min-height:0!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue *{box-sizing:border-box;font-family:inherit!important;}\n/* ── host chrome neutralisation ────────────────────────────────────────────\n   The renderer wraps every form in .mf-form-wrapper > .mf-form-inner, and that inner element\n   carries the standard white card (--mf-form-bg / --mf-form-border / --mf-form-shadow /\n   --mf-form-padding / --mf-form-max-width). Around an invoice that already draws its own paper\n   card it reads as a SECOND frame (owner: \"card thừa bên ngoài form\"). The shell lives INSIDE the\n   wrapper, so reach back up with :has() — nothing else can select an ancestor. */\n.mf-form-wrapper:has(.mfp-invoice-blue){background:transparent!important;padding:0!important;margin:0!important;box-shadow:none!important;border:0!important;border-radius:0!important;}\n.mf-form-wrapper:has(.mfp-invoice-blue) .mf-form-inner,\n.mf-form-wrapper:has(.mfp-invoice-blue) .mf-form{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;margin:0!important;max-width:none!important;border-radius:0!important;}\n.mf-form-wrapper:has(.mfp-invoice-blue) .mf-form-header{display:none!important;}\n/* \"Submitting…\" is a SIBLING of the shell (#mf-loading-<id>), so by default it paints BELOW the\n   card — outside the invoice. Confine it to the form zone: absolute over .mf-form-inner (which the\n   rule above already stripped to a bare box around the shell), never over the host page chrome.\n   Works whether the renderer toggles it to display:block or display:flex. */\n.mf-form-wrapper:has(.mfp-invoice-blue) .mf-form-inner{position:relative!important;}\n.mf-form-wrapper:has(.mfp-invoice-blue) .mf-loading{position:absolute!important;inset:0!important;z-index:20!important;\n  background:color-mix(in srgb,#EBF1FA 90%,transparent)!important;color:#1B4F9B!important;\n  font-weight:800!important;font-size:15px!important;text-align:center!important;padding-top:180px!important;margin:0!important;\n  border-radius:16px!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-body,.mfp.mfp-invoice-blue.mfp-invoice-blue .io-head,.mfp.mfp-invoice-blue.mfp-invoice-blue .io-foot,.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-group,.mfp.mfp-invoice-blue.mfp-invoice-blue label,.mfp.mfp-invoice-blue.mfp-invoice-blue span,.mfp.mfp-invoice-blue.mfp-invoice-blue div,.mfp.mfp-invoice-blue.mfp-invoice-blue input,.mfp.mfp-invoice-blue.mfp-invoice-blue select,.mfp.mfp-invoice-blue.mfp-invoice-blue textarea{font-weight:400;}\n/* The invoice already paints its own centered .io-card. Keep this full-width\n   layout wrapper transparent so it cannot read as a second outer card. */\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-page{background:transparent;padding:0;min-height:0;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-card{max-width:768px;margin:0 auto;background:var(--io-card);border-radius:16px;border:none;box-shadow:0 25px 50px -12px rgba(27,79,155,.18);overflow:hidden;}\n/* header */\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-head{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:32px 32px 24px;background:#1B4F9B;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-blob{position:absolute;top:-40px;left:-40px;height:176px;width:176px;border-radius:9999px;opacity:.9;background:none;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-head-left,.mfp.mfp-invoice-blue.mfp-invoice-blue .io-head-right{position:relative;z-index:1;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-head-right{text-align:right;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-brand{display:flex;align-items:center;gap:8px;margin-bottom:4px;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-logo{display:flex;height:32px;width:32px;align-items:center;justify-content:center;border-radius:8px;background:var(--io-accent);color:#fff!important;font-size:12px;font-weight:900!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-brandname{font-size:18px;font-weight:900!important;letter-spacing:-.02em;color:var(--io-ink)!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-addr{font-size:12px;line-height:1.55;color:var(--io-muted)!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-kicker{font-size:12px;font-weight:500!important;color:var(--io-muted)!important;margin-bottom:4px;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-doctitle{font-size:30px;font-weight:900!important;color:#FFFFFF!important;line-height:1.05;letter-spacing:-.02em;}\n/* [pitfall 11] the stacked \"SAMPLE\" word — without !important the theme bridge repaints it navy */\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-doctop{font-size:30px;font-weight:900!important;color:var(--io-ink)!important;line-height:1.05;letter-spacing:-.02em;}\n/* decorative QR: sits on its own line under the header row, so .io-head drops its bottom padding\n   (see above) and this element carries the header's horizontal padding instead */\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-qrwrap{display:flex;justify-content:flex-end;padding:16px 32px 24px;background:#1B4F9B;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-qr{display:grid!important;grid-template-columns:repeat(5,8px);gap:2px;padding:6px;border-radius:4px;background:transparent;border:1px solid transparent;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-qr i{display:block;width:8px;height:8px;border-radius:1px;background:transparent;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-qr i.on{background:currentColor;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-meta{margin-top:8px;font-size:12px;line-height:1.55;color:var(--io-muted)!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-meta b{color:var(--io-ink)!important;font-weight:600!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-rule{height:6px;width:100%;background:linear-gradient(90deg,var(--io-accent),var(--io-accent-soft));}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-body{padding:24px 32px 28px;display:flex;flex-direction:column;gap:28px;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-two{display:grid;grid-template-columns:1fr 1fr;gap:32px;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-col{display:flex;flex-direction:column;gap:12px;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-sec{display:block;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-eyebrow{margin-bottom:8px;font-size:10px;font-weight:900!important;text-transform:uppercase;letter-spacing:.18em;color:var(--io-accent)!important;}\n\n/* Section tag: a solid pill sitting on a full-width tinted band. Numbers come from the mock —\n   the band is h-7 (28px) and the tag is px-4 py-1.5 at 10px font-black tracking-widest, so the\n   pill is 28px tall and the band shows only beside it. */\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-eyebrow{display:flex!important;align-items:stretch!important;height:28px!important;margin-bottom:14px!important;padding:0!important;background:#EBF1FA!important;letter-spacing:0!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-eyebrow span{display:flex!important;align-items:center!important;padding:0 16px!important;background:#1B4F9B!important;color:#FFFFFF!important;font-size:10px!important;font-weight:900!important;text-transform:uppercase!important;letter-spacing:.1em!important;}\n/* Banded header: the whole block is painted, so every glyph inside it must be re-inked — the\n   theme bridge ships !important, and anything left unset falls back to page ink. The markup puts\n   the two columns in .io-head-top and the address after it, so plain block flow stacks them. */\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-head{display:block!important;background:#1B4F9B!important;padding:26px 32px 22px!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-head-top{display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:16px!important;margin-bottom:18px!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-head-right{text-align:right!important;position:relative;z-index:1;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-brand{margin-bottom:0!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-brandname,.mfp.mfp-invoice-blue.mfp-invoice-blue .io-doctitle,.mfp.mfp-invoice-blue.mfp-invoice-blue .io-kicker,.mfp.mfp-invoice-blue.mfp-invoice-blue .io-meta,.mfp.mfp-invoice-blue.mfp-invoice-blue .io-meta b{color:#FFFFFF!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-logo{background:rgba(255,255,255,.18)!important;color:#FFFFFF!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-addr-cols{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-addr-k{display:block!important;font-size:11px!important;font-weight:700!important;color:#FFFFFF!important;margin-bottom:3px!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-addr-v{display:block!important;font-size:12px!important;color:rgba(255,255,255,.82)!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-rule{display:none!important;}\n/* [pitfall 8 — NEW] .mf-field-group ships flex-basis:100%. Inside a flex-direction:column shell that is\n   the MAIN size, so every field stretched to the full column height (measured 283px for a 53px field).\n   Pin the basis back to content for every field inside this shell. */\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-group{flex:0 0 auto!important;}\n/* [pitfall 2] MegaForm renders its own label — style it as the mock's tiny caps label instead of duplicating text */\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-group{margin:0 0 0 0!important;}\n/* section-level fields are already titled by the .io-eyebrow — their own label would duplicate it */\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-group[data-key='programme'] > .mf-field-label,\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-group[data-key='items'] > .mf-field-label,\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-group[data-key='interests'] > .mf-field-label,\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-group[data-key='accommodation'] > .mf-field-label,\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-group[data-key='motivation'] > .mf-field-label,\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-group[data-key='grand_total'] > .mf-field-label,\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-group[data-key='newsletter'] > .mf-field-label,\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-group[data-key='terms'] > .mf-field-label{display:none!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-label{display:block!important;margin:0 0 4px!important;font-size:10px!important;font-weight:600!important;text-transform:uppercase!important;letter-spacing:.12em!important;color:var(--io-muted)!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-required{color:var(--io-accent)!important;}\n/* [pitfall 5] real inputs are .mf-input/.mf-select — base CSS wins without specificity + !important */\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-input,.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-select,.mfp.mfp-invoice-blue.mfp-invoice-blue input:not([type='checkbox']):not([type='radio']),.mfp.mfp-invoice-blue.mfp-invoice-blue select{\n  width:100%!important;border:0!important;border-bottom:1px solid var(--io-line)!important;border-radius:0!important;\n  background:transparent!important;padding:6px 0!important;font-size:14px!important;color:#1A2333!important;box-shadow:none!important;min-height:34px!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-input:focus,.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-select:focus,.mfp.mfp-invoice-blue.mfp-invoice-blue input:focus,.mfp.mfp-invoice-blue.mfp-invoice-blue select:focus{border-bottom:2px solid var(--io-accent)!important;outline:0!important;box-shadow:none!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue input::placeholder,.mfp.mfp-invoice-blue.mfp-invoice-blue textarea::placeholder{color:#9AA8BF!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-textarea,.mfp.mfp-invoice-blue.mfp-invoice-blue textarea{width:100%!important;border:1px solid var(--io-line)!important;border-radius:8px!important;background:transparent!important;padding:12px!important;font-size:14px!important;color:#1A2333!important;resize:vertical!important;min-height:92px!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-textarea:focus,.mfp.mfp-invoice-blue.mfp-invoice-blue textarea:focus{border-color:var(--io-accent)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--io-accent) 18%,transparent)!important;outline:0!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-error{color:#dc2626!important;font-size:11px!important;margin-top:4px!important;}\n/* [pitfall 3] chips: base ships a 2-col grid — force a wrapping flex row */\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-group[data-key='interests'] .mf-option-group{display:flex!important;flex-wrap:wrap!important;gap:8px!important;grid-template-columns:none!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-group[data-key='interests'] .mf-option-item{width:auto!important;margin:0!important;padding:0!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-group[data-key='interests'] .mf-option-ui{display:inline-flex!important;align-items:center!important;min-height:26px!important;padding:4px 12px!important;font-size:12px!important;border:1px solid var(--io-line)!important;border-radius:9999px!important;background:#FFFFFF!important;color:#1A2333!important;box-shadow:none!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-group[data-key='interests'] .mf-option-label{font-size:12px!important;font-weight:500!important;color:inherit!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-group[data-key='interests'] .mf-option-control:checked+.mf-option-ui{background:#1B4F9B!important;border-color:var(--io-accent)!important;color:#FFFFFF!important;}\n/* cards (programme + accommodation) */\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-group[data-key='programme'] .mf-option-group,\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-group[data-key='accommodation'] .mf-option-group{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-group[data-key='programme'] .mf-option-ui,\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-group[data-key='accommodation'] .mf-option-ui{display:block!important;height:100%!important;padding:12px!important;border:2px solid var(--io-line)!important;border-radius:8px!important;background:#FFFFFF!important;text-align:left!important;box-shadow:none!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-group[data-key='accommodation'] .mf-option-ui{border-width:1px!important;text-align:center!important;font-size:12px!important;padding:10px 0!important;min-height:38px!important;display:flex!important;align-items:center!important;justify-content:center!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-group[data-key='programme'] .mf-option-label,\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-group[data-key='accommodation'] .mf-option-label{font-size:12px!important;font-weight:700!important;color:#1A2333!important;line-height:1.25!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-group[data-key='accommodation'] .mf-option-label{font-weight:600!important;color:var(--io-muted)!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-option-desc{display:block!important;margin-top:2px!important;font-size:10px!important;font-weight:400!important;color:var(--io-muted)!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-group[data-key='programme'] .mf-option-control:checked+.mf-option-ui,\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-group[data-key='accommodation'] .mf-option-control:checked+.mf-option-ui{border-color:var(--io-accent)!important;background:#EBF1FA!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-field-group[data-key='programme'] .mf-option-control:checked+.mf-option-ui .mf-option-label{color:var(--io-accent)!important;}\n/* [pitfall 4] the ✓ badge shows on every card — the mock has no tick at all, selection reads as border+tint */\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-option-check{display:none!important;}\n/* line-item grid — the DataGrid widget renders DIVs (.mfw-dgrid-*), never a <table> */\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-items .mf-field-label{display:none!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mfw-dgrid{border:0!important;background:transparent!important;box-shadow:none!important;display:flex!important;flex-direction:column!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mfw-dgrid-toolbar{order:2!important;justify-content:flex-start!important;padding:8px 0 0!important;border:0!important;background:transparent!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mfw-dgrid-title{display:none!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mfw-dgrid-add{border:0!important;background:transparent!important;color:var(--io-accent)!important;font-size:12px!important;font-weight:700!important;padding:0!important;box-shadow:none!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mfw-dgrid-grid{order:1!important;border:0!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mfw-dgrid-head{background:#EBF1FA!important;border:0!important;}\n/* [StickyHeadOverlap v20260726] The widget styles head cells position:sticky;top:38px\n   (megaform-widget-datagrid.ts:261) and the stickyHeader:false prop does NOT remove it. Sticky is\n   contained by .mfw-dgrid-grid, which in an invoice is only ~2 rows tall, so the header slid its full\n   38px DOWN and painted ON TOP of the first row (measured: natural y=1003 -> rendered y=1041, over an\n   empty row occupying 1039-1085). An invoice table never scrolls on its own - pin it back to static.\n   Selector is .mfw-dgrid-head .mfw-dgrid-cell, NOT .mfw-dgrid-head-cell: the widget also emits a\n   6th, class-less div.mfw-dgrid-cell as the delete-column spacer (:493), which otherwise keeps the\n   stock #f8fafc and reads as a white box at the end of the header row. */\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mfw-dgrid-head .mfw-dgrid-cell{position:static!important;top:auto!important;z-index:auto!important;background:#EBF1FA!important;border:0!important;}\n/* NOTE the order: border:0 must come BEFORE border-bottom, otherwise the shorthand resets the\n   hairline back off and the rule-style table head loses its underline. */\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mfw-dgrid-head-cell{background:#EBF1FA!important;color:#1B4F9B!important;font-size:10px!important;font-weight:900!important;text-transform:uppercase!important;letter-spacing:.08em!important;padding:8px 12px!important;border:0!important;}\n/* a grid track's automatic minimum is its content's min-content size, and an <input> reports a\n   sizeable one — without min-width:0 the cells would re-inflate the tracks minmax() just shrank. */\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mfw-dgrid-cell{padding:4px 12px!important;border:0!important;font-size:12px!important;min-width:0!important;overflow:hidden!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mfw-dgrid-cell input{min-width:0!important;max-width:100%!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mfw-dgrid-grid > div:nth-child(odd of :not(.mfw-dgrid-head)){background:var(--io-row)!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mfw-dgrid-cell input{border:0!important;border-bottom:0!important;background:transparent!important;font-size:12px!important;min-height:26px!important;padding:2px 0!important;box-shadow:none!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mfw-dgrid-empty{grid-column:1/-1!important;display:block!important;padding:14px 12px!important;color:var(--io-muted)!important;font-size:12px!important;background:transparent!important;border:0!important;position:static!important;}\n/* the widget prints its own \"Total (→ grand_total)\" footer once totalFormula is set — the invoice\n   already shows that number in the orange pill, so keep only one */\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mfw-dgrid-foot{display:none!important;}\n/* the TOTAL figure lives in the orange pill: strip the underline-input chrome so it reads as text */\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-hidden-field{position:absolute!important;left:-9999px!important;width:1px!important;height:1px!important;overflow:hidden!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-totnum{font-weight:900!important;font-size:14px!important;color:#FFFFFF!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-total-line .mf-field-group{margin:0!important;flex:0 0 auto!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-total-line .mf-input,.mfp.mfp-invoice-blue.mfp-invoice-blue .io-total-line input{border:0!important;border-bottom:0!important;background:transparent!important;\n  color:#FFFFFF!important;text-align:right!important;font-weight:900!important;font-size:14px!important;\n  padding:0!important;min-height:0!important;height:auto!important;width:110px!important;box-shadow:none!important;-moz-appearance:textfield!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-total-line input::-webkit-outer-spin-button,.mfp.mfp-invoice-blue.mfp-invoice-blue .io-total-line input::-webkit-inner-spin-button{-webkit-appearance:none!important;margin:0!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-totals{margin-top:16px;display:flex;justify-content:flex-end;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-totbox{width:208px;display:flex;flex-direction:column;gap:6px;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-totrow{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:14px;font-weight:400!important;color:var(--io-muted)!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-totrow .io-totval{color:var(--io-ink)!important;font-weight:400!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-total-line{display:flex;align-items:center;justify-content:space-between;gap:12px;border-radius:8px;padding:8px 12px;background:#1B4F9B;color:#FFFFFF;font-size:14px;font-weight:900!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-total-line > span{font-weight:900!important;color:#FFFFFF!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-total-line .mf-field-group{margin:0!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-total-line .mf-field-label{display:none!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-total-line .mf-input{border:0!important;background:transparent!important;color:#FFFFFF!important;text-align:right!important;font-weight:900!important;padding:0!important;min-height:0!important;}\n/* consent rows */\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-terms{display:flex;flex-direction:column;gap:8px;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-terms .mf-field-label{display:none!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-terms .mf-option-item{display:flex!important;align-items:flex-start!important;gap:10px!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-terms .mf-option-control{position:static!important;width:16px!important;height:16px!important;flex:0 0 16px!important;margin-top:2px!important;opacity:1!important;accent-color:var(--io-accent)!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-terms .mf-option-ui{display:block!important;border:0!important;background:transparent!important;padding:0!important;box-shadow:none!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-terms .mf-option-label{font-size:12px!important;line-height:1.6!important;color:var(--io-muted)!important;font-weight:400!important;}\n/* actions */\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-actions{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:12px;border-top:1px solid var(--io-line);}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-back{font-size:12px;font-weight:600!important;color:var(--io-muted)!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-submit{border:0!important;border-radius:8px!important;padding:11px 26px!important;background:#1B4F9B!important;color:#FFFFFF!important;font-size:14px!important;font-weight:900!important;cursor:pointer;font-family:inherit!important;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-submit:hover{opacity:.92;}\n.mfp.mfp-invoice-blue.mfp-invoice-blue .io-foot{margin:16px 0 0;text-align:center;font-size:11px;color:var(--io-muted)!important;}\n/* the renderer's own chrome submit is redundant inside a custom shell */\n.mfp.mfp-invoice-blue.mfp-invoice-blue .mf-form-actions:not(.mf-postsubmit-actions):not(.mf-review-actions){display:none!important;}\n/* ── ⚠️ CỐ Ý KHÔNG CÓ @media BREAKPOINT — ĐỪNG THÊM LẠI ────────────────────────────────────\n   [MockParityNoBreakpoint v20260726] Bản dựng trước có một khối @media (max-width:760px) xếp\n   header thành cột, canh trái khối doc-title, và ép lưới Bill-to / thẻ programme về 1 cột.\n   **Mock KHÔNG có breakpoint nào** — \"flex items-start justify-between\", \"grid-cols-2\",\n   \"grid-cols-3\" đều không mang tiền tố \"md:\", nên nó chỉ CO LẠI chứ không đổi bố cục.\n   Đo ở 480px và 390px: mock stacked=false, header vẫn 1 hàng, doc-title vẫn canh phải.\n   ⇒ Khối @media đó là nguồn duy nhất gây lệch so với mock ở khung hẹp (owner báo 07-26).\n\n   Còn một lý do kỹ thuật nữa để KHÔNG dùng @media ở đây: media query đo **viewport**, nhưng\n   một module MegaForm có thể nằm trong pane hẹp của trang rộng (hoặc ngược lại) — nên nó đằng\n   nào cũng bắn sai. Bố cục co giãn (minmax(0,1fr)) đúng theo cả hai chiều.\n   Muốn thêm hành vi cho màn hình nhỏ thì phải hỏi owner trước, và dùng @container. */",
+    "themeSelector": {
+      "enabled": false
+    },
+    "showProgressBar": false,
+    "themeCompatibility": {
+      "policy": "immutable",
+      "supportsPageColors": false,
+      "supportsPageTypography": false,
+      "supportsDarkHost": true,
+      "prefixes": [
+        "io"
+      ],
+      "immutable": [
+        "customHtml",
+        "customCss",
+        "theme"
+      ]
+    }
+  },
+  "rules": [],
+  "workflow": {
+    "notifications": []
+  },
+  "templateGuideSlug": "tpl-invoice-blue-application",
+  "manifestVersion": 2
+}

@@ -17,13 +17,21 @@
     <TargetFrameworks>net472;net8.0;net9.0;net10.0</TargetFrameworks>
     <AssemblyName>MegaForm.Integrations.CloudStorage</AssemblyName>
     <RootNamespace>MegaForm.Integrations.CloudStorage</RootNamespace>
-    <Description>MegaForm cloud storage providers (Amazon S3, Azure Blob) — optional add-on for MegaForm.Core.</Description>
+    <Description>MegaForm cloud storage provider (Amazon S3) — optional add-on for MegaForm.Core.</Description>
     <IsPackable>true</IsPackable>
     <PackageId>MegaForm.Integrations.CloudStorage</PackageId>
     <Version>1.0.0</Version>
     <Authors>MegaForm Team</Authors>
+    <Company>MegaForm</Company>
+    <Copyright>© 2026 MegaForm. All rights reserved.</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageTags>megaform;forms;storage;s3;azure-blob</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageProjectUrl>https://megaform.github.io/MegaFormSolution</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/megaform/MegaFormSolution.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>megaform;forms;storage;s3;cloud</PackageTags>
+    <PackageReleaseNotes>MegaForm.Integrations.CloudStorage 1.0.0: Amazon S3 IStorageProvider implementation for MegaForm file uploads.</PackageReleaseNotes>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
   </PropertyGroup>
@@ -40,12 +48,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\MegaForm.Core\MegaForm.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AWSSDK.S3" Version="4.0.101.4" />
-    <PackageReference Include="Azure.Storage.Blobs" Version="12.29.1" />
+    <!-- [AzureBlobRemoved v20260726] Azure.Storage.Blobs dropped: it pulled Azure.Core 1.55 →
+         System.ClientModel + .NET 10 System.* transitively, which DNN's net472 bin does not carry
+         and crashed the whole DNN site at startup (MEF attribute scan). Azure Blob mirroring is
+         gone; Google Drive + Amazon S3 storage providers remain. -->
   </ItemGroup>
 
 </Project>

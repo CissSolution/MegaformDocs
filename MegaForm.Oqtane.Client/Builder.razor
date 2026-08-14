@@ -134,7 +134,7 @@
         // bundle unconditionally; the bundle then checks this flag to
         // decide whether to show the floating chat. Without dev.lock,
         // the bundle silently no-ops.
-        var aiEnabled = MegaForm.Core.Services.AiAssistant.AiFeatureGate.IsEnabled() ? "true" : "false";
+        var aiEnabled = MegaForm.Core.Services.AiAssistant.AiFeatureGate.IsAvailable() ? "true" : "false";
 
         AddHeadContent(
             "<style id='mf-oq-builder-prehost'>#mf-builder-root[data-platform='oqtane']{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;max-width:none!important;max-height:none!important;margin:0!important;padding:0!important;z-index:2147483000!important;background:#f8fafc!important;overflow:hidden!important;border-radius:0!important;box-shadow:none!important;}html,body{background:#f8fafc;}</style>" +

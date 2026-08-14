@@ -1,0 +1,38 @@
+@using MegaForm.Umbraco.ViewModels
+@{
+    Layout = "~/Views/_DemoLayout.cshtml";
+    ViewBag.Title = "Multi-Step Form Demo";
+
+    var model = new MegaFormViewModel
+    {
+        ContentId = 500,
+        FormId = 5,
+        ViewType = "submit",
+        IsAdmin = false
+    };
+}
+
+<section class="hero" style="background: linear-gradient(135deg, #ec4899, #be185d);">
+    <div class="container">
+        <h1>Multi-Step Form Demo</h1>
+        <p>A two-step form using MegaForm page breaks. Step 1 collects name and email; Step 2 asks for role and comments.</p>
+    </div>
+</section>
+
+<div class="container">
+    <section class="section">
+        <div class="grid" style="grid-template-columns: 1fr 1fr; align-items: start;">
+            <div>
+                <h2>How it works</h2>
+                <ul>
+                    <li>Schema defines two <code>Section</code> fields.</li>
+                    <li>The second section has <code>properties.pageBreak = true</code>.</li>
+                    <li>Renderer splits fields into pages and shows navigation.</li>
+                </ul>
+            </div>
+            <div class="megaform-card">
+                @Html.Partial("~/Views/MegaFormView.cshtml", model)
+            </div>
+        </div>
+    </section>
+</div>

@@ -1,0 +1,71 @@
+@using MegaForm.Umbraco.ViewModels
+@{
+    Layout = "~/Views/_DemoLayout.cshtml";
+    ViewBag.Title = "Corporate Demo";
+
+    MegaFormViewModel FormModel(int formId, int contentId) => new MegaFormViewModel
+    {
+        ContentId = contentId,
+        FormId = formId,
+        ViewType = "submit",
+        IsAdmin = false
+    };
+}
+
+<section class="hero">
+    <div class="hero-inner">
+        <div>
+            <p class="eyebrow">Umbraco corporate QA site</p>
+            <h1>Premium forms embedded inside a real corporate page.</h1>
+            <p>
+                This site renders MegaForm premium templates inside the Umbraco host, with normal navigation,
+                article pages, scrollable content and backoffice dashboard access.
+            </p>
+        </div>
+        <div class="hero-panel">
+            <div class="metrics">
+                <div><strong>6</strong><span>Premium forms seeded</span></div>
+                <div><strong>4</strong><span>News article pages</span></div>
+                <div><strong>1</strong><span>Umbraco package surface</span></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<main class="container">
+    <section class="section">
+        <div class="section-header">
+            <h2>Corporate services with embedded intake</h2>
+            <p>Use this page to check full-width form rendering next to normal Umbraco content blocks.</p>
+        </div>
+        <div class="split">
+            <div class="grid">
+                <div class="card">
+                    <h3>Digital strategy</h3>
+                    <p>Discovery, journey mapping and operational form design for complex teams.</p>
+                </div>
+                <div class="card">
+                    <h3>Implementation</h3>
+                    <p>Umbraco, MegaForm, workflows, submissions and integrations in one managed surface.</p>
+                </div>
+                <div class="card">
+                    <h3>Governance</h3>
+                    <p>Permission-aware backoffice screens, dashboard access and consistent public rendering.</p>
+                </div>
+            </div>
+            <div class="form-shell">
+                @Html.Partial("~/Views/MegaFormView.cshtml", FormModel(formId: 101, contentId: 80101))
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="section-header">
+            <h2>Featured premium render</h2>
+            <p>Outback Station Stay Booking is included here because it has a strong visual shell and is useful for theme and spacing checks.</p>
+        </div>
+        <div class="form-shell-wide">
+            @Html.Partial("~/Views/MegaFormView.cshtml", FormModel(formId: 105, contentId: 80105))
+        </div>
+    </section>
+</main>

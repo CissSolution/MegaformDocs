@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewBag.Title - MegaForm Corporate Demo</title>
+    <style>
+        * { box-sizing: border-box; }
+        :root {
+            --ink: #102033;
+            --muted: #5b6b7e;
+            --line: #dbe4ee;
+            --brand: #1368c4;
+            --brand-2: #18a999;
+            --surface: #ffffff;
+            --soft: #f4f8fb;
+            --dark: #0c1b2a;
+        }
+        html, body { overflow-x: hidden; }
+        body {
+            margin: 0;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: var(--ink);
+            background: #fff;
+            line-height: 1.55;
+        }
+        a { color: inherit; }
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: rgba(255,255,255,.94);
+            border-bottom: 1px solid var(--line);
+            backdrop-filter: blur(12px);
+        }
+        .header-inner {
+            max-width: 1180px;
+            margin: 0 auto;
+            min-height: 72px;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+        }
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--ink);
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: 0;
+        }
+        .brand-mark {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            display: grid;
+            place-items: center;
+            color: white;
+            background: linear-gradient(135deg, var(--brand), var(--brand-2));
+            font-weight: 900;
+        }
+        .site-nav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .site-nav a {
+            color: #334155;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 650;
+            padding: 10px 12px;
+            border-radius: 8px;
+        }
+        .site-nav a:hover { background: #eef5fb; color: var(--brand); }
+        .site-nav .nav-cta {
+            color: #fff;
+            background: var(--brand);
+            box-shadow: 0 8px 18px rgba(19,104,196,.18);
+        }
+        .site-nav .nav-cta:hover { background: #0f57a6; color: #fff; }
+        .hero {
+            background:
+                radial-gradient(circle at 78% 18%, rgba(24,169,153,.18), transparent 30%),
+                linear-gradient(135deg, #eff7ff 0%, #ffffff 46%, #eefaf7 100%);
+            border-bottom: 1px solid var(--line);
+        }
+        .hero-inner {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 72px 24px 56px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(320px, 430px);
+            gap: 48px;
+            align-items: center;
+        }
+        .eyebrow {
+            margin: 0 0 12px;
+            color: var(--brand);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+        .hero h1 {
+            margin: 0;
+            max-width: 720px;
+            font-size: clamp(36px, 5vw, 58px);
+            line-height: 1.04;
+            letter-spacing: 0;
+        }
+        .hero p {
+            max-width: 700px;
+            margin: 18px 0 0;
+            color: var(--muted);
+            font-size: 18px;
+        }
+        .hero-panel {
+            background: var(--dark);
+            color: #dbeafe;
+            border-radius: 8px;
+            padding: 28px;
+            box-shadow: 0 24px 60px rgba(12,27,42,.2);
+        }
+        .hero-panel strong { display: block; color: #fff; font-size: 30px; line-height: 1; margin-bottom: 6px; }
+        .hero-panel span { color: #9fb3c8; font-size: 13px; }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-top: 26px;
+        }
+        .container {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 44px 24px;
+        }
+        .section { margin-bottom: 52px; }
+        .section-header {
+            max-width: 760px;
+            margin-bottom: 24px;
+        }
+        .section-header h2, .section h2 {
+            margin: 0 0 8px;
+            color: #101827;
+            font-size: 30px;
+            line-height: 1.16;
+        }
+        .section-header p, .section > p { color: var(--muted); margin: 0; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+        }
+        .card, .news-card {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 22px;
+            box-shadow: 0 12px 28px rgba(16,32,51,.06);
+        }
+        .card h3, .news-card h3 { margin: 0 0 8px; font-size: 19px; }
+        .card p, .news-card p { margin: 0; color: var(--muted); }
+        .news-card {
+            min-height: 210px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 18px;
+        }
+        .news-card a {
+            color: var(--brand);
+            text-decoration: none;
+            font-weight: 800;
+        }
+        .split {
+            display: grid;
+            grid-template-columns: minmax(0, .9fr) minmax(420px, 1.1fr);
+            gap: 28px;
+            align-items: start;
+            min-width: 0;
+        }
+        .split > *, .article-layout > * { min-width: 0; }
+        .form-shell {
+            background: #f8fbfd;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 18px;
+            overflow: hidden;
+            max-width: 100%;
+            min-width: 0;
+        }
+        .form-shell-wide {
+            margin-left: calc(50% - 50vw);
+            margin-right: calc(50% - 50vw);
+            padding: 26px max(24px, calc((100vw - 1180px) / 2));
+            background: #f4f8fb;
+            border-top: 1px solid var(--line);
+            border-bottom: 1px solid var(--line);
+        }
+        .article-layout {
+            display: grid;
+            grid-template-columns: minmax(0, .8fr) minmax(420px, 1.2fr);
+            gap: 34px;
+            align-items: start;
+        }
+        .article-body {
+            color: #334155;
+            font-size: 17px;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            min-height: 28px;
+            padding: 0 10px;
+            border-radius: 6px;
+            color: #075985;
+            background: #e0f2fe;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+        }
+        .site-footer {
+            background: var(--dark);
+            color: #b7c5d5;
+            padding: 30px 24px;
+            text-align: center;
+        }
+        @@media (max-width: 900px) {
+            .header-inner { align-items: flex-start; flex-direction: column; padding: 18px 20px; }
+            .site-nav { justify-content: flex-start; }
+            .hero-inner, .split, .article-layout { grid-template-columns: 1fr; }
+            .hero-inner { padding-top: 48px; }
+            .metrics { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/demo">
+                <span class="brand-mark">M</span>
+                <span>MegaForm Corporate</span>
+            </a>
+            <nav class="site-nav" aria-label="Corporate demo navigation">
+                <a href="/demo">Home</a>
+                <a href="/demo/Services">Services</a>
+                <a href="/demo/News">News</a>
+                <a href="/demo/Contact">Contact</a>
+                <a href="/umbraco">Backoffice</a>
+                <a class="nav-cta" href="/umbraco/section/megaform/dashboard/megaform-dashboard">MegaForm Dashboard</a>
+            </nav>
+        </div>
+    </header>
+
+    @RenderBody()
+
+    <footer class="site-footer">
+        <p>&copy; 2026 MegaForm Corporate Demo. Built for Umbraco QA.</p>
+    </footer>
+</body>
+</html>

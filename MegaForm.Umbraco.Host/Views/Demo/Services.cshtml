@@ -1,0 +1,66 @@
+@using MegaForm.Umbraco.ViewModels
+@{
+    Layout = "~/Views/_DemoLayout.cshtml";
+    ViewBag.Title = "Our Services";
+
+    MegaFormViewModel FormModel(int formId, int contentId) => new MegaFormViewModel
+    {
+        ContentId = contentId,
+        FormId = formId,
+        ViewType = "submit",
+        IsAdmin = false
+    };
+}
+
+<section class="hero">
+    <div class="hero-inner">
+        <div>
+            <p class="eyebrow">Services</p>
+            <h1>Consulting, onboarding and managed form operations.</h1>
+            <p>Two premium templates are embedded on this services page to check layout behavior in split content sections.</p>
+        </div>
+        <div class="hero-panel">
+            <strong>101 + 103</strong>
+            <span>Project intake and tabbed setup templates</span>
+        </div>
+    </div>
+</section>
+
+<main class="container">
+    <section class="section">
+        <div class="grid">
+            <div class="card">
+                <h3>Umbraco implementation</h3>
+                <p>Backoffice configuration, property editors, content apps and package-ready extension manifests.</p>
+            </div>
+            <div class="card">
+                <h3>Form experience design</h3>
+                <p>Multi-step journeys, premium shells, validation states and branded layouts that still work with the host theme.</p>
+            </div>
+            <div class="card">
+                <h3>Submission operations</h3>
+                <p>Dashboards, inbox views, reporting and workflow handoff for internal teams.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section split">
+        <div>
+            <h2>Start a project</h2>
+            <p>Project Intake Onboarding is useful for checking dense professional layouts in a corporate service page.</p>
+        </div>
+        <div class="form-shell">
+            @Html.Partial("~/Views/MegaFormView.cshtml", FormModel(formId: 101, contentId: 80301))
+        </div>
+    </section>
+
+    <section class="section split">
+        <div>
+            <h2>Configure a workspace</h2>
+            <p>Tabbed Account Setup checks the premium tab layout and spacing when rendered below standard page content.</p>
+        </div>
+        <div class="form-shell">
+            @Html.Partial("~/Views/MegaFormView.cshtml", FormModel(formId: 103, contentId: 80303))
+        </div>
+    </section>
+</main>

@@ -1,0 +1,39 @@
+@using MegaForm.Umbraco.ViewModels
+@{
+    Layout = "~/Views/_DemoLayout.cshtml";
+    ViewBag.Title = "File Upload Demo";
+
+    var model = new MegaFormViewModel
+    {
+        ContentId = 600,
+        FormId = 6,
+        ViewType = "submit",
+        IsAdmin = false
+    };
+}
+
+<section class="hero" style="background: linear-gradient(135deg, #f97316, #c2410c);">
+    <div class="container">
+        <h1>File Upload Demo</h1>
+        <p>Test MegaForm file upload: select a file, the renderer uploads it to the server, then submits the metadata with the form.</p>
+    </div>
+</section>
+
+<div class="container">
+    <section class="section">
+        <div class="grid" style="grid-template-columns: 1fr 1fr; align-items: start;">
+            <div>
+                <h2>How it works</h2>
+                <ul>
+                    <li>Renderer renders a <code>File</code> field with a dropzone.</li>
+                    <li>File is uploaded to <code>/umbraco/MegaForm/MegaFormApi/Upload/File</code>.</li>
+                    <li>Server stores the file under <code>App_Data/MegaFormUploads/temp/</code>.</li>
+                    <li>Metadata is submitted and linked to the submission in <code>MF_Files</code>.</li>
+                </ul>
+            </div>
+            <div class="megaform-card">
+                @Html.Partial("~/Views/MegaFormView.cshtml", model)
+            </div>
+        </div>
+    </section>
+</div>

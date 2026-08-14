@@ -1,0 +1,52 @@
+@using MegaForm.Umbraco.Host.Controllers
+@using MegaForm.Umbraco.ViewModels
+@{
+    Layout = "~/Views/_DemoLayout.cshtml";
+    var article = ViewBag.Article as DemoController.CorporateNewsArticle;
+    var title = article?.Title ?? "Database Lookup Form";
+    ViewBag.Title = title;
+
+    MegaFormViewModel FormModel(int formId, int contentId) => new MegaFormViewModel
+    {
+        ContentId = contentId,
+        FormId = formId,
+        ViewType = "submit",
+        IsAdmin = false
+    };
+}
+
+<section class="hero">
+    <div class="hero-inner">
+        <div>
+            <p class="eyebrow">Umbraco database integration</p>
+            <h1>@title</h1>
+            <p>@article?.Summary</p>
+        </div>
+        <div class="hero-panel">
+            <strong>@article?.FormId</strong>
+            <span>MegaForm ID using SQL-backed options</span>
+        </div>
+    </div>
+</section>
+
+<main class="container">
+    <section class="section article-layout">
+        <article class="article-body">
+            <span class="badge">@article?.FormLabel</span>
+            <h2>What this page tests</h2>
+            <p>
+                This is a normal Umbraco front-end page. The form is rendered through the MegaForm
+                Umbraco package and its select/radio choices are resolved from SQLite lookup tables
+                at render time.
+            </p>
+            <p>
+                For the service request page, choose a department first; the service dropdown reloads
+                from the database with a parameterized SQL query.
+            </p>
+            <p><a href="/demo/News">Back to news</a></p>
+        </article>
+        <div class="form-shell">
+            @Html.Partial("~/Views/MegaFormView.cshtml", FormModel(formId: article?.FormId ?? 201, contentId: 82000 + (article?.FormId ?? 201)))
+        </div>
+    </section>
+</main>

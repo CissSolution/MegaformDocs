@@ -1,0 +1,106 @@
+@model MegaForm.NopCommerce.Plugin.Models.FormViewModel
+@using Newtonsoft.Json
+@{
+    Layout = null;
+    var safeJson = new Func<string, string>(v => JsonConvert.SerializeObject(v ?? "", new JsonSerializerSettings
+    {
+        StringEscapeHandling = StringEscapeHandling.EscapeHtml
+    }));
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>@Model.Title</title>
+    <meta name="description" content="@Model.Description" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="/megaform-assets/css/megaform.css" />
+    <link rel="stylesheet" href="/megaform-assets/css/megaform-widgets.css" />
+    <style>
+        html, body { margin: 0; padding: 0; font-family: 'DM Sans', sans-serif; background: #f1f5f9; min-height: 100vh; }
+        .mf-std-page { display: flex; flex-direction: column; align-items: center; padding: 40px 16px 80px; }
+        .mf-std-content { width: 100%; max-width: 960px; }
+    </style>
+</head>
+<body>
+    <div class="mf-std-page">
+        <div class="mf-std-content">
+            <div id="mf-form-wrapper-@Model.FormId" class="mf-form-wrapper">
+                <div id="mf-form-mount"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var _MF_CONFIG = {
+            formId: @Model.FormId,
+            schemaJson: @Html.Raw(safeJson(Model.SchemaJson)),
+            settingsJson: @Html.Raw(safeJson(Model.SettingsJson)),
+            themeJson: @Html.Raw(safeJson(Model.ThemeJson)),
+            submitButtonText: @Html.Raw(safeJson(Model.SubmitButtonText)),
+            successMessage: @Html.Raw(safeJson(Model.SuccessMessage)),
+            title: @Html.Raw(safeJson(Model.Title)),
+            description: @Html.Raw(safeJson(Model.Description)),
+            apiBase: '/megaform/api/',
+            locale: '@Model.Locale'
+        };
+    </script>
+    <script src="/megaform-assets/js/megaform-i18n.js"></script>
+    <script src="/megaform-assets/js/megaform-renderer.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var schema = _MF_CONFIG.schemaJson;
+            if (typeof schema === 'string') {
+                try { schema = JSON.parse(schema); } catch (e) { schema = { fields: [] }; }
+            }
+            var rulesJson = [];
+            if (schema && schema.rules && Array.isArray(schema.rules)) rulesJson = schema.rules;
+
+            document.documentElement.setAttribute('data-mf-locale', _MF_CONFIG.locale || 'en-US');
+            document.body.setAttribute('data-mf-locale', _MF_CONFIG.locale || 'en-US');
+
+            try {
+                if (window.MegaFormI18n && typeof MegaFormI18n.initI18n === 'function') {
+                    MegaFormI18n.initI18n('/megaform/api/i18n', _MF_CONFIG.locale || 'en-US');
+                }
+            } catch (_i18nErr) { }
+
+            if (schema && schema.fields && schema.fields.length && window.MegaFormRenderer) {
+                MegaFormRenderer.init({
+                    formId: _MF_CONFIG.formId,
+                    schema: schema,
+                    settingsJson: _MF_CONFIG.settingsJson,
+                    themeJson: _MF_CONFIG.themeJson,
+                    container: '#mf-form-mount',
+                    title: _MF_CONFIG.title,
+                    description: _MF_CONFIG.description,
+                    submitButtonText: _MF_CONFIG.submitButtonText,
+                    successMessage: _MF_CONFIG.successMessage,
+                    apiBase: _MF_CONFIG.apiBase,
+                    locale: _MF_CONFIG.locale || 'en-US'
+                });
+            } else {
+                document.getElementById('mf-form-mount').innerHTML =
+                    '<div style="padding:40px;text-align:center;">This form has no fields yet.</div>';
+            }
+
+            function notifyParentHeight() {
+                if (window.parent && window.parent !== window) {
+                    var h = document.body.scrollHeight;
+                    var targetOrigin = '*';
+                    try { if (document.referrer) targetOrigin = new URL(document.referrer).origin; } catch (_) { }
+                    window.parent.postMessage({ type: 'mf:resize', height: h, formId: _MF_CONFIG.formId }, targetOrigin);
+                }
+            }
+            window.addEventListener('load', notifyParentHeight);
+            if (typeof MutationObserver !== 'undefined') {
+                new MutationObserver(notifyParentHeight).observe(document.body, { childList: true, subtree: true, attributes: true });
+            }
+        });
+    </script>
+</body>
+</html>

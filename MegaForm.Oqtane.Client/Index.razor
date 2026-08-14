@@ -549,7 +549,12 @@
    the CSS before first paint. The JS boot still re-injects idempotently for SPA panel nav (it skips
    a filename that is already present). Public form path (_panelMode==None, not inbox) emits none. *@
 @{
-    var mfAdminCss = _panelMode switch
+    // [OqAdminPane v20260812] The admin-pane surface is deliberately styled by the HOST THEME,
+    // not by MegaForm. Emitting megaform-admin-shell.css there paints a light application shell
+    // inside Oqtane's dark admin theme: the table turned dark-text-on-black and the inactive tabs
+    // went white-on-white, i.e. invisible. Skipping it is what makes the page look like Visitor
+    // Management / Module Management, which is the whole point of this surface.
+    var mfAdminCss = (_panelMode == MfPanelMode.Dashboard && IsAdminPane) ? System.Array.Empty<string>() : _panelMode switch
     {
         MfPanelMode.Dashboard   => new[] { "megaform-admin-shell.css" },
         MfPanelMode.Submissions => new[] { "megaform-admin-shell.css", "megaform-submissions-ts.css" },
@@ -569,7 +574,11 @@
    inbox by mistake could not unpin it.
    So while the surface is role-driven, admins (and only admins — an ordinary visitor sees nothing
    here) get a slim bar with the way back: Settings, plus the other surfaces. *@
-@if (_panelRoleDriven && _isAdmin && _panelMode != MfPanelMode.None)
+@* [OqAdminPane v20260812] …and no floating MegaForm chrome either: the pinned-surface bar
+   (Module settings / Dashboard / Builder + the pin badge) is positioned for a full-screen app
+   shell and lands on top of Oqtane's own header here. The admin pane offers those actions as
+   ordinary tabs/links instead. *@
+@if (_panelRoleDriven && _isAdmin && _panelMode != MfPanelMode.None && !IsAdminPane)
 {
     <style>
         .mf-oq-rolebar{position:relative;z-index:10001;display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap;margin:0 0 10px;font-family:'Inter',system-ui,sans-serif;}
@@ -586,7 +595,139 @@
     </div>
 }
 
-@if (_panelMode == MfPanelMode.Dashboard)
+@* ══════════════════════════════════════════════════════════════════════════
+   [OqAdminPane v20260812] Admin-pane surface — Oqtane-native, deliberately plain.
+
+   On the page MegaForm registers under Oqtane's Admin Dashboard, the heavy SPA is the
+   wrong tool: it is a full-screen application shell inside a page that is supposed to
+   look like Visitor Management or Module Management. It also could not run there — the
+   admin tile navigates with Blazor ENHANCED NAVIGATION, which swaps the DOM without
+   executing the inline script that boots the bundle, so the SPA rendered its chrome
+   around an empty body.
+
+   This surface is ordinary server-rendered Blazor using the host theme's own classes
+   (h1 / nav-tabs / table / btn btn-primary) — no bundle, no inline boot, so enhanced
+   navigation is a non-issue and the colours are whatever the site theme says they are.
+   Tabs are plain links (?mftab=), which is what keeps it working under static render.
+
+   MODULE MODE IS UNTOUCHED: this only replaces the surface when the module sits on the
+   reserved admin path. Anywhere else, ?mfpanel=dashboard still renders DashboardView.
+   ══════════════════════════════════════════════════════════════════════════ *@
+@if (_panelMode == MfPanelMode.Dashboard && IsAdminPane)
+{
+    @* [OqAdminPane v20260812-b] Not adding megaform-admin-shell.css is NOT enough. Arriving here by
+       enhanced navigation from any MegaForm surface leaves that stylesheet already in <head> — the
+       swap replaces the body, not the head — so the pane inherited an application-shell palette and
+       went dark-text-on-black with the inactive tabs white-on-white. Reported twice; the first
+       report was on a URL typed in full (clean head), the second on a soft-nav (dirty head), which
+       is what made it look intermittent.
+       A <style> element DOES apply when inserted by a DOM swap (unlike <script>), so neutralising
+       it here works on both paths: hand the pane back to the host theme's own colours. *@
+    <style>
+        /* Restore the host theme's page background.
+           megaform-admin-shell.css:23 is `html,body{…;background:var(--bg)}` — UNSCOPED. It is
+           right for the full-screen app shell, which owns the page, and wrong everywhere else: it
+           repaints any document that merely loads the file. On Oqtane's dark admin theme (body
+           #060606, measured on /admin/visitors) the page turns WHITE, and since body is only as
+           tall as its content, short tabs show a blank white slab below — "click any link and the
+           background goes white".
+           It cannot be fixed by not loading the file: Oqtane reads module Resources on a pass with
+           no NavigationManager, so the pane cannot opt out there (measured — the nine sheets load
+           regardless). Overriding here is what actually reaches the browser.
+           --bs-body-bg is the Bootstrap variable every Oqtane theme sets, so this follows the
+           theme instead of hard-coding a colour; the fallback matches the default admin theme. */
+        html, body { background-color: var(--bs-body-bg, #060606) !important; }
+        /* The SAME rule also sets `color:var(--fg)` — a dark ink meant for the light app shell.
+           Forcing only the background produced dark-on-dark: the page went black and the text
+           went with it (owner: "chữ bị nền đen nên không nhìn được"). Take the colour from the
+           theme too, so both halves of the contrast come from the same place. */
+        html, body { color: var(--bs-body-color, #dee2e6) !important; }
+        .mf-oq-adminpane, .mf-oq-adminpane * { color: inherit; }
+        .mf-oq-adminpane h1 { color: inherit; }
+        .mf-oq-adminpane .table, .mf-oq-adminpane .table > :not(caption) > * > * {
+            color: inherit; background-color: transparent; border-color: rgba(128,128,128,.25);
+        }
+        .mf-oq-adminpane .nav-tabs .nav-link { color: inherit; opacity: .85; }
+        .mf-oq-adminpane .nav-tabs .nav-link.active { opacity: 1; }
+    </style>
+    <div class="mf-oq-adminpane">
+    <h1 class="mb-3">MegaForm</h1>
+    <ul class="nav nav-tabs mb-3">
+        @foreach (var t in AdminPaneTabs)
+        {
+            <li class="nav-item">
+                <a data-enhance-nav="false" class="nav-link @(AdminTab == t.Key ? "active" : "")" href="@AdminTabUrl(t.Key)">@t.Label</a>
+            </li>
+        }
+    </ul>
+
+    @if (AdminTab == "forms")
+    {
+        <div class="mb-3">
+            <a data-enhance-nav="false" class="btn btn-primary" href="@BuildCurrentModuleUrl("mfpanel", "builder")">Create Form</a>
+            <a data-enhance-nav="false" class="btn btn-secondary ms-1" href="@BuildCurrentModuleUrl("mfpanel", "dashboard")">Full Dashboard</a>
+        </div>
+        @if (_forms == null || _forms.Count == 0)
+        {
+            <p>No forms yet.</p>
+        }
+        else
+        {
+            @* [OqAdminPane v20260812] PREVIEW IS ON DEMAND — one form, when asked.
+               The first attempt put a live ?embed=1 iframe in every row, scaled down, copying what
+               the template gallery does for templates. It does not transfer: the gallery previews a
+               handful of static template documents, this table previews EVERY form on the site, and
+               nine iframes each booting the full MegaForm renderer inside one page hung the browser
+               outright (screenshot and wait both timed out against it). A row is a row; a preview is
+               a click. This opens the real form in a new tab through the same embed route, so the
+               preview is still the actual rendered form, just not nine of them at once. *@
+            <table class="table table-borderless align-middle">
+                <thead><tr><th></th><th></th><th></th><th>Name</th><th>Id</th><th>Status</th></tr></thead>
+                <tbody>
+                    @foreach (var f in _forms)
+                    {
+                        <tr>
+                            <td>
+                                <a data-enhance-nav="false" class="btn btn-secondary" target="_blank" rel="noopener"
+                                   href="@($"{BuildCurrentModuleUrl("embed", "1")}&formId={f.FormId}")">Preview</a>
+                            </td>
+                            <td><a data-enhance-nav="false" class="btn btn-primary" href="@($"{BuildCurrentModuleUrl("mfpanel", "builder")}&formId={f.FormId}")">Edit</a></td>
+                            <td>
+                                @* Inline onclick ATTRIBUTE, not a <script>: attributes are wired by the
+                                   browser from the markup itself, so this survives an enhanced-navigation
+                                   DOM swap — the exact reason the SPA's boot script could not. *@
+                                <button type="button" class="btn btn-secondary"
+                                        onclick="@PinButtonScript(f.FormId, f.Title)">Add To Page</button>
+                            </td>
+                            <td>@f.Title</td>
+                            <td>@f.FormId</td>
+                            <td>@f.Status</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    }
+    else if (AdminTab == "data")
+    {
+        <p>Open a form's submissions, or the full inbox.</p>
+        <a data-enhance-nav="false" class="btn btn-primary" href="@BuildCurrentModuleUrl("mfpanel", "submissions")">Submissions</a>
+        <a data-enhance-nav="false" class="btn btn-secondary ms-1" href="@BuildCurrentModuleUrl("mfpanel", "myinbox")">My Inbox</a>
+    }
+    else if (AdminTab == "templates")
+    {
+        <p>Browse the installed library and the online gallery, then start a form from a template.</p>
+        <a data-enhance-nav="false" class="btn btn-primary" href="@BuildCurrentModuleUrl("mfpanel", "dashboard")">Template Gallery</a>
+    }
+    else
+    {
+        <p>Language packs and site-wide MegaForm settings.</p>
+        <a data-enhance-nav="false" class="btn btn-primary" href="@BuildCurrentModuleUrl("mfpanel", "languages")">Languages</a>
+        <a data-enhance-nav="false" class="btn btn-secondary ms-1" href="@BuildCurrentModuleUrl("mfconfig", "1")">Module Settings</a>
+    }
+    </div>
+}
+else if (_panelMode == MfPanelMode.Dashboard)
 {
     <style>
         html.mf-oq-dashboard-active, body.mf-oq-dashboard-active { overflow: hidden !important; }
@@ -684,6 +825,12 @@ else if (_panelMode == MfPanelMode.SdkDemo)
             </div>
         </div>
     }
+}
+else if (_panelMode == MfPanelMode.Rental)
+{
+    <div class="mf-oq-surface @(IsPanelInline ? "is-inline" : "is-fs")">
+        <RentalSiteView />
+    </div>
 }
 else
 {
@@ -1310,7 +1457,7 @@ else
     // the module's own RenderMode (always Static) so it can't detect this; PageState.RenderMode can.
     private bool IsHostInteractive => string.Equals(PageState?.RenderMode, RenderModes.Interactive, StringComparison.OrdinalIgnoreCase);
 
-    private enum MfPanelMode { None, Dashboard, Builder, Submissions, Portal, MyInbox, Languages, SdkDemo }
+    private enum MfPanelMode { None, Dashboard, Builder, Submissions, Portal, MyInbox, Languages, SdkDemo, Rental }
     private MfPanelMode _panelMode;
     // [Inline surface 2026-06-11] When a panel is driven by the module's ModuleRole
     // setting (vs an explicit ?mfpanel= admin nav), render it INLINE in the module's
@@ -1350,6 +1497,28 @@ else
             // list (admin CSS always-loaded; admin JS gated for anon via
             // IsAdminOnlyAsset). Mirrors the pre-revert May version + panel bundles.
             _allResourcesList = BuildMegaFormResources();
+
+            // [OqAdminPane v20260813] The admin-pane landing surface is plain server-rendered
+            // Blazor styled by the HOST THEME — it needs none of MegaForm's stylesheets, and one of
+            // them actively breaks the page: megaform-admin-shell.css line 23 is
+            //     html,body{…;background:var(--bg)}
+            // an UNSCOPED global rule. It exists for the full-screen app shell, where owning the
+            // page background is correct, but it repaints ANY page that merely loads the file. On
+            // Oqtane's dark admin theme (body #060606, measured on /admin/visitors) that turns the
+            // page WHITE, and because body only grows as tall as its content, the white shows up as
+            // a blank slab under short tabs — reported as "click any link and the background turns
+            // white". Gating it in the SSR <link> block was not enough: the file also ships in this
+            // Resources list, which loads regardless (see the B206 note in _adminOnlyAssets).
+            // Surfaces reached FROM the pane (?mfpanel=…) are not IsAdminPane, so they still get
+            // the full set.
+            // MEASURED: emptying the list here changes NOTHING — the nine stylesheets still load.
+            // Oqtane harvests Resources from an instance that has no NavigationManager/PageState,
+            // so IsAdminPane is false on that pass and the full list is returned anyway. The
+            // background is therefore repaired in the pane's own <style> block instead (see
+            // "restore the host theme's page background"); this gate is kept only because it is
+            // correct for the passes where the context IS present, and costs nothing.
+            if (IsAdminPane) return new List<Resource>();
+
             if (IsLightLoadContext) return _allResourcesList.Where(r => !IsAdminOnlyAsset(r.Url)).ToList();
             return _allResourcesList;
         }
@@ -1408,6 +1577,14 @@ else
             if (string.IsNullOrEmpty(pinnedRole)) pinnedRole = ReadModuleSetting("ModuleRole");
             bool adminCtx =
                 !string.IsNullOrWhiteSpace(pinnedRole) ||
+                // [OqAdminPane v20260812] The page registered under Oqtane's Admin Dashboard is a
+                // pinned dashboard surface without carrying the SETTING that says so (see
+                // AdminPanePath), so it has to be recognised here too — otherwise the admin bundles
+                // are gated out and the surface has nothing to run.
+                // Matched on the URI, NOT PageState.Page.Path: this property is evaluated while
+                // Oqtane collects Resources, a pass on which PageState/ModuleState can still be
+                // null (the same caveat the B206 note below records). The URI is always there.
+                uri.IndexOf("/" + AdminPanePath, StringComparison.OrdinalIgnoreCase) >= 0 ||
                 uri.IndexOf("mfpanel=", StringComparison.OrdinalIgnoreCase) >= 0 ||
                 uri.IndexOf("mfconfig=", StringComparison.OrdinalIgnoreCase) >= 0 ||
                 uri.IndexOf("edit=", StringComparison.OrdinalIgnoreCase) >= 0 ||
@@ -1614,6 +1791,72 @@ private string _viewMode = "form";
 // submissions/portal/languages/builder) so the page renders that panel without
 // a ?mfpanel= query. "" = normal form/view behaviour.
 private string _moduleRole = string.Empty;
+
+// [OqAdminPane v20260812] The page this module registers under Oqtane's Admin Dashboard.
+// Must stay identical to ModuleInfo.PageTemplates[0].Path — they are two halves of one
+// contract: the template creates the page, this constant recognises it.
+internal const string AdminPanePath = "admin/megaform";
+
+/// <summary>
+/// True only for the admin-pane LANDING surface — the plain Oqtane-styled index.
+///
+/// It is NOT enough to ask "is this the admin page?": every MegaForm surface opened from the
+/// pane (?mfpanel=builder, =submissions, …) lives on that same page, and treating those as the
+/// pane stripped their admin CSS and chrome — which is exactly the white screen the builder
+/// showed the first time it was opened from here. An explicit ?mfpanel= means the admin asked
+/// for a real surface, so hand them the real one.
+/// </summary>
+private bool IsAdminPane
+{
+    get
+    {
+        var uri = NavigationManager?.Uri ?? string.Empty;
+        var onAdminPage = string.Equals(PageState?.Page?.Path, AdminPanePath, StringComparison.OrdinalIgnoreCase)
+            || uri.IndexOf("/" + AdminPanePath, StringComparison.OrdinalIgnoreCase) >= 0;
+        if (!onAdminPage) return false;
+        // ?embed=1 is the PREVIEW route — it must render the form, not the pane. Without this the
+        // preview button opened the admin table again (owner-reported: "preview form sai").
+        if (!string.IsNullOrEmpty(GetQueryValue(uri, "embed"))) return false;
+        return string.IsNullOrEmpty(GetQueryValue(uri, "mfpanel"));
+    }
+}
+
+private static readonly (string Key, string Label)[] AdminPaneTabs =
+{
+    ("forms", "Forms"), ("data", "Data"), ("templates", "Templates"), ("settings", "Settings"),
+};
+
+/// <summary>Selected tab, from ?mftab= — plain links keep the surface static-render safe.</summary>
+private string AdminTab
+{
+    get
+    {
+        var t = (GetQueryValue(NavigationManager?.Uri ?? string.Empty, "mftab") ?? string.Empty).Trim().ToLowerInvariant();
+        return AdminPaneTabs.Any(x => x.Key == t) ? t : "forms";
+    }
+}
+
+private string AdminTabUrl(string tab) => BuildCurrentModuleUrl("mftab", tab);
+
+/// <summary>
+/// The Add-To-Page button's handler, emitted as an onclick ATTRIBUTE (see the markup note).
+/// Posts to MegaFormController.PinToNewPage and navigates to the page it creates. Antiforgery
+/// travels in the header Oqtane expects, exactly like the module's other admin POSTs.
+/// </summary>
+private string PinButtonScript(int formId, string title)
+{
+    var safeTitle = (title ?? string.Empty).Replace("\\", "\\\\").Replace("'", "\\'").Replace("\"", "&quot;");
+    return
+        "var n=prompt('Page name for this form:','" + safeTitle + "');if(!n)return;" +
+        "var t=(document.cookie.match(/XSRF-TOKEN=([^;]+)/)||[])[1];" +
+        "fetch('/api/MegaForm/PinToNewPage'," +
+        "{method:'POST',credentials:'same-origin'," +
+        "headers:{'Content-Type':'application/json','X-XSRF-TOKEN-HEADER':t?decodeURIComponent(t):''}," +
+        "body:JSON.stringify({pageName:n,formId:" + formId + "})})" +
+        ".then(function(r){return r.json().catch(function(){return null;});})" +
+        ".then(function(j){ if(j&&j.ok){ window.location.assign(j.url); } else { alert('Could not create the page.'); } })" +
+        ".catch(function(){ alert('Could not create the page.'); });";
+}
 private string _popupSize = "medium";
 private string _activeViewKey = string.Empty;
 private string _activeQueryKey = string.Empty;
@@ -1803,6 +2046,7 @@ private string _listTemplate = string.Empty;
             "myinbox" => MfPanelMode.MyInbox,
             "languages" => MfPanelMode.Languages,
             "sdkdemo" => MfPanelMode.SdkDemo,
+            "rental" => MfPanelMode.Rental,
             _ => MfPanelMode.None
         };
         // [Inline default 2026-06-12] Per user request, MegaForm panel surfaces render INLINE
@@ -1847,6 +2091,22 @@ private string _listTemplate = string.Empty;
             // so an Oqtane page hosting it renders e.g. the Dashboard or My Inbox
             // directly. Honours admin gating downstream (e.g. Languages = admin only).
             _moduleRole = (ReadModuleSetting("MegaForm:ModuleRole") ?? ReadModuleSetting("ModuleRole") ?? string.Empty).Trim().ToLowerInvariant();
+
+            // [OqAdminPane v20260812] The page MegaForm registers under Oqtane's Admin Dashboard
+            // (ModuleInfo.PageTemplates → "admin/megaform") is the dashboard, by definition. The
+            // role would normally be pinned as a module SETTING, but PageTemplateModule.Settings
+            // only exists on the newer Oqtane dev branch — not in the 10.1.0 / 6.0.1 packages this
+            // project builds against — so the reserved path carries that meaning instead. An admin
+            // who deliberately sets a different role on this module still wins: the setting is read
+            // first and only an EMPTY role falls through to here.
+            // IsAdminPane, not a raw path match: it also excludes ?embed= and ?mfpanel=. Matching on
+            // the path alone pinned the role to "dashboard" even for the PREVIEW route, so
+            // ?embed=1&formId=N rendered the dashboard instead of the form — caught by walking every
+            // link in the pane and checking which root actually mounted (mf-dash-root on a preview).
+            if (string.IsNullOrEmpty(_moduleRole) && IsAdminPane)
+            {
+                _moduleRole = "dashboard";
+            }
             // Admin escape: ?mfconfig=1 forces the normal module dock + Settings even
             // when a role is pinned, so admins can always reach / change the role.
             var configEscape = string.Equals(GetQueryValue(currentUri, "mfconfig"), "1", StringComparison.OrdinalIgnoreCase);
@@ -1862,6 +2122,7 @@ private string _listTemplate = string.Empty;
                     "inbox" => MfPanelMode.MyInbox,
                     "languages" => MfPanelMode.Languages,
                     "sdkdemo" => MfPanelMode.SdkDemo,
+                    "rental" => MfPanelMode.Rental,
                     _ => MfPanelMode.None
                 };
                 // [Inline default 2026-06-12] Role-pinned surfaces also render inline (embedded

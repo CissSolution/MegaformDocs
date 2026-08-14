@@ -1,0 +1,23 @@
+MEGAFORM FOR OQTANE — RAPID FORM BUILDER
+Duration: ~2 minutes
+
+[SCENE 1 — INTRO / 0:00-0:10]
+Sometimes you want full control over every pixel. MegaForm's visual Builder lets you create professional forms with drag-and-drop speed.
+
+[SCENE 2 — BUILDER OVERVIEW / 0:10-0:35]
+Open the Builder. On the left, you have fields organized into tabs: Basic inputs, Layout elements, and powerful Widgets.
+Drag a Text field onto the canvas. Add an Email field. Drop a Date picker. Arrange them in rows with one click.
+
+[SCENE 3 — FIELD PROPERTIES / 0:35-1:05]
+Select any field to customize it. Change the label, placeholder, and validation rules.
+Make a field required. Add a regular expression. Set a default value.
+Everything is configurable through the properties panel — no code required.
+
+[SCENE 4 — LAYOUT & DESIGN / 1:05-1:40]
+Add sections to group questions. Use rows to place fields side by side.
+Switch to the Design tab to apply a theme, change colors, fonts, and spacing.
+You can also enable premium custom shells for a branded, Jotform-style look.
+
+[SCENE 5 — PUBLISH / 1:40-2:00]
+When you are ready, click Publish. Your form is live and ready to collect submissions.
+That is rapid form building with MegaForm for Oqtane.

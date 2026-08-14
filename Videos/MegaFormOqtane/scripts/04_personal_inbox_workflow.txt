@@ -1,0 +1,23 @@
+MEGAFORM FOR OQTANE — PERSONAL INBOX & WORKFLOW
+Duration: ~2 minutes
+
+[SCENE 1 — INTRO / 0:00-0:10]
+Forms do not end at submit. With MegaForm workflows and personal inbox, you can route submissions through review, approval, and action steps.
+
+[SCENE 2 — WORKFLOW DESIGNER / 0:10-0:40]
+Open the Workflow tab. Here you design the lifecycle of every submission.
+Add states like Submitted, Under Review, Approved, and Rejected.
+Connect them with transitions. Set who can move a submission from one state to another.
+
+[SCENE 3 — ASSIGNMENTS & ACTIONS / 0:40-1:10]
+Assign tasks to specific users or roles. Send email notifications on transitions.
+Add actions such as updating a database record, sending a summary, or triggering a webhook.
+Everything is visual and configurable without writing code.
+
+[SCENE 4 — MY INBOX / 1:10-1:45]
+End users open My Inbox to see only the submissions that matter to them.
+They can view details, approve requests, add comments, and track history.
+Each user sees a personal, secure queue based on their role and assignments.
+
+[SCENE 5 — OUTRO / 1:45-2:00]
+Turn raw submissions into managed business processes with MegaForm for Oqtane.

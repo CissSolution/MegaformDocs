@@ -1,7 +1,9 @@
 # MegaForm — Ghi chép bàn giao (Umbraco)
 
-> Cập nhật lần cuối: 2026-07-23 bởi Kimi Code CLI.
-> Phiên này (sau cloud storage): tích hợp **Oqtane.Licensing** (phương án B — Oqtane Marketplace licensing làm kênh license thứ hai, OR với `license.lic` file). Xem mục 2.10.
+> Cập nhật lần cuối: 2026-08-13 bởi Kimi Code CLI.
+> Phiên này: **fix sample SDK demo + admin UI login routing**. Sửa xung đột route giữa `AdminController` và `AdminAuthController` trong `MegaForm.Web` (`[Route("admin")]` khiến POST `/admin/login` trả 405); chuyển `AdminAuthController` sang route tuyệt đối `/admin/login` và `/admin/logout`. Repack 5 NuGet packages vào `local-nuget/`. Sample `MegaFormSdkWebDemo` giờ chạy đầy đủ trên `http://localhost:5100`: login `admin`/`admin123`, dashboard/builder/submissions/languages/viewlogs, form mẫu đẹp (`/f/1` Event Registration), submit thành công. Chuẩn bị publish NuGet lên nuget.org cho sales; cần API key. Ghi chú về WordPress: không khuyến nghị rewrite toàn bộ sang PHP; khuyến nghị WordPress plugin PHP gọi MegaForm API / script embed thay thế.
+> Phiên trước (2026-08-11): **hoàn thiện nhánh Umbraco** — fix `ExternalTableController` 500, port 7 nhóm endpoint nhỏ (ColumnOptions, Submissions/Mine, Files/Download, BPMN import, payment webhooks, AiTools CustomTableRows, Diagnostics/TypedStorage), sync asset, fix payment route rewrite 404, build 0 error + Sdk.Tests 360/360 + demo local chạy. Xem mục 2.11.
+> Phiên trước (2026-07-23): tích hợp **Oqtane.Licensing** (phương án B — Oqtane Marketplace licensing làm kênh license thứ hai, OR với `license.lic` file). Xem mục 2.10.
 > Phiên trước: hoàn thiện tính năng **cloud file storage** (Google Drive / Amazon S3 / Azure Blob) — nối vào submit pipeline (fail-soft sau insert), lưu connection server-side, UI cấu hình trong builder, DI đủ 4 host + AspNetCore.Component, assembly riêng `MegaForm.Integrations.CloudStorage`, packaging DNN/Oqtane. Xem mục 2.8.
 > Trước đó (2026-07-17): nền tảng **typed submission storage** trong `MegaForm.Core`; backup trên branch `feature/typed-submission-storage-core`.
 > Phiên tiếp theo: implement `ISubmissionDataStore` + migrations + repositories cho từng platform, bắt đầu với Umbraco hoặc Oqtane; viết typed rows song song với `DataJson` legacy; backfill legacy submissions. Ngoài ra: verify runtime cloud storage (browser test: tạo connection, test, submit form có file → file lên cloud); verify runtime Oqtane licensing (sandbox Marketplace flow + bridge probe).
@@ -116,6 +118,7 @@ Nối tính năng cloud file storage (scaffold từ 2026-06-14, xem `Docs/HANDOF
 - **DI 4 host + Component:** Oqtane `Startup.cs`, Web `Program.cs`, Umbraco `MegaFormComposer.cs` (scoped vì IModuleSettingsService scoped), DNN manual-wire trong `DnnServiceLocator` (static HttpClient); `MegaForm.AspNetCore.Component` `RegisterIntegrationProviders`. Mỗi host có blob reader riêng (`*SubmissionFileBlobReader.cs`) mirror đúng path layout + traversal guard của upload/download endpoint.
 - **API (4 host, admin-gated như named connections):** `ModuleConfig/CloudStorageConnectionsList` (masked) / `CloudStorageConnectionSave` (secret "***" = giữ cũ) / `CloudStorageConnectionDelete` / `CloudStorageConnectionTest`.
 - **Builder UI:** section "Cloud Storage" trong Settings tab (`dom.ts` + module mới `cloud-storage-settings.ts`, sync hook trong `panels.ts`): enable toggle, mappings (provider/connection/folder/upload-fields/organize-by-submission), modal quản lý connections (list/add/edit/delete/test, `extra` gửi dạng object). 44 i18n keys `builder.cloudStorage.*` trong en-US + 11 REQUIRED locales. Bundle đã rebuild + sync 4 platform.
+- **Dashboard UI (bổ sung 2026-07-23):** tab **"Cloud Storage"** trong unified Settings pane của dashboard (`MegaForm.UI/src/dashboard/index.ts` — `openCloudStorageSettings`, icon `cloudUp`) — quản lý GLOBAL named connections (list/add/edit/delete/test) qua cùng 4 endpoint `ModuleConfig/CloudStorageConnection*`; per-form mapping vẫn ở Builder. Trước đó connections chỉ quản lý được qua modal nhỏ trong Builder → không thấy ở màn hình Settings của DNN/Oqtane. i18n `dash.nav_cloudstorage` (en-US + 11 REQUIRED + vi-VN). Kèm fix drift có sẵn: 4 keys `subs.source_*` bổ sung vào 11 REQUIRED locales + vi-VN (i18n:check giờ PASS). Bundle dashboard + i18n đã rebuild/sync 4 platform.
 - **Packaging:** Oqtane 2 nuspec (+6 DLL cloud cho net9/net10); DNN `MegaForm.dnn` + `BuildPackage-DNN.ps1` (chỉ ship 6 DLL feature, CỐ Ý không ship `Microsoft.Extensions.*`/`System.*` — site DNN 10 đã có; site cũ nếu thiếu DI.Abstractions 10.x cần binding redirect, cloud upload fail-soft không ảnh hưởng submit).
 - **Tests:** `MegaForm.Sdk.Tests/CloudStorageTests.cs` — 23 tests (catalog + uploader fail-soft). Tổng 142/142 pass.
 - **Chưa verify:** runtime browser (tạo connection → test → submit form có file → file lên cloud). Cần credentials thật (Google OAuth token / AWS keys / Azure connection string).
@@ -145,6 +148,39 @@ Tích hợp `Oqtane.Licensing` làm **kênh license thứ hai** cho Oqtane host 
 - **Chưa verify:** runtime E2E (sandbox Marketplace: đăng ký product `MegaForm.Oqtane`, trỏ `PackageRegistryUrl=https://sandbox.oqtane.net`, purchase → Activate → probe flips production, caps lifted).
 - **Build:** Server + Client + Package 0 error (net9/net10); Core 0 error 4 TFM; Sdk.Tests 149/149 pass.
 
+### 2.11 Phase 11 — Umbraco parity: external tables + endpoint gaps + asset sync (2026-08-11)
+
+- **External table stack (fix 500):** `MegaForm.Umbraco/Data/UmbracoExternalTableStores.cs` (`UmbracoExternalBindingStore`, `UmbracoExternalRowMapStore` — EF Core scoped, mirror Oqtane `ExternalTableStores.cs`); entities + DbSets `ExternalBindings`/`ExternalRowMap` trong `MegaFormDbContext`; migration step `megaform-schema-external-tables` (`AddExternalTableTablesMigration` + `ExternalTableSchemaBootstrapper.EnsureExternalTables`, DDL đa-provider SQL Server/PostgreSQL/MySQL/SQLite); DI trong `MegaFormComposer` mirror Oqtane `Startup.cs:82-131` — `ExternalTableQueryService`, `DatabaseInsertBindingResolver` (allow-list `DashboardDatabase` + config `MegaForm:ExternalTables:AllowedConnections` + `NamedConnectionCatalog`), `ISubmissionRepository` được decorate bởi `ExternalSubmissionRepository`.
+- **Endpoints mới (port từ Oqtane):** `DataRepeater/ColumnOptions` (`DataRepeaterController`); `Submissions/Mine` (`MegaFormApiController.SubmissionExtras.cs`, `[Authorize]`, nhận cả Umbraco Members qua `BuildUserContextAsync`); `Files/Download` (`MegaFormApiController.Files.cs` — route chính `/umbraco/api/megaform/files/download` khớp URL mà `UmbracoStorageService.GetFileUrl` vốn đã emit, kèm alias; root `App_Data/MegaForm`, hỗ trợ cả `TempUploads`/`PrivateUploads`, IDOR guard port từ Oqtane); BPMN import `Form/Workflow/ImportBpmn/Preview`+`ImportBpmn` (`MegaFormApiController.WorkflowBpmn.cs`, gate `WorkflowLetter`); payment webhooks `stripe/webhook`+`paypal/webhook` (`PaymentController`, DI `PaymentEndpointService`/`PaymentWebhookService` trong `MegaFormPaymentComposer`); AiTools `CustomTableRows` (paging streaming in-memory, provider-agnostic cho SQLite); `Diagnostics/TypedStorage` (`MegaFormApiController.Diagnostics.cs`, admin-gated, smoke opt-in `?smoke=true`).
+- **Asset sync:** 10 bundles JS phụ (`megaform-*-designer`, `listview`, `submission-card/list`, `workflow-inbox`) + full `js/plugins/` (30+ widget + `vendor/`) + 12 i18n JSON từ `Assets/` → `MegaForm.Umbraco/wwwroot/js/`.
+- **Fix kèm:** `EfSubmissionDataStore.GetDataMany` tham chiếu `_dbContextFactory` không tồn tại (lỗi compile sót từ phiên batch-reader) → dùng `CreateScope()` theo idiom của file. Và **fix route payment 404 trên Umbraco**: `MegaFormApiRouteRewriteMiddleware` rewrite `/api/MegaForm/` case-insensitive nên nuốt luôn `/api/megaform/payments/*` (route thật của `PaymentController`, khớp widget default URLs) → 404 mọi payment endpoint từ trước tới nay; đã loại trừ prefix `payments/` khỏi rewrite. Verify live trên demo: `paypal/public-config` + `stripe/webhook` trả 400 (thiếu param/signature) thay vì 404; rewrite API chính vẫn hoạt động.
+- **Verify live (demo local, port 16474):** `/megaform/form/1` 200; `schema?formId=1` 200; `ExternalTable/Connections` 401 (hết 500 — DI OK); `Diagnostics/TypedStorage`/`Submissions/Mine`/`Files/Download`/BPMN import 401 (đúng auth gate); `DataRepeater/ColumnOptions` 200; static mới (`megaform-workflow-inbox.js`, plugin `terms-privacy`, i18n `de-DE.json`) 200.
+- **Build/test:** MegaForm.Umbraco 0 error; Sdk.Tests 360/360.
+- **Cố ý chưa làm:** licensing/trial caps cho Umbraco (quyết định của chủ project 2026-08-11), RazorWidget engine (vẫn stub 501 — port từ Oqtane/Web ở phiên sau), workflow execution queue (`MF_WorkflowQueue` + worker), module style settings, remote template gallery, KB seeder hosted service.
+
+### 2.12 Phase 12 — nopCommerce plugin scaffold (2026-08-11)
+
+- **Tạo project:** `Plugins/MegaForm.NopCommerce.Plugin` — plugin chuẩn nopCommerce (`BasePlugin` + `IWidgetPlugin`, `plugin.json`, `SystemName = MegaForm.NopCommerce.Plugin`, supported versions 4.70/4.80), `INopStartup` (`NopCommerceStartup`) đăng ký MegaForm DI.
+- **References:** project reference `Nop.Core`/`Nop.Services`/`Nop.Web.Framework` từ nopCommerce source path overridable qua `/p:NopCommercePath=...`; project reference `MegaForm.Core`/`MegaForm.Sdk`/`MegaForm.AspNetCore.Component`/`MegaForm.Web` từ MegaForm solution (relative từ `Plugins/`). Build smoke check fail đúng dự kiến vì repo chưa có source nopCommerce.
+- **Platform adapters:** `NopCommercePlatformContext` (dùng `IWorkContext`/`IHttpContextAccessor`), `NopCommerceModuleSettingsService` (lưu JSON blob trong `ISettingService`), `NopCommerceStorageService` (upload vào `App_Data/Uploads` plugin), `NopCommerceLocalizationProvider`, `NopCommerceEmailSender` (bridge `Nop.Services.Messages.IEmailSender`), `NopCommerceLogService` (bridge `ILogger`), `NopCommerceWorkflowPrincipalResolver` (stub).
+- **Public controller:** `MegaFormPublicController` cung cấp `GET /megaform/form/{id}`, `/megaform/form/{id}/embed`, `GET /megaform/api/Submit/Schema`, `POST /megaform/api/Submit/Post`, `GET /megaform/api/i18n/{locale}`. View `Form.cshtml` render bằng `MegaFormRenderer.init` với `_MF_CONFIG` (schema/settings/theme), assets từ `/megaform-assets`.
+- **Widget:** `MegaFormFormWidgetViewComponent` render iframe tới `/megaform/form/{id}/embed`; có thể drop vào các widget zones nopCommerce.
+- **Static assets:** MSBuild copy `Assets/**` (từ `MegaFormAssetsPath`) vào output plugin thư mục `Assets/`; startup `UseStaticFiles` serve tại `/megaform-assets`.
+- **Limitations:** plugin chỉ mới có public render + submit; chưa có admin dashboard, file upload/download, captcha enforcement, workflow queue, licensing. Target `net9.0` vì `MegaForm.Web`/`MegaForm.AspNetCore.Component` hiện chỉ target `net9.0` — muốn hỗ trợ nopCommerce 4.70 (.NET 8) cần multi-target 2 project này.
+
+### 2.13 Phase 13 — MegaForm SDK + ASP.NET Core Component NuGet packages ready for nuget.org (2026-08-12)
+
+- **Cập nhật metadata đầy đủ cho 5 packages để publish:**
+  - `MegaForm.Core` 1.5.0: thêm `IsPackable`, `PackageId`, MIT license, README, icon, project/repository URL, tags, release notes.
+  - `MegaForm.Integrations.CloudStorage` 1.0.0: thêm README, icon, project/repository URL, release notes.
+  - `MegaForm.Sdk` 1.0.0: thêm `PackageReleaseNotes`, suppress `CS1591` để pack sạch; public API analyzers vẫn bật (`RS0016`/`RS0017` là errors).
+  - `MegaForm.Web` 1.7.3: thêm README, icon, license, project/repository URL, tags, release notes.
+  - `MegaForm.AspNetCore.Component` 1.0.0: nâng từ `0.2.4-preview` lên `1.0.0` stable, thêm MIT license, release notes, tags, suppress `CS1591`, tắt `GeneratePackageOnBuild`.
+- **Tạo `publish-nuget.ps1`:** script build/pack/push tự động 5 packages. Dry-run pack thành công vào `local-nuget/`. Push lên nuget.org chỉ cần chạy `powershell -File publish-nuget.ps1 -ApiKey <NUGET_API_KEY>`.
+- **Kiểm tra packages:** tất cả `.nuspec` chứa đủ `license`, `icon`, `readme`, `projectUrl`, `repository`, `releaseNotes`, `tags`; dependencies resolve đúng chuỗi `AspNetCore.Component` → `Web` → `Sdk` / `CloudStorage` → `Core`.
+- **nopCommerce plugin build OK:** source nopCommerce 4.80 đã có trong repo, fixed project paths (`$(SolutionDir)` → `$(MSBuildProjectDirectory)\..\..`), thêm `Plugins/MegaForm.NopCommerce.Plugin` vào `MegaForm.sln`. Build Release 0 error, assets copy đầy đủ.
+- **Chưa publish:** chưa chạy `dotnet nuget push` thật vì cần API key nuget.org của chủ project.
+
 ## 3. Trạng thái hiện tại
 
 - `MegaForm.Umbraco` build thành công (0 error).
@@ -159,6 +195,13 @@ Tích hợp `Oqtane.Licensing` làm **kênh license thứ hai** cho Oqtane host 
 - Warmup prewarm cả 3 path trên thành công.
 - CORS global policy `MegaForm` đang hoạt động cho public script/embed.
 - **Kiểm thử cross-origin script embed thành công:** trang `http://localhost:8080/umbraco-embed-test.html` load script từ `http://localhost:5000/megaform/form/1/script`, render form "Contact Us", submit thành công (Reference #14).
+- **NuGet packages đã pack sẵn sàng:**
+  - `local-nuget/MegaForm.Core.1.5.0.nupkg`
+  - `local-nuget/MegaForm.Integrations.CloudStorage.1.0.0.nupkg`
+  - `local-nuget/MegaForm.Sdk.1.0.0.nupkg`
+  - `local-nuget/MegaForm.Web.1.7.3.nupkg`
+  - `local-nuget/MegaForm.AspNetCore.Component.1.0.0.nupkg`
+- **nopCommerce plugin build OK:** `Plugins/MegaForm.NopCommerce.Plugin` build Release thành công với source nopCommerce 4.80 trong repo.
 
 ## 4. Vấn đề đã biết
 
@@ -166,7 +209,7 @@ Tích hợp `Oqtane.Licensing` làm **kênh license thứ hai** cho Oqtane host 
 
 2. **Workflow builder + AI KB cần runtime test.** Các endpoint mới đã build OK và host chạy, nhưng chưa kiểm thử workflow builder UI / AI KB CRUD qua browser.
 
-3. **Typed submission storage cần platform implementation.** Core abstractions đã xong; cần viết migrations/repositories cho Oqtane, Umbraco, DNN, Web để thực sự tạo bảng và ghi đọc typed rows. Kiến trúc mục tiêu xem `Docs/HANDOUT_NEXT_SESSION_TYPED_SUBMISSION_STORAGE_NO_DATAJSON_2026-07-17.md`.
+3. **Typed submission storage: Umbraco đã implement xong** (store + migration + batch reader — xem mục 2.7/2.11); readers vẫn đọc `DataJson` legacy song song (`SupportsDataJsonCollapse = false`). Việc còn lại: backfill legacy submissions và migrate readers sang typed reads. Kiến trúc mục tiêu xem `Docs/HANDOUT_NEXT_SESSION_TYPED_SUBMISSION_STORAGE_NO_DATAJSON_2026-07-17.md`.
 
 2. **Embed preview page (`Assets/embed-preview.html`) vẫn dùng path DNN.** Bản `Assets/embed-preview.html` là shared/DNN; bản Umbraco `MegaForm.Umbraco/wwwroot/embed-preview.html` đã được cập nhật. Nếu build script sync lại từ `Assets`, cần giữ bản Umbraco hoặc tách thành `embed-preview-umbraco.html`.
 
@@ -211,6 +254,18 @@ dotnet run --project MegaForm.Umbraco.Host/MegaForm.Umbraco.Host.csproj -c Relea
 
 > Ghi chú: Nếu chạy Umbraco Host lần đầu, cần cấu hình connection string / unattended install hoặc chạy qua setup UI tại `/install`.
 
+## 5.1 Publish NuGet packages
+
+```powershell
+# Dry-run: pack vào local-nuget/
+powershell -File publish-nuget.ps1
+
+# Push lên nuget.org (thay <API_KEY> bằng key thật)
+powershell -File publish-nuget.ps1 -ApiKey <API_KEY>
+```
+
+Packages được publish theo thứ tự dependency: `MegaForm.Core` → `MegaForm.Integrations.CloudStorage` / `MegaForm.Sdk` → `MegaForm.Web` → `MegaForm.AspNetCore.Component`. Script dùng `--skip-duplicate` nên có thể chạy lại an toàn.
+
 ## 6. Gợi ý phiên sau
 
 ### Ưu tiên cao
@@ -224,6 +279,10 @@ dotnet run --project MegaForm.Umbraco.Host/MegaForm.Umbraco.Host.csproj -c Relea
 
 ### Ưu tiên trung bình
 
+- **Port RazorWidget engine** từ Oqtane/Web (`RazorWidgetRegistry`, `RazorCompilationService`, `RazorActionService`, 9 widget templates) — Umbraco hiện stub 501.
+- **Workflow execution queue:** bảng `MF_WorkflowQueue` + `WorkflowQueueWorkerHostedService` + `IWorkflowExecutionModeProvider` (Oqtane đã có).
+- **Module style settings + remote template gallery** endpoints (Oqtane/DNN có).
+- **KB seeder hosted service** cho Umbraco (Oqtane có `OqtaneKbSeederHostedService` + KB-seed migrations).
 - **SurfaceController:** tạo Umbraco `SurfaceController` cho form submission nếu cần postback model thay vì API.
 - **Members integration:** map Umbraco Members vào MegaForm user context / workflow.
 - **Custom tree:** thêm custom tree section trong Umbraco backoffice (nếu Content App chưa đủ).

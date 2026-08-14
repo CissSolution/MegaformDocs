@@ -1,0 +1,64 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <RazorLangVersion>3.0</RazorLangVersion>
+    <Version>1.0.0</Version>
+    <Authors>MegaForm</Authors>
+    <Description>MegaForm nopCommerce plugin — public form render, submission, and widget.</Description>
+    <IsPackable>false</IsPackable>
+    <!-- Output to the local dist/plugins folder when built inside the MegaForm solution.
+         Override with /p:OutputPath=... when building inside the nopCommerce solution. -->
+    <OutputPath Condition="'$(OutputPath)' == ''">$(SolutionDir)dist\Plugins\MegaForm.NopCommerce.Plugin\</OutputPath>
+    <OutDir>$(OutputPath)</OutDir>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Path to nopCommerce source (the directory containing src/Libraries, src/Presentation, src/Plugins).
+         Override with /p:NopCommercePath=... if your nopCommerce source is elsewhere. -->
+    <NopCommercePath Condition="'$(NopCommercePath)' == ''">$(MSBuildProjectDirectory)\..\..\nopCommerce\</NopCommercePath>
+    <!-- Path to the shared MegaForm assets (css, js, i18n, fonts, img). -->
+    <MegaFormAssetsPath Condition="'$(MegaFormAssetsPath)' == ''">$(MSBuildProjectDirectory)\..\..\Assets</MegaFormAssetsPath>
+  </PropertyGroup>
+
+  <!-- nopCommerce references -->
+  <ItemGroup>
+    <ProjectReference Include="$(NopCommercePath)\src\Libraries\Nop.Core\Nop.Core.csproj" />
+    <ProjectReference Include="$(NopCommercePath)\src\Libraries\Nop.Services\Nop.Services.csproj" />
+    <ProjectReference Include="$(NopCommercePath)\src\Presentation\Nop.Web.Framework\Nop.Web.Framework.csproj" />
+  </ItemGroup>
+
+  <!-- MegaForm references (relative to the MegaForm solution). -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\MegaForm.Core\MegaForm.Core.csproj" />
+    <ProjectReference Include="..\..\MegaForm.Sdk\MegaForm.Sdk.csproj" />
+    <ProjectReference Include="..\..\MegaForm.AspNetCore.Component\MegaForm.AspNetCore.Component.csproj" />
+    <ProjectReference Include="..\..\MegaForm.Web\MegaForm.Web.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="plugin.json" />
+    <Content Include="plugin.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!-- Copy MegaForm static assets (JS/CSS/img) into the plugin output so the asset controller can serve them. -->
+  <ItemGroup>
+    <Content Include="$(MegaFormAssetsPath)\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Assets\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+
+  <Target Name="ValidatePaths" BeforeTargets="BeforeBuild">
+    <Error Condition="!Exists('$(NopCommercePath)\src\Libraries\Nop.Core\Nop.Core.csproj')" Text="Could not find Nop.Core at $(NopCommercePath)\src\Libraries\Nop.Core. Set NopCommercePath to the folder containing the nopCommerce src directory." />
+    <Error Condition="!Exists('$(MegaFormAssetsPath)\css\megaform.css')" Text="Could not find MegaForm assets at $(MegaFormAssetsPath). Set MegaFormAssetsPath to the Assets folder of the MegaForm solution." />
+  </Target>
+
+</Project>

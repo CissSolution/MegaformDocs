@@ -1,0 +1,25 @@
+MEGAFORM FOR OQTANE — DATABASE CONNECTIVITY
+Duration: ~2 minutes
+
+[SCENE 1 — INTRO / 0:00-0:10]
+MegaForm does not just collect submissions — it can write them directly into your own database tables.
+
+[SCENE 2 — ENABLE DATABASE INSERT / 0:10-0:40]
+Open the Builder and go to the Database panel.
+Check "Enable database INSERT on submit".
+Choose your connection name, for example DashboardDatabase.
+Select your database type: SQL Server, MySQL, PostgreSQL, or SQLite.
+
+[SCENE 3 — BUILD INSERT SQL / 0:40-1:15]
+In the INSERT SQL box, write a standard INSERT statement using field-key placeholders like :full_name and :email.
+Click any field chip to insert its placeholder automatically.
+MegaForm maps each placeholder to the matching form field value.
+You can also override mappings in the parameter mapping section.
+
+[SCENE 4 — TEST & SUBMIT / 1:15-1:50]
+Click Test INSERT to validate the SQL against your database without saving real data.
+Then publish the form. When a user submits, MegaForm first stores the submission, then INSERTs a row into your custom table.
+Even if the custom insert fails, the submission is safe.
+
+[SCENE 5 — OUTRO / 1:50-2:00]
+Connect MegaForm to your database and turn form submissions into structured data instantly.

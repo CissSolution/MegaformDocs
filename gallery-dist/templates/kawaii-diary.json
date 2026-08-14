@@ -1,0 +1,410 @@
+{
+  "version": "1.0",
+  "slug": "kawaii-diary",
+  "title": "Kawaii Diary Application",
+  "description": "Playful source-matched notebook application with pastel sections and a graph-paper canvas.",
+  "category": "application",
+  "categories": [
+    "application",
+    "education",
+    "premium"
+  ],
+  "icon": "sparkles",
+  "templateGuideSlug": "tpl-kawaii-diary",
+  "submitButtonText": "Submit!",
+  "successMessage": "Submitted! Your next adventure is one step closer.",
+  "fields": [
+    {
+      "key": "first_name",
+      "type": "Text",
+      "label": "First name",
+      "placeholder": "Anna",
+      "required": true
+    },
+    {
+      "key": "last_name",
+      "type": "Text",
+      "label": "Last name",
+      "placeholder": "Müller",
+      "required": true
+    },
+    {
+      "key": "email",
+      "type": "Email",
+      "label": "Email",
+      "placeholder": "anna@email.eu",
+      "required": true
+    },
+    {
+      "key": "phone",
+      "type": "Phone",
+      "label": "Phone",
+      "placeholder": "+49 170 123456"
+    },
+    {
+      "key": "birth_year",
+      "type": "Number",
+      "label": "Year of birth",
+      "placeholder": "2004",
+      "validation": {
+        "min": 1970,
+        "max": 2010
+      }
+    },
+    {
+      "key": "country",
+      "type": "Select",
+      "label": "Country",
+      "placeholder": "Pick one ✈",
+      "required": true,
+      "options": [
+        {
+          "label": "Germany",
+          "value": "germany"
+        },
+        {
+          "label": "France",
+          "value": "france"
+        },
+        {
+          "label": "Spain",
+          "value": "spain"
+        },
+        {
+          "label": "Italy",
+          "value": "italy"
+        },
+        {
+          "label": "Portugal",
+          "value": "portugal"
+        },
+        {
+          "label": "Netherlands",
+          "value": "netherlands"
+        },
+        {
+          "label": "Austria",
+          "value": "austria"
+        },
+        {
+          "label": "Belgium",
+          "value": "belgium"
+        },
+        {
+          "label": "Greece",
+          "value": "greece"
+        },
+        {
+          "label": "Poland",
+          "value": "poland"
+        },
+        {
+          "label": "Sweden",
+          "value": "sweden"
+        },
+        {
+          "label": "Ireland",
+          "value": "ireland"
+        },
+        {
+          "label": "Other",
+          "value": "other"
+        }
+      ]
+    },
+    {
+      "key": "programme",
+      "type": "Select",
+      "label": "Programme",
+      "placeholder": "Select 🌍",
+      "required": true,
+      "options": [
+        {
+          "label": "Erasmus Exchange",
+          "value": "erasmus-exchange"
+        },
+        {
+          "label": "Language Immersion",
+          "value": "language-immersion"
+        },
+        {
+          "label": "Solidarity Corps",
+          "value": "solidarity-corps"
+        }
+      ]
+    },
+    {
+      "key": "duration",
+      "type": "Select",
+      "label": "Duration (months)",
+      "defaultValue": "3",
+      "options": [
+        {
+          "label": "1",
+          "value": "1"
+        },
+        {
+          "label": "2",
+          "value": "2"
+        },
+        {
+          "label": "3",
+          "value": "3"
+        },
+        {
+          "label": "6",
+          "value": "6"
+        },
+        {
+          "label": "12",
+          "value": "12"
+        }
+      ]
+    },
+    {
+      "key": "start_month",
+      "type": "Select",
+      "label": "Start month",
+      "placeholder": "Pick month 🗓️",
+      "required": true,
+      "options": [
+        {
+          "label": "January",
+          "value": "january"
+        },
+        {
+          "label": "February",
+          "value": "february"
+        },
+        {
+          "label": "March",
+          "value": "march"
+        },
+        {
+          "label": "April",
+          "value": "april"
+        },
+        {
+          "label": "May",
+          "value": "may"
+        },
+        {
+          "label": "June",
+          "value": "june"
+        },
+        {
+          "label": "July",
+          "value": "july"
+        },
+        {
+          "label": "August",
+          "value": "august"
+        },
+        {
+          "label": "September",
+          "value": "september"
+        },
+        {
+          "label": "October",
+          "value": "october"
+        },
+        {
+          "label": "November",
+          "value": "november"
+        },
+        {
+          "label": "December",
+          "value": "december"
+        }
+      ]
+    },
+    {
+      "key": "language_level",
+      "type": "Select",
+      "label": "Language level",
+      "placeholder": "Level",
+      "options": [
+        {
+          "label": "Beginner (A1–A2)",
+          "value": "beginner"
+        },
+        {
+          "label": "Intermediate (B1–B2)",
+          "value": "intermediate"
+        },
+        {
+          "label": "Advanced (C1–C2)",
+          "value": "advanced"
+        }
+      ]
+    },
+    {
+      "key": "interests",
+      "type": "Checkbox",
+      "label": "Interests",
+      "options": [
+        {
+          "label": "Art & Design",
+          "value": "art-design"
+        },
+        {
+          "label": "Technology",
+          "value": "technology"
+        },
+        {
+          "label": "Sustainability",
+          "value": "sustainability"
+        },
+        {
+          "label": "Music",
+          "value": "music"
+        },
+        {
+          "label": "Sports",
+          "value": "sports"
+        },
+        {
+          "label": "Cuisine",
+          "value": "cuisine"
+        },
+        {
+          "label": "History",
+          "value": "history"
+        },
+        {
+          "label": "Entrepreneurship",
+          "value": "entrepreneurship"
+        }
+      ],
+      "optionDisplay": "chips",
+      "choiceDisplay": "chips",
+      "optionVariant": "chips",
+      "optionColumns": 4,
+      "properties": {
+        "optionDisplay": "chips",
+        "optionColumns": 4
+      },
+      "widgetProps": {
+        "optionDisplay": "chips",
+        "optionColumns": 4
+      }
+    },
+    {
+      "key": "accommodation",
+      "type": "Radio",
+      "label": "Accommodation preference",
+      "required": false,
+      "options": [
+        {
+          "label": "University dormitory",
+          "value": "university-dormitory"
+        },
+        {
+          "label": "Host family",
+          "value": "host-family"
+        },
+        {
+          "label": "Private flat",
+          "value": "private-flat"
+        },
+        {
+          "label": "Flexible",
+          "value": "flexible"
+        }
+      ]
+    },
+    {
+      "key": "scholarship",
+      "type": "Checkbox",
+      "label": "Scholarship application",
+      "options": [
+        {
+          "label": "Apply for scholarship ✨",
+          "value": "yes"
+        }
+      ]
+    },
+    {
+      "key": "motivation",
+      "type": "Textarea",
+      "label": "Motivation",
+      "placeholder": "Tell us why you want to join... 🌟",
+      "properties": {
+        "rows": 4
+      },
+      "validation": {
+        "maxLength": 1000
+      }
+    },
+    {
+      "key": "newsletter",
+      "type": "Checkbox",
+      "label": "Newsletter",
+      "options": [
+        {
+          "label": "Send me updates & news 📬",
+          "value": "yes"
+        }
+      ]
+    },
+    {
+      "key": "terms",
+      "type": "Checkbox",
+      "label": "Terms and conditions",
+      "required": true,
+      "options": [
+        {
+          "label": "I agree to the terms & conditions",
+          "value": "accepted"
+        }
+      ]
+    },
+    {
+      "key": "utm_source",
+      "type": "Hidden",
+      "label": "UTM source"
+    },
+    {
+      "key": "utm_campaign",
+      "type": "Hidden",
+      "label": "UTM campaign"
+    }
+  ],
+  "settings": {
+    "theme": "system",
+    "multiPage": false,
+    "premiumGeneratedShell": true,
+    "premiumNativeMigrationBadge": "form-builder-controls-10/kawaii-diary",
+    "showProgressBar": false,
+    "themeSelector": {
+      "enabled": false
+    },
+    "displayStyle": {
+      "border": "none",
+      "shadow": "none"
+    },
+    "customHtml": "<div class=\"mfp mfp-kawaii-diary mfp-native-generated\" data-mf-flexgrid=\"locked\"><div class=\"mfp-stage\"><article class=\"mfp-paper\">\n<svg class=\"mfp-kawaii-decos\" viewBox=\"0 0 340 80\" aria-hidden=\"true\"><ellipse cx=\"20\" cy=\"18\" rx=\"12\" ry=\"22\" fill=\"#7EC8A0\" transform=\"rotate(-30 20 18)\" opacity=\".85\"/><ellipse cx=\"42\" cy=\"8\" rx=\"10\" ry=\"18\" fill=\"#5BAD82\" transform=\"rotate(15 42 8)\" opacity=\".7\"/><ellipse cx=\"6\" cy=\"45\" rx=\"8\" ry=\"15\" fill=\"#9ED4B2\" transform=\"rotate(-50 6 45)\" opacity=\".65\"/><ellipse cx=\"310\" cy=\"12\" rx=\"12\" ry=\"22\" fill=\"#7EC8A0\" transform=\"rotate(30 310 12)\" opacity=\".85\"/><ellipse cx=\"295\" cy=\"5\" rx=\"10\" ry=\"18\" fill=\"#5BAD82\" transform=\"rotate(-15 295 5)\" opacity=\".7\"/><ellipse cx=\"328\" cy=\"40\" rx=\"8\" ry=\"15\" fill=\"#9ED4B2\" transform=\"rotate(50 328 40)\" opacity=\".65\"/><polygon points=\"75,7 78,16 88,16 80,22 83,32 75,26 67,32 70,22 62,16 72,16\" fill=\"#FFDD57\" stroke=\"#fff\" stroke-width=\"1.5\"/><polygon points=\"260,5 263,14 273,14 265,20 268,30 260,24 252,30 255,20 247,14 257,14\" fill=\"#FFDD57\" stroke=\"#fff\" stroke-width=\"1.5\"/><path d=\"M130 55 C130 51 124 48 120 52 C116 48 110 51 110 55 C110 61 120 68 120 68 C120 68 130 61 130 55Z\" fill=\"#FF8FA3\" opacity=\".8\"/><path d=\"M230 52 C230 48 224 45 220 49 C216 45 210 48 210 52 C210 58 220 65 220 65 C220 65 230 58 230 52Z\" fill=\"#FF8FA3\" opacity=\".8\"/><g opacity=\".7\" fill=\"#fff\" stroke=\"#ccc\"><ellipse cx=\"88\" cy=\"38\" rx=\"16\" ry=\"10\"/><ellipse cx=\"78\" cy=\"42\" rx=\"10\" ry=\"8\"/><ellipse cx=\"98\" cy=\"42\" rx=\"10\" ry=\"8\"/><ellipse cx=\"255\" cy=\"40\" rx=\"16\" ry=\"10\"/><ellipse cx=\"245\" cy=\"44\" rx=\"10\" ry=\"8\"/><ellipse cx=\"265\" cy=\"44\" rx=\"10\" ry=\"8\"/></g><polygon points=\"148,30 158,25 155,35\" fill=\"#87CEEB\" stroke=\"#5aa8d0\"/><polygon points=\"195,28 205,23 202,33\" fill=\"#F9A875\" stroke=\"#e0855a\"/><circle cx=\"170\" cy=\"45\" r=\"9\" fill=\"#FFDD57\" stroke=\"#e8c840\" stroke-width=\"1.5\"/><g stroke=\"#e8c840\" stroke-width=\"1.5\"><path d=\"M170 30v5M170 55v5M155 45h5M180 45h5M159 34l4 4M177 52l4 4M181 34l-4 4M163 52l-4 4\"/></g></svg>\n<header class=\"mfp-header\"><div><h1>MY APPLICATION</h1><p>EuroYouth 2026 &#10024;</p></div></header>\n<div class=\"mfp-body\"><section class=\"mfp-section\" id=\"kawaii-diary-profile\"><div class=\"mfp-kawaii-head mfp-kawaii-blue\"><span>Profile</span><i aria-hidden=\"true\"></i></div><div class=\"mfp-row\"><div>{{field:first_name}}</div><div>{{field:last_name}}</div><div>{{field:email}}</div><div>{{field:phone}}</div><div>{{field:birth_year}}</div><div>{{field:country}}</div></div></section>\n<section class=\"mfp-section\" id=\"kawaii-diary-programme\"><div class=\"mfp-kawaii-head mfp-kawaii-coral\"><span>Programme</span><i aria-hidden=\"true\"></i></div><div class=\"mfp-row\"><div>{{field:programme}}</div><div>{{field:duration}}</div><div>{{field:start_month}}</div><div>{{field:language_level}}</div></div></section>\n<section class=\"mfp-section\" id=\"kawaii-diary-interests\"><div class=\"mfp-kawaii-head mfp-kawaii-green\"><span>Interests &#11088;</span><i aria-hidden=\"true\"></i></div><div class=\"mfp-chip\">{{field:interests}}</div></section>\n<section class=\"mfp-section\" id=\"kawaii-diary-support\"><div class=\"mfp-kawaii-head mfp-kawaii-lavender\"><span>Stay &amp; Support &#127968;</span><i aria-hidden=\"true\"></i></div><div class=\"mfp-row\"><div class=\"mfp-radio\">{{field:accommodation}}</div><div class=\"mfp-check\">{{field:scholarship}}</div></div></section>\n<section class=\"mfp-section\" id=\"kawaii-diary-story\"><div class=\"mfp-kawaii-head mfp-kawaii-pink\"><span>My Story &#128214;</span><i aria-hidden=\"true\"></i></div>{{field:motivation}}</section>\n<section class=\"mfp-section\" id=\"kawaii-diary-finish\"><div class=\"mfp-kawaii-head mfp-kawaii-green\"><span>Almost there &#127881;</span><i aria-hidden=\"true\"></i></div><div class=\"mfp-stack\"><div class=\"mfp-check mfp-consent-check\">{{field:newsletter}}</div><div class=\"mfp-check mfp-consent-check\">{{field:terms}}</div></div></section><div class=\"mfp-hidden\">{{field:utm_source}}{{field:utm_campaign}}</div><div class=\"mfp-actions\"><span aria-hidden=\"true\">&#8592; Back</span><button type=\"submit\" class=\"mfp-btn\" data-mf-native-submit>Submit! &#128640; &#8594;</button></div></div><svg class=\"mfp-kawaii-bottom\" viewBox=\"0 0 340 60\" aria-hidden=\"true\"><ellipse cx=\"30\" cy=\"50\" rx=\"12\" ry=\"20\" fill=\"#7EC8A0\" transform=\"rotate(20 30 50)\" opacity=\".8\"/><ellipse cx=\"12\" cy=\"40\" rx=\"8\" ry=\"14\" fill=\"#9ED4B2\" transform=\"rotate(-20 12 40)\" opacity=\".65\"/><ellipse cx=\"315\" cy=\"48\" rx=\"12\" ry=\"20\" fill=\"#7EC8A0\" transform=\"rotate(-20 315 48)\" opacity=\".8\"/><ellipse cx=\"333\" cy=\"38\" rx=\"8\" ry=\"14\" fill=\"#9ED4B2\" transform=\"rotate(20 333 38)\" opacity=\".65\"/><polygon points=\"170,19 173,27 181,27 175,33 177,42 170,37 163,42 165,33 159,27 167,27\" fill=\"#FFDD57\" stroke=\"#fff\" stroke-width=\"1.5\"/><path d=\"M70 40 C70 36 64 33 60 37 C56 33 50 36 50 40 C50 46 60 53 60 53 C60 53 70 46 70 40Z\" fill=\"#FF8FA3\" opacity=\".75\"/><path d=\"M290 38 C290 34 284 31 280 35 C276 31 270 34 270 38 C270 44 280 51 280 51 C280 51 290 44 290 38Z\" fill=\"#FF8FA3\" opacity=\".75\"/></svg><footer class=\"mfp-foot\">Dream big &middot; travel far &middot; stay curious</footer></article></div></div>",
+    "customCss": "/* MegaForm Gen-3 scroll-aware single-page shell: kawaii-diary */\n.mfp.mfp-kawaii-diary{--kw-page:#f8f5e4;--kw-paper:#fffef5;--kw-ink:#555555;--kw-muted:#5aaacf;--kw-line:#d8eef5;--kw-input:#fff;--kw-primary:#87ceeb;--kw-soft:#eaf8fd;--kw-error:#c0392b;--kw-font:\"MF Euro Nunito\",Nunito,\"Trebuchet MS\",system-ui,sans-serif;--kw-display:\"MF Euro Nunito\",Nunito,\"Trebuchet MS\",system-ui,sans-serif;--mf-form-radius:0px;--mf-btn-bg:var(--kw-primary);--mf-font-family:var(--kw-font);display:block!important;width:100%!important;max-width:none!important;margin:0 auto!important;padding:32px 16px 48px!important;border:0!important;border-radius:0!important;outline:0!important;background:#f8f5e4!important;color:var(--kw-ink)!important;box-shadow:none!important;font-family:var(--kw-font)!important;font-synthesis:none;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;opacity:1!important}\n.mfp.mfp-kawaii-diary,.mfp.mfp-kawaii-diary *,.mfp.mfp-kawaii-diary *::before,.mfp.mfp-kawaii-diary *::after{box-sizing:border-box}\n.mf-form-wrapper .mf-form-inner .mfp.mfp-kawaii-diary{display:block!important;width:100%!important;max-width:none!important;margin-inline:auto!important}\n.mfp-kawaii-diary .mfp-stage{width:100%;max-width:576px!important;margin-inline:auto!important;padding:0!important;border:0!important;border-radius:0!important;outline:0!important;background:transparent!important;box-shadow:none!important}\n.mfp-kawaii-diary .mfp-paper{position:relative;width:100%;max-width:576px!important;margin:0 auto!important;border:0!important;outline:0!important;background:var(--kw-paper)!important;box-shadow:0 20px 45px rgba(40,31,20,.14)}\n.mfp-kawaii-diary .mfp-body{position:relative;padding:12px 32px 36px}\n.mfp-kawaii-diary .mfp-section-head{display:flex;align-items:center;gap:11px;margin:26px 0 16px}.mfp-kawaii-diary .mfp-section-head h2{margin:0!important;padding:0!important;color:var(--kw-ink)!important;font-family:var(--kw-font)!important;font-size:12px!important;font-weight:900!important;line-height:1.2!important;letter-spacing:.14em!important;text-transform:uppercase!important}.mfp-kawaii-diary .mfp-section-head>span:last-child{height:1px;flex:1;background:var(--kw-line)}\n.mfp-kawaii-diary .mfp-section-icon{display:grid;width:30px;height:30px;flex:0 0 auto;place-items:center;border-radius:8px;background:var(--kw-soft);color:var(--kw-primary);font-size:14px;font-weight:900}\n.mfp-kawaii-diary .mfp-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 20px}.mfp-kawaii-diary .mfp-stack{display:grid;gap:16px}.mfp-kawaii-diary .mfp-wide{margin-top:16px}.mfp-kawaii-diary .mf-field-group{min-width:0;margin:0}\n.mfp-kawaii-diary .mf-field-label{display:block;margin:0 0 6px;color:var(--kw-muted);font-size:10px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.mfp-kawaii-diary .mf-required{color:var(--kw-error)}\n.mfp-kawaii-diary .mf-input,.mfp-kawaii-diary .mf-select,.mfp-kawaii-diary .mf-textarea,.mfp-kawaii-diary input:not([type='checkbox']):not([type='radio']),.mfp-kawaii-diary select,.mfp-kawaii-diary textarea{width:100%!important;min-height:43px!important;padding:9px 12px!important;border:1px solid var(--kw-line)!important;border-radius:8px!important;outline:0!important;background:var(--kw-input)!important;color:var(--kw-ink)!important;box-shadow:none!important;font:inherit!important;font-size:14px!important}\n.mfp-kawaii-diary .mf-textarea,.mfp-kawaii-diary textarea{min-height:112px!important;resize:vertical!important}.mfp-kawaii-diary .mf-input:focus,.mfp-kawaii-diary .mf-select:focus,.mfp-kawaii-diary .mf-textarea:focus,.mfp-kawaii-diary input:focus,.mfp-kawaii-diary select:focus,.mfp-kawaii-diary textarea:focus{border-color:var(--kw-primary)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--kw-primary) 14%,transparent)!important}\n.mfp-kawaii-diary input::placeholder,.mfp-kawaii-diary textarea::placeholder{color:color-mix(in srgb,var(--kw-muted) 58%,transparent)}.mfp-kawaii-diary .mf-field-error{margin-top:5px;color:var(--kw-error);font-size:11px}\n.mfp-kawaii-diary .mfp-chip .mf-option-group{display:flex!important;flex-wrap:wrap!important;gap:8px!important;grid-template-columns:none!important}.mfp-kawaii-diary .mfp-chip .mf-option-item{display:inline-flex!important;width:auto!important;margin:0!important;padding:0!important}.mfp-kawaii-diary .mfp-chip .mf-option-control{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;clip-path:inset(50%)!important}\n.mfp-kawaii-diary .mfp-chip .mf-option-ui{display:inline-flex!important;min-height:32px!important;align-items:center!important;padding:7px 12px!important;border:1px solid var(--kw-line)!important;border-radius:999px!important;background:var(--kw-input)!important;color:var(--kw-muted)!important;box-shadow:none!important}.mfp-kawaii-diary .mfp-chip .mf-option-label{color:inherit!important;font-size:12px!important;font-weight:700!important}.mfp-kawaii-diary .mfp-chip .mf-option-control:checked + .mf-option-ui{border-color:var(--kw-primary)!important;background:var(--kw-soft)!important;color:var(--kw-primary)!important}\n.mfp-kawaii-diary .mfp-check .mf-option-group{display:block!important}.mfp-kawaii-diary .mfp-check .mf-option-item{display:flex!important;align-items:flex-start!important;gap:9px!important;margin:0!important;padding:0!important}.mfp-kawaii-diary .mfp-check .mf-option-control{position:static!important;width:17px!important;height:17px!important;flex:0 0 17px!important;margin:3px 0 0!important;accent-color:var(--kw-primary)!important;opacity:1!important}.mfp-kawaii-diary .mfp-check .mf-option-ui{display:block!important;min-width:0!important;padding:0!important;border:0!important;background:transparent!important;color:var(--kw-muted)!important}.mfp-kawaii-diary .mfp-check .mf-option-label{display:block!important;color:inherit!important;font-size:13px!important;line-height:1.5!important}.mfp-kawaii-diary .mfp-consent-check .mf-field-label{display:none!important}.mfp-kawaii-diary .mfp-consent-check .mf-option-item{align-items:center!important}.mfp-kawaii-diary .mfp-consent-check .mf-option-control{margin:0!important}.mfp-kawaii-diary .mfp-consent-check .mf-option-ui{display:flex!important;align-items:center!important;min-height:20px!important}\n.mfp-kawaii-diary .mfp-actions{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:26px;padding-top:22px;border-top:1px solid var(--kw-line);color:var(--kw-muted);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.mfp-kawaii-diary .mfp-btn{display:inline-flex!important;min-height:44px;align-items:center;justify-content:center;gap:8px;border:0!important;border-radius:999px;padding:11px 22px;background:var(--kw-primary)!important;color:#fff!important;font-family:var(--kw-font)!important;font-size:12px!important;font-weight:900!important;line-height:1.4!important;letter-spacing:.08em!important;text-transform:uppercase!important;cursor:pointer}\n.mfp-kawaii-diary .mfp-hidden{display:none!important}.mfp-kawaii-diary .mf-form-title,.mfp-kawaii-diary .mf-form-description,.mfp-kawaii-diary .mf-success-message,.mfp-kawaii-diary .mf-form-actions{display:none!important}.mf-form-wrapper.mf-custom-shell-mode.mf-custom-html-mode,.mf-form-wrapper.mf-custom-shell-mode.mf-custom-html-mode>.mf-form-inner,.mf-form-wrapper.mf-custom-shell-mode.mf-custom-html-mode>.mf-form-inner>.mf-form,.mf-form-wrapper.mf-custom-shell-mode.mf-custom-html-mode .mf-fields-container,.mf-form-wrapper:has(.mfp-kawaii-diary),.mf-form-wrapper:has(.mfp-kawaii-diary) .mf-form,.mf-form-wrapper:has(.mfp-kawaii-diary) .mf-form-inner,.mf-form-wrapper:has(.mfp-kawaii-diary) .mf-fields-container{--mf-page-bg:transparent!important;--mf-form-bg:transparent!important;--mf-card-bg:transparent!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;outline:0!important;background:transparent!important;background-image:none!important;box-shadow:none!important;filter:none!important}.mf-form-wrapper:has(.mfp-kawaii-diary)::before,.mf-form-wrapper:has(.mfp-kawaii-diary)::after,.mf-form-wrapper:has(.mfp-kawaii-diary) .mf-form::before,.mf-form-wrapper:has(.mfp-kawaii-diary) .mf-form::after,.mf-form-wrapper:has(.mfp-kawaii-diary) .mf-form-inner::before,.mf-form-wrapper:has(.mfp-kawaii-diary) .mf-form-inner::after,.mf-form-wrapper:has(.mfp-kawaii-diary) .mf-fields-container::before,.mf-form-wrapper:has(.mfp-kawaii-diary) .mf-fields-container::after{display:none!important;content:none!important}.mf-form-wrapper:has(.mfp-kawaii-diary) .mf-form-actions{display:none!important}\n@media(max-width:700px){.mfp-kawaii-diary .mfp-body{padding:8px 20px 28px}.mfp-kawaii-diary .mfp-row{grid-template-columns:1fr;gap:15px}}\n@media(max-width:440px){.mfp.mfp-kawaii-diary{padding:12px 8px 28px!important}.mfp-kawaii-diary .mfp-body{padding:6px 16px 24px}.mfp-kawaii-diary .mfp-actions{align-items:stretch;flex-direction:column-reverse}.mfp-kawaii-diary .mfp-btn{width:100%}}\n@font-face{font-family:'MF Euro Nunito';font-style:normal;font-weight:400;font-display:swap;src:url('/DesktopModules/MegaForm/Assets/fonts/euro-scroll/nunito-latin.woff2') format('woff2'),url('/Modules/MegaForm/Assets/fonts/euro-scroll/nunito-latin.woff2') format('woff2')}\n@font-face{font-family:'MF Euro Nunito';font-style:normal;font-weight:600;font-display:swap;src:url('/DesktopModules/MegaForm/Assets/fonts/euro-scroll/nunito-latin.woff2') format('woff2'),url('/Modules/MegaForm/Assets/fonts/euro-scroll/nunito-latin.woff2') format('woff2')}\n@font-face{font-family:'MF Euro Nunito';font-style:normal;font-weight:700;font-display:swap;src:url('/DesktopModules/MegaForm/Assets/fonts/euro-scroll/nunito-latin.woff2') format('woff2'),url('/Modules/MegaForm/Assets/fonts/euro-scroll/nunito-latin.woff2') format('woff2')}\n@font-face{font-family:'MF Euro Nunito';font-style:normal;font-weight:800;font-display:swap;src:url('/DesktopModules/MegaForm/Assets/fonts/euro-scroll/nunito-latin.woff2') format('woff2'),url('/Modules/MegaForm/Assets/fonts/euro-scroll/nunito-latin.woff2') format('woff2')}\n@font-face{font-family:'MF Euro Nunito';font-style:normal;font-weight:900;font-display:swap;src:url('/DesktopModules/MegaForm/Assets/fonts/euro-scroll/nunito-latin.woff2') format('woff2'),url('/Modules/MegaForm/Assets/fonts/euro-scroll/nunito-latin.woff2') format('woff2')}\n.mfp.mfp-kawaii-diary{background-color:#f8f5e4!important;background-image:repeating-linear-gradient(#e8e4d2 0 1px,transparent 1px 28px),repeating-linear-gradient(90deg,#e8e4d2 0 1px,transparent 1px 28px)!important}.mfp-kawaii-diary .mfp-paper{overflow:hidden;border:2px dashed #aaddcc!important;border-radius:24px!important;box-shadow:0 20px 48px rgba(84,133,141,.22)}.mfp-kawaii-diary .mfp-kawaii-decos{position:absolute;z-index:0;top:0;left:0;width:100%;height:80px;pointer-events:none}.mfp-kawaii-diary .mfp-header{position:relative;z-index:1;padding:80px 32px 20px;text-align:center}.mfp-kawaii-diary .mfp-header>div{display:inline-block;border:2.5px dashed #87ceeb;border-radius:16px;padding:12px 24px;background:rgba(255,255,255,.7)}.mfp-kawaii-diary .mfp-header h1{margin:0!important;color:#5aaacf!important;font-family:var(--kw-display)!important;font-size:30px!important;font-weight:900!important;line-height:1.15!important;letter-spacing:.06em!important;text-transform:none!important;text-shadow:2px 2px 0 rgba(0,0,0,.06)}.mfp-kawaii-diary .mfp-header p{margin:2px 0 0!important;color:#f9a875!important;font-size:14px!important;font-weight:700!important;line-height:1.5!important}\n.mfp-kawaii-diary .mfp-body{position:relative;z-index:1;display:grid;gap:28px;padding:0 40px 40px}.mfp-kawaii-diary .mfp-kawaii-head{display:flex;align-items:center;gap:8px;margin:0 0 12px}.mfp-kawaii-diary .mfp-kawaii-head span{border-radius:999px;padding:3px 12px;color:#fff;font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}.mfp-kawaii-diary .mfp-kawaii-head i{height:0;flex:1;border-bottom:2px dashed currentColor;opacity:.32}.mfp-kawaii-diary .mfp-kawaii-blue{color:#87ceeb}.mfp-kawaii-diary .mfp-kawaii-blue span{background:#87ceeb}.mfp-kawaii-diary .mfp-kawaii-coral{color:#f9a875}.mfp-kawaii-diary .mfp-kawaii-coral span{background:#f9a875}.mfp-kawaii-diary .mfp-kawaii-green{color:#7ec8a0}.mfp-kawaii-diary .mfp-kawaii-green span{background:#7ec8a0}.mfp-kawaii-diary .mfp-kawaii-lavender{color:#c8b8e8}.mfp-kawaii-diary .mfp-kawaii-lavender span{background:#c8b8e8}.mfp-kawaii-diary .mfp-kawaii-pink{color:#ffb3c1}.mfp-kawaii-diary .mfp-kawaii-pink span{background:#ffb3c1}\n.mfp-kawaii-diary .mfp-row{gap:12px}.mfp-kawaii-diary .mf-field-label{margin-bottom:6px;color:#5aaacf;font-size:12px;font-weight:800;letter-spacing:.12em}.mfp-kawaii-diary .mf-input,.mfp-kawaii-diary .mf-select,.mfp-kawaii-diary .mf-textarea,.mfp-kawaii-diary input:not([type='checkbox']):not([type='radio']),.mfp-kawaii-diary select,.mfp-kawaii-diary textarea{min-height:47px!important;padding:11px 16px!important;border:2px solid #d8eef5!important;border-radius:16px!important;background:#fff!important;color:#555!important;font-size:15px!important}.mfp-kawaii-diary input::placeholder,.mfp-kawaii-diary textarea::placeholder{color:#b8d8e5!important}\n.mfp-kawaii-diary .mfp-chip .mf-option-ui{border:2px solid #87ceeb!important;background:#fff!important;color:#555!important}.mfp-kawaii-diary .mfp-chip .mf-option-item:nth-child(2n) .mf-option-ui{border-color:#ffdd57!important}.mfp-kawaii-diary .mfp-chip .mf-option-item:nth-child(3n) .mf-option-ui{border-color:#7ec8a0!important}.mfp-kawaii-diary .mfp-chip .mf-option-item:nth-child(4n) .mf-option-ui{border-color:#ffb3c1!important}.mfp-kawaii-diary .mfp-radio .mf-option-group{display:grid!important;gap:8px!important}.mfp-kawaii-diary .mfp-radio .mf-option-item{display:flex!important;align-items:center!important;gap:10px!important;margin:0!important}.mfp-kawaii-diary .mfp-radio .mf-option-control{position:static!important;width:20px!important;height:20px!important;margin:0!important;accent-color:#c8b8e8!important;opacity:1!important}.mfp-kawaii-diary .mfp-radio .mf-option-ui{padding:0!important;border:0!important;background:transparent!important}.mfp-kawaii-diary .mfp-radio .mf-option-label{color:#555!important;font-size:14px!important}\n.mfp.mfp-kawaii-diary{--mf-btn-bg:linear-gradient(135deg,#87ceeb,#c8b8e8);--mf-btn-radius:999px}.mfp-kawaii-diary .mfp-btn{background:linear-gradient(135deg,#87ceeb,#c8b8e8)!important;box-shadow:0 6px 18px rgba(104,185,219,.34)}.mfp-kawaii-diary .mfp-kawaii-bottom{position:absolute;z-index:0;right:0;bottom:0;left:0;width:100%;height:60px;pointer-events:none}.mfp-kawaii-diary .mfp-foot{position:relative;z-index:1;padding:0 20px 28px;text-align:center;color:#f9a875;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}\n@media(max-width:540px){.mfp-kawaii-diary .mfp-header{padding:72px 18px 18px}.mfp-kawaii-diary .mfp-header>div{padding-inline:18px}.mfp-kawaii-diary .mfp-header h1{font-size:25px!important}.mfp-kawaii-diary .mfp-body{gap:24px;padding:0 20px 30px}}\n",
+    "customScripts": {},
+    "themeCompatibility": {
+      "policy": "locked",
+      "supportsPageColors": false,
+      "supportsPageTypography": false,
+      "supportsDarkHost": true,
+      "prefixes": [
+        "kw"
+      ],
+      "immutable": [
+        "pastel kawaii palette",
+        "graph-paper background",
+        "sticker ornaments",
+        "semantic red #c0392b"
+      ]
+    }
+  },
+  "rules": [],
+  "workflow": {
+    "notifications": []
+  },
+  "manifestVersion": 2
+}

@@ -78,6 +78,14 @@
 
     private string BuildPanelUrl(string panel)
     {
+        // [OqAdminPane v20260813] On the admin pane page, "dashboard" IS the pane. Returning
+        // ?mfpanel=dashboard from here sent the surface's Close button to the heavy SPA instead of
+        // back where the admin came from, so Close felt like a dead end.
+        if (string.Equals(panel, "dashboard", StringComparison.OrdinalIgnoreCase)
+            && (NavigationManager.Uri ?? string.Empty).IndexOf("/admin/megaform", StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            return NavigationManager.Uri.Split('?')[0].Split('#')[0];
+        }
         var baseUrl = NavigationManager.Uri.Split('?')[0].Split('#')[0];
         var parts = new List<string>();
         var editValue = GetQueryValue(NavigationManager.Uri, "edit");

@@ -1,0 +1,439 @@
+@namespace MegaForm.Client
+@inject HttpClient Http
+@using System
+@using System.Collections.Generic
+@using System.Globalization
+@using System.Linq
+@using System.Net.Http.Json
+@using System.Text.Json
+@using System.Text.Json.Serialization
+
+<style>
+    .mfr-app{min-height:100vh;background:#f6f8fb;color:#111827;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+    .mfr-shell{max-width:1440px;margin:0 auto;padding:86px 22px 28px;}
+    .mfr-top{display:grid;grid-template-columns:minmax(280px,1.15fr) minmax(280px,.85fr);gap:14px;align-items:stretch;margin-bottom:14px;}
+    .mfr-head,.mfr-insight,.mfr-filter,.mfr-list,.mfr-map,.mfr-detail{background:#fff;border:1px solid #dbe3ef;border-radius:8px;}
+    .mfr-head{padding:16px 18px;display:flex;gap:16px;align-items:center;justify-content:space-between;}
+    .mfr-title h1{margin:0;font-size:24px;line-height:1.15;font-weight:800;color:#0f172a;}
+    .mfr-title p{margin:5px 0 0;color:#526174;font-size:13px;}
+    .mfr-kpis{display:grid;grid-template-columns:repeat(4,minmax(92px,1fr));gap:8px;min-width:480px;}
+    .mfr-kpi{border:1px solid #e1e8f2;border-radius:8px;padding:10px;background:#fbfdff;}
+    .mfr-kpi b{display:block;font-size:20px;line-height:1;color:#0f172a;}
+    .mfr-kpi span{display:block;margin-top:5px;font-size:11px;text-transform:uppercase;color:#64748b;font-weight:700;}
+    .mfr-insight{padding:14px 16px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+    .mfr-insight div{border-left:3px solid #14b8a6;padding-left:10px;}
+    .mfr-insight strong{display:block;font-size:15px;color:#0f172a;}
+    .mfr-insight span{display:block;margin-top:4px;font-size:12px;color:#64748b;}
+    .mfr-filter{padding:12px;display:grid;grid-template-columns:minmax(240px,1fr) 160px 150px 150px auto;gap:8px;align-items:center;margin-bottom:14px;}
+    .mfr-control{height:38px;border:1px solid #cbd5e1;border-radius:7px;background:#fff;color:#0f172a;font-size:13px;padding:0 10px;min-width:0;}
+    .mfr-check{height:38px;display:inline-flex;align-items:center;gap:8px;border:1px solid #cbd5e1;border-radius:7px;padding:0 10px;font-size:13px;color:#334155;background:#fff;white-space:nowrap;}
+    .mfr-layout{display:grid;grid-template-columns:minmax(520px,1fr) 390px;gap:14px;align-items:start;}
+    .mfr-list{overflow:hidden;}
+    .mfr-toolbar{height:48px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;padding:0 13px;gap:10px;}
+    .mfr-toolbar h2{margin:0;font-size:14px;color:#0f172a;font-weight:800;}
+    .mfr-toolbar span{font-size:12px;color:#64748b;}
+    .mfr-buildings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:12px;background:#f8fafc;}
+    .mfr-card{background:#fff;border:1px solid #dbe3ef;border-radius:8px;overflow:hidden;text-align:left;cursor:pointer;transition:border-color .12s,box-shadow .12s,transform .12s;}
+    .mfr-card:hover,.mfr-card.is-active{border-color:#0891b2;box-shadow:0 10px 28px rgba(15,23,42,.08);transform:translateY(-1px);}
+    .mfr-card.is-hidden,.mfr-pin.is-hidden{display:none;}
+    .mfr-card img{width:100%;aspect-ratio:16/8;object-fit:cover;display:block;background:#dbeafe;}
+    .mfr-card-body{padding:11px;}
+    .mfr-card h3{margin:0;font-size:15px;line-height:1.25;color:#0f172a;font-weight:800;}
+    .mfr-card p{margin:5px 0 9px;font-size:12px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .mfr-meta{display:flex;flex-wrap:wrap;gap:6px;}
+    .mfr-pill{display:inline-flex;align-items:center;height:24px;border-radius:999px;padding:0 8px;background:#eef6ff;color:#075985;font-size:11px;font-weight:700;}
+    .mfr-pill.ok{background:#ecfdf5;color:#047857;}
+    .mfr-pill.warn{background:#fff7ed;color:#c2410c;}
+    .mfr-map{position:sticky;top:12px;overflow:hidden;}
+    .mfr-map-head{padding:13px 14px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+    .mfr-map-head h2{margin:0;font-size:14px;color:#0f172a;font-weight:800;}
+    .mfr-canvas{height:292px;position:relative;background:linear-gradient(135deg,#e0f2fe,#fef3c7 55%,#dcfce7);overflow:hidden;}
+    .mfr-road{position:absolute;height:2px;background:rgba(15,23,42,.22);transform-origin:left center;}
+    .mfr-pin{position:absolute;min-width:58px;height:28px;border-radius:999px;border:1px solid #fff;background:#0f172a;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 20px rgba(15,23,42,.2);transform:translate(-50%,-50%);}
+    .mfr-pin.is-hot{background:#0f766e;}
+    .mfr-detail{margin-top:12px;padding:13px 14px;}
+    .mfr-detail h3{margin:0 0 4px;font-size:17px;color:#0f172a;}
+    .mfr-detail p{margin:0 0 10px;color:#64748b;font-size:12px;}
+    .mfr-room-list{display:grid;gap:8px;max-height:410px;overflow:auto;padding-right:2px;}
+    .mfr-room{display:grid;grid-template-columns:66px 1fr auto;gap:10px;align-items:center;border:1px solid #e2e8f0;border-radius:8px;background:#fff;padding:8px;}
+    .mfr-room img{width:66px;height:50px;border-radius:6px;object-fit:cover;background:#e2e8f0;}
+    .mfr-room b{display:block;font-size:13px;color:#0f172a;}
+    .mfr-room span{display:block;margin-top:3px;font-size:11px;color:#64748b;}
+    .mfr-price{text-align:right;min-width:88px;}
+    .mfr-price strong{display:block;font-size:13px;color:#047857;}
+    .mfr-price small{display:block;margin-top:4px;color:#c2410c;font-weight:800;}
+    .mfr-empty,.mfr-error,.mfr-loading{padding:28px;text-align:center;color:#64748b;font-size:14px;}
+    .mfr-error{color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;}
+    @@media (max-width:1080px){.mfr-top,.mfr-layout{grid-template-columns:1fr}.mfr-kpis{min-width:0}.mfr-map{position:relative;top:auto}.mfr-filter{grid-template-columns:1fr 1fr 1fr}.mfr-check{justify-content:center}}
+    @@media (max-width:720px){.mfr-shell{padding:74px 12px 12px}.mfr-head{display:block}.mfr-kpis{grid-template-columns:repeat(2,1fr);margin-top:12px}.mfr-insight{grid-template-columns:1fr}.mfr-filter{grid-template-columns:1fr}.mfr-buildings{grid-template-columns:1fr}.mfr-room{grid-template-columns:56px 1fr}.mfr-room img{width:56px}.mfr-price{text-align:left;grid-column:2}}
+</style>
+
+<div class="mfr-app" data-mfr-app="RentalSiteView v20260802-01">
+    <div class="mfr-shell">
+        @if (_error != null)
+        {
+            <div class="mfr-error">@_error</div>
+        }
+        else if (_loading)
+        {
+            <div class="mfr-loading">Loading rental data from SQL...</div>
+        }
+        else
+        {
+            <div class="mfr-top">
+                <section class="mfr-head">
+                    <div class="mfr-title">
+                        <h1>Cho thue phong</h1>
+                        <p>Inventory, pricing and occupancy read from SQL rental tables.</p>
+                    </div>
+                    <div class="mfr-kpis">
+                        <div class="mfr-kpi"><b>@Stats.Buildings</b><span>Buildings</span></div>
+                        <div class="mfr-kpi"><b>@Stats.Rooms</b><span>Rooms</span></div>
+                        <div class="mfr-kpi"><b>@Stats.AvailableRooms</b><span>Available</span></div>
+                        <div class="mfr-kpi"><b>@Stats.DiscountRooms</b><span>Deals</span></div>
+                    </div>
+                </section>
+                <section class="mfr-insight">
+                    <div><strong>@Money(Stats.AvgRent)</strong><span>Average final rent</span></div>
+                    <div><strong>@Stats.OccupancyPercent.ToString("0.#", CultureInfo.InvariantCulture)%</strong><span>Occupied or reserved</span></div>
+                    <div><strong>@Money(Stats.MonthlyRevenue)</strong><span>Projected monthly rent</span></div>
+                </section>
+            </div>
+
+            <section class="mfr-filter" aria-label="Rental filters">
+                <input class="mfr-control" data-mfr-search placeholder="Search building, district, room code..." value="@_query" @oninput="OnQueryInput" />
+                <select class="mfr-control" data-mfr-district value="@_district" @onchange="OnDistrictChanged">
+                    <option value="">All districts</option>
+                    @foreach (var d in Districts)
+                    {
+                        <option value="@d">@d</option>
+                    }
+                </select>
+                <select class="mfr-control" data-mfr-status value="@_status" @onchange="OnStatusChanged">
+                    <option value="">All status</option>
+                    <option value="available">Available</option>
+                    <option value="reserved">Reserved</option>
+                    <option value="occupied">Occupied</option>
+                    <option value="maintenance">Maintenance</option>
+                </select>
+                <select class="mfr-control" data-mfr-rent value="@_maxRent" @onchange="OnMaxRentChanged">
+                    <option value="0">Any rent</option>
+                    <option value="4500000">Under 4.5M</option>
+                    <option value="6500000">Under 6.5M</option>
+                    <option value="8500000">Under 8.5M</option>
+                </select>
+                <label class="mfr-check"><input type="checkbox" data-mfr-discount checked="@_discountOnly" @onchange="OnDiscountChanged" /> 20% deals</label>
+            </section>
+
+            <div class="mfr-layout">
+                <section class="mfr-list">
+                    <div class="mfr-toolbar">
+                        <h2>Buildings</h2>
+                        <span data-mfr-count>@FilteredBuildings.Count building(s), @FilteredRooms.Count room(s)</span>
+                    </div>
+                    @if (FilteredBuildings.Count == 0)
+                    {
+                        <div class="mfr-empty">No buildings match the filters.</div>
+                    }
+                    else
+                    {
+                        <div class="mfr-buildings">
+                            @foreach (var building in FilteredBuildings)
+                            {
+                                var active = SelectedBuilding?.BuildingCode == building.BuildingCode;
+                                var rooms = RoomsFor(building.BuildingCode);
+                                <button type="button" class="mfr-card @(active ? "is-active" : null)" data-mfr-building-card data-building-code="@building.BuildingCode" @onclick="() => SelectBuilding(building)">
+                                    <img src="@building.PhotoUrl" alt="@building.Name" loading="lazy" />
+                                    <div class="mfr-card-body">
+                                        <h3>@building.Name</h3>
+                                        <p>@building.Address</p>
+                                        <div class="mfr-meta">
+                                            <span class="mfr-pill">@building.District</span>
+                                            <span class="mfr-pill ok">@rooms.Count available</span>
+                                            <span class="mfr-pill warn">@Money(building.AvgRent)</span>
+                                        </div>
+                                    </div>
+                                </button>
+                            }
+                        </div>
+                    }
+                </section>
+
+                <aside class="mfr-map">
+                    <div class="mfr-map-head">
+                        <h2>Market map</h2>
+                        <span data-mfr-map-count>@FilteredRooms.Count rooms</span>
+                    </div>
+                    <div class="mfr-canvas" aria-label="Approximate rental map">
+                        <span class="mfr-road" style="left:6%;top:32%;width:92%;transform:rotate(11deg)"></span>
+                        <span class="mfr-road" style="left:12%;top:72%;width:78%;transform:rotate(-17deg)"></span>
+                        <span class="mfr-road" style="left:50%;top:8%;width:76%;transform:rotate(82deg)"></span>
+                        @foreach (var b in FilteredBuildings.Take(18))
+                        {
+                            var x = PinX(b);
+                            var y = PinY(b);
+                            <button type="button" class="mfr-pin @(RoomsFor(b.BuildingCode).Any(r => r.DiscountPercent >= 20) ? "is-hot" : null)" data-mfr-pin data-building-code="@b.BuildingCode" style="left:@x%;top:@y%;" @onclick="() => SelectBuilding(b)">@b.BuildingCode</button>
+                        }
+                    </div>
+                    @if (SelectedBuilding != null)
+                    {
+                        <section class="mfr-detail" data-mfr-detail>
+                            <h3>@SelectedBuilding.Name</h3>
+                            <p>@SelectedBuilding.Address</p>
+                            <div class="mfr-room-list">
+                                @foreach (var room in RoomsFor(SelectedBuilding.BuildingCode).Take(24))
+                                {
+                                    <article class="mfr-room">
+                                        <img src="@room.PhotoUrl" alt="@room.RoomCode" loading="lazy" />
+                                        <div>
+                                            <b>@room.RoomCode - @room.AreaM2.ToString("0.#", CultureInfo.InvariantCulture)m2</b>
+                                            <span>@room.StatusLabel · floor @room.FloorLevel · @room.AmenitiesText</span>
+                                        </div>
+                                        <div class="mfr-price">
+                                            <strong>@Money(room.FinalPrice)</strong>
+                                            @if (room.DiscountPercent > 0)
+                                            {
+                                                <small>-@room.DiscountPercent%</small>
+                                            }
+                                        </div>
+                                    </article>
+                                }
+                            </div>
+                        </section>
+                    }
+                </aside>
+            </div>
+        }
+    </div>
+    @if (!_loading && _error == null)
+    {
+        <script type="application/json" data-mfr-json>@((MarkupString)JsonSerializer.Serialize(_data, new JsonSerializerOptions(JsonSerializerDefaults.Web)))</script>
+        <script data-mfr-boot>@((MarkupString)RentalBootScript())</script>
+    }
+</div>
+
+@code {
+    private RentalListingsResponse _data = new();
+    private bool _loading = true;
+    private string? _error;
+    private string _query = string.Empty;
+    private string _district = string.Empty;
+    private string _status = string.Empty;
+    private int _maxRent;
+    private bool _discountOnly;
+    private RentalBuildingDto? SelectedBuilding { get; set; }
+
+    private RentalStatsDto Stats => _data.Stats ?? new RentalStatsDto();
+    private List<RentalRoomDto> AllRooms => _data.Rooms ?? new List<RentalRoomDto>();
+    private List<RentalBuildingDto> AllBuildings => _data.Buildings ?? new List<RentalBuildingDto>();
+    private List<string> Districts => AllBuildings.Select(b => b.District).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().OrderBy(x => x).ToList();
+
+    private List<RentalRoomDto> FilteredRooms => AllRooms.Where(MatchesRoom).OrderByDescending(r => r.DiscountPercent).ThenBy(r => r.FinalPrice).ToList();
+    private List<RentalBuildingDto> FilteredBuildings
+    {
+        get
+        {
+            var roomBuildingCodes = FilteredRooms.Select(r => r.BuildingCode).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            return AllBuildings.Where(b => roomBuildingCodes.Contains(b.BuildingCode) && MatchesBuilding(b))
+                .OrderByDescending(b => RoomsFor(b.BuildingCode).Count)
+                .ThenBy(b => b.AvgRent)
+                .ToList();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _data = await Http.GetFromJsonAsync<RentalListingsResponse>("/api/MegaForm/RentalSite/Listings") ?? new RentalListingsResponse();
+            SelectedBuilding = FilteredBuildings.FirstOrDefault();
+        }
+        catch (Exception ex)
+        {
+            _error = "Could not load rental SQL data: " + ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private bool MatchesRoom(RentalRoomDto room)
+    {
+        if (!string.IsNullOrWhiteSpace(_district))
+        {
+            var b = AllBuildings.FirstOrDefault(x => string.Equals(x.BuildingCode, room.BuildingCode, StringComparison.OrdinalIgnoreCase));
+            if (!string.Equals(b?.District, _district, StringComparison.OrdinalIgnoreCase)) return false;
+        }
+        if (!string.IsNullOrWhiteSpace(_status) && !string.Equals(room.Status, _status, StringComparison.OrdinalIgnoreCase)) return false;
+        if (_maxRent > 0 && room.FinalPrice > _maxRent) return false;
+        if (_discountOnly && room.DiscountPercent < 20) return false;
+        if (string.IsNullOrWhiteSpace(_query)) return true;
+        var q = _query.Trim();
+        var building = AllBuildings.FirstOrDefault(x => string.Equals(x.BuildingCode, room.BuildingCode, StringComparison.OrdinalIgnoreCase));
+        return Contains(room.RoomCode, q) || Contains(room.RoomName, q) || Contains(room.BuildingCode, q) ||
+            Contains(building?.Name, q) || Contains(building?.District, q) || Contains(building?.Address, q);
+    }
+
+    private bool MatchesBuilding(RentalBuildingDto building)
+        => string.IsNullOrWhiteSpace(_district) || string.Equals(building.District, _district, StringComparison.OrdinalIgnoreCase);
+
+    private static bool Contains(string? value, string query)
+        => !string.IsNullOrWhiteSpace(value) && value.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0;
+
+    private List<RentalRoomDto> RoomsFor(string buildingCode)
+        => FilteredRooms.Where(r => string.Equals(r.BuildingCode, buildingCode, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    private void SelectBuilding(RentalBuildingDto building) => SelectedBuilding = building;
+
+    private void OnQueryInput(ChangeEventArgs e)
+    {
+        _query = Convert.ToString(e.Value) ?? string.Empty;
+        EnsureSelectedBuilding();
+    }
+
+    private void OnDistrictChanged(ChangeEventArgs e)
+    {
+        _district = Convert.ToString(e.Value) ?? string.Empty;
+        EnsureSelectedBuilding();
+    }
+
+    private void OnStatusChanged(ChangeEventArgs e)
+    {
+        _status = Convert.ToString(e.Value) ?? string.Empty;
+        EnsureSelectedBuilding();
+    }
+
+    private void OnMaxRentChanged(ChangeEventArgs e)
+    {
+        _maxRent = int.TryParse(Convert.ToString(e.Value), out var value) ? value : 0;
+        EnsureSelectedBuilding();
+    }
+
+    private void OnDiscountChanged(ChangeEventArgs e)
+    {
+        _discountOnly = e.Value is bool value && value;
+        EnsureSelectedBuilding();
+    }
+
+    private void EnsureSelectedBuilding()
+    {
+        var next = FilteredBuildings;
+        if (SelectedBuilding == null || !next.Any(b => string.Equals(b.BuildingCode, SelectedBuilding.BuildingCode, StringComparison.OrdinalIgnoreCase)))
+        {
+            SelectedBuilding = next.FirstOrDefault();
+        }
+    }
+
+    private static string Money(decimal value) => value <= 0 ? "-" : string.Format(CultureInfo.InvariantCulture, "{0:N0} VND", value);
+    private static int PinX(RentalBuildingDto b) => 8 + Math.Abs((b.BuildingCode ?? string.Empty).GetHashCode()) % 84;
+    private static int PinY(RentalBuildingDto b) => 12 + Math.Abs(((b.Name ?? string.Empty) + "salt").GetHashCode()) % 76;
+    private static string RentalBootScript() => @"
+(function(){
+  var script=document.currentScript;
+  var root=script&&script.closest('[data-mfr-app]');
+  if(!root||root.dataset.mfrReady==='1')return;
+  root.dataset.mfrReady='1';
+  var json=root.querySelector('[data-mfr-json]');
+  var data={buildings:[],rooms:[]};
+  try{data=JSON.parse(json&&json.textContent||'{}')||data;}catch(e){data={buildings:[],rooms:[]};}
+  var buildings=data.buildings||[], rooms=data.rooms||[];
+  var byCode={}; buildings.forEach(function(b){byCode[String(b.buildingCode||'').toLowerCase()]=b;});
+  var q=root.querySelector('[data-mfr-search]');
+  var district=root.querySelector('[data-mfr-district]');
+  var status=root.querySelector('[data-mfr-status]');
+  var rent=root.querySelector('[data-mfr-rent]');
+  var deal=root.querySelector('[data-mfr-discount]');
+  var count=root.querySelector('[data-mfr-count]');
+  var mapCount=root.querySelector('[data-mfr-map-count]');
+  var cards=[].slice.call(root.querySelectorAll('[data-mfr-building-card]'));
+  var pins=[].slice.call(root.querySelectorAll('[data-mfr-pin]'));
+  var detail=root.querySelector('[data-mfr-detail]');
+  var selected=(cards[0]&&cards[0].dataset.buildingCode)||'';
+  function money(v){v=Number(v||0);return v?new Intl.NumberFormat('en-US').format(v)+' VND':'-';}
+  function roomOk(r){
+    var b=byCode[String(r.buildingCode||'').toLowerCase()]||{};
+    var query=String(q&&q.value||'').toLowerCase().trim();
+    if(district&&district.value&&String(b.district||'')!==district.value)return false;
+    if(status&&status.value&&String(r.status||'')!==status.value)return false;
+    if(rent&&Number(rent.value)>0&&Number(r.finalPrice)>Number(rent.value))return false;
+    if(deal&&deal.checked&&Number(r.discountPercent)<20)return false;
+    if(!query)return true;
+    var hay=[r.roomCode,r.roomName,r.buildingCode,b.name,b.district,b.address].join(' ').toLowerCase();
+    return hay.indexOf(query)>=0;
+  }
+  function renderDetail(code, visibleRooms){
+    if(!detail)return;
+    var b=byCode[String(code||'').toLowerCase()]||buildings[0]||{};
+    var list=(visibleRooms||rooms.filter(roomOk)).filter(function(r){return String(r.buildingCode||'')===String(b.buildingCode||'');}).slice(0,24);
+    detail.innerHTML='<h3>'+(b.name||'Rental building')+'</h3><p>'+(b.address||'')+'</p><div class=""mfr-room-list"">'+list.map(function(r){
+      return '<article class=""mfr-room""><img src=""'+(r.photoUrl||'')+'"" alt=""'+(r.roomCode||'')+'"" loading=""lazy"" /><div><b>'+(r.roomCode||'')+' - '+Number(r.areaM2||0).toFixed(1)+'m2</b><span>'+(r.statusLabel||r.status||'')+' · floor '+(r.floorLevel||'')+' · '+(r.amenitiesText||'')+'</span></div><div class=""mfr-price""><strong>'+money(r.finalPrice)+'</strong>'+(Number(r.discountPercent)>0?'<small>-'+r.discountPercent+'%</small>':'')+'</div></article>';
+    }).join('')+'</div>';
+  }
+  function select(code, visibleRooms){
+    selected=code;
+    cards.forEach(function(card){card.classList.toggle('is-active',card.dataset.buildingCode===code);});
+    renderDetail(code, visibleRooms);
+  }
+  function apply(){
+    var visibleRooms=rooms.filter(roomOk);
+    var codes={}; visibleRooms.forEach(function(r){codes[String(r.buildingCode||'')]=true;});
+    var visibleBuildings=0;
+    cards.forEach(function(card){var show=!!codes[card.dataset.buildingCode];card.classList.toggle('is-hidden',!show);if(show)visibleBuildings++;});
+    pins.forEach(function(pin){pin.classList.toggle('is-hidden',!codes[pin.dataset.buildingCode]);});
+    if(count)count.textContent=visibleBuildings+' building(s), '+visibleRooms.length+' room(s)';
+    if(mapCount)mapCount.textContent=visibleRooms.length+' rooms';
+    if(!codes[selected]){var first=cards.find(function(c){return !c.classList.contains('is-hidden');});selected=first&&first.dataset.buildingCode||'';}
+    if(selected)select(selected,visibleRooms);
+  }
+  [q,district,status,rent,deal].forEach(function(el){if(!el)return;el.addEventListener(el===q?'input':'change',apply);});
+  cards.forEach(function(card){card.addEventListener('click',function(){select(card.dataset.buildingCode,rooms.filter(roomOk));});});
+  pins.forEach(function(pin){pin.addEventListener('click',function(){select(pin.dataset.buildingCode,rooms.filter(roomOk));});});
+  apply();
+})();";
+
+    public sealed class RentalListingsResponse
+    {
+        [JsonPropertyName("buildings")] public List<RentalBuildingDto> Buildings { get; set; } = new();
+        [JsonPropertyName("rooms")] public List<RentalRoomDto> Rooms { get; set; } = new();
+        [JsonPropertyName("stats")] public RentalStatsDto Stats { get; set; } = new();
+    }
+
+    public sealed class RentalStatsDto
+    {
+        [JsonPropertyName("buildings")] public int Buildings { get; set; }
+        [JsonPropertyName("rooms")] public int Rooms { get; set; }
+        [JsonPropertyName("availableRooms")] public int AvailableRooms { get; set; }
+        [JsonPropertyName("discountRooms")] public int DiscountRooms { get; set; }
+        [JsonPropertyName("avgRent")] public decimal AvgRent { get; set; }
+        [JsonPropertyName("occupancyPercent")] public decimal OccupancyPercent { get; set; }
+        [JsonPropertyName("monthlyRevenue")] public decimal MonthlyRevenue { get; set; }
+    }
+
+    public sealed class RentalBuildingDto
+    {
+        [JsonPropertyName("buildingCode")] public string BuildingCode { get; set; } = string.Empty;
+        [JsonPropertyName("name")] public string Name { get; set; } = string.Empty;
+        [JsonPropertyName("district")] public string District { get; set; } = string.Empty;
+        [JsonPropertyName("address")] public string Address { get; set; } = string.Empty;
+        [JsonPropertyName("photoUrl")] public string PhotoUrl { get; set; } = string.Empty;
+        [JsonPropertyName("totalRooms")] public int TotalRooms { get; set; }
+        [JsonPropertyName("occupiedRooms")] public int OccupiedRooms { get; set; }
+        [JsonPropertyName("avgRent")] public decimal AvgRent { get; set; }
+    }
+
+    public sealed class RentalRoomDto
+    {
+        [JsonPropertyName("roomCode")] public string RoomCode { get; set; } = string.Empty;
+        [JsonPropertyName("buildingCode")] public string BuildingCode { get; set; } = string.Empty;
+        [JsonPropertyName("roomName")] public string RoomName { get; set; } = string.Empty;
+        [JsonPropertyName("floorLevel")] public int FloorLevel { get; set; }
+        [JsonPropertyName("areaM2")] public decimal AreaM2 { get; set; }
+        [JsonPropertyName("finalPrice")] public decimal FinalPrice { get; set; }
+        [JsonPropertyName("discountPercent")] public int DiscountPercent { get; set; }
+        [JsonPropertyName("status")] public string Status { get; set; } = string.Empty;
+        [JsonPropertyName("statusLabel")] public string StatusLabel { get; set; } = string.Empty;
+        [JsonPropertyName("photoUrl")] public string PhotoUrl { get; set; } = string.Empty;
+        [JsonPropertyName("amenitiesText")] public string AmenitiesText { get; set; } = string.Empty;
+    }
+}

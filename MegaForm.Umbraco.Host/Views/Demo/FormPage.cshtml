@@ -1,0 +1,35 @@
+@{
+    Layout = "~/Views/_DemoLayout.cshtml";
+    ViewBag.Title = "MegaForm Picker Demo";
+}
+
+<section class="hero" style="background: linear-gradient(135deg, #10b981, #059669);">
+    <div class="container">
+        <h1>MegaForm Picker Demo</h1>
+        <p>This page models the Umbraco Forms experience: a form is created in the MegaForm section, then embedded on a content page via the RenderMegaForm view component.</p>
+    </div>
+</section>
+
+<div class="container">
+    <section class="section">
+        <div class="grid" style="grid-template-columns: 1fr 1fr; align-items: start;">
+            <div>
+                <h2>Umbraco-style embedding</h2>
+                <p>
+                    The selected form id would normally come from a document-type property
+                    (<code>MegaForm Form Picker</code>). Here it is hard-coded to the Newsletter form (FormId=2).
+                </p>
+                <pre style="background:#f8fafc;border:1px solid #e2e8f0;padding:1rem;border-radius:.5rem;overflow:auto;">
+@@await Component.InvokeAsync("RenderMegaForm", new {
+    formId = Model.Value&lt;int?&gt;("megaFormPicker") ?? 2,
+    contentId = Model.Id,
+    viewType = "submit"
+})
+</pre>
+            </div>
+            <div>
+                @await Component.InvokeAsync("RenderMegaForm", new { formId = 2, contentId = 9999, viewType = "submit" })
+            </div>
+        </div>
+    </section>
+</div>

@@ -129,9 +129,9 @@ MegaForm_01.05.00_Install.zip
 │   ├── MegaForm.DNN.dll   ← DNN module
 │   └── MegaForm.Core.dll  ← shared core
 ├── SqlScripts\
-│   ├── 01_CreateTables.sql
-│   ├── 02_StoredProcedures.sql
-│   └── Uninstall.sql
+│   ├── 01.06.42.SqlDataProvider    ← v1 schema + procs + seeds (merged)
+│   ├── 02.00.018.SqlDataProvider   ← v2 (merged)
+│   └── Uninstall.SqlDataProvider
 ├── Resources.zip           ← Views + Assets
 ├── License.txt
 └── ReleaseNotes.txt

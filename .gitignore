@@ -189,3 +189,13 @@ tools/browser-qa/**/.p/
 /login.js
 #   - One-shot QA drivers. The reusable ones live under tools/browser-qa without the _tmp- prefix.
 tools/browser-qa/_tmp-*.mjs
+
+# [LocalNugetFeed 2026-08-14] Offline NuGet feeds used to restore without a network. Dependency
+# artifacts, not source — several hundred MB of azure.*/bouncycastle/grpc packages.
+/local-packages/
+/local-packages-sample/
+/local-packages-umbraco/
+
+# [EmbeddedRepo 2026-08-14] A third-party theme cloned into External/. It carries its own .git, so
+# staging it produces a broken gitlink that no clone can resolve. Clone it separately if needed.
+/External/StudioElf.Theme.Bootswatch/

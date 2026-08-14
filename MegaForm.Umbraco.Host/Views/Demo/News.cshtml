@@ -1,0 +1,84 @@
+@using MegaForm.Umbraco.Host.Controllers
+@using MegaForm.Umbraco.ViewModels
+@{
+    Layout = "~/Views/_DemoLayout.cshtml";
+    ViewBag.Title = "News & Insights";
+    var articles = ViewBag.Articles as IReadOnlyDictionary<string, DemoController.CorporateNewsArticle>
+        ?? new Dictionary<string, DemoController.CorporateNewsArticle>();
+    var databaseForms = ViewBag.DatabaseForms as IReadOnlyDictionary<string, DemoController.CorporateNewsArticle>
+        ?? new Dictionary<string, DemoController.CorporateNewsArticle>();
+
+    MegaFormViewModel FormModel(int formId, int contentId) => new MegaFormViewModel
+    {
+        ContentId = contentId,
+        FormId = formId,
+        ViewType = "submit",
+        IsAdmin = false
+    };
+}
+
+<section class="hero">
+    <div class="hero-inner">
+        <div>
+            <p class="eyebrow">News and insights</p>
+            <h1>Corporate pages with premium forms in the story flow.</h1>
+            <p>Open each article to check a different premium template embedded in a normal Umbraco content page.</p>
+        </div>
+        <div class="hero-panel">
+            <strong>4</strong>
+            <span>Article pages available for scroll-aware QA</span>
+        </div>
+    </div>
+</section>
+
+<main class="container">
+    <section class="section">
+        <div class="section-header">
+            <h2>Latest articles</h2>
+            <p>Each card links to an article page with one premium MegaForm template rendered inside it.</p>
+        </div>
+        <div class="grid">
+            @foreach (var article in articles)
+            {
+                <article class="news-card">
+                    <div>
+                        <span class="badge">@article.Value.FormLabel</span>
+                        <h3>@article.Value.Title</h3>
+                        <p>@article.Value.Summary</p>
+                    </div>
+                    <a href="/demo/news/@article.Key">Read article</a>
+                </article>
+            }
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="section-header">
+            <h2>Database lookup forms</h2>
+            <p>These forms exercise Umbraco-hosted SQL option sources against the local SQLite database.</p>
+        </div>
+        <div class="grid">
+            @foreach (var form in databaseForms)
+            {
+                <article class="news-card">
+                    <div>
+                        <span class="badge">@form.Value.FormLabel</span>
+                        <h3>@form.Value.Title</h3>
+                        <p>@form.Value.Summary</p>
+                    </div>
+                    <a href="/demo/db-lookup/@form.Key">Open form</a>
+                </article>
+            }
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="section-header">
+            <h2>Inline newsletter QA</h2>
+            <p>The tabbed account setup template is embedded below to test premium spacing on a long corporate news page.</p>
+        </div>
+        <div class="form-shell">
+            @Html.Partial("~/Views/MegaFormView.cshtml", FormModel(formId: 103, contentId: 80203))
+        </div>
+    </section>
+</main>

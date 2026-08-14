@@ -1,0 +1,28 @@
+MEGAFORM FOR OQTANE — AI FORM CREATION
+Duration: ~2 minutes
+
+[SCENE 1 — INTRO / 0:00-0:10]
+Meet MegaForm for Oqtane — the fastest way to turn ideas into production-ready forms.
+In this video, I will show you how artificial intelligence builds your form in seconds.
+
+[SCENE 2 — OPEN AI DESIGNER / 0:10-0:40]
+From the MegaForm dashboard, click the AI Designer button.
+Now type what you need in plain language.
+For example: "Create a customer registration form and save every submission to the Registrations table."
+No coding. No manual field configuration. Just describe the form you want.
+
+[SCENE 3 — AI GENERATES THE FORM / 0:40-1:15]
+MegaForm reads your request, selects the right field types, labels, and validations.
+It even generates a modern, responsive layout automatically.
+On the right, you can preview the live form instantly.
+If you want a different design, click Regenerate. Otherwise, click Save and Open Builder.
+
+[SCENE 4 — VERIFY DATABASE INSERT / 1:15-1:50]
+Inside the Builder, open the Database panel.
+You will see that "Enable database INSERT on submit" is already turned on.
+The connection name, database type, and INSERT SQL are pre-filled with the correct placeholders.
+MegaForm did the wiring for you.
+
+[SCENE 5 — OUTRO / 1:50-2:00]
+That is AI-powered form creation in MegaForm for Oqtane.
+Build smarter. Deploy faster. Try MegaForm today.

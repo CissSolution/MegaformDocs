@@ -1,0 +1,47 @@
+@using MegaForm.Umbraco.ViewModels
+@{
+    Layout = "~/Views/_DemoLayout.cshtml";
+    ViewBag.Title = "Contact Us";
+
+    MegaFormViewModel FormModel(int formId, int contentId) => new MegaFormViewModel
+    {
+        ContentId = contentId,
+        FormId = formId,
+        ViewType = "submit",
+        IsAdmin = false
+    };
+}
+
+<section class="hero">
+    <div class="hero-inner">
+        <div>
+            <p class="eyebrow">Contact</p>
+            <h1>Talk to the MegaForm corporate team.</h1>
+            <p>This page embeds the premium corporate contact template with map content directly inside Umbraco.</p>
+        </div>
+        <div class="hero-panel">
+            <strong>106</strong>
+            <span>Corporate Contact with Map</span>
+        </div>
+    </div>
+</section>
+
+<main class="container">
+    <section class="section split">
+        <div>
+            <h2>Office details</h2>
+            <p>
+                123 Demo Street, Suite 100<br />
+                hello@example.com<br />
+                +1 (555) 123-4567
+            </p>
+            <p>
+                Use this page to confirm a premium contact template can live in a normal Umbraco site page,
+                not only in a standalone form preview.
+            </p>
+        </div>
+        <div class="form-shell">
+            @Html.Partial("~/Views/MegaFormView.cshtml", FormModel(formId: 106, contentId: 80406))
+        </div>
+    </section>
+</main>

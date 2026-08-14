@@ -1,0 +1,24 @@
+MEGAFORM FOR OQTANE — DEVELOPER API & SDK
+Duration: ~2 minutes
+
+[SCENE 1 — INTRO / 0:00-0:10]
+MegaForm is built for developers too. It ships with a clean API and an official .NET SDK so you can integrate forms into any application.
+
+[SCENE 2 — REST API / 0:10-0:40]
+Every form is reachable through REST endpoints.
+Create a submission. Read submissions. Update status. Query filtered lists.
+The API returns JSON and supports standard authentication, making it easy to connect from mobile apps, SPAs, or backend services.
+
+[SCENE 3 — .NET SDK / 0:40-1:10]
+Use the MegaForm.Sdk NuGet package in your .NET projects.
+Register the client in Program dot C-sharp with a single line.
+Then call methods like GetFormSchema, Submit, or GetSubmissions with strong typing and async support.
+
+[SCENE 4 — WEBHOOKS & EXTENSIBILITY / 1:10-1:45]
+Configure webhooks to notify external systems on every submission.
+Build custom field widgets with Razor or Blazor.
+Extend validations, lifecycle hooks, and database integrations through MegaForm's provider model.
+
+[SCENE 5 — OUTRO / 1:45-2:00]
+Whether you use low-code tools or write code, MegaForm for Oqtane has you covered.
+Start building today.

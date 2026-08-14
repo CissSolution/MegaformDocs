@@ -1,0 +1,53 @@
+@using MegaForm.Umbraco.Host.Controllers
+@using MegaForm.Umbraco.ViewModels
+@{
+    Layout = "~/Views/_DemoLayout.cshtml";
+    var article = ViewBag.Article as DemoController.CorporateNewsArticle;
+    var title = article?.Title ?? "News Article";
+    ViewBag.Title = title;
+
+    MegaFormViewModel FormModel(int formId, int contentId) => new MegaFormViewModel
+    {
+        ContentId = contentId,
+        FormId = formId,
+        ViewType = "submit",
+        IsAdmin = false
+    };
+}
+
+<section class="hero">
+    <div class="hero-inner">
+        <div>
+            <p class="eyebrow">Corporate insight</p>
+            <h1>@title</h1>
+            <p>@article?.Summary</p>
+        </div>
+        <div class="hero-panel">
+            <strong>@article?.FormId</strong>
+            <span>Premium form ID rendered on this article</span>
+        </div>
+    </div>
+</section>
+
+<main class="container">
+    <section class="section article-layout">
+        <article class="article-body">
+            <span class="badge">@article?.FormLabel</span>
+            <h2>Why this matters in Umbraco</h2>
+            <p>
+                Corporate teams often need polished data capture inside pages that already carry editorial context,
+                navigation and site-level theme rules. This page keeps the surrounding Umbraco layout active while
+                MegaForm renders the selected premium template through the Umbraco package surface.
+            </p>
+            <p>
+                Use this page for visual QA on spacing, typography inheritance, long-form scroll behavior and
+                backoffice form availability. The form to the right is not a standalone mock; it is loaded through
+                the same schema endpoint used by the public Umbraco host.
+            </p>
+            <p><a href="/demo/News">Back to news</a></p>
+        </article>
+        <div class="form-shell">
+            @Html.Partial("~/Views/MegaFormView.cshtml", FormModel(formId: article?.FormId ?? 101, contentId: 81000 + (article?.FormId ?? 101)))
+        </div>
+    </section>
+</main>
